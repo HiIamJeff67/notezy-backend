@@ -2,9 +2,9 @@ package app
 
 import (
 	"fmt"
-	models "go-gorm-api/app/models"
-	"go-gorm-api/app/routes"
-	"go-gorm-api/global"
+	models "notezy-backend/app/models"
+	"notezy-backend/app/routes"
+	"notezy-backend/global"
 
 	"github.com/fvbock/endless"
 	"github.com/gin-gonic/gin"
@@ -29,7 +29,7 @@ func StartApplication() {
 
 func MigrateDatabaseSchema(db *gorm.DB) {
 	localDB := models.ConnectToDatabase(models.DatabaseInstanceToConfig[db])
-    models.MigrateToDatabase(localDB)
+	models.MigrateToDatabase(localDB)
 	models.DisconnectToDatabase(localDB)
 }
 

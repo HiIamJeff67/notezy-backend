@@ -1,0 +1,25 @@
+{
+    "Generate Exception Domain and Its Related Initial Constants": {
+        "prefix": [
+            "excpetionDomain",
+            "exceptDomain",
+            "exDom"
+        ],
+        "body": [
+            "package exceptions",
+            "const (",
+            "\t_ExceptionBaseCode_${1:DomainName} ExceptionCode = ${2:DomainBaseCode}",
+            "\tExceptionBaseCode_${1:DomainName} ExceptionCode = _ExceptionBaseCode_${1:DomainName} + ReservedExceptionCode",
+            "\tExceptionPrefix_${1:DomainName} ExceptionPrefix = \"${1:DomainName}\"",
+            ")",
+            "",
+            "type ${1:DomainName}ExceptionDomain struct {",
+            "\tDatabaseExceptionDomain",
+            "}",
+            "",
+            "var ${1:DomainName} = &${1:DomainName}ExceptionDomain{",
+            "\tDatabaseExceptionDomain{ BaseCode: _ExceptionBaseCode_${1:DomainName}, Prefix: ExceptionPrefix_${1:DomainName} },",
+            "}",
+        ]
+    }
+}

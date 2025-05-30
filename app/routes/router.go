@@ -2,22 +2,21 @@ package routes
 
 import (
 	"fmt"
-	"go-gorm-api/app/controllers"
-	"go-gorm-api/global"
+	constants "notezy-backend/global/constants"
 
 	"github.com/gin-gonic/gin"
 )
 
 var (
-	Router *gin.Engine
+	Router      *gin.Engine
 	RouterGroup *gin.RouterGroup
 )
 
 func ConfigureRoutes() {
-    RouterGroup = Router.Group("/api/" + global.VERSION)
-    fmt.Println("Router group path:", RouterGroup.BasePath())
+	RouterGroup = Router.Group("/api/" + constants.DevelopmentVersion) // use in development mode
+	fmt.Println("Router group path:", RouterGroup.BasePath())
 
-    configureUserRoutes()
+	configureUserRoutes()
 }
 
 func configureUserRoutes() {
@@ -27,8 +26,8 @@ func configureUserRoutes() {
 			ctx.JSON(200, gin.H{"message": "Hello, user!"})
 		})
 
-		userRoutes.GET("/all", controllers.GetAllUsers)
+		// userRoutes.GET("/all", controllers.GetAllUsers)
 
-		userRoutes.POST("/register", controllers.Register)
+		// userRoutes.POST("/register", controllers.Register)
 	}
 }
