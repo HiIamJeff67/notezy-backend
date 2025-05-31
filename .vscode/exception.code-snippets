@@ -1,24 +1,53 @@
 {
-    "Generate Exception Domain and Its Related Initial Constants": {
+    "Generate a Customized Database Exception Sub Domain and Its Related Initial Constants": {
         "prefix": [
-            "excpetionDomain",
-            "exceptDomain",
-            "exDom"
+            "databaseExcpetionSubDomain",
+            "dbExcepSubDom",
+            "desd"
         ],
         "body": [
             "package exceptions",
             "const (",
-            "\t_ExceptionBaseCode_${1:DomainName} ExceptionCode = ${2:DomainBaseCode}",
-            "\tExceptionBaseCode_${1:DomainName} ExceptionCode = _ExceptionBaseCode_${1:DomainName} + ReservedExceptionCode",
-            "\tExceptionPrefix_${1:DomainName} ExceptionPrefix = \"${1:DomainName}\"",
+            "\t_ExceptionBaseCode_${1:_DomainName_} ExceptionCode = (DatabaseExceptionDomainCode*ExceptionDomainCodeShiftAmount +",
+            "\t\t${1:_DomainName_}ExceptionSubDomainCode*ExceptionSubDomainCodeShiftAmount)",
+            "",
+            "\t${1:_DomainName_}ExceptionSubDomainCode ExceptionCode = ${2:_SubDomainCode_}",
+            "\tExceptionBaseCode_${1:_DomainName_} ExceptionCode = _ExceptionBaseCode_${1:_DomainName_} + ReservedExceptionCode",
+            "\tExceptionPrefix_${1:_DomainName_} ExceptionPrefix = \"${1:_DomainName_}\"",
             ")",
             "",
-            "type ${1:DomainName}ExceptionDomain struct {",
-            "\tDatabaseExceptionDomain",
+            "type ${1:_DomainName_}ExceptionDomain struct {",
+            "\tDatabaseExceptionDomainCode",
             "}",
             "",
-            "var ${1:DomainName} = &${1:DomainName}ExceptionDomain{",
-            "\tDatabaseExceptionDomain{ BaseCode: _ExceptionBaseCode_${1:DomainName}, Prefix: ExceptionPrefix_${1:DomainName} },",
+            "var ${1:_DomainName_} = &${1:_DomainName_}ExceptionDomain{",
+            "\tDatabaseExceptionDomainCode{ BaseCode: _ExceptionBaseCode_${1:_DomainName_}, Prefix: ExceptionPrefix_${1:DomainName} },",
+            "}",
+        ]
+    },
+    "Generate a Customized API Exception Sub Domain and Its Related Initial Constants": {
+        "prefix": [
+            "apiExceptionSubDomain",
+            "apiExcepSubDom",
+            "aesd"
+        ],
+        "body": [
+            "package exceptions",
+            "const (",
+            "\t_ExceptionBaseCode_${1:_DomainName_} ExceptionCode = (APIExceptionDomainCode*ExceptionDomainCodeShiftAmount +",
+            "\t\t${1:_DomainName_}ExceptionSubDomainCode*ExceptionSubDomainCodeShiftAmount)",
+            "",
+            "\t${1:_DomainName_}ExceptionSubDomainCode ExceptionCode = ${2:_SubDomainCode_}",
+            "\tExceptionBaseCode_${1:_DomainName_} ExceptionCode = _ExceptionBaseCode_${1:_DomainName_} + ReservedExceptionCode",
+            "\tExceptionPrefix_${1:_DomainName_} ExceptionPrefix = \"${1:_DomainName_}\"",
+            ")",
+            "",
+            "type ${1:_DomainName_}ExceptionDomain struct {",
+            "\tAPIExceptionDomain",
+            "}",
+            "",
+            "var ${1:_DomainName_} = &${1:_DomainName_}ExceptionDomain{",
+            "\tAPIExceptionDomain{ BaseCode: _ExceptionBaseCode_${1:_DomainName_}, Prefix: ExceptionPrefix_${1:DomainName} },",
             "}",
         ]
     }

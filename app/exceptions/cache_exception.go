@@ -12,7 +12,7 @@ const (
 	_ExceptionBaseCode_Cache ExceptionCode = (APIExceptionDomainCode*ExceptionDomainCodeShiftAmount +
 		CacheExceptionSubDomainCode*ExceptionSubDomainCodeShiftAmount)
 
-	CacheExceptionSubDomainCode ExceptionCode   = 1
+	CacheExceptionSubDomainCode ExceptionCode   = 2
 	ExceptionBaseCode_Cache     ExceptionCode   = _ExceptionBaseCode_Cache + ReservedExceptionCode
 	ExceptionPrefix_Cache       ExceptionPrefix = "Cache"
 )

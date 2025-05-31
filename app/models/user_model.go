@@ -42,51 +42,81 @@ type CreateUserInput struct {
 	Name         string `json:"name" validate:"required, min=6, max=16, alphanum" gorm:"column:name;"`
 	Email        string `json:"email" validate:"required, email" gorm:"column:email;"`
 	Password     string `json:"password" validate:"required, min=8, max=32, isstrongpassword" gorm:"column:password;"`
-	RefreshToken string `json:"refreshToken" gorm:"column:refresh_token;"`
+	RefreshToken string `json:"refreshToken" validate:"required" gorm:"column:refresh_token;"`
 }
 type UpdateUserInput struct {
-	Name         *string    `json:"name" validate:"required, min=6, max=16, alphanum" gorm:"column:name;"`
-	DisplayName  string     `json:"displayName" validae:"min=6, max=32, alphanum" gorm:"column:display_name; not null; size:32;"`
-	Email        *string    `json:"email" validate:"required, email" gorm:"column:email;"`
-	Password     *string    `json:"password" validate:"required, min=8, max=32, isstrongpassword" gorm:"column:password;"`
-	RefreshToken *string    `json:"refreshToken" gorm:"column:refresh_token;"`
-	Role         UserRole   `json:"role" validate:"oneof=Admin Normal Guest" gorm:"column:role; type:UserRole; not null; default:'Guest';"`
-	Plan         UserPlan   `json:"plan" gorm:"column:plan; type:UserPlan; not null; default:'Free';"`
-	Status       UserStatus `json:"status" gorm:"column:status; type:UserStatus; not null; default:'Online';"`
+	Name         *string     `json:"name" validate:"min=6, max=16, alphanum" gorm:"column:name;"`
+	DisplayName  *string     `json:"displayName" validae:"min=6, max=32, alphanum" gorm:"column:display_name;"`
+	Email        *string     `json:"email" validate:"email" gorm:"column:email;"`
+	Password     *string     `json:"password" validate:"min=8, max=32, isstrongpassword" gorm:"column:password;"`
+	RefreshToken *string     `json:"refreshToken" gorm:"column:refresh_token;"`
+	Role         *UserRole   `json:"role" validate:"isrole" gorm:"column:role;"`
+	Plan         *UserPlan   `json:"plan" validate:"isplan" gorm:"column:plan;"`
+	Status       *UserStatus `json:"status" validate:"isstatus" gorm:"column:status;"`
 }
 
 /* ============================== Methods ============================== */
-func GetUserById(db *gorm.DB, id uuid.UUID) (User, *exceptions.Exception) {
+func GetUserById(db *gorm.DB, id uuid.UUID) (*User, *exceptions.Exception) {
 	if db == nil {
 		db = NotezyDB
 	}
 
 	user := User{}
 	result := db.Table(User{}.TableName()).Where("id = ?", id).First(&user)
-
 	if err := result.Error; err != nil {
-		return User{}, exceptions.User.NotFound().WithError(err)
+		return nil, exceptions.User.NotFound().WithError(err)
 	}
 
-	return user, nil
+	return &user, nil
 }
 
-func GetAllUsers(db *gorm.DB) ([]User, *exceptions.Exception) {
+func GetUserByName(db *gorm.DB, name string) (*User, *exceptions.Exception) {
+	if db == nil {
+		db = NotezyDB
+	}
+
+	user := User{}
+	result := db.Table(User{}.TableName()).Where("name = ?", name).First(&user)
+	if err := result.Error; err != nil {
+		return nil, exceptions.User.NotFound().WithError(err)
+	}
+
+	return &user, nil
+}
+
+func GetUserByEmail(db *gorm.DB, email string) (*User, *exceptions.Exception) {
+	if db == nil {
+		db = NotezyDB
+	}
+
+	user := User{}
+	result := db.Table(User{}.TableName()).Where("email = ?", email).First(&user)
+	if err := result.Error; err != nil {
+		return nil, exceptions.User.NotFound().WithError(err)
+	}
+
+	return &user, nil
+}
+
+func GetAllUsers(db *gorm.DB) (*[]User, *exceptions.Exception) {
 	if db == nil {
 		db = NotezyDB
 	}
 	users := []User{}
 	result := db.Table(User{}.TableName()).Find(&users)
-	return users, exceptions.User.NotFound().WithError(result.Error)
+	if err := result.Error; err != nil {
+		return nil, exceptions.User.NotFound().WithError(result.Error)
+	}
+	return &users, nil
 }
 
-func CreateUser(db *gorm.DB, input CreateUserInput) (User, *exceptions.Exception) {
+func CreateUser(db *gorm.DB, input CreateUserInput) (*User, *exceptions.Exception) {
 	if db == nil {
 		db = NotezyDB
 	}
 
 	if err := Validator.Struct(input); err != nil {
-		return User{}, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
 	newUser := User{
@@ -97,18 +127,18 @@ func CreateUser(db *gorm.DB, input CreateUserInput) (User, *exceptions.Exception
 	}
 	result := db.Table(User{}.TableName()).Create(&newUser)
 	if err := result.Error; err != nil {
-		return User{}, exceptions.User.FailedToCreate().WithError(err)
+		return nil, exceptions.User.FailedToCreate().WithError(err)
 	}
-	return newUser, nil
+	return &newUser, nil
 }
 
-func UpdateUserById(db *gorm.DB, id uuid.UUID, input UpdateUserInput) (User, *exceptions.Exception) {
+func UpdateUserById(db *gorm.DB, id uuid.UUID, input UpdateUserInput) (*User, *exceptions.Exception) {
 	if db == nil {
 		db = NotezyDB
 	}
 
 	if err := Validator.Struct(input); err != nil {
-		return User{}, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
 	updatedUser := User{
@@ -121,12 +151,12 @@ func UpdateUserById(db *gorm.DB, id uuid.UUID, input UpdateUserInput) (User, *ex
 	result := db.Table(User{}.TableName()).Where("id = ?", id).Updates(&updatedUser)
 
 	if err := result.Error; err != nil {
-		return User{}, exceptions.User.FailedToUpdate().WithError(err)
+		return nil, exceptions.User.FailedToUpdate().WithError(err)
 	}
-	return updatedUser, nil
+	return &updatedUser, nil
 }
 
-func DeleteUserById(db *gorm.DB, id uuid.UUID) (User, *exceptions.Exception) {
+func DeleteUserById(db *gorm.DB, id uuid.UUID) (*User, *exceptions.Exception) {
 	if db == nil {
 		db = NotezyDB
 	}
@@ -137,18 +167,18 @@ func DeleteUserById(db *gorm.DB, id uuid.UUID) (User, *exceptions.Exception) {
 	result := tx.Table(User{}.TableName()).Where("id = ?", id).First(&deletedUser)
 	if err := result.Error; err != nil {
 		tx.Rollback()
-		return User{}, exceptions.User.NotFound().WithError(err)
+		return nil, exceptions.User.NotFound().WithError(err)
 	}
 
 	result = tx.Table(User{}.TableName()).Delete(&deletedUser)
 	if err := result.Error; err != nil {
 		tx.Rollback()
-		return User{}, exceptions.User.FailedToDelete().WithError(err)
+		return nil, exceptions.User.FailedToDelete().WithError(err)
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		return User{}, exceptions.User.FailedToDelete().WithError(err)
+		return nil, exceptions.User.FailedToDelete().WithError(err)
 	}
 
-	return deletedUser, nil
+	return &deletedUser, nil
 }

@@ -33,7 +33,7 @@ func init() {
 }
 
 /* ============================== Generate Tokens Functions ============================== */
-func GenerateAccessToken(id string, name string, email string) (string, *exceptions.Exception) {
+func GenerateAccessToken(id string, name string, email string) (*string, *exceptions.Exception) {
 	claims := types.Claims{
 		Id:    id,
 		Name:  name,
@@ -47,13 +47,13 @@ func GenerateAccessToken(id string, name string, email string) (string, *excepti
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	result, err := token.SignedString(_jwtAccessTokenSecret)
 	if err != nil {
-		return "", exceptions.Util.FailedToGenerateAccessToken().WithError(err)
+		return nil, exceptions.Util.FailedToGenerateAccessToken().WithError(err)
 	}
 
-	return result, nil
+	return &result, nil
 }
 
-func GenerateRefreshToken(id string, name string, email string) (string, *exceptions.Exception) {
+func GenerateRefreshToken(id string, name string, email string) (*string, *exceptions.Exception) {
 	claims := types.Claims{
 		Id:    id,
 		Name:  name,
@@ -67,10 +67,10 @@ func GenerateRefreshToken(id string, name string, email string) (string, *except
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	result, err := token.SignedString(_jwtRefreshTokenSecret)
 	if err != nil {
-		return "", exceptions.Util.FailedToGenerateRefreshToken().WithError(err)
+		return nil, exceptions.Util.FailedToGenerateRefreshToken().WithError(err)
 	}
 
-	return result, nil
+	return &result, nil
 }
 
 /* ============================== Parse Tokens Functions ============================== */

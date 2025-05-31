@@ -16,19 +16,19 @@ import (
 )
 
 type UserDataCache struct {
-	Name               string
-	DisplayName        string
-	Email              string
-	AccessToken        string
-	Role               models.UserRole
-	Plan               models.UserPlan
-	Status             models.UserStatus
-	AvatarURL          *string
-	Theme              models.Theme
-	Language           models.Language
-	GeneralSettingCode int64
-	PrivacySettingCode int64
-	UpdatedAt          *time.Time
+	Name               string            // user
+	DisplayName        string            // user
+	Email              string            // user
+	AccessToken        string            // only here
+	Role               models.UserRole   // user
+	Plan               models.UserPlan   // user
+	Status             models.UserStatus // user
+	AvatarURL          *string           // user info
+	Theme              models.Theme      // user setting
+	Language           models.Language   // user setting
+	GeneralSettingCode int64             // user setting
+	PrivacySettingCode int64             // user setting
+	UpdatedAt          *time.Time        // user or its related models
 }
 
 type UpdateUserDataCacheDto struct {
@@ -108,8 +108,8 @@ func GetUserDataCache(id uuid.UUID) (*UserDataCache, *exceptions.Exception) {
 }
 
 /* ============================== Setter ============================== */
-func SetUserDataCache(id uuid.UUID, userData *UserDataCache) *exceptions.Exception {
-	if !isValidUserDataCache(userData) { // strictly check when setting the cache data
+func SetUserDataCache(id uuid.UUID, userData UserDataCache) *exceptions.Exception {
+	if !isValidUserDataCache(&userData) { // strictly check when setting the cache data
 		return exceptions.Cache.InvalidCacheDataStruct(userData)
 	}
 
@@ -138,7 +138,7 @@ func SetUserDataCache(id uuid.UUID, userData *UserDataCache) *exceptions.Excepti
 }
 
 /* ============================== Update Function ============================== */
-func UpdateUserDataCache(id uuid.UUID, dto *UpdateUserDataCacheDto) *exceptions.Exception {
+func UpdateUserDataCache(id uuid.UUID, dto UpdateUserDataCacheDto) *exceptions.Exception {
 	hash := hashUserDataIdentifier(id)
 	serverNumber := max(MaxUserDataServerNumber, UserDataRange.Start+hash)
 	redisClient, ok := RedisClientMap[serverNumber]

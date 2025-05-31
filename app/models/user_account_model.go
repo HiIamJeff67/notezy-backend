@@ -26,21 +26,21 @@ func (UserAccount) TableName() string {
 
 /* ============================== Input ============================== */
 type CreateUserAccountInput struct {
-	CountryCode       *CountryCode `json:"countryCode" gorm:"column:country_code;"`
-	PhoneNumber       *string      `json:"phoneNumber" gorm:"column:phone_number;"`
+	CountryCode       *CountryCode `json:"countryCode" validate:"iscountrycode" gorm:"column:country_code;"`
+	PhoneNumber       *string      `json:"phoneNumber" validate:"max:0, max:15" gorm:"column:phone_number;"`
 	GoogleCredential  *string      `json:"googleCrendential" gorm:"column:google_credential;"`
 	DiscordCredential *string      `json:"discordCrendential" gorm:"column:discord_credential;"`
 }
 
 type UpdateUserAccountInput struct {
-	CountryCode       *CountryCode `json:"countryCode" gorm:"column:country_code;"`
-	PhoneNumber       *string      `json:"phoneNumber" gorm:"column:phone_number;"`
+	CountryCode       *CountryCode `json:"countryCode" validate:"iscountrycode" gorm:"column:country_code;"`
+	PhoneNumber       *string      `json:"phoneNumber" validate:"max:0, max:15" gorm:"column:phone_number;"`
 	GoogleCredential  *string      `json:"googleCrendential" gorm:"column:google_credential;"`
 	DiscordCredential *string      `json:"discordCrendential" gorm:"column:discord_credential;"`
 }
 
 /* ============================== Methods ============================== */
-func GetUserAccountByUserId(db *gorm.DB, userId uuid.UUID) (UserAccount, *exceptions.Exception) {
+func GetUserAccountByUserId(db *gorm.DB, userId uuid.UUID) (*UserAccount, *exceptions.Exception) {
 	if db == nil {
 		db = NotezyDB
 	}
@@ -48,12 +48,12 @@ func GetUserAccountByUserId(db *gorm.DB, userId uuid.UUID) (UserAccount, *except
 	userAccount := UserAccount{}
 	result := db.Table(UserAccount{}.TableName()).Where("user_id = ?", userId).First(&userAccount)
 	if err := result.Error; err != nil {
-		return UserAccount{}, exceptions.UserAccount.NotFound().WithError(err)
+		return nil, exceptions.UserAccount.NotFound().WithError(err)
 	}
-	return userAccount, nil
+	return &userAccount, nil
 }
 
-func GetAllUserAccount(db *gorm.DB) ([]UserAccount, *exceptions.Exception) {
+func GetAllUserAccount(db *gorm.DB) (*[]UserAccount, *exceptions.Exception) {
 	if db == nil {
 		db = NotezyDB
 	}
@@ -61,12 +61,12 @@ func GetAllUserAccount(db *gorm.DB) ([]UserAccount, *exceptions.Exception) {
 	userAccounts := []UserAccount{}
 	result := db.Table(UserAccount{}.TableName()).Find(&userAccounts)
 	if err := result.Error; err != nil {
-		return []UserAccount{}, exceptions.UserAccount.NotFound().WithError(err)
+		return nil, exceptions.UserAccount.NotFound().WithError(err)
 	}
-	return userAccounts, nil
+	return &userAccounts, nil
 }
 
-func CreateUserAccountByUserId(db *gorm.DB, userId uuid.UUID, input CreateUserAccountInput) (UserAccount, *exceptions.Exception) {
+func CreateUserAccountByUserId(db *gorm.DB, userId uuid.UUID, input CreateUserAccountInput) (*UserAccount, *exceptions.Exception) {
 	if db == nil {
 		db = NotezyDB
 	}
@@ -81,12 +81,12 @@ func CreateUserAccountByUserId(db *gorm.DB, userId uuid.UUID, input CreateUserAc
 
 	result := db.Table(UserAccount{}.TableName()).Create(&newUserAccount)
 	if err := result.Error; err != nil {
-		return UserAccount{}, exceptions.UserAccount.FailedToCreate().WithError(err)
+		return nil, exceptions.UserAccount.FailedToCreate().WithError(err)
 	}
-	return newUserAccount, nil
+	return &newUserAccount, nil
 }
 
-func UpdateUserAccountByUserId(db *gorm.DB, userId uuid.UUID, input UpdateUserAccountInput) (UserAccount, *exceptions.Exception) {
+func UpdateUserAccountByUserId(db *gorm.DB, userId uuid.UUID, input UpdateUserAccountInput) (*UserAccount, *exceptions.Exception) {
 	if db == nil {
 		db = NotezyDB
 	}
@@ -100,9 +100,9 @@ func UpdateUserAccountByUserId(db *gorm.DB, userId uuid.UUID, input UpdateUserAc
 
 	result := db.Table(UserAccount{}.TableName()).Where("user_id = ?", userId).Updates(&input)
 	if err := result.Error; err != nil {
-		return UserAccount{}, exceptions.UserAccount.FailedToUpdate().WithError(err)
+		return nil, exceptions.UserAccount.FailedToUpdate().WithError(err)
 	}
-	return updatedUserAccount, nil
+	return &updatedUserAccount, nil
 }
 
 // We do not allow to just delete the userAccount,

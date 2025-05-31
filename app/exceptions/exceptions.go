@@ -51,6 +51,7 @@ const (
 	ExceptionReason_FailedToCommitTransaction ExceptionReason = "Failed_To_Commit_Transaction"
 	ExceptionReason_InvalidInput              ExceptionReason = "Invalid_Input"
 	ExceptionReason_Timeout                   ExceptionReason = "Timeout"
+	ExceptionReason_InvalidDto                ExceptionReason = "Invalid_Dto"
 )
 
 func IsExceptionCode(exceptionCode int) bool {
@@ -286,6 +287,21 @@ func (d *APIExceptionDomain) Timeout(time time.Duration, optionalMessage ...stri
 		Code:           d.BaseCode + 5,
 		Prefix:         d.Prefix,
 		Reason:         ExceptionReason_Timeout,
+		Message:        message,
+		HTTPStatusCode: http.StatusRequestTimeout,
+	}
+}
+
+func (d *APIExceptionDomain) InvalidDto(optionalMessage ...string) *Exception {
+	message := fmt.Sprintf("Invalid dto detected in %s", strings.ToLower(string(d.Prefix)))
+	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
+		message = optionalMessage[0]
+	}
+
+	return &Exception{
+		Code:           d.BaseCode + 6,
+		Prefix:         d.Prefix,
+		Reason:         ExceptionReason_InvalidDto,
 		Message:        message,
 		HTTPStatusCode: http.StatusRequestTimeout,
 	}

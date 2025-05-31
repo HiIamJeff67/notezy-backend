@@ -28,3 +28,16 @@ func IsStringIn(s string, strs []string) bool {
 	}
 	return false
 }
+
+func IsEmailString(s string) bool {
+	return strings.Contains(s, "@")
+}
+
+func IsAlphaNumberString(s string) bool {
+	for _, r := range s {
+		if !unicode.IsLetter(r) && !unicode.IsDigit(r) {
+			return false
+		}
+	}
+	return true
+}

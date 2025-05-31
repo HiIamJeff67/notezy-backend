@@ -29,27 +29,27 @@ func (UserInfo) TableName() string {
 
 /* ============================== Input ============================== */
 type CreateUserInfoInput struct {
-	CoverBackgroundURL *string    `json:"coverBackgroundURL" gorm:"column:cover_background_url;"`
-	AvatarURL          *string    `json:"avatarURL" gorm:"column:avatar_url;"`
-	Header             *string    `json:"header" gorm:"column:header;"`
-	Introduction       *string    `json:"introduction" gorm:"column:introduction;"`
-	Gender             UserGender `json:"gender" gorm:"column:gender;"`
-	Country            Country    `json:"country" gorm:"column:country;"`
-	BirthDate          *time.Time `json:"birthDate" gorm:"column:birth_date;"`
+	CoverBackgroundURL *string     `json:"coverBackgroundURL" gorm:"column:cover_background_url;"`
+	AvatarURL          *string     `json:"avatarURL" gorm:"column:avatar_url;"`
+	Header             *string     `json:"header" validate:"min:0, max:64" gorm:"column:header;"`
+	Introduction       *string     `json:"introduction" validate:"min:0, max:256" gorm:"column:introduction;"`
+	Gender             *UserGender `json:"gender" validate:"isgender" gorm:"column:gender;"`
+	Country            *Country    `json:"country" validate:"iscountry" gorm:"column:country;"`
+	BirthDate          *time.Time  `json:"birthDate" gorm:"column:birth_date;"`
 }
 
 type UpdateUserInfoInput struct {
-	CoverBackgroundURL *string    `json:"coverBackgroundURL" gorm:"column:cover_background_url;"`
-	AvatarURL          *string    `json:"avatarURL" gorm:"column:avatar_url;"`
-	Header             *string    `json:"header" gorm:"column:header;"`
-	Introduction       *string    `json:"introduction" gorm:"column:introduction;"`
-	Gender             UserGender `json:"gender" gorm:"column:gender;"`
-	Country            Country    `json:"country" gorm:"column:country;"`
-	BirthDate          *time.Time `json:"birthDate" gorm:"column:birth_date;"`
+	CoverBackgroundURL *string     `json:"coverBackgroundURL" gorm:"column:cover_background_url;"`
+	AvatarURL          *string     `json:"avatarURL" gorm:"column:avatar_url;"`
+	Header             *string     `json:"header" validate:"min:0, max:64" gorm:"column:header;"`
+	Introduction       *string     `json:"introduction" validate:"min:0, max:256" gorm:"column:introduction;"`
+	Gender             *UserGender `json:"gender" validate:"isgender" gorm:"column:gender;"`
+	Country            *Country    `json:"country" validate:"iscountry" gorm:"column:country;"`
+	BirthDate          *time.Time  `json:"birthDate" gorm:"column:birth_date;"`
 }
 
 /* ============================== Methods ============================== */
-func GetUserInfoByUserId(db *gorm.DB, userId uuid.UUID) (UserInfo, *exceptions.Exception) {
+func GetUserInfoByUserId(db *gorm.DB, userId uuid.UUID) (*UserInfo, *exceptions.Exception) {
 	if db == nil {
 		db = NotezyDB
 	}
@@ -57,14 +57,18 @@ func GetUserInfoByUserId(db *gorm.DB, userId uuid.UUID) (UserInfo, *exceptions.E
 	userInfo := UserInfo{}
 	result := db.Table(UserInfo{}.TableName()).Where("user_id = ?", userId).First(&userInfo)
 	if err := result.Error; err != nil {
-		return UserInfo{}, exceptions.UserInfo.NotFound().WithError(err)
+		return nil, exceptions.UserInfo.NotFound().WithError(err)
 	}
-	return userInfo, nil
+	return &userInfo, nil
 }
 
-func CreateUserInfoByUserId(db *gorm.DB, userId uuid.UUID, input CreateUserInfoInput) (UserInfo, *exceptions.Exception) {
+func CreateUserInfoByUserId(db *gorm.DB, userId uuid.UUID, input CreateUserInfoInput) (*UserInfo, *exceptions.Exception) {
 	if db == nil {
 		db = NotezyDB
+	}
+
+	if err := Validator.Struct(input); err != nil {
+		return nil, exceptions.UserInfo.InvalidInput().WithError(err)
 	}
 
 	newUserInfo := UserInfo{
@@ -73,21 +77,31 @@ func CreateUserInfoByUserId(db *gorm.DB, userId uuid.UUID, input CreateUserInfoI
 		AvatarURL:          input.AvatarURL,
 		Header:             input.Header,
 		Introduction:       input.Introduction,
-		Gender:             input.Gender,
-		Country:            input.Country,
+		Gender:             UserGender_PreferNotToSay,
+		Country:            Country_UnitedStatusOfAmerica,
 		BirthDate:          input.BirthDate,
+	}
+	if input.Gender != nil {
+		newUserInfo.Gender = *input.Gender
+	}
+	if input.Country != nil {
+		newUserInfo.Country = *input.Country
 	}
 
 	result := db.Table(UserInfo{}.TableName()).Create(&newUserInfo)
 	if err := result.Error; err != nil {
-		return UserInfo{}, exceptions.UserInfo.FailedToCreate().WithError(err)
+		return nil, exceptions.UserInfo.FailedToCreate().WithError(err)
 	}
-	return newUserInfo, nil
+	return &newUserInfo, nil
 }
 
-func UpdateUserInfoByUserId(db *gorm.DB, userId uuid.UUID, input UpdateUserInfoInput) (UserInfo, *exceptions.Exception) {
+func UpdateUserInfoByUserId(db *gorm.DB, userId uuid.UUID, input UpdateUserInfoInput) (*UserInfo, *exceptions.Exception) {
 	if db == nil {
 		db = NotezyDB
+	}
+
+	if err := Validator.Struct(input); err != nil {
+		return nil, exceptions.UserInfo.InvalidInput().WithError(err)
 	}
 
 	updatedUserInfo := UserInfo{
@@ -96,14 +110,18 @@ func UpdateUserInfoByUserId(db *gorm.DB, userId uuid.UUID, input UpdateUserInfoI
 		AvatarURL:          input.AvatarURL,
 		Header:             input.Header,
 		Introduction:       input.Introduction,
-		Gender:             input.Gender,
-		Country:            input.Country,
 		BirthDate:          input.BirthDate,
+	}
+	if input.Gender != nil {
+		updatedUserInfo.Gender = *input.Gender
+	}
+	if input.Country != nil {
+		updatedUserInfo.Country = *input.Country
 	}
 
 	result := db.Table(UserInfo{}.TableName()).Updates(&updatedUserInfo)
 	if err := result.Error; err != nil {
-		return UserInfo{}, exceptions.UserInfo.FailedToUpdate().WithError(err)
+		return nil, exceptions.UserInfo.FailedToUpdate().WithError(err)
 	}
-	return updatedUserInfo, nil
+	return &updatedUserInfo, nil
 }

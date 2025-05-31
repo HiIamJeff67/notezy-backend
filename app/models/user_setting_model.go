@@ -15,8 +15,8 @@ type UserSetting struct {
 	UserId             uuid.UUID `json:"userId" gorm:"column:user_id; type:uuid; not null; unique;"`
 	Theme              Theme     `json:"theme" gorm:"column:theme; type:Theme; not null; default:'System';"`
 	Language           Language  `json:"language" gorm:"column:language; type:Language; not null; default:'English';"`
-	GeneralSettingCode int64     `json:"generalSettingCode" gorm:"column:general_setting_code; type:bigint; not null; default:0;"`
-	PrivacySettingCode int64     `json:"privacySettingCode" gorm:"column:privacy_setting_code; type:bigint; not null; default:0;"`
+	GeneralSettingCode int       `json:"generalSettingCode" gorm:"column:general_setting_code; type:integer; not null; default:0;"`
+	PrivacySettingCode int       `json:"privacySettingCode" gorm:"column:privacy_setting_code; type:integer; not null; default:0;"`
 	UpdatedAt          time.Time `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 }
 
@@ -26,20 +26,20 @@ func (UserSetting) TableName() string {
 
 /* ============================== Input ============================== */
 type CreateUserSettingInput struct {
-	Theme              Theme    `json:"theme" gorm:"column:theme;"`
-	Language           Language `json:"language" gorm:"column:language;"`
-	GeneralSettingCode int64    `json:"generalSettingCode" gorm:"column:general_setting_code;"`
-	PrivacySettingCode int64    `json:"privacySettingCode" gorm:"column:privacy_setting_code;"`
+	Theme              *Theme    `json:"theme" validate:"istheme" gorm:"column:theme;"`
+	Language           *Language `json:"language" validate:"islanguage" gorm:"column:language;"`
+	GeneralSettingCode *int      `json:"generalSettingCode" validate:"min:0, max:999999999" gorm:"column:general_setting_code;"`
+	PrivacySettingCode *int      `json:"privacySettingCode" validate:"min:0, max:999999999" gorm:"column:privacy_setting_code;"`
 }
 type UpdateUserSettingInput struct {
-	Theme              *Theme    `json:"theme" gorm:"column:theme;"`
-	Language           *Language `json:"language" gorm:"column:language;"`
-	GeneralSettingCode *int64    `json:"generalSettingCode" gorm:"column:general_setting_code;"`
-	PrivacySettingCode *int64    `json:"privacySettingCode" gorm:"column:privacy_setting_code;"`
+	Theme              *Theme    `json:"theme" validate:"istheme" gorm:"column:theme;"`
+	Language           *Language `json:"language" validate:"islanguage" gorm:"column:language;"`
+	GeneralSettingCode *int      `json:"generalSettingCode" validate:"min:0, max:999999999" gorm:"column:general_setting_code;"`
+	PrivacySettingCode *int      `json:"privacySettingCode" validate:"min:0, max:999999999" gorm:"column:privacy_setting_code;"`
 }
 
 /* ============================== Methods ============================== */
-func GetUserSettingByUserId(db *gorm.DB, userId uuid.UUID) (UserSetting, *exceptions.Exception) {
+func GetUserSettingByUserId(db *gorm.DB, userId uuid.UUID) (*UserSetting, *exceptions.Exception) {
 	if db == nil {
 		db = NotezyDB
 	}
@@ -47,32 +47,40 @@ func GetUserSettingByUserId(db *gorm.DB, userId uuid.UUID) (UserSetting, *except
 	userSetting := UserSetting{}
 	result := db.Table(UserSetting{}.TableName()).Where("user_id = ?", userId).First(&userSetting)
 	if err := result.Error; err != nil {
-		return UserSetting{}, exceptions.UserSetting.NotFound().WithError(err)
+		return nil, exceptions.UserSetting.NotFound().WithError(err)
 	}
-	return userSetting, nil
+	return &userSetting, nil
 }
 
-func CreateUserSettingByUserId(db *gorm.DB, userId uuid.UUID, input CreateUserSettingInput) (UserSetting, *exceptions.Exception) {
+func CreateUserSettingByUserId(db *gorm.DB, userId uuid.UUID, input CreateUserSettingInput) (*UserSetting, *exceptions.Exception) {
 	if db == nil {
 		db = NotezyDB
 	}
 
 	newUserSetting := UserSetting{
-		UserId:             userId,
-		Theme:              input.Theme,
-		Language:           input.Language,
-		GeneralSettingCode: input.GeneralSettingCode,
-		PrivacySettingCode: input.PrivacySettingCode,
+		UserId: userId,
+	}
+	if input.Theme != nil {
+		newUserSetting.Theme = *input.Theme
+	}
+	if input.Language != nil {
+		newUserSetting.Language = *input.Language
+	}
+	if input.GeneralSettingCode != nil {
+		newUserSetting.GeneralSettingCode = *input.GeneralSettingCode
+	}
+	if input.PrivacySettingCode != nil {
+		newUserSetting.PrivacySettingCode = *input.PrivacySettingCode
 	}
 
 	result := db.Table(UserSetting{}.TableName()).Create(&newUserSetting)
 	if err := result.Error; err != nil {
-		return UserSetting{}, exceptions.UserSetting.FailedToCreate().WithError(err)
+		return nil, exceptions.UserSetting.FailedToCreate().WithError(err)
 	}
-	return newUserSetting, nil
+	return &newUserSetting, nil
 }
 
-func UpdateUserSettingByUserId(db *gorm.DB, userId uuid.UUID, input UpdateUserSettingInput) (UserSetting, *exceptions.Exception) {
+func UpdateUserSettingByUserId(db *gorm.DB, userId uuid.UUID, input UpdateUserSettingInput) (*UserSetting, *exceptions.Exception) {
 	if db == nil {
 		db = NotezyDB
 	}
@@ -87,7 +95,7 @@ func UpdateUserSettingByUserId(db *gorm.DB, userId uuid.UUID, input UpdateUserSe
 
 	result := db.Table(UserSetting{}.TableName()).Create(&updatedUserSetting)
 	if err := result.Error; err != nil {
-		return UserSetting{}, exceptions.UserSetting.FailedToUpdate().WithError(err)
+		return nil, exceptions.UserSetting.FailedToUpdate().WithError(err)
 	}
-	return updatedUserSetting, nil
+	return &updatedUserSetting, nil
 }

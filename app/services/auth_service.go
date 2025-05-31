@@ -4,6 +4,7 @@ import (
 	"sync"
 	"time"
 
+	uuid "github.com/jackc/pgx/pgtype/ext/satori-uuid"
 	"golang.org/x/crypto/bcrypt"
 
 	"notezy-backend/app/caches"
@@ -55,6 +56,7 @@ func Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Ex
 	}
 
 	var wg sync.WaitGroup
+	// once the errCh receive an error, we're going to stop the entire process and do the transaction roll back
 	errCh := make(chan *exceptions.Exception, 1)
 
 	run := func(f func() *exceptions.Exception) {
@@ -72,8 +74,7 @@ func Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Ex
 
 	// update refreshToken in user table
 	run(func() *exceptions.Exception {
-		updatedUserInput := models.UpdateUserInput{RefreshToken: &refreshToken}
-		_, exception := models.UpdateUserById(tx, newUser.Id, updatedUserInput)
+		_, exception := models.UpdateUserById(tx, newUser.Id, models.UpdateUserInput{RefreshToken: refreshToken})
 		return exception
 	})
 
@@ -97,21 +98,23 @@ func Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Ex
 
 	// store user data into the cache
 	run(func() *exceptions.Exception {
-		userDataCache := &caches.UserDataCache{
-			Name:               newUser.Name,
-			DisplayName:        newUser.DisplayName,
-			Email:              newUser.Email,
-			AccessToken:        accessToken,
-			Role:               newUser.Role,
-			Plan:               newUser.Plan,
-			Status:             newUser.Status,
-			AvatarURL:          nil,
-			Theme:              models.Theme_System,
-			Language:           models.Language_English,
-			GeneralSettingCode: 0,
-			PrivacySettingCode: 0,
-		}
-		exception = caches.SetUserDataCache(newUser.Id, userDataCache)
+		exception = caches.SetUserDataCache(
+			newUser.Id,
+			caches.UserDataCache{
+				Name:               newUser.Name,
+				DisplayName:        newUser.DisplayName,
+				Email:              newUser.Email,
+				AccessToken:        *accessToken,
+				Role:               newUser.Role,
+				Plan:               newUser.Plan,
+				Status:             newUser.Status,
+				AvatarURL:          nil,
+				Theme:              models.Theme_System,
+				Language:           models.Language_English,
+				GeneralSettingCode: 0,
+				PrivacySettingCode: 0,
+			},
+		)
 		return exception
 	})
 
@@ -125,13 +128,104 @@ func Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Ex
 	select {
 	case err := <-errCh:
 		tx.Rollback()
+		close(errCh)
 		return nil, err
 	case <-time.After(constants.RegisterTimeoutDuration):
 		// deal with timeout exception
 		return nil, exceptions.Util.Timeout(constants.RegisterTimeoutDuration)
 	case <-done: // case when it receive the sign from done channel
-		return &dtos.RegisterResDto{AccessToken: accessToken, CreatedAt: newUser.CreatedAt}, nil
+		return &dtos.RegisterResDto{AccessToken: *accessToken, CreatedAt: newUser.CreatedAt}, nil
 	}
 }
 
-// func Login() {}
+func Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception) {
+	if err := models.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
+	// check if we can just use the access token
+	if reqDto.AccessToken != nil {
+		claims, exception := util.ParseAccessToken(*reqDto.AccessToken)
+		if exception != nil {
+			return nil, exception
+		}
+		var userId uuid.UUID
+		if err := userId.Scan(claims.Id); err != nil {
+			return nil, exceptions.User.InvalidInput().WithError(err)
+		}
+		userCacheData, exception := caches.GetUserDataCache(userId)
+		if exception != nil {
+			return nil, exception
+		}
+		if userCacheData.AccessToken != *reqDto.AccessToken {
+			return nil, exceptions.Auth.WrongAccessToken()
+		}
+
+		return &dtos.LoginResDto{AccessToken: *reqDto.AccessToken, CreatedAt: claims.ExpiresAt.Time}, nil
+	}
+
+	// else check if we can use the refresh token
+	if reqDto.RefreshToken != nil {
+		claims, exception := util.ParseRefreshToken(*reqDto.RefreshToken)
+		if exception != nil {
+			return nil, exception
+		}
+
+		var userId uuid.UUID
+		if err := userId.Scan(claims.Id); err != nil {
+			return nil, exceptions.User.InvalidInput().WithError(err)
+		}
+		user, exception := models.GetUserById(nil, userId)
+		if exception != nil {
+			return nil, exception
+		}
+		if user.RefreshToken != *reqDto.RefreshToken {
+			return nil, exceptions.Auth.WrongRefreshToken()
+		}
+
+		accessToken, exception := util.GenerateAccessToken(claims.Id, claims.Name, claims.Email)
+		if exception != nil {
+			return nil, exception
+		}
+		return &dtos.LoginResDto{AccessToken: *accessToken, CreatedAt: time.Now()}, nil
+	}
+
+	// otherwise, the user should provide their account and password
+	var user *models.User = nil
+	var exception *exceptions.Exception = nil
+	if util.IsAlphaNumberString(*reqDto.Account) {
+		if user, exception = models.GetUserByName(nil, *reqDto.Account); exception != nil {
+			return nil, exception
+		}
+	} else if util.IsEmailString(*reqDto.Account) {
+		if user, exception = models.GetUserByEmail(nil, *reqDto.Account); exception != nil {
+			return nil, exception
+		}
+	} else {
+		return nil, exceptions.Auth.InvalidDto()
+	}
+
+	if !checkPasswordHash(*reqDto.Password, user.Password) {
+		return nil, exceptions.Auth.WrongPassword()
+	}
+
+	accessToken, exception := util.GenerateAccessToken(user.Id.UUID.String(), user.Name, user.Email)
+	if exception != nil {
+		return nil, exception
+	}
+	refreshToken, exception := util.GenerateRefreshToken(user.Id.UUID.String(), user.Name, user.Email)
+	if exception != nil {
+		return nil, exception
+	}
+
+	// update the access token of the user
+	if exception = caches.UpdateUserDataCache(user.Id, caches.UpdateUserDataCacheDto{AccessToken: accessToken}); exception != nil {
+		return nil, exception
+	}
+	// update the refresh token of the user
+	if _, exception = models.UpdateUserById(nil, user.Id, models.UpdateUserInput{RefreshToken: refreshToken}); exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.LoginResDto{AccessToken: *accessToken, CreatedAt: time.Now()}, nil
+}

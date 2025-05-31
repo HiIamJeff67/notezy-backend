@@ -2,6 +2,7 @@ package routes
 
 import (
 	"fmt"
+	"notezy-backend/app/controllers"
 	constants "notezy-backend/global/constants"
 
 	"github.com/gin-gonic/gin"
@@ -22,12 +23,13 @@ func ConfigureRoutes() {
 func configureUserRoutes() {
 	userRoutes := RouterGroup.Group("/user")
 	{
-		userRoutes.GET("/me", func(ctx *gin.Context) {
-			ctx.JSON(200, gin.H{"message": "Hello, user!"})
-		})
+		// userRoutes.GET("/me", func(ctx *gin.Context) {
+		// 	ctx.JSON(200, gin.H{"message": "Hello, user!"})
+		// })
 
-		// userRoutes.GET("/all", controllers.GetAllUsers)
+		userRoutes.POST("/register", controllers.Register)
+		userRoutes.POST("/login", controllers.Login)
 
-		// userRoutes.POST("/register", controllers.Register)
+		userRoutes.GET("/all", controllers.FindAllUsers)
 	}
 }

@@ -6,7 +6,7 @@ const (
 	_ExceptionBaseCode_Util ExceptionCode = (APIExceptionDomainCode*ExceptionDomainCodeShiftAmount +
 		UtilExceptionSubDomainCode*ExceptionSubDomainCodeShiftAmount)
 
-	UtilExceptionSubDomainCode ExceptionCode   = 2
+	UtilExceptionSubDomainCode ExceptionCode   = 1
 	ExceptionBaseCode_Util     ExceptionCode   = _ExceptionBaseCode_Util + ReservedExceptionCode
 	ExceptionPrefix_Util       ExceptionPrefix = "Util"
 )
