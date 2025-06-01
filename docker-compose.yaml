@@ -1,13 +1,23 @@
 version: "3.7"
 
 services:
+  notezy-redis:
+    container_name: ${DOCKER_REDIS_SERVICE_NAME}
+    # restart: always
+    image: redis:7.2.3-alpine
+    ports:
+      - "${REDIS_PORT}:${DOCKER_REDIS_PORT}"
+    volumes:
+      - redis-data:/data
+    command: ["redis-server", "--appendonly", "yes"]
   notezy-api:
     container_name: ${DOCKER_API_SERVICE_NAME}
     image: ${DOCKER_API_SERVICE_NAME}:latest
+    # restart: always
     build:
       context: .
       dockerfile: Dockerfile
-    entrypoint: [ "${ENTRYPOINT_CMD}" ]
+    entrypoint: ["${ENTRYPOINT_CMD}"]
     environment:
       DB_HOST: ${DB_HOST}
       DB_USER: ${DB_USER}
@@ -26,8 +36,8 @@ services:
   notezy-db:
     # should be the same as DB_HOST(hosting service)
     container_name: ${DOCKER_DB_SERVICE_NAME}
+    # restart: always
     image: postgis/postgis:16-3.4-alpine
-    restart: always
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
@@ -37,10 +47,15 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
 volumes:
+  redis-data:
+    name: notezy-backend-redis-data
+  # api-data:
+  #   nmae: notezy-backend-api-data
   postgres-data:
+    name: notezy-backend-postgres-data

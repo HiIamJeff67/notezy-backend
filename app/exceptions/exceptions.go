@@ -44,6 +44,7 @@ const (
 // if some individual domain require a custom reason,
 // just create one with ExceptionReason type privately whic means its variable name in lower case
 const (
+	ExceptionReason_UndefinedError            ExceptionReason = "Undefined_Error"
 	ExceptionReason_NotFound                  ExceptionReason = "Not_Found"
 	ExceptionReason_FailedToCreate            ExceptionReason = "Failed_To_Create"
 	ExceptionReason_FailedToUpdate            ExceptionReason = "Failed_To_Update"
@@ -119,6 +120,21 @@ func (e *Exception) PanicVerbose() {
 type DatabaseExceptionDomain struct {
 	BaseCode ExceptionCode
 	Prefix   ExceptionPrefix
+}
+
+func (d *DatabaseExceptionDomain) UndefinedError(optionalMessage ...string) *Exception {
+	message := fmt.Sprintf("Undefined error happened in %s", strings.ToLower(string(d.Prefix)))
+	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
+		message = optionalMessage[0]
+	}
+
+	return &Exception{
+		Code:           d.BaseCode + 0,
+		Prefix:         d.Prefix,
+		Reason:         ExceptionReason_UndefinedError,
+		Message:        message,
+		HTTPStatusCode: http.StatusBadRequest,
+	}
 }
 
 func (d *DatabaseExceptionDomain) NotFound(optionalMessage ...string) *Exception {
@@ -215,6 +231,21 @@ func (d *DatabaseExceptionDomain) InvalidInput(optionalMessage ...string) *Excep
 type APIExceptionDomain struct {
 	BaseCode ExceptionCode
 	Prefix   ExceptionPrefix
+}
+
+func (d *APIExceptionDomain) UndefinedError(optionalMessage ...string) *Exception {
+	message := fmt.Sprintf("Undefined error happened in %s", strings.ToLower(string(d.Prefix)))
+	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
+		message = optionalMessage[0]
+	}
+
+	return &Exception{
+		Code:           d.BaseCode + 0,
+		Prefix:         d.Prefix,
+		Reason:         ExceptionReason_UndefinedError,
+		Message:        message,
+		HTTPStatusCode: http.StatusBadRequest,
+	}
 }
 
 func (d *APIExceptionDomain) NotFound(optionalMessage ...string) *Exception {

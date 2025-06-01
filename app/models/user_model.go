@@ -4,10 +4,12 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
-	uuid "github.com/jackc/pgx/pgtype/ext/satori-uuid"
+	uuid "github.com/google/uuid"
 
 	exceptions "notezy-backend/app/exceptions"
+	"notezy-backend/app/util"
 	global "notezy-backend/global"
 )
 
@@ -17,8 +19,8 @@ type User struct {
 	Name         string     `json:"name" gorm:"column:name; unique; not null; size:16;"`
 	DisplayName  string     `json:"displayName" gorm:"column:display_name; not null; size:32;"`
 	Email        string     `json:"email" gorm:"column:email; unique; not null;"`
-	Password     string     `json:"password" gorm:"column:password; not null; size:255;"`
-	RefreshToken string     `json:"refreshToken" gorm:"column:refresh_token; not null;"`
+	Password     string     `json:"password" gorm:"column:password; not null; size:1024;"` // since we store the hashed password which is quite long
+	RefreshToken string     `json:"refreshToken" gorm:"column:refresh_token; not null; default:''"`
 	Role         UserRole   `json:"role" gorm:"column:role; type:UserRole; not null; default:'Guest';"`
 	Plan         UserPlan   `json:"plan" gorm:"column:plan; type:UserPlan; not null; default:'Free';"`
 	Status       UserStatus `json:"status" gorm:"column:status; type:UserStatus; not null; default:'Online';"`
@@ -26,10 +28,10 @@ type User struct {
 	CreatedAt    time.Time  `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 
 	// relation
-	UserInfo    UserInfo    `json:"userInfo" gorm:"foreignKey:UserId; references:ID; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	UserAccount UserAccount `json:"userAccount" gorm:"foreignKey:UserId; references:ID; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	UserSetting UserSetting `json:"userSetting" gorm:"foreignKey:UserId; references:ID; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	Badges      []Badge     `json:"badges" gorm:"many2many:\"UsersToBadgesTable\"; foreignKey:ID; joinForeignKey:UserID; references:ID; joinReferences:BadgeID;"`
+	UserInfo    UserInfo    `json:"userInfo" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	UserAccount UserAccount `json:"userAccount" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	UserSetting UserSetting `json:"userSetting" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	Badges      []Badge     `json:"badges" gorm:"-"` // many2many:\"UsersToBadgesTable\"; foreignKey:Id; joinForeignKey:UserId; references:Id; joinReferences:BadgeId;
 }
 
 // force gorm to use the given table name
@@ -39,20 +41,21 @@ func (User) TableName() string {
 
 /* ============================== Input & Output ============================== */
 type CreateUserInput struct {
-	Name         string `json:"name" validate:"required, min=6, max=16, alphanum" gorm:"column:name;"`
-	Email        string `json:"email" validate:"required, email" gorm:"column:email;"`
-	Password     string `json:"password" validate:"required, min=8, max=32, isstrongpassword" gorm:"column:password;"`
-	RefreshToken string `json:"refreshToken" validate:"required" gorm:"column:refresh_token;"`
+	Name         string  `json:"name" validate:"required,min=6,max=16,alphanum" gorm:"column:name;"`
+	DisplayName  string  `json:"displayName" validate:"required,min=6,max=32" gorm:"column:display_name"`
+	Email        string  `json:"email" validate:"required,email" gorm:"column:email;"`
+	Password     string  `json:"password" validate:"required,min=8,max=1024" gorm:"column:password;"`
+	RefreshToken *string `json:"refreshToken" validate:"omitempty" gorm:"column:refresh_token;"`
 }
 type UpdateUserInput struct {
-	Name         *string     `json:"name" validate:"min=6, max=16, alphanum" gorm:"column:name;"`
-	DisplayName  *string     `json:"displayName" validae:"min=6, max=32, alphanum" gorm:"column:display_name;"`
-	Email        *string     `json:"email" validate:"email" gorm:"column:email;"`
-	Password     *string     `json:"password" validate:"min=8, max=32, isstrongpassword" gorm:"column:password;"`
-	RefreshToken *string     `json:"refreshToken" gorm:"column:refresh_token;"`
-	Role         *UserRole   `json:"role" validate:"isrole" gorm:"column:role;"`
-	Plan         *UserPlan   `json:"plan" validate:"isplan" gorm:"column:plan;"`
-	Status       *UserStatus `json:"status" validate:"isstatus" gorm:"column:status;"`
+	Name         *string     `json:"name" validate:"omitempty,min=6,max=16,alphanum" gorm:"column:name;"`
+	DisplayName  *string     `json:"displayName" validae:"omitempty,min=6,max=32,alphanum" gorm:"column:display_name;"`
+	Email        *string     `json:"email" validate:"omitempty,email" gorm:"column:email;"`
+	Password     *string     `json:"password" validate:"omitempty,min=8,max=1024" gorm:"column:password;"`
+	RefreshToken *string     `json:"refreshToken" validate:"omitempty" gorm:"column:refresh_token;"`
+	Role         *UserRole   `json:"role" validate:"omitempty,isrole" gorm:"column:role;"`
+	Plan         *UserPlan   `json:"plan" validate:"omitempty,isplan" gorm:"column:plan;"`
+	Status       *UserStatus `json:"status" validate:"omitempty,isstatus" gorm:"column:status;"`
 }
 
 /* ============================== Methods ============================== */
@@ -119,13 +122,16 @@ func CreateUser(db *gorm.DB, input CreateUserInput) (*User, *exceptions.Exceptio
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	newUser := User{
-		Name:         input.Name,
-		Email:        input.Email,
-		Password:     input.Password,
-		RefreshToken: input.RefreshToken,
-	}
-	result := db.Table(User{}.TableName()).Create(&newUser)
+	var newUser User
+	util.CopyNonNilFields(&newUser, input)
+	result := db.Table(User{}.TableName()).
+		Clauses(clause.Returning{Columns: []clause.Column{
+			{Name: "id"}, // for the following procedure such as create user info, create user account, generate refresh token etc..
+			{Name: "name"},
+			{Name: "display_name"},
+			{Name: "email"},
+		}}).
+		Create(&newUser)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.FailedToCreate().WithError(err)
 	}
@@ -141,14 +147,11 @@ func UpdateUserById(db *gorm.DB, id uuid.UUID, input UpdateUserInput) (*User, *e
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	updatedUser := User{
-		Name:         *input.Name,
-		Email:        *input.Email,
-		Password:     *input.Password,
-		RefreshToken: *input.RefreshToken,
-	}
-
-	result := db.Table(User{}.TableName()).Where("id = ?", id).Updates(&updatedUser)
+	var updatedUser User
+	util.CopyNonNilFields(&updatedUser, input)
+	result := db.Table(User{}.TableName()).Where("id = ?", id).
+		Clauses(clause.Returning{}).
+		Updates(&updatedUser)
 
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.FailedToUpdate().WithError(err)
@@ -164,7 +167,9 @@ func DeleteUserById(db *gorm.DB, id uuid.UUID) (*User, *exceptions.Exception) {
 	tx := db.Begin()
 
 	deletedUser := User{}
-	result := tx.Table(User{}.TableName()).Where("id = ?", id).First(&deletedUser)
+	result := tx.Table(User{}.TableName()).Where("id = ?", id).
+		Clauses(clause.Returning{}).
+		First(&deletedUser)
 	if err := result.Error; err != nil {
 		tx.Rollback()
 		return nil, exceptions.User.NotFound().WithError(err)

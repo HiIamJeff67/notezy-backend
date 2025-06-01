@@ -4,7 +4,7 @@ import (
 	"notezy-backend/global"
 	"time"
 
-	uuid "github.com/jackc/pgx/pgtype/ext/satori-uuid"
+	uuid "github.com/google/uuid"
 )
 
 /* ============================== Schema ============================== */
@@ -13,8 +13,8 @@ type UsersToBadges struct {
 	BadgeId   uuid.UUID `json:"badgeId" gorm:"column:badge_id; primaryKey;"`
 	CreatedAt time.Time `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 
-	User  User  `gorm:"foreignKey:UserID; references:ID; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	Badge Badge `gorm:"foreignKey:BadgeID; references:ID; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	User  User  `gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	Badge Badge `gorm:"foreignKey:BadgeId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
 
 func (UsersToBadges) TableName() string {

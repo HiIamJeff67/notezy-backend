@@ -5,5 +5,5 @@ import (
 )
 
 var (
-	RecentPagesRange = types.Range{Start: 10, Size: 10}
+	RecentPagesRange = types.Range{Start: 8, Size: 8} // server number: 8 - 15 (included)
 )

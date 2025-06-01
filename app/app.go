@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"notezy-backend/app/caches"
 	models "notezy-backend/app/models"
 	"notezy-backend/app/routes"
 	"notezy-backend/global"
@@ -13,6 +14,7 @@ import (
 
 func StartApplication() {
 	models.NotezyDB = models.ConnectToDatabase(global.PostgresDatabaseConfig)
+	caches.ConnectToAllRedis()
 
 	routes.Router = gin.Default()
 	routes.ConfigureRoutes()
@@ -25,6 +27,7 @@ func StartApplication() {
 	}
 
 	models.DisconnectToDatabase(models.NotezyDB)
+	caches.DisconnectToAllRedis()
 }
 
 func MigrateDatabaseSchema(db *gorm.DB) {

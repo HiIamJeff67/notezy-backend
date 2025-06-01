@@ -2,11 +2,13 @@ package models
 
 import (
 	"notezy-backend/app/exceptions"
+	"notezy-backend/app/util"
 	"notezy-backend/global"
 	"time"
 
-	uuid "github.com/jackc/pgx/pgtype/ext/satori-uuid"
+	uuid "github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 /* ============================== Schema ============================== */
@@ -28,14 +30,14 @@ func (UserSetting) TableName() string {
 type CreateUserSettingInput struct {
 	Theme              *Theme    `json:"theme" validate:"istheme" gorm:"column:theme;"`
 	Language           *Language `json:"language" validate:"islanguage" gorm:"column:language;"`
-	GeneralSettingCode *int      `json:"generalSettingCode" validate:"min:0, max:999999999" gorm:"column:general_setting_code;"`
-	PrivacySettingCode *int      `json:"privacySettingCode" validate:"min:0, max:999999999" gorm:"column:privacy_setting_code;"`
+	GeneralSettingCode *int      `json:"generalSettingCode" validate:"min=0,max=999999999" gorm:"column:general_setting_code;"`
+	PrivacySettingCode *int      `json:"privacySettingCode" validate:"min=0,max=999999999" gorm:"column:privacy_setting_code;"`
 }
 type UpdateUserSettingInput struct {
 	Theme              *Theme    `json:"theme" validate:"istheme" gorm:"column:theme;"`
 	Language           *Language `json:"language" validate:"islanguage" gorm:"column:language;"`
-	GeneralSettingCode *int      `json:"generalSettingCode" validate:"min:0, max:999999999" gorm:"column:general_setting_code;"`
-	PrivacySettingCode *int      `json:"privacySettingCode" validate:"min:0, max:999999999" gorm:"column:privacy_setting_code;"`
+	GeneralSettingCode *int      `json:"generalSettingCode" validate:"min=0,max=999999999" gorm:"column:general_setting_code;"`
+	PrivacySettingCode *int      `json:"privacySettingCode" validate:"min=0,max=999999999" gorm:"column:privacy_setting_code;"`
 }
 
 /* ============================== Methods ============================== */
@@ -57,23 +59,12 @@ func CreateUserSettingByUserId(db *gorm.DB, userId uuid.UUID, input CreateUserSe
 		db = NotezyDB
 	}
 
-	newUserSetting := UserSetting{
-		UserId: userId,
-	}
-	if input.Theme != nil {
-		newUserSetting.Theme = *input.Theme
-	}
-	if input.Language != nil {
-		newUserSetting.Language = *input.Language
-	}
-	if input.GeneralSettingCode != nil {
-		newUserSetting.GeneralSettingCode = *input.GeneralSettingCode
-	}
-	if input.PrivacySettingCode != nil {
-		newUserSetting.PrivacySettingCode = *input.PrivacySettingCode
-	}
-
-	result := db.Table(UserSetting{}.TableName()).Create(&newUserSetting)
+	var newUserSetting UserSetting
+	newUserSetting.UserId = userId
+	util.CopyNonNilFields(&newUserSetting, input)
+	result := db.Table(UserSetting{}.TableName()).
+		Clauses(clause.Returning{}).
+		Create(&newUserSetting)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserSetting.FailedToCreate().WithError(err)
 	}
@@ -85,15 +76,12 @@ func UpdateUserSettingByUserId(db *gorm.DB, userId uuid.UUID, input UpdateUserSe
 		db = NotezyDB
 	}
 
-	updatedUserSetting := UserSetting{
-		UserId:             userId,
-		Theme:              *input.Theme,
-		Language:           *input.Language,
-		GeneralSettingCode: *input.GeneralSettingCode,
-		PrivacySettingCode: *input.PrivacySettingCode,
-	}
-
-	result := db.Table(UserSetting{}.TableName()).Create(&updatedUserSetting)
+	var updatedUserSetting UserSetting
+	updatedUserSetting.UserId = userId
+	util.CopyNonNilFields(&updatedUserSetting, input)
+	result := db.Table(UserSetting{}.TableName()).
+		Clauses(clause.Returning{}).
+		Create(&updatedUserSetting)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserSetting.FailedToUpdate().WithError(err)
 	}

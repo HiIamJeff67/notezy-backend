@@ -1,10 +1,9 @@
 package services
 
 import (
-	"sync"
 	"time"
 
-	uuid "github.com/jackc/pgx/pgtype/ext/satori-uuid"
+	uuid "github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
 	"notezy-backend/app/caches"
@@ -12,7 +11,6 @@ import (
 	exceptions "notezy-backend/app/exceptions"
 	models "notezy-backend/app/models"
 	util "notezy-backend/app/util"
-	constants "notezy-backend/global/constants"
 )
 
 /* ============================== Auxiliary Function ============================== */
@@ -32,110 +30,99 @@ func checkPasswordHash(password string, hash string) bool {
 
 /* ============================== Service ============================== */
 func Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Exception) {
-	db := models.NotezyDB
-	tx := db.Begin() // start the transaction
+	// Start transaction
+	tx := models.NotezyDB.Begin()
 
-	hashedPassword, exception := hashPassword(reqDto.CreateUserInputData.Password)
+	hashedPassword, exception := hashPassword(reqDto.Password)
 	if exception != nil {
-		return nil, exception
-	}
-
-	reqDto.CreateUserInputData.Password = hashedPassword
-	newUser, exception := models.CreateUser(tx, reqDto.CreateUserInputData)
-	if exception != nil {
-		return nil, exception
-	}
-
-	accessToken, exception := util.GenerateAccessToken(newUser.Id.UUID.String(), newUser.Name, newUser.Email)
-	if exception != nil {
-		return nil, exception
-	}
-	refreshToken, exception := util.GenerateRefreshToken(newUser.Id.UUID.String(), newUser.Name, newUser.Email)
-	if exception != nil {
-		return nil, exception
-	}
-
-	var wg sync.WaitGroup
-	// once the errCh receive an error, we're going to stop the entire process and do the transaction roll back
-	errCh := make(chan *exceptions.Exception, 1)
-
-	run := func(f func() *exceptions.Exception) {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			if err := f(); err != nil {
-				select {
-				case errCh <- err:
-				default:
-				}
-			}
-		}()
-	}
-
-	// update refreshToken in user table
-	run(func() *exceptions.Exception {
-		_, exception := models.UpdateUserById(tx, newUser.Id, models.UpdateUserInput{RefreshToken: refreshToken})
-		return exception
-	})
-
-	// create user info
-	run(func() *exceptions.Exception {
-		_, exception := models.CreateUserInfoByUserId(tx, newUser.Id, reqDto.CreateUserInfoInputData)
-		return exception
-	})
-
-	// create user account
-	run(func() *exceptions.Exception {
-		_, exception := models.CreateUserAccountByUserId(tx, newUser.Id, reqDto.CreateUserAccountInputData)
-		return exception
-	})
-
-	// create user setting
-	run(func() *exceptions.Exception {
-		_, exception := models.CreateUserSettingByUserId(tx, newUser.Id, reqDto.CreateUserSettingInputData)
-		return exception
-	})
-
-	// store user data into the cache
-	run(func() *exceptions.Exception {
-		exception = caches.SetUserDataCache(
-			newUser.Id,
-			caches.UserDataCache{
-				Name:               newUser.Name,
-				DisplayName:        newUser.DisplayName,
-				Email:              newUser.Email,
-				AccessToken:        *accessToken,
-				Role:               newUser.Role,
-				Plan:               newUser.Plan,
-				Status:             newUser.Status,
-				AvatarURL:          nil,
-				Theme:              models.Theme_System,
-				Language:           models.Language_English,
-				GeneralSettingCode: 0,
-				PrivacySettingCode: 0,
-			},
-		)
-		return exception
-	})
-
-	done := make(chan struct{}) // to indicate a end sign
-	go func() {
-		wg.Wait()
-		errCh <- exceptions.User.FailedToCommitTransaction().WithError(tx.Commit().Error)
-		close(done) // to pass the end sign
-	}()
-
-	select {
-	case err := <-errCh:
 		tx.Rollback()
-		close(errCh)
-		return nil, err
-	case <-time.After(constants.RegisterTimeoutDuration):
-		// deal with timeout exception
-		return nil, exceptions.Util.Timeout(constants.RegisterTimeoutDuration)
-	case <-done: // case when it receive the sign from done channel
-		return &dtos.RegisterResDto{AccessToken: *accessToken, CreatedAt: newUser.CreatedAt}, nil
+		return nil, exception
 	}
+	createUserInputData := models.CreateUserInput{
+		Name:        reqDto.Name,
+		DisplayName: util.GenerateRandomFakeName(),
+		Email:       reqDto.Email,
+		Password:    hashedPassword,
+	}
+	newUser, exception := models.CreateUser(tx, createUserInputData)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	// Generate tokens
+	accessToken, exception := util.GenerateAccessToken(newUser.Id.String(), createUserInputData.Name, createUserInputData.Email)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+	refreshToken, exception := util.GenerateRefreshToken(newUser.Id.String(), createUserInputData.Name, createUserInputData.Email)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	// Update user refresh token
+	_, exception = models.UpdateUserById(tx, newUser.Id, models.UpdateUserInput{RefreshToken: refreshToken})
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	// Create user info
+	_, exception = models.CreateUserInfoByUserId(tx, newUser.Id, models.CreateUserInfoInput{})
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	// Create user account
+	_, exception = models.CreateUserAccountByUserId(tx, newUser.Id, models.CreateUserAccountInput{})
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	// Create user setting
+	_, exception = models.CreateUserSettingByUserId(tx, newUser.Id, models.CreateUserSettingInput{})
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.User.FailedToCommitTransaction().WithError(err)
+	}
+
+	// Create user data cache
+	exception = caches.SetUserDataCache(
+		newUser.Id,
+		caches.UserDataCache{
+			Name:               createUserInputData.Name,
+			DisplayName:        createUserInputData.DisplayName,
+			Email:              createUserInputData.Email,
+			AccessToken:        *accessToken,
+			Role:               newUser.Role,   // generate by gorm tag default value
+			Plan:               newUser.Plan,   // generate by gorm tag default value
+			Status:             newUser.Status, // generate by gorm tag default value
+			AvatarURL:          "",
+			Theme:              models.Theme_System,
+			Language:           models.Language_English,
+			GeneralSettingCode: 0,
+			PrivacySettingCode: 0,
+			UpdatedAt:          time.Now(),
+		},
+	)
+	if exception != nil {
+		exception.Log()
+	}
+
+	return &dtos.RegisterResDto{
+		AccessToken: *accessToken,
+		CreatedAt:   newUser.CreatedAt,
+	}, nil
 }
 
 func Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception) {
@@ -209,11 +196,11 @@ func Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception) 
 		return nil, exceptions.Auth.WrongPassword()
 	}
 
-	accessToken, exception := util.GenerateAccessToken(user.Id.UUID.String(), user.Name, user.Email)
+	accessToken, exception := util.GenerateAccessToken(user.Id.String(), user.Name, user.Email)
 	if exception != nil {
 		return nil, exception
 	}
-	refreshToken, exception := util.GenerateRefreshToken(user.Id.UUID.String(), user.Name, user.Email)
+	refreshToken, exception := util.GenerateRefreshToken(user.Id.String(), user.Name, user.Email)
 	if exception != nil {
 		return nil, exception
 	}

@@ -6,12 +6,12 @@ import (
 	"notezy-backend/app/services"
 
 	"github.com/gin-gonic/gin"
-	uuid "github.com/jackc/pgx/pgtype/ext/satori-uuid"
+	uuid "github.com/google/uuid"
 )
 
 /* ============================== DTO ============================== */
 type UpdateUserDto struct {
-	ID        uuid.UUID
+	Id        uuid.UUID
 	InputData models.UpdateUserInput
 }
 
@@ -38,7 +38,7 @@ type UpdateUserDto struct {
 // 		return
 // 	}
 
-// 	updatedUser, err := models.UpdateUserById(dto.ID, dto.InputData)
+// 	updatedUser, err := models.UpdateUserById(dto.Id, dto.InputData)
 // 	if err != nil {
 // 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 // 		return

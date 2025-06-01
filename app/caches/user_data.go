@@ -3,14 +3,16 @@ package caches
 import (
 	"encoding/json"
 	"fmt"
+	"hash/fnv"
 	"strings"
 	"time"
 
-	uuid "github.com/jackc/pgx/pgtype/ext/satori-uuid"
+	uuid "github.com/google/uuid"
 
 	exceptions "notezy-backend/app/exceptions"
 	logs "notezy-backend/app/logs"
 	models "notezy-backend/app/models"
+	"notezy-backend/app/util"
 	global "notezy-backend/global"
 	types "notezy-backend/global/types"
 )
@@ -23,12 +25,12 @@ type UserDataCache struct {
 	Role               models.UserRole   // user
 	Plan               models.UserPlan   // user
 	Status             models.UserStatus // user
-	AvatarURL          *string           // user info
+	AvatarURL          string            // user info
 	Theme              models.Theme      // user setting
 	Language           models.Language   // user setting
 	GeneralSettingCode int64             // user setting
 	PrivacySettingCode int64             // user setting
-	UpdatedAt          *time.Time        // user or its related models
+	UpdatedAt          time.Time         // cache
 }
 
 type UpdateUserDataCacheDto struct {
@@ -44,7 +46,6 @@ type UpdateUserDataCacheDto struct {
 	Language           *models.Language
 	GeneralSettingCode *int64
 	PrivacySettingCode *int64
-	UpdatedAt          *time.Time
 }
 
 const (
@@ -52,25 +53,22 @@ const (
 )
 
 var (
-	UserDataRange           = types.Range{Start: 0, Size: 10}
+	UserDataRange           = types.Range{Start: 0, Size: 8} // server number: 0 - 7 (included)
 	MaxUserDataServerNumber = UserDataRange.Start + UserDataRange.Size - 1
 )
 
 /* ============================== Auxiliary Function ============================== */
 func hashUserDataIdentifier(identifier uuid.UUID) int {
-	hash := 0
-	bytes := identifier.UUID.Bytes()
-	for _, b := range bytes {
-		hash = (hash*31 + int(b)) % UserDataRange.Size
-	}
-	return hash
+	h := fnv.New32a()
+	h.Write([]byte(identifier.String()))
+	return int(h.Sum32()) % UserDataRange.Size
 }
 
 func formatKey(id uuid.UUID) string {
-	return fmt.Sprintf("UserId:%s", id.UUID.String())
+	return fmt.Sprintf("UserId:%s", id.String())
 }
 
-func isValidUserDataCache(userDataCache *UserDataCache) bool {
+func isValidUserCacheData(userDataCache *UserDataCache) bool {
 	if strings.ReplaceAll(userDataCache.Name, " ", "") == "" ||
 		strings.ReplaceAll(userDataCache.DisplayName, " ", "") == "" ||
 		strings.ReplaceAll(userDataCache.Email, " ", "") == "" ||
@@ -109,7 +107,7 @@ func GetUserDataCache(id uuid.UUID) (*UserDataCache, *exceptions.Exception) {
 
 /* ============================== Setter ============================== */
 func SetUserDataCache(id uuid.UUID, userData UserDataCache) *exceptions.Exception {
-	if !isValidUserDataCache(&userData) { // strictly check when setting the cache data
+	if !isValidUserCacheData(&userData) { // strictly check when setting the cache data
 		return exceptions.Cache.InvalidCacheDataStruct(userData)
 	}
 
@@ -120,8 +118,6 @@ func SetUserDataCache(id uuid.UUID, userData UserDataCache) *exceptions.Exceptio
 		return exceptions.Cache.ClientInstanceDoesNotExist(serverNumber)
 	}
 
-	currentTime := time.Now()
-	userData.UpdatedAt = &currentTime
 	userDataJson, err := json.Marshal(userData)
 	if err != nil {
 		return exceptions.Cache.FailedToConvertStructToJson().WithError(err)
@@ -146,15 +142,19 @@ func UpdateUserDataCache(id uuid.UUID, dto UpdateUserDataCacheDto) *exceptions.E
 		return exceptions.Cache.ClientInstanceDoesNotExist(serverNumber)
 	}
 
-	currentTime := time.Now()
-	dto.UpdatedAt = &currentTime
-	dtoJson, err := json.Marshal(dto)
+	userData, exception := GetUserDataCache(id)
+	if exception != nil {
+		return exception
+	}
+	userData.UpdatedAt = time.Now()
+	util.CopyNonNilFields(&userData, dto)
+	userDataJson, err := json.Marshal(userData)
 	if err != nil {
 		return exceptions.Cache.FailedToConvertStructToJson().WithError(err)
 	}
 
 	formattedKey := formatKey(id)
-	err = redisClient.Set(formattedKey, string(dtoJson), _userDataCacheExpiresIn).Err()
+	err = redisClient.Set(formattedKey, string(userDataJson), _userDataCacheExpiresIn).Err()
 	if err != nil {
 		return exceptions.Cache.FailedToUpdate(global.ValidCachePurpose_UserData).WithError(err)
 	}

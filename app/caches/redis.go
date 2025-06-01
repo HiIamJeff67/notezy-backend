@@ -14,13 +14,15 @@ import (
 )
 
 var (
-	RedisClientMap             map[int]*redis.Client
-	RedisClientToConfig        map[*redis.Client]global.CacheManagerConfig
-	PurposeToServerNumberRange = map[global.ValidCachePurpose]types.Range{
-		global.ValidCachePurpose_UserData:    UserDataRange,    // server number: 0 - 9 (included)
-		global.ValidCachePurpose_RecentPages: RecentPagesRange, // server number: 10 - 19 (included)
+	RedisClientMap             map[int]*redis.Client                       = make(map[int]*redis.Client)
+	RedisClientToConfig        map[*redis.Client]global.CacheManagerConfig = make(map[*redis.Client]global.CacheManagerConfig)
+	PurposeToServerNumberRange                                             = map[global.ValidCachePurpose]types.Range{
+		global.ValidCachePurpose_UserData:    UserDataRange,    // server number: 0 - 7 (included)
+		global.ValidCachePurpose_RecentPages: RecentPagesRange, // server number: 8 - 15 (included)
 	}
 	Ctx = context.Background()
+
+	redisMapMutex sync.Mutex // since the map in go is not thread-safe, we need this mutex lock
 )
 
 func ConnectToRedis(config global.CacheManagerConfig) *redis.Client {
@@ -34,6 +36,8 @@ func ConnectToRedis(config global.CacheManagerConfig) *redis.Client {
 		exceptions.Cache.FailedToConnectToServer(config.DB).WithError(err).Log().Panic()
 	}
 
+	redisMapMutex.Lock()
+	defer redisMapMutex.Unlock()
 	if _, ok := RedisClientToConfig[redisClient]; !ok {
 		logs.FInfo("Storing redis client server of %s into the RedisClientToConfig...", strconv.Itoa(config.DB))
 		RedisClientToConfig[redisClient] = config
@@ -60,6 +64,8 @@ func DisconnectToRedis(redisClient *redis.Client) bool {
 		return false // since the server is just going to stop anyway, we don't need to panic here
 	}
 
+	redisMapMutex.Lock()
+	defer redisMapMutex.Unlock()
 	logs.FInfo("Deleting redis client server of %s into the RedisClientToConfig...", strconv.Itoa(config.DB))
 	delete(RedisClientToConfig, redisClient)
 	logs.FInfo("Deleting redis client server of %s into the RedisClientMap...", strconv.Itoa(config.DB))

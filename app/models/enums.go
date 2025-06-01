@@ -11,7 +11,7 @@ const (
 var AllUserRoles = []UserRole{
 	UserRole_Admin,
 	UserRole_Noraml,
-	UserRole_Noraml,
+	UserRole_Guest,
 }
 var AllUserRoleStrings = []string{
 	string(UserRole_Admin),
@@ -85,6 +85,7 @@ var AllUserGenderStrings = []string{
 type Country string
 
 const (
+	Country_Default               Country = "Default" // null value
 	Country_Taiwan                Country = "Taiwan"
 	Country_Japan                 Country = "Japan"
 	Country_Malaysia              Country = "Malaysia"
@@ -97,6 +98,7 @@ const (
 )
 
 var AllCountries = []Country{
+	Country_Default,
 	Country_Taiwan,
 	Country_Japan,
 	Country_Malaysia,
@@ -108,6 +110,7 @@ var AllCountries = []Country{
 	Country_Canada,
 }
 var AllCountryStrings = []string{
+	string(Country_Default),
 	string(Country_Taiwan),
 	string(Country_Japan),
 	string(Country_Malaysia),
@@ -122,6 +125,7 @@ var AllCountryStrings = []string{
 type CountryCode string
 
 const (
+	CountryCode_Default       CountryCode = "Default" // null value
 	CountryCode_Taiwan        CountryCode = "+886"
 	CountryCode_Japan         CountryCode = "+81"
 	CountryCode_Malaysia      CountryCode = "+60"
@@ -133,6 +137,7 @@ const (
 )
 
 var AllCountryCodes = []CountryCode{
+	CountryCode_Default,
 	CountryCode_Taiwan,
 	CountryCode_Japan,
 	CountryCode_Malaysia,
@@ -143,6 +148,7 @@ var AllCountryCodes = []CountryCode{
 	CountryCode_Australia,
 }
 var AllCountryCodeStrings = []string{
+	string(CountryCode_Default),
 	string(CountryCode_Taiwan),
 	string(CountryCode_Japan),
 	string(CountryCode_Malaysia),

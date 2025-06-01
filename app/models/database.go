@@ -87,7 +87,7 @@ func TruncateTablesInDatabase(tableName global.ValidTableName, db *gorm.DB) bool
 }
 
 func MigrateToDatabase(db *gorm.DB) bool {
-	logs.Info("Migrating enums found in models/index.go ...")
+	logs.Info("Migrating enums found in models/migration.go ...")
 	for name, values := range MigratingEnums {
 		name = strings.ToLower(name)
 
@@ -159,7 +159,7 @@ func MigrateToDatabase(db *gorm.DB) bool {
 		}
 	}
 
-	logs.Info("Migrating tables found in models/index.go ...")
+	logs.Info("Migrating tables found in models/migration.go ...")
 	for _, table := range MigratingTables {
 		if err := db.AutoMigrate(table); err != nil {
 			logs.FError("Failed to migrate table: %v", err)

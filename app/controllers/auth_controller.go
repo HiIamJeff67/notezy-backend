@@ -18,7 +18,11 @@ func Register(ctx *gin.Context) {
 
 	resDto, exception := services.Register(&reqDto)
 	if exception != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": exception.Log().Error})
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"error": exception.GetString(),
+			"code":  exception.Code,
+		})
+		exception.Log()
 		return
 	}
 

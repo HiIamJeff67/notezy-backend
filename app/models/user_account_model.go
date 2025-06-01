@@ -2,22 +2,24 @@ package models
 
 import (
 	"notezy-backend/app/exceptions"
+	"notezy-backend/app/util"
 	"notezy-backend/global"
 	"time"
 
-	uuid "github.com/jackc/pgx/pgtype/ext/satori-uuid"
+	uuid "github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 /* ============================== Schema ============================== */
 type UserAccount struct {
-	Id                uuid.UUID    `json:"id" gorm:"column:id; type:uuid; primaryKey; not null; default:gen_random_uuid();"`
-	UserId            uuid.UUID    `json:"userId" gorm:"column:user_id; type:uuid; not null; unique;"`
-	CountryCode       *CountryCode `json:"countryCound" gorm:"column:country_code; type:CountryCode; not null;"`
-	PhoneNumber       *string      `json:"phoneNumber" gorm:"column:phone_number; unique;"`
-	GoogleCredential  *string      `json:"googleCrendential" gorm:"column:google_credential; unique;"`
-	DiscordCredential *string      `json:"discordCrendential" gorm:"column:discord_credential; unique;"`
-	UpdatedAt         time.Time    `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
+	Id                uuid.UUID   `json:"id" gorm:"column:id; type:uuid; primaryKey; not null; default:gen_random_uuid();"`
+	UserId            uuid.UUID   `json:"userId" gorm:"column:user_id; type:uuid; not null; unique;"`
+	CountryCode       CountryCode `json:"countryCound" gorm:"column:country_code; type:CountryCode; not null; default:'Default'"`
+	PhoneNumber       string      `json:"phoneNumber" gorm:"column:phone_number; unique; not null; default:''"`
+	GoogleCredential  string      `json:"googleCrendential" gorm:"column:google_credential; unique; not null; default:''"`
+	DiscordCredential string      `json:"discordCrendential" gorm:"column:discord_credential; unique; not null; default:''"`
+	UpdatedAt         time.Time   `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 }
 
 func (UserAccount) TableName() string {
@@ -26,17 +28,17 @@ func (UserAccount) TableName() string {
 
 /* ============================== Input ============================== */
 type CreateUserAccountInput struct {
-	CountryCode       *CountryCode `json:"countryCode" validate:"iscountrycode" gorm:"column:country_code;"`
-	PhoneNumber       *string      `json:"phoneNumber" validate:"max:0, max:15" gorm:"column:phone_number;"`
-	GoogleCredential  *string      `json:"googleCrendential" gorm:"column:google_credential;"`
-	DiscordCredential *string      `json:"discordCrendential" gorm:"column:discord_credential;"`
+	CountryCode       *CountryCode `json:"countryCode" validate:"omitempty,iscountrycode" gorm:"column:country_code;"`
+	PhoneNumber       *string      `json:"phoneNumber" validate:"omitempty,max=0,max=15" gorm:"column:phone_number;"`
+	GoogleCredential  *string      `json:"googleCrendential" validate:"omitempty" gorm:"column:google_credential;"`
+	DiscordCredential *string      `json:"discordCrendential" validate:"omitempty" gorm:"column:discord_credential;"`
 }
 
 type UpdateUserAccountInput struct {
-	CountryCode       *CountryCode `json:"countryCode" validate:"iscountrycode" gorm:"column:country_code;"`
-	PhoneNumber       *string      `json:"phoneNumber" validate:"max:0, max:15" gorm:"column:phone_number;"`
-	GoogleCredential  *string      `json:"googleCrendential" gorm:"column:google_credential;"`
-	DiscordCredential *string      `json:"discordCrendential" gorm:"column:discord_credential;"`
+	CountryCode       *CountryCode `json:"countryCode" validate:"omitempty,iscountrycode" gorm:"column:country_code;"`
+	PhoneNumber       *string      `json:"phoneNumber" validate:"omitempty,max=0,max=15" gorm:"column:phone_number;"`
+	GoogleCredential  *string      `json:"googleCrendential" validate:"omitempty" gorm:"column:google_credential;"`
+	DiscordCredential *string      `json:"discordCrendential" validate:"omitempty" gorm:"column:discord_credential;"`
 }
 
 /* ============================== Methods ============================== */
@@ -71,15 +73,12 @@ func CreateUserAccountByUserId(db *gorm.DB, userId uuid.UUID, input CreateUserAc
 		db = NotezyDB
 	}
 
-	newUserAccount := UserAccount{
-		UserId:            userId,
-		CountryCode:       input.CountryCode,
-		PhoneNumber:       input.PhoneNumber,
-		GoogleCredential:  input.GoogleCredential,
-		DiscordCredential: input.DiscordCredential,
-	}
-
-	result := db.Table(UserAccount{}.TableName()).Create(&newUserAccount)
+	var newUserAccount UserAccount
+	newUserAccount.UserId = userId
+	util.CopyNonNilFields(&newUserAccount, input)
+	result := db.Table(UserAccount{}.TableName()).
+		Clauses(clause.Returning{}).
+		Create(&newUserAccount)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserAccount.FailedToCreate().WithError(err)
 	}
@@ -91,14 +90,11 @@ func UpdateUserAccountByUserId(db *gorm.DB, userId uuid.UUID, input UpdateUserAc
 		db = NotezyDB
 	}
 
-	updatedUserAccount := UserAccount{
-		CountryCode:       input.CountryCode,
-		PhoneNumber:       input.PhoneNumber,
-		GoogleCredential:  input.GoogleCredential,
-		DiscordCredential: input.DiscordCredential,
-	}
-
-	result := db.Table(UserAccount{}.TableName()).Where("user_id = ?", userId).Updates(&input)
+	var updatedUserAccount UserAccount
+	util.CopyNonNilFields(&updatedUserAccount, input)
+	result := db.Table(UserAccount{}.TableName()).Where("user_id = ?", userId).
+		Clauses(clause.Returning{}).
+		Updates(&input)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserAccount.FailedToUpdate().WithError(err)
 	}

@@ -1,15 +1,13 @@
 package dtos
 
 import (
-	"notezy-backend/app/models"
 	"time"
 )
 
 type RegisterReqDto struct {
-	CreateUserInputData        models.CreateUserInput        `json:"createUserInputData"`
-	CreateUserInfoInputData    models.CreateUserInfoInput    `json:"createUserInfoInputData"`
-	CreateUserAccountInputData models.CreateUserAccountInput `json:"createUserAccountInputData"`
-	CreateUserSettingInputData models.CreateUserSettingInput `json:"createUserSettingInputData"`
+	Name     string `json:"name" validate:"required"`
+	Email    string `json:"email" validate:"required"`
+	Password string `json:"password" validate:"required,min=8,max=32,isstrongpassword"`
 }
 
 type RegisterResDto struct {
@@ -18,10 +16,10 @@ type RegisterResDto struct {
 }
 
 type LoginReqDto struct {
-	AccessToken  *string `json:"accessToken"`
-	RefreshToken *string `json:"refreshToken"`
-	Account      *string `json:"account"`
-	Password     *string `json:"password" validate:"min:8, max:255, isstrongpassword"`
+	AccessToken  *string `json:"accessToken" validate:"omitempty"`
+	RefreshToken *string `json:"refreshToken" validate:"omitempty"`
+	Account      *string `json:"account" validate:"omitempty"`
+	Password     *string `json:"password" validate:"omitempty,min=8,max=32,isstrongpassword"`
 }
 
 type LoginResDto struct {
