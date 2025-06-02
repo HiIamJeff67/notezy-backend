@@ -20,7 +20,7 @@ type User struct {
 	DisplayName  string     `json:"displayName" gorm:"column:display_name; not null; size:32;"`
 	Email        string     `json:"email" gorm:"column:email; unique; not null;"`
 	Password     string     `json:"password" gorm:"column:password; not null; size:1024;"` // since we store the hashed password which is quite long
-	RefreshToken string     `json:"refreshToken" gorm:"column:refresh_token; not null; default:''"`
+	RefreshToken string     `json:"refreshToken" gorm:"column:refresh_token; not null; default:'';"`
 	Role         UserRole   `json:"role" gorm:"column:role; type:UserRole; not null; default:'Guest';"`
 	Plan         UserPlan   `json:"plan" gorm:"column:plan; type:UserPlan; not null; default:'Free';"`
 	Status       UserStatus `json:"status" gorm:"column:status; type:UserStatus; not null; default:'Online';"`
@@ -65,7 +65,9 @@ func GetUserById(db *gorm.DB, id uuid.UUID) (*User, *exceptions.Exception) {
 	}
 
 	user := User{}
-	result := db.Table(User{}.TableName()).Where("id = ?", id).First(&user)
+	result := db.Table(User{}.TableName()).
+		Where("id = ?", id).
+		First(&user)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.NotFound().WithError(err)
 	}
@@ -79,7 +81,9 @@ func GetUserByName(db *gorm.DB, name string) (*User, *exceptions.Exception) {
 	}
 
 	user := User{}
-	result := db.Table(User{}.TableName()).Where("name = ?", name).First(&user)
+	result := db.Table(User{}.TableName()).
+		Where("name = ?", name).
+		First(&user)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.NotFound().WithError(err)
 	}
@@ -93,7 +97,9 @@ func GetUserByEmail(db *gorm.DB, email string) (*User, *exceptions.Exception) {
 	}
 
 	user := User{}
-	result := db.Table(User{}.TableName()).Where("email = ?", email).First(&user)
+	result := db.Table(User{}.TableName()).
+		Where("email = ?", email).
+		First(&user)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.NotFound().WithError(err)
 	}
@@ -105,15 +111,17 @@ func GetAllUsers(db *gorm.DB) (*[]User, *exceptions.Exception) {
 	if db == nil {
 		db = NotezyDB
 	}
+
 	users := []User{}
-	result := db.Table(User{}.TableName()).Find(&users)
+	result := db.Table(User{}.TableName()).
+		Find(&users)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.NotFound().WithError(result.Error)
 	}
 	return &users, nil
 }
 
-func CreateUser(db *gorm.DB, input CreateUserInput) (*User, *exceptions.Exception) {
+func CreateUser(db *gorm.DB, input CreateUserInput) (*uuid.UUID, *exceptions.Exception) {
 	if db == nil {
 		db = NotezyDB
 	}
@@ -122,20 +130,19 @@ func CreateUser(db *gorm.DB, input CreateUserInput) (*User, *exceptions.Exceptio
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
+	// note that the create operation in gorm will NOT return anything
+	// but the default value we set in gorm field in the above struct will be returned if we specified it in the "returning"
 	var newUser User
 	util.CopyNonNilFields(&newUser, input)
 	result := db.Table(User{}.TableName()).
 		Clauses(clause.Returning{Columns: []clause.Column{
 			{Name: "id"}, // for the following procedure such as create user info, create user account, generate refresh token etc..
-			{Name: "name"},
-			{Name: "display_name"},
-			{Name: "email"},
 		}}).
 		Create(&newUser)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.FailedToCreate().WithError(err)
 	}
-	return &newUser, nil
+	return &newUser.Id, nil
 }
 
 func UpdateUserById(db *gorm.DB, id uuid.UUID, input UpdateUserInput) (*User, *exceptions.Exception) {
@@ -148,11 +155,12 @@ func UpdateUserById(db *gorm.DB, id uuid.UUID, input UpdateUserInput) (*User, *e
 	}
 
 	var updatedUser User
+	updatedUser.UpdatedAt = time.Now()
 	util.CopyNonNilFields(&updatedUser, input)
-	result := db.Table(User{}.TableName()).Where("id = ?", id).
+	result := db.Table(User{}.TableName()).
+		Where("id = ?", id).
 		Clauses(clause.Returning{}).
 		Updates(&updatedUser)
-
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.FailedToUpdate().WithError(err)
 	}
@@ -167,7 +175,8 @@ func DeleteUserById(db *gorm.DB, id uuid.UUID) (*User, *exceptions.Exception) {
 	tx := db.Begin()
 
 	deletedUser := User{}
-	result := tx.Table(User{}.TableName()).Where("id = ?", id).
+	result := tx.Table(User{}.TableName()).
+		Where("id = ?", id).
 		Clauses(clause.Returning{}).
 		First(&deletedUser)
 	if err := result.Error; err != nil {
@@ -175,7 +184,8 @@ func DeleteUserById(db *gorm.DB, id uuid.UUID) (*User, *exceptions.Exception) {
 		return nil, exceptions.User.NotFound().WithError(err)
 	}
 
-	result = tx.Table(User{}.TableName()).Delete(&deletedUser)
+	result = tx.Table(User{}.TableName()).
+		Delete(&deletedUser)
 	if err := result.Error; err != nil {
 		tx.Rollback()
 		return nil, exceptions.User.FailedToDelete().WithError(err)

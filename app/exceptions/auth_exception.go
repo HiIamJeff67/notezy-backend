@@ -12,9 +12,9 @@ const (
 )
 
 const (
-	ExceptionReason_WrongPassword     ExceptionReason = "Wrong_Password"
-	ExceptionReason_WrongAccessToken  ExceptionReason = "Wrong_AccessToken"
-	ExceptionReason_WrongRefreshToken ExceptionReason = "Wrong_RefreshToken"
+	exceptionReason_WrongPassword     ExceptionReason = "Wrong_Password"
+	exceptionReason_WrongAccessToken  ExceptionReason = "Wrong_AccessToken"
+	exceptionReason_WrongRefreshToken ExceptionReason = "Wrong_RefreshToken"
 )
 
 type AuthExceptionDomain struct {
@@ -26,11 +26,12 @@ var Auth = &AuthExceptionDomain{
 }
 
 /* ============================== Handling Invalid From ============================== */
+
 func (d *AuthExceptionDomain) WrongPassword() *Exception {
 	return &Exception{
 		Code:           ExceptionBaseCode_Auth + 1,
 		Prefix:         ExceptionPrefix_Auth,
-		Reason:         ExceptionReason_WrongPassword,
+		Reason:         exceptionReason_WrongPassword,
 		Message:        "The password is not match",
 		HTTPStatusCode: http.StatusUnauthorized,
 	}
@@ -40,7 +41,7 @@ func (d *AuthExceptionDomain) WrongAccessToken() *Exception {
 	return &Exception{
 		Code:           ExceptionBaseCode_Auth + 2,
 		Prefix:         ExceptionPrefix_Auth,
-		Reason:         ExceptionReason_WrongAccessToken,
+		Reason:         exceptionReason_WrongAccessToken,
 		Message:        "The access token is not match or expired",
 		HTTPStatusCode: http.StatusUnauthorized,
 	}
@@ -50,7 +51,7 @@ func (d *AuthExceptionDomain) WrongRefreshToken() *Exception {
 	return &Exception{
 		Code:           ExceptionBaseCode_Auth + 3,
 		Prefix:         ExceptionPrefix_Auth,
-		Reason:         ExceptionReason_WrongRefreshToken,
+		Reason:         exceptionReason_WrongRefreshToken,
 		Message:        "The refresh token is not match or expired",
 		HTTPStatusCode: http.StatusUnauthorized,
 	}

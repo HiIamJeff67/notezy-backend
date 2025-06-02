@@ -1,5 +1,23 @@
 package models
 
+import (
+	"database/sql/driver"
+	"fmt"
+	"reflect"
+)
+
+type Enum interface {
+	Name() string
+	Scan(value any) error
+	Value() (driver.Value, error)
+}
+
+func _scanError(value any, e Enum) error {
+	// A Helper Function to Get the Error
+	return fmt.Errorf("failed to scan %T into %s", value, e.Name())
+}
+
+/* ============================== UserRole Definition ============================== */
 type UserRole string
 
 const (
@@ -7,6 +25,28 @@ const (
 	UserRole_Noraml UserRole = "Normal"
 	UserRole_Guest  UserRole = "Guest"
 )
+
+func (r *UserRole) Name() string {
+	return reflect.TypeOf(r).Name()
+}
+
+// Scan() makes UserRole support automatically convert type from string in database to UserRole in codebase
+func (r *UserRole) Scan(value any) error {
+	switch v := value.(type) {
+	case []byte:
+		*r = UserRole(string(v))
+		return nil
+	case string:
+		*r = UserRole(v)
+		return nil
+	}
+	return _scanError(value, r)
+}
+
+// Value() makes UserRole support automatically convert from UserRole in codebase to string in database
+func (r UserRole) Value() (driver.Value, error) {
+	return string(r), nil
+}
 
 var AllUserRoles = []UserRole{
 	UserRole_Admin,
@@ -19,6 +59,7 @@ var AllUserRoleStrings = []string{
 	string(UserRole_Guest),
 }
 
+/* ============================== UserPlan Definition ============================== */
 type UserPlan string
 
 const (
@@ -27,6 +68,26 @@ const (
 	UserPlan_Pro        UserPlan = "Pro"
 	UserPlan_Free       UserPlan = "Free"
 )
+
+func (p *UserPlan) Name() string {
+	return reflect.TypeOf(p).Name()
+}
+
+func (p *UserPlan) Scan(value any) error {
+	switch v := value.(type) {
+	case []byte:
+		*p = UserPlan(string(v))
+		return nil
+	case string:
+		*p = UserPlan(v)
+		return nil
+	}
+	return _scanError(value, p)
+}
+
+func (p UserPlan) Value() (driver.Value, error) {
+	return string(p), nil
+}
 
 var AllUserPlans = []UserPlan{
 	UserPlan_Enterprise,
@@ -41,6 +102,7 @@ var AllUserPlanStrings = []string{
 	string(UserPlan_Free),
 }
 
+/* ============================== UserStatus Definition ============================== */
 type UserStatus string
 
 const (
@@ -49,6 +111,26 @@ const (
 	UserStatus_DoNotDisturb UserStatus = "DoNotDisturb"
 	UserStatus_Offline      UserStatus = "Offline"
 )
+
+func (s *UserStatus) Name() string {
+	return reflect.TypeOf(s).Name()
+}
+
+func (s *UserStatus) Scan(value any) error {
+	switch v := value.(type) {
+	case []byte:
+		*s = UserStatus(string(v))
+		return nil
+	case string:
+		*s = UserStatus(v)
+		return nil
+	}
+	return _scanError(value, s)
+}
+
+func (s UserStatus) Value() (driver.Value, error) {
+	return string(s), nil
+}
 
 var AllUserStatuses = []UserStatus{
 	UserStatus_Online,
@@ -63,6 +145,7 @@ var AllUserStatusStrings = []string{
 	string(UserStatus_Offline),
 }
 
+/* ============================== UserGener Definition ============================== */
 type UserGender string
 
 const (
@@ -70,6 +153,26 @@ const (
 	UserGender_Female         UserGender = "Female"
 	UserGender_PreferNotToSay UserGender = "PreferNotToSay"
 )
+
+func (g *UserGender) Name() string {
+	return reflect.TypeOf(g).Name()
+}
+
+func (g *UserGender) Scan(value any) error {
+	switch v := value.(type) {
+	case []byte:
+		*g = UserGender(string(v))
+		return nil
+	case string:
+		*g = UserGender(v)
+		return nil
+	}
+	return _scanError(value, g)
+}
+
+func (g UserGender) Value() (driver.Value, error) {
+	return string(g), nil
+}
 
 var AllUserGenders = []UserGender{
 	UserGender_Male,
@@ -82,6 +185,7 @@ var AllUserGenderStrings = []string{
 	string(UserGender_PreferNotToSay),
 }
 
+/* ============================== Country Definition ============================== */
 type Country string
 
 const (
@@ -96,6 +200,26 @@ const (
 	Country_Australia             Country = "Australia"
 	Country_Canada                Country = "Canada"
 )
+
+func (c *Country) Name() string {
+	return reflect.TypeOf(c).Name()
+}
+
+func (c *Country) Scan(value any) error {
+	switch v := value.(type) {
+	case []byte:
+		*c = Country(string(v))
+		return nil
+	case string:
+		*c = Country(v)
+		return nil
+	}
+	return _scanError(value, c)
+}
+
+func (c Country) Value() (driver.Value, error) {
+	return string(c), nil
+}
 
 var AllCountries = []Country{
 	Country_Default,
@@ -122,6 +246,7 @@ var AllCountryStrings = []string{
 	string(Country_Canada),
 }
 
+/* ============================== CountryCode Definition ============================== */
 type CountryCode string
 
 const (
@@ -135,6 +260,26 @@ const (
 	CountryCode_UnitedKingdom CountryCode = "+44"
 	CountryCode_Australia     CountryCode = "+61"
 )
+
+func (cc *CountryCode) Name() string {
+	return reflect.TypeOf(cc).Name()
+}
+
+func (cc *CountryCode) Scan(value any) error {
+	switch v := value.(type) {
+	case []byte:
+		*cc = CountryCode(string(v))
+		return nil
+	case string:
+		*cc = CountryCode(v)
+		return nil
+	}
+	return _scanError(value, cc)
+}
+
+func (cc CountryCode) Value() (driver.Value, error) {
+	return string(cc), nil
+}
 
 var AllCountryCodes = []CountryCode{
 	CountryCode_Default,
@@ -159,6 +304,7 @@ var AllCountryCodeStrings = []string{
 	string(CountryCode_Australia),
 }
 
+/* ============================== Theme Definition ============================== */
 type Theme string
 
 const (
@@ -166,6 +312,26 @@ const (
 	Theme_Dark   Theme = "Dark"
 	Theme_System Theme = "System"
 )
+
+func (t *Theme) Name() string {
+	return reflect.TypeOf(t).Name()
+}
+
+func (t *Theme) Scan(value any) error {
+	switch v := value.(type) {
+	case []byte:
+		*t = Theme(string(v))
+		return nil
+	case string:
+		*t = Theme(v)
+		return nil
+	}
+	return _scanError(value, t)
+}
+
+func (t Theme) Value() (driver.Value, error) {
+	return string(t), nil
+}
 
 var AllThemes = []Theme{
 	Theme_Light,
@@ -178,6 +344,7 @@ var AllThemeStrings = []string{
 	string(Theme_System),
 }
 
+/* ============================== Language Definition ============================== */
 type Language string
 
 const (
@@ -186,6 +353,26 @@ const (
 	Language_SimpleChinese      Language = "SimpleChinese"
 	Language_Japanese           Language = "Japanese"
 )
+
+func (l *Language) Name() string {
+	return reflect.TypeOf(l).Name()
+}
+
+func (l *Language) Scan(value any) error {
+	switch v := value.(type) {
+	case []byte:
+		*l = Language(string(v))
+		return nil
+	case string:
+		*l = Language(v)
+		return nil
+	}
+	return _scanError(value, l)
+}
+
+func (l Language) Value() (driver.Value, error) {
+	return string(l), nil
+}
 
 var AllLanguages = []Language{
 	Language_English,
@@ -200,6 +387,7 @@ var AllLanguageStrings = []string{
 	string(Language_Japanese),
 }
 
+/* ============================== BadgeType Definition ============================== */
 type BadgeType string
 
 const (
@@ -209,6 +397,26 @@ const (
 	BadgeType_Bronze  BadgeType = "Bronze"
 	BadgeType_Steel   BadgeType = "Steel"
 )
+
+func (bt *BadgeType) Name() string {
+	return reflect.TypeOf(bt).Name()
+}
+
+func (bt *BadgeType) Scan(value any) error {
+	switch v := value.(type) {
+	case []byte:
+		*bt = BadgeType(string(v))
+		return nil
+	case string:
+		*bt = BadgeType(v)
+		return nil
+	}
+	return _scanError(value, bt)
+}
+
+func (bt BadgeType) Value() (driver.Value, error) {
+	return string(bt), nil
+}
 
 var AllBadgeTypes = []BadgeType{
 	BadgeType_Diamond,
@@ -225,7 +433,7 @@ var AllBadgeTypeStrings = []string{
 	string(BadgeType_Steel),
 }
 
-/* ============================== Validator for Validating Enums ============================== */
+/* ========================= Validator for Validating Enums ========================= */
 func IsValidEnumValues[EnumValue interface {
 	UserRole |
 		UserPlan |

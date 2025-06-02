@@ -29,15 +29,16 @@ const (
 
 // all the domain prefix shown here, defined in their corresponded files
 const (
-// ExceptionPrefix_User ExceptionPrefix = "User"
-// ExceptionPrefix_UserInfo ExceptionPrefix = "UserInfo"
-// ExceptionPrefix_UserAccount ExceptionPrefix = "UserAccount"
-// ExceptionPrefix_UserSetting ExceptionPrefix = "UserSetting"
-// ExceptionPrefix_UsersToBadges ExceptionPrefix = "UsersToBadges"
-// ExceptionPrefix_Badge ExceptionPrefix = "Badge"
+// ExceptionPrefix_User ExceptionPrefix = "User"                         1
+// ExceptionPrefix_UserInfo ExceptionPrefix = "UserInfo"                 2
+// ExceptionPrefix_UserAccount ExceptionPrefix = "UserAccount"           3
+// ExceptionPrefix_UserSetting ExceptionPrefix = "UserSetting"           4
+// ExceptionPrefix_UsersToBadges ExceptionPrefix = "UsersToBadges"       5
+// ExceptionPrefix_Badge ExceptionPrefix = "Badge"                       6
 
-// ExceptionPrefix_Cache ExceptionPrefix = "Cache"
-// ExceptionPrefix_Util ExceptionPrefix = "Util"
+// ExceptionPrefix_Cache ExceptionPrefix = "Cache"	   					 1
+// ExceptionPrefix_Util ExceptionPrefix = "Util"       					 2
+// ExceptionPrefix_Auth       ExceptionPrefix = "Auth" 					 3
 )
 
 // global reason for common domain use

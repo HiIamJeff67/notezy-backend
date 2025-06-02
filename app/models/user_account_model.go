@@ -1,9 +1,9 @@
 package models
 
 import (
-	"notezy-backend/app/exceptions"
-	"notezy-backend/app/util"
-	"notezy-backend/global"
+	exceptions "notezy-backend/app/exceptions"
+	util "notezy-backend/app/util"
+	global "notezy-backend/global"
 	"time"
 
 	uuid "github.com/google/uuid"
@@ -48,10 +48,13 @@ func GetUserAccountByUserId(db *gorm.DB, userId uuid.UUID) (*UserAccount, *excep
 	}
 
 	userAccount := UserAccount{}
-	result := db.Table(UserAccount{}.TableName()).Where("user_id = ?", userId).First(&userAccount)
+	result := db.Table(UserAccount{}.TableName()).
+		Where("user_id = ?", userId).
+		First(&userAccount)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserAccount.NotFound().WithError(err)
 	}
+
 	return &userAccount, nil
 }
 
@@ -68,7 +71,7 @@ func GetAllUserAccount(db *gorm.DB) (*[]UserAccount, *exceptions.Exception) {
 	return &userAccounts, nil
 }
 
-func CreateUserAccountByUserId(db *gorm.DB, userId uuid.UUID, input CreateUserAccountInput) (*UserAccount, *exceptions.Exception) {
+func CreateUserAccountByUserId(db *gorm.DB, userId uuid.UUID, input CreateUserAccountInput) (*uuid.UUID, *exceptions.Exception) {
 	if db == nil {
 		db = NotezyDB
 	}
@@ -77,12 +80,14 @@ func CreateUserAccountByUserId(db *gorm.DB, userId uuid.UUID, input CreateUserAc
 	newUserAccount.UserId = userId
 	util.CopyNonNilFields(&newUserAccount, input)
 	result := db.Table(UserAccount{}.TableName()).
-		Clauses(clause.Returning{}).
+		Clauses(clause.Returning{Columns: []clause.Column{
+			{Name: "id"},
+		}}).
 		Create(&newUserAccount)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserAccount.FailedToCreate().WithError(err)
 	}
-	return &newUserAccount, nil
+	return &newUserAccount.Id, nil
 }
 
 func UpdateUserAccountByUserId(db *gorm.DB, userId uuid.UUID, input UpdateUserAccountInput) (*UserAccount, *exceptions.Exception) {
@@ -92,12 +97,14 @@ func UpdateUserAccountByUserId(db *gorm.DB, userId uuid.UUID, input UpdateUserAc
 
 	var updatedUserAccount UserAccount
 	util.CopyNonNilFields(&updatedUserAccount, input)
-	result := db.Table(UserAccount{}.TableName()).Where("user_id = ?", userId).
+	result := db.Table(UserAccount{}.TableName()).
+		Where("user_id = ?", userId).
 		Clauses(clause.Returning{}).
 		Updates(&input)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserAccount.FailedToUpdate().WithError(err)
 	}
+
 	return &updatedUserAccount, nil
 }
 

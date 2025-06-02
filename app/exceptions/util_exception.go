@@ -12,13 +12,13 @@ const (
 )
 
 const (
-	ExceptionReason_FailedToGenerateHashValue     ExceptionReason = "Failed_To_Generate_Hash_Value"
-	ExceptionReason_AccessTokenSecretKeyNotFound  ExceptionReason = "Access_Token_Secret_Key_Not_Found"
-	ExceptionReason_RefreshTokenSecretKeyNotFound ExceptionReason = "Refresh_Token_Secret_Key_Not_Found"
-	ExceptionReason_FailedToGenerateAccessToken   ExceptionReason = "Failed_To_Generate_Access_Token"
-	ExceptionReason_FailedToGenerateRefreshToken  ExceptionReason = "Failed_To_Generate_Refresh_Token"
-	ExceptionReason_FailedToParseAccessToken      ExceptionReason = "Failed_To_Parse_Access_Token"
-	ExceptionReason_FailedToParseRefreshToken     ExceptionReason = "Failed_To_Parse_Refresh_Token"
+	exceptionReason_FailedToGenerateHashValue     ExceptionReason = "Failed_To_Generate_Hash_Value"
+	exceptionReason_AccessTokenSecretKeyNotFound  ExceptionReason = "Access_Token_Secret_Key_Not_Found"
+	exceptionReason_RefreshTokenSecretKeyNotFound ExceptionReason = "Refresh_Token_Secret_Key_Not_Found"
+	exceptionReason_FailedToGenerateAccessToken   ExceptionReason = "Failed_To_Generate_Access_Token"
+	exceptionReason_FailedToGenerateRefreshToken  ExceptionReason = "Failed_To_Generate_Refresh_Token"
+	exceptionReason_FailedToParseAccessToken      ExceptionReason = "Failed_To_Parse_Access_Token"
+	exceptionReason_FailedToParseRefreshToken     ExceptionReason = "Failed_To_Parse_Refresh_Token"
 )
 
 type UtilExceptionDomain struct {
@@ -30,22 +30,24 @@ var Util = &UtilExceptionDomain{
 }
 
 /* ============================== Handing Exception on Hash ============================== */
+
 func (d *UtilExceptionDomain) FailedToGenerateHashValue() *Exception {
 	return &Exception{
 		Code:           ExceptionBaseCode_Util + 1,
 		Prefix:         ExceptionPrefix_Util,
-		Reason:         ExceptionReason_FailedToGenerateHashValue,
+		Reason:         exceptionReason_FailedToGenerateHashValue,
 		Message:        "Failed to generate the hash value",
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
 }
 
 /* ============================== Handling Exception on Json Web Tokens ============================== */
+
 func (d *UtilExceptionDomain) AccessTokenSecretKeyNotFound() *Exception {
 	return &Exception{
 		Code:           ExceptionBaseCode_Util + 11,
 		Prefix:         ExceptionPrefix_Util,
-		Reason:         ExceptionReason_AccessTokenSecretKeyNotFound,
+		Reason:         exceptionReason_AccessTokenSecretKeyNotFound,
 		Message:        "The environment variables of access token secret key is not found",
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -55,7 +57,7 @@ func (d *UtilExceptionDomain) RefreshTokenSecretKeyNotFound() *Exception {
 	return &Exception{
 		Code:           ExceptionBaseCode_Util + 12,
 		Prefix:         ExceptionPrefix_Util,
-		Reason:         ExceptionReason_RefreshTokenSecretKeyNotFound,
+		Reason:         exceptionReason_RefreshTokenSecretKeyNotFound,
 		Message:        "The environment variables of refresh token secret key is not found",
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -65,7 +67,7 @@ func (d *UtilExceptionDomain) FailedToGenerateAccessToken() *Exception {
 	return &Exception{
 		Code:           ExceptionBaseCode_Util + 13,
 		Prefix:         ExceptionPrefix_Util,
-		Reason:         ExceptionReason_FailedToGenerateAccessToken,
+		Reason:         exceptionReason_FailedToGenerateAccessToken,
 		Message:        "Failed to generate the access token",
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -75,7 +77,7 @@ func (d *UtilExceptionDomain) FailedToGenerateRefreshToken() *Exception {
 	return &Exception{
 		Code:           ExceptionBaseCode_Util + 14,
 		Prefix:         ExceptionPrefix_Util,
-		Reason:         ExceptionReason_FailedToGenerateRefreshToken,
+		Reason:         exceptionReason_FailedToGenerateRefreshToken,
 		Message:        "Failed to generate the refresh token",
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -85,7 +87,7 @@ func (d *UtilExceptionDomain) FailedToParseAccessToken() *Exception {
 	return &Exception{
 		Code:           ExceptionBaseCode_Util + 15,
 		Prefix:         ExceptionPrefix_Util,
-		Reason:         ExceptionReason_FailedToParseAccessToken,
+		Reason:         exceptionReason_FailedToParseAccessToken,
 		Message:        "Failed to parse the access token",
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -95,7 +97,7 @@ func (d *UtilExceptionDomain) FailedToParseRefreshToken() *Exception {
 	return &Exception{
 		Code:           ExceptionBaseCode_Util + 16,
 		Prefix:         ExceptionPrefix_Util,
-		Reason:         ExceptionReason_FailedToParseRefreshToken,
+		Reason:         exceptionReason_FailedToParseRefreshToken,
 		Message:        "Failed to parse the refresh token",
 		HTTPStatusCode: http.StatusInternalServerError,
 	}

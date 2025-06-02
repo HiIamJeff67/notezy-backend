@@ -1,7 +1,6 @@
 package models
 
-import "notezy-backend/app/util"
-
+// place the tables here to migrate
 var MigratingTables = []any{
 	&User{},
 	&UserInfo{},
@@ -11,14 +10,15 @@ var MigratingTables = []any{
 	&Badge{},
 }
 
+// place the enums here to migrate
 var MigratingEnums = map[string][]string{
-	util.GetTypeName[UserRole]():    AllUserRoleStrings,
-	util.GetTypeName[UserPlan]():    AllUserPlanStrings,
-	util.GetTypeName[UserStatus]():  AllUserStatusStrings,
-	util.GetTypeName[UserGender]():  AllUserGenderStrings,
-	util.GetTypeName[Country]():     AllCountryStrings,
-	util.GetTypeName[CountryCode](): AllCountryCodeStrings,
-	util.GetTypeName[Theme]():       AllThemeStrings,
-	util.GetTypeName[Language]():    AllLanguageStrings,
-	util.GetTypeName[BadgeType]():   AllBadgeTypeStrings,
+	new(UserRole).Name():    AllUserRoleStrings,
+	new(UserPlan).Name():    AllUserPlanStrings,
+	new(UserStatus).Name():  AllUserStatusStrings,
+	new(UserGender).Name():  AllUserGenderStrings,
+	new(Country).Name():     AllCountryStrings,
+	new(CountryCode).Name(): AllCountryCodeStrings,
+	new(Theme).Name():       AllThemeStrings,
+	new(Language).Name():    AllLanguageStrings,
+	new(BadgeType).Name():   AllBadgeTypeStrings,
 }

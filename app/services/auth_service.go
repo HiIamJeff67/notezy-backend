@@ -44,47 +44,47 @@ func Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Ex
 		Email:       reqDto.Email,
 		Password:    hashedPassword,
 	}
-	newUser, exception := models.CreateUser(tx, createUserInputData)
+	newUserId, exception := models.CreateUser(tx, createUserInputData)
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
 
 	// Generate tokens
-	accessToken, exception := util.GenerateAccessToken(newUser.Id.String(), createUserInputData.Name, createUserInputData.Email)
+	accessToken, exception := util.GenerateAccessToken((*newUserId).String(), createUserInputData.Name, createUserInputData.Email)
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
-	refreshToken, exception := util.GenerateRefreshToken(newUser.Id.String(), createUserInputData.Name, createUserInputData.Email)
+	refreshToken, exception := util.GenerateRefreshToken((*newUserId).String(), createUserInputData.Name, createUserInputData.Email)
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
 
 	// Update user refresh token
-	_, exception = models.UpdateUserById(tx, newUser.Id, models.UpdateUserInput{RefreshToken: refreshToken})
+	newUser, exception := models.UpdateUserById(tx, *newUserId, models.UpdateUserInput{RefreshToken: refreshToken})
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
 
 	// Create user info
-	_, exception = models.CreateUserInfoByUserId(tx, newUser.Id, models.CreateUserInfoInput{})
+	_, exception = models.CreateUserInfoByUserId(tx, *newUserId, models.CreateUserInfoInput{})
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
 
 	// Create user account
-	_, exception = models.CreateUserAccountByUserId(tx, newUser.Id, models.CreateUserAccountInput{})
+	_, exception = models.CreateUserAccountByUserId(tx, *newUserId, models.CreateUserAccountInput{})
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
 
 	// Create user setting
-	_, exception = models.CreateUserSettingByUserId(tx, newUser.Id, models.CreateUserSettingInput{})
+	_, exception = models.CreateUserSettingByUserId(tx, *newUserId, models.CreateUserSettingInput{})
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -98,21 +98,21 @@ func Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Ex
 
 	// Create user data cache
 	exception = caches.SetUserDataCache(
-		newUser.Id,
+		*newUserId,
 		caches.UserDataCache{
-			Name:               createUserInputData.Name,
-			DisplayName:        createUserInputData.DisplayName,
-			Email:              createUserInputData.Email,
+			Name:               newUser.Name,
+			DisplayName:        newUser.DisplayName,
+			Email:              newUser.Email,
 			AccessToken:        *accessToken,
-			Role:               newUser.Role,   // generate by gorm tag default value
-			Plan:               newUser.Plan,   // generate by gorm tag default value
-			Status:             newUser.Status, // generate by gorm tag default value
+			Role:               newUser.Role,
+			Plan:               newUser.Plan,
+			Status:             newUser.Status,
 			AvatarURL:          "",
 			Theme:              models.Theme_System,
 			Language:           models.Language_English,
 			GeneralSettingCode: 0,
 			PrivacySettingCode: 0,
-			UpdatedAt:          time.Now(),
+			UpdatedAt:          newUser.UpdatedAt,
 		},
 	)
 	if exception != nil {

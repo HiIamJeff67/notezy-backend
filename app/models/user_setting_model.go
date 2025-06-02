@@ -51,10 +51,11 @@ func GetUserSettingByUserId(db *gorm.DB, userId uuid.UUID) (*UserSetting, *excep
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserSetting.NotFound().WithError(err)
 	}
+
 	return &userSetting, nil
 }
 
-func CreateUserSettingByUserId(db *gorm.DB, userId uuid.UUID, input CreateUserSettingInput) (*UserSetting, *exceptions.Exception) {
+func CreateUserSettingByUserId(db *gorm.DB, userId uuid.UUID, input CreateUserSettingInput) (*uuid.UUID, *exceptions.Exception) {
 	if db == nil {
 		db = NotezyDB
 	}
@@ -63,12 +64,15 @@ func CreateUserSettingByUserId(db *gorm.DB, userId uuid.UUID, input CreateUserSe
 	newUserSetting.UserId = userId
 	util.CopyNonNilFields(&newUserSetting, input)
 	result := db.Table(UserSetting{}.TableName()).
-		Clauses(clause.Returning{}).
+		Clauses(clause.Returning{Columns: []clause.Column{
+			{Name: "id"},
+		}}).
 		Create(&newUserSetting)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserSetting.FailedToCreate().WithError(err)
 	}
-	return &newUserSetting, nil
+
+	return &newUserSetting.Id, nil
 }
 
 func UpdateUserSettingByUserId(db *gorm.DB, userId uuid.UUID, input UpdateUserSettingInput) (*UserSetting, *exceptions.Exception) {
@@ -80,10 +84,12 @@ func UpdateUserSettingByUserId(db *gorm.DB, userId uuid.UUID, input UpdateUserSe
 	updatedUserSetting.UserId = userId
 	util.CopyNonNilFields(&updatedUserSetting, input)
 	result := db.Table(UserSetting{}.TableName()).
+		Where("user_id = ?", userId).
 		Clauses(clause.Returning{}).
 		Create(&updatedUserSetting)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserSetting.FailedToUpdate().WithError(err)
 	}
+
 	return &updatedUserSetting, nil
 }

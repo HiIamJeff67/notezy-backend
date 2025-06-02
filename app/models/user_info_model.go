@@ -62,10 +62,11 @@ func GetUserInfoByUserId(db *gorm.DB, userId uuid.UUID) (*UserInfo, *exceptions.
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserInfo.NotFound().WithError(err)
 	}
+
 	return &userInfo, nil
 }
 
-func CreateUserInfoByUserId(db *gorm.DB, userId uuid.UUID, input CreateUserInfoInput) (*UserInfo, *exceptions.Exception) {
+func CreateUserInfoByUserId(db *gorm.DB, userId uuid.UUID, input CreateUserInfoInput) (*uuid.UUID, *exceptions.Exception) {
 	if db == nil {
 		db = NotezyDB
 	}
@@ -74,27 +75,20 @@ func CreateUserInfoByUserId(db *gorm.DB, userId uuid.UUID, input CreateUserInfoI
 		return nil, exceptions.UserInfo.InvalidInput().WithError(err)
 	}
 
-	// newUserInfo := UserInfo{
-	// 	UserId:             userId,
-	// 	CoverBackgroundURL: input.CoverBackgroundURL,
-	// 	AvatarURL:          input.AvatarURL,
-	// 	Header:             input.Header,
-	// 	Introduction:       input.Introduction,
-	// 	Gender:             UserGender_PreferNotToSay,
-	// 	Country:            Country_UnitedStatusOfAmerica,
-	// 	BirthDate:          input.BirthDate,
-	// }
 	var newUserInfo UserInfo
 	newUserInfo.UserId = userId
 	util.CopyNonNilFields(&newUserInfo, input)
 
 	result := db.Table(UserInfo{}.TableName()).
-		Clauses(clause.Returning{}).
+		Clauses(clause.Returning{Columns: []clause.Column{
+			{Name: "id"},
+		}}).
 		Create(&newUserInfo)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserInfo.FailedToCreate().WithError(err)
 	}
-	return &newUserInfo, nil
+
+	return &newUserInfo.Id, nil
 }
 
 func UpdateUserInfoByUserId(db *gorm.DB, userId uuid.UUID, input UpdateUserInfoInput) (*UserInfo, *exceptions.Exception) {
@@ -108,12 +102,13 @@ func UpdateUserInfoByUserId(db *gorm.DB, userId uuid.UUID, input UpdateUserInfoI
 
 	var updatedUserInfo UserInfo
 	util.CopyNonNilFields(&updatedUserInfo, input)
-
 	result := db.Table(UserInfo{}.TableName()).
+		Where("user_id = ?", userId).
 		Clauses(clause.Returning{}).
 		Updates(&updatedUserInfo)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserInfo.FailedToUpdate().WithError(err)
 	}
+
 	return &updatedUserInfo, nil
 }

@@ -17,11 +17,11 @@
             ")",
             "",
             "type ${1:_DomainName_}ExceptionDomain struct {",
-            "\tDatabaseExceptionDomainCode",
+            "\tDatabaseExceptionDomain",
             "}",
             "",
             "var ${1:_DomainName_} = &${1:_DomainName_}ExceptionDomain{",
-            "\tDatabaseExceptionDomainCode{ BaseCode: _ExceptionBaseCode_${1:_DomainName_}, Prefix: ExceptionPrefix_${1:DomainName} },",
+            "\tDatabaseExceptionDomain{ BaseCode: _ExceptionBaseCode_${1:_DomainName_}, Prefix: ExceptionPrefix_${1:DomainName} },",
             "}",
         ]
     },

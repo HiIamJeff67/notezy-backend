@@ -1,7 +1,6 @@
 package models
 
 import (
-	logs "notezy-backend/app/logs"
 	"notezy-backend/app/util"
 	"regexp"
 
@@ -20,9 +19,6 @@ func RegisterUserModelFieldsValidators(validate *validator.Validate) {
 		hasLetter := regexp.MustCompile(`[A-Za-z]`).MatchString(password)
 		hasDigit := regexp.MustCompile(`\d`).MatchString(password)
 		hasSpecialCharacter := regexp.MustCompile(`[^\w\s]`).MatchString(password)
-		logs.FInfo("字母檢查: %v", hasLetter)
-		logs.FInfo("數字檢查: %v", hasDigit)
-		logs.FInfo("特殊字元檢查: %v", hasSpecialCharacter)
 		return hasLetter && hasDigit && hasSpecialCharacter
 	})
 }
