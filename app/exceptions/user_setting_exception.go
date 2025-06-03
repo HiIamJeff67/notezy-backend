@@ -10,9 +10,16 @@ const (
 )
 
 type UserSettingExceptionDomain struct {
+	BaseCode ExceptionCode
+	Prefix   ExceptionPrefix
 	DatabaseExceptionDomain
 }
 
 var UserSetting = &UserSettingExceptionDomain{
-	DatabaseExceptionDomain{BaseCode: _ExceptionBaseCode_UserSetting, Prefix: ExceptionPrefix_UserSetting},
+	BaseCode: ExceptionBaseCode_UserSetting,
+	Prefix:   ExceptionPrefix_UserSetting,
+	DatabaseExceptionDomain: DatabaseExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_UserSetting,
+		_Prefix:   ExceptionPrefix_UserSetting,
+	},
 }

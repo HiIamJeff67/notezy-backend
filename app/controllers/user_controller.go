@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"net/http"
-	models "notezy-backend/app/models"
+	"notezy-backend/app/models/inputs"
 	"notezy-backend/app/services"
 
 	"github.com/gin-gonic/gin"
@@ -12,7 +12,7 @@ import (
 /* ============================== DTO ============================== */
 type UpdateUserDto struct {
 	Id        uuid.UUID
-	InputData models.UpdateUserInput
+	InputData inputs.UpdateUserInput
 }
 
 /* ============================== DTO ============================== */

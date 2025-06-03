@@ -6,6 +6,8 @@ import (
 	"notezy-backend/app/logs"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 /* ============================== Exception Field Type Definition ============================== */
@@ -80,6 +82,18 @@ func (e *Exception) GetString() string {
 	return fmt.Sprintf("[%v]%s: %s", e.Code, e.Reason, e.Message)
 }
 
+func (e *Exception) GetGinH() *gin.H {
+	return &gin.H{
+		"code":    e.Code,
+		"prefix":  e.Prefix,
+		"reason":  e.Reason,
+		"message": e.Message,
+		"status":  e.HTTPStatusCode,
+		"details": e.Details,
+		"error":   e.Error,
+	}
+}
+
 func (e *Exception) WithDetails(details any) *Exception {
 	e.Details = details
 	return e
@@ -119,19 +133,19 @@ func (e *Exception) PanicVerbose() {
 
 /* ============================== Database Exception Domain Definition ============================== */
 type DatabaseExceptionDomain struct {
-	BaseCode ExceptionCode
-	Prefix   ExceptionPrefix
+	_BaseCode ExceptionCode
+	_Prefix   ExceptionPrefix
 }
 
 func (d *DatabaseExceptionDomain) UndefinedError(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Undefined error happened in %s", strings.ToLower(string(d.Prefix)))
+	message := fmt.Sprintf("Undefined error happened in %s", strings.ToLower(string(d._Prefix)))
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
 	}
 
 	return &Exception{
-		Code:           d.BaseCode + 0,
-		Prefix:         d.Prefix,
+		Code:           d._BaseCode + 0,
+		Prefix:         d._Prefix,
 		Reason:         ExceptionReason_UndefinedError,
 		Message:        message,
 		HTTPStatusCode: http.StatusBadRequest,
@@ -139,14 +153,14 @@ func (d *DatabaseExceptionDomain) UndefinedError(optionalMessage ...string) *Exc
 }
 
 func (d *DatabaseExceptionDomain) NotFound(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("%s not found", strings.ToLower(string(d.Prefix)))
+	message := fmt.Sprintf("%s not found", strings.ToLower(string(d._Prefix)))
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
 	}
 
 	return &Exception{
-		Code:           d.BaseCode + 1,
-		Prefix:         d.Prefix,
+		Code:           d._BaseCode + 1,
+		Prefix:         d._Prefix,
 		Reason:         ExceptionReason_NotFound,
 		Message:        message,
 		HTTPStatusCode: http.StatusNotFound,
@@ -154,14 +168,14 @@ func (d *DatabaseExceptionDomain) NotFound(optionalMessage ...string) *Exception
 }
 
 func (d *DatabaseExceptionDomain) FailedToCreate(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Failed to create the %s", strings.ToLower(string(d.Prefix)))
+	message := fmt.Sprintf("Failed to create the %s", strings.ToLower(string(d._Prefix)))
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
 	}
 
 	return &Exception{
-		Code:           d.BaseCode + 2,
-		Prefix:         d.Prefix,
+		Code:           d._BaseCode + 2,
+		Prefix:         d._Prefix,
 		Reason:         ExceptionReason_FailedToCreate,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
@@ -169,14 +183,14 @@ func (d *DatabaseExceptionDomain) FailedToCreate(optionalMessage ...string) *Exc
 }
 
 func (d *DatabaseExceptionDomain) FailedToUpdate(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Failed to update the %s", strings.ToLower(string(d.Prefix)))
+	message := fmt.Sprintf("Failed to update the %s", strings.ToLower(string(d._Prefix)))
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
 	}
 
 	return &Exception{
-		Code:           d.BaseCode + 3,
-		Prefix:         d.Prefix,
+		Code:           d._BaseCode + 3,
+		Prefix:         d._Prefix,
 		Reason:         ExceptionReason_FailedToUpdate,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
@@ -184,14 +198,14 @@ func (d *DatabaseExceptionDomain) FailedToUpdate(optionalMessage ...string) *Exc
 }
 
 func (d *DatabaseExceptionDomain) FailedToDelete(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Failed to delete the %s", strings.ToLower(string(d.Prefix)))
+	message := fmt.Sprintf("Failed to delete the %s", strings.ToLower(string(d._Prefix)))
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
 	}
 
 	return &Exception{
-		Code:           d.BaseCode + 4,
-		Prefix:         d.Prefix,
+		Code:           d._BaseCode + 4,
+		Prefix:         d._Prefix,
 		Reason:         ExceptionReason_FailedToDelete,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
@@ -199,14 +213,14 @@ func (d *DatabaseExceptionDomain) FailedToDelete(optionalMessage ...string) *Exc
 }
 
 func (d *DatabaseExceptionDomain) FailedToCommitTransaction(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Failed to commit the transaction in %s", strings.ToLower(string(d.Prefix)))
+	message := fmt.Sprintf("Failed to commit the transaction in %s", strings.ToLower(string(d._Prefix)))
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
 	}
 
 	return &Exception{
-		Code:           d.BaseCode + 5,
-		Prefix:         d.Prefix,
+		Code:           d._BaseCode + 5,
+		Prefix:         d._Prefix,
 		Reason:         ExceptionReason_FailedToCommitTransaction,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
@@ -214,14 +228,14 @@ func (d *DatabaseExceptionDomain) FailedToCommitTransaction(optionalMessage ...s
 }
 
 func (d *DatabaseExceptionDomain) InvalidInput(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Invalid input object detected in %s", strings.ToLower(string(d.Prefix)))
+	message := fmt.Sprintf("Invalid input object detected in %s", strings.ToLower(string(d._Prefix)))
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
 	}
 
 	return &Exception{
-		Code:           d.BaseCode + 6,
-		Prefix:         d.Prefix,
+		Code:           d._BaseCode + 6,
+		Prefix:         d._Prefix,
 		Reason:         ExceptionReason_InvalidInput,
 		Message:        message,
 		HTTPStatusCode: http.StatusBadRequest,
@@ -230,94 +244,34 @@ func (d *DatabaseExceptionDomain) InvalidInput(optionalMessage ...string) *Excep
 
 /* ============================== API Exception Domain Definition ============================== */
 type APIExceptionDomain struct {
-	BaseCode ExceptionCode
-	Prefix   ExceptionPrefix
+	_BaseCode ExceptionCode
+	_Prefix   ExceptionPrefix
 }
 
 func (d *APIExceptionDomain) UndefinedError(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Undefined error happened in %s", strings.ToLower(string(d.Prefix)))
+	message := fmt.Sprintf("Undefined error happened in %s", strings.ToLower(string(d._Prefix)))
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
 	}
 
 	return &Exception{
-		Code:           d.BaseCode + 0,
-		Prefix:         d.Prefix,
+		Code:           d._BaseCode + 0,
+		Prefix:         d._Prefix,
 		Reason:         ExceptionReason_UndefinedError,
 		Message:        message,
 		HTTPStatusCode: http.StatusBadRequest,
 	}
 }
 
-func (d *APIExceptionDomain) NotFound(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("%s not found", strings.ToLower(string(d.Prefix)))
-	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
-		message = optionalMessage[0]
-	}
-
-	return &Exception{
-		Code:           d.BaseCode + 1,
-		Prefix:         d.Prefix,
-		Reason:         ExceptionReason_NotFound,
-		Message:        message,
-		HTTPStatusCode: http.StatusNotFound,
-	}
-}
-
-func (d *APIExceptionDomain) FailedToCreate(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Failed to create the %s", strings.ToLower(string(d.Prefix)))
-	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
-		message = optionalMessage[0]
-	}
-
-	return &Exception{
-		Code:           d.BaseCode + 2,
-		Prefix:         d.Prefix,
-		Reason:         ExceptionReason_FailedToCreate,
-		Message:        message,
-		HTTPStatusCode: http.StatusInternalServerError,
-	}
-}
-
-func (d *APIExceptionDomain) FailedToUpdate(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Failed to update the %s", strings.ToLower(string(d.Prefix)))
-	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
-		message = optionalMessage[0]
-	}
-
-	return &Exception{
-		Code:           d.BaseCode + 3,
-		Prefix:         d.Prefix,
-		Reason:         ExceptionReason_FailedToUpdate,
-		Message:        message,
-		HTTPStatusCode: http.StatusInternalServerError,
-	}
-}
-
-func (d *APIExceptionDomain) FailedToDelete(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Failed to delete the %s", strings.ToLower(string(d.Prefix)))
-	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
-		message = optionalMessage[0]
-	}
-
-	return &Exception{
-		Code:           d.BaseCode + 4,
-		Prefix:         d.Prefix,
-		Reason:         ExceptionReason_FailedToDelete,
-		Message:        message,
-		HTTPStatusCode: http.StatusInternalServerError,
-	}
-}
-
 func (d *APIExceptionDomain) Timeout(time time.Duration, optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Timeout in %s with %v", strings.ToLower(string(d.Prefix)), time)
+	message := fmt.Sprintf("Timeout in %s with %v", strings.ToLower(string(d._Prefix)), time)
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
 	}
 
 	return &Exception{
-		Code:           d.BaseCode + 5,
-		Prefix:         d.Prefix,
+		Code:           d._BaseCode + 1,
+		Prefix:         d._Prefix,
 		Reason:         ExceptionReason_Timeout,
 		Message:        message,
 		HTTPStatusCode: http.StatusRequestTimeout,
@@ -325,14 +279,14 @@ func (d *APIExceptionDomain) Timeout(time time.Duration, optionalMessage ...stri
 }
 
 func (d *APIExceptionDomain) InvalidDto(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Invalid dto detected in %s", strings.ToLower(string(d.Prefix)))
+	message := fmt.Sprintf("Invalid dto detected in %s", strings.ToLower(string(d._Prefix)))
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
 	}
 
 	return &Exception{
-		Code:           d.BaseCode + 6,
-		Prefix:         d.Prefix,
+		Code:           d._BaseCode + 2,
+		Prefix:         d._Prefix,
 		Reason:         ExceptionReason_InvalidDto,
 		Message:        message,
 		HTTPStatusCode: http.StatusRequestTimeout,

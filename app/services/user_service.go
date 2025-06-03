@@ -2,7 +2,8 @@ package services
 
 import (
 	"notezy-backend/app/exceptions"
-	"notezy-backend/app/models"
+	"notezy-backend/app/models/operations"
+	"notezy-backend/app/models/schemas"
 )
 
 /* ============================== Services ============================== */
@@ -46,8 +47,8 @@ import (
 // }
 
 // for temporary use
-func FindAllUsers() (*[]models.User, *exceptions.Exception) {
-	users, exception := models.GetAllUsers(nil)
+func FindAllUsers() (*[]schemas.User, *exceptions.Exception) {
+	users, exception := operations.GetAllUsers(nil)
 	if exception != nil {
 		return nil, exception
 	}

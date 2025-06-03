@@ -2,14 +2,14 @@
   "Generate Go GORM Model Table Schema": {
     "prefix": "gmodel",
     "body": [
-      "type ${1:ModelName} struct {",
+      "type ${1:_ModelName_} struct {",
       "\tId        uuid.UUID  `json:\"id\" gorm:\"column:id; type:uuid; primaryKey; default:gen_random_uuid();\"`",
       "\tCreatedAt time.Time  `json:\"createdAt\" gorm:\"column:created_at; type:timestamptz; not null; autoCreateTime:true;\"`",
       "\tUpdatedAt time.Time  `json:\"updatedAt\" gorm:\"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;\"`",
       "}",
       "",
-      "func (${1}) TableName() string {",
-      "\treturn string(global.${1}TableName)",
+      "func (${1:_ModelName_}) TableName() string {",
+      "\treturn string(global.${1:_ModelName_}TableName)",
       "}"
     ],
     "description": "Create an advanced GORM model with UUID, enum, timestamps, and table name."
@@ -17,23 +17,27 @@
   "Generate Go GORM Enum Schema": {
     "prefix": "gnum",
     "body": [
-      "type ${1:EnumName} string",
+      "type ${1:_EnumName_} string",
       "const (",
-      "\t${1}_ ${1} = \"\"",
+      "\t${1:_EnumName_}_ ${1:_EnumName_} = \"\"",
       ")",
-      "var All${1}s = []${1}{",
-      "\t${1}_,",
+      "var All${1:_EnumName_}s = []${1:_EnumName_}{",
+      "\t${1:_EnumName_}_,",
       "}",
-      "var All${1}Strings = []string{",
-      "\tstring(${1}_),",
+      "var All${1:_EnumName_}Strings = []string{",
+      "\tstring(${1:_EnumName_}_),",
       "}"
     ],
     "description": "Create an advanced GORM enum with a list of enum and a list of enum string values."
   },
   "Generate a String for Descibing Json Attributes and GORM Attributes": {
-    "prefix": ["jga", "jgattributes", "jsongormattributes"],
+    "prefix": [
+      "jga",
+      "jgattributes",
+      "jsongormattributes"
+    ],
     "body": [
-      "`json:\"${1:jsonName}\" gorm:\"column:; type:; not null; default:;\"`"
+      "`json:\"${1:_JsonName_}\" gorm:\"column:; type:; not null; default:;\"`"
     ],
     "description": "Create a string for describing json attributes and gorm attributes as a field in a table."
   }

@@ -10,6 +10,10 @@ import (
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	models "notezy-backend/app/models"
+	"notezy-backend/app/models/enums"
+	"notezy-backend/app/models/inputs"
+	"notezy-backend/app/models/operations"
+	"notezy-backend/app/models/schemas"
 	util "notezy-backend/app/util"
 )
 
@@ -38,13 +42,13 @@ func Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Ex
 		tx.Rollback()
 		return nil, exception
 	}
-	createUserInputData := models.CreateUserInput{
+	createUserInputData := inputs.CreateUserInput{
 		Name:        reqDto.Name,
 		DisplayName: util.GenerateRandomFakeName(),
 		Email:       reqDto.Email,
 		Password:    hashedPassword,
 	}
-	newUserId, exception := models.CreateUser(tx, createUserInputData)
+	newUserId, exception := operations.CreateUser(tx, createUserInputData)
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -63,28 +67,28 @@ func Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Ex
 	}
 
 	// Update user refresh token
-	newUser, exception := models.UpdateUserById(tx, *newUserId, models.UpdateUserInput{RefreshToken: refreshToken})
+	newUser, exception := operations.UpdateUserById(tx, *newUserId, inputs.UpdateUserInput{RefreshToken: refreshToken})
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
 
 	// Create user info
-	_, exception = models.CreateUserInfoByUserId(tx, *newUserId, models.CreateUserInfoInput{})
+	_, exception = operations.CreateUserInfoByUserId(tx, *newUserId, inputs.CreateUserInfoInput{})
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
 
 	// Create user account
-	_, exception = models.CreateUserAccountByUserId(tx, *newUserId, models.CreateUserAccountInput{})
+	_, exception = operations.CreateUserAccountByUserId(tx, *newUserId, inputs.CreateUserAccountInput{})
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
 
 	// Create user setting
-	_, exception = models.CreateUserSettingByUserId(tx, *newUserId, models.CreateUserSettingInput{})
+	_, exception = operations.CreateUserSettingByUserId(tx, *newUserId, inputs.CreateUserSettingInput{})
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -108,8 +112,8 @@ func Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Ex
 			Plan:               newUser.Plan,
 			Status:             newUser.Status,
 			AvatarURL:          "",
-			Theme:              models.Theme_System,
-			Language:           models.Language_English,
+			Theme:              enums.Theme_System,
+			Language:           enums.Language_English,
 			GeneralSettingCode: 0,
 			PrivacySettingCode: 0,
 			UpdatedAt:          newUser.UpdatedAt,
@@ -162,7 +166,7 @@ func Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception) 
 		if err := userId.Scan(claims.Id); err != nil {
 			return nil, exceptions.User.InvalidInput().WithError(err)
 		}
-		user, exception := models.GetUserById(nil, userId)
+		user, exception := operations.GetUserById(nil, userId)
 		if exception != nil {
 			return nil, exception
 		}
@@ -178,14 +182,14 @@ func Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception) 
 	}
 
 	// otherwise, the user should provide their account and password
-	var user *models.User = nil
+	var user *schemas.User = nil
 	var exception *exceptions.Exception = nil
 	if util.IsAlphaNumberString(*reqDto.Account) {
-		if user, exception = models.GetUserByName(nil, *reqDto.Account); exception != nil {
+		if user, exception = operations.GetUserByName(nil, *reqDto.Account); exception != nil {
 			return nil, exception
 		}
 	} else if util.IsEmailString(*reqDto.Account) {
-		if user, exception = models.GetUserByEmail(nil, *reqDto.Account); exception != nil {
+		if user, exception = operations.GetUserByEmail(nil, *reqDto.Account); exception != nil {
 			return nil, exception
 		}
 	} else {
@@ -210,7 +214,7 @@ func Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception) 
 		return nil, exception
 	}
 	// update the refresh token of the user
-	if _, exception = models.UpdateUserById(nil, user.Id, models.UpdateUserInput{RefreshToken: refreshToken}); exception != nil {
+	if _, exception = operations.UpdateUserById(nil, user.Id, inputs.UpdateUserInput{RefreshToken: refreshToken}); exception != nil {
 		return nil, exception
 	}
 

@@ -11,26 +11,26 @@ import (
 
 	exceptions "notezy-backend/app/exceptions"
 	logs "notezy-backend/app/logs"
-	models "notezy-backend/app/models"
+	"notezy-backend/app/models/enums"
 	"notezy-backend/app/util"
 	global "notezy-backend/global"
 	types "notezy-backend/global/types"
 )
 
 type UserDataCache struct {
-	Name               string            // user
-	DisplayName        string            // user
-	Email              string            // user
-	AccessToken        string            // only here
-	Role               models.UserRole   // user
-	Plan               models.UserPlan   // user
-	Status             models.UserStatus // user
-	AvatarURL          string            // user info
-	Theme              models.Theme      // user setting
-	Language           models.Language   // user setting
-	GeneralSettingCode int64             // user setting
-	PrivacySettingCode int64             // user setting
-	UpdatedAt          time.Time         // cache
+	Name               string           // user
+	DisplayName        string           // user
+	Email              string           // user
+	AccessToken        string           // only here
+	Role               enums.UserRole   // user
+	Plan               enums.UserPlan   // user
+	Status             enums.UserStatus // user
+	AvatarURL          string           // user info
+	Theme              enums.Theme      // user setting
+	Language           enums.Language   // user setting
+	GeneralSettingCode int64            // user setting
+	PrivacySettingCode int64            // user setting
+	UpdatedAt          time.Time        // cache
 }
 
 type UpdateUserDataCacheDto struct {
@@ -38,12 +38,12 @@ type UpdateUserDataCacheDto struct {
 	DisplayName        *string
 	Email              *string
 	AccessToken        *string
-	Role               *models.UserRole
-	Plan               *models.UserPlan
-	Status             *models.UserStatus
+	Role               *enums.UserRole
+	Plan               *enums.UserPlan
+	Status             *enums.UserStatus
 	AvatarURL          *string
-	Theme              *models.Theme
-	Language           *models.Language
+	Theme              *enums.Theme
+	Language           *enums.Language
 	GeneralSettingCode *int64
 	PrivacySettingCode *int64
 }
@@ -73,9 +73,9 @@ func isValidUserCacheData(userDataCache *UserDataCache) bool {
 		strings.ReplaceAll(userDataCache.DisplayName, " ", "") == "" ||
 		strings.ReplaceAll(userDataCache.Email, " ", "") == "" ||
 		strings.ReplaceAll(userDataCache.AccessToken, " ", "") == "" ||
-		!models.IsValidEnumValues(userDataCache.Role, models.AllUserRoles) ||
-		!models.IsValidEnumValues(userDataCache.Plan, models.AllUserPlans) ||
-		!models.IsValidEnumValues(userDataCache.Status, models.AllUserStatuses) {
+		!enums.IsValidEnumValues(userDataCache.Role, enums.AllUserRoles) ||
+		!enums.IsValidEnumValues(userDataCache.Plan, enums.AllUserPlans) ||
+		!enums.IsValidEnumValues(userDataCache.Status, enums.AllUserStatuses) {
 		return false
 	}
 	return true

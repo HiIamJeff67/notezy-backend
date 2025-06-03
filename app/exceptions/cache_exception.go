@@ -28,11 +28,18 @@ const (
 )
 
 type CacheExceptionSubDomain struct {
-	APIExceptionDomain
+	BaseCode           ExceptionCode
+	Prefix             ExceptionPrefix
+	APIExceptionDomain APIExceptionDomain
 }
 
 var Cache = &CacheExceptionSubDomain{
-	APIExceptionDomain{BaseCode: _ExceptionBaseCode_Cache, Prefix: ExceptionPrefix_Cache},
+	BaseCode: ExceptionBaseCode_Cache,
+	Prefix:   ExceptionPrefix_Cache,
+	APIExceptionDomain: APIExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_Cache,
+		_Prefix:   ExceptionPrefix_Cache,
+	},
 }
 
 /* ============================== Temporary Function to Convert Camel Case to Sentence Case ============================== */
@@ -49,41 +56,52 @@ func convertCamelCaseToSentenceCase(camelCaseString string) string {
 }
 
 /* ============================== Handling Cached Data in the Servers (overriding methods) ============================== */
-
-// overriding the NotFound method in ExceptionDomain
 func (d *CacheExceptionSubDomain) NotFound(cachePurpose global.ValidCachePurpose) *Exception {
-	return d.APIExceptionDomain.NotFound(
-		fmt.Sprintf("Cannot find the %s in the cache server", convertCamelCaseToSentenceCase(string(cachePurpose))),
-	)
+	return &Exception{
+		Code:           d.BaseCode + 1,
+		Prefix:         d.Prefix,
+		Reason:         ExceptionReason_NotFound,
+		Message:        fmt.Sprintf("Cannot find the %s in the cache server", convertCamelCaseToSentenceCase(string(cachePurpose))),
+		HTTPStatusCode: http.StatusNotFound,
+	}
 }
 
-// overriding the FailedToCreate method in ExceptionDomain
 func (d *CacheExceptionSubDomain) FailedToCreate(cachePurpose global.ValidCachePurpose) *Exception {
-	return d.APIExceptionDomain.FailedToCreate(
-		fmt.Sprintf("Failed to set the %s to the cache server", convertCamelCaseToSentenceCase(string(cachePurpose))),
-	)
+	return &Exception{
+		Code:           d.BaseCode + 2,
+		Prefix:         d.Prefix,
+		Reason:         ExceptionReason_FailedToCreate,
+		Message:        fmt.Sprintf("Failed to set the %s to the cache server", convertCamelCaseToSentenceCase(string(cachePurpose))),
+		HTTPStatusCode: http.StatusInternalServerError,
+	}
 }
 
-// overriding the FailedToUpdate method in ExceptionDomain
 func (d *CacheExceptionSubDomain) FailedToUpdate(cachePurpose global.ValidCachePurpose) *Exception {
-	return d.APIExceptionDomain.FailedToUpdate(
-		fmt.Sprintf("Failed to update the %s in the cache server", convertCamelCaseToSentenceCase(string(cachePurpose))),
-	)
+	return &Exception{
+		Code:           d.BaseCode + 3,
+		Prefix:         d.Prefix,
+		Reason:         ExceptionReason_FailedToUpdate,
+		Message:        fmt.Sprintf("Failed to update the %s in the cache server", convertCamelCaseToSentenceCase(string(cachePurpose))),
+		HTTPStatusCode: http.StatusInternalServerError,
+	}
 }
 
-// overriding the FailedToDelete method in ExceptionDomain
 func (d *CacheExceptionSubDomain) FailedToDelete(cachePurpose global.ValidCachePurpose) *Exception {
-	return d.APIExceptionDomain.FailedToDelete(
-		fmt.Sprintf("Failed to delete the %s in the cache server", convertCamelCaseToSentenceCase(string(cachePurpose))),
-	)
+	return &Exception{
+		Code:           d.BaseCode + 4,
+		Prefix:         d.Prefix,
+		Reason:         ExceptionReason_FailedToDelete,
+		Message:        fmt.Sprintf("Failed to delete the %s in the cache server", convertCamelCaseToSentenceCase(string(cachePurpose))),
+		HTTPStatusCode: http.StatusInternalServerError,
+	}
 }
 
 /* ============================== Handling Connection of the Servers ============================== */
 
 func (d *CacheExceptionSubDomain) FailedToConnectToServer(serverNumber int) *Exception {
 	return &Exception{
-		Code:           ExceptionBaseCode_Cache + 1,
-		Prefix:         ExceptionPrefix_Cache,
+		Code:           d.BaseCode + 1,
+		Prefix:         d.Prefix,
 		Reason:         exceptionReason_FailedToConnectToServer,
 		Message:        fmt.Sprintf("Error on connecting to the redis client server of %v", serverNumber),
 		HTTPStatusCode: http.StatusBadGateway,
@@ -92,8 +110,8 @@ func (d *CacheExceptionSubDomain) FailedToConnectToServer(serverNumber int) *Exc
 
 func (d *CacheExceptionSubDomain) FailedToDisconnectToServer(serverNumber int) *Exception {
 	return &Exception{
-		Code:           ExceptionBaseCode_Cache + 2,
-		Prefix:         ExceptionPrefix_Cache,
+		Code:           d.BaseCode + 2,
+		Prefix:         d.Prefix,
 		Reason:         exceptionReason_FailedToDisconnectToServer,
 		Message:        fmt.Sprintf("Error on disconnecting to the redis client server of %v", serverNumber),
 		HTTPStatusCode: http.StatusBadGateway,
@@ -102,8 +120,8 @@ func (d *CacheExceptionSubDomain) FailedToDisconnectToServer(serverNumber int) *
 
 func (d *CacheExceptionSubDomain) ClientInstanceDoesNotExist(serverNumber int) *Exception {
 	return &Exception{
-		Code:           ExceptionBaseCode_Cache + 3,
-		Prefix:         ExceptionPrefix_Cache,
+		Code:           d.BaseCode + 3,
+		Prefix:         d.Prefix,
 		Reason:         exceptionReason_ClientInstanceDoesNotExist,
 		Message:        fmt.Sprintf("The client instance with server number of %v does not exist", serverNumber),
 		HTTPStatusCode: http.StatusBadGateway,
@@ -112,8 +130,8 @@ func (d *CacheExceptionSubDomain) ClientInstanceDoesNotExist(serverNumber int) *
 
 func (d *CacheExceptionSubDomain) ClientConfigDoesNotExist() *Exception {
 	return &Exception{
-		Code:           ExceptionBaseCode_Cache + 4,
-		Prefix:         ExceptionPrefix_Cache,
+		Code:           d.BaseCode + 4,
+		Prefix:         d.Prefix,
 		Reason:         exceptionReason_CLientConfigDoesNotExist,
 		Message:        "The config of the client instance does not exist",
 		HTTPStatusCode: http.StatusBadGateway,
@@ -124,8 +142,8 @@ func (d *CacheExceptionSubDomain) ClientConfigDoesNotExist() *Exception {
 
 func (d *CacheExceptionSubDomain) InvalidCacheDataStruct(cachedDataStruct any) *Exception {
 	return &Exception{
-		Code:           ExceptionBaseCode_Cache + 11,
-		Prefix:         ExceptionPrefix_Cache,
+		Code:           d.BaseCode + 11,
+		Prefix:         d.Prefix,
 		Reason:         exceptionReason_InvalidCacheDataStruct,
 		Message:        fmt.Sprintf("Invalid cached data struct detected %v", cachedDataStruct),
 		HTTPStatusCode: http.StatusInternalServerError,
@@ -134,8 +152,8 @@ func (d *CacheExceptionSubDomain) InvalidCacheDataStruct(cachedDataStruct any) *
 
 func (d *CacheExceptionSubDomain) FailedToConvertStructToJson() *Exception {
 	return &Exception{
-		Code:           ExceptionBaseCode_Cache + 12,
-		Prefix:         ExceptionPrefix_Cache,
+		Code:           d.BaseCode + 12,
+		Prefix:         d.Prefix,
 		Reason:         exceptionReason_FailedToConvertStructToJson,
 		Message:        "Failed to convert struct to json",
 		HTTPStatusCode: http.StatusForbidden,
@@ -144,8 +162,8 @@ func (d *CacheExceptionSubDomain) FailedToConvertStructToJson() *Exception {
 
 func (d *CacheExceptionSubDomain) FailedToConvertJsonToStruct() *Exception {
 	return &Exception{
-		Code:           ExceptionBaseCode_Cache + 13,
-		Prefix:         ExceptionPrefix_Cache,
+		Code:           d.BaseCode + 13,
+		Prefix:         d.Prefix,
 		Reason:         exceptionReason_FailedToConvertJsonToStruct,
 		Message:        "Failed to convert json to struct",
 		HTTPStatusCode: http.StatusForbidden,

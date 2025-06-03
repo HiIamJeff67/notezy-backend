@@ -3,6 +3,8 @@ package models
 import (
 	"fmt"
 	logs "notezy-backend/app/logs"
+	"notezy-backend/app/models/enums"
+	"notezy-backend/app/models/schemas"
 	"notezy-backend/app/util"
 	"notezy-backend/global"
 	"strings"
@@ -88,7 +90,7 @@ func TruncateTablesInDatabase(tableName global.ValidTableName, db *gorm.DB) bool
 
 func MigrateToDatabase(db *gorm.DB) bool {
 	logs.Info("Migrating enums found in models/migration.go ...")
-	for name, values := range MigratingEnums {
+	for name, values := range enums.MigratingEnums {
 		name = strings.ToLower(name)
 
 		// get current enum value
@@ -160,7 +162,7 @@ func MigrateToDatabase(db *gorm.DB) bool {
 	}
 
 	logs.Info("Migrating tables found in models/migration.go ...")
-	for _, table := range MigratingTables {
+	for _, table := range schemas.MigratingTables {
 		if err := db.AutoMigrate(table); err != nil {
 			logs.FError("Failed to migrate table: %v", err)
 			return false

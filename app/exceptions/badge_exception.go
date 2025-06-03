@@ -10,9 +10,16 @@ const (
 )
 
 type BadgeExceptionDomain struct {
+	BaseCode ExceptionCode
+	Prefix   ExceptionPrefix
 	DatabaseExceptionDomain
 }
 
 var Badge = &BadgeExceptionDomain{
-	DatabaseExceptionDomain{BaseCode: _ExceptionBaseCode_Badge, Prefix: ExceptionPrefix_Badge},
+	BaseCode: ExceptionBaseCode_Badge,
+	Prefix:   ExceptionPrefix_Badge,
+	DatabaseExceptionDomain: DatabaseExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_Badge,
+		_Prefix:   ExceptionPrefix_Badge,
+	},
 }

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"notezy-backend/app/models/enums"
 	"notezy-backend/app/util"
 	"regexp"
 
@@ -26,39 +27,39 @@ func RegisterUserModelFieldsValidators(validate *validator.Validate) {
 func RegisterEnumValidators(validate *validator.Validate) {
 	validate.RegisterValidation("isrole", func(fl validator.FieldLevel) bool {
 		val := fl.Field().String()
-		return util.IsStringIn(val, AllUserRoleStrings)
+		return util.IsStringIn(val, enums.AllUserRoleStrings)
 	})
 	validate.RegisterValidation("isplan", func(fl validator.FieldLevel) bool {
 		val := fl.Field().String()
-		return util.IsStringIn(val, AllUserPlanStrings)
+		return util.IsStringIn(val, enums.AllUserPlanStrings)
 	})
 	validate.RegisterValidation("isstatus", func(fl validator.FieldLevel) bool {
 		val := fl.Field().String()
-		return util.IsStringIn(val, AllUserStatusStrings)
+		return util.IsStringIn(val, enums.AllUserStatusStrings)
 	})
 	validate.RegisterValidation("isgender", func(fl validator.FieldLevel) bool {
 		val := fl.Field().String()
-		return util.IsStringIn(val, AllUserGenderStrings)
+		return util.IsStringIn(val, enums.AllUserGenderStrings)
 	})
 	validate.RegisterValidation("iscountry", func(fl validator.FieldLevel) bool {
 		val := fl.Field().String()
-		return util.IsStringIn(val, AllCountryStrings)
+		return util.IsStringIn(val, enums.AllCountryStrings)
 	})
 	validate.RegisterValidation("iscountrycode", func(fl validator.FieldLevel) bool {
 		val := fl.Field().String()
-		return util.IsStringIn(val, AllCountryCodeStrings)
+		return util.IsStringIn(val, enums.AllCountryCodeStrings)
 	})
 	validate.RegisterValidation("istheme", func(fl validator.FieldLevel) bool {
 		val := fl.Field().String()
-		return util.IsStringIn(val, AllThemeStrings)
+		return util.IsStringIn(val, enums.AllThemeStrings)
 	})
 	validate.RegisterValidation("islanguage", func(fl validator.FieldLevel) bool {
 		val := fl.Field().String()
-		return util.IsStringIn(val, AllLanguageStrings)
+		return util.IsStringIn(val, enums.AllLanguageStrings)
 	})
 	validate.RegisterValidation("isbadgetype", func(fl validator.FieldLevel) bool {
 		val := fl.Field().String()
-		return util.IsStringIn(val, AllBadgeTypeStrings)
+		return util.IsStringIn(val, enums.AllBadgeTypeStrings)
 	})
 }
 

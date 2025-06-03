@@ -10,9 +10,16 @@ const (
 )
 
 type UserInfoExceptionDomain struct {
+	BaseCode ExceptionCode
+	Prefix   ExceptionPrefix
 	DatabaseExceptionDomain
 }
 
 var UserInfo = &UserInfoExceptionDomain{
-	DatabaseExceptionDomain{BaseCode: _ExceptionBaseCode_UserInfo, Prefix: ExceptionPrefix_UserInfo},
+	BaseCode: ExceptionBaseCode_UserInfo,
+	Prefix:   ExceptionPrefix_UserInfo,
+	DatabaseExceptionDomain: DatabaseExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_UserInfo,
+		_Prefix:   ExceptionPrefix_UserInfo,
+	},
 }

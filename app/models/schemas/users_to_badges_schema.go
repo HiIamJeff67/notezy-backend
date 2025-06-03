@@ -1,13 +1,12 @@
-package models
+package schemas
 
 import (
 	"notezy-backend/global"
 	"time"
 
-	uuid "github.com/google/uuid"
+	"github.com/google/uuid"
 )
 
-/* ============================== Schema ============================== */
 type UsersToBadges struct {
 	UserId    uuid.UUID `json:"userId" gorm:"column:user_id ;primaryKey;"`
 	BadgeId   uuid.UUID `json:"badgeId" gorm:"column:badge_id; primaryKey;"`
@@ -20,9 +19,3 @@ type UsersToBadges struct {
 func (UsersToBadges) TableName() string {
 	return string(global.ValidTableName_UsersToBadgesTable)
 }
-
-/* ============================== Schema ============================== */
-
-/* ============================== Input ============================== */
-
-/* ============================== Methods ============================== */

@@ -10,9 +10,16 @@ const (
 )
 
 type UserAccountExceptionDomain struct {
+	BaseCode ExceptionCode
+	Prefix   ExceptionPrefix
 	DatabaseExceptionDomain
 }
 
 var UserAccount = &UserAccountExceptionDomain{
-	DatabaseExceptionDomain{BaseCode: _ExceptionBaseCode_UserAccount, Prefix: ExceptionPrefix_UserAccount},
+	BaseCode: ExceptionBaseCode_UserAccount,
+	Prefix:   ExceptionPrefix_UserAccount,
+	DatabaseExceptionDomain: DatabaseExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_UserAccount,
+		_Prefix:   ExceptionPrefix_UserAccount,
+	},
 }

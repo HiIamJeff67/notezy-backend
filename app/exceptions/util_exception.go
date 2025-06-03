@@ -22,19 +22,26 @@ const (
 )
 
 type UtilExceptionDomain struct {
+	BaseCode ExceptionCode
+	Prefix   ExceptionPrefix
 	APIExceptionDomain
 }
 
 var Util = &UtilExceptionDomain{
-	APIExceptionDomain{BaseCode: _ExceptionBaseCode_Util, Prefix: ExceptionPrefix_Util},
+	BaseCode: ExceptionBaseCode_Util,
+	Prefix:   ExceptionPrefix_Util,
+	APIExceptionDomain: APIExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_Util,
+		_Prefix:   ExceptionPrefix_Util,
+	},
 }
 
 /* ============================== Handing Exception on Hash ============================== */
 
 func (d *UtilExceptionDomain) FailedToGenerateHashValue() *Exception {
 	return &Exception{
-		Code:           ExceptionBaseCode_Util + 1,
-		Prefix:         ExceptionPrefix_Util,
+		Code:           d.BaseCode + 1,
+		Prefix:         d.Prefix,
 		Reason:         exceptionReason_FailedToGenerateHashValue,
 		Message:        "Failed to generate the hash value",
 		HTTPStatusCode: http.StatusInternalServerError,
@@ -45,8 +52,8 @@ func (d *UtilExceptionDomain) FailedToGenerateHashValue() *Exception {
 
 func (d *UtilExceptionDomain) AccessTokenSecretKeyNotFound() *Exception {
 	return &Exception{
-		Code:           ExceptionBaseCode_Util + 11,
-		Prefix:         ExceptionPrefix_Util,
+		Code:           d.BaseCode + 11,
+		Prefix:         d.Prefix,
 		Reason:         exceptionReason_AccessTokenSecretKeyNotFound,
 		Message:        "The environment variables of access token secret key is not found",
 		HTTPStatusCode: http.StatusInternalServerError,
@@ -55,8 +62,8 @@ func (d *UtilExceptionDomain) AccessTokenSecretKeyNotFound() *Exception {
 
 func (d *UtilExceptionDomain) RefreshTokenSecretKeyNotFound() *Exception {
 	return &Exception{
-		Code:           ExceptionBaseCode_Util + 12,
-		Prefix:         ExceptionPrefix_Util,
+		Code:           d.BaseCode + 12,
+		Prefix:         d.Prefix,
 		Reason:         exceptionReason_RefreshTokenSecretKeyNotFound,
 		Message:        "The environment variables of refresh token secret key is not found",
 		HTTPStatusCode: http.StatusInternalServerError,
@@ -65,8 +72,8 @@ func (d *UtilExceptionDomain) RefreshTokenSecretKeyNotFound() *Exception {
 
 func (d *UtilExceptionDomain) FailedToGenerateAccessToken() *Exception {
 	return &Exception{
-		Code:           ExceptionBaseCode_Util + 13,
-		Prefix:         ExceptionPrefix_Util,
+		Code:           d.BaseCode + 13,
+		Prefix:         d.Prefix,
 		Reason:         exceptionReason_FailedToGenerateAccessToken,
 		Message:        "Failed to generate the access token",
 		HTTPStatusCode: http.StatusInternalServerError,
@@ -75,8 +82,8 @@ func (d *UtilExceptionDomain) FailedToGenerateAccessToken() *Exception {
 
 func (d *UtilExceptionDomain) FailedToGenerateRefreshToken() *Exception {
 	return &Exception{
-		Code:           ExceptionBaseCode_Util + 14,
-		Prefix:         ExceptionPrefix_Util,
+		Code:           d.BaseCode + 14,
+		Prefix:         d.Prefix,
 		Reason:         exceptionReason_FailedToGenerateRefreshToken,
 		Message:        "Failed to generate the refresh token",
 		HTTPStatusCode: http.StatusInternalServerError,
@@ -85,8 +92,8 @@ func (d *UtilExceptionDomain) FailedToGenerateRefreshToken() *Exception {
 
 func (d *UtilExceptionDomain) FailedToParseAccessToken() *Exception {
 	return &Exception{
-		Code:           ExceptionBaseCode_Util + 15,
-		Prefix:         ExceptionPrefix_Util,
+		Code:           d.BaseCode + 15,
+		Prefix:         d.Prefix,
 		Reason:         exceptionReason_FailedToParseAccessToken,
 		Message:        "Failed to parse the access token",
 		HTTPStatusCode: http.StatusInternalServerError,
@@ -95,8 +102,8 @@ func (d *UtilExceptionDomain) FailedToParseAccessToken() *Exception {
 
 func (d *UtilExceptionDomain) FailedToParseRefreshToken() *Exception {
 	return &Exception{
-		Code:           ExceptionBaseCode_Util + 16,
-		Prefix:         ExceptionPrefix_Util,
+		Code:           d.BaseCode + 16,
+		Prefix:         d.Prefix,
 		Reason:         exceptionReason_FailedToParseRefreshToken,
 		Message:        "Failed to parse the refresh token",
 		HTTPStatusCode: http.StatusInternalServerError,

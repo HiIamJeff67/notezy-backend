@@ -16,6 +16,8 @@ const (
 )
 
 type UserExceptionDomain struct {
+	BaseCode ExceptionCode
+	Prefix   ExceptionPrefix
 	// as the down layer of DatabaseExceptionDomain
 	// so that we don't make methods for DatabaseExceptionDomain
 	// instead we make methods for UserExceptionDomain
@@ -23,5 +25,10 @@ type UserExceptionDomain struct {
 }
 
 var User = &UserExceptionDomain{
-	DatabaseExceptionDomain{BaseCode: _ExceptionBaseCode_User, Prefix: ExceptionPrefix_User},
+	BaseCode: ExceptionBaseCode_User,
+	Prefix:   ExceptionPrefix_User,
+	DatabaseExceptionDomain: DatabaseExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_User,
+		_Prefix:   ExceptionPrefix_User,
+	},
 }
