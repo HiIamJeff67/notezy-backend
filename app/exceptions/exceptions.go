@@ -56,6 +56,7 @@ const (
 	ExceptionReason_InvalidInput              ExceptionReason = "Invalid_Input"
 	ExceptionReason_Timeout                   ExceptionReason = "Timeout"
 	ExceptionReason_InvalidDto                ExceptionReason = "Invalid_Dto"
+	ExceptionReason_NotImplemented            ExceptionReason = "NotImplement"
 )
 
 func IsExceptionCode(exceptionCode int) bool {
@@ -242,6 +243,21 @@ func (d *DatabaseExceptionDomain) InvalidInput(optionalMessage ...string) *Excep
 	}
 }
 
+func (d *DatabaseExceptionDomain) NotImplemented(optionalMessage ...string) *Exception {
+	message := fmt.Sprintf("Not yet implemented the methods in %s", strings.ToLower(string(d._Prefix)))
+	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
+		message = optionalMessage[0]
+	}
+
+	return &Exception{
+		Code:           d._BaseCode + 7,
+		Prefix:         d._Prefix,
+		Reason:         ExceptionReason_NotImplemented,
+		Message:        message,
+		HTTPStatusCode: http.StatusNotImplemented,
+	}
+}
+
 /* ============================== API Exception Domain Definition ============================== */
 type APIExceptionDomain struct {
 	_BaseCode ExceptionCode
@@ -290,5 +306,20 @@ func (d *APIExceptionDomain) InvalidDto(optionalMessage ...string) *Exception {
 		Reason:         ExceptionReason_InvalidDto,
 		Message:        message,
 		HTTPStatusCode: http.StatusRequestTimeout,
+	}
+}
+
+func (d *APIExceptionDomain) NotImplemented(optionalMessage ...string) *Exception {
+	message := fmt.Sprintf("Not yet implemented the methods in %s", strings.ToLower(string(d._Prefix)))
+	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
+		message = optionalMessage[0]
+	}
+
+	return &Exception{
+		Code:           d._BaseCode + 3,
+		Prefix:         d._Prefix,
+		Reason:         ExceptionReason_NotImplemented,
+		Message:        message,
+		HTTPStatusCode: http.StatusNotImplemented,
 	}
 }

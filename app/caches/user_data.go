@@ -11,8 +11,8 @@ import (
 
 	exceptions "notezy-backend/app/exceptions"
 	logs "notezy-backend/app/logs"
-	"notezy-backend/app/models/enums"
-	"notezy-backend/app/util"
+	enums "notezy-backend/app/models/enums"
+	util "notezy-backend/app/util"
 	global "notezy-backend/global"
 	types "notezy-backend/global/types"
 )

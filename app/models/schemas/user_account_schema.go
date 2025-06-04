@@ -19,5 +19,5 @@ type UserAccount struct {
 }
 
 func (UserAccount) TableName() string {
-	return string(global.ValidTableName_UserAccountTable)
+	return global.ValidTableName_UserAccountTable.String()
 }

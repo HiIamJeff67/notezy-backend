@@ -3,10 +3,10 @@ package models
 import (
 	"fmt"
 	logs "notezy-backend/app/logs"
-	"notezy-backend/app/models/enums"
-	"notezy-backend/app/models/schemas"
-	"notezy-backend/app/util"
-	"notezy-backend/global"
+	enums "notezy-backend/app/models/enums"
+	schemas "notezy-backend/app/models/schemas"
+	util "notezy-backend/app/util"
+	global "notezy-backend/global"
 	"strings"
 
 	"gorm.io/driver/postgres"

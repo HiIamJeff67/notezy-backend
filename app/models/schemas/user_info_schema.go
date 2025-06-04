@@ -22,5 +22,5 @@ type UserInfo struct {
 }
 
 func (UserInfo) TableName() string {
-	return string(global.ValidTableName_UserInfoTable)
+	return global.ValidTableName_UserInfoTable.String()
 }

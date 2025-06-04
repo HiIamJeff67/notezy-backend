@@ -2,14 +2,15 @@ package app
 
 import (
 	"fmt"
-	"notezy-backend/app/caches"
-	models "notezy-backend/app/models"
-	"notezy-backend/app/routes"
-	"notezy-backend/global"
 
 	"github.com/fvbock/endless"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+
+	caches "notezy-backend/app/caches"
+	models "notezy-backend/app/models"
+	routes "notezy-backend/app/routes"
+	global "notezy-backend/global"
 )
 
 func StartApplication() {

@@ -17,5 +17,5 @@ type UsersToBadges struct {
 }
 
 func (UsersToBadges) TableName() string {
-	return string(global.ValidTableName_UsersToBadgesTable)
+	return global.ValidTableName_UsersToBadgesTable.String()
 }

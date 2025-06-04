@@ -19,5 +19,5 @@ type UserSetting struct {
 }
 
 func (UserSetting) TableName() string {
-	return string(global.ValidTableName_UserSettingTable)
+	return global.ValidTableName_UserSettingTable.String()
 }

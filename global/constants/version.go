@@ -1,4 +1,4 @@
-package global
+package constants
 
 const (
 	DevelopmentVersion = "v1"

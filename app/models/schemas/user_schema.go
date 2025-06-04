@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type User struct {
@@ -17,6 +18,7 @@ type User struct {
 	RefreshToken string           `json:"refreshToken" gorm:"column:refresh_token; not null; default:'';"`
 	Role         enums.UserRole   `json:"role" gorm:"column:role; type:UserRole; not null; default:'Guest';"`
 	Plan         enums.UserPlan   `json:"plan" gorm:"column:plan; type:UserPlan; not null; default:'Free';"`
+	PrevStatus   enums.UserStatus `json:"prevStatus" gorm:"column:prev_status; type:UserStatus; not null; default:'Online';"`
 	Status       enums.UserStatus `json:"status" gorm:"column:status; type:UserStatus; not null; default:'Online';"`
 	UpdatedAt    time.Time        `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt    time.Time        `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
@@ -30,5 +32,14 @@ type User struct {
 
 // force gorm to use the given table name
 func (User) TableName() string {
-	return string(global.ValidTableName_UserTable)
+	return global.ValidTableName_UserTable.String()
+}
+
+//* ============================== Trigger Hook ============================== */
+
+func (u *User) BeforeUpdate(db *gorm.DB) (err error) {
+	if db.Statement.Changed("Status") {
+		u.PrevStatus = u.Status
+	}
+	return nil
 }

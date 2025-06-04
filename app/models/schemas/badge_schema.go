@@ -21,5 +21,5 @@ type Badge struct {
 }
 
 func (Badge) TableName() string {
-	return string(global.ValidTableName_BadgeTable)
+	return global.ValidTableName_BadgeTable.String()
 }

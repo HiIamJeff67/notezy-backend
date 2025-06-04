@@ -18,13 +18,13 @@ const (
 )
 
 const (
-	exceptionReason_FailedToConnectToServer     ExceptionReason = "Failed_To_Connect_To_Server"
-	exceptionReason_FailedToDisconnectToServer  ExceptionReason = "Failed_To_Disconnect_To_Server"
-	exceptionReason_ClientInstanceDoesNotExist  ExceptionReason = "Client_Instance_Does_Not_Exist"
-	exceptionReason_CLientConfigDoesNotExist    ExceptionReason = "Client_Config_Does_Not_Exist"
-	exceptionReason_InvalidCacheDataStruct      ExceptionReason = "Invalid_Cache_Data_Struct"
-	exceptionReason_FailedToConvertStructToJson ExceptionReason = "Failed_To_Convert_Struct_To_Json"
-	exceptionReason_FailedToConvertJsonToStruct ExceptionReason = "Failed_To_Convert_Json_To_Struct"
+	ExceptionReason__FailedToConnectToServer     ExceptionReason = "Failed_To_Connect_To_Server"
+	ExceptionReason__FailedToDisconnectToServer  ExceptionReason = "Failed_To_Disconnect_To_Server"
+	ExceptionReason__ClientInstanceDoesNotExist  ExceptionReason = "Client_Instance_Does_Not_Exist"
+	ExceptionReason__CLientConfigDoesNotExist    ExceptionReason = "Client_Config_Does_Not_Exist"
+	ExceptionReason__InvalidCacheDataStruct      ExceptionReason = "Invalid_Cache_Data_Struct"
+	ExceptionReason__FailedToConvertStructToJson ExceptionReason = "Failed_To_Convert_Struct_To_Json"
+	ExceptionReason__FailedToConvertJsonToStruct ExceptionReason = "Failed_To_Convert_Json_To_Struct"
 )
 
 type CacheExceptionSubDomain struct {
@@ -61,7 +61,7 @@ func (d *CacheExceptionSubDomain) NotFound(cachePurpose global.ValidCachePurpose
 		Code:           d.BaseCode + 1,
 		Prefix:         d.Prefix,
 		Reason:         ExceptionReason_NotFound,
-		Message:        fmt.Sprintf("Cannot find the %s in the cache server", convertCamelCaseToSentenceCase(string(cachePurpose))),
+		Message:        fmt.Sprintf("Cannot find the %s in the cache server", convertCamelCaseToSentenceCase(cachePurpose.String())),
 		HTTPStatusCode: http.StatusNotFound,
 	}
 }
@@ -71,7 +71,7 @@ func (d *CacheExceptionSubDomain) FailedToCreate(cachePurpose global.ValidCacheP
 		Code:           d.BaseCode + 2,
 		Prefix:         d.Prefix,
 		Reason:         ExceptionReason_FailedToCreate,
-		Message:        fmt.Sprintf("Failed to set the %s to the cache server", convertCamelCaseToSentenceCase(string(cachePurpose))),
+		Message:        fmt.Sprintf("Failed to set the %s to the cache server", convertCamelCaseToSentenceCase(cachePurpose.String())),
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
 }
@@ -81,7 +81,7 @@ func (d *CacheExceptionSubDomain) FailedToUpdate(cachePurpose global.ValidCacheP
 		Code:           d.BaseCode + 3,
 		Prefix:         d.Prefix,
 		Reason:         ExceptionReason_FailedToUpdate,
-		Message:        fmt.Sprintf("Failed to update the %s in the cache server", convertCamelCaseToSentenceCase(string(cachePurpose))),
+		Message:        fmt.Sprintf("Failed to update the %s in the cache server", convertCamelCaseToSentenceCase(cachePurpose.String())),
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
 }
@@ -91,7 +91,7 @@ func (d *CacheExceptionSubDomain) FailedToDelete(cachePurpose global.ValidCacheP
 		Code:           d.BaseCode + 4,
 		Prefix:         d.Prefix,
 		Reason:         ExceptionReason_FailedToDelete,
-		Message:        fmt.Sprintf("Failed to delete the %s in the cache server", convertCamelCaseToSentenceCase(string(cachePurpose))),
+		Message:        fmt.Sprintf("Failed to delete the %s in the cache server", convertCamelCaseToSentenceCase(cachePurpose.String())),
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
 }
@@ -102,7 +102,7 @@ func (d *CacheExceptionSubDomain) FailedToConnectToServer(serverNumber int) *Exc
 	return &Exception{
 		Code:           d.BaseCode + 1,
 		Prefix:         d.Prefix,
-		Reason:         exceptionReason_FailedToConnectToServer,
+		Reason:         ExceptionReason__FailedToConnectToServer,
 		Message:        fmt.Sprintf("Error on connecting to the redis client server of %v", serverNumber),
 		HTTPStatusCode: http.StatusBadGateway,
 	}
@@ -112,7 +112,7 @@ func (d *CacheExceptionSubDomain) FailedToDisconnectToServer(serverNumber int) *
 	return &Exception{
 		Code:           d.BaseCode + 2,
 		Prefix:         d.Prefix,
-		Reason:         exceptionReason_FailedToDisconnectToServer,
+		Reason:         ExceptionReason__FailedToDisconnectToServer,
 		Message:        fmt.Sprintf("Error on disconnecting to the redis client server of %v", serverNumber),
 		HTTPStatusCode: http.StatusBadGateway,
 	}
@@ -122,7 +122,7 @@ func (d *CacheExceptionSubDomain) ClientInstanceDoesNotExist(serverNumber int) *
 	return &Exception{
 		Code:           d.BaseCode + 3,
 		Prefix:         d.Prefix,
-		Reason:         exceptionReason_ClientInstanceDoesNotExist,
+		Reason:         ExceptionReason__ClientInstanceDoesNotExist,
 		Message:        fmt.Sprintf("The client instance with server number of %v does not exist", serverNumber),
 		HTTPStatusCode: http.StatusBadGateway,
 	}
@@ -132,7 +132,7 @@ func (d *CacheExceptionSubDomain) ClientConfigDoesNotExist() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 4,
 		Prefix:         d.Prefix,
-		Reason:         exceptionReason_CLientConfigDoesNotExist,
+		Reason:         ExceptionReason__CLientConfigDoesNotExist,
 		Message:        "The config of the client instance does not exist",
 		HTTPStatusCode: http.StatusBadGateway,
 	}
@@ -144,7 +144,7 @@ func (d *CacheExceptionSubDomain) InvalidCacheDataStruct(cachedDataStruct any) *
 	return &Exception{
 		Code:           d.BaseCode + 11,
 		Prefix:         d.Prefix,
-		Reason:         exceptionReason_InvalidCacheDataStruct,
+		Reason:         ExceptionReason__InvalidCacheDataStruct,
 		Message:        fmt.Sprintf("Invalid cached data struct detected %v", cachedDataStruct),
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -154,7 +154,7 @@ func (d *CacheExceptionSubDomain) FailedToConvertStructToJson() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 12,
 		Prefix:         d.Prefix,
-		Reason:         exceptionReason_FailedToConvertStructToJson,
+		Reason:         ExceptionReason__FailedToConvertStructToJson,
 		Message:        "Failed to convert struct to json",
 		HTTPStatusCode: http.StatusForbidden,
 	}
@@ -164,7 +164,7 @@ func (d *CacheExceptionSubDomain) FailedToConvertJsonToStruct() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 13,
 		Prefix:         d.Prefix,
-		Reason:         exceptionReason_FailedToConvertJsonToStruct,
+		Reason:         ExceptionReason__FailedToConvertJsonToStruct,
 		Message:        "Failed to convert json to struct",
 		HTTPStatusCode: http.StatusForbidden,
 	}

@@ -1,4 +1,4 @@
-package global
+package types
 
 type Pair struct {
 	First  int

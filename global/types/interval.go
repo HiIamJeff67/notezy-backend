@@ -1,4 +1,4 @@
-package global
+package types
 
 type Interval struct {
 	Start int

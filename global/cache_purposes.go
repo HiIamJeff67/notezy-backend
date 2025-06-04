@@ -12,6 +12,10 @@ var _validCachePurposes = map[string]ValidCachePurpose{
 	"RecentPages": ValidCachePurpose_RecentPages,
 }
 
+func (cp ValidCachePurpose) String() string {
+	return string(cp)
+}
+
 func IsValidCachePurpose(cachePurpose string) bool {
 	_, ok := _validCachePurposes[cachePurpose]
 	return ok

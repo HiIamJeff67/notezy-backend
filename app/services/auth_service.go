@@ -1,19 +1,17 @@
 package services
 
 import (
-	"time"
-
-	uuid "github.com/google/uuid"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
-	"notezy-backend/app/caches"
+	caches "notezy-backend/app/caches"
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	models "notezy-backend/app/models"
-	"notezy-backend/app/models/enums"
-	"notezy-backend/app/models/inputs"
-	"notezy-backend/app/models/operations"
-	"notezy-backend/app/models/schemas"
+	enums "notezy-backend/app/models/enums"
+	inputs "notezy-backend/app/models/inputs"
+	operations "notezy-backend/app/models/operations"
+	schemas "notezy-backend/app/models/schemas"
 	util "notezy-backend/app/util"
 )
 
@@ -27,8 +25,8 @@ func hashPassword(password string) (string, *exceptions.Exception) {
 	return string(bytes), nil
 }
 
-func checkPasswordHash(password string, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+func checkPasswordHash(hashedPassword string, password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	return err == nil
 }
 
@@ -124,8 +122,9 @@ func Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Ex
 	}
 
 	return &dtos.RegisterResDto{
-		AccessToken: *accessToken,
-		CreatedAt:   newUser.CreatedAt,
+		AccessToken:  *accessToken,
+		RefreshToken: *refreshToken,
+		CreatedAt:    newUser.CreatedAt,
 	}, nil
 }
 
@@ -134,69 +133,22 @@ func Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception) 
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	// check if we can just use the access token
-	if reqDto.AccessToken != nil {
-		claims, exception := util.ParseAccessToken(*reqDto.AccessToken)
-		if exception != nil {
-			return nil, exception
-		}
-		var userId uuid.UUID
-		if err := userId.Scan(claims.Id); err != nil {
-			return nil, exceptions.User.InvalidInput().WithError(err)
-		}
-		userCacheData, exception := caches.GetUserDataCache(userId)
-		if exception != nil {
-			return nil, exception
-		}
-		if userCacheData.AccessToken != *reqDto.AccessToken {
-			return nil, exceptions.Auth.WrongAccessToken()
-		}
-
-		return &dtos.LoginResDto{AccessToken: *reqDto.AccessToken, CreatedAt: claims.ExpiresAt.Time}, nil
-	}
-
-	// else check if we can use the refresh token
-	if reqDto.RefreshToken != nil {
-		claims, exception := util.ParseRefreshToken(*reqDto.RefreshToken)
-		if exception != nil {
-			return nil, exception
-		}
-
-		var userId uuid.UUID
-		if err := userId.Scan(claims.Id); err != nil {
-			return nil, exceptions.User.InvalidInput().WithError(err)
-		}
-		user, exception := operations.GetUserById(nil, userId)
-		if exception != nil {
-			return nil, exception
-		}
-		if user.RefreshToken != *reqDto.RefreshToken {
-			return nil, exceptions.Auth.WrongRefreshToken()
-		}
-
-		accessToken, exception := util.GenerateAccessToken(claims.Id, claims.Name, claims.Email)
-		if exception != nil {
-			return nil, exception
-		}
-		return &dtos.LoginResDto{AccessToken: *accessToken, CreatedAt: time.Now()}, nil
-	}
-
 	// otherwise, the user should provide their account and password
 	var user *schemas.User = nil
 	var exception *exceptions.Exception = nil
-	if util.IsAlphaNumberString(*reqDto.Account) {
-		if user, exception = operations.GetUserByName(nil, *reqDto.Account); exception != nil {
+	if util.IsAlphaNumberString(reqDto.Account) { // if the account field contain user name
+		if user, exception = operations.GetUserByName(nil, reqDto.Account); exception != nil {
 			return nil, exception
 		}
-	} else if util.IsEmailString(*reqDto.Account) {
-		if user, exception = operations.GetUserByEmail(nil, *reqDto.Account); exception != nil {
+	} else if util.IsEmailString(reqDto.Account) { // if the account field contain email
+		if user, exception = operations.GetUserByEmail(nil, reqDto.Account); exception != nil {
 			return nil, exception
 		}
 	} else {
 		return nil, exceptions.Auth.InvalidDto()
 	}
 
-	if !checkPasswordHash(*reqDto.Password, user.Password) {
+	if !checkPasswordHash(user.Password, reqDto.Password) {
 		return nil, exceptions.Auth.WrongPassword()
 	}
 
@@ -210,13 +162,61 @@ func Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception) 
 	}
 
 	// update the access token of the user
-	if exception = caches.UpdateUserDataCache(user.Id, caches.UpdateUserDataCacheDto{AccessToken: accessToken}); exception != nil {
-		return nil, exception
-	}
-	// update the refresh token of the user
-	if _, exception = operations.UpdateUserById(nil, user.Id, inputs.UpdateUserInput{RefreshToken: refreshToken}); exception != nil {
+	exception = caches.UpdateUserDataCache(user.Id, caches.UpdateUserDataCacheDto{AccessToken: accessToken})
+	if exception != nil {
 		return nil, exception
 	}
 
-	return &dtos.LoginResDto{AccessToken: *accessToken, CreatedAt: time.Now()}, nil
+	// update the refresh token and the status of the user
+	updatedUser, exception := operations.UpdateUserById(
+		nil,
+		user.Id,
+		inputs.UpdateUserInput{
+			Status:       &user.PrevStatus,
+			RefreshToken: refreshToken,
+		},
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.LoginResDto{
+		AccessToken: *accessToken,
+		UpdatedAt:   updatedUser.UpdatedAt,
+	}, nil
+}
+
+func Logout(reqDto *dtos.LogoutReqDto) (*dtos.LogoutResDto, *exceptions.Exception) {
+	claims, exception := util.ParseAccessToken(reqDto.AccessToken)
+	if exception != nil {
+		return nil, exception
+	}
+
+	userId, err := uuid.Parse(claims.Id)
+	if err != nil {
+		return nil, exceptions.Util.FailedToParseAccessToken().WithError(err)
+	}
+
+	statusOffline := enums.UserStatus_Offline
+	emptyRefreshToken := ""
+	updatedUser, exception := operations.UpdateUserById(
+		nil,
+		userId,
+		inputs.UpdateUserInput{
+			Status:       &statusOffline,
+			RefreshToken: &emptyRefreshToken,
+		},
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	exception = caches.DeleteUserDataCache(userId)
+	if exception != nil {
+		exception.Log()
+	}
+
+	return &dtos.LogoutResDto{
+		UpdatedAt: updatedUser.UpdatedAt,
+	}, nil
 }

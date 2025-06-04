@@ -12,9 +12,11 @@ const (
 )
 
 const (
-	exceptionReason_WrongPassword     ExceptionReason = "Wrong_Password"
-	exceptionReason_WrongAccessToken  ExceptionReason = "Wrong_AccessToken"
-	exceptionReason_WrongRefreshToken ExceptionReason = "Wrong_RefreshToken"
+	ExceptionReason__WrongPassword                         ExceptionReason = "Wrong_Password"
+	ExceptionReason__WrongAccessToken                      ExceptionReason = "Wrong_AccessToken"
+	ExceptionReason__WrongRefreshToken                     ExceptionReason = "Wrong_RefreshToken"
+	ExceptionReason__FailedToExtractOrValidateAccessToken  ExceptionReason = "Failed_To_Extract_Or_Validate_AccessToken"
+	ExceptionReason__FailedToExtractOrValidateRefreshToken ExceptionReason = "Failed_To_Extract_Or_Validate_RefreshToken"
 )
 
 type AuthExceptionDomain struct {
@@ -38,7 +40,7 @@ func (d *AuthExceptionDomain) WrongPassword() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
 		Prefix:         d.Prefix,
-		Reason:         exceptionReason_WrongPassword,
+		Reason:         ExceptionReason__WrongPassword,
 		Message:        "The password is not match",
 		HTTPStatusCode: http.StatusUnauthorized,
 	}
@@ -48,7 +50,7 @@ func (d *AuthExceptionDomain) WrongAccessToken() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 2,
 		Prefix:         d.Prefix,
-		Reason:         exceptionReason_WrongAccessToken,
+		Reason:         ExceptionReason__WrongAccessToken,
 		Message:        "The access token is not match or expired",
 		HTTPStatusCode: http.StatusUnauthorized,
 	}
@@ -58,8 +60,28 @@ func (d *AuthExceptionDomain) WrongRefreshToken() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 3,
 		Prefix:         d.Prefix,
-		Reason:         exceptionReason_WrongRefreshToken,
+		Reason:         ExceptionReason__WrongRefreshToken,
 		Message:        "The refresh token is not match or expired",
+		HTTPStatusCode: http.StatusUnauthorized,
+	}
+}
+
+func (d *AuthExceptionDomain) FailedToExtractOrValidateAccessToken() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 4,
+		Prefix:         d.Prefix,
+		Reason:         ExceptionReason__FailedToExtractOrValidateAccessToken,
+		Message:        "Failed to get or validate the access token",
+		HTTPStatusCode: http.StatusUnauthorized,
+	}
+}
+
+func (d *AuthExceptionDomain) FailedToExtractOrValidateRefreshToken() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 5,
+		Prefix:         d.Prefix,
+		Reason:         ExceptionReason__FailedToExtractOrValidateRefreshToken,
+		Message:        "Failed to get or validate the refresh token",
 		HTTPStatusCode: http.StatusUnauthorized,
 	}
 }

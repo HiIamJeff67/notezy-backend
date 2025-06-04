@@ -4,7 +4,7 @@ import (
 	"notezy-backend/app"
 	logs "notezy-backend/app/logs"
 	models "notezy-backend/app/models"
-	"notezy-backend/global"
+	global "notezy-backend/global"
 	"os"
 
 	"github.com/spf13/cobra"
