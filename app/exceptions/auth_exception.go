@@ -12,11 +12,12 @@ const (
 )
 
 const (
-	ExceptionReason__WrongPassword                         ExceptionReason = "Wrong_Password"
-	ExceptionReason__WrongAccessToken                      ExceptionReason = "Wrong_AccessToken"
-	ExceptionReason__WrongRefreshToken                     ExceptionReason = "Wrong_RefreshToken"
-	ExceptionReason__FailedToExtractOrValidateAccessToken  ExceptionReason = "Failed_To_Extract_Or_Validate_AccessToken"
-	ExceptionReason__FailedToExtractOrValidateRefreshToken ExceptionReason = "Failed_To_Extract_Or_Validate_RefreshToken"
+	ExceptionReason_WrongPassword                         ExceptionReason = "Wrong_Password"
+	ExceptionReason_WrongAccessToken                      ExceptionReason = "Wrong_Access_Token"
+	ExceptionReason_WrongRefreshToken                     ExceptionReason = "Wrong_Refresh_Token"
+	ExceptionReason_WronUserAgent                         ExceptionReason = "Wrong_User_Agent"
+	ExceptionReason_FailedToExtractOrValidateAccessToken  ExceptionReason = "Failed_To_Extract_Or_Validate_Access_Token"
+	ExceptionReason_FailedToExtractOrValidateRefreshToken ExceptionReason = "Failed_To_Extract_Or_Validate_Refresh_Token"
 )
 
 type AuthExceptionDomain struct {
@@ -40,7 +41,7 @@ func (d *AuthExceptionDomain) WrongPassword() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
 		Prefix:         d.Prefix,
-		Reason:         ExceptionReason__WrongPassword,
+		Reason:         ExceptionReason_WrongPassword,
 		Message:        "The password is not match",
 		HTTPStatusCode: http.StatusUnauthorized,
 	}
@@ -50,7 +51,7 @@ func (d *AuthExceptionDomain) WrongAccessToken() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 2,
 		Prefix:         d.Prefix,
-		Reason:         ExceptionReason__WrongAccessToken,
+		Reason:         ExceptionReason_WrongAccessToken,
 		Message:        "The access token is not match or expired",
 		HTTPStatusCode: http.StatusUnauthorized,
 	}
@@ -60,17 +61,27 @@ func (d *AuthExceptionDomain) WrongRefreshToken() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 3,
 		Prefix:         d.Prefix,
-		Reason:         ExceptionReason__WrongRefreshToken,
+		Reason:         ExceptionReason_WrongRefreshToken,
 		Message:        "The refresh token is not match or expired",
+		HTTPStatusCode: http.StatusUnauthorized,
+	}
+}
+
+func (d *AuthExceptionDomain) WrongUserAgent() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 4,
+		Prefix:         d.Prefix,
+		Reason:         ExceptionReason_WronUserAgent,
+		Message:        "The user agent is not match",
 		HTTPStatusCode: http.StatusUnauthorized,
 	}
 }
 
 func (d *AuthExceptionDomain) FailedToExtractOrValidateAccessToken() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 4,
+		Code:           d.BaseCode + 5,
 		Prefix:         d.Prefix,
-		Reason:         ExceptionReason__FailedToExtractOrValidateAccessToken,
+		Reason:         ExceptionReason_FailedToExtractOrValidateAccessToken,
 		Message:        "Failed to get or validate the access token",
 		HTTPStatusCode: http.StatusUnauthorized,
 	}
@@ -78,9 +89,9 @@ func (d *AuthExceptionDomain) FailedToExtractOrValidateAccessToken() *Exception 
 
 func (d *AuthExceptionDomain) FailedToExtractOrValidateRefreshToken() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 5,
+		Code:           d.BaseCode + 6,
 		Prefix:         d.Prefix,
-		Reason:         ExceptionReason__FailedToExtractOrValidateRefreshToken,
+		Reason:         ExceptionReason_FailedToExtractOrValidateRefreshToken,
 		Message:        "Failed to get or validate the refresh token",
 		HTTPStatusCode: http.StatusUnauthorized,
 	}

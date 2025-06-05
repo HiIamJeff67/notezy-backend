@@ -10,7 +10,7 @@ import (
 var RefreshToken = NewCookieHandler(
 	global.ValidCookieName_RefreshToken,
 	constants.BaseURL,
-	time.Now().Add(constants.RefreshTokenExpirationTime),
+	time.Now().Add(constants.ExpirationTimeOfRefreshToken),
 	true,
 	true,
 	http.SameSiteStrictMode,

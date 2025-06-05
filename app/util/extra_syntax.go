@@ -1,8 +1,8 @@
 package util
 
 func AssignIfNotNil[T any](
-	updatedObject *T, 
-	value *T, 
+	updatedObject *T,
+	value *T,
 ) bool {
 	if value != nil {
 		*updatedObject = *value
@@ -10,4 +10,3 @@ func AssignIfNotNil[T any](
 	}
 	return false
 }
-

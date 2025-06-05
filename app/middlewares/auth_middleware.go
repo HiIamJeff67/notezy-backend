@@ -8,11 +8,12 @@ import (
 	"github.com/google/uuid"
 
 	caches "notezy-backend/app/caches"
-	cookies "notezy-backend/app/cookie"
+	cookies "notezy-backend/app/cookies"
 	exceptions "notezy-backend/app/exceptions"
 	operations "notezy-backend/app/models/operations"
 	schemas "notezy-backend/app/models/schemas"
 	util "notezy-backend/app/util"
+	"notezy-backend/global/types"
 )
 
 func _extractAccessToken(ctx *gin.Context) (string, *exceptions.Exception) {
@@ -37,27 +38,27 @@ func _extractRefreshToken(ctx *gin.Context) (string, *exceptions.Exception) {
 	return refreshToken, nil
 }
 
-func _validateAccessToken(accessToken string) *exceptions.Exception {
+func _validateAccessTokenAndUserAgent(accessToken string) (*types.Claims, *exceptions.Exception) {
 	claims, exception := util.ParseAccessToken(accessToken)
 	if exception != nil { // if failed to parse the accessToken
-		return exception
+		return nil, exception
 	}
 
 	userId, err := uuid.Parse(claims.Id)
 	if err != nil { // if the id is invalid somehow
-		return exceptions.Util.FailedToParseAccessToken().WithError(err)
+		return nil, exceptions.Util.FailedToParseAccessToken().WithError(err)
 	}
 
 	userDataCache, exception := caches.GetUserDataCache(userId)
 	if exception != nil { // if there's no user cache storing its accessToken, in this way, we're impossible to validate its accessToken
-		return exception
+		return nil, exception
 	}
 
 	if accessToken != userDataCache.AccessToken { // if failed to compare and validate the accessToken as the correct token storing in the cache
-		return exceptions.Auth.WrongAccessToken()
+		return nil, exceptions.Auth.WrongAccessToken()
 	}
 
-	return nil
+	return claims, nil
 }
 
 func _validateRefreshToken(refreshToken string) (*schemas.User, *exceptions.Exception) {
@@ -85,16 +86,20 @@ func _validateRefreshToken(refreshToken string) (*schemas.User, *exceptions.Exce
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		// nest if statement bcs we will skip the accessToken validation if it failed
 		if accessToken, exception := _extractAccessToken(ctx); exception == nil { // if extract the accessToken successfully
-			if exception = _validateAccessToken(accessToken); exception == nil { // if validate the accessToken successfully
-				ctx.Set("accessToken", accessToken)
-				ctx.Next()
-				return
+			if claims, exception := _validateAccessTokenAndUserAgent(accessToken); exception == nil { // if validate the accessToken successfully
+				if currentUserAgent := ctx.GetHeader("User-Agent"); currentUserAgent == claims.UserAgent { // if the userAgent is matched
+					ctx.Set("accessToken", accessToken)
+					ctx.Next()
+					return
+				}
 			}
 		}
 
 		// if the above procedures to validating accessToken is failed,
 		// we now try to extract and validate the refreshToken
+		// this means the old accessToken can no longer get any data of the user
 		refreshToken, exception := _extractRefreshToken(ctx)
 		if exception != nil { // if failed to extract the refreshToken
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, exception.GetGinH())
@@ -107,9 +112,15 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
+		// if we can't check the userAgent in accessToken, then we check it in our database
+		if currentUserAgent := ctx.GetHeader("User-Agent"); currentUserAgent != _user.UserAgent {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, exceptions.Auth.WrongUserAgent().GetGinH())
+			return
+		}
+
 		// if we failed to validate the accessToken, but we have validated the refreshToken
 		// then we need to generate the new accessToken, and storing it in the cache, and regarding the entire validation as successful
-		newAccessToken, exception := util.GenerateAccessToken(_user.Id.String(), _user.Name, _user.Email)
+		newAccessToken, exception := util.GenerateAccessToken(_user.Id.String(), _user.Name, _user.Email, _user.UserAgent)
 		if exception != nil {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, exception.GetGinH())
 			return

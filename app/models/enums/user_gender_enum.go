@@ -14,7 +14,7 @@ const (
 	UserGender_PreferNotToSay UserGender = "PreferNotToSay"
 )
 
-func (g *UserGender) Name() string {
+func (g UserGender) Name() string {
 	return reflect.TypeOf(g).Name()
 }
 
@@ -34,6 +34,16 @@ func (g UserGender) Value() (driver.Value, error) {
 	return string(g), nil
 }
 
+func (g *UserGender) IsValidEnum() bool {
+	for _, enum := range AllUserGenders {
+		if *g == enum {
+			return true
+		}
+	}
+	return false
+}
+
+/* ========================= All UserGenders ========================= */
 var AllUserGenders = []UserGender{
 	UserGender_Male,
 	UserGender_Female,

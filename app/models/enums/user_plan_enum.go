@@ -15,7 +15,7 @@ const (
 	UserPlan_Free       UserPlan = "Free"
 )
 
-func (p *UserPlan) Name() string {
+func (p UserPlan) Name() string {
 	return reflect.TypeOf(p).Name()
 }
 
@@ -35,6 +35,16 @@ func (p UserPlan) Value() (driver.Value, error) {
 	return string(p), nil
 }
 
+func (p *UserPlan) IsValidEnum() bool {
+	for _, enum := range AllUserPlans {
+		if *p == enum {
+			return true
+		}
+	}
+	return false
+}
+
+/* ========================= All UserPlans ========================= */
 var AllUserPlans = []UserPlan{
 	UserPlan_Enterprise,
 	UserPlan_Ultimate,

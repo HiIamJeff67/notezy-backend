@@ -15,7 +15,7 @@ const (
 	UserStatus_Offline      UserStatus = "Offline"
 )
 
-func (s *UserStatus) Name() string {
+func (s UserStatus) Name() string {
 	return reflect.TypeOf(s).Name()
 }
 
@@ -35,6 +35,16 @@ func (s UserStatus) Value() (driver.Value, error) {
 	return string(s), nil
 }
 
+func (s *UserStatus) IsValidEnum() bool {
+	for _, enum := range AllUserStatuses {
+		if *s == enum {
+			return true
+		}
+	}
+	return false
+}
+
+/* ========================= All UserStatuses ========================= */
 var AllUserStatuses = []UserStatus{
 	UserStatus_Online,
 	UserStatus_AFK,

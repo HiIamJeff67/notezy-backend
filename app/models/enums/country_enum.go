@@ -21,7 +21,7 @@ const (
 	Country_Canada                Country = "Canada"
 )
 
-func (c *Country) Name() string {
+func (c Country) Name() string {
 	return reflect.TypeOf(c).Name()
 }
 
@@ -41,6 +41,16 @@ func (c Country) Value() (driver.Value, error) {
 	return string(c), nil
 }
 
+func (c *Country) IsValidEnum() bool {
+	for _, enum := range AllCountries {
+		if *c == enum {
+			return true
+		}
+	}
+	return false
+}
+
+/* ========================= All Countries ========================= */
 var AllCountries = []Country{
 	Country_Default,
 	Country_Taiwan,

@@ -12,13 +12,14 @@ const (
 )
 
 const (
-	ExceptionReason__FailedToGenerateHashValue     ExceptionReason = "Failed_To_Generate_Hash_Value"
-	ExceptionReason__AccessTokenSecretKeyNotFound  ExceptionReason = "Access_Token_Secret_Key_Not_Found"
-	ExceptionReason__RefreshTokenSecretKeyNotFound ExceptionReason = "Refresh_Token_Secret_Key_Not_Found"
-	ExceptionReason__FailedToGenerateAccessToken   ExceptionReason = "Failed_To_Generate_Access_Token"
-	ExceptionReason__FailedToGenerateRefreshToken  ExceptionReason = "Failed_To_Generate_Refresh_Token"
-	ExceptionReason__FailedToParseAccessToken      ExceptionReason = "Failed_To_Parse_Access_Token"
-	ExceptionReason__FailedToParseRefreshToken     ExceptionReason = "Failed_To_Parse_Refresh_Token"
+	ExceptionReason_AccessTokenSecretKeyNotFound  ExceptionReason = "Access_Token_Secret_Key_Not_Found"
+	ExceptionReason_RefreshTokenSecretKeyNotFound ExceptionReason = "Refresh_Token_Secret_Key_Not_Found"
+	ExceptionReason_FailedToGenerateAccessToken   ExceptionReason = "Failed_To_Generate_Access_Token"
+	ExceptionReason_FailedToGenerateRefreshToken  ExceptionReason = "Failed_To_Generate_Refresh_Token"
+	ExceptionReason_FailedToParseAccessToken      ExceptionReason = "Failed_To_Parse_Access_Token"
+	ExceptionReason_FailedToParseRefreshToken     ExceptionReason = "Failed_To_Parse_Refresh_Token"
+	ExceptionReason_FailedToGenerateHashValue     ExceptionReason = "Failed_To_Generate_Hash_Value"
+	ExceptionReason_FailedToReadFile              ExceptionReason = "Failed_To_Read_File"
 )
 
 type UtilExceptionDomain struct {
@@ -36,25 +37,13 @@ var Util = &UtilExceptionDomain{
 	},
 }
 
-/* ============================== Handing Exception on Hash ============================== */
-
-func (d *UtilExceptionDomain) FailedToGenerateHashValue() *Exception {
-	return &Exception{
-		Code:           d.BaseCode + 1,
-		Prefix:         d.Prefix,
-		Reason:         ExceptionReason__FailedToGenerateHashValue,
-		Message:        "Failed to generate the hash value",
-		HTTPStatusCode: http.StatusInternalServerError,
-	}
-}
-
 /* ============================== Handling Exception on Json Web Tokens ============================== */
 
 func (d *UtilExceptionDomain) AccessTokenSecretKeyNotFound() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 11,
 		Prefix:         d.Prefix,
-		Reason:         ExceptionReason__AccessTokenSecretKeyNotFound,
+		Reason:         ExceptionReason_AccessTokenSecretKeyNotFound,
 		Message:        "The environment variables of access token secret key is not found",
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -62,9 +51,9 @@ func (d *UtilExceptionDomain) AccessTokenSecretKeyNotFound() *Exception {
 
 func (d *UtilExceptionDomain) RefreshTokenSecretKeyNotFound() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 12,
+		Code:           d.BaseCode + 2,
 		Prefix:         d.Prefix,
-		Reason:         ExceptionReason__RefreshTokenSecretKeyNotFound,
+		Reason:         ExceptionReason_RefreshTokenSecretKeyNotFound,
 		Message:        "The environment variables of refresh token secret key is not found",
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -72,9 +61,9 @@ func (d *UtilExceptionDomain) RefreshTokenSecretKeyNotFound() *Exception {
 
 func (d *UtilExceptionDomain) FailedToGenerateAccessToken() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 13,
+		Code:           d.BaseCode + 3,
 		Prefix:         d.Prefix,
-		Reason:         ExceptionReason__FailedToGenerateAccessToken,
+		Reason:         ExceptionReason_FailedToGenerateAccessToken,
 		Message:        "Failed to generate the access token",
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -82,9 +71,9 @@ func (d *UtilExceptionDomain) FailedToGenerateAccessToken() *Exception {
 
 func (d *UtilExceptionDomain) FailedToGenerateRefreshToken() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 14,
+		Code:           d.BaseCode + 4,
 		Prefix:         d.Prefix,
-		Reason:         ExceptionReason__FailedToGenerateRefreshToken,
+		Reason:         ExceptionReason_FailedToGenerateRefreshToken,
 		Message:        "Failed to generate the refresh token",
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -92,9 +81,9 @@ func (d *UtilExceptionDomain) FailedToGenerateRefreshToken() *Exception {
 
 func (d *UtilExceptionDomain) FailedToParseAccessToken() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 15,
+		Code:           d.BaseCode + 5,
 		Prefix:         d.Prefix,
-		Reason:         ExceptionReason__FailedToParseAccessToken,
+		Reason:         ExceptionReason_FailedToParseAccessToken,
 		Message:        "Failed to parse the access token",
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -102,10 +91,34 @@ func (d *UtilExceptionDomain) FailedToParseAccessToken() *Exception {
 
 func (d *UtilExceptionDomain) FailedToParseRefreshToken() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 16,
+		Code:           d.BaseCode + 6,
 		Prefix:         d.Prefix,
-		Reason:         ExceptionReason__FailedToParseRefreshToken,
+		Reason:         ExceptionReason_FailedToParseRefreshToken,
 		Message:        "Failed to parse the refresh token",
+		HTTPStatusCode: http.StatusInternalServerError,
+	}
+}
+
+/* ============================== Handing Exception on Hash ============================== */
+
+func (d *UtilExceptionDomain) FailedToGenerateHashValue() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 11,
+		Prefix:         d.Prefix,
+		Reason:         ExceptionReason_FailedToGenerateHashValue,
+		Message:        "Failed to generate the hash value",
+		HTTPStatusCode: http.StatusInternalServerError,
+	}
+}
+
+/* ============================== Handling Wrapping Official Utility Error ============================== */
+
+func (d *UtilExceptionDomain) FailedToReadFile() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 12,
+		Prefix:         d.Prefix,
+		Reason:         ExceptionReason_FailedToReadFile,
+		Message:        "Failed to read the file",
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
 }

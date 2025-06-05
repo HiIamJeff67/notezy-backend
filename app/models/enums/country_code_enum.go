@@ -20,7 +20,7 @@ const (
 	CountryCode_Australia     CountryCode = "+61"
 )
 
-func (cc *CountryCode) Name() string {
+func (cc CountryCode) Name() string {
 	return reflect.TypeOf(cc).Name()
 }
 
@@ -40,6 +40,16 @@ func (cc CountryCode) Value() (driver.Value, error) {
 	return string(cc), nil
 }
 
+func (cc *CountryCode) IsValidEnum() bool {
+	for _, enum := range AllCountryCodes {
+		if *cc == enum {
+			return true
+		}
+	}
+	return false
+}
+
+/* ========================= All CountryCodes ========================= */
 var AllCountryCodes = []CountryCode{
 	CountryCode_Default,
 	CountryCode_Taiwan,

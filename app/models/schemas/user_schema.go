@@ -16,6 +16,7 @@ type User struct {
 	Email        string           `json:"email" gorm:"column:email; unique; not null;"`
 	Password     string           `json:"password" gorm:"column:password; not null; size:1024;"` // since we store the hashed password which is quite long
 	RefreshToken string           `json:"refreshToken" gorm:"column:refresh_token; not null; default:'';"`
+	UserAgent    string           `json:"userAgent" gorm:"column:user_agent; not null;"`
 	Role         enums.UserRole   `json:"role" gorm:"column:role; type:UserRole; not null; default:'Guest';"`
 	Plan         enums.UserPlan   `json:"plan" gorm:"column:plan; type:UserPlan; not null; default:'Free';"`
 	PrevStatus   enums.UserStatus `json:"prevStatus" gorm:"column:prev_status; type:UserStatus; not null; default:'Online';"`

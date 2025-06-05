@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	cookies "notezy-backend/app/cookie"
+	cookies "notezy-backend/app/cookies"
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	services "notezy-backend/app/services"
@@ -14,6 +14,7 @@ import (
 /* ============================== Controller ============================== */
 func Register(ctx *gin.Context) {
 	var reqDto dtos.RegisterReqDto
+	reqDto.UserAgent = ctx.GetHeader("User-Agent")
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		ctx.JSON(http.StatusBadRequest, exceptions.Auth.InvalidDto().WithError(err).GetGinH())
 		return
@@ -38,6 +39,7 @@ func Register(ctx *gin.Context) {
 
 func Login(ctx *gin.Context) {
 	var reqDto dtos.LoginReqDto
+	reqDto.UserAgent = ctx.GetHeader("User-Agent")
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		ctx.JSON(
 			exceptions.Auth.InvalidDto().HTTPStatusCode,

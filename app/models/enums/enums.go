@@ -9,6 +9,7 @@ type Enum interface {
 	Name() string
 	Scan(value any) error
 	Value() (driver.Value, error)
+	IsValidEnum() bool
 }
 
 /* ==================== Temporary Function to Get the Scan Error ==================== */

@@ -14,7 +14,7 @@ const (
 	UserRole_Guest  UserRole = "Guest"
 )
 
-func (r *UserRole) Name() string {
+func (r UserRole) Name() string {
 	return reflect.TypeOf(r).Name()
 }
 
@@ -36,6 +36,16 @@ func (r UserRole) Value() (driver.Value, error) {
 	return string(r), nil
 }
 
+func (r *UserRole) IsValidEnum() bool {
+	for _, enum := range AllUserRoles {
+		if *r == enum {
+			return true
+		}
+	}
+	return false
+}
+
+/* ========================= All UserRoles ========================= */
 var AllUserRoles = []UserRole{
 	UserRole_Admin,
 	UserRole_Noraml,

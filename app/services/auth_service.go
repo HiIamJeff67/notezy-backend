@@ -1,6 +1,8 @@
 package services
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
@@ -13,6 +15,7 @@ import (
 	operations "notezy-backend/app/models/operations"
 	schemas "notezy-backend/app/models/schemas"
 	util "notezy-backend/app/util"
+	"notezy-backend/global/constants"
 )
 
 /* ============================== Auxiliary Function ============================== */
@@ -45,6 +48,7 @@ func Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Ex
 		DisplayName: util.GenerateRandomFakeName(),
 		Email:       reqDto.Email,
 		Password:    hashedPassword,
+		UserAgent:   reqDto.UserAgent,
 	}
 	newUserId, exception := operations.CreateUser(tx, createUserInputData)
 	if exception != nil {
@@ -52,17 +56,31 @@ func Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Ex
 		return nil, exception
 	}
 
-	// Generate tokens
-	accessToken, exception := util.GenerateAccessToken((*newUserId).String(), createUserInputData.Name, createUserInputData.Email)
+	// Generate accessToken
+	accessToken, exception := util.GenerateAccessToken(
+		(*newUserId).String(),
+		createUserInputData.Name,
+		createUserInputData.Email,
+		createUserInputData.UserAgent,
+	)
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
-	refreshToken, exception := util.GenerateRefreshToken((*newUserId).String(), createUserInputData.Name, createUserInputData.Email)
+	// Generate refreshToken
+	refreshToken, exception := util.GenerateRefreshToken(
+		(*newUserId).String(),
+		createUserInputData.Name,
+		createUserInputData.Email,
+		createUserInputData.UserAgent,
+	)
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
+	// Generate authCode and its expiration time
+	authCode := util.GenerateAuthCode()
+	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
 
 	// Update user refresh token
 	newUser, exception := operations.UpdateUserById(tx, *newUserId, inputs.UpdateUserInput{RefreshToken: refreshToken})
@@ -79,7 +97,7 @@ func Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Ex
 	}
 
 	// Create user account
-	_, exception = operations.CreateUserAccountByUserId(tx, *newUserId, inputs.CreateUserAccountInput{})
+	_, exception = operations.CreateUserAccountByUserId(tx, *newUserId, inputs.CreateUserAccountInput{AuthCode: authCode, AuthCodeExpiredAt: authCodeExpiredAt})
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -151,12 +169,15 @@ func Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception) 
 	if !checkPasswordHash(user.Password, reqDto.Password) {
 		return nil, exceptions.Auth.WrongPassword()
 	}
+	if user.UserAgent != reqDto.UserAgent {
+		// send a security email to warn the user
+	}
 
-	accessToken, exception := util.GenerateAccessToken(user.Id.String(), user.Name, user.Email)
+	accessToken, exception := util.GenerateAccessToken(user.Id.String(), user.Name, user.Email, user.UserAgent)
 	if exception != nil {
 		return nil, exception
 	}
-	refreshToken, exception := util.GenerateRefreshToken(user.Id.String(), user.Name, user.Email)
+	refreshToken, exception := util.GenerateRefreshToken(user.Id.String(), user.Name, user.Email, user.UserAgent)
 	if exception != nil {
 		return nil, exception
 	}
@@ -174,6 +195,7 @@ func Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception) 
 		inputs.UpdateUserInput{
 			Status:       &user.PrevStatus,
 			RefreshToken: refreshToken,
+			UserAgent:    &reqDto.UserAgent,
 		},
 	)
 	if exception != nil {

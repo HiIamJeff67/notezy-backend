@@ -16,7 +16,7 @@ const (
 	BadgeType_Steel   BadgeType = "Steel"
 )
 
-func (bt *BadgeType) Name() string {
+func (bt BadgeType) Name() string {
 	return reflect.TypeOf(bt).Name()
 }
 
@@ -36,6 +36,16 @@ func (bt BadgeType) Value() (driver.Value, error) {
 	return string(bt), nil
 }
 
+func (bt *BadgeType) IsValidEnum() bool {
+	for _, enum := range AllBadgeTypes {
+		if *bt == enum {
+			return true
+		}
+	}
+	return false
+}
+
+/* ========================= All BadgeTypes ========================= */
 var AllBadgeTypes = []BadgeType{
 	BadgeType_Diamond,
 	BadgeType_Golden,

@@ -33,11 +33,12 @@ func init() {
 }
 
 /* ============================== Generate Tokens Functions ============================== */
-func GenerateAccessToken(id string, name string, email string) (*string, *exceptions.Exception) {
+func GenerateAccessToken(id string, name string, email string, userAgent string) (*string, *exceptions.Exception) {
 	claims := types.Claims{
-		Id:    id,
-		Name:  name,
-		Email: email,
+		Id:        id,
+		Name:      name,
+		Email:     email,
+		UserAgent: userAgent,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(_accessTokenExpiresIn)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -53,11 +54,12 @@ func GenerateAccessToken(id string, name string, email string) (*string, *except
 	return &result, nil
 }
 
-func GenerateRefreshToken(id string, name string, email string) (*string, *exceptions.Exception) {
+func GenerateRefreshToken(id string, name string, email string, userAgent string) (*string, *exceptions.Exception) {
 	claims := types.Claims{
-		Id:    id,
-		Name:  name,
-		Email: email,
+		Id:        id,
+		Name:      name,
+		Email:     email,
+		UserAgent: userAgent,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(_refreshTokenExpiresIn)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

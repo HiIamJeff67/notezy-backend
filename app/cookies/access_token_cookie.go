@@ -10,7 +10,7 @@ import (
 var AccessToken = NewCookieHandler(
 	global.ValidCookieName_AccessToken,
 	constants.BaseURL,
-	time.Now().Add(constants.AccessTokenExpirationTime),
+	time.Now().Add(constants.ExpirationTimeOfAccessToken),
 	true,
 	true,
 	http.SameSiteLaxMode,

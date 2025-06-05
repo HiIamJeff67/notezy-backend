@@ -14,7 +14,7 @@ const (
 	Theme_System Theme = "System"
 )
 
-func (t *Theme) Name() string {
+func (t Theme) Name() string {
 	return reflect.TypeOf(t).Name()
 }
 
@@ -34,6 +34,16 @@ func (t Theme) Value() (driver.Value, error) {
 	return string(t), nil
 }
 
+func (t *Theme) IsValidEnum() bool {
+	for _, enum := range AllThemes {
+		if *t == enum {
+			return true
+		}
+	}
+	return false
+}
+
+/* ========================= All Themes ========================= */
 var AllThemes = []Theme{
 	Theme_Light,
 	Theme_Dark,

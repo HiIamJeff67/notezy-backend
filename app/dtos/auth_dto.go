@@ -7,14 +7,16 @@ import (
 /* ============================== Request DTO ============================== */
 
 type RegisterReqDto struct {
-	Name     string `json:"name" validate:"required"`
-	Email    string `json:"email" validate:"required"`
-	Password string `json:"password" validate:"required,min=8,max=32,isstrongpassword"`
+	Name      string `json:"name" validate:"required"`
+	Email     string `json:"email" validate:"required"`
+	Password  string `json:"password" validate:"required,min=8,max=32,isstrongpassword"`
+	UserAgent string `json:"userAgent" validate:"required" gorm:"column:user_agent;"`
 }
 
 type LoginReqDto struct {
-	Account  string `json:"account" validate:"required"`
-	Password string `json:"password" validate:"required,min=8,max=32,isstrongpassword"`
+	Account   string `json:"account" validate:"required"`
+	Password  string `json:"password" validate:"required,min=8,max=32,isstrongpassword"`
+	UserAgent string `json:"userAgent" validate:"required" gorm:"column:user_agent;"`
 }
 
 type LogoutReqDto struct {

@@ -15,7 +15,7 @@ const (
 	Language_Japanese           Language = "Japanese"
 )
 
-func (l *Language) Name() string {
+func (l Language) Name() string {
 	return reflect.TypeOf(l).Name()
 }
 
@@ -35,6 +35,16 @@ func (l Language) Value() (driver.Value, error) {
 	return string(l), nil
 }
 
+func (l *Language) IsValidEnum() bool {
+	for _, enum := range AllLanguages {
+		if *l == enum {
+			return true
+		}
+	}
+	return false
+}
+
+/* ========================= All Languages ========================= */
 var AllLanguages = []Language{
 	Language_English,
 	Language_TraditionalChinese,
