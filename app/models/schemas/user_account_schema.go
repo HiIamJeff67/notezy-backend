@@ -13,10 +13,10 @@ type UserAccount struct {
 	UserId            uuid.UUID         `json:"userId" gorm:"column:user_id; type:uuid; not null; unique;"`
 	AuthCode          string            `json:"authCode" gorm:"column:auth_code; not null;"`
 	AuthCodeExpiredAt time.Time         `json:"authCodeExpiredAt" gorm:"column:auth_code_expired_at; not null;"` // the exact time when authCode expires
-	CountryCode       enums.CountryCode `json:"countryCound" gorm:"column:country_code; type:CountryCode; not null; default:'Default'"`
+	CountryCode       enums.CountryCode `json:"countryCode" gorm:"column:country_code; type:CountryCode; not null; default:'Default'"`
 	PhoneNumber       string            `json:"phoneNumber" gorm:"column:phone_number; unique; not null; default:''"`
-	GoogleCredential  string            `json:"googleCrendential" gorm:"column:google_credential; unique; not null; default:''"`
-	DiscordCredential string            `json:"discordCrendential" gorm:"column:discord_credential; unique; not null; default:''"`
+	GoogleCredential  string            `json:"googleCredential" gorm:"column:google_credential; unique; not null; default:''"`
+	DiscordCredential string            `json:"discordCredential" gorm:"column:discord_credential; unique; not null; default:''"`
 	UpdatedAt         time.Time         `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 }
 

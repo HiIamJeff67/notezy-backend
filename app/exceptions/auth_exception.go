@@ -15,7 +15,7 @@ const (
 	ExceptionReason_WrongPassword                         ExceptionReason = "Wrong_Password"
 	ExceptionReason_WrongAccessToken                      ExceptionReason = "Wrong_Access_Token"
 	ExceptionReason_WrongRefreshToken                     ExceptionReason = "Wrong_Refresh_Token"
-	ExceptionReason_WronUserAgent                         ExceptionReason = "Wrong_User_Agent"
+	ExceptionReason_WrongUserAgent                        ExceptionReason = "Wrong_User_Agent"
 	ExceptionReason_FailedToExtractOrValidateAccessToken  ExceptionReason = "Failed_To_Extract_Or_Validate_Access_Token"
 	ExceptionReason_FailedToExtractOrValidateRefreshToken ExceptionReason = "Failed_To_Extract_Or_Validate_Refresh_Token"
 )
@@ -71,7 +71,7 @@ func (d *AuthExceptionDomain) WrongUserAgent() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 4,
 		Prefix:         d.Prefix,
-		Reason:         ExceptionReason_WronUserAgent,
+		Reason:         ExceptionReason_WrongUserAgent,
 		Message:        "The user agent is not match",
 		HTTPStatusCode: http.StatusUnauthorized,
 	}

@@ -26,13 +26,13 @@ func (r *HTMLEmailRenderer) Render() (string, *exceptions.Exception) {
 		return "", exceptions.Email.FailedToReadTemplateFileWithPath(r.TemplatePath).WithError(err)
 	}
 
-	tmlp, err := template.New("email").Parse(string(templateBytes))
+	extractedTemplate, err := template.New("email").Parse(string(templateBytes))
 	if err != nil {
 		return "", exceptions.Email.FailedToParseTemplateWithDataMap(r.DataMap).WithError(err)
 	}
 
 	var buffer bytes.Buffer
-	if err = tmlp.Execute(&buffer, r.DataMap); err != nil {
+	if err = extractedTemplate.Execute(&buffer, r.DataMap); err != nil {
 		return "", exceptions.Email.FailedToRenderTemplate().WithError(err)
 	}
 
@@ -54,13 +54,13 @@ func (r *PlainTextEmailRenderer) Render() (string, *exceptions.Exception) {
 		return "", exceptions.Email.FailedToReadTemplateFileWithPath(r.TemplatePath).WithError(err)
 	}
 
-	tmpl, err := template.New("email").Parse(string(templateBytes))
+	extractedTemplate, err := template.New("email").Parse(string(templateBytes))
 	if err != nil {
 		return "", exceptions.Email.FailedToParseTemplateWithDataMap(r.DataMap).WithError(err)
 	}
 
 	var buffer bytes.Buffer
-	if err = tmpl.Execute(&buffer, r.DataMap); err != nil {
+	if err = extractedTemplate.Execute(&buffer, r.DataMap); err != nil {
 		return "", exceptions.Email.FailedToRenderTemplate().WithError(err)
 	}
 
@@ -82,13 +82,13 @@ func (r *MarkdownEmailRenderer) Render() (string, *exceptions.Exception) {
 		return "", exceptions.Email.FailedToReadTemplateFileWithPath(r.TemplatePath).WithError(err)
 	}
 
-	tmpl, err := template.New("email").Parse(string(templateBytes))
+	extractedTemplate, err := template.New("email").Parse(string(templateBytes))
 	if err != nil {
 		return "", exceptions.Email.FailedToParseTemplateWithDataMap(r.DataMap).WithError(err)
 	}
 
 	var buffer bytes.Buffer
-	if err = tmpl.Execute(&buffer, r.DataMap); err != nil {
+	if err = extractedTemplate.Execute(&buffer, r.DataMap); err != nil {
 		return "", exceptions.Email.FailedToRenderTemplate().WithError(err)
 	}
 

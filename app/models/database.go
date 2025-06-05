@@ -15,7 +15,7 @@ import (
 
 var (
 	NotezyDB *gorm.DB
-	// maintain the static infomantion about the database instance and its config
+	// maintain the static information about the database instance and its config
 	DatabaseInstanceToConfig = map[*gorm.DB]global.DatabaseConfig{
 		NotezyDB: global.PostgresDatabaseConfig,
 	}
@@ -63,7 +63,7 @@ func DisconnectToDatabase(db *gorm.DB) bool {
 	}
 
 	if err := sqlDB.Close(); err != nil {
-		logs.FError("Failed to close the connecction of %s database", config.DBName)
+		logs.FError("Failed to close the connection of %s database", config.DBName)
 		return false
 	}
 
@@ -95,7 +95,7 @@ func MigrateToDatabase(db *gorm.DB) bool {
 
 		// get current enum value
 		var exists bool
-		checkEnumSQL := fmt.Sprintf("SELECT EXISTS (SELECT 1 FROM pg_type WHERE typname = '%s');", name)
+		checkEnumSQL := fmt.Sprintf("SELECT EXISTS (SELECT 1 FROM pg_type WHERE typename = '%s');", name)
 		if err := db.Raw(checkEnumSQL).Scan(&exists).Error; err != nil {
 			logs.FError("Failed to check enum %s existence: %v", name, err)
 			return false
@@ -114,7 +114,7 @@ func MigrateToDatabase(db *gorm.DB) bool {
 			var dbValues []string
 			getValuesSQL := `
                 SELECT enumlabel FROM pg_enum
-                WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = ?)
+                WHERE enumtypid = (SELECT oid FROM pg_type WHERE typename = ?)
                 ORDER BY enumsortorder;`
 			if err := db.Raw(getValuesSQL, name).Scan(&dbValues).Error; err != nil {
 				logs.FError("Failed to get enum %s values: %v", name, err)

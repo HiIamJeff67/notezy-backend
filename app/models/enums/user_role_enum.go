@@ -3,6 +3,7 @@ package enums
 import (
 	"database/sql/driver"
 	"reflect"
+	"slices"
 )
 
 /* ============================== UserRole Definition ============================== */
@@ -10,7 +11,7 @@ type UserRole string
 
 const (
 	UserRole_Admin  UserRole = "Admin"
-	UserRole_Noraml UserRole = "Normal"
+	UserRole_Normal UserRole = "Normal"
 	UserRole_Guest  UserRole = "Guest"
 )
 
@@ -37,22 +38,17 @@ func (r UserRole) Value() (driver.Value, error) {
 }
 
 func (r *UserRole) IsValidEnum() bool {
-	for _, enum := range AllUserRoles {
-		if *r == enum {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(AllUserRoles, *r)
 }
 
 /* ========================= All UserRoles ========================= */
 var AllUserRoles = []UserRole{
 	UserRole_Admin,
-	UserRole_Noraml,
+	UserRole_Normal,
 	UserRole_Guest,
 }
 var AllUserRoleStrings = []string{
 	string(UserRole_Admin),
-	string(UserRole_Noraml),
+	string(UserRole_Normal),
 	string(UserRole_Guest),
 }

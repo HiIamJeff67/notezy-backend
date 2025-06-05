@@ -86,7 +86,7 @@ func ConnectToAllRedis() bool {
 			totCount++
 			wg.Add(1) // increase the counter by 1
 			go func(dbIndex int) {
-				defer wg.Done() // decrese the counter by 1 after this gorountine function returned
+				defer wg.Done() // decrease the counter by 1 after this gorountine function returned
 				currentConfig := global.RedisCacheManagerConfigTemplate
 				currentConfig.DB = dbIndex // modify the server number of the client
 				res := ConnectToRedis(currentConfig)

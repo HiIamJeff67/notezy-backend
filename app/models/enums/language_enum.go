@@ -3,6 +3,7 @@ package enums
 import (
 	"database/sql/driver"
 	"reflect"
+	"slices"
 )
 
 /* ============================== Language Definition ============================== */
@@ -36,12 +37,7 @@ func (l Language) Value() (driver.Value, error) {
 }
 
 func (l *Language) IsValidEnum() bool {
-	for _, enum := range AllLanguages {
-		if *l == enum {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(AllLanguages, *l)
 }
 
 /* ========================= All Languages ========================= */

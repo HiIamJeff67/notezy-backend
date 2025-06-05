@@ -3,6 +3,7 @@ package enums
 import (
 	"database/sql/driver"
 	"fmt"
+	"slices"
 )
 
 type Enum interface {
@@ -31,12 +32,7 @@ func IsValidEnumValues[EnumValue interface {
 		BadgeType |
 		string
 }](value EnumValue, validateValues []EnumValue) bool {
-	for _, validateValue := range validateValues {
-		if value == validateValue {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(validateValues, value)
 }
 
 /* ========================= Map to Handling Migrating Enums ========================= */

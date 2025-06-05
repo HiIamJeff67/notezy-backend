@@ -3,6 +3,7 @@ package enums
 import (
 	"database/sql/driver"
 	"reflect"
+	"slices"
 )
 
 /* ============================== Theme Definition ============================== */
@@ -35,12 +36,7 @@ func (t Theme) Value() (driver.Value, error) {
 }
 
 func (t *Theme) IsValidEnum() bool {
-	for _, enum := range AllThemes {
-		if *t == enum {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(AllThemes, *t)
 }
 
 /* ========================= All Themes ========================= */

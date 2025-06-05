@@ -23,10 +23,10 @@ var rootCommand = &cobra.Command{
 var migrateDatabaseCommand = &cobra.Command{
 	Use:   "migrateDB",
 	Short: "Create or update database schema.",
-	Long:  "Use models paclage to create or update database table schema.",
+	Long:  "Use models package to create or update database table schema.",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		logs.Info("All avaliable databases:")
+		logs.Info("All available databases:")
 		for key, value := range models.DatabaseNameToInstance {
 			logs.FInfo("database name: %v, instance: %v", key, value)
 		}

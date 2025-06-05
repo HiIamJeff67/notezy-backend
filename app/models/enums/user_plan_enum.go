@@ -3,6 +3,7 @@ package enums
 import (
 	"database/sql/driver"
 	"reflect"
+	"slices"
 )
 
 /* ============================== UserPlan Definition ============================== */
@@ -36,12 +37,7 @@ func (p UserPlan) Value() (driver.Value, error) {
 }
 
 func (p *UserPlan) IsValidEnum() bool {
-	for _, enum := range AllUserPlans {
-		if *p == enum {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(AllUserPlans, *p)
 }
 
 /* ========================= All UserPlans ========================= */

@@ -4,12 +4,12 @@ type ValidCookieName string
 
 const (
 	ValidCookieName_AccessToken  ValidCookieName = "accessToken"
-	ValidCookieName_RefreshToken ValidCookieName = "refrehsToken"
+	ValidCookieName_RefreshToken ValidCookieName = "refreshToken"
 )
 
 var _validCookieNames = map[string]ValidCookieName{
 	"accessToken":  ValidCookieName_AccessToken,
-	"refrehsToken": ValidCookieName_RefreshToken,
+	"refreshToken": ValidCookieName_RefreshToken,
 }
 
 func (cn ValidCookieName) String() string {

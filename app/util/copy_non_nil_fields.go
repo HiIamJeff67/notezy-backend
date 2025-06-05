@@ -9,7 +9,7 @@ func CopyNonNilFields(target interface{}, input interface{}) {
 	inputVal := reflect.ValueOf(input)
 	inputType := inputVal.Type()
 
-	for i := 0; i < inputVal.NumField(); i++ {
+	for i := range inputVal.NumField() {
 		inField := inputVal.Field(i)
 		fieldName := inputType.Field(i).Name
 		tarField := targetVal.FieldByName(fieldName)

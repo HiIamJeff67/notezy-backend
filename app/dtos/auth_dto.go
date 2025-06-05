@@ -26,7 +26,7 @@ type LogoutReqDto struct {
 /* ============================== Response DTO ============================== */
 type RegisterResDto struct {
 	AccessToken  string    `json:"accessToken"`
-	RefreshToken string    `json:"refrehsToken"`
+	RefreshToken string    `json:"refreshToken"`
 	CreatedAt    time.Time `json:"createdAt"`
 }
 
