@@ -37,16 +37,24 @@ func (r UserRole) Value() (driver.Value, error) {
 	return string(r), nil
 }
 
+func (r UserRole) String() string {
+	return string(r)
+}
+
 func (r *UserRole) IsValidEnum() bool {
 	return slices.Contains(AllUserRoles, *r)
 }
 
 /* ========================= All UserRoles ========================= */
+
+// All the userRoles placing in the descending order
 var AllUserRoles = []UserRole{
 	UserRole_Admin,
 	UserRole_Normal,
 	UserRole_Guest,
 }
+
+// All the userRole strings placing in the descending order
 var AllUserRoleStrings = []string{
 	string(UserRole_Admin),
 	string(UserRole_Normal),

@@ -36,6 +36,10 @@ func (bt BadgeType) Value() (driver.Value, error) {
 	return string(bt), nil
 }
 
+func (bt BadgeType) String() string {
+	return string(bt)
+}
+
 func (bt *BadgeType) IsValidEnum() bool {
 	for _, enum := range AllBadgeTypes {
 		if *bt == enum {

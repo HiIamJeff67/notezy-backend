@@ -1,5 +1,7 @@
 package types
 
+import "slices"
+
 type ContentType string
 
 const (
@@ -8,17 +10,12 @@ const (
 	ContentType_Markdown  ContentType = "text/markdown"
 )
 
-func (ct ContentType) Value() (string, error) {
-	return string(ct), nil
+func (ct ContentType) String() string {
+	return string(ct)
 }
 
 func (ct *ContentType) IsValidEnum() bool {
-	for _, enum := range AllContentTypes {
-		if *ct == enum {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(AllContentTypes, *ct)
 }
 
 /* ========================= All ContentTypes ========================= */

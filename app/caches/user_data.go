@@ -57,7 +57,8 @@ var (
 	MaxUserDataServerNumber = UserDataRange.Start + UserDataRange.Size - 1
 )
 
-/* ============================== Auxiliary Function ============================== */
+/* ========================= Auxiliary Function ========================= */
+
 func hashUserDataIdentifier(identifier uuid.UUID) int {
 	h := fnv.New32a()
 	h.Write([]byte(identifier.String()))
@@ -81,7 +82,8 @@ func isValidUserCacheData(userDataCache *UserDataCache) bool {
 	return true
 }
 
-/* ============================== Getter ============================== */
+/* ========================= CRUD Operations of the Cache ========================= */
+
 func GetUserDataCache(id uuid.UUID) (*UserDataCache, *exceptions.Exception) {
 	hash := hashUserDataIdentifier(id)
 	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
@@ -98,6 +100,7 @@ func GetUserDataCache(id uuid.UUID) (*UserDataCache, *exceptions.Exception) {
 
 	var userDataCache UserDataCache
 	if err := json.Unmarshal([]byte(cacheString), &userDataCache); err != nil {
+		// note that the json.Unmarshal() automatically return InvalidUnmarshalError if the userDataCache is nil
 		return nil, exceptions.Cache.FailedToConvertJsonToStruct().WithError(err)
 	}
 
@@ -105,7 +108,6 @@ func GetUserDataCache(id uuid.UUID) (*UserDataCache, *exceptions.Exception) {
 	return &userDataCache, nil
 }
 
-/* ============================== Setter ============================== */
 func SetUserDataCache(id uuid.UUID, userData UserDataCache) *exceptions.Exception {
 	if !isValidUserCacheData(&userData) { // strictly check when setting the cache data
 		return exceptions.Cache.InvalidCacheDataStruct(userData)
@@ -133,7 +135,6 @@ func SetUserDataCache(id uuid.UUID, userData UserDataCache) *exceptions.Exceptio
 	return nil
 }
 
-/* ============================== Update Function ============================== */
 func UpdateUserDataCache(id uuid.UUID, dto UpdateUserDataCacheDto) *exceptions.Exception {
 	hash := hashUserDataIdentifier(id)
 	serverNumber := max(MaxUserDataServerNumber, UserDataRange.Start+hash)
@@ -163,7 +164,6 @@ func UpdateUserDataCache(id uuid.UUID, dto UpdateUserDataCacheDto) *exceptions.E
 	return nil
 }
 
-/* ============================== Delete Function ============================== */
 func DeleteUserDataCache(id uuid.UUID) *exceptions.Exception {
 	hash := hashUserDataIdentifier(id)
 	serverNumber := max(MaxUserDataServerNumber, UserDataRange.Start+hash)

@@ -8,6 +8,7 @@ import (
 
 	caches "notezy-backend/app/caches"
 	dtos "notezy-backend/app/dtos"
+	"notezy-backend/app/emails"
 	exceptions "notezy-backend/app/exceptions"
 	models "notezy-backend/app/models"
 	enums "notezy-backend/app/models/enums"
@@ -138,6 +139,9 @@ func Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Ex
 	if exception != nil {
 		exception.Log()
 	}
+
+	// ssend the welcome email to the registered user
+	emails.SendWelcomeEmail(newUser.Email)
 
 	return &dtos.RegisterResDto{
 		AccessToken:  *accessToken,

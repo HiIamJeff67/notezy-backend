@@ -36,17 +36,25 @@ func (p UserPlan) Value() (driver.Value, error) {
 	return string(p), nil
 }
 
+func (p UserPlan) String() string {
+	return string(p)
+}
+
 func (p *UserPlan) IsValidEnum() bool {
 	return slices.Contains(AllUserPlans, *p)
 }
 
 /* ========================= All UserPlans ========================= */
+
+// All the userPlans placing in the descending order
 var AllUserPlans = []UserPlan{
 	UserPlan_Enterprise,
 	UserPlan_Ultimate,
 	UserPlan_Pro,
 	UserPlan_Free,
 }
+
+// All the userPlan strings placing in the descending order
 var AllUserPlanStrings = []string{
 	string(UserPlan_Enterprise),
 	string(UserPlan_Ultimate),

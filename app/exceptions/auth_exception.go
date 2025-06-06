@@ -1,6 +1,10 @@
 package exceptions
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+	"strings"
+)
 
 const (
 	_ExceptionBaseCode_Auth ExceptionCode = (APIExceptionDomainCode*ExceptionDomainCodeShiftAmount +
@@ -18,6 +22,9 @@ const (
 	ExceptionReason_WrongUserAgent                        ExceptionReason = "Wrong_User_Agent"
 	ExceptionReason_FailedToExtractOrValidateAccessToken  ExceptionReason = "Failed_To_Extract_Or_Validate_Access_Token"
 	ExceptionReason_FailedToExtractOrValidateRefreshToken ExceptionReason = "Failed_To_Extract_Or_Validate_Refresh_Token"
+	ExceptionReason_PermissionDeniedDueToUserRole         ExceptionReason = "Permission_Denied_Due_To_User_Role"
+	ExceptionReason_PermissionDeniedDueToUserPlan         ExceptionReason = "Permission_Denied_Due_To_User_Plan"
+	ExceptionReason_MissPlacingOrWrongMiddlewareOrder     ExceptionReason = "Miss_Placing_Or_Wrong_Middleware_Order"
 )
 
 type AuthExceptionDomain struct {
@@ -94,5 +101,45 @@ func (d *AuthExceptionDomain) FailedToExtractOrValidateRefreshToken() *Exception
 		Reason:         ExceptionReason_FailedToExtractOrValidateRefreshToken,
 		Message:        "Failed to get or validate the refresh token",
 		HTTPStatusCode: http.StatusUnauthorized,
+	}
+}
+
+/* ========================= Handling Permission Denied ========================= */
+
+func (d *AuthExceptionDomain) PermissionDeniedDueToUserRole(userRole any) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 11,
+		Prefix:         d.Prefix,
+		Reason:         ExceptionReason_PermissionDeniedDueToUserRole,
+		Message:        fmt.Sprintf("The current user role of %v does not have access to this operation", userRole),
+		HTTPStatusCode: http.StatusUnauthorized,
+	}
+}
+
+func (d *AuthExceptionDomain) PermissionDeniedDueToUserPlan(userPlan any) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 12,
+		Prefix:         d.Prefix,
+		Reason:         ExceptionReason_PermissionDeniedDueToUserPlan,
+		Message:        fmt.Sprintf("The current user plan of %v does not have access to this operation", userPlan),
+		HTTPStatusCode: http.StatusUnauthorized,
+	}
+}
+
+/* ========================= Handling Internal Error ========================= */
+// (this part is usually due to the developer, ex. Place the middleware in the wrong order)
+
+func (d *AuthExceptionDomain) MissPlacingOrWrongMiddlewareOrder(optionalMessage ...string) *Exception {
+	message := "Miss placing or placing the middleware in the wrong order"
+	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], "", " ")) > 0 {
+		message = optionalMessage[0]
+	}
+
+	return &Exception{
+		Code:           d.BaseCode + 101,
+		Prefix:         d.Prefix,
+		Reason:         ExceptionReason_MissPlacingOrWrongMiddlewareOrder,
+		Message:        message,
+		HTTPStatusCode: http.StatusInternalServerError,
 	}
 }

@@ -57,6 +57,7 @@ const (
 	ExceptionReason_Timeout                   ExceptionReason = "Timeout"
 	ExceptionReason_InvalidDto                ExceptionReason = "Invalid_Dto"
 	ExceptionReason_NotImplemented            ExceptionReason = "NotImplement"
+	ExceptionReason_InvalidType               ExceptionReason = "Invalid_Type"
 )
 
 func IsExceptionCode(exceptionCode int) bool {
@@ -258,6 +259,20 @@ func (d *DatabaseExceptionDomain) NotImplemented(optionalMessage ...string) *Exc
 	}
 }
 
+func (d *DatabaseExceptionDomain) InvalidType(value any) *Exception {
+	return &Exception{
+		Code:           d._BaseCode + 8,
+		Prefix:         d._Prefix,
+		Reason:         ExceptionReason_InvalidType,
+		Message:        fmt.Sprintf("Invalid type in %s", strings.ToLower(string(d._Prefix))),
+		HTTPStatusCode: http.StatusInternalServerError,
+		Details: map[string]any{
+			"actualType": fmt.Sprintf("%T", value),
+			"value":      value,
+		},
+	}
+}
+
 /* ============================== API Exception Domain Definition ============================== */
 type APIExceptionDomain struct {
 	_BaseCode ExceptionCode
@@ -321,5 +336,19 @@ func (d *APIExceptionDomain) NotImplemented(optionalMessage ...string) *Exceptio
 		Reason:         ExceptionReason_NotImplemented,
 		Message:        message,
 		HTTPStatusCode: http.StatusNotImplemented,
+	}
+}
+
+func (d *APIExceptionDomain) InvalidType(value any) *Exception {
+	return &Exception{
+		Code:           d._BaseCode + 4,
+		Prefix:         d._Prefix,
+		Reason:         ExceptionReason_InvalidType,
+		Message:        fmt.Sprintf("Invalid type in %s", strings.ToLower(string(d._Prefix))),
+		HTTPStatusCode: http.StatusInternalServerError,
+		Details: map[string]any{
+			"actualType": fmt.Sprintf("%T", value),
+			"value":      value,
+		},
 	}
 }

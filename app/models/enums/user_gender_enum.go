@@ -35,6 +35,10 @@ func (g UserGender) Value() (driver.Value, error) {
 	return string(g), nil
 }
 
+func (g UserGender) String() string {
+	return string(g)
+}
+
 func (g *UserGender) IsValidEnum() bool {
 	return slices.Contains(AllUserGenders, *g)
 }

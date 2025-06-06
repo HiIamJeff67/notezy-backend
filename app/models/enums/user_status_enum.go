@@ -36,6 +36,10 @@ func (s UserStatus) Value() (driver.Value, error) {
 	return string(s), nil
 }
 
+func (s UserStatus) String() string {
+	return string(s)
+}
+
 func (s *UserStatus) IsValidEnum() bool {
 	return slices.Contains(AllUserStatuses, *s)
 }

@@ -16,10 +16,10 @@ type EmailSender struct {
 }
 
 func (s *EmailSender) Send(to string, subject string, body string, contentType types.ContentType) *exceptions.Exception {
-	contentTypeString, err := contentType.Value() // try to convert it to the string
-	if !contentType.IsValidEnum() || err != nil {
+	if !contentType.IsValidEnum() {
 		return exceptions.Email.InvalidContentType(contentType)
 	}
+	contentTypeString := contentType.String()
 
 	m := gomail.NewMessage()
 	m.SetHeader("From", s.From)

@@ -19,7 +19,7 @@ var _welcomeEmailSender = &EmailSender{
 	Host:     "smtp.example.com",
 	Port:     587,
 	UserName: util.GetEnv("NOTEZY_OFFICIAL_GMAIL", ""),
-	Password: util.GetEnv("NOTEZY_OFFICIAL_GOOGLE_PASSWORD", ""),
+	Password: util.GetEnv("NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD", ""),
 	From:     util.GetEnv("NOTEZY_OFFICIAL_GMAIL", ""),
 }
 

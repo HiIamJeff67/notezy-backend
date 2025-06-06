@@ -36,6 +36,10 @@ func (l Language) Value() (driver.Value, error) {
 	return string(l), nil
 }
 
+func (l Language) String() string {
+	return string(l)
+}
+
 func (l *Language) IsValidEnum() bool {
 	return slices.Contains(AllLanguages, *l)
 }

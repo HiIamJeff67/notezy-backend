@@ -5,8 +5,7 @@ import (
 )
 
 type FindMeReqDto struct {
-	AccessToken  *string
-	RefreshToken *string
+	AccessToken string
 }
 
 type FindMeResDto = caches.UserDataCache

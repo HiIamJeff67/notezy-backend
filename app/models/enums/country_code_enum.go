@@ -40,6 +40,10 @@ func (cc CountryCode) Value() (driver.Value, error) {
 	return string(cc), nil
 }
 
+func (cc CountryCode) String() string {
+	return string(cc)
+}
+
 func (cc *CountryCode) IsValidEnum() bool {
 	for _, enum := range AllCountryCodes {
 		if *cc == enum {

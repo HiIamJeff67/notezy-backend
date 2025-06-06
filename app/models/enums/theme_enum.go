@@ -35,6 +35,10 @@ func (t Theme) Value() (driver.Value, error) {
 	return string(t), nil
 }
 
+func (t Theme) String() string {
+	return string(t)
+}
+
 func (t *Theme) IsValidEnum() bool {
 	return slices.Contains(AllThemes, *t)
 }
