@@ -23,6 +23,11 @@ type LogoutReqDto struct {
 	AccessToken string `json:"accessToken" validate:"required"`
 }
 
+type HeartBeatReqDto struct {
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+}
+
 /* ============================== Response DTO ============================== */
 type RegisterResDto struct {
 	AccessToken  string    `json:"accessToken"`
@@ -37,4 +42,9 @@ type LoginResDto struct {
 
 type LogoutResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type HeartBeatResDto struct {
+	AccessToken string    `json:"accessToken"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }

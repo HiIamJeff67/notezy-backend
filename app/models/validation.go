@@ -49,10 +49,6 @@ func RegisterEnumValidators(validate *validator.Validate) {
 		val := fl.Field().String()
 		return util.IsStringIn(val, enums.AllCountryCodeStrings)
 	})
-	validate.RegisterValidation("istheme", func(fl validator.FieldLevel) bool {
-		val := fl.Field().String()
-		return util.IsStringIn(val, enums.AllThemeStrings)
-	})
 	validate.RegisterValidation("islanguage", func(fl validator.FieldLevel) bool {
 		val := fl.Field().String()
 		return util.IsStringIn(val, enums.AllLanguageStrings)

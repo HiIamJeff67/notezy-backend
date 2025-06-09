@@ -1,15 +1,21 @@
 {
-  "Generate Go GORM Model Table Schema": {
-    "prefix": "gmodel",
+  "Generate Go GORM Database Table Schema": {
+    "prefix": "gschema",
     "body": [
-      "type ${1:_ModelName_} struct {",
+      "package schemas", 
+      "import (", 
+      "\tglobal \"notezy-backend/global\"", 
+      "\t\"time\"", 
+      "\t\"github.com/google/uuid\"", 
+      ")",
+      "type ${1:_TableName_} struct {",
       "\tId        uuid.UUID  `json:\"id\" gorm:\"column:id; type:uuid; primaryKey; default:gen_random_uuid();\"`",
       "\tCreatedAt time.Time  `json:\"createdAt\" gorm:\"column:created_at; type:timestamptz; not null; autoCreateTime:true;\"`",
       "\tUpdatedAt time.Time  `json:\"updatedAt\" gorm:\"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;\"`",
       "}",
       "",
-      "func (${1:_ModelName_}) TableName() string {",
-      "\treturn string(global.${1:_ModelName_}TableName)",
+      "func (${1:_TableName_}) TableName() string {",
+      "\treturn global.ValidTableName_${1:_TableName_}Table.String()",
       "}"
     ],
     "description": "Create an advanced GORM model with UUID, enum, timestamps, and table name."
@@ -17,6 +23,7 @@
   "Generate Go GORM Enum Schema": {
     "prefix": "gnum",
     "body": [
+      "package enums", 
       "type ${1:_EnumName_} string",
       "const (",
       "\t${1:_EnumName_}_ ${1:_EnumName_} = \"\"",

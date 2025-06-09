@@ -26,7 +26,6 @@ type UserDataCache struct {
 	Plan               enums.UserPlan   // user
 	Status             enums.UserStatus // user
 	AvatarURL          string           // user info
-	Theme              enums.Theme      // user setting
 	Language           enums.Language   // user setting
 	GeneralSettingCode int64            // user setting
 	PrivacySettingCode int64            // user setting
@@ -42,7 +41,6 @@ type UpdateUserDataCacheDto struct {
 	Plan               *enums.UserPlan
 	Status             *enums.UserStatus
 	AvatarURL          *string
-	Theme              *enums.Theme
 	Language           *enums.Language
 	GeneralSettingCode *int64
 	PrivacySettingCode *int64

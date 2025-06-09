@@ -37,10 +37,12 @@ const (
 // ExceptionPrefix_UserSetting ExceptionPrefix = "UserSetting"           4
 // ExceptionPrefix_UsersToBadges ExceptionPrefix = "UsersToBadges"       5
 // ExceptionPrefix_Badge ExceptionPrefix = "Badge"                       6
+// ExceptionPrefix_Theme ExceptionPrefix = "Theme"						 7
 
 // ExceptionPrefix_Cache ExceptionPrefix = "Cache"	   					 1
 // ExceptionPrefix_Util ExceptionPrefix = "Util"       					 2
-// ExceptionPrefix_Auth       ExceptionPrefix = "Auth" 					 3
+// ExceptionPrefix_Auth ExceptionPrefix = "Auth" 			 		     3
+// ExceptionPrefix_Cookie ExceptionPrefx = "Cookie"						 4
 )
 
 // global reason for common domain use

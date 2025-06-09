@@ -6,7 +6,6 @@ import (
 	"notezy-backend/app/models/inputs"
 	"notezy-backend/app/models/schemas"
 	"notezy-backend/app/util"
-	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -109,7 +108,6 @@ func UpdateUserById(db *gorm.DB, id uuid.UUID, input inputs.UpdateUserInput) (*s
 	}
 
 	var updatedUser schemas.User
-	updatedUser.UpdatedAt = time.Now()
 	util.CopyNonNilFields(&updatedUser, input)
 	result := db.Table(schemas.User{}.TableName()).
 		Where("id = ?", id).
@@ -126,29 +124,17 @@ func DeleteUserById(db *gorm.DB, id uuid.UUID) (*schemas.User, *exceptions.Excep
 		db = models.NotezyDB
 	}
 
-	tx := db.Begin()
-
 	deletedUser := schemas.User{}
-	result := tx.Table(schemas.User{}.TableName()).
+	result := db.Table(schemas.User{}.TableName()).
 		Where("id = ?", id).
 		Clauses(clause.Returning{}).
-		First(&deletedUser)
-	if err := result.Error; err != nil {
-		tx.Rollback()
-		return nil, exceptions.User.NotFound().WithError(err)
-	}
-
-	result = tx.Table(schemas.User{}.TableName()).
 		Delete(&deletedUser)
 	if err := result.Error; err != nil {
-		tx.Rollback()
-		return nil, exceptions.User.FailedToDelete().WithError(err)
+		return nil, exceptions.User.NotFound().WithError(err)
 	}
-
-	if err := tx.Commit().Error; err != nil {
-		return nil, exceptions.User.FailedToDelete().WithError(err)
+	if result.RowsAffected == 0 {
+		return nil, exceptions.User.FailedToDelete()
 	}
-
 	return &deletedUser, nil
 
 }

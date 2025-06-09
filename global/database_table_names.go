@@ -9,6 +9,7 @@ const (
 	ValidTableName_UserSettingTable   ValidTableName = "UserSettingTable"
 	ValidTableName_BadgeTable         ValidTableName = "BadgeTable"
 	ValidTableName_UsersToBadgesTable ValidTableName = "UsersToBadgesTable"
+	ValidTableName_ThemeTable         ValidTableName = "ThemeTable"
 )
 
 var _validTableNames = map[string]ValidTableName{
@@ -18,6 +19,7 @@ var _validTableNames = map[string]ValidTableName{
 	"UserSettingTable":   ValidTableName_UserSettingTable,
 	"BadgeTable":         ValidTableName_BadgeTable,
 	"UsersToBadgesTable": ValidTableName_UsersToBadgesTable,
+	"ThemeTable":         ValidTableName_ThemeTable,
 }
 
 func (tn ValidTableName) String() string {

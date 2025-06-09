@@ -28,7 +28,6 @@ func IsValidEnumValues[EnumValue interface {
 		UserGender |
 		Country |
 		CountryCode |
-		Theme |
 		Language |
 		BadgeType |
 		string
@@ -45,7 +44,6 @@ var MigratingEnums = map[string][]string{
 	new(UserGender).Name():  AllUserGenderStrings,
 	new(Country).Name():     AllCountryStrings,
 	new(CountryCode).Name(): AllCountryCodeStrings,
-	new(Theme).Name():       AllThemeStrings,
 	new(Language).Name():    AllLanguageStrings,
 	new(BadgeType).Name():   AllBadgeTypeStrings,
 }

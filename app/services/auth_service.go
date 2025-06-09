@@ -129,7 +129,6 @@ func Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Ex
 			Plan:               newUser.Plan,
 			Status:             newUser.Status,
 			AvatarURL:          "",
-			Theme:              enums.Theme_System,
 			Language:           enums.Language_English,
 			GeneralSettingCode: 0,
 			PrivacySettingCode: 0,
@@ -245,4 +244,9 @@ func Logout(reqDto *dtos.LogoutReqDto) (*dtos.LogoutResDto, *exceptions.Exceptio
 	return &dtos.LogoutResDto{
 		UpdatedAt: updatedUser.UpdatedAt,
 	}, nil
+}
+
+func HeartBeat(reqDto *dtos.HeartBeatReqDto) (*dtos.HeartBeatResDto, *exceptions.Exception) {
+
+	return nil, nil
 }
