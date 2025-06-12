@@ -1,10 +1,10 @@
 package emails
 
 import (
-	"notezy-backend/app/exceptions"
-	"notezy-backend/global/types"
-
 	"gopkg.in/gomail.v2"
+
+	exceptions "notezy-backend/app/exceptions"
+	types "notezy-backend/app/shared/types"
 )
 
 type EmailSender struct {

@@ -8,15 +8,15 @@ import (
 
 	caches "notezy-backend/app/caches"
 	dtos "notezy-backend/app/dtos"
-	"notezy-backend/app/emails"
+	emails "notezy-backend/app/emails"
 	exceptions "notezy-backend/app/exceptions"
 	models "notezy-backend/app/models"
 	enums "notezy-backend/app/models/enums"
 	inputs "notezy-backend/app/models/inputs"
 	operations "notezy-backend/app/models/operations"
 	schemas "notezy-backend/app/models/schemas"
+	constants "notezy-backend/app/shared/constants"
 	util "notezy-backend/app/util"
-	"notezy-backend/global/constants"
 )
 
 /* ============================== Auxiliary Function ============================== */
@@ -46,7 +46,7 @@ func Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Ex
 	}
 	createUserInputData := inputs.CreateUserInput{
 		Name:        reqDto.Name,
-		DisplayName: util.GenerateRandomFakeName(),
+		DisplayName: util.GenerateRandomFakeName(), // we generate a default display name for the new user
 		Email:       reqDto.Email,
 		Password:    hashedPassword,
 		UserAgent:   reqDto.UserAgent,
@@ -157,11 +157,11 @@ func Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception) 
 	// otherwise, the user should provide their account and password
 	var user *schemas.User = nil
 	var exception *exceptions.Exception = nil
-	if util.IsAlphaNumberString(reqDto.Account) { // if the account field contain user name
+	if util.IsAlphaNumberString(reqDto.Account) { // if the account field contains user name
 		if user, exception = operations.GetUserByName(nil, reqDto.Account); exception != nil {
 			return nil, exception
 		}
-	} else if util.IsEmailString(reqDto.Account) { // if the account field contain email
+	} else if util.IsEmailString(reqDto.Account) { // if the account field contains email
 		if user, exception = operations.GetUserByEmail(nil, reqDto.Account); exception != nil {
 			return nil, exception
 		}
@@ -169,9 +169,32 @@ func Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception) 
 		return nil, exceptions.Auth.InvalidDto()
 	}
 
+	if user.BlockLoginUtil.After(time.Now()) {
+		return nil, exceptions.Auth.LoginBlockedDueToTryingTooManyTimes(user.BlockLoginUtil)
+	}
+
 	if !checkPasswordHash(user.Password, reqDto.Password) {
+		newLoginCount := user.LoginCount + 1
+		blockLoginUntil := util.GetLoginBlockedUntilByLoginCount(newLoginCount)
+		updateInvalidUserInput := inputs.UpdateUserInput{
+			LoginCount: &newLoginCount,
+		}
+		if blockLoginUntil != nil {
+			updateInvalidUserInput.BlockLoginUtil = blockLoginUntil
+		}
+
+		_, exception := operations.UpdateUserById(nil, user.Id, updateInvalidUserInput)
+		if exception != nil {
+			return nil, exception
+		}
+
+		if blockLoginUntil != nil {
+			return nil, exceptions.Auth.LoginBlockedDueToTryingTooManyTimes(*blockLoginUntil)
+		}
+
 		return nil, exceptions.Auth.WrongPassword()
 	}
+
 	if user.UserAgent != reqDto.UserAgent {
 		// send a security email to warn the user
 	}
@@ -192,6 +215,7 @@ func Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception) 
 	}
 
 	// update the refresh token and the status of the user
+	var zeroLoginCount int32 = 0
 	updatedUser, exception := operations.UpdateUserById(
 		nil,
 		user.Id,
@@ -199,6 +223,7 @@ func Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception) 
 			Status:       &user.PrevStatus,
 			RefreshToken: refreshToken,
 			UserAgent:    &reqDto.UserAgent,
+			LoginCount:   &zeroLoginCount,
 		},
 	)
 	if exception != nil {
@@ -221,15 +246,14 @@ func Logout(reqDto *dtos.LogoutReqDto) (*dtos.LogoutResDto, *exceptions.Exceptio
 	if err != nil {
 		return nil, exceptions.Util.FailedToParseAccessToken().WithError(err)
 	}
-
-	statusOffline := enums.UserStatus_Offline
-	emptyRefreshToken := ""
+	offlineStatus := enums.UserStatus_Offline
+	emptyString := ""
 	updatedUser, exception := operations.UpdateUserById(
 		nil,
 		userId,
 		inputs.UpdateUserInput{
-			Status:       &statusOffline,
-			RefreshToken: &emptyRefreshToken,
+			Status:       &offlineStatus,
+			RefreshToken: &emptyString,
 		},
 	)
 	if exception != nil {

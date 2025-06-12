@@ -3,7 +3,7 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
-	"notezy-backend/global"
+	shared "notezy-backend/app/shared"
 )
 
 const (
@@ -29,7 +29,7 @@ var Cookie = &CookieExceptionDomain{
 		_Prefix:   ExceptionPrefix_Cookie},
 }
 
-func (d *CookieExceptionDomain) NotFound(cookieName global.ValidCookieName) *Exception {
+func (d *CookieExceptionDomain) NotFound(cookieName shared.ValidCookieName) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
 		Prefix:         d.Prefix,
@@ -39,7 +39,7 @@ func (d *CookieExceptionDomain) NotFound(cookieName global.ValidCookieName) *Exc
 	}
 }
 
-func (d *CookieExceptionDomain) FailedToCreate(cookieName global.ValidCookieName) *Exception {
+func (d *CookieExceptionDomain) FailedToCreate(cookieName shared.ValidCookieName) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 2,
 		Prefix:         d.Prefix,

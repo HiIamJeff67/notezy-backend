@@ -10,5 +10,6 @@ func configureUserRoutes() {
 	userRoutes.Use(middlewares.AuthMiddleware())
 	{
 		userRoutes.GET("/all", controllers.FindAllUsers)
+		userRoutes.PATCH("/updateMe", controllers.UpdateMe)
 	}
 }

@@ -9,23 +9,23 @@ import (
 
 	exceptions "notezy-backend/app/exceptions"
 	logs "notezy-backend/app/logs"
-	global "notezy-backend/global"
-	types "notezy-backend/global/types"
+	shared "notezy-backend/app/shared"
+	types "notezy-backend/app/shared/types"
 )
 
 var (
 	RedisClientMap             map[int]*redis.Client                       = make(map[int]*redis.Client)
-	RedisClientToConfig        map[*redis.Client]global.CacheManagerConfig = make(map[*redis.Client]global.CacheManagerConfig)
-	PurposeToServerNumberRange                                             = map[global.ValidCachePurpose]types.Range{
-		global.ValidCachePurpose_UserData:    UserDataRange,    // server number: 0 - 7 (included)
-		global.ValidCachePurpose_RecentPages: RecentPagesRange, // server number: 8 - 15 (included)
+	RedisClientToConfig        map[*redis.Client]shared.CacheManagerConfig = make(map[*redis.Client]shared.CacheManagerConfig)
+	PurposeToServerNumberRange                                             = map[shared.ValidCachePurpose]types.Range{
+		shared.ValidCachePurpose_UserData:    UserDataRange,    // server number: 0 - 7 (included)
+		shared.ValidCachePurpose_RecentPages: RecentPagesRange, // server number: 8 - 15 (included)
 	}
 	Ctx = context.Background()
 
 	redisMapMutex sync.Mutex // since the map in go is not thread-safe, we need this mutex lock
 )
 
-func ConnectToRedis(config global.CacheManagerConfig) *redis.Client {
+func ConnectToRedis(config shared.CacheManagerConfig) *redis.Client {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     config.Host + ":" + config.Port,
 		Password: config.Password,
@@ -87,7 +87,7 @@ func ConnectToAllRedis() bool {
 			wg.Add(1) // increase the counter by 1
 			go func(dbIndex int) {
 				defer wg.Done() // decrease the counter by 1 after this gorountine function returned
-				currentConfig := global.RedisCacheManagerConfigTemplate
+				currentConfig := shared.RedisCacheManagerConfigTemplate
 				currentConfig.DB = dbIndex // modify the server number of the client
 				res := ConnectToRedis(currentConfig)
 				resultCh <- (res != nil)

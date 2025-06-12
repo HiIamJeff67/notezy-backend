@@ -1,11 +1,12 @@
 package schemas
 
 import (
-	"notezy-backend/app/models/enums"
-	"notezy-backend/global"
 	"time"
 
 	"github.com/google/uuid"
+
+	enums "notezy-backend/app/models/enums"
+	shared "notezy-backend/app/shared"
 )
 
 type UserAccount struct {
@@ -14,12 +15,12 @@ type UserAccount struct {
 	AuthCode          string            `json:"authCode" gorm:"column:auth_code; not null;"`
 	AuthCodeExpiredAt time.Time         `json:"authCodeExpiredAt" gorm:"column:auth_code_expired_at; not null;"` // the exact time when authCode expires
 	CountryCode       enums.CountryCode `json:"countryCode" gorm:"column:country_code; type:CountryCode; not null; default:'Default'"`
-	PhoneNumber       string            `json:"phoneNumber" gorm:"column:phone_number; unique; not null; default:''"`
-	GoogleCredential  string            `json:"googleCredential" gorm:"column:google_credential; unique; not null; default:''"`
-	DiscordCredential string            `json:"discordCredential" gorm:"column:discord_credential; unique; not null; default:''"`
+	PhoneNumber       *string           `json:"phoneNumber" gorm:"column:phone_number; unique;"`
+	GoogleCredential  *string           `json:"googleCredential" gorm:"column:google_credential; unique;"`
+	DiscordCredential *string           `json:"discordCredential" gorm:"column:discord_credential; unique;"`
 	UpdatedAt         time.Time         `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 }
 
 func (UserAccount) TableName() string {
-	return global.ValidTableName_UserAccountTable.String()
+	return shared.ValidTableName_UserAccountTable.String()
 }

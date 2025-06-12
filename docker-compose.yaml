@@ -16,8 +16,11 @@ services:
     # restart: always
     build:
       context: .
-      dockerfile: Dockerfile
-    entrypoint: ["${ENTRYPOINT_CMD}"]
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/app
+      - /app/tmp
+    # entrypoint: ["${ENTRYPOINT_CMD}"]
     environment:
       DB_HOST: ${DB_HOST}
       DB_USER: ${DB_USER}

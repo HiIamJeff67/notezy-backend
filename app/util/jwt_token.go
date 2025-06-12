@@ -4,8 +4,8 @@ import (
 	"time"
 
 	exceptions "notezy-backend/app/exceptions"
-	global "notezy-backend/global"
-	types "notezy-backend/global/types"
+	shared "notezy-backend/app/shared"
+	types "notezy-backend/app/shared/types"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -20,8 +20,8 @@ const (
 )
 
 func init() {
-	accessTokenSecretKey := global.GetEnv("JWT_ACCESS_TOKEN_SECRET_KEY", "")
-	refreshTokenSecretKey := global.GetEnv("JWT_REFRESH_TOKEN_SECRET_KEY", "")
+	accessTokenSecretKey := shared.GetEnv("JWT_ACCESS_TOKEN_SECRET_KEY", "")
+	refreshTokenSecretKey := shared.GetEnv("JWT_REFRESH_TOKEN_SECRET_KEY", "")
 	if accessTokenSecretKey == "" {
 		exceptions.Util.AccessTokenSecretKeyNotFound()
 	}

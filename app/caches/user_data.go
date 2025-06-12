@@ -12,9 +12,9 @@ import (
 	exceptions "notezy-backend/app/exceptions"
 	logs "notezy-backend/app/logs"
 	enums "notezy-backend/app/models/enums"
+	shared "notezy-backend/app/shared"
+	types "notezy-backend/app/shared/types"
 	util "notezy-backend/app/util"
-	global "notezy-backend/global"
-	types "notezy-backend/global/types"
 )
 
 type UserDataCache struct {
@@ -93,7 +93,7 @@ func GetUserDataCache(id uuid.UUID) (*UserDataCache, *exceptions.Exception) {
 	formattedKey := formatKey(id)
 	cacheString, err := redisClient.Get(formattedKey).Result()
 	if err != nil {
-		return nil, exceptions.Cache.NotFound(global.ValidCachePurpose_UserData).WithError(err)
+		return nil, exceptions.Cache.NotFound(shared.ValidCachePurpose_UserData).WithError(err)
 	}
 
 	var userDataCache UserDataCache
@@ -112,7 +112,7 @@ func SetUserDataCache(id uuid.UUID, userData UserDataCache) *exceptions.Exceptio
 	}
 
 	hash := hashUserDataIdentifier(id)
-	serverNumber := max(MaxUserDataServerNumber, UserDataRange.Start+hash)
+	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
 	redisClient, ok := RedisClientMap[serverNumber]
 	if !ok {
 		return exceptions.Cache.ClientInstanceDoesNotExist(serverNumber)
@@ -126,7 +126,7 @@ func SetUserDataCache(id uuid.UUID, userData UserDataCache) *exceptions.Exceptio
 	formattedKey := formatKey(id)
 	err = redisClient.Set(formattedKey, string(userDataJson), _userDataCacheExpiresIn).Err()
 	if err != nil {
-		return exceptions.Cache.FailedToCreate(global.ValidCachePurpose_UserData).WithError(err)
+		return exceptions.Cache.FailedToCreate(shared.ValidCachePurpose_UserData).WithError(err)
 	}
 
 	logs.FInfo("Successfully set the cached user data in the server with server number of %d", serverNumber)
@@ -135,7 +135,7 @@ func SetUserDataCache(id uuid.UUID, userData UserDataCache) *exceptions.Exceptio
 
 func UpdateUserDataCache(id uuid.UUID, dto UpdateUserDataCacheDto) *exceptions.Exception {
 	hash := hashUserDataIdentifier(id)
-	serverNumber := max(MaxUserDataServerNumber, UserDataRange.Start+hash)
+	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
 	redisClient, ok := RedisClientMap[serverNumber]
 	if !ok {
 		return exceptions.Cache.ClientInstanceDoesNotExist(serverNumber)
@@ -155,7 +155,7 @@ func UpdateUserDataCache(id uuid.UUID, dto UpdateUserDataCacheDto) *exceptions.E
 	formattedKey := formatKey(id)
 	err = redisClient.Set(formattedKey, string(userDataJson), _userDataCacheExpiresIn).Err()
 	if err != nil {
-		return exceptions.Cache.FailedToUpdate(global.ValidCachePurpose_UserData).WithError(err)
+		return exceptions.Cache.FailedToUpdate(shared.ValidCachePurpose_UserData).WithError(err)
 	}
 
 	logs.FInfo("Successfully update the cached user data in the server with server number of %d", serverNumber)
@@ -164,7 +164,7 @@ func UpdateUserDataCache(id uuid.UUID, dto UpdateUserDataCacheDto) *exceptions.E
 
 func DeleteUserDataCache(id uuid.UUID) *exceptions.Exception {
 	hash := hashUserDataIdentifier(id)
-	serverNumber := max(MaxUserDataServerNumber, UserDataRange.Start+hash)
+	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
 	redisClient, ok := RedisClientMap[serverNumber]
 	if !ok {
 		return exceptions.Cache.ClientInstanceDoesNotExist(serverNumber)
@@ -173,7 +173,7 @@ func DeleteUserDataCache(id uuid.UUID) *exceptions.Exception {
 	formattedKey := formatKey(id)
 	err := redisClient.Del(formattedKey).Err()
 	if err != nil {
-		return exceptions.Cache.FailedToDelete(global.ValidCachePurpose_UserData).WithError(err)
+		return exceptions.Cache.FailedToDelete(shared.ValidCachePurpose_UserData).WithError(err)
 	}
 
 	logs.FInfo("Successfully delete the cached user data in the server with server number of %d", serverNumber)

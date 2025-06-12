@@ -14,6 +14,7 @@ const (
 	Language_TraditionalChinese Language = "TraditionalChinese"
 	Language_SimpleChinese      Language = "SimpleChinese"
 	Language_Japanese           Language = "Japanese"
+	Language_Korean             Language = "Korean"
 )
 
 func (l Language) Name() string {
@@ -50,10 +51,12 @@ var AllLanguages = []Language{
 	Language_TraditionalChinese,
 	Language_SimpleChinese,
 	Language_Japanese,
+	Language_Korean,
 }
 var AllLanguageStrings = []string{
 	string(Language_English),
 	string(Language_TraditionalChinese),
 	string(Language_SimpleChinese),
 	string(Language_Japanese),
+	string(Language_Korean),
 }

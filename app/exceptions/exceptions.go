@@ -45,7 +45,7 @@ const (
 // ExceptionPrefix_Cookie ExceptionPrefx = "Cookie"						 4
 )
 
-// global reason for common domain use
+// shared reason for common domain use
 // if some individual domain require a custom reason,
 // just create one with ExceptionReason type privately whic means its variable name in lower case
 const (

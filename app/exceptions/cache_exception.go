@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"unicode"
 
-	"notezy-backend/global"
+	shared "notezy-backend/app/shared"
 )
 
 const (
@@ -56,7 +56,7 @@ func convertCamelCaseToSentenceCase(camelCaseString string) string {
 }
 
 /* ============================== Handling Cached Data in the Servers (overriding methods) ============================== */
-func (d *CacheExceptionSubDomain) NotFound(cachePurpose global.ValidCachePurpose) *Exception {
+func (d *CacheExceptionSubDomain) NotFound(cachePurpose shared.ValidCachePurpose) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
 		Prefix:         d.Prefix,
@@ -66,7 +66,7 @@ func (d *CacheExceptionSubDomain) NotFound(cachePurpose global.ValidCachePurpose
 	}
 }
 
-func (d *CacheExceptionSubDomain) FailedToCreate(cachePurpose global.ValidCachePurpose) *Exception {
+func (d *CacheExceptionSubDomain) FailedToCreate(cachePurpose shared.ValidCachePurpose) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 2,
 		Prefix:         d.Prefix,
@@ -76,7 +76,7 @@ func (d *CacheExceptionSubDomain) FailedToCreate(cachePurpose global.ValidCacheP
 	}
 }
 
-func (d *CacheExceptionSubDomain) FailedToUpdate(cachePurpose global.ValidCachePurpose) *Exception {
+func (d *CacheExceptionSubDomain) FailedToUpdate(cachePurpose shared.ValidCachePurpose) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 3,
 		Prefix:         d.Prefix,
@@ -86,7 +86,7 @@ func (d *CacheExceptionSubDomain) FailedToUpdate(cachePurpose global.ValidCacheP
 	}
 }
 
-func (d *CacheExceptionSubDomain) FailedToDelete(cachePurpose global.ValidCachePurpose) *Exception {
+func (d *CacheExceptionSubDomain) FailedToDelete(cachePurpose shared.ValidCachePurpose) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 4,
 		Prefix:         d.Prefix,

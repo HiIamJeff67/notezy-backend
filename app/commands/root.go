@@ -1,13 +1,14 @@
 package commands
 
 import (
-	"notezy-backend/app"
-	logs "notezy-backend/app/logs"
-	models "notezy-backend/app/models"
-	global "notezy-backend/global"
 	"os"
 
 	"github.com/spf13/cobra"
+
+	app "notezy-backend/app"
+	logs "notezy-backend/app/logs"
+	models "notezy-backend/app/models"
+	shared "notezy-backend/app/shared"
 )
 
 var rootCommand = &cobra.Command{
@@ -65,7 +66,7 @@ var truncateDatabaseCommand = &cobra.Command{
 			return
 		}
 
-		validTableName, isValidTableName := global.ConvertToValidTableName(tableNameStr)
+		validTableName, isValidTableName := shared.ConvertToValidTableName(tableNameStr)
 		if !isValidTableName {
 			logs.FError("The table name of %s is not in the database %s", tableNameStr, databaseNameStr)
 			return

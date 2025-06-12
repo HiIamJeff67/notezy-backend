@@ -2,29 +2,30 @@ package models
 
 import (
 	"fmt"
-	logs "notezy-backend/app/logs"
-	enums "notezy-backend/app/models/enums"
-	schemas "notezy-backend/app/models/schemas"
-	util "notezy-backend/app/util"
-	global "notezy-backend/global"
 	"strings"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	logs "notezy-backend/app/logs"
+	enums "notezy-backend/app/models/enums"
+	schemas "notezy-backend/app/models/schemas"
+	shared "notezy-backend/app/shared"
+	util "notezy-backend/app/util"
 )
 
 var (
 	NotezyDB *gorm.DB
 	// maintain the static information about the database instance and its config
-	DatabaseInstanceToConfig = map[*gorm.DB]global.DatabaseConfig{
-		NotezyDB: global.PostgresDatabaseConfig,
+	DatabaseInstanceToConfig = map[*gorm.DB]shared.DatabaseConfig{
+		NotezyDB: shared.PostgresDatabaseConfig,
 	}
 	DatabaseNameToInstance = map[string]*gorm.DB{
 		"notezy-db": NotezyDB,
 	}
 )
 
-func ConnectToDatabase(config global.DatabaseConfig) *gorm.DB {
+func ConnectToDatabase(config shared.DatabaseConfig) *gorm.DB {
 	var dbArgs string = fmt.Sprintf(
 		"host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
 		config.Host,
@@ -77,7 +78,7 @@ func DisconnectToDatabase(db *gorm.DB) bool {
 	return true
 }
 
-func TruncateTablesInDatabase(tableName global.ValidTableName, db *gorm.DB) bool {
+func TruncateTablesInDatabase(tableName shared.ValidTableName, db *gorm.DB) bool {
 	result := db.Exec("TRUNCATE TABLE \"%s\" RESTART IDENTITY CASCADE;")
 	if err := result.Error; err != nil {
 		logs.FError("Failed to truncate %s database %s table", DatabaseInstanceToConfig[db].DBName, tableName)
@@ -95,7 +96,7 @@ func MigrateToDatabase(db *gorm.DB) bool {
 
 		// get current enum value
 		var exists bool
-		checkEnumSQL := fmt.Sprintf("SELECT EXISTS (SELECT 1 FROM pg_type WHERE typename = '%s');", name)
+		checkEnumSQL := fmt.Sprintf("SELECT EXISTS (SELECT 1 FROM pg_type WHERE typname = '%s');", name)
 		if err := db.Raw(checkEnumSQL).Scan(&exists).Error; err != nil {
 			logs.FError("Failed to check enum %s existence: %v", name, err)
 			return false
@@ -114,7 +115,7 @@ func MigrateToDatabase(db *gorm.DB) bool {
 			var dbValues []string
 			getValuesSQL := `
                 SELECT enumlabel FROM pg_enum
-                WHERE enumtypid = (SELECT oid FROM pg_type WHERE typename = ?)
+                WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = ?)
                 ORDER BY enumsortorder;`
 			if err := db.Raw(getValuesSQL, name).Scan(&dbValues).Error; err != nil {
 				logs.FError("Failed to get enum %s values: %v", name, err)

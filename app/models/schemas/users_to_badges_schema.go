@@ -1,10 +1,11 @@
 package schemas
 
 import (
-	"notezy-backend/global"
 	"time"
 
 	"github.com/google/uuid"
+
+	shared "notezy-backend/app/shared"
 )
 
 type UsersToBadges struct {
@@ -17,5 +18,5 @@ type UsersToBadges struct {
 }
 
 func (UsersToBadges) TableName() string {
-	return global.ValidTableName_UsersToBadgesTable.String()
+	return shared.ValidTableName_UsersToBadgesTable.String()
 }

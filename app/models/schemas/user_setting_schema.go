@@ -1,11 +1,12 @@
 package schemas
 
 import (
-	"notezy-backend/app/models/enums"
-	"notezy-backend/global"
 	"time"
 
 	"github.com/google/uuid"
+
+	enums "notezy-backend/app/models/enums"
+	shared "notezy-backend/app/shared"
 )
 
 type UserSetting struct {
@@ -18,5 +19,5 @@ type UserSetting struct {
 }
 
 func (UserSetting) TableName() string {
-	return global.ValidTableName_UserSettingTable.String()
+	return shared.ValidTableName_UserSettingTable.String()
 }

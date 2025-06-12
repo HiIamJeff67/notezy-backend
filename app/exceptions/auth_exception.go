@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 )
 
 const (
@@ -25,6 +26,7 @@ const (
 	ExceptionReason_PermissionDeniedDueToUserRole         ExceptionReason = "Permission_Denied_Due_To_User_Role"
 	ExceptionReason_PermissionDeniedDueToUserPlan         ExceptionReason = "Permission_Denied_Due_To_User_Plan"
 	ExceptionReason_MissPlacingOrWrongMiddlewareOrder     ExceptionReason = "Miss_Placing_Or_Wrong_Middleware_Order"
+	ExceptionReason_LoginBlockedDueToTryingTooManyTimes   ExceptionReason = "Login_Blocked_Due_To_Trying_Too_Many_Times"
 )
 
 type AuthExceptionDomain struct {
@@ -100,6 +102,16 @@ func (d *AuthExceptionDomain) FailedToExtractOrValidateRefreshToken() *Exception
 		Prefix:         d.Prefix,
 		Reason:         ExceptionReason_FailedToExtractOrValidateRefreshToken,
 		Message:        "Failed to get or validate the refresh token",
+		HTTPStatusCode: http.StatusUnauthorized,
+	}
+}
+
+func (d *AuthExceptionDomain) LoginBlockedDueToTryingTooManyTimes(blockedUntil time.Time) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 7,
+		Prefix:         d.Prefix,
+		Reason:         ExceptionReason_LoginBlockedDueToTryingTooManyTimes,
+		Message:        fmt.Sprintf("Blocked the login procedure because user has tried too many time and require to wait until %v", blockedUntil),
 		HTTPStatusCode: http.StatusUnauthorized,
 	}
 }

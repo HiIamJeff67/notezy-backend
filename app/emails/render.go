@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	exceptions "notezy-backend/app/exceptions"
-	"notezy-backend/app/util"
-	"notezy-backend/global/types"
+	types "notezy-backend/app/shared/types"
+	util "notezy-backend/app/util"
 )
 
 /* ==================== HTML Email Renderer ==================== */

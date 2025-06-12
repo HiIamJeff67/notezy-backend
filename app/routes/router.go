@@ -2,7 +2,7 @@ package routes
 
 import (
 	"fmt"
-	constants "notezy-backend/global/constants"
+	constants "notezy-backend/app/shared/constants"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,4 +18,5 @@ func ConfigureRoutes() {
 
 	configureAuthRoutes()
 	configureUserRoutes()
+	configureTestRoutes()
 }

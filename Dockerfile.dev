@@ -1,0 +1,23 @@
+FROM golang:1.24.3-alpine
+
+RUN apk add --no-cache git
+
+WORKDIR /app
+
+# copy go mod & go sum files
+COPY go.mod go.sum ./
+
+# download go modules & dependencies
+RUN go mod tidy
+
+# install Air (Go hot loading tool) !after downloading go mod
+RUN go install github.com/air-verse/air@latest
+
+# copy entire codes
+COPY . .
+
+# expose the port
+EXPOSE 7777
+
+# use Air to processing hot loading
+CMD ["air", "-c", ".air.toml"]

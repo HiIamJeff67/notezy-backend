@@ -10,17 +10,17 @@ import (
 	caches "notezy-backend/app/caches"
 	models "notezy-backend/app/models"
 	routes "notezy-backend/app/routes"
-	global "notezy-backend/global"
+	shared "notezy-backend/app/shared"
 )
 
 func StartApplication() {
-	models.NotezyDB = models.ConnectToDatabase(global.PostgresDatabaseConfig)
+	models.NotezyDB = models.ConnectToDatabase(shared.PostgresDatabaseConfig)
 	caches.ConnectToAllRedis()
 
 	routes.Router = gin.Default()
 	routes.ConfigureRoutes()
 
-	addr := global.GinAddr
+	addr := shared.GinAddr
 
 	err := endless.ListenAndServe(addr, routes.Router)
 	if err != nil {
@@ -37,7 +37,7 @@ func MigrateDatabaseSchema(db *gorm.DB) {
 	models.DisconnectToDatabase(localDB)
 }
 
-func TrancateDatabaseTable(tableName global.ValidTableName, db *gorm.DB) {
+func TrancateDatabaseTable(tableName shared.ValidTableName, db *gorm.DB) {
 	models.NotezyDB = models.ConnectToDatabase(models.DatabaseInstanceToConfig[db])
 	models.TruncateTablesInDatabase(tableName, db)
 	models.DisconnectToDatabase(models.NotezyDB)

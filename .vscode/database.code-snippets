@@ -4,7 +4,7 @@
     "body": [
       "package schemas", 
       "import (", 
-      "\tglobal \"notezy-backend/global\"", 
+      "\tshared \"notezy-backend/shared\"", 
       "\t\"time\"", 
       "\t\"github.com/google/uuid\"", 
       ")",
@@ -15,7 +15,7 @@
       "}",
       "",
       "func (${1:_TableName_}) TableName() string {",
-      "\treturn global.ValidTableName_${1:_TableName_}Table.String()",
+      "\treturn shared.ValidTableName_${1:_TableName_}Table.String()",
       "}"
     ],
     "description": "Create an advanced GORM model with UUID, enum, timestamps, and table name."

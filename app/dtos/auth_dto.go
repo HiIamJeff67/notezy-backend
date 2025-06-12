@@ -15,7 +15,7 @@ type RegisterReqDto struct {
 
 type LoginReqDto struct {
 	Account   string `json:"account" validate:"required"`
-	Password  string `json:"password" validate:"required,min=8,max=32,isstrongpassword"`
+	Password  string `json:"password" validate:"required"` // don't validate other additions while login
 	UserAgent string `json:"userAgent" validate:"required" gorm:"column:user_agent;"`
 }
 

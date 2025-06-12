@@ -3,7 +3,8 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
-	"notezy-backend/global/types"
+
+	types "notezy-backend/app/shared/types"
 )
 
 const (

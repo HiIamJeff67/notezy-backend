@@ -2,7 +2,7 @@ package util
 
 import (
 	"math/rand/v2"
-	"notezy-backend/global/constants"
+	"notezy-backend/app/shared/constants"
 	"strconv"
 )
 

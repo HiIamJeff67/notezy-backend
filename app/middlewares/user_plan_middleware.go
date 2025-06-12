@@ -2,10 +2,11 @@ package middlewares
 
 import (
 	"net/http"
-	exceptions "notezy-backend/app/exceptions"
-	"notezy-backend/app/models/enums"
 
 	"github.com/gin-gonic/gin"
+
+	exceptions "notezy-backend/app/exceptions"
+	enums "notezy-backend/app/models/enums"
 )
 
 // This UserPlanMiddleware() MUST be processed AFTER the AuthMiddleware()

@@ -8,4 +8,6 @@ var MigratingTables = []any{
 	&UserSetting{},
 	&UsersToBadges{},
 	&Badge{},
+	&UsersToBadges{},
+	&Theme{},
 }

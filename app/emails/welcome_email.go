@@ -2,8 +2,8 @@ package emails
 
 import (
 	exceptions "notezy-backend/app/exceptions"
+	types "notezy-backend/app/shared/types"
 	util "notezy-backend/app/util"
-	types "notezy-backend/global/types"
 )
 
 const (

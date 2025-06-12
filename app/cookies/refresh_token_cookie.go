@@ -2,13 +2,14 @@ package cookies
 
 import (
 	"net/http"
-	"notezy-backend/global"
-	"notezy-backend/global/constants"
 	"time"
+
+	shared "notezy-backend/app/shared"
+	constants "notezy-backend/app/shared/constants"
 )
 
 var RefreshToken = NewCookieHandler(
-	global.ValidCookieName_RefreshToken,
+	shared.ValidCookieName_RefreshToken,
 	constants.BaseURL,
 	time.Now().Add(constants.ExpirationTimeOfRefreshToken),
 	true,

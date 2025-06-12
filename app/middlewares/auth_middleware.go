@@ -12,8 +12,8 @@ import (
 	exceptions "notezy-backend/app/exceptions"
 	operations "notezy-backend/app/models/operations"
 	schemas "notezy-backend/app/models/schemas"
+	types "notezy-backend/app/shared/types"
 	util "notezy-backend/app/util"
-	types "notezy-backend/global/types"
 )
 
 func _extractAccessToken(ctx *gin.Context) (string, *exceptions.Exception) {
@@ -51,7 +51,8 @@ func _validateAccessTokenAndUserAgent(ctx *gin.Context, accessToken string) (*ty
 
 	userDataCache, exception := caches.GetUserDataCache(userId)
 	if exception != nil { // if there's no user cache storing its accessToken, in this way, we're impossible to validate its accessToken
-		return nil, exception
+		// logs.Info(userId)
+		return nil, exception.Log()
 	}
 
 	if accessToken != userDataCache.AccessToken { // if failed to compare and validate the accessToken as the correct token storing in the cache
