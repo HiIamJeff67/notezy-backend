@@ -1,6 +1,9 @@
 package exceptions
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 const (
 	_ExceptionBaseCode_Util ExceptionCode = (APIExceptionDomainCode*ExceptionDomainCodeShiftAmount +
@@ -12,14 +15,15 @@ const (
 )
 
 const (
-	ExceptionReason_AccessTokenSecretKeyNotFound  ExceptionReason = "Access_Token_Secret_Key_Not_Found"
-	ExceptionReason_RefreshTokenSecretKeyNotFound ExceptionReason = "Refresh_Token_Secret_Key_Not_Found"
-	ExceptionReason_FailedToGenerateAccessToken   ExceptionReason = "Failed_To_Generate_Access_Token"
-	ExceptionReason_FailedToGenerateRefreshToken  ExceptionReason = "Failed_To_Generate_Refresh_Token"
-	ExceptionReason_FailedToParseAccessToken      ExceptionReason = "Failed_To_Parse_Access_Token"
-	ExceptionReason_FailedToParseRefreshToken     ExceptionReason = "Failed_To_Parse_Refresh_Token"
-	ExceptionReason_FailedToGenerateHashValue     ExceptionReason = "Failed_To_Generate_Hash_Value"
-	ExceptionReason_FailedToReadFile              ExceptionReason = "Failed_To_Read_File"
+	ExceptionReason_AccessTokenSecretKeyNotFound    ExceptionReason = "Access_Token_Secret_Key_Not_Found"
+	ExceptionReason_RefreshTokenSecretKeyNotFound   ExceptionReason = "Refresh_Token_Secret_Key_Not_Found"
+	ExceptionReason_FailedToGenerateAccessToken     ExceptionReason = "Failed_To_Generate_Access_Token"
+	ExceptionReason_FailedToGenerateRefreshToken    ExceptionReason = "Failed_To_Generate_Refresh_Token"
+	ExceptionReason_FailedToParseAccessToken        ExceptionReason = "Failed_To_Parse_Access_Token"
+	ExceptionReason_FailedToParseRefreshToken       ExceptionReason = "Failed_To_Parse_Refresh_Token"
+	ExceptionReason_FailedToGenerateHashValue       ExceptionReason = "Failed_To_Generate_Hash_Value"
+	ExceptionReason_FailedToReadFile                ExceptionReason = "Failed_To_Read_File"
+	ExceptionReason_FailedToPreprocessPartialUpdate ExceptionReason = "Failed_To_Preprocess_Partial_Update"
 )
 
 type UtilExceptionDomain struct {
@@ -115,10 +119,20 @@ func (d *UtilExceptionDomain) FailedToGenerateHashValue() *Exception {
 
 func (d *UtilExceptionDomain) FailedToReadFile() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 12,
+		Code:           d.BaseCode + 21,
 		Prefix:         d.Prefix,
 		Reason:         ExceptionReason_FailedToReadFile,
 		Message:        "Failed to read the file",
+		HTTPStatusCode: http.StatusInternalServerError,
+	}
+}
+
+func (d *UtilExceptionDomain) FailedToPreprocessPartialUpdate(values interface{}, setNull map[string]bool, existingValues interface{}) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 22,
+		Prefix:         d.Prefix,
+		Reason:         ExceptionReason_FailedToPreprocessPartialUpdate,
+		Message:        fmt.Sprintf("Failed to preprocess partial update with value: %v, setNull: %v, and existingValues: %v", values, setNull, existingValues),
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
 }

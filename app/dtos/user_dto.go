@@ -6,17 +6,23 @@ import (
 	"time"
 )
 
+/* ============================== Request DTO ============================== */
+
 type FindMeReqDto struct {
 	AccessToken string
 }
 
-type UpdateMeReqDto struct {
-	AccessToken string
-	DisplayName string
-	Email       string
-	Password    string
-	Status      enums.UserStatus
+type UpdateMeReqValues struct {
+	DisplayName *string
+	Status      *enums.UserStatus
 }
+
+type UpdateMeReqDto struct {
+	PartialUpdateDto[UpdateMeReqValues]
+	AccessToken string
+}
+
+/* ============================== Response DTO ============================== */
 
 type FindMeResDto = caches.UserDataCache
 

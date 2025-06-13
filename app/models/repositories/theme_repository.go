@@ -1,4 +1,4 @@
-package operations
+package repositories
 
 import (
 	"notezy-backend/app/exceptions"

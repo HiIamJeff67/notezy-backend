@@ -6,8 +6,8 @@ import (
 	caches "notezy-backend/app/caches"
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
-	"notezy-backend/app/models/inputs"
-	operations "notezy-backend/app/models/operations"
+	inputs "notezy-backend/app/models/inputs"
+	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	util "notezy-backend/app/util"
 )
@@ -33,7 +33,8 @@ func FindMe(reqDto *dtos.FindMeReqDto) (*dtos.FindMeResDto, *exceptions.Exceptio
 
 // for temporary use
 func FindAllUsers() (*[]schemas.User, *exceptions.Exception) {
-	users, exception := operations.GetAllUsers(nil)
+	userRepository := repositories.NewUserRepository(nil)
+	users, exception := userRepository.GetAll()
 	if exception != nil {
 		return nil, exception
 	}
@@ -47,16 +48,18 @@ func UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Ex
 		return nil, exception
 	}
 
+	userRepository := repositories.NewUserRepository(nil)
 	userId, err := uuid.Parse(claims.Id)
 	if err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	user, exception := operations.UpdateUserById(nil, userId, inputs.UpdateUserInput{
-		DisplayName: &reqDto.DisplayName,
-		Email:       &reqDto.Email,
-		Password:    &reqDto.Password,
-		Status:      &reqDto.Status,
+	user, exception := userRepository.UpdateOneById(userId, inputs.PartialUpdateUserInput{
+		Values: inputs.UpdateUserInput{
+			DisplayName: reqDto.Values.DisplayName,
+			Status:      reqDto.Values.Status,
+		},
+		SetNull: reqDto.SetNull,
 	})
 	if exception != nil {
 		return nil, exception

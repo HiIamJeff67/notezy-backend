@@ -10,7 +10,7 @@ import (
 	caches "notezy-backend/app/caches"
 	cookies "notezy-backend/app/cookies"
 	exceptions "notezy-backend/app/exceptions"
-	operations "notezy-backend/app/models/operations"
+	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	types "notezy-backend/app/shared/types"
 	util "notezy-backend/app/util"
@@ -75,7 +75,8 @@ func _validateRefreshToken(ctx *gin.Context, refreshToken string) (*schemas.User
 		return nil, exceptions.Util.FailedToParseAccessToken().WithError(err)
 	}
 
-	user, exception := operations.GetUserById(nil, userId)
+	userRepository := repositories.NewUserRepository(nil)
+	user, exception := userRepository.GetOneById(userId)
 	if exception != nil { // if there's not such user with the parsed id
 		return nil, exception
 	}
