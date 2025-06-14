@@ -5,7 +5,7 @@ import (
 	"reflect"
 )
 
-func PartialUpdatePreprocess[T any, S any](values T, setNull map[string]bool, existingValues S) (S, error) {
+func PartialUpdatePreprocess[T any, S any](values T, setNull *map[string]bool, existingValues S) (S, error) {
 	existingReflect := reflect.ValueOf(&existingValues).Elem()
 	existingType := reflect.TypeOf(existingValues)
 	valuesReflect := reflect.ValueOf(values)
@@ -36,7 +36,7 @@ func PartialUpdatePreprocess[T any, S any](values T, setNull map[string]bool, ex
 
 		// 1. check if there's a true value in setNull which indicating we need to set it to null
 		if setNull != nil {
-			if shouldSetNull, exists := setNull[fieldName]; exists && shouldSetNull {
+			if shouldSetNull, exists := (*setNull)[fieldName]; exists && shouldSetNull {
 				// setting the zero value（which is nil for pointer）
 				existingField.Set(reflect.Zero(existingField.Type()))
 				continue

@@ -14,6 +14,8 @@ import (
 	"notezy-backend/app/util"
 )
 
+/* ============================== Definitions ============================== */
+
 type UserRepository interface {
 	GetOneById(id uuid.UUID) (*schemas.User, *exceptions.Exception)
 	GetOneByName(name string) (*schemas.User, *exceptions.Exception)
@@ -34,6 +36,8 @@ func NewUserRepository(db *gorm.DB) *userRepository {
 	}
 	return &userRepository{db: db}
 }
+
+/* ============================== CRUD operations ============================== */
 
 func (r *userRepository) GetOneById(id uuid.UUID) (*schemas.User, *exceptions.Exception) {
 	user := schemas.User{}
@@ -115,11 +119,11 @@ func (r *userRepository) UpdateOneById(id uuid.UUID, input inputs.PartialUpdateU
 	values := input.Values
 	setNull := input.SetNull
 	existingUser, exception := r.GetOneById(id)
-	if exception != nil {
+	if exception != nil || existingUser == nil {
 		return nil, exception
 	}
 
-	updates, err := util.PartialUpdatePreprocess(values, *setNull, *existingUser)
+	updates, err := util.PartialUpdatePreprocess(values, setNull, *existingUser)
 	if err != nil {
 		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(values, *setNull, *existingUser)
 	}

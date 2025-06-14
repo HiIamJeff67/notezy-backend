@@ -12,13 +12,30 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func GetUserAccountByUserId(db *gorm.DB, userId uuid.UUID) (*schemas.UserAccount, *exceptions.Exception) {
+/* ============================== Definitions ============================== */
+
+type UserAccountRepository interface {
+	GetOneByUserId(userId uuid.UUID) (*schemas.UserAccount, *exceptions.Exception)
+	CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserAccountInput) *exceptions.Exception
+	UpdateOneByUserId(userId uuid.UUID, input inputs.UpdateUserAccountInput) *exceptions.Exception
+}
+
+type userAccountRepository struct {
+	db *gorm.DB
+}
+
+func NewUserAccountRepository(db *gorm.DB) *userAccountRepository {
 	if db == nil {
 		db = models.NotezyDB
 	}
+	return &userAccountRepository{db: db}
+}
 
+/* ============================== CRUD operations ============================== */
+
+func (r *userAccountRepository) GetOneByUserId(userId uuid.UUID) (*schemas.UserAccount, *exceptions.Exception) {
 	userAccount := schemas.UserAccount{}
-	result := db.Table(schemas.UserAccount{}.TableName()).
+	result := r.db.Table(schemas.UserAccount{}.TableName()).
 		Where("user_id = ?", userId).
 		First(&userAccount)
 	if err := result.Error; err != nil {
@@ -28,54 +45,33 @@ func GetUserAccountByUserId(db *gorm.DB, userId uuid.UUID) (*schemas.UserAccount
 	return &userAccount, nil
 }
 
-func GetAllUserAccount(db *gorm.DB) (*[]schemas.UserAccount, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
-
-	userAccounts := []schemas.UserAccount{}
-	result := db.Table(schemas.UserAccount{}.TableName()).Find(&userAccounts)
-	if err := result.Error; err != nil {
-		return nil, exceptions.UserAccount.NotFound().WithError(err)
-	}
-	return &userAccounts, nil
-}
-
-func CreateUserAccountByUserId(db *gorm.DB, userId uuid.UUID, input inputs.CreateUserAccountInput) (*uuid.UUID, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
-
+func (r *userAccountRepository) CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserAccountInput) *exceptions.Exception {
 	var newUserAccount schemas.UserAccount
 	newUserAccount.UserId = userId
 	util.CopyNonNilFields(&newUserAccount, input)
-	result := db.Table(schemas.UserAccount{}.TableName()).
+	result := r.db.Table(schemas.UserAccount{}.TableName()).
 		Clauses(clause.Returning{Columns: []clause.Column{
 			{Name: "id"},
 		}}).
 		Create(&newUserAccount)
 	if err := result.Error; err != nil {
-		return nil, exceptions.UserAccount.FailedToCreate().WithError(err)
+		return exceptions.UserAccount.FailedToCreate().WithError(err)
 	}
-	return &newUserAccount.Id, nil
+	return nil
 }
 
-func UpdateUserAccountByUserId(db *gorm.DB, userId uuid.UUID, input inputs.UpdateUserAccountInput) (*schemas.UserAccount, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
-
+func (r *userAccountRepository) UpdateOneByUserId(userId uuid.UUID, input inputs.UpdateUserAccountInput) *exceptions.Exception {
 	var updatedUserAccount schemas.UserAccount
 	util.CopyNonNilFields(&updatedUserAccount, input)
-	result := db.Table(schemas.UserAccount{}.TableName()).
+	result := r.db.Table(schemas.UserAccount{}.TableName()).
 		Where("user_id = ?", userId).
 		Clauses(clause.Returning{}).
 		Updates(&input)
 	if err := result.Error; err != nil {
-		return nil, exceptions.UserAccount.FailedToUpdate().WithError(err)
+		return exceptions.UserAccount.FailedToUpdate().WithError(err)
 	}
 
-	return &updatedUserAccount, nil
+	return nil
 }
 
 // We do not allow to just delete the userAccount,

@@ -39,6 +39,9 @@ func Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Ex
 	// Start transaction
 	tx := models.NotezyDB.Begin()
 	userRepository := repositories.NewUserRepository(tx)
+	userInfoRepository := repositories.NewUserInfoRepository(tx)
+	userAccountRepository := repositories.NewUserAccountRepository(tx)
+	userSettingRepository := repositories.NewUserSettingRepository(tx)
 
 	hashedPassword, exception := hashPassword(reqDto.Password)
 	if exception != nil {
@@ -95,21 +98,21 @@ func Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Ex
 	}
 
 	// Create user info
-	_, exception = repositories.CreateUserInfoByUserId(tx, *newUserId, inputs.CreateUserInfoInput{})
+	exception = userInfoRepository.CreateOneByUserId(*newUserId, inputs.CreateUserInfoInput{})
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
 
 	// Create user account
-	_, exception = repositories.CreateUserAccountByUserId(tx, *newUserId, inputs.CreateUserAccountInput{AuthCode: authCode, AuthCodeExpiredAt: authCodeExpiredAt})
+	exception = userAccountRepository.CreateOneByUserId(*newUserId, inputs.CreateUserAccountInput{AuthCode: authCode, AuthCodeExpiredAt: authCodeExpiredAt})
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
 
 	// Create user setting
-	_, exception = repositories.CreateUserSettingByUserId(tx, *newUserId, inputs.CreateUserSettingInput{})
+	exception = userSettingRepository.CreateOneByUserId(*newUserId, inputs.CreateUserSettingInput{})
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
