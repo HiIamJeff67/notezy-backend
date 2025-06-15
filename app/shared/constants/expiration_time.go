@@ -8,5 +8,5 @@ const (
 )
 
 const (
-	ExpirationTimeOfAuthCode = 60 * time.Second
+	ExpirationTimeOfAuthCode = 3 * time.Minute
 )

@@ -2,9 +2,12 @@ package dtos
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 /* ============================== Request DTO ============================== */
+// make sure do NOT use the access token or refresh token as the request dto
 
 type RegisterReqDto struct {
 	Name      string `json:"name" validate:"required"`
@@ -20,12 +23,11 @@ type LoginReqDto struct {
 }
 
 type LogoutReqDto struct {
-	AccessToken string `json:"accessToken" validate:"required"`
+	UserId uuid.UUID // extracted from the access token of authMidddleware
 }
 
-type HeartBeatReqDto struct {
-	AccessToken  string `json:"accessToken"`
-	RefreshToken string `json:"refreshToken"`
+type SendAuthCodeReqDto struct {
+	Email string `json:"email" validate:"required,email"`
 }
 
 /* ============================== Response DTO ============================== */
@@ -44,7 +46,7 @@ type LogoutResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type HeartBeatResDto struct {
-	AccessToken string    `json:"accessToken"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+type SendAuthCodeResDto struct {
+	AuthCodeExpiredAt time.Time `json:"authCodeExpiredAt"`
+	UpdatedAt         time.Time `json:"updatedAt"`
 }

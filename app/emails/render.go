@@ -18,7 +18,7 @@ type HTMLEmailRenderer struct {
 }
 
 func (r *HTMLEmailRenderer) Render() (string, *exceptions.Exception) {
-	if templateFileType := strings.Split(r.TemplatePath, ".")[1]; util.IsStringIn(templateFileType, []string{"html"}) {
+	if templateFileType := strings.Split(r.TemplatePath, ".")[1]; !util.IsStringIn(templateFileType, []string{"html"}) {
 		return "", exceptions.Email.TemplateFileTypeAndContentTypeNotMatch(templateFileType, types.ContentType_HTML)
 	}
 	templateBytes, err := os.ReadFile(r.TemplatePath)

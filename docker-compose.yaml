@@ -10,6 +10,24 @@ services:
     volumes:
       - redis-data:/data
     command: ["redis-server", "--appendonly", "yes"]
+  notezy-db:
+    # should be the same as DB_HOST(hosting service)
+    container_name: ${DOCKER_DB_SERVICE_NAME}
+    # restart: always
+    image: postgis/postgis:16-3.4-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_PORT}:${DOCKER_DB_PORT}"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   notezy-api:
     container_name: ${DOCKER_API_SERVICE_NAME}
     image: ${DOCKER_API_SERVICE_NAME}:latest
@@ -31,29 +49,17 @@ services:
       GIN_PORT: ${GIN_PORT}
       JWT_ACCESS_TOKEN_SECRET_KEY: ${JWT_ACCESS_TOKEN_SECRET_KEY}
       JWT_REFRESH_TOKEN_SECRET_KEY: ${JWT_REFRESH_TOKEN_SECRET_KEY}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      NOTEZY_OFFICIAL_NAME: ${NOTEZY_OFFICIAL_NAME}
+      NOTEZY_OFFICIAL_GMAIL: ${NOTEZY_OFFICIAL_GMAIL}
+      NOTEZY_OFFICIAL_GOOGLE_PASSWORD: ${NOTEZY_OFFICIAL_GOOGLE_PASSWORD}
+      NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD: ${NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD}
     ports:
       - "${GIN_PORT}:${DOCKER_GIN_PORT}"
     depends_on:
       notezy-db:
         condition: service_healthy
-  notezy-db:
-    # should be the same as DB_HOST(hosting service)
-    container_name: ${DOCKER_DB_SERVICE_NAME}
-    # restart: always
-    image: postgis/postgis:16-3.4-alpine
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "${DB_PORT}:${DOCKER_DB_PORT}"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
 volumes:
   redis-data:

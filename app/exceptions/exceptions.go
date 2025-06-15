@@ -42,7 +42,8 @@ const (
 // ExceptionPrefix_Cache ExceptionPrefix = "Cache"	   					 1
 // ExceptionPrefix_Util ExceptionPrefix = "Util"       					 2
 // ExceptionPrefix_Auth ExceptionPrefix = "Auth" 			 		     3
-// ExceptionPrefix_Cookie ExceptionPrefx = "Cookie"						 4
+// ExceptionPrefix_Cookie ExceptionPrefix = "Cookie"					 4
+// ExceptionPrefix_Context ExceptionPrefix = "Context"					 5
 )
 
 // shared reason for common domain use

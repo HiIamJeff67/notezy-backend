@@ -7,23 +7,28 @@ import (
 )
 
 const (
-	WelcomeEmailSubject = "Welcome and thanks for registration in the Notezy application!"
+	WelcomeEmailSubject = "Welcome to Notezy - Account Registration Was Successfully Done"
 )
 
 var _welcomeEmailRenderer = &HTMLEmailRenderer{
-	TemplatePath: "templates/welcome_email_template.html",
+	TemplatePath: "app/emails/templates/welcome_email_template.html",
 	DataMap:      map[string]any{},
 }
 
 var _welcomeEmailSender = &EmailSender{
-	Host:     "smtp.example.com",
-	Port:     587,
+	Host:     util.GetEnv("SMTP_HOST", "smtp.gmail.com"),
+	Port:     util.GetIntEnv("SMTP_PORT", 587),
 	UserName: util.GetEnv("NOTEZY_OFFICIAL_GMAIL", ""),
 	Password: util.GetEnv("NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD", ""),
-	From:     util.GetEnv("NOTEZY_OFFICIAL_GMAIL", ""),
+	From:     util.GetEnv("NOTEZY_OFFICIAL_NAME", "Notezy"),
 }
 
-func SendWelcomeEmail(to string) *exceptions.Exception {
+func SendWelcomeEmail(to string, name string, status string) *exceptions.Exception {
+	_welcomeEmailRenderer.DataMap = map[string]any{
+		"UserName": name,
+		"Email":    to,
+		"Status":   status,
+	}
 	body, exception := _welcomeEmailRenderer.Render()
 	if exception != nil {
 		return exception

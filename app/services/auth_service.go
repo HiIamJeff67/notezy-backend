@@ -3,7 +3,6 @@ package services
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
 	caches "notezy-backend/app/caches"
@@ -147,7 +146,10 @@ func Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Ex
 	}
 
 	// ssend the welcome email to the registered user
-	emails.SendWelcomeEmail(newUser.Email)
+	exception = emails.SendWelcomeEmail(newUser.Email, newUser.Name, newUser.Status.String())
+	if exception != nil {
+		exception.Log()
+	}
 
 	return &dtos.RegisterResDto{
 		AccessToken:  *accessToken,
@@ -227,7 +229,7 @@ func Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception) 
 	}
 
 	// update the refresh token and the status of the user
-	var zeroLoginCount int32 = 0
+	var zeroLoginCount int32 = 0 // reset the login count if the login procedure is valid
 	updatedUser, exception := userRepository.UpdateOneById(
 		user.Id,
 		inputs.PartialUpdateUserInput{
@@ -250,21 +252,12 @@ func Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception) 
 }
 
 func Logout(reqDto *dtos.LogoutReqDto) (*dtos.LogoutResDto, *exceptions.Exception) {
-	claims, exception := util.ParseAccessToken(reqDto.AccessToken)
-	if exception != nil {
-		return nil, exception
-	}
-
 	userRepository := repositories.NewUserRepository(nil)
 
-	userId, err := uuid.Parse(claims.Id)
-	if err != nil {
-		return nil, exceptions.Util.FailedToParseAccessToken().WithError(err)
-	}
 	offlineStatus := enums.UserStatus_Offline
 	emptyString := ""
 	updatedUser, exception := userRepository.UpdateOneById(
-		userId,
+		reqDto.UserId,
 		inputs.PartialUpdateUserInput{
 			Values: inputs.UpdateUserInput{
 				Status:       &offlineStatus,
@@ -276,7 +269,7 @@ func Logout(reqDto *dtos.LogoutReqDto) (*dtos.LogoutResDto, *exceptions.Exceptio
 		return nil, exception
 	}
 
-	exception = caches.DeleteUserDataCache(userId)
+	exception = caches.DeleteUserDataCache(reqDto.UserId)
 	if exception != nil {
 		exception.Log()
 	}
@@ -285,3 +278,43 @@ func Logout(reqDto *dtos.LogoutReqDto) (*dtos.LogoutResDto, *exceptions.Exceptio
 		UpdatedAt: updatedUser.UpdatedAt,
 	}, nil
 }
+
+func SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendAuthCodeResDto, *exceptions.Exception) {
+	if err := models.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err).Log()
+	}
+
+	db := models.NotezyDB
+
+	// Use CTE(Common Table Expression) tp speed up
+	authCode := util.GenerateAuthCode()
+	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
+	result := struct {
+		Name      string `json:"name"`
+		UserAgent string `json:"userAgent"`
+	}{}
+	err := db.Raw(`
+        UPDATE`+schemas.UserAccount{}.TableName()+` ua
+		SET auth_code = ?, auth_code_expired_at = ?
+		FROM `+schemas.User{}.TableName()+` u
+		WHERE ua.user_id = u.id AND u.email = ?
+		RETURNING u.name, u.user_agent
+    `, authCode, authCodeExpiredAt, reqDto.Email).Scan(&result).Error
+	if err != nil {
+		return nil, exceptions.UserAccount.FailedToUpdate().WithError(err)
+	}
+
+	exception := emails.SendValidationEmail(reqDto.Email, result.Name, authCode, result.UserAgent, authCodeExpiredAt)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.SendAuthCodeResDto{
+		AuthCodeExpiredAt: authCodeExpiredAt,
+		UpdatedAt:         time.Now(),
+	}, nil
+}
+
+func ResetEmail() {}
+
+func ResetPassword() {}

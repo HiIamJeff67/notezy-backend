@@ -19,6 +19,7 @@ func (s *EmailSender) Send(to string, subject string, body string, contentType t
 	if !contentType.IsValidEnum() {
 		return exceptions.Email.InvalidContentType(contentType)
 	}
+
 	contentTypeString := contentType.String()
 
 	m := gomail.NewMessage()
@@ -29,7 +30,7 @@ func (s *EmailSender) Send(to string, subject string, body string, contentType t
 
 	d := gomail.NewDialer(s.Host, s.Port, s.UserName, s.Password)
 	if err := d.DialAndSend(m); err != nil {
-		return exceptions.Email.FailedToSendEmailWithSubject(subject)
+		return exceptions.Email.FailedToSendEmailWithSubject(subject).WithError(err)
 	}
 	return nil
 }

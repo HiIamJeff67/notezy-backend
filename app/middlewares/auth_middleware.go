@@ -38,33 +38,30 @@ func _extractRefreshToken(ctx *gin.Context) (string, *exceptions.Exception) {
 	return refreshToken, nil
 }
 
-func _validateAccessTokenAndUserAgent(ctx *gin.Context, accessToken string) (*types.Claims, *exceptions.Exception) {
+func _validateAccessTokenAndUserAgent(accessToken string) (*types.Claims, *caches.UserDataCache, *exceptions.Exception) {
 	claims, exception := util.ParseAccessToken(accessToken)
 	if exception != nil { // if failed to parse the accessToken
-		return nil, exception
+		return nil, nil, exception
 	}
 
 	userId, err := uuid.Parse(claims.Id)
 	if err != nil { // if the id is invalid somehow
-		return nil, exceptions.Util.FailedToParseAccessToken().WithError(err)
+		return nil, nil, exceptions.Util.FailedToParseAccessToken().WithError(err)
 	}
 
 	userDataCache, exception := caches.GetUserDataCache(userId)
 	if exception != nil { // if there's no user cache storing its accessToken, in this way, we're impossible to validate its accessToken
-		// logs.Info(userId)
-		return nil, exception.Log()
+		return nil, nil, exception.Log()
 	}
 
 	if accessToken != userDataCache.AccessToken { // if failed to compare and validate the accessToken as the correct token storing in the cache
-		return nil, exceptions.Auth.WrongAccessToken()
+		return nil, nil, exceptions.Auth.WrongAccessToken()
 	}
 
-	ctx.Set("userRole", userDataCache.Role)
-	ctx.Set("userPlan", userDataCache.Plan)
-	return claims, nil
+	return claims, userDataCache, nil
 }
 
-func _validateRefreshToken(ctx *gin.Context, refreshToken string) (*schemas.User, *exceptions.Exception) {
+func _validateRefreshToken(refreshToken string) (*schemas.User, *exceptions.Exception) {
 	claims, exception := util.ParseRefreshToken(refreshToken)
 	if exception != nil { // if failed to parse the refreshToken
 		return nil, exception
@@ -85,8 +82,6 @@ func _validateRefreshToken(ctx *gin.Context, refreshToken string) (*schemas.User
 		return nil, exceptions.Auth.WrongRefreshToken()
 	}
 
-	ctx.Set("userRole", user.Role)
-	ctx.Set("userPlan", user.Plan)
 	return user, nil
 }
 
@@ -94,8 +89,15 @@ func AuthMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// nest if statement bcs we will skip the accessToken validation if it failed
 		if accessToken, exception := _extractAccessToken(ctx); exception == nil { // if extract the accessToken successfully
-			if claims, exception := _validateAccessTokenAndUserAgent(ctx, accessToken); exception == nil { // if validate the accessToken successfully
+			if claims, userDataCache, exception := _validateAccessTokenAndUserAgent(accessToken); exception == nil { // if validate the accessToken successfully
 				if currentUserAgent := ctx.GetHeader("User-Agent"); currentUserAgent == claims.UserAgent { // if the userAgent is matched
+					// if everything above is all fine, we should get the valid userDataCache and claims
+					ctx.Set("userId", claims.Id)
+					ctx.Set("name", userDataCache.Name)
+					ctx.Set("displayName", userDataCache.DisplayName)
+					ctx.Set("email", userDataCache.Email)
+					ctx.Set("userRole", userDataCache.Role)
+					ctx.Set("userPlan", userDataCache.Plan)
 					ctx.Set("accessToken", accessToken)
 					ctx.Next()
 					return
@@ -112,7 +114,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		_user, exception := _validateRefreshToken(ctx, refreshToken)
+		_user, exception := _validateRefreshToken(refreshToken)
 		if exception != nil {
 			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
 			return
@@ -138,6 +140,12 @@ func AuthMiddleware() gin.HandlerFunc {
 			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
 		}
 
+		ctx.Set("userId", _user.Id.String())
+		ctx.Set("name", _user.Name)
+		ctx.Set("displayName", _user.DisplayName)
+		ctx.Set("email", _user.Email)
+		ctx.Set("userRole", _user.Role)
+		ctx.Set("userPlan", _user.Plan)
 		ctx.Set("accessToken", newAccessToken)
 		ctx.Next()
 	}

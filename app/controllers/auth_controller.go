@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"notezy-backend/app/contexts"
 	cookies "notezy-backend/app/cookies"
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
@@ -67,33 +68,16 @@ func Login(ctx *gin.Context) {
 
 func Logout(ctx *gin.Context) {
 	var reqDto dtos.LogoutReqDto
-	accessTokenFromCookie, exists := ctx.Get("accessToken")
-	if !exists {
+	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
+	if exception != nil {
+		exception.Log() // only log the error without throwing them back to client
 		ctx.JSON(
 			exceptions.Auth.InvalidDto().HTTPStatusCode,
 			exceptions.Auth.InvalidDto().GetGinH(),
 		)
 		return
 	}
-
-	tokenStr, ok := accessTokenFromCookie.(string)
-	if !ok {
-		ctx.JSON(
-			exceptions.Auth.InvalidDto().HTTPStatusCode,
-			exceptions.Auth.InvalidDto().GetGinH(),
-		)
-		return
-	}
-
-	reqDto.AccessToken = tokenStr
-	// use the below code if we can't use the cookies of the user
-	// if err := ctx.ShouldBindJSON(&reqDto); err != nil {
-	// 	ctx.JSON(
-	// 		exceptions.Auth.InvalidDto().HTTPStatusCode,
-	// 		exceptions.Auth.InvalidDto().WithError(err).GetGinH(),
-	// 	)
-	// 	return
-	// }
+	reqDto.UserId = *userId
 
 	resDto, exception := services.Logout(&reqDto)
 	if exception != nil {
