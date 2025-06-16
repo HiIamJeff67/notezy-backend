@@ -1,15 +1,16 @@
 package repositories
 
 import (
-	"notezy-backend/app/exceptions"
-	"notezy-backend/app/models"
-	"notezy-backend/app/models/inputs"
-	"notezy-backend/app/models/schemas"
-	"notezy-backend/app/util"
-
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+
+	"github.com/google/uuid"
+
+	exceptions "notezy-backend/app/exceptions"
+	models "notezy-backend/app/models"
+	inputs "notezy-backend/app/models/inputs"
+	schemas "notezy-backend/app/models/schemas"
+	util "notezy-backend/app/util"
 )
 
 /* ============================== Definitions ============================== */

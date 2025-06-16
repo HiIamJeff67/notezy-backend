@@ -11,7 +11,7 @@ import (
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
-	"notezy-backend/app/util"
+	util "notezy-backend/app/util"
 )
 
 /* ============================== Definitions ============================== */
@@ -153,5 +153,4 @@ func (r *userRepository) DeleteOneById(id uuid.UUID, input inputs.DeleteUserInpu
 		return exceptions.User.FailedToDelete()
 	}
 	return nil
-
 }

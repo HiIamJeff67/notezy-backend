@@ -1,6 +1,8 @@
 package inputs
 
-import "notezy-backend/app/models/enums"
+import (
+	enums "notezy-backend/app/models/enums"
+)
 
 type CreateUserSettingInput struct {
 	Theme              *string         `json:"theme" validate:"len=36" gorm:"column:theme;"`

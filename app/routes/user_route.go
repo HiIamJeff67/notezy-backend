@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"notezy-backend/app/controllers"
-	"notezy-backend/app/middlewares"
+	controllers "notezy-backend/app/controllers"
+	middlewares "notezy-backend/app/middlewares"
 )
 
 func configureUserRoutes() {

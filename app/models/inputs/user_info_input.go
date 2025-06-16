@@ -1,8 +1,9 @@
 package inputs
 
 import (
-	"notezy-backend/app/models/enums"
 	"time"
+
+	enums "notezy-backend/app/models/enums"
 )
 
 type CreateUserInfoInput struct {

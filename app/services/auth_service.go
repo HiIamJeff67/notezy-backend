@@ -16,6 +16,8 @@ import (
 	schemas "notezy-backend/app/models/schemas"
 	constants "notezy-backend/app/shared/constants"
 	util "notezy-backend/app/util"
+
+	authsql "notezy-backend/app/models/sql/auth"
 )
 
 /* ============================== Auxiliary Function ============================== */
@@ -293,13 +295,7 @@ func SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendAuthCodeResDto, *e
 		Name      string `json:"name"`
 		UserAgent string `json:"userAgent"`
 	}{}
-	err := db.Raw(`
-        UPDATE`+schemas.UserAccount{}.TableName()+` ua
-		SET auth_code = ?, auth_code_expired_at = ?
-		FROM `+schemas.User{}.TableName()+` u
-		WHERE ua.user_id = u.id AND u.email = ?
-		RETURNING u.name, u.user_agent
-    `, authCode, authCodeExpiredAt, reqDto.Email).Scan(&result).Error
+	err := db.Raw(authsql.UpdateAuthCodeQuery, authCode, authCodeExpiredAt, reqDto.Email).Scan(&result).Error
 	if err != nil {
 		return nil, exceptions.UserAccount.FailedToUpdate().WithError(err)
 	}

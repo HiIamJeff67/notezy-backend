@@ -2,9 +2,10 @@ package routes
 
 import (
 	"fmt"
-	constants "notezy-backend/app/shared/constants"
 
 	"github.com/gin-gonic/gin"
+
+	constants "notezy-backend/app/shared/constants"
 )
 
 var (

@@ -1,11 +1,12 @@
 package models
 
 import (
-	"notezy-backend/app/models/enums"
-	"notezy-backend/app/util"
 	"regexp"
 
 	"github.com/go-playground/validator"
+
+	enums "notezy-backend/app/models/enums"
+	util "notezy-backend/app/util"
 )
 
 // initialize the validator to validate the inputs, dtos
