@@ -10,24 +10,38 @@ import (
 // make sure do NOT use the access token or refresh token as the request dto
 
 type RegisterReqDto struct {
-	Name      string `json:"name" validate:"required"`
-	Email     string `json:"email" validate:"required"`
-	Password  string `json:"password" validate:"required,min=8,max=32,isstrongpassword"`
-	UserAgent string `json:"userAgent" validate:"required" gorm:"column:user_agent;"`
+	Name      string `json:"name" validate:"required,min=6,max=16"`
+	Email     string `json:"email" validate:"required,email"`
+	Password  string `json:"password" validate:"required,min=8,isstrongpassword"`
+	UserAgent string `json:"userAgent" validate:"required"`
 }
 
 type LoginReqDto struct {
 	Account   string `json:"account" validate:"required"`
 	Password  string `json:"password" validate:"required"` // don't validate other additions while login
-	UserAgent string `json:"userAgent" validate:"required" gorm:"column:user_agent;"`
+	UserAgent string `json:"userAgent" validate:"required"`
 }
 
 type LogoutReqDto struct {
-	UserId uuid.UUID // extracted from the access token of authMidddleware
+	UserId uuid.UUID // extracted from the access token of authMiddleware
 }
 
 type SendAuthCodeReqDto struct {
-	Email string `json:"email" validate:"required,email"`
+	Email     string `json:"email" validate:"required,email"`
+	UserAgent string `json:"userAgent" validate:"required"`
+}
+
+type ResetEmailReqDto struct {
+	UserId   uuid.UUID // extracted from the access token of authMiddleware
+	NewEmail string    `json:"newEmail" validate:"required,email"`
+	AuthCode string    `json:"authCode" validate:"required"`
+}
+
+type ResetPasswordReqDto struct {
+	NewPassword string `json:"newPassword" validation:"required,min=8,isstrongpassword"`
+	Account     string `json:"account" validate:"required"`
+	AuthCode    string `json:"authCode" validate:"required"`
+	UserAgent   string `json:"userAgent" validate:"required"`
 }
 
 /* ============================== Response DTO ============================== */
@@ -49,4 +63,12 @@ type LogoutResDto struct {
 type SendAuthCodeResDto struct {
 	AuthCodeExpiredAt time.Time `json:"authCodeExpiredAt"`
 	UpdatedAt         time.Time `json:"updatedAt"`
+}
+
+type ResetEmailResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type ResetPasswordResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
 }

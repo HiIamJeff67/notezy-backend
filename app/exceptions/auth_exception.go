@@ -21,6 +21,7 @@ const (
 	ExceptionReason_WrongAccessToken                      ExceptionReason = "Wrong_Access_Token"
 	ExceptionReason_WrongRefreshToken                     ExceptionReason = "Wrong_Refresh_Token"
 	ExceptionReason_WrongUserAgent                        ExceptionReason = "Wrong_User_Agent"
+	ExceptionReason_WrongAuthCode                         ExceptionReason = "Wrong_Authentication_Code"
 	ExceptionReason_FailedToExtractOrValidateAccessToken  ExceptionReason = "Failed_To_Extract_Or_Validate_Access_Token"
 	ExceptionReason_FailedToExtractOrValidateRefreshToken ExceptionReason = "Failed_To_Extract_Or_Validate_Refresh_Token"
 	ExceptionReason_PermissionDeniedDueToUserRole         ExceptionReason = "Permission_Denied_Due_To_User_Role"
@@ -86,9 +87,19 @@ func (d *AuthExceptionDomain) WrongUserAgent() *Exception {
 	}
 }
 
-func (d *AuthExceptionDomain) FailedToExtractOrValidateAccessToken() *Exception {
+func (d *AuthExceptionDomain) WrongAuthCode() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 5,
+		Prefix:         d.Prefix,
+		Reason:         ExceptionReason_WrongAuthCode,
+		Message:        "The authentication code is not match",
+		HTTPStatusCode: http.StatusUnauthorized,
+	}
+}
+
+func (d *AuthExceptionDomain) FailedToExtractOrValidateAccessToken() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 6,
 		Prefix:         d.Prefix,
 		Reason:         ExceptionReason_FailedToExtractOrValidateAccessToken,
 		Message:        "Failed to get or validate the access token",
@@ -98,7 +109,7 @@ func (d *AuthExceptionDomain) FailedToExtractOrValidateAccessToken() *Exception 
 
 func (d *AuthExceptionDomain) FailedToExtractOrValidateRefreshToken() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 6,
+		Code:           d.BaseCode + 7,
 		Prefix:         d.Prefix,
 		Reason:         ExceptionReason_FailedToExtractOrValidateRefreshToken,
 		Message:        "Failed to get or validate the refresh token",
@@ -108,7 +119,7 @@ func (d *AuthExceptionDomain) FailedToExtractOrValidateRefreshToken() *Exception
 
 func (d *AuthExceptionDomain) LoginBlockedDueToTryingTooManyTimes(blockedUntil time.Time) *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 7,
+		Code:           d.BaseCode + 8,
 		Prefix:         d.Prefix,
 		Reason:         ExceptionReason_LoginBlockedDueToTryingTooManyTimes,
 		Message:        fmt.Sprintf("Blocked the login procedure because user has tried too many time and require to wait until %v", blockedUntil),

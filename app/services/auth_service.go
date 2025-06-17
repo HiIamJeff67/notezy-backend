@@ -288,7 +288,6 @@ func SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendAuthCodeResDto, *e
 
 	db := models.NotezyDB
 
-	// Use CTE(Common Table Expression) tp speed up
 	authCode := util.GenerateAuthCode()
 	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
 	result := struct {
@@ -311,6 +310,117 @@ func SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendAuthCodeResDto, *e
 	}, nil
 }
 
-func ResetEmail() {}
+// TODO: use 1 or 2 SQL to finish this work
+func ResetEmail(reqDto *dtos.ResetEmailReqDto) (*dtos.ResetEmailResDto, *exceptions.Exception) {
+	if err := models.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
 
-func ResetPassword() {}
+	userRepository := repositories.NewUserRepository(nil)
+	userAccountRepository := repositories.NewUserAccountRepository(nil)
+
+	userAccount, exception := userAccountRepository.GetOneByUserId(reqDto.UserId)
+	if exception != nil {
+		return nil, exception
+	}
+
+	if userAccount.AuthCode != reqDto.AuthCode {
+		return nil, exceptions.Auth.WrongAuthCode()
+	}
+
+	updatedUser, exception := userRepository.UpdateOneById(
+		reqDto.UserId,
+		inputs.PartialUpdateUserInput{
+			Values: inputs.UpdateUserInput{
+				Email: &reqDto.NewEmail,
+			},
+			SetNull: nil,
+		})
+	if exception != nil {
+		return nil, exception
+	}
+
+	db := models.NotezyDB
+	authCode := util.GenerateAuthCode()
+	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
+	result := struct {
+		Name      string `json:"name"`
+		UserAgent string `json:"userAgent"`
+	}{}
+	err := db.Raw(authsql.UpdateAuthCodeQuery, authCode, authCodeExpiredAt, reqDto.NewEmail).Scan(&result).Error
+	if err != nil {
+		return nil, exceptions.UserAccount.FailedToUpdate().WithError(err)
+	}
+
+	return &dtos.ResetEmailResDto{
+		UpdatedAt: updatedUser.UpdatedAt,
+	}, nil
+}
+
+func ResetPassword(reqDto *dtos.ResetPasswordReqDto) (*dtos.ResetPasswordResDto, *exceptions.Exception) {
+	if err := models.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
+	userRepository := repositories.NewUserRepository(nil)
+
+	var user *schemas.User = nil
+	var exception *exceptions.Exception = nil
+	if util.IsAlphaNumberString(reqDto.Account) { // if the account field contains user name
+		if user, exception = userRepository.GetOneByName(reqDto.Account); exception != nil {
+			return nil, exception
+		}
+	} else if util.IsEmailString(reqDto.Account) { // if the account field contains email
+		if user, exception = userRepository.GetOneByEmail(reqDto.Account); exception != nil {
+			return nil, exception
+		}
+	} else {
+		return nil, exceptions.Auth.InvalidDto()
+	}
+
+	if user.BlockLoginUtil.After(time.Now()) {
+		return nil, exceptions.Auth.LoginBlockedDueToTryingTooManyTimes(user.BlockLoginUtil)
+	}
+
+	accessToken, exception := util.GenerateAccessToken(user.Id.String(), user.Name, user.Email, user.UserAgent)
+	if exception != nil {
+		return nil, exception
+	}
+	refreshToken, exception := util.GenerateRefreshToken(user.Id.String(), user.Name, user.Email, user.UserAgent)
+	if exception != nil {
+		return nil, exception
+	}
+
+	// update the access token of the user
+	exception = caches.UpdateUserDataCache(user.Id, caches.UpdateUserDataCacheDto{AccessToken: accessToken})
+	if exception != nil {
+		return nil, exception
+	}
+
+	hashedPassword, exception := hashPassword(reqDto.NewPassword)
+	if exception != nil {
+		return nil, exception
+	}
+
+	// update the refresh token and the status of the user
+	var zeroLoginCount int32 = 0 // reset the login count if the login procedure is valid
+	updatedUser, exception := userRepository.UpdateOneById(
+		user.Id,
+		inputs.PartialUpdateUserInput{
+			Values: inputs.UpdateUserInput{
+				Password:     &hashedPassword,
+				Status:       &user.PrevStatus,
+				RefreshToken: refreshToken,
+				UserAgent:    &reqDto.UserAgent,
+				LoginCount:   &zeroLoginCount,
+			},
+			SetNull: nil,
+		})
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.ResetPasswordResDto{
+		UpdatedAt: updatedUser.UpdatedAt,
+	}, nil
+}
