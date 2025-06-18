@@ -13,3 +13,5 @@ type UpdateThemeInput struct {
 	DownloadURL *string `json:"downloadURL" validate:"required,url" gorm:"column:download_url;"`
 	IsDefault   *bool   `json:"isDefault" validate:"required" gorm:"column:is_default;"`
 }
+
+type PartialUpdateThemeInput = PartialUpdateInput[UpdateThemeInput]

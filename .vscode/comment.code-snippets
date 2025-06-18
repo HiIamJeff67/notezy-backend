@@ -5,7 +5,7 @@
       "contextseperator5"
     ],
     "body": [
-      "/* ===== ${1:Title} ===== */"
+      "/* ===== ${1:_Title_} ===== */"
     ],
     "description": "Create a basic comment with length of 5 as a context seperator to seperate codes"
   },
@@ -15,7 +15,7 @@
       "contextseperator10"
     ],
     "body": [
-      "/* ========== ${1:Title} ========== */"
+      "/* ========== ${1:_Title_} ========== */"
     ],
     "description": "Create a basic comment with length of 10 as a context seperator to seperate codes"
   },
@@ -25,7 +25,7 @@
       "contextseperator15"
     ],
     "body": [
-      "/* =============== ${1:Title} =============== */"
+      "/* =============== ${1:_Title_} =============== */"
     ],
     "description": "Create a basic comment with length of 15 as a context seperator to seperate codes"
   },
@@ -35,7 +35,7 @@
       "contextseperator20"
     ],
     "body": [
-      "/* ==================== ${1:Title} ==================== */"
+      "/* ==================== ${1:_Title_} ==================== */"
     ],
     "description": "Create a basic comment with length of 20 as a context seperator to seperate codes"
   },
@@ -45,7 +45,7 @@
       "contextseperator25"
     ],
     "body": [
-      "/* ========================= ${1:Title} ========================= */"
+      "/* ========================= ${1:_Title_} ========================= */"
     ],
     "description": "Create a basic comment with length of 25 as a context seperator to seperate codes"
   },
@@ -55,7 +55,7 @@
       "contextseperator30"
     ],
     "body": [
-      "/* ============================== ${1:Title} ============================== */"
+      "/* ============================== ${1:_Title_} ============================== */"
     ],
     "description": "Create a basic comment with length of 30 as a context seperator to seperate codes"
   },
@@ -65,7 +65,7 @@
       "textfilecontextseperator10"
     ],
     "body": [
-      "# ========== ${1:Title} ========== #"
+      "# ========== ${1:_Title_} ========== #"
     ],
     "description": "Create a basic comment with length of 10 as a context seperator to seperate text in the text file"
   },
@@ -75,7 +75,7 @@
       "textfilecontextseperator20"
     ],
     "body": [
-      "# ==================== ${1:Title} ==================== #"
+      "# ==================== ${1:_Title_} ==================== #"
     ],
     "description": "Create a basic comment with length of 20 as a context seperator to seperate text in the text file"
   },
@@ -85,7 +85,7 @@
       "textfilecontextseperator30"
     ],
     "body": [
-      "# ============================== ${1:Title} ============================== #"
+      "# ============================== ${1:_Title_} ============================== #"
     ],
     "description": "Create a basic comment with length of 30 as a context seperator to seperate text in the text file"
   }

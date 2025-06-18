@@ -31,7 +31,7 @@ func Register(ctx *gin.Context) {
 	cookies.RefreshToken.SetCookie(ctx, resDto.RefreshToken)
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"data": gin.H{
+		"data": gin.H{ // make sure we don't response with the refresh token
 			"accessToken": resDto.AccessToken,
 			"createdAt":   resDto.CreatedAt,
 		},
@@ -59,13 +59,11 @@ func Login(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"data": gin.H{
-			"accessToken": resDto.AccessToken,
-			"updatedAt":   resDto.UpdatedAt,
-		},
+		"data": resDto,
 	})
 }
 
+// with AuthMiddleware()
 func Logout(ctx *gin.Context) {
 	var reqDto dtos.LogoutReqDto
 	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
@@ -89,8 +87,73 @@ func Logout(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"data": gin.H{
-			"updatedAt": resDto.UpdatedAt,
-		},
+		"data": resDto,
+	})
+}
+
+func SendAuthCode(ctx *gin.Context) {
+	var reqDto dtos.SendAuthCodeReqDto
+	reqDto.UserAgent = ctx.GetHeader("User-Agent")
+	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
+		exception := exceptions.Auth.InvalidDto().WithError(err)
+		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		return
+	}
+
+	resDto, exception := services.SendAuthCode(&reqDto)
+	if exception != nil {
+		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"data": resDto,
+	})
+}
+
+// with AuthMiddleware()
+func ResetEmail(ctx *gin.Context) {
+	var reqDto dtos.ResetEmailReqDto
+	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
+	if exception != nil {
+		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		return
+	}
+	reqDto.UserId = *userId
+	reqDto.UserAgent = ctx.GetHeader("User-Agent")
+	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
+		exception := exceptions.Auth.InvalidDto().WithError(err)
+		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		return
+	}
+
+	resDto, exception := services.ResetEmail(&reqDto)
+	if exception != nil {
+		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"data": resDto,
+	})
+}
+
+func ResetPassword(ctx *gin.Context) {
+	var reqDto dtos.ResetPasswordReqDto
+	reqDto.UserAgent = ctx.GetHeader("User-Agent")
+	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
+		exception := exceptions.Auth.InvalidDto().WithError(err)
+		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		return
+	}
+
+	resDto, exception := services.ResetPassword(&reqDto)
+	if exception != nil {
+		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"data": resDto,
 	})
 }

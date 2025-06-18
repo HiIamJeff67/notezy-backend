@@ -1,0 +1,11 @@
+{
+    "Generate a Controller Layer Function": {
+        "prefix": "controller", 
+        "body": "func ${1:_Controller_Function_Name_} (ctx *gin.Context) {}", 
+        "description": "Create a starter format of the controller layer function"
+    }, 
+    "Generate a Service Layer Function": {
+        "prefix": "service", 
+        "body": "func ${1:_Service_Function_Name_} (reqDto *dtos.${1}ReqDto) (*dtos.${1}ResDto, *exception.Exception) {}"
+    }
+}

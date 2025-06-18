@@ -2,23 +2,23 @@ package repositories
 
 import (
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 
 	"github.com/google/uuid"
+	"github.com/jinzhu/copier"
 
 	exceptions "notezy-backend/app/exceptions"
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
-	util "notezy-backend/app/util"
+	"notezy-backend/app/util"
 )
 
 /* ============================== Definitions ============================== */
 
 type UserSettingRepository interface {
 	GetOneByUserId(userId uuid.UUID) (*schemas.UserSetting, *exceptions.Exception)
-	CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserSettingInput) *exceptions.Exception
-	UpdateOneByUserId(userId uuid.UUID, input inputs.UpdateUserSettingInput) *exceptions.Exception
+	CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserSettingInput) (*uuid.UUID, *exceptions.Exception)
+	UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserSettingInput) (*schemas.UserSetting, *exceptions.Exception)
 }
 
 type userSettingRepository struct {
@@ -36,7 +36,9 @@ func NewUserSettingRepository(db *gorm.DB) *userSettingRepository {
 
 func (r *userSettingRepository) GetOneByUserId(userId uuid.UUID) (*schemas.UserSetting, *exceptions.Exception) {
 	userSetting := schemas.UserSetting{}
-	result := r.db.Table(schemas.UserSetting{}.TableName()).Where("user_id = ?", userId).First(&userSetting)
+	result := r.db.Table(schemas.UserSetting{}.TableName()).
+		Where("user_id = ?", userId).
+		First(&userSetting)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserSetting.NotFound().WithError(err)
 	}
@@ -44,33 +46,50 @@ func (r *userSettingRepository) GetOneByUserId(userId uuid.UUID) (*schemas.UserS
 	return &userSetting, nil
 }
 
-func (r *userSettingRepository) CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserSettingInput) *exceptions.Exception {
+func (r *userSettingRepository) CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserSettingInput) (*uuid.UUID, *exceptions.Exception) {
+	if err := models.Validator.Struct(input); err != nil {
+		return nil, exceptions.UserSetting.InvalidInput().WithError(err)
+	}
+
 	var newUserSetting schemas.UserSetting
 	newUserSetting.UserId = userId
-	util.CopyNonNilFields(&newUserSetting, input)
+	if err := copier.Copy(&newUserSetting, &input); err != nil {
+		return nil, exceptions.UserSetting.FailedToCreate().WithError(err)
+	}
+
 	result := r.db.Table(schemas.UserSetting{}.TableName()).
-		Clauses(clause.Returning{Columns: []clause.Column{
-			{Name: "id"},
-		}}).
 		Create(&newUserSetting)
 	if err := result.Error; err != nil {
-		return exceptions.UserSetting.FailedToCreate().WithError(err)
+		return nil, exceptions.UserSetting.FailedToCreate().WithError(err)
 	}
 
-	return nil
+	return &newUserSetting.Id, nil
 }
 
-func (r *userSettingRepository) UpdateOneByUserId(userId uuid.UUID, input inputs.UpdateUserSettingInput) *exceptions.Exception {
-	var updatedUserSetting schemas.UserSetting
-	updatedUserSetting.UserId = userId
-	util.CopyNonNilFields(&updatedUserSetting, input)
-	result := r.db.Table(schemas.UserSetting{}.TableName()).
-		Where("user_id = ?", userId).
-		Clauses(clause.Returning{}).
-		Create(&updatedUserSetting)
-	if err := result.Error; err != nil {
-		return exceptions.UserSetting.FailedToUpdate().WithError(err)
+func (r *userSettingRepository) UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserSettingInput) (*schemas.UserSetting, *exceptions.Exception) {
+	if err := models.Validator.Struct(input); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	return nil
+	existingUserSetting, exception := r.GetOneByUserId(userId)
+	if exception != nil || existingUserSetting == nil {
+		return nil, exception
+	}
+
+	updates, err := util.PartialUpdatePreprocess(input.Values, input.SetNull, *existingUserSetting)
+	if err != nil {
+		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(input.Values, input.SetNull, *existingUserSetting)
+	}
+
+	result := r.db.Table(schemas.UserSetting{}.TableName()).
+		Where("user_id = ?").
+		Updates(&updates)
+	if err := result.Error; err != nil {
+		return nil, exceptions.UserSetting.FailedToUpdate().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return nil, exceptions.UserSetting.NotFound()
+	}
+
+	return &updates, nil
 }

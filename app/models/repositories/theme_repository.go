@@ -5,12 +5,13 @@ import (
 	"gorm.io/gorm/clause"
 
 	"github.com/google/uuid"
+	"github.com/jinzhu/copier"
 
 	exceptions "notezy-backend/app/exceptions"
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
-	util "notezy-backend/app/util"
+	"notezy-backend/app/util"
 )
 
 /* ============================== Definitions ============================== */
@@ -18,8 +19,8 @@ import (
 type ThemeRepository interface {
 	GetOneById(id uuid.UUID) (*schemas.Theme, *exceptions.Exception)
 	GetAll() (*[]schemas.Theme, *exceptions.Exception)
-	CreateOneByAuthorId(authorId uuid.UUID, input inputs.CreateThemeInput) *exceptions.Exception
-	UpdateOneById(id uuid.UUID, authorId uuid.UUID, input inputs.UpdateThemeInput) *exceptions.Exception
+	CreateOneByAuthorId(authorId uuid.UUID, input inputs.CreateThemeInput) (*uuid.UUID, *exceptions.Exception)
+	UpdateOneById(id uuid.UUID, authorId uuid.UUID, input inputs.PartialUpdateThemeInput) (*schemas.Theme, *exceptions.Exception)
 	DeleteOneById(id uuid.UUID, authorId uuid.UUID) *exceptions.Exception
 }
 
@@ -59,43 +60,51 @@ func (r *themeRepository) GetAll() (*[]schemas.Theme, *exceptions.Exception) {
 	return &themes, nil
 }
 
-func (r *themeRepository) CreateOneByAuthorId(authorId uuid.UUID, input inputs.CreateThemeInput) *exceptions.Exception {
+func (r *themeRepository) CreateOneByAuthorId(authorId uuid.UUID, input inputs.CreateThemeInput) (*uuid.UUID, *exceptions.Exception) {
 	if err := models.Validator.Struct(input); err != nil {
-		return exceptions.Theme.FailedToCreate().WithError(err)
+		return nil, exceptions.Theme.FailedToCreate().WithError(err)
 	}
 
 	var newTheme schemas.Theme
 	newTheme.AuthorId = authorId
-	util.CopyNonNilFields(&newTheme, input)
+	if err := copier.Copy(&newTheme, &input); err != nil {
+		return nil, exceptions.Theme.FailedToCreate().WithError(err)
+	}
 	result := r.db.Table(schemas.Theme{}.TableName()).
-		Clauses(clause.Returning{Columns: []clause.Column{
-			{Name: "id"},
-		}}).
 		Create(&newTheme)
 	if err := result.Error; err != nil {
-		return exceptions.Theme.FailedToCreate().WithError(err)
+		return nil, exceptions.Theme.FailedToCreate().WithError(err)
 	}
-	return nil
+
+	return &newTheme.Id, nil
 }
 
-func (r *themeRepository) UpdateOneById(id uuid.UUID, authorId uuid.UUID, input inputs.UpdateThemeInput) *exceptions.Exception {
+func (r *themeRepository) UpdateOneById(id uuid.UUID, authorId uuid.UUID, input inputs.PartialUpdateThemeInput) (*schemas.Theme, *exceptions.Exception) {
 	if err := models.Validator.Struct(input); err != nil {
-		return exceptions.Theme.FailedToCreate().WithError(err)
+		return nil, exceptions.Theme.FailedToCreate().WithError(err)
 	}
 
-	var updatedTheme schemas.Theme
-	util.CopyNonNilFields(&updatedTheme, input)
+	existingTheme, exception := r.GetOneById(id)
+	if exception != nil || existingTheme == nil {
+		return nil, exception
+	}
+
+	updates, err := util.PartialUpdatePreprocess(input.Values, input.SetNull, *existingTheme)
+	if err != nil {
+		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(input.Values, input.SetNull, *existingTheme)
+	}
+
 	result := r.db.Table(schemas.Theme{}.TableName()).
 		Where("id = ? AND author_id = ?", id, authorId).
-		Clauses(clause.Returning{}).
-		Updates(&updatedTheme)
+		Updates(&updates)
 	if err := result.Error; err != nil {
-		return exceptions.Theme.FailedToUpdate().WithError(err)
+		return nil, exceptions.Theme.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 { // check if we do update it or not
-		return exceptions.Theme.FailedToUpdate()
+		return nil, exceptions.Theme.FailedToUpdate()
 	}
-	return nil
+
+	return &updates, nil
 }
 
 func (r *themeRepository) DeleteOneById(id uuid.UUID, authorId uuid.UUID) *exceptions.Exception {
@@ -108,7 +117,8 @@ func (r *themeRepository) DeleteOneById(id uuid.UUID, authorId uuid.UUID) *excep
 		return exceptions.Theme.FailedToDelete().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.Theme.FailedToDelete()
+		return exceptions.Theme.NotFound()
 	}
+
 	return nil
 }

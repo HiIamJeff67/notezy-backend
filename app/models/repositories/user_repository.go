@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
@@ -88,6 +87,7 @@ func (r *userRepository) GetAll() (*[]schemas.User, *exceptions.Exception) {
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.NotFound().WithError(result.Error)
 	}
+
 	return &users, nil
 }
 
@@ -108,6 +108,7 @@ func (r *userRepository) CreateOne(input inputs.CreateUserInput) (*uuid.UUID, *e
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.FailedToCreate().WithError(err)
 	}
+
 	return &newUser.Id, nil
 }
 
@@ -116,16 +117,14 @@ func (r *userRepository) UpdateOneById(id uuid.UUID, input inputs.PartialUpdateU
 		return nil, exceptions.User.InvalidInput().WithError(err).Log()
 	}
 
-	values := input.Values
-	setNull := input.SetNull
 	existingUser, exception := r.GetOneById(id)
 	if exception != nil || existingUser == nil {
 		return nil, exception
 	}
 
-	updates, err := util.PartialUpdatePreprocess(values, setNull, *existingUser)
+	updates, err := util.PartialUpdatePreprocess(input.Values, input.SetNull, *existingUser)
 	if err != nil {
-		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(values, *setNull, *existingUser)
+		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(input.Values, input.SetNull, *existingUser)
 	}
 
 	result := r.db.Table(schemas.User{}.TableName()).
@@ -137,6 +136,7 @@ func (r *userRepository) UpdateOneById(id uuid.UUID, input inputs.PartialUpdateU
 	if result.RowsAffected == 0 {
 		return nil, exceptions.User.NotFound()
 	}
+
 	return &updates, nil
 }
 
@@ -144,13 +144,13 @@ func (r *userRepository) DeleteOneById(id uuid.UUID, input inputs.DeleteUserInpu
 	deletedUser := schemas.User{}
 	result := r.db.Table(schemas.User{}.TableName()).
 		Where("id = ? AND name = ? AND password", id, input.Name, input.Password).
-		Clauses(clause.Returning{}).
 		Delete(&deletedUser)
 	if err := result.Error; err != nil {
-		return exceptions.User.NotFound().WithError(err)
+		return exceptions.User.FailedToDelete().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.User.FailedToDelete()
+		return exceptions.User.NotFound()
 	}
+
 	return nil
 }

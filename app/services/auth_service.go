@@ -99,21 +99,21 @@ func Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Ex
 	}
 
 	// Create user info
-	exception = userInfoRepository.CreateOneByUserId(*newUserId, inputs.CreateUserInfoInput{})
+	_, exception = userInfoRepository.CreateOneByUserId(*newUserId, inputs.CreateUserInfoInput{})
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
 
 	// Create user account
-	exception = userAccountRepository.CreateOneByUserId(*newUserId, inputs.CreateUserAccountInput{AuthCode: authCode, AuthCodeExpiredAt: authCodeExpiredAt})
+	_, exception = userAccountRepository.CreateOneByUserId(*newUserId, inputs.CreateUserAccountInput{AuthCode: authCode, AuthCodeExpiredAt: authCodeExpiredAt})
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
 
 	// Create user setting
-	exception = userSettingRepository.CreateOneByUserId(*newUserId, inputs.CreateUserSettingInput{})
+	_, exception = userSettingRepository.CreateOneByUserId(*newUserId, inputs.CreateUserSettingInput{})
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -273,7 +273,7 @@ func Logout(reqDto *dtos.LogoutReqDto) (*dtos.LogoutResDto, *exceptions.Exceptio
 
 	exception = caches.DeleteUserDataCache(reqDto.UserId)
 	if exception != nil {
-		exception.Log()
+		return nil, exception
 	}
 
 	return &dtos.LogoutResDto{
@@ -290,16 +290,16 @@ func SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendAuthCodeResDto, *e
 
 	authCode := util.GenerateAuthCode()
 	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
-	result := struct {
+	output := struct {
 		Name      string `json:"name"`
 		UserAgent string `json:"userAgent"`
 	}{}
-	err := db.Raw(authsql.UpdateAuthCodeQuery, authCode, authCodeExpiredAt, reqDto.Email).Scan(&result).Error
-	if err != nil {
+	result := db.Raw(authsql.UpdateAuthCodeQuery, authCode, authCodeExpiredAt, reqDto.Email).Scan(&output)
+	if err := result.Error; err != nil {
 		return nil, exceptions.UserAccount.FailedToUpdate().WithError(err)
 	}
 
-	exception := emails.SendValidationEmail(reqDto.Email, result.Name, authCode, result.UserAgent, authCodeExpiredAt)
+	exception := emails.SendValidationEmail(reqDto.Email, output.Name, authCode, output.UserAgent, authCodeExpiredAt)
 	if exception != nil {
 		return nil, exception
 	}
@@ -310,50 +310,43 @@ func SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendAuthCodeResDto, *e
 	}, nil
 }
 
-// TODO: use 1 or 2 SQL to finish this work
 func ResetEmail(reqDto *dtos.ResetEmailReqDto) (*dtos.ResetEmailResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	userRepository := repositories.NewUserRepository(nil)
+	db := models.NotezyDB
 	userAccountRepository := repositories.NewUserAccountRepository(nil)
 
-	userAccount, exception := userAccountRepository.GetOneByUserId(reqDto.UserId)
-	if exception != nil {
-		return nil, exception
+	output := struct {
+		UpdatedAt time.Time `json:"updatedAt"`
+	}{}
+	result := db.Raw(authsql.ResetEmailQuery, reqDto.NewEmail, reqDto.AuthCode, reqDto.UserId, reqDto.UserAgent).Scan(&output)
+	if err := result.Error; err != nil {
+		return nil, exceptions.User.FailedToUpdate().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return nil, exceptions.User.NotFound()
 	}
 
-	if userAccount.AuthCode != reqDto.AuthCode {
-		return nil, exceptions.Auth.WrongAuthCode()
-	}
-
-	updatedUser, exception := userRepository.UpdateOneById(
-		reqDto.UserId,
-		inputs.PartialUpdateUserInput{
-			Values: inputs.UpdateUserInput{
-				Email: &reqDto.NewEmail,
-			},
-			SetNull: nil,
-		})
-	if exception != nil {
-		return nil, exception
-	}
-
-	db := models.NotezyDB
 	authCode := util.GenerateAuthCode()
 	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
-	result := struct {
-		Name      string `json:"name"`
-		UserAgent string `json:"userAgent"`
-	}{}
-	err := db.Raw(authsql.UpdateAuthCodeQuery, authCode, authCodeExpiredAt, reqDto.NewEmail).Scan(&result).Error
-	if err != nil {
-		return nil, exceptions.UserAccount.FailedToUpdate().WithError(err)
+	_, exception := userAccountRepository.UpdateOneByUserId(
+		reqDto.UserId,
+		inputs.PartialUpdateUserAccountInput{
+			Values: inputs.UpdateUserAccountInput{
+				AuthCode:          &authCode,
+				AuthCodeExpiredAt: &authCodeExpiredAt,
+			},
+			SetNull: nil,
+		},
+	)
+	if exception != nil {
+		return nil, exception
 	}
 
 	return &dtos.ResetEmailResDto{
-		UpdatedAt: updatedUser.UpdatedAt,
+		UpdatedAt: output.UpdatedAt,
 	}, nil
 }
 
@@ -376,10 +369,6 @@ func ResetPassword(reqDto *dtos.ResetPasswordReqDto) (*dtos.ResetPasswordResDto,
 		}
 	} else {
 		return nil, exceptions.Auth.InvalidDto()
-	}
-
-	if user.BlockLoginUtil.After(time.Now()) {
-		return nil, exceptions.Auth.LoginBlockedDueToTryingTooManyTimes(user.BlockLoginUtil)
 	}
 
 	accessToken, exception := util.GenerateAccessToken(user.Id.String(), user.Name, user.Email, user.UserAgent)
@@ -409,7 +398,6 @@ func ResetPassword(reqDto *dtos.ResetPasswordReqDto) (*dtos.ResetPasswordResDto,
 		inputs.PartialUpdateUserInput{
 			Values: inputs.UpdateUserInput{
 				Password:     &hashedPassword,
-				Status:       &user.PrevStatus,
 				RefreshToken: refreshToken,
 				UserAgent:    &reqDto.UserAgent,
 				LoginCount:   &zeroLoginCount,

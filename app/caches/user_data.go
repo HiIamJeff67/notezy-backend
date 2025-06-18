@@ -8,13 +8,13 @@ import (
 	"time"
 
 	uuid "github.com/google/uuid"
+	"github.com/jinzhu/copier"
 
 	exceptions "notezy-backend/app/exceptions"
 	logs "notezy-backend/app/logs"
 	enums "notezy-backend/app/models/enums"
 	shared "notezy-backend/app/shared"
 	types "notezy-backend/app/shared/types"
-	util "notezy-backend/app/util"
 )
 
 type UserDataCache struct {
@@ -146,7 +146,9 @@ func UpdateUserDataCache(id uuid.UUID, dto UpdateUserDataCacheDto) *exceptions.E
 		return exception
 	}
 	userData.UpdatedAt = time.Now()
-	util.CopyNonNilFields(&userData, dto)
+	if err := copier.Copy(&userData, &dto); err != nil {
+		return exceptions.Cache.FailedToConvertStructToJson().WithError(err)
+	}
 	userDataJson, err := json.Marshal(userData)
 	if err != nil {
 		return exceptions.Cache.FailedToConvertStructToJson().WithError(err)

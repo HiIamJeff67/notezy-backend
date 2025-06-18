@@ -32,14 +32,15 @@ type SendAuthCodeReqDto struct {
 }
 
 type ResetEmailReqDto struct {
-	UserId   uuid.UUID // extracted from the access token of authMiddleware
-	NewEmail string    `json:"newEmail" validate:"required,email"`
-	AuthCode string    `json:"authCode" validate:"required"`
+	UserId    uuid.UUID // extracted from the access token of authMiddleware
+	NewEmail  string    `json:"newEmail" validate:"required,email"`
+	AuthCode  string    `json:"authCode" validate:"required"`
+	UserAgent string    `json:"userAgent" validate:"required"`
 }
 
 type ResetPasswordReqDto struct {
-	NewPassword string `json:"newPassword" validation:"required,min=8,isstrongpassword"`
 	Account     string `json:"account" validate:"required"`
+	NewPassword string `json:"newPassword" validation:"required,min=8,isstrongpassword"`
 	AuthCode    string `json:"authCode" validate:"required"`
 	UserAgent   string `json:"userAgent" validate:"required"`
 }

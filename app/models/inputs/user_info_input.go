@@ -25,3 +25,5 @@ type UpdateUserInfoInput struct {
 	Country            *enums.Country    `json:"country" validate:"omitempty,iscountry" gorm:"column:country;"`
 	BirthDate          *time.Time        `json:"birthDate" validate:"omitempty" gorm:"column:birth_date;"`
 }
+
+type PartialUpdateUserInfoInput = PartialUpdateInput[UpdateUserInfoInput]

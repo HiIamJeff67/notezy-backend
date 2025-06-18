@@ -127,7 +127,7 @@ func (d *UtilExceptionDomain) FailedToReadFile() *Exception {
 	}
 }
 
-func (d *UtilExceptionDomain) FailedToPreprocessPartialUpdate(values interface{}, setNull map[string]bool, existingValues interface{}) *Exception {
+func (d *UtilExceptionDomain) FailedToPreprocessPartialUpdate(values interface{}, setNull *map[string]bool, existingValues interface{}) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 22,
 		Prefix:         d.Prefix,
