@@ -12,7 +12,6 @@ import (
 	services "notezy-backend/app/services"
 )
 
-/* ============================== Controller ============================== */
 func Register(ctx *gin.Context) {
 	var reqDto dtos.RegisterReqDto
 	reqDto.UserAgent = ctx.GetHeader("User-Agent")
@@ -112,6 +111,27 @@ func SendAuthCode(ctx *gin.Context) {
 }
 
 // with AuthMiddleware()
+func ValidateEmail(ctx *gin.Context) {
+	var reqDto dtos.ValidateEmailReqDto
+	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
+	if exception != nil {
+		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		return
+	}
+	reqDto.UserId = *userId
+
+	resDto, exception := services.ValidateEmail(&reqDto)
+	if exception != nil {
+		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"data": resDto,
+	})
+}
+
+// with AuthMiddleware()
 func ResetEmail(ctx *gin.Context) {
 	var reqDto dtos.ResetEmailReqDto
 	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
@@ -120,7 +140,6 @@ func ResetEmail(ctx *gin.Context) {
 		return
 	}
 	reqDto.UserId = *userId
-	reqDto.UserAgent = ctx.GetHeader("User-Agent")
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
 		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
@@ -138,8 +157,9 @@ func ResetEmail(ctx *gin.Context) {
 	})
 }
 
-func ResetPassword(ctx *gin.Context) {
-	var reqDto dtos.ResetPasswordReqDto
+// ! this should not use any middleware, bcs we want the user to set it by providing the account
+func ForgetPassword(ctx *gin.Context) {
+	var reqDto dtos.ForgetPasswordReqDto
 	reqDto.UserAgent = ctx.GetHeader("User-Agent")
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
@@ -147,7 +167,7 @@ func ResetPassword(ctx *gin.Context) {
 		return
 	}
 
-	resDto, exception := services.ResetPassword(&reqDto)
+	resDto, exception := services.ForgetPassword(&reqDto)
 	if exception != nil {
 		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return

@@ -40,12 +40,13 @@ func UserPlanMiddleware(atLeastUserPlan enums.UserPlan) gin.HandlerFunc {
 			ctx.Next()
 			return
 		}
+		// from high level plans to low level plans
 		for _, enum := range enums.AllUserPlans {
-			if enum == atLeastUserPlan {
+			if enum == currentUserPlan {
 				ctx.Set("userPlan", currentUserPlan)
 				ctx.Next()
 				return
-			} else if enum == currentUserPlan {
+			} else if enum == atLeastUserPlan {
 				ctx.AbortWithStatusJSON(
 					http.StatusUnauthorized,
 					exceptions.Auth.PermissionDeniedDueToUserPlan(currentUserPlan).GetGinH(),

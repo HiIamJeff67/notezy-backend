@@ -96,8 +96,6 @@ func AuthMiddleware() gin.HandlerFunc {
 					ctx.Set("name", userDataCache.Name)
 					ctx.Set("displayName", userDataCache.DisplayName)
 					ctx.Set("email", userDataCache.Email)
-					ctx.Set("userRole", userDataCache.Role)
-					ctx.Set("userPlan", userDataCache.Plan)
 					ctx.Set("accessToken", accessToken)
 					ctx.Next()
 					return
@@ -144,8 +142,6 @@ func AuthMiddleware() gin.HandlerFunc {
 		ctx.Set("name", _user.Name)
 		ctx.Set("displayName", _user.DisplayName)
 		ctx.Set("email", _user.Email)
-		ctx.Set("userRole", _user.Role)
-		ctx.Set("userPlan", _user.Plan)
 		ctx.Set("accessToken", newAccessToken)
 		ctx.Next()
 	}

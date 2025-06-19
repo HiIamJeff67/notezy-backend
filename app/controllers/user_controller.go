@@ -5,10 +5,35 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"notezy-backend/app/contexts"
 	"notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	services "notezy-backend/app/services"
 )
+
+// with AuthMiddleware()
+func GetMe(ctx *gin.Context) {
+	var reqDto dtos.FindMeReqDto
+	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
+	if exception != nil {
+		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		return
+	}
+	reqDto.Id = *userId
+
+	resDto, exception := services.FindMe(&reqDto)
+	if exception != nil {
+		ctx.JSON(
+			exception.HTTPStatusCode,
+			exception.GetGinH(),
+		)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"data": resDto,
+	})
+}
 
 func FindAllUsers(ctx *gin.Context) {
 	resDto, exception := services.FindAllUsers()

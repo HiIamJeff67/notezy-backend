@@ -40,12 +40,13 @@ func UserRoleMiddleware(atLeastUserRole enums.UserRole) gin.HandlerFunc {
 			ctx.Next()
 			return
 		}
+		// from high level roles to low level roles
 		for _, enum := range enums.AllUserRoles {
-			if enum == atLeastUserRole {
+			if enum == currentUserRole {
 				ctx.Set("userRole", currentUserRole)
 				ctx.Next()
 				return
-			} else if enum == currentUserRole {
+			} else if enum == atLeastUserRole {
 				ctx.AbortWithStatusJSON(
 					http.StatusUnauthorized,
 					exceptions.Auth.PermissionDeniedDueToUserRole(currentUserRole).GetGinH(),

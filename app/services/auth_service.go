@@ -310,6 +310,28 @@ func SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendAuthCodeResDto, *e
 	}, nil
 }
 
+func ValidateEmail(reqDto *dtos.ValidateEmailReqDto) (*dtos.ValidateEmailResDto, *exceptions.Exception) {
+	if err := models.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
+	db := models.NotezyDB
+	output := struct {
+		UpdatedAt time.Time `json:"updatedAt"`
+	}{}
+	result := db.Raw(authsql.ValidateEmailQuery, reqDto.UserId, reqDto.AuthCode).Scan(&output)
+	if err := result.Error; err != nil {
+		return nil, exceptions.User.FailedToUpdate().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return nil, exceptions.User.NotFound()
+	}
+
+	return &dtos.ValidateEmailResDto{
+		UpdatedAt: output.UpdatedAt,
+	}, nil
+}
+
 func ResetEmail(reqDto *dtos.ResetEmailReqDto) (*dtos.ResetEmailResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
@@ -321,7 +343,7 @@ func ResetEmail(reqDto *dtos.ResetEmailReqDto) (*dtos.ResetEmailResDto, *excepti
 	output := struct {
 		UpdatedAt time.Time `json:"updatedAt"`
 	}{}
-	result := db.Raw(authsql.ResetEmailQuery, reqDto.NewEmail, reqDto.AuthCode, reqDto.UserId, reqDto.UserAgent).Scan(&output)
+	result := db.Raw(authsql.ResetEmailQuery, reqDto.NewEmail, reqDto.AuthCode, reqDto.UserId).Scan(&output)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.FailedToUpdate().WithError(err)
 	}
@@ -350,7 +372,7 @@ func ResetEmail(reqDto *dtos.ResetEmailReqDto) (*dtos.ResetEmailResDto, *excepti
 	}, nil
 }
 
-func ResetPassword(reqDto *dtos.ResetPasswordReqDto) (*dtos.ResetPasswordResDto, *exceptions.Exception) {
+func ForgetPassword(reqDto *dtos.ForgetPasswordReqDto) (*dtos.ForgetPasswordResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -408,7 +430,7 @@ func ResetPassword(reqDto *dtos.ResetPasswordReqDto) (*dtos.ResetPasswordResDto,
 		return nil, exception
 	}
 
-	return &dtos.ResetPasswordResDto{
+	return &dtos.ForgetPasswordResDto{
 		UpdatedAt: updatedUser.UpdatedAt,
 	}, nil
 }

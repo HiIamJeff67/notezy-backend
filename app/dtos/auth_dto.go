@@ -31,14 +31,18 @@ type SendAuthCodeReqDto struct {
 	UserAgent string `json:"userAgent" validate:"required"`
 }
 
-type ResetEmailReqDto struct {
-	UserId    uuid.UUID // extracted from the access token of authMiddleware
-	NewEmail  string    `json:"newEmail" validate:"required,email"`
-	AuthCode  string    `json:"authCode" validate:"required"`
-	UserAgent string    `json:"userAgent" validate:"required"`
+type ValidateEmailReqDto struct {
+	UserId   uuid.UUID // extracted from the access token of AuthMiddleware()
+	AuthCode string    `json:"authCode" validate:"required"`
 }
 
-type ResetPasswordReqDto struct {
+type ResetEmailReqDto struct {
+	UserId   uuid.UUID // extracted from the access token of AuthMiddleware()
+	NewEmail string    `json:"newEmail" validate:"required,email"`
+	AuthCode string    `json:"authCode" validate:"required"`
+}
+
+type ForgetPasswordReqDto struct {
 	Account     string `json:"account" validate:"required"`
 	NewPassword string `json:"newPassword" validation:"required,min=8,isstrongpassword"`
 	AuthCode    string `json:"authCode" validate:"required"`
@@ -66,10 +70,14 @@ type SendAuthCodeResDto struct {
 	UpdatedAt         time.Time `json:"updatedAt"`
 }
 
+type ValidateEmailResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
 type ResetEmailResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type ResetPasswordResDto struct {
+type ForgetPasswordResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }

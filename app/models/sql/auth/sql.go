@@ -9,3 +9,6 @@ var UpdateAuthCodeQuery string
 
 //go:embed reset_email.sql
 var ResetEmailQuery string
+
+//go:embed validate_email_by_auth_code.sql
+var ValidateEmailQuery string

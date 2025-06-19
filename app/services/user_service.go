@@ -13,17 +13,7 @@ import (
 )
 
 func FindMe(reqDto *dtos.FindMeReqDto) (*dtos.FindMeResDto, *exceptions.Exception) {
-	claims, exception := util.ParseAccessToken(reqDto.AccessToken)
-	if exception != nil {
-		return nil, exception
-	}
-
-	userId, err := uuid.Parse(claims.Id)
-	if err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
-	}
-
-	userDataCache, exception := caches.GetUserDataCache(userId)
+	userDataCache, exception := caches.GetUserDataCache(reqDto.Id)
 	if exception != nil {
 		return nil, exception
 	}
@@ -67,3 +57,7 @@ func UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Ex
 
 	return &dtos.UpdateMeResDto{UpdatedAt: user.UpdatedAt}, nil
 }
+
+// func UpdatePlan(reqDto *dtos.UpdatePlanReqDto) (*dtos.UpdatePlanResDto, *exceptions.Exception) {
+
+// }
