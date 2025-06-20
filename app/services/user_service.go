@@ -12,8 +12,8 @@ import (
 	util "notezy-backend/app/util"
 )
 
-func FindMe(reqDto *dtos.FindMeReqDto) (*dtos.FindMeResDto, *exceptions.Exception) {
-	userDataCache, exception := caches.GetUserDataCache(reqDto.Id)
+func GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception) {
+	userDataCache, exception := caches.GetUserDataCache(reqDto.UserId)
 	if exception != nil {
 		return nil, exception
 	}
@@ -22,8 +22,9 @@ func FindMe(reqDto *dtos.FindMeReqDto) (*dtos.FindMeResDto, *exceptions.Exceptio
 }
 
 // for temporary use
-func FindAllUsers() (*[]schemas.User, *exceptions.Exception) {
+func GetAllUsers() (*[]schemas.User, *exceptions.Exception) {
 	userRepository := repositories.NewUserRepository(nil)
+
 	users, exception := userRepository.GetAll()
 	if exception != nil {
 		return nil, exception
@@ -58,6 +59,7 @@ func UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Ex
 	return &dtos.UpdateMeResDto{UpdatedAt: user.UpdatedAt}, nil
 }
 
+// may add some business logic of payment
 // func UpdatePlan(reqDto *dtos.UpdatePlanReqDto) (*dtos.UpdatePlanResDto, *exceptions.Exception) {
 
 // }

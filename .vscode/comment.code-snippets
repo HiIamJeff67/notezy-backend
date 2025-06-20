@@ -2,7 +2,7 @@
   "Generate a Pair of Context Seperators with Size of 5": {
     "prefix": [
       "sep5",
-      "contextseperator5"
+      "contextSeperator5"
     ],
     "body": [
       "/* ===== ${1:_Title_} ===== */"
@@ -12,7 +12,7 @@
   "Generate a Pair of Context Seperators with Size of 10": {
     "prefix": [
       "sep10",
-      "contextseperator10"
+      "contextSeperator10"
     ],
     "body": [
       "/* ========== ${1:_Title_} ========== */"
@@ -22,7 +22,7 @@
   "Generate a Pair of Context Seperators with Size of 15": {
     "prefix": [
       "sep15",
-      "contextseperator15"
+      "contextSeperator15"
     ],
     "body": [
       "/* =============== ${1:_Title_} =============== */"
@@ -32,7 +32,7 @@
   "Generate a Pair of Context Seperators with Size of 20": {
     "prefix": [
       "sep20",
-      "contextseperator20"
+      "contextSeperator20"
     ],
     "body": [
       "/* ==================== ${1:_Title_} ==================== */"
@@ -42,7 +42,7 @@
   "Generate a Pair of Context Seperators with Size of 25": {
     "prefix": [
       "sep25",
-      "contextseperator25"
+      "contextSeperator25"
     ],
     "body": [
       "/* ========================= ${1:_Title_} ========================= */"
@@ -52,7 +52,7 @@
   "Generate a Pair of Context Seperators with Size of 30": {
     "prefix": [
       "sep30",
-      "contextseperator30"
+      "contextSeperator30"
     ],
     "body": [
       "/* ============================== ${1:_Title_} ============================== */"
@@ -62,7 +62,7 @@
   "Generate a Pair of Context Seperators with Size of 10 for Text File": {
     "prefix": [
       "tsep10",
-      "textfilecontextseperator10"
+      "textFileContextSeperator10"
     ],
     "body": [
       "# ========== ${1:_Title_} ========== #"
@@ -72,7 +72,7 @@
   "Generate a Pair of Context Seperators with Size of 20 for Text File": {
     "prefix": [
       "tsep20",
-      "textfilecontextseperator20"
+      "textFileContextSeperator20"
     ],
     "body": [
       "# ==================== ${1:_Title_} ==================== #"
@@ -82,7 +82,7 @@
   "Generate a Pair of Context Seperators with Size of 30 for Text File": {
     "prefix": [
       "tsep30",
-      "textfilecontextseperator30"
+      "textFileContextSeperator30"
     ],
     "body": [
       "# ============================== ${1:_Title_} ============================== #"

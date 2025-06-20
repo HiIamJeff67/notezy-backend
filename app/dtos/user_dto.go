@@ -10,8 +10,8 @@ import (
 
 /* ============================== Request DTO ============================== */
 
-type FindMeReqDto struct {
-	Id uuid.UUID
+type GetMeReqDto struct {
+	UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 }
 
 type UpdateMeReqValues struct {
@@ -36,7 +36,7 @@ type UpdatePlanReqDto struct {
 
 /* ============================== Response DTO ============================== */
 
-type FindMeResDto = caches.UserDataCache
+type GetMeResDto = caches.UserDataCache
 
 type UpdateMeResDto struct {
 	UpdatedAt time.Time

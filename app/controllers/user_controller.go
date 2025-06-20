@@ -13,15 +13,15 @@ import (
 
 // with AuthMiddleware()
 func GetMe(ctx *gin.Context) {
-	var reqDto dtos.FindMeReqDto
+	var reqDto dtos.GetMeReqDto
 	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
 		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return
 	}
-	reqDto.Id = *userId
+	reqDto.UserId = *userId
 
-	resDto, exception := services.FindMe(&reqDto)
+	resDto, exception := services.GetMe(&reqDto)
 	if exception != nil {
 		ctx.JSON(
 			exception.HTTPStatusCode,
@@ -35,8 +35,8 @@ func GetMe(ctx *gin.Context) {
 	})
 }
 
-func FindAllUsers(ctx *gin.Context) {
-	resDto, exception := services.FindAllUsers()
+func GetAllUsers(ctx *gin.Context) {
+	resDto, exception := services.GetAllUsers()
 	if exception != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": exception.Log().Error})
 		return
