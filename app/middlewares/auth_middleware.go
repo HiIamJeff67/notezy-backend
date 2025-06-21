@@ -13,7 +13,7 @@ import (
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	types "notezy-backend/app/shared/types"
-	util "notezy-backend/app/util"
+	"notezy-backend/app/tokens"
 )
 
 func _extractAccessToken(ctx *gin.Context) (string, *exceptions.Exception) {
@@ -39,7 +39,7 @@ func _extractRefreshToken(ctx *gin.Context) (string, *exceptions.Exception) {
 }
 
 func _validateAccessTokenAndUserAgent(accessToken string) (*types.Claims, *caches.UserDataCache, *exceptions.Exception) {
-	claims, exception := util.ParseAccessToken(accessToken)
+	claims, exception := tokens.ParseAccessToken(accessToken)
 	if exception != nil { // if failed to parse the accessToken
 		return nil, nil, exception
 	}
@@ -62,7 +62,7 @@ func _validateAccessTokenAndUserAgent(accessToken string) (*types.Claims, *cache
 }
 
 func _validateRefreshToken(refreshToken string) (*schemas.User, *exceptions.Exception) {
-	claims, exception := util.ParseRefreshToken(refreshToken)
+	claims, exception := tokens.ParseRefreshToken(refreshToken)
 	if exception != nil { // if failed to parse the refreshToken
 		return nil, exception
 	}
@@ -126,7 +126,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		// if we failed to validate the accessToken, but we have validated the refreshToken
 		// then we need to generate the new accessToken, and storing it in the cache, and regarding the entire validation as successful
-		newAccessToken, exception := util.GenerateAccessToken(_user.Id.String(), _user.Name, _user.Email, _user.UserAgent)
+		newAccessToken, exception := tokens.GenerateAccessToken(_user.Id.String(), _user.Name, _user.Email, _user.UserAgent)
 		if exception != nil {
 			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
 			return

@@ -12,3 +12,6 @@ var ResetEmailQuery string
 
 //go:embed validate_email_by_auth_code.sql
 var ValidateEmailQuery string
+
+//go:embed delete_me.sql
+var DeleteMeQuery string

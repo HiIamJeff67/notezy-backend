@@ -2,8 +2,9 @@ package util
 
 import (
 	"math/rand/v2"
-	"notezy-backend/app/shared/constants"
 	"strconv"
+
+	constants "notezy-backend/app/shared/constants"
 )
 
 func GenerateAuthCode() string {

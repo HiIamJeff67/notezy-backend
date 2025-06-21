@@ -14,14 +14,12 @@ type GetMeReqDto struct {
 	UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 }
 
-type UpdateMeReqValues struct {
-	DisplayName *string
-	Status      *enums.UserStatus
-}
-
 type UpdateMeReqDto struct {
-	PartialUpdateDto[UpdateMeReqValues]
-	AccessToken string
+	UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+	PartialUpdateDto[struct {
+		DisplayName *string           `json:"displayName" validate:"omitempty"`
+		Status      *enums.UserStatus `json:"status" validate:"omitempty"`
+	}]
 }
 
 type UpdateRoleReqDto struct {

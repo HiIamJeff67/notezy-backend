@@ -1,18 +1,29 @@
 package services
 
 import (
-	"github.com/google/uuid"
-
 	caches "notezy-backend/app/caches"
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
-	util "notezy-backend/app/util"
 )
 
-func GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception) {
+/* ============================== Interface & Instance ============================== */
+
+type UserServiceInterface interface {
+	GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception)
+	GetAllUsers() (*[]schemas.User, *exceptions.Exception)
+	UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Exception)
+}
+
+type userService struct{}
+
+var UserService UserServiceInterface = &userService{}
+
+/* ============================== Services ============================== */
+
+func (u *userService) GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception) {
 	userDataCache, exception := caches.GetUserDataCache(reqDto.UserId)
 	if exception != nil {
 		return nil, exception
@@ -22,7 +33,7 @@ func GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception) 
 }
 
 // for temporary use
-func GetAllUsers() (*[]schemas.User, *exceptions.Exception) {
+func (u *userService) GetAllUsers() (*[]schemas.User, *exceptions.Exception) {
 	userRepository := repositories.NewUserRepository(nil)
 
 	users, exception := userRepository.GetAll()
@@ -33,19 +44,10 @@ func GetAllUsers() (*[]schemas.User, *exceptions.Exception) {
 	return users, nil
 }
 
-func UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Exception) {
-	claims, exception := util.ParseAccessToken(reqDto.AccessToken)
-	if exception != nil {
-		return nil, exception
-	}
-
+func (u *userService) UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Exception) {
 	userRepository := repositories.NewUserRepository(nil)
-	userId, err := uuid.Parse(claims.Id)
-	if err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
-	}
 
-	user, exception := userRepository.UpdateOneById(userId, inputs.PartialUpdateUserInput{
+	updatedUser, exception := userRepository.UpdateOneById(reqDto.UserId, inputs.PartialUpdateUserInput{
 		Values: inputs.UpdateUserInput{
 			DisplayName: reqDto.Values.DisplayName,
 			Status:      reqDto.Values.Status,
@@ -56,7 +58,7 @@ func UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Ex
 		return nil, exception
 	}
 
-	return &dtos.UpdateMeResDto{UpdatedAt: user.UpdatedAt}, nil
+	return &dtos.UpdateMeResDto{UpdatedAt: updatedUser.UpdatedAt}, nil
 }
 
 // may add some business logic of payment

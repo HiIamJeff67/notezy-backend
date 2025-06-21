@@ -49,6 +49,11 @@ type ForgetPasswordReqDto struct {
 	UserAgent   string `json:"userAgent" validate:"required"`
 }
 
+type DeleteMeReqDto struct {
+	UserId   uuid.UUID  // extracted from the access token of AuthMiddleware()
+	AuthCode *time.Time `json:"authCode" validate:"omitempty"`
+}
+
 /* ============================== Response DTO ============================== */
 type RegisterResDto struct {
 	AccessToken  string    `json:"accessToken"`
@@ -80,4 +85,8 @@ type ResetEmailResDto struct {
 
 type ForgetPasswordResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type DeleteMeResDto struct {
+	DeletedAt time.Time `json:"deletedAt"`
 }

@@ -11,8 +11,24 @@ import (
 	services "notezy-backend/app/services"
 )
 
+/* ============================== Interface & Instance ============================== */
+
+type UserControllerInterface interface {
+	GetMe(ctx *gin.Context)
+	GetAllUsers(ctx *gin.Context)
+	UpdateMe(ctx *gin.Context)
+}
+
+type userController struct {
+	userService services.UserServiceInterface
+}
+
+var UserController UserControllerInterface = &userController{}
+
+/* ============================== Controllers ============================== */
+
 // with AuthMiddleware()
-func GetMe(ctx *gin.Context) {
+func (c *userController) GetMe(ctx *gin.Context) {
 	var reqDto dtos.GetMeReqDto
 	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
@@ -21,7 +37,7 @@ func GetMe(ctx *gin.Context) {
 	}
 	reqDto.UserId = *userId
 
-	resDto, exception := services.GetMe(&reqDto)
+	resDto, exception := c.userService.GetMe(&reqDto)
 	if exception != nil {
 		ctx.JSON(
 			exception.HTTPStatusCode,
@@ -35,8 +51,9 @@ func GetMe(ctx *gin.Context) {
 	})
 }
 
-func GetAllUsers(ctx *gin.Context) {
-	resDto, exception := services.GetAllUsers()
+// with AuthMiddleware()
+func (c *userController) GetAllUsers(ctx *gin.Context) {
+	resDto, exception := c.userService.GetAllUsers()
 	if exception != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": exception.Log().Error})
 		return
@@ -50,27 +67,16 @@ func GetAllUsers(ctx *gin.Context) {
 	})
 }
 
-func UpdateMe(ctx *gin.Context) {
+// with AuthMiddleware()
+func (c *userController) UpdateMe(ctx *gin.Context) {
 	var reqDto dtos.UpdateMeReqDto
-	accessTokenFromCookie, exists := ctx.Get("accessToken")
-	if !exists {
-		ctx.JSON(
-			exceptions.Auth.InvalidDto().HTTPStatusCode,
-			exceptions.Auth.InvalidDto().GetGinH(),
-		)
+	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
+	if exception != nil {
+		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return
 	}
+	reqDto.UserId = *userId
 
-	tokenStr, ok := accessTokenFromCookie.(string)
-	if !ok {
-		ctx.JSON(
-			exceptions.Auth.InvalidDto().HTTPStatusCode,
-			exceptions.Auth.InvalidDto().GetGinH(),
-		)
-		return
-	}
-
-	reqDto.AccessToken = tokenStr
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		ctx.JSON(
 			exceptions.Auth.InvalidDto().HTTPStatusCode,
@@ -79,7 +85,7 @@ func UpdateMe(ctx *gin.Context) {
 		return
 	}
 
-	resDto, exception := services.UpdateMe(&reqDto)
+	resDto, exception := c.userService.UpdateMe(&reqDto)
 	if exception != nil {
 		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return

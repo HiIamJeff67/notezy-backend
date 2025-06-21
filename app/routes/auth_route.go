@@ -11,36 +11,41 @@ func configureAuthRoutes() {
 	{
 		authRoutes.POST(
 			"/register",
-			controllers.Register,
+			controllers.AuthController.Register,
 		)
 		authRoutes.POST(
 			"/login",
-			controllers.Login,
+			controllers.AuthController.Login,
 		)
 		// only protected the logout route
 		authRoutes.POST(
 			"/logout",
 			middlewares.AuthMiddleware(),
-			controllers.Logout,
+			controllers.AuthController.Logout,
 		)
 		authRoutes.GET(
 			"/sendAuthCode",
-			controllers.SendAuthCode,
+			controllers.AuthController.SendAuthCode,
 		)
 		authRoutes.PUT(
 			"/validateEmail",
 			middlewares.AuthMiddleware(),
-			controllers.ValidateEmail,
+			controllers.AuthController.ValidateEmail,
 		)
 		authRoutes.PUT(
 			"/resetEmail",
 			middlewares.AuthMiddleware(),
 			middlewares.UserRoleMiddleware(enums.UserRole_Normal),
-			controllers.ResetEmail,
+			controllers.AuthController.ResetEmail,
 		)
 		authRoutes.PUT(
 			"/forgetPassword",
-			controllers.ForgetPassword,
+			controllers.AuthController.ForgetPassword,
+		)
+		authRoutes.DELETE(
+			"/deleteMe",
+			middlewares.AuthMiddleware(),
+			controllers.AuthController.DeleteMe,
 		)
 	}
 }
