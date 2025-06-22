@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"notezy-backend/app/contexts"
+	contexts "notezy-backend/app/contexts"
 	cookies "notezy-backend/app/cookies"
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
@@ -62,19 +62,14 @@ func (c *authController) Login(ctx *gin.Context) {
 	var reqDto dtos.LoginReqDto
 	reqDto.UserAgent = ctx.GetHeader("User-Agent")
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
-		ctx.JSON(
-			exceptions.Auth.InvalidDto().HTTPStatusCode,
-			exceptions.Auth.InvalidDto().WithError(err).GetGinH(),
-		)
+		exception := exceptions.Auth.InvalidDto().WithError(err)
+		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return
 	}
 
 	resDto, exception := c.authService.Login(&reqDto)
 	if exception != nil {
-		ctx.JSON(
-			exception.HTTPStatusCode,
-			exception.GetGinH(),
-		)
+		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return
 	}
 
@@ -88,11 +83,7 @@ func (c *authController) Logout(ctx *gin.Context) {
 	var reqDto dtos.LogoutReqDto
 	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
-		exception.Log() // only log the error without throwing them back to client
-		ctx.JSON(
-			exceptions.Auth.InvalidDto().HTTPStatusCode,
-			exceptions.Auth.InvalidDto().GetGinH(),
-		)
+		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return
 	}
 	reqDto.UserId = *userId

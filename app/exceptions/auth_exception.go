@@ -8,10 +8,9 @@ import (
 )
 
 const (
-	_ExceptionBaseCode_Auth ExceptionCode = (APIExceptionDomainCode*ExceptionDomainCodeShiftAmount +
-		AuthExceptionSubDomainCode*ExceptionSubDomainCodeShiftAmount)
+	_ExceptionBaseCode_Auth ExceptionCode = AuthExceptionSubDomainCode * ExceptionSubDomainCodeShiftAmount
 
-	AuthExceptionSubDomainCode ExceptionCode   = 3
+	AuthExceptionSubDomainCode ExceptionCode   = 31
 	ExceptionBaseCode_Auth     ExceptionCode   = _ExceptionBaseCode_Auth + ReservedExceptionCode
 	ExceptionPrefix_Auth       ExceptionPrefix = "Auth"
 )
@@ -34,6 +33,8 @@ type AuthExceptionDomain struct {
 	BaseCode ExceptionCode
 	Prefix   ExceptionPrefix
 	APIExceptionDomain
+	TypeExceptionDomain
+	CommonExceptionDomain
 }
 
 var Auth = &AuthExceptionDomain{
@@ -42,6 +43,14 @@ var Auth = &AuthExceptionDomain{
 	APIExceptionDomain: APIExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_Auth,
 		_Prefix:   ExceptionPrefix_Auth,
+	},
+	TypeExceptionDomain: TypeExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_User,
+		_Prefix:   ExceptionPrefix_User,
+	},
+	CommonExceptionDomain: CommonExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_User,
+		_Prefix:   ExceptionPrefix_User,
 	},
 }
 

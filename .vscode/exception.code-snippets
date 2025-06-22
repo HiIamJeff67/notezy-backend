@@ -8,7 +8,7 @@
         "body": [
             "package exceptions",
             "const (",
-            "\t_ExceptionBaseCode_${1:_DomainName_} ExceptionCode = (DatabaseExceptionDomainCode*ExceptionDomainCodeShiftAmount +",
+            "\t_ExceptionBaseCode_${1:_DomainName_} ExceptionCode = (  +",
             "\t\t${1:_DomainName_}ExceptionSubDomainCode*ExceptionSubDomainCodeShiftAmount)",
             "",
             "\t${1:_DomainName_}ExceptionSubDomainCode ExceptionCode = ${2:_SubDomainCode_}",
@@ -40,7 +40,7 @@
         "body": [
             "package exceptions",
             "const (",
-            "\t_ExceptionBaseCode_${1:_DomainName_} ExceptionCode = (APIExceptionDomainCode*ExceptionDomainCodeShiftAmount +",
+            "\t_ExceptionBaseCode_${1:_DomainName_} ExceptionCode = (   +",
             "\t\t${1:_DomainName_}ExceptionSubDomainCode*ExceptionSubDomainCodeShiftAmount)",
             "",
             "\t${1:_DomainName_}ExceptionSubDomainCode ExceptionCode = ${2:_SubDomainCode_}",

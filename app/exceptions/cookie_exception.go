@@ -7,10 +7,9 @@ import (
 )
 
 const (
-	_ExceptionBaseCode_Cookie ExceptionCode = (APIExceptionDomainCode*ExceptionDomainCodeShiftAmount +
-		CookieExceptionSubDomainCode*ExceptionSubDomainCodeShiftAmount)
+	_ExceptionBaseCode_Cookie ExceptionCode = CookieExceptionSubDomainCode * ExceptionSubDomainCodeShiftAmount
 
-	CookieExceptionSubDomainCode ExceptionCode   = 4
+	CookieExceptionSubDomainCode ExceptionCode   = 2
 	ExceptionBaseCode_Cookie     ExceptionCode   = _ExceptionBaseCode_Cookie + ReservedExceptionCode
 	ExceptionPrefix_Cookie       ExceptionPrefix = "Cookie"
 )
@@ -26,7 +25,8 @@ var Cookie = &CookieExceptionDomain{
 	Prefix:   ExceptionPrefix_Cookie,
 	APIExceptionDomain: APIExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_Cookie,
-		_Prefix:   ExceptionPrefix_Cookie},
+		_Prefix:   ExceptionPrefix_Cookie,
+	},
 }
 
 func (d *CookieExceptionDomain) NotFound(cookieName shared.ValidCookieName) *Exception {

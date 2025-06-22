@@ -9,10 +9,9 @@ import (
 )
 
 const (
-	_ExceptionBaseCode_Cache ExceptionCode = (APIExceptionDomainCode*ExceptionDomainCodeShiftAmount +
-		CacheExceptionSubDomainCode*ExceptionSubDomainCodeShiftAmount)
+	_ExceptionBaseCode_Cache ExceptionCode = CacheExceptionSubDomainCode * ExceptionSubDomainCodeShiftAmount
 
-	CacheExceptionSubDomainCode ExceptionCode   = 2
+	CacheExceptionSubDomainCode ExceptionCode   = 3
 	ExceptionBaseCode_Cache     ExceptionCode   = _ExceptionBaseCode_Cache + ReservedExceptionCode
 	ExceptionPrefix_Cache       ExceptionPrefix = "Cache"
 )

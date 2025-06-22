@@ -1,10 +1,9 @@
 package exceptions
 
 const (
-	_ExceptionBaseCode_UsersToBadges ExceptionCode = (DatabaseExceptionDomainCode*ExceptionDomainCodeShiftAmount +
-		UsersToBadgesExceptionSubDomainCode*ExceptionSubDomainCodeShiftAmount)
+	_ExceptionBaseCode_UsersToBadges ExceptionCode = UsersToBadgesExceptionSubDomainCode * ExceptionSubDomainCodeShiftAmount
 
-	UsersToBadgesExceptionSubDomainCode ExceptionCode   = 5
+	UsersToBadgesExceptionSubDomainCode ExceptionCode   = 36
 	ExceptionBaseCode_UsersToBadges     ExceptionCode   = _ExceptionBaseCode_UsersToBadges + ReservedExceptionCode
 	ExceptionPrefix_UsersToBadges       ExceptionPrefix = "UsersToBadges"
 )
@@ -13,6 +12,9 @@ type UsersToBadgesExceptionDomain struct {
 	BaseCode ExceptionCode
 	Prefix   ExceptionPrefix
 	DatabaseExceptionDomain
+	APIExceptionDomain
+	TypeExceptionDomain
+	CommonExceptionDomain
 }
 
 var UsersToBadges = &UsersToBadgesExceptionDomain{
@@ -21,5 +23,17 @@ var UsersToBadges = &UsersToBadgesExceptionDomain{
 	DatabaseExceptionDomain: DatabaseExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_UsersToBadges,
 		_Prefix:   ExceptionPrefix_UsersToBadges,
+	},
+	APIExceptionDomain: APIExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_User,
+		_Prefix:   ExceptionPrefix_User,
+	},
+	TypeExceptionDomain: TypeExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_User,
+		_Prefix:   ExceptionPrefix_User,
+	},
+	CommonExceptionDomain: CommonExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_User,
+		_Prefix:   ExceptionPrefix_User,
 	},
 }

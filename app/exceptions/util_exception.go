@@ -6,8 +6,7 @@ import (
 )
 
 const (
-	_ExceptionBaseCode_Util ExceptionCode = (APIExceptionDomainCode*ExceptionDomainCodeShiftAmount +
-		UtilExceptionSubDomainCode*ExceptionSubDomainCodeShiftAmount)
+	_ExceptionBaseCode_Util ExceptionCode = UtilExceptionSubDomainCode * ExceptionSubDomainCodeShiftAmount
 
 	UtilExceptionSubDomainCode ExceptionCode   = 1
 	ExceptionBaseCode_Util     ExceptionCode   = _ExceptionBaseCode_Util + ReservedExceptionCode
@@ -29,13 +28,13 @@ const (
 type UtilExceptionDomain struct {
 	BaseCode ExceptionCode
 	Prefix   ExceptionPrefix
-	APIExceptionDomain
+	CommonExceptionDomain
 }
 
 var Util = &UtilExceptionDomain{
 	BaseCode: ExceptionBaseCode_Util,
 	Prefix:   ExceptionPrefix_Util,
-	APIExceptionDomain: APIExceptionDomain{
+	CommonExceptionDomain: CommonExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_Util,
 		_Prefix:   ExceptionPrefix_Util,
 	},
@@ -45,7 +44,7 @@ var Util = &UtilExceptionDomain{
 
 func (d *UtilExceptionDomain) AccessTokenSecretKeyNotFound() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 11,
+		Code:           d.BaseCode + 1,
 		Prefix:         d.Prefix,
 		Reason:         ExceptionReason_AccessTokenSecretKeyNotFound,
 		Message:        "The environment variables of access token secret key is not found",

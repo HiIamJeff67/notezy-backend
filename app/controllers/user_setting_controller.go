@@ -2,11 +2,12 @@ package controllers
 
 import (
 	"net/http"
-	"notezy-backend/app/contexts"
-	"notezy-backend/app/dtos"
-	"notezy-backend/app/services"
 
 	"github.com/gin-gonic/gin"
+
+	contexts "notezy-backend/app/contexts"
+	dtos "notezy-backend/app/dtos"
+	services "notezy-backend/app/services"
 )
 
 /* ============================== Interface & Instance ============================== */

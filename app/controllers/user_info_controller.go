@@ -38,10 +38,7 @@ func (c *userInfoController) GetMyInfo(ctx *gin.Context) {
 
 	resDto, exception := c.userInfoService.GetMyInfo(&reqDto)
 	if exception != nil {
-		ctx.JSON(
-			exception.HTTPStatusCode,
-			exception.GetGinH(),
-		)
+		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return
 	}
 
@@ -60,7 +57,7 @@ func (c *userInfoController) UpdateMyInfo(ctx *gin.Context) {
 	}
 	reqDto.UserId = *userId
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
-		exception := exceptions.Auth.InvalidDto().WithError(err)
+		exception := exceptions.UserInfo.InvalidDto().WithError(err)
 		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return
 	}

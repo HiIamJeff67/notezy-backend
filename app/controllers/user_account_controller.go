@@ -35,13 +35,6 @@ func (c *userAccountController) GetMyAccount(ctx *gin.Context) {
 		return
 	}
 	reqDto.UserId = *userId
-	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
-		ctx.JSON(
-			exceptions.Auth.InvalidDto().HTTPStatusCode,
-			exceptions.Auth.InvalidDto().WithError(err).GetGinH(),
-		)
-		return
-	}
 
 	resDto, exception := c.userAccountService.GetMyAccount(&reqDto)
 	if exception != nil {
@@ -66,10 +59,8 @@ func (c *userAccountController) UpdateMyAccount(ctx *gin.Context) {
 	}
 	reqDto.UserId = *userId
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
-		ctx.JSON(
-			exceptions.Auth.InvalidDto().HTTPStatusCode,
-			exceptions.Auth.InvalidDto().WithError(err).GetGinH(),
-		)
+		exception := exceptions.UserAccount.InvalidDto().WithError(err)
+		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return
 	}
 

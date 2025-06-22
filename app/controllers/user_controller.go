@@ -39,10 +39,7 @@ func (c *userController) GetMe(ctx *gin.Context) {
 
 	resDto, exception := c.userService.GetMe(&reqDto)
 	if exception != nil {
-		ctx.JSON(
-			exception.HTTPStatusCode,
-			exception.GetGinH(),
-		)
+		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return
 	}
 
@@ -77,10 +74,8 @@ func (c *userController) UpdateMe(ctx *gin.Context) {
 	}
 	reqDto.UserId = *userId
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
-		ctx.JSON(
-			exceptions.Auth.InvalidDto().HTTPStatusCode,
-			exceptions.Auth.InvalidDto().WithError(err).GetGinH(),
-		)
+		exception := exceptions.User.InvalidDto().WithError(err)
+		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return
 	}
 

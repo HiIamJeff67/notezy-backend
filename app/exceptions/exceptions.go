@@ -19,33 +19,31 @@ type ExceptionReason string
 const (
 	// the first 3 digits are the class of exceptions
 	// the last 5 digits are the individual labels for each exceptions
-	ExceptionDomainCodeShiftAmount    = 10000000
 	ExceptionSubDomainCodeShiftAmount = 100000
 	MaxExceptionCode                  = 99999999 // 999 99999
 	MinExceptionCode                  = 0        // 000 00000
 	// reserve some codes for general use purpose
 	// see the below general exceptions ex. NotFound(), FailedToCreate()
-	ReservedExceptionCode       = 100 // *** **100, the codes >= *** **100 will be use in the general domain
-	DatabaseExceptionDomainCode = 1
-	APIExceptionDomainCode      = 2
+	ReservedExceptionCode = 100 // *** **100, the codes >= *** **100 will be use in the general domain
 )
 
 // all the domain prefix shown here, defined in their corresponded files
+// we have 100 codes available to set
 const (
-// ExceptionPrefix_User ExceptionPrefix = "User"                         1
-// ExceptionPrefix_UserInfo ExceptionPrefix = "UserInfo"                 2
-// ExceptionPrefix_UserAccount ExceptionPrefix = "UserAccount"           3
-// ExceptionPrefix_UserSetting ExceptionPrefix = "UserSetting"           4
-// ExceptionPrefix_UsersToBadges ExceptionPrefix = "UsersToBadges"       5
-// ExceptionPrefix_Badge ExceptionPrefix = "Badge"                       6
-// ExceptionPrefix_Theme ExceptionPrefix = "Theme"						 7
+// ExceptionPrefix_Util ExceptionPrefix = "Util"       					 1
+// ExceptionPrefix_Cookie ExceptionPrefix = "Cookie"					 2
+// ExceptionPrefix_Cache ExceptionPrefix = "Cache"	   					 3
+// ExceptionPrefix_Context ExceptionPrefix = "Context"					 4
+// ExceptionPrefix_Email ExceptionPrefix = "Email"					     5
 
-// ExceptionPrefix_Cache ExceptionPrefix = "Cache"	   					 1
-// ExceptionPrefix_Util ExceptionPrefix = "Util"       					 2
-// ExceptionPrefix_Auth ExceptionPrefix = "Auth" 			 		     3
-// ExceptionPrefix_Cookie ExceptionPrefix = "Cookie"					 4
-// ExceptionPrefix_Context ExceptionPrefix = "Context"					 5
-// ExceptionPrefix_Email ExceptionPrefix = "Email"					     6
+// ExceptionPrefix_Auth ExceptionPrefix = "Auth" 			 		     31
+// ExceptionPrefix_User ExceptionPrefix = "User"                         32
+// ExceptionPrefix_UserInfo ExceptionPrefix = "UserInfo"                 33
+// ExceptionPrefix_UserAccount ExceptionPrefix = "UserAccount"           34
+// ExceptionPrefix_UserSetting ExceptionPrefix = "UserSetting"           35
+// ExceptionPrefix_UsersToBadges ExceptionPrefix = "UsersToBadges"       36
+// ExceptionPrefix_Badge ExceptionPrefix = "Badge"                       37
+// ExceptionPrefix_Theme ExceptionPrefix = "Theme"						 38
 )
 
 // shared reason for common domain use
@@ -142,21 +140,6 @@ type DatabaseExceptionDomain struct {
 	_Prefix   ExceptionPrefix
 }
 
-func (d *DatabaseExceptionDomain) UndefinedError(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Undefined error happened in %s", strings.ToLower(string(d._Prefix)))
-	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
-		message = optionalMessage[0]
-	}
-
-	return &Exception{
-		Code:           d._BaseCode + 0,
-		Prefix:         d._Prefix,
-		Reason:         ExceptionReason_UndefinedError,
-		Message:        message,
-		HTTPStatusCode: http.StatusBadRequest,
-	}
-}
-
 func (d *DatabaseExceptionDomain) NotFound(optionalMessage ...string) *Exception {
 	message := fmt.Sprintf("%s not found", strings.ToLower(string(d._Prefix)))
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
@@ -232,70 +215,11 @@ func (d *DatabaseExceptionDomain) FailedToCommitTransaction(optionalMessage ...s
 	}
 }
 
-func (d *DatabaseExceptionDomain) InvalidInput(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Invalid input object detected in %s", strings.ToLower(string(d._Prefix)))
-	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
-		message = optionalMessage[0]
-	}
-
-	return &Exception{
-		Code:           d._BaseCode + 6,
-		Prefix:         d._Prefix,
-		Reason:         ExceptionReason_InvalidInput,
-		Message:        message,
-		HTTPStatusCode: http.StatusBadRequest,
-	}
-}
-
-func (d *DatabaseExceptionDomain) NotImplemented(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Not yet implemented the methods in %s", strings.ToLower(string(d._Prefix)))
-	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
-		message = optionalMessage[0]
-	}
-
-	return &Exception{
-		Code:           d._BaseCode + 7,
-		Prefix:         d._Prefix,
-		Reason:         ExceptionReason_NotImplemented,
-		Message:        message,
-		HTTPStatusCode: http.StatusNotImplemented,
-	}
-}
-
-func (d *DatabaseExceptionDomain) InvalidType(value any) *Exception {
-	return &Exception{
-		Code:           d._BaseCode + 8,
-		Prefix:         d._Prefix,
-		Reason:         ExceptionReason_InvalidType,
-		Message:        fmt.Sprintf("Invalid type in %s", strings.ToLower(string(d._Prefix))),
-		HTTPStatusCode: http.StatusInternalServerError,
-		Details: map[string]any{
-			"actualType": fmt.Sprintf("%T", value),
-			"value":      value,
-		},
-	}
-}
-
 /* ============================== API Exception Domain Definition ============================== */
 
 type APIExceptionDomain struct {
 	_BaseCode ExceptionCode
 	_Prefix   ExceptionPrefix
-}
-
-func (d *APIExceptionDomain) UndefinedError(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Undefined error happened in %s", strings.ToLower(string(d._Prefix)))
-	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
-		message = optionalMessage[0]
-	}
-
-	return &Exception{
-		Code:           d._BaseCode + 0,
-		Prefix:         d._Prefix,
-		Reason:         ExceptionReason_UndefinedError,
-		Message:        message,
-		HTTPStatusCode: http.StatusBadRequest,
-	}
 }
 
 func (d *APIExceptionDomain) Timeout(time time.Duration, optionalMessage ...string) *Exception {
@@ -313,7 +237,29 @@ func (d *APIExceptionDomain) Timeout(time time.Duration, optionalMessage ...stri
 	}
 }
 
-func (d *APIExceptionDomain) InvalidDto(optionalMessage ...string) *Exception {
+/* ============================== Type Exception ============================== */
+
+type TypeExceptionDomain struct {
+	_BaseCode ExceptionCode
+	_Prefix   ExceptionPrefix
+}
+
+func (d *TypeExceptionDomain) InvalidInput(optionalMessage ...string) *Exception {
+	message := fmt.Sprintf("Invalid input object detected in %s", strings.ToLower(string(d._Prefix)))
+	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
+		message = optionalMessage[0]
+	}
+
+	return &Exception{
+		Code:           d._BaseCode + 1,
+		Prefix:         d._Prefix,
+		Reason:         ExceptionReason_InvalidInput,
+		Message:        message,
+		HTTPStatusCode: http.StatusBadRequest,
+	}
+}
+
+func (d *TypeExceptionDomain) InvalidDto(optionalMessage ...string) *Exception {
 	message := fmt.Sprintf("Invalid dto detected in %s", strings.ToLower(string(d._Prefix)))
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
@@ -328,24 +274,9 @@ func (d *APIExceptionDomain) InvalidDto(optionalMessage ...string) *Exception {
 	}
 }
 
-func (d *APIExceptionDomain) NotImplemented(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Not yet implemented the methods in %s", strings.ToLower(string(d._Prefix)))
-	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
-		message = optionalMessage[0]
-	}
-
+func (d *TypeExceptionDomain) InvalidType(value any) *Exception {
 	return &Exception{
 		Code:           d._BaseCode + 3,
-		Prefix:         d._Prefix,
-		Reason:         ExceptionReason_NotImplemented,
-		Message:        message,
-		HTTPStatusCode: http.StatusNotImplemented,
-	}
-}
-
-func (d *APIExceptionDomain) InvalidType(value any) *Exception {
-	return &Exception{
-		Code:           d._BaseCode + 4,
 		Prefix:         d._Prefix,
 		Reason:         ExceptionReason_InvalidType,
 		Message:        fmt.Sprintf("Invalid type in %s", strings.ToLower(string(d._Prefix))),
@@ -357,26 +288,39 @@ func (d *APIExceptionDomain) InvalidType(value any) *Exception {
 	}
 }
 
-/* ============================== Type Exception ============================== */
-
 /* ============================== Common Exception ============================== */
 
-// type CommonExceptionDomain struct {
-// 	_BaseCode ExceptionCode
-// 	_Prefix   ExceptionPrefix
-// }
+type CommonExceptionDomain struct {
+	_BaseCode ExceptionCode
+	_Prefix   ExceptionPrefix
+}
 
-// func (d *CommonExceptionDomain) UndefinedError(optionalMessage ...string) *Exception {
-// 	message := fmt.Sprintf("Undefined error happened in %s", strings.ToLower(string(d._Prefix)))
-// 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
-// 		message = optionalMessage[0]
-// 	}
+func (d *CommonExceptionDomain) UndefinedError(optionalMessage ...string) *Exception {
+	message := fmt.Sprintf("Undefined error happened in %s", strings.ToLower(string(d._Prefix)))
+	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
+		message = optionalMessage[0]
+	}
 
-// 	return &Exception{
-// 		Code:           d._BaseCode + 0,
-// 		Prefix:         d._Prefix,
-// 		Reason:         ExceptionReason_UndefinedError,
-// 		Message:        message,
-// 		HTTPStatusCode: http.StatusBadRequest,
-// 	}
-// }
+	return &Exception{
+		Code:           d._BaseCode + 1,
+		Prefix:         d._Prefix,
+		Reason:         ExceptionReason_UndefinedError,
+		Message:        message,
+		HTTPStatusCode: http.StatusBadRequest,
+	}
+}
+
+func (d *CommonExceptionDomain) NotImplemented(optionalMessage ...string) *Exception {
+	message := fmt.Sprintf("Not yet implemented the methods in %s", strings.ToLower(string(d._Prefix)))
+	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
+		message = optionalMessage[0]
+	}
+
+	return &Exception{
+		Code:           d._BaseCode + 2,
+		Prefix:         d._Prefix,
+		Reason:         ExceptionReason_NotImplemented,
+		Message:        message,
+		HTTPStatusCode: http.StatusNotImplemented,
+	}
+}

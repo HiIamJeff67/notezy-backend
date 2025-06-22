@@ -6,10 +6,9 @@ import (
 )
 
 const (
-	_ExceptionBaseCode_Context ExceptionCode = (APIExceptionDomainCode*ExceptionDomainCodeShiftAmount +
-		ContextExceptionSubDomainCode*ExceptionSubDomainCodeShiftAmount)
+	_ExceptionBaseCode_Context ExceptionCode = ContextExceptionSubDomainCode * ExceptionSubDomainCodeShiftAmount
 
-	ContextExceptionSubDomainCode ExceptionCode   = 5
+	ContextExceptionSubDomainCode ExceptionCode   = 4
 	ExceptionBaseCode_Context     ExceptionCode   = _ExceptionBaseCode_Context + ReservedExceptionCode
 	ExceptionPrefix_Context       ExceptionPrefix = "Context"
 )
@@ -30,7 +29,8 @@ var Context = &ContextExceptionDomain{
 	Prefix:   ExceptionPrefix_Context,
 	APIExceptionDomain: APIExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_Context,
-		_Prefix:   ExceptionPrefix_Context},
+		_Prefix:   ExceptionPrefix_Context,
+	},
 }
 
 func (d *ContextExceptionDomain) FailedToFetchContextFieldOfSpecificName(name string) *Exception {

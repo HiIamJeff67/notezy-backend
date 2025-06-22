@@ -8,10 +8,9 @@ import (
 )
 
 const (
-	_ExceptionBaseCode_Email ExceptionCode = (APIExceptionDomainCode*ExceptionDomainCodeShiftAmount +
-		EmailExceptionSubDomainCode*ExceptionSubDomainCodeShiftAmount)
+	_ExceptionBaseCode_Email ExceptionCode = EmailExceptionSubDomainCode * ExceptionSubDomainCodeShiftAmount
 
-	EmailExceptionSubDomainCode ExceptionCode   = 6
+	EmailExceptionSubDomainCode ExceptionCode   = 5
 	ExceptionBaseCode_Email     ExceptionCode   = _ExceptionBaseCode_Email + ReservedExceptionCode
 	ExceptionPrefix_Email       ExceptionPrefix = "Email"
 )
@@ -36,7 +35,8 @@ var Email = &EmailExceptionDomain{
 	Prefix:   ExceptionPrefix_Email,
 	APIExceptionDomain: APIExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_Email,
-		_Prefix:   ExceptionPrefix_Email},
+		_Prefix:   ExceptionPrefix_Email,
+	},
 }
 
 func (d *EmailExceptionDomain) FailedToSendEmailWithSubject(subject string) *Exception {
