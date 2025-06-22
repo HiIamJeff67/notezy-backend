@@ -9,7 +9,13 @@ func configureUserInfoRoutes() {
 	userInfoRoutes := RouterGroup.Group("/userInfo")
 	userInfoRoutes.Use(middlewares.AuthMiddleware())
 	{
-		userInfoRoutes.GET("/getMyInfo", controllers.UserInfoController.GetMyInfo)
-		userInfoRoutes.PUT("/updateMyInfo", controllers.UserInfoController.UpdateMyInfo)
+		userInfoRoutes.GET(
+			"/getMyInfo",
+			controllers.UserInfoController.GetMyInfo,
+		)
+		userInfoRoutes.PUT(
+			"/updateMyInfo",
+			controllers.UserInfoController.UpdateMyInfo,
+		)
 	}
 }

@@ -59,5 +59,7 @@ func (s *userInfoService) UpdateMyInfo(reqDto *dtos.UpdateMyInfoReqDto) (*dtos.U
 		return nil, exception
 	}
 
-	return &dtos.UpdateMyInfoResDto{UpdatedAt: updatedUserInfo.UpdatedAt}, nil
+	return &dtos.UpdateMyInfoResDto{
+		UpdatedAt: updatedUserInfo.UpdatedAt,
+	}, nil
 }

@@ -11,7 +11,7 @@ const (
 	_ExceptionBaseCode_Email ExceptionCode = (APIExceptionDomainCode*ExceptionDomainCodeShiftAmount +
 		EmailExceptionSubDomainCode*ExceptionSubDomainCodeShiftAmount)
 
-	EmailExceptionSubDomainCode ExceptionCode   = 5
+	EmailExceptionSubDomainCode ExceptionCode   = 6
 	ExceptionBaseCode_Email     ExceptionCode   = _ExceptionBaseCode_Email + ReservedExceptionCode
 	ExceptionPrefix_Email       ExceptionPrefix = "Email"
 )

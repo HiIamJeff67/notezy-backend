@@ -21,4 +21,5 @@ func ConfigureRoutes() {
 	configureUserRoutes()
 	configureTestRoutes()
 	configureUserInfoRoutes()
+	configureUserAccountRoutes()
 }

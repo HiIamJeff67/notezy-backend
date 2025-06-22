@@ -15,7 +15,7 @@ import (
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	constants "notezy-backend/app/shared/constants"
-	"notezy-backend/app/tokens"
+	tokens "notezy-backend/app/tokens"
 	util "notezy-backend/app/util"
 
 	authsql "notezy-backend/app/models/sql/auth"

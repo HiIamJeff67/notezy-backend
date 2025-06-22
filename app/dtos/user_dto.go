@@ -1,11 +1,12 @@
 package dtos
 
 import (
-	"notezy-backend/app/caches"
-	"notezy-backend/app/models/enums"
 	"time"
 
 	"github.com/google/uuid"
+
+	caches "notezy-backend/app/caches"
+	enums "notezy-backend/app/models/enums"
 )
 
 /* ============================== Request DTO ============================== */
@@ -23,13 +24,13 @@ type UpdateMeReqDto struct {
 }
 
 type UpdateRoleReqDto struct {
-	UserId  uuid.UUID      // extracted from the access token of AuthMiddleware()
-	NewRole enums.UserRole `json:"role" validate:"required,isrole"`
+	UserId uuid.UUID      // extracted from the access token of AuthMiddleware()
+	Role   enums.UserRole `json:"role" validate:"required,isrole"`
 }
 
 type UpdatePlanReqDto struct {
-	UserId  uuid.UUID      // extracted from the access token of AuthMiddleware()
-	NewPlan enums.UserPlan `json:"plan" validate:"required,isplan"`
+	UserId uuid.UUID      // extracted from the access token of AuthMiddleware()
+	Plan   enums.UserPlan `json:"plan" validate:"required,isplan"`
 }
 
 /* ============================== Response DTO ============================== */

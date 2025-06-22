@@ -11,6 +11,7 @@ import (
 )
 
 /* ============================== Exception Field Type Definition ============================== */
+
 type ExceptionCode int
 type ExceptionPrefix string
 type ExceptionReason string
@@ -44,32 +45,32 @@ const (
 // ExceptionPrefix_Auth ExceptionPrefix = "Auth" 			 		     3
 // ExceptionPrefix_Cookie ExceptionPrefix = "Cookie"					 4
 // ExceptionPrefix_Context ExceptionPrefix = "Context"					 5
+// ExceptionPrefix_Email ExceptionPrefix = "Email"					     6
 )
 
 // shared reason for common domain use
 // if some individual domain require a custom reason,
 // just create one with ExceptionReason type privately whic means its variable name in lower case
 const (
-	ExceptionReason_UndefinedError            ExceptionReason = "Undefined_Error"
-	ExceptionReason_NotFound                  ExceptionReason = "Not_Found"
-	ExceptionReason_FailedToCreate            ExceptionReason = "Failed_To_Create"
-	ExceptionReason_FailedToUpdate            ExceptionReason = "Failed_To_Update"
-	ExceptionReason_FailedToDelete            ExceptionReason = "Failed_To_Delete"
-	ExceptionReason_FailedToCommitTransaction ExceptionReason = "Failed_To_Commit_Transaction"
-	ExceptionReason_InvalidInput              ExceptionReason = "Invalid_Input"
-	ExceptionReason_Timeout                   ExceptionReason = "Timeout"
-	ExceptionReason_InvalidDto                ExceptionReason = "Invalid_Dto"
-	ExceptionReason_NotImplemented            ExceptionReason = "NotImplement"
-	ExceptionReason_InvalidType               ExceptionReason = "Invalid_Type"
+	ExceptionReason_UndefinedError            ExceptionReason = "Undefined_Error"              // database, api -> common
+	ExceptionReason_NotFound                  ExceptionReason = "Not_Found"                    // database
+	ExceptionReason_FailedToCreate            ExceptionReason = "Failed_To_Create"             // database
+	ExceptionReason_FailedToUpdate            ExceptionReason = "Failed_To_Update"             // database
+	ExceptionReason_FailedToDelete            ExceptionReason = "Failed_To_Delete"             // database
+	ExceptionReason_FailedToCommitTransaction ExceptionReason = "Failed_To_Commit_Transaction" // database
+	ExceptionReason_InvalidInput              ExceptionReason = "Invalid_Input"                // database -> type
+	ExceptionReason_Timeout                   ExceptionReason = "Timeout"                      // api
+	ExceptionReason_InvalidDto                ExceptionReason = "Invalid_Dto"                  // api -> type
+	ExceptionReason_NotImplemented            ExceptionReason = "NotImplement"                 // database, api -> common
+	ExceptionReason_InvalidType               ExceptionReason = "Invalid_Type"                 // database, api -> type
 )
 
 func IsExceptionCode(exceptionCode int) bool {
 	return exceptionCode >= MinExceptionCode && exceptionCode <= MaxExceptionCode
 }
 
-/* ============================== Exception Field Type Definition ============================== */
-
 /* ============================== General Exception Structure Definition ============================== */
+
 type Exception struct {
 	Code           ExceptionCode   // custom exception code
 	Prefix         ExceptionPrefix // custom exception prefix
@@ -134,9 +135,8 @@ func (e *Exception) PanicVerbose() {
 	}
 }
 
-/* ============================== General Exception Structure Definition ============================== */
-
 /* ============================== Database Exception Domain Definition ============================== */
+
 type DatabaseExceptionDomain struct {
 	_BaseCode ExceptionCode
 	_Prefix   ExceptionPrefix
@@ -277,6 +277,7 @@ func (d *DatabaseExceptionDomain) InvalidType(value any) *Exception {
 }
 
 /* ============================== API Exception Domain Definition ============================== */
+
 type APIExceptionDomain struct {
 	_BaseCode ExceptionCode
 	_Prefix   ExceptionPrefix
@@ -355,3 +356,27 @@ func (d *APIExceptionDomain) InvalidType(value any) *Exception {
 		},
 	}
 }
+
+/* ============================== Type Exception ============================== */
+
+/* ============================== Common Exception ============================== */
+
+// type CommonExceptionDomain struct {
+// 	_BaseCode ExceptionCode
+// 	_Prefix   ExceptionPrefix
+// }
+
+// func (d *CommonExceptionDomain) UndefinedError(optionalMessage ...string) *Exception {
+// 	message := fmt.Sprintf("Undefined error happened in %s", strings.ToLower(string(d._Prefix)))
+// 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
+// 		message = optionalMessage[0]
+// 	}
+
+// 	return &Exception{
+// 		Code:           d._BaseCode + 0,
+// 		Prefix:         d._Prefix,
+// 		Reason:         ExceptionReason_UndefinedError,
+// 		Message:        message,
+// 		HTTPStatusCode: http.StatusBadRequest,
+// 	}
+// }
