@@ -25,15 +25,15 @@ var Theme = &ThemeExceptionDomain{
 		_Prefix:   ExceptionPrefix_Theme,
 	},
 	APIExceptionDomain: APIExceptionDomain{
-		_BaseCode: _ExceptionBaseCode_User,
-		_Prefix:   ExceptionPrefix_User,
+		_BaseCode: _ExceptionBaseCode_Theme,
+		_Prefix:   ExceptionPrefix_Theme,
 	},
 	TypeExceptionDomain: TypeExceptionDomain{
-		_BaseCode: _ExceptionBaseCode_User,
-		_Prefix:   ExceptionPrefix_User,
+		_BaseCode: _ExceptionBaseCode_Theme,
+		_Prefix:   ExceptionPrefix_Theme,
 	},
 	CommonExceptionDomain: CommonExceptionDomain{
-		_BaseCode: _ExceptionBaseCode_User,
-		_Prefix:   ExceptionPrefix_User,
+		_BaseCode: _ExceptionBaseCode_Theme,
+		_Prefix:   ExceptionPrefix_Theme,
 	},
 }

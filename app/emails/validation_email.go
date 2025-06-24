@@ -23,7 +23,7 @@ var _validationEmailSender = &EmailSender{
 	Port:     util.GetIntEnv("SMTP_PORT", 587),
 	UserName: util.GetEnv("NOTEZY_OFFICIAL_GMAIL", ""),
 	Password: util.GetEnv("NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD", ""),
-	From:     util.GetEnv("NOTEZY_OFFICIAL_GMAIL", ""),
+	From:     util.GetEnv("NOTEZY_OFFICIAL_NAME", "") + "<" + util.GetEnv("NOTEZY_OFFICIAL_GMAIL", "") + ">",
 }
 
 func SendValidationEmail(to string, name string, authCode string, userAgent string, expiredAt time.Time) *exceptions.Exception {

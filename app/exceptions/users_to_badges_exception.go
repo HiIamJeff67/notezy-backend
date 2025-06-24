@@ -25,15 +25,15 @@ var UsersToBadges = &UsersToBadgesExceptionDomain{
 		_Prefix:   ExceptionPrefix_UsersToBadges,
 	},
 	APIExceptionDomain: APIExceptionDomain{
-		_BaseCode: _ExceptionBaseCode_User,
-		_Prefix:   ExceptionPrefix_User,
+		_BaseCode: _ExceptionBaseCode_UsersToBadges,
+		_Prefix:   ExceptionPrefix_UsersToBadges,
 	},
 	TypeExceptionDomain: TypeExceptionDomain{
-		_BaseCode: _ExceptionBaseCode_User,
-		_Prefix:   ExceptionPrefix_User,
+		_BaseCode: _ExceptionBaseCode_UsersToBadges,
+		_Prefix:   ExceptionPrefix_UsersToBadges,
 	},
 	CommonExceptionDomain: CommonExceptionDomain{
-		_BaseCode: _ExceptionBaseCode_User,
-		_Prefix:   ExceptionPrefix_User,
+		_BaseCode: _ExceptionBaseCode_UsersToBadges,
+		_Prefix:   ExceptionPrefix_UsersToBadges,
 	},
 }

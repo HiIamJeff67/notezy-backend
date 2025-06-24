@@ -1,7 +1,7 @@
 -- name: ValidateEmailByAuthCode
-UPDATE UserTable u
+UPDATE "UserTable" u
 SET u.Role = 'Normal'
-FROM UserAccountTable ua
+FROM "UserAccountTable" ua
 WHERE ua.user_id = u.id
     AND u.id = ?
     AND ua.auth_code = ?

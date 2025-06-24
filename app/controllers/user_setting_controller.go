@@ -18,7 +18,9 @@ type userSettingController struct {
 	userSettingService services.UserSettingServiceInterface
 }
 
-var UserSettingController UserSettingControllerInterface = &userSettingController{}
+var UserSettingController UserSettingControllerInterface = &userSettingController{
+	userSettingService: services.UserSettingService,
+}
 
 /* ============================== Controllers ============================== */
 

@@ -1,8 +1,8 @@
 -- name: ResetEmail
-UPDATE UserTable u
+UPDATE "UserTable" u
 SET 
     email = ?
-FROM UserAccountTable ua
+FROM "UserAccountTable" ua
 WHERE ua.auth_code = ?
     AND u.user_id = ?
     AND u.user_id = ua.user_id

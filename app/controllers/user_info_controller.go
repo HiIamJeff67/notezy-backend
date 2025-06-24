@@ -22,7 +22,9 @@ type userInfoController struct {
 	userInfoService services.UserInfoServiceInterface
 }
 
-var UserInfoController UserInfoControllerInterface = &userInfoController{}
+var UserInfoController UserInfoControllerInterface = &userInfoController{
+	userInfoService: services.UserInfoService,
+}
 
 /* ============================== Controllers ============================== */
 

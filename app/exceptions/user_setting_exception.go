@@ -25,15 +25,15 @@ var UserSetting = &UserSettingExceptionDomain{
 		_Prefix:   ExceptionPrefix_UserSetting,
 	},
 	APIExceptionDomain: APIExceptionDomain{
-		_BaseCode: _ExceptionBaseCode_User,
-		_Prefix:   ExceptionPrefix_User,
+		_BaseCode: _ExceptionBaseCode_UserSetting,
+		_Prefix:   ExceptionPrefix_UserSetting,
 	},
 	TypeExceptionDomain: TypeExceptionDomain{
-		_BaseCode: _ExceptionBaseCode_User,
-		_Prefix:   ExceptionPrefix_User,
+		_BaseCode: _ExceptionBaseCode_UserSetting,
+		_Prefix:   ExceptionPrefix_UserSetting,
 	},
 	CommonExceptionDomain: CommonExceptionDomain{
-		_BaseCode: _ExceptionBaseCode_User,
-		_Prefix:   ExceptionPrefix_User,
+		_BaseCode: _ExceptionBaseCode_UserSetting,
+		_Prefix:   ExceptionPrefix_UserSetting,
 	},
 }

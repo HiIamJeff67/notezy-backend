@@ -9,8 +9,17 @@ func configureUserRoutes() {
 	userRoutes := RouterGroup.Group("/user")
 	userRoutes.Use(middlewares.AuthMiddleware())
 	{
-		userRoutes.GET("/getMe", controllers.UserController.GetMe)
-		userRoutes.GET("/all", controllers.UserController.GetAllUsers)
-		userRoutes.PATCH("/updateMe", controllers.UserController.UpdateMe)
+		userRoutes.GET(
+			"/getMe",
+			controllers.UserController.GetMe,
+		)
+		userRoutes.GET(
+			"/all",
+			controllers.UserController.GetAllUsers,
+		)
+		userRoutes.PATCH(
+			"/updateMe",
+			controllers.UserController.UpdateMe,
+		)
 	}
 }

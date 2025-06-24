@@ -69,6 +69,7 @@ func (s *authService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDt
 		tx.Rollback()
 		return nil, exception
 	}
+
 	createUserInputData := inputs.CreateUserInput{
 		Name:        reqDto.Name,
 		DisplayName: util.GenerateRandomFakeName(), // we generate a default display name for the new user
@@ -110,7 +111,9 @@ func (s *authService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDt
 
 	// Update user refresh token
 	newUser, exception := userRepository.UpdateOneById(*newUserId, inputs.PartialUpdateUserInput{
-		Values:  inputs.UpdateUserInput{RefreshToken: refreshToken},
+		Values: inputs.UpdateUserInput{
+			RefreshToken: refreshToken,
+		},
 		SetNull: nil,
 	})
 	if exception != nil {

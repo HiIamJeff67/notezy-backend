@@ -23,7 +23,9 @@ type userController struct {
 	userService services.UserServiceInterface
 }
 
-var UserController UserControllerInterface = &userController{}
+var UserController UserControllerInterface = &userController{
+	userService: services.UserService,
+}
 
 /* ============================== Controllers ============================== */
 

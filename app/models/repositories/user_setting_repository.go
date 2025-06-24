@@ -68,7 +68,7 @@ func (r *userSettingRepository) CreateOneByUserId(userId uuid.UUID, input inputs
 
 func (r *userSettingRepository) UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserSettingInput) (*schemas.UserSetting, *exceptions.Exception) {
 	if err := models.Validator.Struct(input); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.UserSetting.InvalidInput().WithError(err)
 	}
 
 	existingUserSetting, exception := r.GetOneByUserId(userId)

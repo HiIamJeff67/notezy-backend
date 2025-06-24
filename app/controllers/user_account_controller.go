@@ -22,7 +22,9 @@ type userAccountController struct {
 	userAccountService services.UserAccountServiceInterface
 }
 
-var UserAccountController UserAccountControllerInterface = &userAccountController{}
+var UserAccountController UserAccountControllerInterface = &userAccountController{
+	userAccountService: services.UserAccountService,
+}
 
 /* ============================== Controllers ============================== */
 

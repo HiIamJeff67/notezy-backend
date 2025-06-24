@@ -25,15 +25,15 @@ var UserInfo = &UserInfoExceptionDomain{
 		_Prefix:   ExceptionPrefix_UserInfo,
 	},
 	APIExceptionDomain: APIExceptionDomain{
-		_BaseCode: _ExceptionBaseCode_User,
-		_Prefix:   ExceptionPrefix_User,
+		_BaseCode: _ExceptionBaseCode_UserInfo,
+		_Prefix:   ExceptionPrefix_UserInfo,
 	},
 	TypeExceptionDomain: TypeExceptionDomain{
-		_BaseCode: _ExceptionBaseCode_User,
-		_Prefix:   ExceptionPrefix_User,
+		_BaseCode: _ExceptionBaseCode_UserInfo,
+		_Prefix:   ExceptionPrefix_UserInfo,
 	},
 	CommonExceptionDomain: CommonExceptionDomain{
-		_BaseCode: _ExceptionBaseCode_User,
-		_Prefix:   ExceptionPrefix_User,
+		_BaseCode: _ExceptionBaseCode_UserInfo,
+		_Prefix:   ExceptionPrefix_UserInfo,
 	},
 }

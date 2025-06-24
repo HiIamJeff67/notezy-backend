@@ -29,7 +29,9 @@ type authController struct {
 	authService services.AuthServiceInterface
 }
 
-var AuthController AuthControllerInterface = &authController{}
+var AuthController AuthControllerInterface = &authController{
+	authService: services.AuthService,
+}
 
 /* ============================== Controllers ============================== */
 
@@ -37,7 +39,8 @@ func (c *authController) Register(ctx *gin.Context) {
 	var reqDto dtos.RegisterReqDto
 	reqDto.UserAgent = ctx.GetHeader("User-Agent")
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
-		ctx.JSON(http.StatusBadRequest, exceptions.Auth.InvalidDto().WithError(err).GetGinH())
+		exception := exceptions.Auth.InvalidDto().WithError(err)
+		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return
 	}
 

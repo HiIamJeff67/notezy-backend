@@ -1,5 +1,5 @@
-DELETE FROM UserTable u
-USING UserAccountTable ua
+DELETE FROM "UserTable" u
+USING "UserAccountTable" ua
 WHERE u.id = ?
     AND ua.user_id = u.id
     AND (

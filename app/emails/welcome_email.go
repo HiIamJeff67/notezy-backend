@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	WelcomeEmailSubject = "Welcome to Notezy - Account Registration Was Successfully Done"
+	WelcomeEmailSubject = "Welcome to Notezy - The Account Registration Was Successfully Done"
 )
 
 var _welcomeEmailRenderer = &HTMLEmailRenderer{
@@ -20,7 +20,7 @@ var _welcomeEmailSender = &EmailSender{
 	Port:     util.GetIntEnv("SMTP_PORT", 587),
 	UserName: util.GetEnv("NOTEZY_OFFICIAL_GMAIL", ""),
 	Password: util.GetEnv("NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD", ""),
-	From:     util.GetEnv("NOTEZY_OFFICIAL_NAME", "Notezy"),
+	From:     util.GetEnv("NOTEZY_OFFICIAL_NAME", "") + "<" + util.GetEnv("NOTEZY_OFFICIAL_GMAIL", "") + ">",
 }
 
 func SendWelcomeEmail(to string, name string, status string) *exceptions.Exception {
