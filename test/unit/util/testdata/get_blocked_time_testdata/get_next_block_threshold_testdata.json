@@ -1,0 +1,6 @@
+[
+  { "Args": { "LoginCount": 2 }, "Returns": 3 },
+  { "Args": { "LoginCount": 3 }, "Returns": 5 },
+  { "Args": { "LoginCount": 10 }, "Returns": 15 },
+  { "Args": { "LoginCount": 30 }, "Returns": -1 }
+]

@@ -1,0 +1,6 @@
+[
+  { "Args": { "S": "test@example.com" }, "Returns": true },
+  { "Args": { "S": "notanemail" }, "Returns": false },
+  { "Args": { "S": "" }, "Returns": false },
+  { "Args": { "S": "foo@bar" }, "Returns": true }
+]

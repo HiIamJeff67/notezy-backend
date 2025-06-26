@@ -1,6 +1,10 @@
 package util
 
-import "time"
+import (
+	"time"
+
+	constants "notezy-backend/shared/constants"
+)
 
 var loginCountToBlockDurationMap = map[int32]time.Duration{
 	3:  5 * time.Minute,
@@ -41,7 +45,7 @@ func ShouldBlockLogin(loginCount int32) bool {
 }
 
 func GetNextBlockThreshold(loginCount int32) int32 {
-	nextThreshold := int32(1000) // 設定一個很大的預設值
+	nextThreshold := int32(constants.MAX_INT32)
 
 	for count := range loginCountToBlockDurationMap {
 		if count > loginCount && count < nextThreshold {
@@ -49,7 +53,7 @@ func GetNextBlockThreshold(loginCount int32) int32 {
 		}
 	}
 
-	if nextThreshold == 1000 {
+	if nextThreshold == constants.MAX_INT32 {
 		return -1
 	}
 	return nextThreshold

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	types "notezy-backend/app/shared/types"
+	types "notezy-backend/shared/types"
 )
 
 const (

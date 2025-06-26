@@ -5,8 +5,8 @@ import (
 	"time"
 
 	exceptions "notezy-backend/app/exceptions"
-	types "notezy-backend/app/shared/types"
 	util "notezy-backend/app/util"
+	types "notezy-backend/shared/types"
 )
 
 const (

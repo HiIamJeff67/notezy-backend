@@ -12,8 +12,8 @@ import (
 	exceptions "notezy-backend/app/exceptions"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
-	types "notezy-backend/app/shared/types"
 	"notezy-backend/app/tokens"
+	types "notezy-backend/shared/types"
 )
 
 func _extractAccessToken(ctx *gin.Context) (string, *exceptions.Exception) {

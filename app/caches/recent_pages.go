@@ -1,7 +1,7 @@
 package caches
 
 import (
-	types "notezy-backend/app/shared/types"
+	types "notezy-backend/shared/types"
 )
 
 var (

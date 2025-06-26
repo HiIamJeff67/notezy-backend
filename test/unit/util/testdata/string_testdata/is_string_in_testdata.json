@@ -1,0 +1,6 @@
+[
+  { "Args": { "S": "a", "Strs": ["a", "b", "c"] }, "Returns": true },
+  { "Args": { "S": "d", "Strs": ["a", "b", "c"] }, "Returns": false },
+  { "Args": { "S": "", "Strs": [""] }, "Returns": true },
+  { "Args": { "S": "x", "Strs": [] }, "Returns": false }
+]

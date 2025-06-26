@@ -10,8 +10,8 @@ import (
 	logs "notezy-backend/app/logs"
 	enums "notezy-backend/app/models/enums"
 	schemas "notezy-backend/app/models/schemas"
-	shared "notezy-backend/app/shared"
 	util "notezy-backend/app/util"
+	shared "notezy-backend/shared"
 )
 
 var (

@@ -1,0 +1,6 @@
+[
+  { "Args": { "Input": "CamelCaseString" }, "Returns": "camel case string" },
+  { "Args": { "Input": "simpleTest" }, "Returns": "simple test" },
+  { "Args": { "Input": "A" }, "Returns": "a" },
+  { "Args": { "Input": "" }, "Returns": "" }
+]

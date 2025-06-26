@@ -1,0 +1,8 @@
+[
+  { "Args": { "S": "abc123" }, "Returns": true },
+  { "Args": { "S": "abc 123" }, "Returns": false },
+  { "Args": { "S": "ABC" }, "Returns": true },
+  { "Args": { "S": "123" }, "Returns": true },
+  { "Args": { "S": "abc!" }, "Returns": false },
+  { "Args": { "S": "" }, "Returns": true }
+]

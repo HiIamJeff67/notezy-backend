@@ -2,7 +2,7 @@ package tokens
 
 import (
 	"notezy-backend/app/exceptions"
-	"notezy-backend/app/shared"
+	"notezy-backend/shared"
 	"time"
 )
 

@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	exceptions "notezy-backend/app/exceptions"
-	shared "notezy-backend/app/shared"
+	shared "notezy-backend/shared"
 )
 
 type CookieHandlerInterface interface {

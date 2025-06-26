@@ -1,6 +1,6 @@
 package util
 
-import types "notezy-backend/app/shared/types"
+import types "notezy-backend/shared/types"
 
 func GetMinInMap[K comparable, T types.Number](searchMap map[K]T) (res T) {
 	for _, value := range searchMap {

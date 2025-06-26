@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	constants "notezy-backend/app/shared/constants"
+	constants "notezy-backend/shared/constants"
 )
 
 var (

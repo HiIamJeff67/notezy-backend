@@ -1,0 +1,5 @@
+[
+  { "Args": { "Values": ["a", "b", "c"] }, "Returns": "a', 'b', 'c" },
+  { "Args": { "Values": ["one"] }, "Returns": "one" },
+  { "Args": { "Values": [] }, "Returns": "" }
+]

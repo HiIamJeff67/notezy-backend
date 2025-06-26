@@ -1,0 +1,67 @@
+package unit_test_util
+
+import (
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+
+	util "notezy-backend/app/util"
+	types "notezy-backend/shared/types"
+	test "notezy-backend/test"
+)
+
+type GetLoginBlockedUntilByLoginCountArgType = struct {
+	LoginCount int32
+}
+type GetLoginBlockedUntilByLoginCountReturnType = struct {
+	ShouldBlock bool
+}
+type GetLoginBlockedUntilByLoginCountTestCase = types.TestCase[GetLoginBlockedUntilByLoginCountArgType, GetLoginBlockedUntilByLoginCountReturnType]
+
+type ShouldBlockLoginArgType = struct {
+	LoginCount int32
+}
+type ShouldBlockLoginReturnType = bool
+type ShouldBlockLoginTestCase = types.TestCase[ShouldBlockLoginArgType, ShouldBlockLoginReturnType]
+
+type GetNextBlockThresholdArgType = struct {
+	LoginCount int32
+}
+type GetNextBlockThresholdReturnType = int32
+type GetNextBlockThresholdTestCase = types.TestCase[GetNextBlockThresholdArgType, GetNextBlockThresholdReturnType]
+
+func TestGetLoginBlockedUntilByLoginCount(t *testing.T) {
+	cases := test.LoadTestCases[GetLoginBlockedUntilByLoginCountTestCase](
+		t, "testdata/get_blocked_time_testdata/get_login_blocked_until_by_login_count_testdata.json",
+	)
+	for _, c := range cases {
+		got := util.GetLoginBlockedUntilByLoginCount(c.Args.LoginCount)
+		if c.Returns.ShouldBlock {
+			assert.NotNil(t, got)
+			assert.True(t, got.After(time.Now().Add(-1*time.Second)))
+		} else {
+			assert.Nil(t, got)
+		}
+	}
+}
+
+func TestShouldBlockLogin(t *testing.T) {
+	cases := test.LoadTestCases[ShouldBlockLoginTestCase](
+		t, "testdata/get_blocked_time_testdata/should_block_login_testdata.json",
+	)
+	for _, c := range cases {
+		got := util.ShouldBlockLogin(c.Args.LoginCount)
+		assert.Equal(t, c.Returns, got)
+	}
+}
+
+func TestGetNextBlockThreshold(t *testing.T) {
+	cases := test.LoadTestCases[GetNextBlockThresholdTestCase](
+		t, "testdata/get_blocked_time_testdata/get_next_block_threshold_testdata.json",
+	)
+	for _, c := range cases {
+		got := util.GetNextBlockThreshold(c.Args.LoginCount)
+		assert.Equal(t, c.Returns, got)
+	}
+}

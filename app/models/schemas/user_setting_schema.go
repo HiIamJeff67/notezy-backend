@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	enums "notezy-backend/app/models/enums"
-	shared "notezy-backend/app/shared"
+	shared "notezy-backend/shared"
 )
 
 type UserSetting struct {

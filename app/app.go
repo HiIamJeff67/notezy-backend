@@ -10,7 +10,7 @@ import (
 	caches "notezy-backend/app/caches"
 	models "notezy-backend/app/models"
 	routes "notezy-backend/app/routes"
-	shared "notezy-backend/app/shared"
+	shared "notezy-backend/shared"
 )
 
 func StartApplication() {

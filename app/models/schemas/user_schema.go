@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 
 	enums "notezy-backend/app/models/enums"
-	shared "notezy-backend/app/shared"
+	shared "notezy-backend/shared"
 )
 
 type User struct {

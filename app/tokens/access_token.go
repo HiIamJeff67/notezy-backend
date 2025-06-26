@@ -2,7 +2,7 @@ package tokens
 
 import (
 	"notezy-backend/app/exceptions"
-	"notezy-backend/app/shared/types"
+	"notezy-backend/shared/types"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"

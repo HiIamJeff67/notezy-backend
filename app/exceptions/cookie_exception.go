@@ -3,7 +3,7 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
-	shared "notezy-backend/app/shared"
+	shared "notezy-backend/shared"
 )
 
 const (

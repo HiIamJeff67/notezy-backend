@@ -9,8 +9,8 @@ import (
 
 	exceptions "notezy-backend/app/exceptions"
 	logs "notezy-backend/app/logs"
-	shared "notezy-backend/app/shared"
-	types "notezy-backend/app/shared/types"
+	shared "notezy-backend/shared"
+	types "notezy-backend/shared/types"
 )
 
 var (

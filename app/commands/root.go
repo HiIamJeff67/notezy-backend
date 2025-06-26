@@ -8,7 +8,7 @@ import (
 	app "notezy-backend/app"
 	logs "notezy-backend/app/logs"
 	models "notezy-backend/app/models"
-	shared "notezy-backend/app/shared"
+	shared "notezy-backend/shared"
 )
 
 var rootCommand = &cobra.Command{

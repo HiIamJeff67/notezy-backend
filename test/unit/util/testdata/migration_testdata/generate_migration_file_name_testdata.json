@@ -1,0 +1,4 @@
+[
+  { "Args": { "DBName": "testdb" }, "Returns": "" },
+  { "Args": { "DBName": "mydb" }, "Returns": "" }
+]

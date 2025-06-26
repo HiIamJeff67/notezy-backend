@@ -6,7 +6,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 
 	exceptions "notezy-backend/app/exceptions"
-	types "notezy-backend/app/shared/types"
+	types "notezy-backend/shared/types"
 )
 
 /* ============================== Generate Tokens Functions ============================== */

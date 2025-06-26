@@ -13,8 +13,8 @@ import (
 	exceptions "notezy-backend/app/exceptions"
 	logs "notezy-backend/app/logs"
 	enums "notezy-backend/app/models/enums"
-	shared "notezy-backend/app/shared"
-	types "notezy-backend/app/shared/types"
+	shared "notezy-backend/shared"
+	types "notezy-backend/shared/types"
 )
 
 type UserDataCache struct {

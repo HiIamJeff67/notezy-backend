@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	shared "notezy-backend/app/shared"
-	constants "notezy-backend/app/shared/constants"
+	shared "notezy-backend/shared"
+	constants "notezy-backend/shared/constants"
 )
 
 var RefreshToken = NewCookieHandler(

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"unicode"
 
-	shared "notezy-backend/app/shared"
+	shared "notezy-backend/shared"
 )
 
 const (
