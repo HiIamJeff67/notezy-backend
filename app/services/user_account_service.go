@@ -3,6 +3,7 @@ package services
 import (
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
+	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
 )
@@ -21,6 +22,10 @@ var UserAccountService UserAccountServiceInterface = &userAccountService{}
 /* ============================== Services ============================== */
 
 func (s *userAccountService) GetMyAccount(reqDto *dtos.GetMyAccountReqDto) (*dtos.GetMyAccountResDto, *exceptions.Exception) {
+	if err := models.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
 	userAccountRepository := repositories.NewUserAccountRepository(nil)
 
 	userAccount, exception := userAccountRepository.GetOneByUserId(reqDto.UserId)
@@ -37,6 +42,10 @@ func (s *userAccountService) GetMyAccount(reqDto *dtos.GetMyAccountReqDto) (*dto
 }
 
 func (s *userAccountService) UpdateMyAccount(reqDto *dtos.UpdateMyAccountReqDto) (*dtos.UpdateMyAccountResDto, *exceptions.Exception) {
+	if err := models.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
 	userAccountRepository := repositories.NewUserAccountRepository(nil)
 
 	updatedUserAccount, exception := userAccountRepository.UpdateOneByUserId(reqDto.UserId, inputs.PartialUpdateUserAccountInput{

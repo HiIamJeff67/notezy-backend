@@ -57,6 +57,7 @@ const (
 	ExceptionReason_FailedToDelete            ExceptionReason = "Failed_To_Delete"             // database
 	ExceptionReason_FailedToCommitTransaction ExceptionReason = "Failed_To_Commit_Transaction" // database
 	ExceptionReason_InvalidInput              ExceptionReason = "Invalid_Input"                // database -> type
+	ExceptionReason_InternalServerWentWrong   ExceptionReason = "Internal_Server_Went_Wrong"   // api
 	ExceptionReason_Timeout                   ExceptionReason = "Timeout"                      // api
 	ExceptionReason_InvalidDto                ExceptionReason = "Invalid_Dto"                  // api -> type
 	ExceptionReason_NotImplemented            ExceptionReason = "NotImplement"                 // database, api -> common
@@ -77,6 +78,16 @@ type Exception struct {
 	HTTPStatusCode int             // http status code
 	Details        any             // additional error details (optional)
 	Error          error           // original error (optional)
+}
+
+type ExceptionCompareOption struct {
+	WithCode           bool
+	WithPrefix         bool
+	WithReason         bool
+	WithMessage        bool
+	WithHTTPStatusCode bool
+	WithDetails        bool
+	WithError          bool
 }
 
 func (e *Exception) GetString() string {
@@ -131,6 +142,47 @@ func (e *Exception) PanicVerbose() {
 	} else {
 		panic(fmt.Sprintf("[%d] %s", e.Code, e.Message))
 	}
+}
+
+func CompareExceptions(e1 *Exception, e2 *Exception, opt ExceptionCompareOption) bool {
+	if opt.WithCode && e1.Code != e2.Code {
+		return false
+	}
+	if opt.WithPrefix && e1.Prefix != e2.Prefix {
+		return false
+	}
+	if opt.WithReason && e1.Reason != e2.Reason {
+		return false
+	}
+	if opt.WithMessage && e1.Message != e2.Message {
+		return false
+	}
+	if opt.WithHTTPStatusCode && e1.HTTPStatusCode != e2.HTTPStatusCode {
+		return false
+	}
+	if opt.WithDetails && fmt.Sprintf("%v", e1.Details) != fmt.Sprintf("%v", e2.Details) {
+		return false
+	}
+	if opt.WithError && fmt.Sprintf("%v", e1.Error) != fmt.Sprintf("%v", e2.Error) {
+		return false
+	}
+	return true
+}
+
+func CompareCommonExceptions(e1 *Exception, e2 *Exception, withMessage bool) bool {
+	if e1.Code != e2.Code {
+		return false
+	}
+	if e1.Prefix != e2.Prefix {
+		return false
+	}
+	if e1.Reason != e2.Reason {
+		return false
+	}
+	if withMessage && e1.Message != e2.Message {
+		return false
+	}
+	return true
 }
 
 /* ============================== Database Exception Domain Definition ============================== */
@@ -222,6 +274,33 @@ type APIExceptionDomain struct {
 	_Prefix   ExceptionPrefix
 }
 
+func (d *APIExceptionDomain) InternalServerWentWrong(originalException *Exception, optionalMessage ...string) *Exception {
+	message := fmt.Sprintf("Something went wrong in %v", d._Prefix)
+	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
+		message = optionalMessage[0]
+	}
+
+	exception := &Exception{
+		Code:           d._BaseCode + 1,
+		Prefix:         d._Prefix,
+		Reason:         ExceptionReason_InternalServerWentWrong,
+		Message:        message,
+		HTTPStatusCode: http.StatusInternalServerError,
+	}
+	if originalException == nil {
+		return exception
+	}
+
+	if originalException.Error != nil {
+		exception.Error = originalException.Error
+	}
+	if originalException.Details != nil {
+		exception.Message = originalException.Message
+	}
+
+	return exception
+}
+
 func (d *APIExceptionDomain) Timeout(time time.Duration, optionalMessage ...string) *Exception {
 	message := fmt.Sprintf("Timeout in %s with %v", strings.ToLower(string(d._Prefix)), time)
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
@@ -229,7 +308,7 @@ func (d *APIExceptionDomain) Timeout(time time.Duration, optionalMessage ...stri
 	}
 
 	return &Exception{
-		Code:           d._BaseCode + 1,
+		Code:           d._BaseCode + 2,
 		Prefix:         d._Prefix,
 		Reason:         ExceptionReason_Timeout,
 		Message:        message,

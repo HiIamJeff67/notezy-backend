@@ -1,66 +1,28 @@
 package unit_test_util
 
 import (
-	"encoding/json"
-	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	util "notezy-backend/app/util"
 	types "notezy-backend/shared/types"
-
-	"github.com/stretchr/testify/assert"
+	test "notezy-backend/test"
 )
 
-// JoinValues
+/* ============================== Test JoinValues ============================== */
+
 type JoinValuesArgType = struct {
 	Values []string
 }
 type JoinValuesReturnType = string
-type JoinValuesTestCase = types.TestCase[JoinValuesArgType, JoinValuesReturnType]
-
-// ConvertCamelCaseToSentenceCase
-type ConvertCamelCaseToSentenceCaseArgType = struct {
-	Input string
-}
-type ConvertCamelCaseToSentenceCaseReturnType = string
-type ConvertCamelCaseToSentenceCaseTestCase = types.TestCase[ConvertCamelCaseToSentenceCaseArgType, ConvertCamelCaseToSentenceCaseReturnType]
-
-// IsStringIn
-type IsStringInArgType = struct {
-	S    string
-	Strs []string
-}
-type IsStringInReturnType = bool
-type IsStringInTestCase = types.TestCase[IsStringInArgType, IsStringInReturnType]
-
-// IsEmailString
-type IsEmailStringArgType = struct {
-	S string
-}
-type IsEmailStringReturnType = bool
-type IsEmailStringTestCase = types.TestCase[IsEmailStringArgType, IsEmailStringReturnType]
-
-// IsAlphaNumberString
-type IsAlphaNumberStringArgType = struct {
-	S string
-}
-type IsAlphaNumberStringReturnType = bool
-type IsAlphaNumberStringTestCase = types.TestCase[IsAlphaNumberStringArgType, IsAlphaNumberStringReturnType]
-
-func loadTestCases[T any](t *testing.T, filename string) []T {
-	data, err := os.ReadFile(filename)
-	if err != nil {
-		t.Fatalf("failed to read testdata: %v", err)
-	}
-	var cases []T
-	if err := json.Unmarshal(data, &cases); err != nil {
-		t.Fatalf("failed to unmarshal testdata: %v", err)
-	}
-	return cases
-}
+type JoinValuesTestCase = types.TestCase[
+	JoinValuesArgType,
+	JoinValuesReturnType,
+]
 
 func TestJoinValues(t *testing.T) {
-	cases := loadTestCases[JoinValuesTestCase](
+	cases := test.LoadTestCases[JoinValuesTestCase](
 		t, "testdata/string_testdata/join_values_testdata.json",
 	)
 	for _, c := range cases {
@@ -69,8 +31,19 @@ func TestJoinValues(t *testing.T) {
 	}
 }
 
+/* ============================== Test ConvertCamelCaseToSenctenceCase ============================== */
+
+type ConvertCamelCaseToSentenceCaseArgType = struct {
+	Input string
+}
+type ConvertCamelCaseToSentenceCaseReturnType = string
+type ConvertCamelCaseToSentenceCaseTestCase = types.TestCase[
+	ConvertCamelCaseToSentenceCaseArgType,
+	ConvertCamelCaseToSentenceCaseReturnType,
+]
+
 func TestConvertCamelCaseToSentenceCase(t *testing.T) {
-	cases := loadTestCases[ConvertCamelCaseToSentenceCaseTestCase](
+	cases := test.LoadTestCases[ConvertCamelCaseToSentenceCaseTestCase](
 		t, "testdata/string_testdata/convert_camel_case_to_sentence_case_testdata.json",
 	)
 	for _, c := range cases {
@@ -79,8 +52,20 @@ func TestConvertCamelCaseToSentenceCase(t *testing.T) {
 	}
 }
 
+/* ============================== Test IsStringIn ============================== */
+
+type IsStringInArgType = struct {
+	S    string
+	Strs []string
+}
+type IsStringInReturnType = bool
+type IsStringInTestCase = types.TestCase[
+	IsStringInArgType,
+	IsStringInReturnType,
+]
+
 func TestIsStringIn(t *testing.T) {
-	cases := loadTestCases[IsStringInTestCase](
+	cases := test.LoadTestCases[IsStringInTestCase](
 		t, "testdata/string_testdata/is_string_in_testdata.json",
 	)
 	for _, c := range cases {
@@ -89,8 +74,19 @@ func TestIsStringIn(t *testing.T) {
 	}
 }
 
+/* ============================== Test IsEmailString ============================== */
+
+type IsEmailStringArgType = struct {
+	S string
+}
+type IsEmailStringReturnType = bool
+type IsEmailStringTestCase = types.TestCase[
+	IsEmailStringArgType,
+	IsEmailStringReturnType,
+]
+
 func TestIsEmailString(t *testing.T) {
-	cases := loadTestCases[IsEmailStringTestCase](
+	cases := test.LoadTestCases[IsEmailStringTestCase](
 		t, "testdata/string_testdata/is_email_string_testdata.json",
 	)
 	for _, c := range cases {
@@ -99,8 +95,18 @@ func TestIsEmailString(t *testing.T) {
 	}
 }
 
+/* ============================== Test IsAlphaNumberString ============================== */
+type IsAlphaNumberStringArgType = struct {
+	S string
+}
+type IsAlphaNumberStringReturnType = bool
+type IsAlphaNumberStringTestCase = types.TestCase[
+	IsAlphaNumberStringArgType,
+	IsAlphaNumberStringReturnType,
+]
+
 func TestIsAlphaNumberString(t *testing.T) {
-	cases := loadTestCases[IsAlphaNumberStringTestCase](
+	cases := test.LoadTestCases[IsAlphaNumberStringTestCase](
 		t, "testdata/string_testdata/is_alpha_number_string_testdata.json",
 	)
 	for _, c := range cases {

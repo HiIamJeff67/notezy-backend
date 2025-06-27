@@ -17,7 +17,6 @@ func configureAuthRoutes() {
 			"/login",
 			controllers.AuthController.Login,
 		)
-		// only protected the logout route
 		authRoutes.POST(
 			"/logout",
 			middlewares.AuthMiddleware(),

@@ -3,6 +3,7 @@ package services
 import (
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
+	models "notezy-backend/app/models"
 	"notezy-backend/app/models/inputs"
 	"notezy-backend/app/models/repositories"
 )
@@ -21,6 +22,10 @@ var UserSettingService UserSettingServiceInterface = &userSettingService{}
 /* ============================== Services ============================== */
 
 func (s *userSettingService) GetMySetting(reqDto *dtos.GetMySettingReqDto) (*dtos.GetMySettingResDto, *exceptions.Exception) {
+	if err := models.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
 	userSettingRepository := repositories.NewUserSettingRepository(nil)
 
 	userSetting, exception := userSettingRepository.GetOneByUserId(reqDto.UserId)
@@ -36,6 +41,10 @@ func (s *userSettingService) GetMySetting(reqDto *dtos.GetMySettingReqDto) (*dto
 }
 
 func (s *userSettingService) UpdateMySetting(reqDto *dtos.UpdateMySettingReqDto) (*dtos.UpdateMySettingResDto, *exceptions.Exception) {
+	if err := models.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
 	userSettingRepository := repositories.NewUserSettingRepository(nil)
 
 	updatedUserSetting, exception := userSettingRepository.UpdateOneByUserId(reqDto.UserId, inputs.PartialUpdateUserSettingInput{

@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-func LoadTestCases[T any](t *testing.T, filename string) []T {
-	data, err := os.ReadFile(filename)
+func LoadTestCases[T any](t *testing.T, relativePath string) []T {
+	data, err := os.ReadFile(relativePath)
 	if err != nil {
 		t.Fatalf("failed to read testdata: %v", err)
 	}

@@ -11,11 +11,16 @@ import (
 	test "notezy-backend/test"
 )
 
+/* ============================== Test GenerateMigrationFileName ============================== */
+
 type GenerateMigrationFileNameArgType = struct {
 	DBName string
 }
 type GenerateMigrationFileNameReturnType = string
-type GenerateMigrationFileNameTestCase = types.TestCase[GenerateMigrationFileNameArgType, GenerateMigrationFileNameReturnType]
+type GenerateMigrationFileNameTestCase = types.TestCase[
+	GenerateMigrationFileNameArgType,
+	GenerateMigrationFileNameReturnType,
+]
 
 func TestGenerateMigrationFileName(t *testing.T) {
 	cases := test.LoadTestCases[GenerateMigrationFileNameTestCase](
@@ -23,7 +28,7 @@ func TestGenerateMigrationFileName(t *testing.T) {
 	)
 	for _, c := range cases {
 		got := util.GenerateMigrationFileName(c.Args.DBName)
-		// 只驗證開頭是否正確，因為內容是隨機的
+		// only validate the beginning, since the content is randomly generated
 		assert.True(t, regexp.MustCompile("^"+regexp.QuoteMeta(c.Args.DBName)+"_").MatchString(got))
 	}
 }

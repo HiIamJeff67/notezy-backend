@@ -33,6 +33,8 @@ func (c *userAccountController) GetMyAccount(ctx *gin.Context) {
 	var reqDto dtos.GetMyAccountReqDto
 	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
+		exception.Log()
+		exception = exceptions.UserAccount.InternalServerWentWrong(exception)
 		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return
 	}
@@ -40,11 +42,16 @@ func (c *userAccountController) GetMyAccount(ctx *gin.Context) {
 
 	resDto, exception := c.userAccountService.GetMyAccount(&reqDto)
 	if exception != nil {
+		exception.Log()
+		if !exceptions.CompareCommonExceptions(exceptions.UserAccount.InvalidDto(), exception, false) {
+			exception = exceptions.UserAccount.InternalServerWentWrong(exception)
+		}
 		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
+		"message": "success",
 		"data": gin.H{
 			"updatedAt": resDto,
 		},
@@ -56,6 +63,8 @@ func (c *userAccountController) UpdateMyAccount(ctx *gin.Context) {
 	var reqDto dtos.UpdateMyAccountReqDto
 	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
+		exception.Log()
+		exception = exceptions.UserAccount.InternalServerWentWrong(exception)
 		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return
 	}
@@ -68,11 +77,16 @@ func (c *userAccountController) UpdateMyAccount(ctx *gin.Context) {
 
 	resDto, exception := c.userAccountService.UpdateMyAccount(&reqDto)
 	if exception != nil {
+		exception.Log()
+		if !exceptions.CompareCommonExceptions(exceptions.UserAccount.InvalidDto(), exception, false) {
+			exception = exceptions.UserAccount.InternalServerWentWrong(exception)
+		}
 		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
+		"message": "success",
 		"data": gin.H{
 			"updatedAt": resDto,
 		},

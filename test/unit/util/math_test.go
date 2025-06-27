@@ -10,17 +10,16 @@ import (
 	test "notezy-backend/test"
 )
 
+/* ============================== Test GetMinInMap ============================== */
+
 type GetMinInMapArgType = struct {
 	Map map[string]int
 }
 type GetMinInMapReturnType = int
-type GetMinInMapTestCase = types.TestCase[GetMinInMapArgType, GetMinInMapReturnType]
-
-type GetMaxInMapArgType = struct {
-	Map map[string]int
-}
-type GetMaxInMapReturnType = int
-type GetMaxInMapTestCase = types.TestCase[GetMaxInMapArgType, GetMaxInMapReturnType]
+type GetMinInMapTestCase = types.TestCase[
+	GetMinInMapArgType,
+	GetMinInMapReturnType,
+]
 
 func TestGetMinInMap(t *testing.T) {
 	cases := test.LoadTestCases[GetMinInMapTestCase](
@@ -31,6 +30,17 @@ func TestGetMinInMap(t *testing.T) {
 		assert.Equal(t, c.Returns, got)
 	}
 }
+
+/* ============================== Test GetMaxInMap ============================== */
+
+type GetMaxInMapArgType = struct {
+	Map map[string]int
+}
+type GetMaxInMapReturnType = int
+type GetMaxInMapTestCase = types.TestCase[
+	GetMaxInMapArgType,
+	GetMaxInMapReturnType,
+]
 
 func TestGetMaxInMap(t *testing.T) {
 	cases := test.LoadTestCases[GetMaxInMapTestCase](

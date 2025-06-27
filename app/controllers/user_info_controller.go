@@ -33,6 +33,8 @@ func (c *userInfoController) GetMyInfo(ctx *gin.Context) {
 	var reqDto dtos.GetMyInfoReqDto
 	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
+		exception.Log()
+		exception = exceptions.UserInfo.InternalServerWentWrong(exception)
 		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return
 	}
@@ -40,12 +42,17 @@ func (c *userInfoController) GetMyInfo(ctx *gin.Context) {
 
 	resDto, exception := c.userInfoService.GetMyInfo(&reqDto)
 	if exception != nil {
+		exception.Log()
+		if !exceptions.CompareCommonExceptions(exceptions.UserInfo.InvalidDto(), exception, false) {
+			exception = exceptions.UserInfo.InternalServerWentWrong(exception)
+		}
 		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"data": resDto,
+		"message": "success",
+		"data":    resDto,
 	})
 }
 
@@ -54,6 +61,8 @@ func (c *userInfoController) UpdateMyInfo(ctx *gin.Context) {
 	var reqDto dtos.UpdateMyInfoReqDto
 	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
+		exception.Log()
+		exception = exceptions.UserInfo.InternalServerWentWrong(exception)
 		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return
 	}
@@ -66,11 +75,16 @@ func (c *userInfoController) UpdateMyInfo(ctx *gin.Context) {
 
 	resDto, exception := c.userInfoService.UpdateMyInfo(&reqDto)
 	if exception != nil {
+		exception.Log()
+		if !exceptions.CompareCommonExceptions(exceptions.UserInfo.InvalidDto(), exception, false) {
+			exception = exceptions.UserInfo.InternalServerWentWrong(exception)
+		}
 		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"data": resDto,
+		"message": "success",
+		"data":    resDto,
 	})
 }

@@ -1,10 +1,11 @@
 package unit_test_util
 
 import (
-	"notezy-backend/app/util"
-	"notezy-backend/shared/constants"
 	"strconv"
 	"testing"
+
+	util "notezy-backend/app/util"
+	constants "notezy-backend/shared/constants"
 )
 
 func TestGenerateAuthCode(t *testing.T) {

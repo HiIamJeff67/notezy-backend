@@ -131,7 +131,7 @@ func (d *AuthExceptionDomain) LoginBlockedDueToTryingTooManyTimes(blockedUntil t
 		Code:           d.BaseCode + 8,
 		Prefix:         d.Prefix,
 		Reason:         ExceptionReason_LoginBlockedDueToTryingTooManyTimes,
-		Message:        fmt.Sprintf("Blocked the login procedure because user has tried too many time and require to wait until %v", blockedUntil),
+		Message:        fmt.Sprintf("Blocked the login procedure because user has tried too many times and require to wait until %v", blockedUntil),
 		HTTPStatusCode: http.StatusUnauthorized,
 	}
 }

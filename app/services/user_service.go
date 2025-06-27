@@ -4,6 +4,7 @@ import (
 	caches "notezy-backend/app/caches"
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
+	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
@@ -24,6 +25,10 @@ var UserService UserServiceInterface = &userService{}
 /* ============================== Services ============================== */
 
 func (u *userService) GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception) {
+	if err := models.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
 	userDataCache, exception := caches.GetUserDataCache(reqDto.UserId)
 	if exception != nil {
 		return nil, exception
@@ -45,6 +50,10 @@ func (u *userService) GetAllUsers() (*[]schemas.User, *exceptions.Exception) {
 }
 
 func (u *userService) UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Exception) {
+	if err := models.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
 	userRepository := repositories.NewUserRepository(nil)
 
 	updatedUser, exception := userRepository.UpdateOneById(reqDto.UserId, inputs.PartialUpdateUserInput{

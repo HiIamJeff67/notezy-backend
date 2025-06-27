@@ -9,10 +9,10 @@ import (
 )
 
 var AccessToken = NewCookieHandler(
-	shared.ValidCookieName_AccessToken,
-	constants.BaseURL,
-	time.Now().Add(constants.ExpirationTimeOfAccessToken),
-	true,
-	true,
-	http.SameSiteLaxMode,
+	shared.ValidCookieName_AccessToken,                    // name
+	constants.BaseURL,                                     // path
+	time.Now().Add(constants.ExpirationTimeOfAccessToken), // expires
+	true,                 // secure
+	true,                 // httpOnly
+	http.SameSiteLaxMode, // sameSite
 )

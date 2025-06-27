@@ -3,6 +3,7 @@ package services
 import (
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
+	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
 )
@@ -21,6 +22,10 @@ var UserInfoService UserInfoServiceInterface = &userInfoService{}
 /* ============================== Services ============================== */
 
 func (s *userInfoService) GetMyInfo(reqDto *dtos.GetMyInfoReqDto) (*dtos.GetMyInfoResDto, *exceptions.Exception) {
+	if err := models.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
 	userInfoRepository := repositories.NewUserInfoRepository(nil)
 
 	userInfo, exception := userInfoRepository.GetOneByUserId(reqDto.UserId)
@@ -41,6 +46,10 @@ func (s *userInfoService) GetMyInfo(reqDto *dtos.GetMyInfoReqDto) (*dtos.GetMyIn
 }
 
 func (s *userInfoService) UpdateMyInfo(reqDto *dtos.UpdateMyInfoReqDto) (*dtos.UpdateMyInfoResDto, *exceptions.Exception) {
+	if err := models.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
 	userInfoRepository := repositories.NewUserInfoRepository(nil)
 
 	updatedUserInfo, exception := userInfoRepository.UpdateOneByUserId(reqDto.UserId, inputs.PartialUpdateUserInfoInput{

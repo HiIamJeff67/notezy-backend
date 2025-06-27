@@ -11,25 +11,18 @@ import (
 	test "notezy-backend/test"
 )
 
+/* ============================== Test GetLoginBlockedUntilByLoginCount ============================== */
+
 type GetLoginBlockedUntilByLoginCountArgType = struct {
 	LoginCount int32
 }
 type GetLoginBlockedUntilByLoginCountReturnType = struct {
 	ShouldBlock bool
 }
-type GetLoginBlockedUntilByLoginCountTestCase = types.TestCase[GetLoginBlockedUntilByLoginCountArgType, GetLoginBlockedUntilByLoginCountReturnType]
-
-type ShouldBlockLoginArgType = struct {
-	LoginCount int32
-}
-type ShouldBlockLoginReturnType = bool
-type ShouldBlockLoginTestCase = types.TestCase[ShouldBlockLoginArgType, ShouldBlockLoginReturnType]
-
-type GetNextBlockThresholdArgType = struct {
-	LoginCount int32
-}
-type GetNextBlockThresholdReturnType = int32
-type GetNextBlockThresholdTestCase = types.TestCase[GetNextBlockThresholdArgType, GetNextBlockThresholdReturnType]
+type GetLoginBlockedUntilByLoginCountTestCase = types.TestCase[
+	GetLoginBlockedUntilByLoginCountArgType,
+	GetLoginBlockedUntilByLoginCountReturnType,
+]
 
 func TestGetLoginBlockedUntilByLoginCount(t *testing.T) {
 	cases := test.LoadTestCases[GetLoginBlockedUntilByLoginCountTestCase](
@@ -46,6 +39,17 @@ func TestGetLoginBlockedUntilByLoginCount(t *testing.T) {
 	}
 }
 
+/* ============================== Test ShouldBlockLogin ============================== */
+
+type ShouldBlockLoginArgType = struct {
+	LoginCount int32
+}
+type ShouldBlockLoginReturnType = bool
+type ShouldBlockLoginTestCase = types.TestCase[
+	ShouldBlockLoginArgType,
+	ShouldBlockLoginReturnType,
+]
+
 func TestShouldBlockLogin(t *testing.T) {
 	cases := test.LoadTestCases[ShouldBlockLoginTestCase](
 		t, "testdata/get_blocked_time_testdata/should_block_login_testdata.json",
@@ -55,6 +59,17 @@ func TestShouldBlockLogin(t *testing.T) {
 		assert.Equal(t, c.Returns, got)
 	}
 }
+
+/* ============================== Test GetNextBlockThreshold ============================== */
+
+type GetNextBlockThresholdArgType = struct {
+	LoginCount int32
+}
+type GetNextBlockThresholdReturnType = int32
+type GetNextBlockThresholdTestCase = types.TestCase[
+	GetNextBlockThresholdArgType,
+	GetNextBlockThresholdReturnType,
+]
 
 func TestGetNextBlockThreshold(t *testing.T) {
 	cases := test.LoadTestCases[GetNextBlockThresholdTestCase](

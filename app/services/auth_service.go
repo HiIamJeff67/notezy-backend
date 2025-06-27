@@ -57,6 +57,10 @@ func (s *authService) checkPasswordHash(hashedPassword string, password string) 
 /* ============================== Services ============================== */
 
 func (s *authService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Exception) {
+	if err := models.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Auth.InvalidDto().WithError(err)
+	}
+
 	// Start transaction
 	tx := models.NotezyDB.Begin()
 	userRepository := repositories.NewUserRepository(tx)
@@ -277,6 +281,10 @@ func (s *authService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 }
 
 func (s *authService) Logout(reqDto *dtos.LogoutReqDto) (*dtos.LogoutResDto, *exceptions.Exception) {
+	if err := models.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Auth.InvalidDto().WithError(err)
+	}
+
 	userRepository := repositories.NewUserRepository(nil)
 
 	offlineStatus := enums.UserStatus_Offline

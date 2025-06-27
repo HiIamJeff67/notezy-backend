@@ -55,3 +55,15 @@ func (h *CookieHandler) SetCookie(ctx *gin.Context, value string) {
 		Value:    value,
 	})
 }
+
+func (h *CookieHandler) DeleteCookie(ctx *gin.Context) {
+	http.SetCookie(ctx.Writer, &http.Cookie{
+		Name:     h.name.String(),
+		Path:     h.path,
+		Expires:  time.Unix(0, 0), // set to before
+		MaxAge:   -1,              // set to before
+		Secure:   h.secure,
+		HttpOnly: h.httpOnly,
+		SameSite: h.sameSite,
+	})
+}

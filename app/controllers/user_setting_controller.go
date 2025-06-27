@@ -7,6 +7,7 @@ import (
 
 	contexts "notezy-backend/app/contexts"
 	dtos "notezy-backend/app/dtos"
+	"notezy-backend/app/exceptions"
 	services "notezy-backend/app/services"
 )
 
@@ -28,6 +29,8 @@ func (c *userSettingController) GetMySetting(ctx *gin.Context) {
 	var reqDto dtos.GetMySettingReqDto
 	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
+		exception.Log()
+		exception = exceptions.UserSetting.InternalServerWentWrong(exception)
 		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return
 	}
@@ -35,11 +38,16 @@ func (c *userSettingController) GetMySetting(ctx *gin.Context) {
 
 	resDto, exception := c.userSettingService.GetMySetting(&reqDto)
 	if exception != nil {
+		exception.Log()
+		if !exceptions.CompareCommonExceptions(exceptions.UserSetting.InvalidDto(), exception, false) {
+			exception = exceptions.UserSetting.InternalServerWentWrong(exception)
+		}
 		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"data": resDto,
+		"message": "success",
+		"data":    resDto,
 	})
 }

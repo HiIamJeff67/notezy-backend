@@ -1,9 +1,10 @@
 package unit_test_util
 
 import (
-	"notezy-backend/app/util"
 	"regexp"
 	"testing"
+
+	util "notezy-backend/app/util"
 )
 
 func TestGenerateRandomFakeName(t *testing.T) {

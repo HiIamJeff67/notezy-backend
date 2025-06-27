@@ -9,10 +9,10 @@ import (
 )
 
 var RefreshToken = NewCookieHandler(
-	shared.ValidCookieName_RefreshToken,
-	constants.BaseURL,
-	time.Now().Add(constants.ExpirationTimeOfRefreshToken),
-	true,
-	true,
-	http.SameSiteStrictMode,
+	shared.ValidCookieName_RefreshToken,                    // name
+	constants.BaseURL,                                      // path
+	time.Now().Add(constants.ExpirationTimeOfRefreshToken), // expires
+	true,                    // secure
+	true,                    // httpOnly
+	http.SameSiteStrictMode, // sameSite
 )
