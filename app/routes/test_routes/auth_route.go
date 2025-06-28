@@ -1,13 +1,19 @@
-package routes
+package testroutes
 
 import (
-	controllers "notezy-backend/app/controllers"
-	middlewares "notezy-backend/app/middlewares"
-	enums "notezy-backend/app/models/enums"
+	"notezy-backend/app/controllers"
+	"notezy-backend/app/middlewares"
+	"notezy-backend/app/models/enums"
+
+	"github.com/gin-gonic/gin"
 )
 
-func configureAuthRoutes() {
-	authRoutes := RouterGroup.Group("/auth")
+func ConfigureTestAuthRoutes(routerGroup *gin.RouterGroup) {
+	if routerGroup == nil {
+		routerGroup = TestRouterGroup
+	}
+
+	authRoutes := routerGroup.Group("/auth")
 	{
 		authRoutes.POST(
 			"/register",

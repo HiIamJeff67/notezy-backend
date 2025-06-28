@@ -1,4 +1,4 @@
-package unit_test_util
+package utilunittest
 
 import (
 	"testing"
@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	util "notezy-backend/app/util"
-	types "notezy-backend/shared/types"
 	test "notezy-backend/test"
 )
 
@@ -16,7 +15,7 @@ type GetMinInMapArgType = struct {
 	Map map[string]int
 }
 type GetMinInMapReturnType = int
-type GetMinInMapTestCase = types.TestCase[
+type GetMinInMapTestCase = test.UnitTestCase[
 	GetMinInMapArgType,
 	GetMinInMapReturnType,
 ]
@@ -37,7 +36,7 @@ type GetMaxInMapArgType = struct {
 	Map map[string]int
 }
 type GetMaxInMapReturnType = int
-type GetMaxInMapTestCase = types.TestCase[
+type GetMaxInMapTestCase = test.UnitTestCase[
 	GetMaxInMapArgType,
 	GetMaxInMapReturnType,
 ]

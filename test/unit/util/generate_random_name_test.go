@@ -1,4 +1,4 @@
-package unit_test_util
+package utilunittest
 
 import (
 	"regexp"

@@ -1,4 +1,4 @@
-package unit_test_util
+package utilunittest
 
 import (
 	"regexp"
@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	util "notezy-backend/app/util"
-	types "notezy-backend/shared/types"
 	test "notezy-backend/test"
 )
 
@@ -17,7 +16,7 @@ type GenerateMigrationFileNameArgType = struct {
 	DBName string
 }
 type GenerateMigrationFileNameReturnType = string
-type GenerateMigrationFileNameTestCase = types.TestCase[
+type GenerateMigrationFileNameTestCase = test.UnitTestCase[
 	GenerateMigrationFileNameArgType,
 	GenerateMigrationFileNameReturnType,
 ]

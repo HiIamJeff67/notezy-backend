@@ -1,4 +1,4 @@
-package unit_test_util
+package utilunittest
 
 import (
 	"testing"
@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	util "notezy-backend/app/util"
-	types "notezy-backend/shared/types"
 	test "notezy-backend/test"
 )
 
@@ -19,7 +18,7 @@ type GetLoginBlockedUntilByLoginCountArgType = struct {
 type GetLoginBlockedUntilByLoginCountReturnType = struct {
 	ShouldBlock bool
 }
-type GetLoginBlockedUntilByLoginCountTestCase = types.TestCase[
+type GetLoginBlockedUntilByLoginCountTestCase = test.UnitTestCase[
 	GetLoginBlockedUntilByLoginCountArgType,
 	GetLoginBlockedUntilByLoginCountReturnType,
 ]
@@ -45,7 +44,7 @@ type ShouldBlockLoginArgType = struct {
 	LoginCount int32
 }
 type ShouldBlockLoginReturnType = bool
-type ShouldBlockLoginTestCase = types.TestCase[
+type ShouldBlockLoginTestCase = test.UnitTestCase[
 	ShouldBlockLoginArgType,
 	ShouldBlockLoginReturnType,
 ]
@@ -66,7 +65,7 @@ type GetNextBlockThresholdArgType = struct {
 	LoginCount int32
 }
 type GetNextBlockThresholdReturnType = int32
-type GetNextBlockThresholdTestCase = types.TestCase[
+type GetNextBlockThresholdTestCase = test.UnitTestCase[
 	GetNextBlockThresholdArgType,
 	GetNextBlockThresholdReturnType,
 ]

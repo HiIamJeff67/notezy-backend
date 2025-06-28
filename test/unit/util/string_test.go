@@ -1,4 +1,4 @@
-package unit_test_util
+package utilunittest
 
 import (
 	"testing"
@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	util "notezy-backend/app/util"
-	types "notezy-backend/shared/types"
 	test "notezy-backend/test"
 )
 
@@ -16,7 +15,7 @@ type JoinValuesArgType = struct {
 	Values []string
 }
 type JoinValuesReturnType = string
-type JoinValuesTestCase = types.TestCase[
+type JoinValuesTestCase = test.UnitTestCase[
 	JoinValuesArgType,
 	JoinValuesReturnType,
 ]
@@ -37,7 +36,7 @@ type ConvertCamelCaseToSentenceCaseArgType = struct {
 	Input string
 }
 type ConvertCamelCaseToSentenceCaseReturnType = string
-type ConvertCamelCaseToSentenceCaseTestCase = types.TestCase[
+type ConvertCamelCaseToSentenceCaseTestCase = test.UnitTestCase[
 	ConvertCamelCaseToSentenceCaseArgType,
 	ConvertCamelCaseToSentenceCaseReturnType,
 ]
@@ -59,7 +58,7 @@ type IsStringInArgType = struct {
 	Strs []string
 }
 type IsStringInReturnType = bool
-type IsStringInTestCase = types.TestCase[
+type IsStringInTestCase = test.UnitTestCase[
 	IsStringInArgType,
 	IsStringInReturnType,
 ]
@@ -80,7 +79,7 @@ type IsEmailStringArgType = struct {
 	S string
 }
 type IsEmailStringReturnType = bool
-type IsEmailStringTestCase = types.TestCase[
+type IsEmailStringTestCase = test.UnitTestCase[
 	IsEmailStringArgType,
 	IsEmailStringReturnType,
 ]
@@ -100,7 +99,7 @@ type IsAlphaNumberStringArgType = struct {
 	S string
 }
 type IsAlphaNumberStringReturnType = bool
-type IsAlphaNumberStringTestCase = types.TestCase[
+type IsAlphaNumberStringTestCase = test.UnitTestCase[
 	IsAlphaNumberStringArgType,
 	IsAlphaNumberStringReturnType,
 ]

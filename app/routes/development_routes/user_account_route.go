@@ -1,12 +1,12 @@
-package routes
+package developmentroutes
 
 import (
 	"notezy-backend/app/controllers"
 	"notezy-backend/app/middlewares"
 )
 
-func configureUserAccountRoutes() {
-	userAccountRoutes := RouterGroup.Group("/userAccount")
+func configureDevelopmentUserAccountRoutes() {
+	userAccountRoutes := DevelopmentRouterGroup.Group("/userAccount")
 	userAccountRoutes.Use(middlewares.AuthMiddleware())
 	{
 		userAccountRoutes.GET(

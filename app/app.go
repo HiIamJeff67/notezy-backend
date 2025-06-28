@@ -9,7 +9,7 @@ import (
 
 	caches "notezy-backend/app/caches"
 	models "notezy-backend/app/models"
-	routes "notezy-backend/app/routes"
+	developmentroutes "notezy-backend/app/routes/development_routes"
 	shared "notezy-backend/shared"
 )
 
@@ -17,12 +17,12 @@ func StartApplication() {
 	models.NotezyDB = models.ConnectToDatabase(shared.PostgresDatabaseConfig)
 	caches.ConnectToAllRedis()
 
-	routes.Router = gin.Default()
-	routes.ConfigureRoutes()
+	developmentroutes.DevelopmentRouter = gin.Default()
+	developmentroutes.ConfigureDevelopmentRoutes()
 
 	addr := shared.GinAddr
 
-	err := endless.ListenAndServe(addr, routes.Router)
+	err := endless.ListenAndServe(addr, developmentroutes.DevelopmentRouter)
 	if err != nil {
 		fmt.Println("Failed to connect to the server")
 	}
