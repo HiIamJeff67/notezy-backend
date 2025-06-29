@@ -35,7 +35,11 @@ func (c *userAccountController) GetMyAccount(ctx *gin.Context) {
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.UserAccount.InternalServerWentWrong(exception)
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 	reqDto.UserId = *userId
@@ -46,15 +50,18 @@ func (c *userAccountController) GetMyAccount(ctx *gin.Context) {
 		if !exceptions.CompareCommonExceptions(exceptions.UserAccount.InvalidDto(), exception, false) {
 			exception = exceptions.UserAccount.InternalServerWentWrong(exception)
 		}
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "success",
-		"data": gin.H{
-			"updatedAt": resDto,
-		},
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
 	})
 }
 
@@ -65,13 +72,21 @@ func (c *userAccountController) UpdateMyAccount(ctx *gin.Context) {
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.UserAccount.InternalServerWentWrong(exception)
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 	reqDto.UserId = *userId
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		exception := exceptions.UserAccount.InvalidDto().WithError(err)
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 
@@ -81,14 +96,17 @@ func (c *userAccountController) UpdateMyAccount(ctx *gin.Context) {
 		if !exceptions.CompareCommonExceptions(exceptions.UserAccount.InvalidDto(), exception, false) {
 			exception = exceptions.UserAccount.InternalServerWentWrong(exception)
 		}
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "success",
-		"data": gin.H{
-			"updatedAt": resDto,
-		},
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
 	})
 }

@@ -1,5 +1,7 @@
 package test
 
+import "notezy-backend/app/exceptions"
+
 /* ============================== Test Case for Unit Test ============================== */
 
 type UnitTestCase[ArgType any, ReturnType any] struct {
@@ -14,22 +16,22 @@ type CommonCookiesType struct {
 	RefreshToken string
 }
 
-type CommonRequestType struct {
+type CommonRequestType[BodyType any, CookiesType any] struct {
 	Header struct {
-		UserAgent string
+		UserAgent *string
 	}
-	Body    any
-	Cookies CommonCookiesType
+	Body    BodyType
+	Cookies *CookiesType
 }
 
-type CommonResponseType struct {
+type CommonResponseType[DataType any, CookiesType any] struct {
 	HTTPStatusCode int
-	Result         *struct {
-		Message string
-		Data    any
+	Result         struct {
+		Success   bool                  `json:"success"`
+		Data      *DataType             `json:"data"`
+		Exception *exceptions.Exception `json:"exception"`
 	}
-	Exception any
-	Cookies   CommonCookiesType
+	Cookies *CookiesType
 }
 
 type E2ETestCase[RequestType any, ResponseType any] struct {

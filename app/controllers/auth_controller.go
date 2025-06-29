@@ -40,7 +40,11 @@ func (c *authController) Register(ctx *gin.Context) {
 	reqDto.UserAgent = ctx.GetHeader("User-Agent")
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 
@@ -50,7 +54,11 @@ func (c *authController) Register(ctx *gin.Context) {
 		if !exceptions.CompareCommonExceptions(exceptions.Auth.InvalidDto(), exception, false) {
 			exception = exceptions.Auth.InternalServerWentWrong(exception)
 		}
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 
@@ -58,11 +66,12 @@ func (c *authController) Register(ctx *gin.Context) {
 	cookies.RefreshToken.SetCookie(ctx, resDto.RefreshToken)
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "success",
+		"success": true,
 		"data": gin.H{ // make sure we don't response with the refresh token
 			"accessToken": resDto.AccessToken,
 			"createdAt":   resDto.CreatedAt,
 		},
+		"exception": nil,
 	})
 }
 
@@ -71,7 +80,11 @@ func (c *authController) Login(ctx *gin.Context) {
 	reqDto.UserAgent = ctx.GetHeader("User-Agent")
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 
@@ -81,13 +94,18 @@ func (c *authController) Login(ctx *gin.Context) {
 		if !exceptions.CompareCommonExceptions(exceptions.Auth.InvalidDto(), exception, false) {
 			exception = exceptions.Auth.InternalServerWentWrong(exception)
 		}
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "success",
-		"data":    resDto,
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
 	})
 }
 
@@ -98,7 +116,11 @@ func (c *authController) Logout(ctx *gin.Context) {
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.Auth.InternalServerWentWrong(exception)
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 	reqDto.UserId = *userId
@@ -109,13 +131,18 @@ func (c *authController) Logout(ctx *gin.Context) {
 		if !exceptions.CompareCommonExceptions(exceptions.Auth.InvalidDto(), exception, false) {
 			exception = exceptions.Auth.InternalServerWentWrong(exception)
 		}
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "success",
-		"data":    resDto,
+		"success":   true,
+		"data":      resDto,
+		"exceptoin": nil,
 	})
 }
 
@@ -124,7 +151,11 @@ func (c *authController) SendAuthCode(ctx *gin.Context) {
 	reqDto.UserAgent = ctx.GetHeader("User-Agent")
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 
@@ -134,13 +165,18 @@ func (c *authController) SendAuthCode(ctx *gin.Context) {
 		if !exceptions.CompareCommonExceptions(exceptions.Auth.InvalidDto(), exception, false) {
 			exception = exceptions.Auth.InternalServerWentWrong(exception)
 		}
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "success",
-		"data":    resDto,
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
 	})
 }
 
@@ -151,13 +187,21 @@ func (c *authController) ValidateEmail(ctx *gin.Context) {
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.Auth.InternalServerWentWrong(exception)
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 	reqDto.UserId = *userId
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 
@@ -167,13 +211,18 @@ func (c *authController) ValidateEmail(ctx *gin.Context) {
 		if !exceptions.CompareCommonExceptions(exceptions.Auth.InvalidDto(), exception, false) {
 			exception = exceptions.Auth.InternalServerWentWrong(exception)
 		}
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "success",
-		"data":    resDto,
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
 	})
 }
 
@@ -184,13 +233,21 @@ func (c *authController) ResetEmail(ctx *gin.Context) {
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.Auth.InternalServerWentWrong(exception)
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 	reqDto.UserId = *userId
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 
@@ -200,13 +257,18 @@ func (c *authController) ResetEmail(ctx *gin.Context) {
 		if !exceptions.CompareCommonExceptions(exceptions.Auth.InvalidDto(), exception, false) {
 			exception = exceptions.Auth.InternalServerWentWrong(exception)
 		}
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "success",
-		"data":    resDto,
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
 	})
 }
 
@@ -216,7 +278,11 @@ func (c *authController) ForgetPassword(ctx *gin.Context) {
 	reqDto.UserAgent = ctx.GetHeader("User-Agent")
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 
@@ -226,13 +292,18 @@ func (c *authController) ForgetPassword(ctx *gin.Context) {
 		if !exceptions.CompareCommonExceptions(exceptions.Auth.InvalidDto(), exception, false) {
 			exception = exceptions.Auth.InternalServerWentWrong(exception)
 		}
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "success",
-		"data":    resDto,
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
 	})
 }
 
@@ -243,13 +314,21 @@ func (c *authController) DeleteMe(ctx *gin.Context) {
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.Auth.InternalServerWentWrong(exception)
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 	reqDto.UserId = *userId
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 
@@ -259,12 +338,17 @@ func (c *authController) DeleteMe(ctx *gin.Context) {
 		if !exceptions.CompareCommonExceptions(exceptions.Auth.InvalidDto(), exception, false) {
 			exception = exceptions.Auth.InternalServerWentWrong(exception)
 		}
-		ctx.JSON(exception.HTTPStatusCode, exception.GetGinH())
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "success",
-		"data":    resDto,
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
 	})
 }

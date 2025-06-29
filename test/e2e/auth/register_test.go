@@ -7,32 +7,39 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
 	testroutes "notezy-backend/app/routes/test_routes"
+	test "notezy-backend/test"
 )
 
-type RegisterReqType = struct {
-	Header struct {
-		UserAgent string
-	}
-	Body struct {
+type RegisterRequestType = test.CommonRequestType[
+	struct {
 		Name     string `json:"name"`
 		Email    string `json:"email"`
 		Password string `json:"password"`
-	}
-	Cookie *string
-}
-
-type RegisterResType = struct {
-}
+	},
+	test.CommonCookiesType,
+]
+type RegisterResponseType = test.CommonResponseType[
+	struct {
+		AccessToken string    `json:"accessToken"`
+		CreatedAt   time.Time `json:"createdAt"`
+	},
+	test.CommonCookiesType,
+]
+type RegisterE2ETestCase = test.E2ETestCase[
+	RegisterRequestType,
+	RegisterResponseType,
+]
 
 func TestRegisterRoute(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	tempRouterGroup := router.Group("/testRegisterRoute")
-	testroutes.ConfigureTestAuthRoutes(tempRouterGroup)
+	testRouterGroup := router.Group("/testRegisterRoute")
+	testroutes.ConfigureTestAuthRoutes(testRouterGroup)
 
 	// 準備 request body
 	body := map[string]string{
