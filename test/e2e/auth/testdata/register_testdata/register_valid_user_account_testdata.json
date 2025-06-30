@@ -1,0 +1,28 @@
+{
+    "Request": {
+      "Header": {
+        "UserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.1 Safari/537.36"
+      },
+      "Body": {
+        "Name": "JOIFGERFKL349",
+        "Email": "john123@gmail.com",
+        "Password": "jflkSDj988435ut&(*$#@"
+      },
+      "Cookies": null
+    },
+    "Response": {
+      "HTTPStatusCode": 200,
+      "Body": {
+        "Success": true,
+        "Data": {
+          "AccessToken": "mocked-access-token",
+          "CreatedAt": "2024-06-29T12:00:00Z"
+        },
+        "Exception": null
+      },
+      "Cookies": {
+        "AccessToken": "mocked-access-token",
+        "RefreshToken": "mocked-refresh-token"
+      }
+    }
+}

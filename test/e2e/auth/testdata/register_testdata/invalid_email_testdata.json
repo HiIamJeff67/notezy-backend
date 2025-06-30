@@ -1,0 +1,25 @@
+{
+    "Request": {
+      "Header": {
+        "UserAgent": "Mozilla/5.0 (X11; Linux x86_64) Gecko/20100101 Firefox/115.0"
+      },
+      "Body": {
+        "Name": "testAccount123",
+        "Email": "invalidemail.com",
+        "Password": "Test123!"
+      },
+      "Cookies": null
+    },
+    "Response": {
+      "HTTPStatusCode": 408,
+      "Body": {
+        "Success": false,
+        "Data": null,
+        "Exception": null
+      },
+      "Cookies": {
+        "AccessToken": "mocked-access-token",
+        "RefreshToken": "mocked-refresh-token"
+      }
+    }
+}

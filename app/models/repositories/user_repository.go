@@ -20,8 +20,8 @@ type UserRepository interface {
 	GetOneByName(name string) (*schemas.User, *exceptions.Exception)
 	GetOneByEmail(email string) (*schemas.User, *exceptions.Exception)
 	GetAll() (*[]schemas.User, *exceptions.Exception)
-	CreateOne(input inputs.CreateUserInput) *exceptions.Exception
-	UpdateOneById(id uuid.UUID, input inputs.UpdateUserInput) (*schemas.User, *exceptions.Exception)
+	CreateOne(input inputs.CreateUserInput) (*uuid.UUID, *exceptions.Exception)
+	UpdateOneById(id uuid.UUID, input inputs.PartialUpdateUserInput) (*schemas.User, *exceptions.Exception)
 	DeleteOneById(id uuid.UUID, input inputs.DeleteUserInput) *exceptions.Exception
 }
 
@@ -29,7 +29,7 @@ type userRepository struct {
 	db *gorm.DB
 }
 
-func NewUserRepository(db *gorm.DB) *userRepository {
+func NewUserRepository(db *gorm.DB) UserRepository {
 	if db == nil {
 		db = models.NotezyDB
 	}

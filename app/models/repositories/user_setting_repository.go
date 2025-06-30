@@ -25,7 +25,7 @@ type userSettingRepository struct {
 	db *gorm.DB
 }
 
-func NewUserSettingRepository(db *gorm.DB) *userSettingRepository {
+func NewUserSettingRepository(db *gorm.DB) UserSettingRepository {
 	if db == nil {
 		db = models.NotezyDB
 	}

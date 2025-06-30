@@ -9,7 +9,7 @@ import (
 	test "notezy-backend/test"
 )
 
-/* ============================== Test GetMinInMap ============================== */
+/* ============================== Test GetMinInMap() ============================== */
 
 type GetMinInMapArgType = struct {
 	Map map[string]int
@@ -30,7 +30,7 @@ func TestGetMinInMap(t *testing.T) {
 	}
 }
 
-/* ============================== Test GetMaxInMap ============================== */
+/* ============================== Test GetMaxInMap() ============================== */
 
 type GetMaxInMapArgType = struct {
 	Map map[string]int

@@ -28,7 +28,7 @@ type themeRepository struct {
 	db *gorm.DB
 }
 
-func NewThemeRepository(db *gorm.DB) *themeRepository {
+func NewThemeRepository(db *gorm.DB) ThemeRepository {
 	if db == nil {
 		db = models.NotezyDB
 	}

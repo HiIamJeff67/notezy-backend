@@ -25,7 +25,7 @@ type userInfoRepository struct {
 	db *gorm.DB
 }
 
-func NewUserInfoRepository(db *gorm.DB) *userInfoRepository {
+func NewUserInfoRepository(db *gorm.DB) UserInfoRepository {
 	if db == nil {
 		db = models.NotezyDB
 	}

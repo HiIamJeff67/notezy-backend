@@ -10,7 +10,7 @@ import (
 	test "notezy-backend/test"
 )
 
-/* ============================== Test GetLoginBlockedUntilByLoginCount ============================== */
+/* ============================== Test GetLoginBlockedUntilByLoginCount() ============================== */
 
 type GetLoginBlockedUntilByLoginCountArgType = struct {
 	LoginCount int32
@@ -38,7 +38,7 @@ func TestGetLoginBlockedUntilByLoginCount(t *testing.T) {
 	}
 }
 
-/* ============================== Test ShouldBlockLogin ============================== */
+/* ============================== Test ShouldBlockLogin() ============================== */
 
 type ShouldBlockLoginArgType = struct {
 	LoginCount int32
@@ -59,7 +59,7 @@ func TestShouldBlockLogin(t *testing.T) {
 	}
 }
 
-/* ============================== Test GetNextBlockThreshold ============================== */
+/* ============================== Test GetNextBlockThreshold() ============================== */
 
 type GetNextBlockThresholdArgType = struct {
 	LoginCount int32

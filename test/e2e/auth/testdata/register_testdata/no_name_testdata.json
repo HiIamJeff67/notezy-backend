@@ -1,0 +1,25 @@
+{
+    "Request": {
+      "Header": {
+        "UserAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
+      },
+      "Body": {
+        "Name": "",
+        "Email": "noname@example.com",
+        "Password": "Test123!"
+      },
+      "Cookies": null
+    },
+    "Response": {
+      "HTTPStatusCode": 408,
+      "Body": {
+        "Success": false,
+        "Data": null,
+        "Exception": null
+      },
+      "Cookies": {
+        "AccessToken": "mocked-access-token",
+        "RefreshToken": "mocked-refresh-token"
+      }
+    }
+}

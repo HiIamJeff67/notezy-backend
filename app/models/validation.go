@@ -15,13 +15,14 @@ var Validator = validator.New()
 func RegisterUserModelFieldsValidators(validate *validator.Validate) {
 	validate.RegisterValidation("isstrongpassword", func(fl validator.FieldLevel) bool {
 		password := fl.Field().String()
-		if len(password) < 8 || len(password) > 32 {
+		if len(password) < 8 {
 			return false
 		}
-		hasLetter := regexp.MustCompile(`[A-Za-z]`).MatchString(password)
+		hasUpperCaseLetter := regexp.MustCompile(`[A-Z]`).MatchString(password)
+		hasLowerCaseLetter := regexp.MustCompile(`[a-z]`).MatchString(password)
 		hasDigit := regexp.MustCompile(`\d`).MatchString(password)
 		hasSpecialCharacter := regexp.MustCompile(`[^\w\s]`).MatchString(password)
-		return hasLetter && hasDigit && hasSpecialCharacter
+		return hasUpperCaseLetter && hasLowerCaseLetter && hasDigit && hasSpecialCharacter
 	})
 }
 

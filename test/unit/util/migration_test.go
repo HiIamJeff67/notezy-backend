@@ -10,7 +10,7 @@ import (
 	test "notezy-backend/test"
 )
 
-/* ============================== Test GenerateMigrationFileName ============================== */
+/* ============================== Test GenerateMigrationFileName() ============================== */
 
 type GenerateMigrationFileNameArgType = struct {
 	DBName string

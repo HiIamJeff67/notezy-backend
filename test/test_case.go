@@ -26,7 +26,7 @@ type CommonRequestType[BodyType any, CookiesType any] struct {
 
 type CommonResponseType[DataType any, CookiesType any] struct {
 	HTTPStatusCode int
-	Result         struct {
+	Body           struct {
 		Success   bool                  `json:"success"`
 		Data      *DataType             `json:"data"`
 		Exception *exceptions.Exception `json:"exception"`

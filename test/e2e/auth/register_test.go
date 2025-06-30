@@ -11,9 +11,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	testroutes "notezy-backend/app/routes/test_routes"
+	"notezy-backend/app/util"
 	test "notezy-backend/test"
 )
+
+/* ============================== Test Case Type ============================== */
 
 type RegisterRequestType = test.CommonRequestType[
 	struct {
@@ -35,34 +37,86 @@ type RegisterE2ETestCase = test.E2ETestCase[
 	RegisterResponseType,
 ]
 
-func TestRegisterRoute(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	testRouterGroup := router.Group("/testRegisterRoute")
-	testroutes.ConfigureTestAuthRoutes(testRouterGroup)
+/* ============================== Test Data Path & Some Constants ============================== */
 
-	// 準備 request body
-	body := map[string]string{
-		"email":    "test@example.com",
-		"password": "test123!",
+const (
+	testdataPath   = "testdata/register_testdata/"
+	routeNamespace = "/testRegisterRoute"
+	registerRoute  = routeNamespace + "/auth/register"
+)
+
+/* ============================== Interface & Instance ============================== */
+
+type RegisterE2ETesterInterface interface {
+	TestRegisterValidTestAccount(t *testing.T)
+}
+
+type registerE2ETester struct {
+	router *gin.Engine
+}
+
+func NewRegisterE2ETester(router *gin.Engine) RegisterE2ETesterInterface {
+	if router == nil {
+		return nil
 	}
-	jsonBody, _ := json.Marshal(body)
+	return &registerE2ETester{
+		router: router,
+	}
+}
 
-	// 建立 request
-	req, _ := http.NewRequest("POST", "/testRegisterRoute/auth/register", bytes.NewBuffer(jsonBody))
+/* ============================== Test Procedures ============================== */
+
+func (et *registerE2ETester) TestRegisterValidTestAccount(t *testing.T) {
+	if et.router == nil {
+		return
+	}
+
+	testCase := test.LoadTestCase[RegisterE2ETestCase](
+		t, testdataPath+"valid_test_account_testdata.json",
+	)
+
+	jsonBody, _ := json.Marshal(testCase.Request.Body)
+	req, err := http.NewRequest(
+		"POST",
+		registerRoute,
+		bytes.NewBuffer(jsonBody),
+	)
+	if err != nil {
+		t.Errorf("failed to marshal json body, maybe something went wrong in testdata")
+	}
+
 	req.Header.Set("Content-Type", "application/json")
+	if ua := testCase.Request.Header.UserAgent; ua != nil {
+		req.Header.Set("User-Agent", *ua)
+	}
 
-	// 建立 recorder
 	w := httptest.NewRecorder()
+	et.router.ServeHTTP(w, req)
 
-	// 執行
-	router.ServeHTTP(w, req)
+	// check status code
+	if w.Code != testCase.Response.HTTPStatusCode {
+		t.Errorf("expected status %d, got %d, body: %s", testCase.Response.HTTPStatusCode, w.Code, w.Body.String())
+	}
 
-	// 驗證
-	if w.Code != http.StatusOK {
-		t.Fatalf("unexpected status: %d, body: %s", w.Code, w.Body.String())
+	var res RegisterResponseType
+	if err := json.Unmarshal(w.Body.Bytes(), &res.Body); err != nil {
+		t.Errorf("failed to unmarshal response body: %v, body: %s", err, w.Body.String())
 	}
-	if !strings.Contains(w.Body.String(), "success") {
-		t.Errorf("unexpected response body: %s", w.Body.String())
+
+	if res.Body.Data == nil {
+		t.Errorf("response data does not exist")
 	}
+
+	if res.Body.Data != nil {
+		if !res.Body.Success {
+			t.Errorf("expected body/success to be true, got false")
+		}
+		if len(strings.ReplaceAll(res.Body.Data.AccessToken, " ", "")) > 0 {
+			t.Errorf("expected accessToken %s, got %s", testCase.Response.Body.Data.AccessToken, res.Body.Data.AccessToken)
+		}
+		if !util.IsTimeWithinDelta(res.Body.Data.CreatedAt, testCase.Response.Body.Data.CreatedAt, 10*time.Second) {
+			t.Errorf("expected createdAt %v (within tolerable time duration of %v), got %v", testCase.Response.Body.Data.CreatedAt, 10*time.Second, res.Body.Data.CreatedAt)
+		}
+	}
+
 }

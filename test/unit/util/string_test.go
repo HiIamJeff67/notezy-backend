@@ -9,7 +9,7 @@ import (
 	test "notezy-backend/test"
 )
 
-/* ============================== Test JoinValues ============================== */
+/* ============================== Test JoinValues() ============================== */
 
 type JoinValuesArgType = struct {
 	Values []string
@@ -30,7 +30,7 @@ func TestJoinValues(t *testing.T) {
 	}
 }
 
-/* ============================== Test ConvertCamelCaseToSenctenceCase ============================== */
+/* ============================== Test ConvertCamelCaseToSenctenceCase() ============================== */
 
 type ConvertCamelCaseToSentenceCaseArgType = struct {
 	Input string
@@ -51,7 +51,7 @@ func TestConvertCamelCaseToSentenceCase(t *testing.T) {
 	}
 }
 
-/* ============================== Test IsStringIn ============================== */
+/* ============================== Test IsStringIn() ============================== */
 
 type IsStringInArgType = struct {
 	S    string
@@ -73,7 +73,7 @@ func TestIsStringIn(t *testing.T) {
 	}
 }
 
-/* ============================== Test IsEmailString ============================== */
+/* ============================== Test IsEmailString() ============================== */
 
 type IsEmailStringArgType = struct {
 	S string
@@ -94,7 +94,7 @@ func TestIsEmailString(t *testing.T) {
 	}
 }
 
-/* ============================== Test IsAlphaNumberString ============================== */
+/* ============================== Test IsAlphaNumberString() ============================== */
 type IsAlphaNumberStringArgType = struct {
 	S string
 }

@@ -1,0 +1,28 @@
+{ 
+    "Request": {
+        "Header": {
+            "UserAgent": "Go-http-client/1.1"
+        },
+        "Body": {
+            "Name": "testAccount123",
+            "Email": "test123@example.com",
+            "Password": "Test123!"
+        },
+        "Cookies": null
+    },
+    "Response": {
+        "HTTPStatusCode": 200,
+        "Body": {
+            "Success": true,
+            "Data": {
+                "AccessToken": "mocked-access-token",
+                "CreatedAt": "2024-06-29T12:00:00Z"
+            },
+            "Exception": null
+        },
+        "Cookies": {
+            "AccessToken": "mocked-access-token",
+            "RefreshToken": "mocked-refresh-token"
+        }
+    }
+}

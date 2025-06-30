@@ -7,6 +7,8 @@ import (
 	util "notezy-backend/app/util"
 )
 
+/* ============================== Test GenerateRandomFakeName() ============================== */
+
 func TestGenerateRandomFakeName(t *testing.T) {
 	got := util.GenerateRandomFakeName()
 	// 檢查格式: 字母開頭，結尾為6位數字

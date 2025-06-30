@@ -8,6 +8,8 @@ import (
 	constants "notezy-backend/shared/constants"
 )
 
+/* ============================== Test GenerateAuthCode() ============================== */
+
 func TestGenerateAuthCode(t *testing.T) {
 	code := util.GenerateAuthCode()
 	if len(code) != constants.MaxLengthOfAuthCode {
