@@ -118,5 +118,4 @@ func (et *registerE2ETester) TestRegisterValidTestAccount(t *testing.T) {
 			t.Errorf("expected createdAt %v (within tolerable time duration of %v), got %v", testCase.Response.Body.Data.CreatedAt, 10*time.Second, res.Body.Data.CreatedAt)
 		}
 	}
-
 }
