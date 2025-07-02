@@ -64,20 +64,26 @@ func NewRegisterE2ETester(router *gin.Engine) RegisterE2ETesterInterface {
 	}
 }
 
-/* ============================== Test Procedures ============================== */
+/* ============================== Auxilary Functions ============================== */
 
-func (et *registerE2ETester) TestRegisterValidTestAccount(t *testing.T) {
+func (et *registerE2ETester) getRegisterTestdataAndResponse(
+	t *testing.T,
+	method string,
+	testdataPath string,
+) (*httptest.ResponseRecorder, RegisterE2ETestCase, RegisterResponseType) {
 	if et.router == nil {
-		return
+		var zeroTestCase RegisterE2ETestCase
+		var zeroResponse RegisterResponseType
+		return nil, zeroTestCase, zeroResponse
 	}
 
 	testCase := test.LoadTestCase[RegisterE2ETestCase](
-		t, testdataPath+"valid_test_account_testdata.json",
+		t, testdataPath,
 	)
 
 	jsonBody, _ := json.Marshal(testCase.Request.Body)
 	req, err := http.NewRequest(
-		"POST",
+		method,
 		registerRoute,
 		bytes.NewBuffer(jsonBody),
 	)
@@ -93,29 +99,69 @@ func (et *registerE2ETester) TestRegisterValidTestAccount(t *testing.T) {
 	w := httptest.NewRecorder()
 	et.router.ServeHTTP(w, req)
 
-	// check status code
-	if w.Code != testCase.Response.HTTPStatusCode {
-		t.Errorf("expected status %d, got %d, body: %s", testCase.Response.HTTPStatusCode, w.Code, w.Body.String())
-	}
-
 	var res RegisterResponseType
 	if err := json.Unmarshal(w.Body.Bytes(), &res.Body); err != nil {
 		t.Errorf("failed to unmarshal response body: %v, body: %s", err, w.Body.String())
 	}
 
+	return w, testCase, res
+}
+
+/* ============================== Test Procedures ============================== */
+
+func (et *registerE2ETester) TestRegisterValidTestAccount(t *testing.T) {
+	if et.router == nil {
+		return
+	}
+
+	w, testCase, res := et.getRegisterTestdataAndResponse(
+		t, "POST", testdataPath+"valid_test_account_testdata.json",
+	)
+
+	// check status code
+	if w.Code != testCase.Response.HTTPStatusCode {
+		t.Errorf("expected http status code to be %d, got %d, body: %s", testCase.Response.HTTPStatusCode, w.Code, w.Body.String())
+	}
+
+	// check the body
+	if err := json.Unmarshal(w.Body.Bytes(), &res.Body); err != nil {
+		t.Errorf("failed to unmarshal response body: %v, body: %s", err, w.Body.String())
+	}
+
+	if !res.Body.Success {
+		t.Errorf("expected body.success to be true, got false")
+	}
+
 	if res.Body.Data == nil {
 		t.Errorf("response data does not exist")
 	}
-
-	if res.Body.Data != nil {
-		if !res.Body.Success {
-			t.Errorf("expected body/success to be true, got false")
-		}
-		if len(strings.ReplaceAll(res.Body.Data.AccessToken, " ", "")) > 0 {
-			t.Errorf("expected accessToken %s, got %s", testCase.Response.Body.Data.AccessToken, res.Body.Data.AccessToken)
-		}
-		if !util.IsTimeWithinDelta(res.Body.Data.CreatedAt, testCase.Response.Body.Data.CreatedAt, 10*time.Second) {
-			t.Errorf("expected createdAt %v (within tolerable time duration of %v), got %v", testCase.Response.Body.Data.CreatedAt, 10*time.Second, res.Body.Data.CreatedAt)
-		}
+	if len(strings.ReplaceAll(res.Body.Data.AccessToken, " ", "")) > 0 {
+		t.Errorf("expected body.data.accessToken to be %s, got %s", testCase.Response.Body.Data.AccessToken, res.Body.Data.AccessToken)
 	}
+	if !util.IsTimeWithinDelta(res.Body.Data.CreatedAt, testCase.Response.Body.Data.CreatedAt, 10*time.Second) {
+		t.Errorf("expected body.data.createdAt to be %v (within tolerable time duration of %v), got %v", testCase.Response.Body.Data.CreatedAt, 10*time.Second, res.Body.Data.CreatedAt)
+	}
+
+	if res.Body.Exception != nil {
+		t.Errorf("expected body.exception to be nil, got not %v", res.Body.Exception)
+	}
+
+	cookies := w.Result().Cookies()
+	cookieMap := make(map[string]string)
+	for _, c := range cookies {
+		cookieMap[c.Name] = c.Value
+	}
+	// check the accessToken in cookies
+	if _, ok := cookieMap["accessToken"]; !ok {
+		t.Errorf("expected cookie.accessToken to be set")
+	}
+
+	// check the refreshToken in cookies
+	if _, ok := cookieMap["refreshToken"]; !ok {
+		t.Errorf("expected cookie.refreshToken to be set")
+	}
+}
+
+func (et *registerE2ETester) TestRegisterValidUserAccount(t *testing.T) {
+
 }
