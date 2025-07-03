@@ -3,48 +3,56 @@ package developmentroutes
 import (
 	controllers "notezy-backend/app/controllers"
 	middlewares "notezy-backend/app/middlewares"
+	models "notezy-backend/app/models"
 	enums "notezy-backend/app/models/enums"
+	services "notezy-backend/app/services"
 )
 
 func configureDevelopmentAuthRoutes() {
+	authController := controllers.NewAuthController(
+		services.NewAuthService(
+			models.NotezyDB,
+		),
+	)
+
 	authRoutes := DevelopmentRouterGroup.Group("/auth")
 	{
 		authRoutes.POST(
 			"/register",
-			controllers.AuthController.Register,
+			authController.Register,
 		)
 		authRoutes.POST(
 			"/login",
-			controllers.AuthController.Login,
+			authController.Login,
 		)
 		authRoutes.POST(
 			"/logout",
 			middlewares.AuthMiddleware(),
-			controllers.AuthController.Logout,
+			authController.Logout,
 		)
 		authRoutes.GET(
 			"/sendAuthCode",
-			controllers.AuthController.SendAuthCode,
+			authController.SendAuthCode,
 		)
 		authRoutes.PUT(
 			"/validateEmail",
 			middlewares.AuthMiddleware(),
-			controllers.AuthController.ValidateEmail,
+			authController.ValidateEmail,
 		)
 		authRoutes.PUT(
 			"/resetEmail",
 			middlewares.AuthMiddleware(),
 			middlewares.UserRoleMiddleware(enums.UserRole_Normal),
-			controllers.AuthController.ResetEmail,
+			authController.ResetEmail,
 		)
 		authRoutes.PUT(
 			"/forgetPassword",
-			controllers.AuthController.ForgetPassword,
+			authController.ForgetPassword,
 		)
 		authRoutes.DELETE(
 			"/deleteMe",
 			middlewares.AuthMiddleware(),
-			controllers.AuthController.DeleteMe,
+			authController.DeleteMe,
 		)
 	}
 }

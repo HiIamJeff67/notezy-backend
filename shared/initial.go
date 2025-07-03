@@ -6,7 +6,7 @@ type DatabaseConfig struct {
 	User     string
 	Password string
 	DBName   string
-	Port     string
+	Port     string // the port inside the container, so please leave this as 5432 for PostgreSQL
 }
 
 var (
@@ -15,7 +15,7 @@ var (
 		User:     GetEnv("DB_USER", "master"),
 		Password: GetEnv("DB_PASSWORD", ""),
 		DBName:   GetEnv("DB_NAME", "notezy-db"),
-		Port:     GetEnv("DOCKER_DB_PORT", "5432"), // we should use the port hosted by docker
+		Port:     GetEnv("DOCKER_DB_PORT", "5432"),
 	}
 )
 

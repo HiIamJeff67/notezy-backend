@@ -2,4 +2,5 @@
 *.temp
 temp/
 backup-codes-thenotezy.*
-general_designs/
+docs/general_designs/
+Makefile

@@ -9,7 +9,7 @@ const (
 	testTargetPath = "notezy-backend/app/util/"
 )
 
-func TestObjectInParallel(t *testing.T) {
+func TestFeatureInParallel(t *testing.T) {
 	t.Run("Unit-Test---Util", func(t *testing.T) { // feature level
 		t.Run(fmt.Sprintf("Test-Generate-Auth-Code-(%s):", testTargetPath+"generate_auth_code.go"), func(t *testing.T) { // spec level
 			t.Run("Test-GenerateAuthCode()", func(t *testing.T) { // subspec level

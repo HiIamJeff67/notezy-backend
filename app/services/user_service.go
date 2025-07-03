@@ -8,6 +8,8 @@ import (
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
+
+	"gorm.io/gorm"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -18,13 +20,19 @@ type UserServiceInterface interface {
 	UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Exception)
 }
 
-type userService struct{}
+type UserService struct {
+	db *gorm.DB
+}
 
-var UserService UserServiceInterface = &userService{}
+func NewUserService(db *gorm.DB) UserServiceInterface {
+	return &UserService{
+		db: db,
+	}
+}
 
 /* ============================== Services ============================== */
 
-func (u *userService) GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception) {
+func (u *UserService) GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -38,7 +46,7 @@ func (u *userService) GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *excep
 }
 
 // for temporary use
-func (u *userService) GetAllUsers() (*[]schemas.User, *exceptions.Exception) {
+func (s *UserService) GetAllUsers() (*[]schemas.User, *exceptions.Exception) {
 	userRepository := repositories.NewUserRepository(nil)
 
 	users, exception := userRepository.GetAll()
@@ -49,12 +57,12 @@ func (u *userService) GetAllUsers() (*[]schemas.User, *exceptions.Exception) {
 	return users, nil
 }
 
-func (u *userService) UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Exception) {
+func (s *UserService) UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	userRepository := repositories.NewUserRepository(nil)
+	userRepository := repositories.NewUserRepository(s.db)
 
 	updatedUser, exception := userRepository.UpdateOneById(reqDto.UserId, inputs.PartialUpdateUserInput{
 		Values: inputs.UpdateUserInput{

@@ -18,18 +18,20 @@ type UserInfoControllerInterface interface {
 	UpdateMyInfo(ctx *gin.Context)
 }
 
-type userInfoController struct {
+type UserInfoController struct {
 	userInfoService services.UserInfoServiceInterface
 }
 
-var UserInfoController UserInfoControllerInterface = &userInfoController{
-	userInfoService: services.UserInfoService,
+func NewUserInfoController(service services.UserInfoServiceInterface) UserInfoControllerInterface {
+	return &UserInfoController{
+		userInfoService: service,
+	}
 }
 
 /* ============================== Controllers ============================== */
 
 // with AuthMiddleware()
-func (c *userInfoController) GetMyInfo(ctx *gin.Context) {
+func (c *UserInfoController) GetMyInfo(ctx *gin.Context) {
 	var reqDto dtos.GetMyInfoReqDto
 	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
@@ -66,7 +68,7 @@ func (c *userInfoController) GetMyInfo(ctx *gin.Context) {
 }
 
 // with AuthMiddleware()
-func (c *userInfoController) UpdateMyInfo(ctx *gin.Context) {
+func (c *UserInfoController) UpdateMyInfo(ctx *gin.Context) {
 	var reqDto dtos.UpdateMyInfoReqDto
 	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {

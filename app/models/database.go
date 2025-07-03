@@ -15,14 +15,12 @@ import (
 )
 
 var (
+	// the main database instance of the application (we use a different one for e2e testing, etc.)
 	NotezyDB *gorm.DB
+
 	// maintain the static information about the database instance and its config
-	DatabaseInstanceToConfig = map[*gorm.DB]shared.DatabaseConfig{
-		NotezyDB: shared.PostgresDatabaseConfig,
-	}
-	DatabaseNameToInstance = map[string]*gorm.DB{
-		"notezy-db": NotezyDB,
-	}
+	DatabaseInstanceToConfig = map[*gorm.DB]shared.DatabaseConfig{}
+	DatabaseNameToInstance   = map[string]*gorm.DB{}
 )
 
 func ConnectToDatabase(config shared.DatabaseConfig) *gorm.DB {

@@ -3,19 +3,27 @@ package developmentroutes
 import (
 	"notezy-backend/app/controllers"
 	"notezy-backend/app/middlewares"
+	models "notezy-backend/app/models"
+	"notezy-backend/app/services"
 )
 
 func configureDevelopmentUserInfoRoutes() {
+	userInfoController := controllers.NewUserInfoController(
+		services.NewUserInfoService(
+			models.NotezyDB,
+		),
+	)
+
 	userInfoRoutes := DevelopmentRouterGroup.Group("/userInfo")
 	userInfoRoutes.Use(middlewares.AuthMiddleware())
 	{
 		userInfoRoutes.GET(
 			"/getMyInfo",
-			controllers.UserInfoController.GetMyInfo,
+			userInfoController.GetMyInfo,
 		)
 		userInfoRoutes.PUT(
 			"/updateMyInfo",
-			controllers.UserInfoController.UpdateMyInfo,
+			userInfoController.UpdateMyInfo,
 		)
 	}
 }

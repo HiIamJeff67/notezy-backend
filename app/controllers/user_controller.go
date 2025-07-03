@@ -19,18 +19,20 @@ type UserControllerInterface interface {
 	UpdateMe(ctx *gin.Context)
 }
 
-type userController struct {
+type UserController struct {
 	userService services.UserServiceInterface
 }
 
-var UserController UserControllerInterface = &userController{
-	userService: services.UserService,
+func NewUserController(service services.UserServiceInterface) UserControllerInterface {
+	return &UserController{
+		userService: service,
+	}
 }
 
 /* ============================== Controllers ============================== */
 
 // with AuthMiddleware()
-func (c *userController) GetMe(ctx *gin.Context) {
+func (c *UserController) GetMe(ctx *gin.Context) {
 	var reqDto dtos.GetMeReqDto
 	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
@@ -67,7 +69,7 @@ func (c *userController) GetMe(ctx *gin.Context) {
 }
 
 // with AuthMiddleware()
-func (c *userController) GetAllUsers(ctx *gin.Context) {
+func (c *UserController) GetAllUsers(ctx *gin.Context) {
 	resDto, exception := c.userService.GetAllUsers()
 	if exception != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": exception.Log().Error})
@@ -82,7 +84,7 @@ func (c *userController) GetAllUsers(ctx *gin.Context) {
 }
 
 // with AuthMiddleware()
-func (c *userController) UpdateMe(ctx *gin.Context) {
+func (c *UserController) UpdateMe(ctx *gin.Context) {
 	var reqDto dtos.UpdateMeReqDto
 	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {

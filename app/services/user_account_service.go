@@ -6,6 +6,8 @@ import (
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
+
+	"gorm.io/gorm"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -15,18 +17,24 @@ type UserAccountServiceInterface interface {
 	UpdateMyAccount(reqDto *dtos.UpdateMyAccountReqDto) (*dtos.UpdateMyAccountResDto, *exceptions.Exception)
 }
 
-type userAccountService struct{}
+type UserAccountService struct {
+	db *gorm.DB
+}
 
-var UserAccountService UserAccountServiceInterface = &userAccountService{}
+func NewUserAccountService(db *gorm.DB) UserAccountServiceInterface {
+	return &UserAccountService{
+		db: db,
+	}
+}
 
 /* ============================== Services ============================== */
 
-func (s *userAccountService) GetMyAccount(reqDto *dtos.GetMyAccountReqDto) (*dtos.GetMyAccountResDto, *exceptions.Exception) {
+func (s *UserAccountService) GetMyAccount(reqDto *dtos.GetMyAccountReqDto) (*dtos.GetMyAccountResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	userAccountRepository := repositories.NewUserAccountRepository(nil)
+	userAccountRepository := repositories.NewUserAccountRepository(s.db)
 
 	userAccount, exception := userAccountRepository.GetOneByUserId(reqDto.UserId)
 	if exception != nil {
@@ -41,12 +49,12 @@ func (s *userAccountService) GetMyAccount(reqDto *dtos.GetMyAccountReqDto) (*dto
 	}, nil
 }
 
-func (s *userAccountService) UpdateMyAccount(reqDto *dtos.UpdateMyAccountReqDto) (*dtos.UpdateMyAccountResDto, *exceptions.Exception) {
+func (s *UserAccountService) UpdateMyAccount(reqDto *dtos.UpdateMyAccountReqDto) (*dtos.UpdateMyAccountResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	userAccountRepository := repositories.NewUserAccountRepository(nil)
+	userAccountRepository := repositories.NewUserAccountRepository(s.db)
 
 	updatedUserAccount, exception := userAccountRepository.UpdateOneByUserId(reqDto.UserId, inputs.PartialUpdateUserAccountInput{
 		Values: inputs.UpdateUserAccountInput{

@@ -36,8 +36,8 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     volumes:
-      - .:/app
-      - /app/tmp
+      - .:/notezy-backend
+      - /notezy-backend/tmp
     # entrypoint: ["${ENTRYPOINT_CMD}"]
     environment:
       DB_HOST: ${DB_HOST}
@@ -45,6 +45,11 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
       DB_PORT: ${DOCKER_DB_PORT}
+      TEST_DB_HOST: ${TEST_DB_HOST}
+      TEST_DB_USER: ${TEST_DB_USER}
+      TEST_DB_PASSWORD: ${TEST_DB_PASSWORD}
+      TEST_DB_NAME: ${TEST_DB_NAME}
+      TEST_DB_PORT: ${TEST_DOCKER_DB_PORT}
       GIN_DOMAIN: ${GIN_DOMAIN}
       GIN_PORT: ${GIN_PORT}
       JWT_ACCESS_TOKEN_SECRET_KEY: ${JWT_ACCESS_TOKEN_SECRET_KEY}
@@ -68,3 +73,5 @@ volumes:
   #   nmae: notezy-backend-api-data
   postgres-data:
     name: notezy-backend-postgres-data
+  postgres-test-data:
+    name: notezy-backend-postgres-test-data

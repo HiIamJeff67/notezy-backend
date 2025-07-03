@@ -4,53 +4,61 @@ import (
 	"notezy-backend/app/controllers"
 	"notezy-backend/app/middlewares"
 	"notezy-backend/app/models/enums"
+	"notezy-backend/app/services"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-func ConfigureTestAuthRoutes(routerGroup *gin.RouterGroup) {
+func ConfigureTestAuthRoutes(db *gorm.DB, routerGroup *gin.RouterGroup) {
 	if routerGroup == nil {
 		routerGroup = TestRouterGroup
 	}
+
+	AuthController := controllers.NewAuthController(
+		services.NewAuthService(
+			db,
+		),
+	)
 
 	authRoutes := routerGroup.Group("/auth")
 	{
 		authRoutes.POST(
 			"/register",
-			controllers.AuthController.Register,
+			AuthController.Register,
 		)
 		authRoutes.POST(
 			"/login",
-			controllers.AuthController.Login,
+			AuthController.Login,
 		)
 		authRoutes.POST(
 			"/logout",
 			middlewares.AuthMiddleware(),
-			controllers.AuthController.Logout,
+			AuthController.Logout,
 		)
 		authRoutes.GET(
 			"/sendAuthCode",
-			controllers.AuthController.SendAuthCode,
+			AuthController.SendAuthCode,
 		)
 		authRoutes.PUT(
 			"/validateEmail",
 			middlewares.AuthMiddleware(),
-			controllers.AuthController.ValidateEmail,
+			AuthController.ValidateEmail,
 		)
 		authRoutes.PUT(
 			"/resetEmail",
 			middlewares.AuthMiddleware(),
 			middlewares.UserRoleMiddleware(enums.UserRole_Normal),
-			controllers.AuthController.ResetEmail,
+			AuthController.ResetEmail,
 		)
 		authRoutes.PUT(
 			"/forgetPassword",
-			controllers.AuthController.ForgetPassword,
+			AuthController.ForgetPassword,
 		)
 		authRoutes.DELETE(
 			"/deleteMe",
 			middlewares.AuthMiddleware(),
-			controllers.AuthController.DeleteMe,
+			AuthController.DeleteMe,
 		)
 	}
 }

@@ -11,7 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"notezy-backend/app/util"
+	util "notezy-backend/app/util"
 	test "notezy-backend/test"
 )
 
@@ -49,6 +49,16 @@ const (
 
 type RegisterE2ETesterInterface interface {
 	TestRegisterValidTestAccount(t *testing.T)
+	TestRegisterValidUserAccount(t *testing.T)
+	TestRegisterNoName(t *testing.T)
+	TestRegisterNameWithoutNumber(t *testing.T)
+	TestRegisterShortName(t *testing.T)
+	TestRegisterInvalidEmail(t *testing.T)
+	TestRegisterShortPassword(t *testing.T)
+	TestRegisterPasswordWithoutLowerCaseLetter(t *testing.T)
+	TestRegisterPasswordWithoutUpperCaseLetter(t *testing.T)
+	TestRegisterPasswordWithoutNumber(t *testing.T)
+	TestRegisterPasswordWithoutSign(t *testing.T)
 }
 
 type registerE2ETester struct {
@@ -64,20 +74,23 @@ func NewRegisterE2ETester(router *gin.Engine) RegisterE2ETesterInterface {
 	}
 }
 
-/* ============================== Auxilary Functions ============================== */
+/* ============================== Auxiliary Functions ============================== */
 
 func (et *registerE2ETester) getRegisterTestdataAndResponse(
 	t *testing.T,
 	method string,
 	testdataPath string,
-) (*httptest.ResponseRecorder, RegisterE2ETestCase, RegisterResponseType) {
-	if et.router == nil {
-		var zeroTestCase RegisterE2ETestCase
-		var zeroResponse RegisterResponseType
-		return nil, zeroTestCase, zeroResponse
+) (
+	w *httptest.ResponseRecorder,
+	testCase RegisterE2ETestCase,
+	res RegisterResponseType,
+	cookieMap map[string]string,
+) {
+	if et == nil || et.router == nil {
+		t.Fatal("registerE2ETester or router is nil")
 	}
 
-	testCase := test.LoadTestCase[RegisterE2ETestCase](
+	testCase = test.LoadTestCase[RegisterE2ETestCase](
 		t, testdataPath,
 	)
 
@@ -96,15 +109,20 @@ func (et *registerE2ETester) getRegisterTestdataAndResponse(
 		req.Header.Set("User-Agent", *ua)
 	}
 
-	w := httptest.NewRecorder()
+	w = httptest.NewRecorder()
 	et.router.ServeHTTP(w, req)
 
-	var res RegisterResponseType
 	if err := json.Unmarshal(w.Body.Bytes(), &res.Body); err != nil {
 		t.Errorf("failed to unmarshal response body: %v, body: %s", err, w.Body.String())
 	}
 
-	return w, testCase, res
+	cookies := w.Result().Cookies()
+	cookieMap = make(map[string]string)
+	for _, c := range cookies {
+		cookieMap[c.Name] = c.Value
+	}
+
+	return w, testCase, res, cookieMap
 }
 
 /* ============================== Test Procedures ============================== */
@@ -114,13 +132,13 @@ func (et *registerE2ETester) TestRegisterValidTestAccount(t *testing.T) {
 		return
 	}
 
-	w, testCase, res := et.getRegisterTestdataAndResponse(
+	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
 		t, "POST", testdataPath+"valid_test_account_testdata.json",
 	)
 
 	// check status code
 	if w.Code != testCase.Response.HTTPStatusCode {
-		t.Errorf("expected http status code to be %d, got %d, body: %s", testCase.Response.HTTPStatusCode, w.Code, w.Body.String())
+		t.Errorf("expected http status code to be %d, got %d", testCase.Response.HTTPStatusCode, w.Code)
 	}
 
 	// check the body
@@ -133,35 +151,455 @@ func (et *registerE2ETester) TestRegisterValidTestAccount(t *testing.T) {
 	}
 
 	if res.Body.Data == nil {
-		t.Errorf("response data does not exist")
+		t.Errorf("expected response data to be not nil, got nil")
 	}
-	if len(strings.ReplaceAll(res.Body.Data.AccessToken, " ", "")) > 0 {
-		t.Errorf("expected body.data.accessToken to be %s, got %s", testCase.Response.Body.Data.AccessToken, res.Body.Data.AccessToken)
+	if len(strings.ReplaceAll(res.Body.Data.AccessToken, " ", "")) == 0 {
+		t.Errorf("expected body.data.accessToken to be exist, got nil")
 	}
-	if !util.IsTimeWithinDelta(res.Body.Data.CreatedAt, testCase.Response.Body.Data.CreatedAt, 10*time.Second) {
-		t.Errorf("expected body.data.createdAt to be %v (within tolerable time duration of %v), got %v", testCase.Response.Body.Data.CreatedAt, 10*time.Second, res.Body.Data.CreatedAt)
+
+	now := time.Now()
+	if !util.IsTimeWithinDelta(res.Body.Data.CreatedAt, now, 10*time.Second) {
+		t.Errorf("expected body.data.createdAt to be %v (within tolerable time duration of %v), got %v", testCase.Response.Body.Data.CreatedAt, 10*time.Second, now)
 	}
 
 	if res.Body.Exception != nil {
 		t.Errorf("expected body.exception to be nil, got not %v", res.Body.Exception)
 	}
 
-	cookies := w.Result().Cookies()
-	cookieMap := make(map[string]string)
-	for _, c := range cookies {
-		cookieMap[c.Name] = c.Value
-	}
 	// check the accessToken in cookies
 	if _, ok := cookieMap["accessToken"]; !ok {
-		t.Errorf("expected cookie.accessToken to be set")
+		t.Errorf("expected cookie.accessToken to be set, got nil")
 	}
 
 	// check the refreshToken in cookies
 	if _, ok := cookieMap["refreshToken"]; !ok {
-		t.Errorf("expected cookie.refreshToken to be set")
+		t.Errorf("expected cookie.refreshToken to be set, got nil")
 	}
 }
 
 func (et *registerE2ETester) TestRegisterValidUserAccount(t *testing.T) {
+	if et.router == nil {
+		return
+	}
 
+	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
+		t, "POST", testdataPath+"valid_user_account_testdata.json",
+	)
+
+	// check status code
+	if w.Code != testCase.Response.HTTPStatusCode {
+		t.Errorf("expected http status code to be %d, got %d", testCase.Response.HTTPStatusCode, w.Code)
+	}
+
+	// check the body
+	if err := json.Unmarshal(w.Body.Bytes(), &res.Body); err != nil {
+		t.Errorf("failed to unmarshal response body: %v, body: %s", err, w.Body.String())
+	}
+
+	if !res.Body.Success {
+		t.Errorf("expected body.success to be true, got false")
+	}
+
+	if res.Body.Data == nil {
+		t.Errorf("expected response data to be exist, got nil")
+	}
+	if len(strings.ReplaceAll(res.Body.Data.AccessToken, " ", "")) == 0 {
+		t.Errorf("expected body.data.accessToken to be exist, got nil")
+	}
+	now := time.Now()
+	if !util.IsTimeWithinDelta(res.Body.Data.CreatedAt, now, 10*time.Second) {
+		t.Errorf("expected body.data.createdAt to be %v (within tolerable time duration of %v), got %v", testCase.Response.Body.Data.CreatedAt, 10*time.Second, now)
+	}
+
+	if res.Body.Exception != nil {
+		t.Errorf("expected body.exception to be nil, got not %v", res.Body.Exception)
+	}
+
+	// check the accessToken in cookies
+	if _, ok := cookieMap["accessToken"]; !ok {
+		t.Errorf("expected cookie.accessToken to be set, got nil")
+	}
+
+	// check the refreshToken in cookies
+	if _, ok := cookieMap["refreshToken"]; !ok {
+		t.Errorf("expected cookie.refreshToken to be set, got nil")
+	}
+}
+
+func (et *registerE2ETester) TestRegisterNoName(t *testing.T) {
+	if et.router == nil {
+		return
+	}
+
+	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
+		t, "POST", testdataPath+"no_name_testdata.json",
+	)
+
+	// check status code
+	if w.Code != testCase.Response.HTTPStatusCode {
+		t.Errorf("expected http status code to be %d, got %d", testCase.Response.HTTPStatusCode, w.Code)
+	}
+
+	// check the body
+	if err := json.Unmarshal(w.Body.Bytes(), &res.Body); err != nil {
+		t.Errorf("failed to unmarshal response body: %v, body: %s", err, w.Body.String())
+	}
+
+	if res.Body.Success {
+		t.Errorf("expected body.success to be false, got true")
+	}
+
+	if res.Body.Data != nil {
+		t.Errorf("expected response data to be nil, got %v", res.Body.Data)
+	}
+
+	if res.Body.Exception == nil {
+		t.Errorf("expected body.exception to be exist, got nil")
+	}
+
+	// check the accessToken in cookies
+	if val, ok := cookieMap["accessToken"]; ok {
+		t.Errorf("expected cookie.accessToken to be not set, got %v", val)
+	}
+
+	// check the refreshToken in cookies
+	if val, ok := cookieMap["refreshToken"]; ok {
+		t.Errorf("expected cookie.refreshToken to be not set, got %v", val)
+	}
+}
+
+func (et *registerE2ETester) TestRegisterNameWithoutNumber(t *testing.T) {
+	if et.router == nil {
+		return
+	}
+
+	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
+		t, "POST", testdataPath+"name_without_number_testdata.json",
+	)
+
+	// check status code
+	if w.Code != testCase.Response.HTTPStatusCode {
+		t.Errorf("expected http status code to be %d, got %d", testCase.Response.HTTPStatusCode, w.Code)
+	}
+
+	// check the body
+	if err := json.Unmarshal(w.Body.Bytes(), &res.Body); err != nil {
+		t.Errorf("failed to unmarshal response body: %v, body: %s", err, w.Body.String())
+	}
+
+	if res.Body.Success {
+		t.Errorf("expected body.success to be false, got true")
+	}
+
+	if res.Body.Data != nil {
+		t.Errorf("expected response data to be nil, got %v", res.Body.Data)
+	}
+
+	if res.Body.Exception == nil {
+		t.Errorf("expected body.exception to be exist, got nil")
+	}
+
+	// check the accessToken in cookies
+	if val, ok := cookieMap["accessToken"]; ok {
+		t.Errorf("expected cookie.accessToken to be not set, got %v", val)
+	}
+
+	// check the refreshToken in cookies
+	if val, ok := cookieMap["refreshToken"]; ok {
+		t.Errorf("expected cookie.refreshToken to be not set, got %v", val)
+	}
+}
+
+func (et *registerE2ETester) TestRegisterShortName(t *testing.T) {
+	if et.router == nil {
+		return
+	}
+
+	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
+		t, "POST", testdataPath+"short_name_testdata.json",
+	)
+
+	// check status code
+	if w.Code != testCase.Response.HTTPStatusCode {
+		t.Errorf("expected http status code to be %d, got %d", testCase.Response.HTTPStatusCode, w.Code)
+	}
+
+	// check the body
+	if err := json.Unmarshal(w.Body.Bytes(), &res.Body); err != nil {
+		t.Errorf("failed to unmarshal response body: %v, body: %s", err, w.Body.String())
+	}
+
+	if res.Body.Success {
+		t.Errorf("expected body.success to be false, got true")
+	}
+
+	if res.Body.Data != nil {
+		t.Errorf("expected response data to be nil, got %v", res.Body.Data)
+	}
+
+	if res.Body.Exception == nil {
+		t.Errorf("expected body.exception to be exist, got nil")
+	}
+
+	// check the accessToken in cookies
+	if val, ok := cookieMap["accessToken"]; ok {
+		t.Errorf("expected cookie.accessToken to be not set, got %v", val)
+	}
+
+	// check the refreshToken in cookies
+	if val, ok := cookieMap["refreshToken"]; ok {
+		t.Errorf("expected cookie.refreshToken to be not set, got %v", val)
+	}
+}
+
+func (et *registerE2ETester) TestRegisterInvalidEmail(t *testing.T) {
+	if et.router == nil {
+		return
+	}
+
+	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
+		t, "POST", testdataPath+"invalid_email_testdata.json",
+	)
+
+	// check status code
+	if w.Code != testCase.Response.HTTPStatusCode {
+		t.Errorf("expected http status code to be %d, got %d", testCase.Response.HTTPStatusCode, w.Code)
+	}
+
+	// check the body
+	if err := json.Unmarshal(w.Body.Bytes(), &res.Body); err != nil {
+		t.Errorf("failed to unmarshal response body: %v, body: %s", err, w.Body.String())
+	}
+
+	if res.Body.Success {
+		t.Errorf("expected body.success to be false, got true")
+	}
+
+	if res.Body.Data != nil {
+		t.Errorf("expected response data to be nil, got %v", res.Body.Data)
+	}
+
+	if res.Body.Exception == nil {
+		t.Errorf("expected body.exception to be exist, got nil")
+	}
+
+	// check the accessToken in cookies
+	if val, ok := cookieMap["accessToken"]; ok {
+		t.Errorf("expected cookie.accessToken to be not set, got %v", val)
+	}
+
+	// check the refreshToken in cookies
+	if val, ok := cookieMap["refreshToken"]; ok {
+		t.Errorf("expected cookie.refreshToken to be not set, got %v", val)
+	}
+}
+
+func (et *registerE2ETester) TestRegisterShortPassword(t *testing.T) {
+	if et.router == nil {
+		return
+	}
+
+	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
+		t, "POST", testdataPath+"short_password_testdata.json",
+	)
+
+	// check status code
+	if w.Code != testCase.Response.HTTPStatusCode {
+		t.Errorf("expected http status code to be %d, got %d", testCase.Response.HTTPStatusCode, w.Code)
+	}
+
+	// check the body
+	if err := json.Unmarshal(w.Body.Bytes(), &res.Body); err != nil {
+		t.Errorf("failed to unmarshal response body: %v, body: %s", err, w.Body.String())
+	}
+
+	if res.Body.Success {
+		t.Errorf("expected body.success to be false, got true")
+	}
+
+	if res.Body.Data != nil {
+		t.Errorf("expected response data to be nil, got %v", res.Body.Data)
+	}
+
+	if res.Body.Exception == nil {
+		t.Errorf("expected body.exception to be exist, got nil")
+	}
+
+	// check the accessToken in cookies
+	if val, ok := cookieMap["accessToken"]; ok {
+		t.Errorf("expected cookie.accessToken to be not set, got %v", val)
+	}
+
+	// check the refreshToken in cookies
+	if val, ok := cookieMap["refreshToken"]; ok {
+		t.Errorf("expected cookie.refreshToken to be not set, got %v", val)
+	}
+}
+
+func (et *registerE2ETester) TestRegisterPasswordWithoutLowerCaseLetter(t *testing.T) {
+	if et.router == nil {
+		return
+	}
+
+	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
+		t, "POST", testdataPath+"password_without_lower_case_letter_testdata.json",
+	)
+
+	// check status code
+	if w.Code != testCase.Response.HTTPStatusCode {
+		t.Errorf("expected http status code to be %d, got %d", testCase.Response.HTTPStatusCode, w.Code)
+	}
+
+	// check the body
+	if err := json.Unmarshal(w.Body.Bytes(), &res.Body); err != nil {
+		t.Errorf("failed to unmarshal response body: %v, body: %s", err, w.Body.String())
+	}
+
+	if res.Body.Success {
+		t.Errorf("expected body.success to be false, got true")
+	}
+
+	if res.Body.Data != nil {
+		t.Errorf("expected response data to be nil, got %v", res.Body.Data)
+	}
+
+	if res.Body.Exception == nil {
+		t.Errorf("expected body.exception to be exist, got nil")
+	}
+
+	// check the accessToken in cookies
+	if val, ok := cookieMap["accessToken"]; ok {
+		t.Errorf("expected cookie.accessToken to be not set, got %v", val)
+	}
+
+	// check the refreshToken in cookies
+	if val, ok := cookieMap["refreshToken"]; ok {
+		t.Errorf("expected cookie.refreshToken to be not set, got %v", val)
+	}
+}
+
+func (et *registerE2ETester) TestRegisterPasswordWithoutUpperCaseLetter(t *testing.T) {
+	if et.router == nil {
+		return
+	}
+
+	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
+		t, "POST", testdataPath+"password_without_upper_case_letter_testdata.json",
+	)
+
+	// check status code
+	if w.Code != testCase.Response.HTTPStatusCode {
+		t.Errorf("expected http status code to be %d, got %d", testCase.Response.HTTPStatusCode, w.Code)
+	}
+
+	// check the body
+	if err := json.Unmarshal(w.Body.Bytes(), &res.Body); err != nil {
+		t.Errorf("failed to unmarshal response body: %v, body: %s", err, w.Body.String())
+	}
+
+	if res.Body.Success {
+		t.Errorf("expected body.success to be false, got true")
+	}
+
+	if res.Body.Data != nil {
+		t.Errorf("expected response data to be nil, got %v", res.Body.Data)
+	}
+
+	if res.Body.Exception == nil {
+		t.Errorf("expected body.exception to be exist, got nil")
+	}
+
+	// check the accessToken in cookies
+	if val, ok := cookieMap["accessToken"]; ok {
+		t.Errorf("expected cookie.accessToken to be not set, got %v", val)
+	}
+
+	// check the refreshToken in cookies
+	if val, ok := cookieMap["refreshToken"]; ok {
+		t.Errorf("expected cookie.refreshToken to be not set, got %v", val)
+	}
+}
+
+func (et *registerE2ETester) TestRegisterPasswordWithoutNumber(t *testing.T) {
+	if et.router == nil {
+		return
+	}
+
+	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
+		t, "POST", testdataPath+"password_without_number_testdata.json",
+	)
+
+	// check status code
+	if w.Code != testCase.Response.HTTPStatusCode {
+		t.Errorf("expected http status code to be %d, got %d", testCase.Response.HTTPStatusCode, w.Code)
+	}
+
+	// check the body
+	if err := json.Unmarshal(w.Body.Bytes(), &res.Body); err != nil {
+		t.Errorf("failed to unmarshal response body: %v, body: %s", err, w.Body.String())
+	}
+
+	if res.Body.Success {
+		t.Errorf("expected body.success to be false, got true")
+	}
+
+	if res.Body.Data != nil {
+		t.Errorf("expected response data to be nil, got %v", res.Body.Data)
+	}
+
+	if res.Body.Exception == nil {
+		t.Errorf("expected body.exception to be exist, got nil")
+	}
+
+	// check the accessToken in cookies
+	if val, ok := cookieMap["accessToken"]; ok {
+		t.Errorf("expected cookie.accessToken to be not set, got %v", val)
+	}
+
+	// check the refreshToken in cookies
+	if val, ok := cookieMap["refreshToken"]; ok {
+		t.Errorf("expected cookie.refreshToken to be not set, got %v", val)
+	}
+}
+
+func (et *registerE2ETester) TestRegisterPasswordWithoutSign(t *testing.T) {
+	if et.router == nil {
+		return
+	}
+
+	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
+		t, "POST", testdataPath+"password_without_sign_testdata.json",
+	)
+
+	// check status code
+	if w.Code != testCase.Response.HTTPStatusCode {
+		t.Errorf("expected http status code to be %d, got %d", testCase.Response.HTTPStatusCode, w.Code)
+	}
+
+	// check the body
+	if err := json.Unmarshal(w.Body.Bytes(), &res.Body); err != nil {
+		t.Errorf("failed to unmarshal response body: %v, body: %s", err, w.Body.String())
+	}
+
+	if res.Body.Success {
+		t.Errorf("expected body.success to be false, got true")
+	}
+
+	if res.Body.Data != nil {
+		t.Errorf("expected response data to be nil, got %v", res.Body.Data)
+	}
+
+	if res.Body.Exception == nil {
+		t.Errorf("expected body.exception to be exist, got nil")
+	}
+
+	// check the accessToken in cookies
+	if val, ok := cookieMap["accessToken"]; ok {
+		t.Errorf("expected cookie.accessToken to be not set, got %v", val)
+	}
+
+	// check the refreshToken in cookies
+	if val, ok := cookieMap["refreshToken"]; ok {
+		t.Errorf("expected cookie.refreshToken to be not set, got %v", val)
+	}
 }

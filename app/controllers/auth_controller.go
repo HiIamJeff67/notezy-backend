@@ -29,8 +29,10 @@ type authController struct {
 	authService services.AuthServiceInterface
 }
 
-var AuthController AuthControllerInterface = &authController{
-	authService: services.AuthService,
+func NewAuthController(service services.AuthServiceInterface) AuthControllerInterface {
+	return &authController{
+		authService: service,
+	}
 }
 
 /* ============================== Controllers ============================== */

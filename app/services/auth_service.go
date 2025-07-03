@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 
 	caches "notezy-backend/app/caches"
 	dtos "notezy-backend/app/dtos"
@@ -34,13 +35,19 @@ type AuthServiceInterface interface {
 	DeleteMe(reqDto *dtos.DeleteMeReqDto) (*dtos.DeleteMeResDto, *exceptions.Exception)
 }
 
-type authService struct{}
+type AuthService struct {
+	db *gorm.DB
+}
 
-var AuthService AuthServiceInterface = &authService{}
+func NewAuthService(db *gorm.DB) AuthServiceInterface {
+	return &AuthService{
+		db: db,
+	}
+}
 
 /* ============================== Auxiliary Functions ============================== */
 
-func (s *authService) hashPassword(password string) (string, *exceptions.Exception) {
+func (s *AuthService) hashPassword(password string) (string, *exceptions.Exception) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", exceptions.Util.FailedToGenerateHashValue().WithError(err)
@@ -49,20 +56,20 @@ func (s *authService) hashPassword(password string) (string, *exceptions.Excepti
 	return string(bytes), nil
 }
 
-func (s *authService) checkPasswordHash(hashedPassword string, password string) bool {
+func (s *AuthService) checkPasswordHash(hashedPassword string, password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	return err == nil
 }
 
 /* ============================== Services ============================== */
 
-func (s *authService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Exception) {
+func (s *AuthService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Auth.InvalidDto().WithError(err)
 	}
 
 	// Start transaction
-	tx := models.NotezyDB.Begin()
+	tx := s.db.Begin()
 	userRepository := repositories.NewUserRepository(tx)
 	userInfoRepository := repositories.NewUserInfoRepository(tx)
 	userAccountRepository := repositories.NewUserAccountRepository(tx)
@@ -187,12 +194,12 @@ func (s *authService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDt
 	}, nil
 }
 
-func (s *authService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception) {
+func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	userRepository := repositories.NewUserRepository(nil)
+	userRepository := repositories.NewUserRepository(s.db)
 
 	// otherwise, the user should provide their account and password
 	var user *schemas.User = nil
@@ -280,12 +287,12 @@ func (s *authService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 	}, nil
 }
 
-func (s *authService) Logout(reqDto *dtos.LogoutReqDto) (*dtos.LogoutResDto, *exceptions.Exception) {
+func (s *AuthService) Logout(reqDto *dtos.LogoutReqDto) (*dtos.LogoutResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Auth.InvalidDto().WithError(err)
 	}
 
-	userRepository := repositories.NewUserRepository(nil)
+	userRepository := repositories.NewUserRepository(s.db)
 
 	offlineStatus := enums.UserStatus_Offline
 	emptyString := ""
@@ -312,12 +319,10 @@ func (s *authService) Logout(reqDto *dtos.LogoutReqDto) (*dtos.LogoutResDto, *ex
 	}, nil
 }
 
-func (s *authService) SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendAuthCodeResDto, *exceptions.Exception) {
+func (s *AuthService) SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendAuthCodeResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err).Log()
 	}
-
-	db := models.NotezyDB
 
 	authCode := util.GenerateAuthCode()
 	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
@@ -325,7 +330,7 @@ func (s *authService) SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendA
 		Name      string `json:"name"`
 		UserAgent string `json:"userAgent"`
 	}{}
-	result := db.Raw(authsql.UpdateAuthCodeQuery, authCode, authCodeExpiredAt, reqDto.Email).Scan(&output)
+	result := s.db.Raw(authsql.UpdateAuthCodeQuery, authCode, authCodeExpiredAt, reqDto.Email).Scan(&output)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserAccount.FailedToUpdate().WithError(err)
 	}
@@ -341,16 +346,15 @@ func (s *authService) SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendA
 	}, nil
 }
 
-func (s *authService) ValidateEmail(reqDto *dtos.ValidateEmailReqDto) (*dtos.ValidateEmailResDto, *exceptions.Exception) {
+func (s *AuthService) ValidateEmail(reqDto *dtos.ValidateEmailReqDto) (*dtos.ValidateEmailResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	db := models.NotezyDB
 	output := struct {
 		UpdatedAt time.Time `json:"updatedAt"`
 	}{}
-	result := db.Raw(authsql.ValidateEmailQuery, reqDto.UserId, reqDto.AuthCode).Scan(&output)
+	result := s.db.Raw(authsql.ValidateEmailQuery, reqDto.UserId, reqDto.AuthCode).Scan(&output)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.FailedToUpdate().WithError(err)
 	}
@@ -363,18 +367,17 @@ func (s *authService) ValidateEmail(reqDto *dtos.ValidateEmailReqDto) (*dtos.Val
 	}, nil
 }
 
-func (s *authService) ResetEmail(reqDto *dtos.ResetEmailReqDto) (*dtos.ResetEmailResDto, *exceptions.Exception) {
+func (s *AuthService) ResetEmail(reqDto *dtos.ResetEmailReqDto) (*dtos.ResetEmailResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	db := models.NotezyDB
 	userAccountRepository := repositories.NewUserAccountRepository(nil)
 
 	output := struct {
 		UpdatedAt time.Time `json:"updatedAt"`
 	}{}
-	result := db.Raw(authsql.ResetEmailQuery, reqDto.NewEmail, reqDto.AuthCode, reqDto.UserId).Scan(&output)
+	result := s.db.Raw(authsql.ResetEmailQuery, reqDto.NewEmail, reqDto.AuthCode, reqDto.UserId).Scan(&output)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.FailedToUpdate().WithError(err)
 	}
@@ -403,12 +406,12 @@ func (s *authService) ResetEmail(reqDto *dtos.ResetEmailReqDto) (*dtos.ResetEmai
 	}, nil
 }
 
-func (s *authService) ForgetPassword(reqDto *dtos.ForgetPasswordReqDto) (*dtos.ForgetPasswordResDto, *exceptions.Exception) {
+func (s *AuthService) ForgetPassword(reqDto *dtos.ForgetPasswordReqDto) (*dtos.ForgetPasswordResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	userRepository := repositories.NewUserRepository(nil)
+	userRepository := repositories.NewUserRepository(s.db)
 
 	var user *schemas.User = nil
 	var exception *exceptions.Exception = nil
@@ -466,17 +469,15 @@ func (s *authService) ForgetPassword(reqDto *dtos.ForgetPasswordReqDto) (*dtos.F
 	}, nil
 }
 
-func (s *authService) DeleteMe(reqDto *dtos.DeleteMeReqDto) (*dtos.DeleteMeResDto, *exceptions.Exception) {
+func (s *AuthService) DeleteMe(reqDto *dtos.DeleteMeReqDto) (*dtos.DeleteMeResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	db := models.NotezyDB
-
 	output := struct {
 		DeletedAt time.Time `json:"deletedAt" gorm:"deleted_at"`
 	}{}
-	result := db.Raw(authsql.DeleteMeQuery, reqDto.UserId, reqDto.AuthCode).Scan(&output)
+	result := s.db.Raw(authsql.DeleteMeQuery, reqDto.UserId, reqDto.AuthCode).Scan(&output)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.FailedToUpdate().WithError(err)
 	}

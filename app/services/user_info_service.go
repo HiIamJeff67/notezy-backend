@@ -6,6 +6,8 @@ import (
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
+
+	"gorm.io/gorm"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -15,18 +17,24 @@ type UserInfoServiceInterface interface {
 	UpdateMyInfo(reqDto *dtos.UpdateMyInfoReqDto) (*dtos.UpdateMyInfoResDto, *exceptions.Exception)
 }
 
-type userInfoService struct{}
+type UserInfoService struct {
+	db *gorm.DB
+}
 
-var UserInfoService UserInfoServiceInterface = &userInfoService{}
+func NewUserInfoService(db *gorm.DB) UserInfoServiceInterface {
+	return &UserInfoService{
+		db: db,
+	}
+}
 
 /* ============================== Services ============================== */
 
-func (s *userInfoService) GetMyInfo(reqDto *dtos.GetMyInfoReqDto) (*dtos.GetMyInfoResDto, *exceptions.Exception) {
+func (s *UserInfoService) GetMyInfo(reqDto *dtos.GetMyInfoReqDto) (*dtos.GetMyInfoResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	userInfoRepository := repositories.NewUserInfoRepository(nil)
+	userInfoRepository := repositories.NewUserInfoRepository(s.db)
 
 	userInfo, exception := userInfoRepository.GetOneByUserId(reqDto.UserId)
 	if exception != nil {
@@ -45,12 +53,12 @@ func (s *userInfoService) GetMyInfo(reqDto *dtos.GetMyInfoReqDto) (*dtos.GetMyIn
 	}, nil
 }
 
-func (s *userInfoService) UpdateMyInfo(reqDto *dtos.UpdateMyInfoReqDto) (*dtos.UpdateMyInfoResDto, *exceptions.Exception) {
+func (s *UserInfoService) UpdateMyInfo(reqDto *dtos.UpdateMyInfoReqDto) (*dtos.UpdateMyInfoResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	userInfoRepository := repositories.NewUserInfoRepository(nil)
+	userInfoRepository := repositories.NewUserInfoRepository(s.db)
 
 	updatedUserInfo, exception := userInfoRepository.UpdateOneByUserId(reqDto.UserId, inputs.PartialUpdateUserInfoInput{
 		Values: inputs.UpdateUserInfoInput{

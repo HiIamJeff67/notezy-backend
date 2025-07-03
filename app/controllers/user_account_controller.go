@@ -18,18 +18,20 @@ type UserAccountControllerInterface interface {
 	UpdateMyAccount(ctx *gin.Context)
 }
 
-type userAccountController struct {
+type UserAccountController struct {
 	userAccountService services.UserAccountServiceInterface
 }
 
-var UserAccountController UserAccountControllerInterface = &userAccountController{
-	userAccountService: services.UserAccountService,
+func NewUserAccountController(service services.UserAccountServiceInterface) UserAccountControllerInterface {
+	return &UserAccountController{
+		userAccountService: service,
+	}
 }
 
 /* ============================== Controllers ============================== */
 
 // with AuthMiddleware
-func (c *userAccountController) GetMyAccount(ctx *gin.Context) {
+func (c *UserAccountController) GetMyAccount(ctx *gin.Context) {
 	var reqDto dtos.GetMyAccountReqDto
 	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
@@ -66,7 +68,7 @@ func (c *userAccountController) GetMyAccount(ctx *gin.Context) {
 }
 
 // with AuthMiddleware
-func (c *userAccountController) UpdateMyAccount(ctx *gin.Context) {
+func (c *UserAccountController) UpdateMyAccount(ctx *gin.Context) {
 	var reqDto dtos.UpdateMyAccountReqDto
 	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {

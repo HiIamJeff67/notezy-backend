@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 
 	app "notezy-backend/app"
@@ -11,13 +9,15 @@ import (
 	shared "notezy-backend/shared"
 )
 
-var rootCommand = &cobra.Command{
-	Use:   "app",
-	Short: "This is the root command.",
-	Long:  "This is a longer description of the root command.",
+var viewAllAvailableDatabasesCommand = &cobra.Command{
+	Use:   "viewDatabases",
+	Short: "View all the available databases.",
+	Long:  "Use some map to storing and printing the available databases in the project.",
 	Run: func(cmd *cobra.Command, args []string) {
-		logs.Info("Welcome to the CLI.")
-		app.StartApplication()
+		logs.Info("All available databases:")
+		for key, value := range models.DatabaseNameToInstance {
+			logs.FInfo("database name: %v, instance: %v", key, value)
+		}
 	},
 }
 
@@ -26,26 +26,10 @@ var migrateDatabaseCommand = &cobra.Command{
 	Short: "Create or update database schema.",
 	Long:  "Use models package to create or update database table schema.",
 	Run: func(cmd *cobra.Command, args []string) {
-
-		logs.Info("All available databases:")
-		for key, value := range models.DatabaseNameToInstance {
-			logs.FInfo("database name: %v, instance: %v", key, value)
-		}
-
-		databaseNameStr, _ := cmd.Flags().GetString("database")
-		if databaseNameStr == "" {
-			logs.FError("The --database flag must be specified")
-			return
-		}
-
-		db, ok := models.DatabaseNameToInstance[databaseNameStr]
-		if !ok {
-			logs.FError("The database instance with the name of %s is not exist", databaseNameStr)
-			return
-		}
-
-		logs.Info("Start the process of migrating database schema.")
+		db := models.ConnectToDatabase(shared.PostgresDatabaseConfig)
+		logs.FInfo("Start the process of migrating database schema to %v.", shared.PostgresDatabaseConfig.DBName)
 		app.MigrateDatabaseSchema(db)
+		models.DisconnectToDatabase(db)
 	},
 }
 
@@ -81,21 +65,4 @@ var truncateDatabaseCommand = &cobra.Command{
 		logs.FInfo("Start the process of truncating database table: %s.", tableNameStr)
 		app.TrancateDatabaseTable(validTableName, db)
 	},
-}
-
-// the Execute() function is the start point of cobra
-func Execute() {
-	/* register the migrate database command and its flags */
-	migrateDatabaseCommand.Flags().String("database", "", "The name of the database to migrate")
-	rootCommand.AddCommand(migrateDatabaseCommand)
-
-	/* register the truncate database table command and its flags */
-	truncateDatabaseCommand.Flags().String("database", "", "The name of the database to truncate the table inside it")
-	truncateDatabaseCommand.Flags().String("table", "", "The name of the table to truncate")
-	rootCommand.AddCommand(truncateDatabaseCommand)
-
-	if err := rootCommand.Execute(); err != nil {
-		logs.FError("Failed to init the CLI: %s", err)
-		os.Exit(1)
-	}
 }

@@ -35,6 +35,7 @@ const (
 // ExceptionPrefix_Cache ExceptionPrefix = "Cache"	   					 3
 // ExceptionPrefix_Context ExceptionPrefix = "Context"					 4
 // ExceptionPrefix_Email ExceptionPrefix = "Email"					     5
+// ExceptionPrefix_Test ExceptionPrefix = "Test"						 6
 
 // ExceptionPrefix_Auth ExceptionPrefix = "Auth" 			 		     31
 // ExceptionPrefix_User ExceptionPrefix = "User"                         32
@@ -62,6 +63,9 @@ const (
 	ExceptionReason_InvalidDto                ExceptionReason = "Invalid_Dto"                  // api -> type
 	ExceptionReason_NotImplemented            ExceptionReason = "NotImplement"                 // database, api -> common
 	ExceptionReason_InvalidType               ExceptionReason = "Invalid_Type"                 // database, api -> type
+	ExceptionReason_InvalidTestdataForm       ExceptionReason = "Invalid_Testdata_Form"        // test
+	ExceptionReason_FailedToMarshalTestdata   ExceptionReason = "Failed_To_Marshal_Testdata"   // test
+	ExceptionReason_FailedToUnmarshalTestdata ExceptionReason = "Failed_To_Unmarshal_Testdata" // test
 )
 
 func IsExceptionCode(exceptionCode int) bool {
@@ -316,7 +320,7 @@ func (d *APIExceptionDomain) Timeout(time time.Duration, optionalMessage ...stri
 	}
 }
 
-/* ============================== Type Exception ============================== */
+/* ============================== Type Exception Domain Definition ============================== */
 
 type TypeExceptionDomain struct {
 	_BaseCode ExceptionCode
@@ -367,7 +371,7 @@ func (d *TypeExceptionDomain) InvalidType(value any) *Exception {
 	}
 }
 
-/* ============================== Common Exception ============================== */
+/* ============================== Common Exception Domain Definition ============================== */
 
 type CommonExceptionDomain struct {
 	_BaseCode ExceptionCode
@@ -401,5 +405,48 @@ func (d *CommonExceptionDomain) NotImplemented(optionalMessage ...string) *Excep
 		Reason:         ExceptionReason_NotImplemented,
 		Message:        message,
 		HTTPStatusCode: http.StatusNotImplemented,
+	}
+}
+
+/* ============================== Test Exception Domain Definition ============================== */
+
+type TestExceptionDomain struct {
+	_BaseCode ExceptionCode
+	_Prefix   ExceptionPrefix
+}
+
+func (d *TestExceptionDomain) FailedToMarshalTestdata(testdataPath string) *Exception {
+	message := fmt.Sprintf("Failed to marshal testdata from %v", testdataPath)
+
+	return &Exception{
+		Code:           d._BaseCode + 1,
+		Prefix:         d._Prefix,
+		Reason:         ExceptionReason_FailedToMarshalTestdata,
+		Message:        message,
+		HTTPStatusCode: http.StatusInternalServerError,
+	}
+}
+
+func (d *TestExceptionDomain) FailedToUnmarshalTestdata(testdataPath string) *Exception {
+	message := fmt.Sprintf("Failed to unmarshal testdata from %v", testdataPath)
+
+	return &Exception{
+		Code:           d._BaseCode + 1,
+		Prefix:         d._Prefix,
+		Reason:         ExceptionReason_FailedToUnmarshalTestdata,
+		Message:        message,
+		HTTPStatusCode: http.StatusInternalServerError,
+	}
+}
+
+func (d *TestExceptionDomain) InvalidTestdataJSONForm(testdataPath string) *Exception {
+	message := fmt.Sprintf("Invalid testdata json form from %v", testdataPath)
+
+	return &Exception{
+		Code:           d._BaseCode + 1,
+		Prefix:         d._Prefix,
+		Reason:         ExceptionReason_InvalidTestdataForm,
+		Message:        message,
+		HTTPStatusCode: http.StatusInternalServerError,
 	}
 }

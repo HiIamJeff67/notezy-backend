@@ -3,23 +3,31 @@ package developmentroutes
 import (
 	controllers "notezy-backend/app/controllers"
 	middlewares "notezy-backend/app/middlewares"
+	models "notezy-backend/app/models"
+	services "notezy-backend/app/services"
 )
 
 func configureDevelopmentUserRoutes() {
+	userController := controllers.NewUserController(
+		services.NewUserService(
+			models.NotezyDB,
+		),
+	)
+
 	userRoutes := DevelopmentRouterGroup.Group("/user")
 	userRoutes.Use(middlewares.AuthMiddleware())
 	{
 		userRoutes.GET(
 			"/getMe",
-			controllers.UserController.GetMe,
+			userController.GetMe,
 		)
 		userRoutes.GET(
 			"/all",
-			controllers.UserController.GetAllUsers,
+			userController.GetAllUsers,
 		)
 		userRoutes.PATCH(
 			"/updateMe",
-			controllers.UserController.UpdateMe,
+			userController.UpdateMe,
 		)
 	}
 }

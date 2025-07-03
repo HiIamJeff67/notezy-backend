@@ -32,9 +32,7 @@ func StartApplication() {
 }
 
 func MigrateDatabaseSchema(db *gorm.DB) {
-	localDB := models.ConnectToDatabase(models.DatabaseInstanceToConfig[db])
-	models.MigrateToDatabase(localDB)
-	models.DisconnectToDatabase(localDB)
+	models.MigrateToDatabase(db)
 }
 
 func TrancateDatabaseTable(tableName shared.ValidTableName, db *gorm.DB) {
