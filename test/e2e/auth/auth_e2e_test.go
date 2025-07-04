@@ -14,38 +14,40 @@ import (
 )
 
 const (
-	testTargetPath = "notezy-backend/app/routes/test_routes/auth_route.go"
+	testTargetPath         = "notezy-backend/app/routes/test_routes/auth_route.go"
+	testAuthRouteNamespace = "/testRoute/auth"
 )
 
-type testRegisterFeatureProcedure struct {
+type testAuthFeatureProcedure struct {
 	testDB          *gorm.DB
 	testRouter      *gin.Engine
 	testRouterGroup *gin.RouterGroup
 }
 
-func (p *testRegisterFeatureProcedure) BeforeAll(t *testing.T) {
+func (p *testAuthFeatureProcedure) BeforeAll(t *testing.T) {
 	p.testDB = models.ConnectToDatabase(shared.PostgresDatabaseConfig)
 	gin.SetMode(gin.TestMode)
 	p.testRouter = gin.New()
-	p.testRouterGroup = p.testRouter.Group("/testRegisterRoute")
+	p.testRouterGroup = p.testRouter.Group(testAuthRouteNamespace)
 	testroutes.ConfigureTestAuthRoutes(p.testDB, p.testRouterGroup)
 }
 
-func (p *testRegisterFeatureProcedure) BeforeEach(t *testing.T) { /* Do Nothing */ }
+func (p *testAuthFeatureProcedure) BeforeEach(t *testing.T) { /* Do Nothing */ }
 
-func (p *testRegisterFeatureProcedure) AfterEach(t *testing.T) { /* Do Nothing */ }
+func (p *testAuthFeatureProcedure) AfterEach(t *testing.T) { /* Do Nothing */ }
 
-func (p *testRegisterFeatureProcedure) AfterAll(t *testing.T) {
+func (p *testAuthFeatureProcedure) AfterAll(t *testing.T) {
 	models.DisconnectToDatabase(p.testDB)
 }
 
-func (p *testRegisterFeatureProcedure) Main(t *testing.T) {
+func (p *testAuthFeatureProcedure) Main(t *testing.T) {
 	t.Run(fmt.Sprintf("E2E-Test---Auth-(%s):", testTargetPath), func(t *testing.T) { // feature level
 		t.Run("Test-Register-Route", func(t *testing.T) { // spec level
 			var registerE2ETester = NewRegisterE2ETester(p.testRouter)
 			if registerE2ETester == nil {
 				t.Fatal("NewRegisterE2ETester returned nil, router may be nil")
 			}
+
 			t.Run("[Valid-Test-Account]", func(t *testing.T) { // case level
 				t.Parallel()
 				p.BeforeEach(t)
@@ -113,13 +115,31 @@ func (p *testRegisterFeatureProcedure) Main(t *testing.T) {
 				p.AfterEach(t)
 			})
 		})
-		// login
+		t.Run("Test-Login-Route", func(t *testing.T) { // spec
+			var loginE2ETester = NewLoginE2ETester(p.testRouter)
+			if loginE2ETester == nil {
+				t.Fatal("NewLoginE2ETester returned nil, router may be nil")
+			}
+
+			t.Run("[Valid-Test-Account-By-Name]", func(t *testing.T) {
+				t.Parallel()
+				p.BeforeEach(t)
+				loginE2ETester.TestLoginValidTestAccountByName(t)
+				p.AfterEach(t)
+			})
+			t.Run("[Valid-Test-Account-By-Email]", func(t *testing.T) {
+				t.Parallel()
+				p.BeforeEach(t)
+				loginE2ETester.TestLoginValidTestAccountByEmail(t)
+				p.AfterEach(t)
+			})
+		})
 		// logout...
 	})
 }
 
 func TestMain(t *testing.T) {
-	var testRegisterFeatureProcedure test.TestFeatureProcedureInterface = &testRegisterFeatureProcedure{}
+	var testRegisterFeatureProcedure test.TestFeatureProcedureInterface = &testAuthFeatureProcedure{}
 
 	testRegisterFeatureProcedure.BeforeAll(t)
 	defer testRegisterFeatureProcedure.AfterAll(t)

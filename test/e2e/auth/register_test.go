@@ -15,7 +15,7 @@ import (
 	test "notezy-backend/test"
 )
 
-/* ============================== Test Case Type ============================== */
+/* ============================== Test Case Types ============================== */
 
 type RegisterRequestType = test.CommonRequestType[
 	struct {
@@ -40,14 +40,23 @@ type RegisterE2ETestCase = test.E2ETestCase[
 /* ============================== Test Data Path & Some Constants ============================== */
 
 const (
-	testdataPath   = "testdata/register_testdata/"
-	routeNamespace = "/testRegisterRoute"
-	registerRoute  = routeNamespace + "/auth/register"
+	registerTestdataPath = "testdata/register_testdata/"
+	registerRoute        = testAuthRouteNamespace + "/register"
 )
 
 /* ============================== Interface & Instance ============================== */
 
 type RegisterE2ETesterInterface interface {
+	getRegisterTestdataAndResponse(
+		t *testing.T,
+		method string,
+		registerTestdataPath string,
+	) (
+		w *httptest.ResponseRecorder,
+		testCase RegisterE2ETestCase,
+		res RegisterResponseType,
+		cookieMap map[string]string,
+	)
 	TestRegisterValidTestAccount(t *testing.T)
 	TestRegisterValidUserAccount(t *testing.T)
 	TestRegisterNoName(t *testing.T)
@@ -61,7 +70,7 @@ type RegisterE2ETesterInterface interface {
 	TestRegisterPasswordWithoutSign(t *testing.T)
 }
 
-type registerE2ETester struct {
+type RegisterE2ETester struct {
 	router *gin.Engine
 }
 
@@ -69,17 +78,17 @@ func NewRegisterE2ETester(router *gin.Engine) RegisterE2ETesterInterface {
 	if router == nil {
 		return nil
 	}
-	return &registerE2ETester{
+	return &RegisterE2ETester{
 		router: router,
 	}
 }
 
 /* ============================== Auxiliary Functions ============================== */
 
-func (et *registerE2ETester) getRegisterTestdataAndResponse(
+func (et *RegisterE2ETester) getRegisterTestdataAndResponse(
 	t *testing.T,
 	method string,
-	testdataPath string,
+	registerTestdataPath string,
 ) (
 	w *httptest.ResponseRecorder,
 	testCase RegisterE2ETestCase,
@@ -91,7 +100,7 @@ func (et *registerE2ETester) getRegisterTestdataAndResponse(
 	}
 
 	testCase = test.LoadTestCase[RegisterE2ETestCase](
-		t, testdataPath,
+		t, registerTestdataPath,
 	)
 
 	jsonBody, _ := json.Marshal(testCase.Request.Body)
@@ -125,15 +134,15 @@ func (et *registerE2ETester) getRegisterTestdataAndResponse(
 	return w, testCase, res, cookieMap
 }
 
-/* ============================== Test Procedures ============================== */
+/* ============================== Test Cases ============================== */
 
-func (et *registerE2ETester) TestRegisterValidTestAccount(t *testing.T) {
+func (et *RegisterE2ETester) TestRegisterValidTestAccount(t *testing.T) {
 	if et.router == nil {
 		return
 	}
 
 	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
-		t, "POST", testdataPath+"valid_test_account_testdata.json",
+		t, "POST", registerTestdataPath+"valid_test_account_testdata.json",
 	)
 
 	// check status code
@@ -177,13 +186,13 @@ func (et *registerE2ETester) TestRegisterValidTestAccount(t *testing.T) {
 	}
 }
 
-func (et *registerE2ETester) TestRegisterValidUserAccount(t *testing.T) {
+func (et *RegisterE2ETester) TestRegisterValidUserAccount(t *testing.T) {
 	if et.router == nil {
 		return
 	}
 
 	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
-		t, "POST", testdataPath+"valid_user_account_testdata.json",
+		t, "POST", registerTestdataPath+"valid_user_account_testdata.json",
 	)
 
 	// check status code
@@ -226,13 +235,13 @@ func (et *registerE2ETester) TestRegisterValidUserAccount(t *testing.T) {
 	}
 }
 
-func (et *registerE2ETester) TestRegisterNoName(t *testing.T) {
+func (et *RegisterE2ETester) TestRegisterNoName(t *testing.T) {
 	if et.router == nil {
 		return
 	}
 
 	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
-		t, "POST", testdataPath+"no_name_testdata.json",
+		t, "POST", registerTestdataPath+"no_name_testdata.json",
 	)
 
 	// check status code
@@ -268,13 +277,13 @@ func (et *registerE2ETester) TestRegisterNoName(t *testing.T) {
 	}
 }
 
-func (et *registerE2ETester) TestRegisterNameWithoutNumber(t *testing.T) {
+func (et *RegisterE2ETester) TestRegisterNameWithoutNumber(t *testing.T) {
 	if et.router == nil {
 		return
 	}
 
 	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
-		t, "POST", testdataPath+"name_without_number_testdata.json",
+		t, "POST", registerTestdataPath+"name_without_number_testdata.json",
 	)
 
 	// check status code
@@ -310,13 +319,13 @@ func (et *registerE2ETester) TestRegisterNameWithoutNumber(t *testing.T) {
 	}
 }
 
-func (et *registerE2ETester) TestRegisterShortName(t *testing.T) {
+func (et *RegisterE2ETester) TestRegisterShortName(t *testing.T) {
 	if et.router == nil {
 		return
 	}
 
 	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
-		t, "POST", testdataPath+"short_name_testdata.json",
+		t, "POST", registerTestdataPath+"short_name_testdata.json",
 	)
 
 	// check status code
@@ -352,13 +361,13 @@ func (et *registerE2ETester) TestRegisterShortName(t *testing.T) {
 	}
 }
 
-func (et *registerE2ETester) TestRegisterInvalidEmail(t *testing.T) {
+func (et *RegisterE2ETester) TestRegisterInvalidEmail(t *testing.T) {
 	if et.router == nil {
 		return
 	}
 
 	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
-		t, "POST", testdataPath+"invalid_email_testdata.json",
+		t, "POST", registerTestdataPath+"invalid_email_testdata.json",
 	)
 
 	// check status code
@@ -394,13 +403,13 @@ func (et *registerE2ETester) TestRegisterInvalidEmail(t *testing.T) {
 	}
 }
 
-func (et *registerE2ETester) TestRegisterShortPassword(t *testing.T) {
+func (et *RegisterE2ETester) TestRegisterShortPassword(t *testing.T) {
 	if et.router == nil {
 		return
 	}
 
 	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
-		t, "POST", testdataPath+"short_password_testdata.json",
+		t, "POST", registerTestdataPath+"short_password_testdata.json",
 	)
 
 	// check status code
@@ -436,13 +445,13 @@ func (et *registerE2ETester) TestRegisterShortPassword(t *testing.T) {
 	}
 }
 
-func (et *registerE2ETester) TestRegisterPasswordWithoutLowerCaseLetter(t *testing.T) {
+func (et *RegisterE2ETester) TestRegisterPasswordWithoutLowerCaseLetter(t *testing.T) {
 	if et.router == nil {
 		return
 	}
 
 	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
-		t, "POST", testdataPath+"password_without_lower_case_letter_testdata.json",
+		t, "POST", registerTestdataPath+"password_without_lower_case_letter_testdata.json",
 	)
 
 	// check status code
@@ -478,13 +487,13 @@ func (et *registerE2ETester) TestRegisterPasswordWithoutLowerCaseLetter(t *testi
 	}
 }
 
-func (et *registerE2ETester) TestRegisterPasswordWithoutUpperCaseLetter(t *testing.T) {
+func (et *RegisterE2ETester) TestRegisterPasswordWithoutUpperCaseLetter(t *testing.T) {
 	if et.router == nil {
 		return
 	}
 
 	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
-		t, "POST", testdataPath+"password_without_upper_case_letter_testdata.json",
+		t, "POST", registerTestdataPath+"password_without_upper_case_letter_testdata.json",
 	)
 
 	// check status code
@@ -520,13 +529,13 @@ func (et *registerE2ETester) TestRegisterPasswordWithoutUpperCaseLetter(t *testi
 	}
 }
 
-func (et *registerE2ETester) TestRegisterPasswordWithoutNumber(t *testing.T) {
+func (et *RegisterE2ETester) TestRegisterPasswordWithoutNumber(t *testing.T) {
 	if et.router == nil {
 		return
 	}
 
 	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
-		t, "POST", testdataPath+"password_without_number_testdata.json",
+		t, "POST", registerTestdataPath+"password_without_number_testdata.json",
 	)
 
 	// check status code
@@ -562,13 +571,13 @@ func (et *registerE2ETester) TestRegisterPasswordWithoutNumber(t *testing.T) {
 	}
 }
 
-func (et *registerE2ETester) TestRegisterPasswordWithoutSign(t *testing.T) {
+func (et *RegisterE2ETester) TestRegisterPasswordWithoutSign(t *testing.T) {
 	if et.router == nil {
 		return
 	}
 
 	w, testCase, res, cookieMap := et.getRegisterTestdataAndResponse(
-		t, "POST", testdataPath+"password_without_sign_testdata.json",
+		t, "POST", registerTestdataPath+"password_without_sign_testdata.json",
 	)
 
 	// check status code
