@@ -1,0 +1,20 @@
+type User {
+  id: UUID!
+  name: String!
+  displayName: String!
+  email: String!
+  loginCount: Int!
+  role: UserRole!
+  plan: UserPlan!
+  status: UserStatus!
+  prevStatus: UserStatus!
+  createdAt: Time!
+  updatedAt: Time!
+
+  # relations
+  userInfo: UserInfo
+  userAccount: UserAccount
+  userSetting: UserSetting
+  badges: [Badge!]!
+  themes: [Theme!]!
+}

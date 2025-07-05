@@ -1,0 +1,7 @@
+enum BadgeType {
+  Diamond
+  Golden
+  Silver
+  Bronze
+  Steel
+}

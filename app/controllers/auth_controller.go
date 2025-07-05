@@ -25,19 +25,19 @@ type AuthControllerInterface interface {
 	DeleteMe(ctx *gin.Context)
 }
 
-type authController struct {
+type AuthController struct {
 	authService services.AuthServiceInterface
 }
 
 func NewAuthController(service services.AuthServiceInterface) AuthControllerInterface {
-	return &authController{
+	return &AuthController{
 		authService: service,
 	}
 }
 
 /* ============================== Controllers ============================== */
 
-func (c *authController) Register(ctx *gin.Context) {
+func (c *AuthController) Register(ctx *gin.Context) {
 	var reqDto dtos.RegisterReqDto
 	reqDto.UserAgent = ctx.GetHeader("User-Agent")
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
@@ -77,7 +77,7 @@ func (c *authController) Register(ctx *gin.Context) {
 	})
 }
 
-func (c *authController) Login(ctx *gin.Context) {
+func (c *AuthController) Login(ctx *gin.Context) {
 	var reqDto dtos.LoginReqDto
 	reqDto.UserAgent = ctx.GetHeader("User-Agent")
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
@@ -112,7 +112,7 @@ func (c *authController) Login(ctx *gin.Context) {
 }
 
 // with AuthMiddleware()
-func (c *authController) Logout(ctx *gin.Context) {
+func (c *AuthController) Logout(ctx *gin.Context) {
 	var reqDto dtos.LogoutReqDto
 	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
@@ -148,7 +148,7 @@ func (c *authController) Logout(ctx *gin.Context) {
 	})
 }
 
-func (c *authController) SendAuthCode(ctx *gin.Context) {
+func (c *AuthController) SendAuthCode(ctx *gin.Context) {
 	var reqDto dtos.SendAuthCodeReqDto
 	reqDto.UserAgent = ctx.GetHeader("User-Agent")
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
@@ -183,7 +183,7 @@ func (c *authController) SendAuthCode(ctx *gin.Context) {
 }
 
 // with AuthMiddleware()
-func (c *authController) ValidateEmail(ctx *gin.Context) {
+func (c *AuthController) ValidateEmail(ctx *gin.Context) {
 	var reqDto dtos.ValidateEmailReqDto
 	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
@@ -229,7 +229,7 @@ func (c *authController) ValidateEmail(ctx *gin.Context) {
 }
 
 // with AuthMiddleware()
-func (c *authController) ResetEmail(ctx *gin.Context) {
+func (c *AuthController) ResetEmail(ctx *gin.Context) {
 	var reqDto dtos.ResetEmailReqDto
 	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
@@ -275,7 +275,7 @@ func (c *authController) ResetEmail(ctx *gin.Context) {
 }
 
 // ! this should not use any middleware, bcs we want the user to set it by providing the account
-func (c *authController) ForgetPassword(ctx *gin.Context) {
+func (c *AuthController) ForgetPassword(ctx *gin.Context) {
 	var reqDto dtos.ForgetPasswordReqDto
 	reqDto.UserAgent = ctx.GetHeader("User-Agent")
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
@@ -310,7 +310,7 @@ func (c *authController) ForgetPassword(ctx *gin.Context) {
 }
 
 // with AuthMiddleware()
-func (c *authController) DeleteMe(ctx *gin.Context) {
+func (c *AuthController) DeleteMe(ctx *gin.Context) {
 	var reqDto dtos.DeleteMeReqDto
 	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {

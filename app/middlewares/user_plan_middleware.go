@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	exceptions "notezy-backend/app/exceptions"
-	enums "notezy-backend/app/models/enums"
+	enums "notezy-backend/app/models/schemas/enums"
 )
 
 // This UserPlanMiddleware() MUST be processed AFTER the AuthMiddleware()

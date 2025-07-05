@@ -1,10 +1,10 @@
 package developmentroutes
 
 import (
-	"notezy-backend/app/controllers"
-	"notezy-backend/app/middlewares"
+	controllers "notezy-backend/app/controllers"
+	middlewares "notezy-backend/app/middlewares"
 	models "notezy-backend/app/models"
-	"notezy-backend/app/services"
+	services "notezy-backend/app/services"
 )
 
 func configureDevelopmentUserInfoRoutes() {

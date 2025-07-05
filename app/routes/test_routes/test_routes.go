@@ -2,10 +2,11 @@ package testroutes
 
 import (
 	"fmt"
-	"notezy-backend/shared/constants"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+
+	constants "notezy-backend/shared/constants"
 )
 
 var (

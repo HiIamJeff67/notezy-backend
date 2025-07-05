@@ -1,13 +1,14 @@
 package testroutes
 
 import (
-	"notezy-backend/app/controllers"
-	"notezy-backend/app/middlewares"
-	"notezy-backend/app/models/enums"
-	"notezy-backend/app/services"
+	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
+
+	controllers "notezy-backend/app/controllers"
+	middlewares "notezy-backend/app/middlewares"
+	enums "notezy-backend/app/models/schemas/enums"
+	services "notezy-backend/app/services"
 )
 
 func ConfigureTestAuthRoutes(db *gorm.DB, routerGroup *gin.RouterGroup) {

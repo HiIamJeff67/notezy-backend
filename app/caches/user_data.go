@@ -12,7 +12,7 @@ import (
 
 	exceptions "notezy-backend/app/exceptions"
 	logs "notezy-backend/app/logs"
-	enums "notezy-backend/app/models/enums"
+	enums "notezy-backend/app/models/schemas/enums"
 	shared "notezy-backend/shared"
 	types "notezy-backend/shared/types"
 )

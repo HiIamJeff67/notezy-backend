@@ -1,0 +1,6 @@
+enum UserPlan {
+  Enterprise
+  Ultimate
+  Pro
+  Free
+}

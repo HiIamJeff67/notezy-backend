@@ -1,7 +1,7 @@
 package inputs
 
 import (
-	enums "notezy-backend/app/models/enums"
+	enums "notezy-backend/app/models/schemas/enums"
 )
 
 type CreateUserSettingInput struct {

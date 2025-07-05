@@ -15,17 +15,19 @@ import (
 
 type UserSettingControllerInterface interface{}
 
-type userSettingController struct {
+type UserSettingController struct {
 	userSettingService services.UserSettingServiceInterface
 }
 
-var UserSettingController UserSettingControllerInterface = &userSettingController{
-	userSettingService: services.UserSettingService,
+func NewUserSettingController(service services.UserSettingServiceInterface) UserSettingControllerInterface {
+	return &UserSettingController{
+		userSettingService: service,
+	}
 }
 
 /* ============================== Controllers ============================== */
 
-func (c *userSettingController) GetMySetting(ctx *gin.Context) {
+func (c *UserSettingController) GetMySetting(ctx *gin.Context) {
 	var reqDto dtos.GetMySettingReqDto
 	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {

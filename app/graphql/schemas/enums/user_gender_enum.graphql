@@ -1,0 +1,5 @@
+enum UserGender {
+  Male
+  Female
+  PreferNotToSay
+}

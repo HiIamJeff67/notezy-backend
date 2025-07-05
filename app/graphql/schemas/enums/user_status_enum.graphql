@@ -1,0 +1,6 @@
+enum UserStatus {
+  Online
+  AFK
+  DoNotDisturb
+  Offline
+}

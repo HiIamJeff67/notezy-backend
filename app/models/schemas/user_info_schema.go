@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	enums "notezy-backend/app/models/enums"
+	enums "notezy-backend/app/models/schemas/enums"
 	shared "notezy-backend/shared"
 )
 
@@ -17,7 +17,7 @@ type UserInfo struct {
 	Header             *string          `json:"header" gorm:"column:header; size:64;"`
 	Introduction       *string          `json:"introduction" gorm:"column:introduction; size:256;"`
 	Gender             enums.UserGender `json:"gender" gorm:"column:gender; type:UserGender; not null; default:'PreferNotToSay'"`
-	Country            enums.Country    `json:"country" gorm:"column:country; type:Country; not null; default:'Default'"`
+	Country            enums.Country    `json:"country" gorm:"column:country; type:Country;"`
 	BirthDate          time.Time        `json:"birthDate" gorm:"column:birth_date; type:timestamptz; not null; default:CURRENT_TIMESTAMP"`
 	UpdatedAt          time.Time        `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 }

@@ -4,7 +4,7 @@ import (
 	controllers "notezy-backend/app/controllers"
 	middlewares "notezy-backend/app/middlewares"
 	models "notezy-backend/app/models"
-	enums "notezy-backend/app/models/enums"
+	enums "notezy-backend/app/models/schemas/enums"
 	services "notezy-backend/app/services"
 )
 

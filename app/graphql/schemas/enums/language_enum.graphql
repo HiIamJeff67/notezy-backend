@@ -1,0 +1,7 @@
+enum Language {
+  English
+  TraditionalChinese
+  SimpleChinese
+  Japanese
+  Korean
+}

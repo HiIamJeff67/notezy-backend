@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-playground/validator"
 
-	enums "notezy-backend/app/models/enums"
+	enums "notezy-backend/app/models/schemas/enums"
 	util "notezy-backend/app/util"
 )
 

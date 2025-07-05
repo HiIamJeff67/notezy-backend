@@ -9,7 +9,6 @@ import (
 type CountryCode string
 
 const (
-	CountryCode_Default       CountryCode = "Default" // null value
 	CountryCode_Taiwan        CountryCode = "+886"
 	CountryCode_Japan         CountryCode = "+81"
 	CountryCode_Malaysia      CountryCode = "+60"
@@ -55,7 +54,6 @@ func (cc *CountryCode) IsValidEnum() bool {
 
 /* ========================= All CountryCodes ========================= */
 var AllCountryCodes = []CountryCode{
-	CountryCode_Default,
 	CountryCode_Taiwan,
 	CountryCode_Japan,
 	CountryCode_Malaysia,
@@ -66,7 +64,6 @@ var AllCountryCodes = []CountryCode{
 	CountryCode_Australia,
 }
 var AllCountryCodeStrings = []string{
-	string(CountryCode_Default),
 	string(CountryCode_Taiwan),
 	string(CountryCode_Japan),
 	string(CountryCode_Malaysia),

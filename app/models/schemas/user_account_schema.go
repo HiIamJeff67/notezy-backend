@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	enums "notezy-backend/app/models/enums"
+	enums "notezy-backend/app/models/schemas/enums"
 	shared "notezy-backend/shared"
 )
 
@@ -14,7 +14,7 @@ type UserAccount struct {
 	UserId            uuid.UUID         `json:"userId" gorm:"column:user_id; type:uuid; not null; unique;"`
 	AuthCode          string            `json:"authCode" gorm:"column:auth_code; not null;"`
 	AuthCodeExpiredAt time.Time         `json:"authCodeExpiredAt" gorm:"column:auth_code_expired_at; not null;"` // the exact time when authCode expires
-	CountryCode       enums.CountryCode `json:"countryCode" gorm:"column:country_code; type:CountryCode; not null; default:'Default'"`
+	CountryCode       enums.CountryCode `json:"countryCode" gorm:"column:country_code; type:CountryCode;"`
 	PhoneNumber       *string           `json:"phoneNumber" gorm:"column:phone_number; unique;"`
 	GoogleCredential  *string           `json:"googleCredential" gorm:"column:google_credential; unique;"`
 	DiscordCredential *string           `json:"discordCredential" gorm:"column:discord_credential; unique;"`

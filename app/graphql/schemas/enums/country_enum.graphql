@@ -1,0 +1,11 @@
+enum Country {
+  Taiwan
+  Japan
+  Malaysia
+  Singapore
+  China
+  UnitedStatesOfAmerica
+  UnitedKingdom
+  Australia
+  Canada
+}
