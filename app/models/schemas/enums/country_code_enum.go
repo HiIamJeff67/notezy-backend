@@ -9,14 +9,14 @@ import (
 type CountryCode string
 
 const (
-	CountryCode_Taiwan        CountryCode = "+886"
-	CountryCode_Japan         CountryCode = "+81"
-	CountryCode_Malaysia      CountryCode = "+60"
-	CountryCode_Singapore     CountryCode = "+65"
-	CountryCode_China         CountryCode = "+86"
-	CountryCode_NANP          CountryCode = "+1"
-	CountryCode_UnitedKingdom CountryCode = "+44"
-	CountryCode_Australia     CountryCode = "+61"
+	CountryCode_Taiwan        CountryCode = "COUNTRY_CODE_886"
+	CountryCode_Japan         CountryCode = "COUNTRY_CODE_81"
+	CountryCode_Malaysia      CountryCode = "COUNTRY_CODE_60"
+	CountryCode_Singapore     CountryCode = "COUNTRY_CODE_65"
+	CountryCode_China         CountryCode = "COUNTRY_CODE_86"
+	CountryCode_NANP          CountryCode = "COUNTRY_CODE_1"
+	CountryCode_UnitedKingdom CountryCode = "COUNTRY_CODE_44"
+	CountryCode_Australia     CountryCode = "COUNTRY_CODE_61"
 )
 
 func (cc CountryCode) Name() string {

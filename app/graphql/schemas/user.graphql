@@ -1,20 +1,25 @@
-type User {
-  id: UUID!
-  name: String!
+# the complete user structure: app/models/schemas/user_schema.go
+# this schema file is only use for go graphql to improve better user experience
+
+type PublicUser {
+  # id: UUID!
+  name: String! # the identifier of the PublicUser
   displayName: String!
-  email: String!
-  loginCount: Int!
+  email: String! # the secondary indentifier of the PublicUser
+  # password: String!
+  # refreshToken: String!
+  # loginCount: Int
+  # blockLoginUtil: Time!
+  # userAgent: String!
   role: UserRole!
   plan: UserPlan!
-  status: UserStatus!
   prevStatus: UserStatus!
+  status: UserStatus!
   createdAt: Time!
   updatedAt: Time!
 
   # relations
-  userInfo: UserInfo
-  userAccount: UserAccount
-  userSetting: UserSetting
-  badges: [Badge!]!
-  themes: [Theme!]!
+  userInfo: PublicUserInfo!
+  badges: [PublicBadge!]!
+  themes: [PublicTheme!]!
 }

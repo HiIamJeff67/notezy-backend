@@ -1,0 +1,14 @@
+type PublicTheme {
+  id: UUID!
+  name: Strnig!
+  #   authorId: UUID!
+  version: String!
+  isDefault: Boolean!
+  downloadURL: String
+  #   downloadCount: Int!
+  createdAt: Time!
+  updatedAt: Time!
+
+  # relations
+  author: PublicUser!
+}

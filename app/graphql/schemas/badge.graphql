@@ -1,0 +1,10 @@
+type PublicBadge {
+  id: UUID!
+  title: String!
+  description: String!
+  type: BadgeType!
+  imageURL: String
+  createdAt: Time!
+
+  users: [PublicUser!]!
+}

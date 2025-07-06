@@ -42,7 +42,7 @@ func (s *UserAccountService) GetMyAccount(reqDto *dtos.GetMyAccountReqDto) (*dto
 	}
 
 	return &dtos.GetMyAccountResDto{
-		CountryCode:       userAccount.CountryCode,
+		CountryCode:       *userAccount.CountryCode,
 		PhoneNumber:       userAccount.PhoneNumber,
 		GoogleCredential:  userAccount.GoogleCredential,
 		DiscordCredential: userAccount.DiscordCredential,

@@ -47,7 +47,7 @@ func (s *UserInfoService) GetMyInfo(reqDto *dtos.GetMyInfoReqDto) (*dtos.GetMyIn
 		Header:             userInfo.Header,
 		Introduction:       userInfo.Introduction,
 		Gender:             userInfo.Gender,
-		Country:            userInfo.Country,
+		Country:            *userInfo.Country,
 		BirthDate:          userInfo.BirthDate,
 		UpdatedAt:          userInfo.UpdatedAt,
 	}, nil

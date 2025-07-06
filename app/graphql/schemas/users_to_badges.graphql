@@ -1,0 +1,8 @@
+type PublicUsersToBadges {
+  userId: UUID!
+  badgeId: UUID!
+  createdAt: Time!
+
+  user: PublicUser!
+  badge: PublicBadge!
+}
