@@ -1,14 +1,14 @@
 # Where are all the schema files located? globs are supported eg  src/**/*.graphqls
 schema:
+  - app/graphql/schemas/enums/*.graphql
   - app/graphql/schemas/*.graphql
 
 # Where should the generated server code go?
 exec:
   package: generated
-  layout: single-file # Only other option is "follow-schema," ie multi-file.
-
-  # Only for single-file layout:
-  filename: app/graphql/generated/generated.go
+  layout: follow-schema # Only other option is "follow-schema," ie multi-file.
+  dir: app/graphql/generated
+  filename: "{name}_generated.go" # optional
 
 # Uncomment to enable federation
 # federation:
@@ -121,17 +121,22 @@ autobind:
 # The first line in each type will be used as defaults for resolver arguments and
 # modelgen, the others will be allowed when binding to fields. Configure them to
 # your liking
+
 models:
   ID:
-    model: github.com/99designs/gqlgen/graphql.ID
+    model: "github.com/99designs/gqlgen/graphql.ID"
   UUID:
-    model: github.com/google/uuid.UUID
+    model: "notezy-backend/app/graphql/scalars.UUID"
+    # marshal: notezy-backend/app/graphql/scalars.MarshalUUID
+    # unmarshal: notezy-backend/app/graphql/scalars.UnmarshalUUID
   Time:
-    model: time.Time
+    model: "notezy-backend/app/graphql/scalars.Time"
+    # marshal: notezy-backend/app/graphql/scalars.MarshalTime
+    # unmarshal: notezy-backend/app/graphql/scalars.UnmarshalTime
   Int:
-    model: github.com/99designs/gqlgen/graphql.Int32
+    model: "github.com/99designs/gqlgen/graphql.Int32"
   Int64:
-    model: github.com/99designs/gqlgen/graphql.Int64
+    model: "github.com/99designs/gqlgen/graphql.Int64"
 
   UserRole:
     model: "notezy-backend/app/models/schemas/enums.UserRole"

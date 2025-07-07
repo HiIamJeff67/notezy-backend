@@ -79,6 +79,16 @@
     ],
     "description": "Create a basic comment with length of 20 as a context seperator to seperate text in the text file"
   },
+  "Generate a Pair of Context Seperators with Size of 15 for Text File": {
+    "prefix": [
+      "tsep15",
+      "textFileContextSeperator15"
+    ],
+    "body": [
+      "# =============== ${1:_Title_} =============== #"
+    ],
+    "description": "Create a basic comment with length of 15 as a context seperator to seperate text in the text file"
+  },
   "Generate a Pair of Context Seperators with Size of 30 for Text File": {
     "prefix": [
       "tsep30",

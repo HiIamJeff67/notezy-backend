@@ -1,0 +1,47 @@
+# every schemas or graphql types which want to be searchable
+# are required to inheritence the structure (of cursor-based pagination) here
+
+# =============== Search Filters (part of Input) =============== #
+# input ExampleSearchableFilters {}
+
+# =============== Search By (part of Input) =============== #
+# enum ExampleSearchableSortBy {
+#     RELEVANCE
+# }
+
+# =============== Search Order (part of Input) =============== #
+# Note that this field is fixed, and should not build another one for customization
+enum SearchableSortOrder {
+  ASC
+  DESC
+}
+
+# ==================== Search Input ==================== #
+# input ExampleSearchInput {
+#     query: String!
+#     after: String
+#     first: Int = 10
+#     filters: SearchableFilters
+#     sortBy: SearchableSortBy = RELEVANCE
+#     sortOrder: SearchableSortOrder = DESC
+# }
+
+# =============== Current Edge (part of Output) =============== #
+interface Edge {
+  cursor: String!
+}
+
+# =============== Page Info (part of Output) =============== #
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+# =============== Search Output (Connection) =============== #
+interface Connection {
+  pageInfo: PageInfo!
+  totalCount: Int!
+  searchTime: Float!
+}

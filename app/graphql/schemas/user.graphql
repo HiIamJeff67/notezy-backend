@@ -23,3 +23,41 @@ type PublicUser {
   badges: [PublicBadge!]!
   themes: [PublicTheme!]!
 }
+
+# =============== Searchable Input & Enums & Interfaces =============== #
+input SearchableUserFilters {
+  role: UserRole
+  plan: UserPlan
+  status: UserStatus
+  hasAvatar: Boolean
+  country: Country
+  isOnline: Boolean
+}
+
+enum SearchableUserSortBy {
+  RELEVANCE
+  NAME # using this to check both the name and display name fields
+  LAST_ACTIVE
+  CREATED_AT
+}
+
+input SearchableUserInput {
+  query: String!
+  after: String # base64 encoded cursor
+  first: Int = 10
+  filters: SearchableUserFilters
+  sortBy: SearchableUserSortBy = RELEVANCE
+  sortOrder: SearchableSortOrder = DESC
+}
+
+type SearchableUserEdge implements Edge {
+  node: PublicUser!
+  cursor: String!
+}
+
+type SearchableUserConnection implements Connection {
+  edges: [SearchableUserEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+  searchTime: Float!
+}

@@ -1,6 +1,6 @@
 type PublicTheme {
   id: UUID!
-  name: Strnig!
+  name: String!
   #   authorId: UUID!
   version: String!
   isDefault: Boolean!
