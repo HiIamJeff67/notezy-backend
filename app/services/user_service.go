@@ -1,6 +1,8 @@
 package services
 
 import (
+	"gorm.io/gorm"
+
 	caches "notezy-backend/app/caches"
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
@@ -8,8 +10,6 @@ import (
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
-
-	"gorm.io/gorm"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -56,6 +56,20 @@ func (s *UserService) GetAllUsers() (*[]schemas.User, *exceptions.Exception) {
 
 	return users, nil
 }
+
+// func (s *UserService) SearchUsers(ctx context.Context, gqlInput gqlmodels.SearchableUserInput) (*gqlmodels.SearchableUserConnection, error) {
+// 	startTime := time.Now()
+
+// 	query := s.db.WithContext(ctx).Model(&schemas.User{})
+
+// 	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
+// 		searchCursor, err := util.DecodeSearchCursor(*gqlInput.After)
+// 		if err != nil {
+// 			return nil, fmt.Errorf("invalid cursor: %w", err)
+// 		}
+
+// 	}
+// }
 
 func (s *UserService) UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {

@@ -6,7 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"notezy-backend/app/graphql/models"
+	gqlmodels "notezy-backend/app/graphql/models"
 	"strconv"
 	"sync/atomic"
 	"time"
@@ -30,7 +30,7 @@ import (
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _PublicUsersToBadges_userId(ctx context.Context, field graphql.CollectedField, obj *models.PublicUsersToBadges) (ret graphql.Marshaler) {
+func (ec *executionContext) _PublicUsersToBadges_userId(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicUsersToBadges) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PublicUsersToBadges_userId(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -74,7 +74,7 @@ func (ec *executionContext) fieldContext_PublicUsersToBadges_userId(_ context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _PublicUsersToBadges_badgeId(ctx context.Context, field graphql.CollectedField, obj *models.PublicUsersToBadges) (ret graphql.Marshaler) {
+func (ec *executionContext) _PublicUsersToBadges_badgeId(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicUsersToBadges) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PublicUsersToBadges_badgeId(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -118,7 +118,7 @@ func (ec *executionContext) fieldContext_PublicUsersToBadges_badgeId(_ context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _PublicUsersToBadges_createdAt(ctx context.Context, field graphql.CollectedField, obj *models.PublicUsersToBadges) (ret graphql.Marshaler) {
+func (ec *executionContext) _PublicUsersToBadges_createdAt(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicUsersToBadges) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PublicUsersToBadges_createdAt(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -162,7 +162,7 @@ func (ec *executionContext) fieldContext_PublicUsersToBadges_createdAt(_ context
 	return fc, nil
 }
 
-func (ec *executionContext) _PublicUsersToBadges_user(ctx context.Context, field graphql.CollectedField, obj *models.PublicUsersToBadges) (ret graphql.Marshaler) {
+func (ec *executionContext) _PublicUsersToBadges_user(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicUsersToBadges) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PublicUsersToBadges_user(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -188,7 +188,7 @@ func (ec *executionContext) _PublicUsersToBadges_user(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*models.PublicUser)
+	res := resTmp.(*gqlmodels.PublicUser)
 	fc.Result = res
 	return ec.marshalNPublicUser2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUser(ctx, field.Selections, res)
 }
@@ -232,7 +232,7 @@ func (ec *executionContext) fieldContext_PublicUsersToBadges_user(_ context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _PublicUsersToBadges_badge(ctx context.Context, field graphql.CollectedField, obj *models.PublicUsersToBadges) (ret graphql.Marshaler) {
+func (ec *executionContext) _PublicUsersToBadges_badge(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicUsersToBadges) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PublicUsersToBadges_badge(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -258,7 +258,7 @@ func (ec *executionContext) _PublicUsersToBadges_badge(ctx context.Context, fiel
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*models.PublicBadge)
+	res := resTmp.(*gqlmodels.PublicBadge)
 	fc.Result = res
 	return ec.marshalNPublicBadge2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicBadge(ctx, field.Selections, res)
 }
@@ -306,7 +306,7 @@ func (ec *executionContext) fieldContext_PublicUsersToBadges_badge(_ context.Con
 
 var publicUsersToBadgesImplementors = []string{"PublicUsersToBadges"}
 
-func (ec *executionContext) _PublicUsersToBadges(ctx context.Context, sel ast.SelectionSet, obj *models.PublicUsersToBadges) graphql.Marshaler {
+func (ec *executionContext) _PublicUsersToBadges(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.PublicUsersToBadges) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, publicUsersToBadgesImplementors)
 
 	out := graphql.NewFieldSet(fields)

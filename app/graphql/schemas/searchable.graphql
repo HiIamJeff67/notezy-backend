@@ -27,21 +27,22 @@ enum SearchableSortOrder {
 # }
 
 # =============== Current Edge (part of Output) =============== #
-interface Edge {
-  cursor: String!
+interface SearchEdge {
+  # node: data of the result, this should be implement in each models require search functionality
+  searchCursor: String!
 }
 
 # =============== Page Info (part of Output) =============== #
-type PageInfo {
+type SearchPageInfo {
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
-  startCursor: String
-  endCursor: String
+  startSearchCursor: String
+  endSearchCursor: String
 }
 
 # =============== Search Output (Connection) =============== #
-interface Connection {
-  pageInfo: PageInfo!
+interface SearchConnection {
+  searchPageInfo: SearchPageInfo!
   totalCount: Int!
   searchTime: Float!
 }

@@ -38,13 +38,6 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
-	PageInfo struct {
-		EndCursor       func(childComplexity int) int
-		HasNextPage     func(childComplexity int) int
-		HasPreviousPage func(childComplexity int) int
-		StartCursor     func(childComplexity int) int
-	}
-
 	PublicBadge struct {
 		CreatedAt   func(childComplexity int) int
 		Description func(childComplexity int) int
@@ -103,16 +96,23 @@ type ComplexityRoot struct {
 	Query struct {
 	}
 
+	SearchPageInfo struct {
+		EndSearchCursor   func(childComplexity int) int
+		HasNextPage       func(childComplexity int) int
+		HasPreviousPage   func(childComplexity int) int
+		StartSearchCursor func(childComplexity int) int
+	}
+
 	SearchableUserConnection struct {
-		Edges      func(childComplexity int) int
-		PageInfo   func(childComplexity int) int
-		SearchTime func(childComplexity int) int
-		TotalCount func(childComplexity int) int
+		SearchEdges    func(childComplexity int) int
+		SearchPageInfo func(childComplexity int) int
+		SearchTime     func(childComplexity int) int
+		TotalCount     func(childComplexity int) int
 	}
 
 	SearchableUserEdge struct {
-		Cursor func(childComplexity int) int
-		Node   func(childComplexity int) int
+		Node         func(childComplexity int) int
+		SearchCursor func(childComplexity int) int
 	}
 }
 
@@ -134,34 +134,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
-
-	case "PageInfo.endCursor":
-		if e.complexity.PageInfo.EndCursor == nil {
-			break
-		}
-
-		return e.complexity.PageInfo.EndCursor(childComplexity), true
-
-	case "PageInfo.hasNextPage":
-		if e.complexity.PageInfo.HasNextPage == nil {
-			break
-		}
-
-		return e.complexity.PageInfo.HasNextPage(childComplexity), true
-
-	case "PageInfo.hasPreviousPage":
-		if e.complexity.PageInfo.HasPreviousPage == nil {
-			break
-		}
-
-		return e.complexity.PageInfo.HasPreviousPage(childComplexity), true
-
-	case "PageInfo.startCursor":
-		if e.complexity.PageInfo.StartCursor == nil {
-			break
-		}
-
-		return e.complexity.PageInfo.StartCursor(childComplexity), true
 
 	case "PublicBadge.createdAt":
 		if e.complexity.PublicBadge.CreatedAt == nil {
@@ -443,19 +415,47 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PublicUsersToBadges.UserID(childComplexity), true
 
-	case "SearchableUserConnection.edges":
-		if e.complexity.SearchableUserConnection.Edges == nil {
+	case "SearchPageInfo.endSearchCursor":
+		if e.complexity.SearchPageInfo.EndSearchCursor == nil {
 			break
 		}
 
-		return e.complexity.SearchableUserConnection.Edges(childComplexity), true
+		return e.complexity.SearchPageInfo.EndSearchCursor(childComplexity), true
 
-	case "SearchableUserConnection.pageInfo":
-		if e.complexity.SearchableUserConnection.PageInfo == nil {
+	case "SearchPageInfo.hasNextPage":
+		if e.complexity.SearchPageInfo.HasNextPage == nil {
 			break
 		}
 
-		return e.complexity.SearchableUserConnection.PageInfo(childComplexity), true
+		return e.complexity.SearchPageInfo.HasNextPage(childComplexity), true
+
+	case "SearchPageInfo.hasPreviousPage":
+		if e.complexity.SearchPageInfo.HasPreviousPage == nil {
+			break
+		}
+
+		return e.complexity.SearchPageInfo.HasPreviousPage(childComplexity), true
+
+	case "SearchPageInfo.startSearchCursor":
+		if e.complexity.SearchPageInfo.StartSearchCursor == nil {
+			break
+		}
+
+		return e.complexity.SearchPageInfo.StartSearchCursor(childComplexity), true
+
+	case "SearchableUserConnection.searchEdges":
+		if e.complexity.SearchableUserConnection.SearchEdges == nil {
+			break
+		}
+
+		return e.complexity.SearchableUserConnection.SearchEdges(childComplexity), true
+
+	case "SearchableUserConnection.searchPageInfo":
+		if e.complexity.SearchableUserConnection.SearchPageInfo == nil {
+			break
+		}
+
+		return e.complexity.SearchableUserConnection.SearchPageInfo(childComplexity), true
 
 	case "SearchableUserConnection.searchTime":
 		if e.complexity.SearchableUserConnection.SearchTime == nil {
@@ -471,19 +471,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.SearchableUserConnection.TotalCount(childComplexity), true
 
-	case "SearchableUserEdge.cursor":
-		if e.complexity.SearchableUserEdge.Cursor == nil {
-			break
-		}
-
-		return e.complexity.SearchableUserEdge.Cursor(childComplexity), true
-
 	case "SearchableUserEdge.node":
 		if e.complexity.SearchableUserEdge.Node == nil {
 			break
 		}
 
 		return e.complexity.SearchableUserEdge.Node(childComplexity), true
+
+	case "SearchableUserEdge.searchCursor":
+		if e.complexity.SearchableUserEdge.SearchCursor == nil {
+			break
+		}
+
+		return e.complexity.SearchableUserEdge.SearchCursor(childComplexity), true
 
 	}
 	return 0, false
@@ -685,21 +685,22 @@ enum SearchableSortOrder {
 # }
 
 # =============== Current Edge (part of Output) =============== #
-interface Edge {
-  cursor: String!
+interface SearchEdge {
+  # node: data of the result, this should be implement in each models require search functionality
+  searchCursor: String!
 }
 
 # =============== Page Info (part of Output) =============== #
-type PageInfo {
+type SearchPageInfo {
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
-  startCursor: String
-  endCursor: String
+  startSearchCursor: String
+  endSearchCursor: String
 }
 
 # =============== Search Output (Connection) =============== #
-interface Connection {
-  pageInfo: PageInfo!
+interface SearchConnection {
+  searchPageInfo: SearchPageInfo!
   totalCount: Int!
   searchTime: Float!
 }
@@ -745,7 +746,7 @@ type PublicUser {
   themes: [PublicTheme!]!
 }
 
-# =============== Searchable Input & Enums & Interfaces =============== #
+# =============== Searchable Filters & SortBy & Input =============== #
 input SearchableUserFilters {
   role: UserRole
   plan: UserPlan
@@ -771,14 +772,16 @@ input SearchableUserInput {
   sortOrder: SearchableSortOrder = DESC
 }
 
-type SearchableUserEdge implements Edge {
+# =============== Searchable Edge & Connection =============== #
+
+type SearchableUserEdge implements SearchEdge {
   node: PublicUser!
-  cursor: String!
+  searchCursor: String!
 }
 
-type SearchableUserConnection implements Connection {
-  edges: [SearchableUserEdge!]!
-  pageInfo: PageInfo!
+type SearchableUserConnection implements SearchConnection {
+  searchEdges: [SearchableUserEdge!]!
+  searchPageInfo: SearchPageInfo!
   totalCount: Int!
   searchTime: Float!
 }

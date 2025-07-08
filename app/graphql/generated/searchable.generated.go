@@ -6,7 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"notezy-backend/app/graphql/models"
+	gqlmodels "notezy-backend/app/graphql/models"
 	"strconv"
 	"sync/atomic"
 
@@ -28,8 +28,8 @@ import (
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _PageInfo_hasNextPage(ctx context.Context, field graphql.CollectedField, obj *models.PageInfo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+func (ec *executionContext) _SearchPageInfo_hasNextPage(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchPageInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchPageInfo_hasNextPage(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -59,9 +59,9 @@ func (ec *executionContext) _PageInfo_hasNextPage(ctx context.Context, field gra
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PageInfo_hasNextPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchPageInfo_hasNextPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "PageInfo",
+		Object:     "SearchPageInfo",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -72,8 +72,8 @@ func (ec *executionContext) fieldContext_PageInfo_hasNextPage(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _PageInfo_hasPreviousPage(ctx context.Context, field graphql.CollectedField, obj *models.PageInfo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PageInfo_hasPreviousPage(ctx, field)
+func (ec *executionContext) _SearchPageInfo_hasPreviousPage(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchPageInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchPageInfo_hasPreviousPage(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -103,9 +103,9 @@ func (ec *executionContext) _PageInfo_hasPreviousPage(ctx context.Context, field
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PageInfo_hasPreviousPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchPageInfo_hasPreviousPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "PageInfo",
+		Object:     "SearchPageInfo",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -116,8 +116,8 @@ func (ec *executionContext) fieldContext_PageInfo_hasPreviousPage(_ context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _PageInfo_startCursor(ctx context.Context, field graphql.CollectedField, obj *models.PageInfo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PageInfo_startCursor(ctx, field)
+func (ec *executionContext) _SearchPageInfo_startSearchCursor(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchPageInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchPageInfo_startSearchCursor(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -130,7 +130,7 @@ func (ec *executionContext) _PageInfo_startCursor(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.StartCursor, nil
+		return obj.StartSearchCursor, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -144,9 +144,9 @@ func (ec *executionContext) _PageInfo_startCursor(ctx context.Context, field gra
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PageInfo_startCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchPageInfo_startSearchCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "PageInfo",
+		Object:     "SearchPageInfo",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -157,8 +157,8 @@ func (ec *executionContext) fieldContext_PageInfo_startCursor(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _PageInfo_endCursor(ctx context.Context, field graphql.CollectedField, obj *models.PageInfo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PageInfo_endCursor(ctx, field)
+func (ec *executionContext) _SearchPageInfo_endSearchCursor(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchPageInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchPageInfo_endSearchCursor(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -171,7 +171,7 @@ func (ec *executionContext) _PageInfo_endCursor(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.EndCursor, nil
+		return obj.EndSearchCursor, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -185,9 +185,9 @@ func (ec *executionContext) _PageInfo_endCursor(ctx context.Context, field graph
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PageInfo_endCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchPageInfo_endSearchCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "PageInfo",
+		Object:     "SearchPageInfo",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -206,13 +206,13 @@ func (ec *executionContext) fieldContext_PageInfo_endCursor(_ context.Context, f
 
 // region    ************************** interface.gotpl ***************************
 
-func (ec *executionContext) _Connection(ctx context.Context, sel ast.SelectionSet, obj models.Connection) graphql.Marshaler {
+func (ec *executionContext) _SearchConnection(ctx context.Context, sel ast.SelectionSet, obj gqlmodels.SearchConnection) graphql.Marshaler {
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case models.SearchableUserConnection:
+	case gqlmodels.SearchableUserConnection:
 		return ec._SearchableUserConnection(ctx, sel, &obj)
-	case *models.SearchableUserConnection:
+	case *gqlmodels.SearchableUserConnection:
 		if obj == nil {
 			return graphql.Null
 		}
@@ -222,13 +222,13 @@ func (ec *executionContext) _Connection(ctx context.Context, sel ast.SelectionSe
 	}
 }
 
-func (ec *executionContext) _Edge(ctx context.Context, sel ast.SelectionSet, obj models.Edge) graphql.Marshaler {
+func (ec *executionContext) _SearchEdge(ctx context.Context, sel ast.SelectionSet, obj gqlmodels.SearchEdge) graphql.Marshaler {
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case models.SearchableUserEdge:
+	case gqlmodels.SearchableUserEdge:
 		return ec._SearchableUserEdge(ctx, sel, &obj)
-	case *models.SearchableUserEdge:
+	case *gqlmodels.SearchableUserEdge:
 		if obj == nil {
 			return graphql.Null
 		}
@@ -242,31 +242,31 @@ func (ec *executionContext) _Edge(ctx context.Context, sel ast.SelectionSet, obj
 
 // region    **************************** object.gotpl ****************************
 
-var pageInfoImplementors = []string{"PageInfo"}
+var searchPageInfoImplementors = []string{"SearchPageInfo"}
 
-func (ec *executionContext) _PageInfo(ctx context.Context, sel ast.SelectionSet, obj *models.PageInfo) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, pageInfoImplementors)
+func (ec *executionContext) _SearchPageInfo(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.SearchPageInfo) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, searchPageInfoImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("PageInfo")
+			out.Values[i] = graphql.MarshalString("SearchPageInfo")
 		case "hasNextPage":
-			out.Values[i] = ec._PageInfo_hasNextPage(ctx, field, obj)
+			out.Values[i] = ec._SearchPageInfo_hasNextPage(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "hasPreviousPage":
-			out.Values[i] = ec._PageInfo_hasPreviousPage(ctx, field, obj)
+			out.Values[i] = ec._SearchPageInfo_hasPreviousPage(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "startCursor":
-			out.Values[i] = ec._PageInfo_startCursor(ctx, field, obj)
-		case "endCursor":
-			out.Values[i] = ec._PageInfo_endCursor(ctx, field, obj)
+		case "startSearchCursor":
+			out.Values[i] = ec._SearchPageInfo_startSearchCursor(ctx, field, obj)
+		case "endSearchCursor":
+			out.Values[i] = ec._SearchPageInfo_endSearchCursor(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -294,26 +294,26 @@ func (ec *executionContext) _PageInfo(ctx context.Context, sel ast.SelectionSet,
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNPageInfo2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPageInfo(ctx context.Context, sel ast.SelectionSet, v *models.PageInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchPageInfo2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchPageInfo(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchPageInfo) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._PageInfo(ctx, sel, v)
+	return ec._SearchPageInfo(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOSearchableSortOrder2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableSortOrder(ctx context.Context, v any) (*models.SearchableSortOrder, error) {
+func (ec *executionContext) unmarshalOSearchableSortOrder2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableSortOrder(ctx context.Context, v any) (*gqlmodels.SearchableSortOrder, error) {
 	if v == nil {
 		return nil, nil
 	}
-	var res = new(models.SearchableSortOrder)
+	var res = new(gqlmodels.SearchableSortOrder)
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOSearchableSortOrder2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableSortOrder(ctx context.Context, sel ast.SelectionSet, v *models.SearchableSortOrder) graphql.Marshaler {
+func (ec *executionContext) marshalOSearchableSortOrder2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableSortOrder(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchableSortOrder) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

@@ -4,4 +4,10 @@ package resolvers
 //
 // It serves as dependency injection for your app, add any dependencies you require here.
 
-type Resolver struct{}
+type Resolver struct {
+	// add a field for dataloader here
+}
+
+func (r *Resolver) NewResolver() *Resolver {
+	return &Resolver{}
+}

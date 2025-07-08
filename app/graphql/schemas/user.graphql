@@ -24,7 +24,7 @@ type PublicUser {
   themes: [PublicTheme!]!
 }
 
-# =============== Searchable Input & Enums & Interfaces =============== #
+# =============== Searchable Filters & SortBy & Input =============== #
 input SearchableUserFilters {
   role: UserRole
   plan: UserPlan
@@ -42,22 +42,24 @@ enum SearchableUserSortBy {
 }
 
 input SearchableUserInput {
-  query: String!
+  query: String! # the input from the frontend
   after: String # base64 encoded cursor
-  first: Int = 10
+  first: Int = 10 # the number of data we want to extract
   filters: SearchableUserFilters
   sortBy: SearchableUserSortBy = RELEVANCE
   sortOrder: SearchableSortOrder = DESC
 }
 
-type SearchableUserEdge implements Edge {
+# =============== Searchable Edge & Connection =============== #
+
+type SearchableUserEdge implements SearchEdge {
   node: PublicUser!
-  cursor: String!
+  searchCursor: String!
 }
 
-type SearchableUserConnection implements Connection {
-  edges: [SearchableUserEdge!]!
-  pageInfo: PageInfo!
+type SearchableUserConnection implements SearchConnection {
+  searchEdges: [SearchableUserEdge!]!
+  searchPageInfo: SearchPageInfo!
   totalCount: Int!
   searchTime: Float!
 }
