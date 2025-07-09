@@ -8,6 +8,6 @@ type Resolver struct {
 	// add a field for dataloader here
 }
 
-func (r *Resolver) NewResolver() *Resolver {
+func NewResolver() *Resolver {
 	return &Resolver{}
 }

@@ -8,8 +8,7 @@
         "body": [
             "package exceptions",
             "const (",
-            "\t_ExceptionBaseCode_${1:_DomainName_} ExceptionCode = (  +",
-            "\t\t${1:_DomainName_}ExceptionSubDomainCode*ExceptionSubDomainCodeShiftAmount)",
+            "\t_ExceptionBaseCode_${1:_DomainName_} ExceptionCode = ${1:_DomainName_}ExceptionSubDomainCode*ExceptionSubDomainCodeShiftAmount",
             "",
             "\t${1:_DomainName_}ExceptionSubDomainCode ExceptionCode = ${2:_SubDomainCode_}",
             "\tExceptionBaseCode_${1:_DomainName_} ExceptionCode = _ExceptionBaseCode_${1:_DomainName_} + ReservedExceptionCode",
@@ -27,7 +26,8 @@
             "\tPrefix: ExceptionPrefix_${1:_DomainName_},",
             "\tDatabaseExceptionDomain: DatabaseExceptionDomain{",
             "\t\t_BaseCode: _ExceptionBaseCode_${1:_DomainName_},",
-            "\t\t_Prefix: ExceptionPrefix_${1:_DomainName_} },",
+            "\t\t_Prefix: ExceptionPrefix_${1:_DomainName_}, ",
+            "\t},",
             "}",
         ]
     },
@@ -40,8 +40,7 @@
         "body": [
             "package exceptions",
             "const (",
-            "\t_ExceptionBaseCode_${1:_DomainName_} ExceptionCode = (   +",
-            "\t\t${1:_DomainName_}ExceptionSubDomainCode*ExceptionSubDomainCodeShiftAmount)",
+            "\t_ExceptionBaseCode_${1:_DomainName_} ExceptionCode = ${1:_DomainName_}ExceptionSubDomainCode*ExceptionSubDomainCodeShiftAmount",
             "",
             "\t${1:_DomainName_}ExceptionSubDomainCode ExceptionCode = ${2:_SubDomainCode_}",
             "\tExceptionBaseCode_${1:_DomainName_} ExceptionCode = _ExceptionBaseCode_${1:_DomainName_} + ReservedExceptionCode",
@@ -59,7 +58,8 @@
             "\tPrefix: ExceptionPrefix_${1:_DomainName_},",
             "\tAPIExceptionDomain: APIExceptionDomain{",
             "\t\t_BaseCode: _ExceptionBaseCode_${1:_DomainName_},",
-            "\t\t_Prefix: ExceptionPrefix_${1:_DomainName_} },",
+            "\t\t_Prefix: ExceptionPrefix_${1:_DomainName_}, ",
+            "\t},",
             "}",
         ]
     }

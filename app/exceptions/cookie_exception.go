@@ -3,6 +3,7 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
+
 	shared "notezy-backend/shared"
 )
 

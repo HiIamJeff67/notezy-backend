@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"notezy-backend/app/exceptions"
 	"reflect"
 	"time"
 
@@ -20,59 +21,54 @@ type SearchCursor struct {
 	Fields []SearchCursorField `json:"fields"`
 }
 
-func EncodeSearchCursor(data interface{}, fieldNames ...string) (string, error) {
+func EncodeSearchCursor(data interface{}) (*string, *exceptions.Exception) {
 	if data == nil {
-		return "", fmt.Errorf("data cannot be nil")
+		return nil, exceptions.Searchable.InvalidNilDataToEncodeSearchCursor()
 	}
 
-	val := reflect.ValueOf(data)
-	if val.Kind() == reflect.Ptr {
-		val = val.Elem()
-	}
+	var searchCursor SearchCursor
 
-	if val.Kind() != reflect.Struct {
-		return "", fmt.Errorf("data must be a struct")
-	}
+	if mapData, ok := data.(map[string]interface{}); ok {
+		searchCursor.Fields = make([]SearchCursorField, 0, len(mapData))
 
-	searchCursor := SearchCursor{
-		Fields: make([]SearchCursorField, 0, len(fieldNames)),
-	}
-
-	for _, fieldName := range fieldNames {
-		field := val.FieldByName(fieldName)
-		if !field.IsValid() {
-			return "", fmt.Errorf("field %s not found", fieldName)
+		for fieldName, fieldValue := range mapData {
+			fieldType := "nil"
+			if fieldValue != nil {
+				fieldType = reflect.TypeOf(fieldValue).String()
+			}
+			field := SearchCursorField{
+				Name:  fieldName,
+				Value: fieldValue,
+				Type:  fieldType,
+			}
+			searchCursor.Fields = append(searchCursor.Fields, field)
 		}
-		searhCursorField := SearchCursorField{
-			Name:  fieldName,
-			Value: field.Interface(),
-			Type:  field.Type().String(),
-		}
-		searchCursor.Fields = append(searchCursor.Fields, searhCursorField)
+	} else {
+		return nil, exceptions.Searchable.InvalidNonMapToEncodeSearchCursor()
 	}
 
 	jsonData, err := json.Marshal(searchCursor)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal search cursor: %w", err)
+		return nil, exceptions.Searchable.FailedToMarshalSearchCursor().WithError(err)
 	}
 
 	encoded := base64.StdEncoding.EncodeToString(jsonData)
-	return encoded, nil
+	return &encoded, nil
 }
 
-func DecodeSearchCursor(encoded string) (*SearchCursor, error) {
+func DecodeSearchCursor(encoded string) (*SearchCursor, *exceptions.Exception) {
 	if encoded == "" {
-		return nil, fmt.Errorf("encoded string cannot be empty")
+		return nil, exceptions.Searchable.EmptyEncodedStringToDecodeSearchCursor()
 	}
 
 	jsonData, err := base64.StdEncoding.DecodeString(encoded)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode base64: %w", err)
+		return nil, exceptions.Searchable.FailedToDecodeBase64String().WithError(err)
 	}
 
 	var cursor SearchCursor
 	if err := json.Unmarshal(jsonData, &cursor); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal cursor: %w", err)
+		return nil, exceptions.Searchable.FailedToUnMarshalSearchCursor().WithError(err)
 	}
 
 	return &cursor, nil

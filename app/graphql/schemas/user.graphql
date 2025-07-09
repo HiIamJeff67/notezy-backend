@@ -13,7 +13,7 @@ type PublicUser {
   # userAgent: String!
   role: UserRole!
   plan: UserPlan!
-  prevStatus: UserStatus!
+  # prevStatus: UserStatus!
   status: UserStatus!
   createdAt: Time!
   updatedAt: Time!
