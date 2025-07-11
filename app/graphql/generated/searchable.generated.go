@@ -116,8 +116,8 @@ func (ec *executionContext) fieldContext_SearchPageInfo_hasPreviousPage(_ contex
 	return fc, nil
 }
 
-func (ec *executionContext) _SearchPageInfo_startSearchCursor(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchPageInfo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchPageInfo_startSearchCursor(ctx, field)
+func (ec *executionContext) _SearchPageInfo_startEncodedSearchCursor(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchPageInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchPageInfo_startEncodedSearchCursor(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -130,7 +130,7 @@ func (ec *executionContext) _SearchPageInfo_startSearchCursor(ctx context.Contex
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.StartSearchCursor, nil
+		return obj.StartEncodedSearchCursor, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -144,7 +144,7 @@ func (ec *executionContext) _SearchPageInfo_startSearchCursor(ctx context.Contex
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchPageInfo_startSearchCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchPageInfo_startEncodedSearchCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SearchPageInfo",
 		Field:      field,
@@ -157,8 +157,8 @@ func (ec *executionContext) fieldContext_SearchPageInfo_startSearchCursor(_ cont
 	return fc, nil
 }
 
-func (ec *executionContext) _SearchPageInfo_endSearchCursor(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchPageInfo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchPageInfo_endSearchCursor(ctx, field)
+func (ec *executionContext) _SearchPageInfo_endEncodedSearchCursor(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchPageInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchPageInfo_endEncodedSearchCursor(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -171,7 +171,7 @@ func (ec *executionContext) _SearchPageInfo_endSearchCursor(ctx context.Context,
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.EndSearchCursor, nil
+		return obj.EndEncodedSearchCursor, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -185,7 +185,7 @@ func (ec *executionContext) _SearchPageInfo_endSearchCursor(ctx context.Context,
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchPageInfo_endSearchCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchPageInfo_endEncodedSearchCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SearchPageInfo",
 		Field:      field,
@@ -263,10 +263,10 @@ func (ec *executionContext) _SearchPageInfo(ctx context.Context, sel ast.Selecti
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "startSearchCursor":
-			out.Values[i] = ec._SearchPageInfo_startSearchCursor(ctx, field, obj)
-		case "endSearchCursor":
-			out.Values[i] = ec._SearchPageInfo_endSearchCursor(ctx, field, obj)
+		case "startEncodedSearchCursor":
+			out.Values[i] = ec._SearchPageInfo_startEncodedSearchCursor(ctx, field, obj)
+		case "endEncodedSearchCursor":
+			out.Values[i] = ec._SearchPageInfo_endEncodedSearchCursor(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

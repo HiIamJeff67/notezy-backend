@@ -34,6 +34,7 @@ func (d *ContextExceptionDomain) FailedToFetchContextFieldOfSpecificName(name st
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("Failed to find and fetch the context field with name of %s since it is not exist in the current context", name),
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -43,5 +44,6 @@ func (d *ContextExceptionDomain) FailedToConvertContextFieldToSpecificType(typeN
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("Failed to convert context field from type of any to type of %s", typeName),
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }

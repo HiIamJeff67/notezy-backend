@@ -19,7 +19,7 @@ type userSettingService struct{}
 
 var UserSettingService UserSettingServiceInterface = &userSettingService{}
 
-/* ============================== Services ============================== */
+/* ============================== Services for UserSetting ============================== */
 
 func (s *userSettingService) GetMySetting(reqDto *dtos.GetMySettingReqDto) (*dtos.GetMySettingResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {

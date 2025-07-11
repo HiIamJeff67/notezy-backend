@@ -22,7 +22,7 @@ type SearchConnection interface {
 
 type SearchEdge interface {
 	IsSearchEdge()
-	GetSearchCursor() string
+	GetEncodedSearchCursor() string
 }
 
 type PublicBadge struct {
@@ -83,10 +83,10 @@ type Query struct {
 }
 
 type SearchPageInfo struct {
-	HasNextPage       bool    `json:"hasNextPage"`
-	HasPreviousPage   bool    `json:"hasPreviousPage"`
-	StartSearchCursor *string `json:"startSearchCursor,omitempty"`
-	EndSearchCursor   *string `json:"endSearchCursor,omitempty"`
+	HasNextPage              bool    `json:"hasNextPage"`
+	HasPreviousPage          bool    `json:"hasPreviousPage"`
+	StartEncodedSearchCursor *string `json:"startEncodedSearchCursor,omitempty"`
+	EndEncodedSearchCursor   *string `json:"endEncodedSearchCursor,omitempty"`
 }
 
 type SearchableUserConnection struct {
@@ -101,13 +101,19 @@ func (this SearchableUserConnection) GetSearchPageInfo() *SearchPageInfo { retur
 func (this SearchableUserConnection) GetTotalCount() int32               { return this.TotalCount }
 func (this SearchableUserConnection) GetSearchTime() float64             { return this.SearchTime }
 
-type SearchableUserEdge struct {
-	Node         *PublicUser `json:"node"`
-	SearchCursor string      `json:"searchCursor"`
+type SearchableUserCursor struct {
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName"`
+	Email       string `json:"email"`
 }
 
-func (SearchableUserEdge) IsSearchEdge()                {}
-func (this SearchableUserEdge) GetSearchCursor() string { return this.SearchCursor }
+type SearchableUserEdge struct {
+	Node                *PublicUser `json:"node"`
+	EncodedSearchCursor string      `json:"encodedSearchCursor"`
+}
+
+func (SearchableUserEdge) IsSearchEdge()                       {}
+func (this SearchableUserEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
 
 type SearchableUserFilters struct {
 	Role      *enums.UserRole   `json:"role,omitempty"`

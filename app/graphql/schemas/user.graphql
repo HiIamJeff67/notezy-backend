@@ -50,11 +50,20 @@ input SearchableUserInput {
   sortOrder: SearchableSortOrder = DESC
 }
 
+# =============== Search Cursor Structure =============== #
+type SearchableUserCursor {
+  name: String!
+  displayName: String!
+  email: String!
+}
+
+# type EncodedSearchableUserCursor = String!
+
 # =============== Searchable Edge & Connection =============== #
 
 type SearchableUserEdge implements SearchEdge {
   node: PublicUser!
-  searchCursor: String!
+  encodedSearchCursor: String!
 }
 
 type SearchableUserConnection implements SearchConnection {

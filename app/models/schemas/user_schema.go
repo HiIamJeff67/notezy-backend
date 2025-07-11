@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	gqlmodels "notezy-backend/app/graphql/models"
 	enums "notezy-backend/app/models/schemas/enums"
 	shared "notezy-backend/shared"
 )
@@ -55,4 +56,20 @@ func (u *User) BeforeUpdate(db *gorm.DB) (err error) {
 		u.PrevStatus = u.Status
 	}
 	return nil
+}
+
+func (u *User) ToPublicUser() *gqlmodels.PublicUser {
+	return &gqlmodels.PublicUser{
+		Name:        u.Name,
+		DisplayName: u.DisplayName,
+		Email:       u.Email,
+		Role:        u.Role,
+		Plan:        u.Plan,
+		Status:      u.Status,
+		CreatedAt:   u.CreatedAt,
+		UpdatedAt:   u.UpdatedAt,
+		UserInfo:    &gqlmodels.PublicUserInfo{},
+		Badges:      []*gqlmodels.PublicBadge{},
+		Themes:      []*gqlmodels.PublicTheme{},
+	}
 }

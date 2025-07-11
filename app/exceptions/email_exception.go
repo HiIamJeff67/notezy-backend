@@ -36,6 +36,7 @@ func (d *EmailExceptionDomain) FailedToSendEmailWithSubject(subject string) *Exc
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("Failed to send the email with subject of %s", subject),
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -45,6 +46,7 @@ func (d *EmailExceptionDomain) InvalidContentType(contentType types.ContentType)
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("The given content type of %v is not a valid content type", contentType),
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -54,6 +56,7 @@ func (d *EmailExceptionDomain) FailedToReadTemplateFileWithPath(templateFilePath
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("Failed to read the email template file from %s", templateFilePath),
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -63,6 +66,7 @@ func (d *EmailExceptionDomain) FailedToParseTemplateWithDataMap(dataMap map[stri
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("Failed to parse the email template with %v", dataMap),
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -72,6 +76,7 @@ func (d *EmailExceptionDomain) FailedToRenderTemplate() *Exception {
 		Prefix:         d.Prefix,
 		Message:        "Failed to render the template",
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -81,5 +86,6 @@ func (d *EmailExceptionDomain) TemplateFileTypeAndContentTypeNotMatch(templateFi
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("The type of the template file of %s is not match with the content type of %v", templateFileType, contentType),
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }

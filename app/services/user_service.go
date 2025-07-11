@@ -38,25 +38,7 @@ func NewUserService(db *gorm.DB) UserServiceInterface {
 	}
 }
 
-/* ============================== Auxilary Functions for GraphQL ============================== */
-
-func (s *UserService) convertUserToPublicUser(user *schemas.User) *gqlmodels.PublicUser {
-	return &gqlmodels.PublicUser{
-		Name:        user.Name,
-		DisplayName: user.DisplayName,
-		Email:       user.Email,
-		Role:        user.Role,
-		Plan:        user.Plan,
-		Status:      user.Status,
-		CreatedAt:   user.CreatedAt,
-		UpdatedAt:   user.UpdatedAt,
-		UserInfo:    &gqlmodels.PublicUserInfo{},
-		Badges:      []*gqlmodels.PublicBadge{},
-		Themes:      []*gqlmodels.PublicTheme{},
-	}
-}
-
-/* ============================== Services ============================== */
+/* ============================== Services for Users ============================== */
 
 func (s *UserService) GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {
@@ -83,9 +65,61 @@ func (s *UserService) GetAllUsers() (*[]schemas.User, *exceptions.Exception) {
 	return users, nil
 }
 
-// func (s *User`Service) GetPublicUserBySearchCursor(ctx context.Context, searchCursor string) (*gqlmodels.PublicUser, *exceptions.Exception) {
+func (s *UserService) UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Exception) {
+	if err := models.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
 
-// }`
+	userRepository := repositories.NewUserRepository(s.db)
+
+	updatedUser, exception := userRepository.UpdateOneById(reqDto.UserId, inputs.PartialUpdateUserInput{
+		Values: inputs.UpdateUserInput{
+			DisplayName: reqDto.Values.DisplayName,
+			Status:      reqDto.Values.Status,
+		},
+		SetNull: reqDto.SetNull,
+	})
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.UpdateMeResDto{UpdatedAt: updatedUser.UpdatedAt}, nil
+}
+
+// may add some business logic of payment
+// func UpdatePlan(reqDto *dtos.UpdatePlanReqDto) (*dtos.UpdatePlanResDto, *exceptions.Exception) {
+
+// }
+
+/* ============================== Services for Public User ============================== */
+
+func (s *UserService) GetPublicUserByEncodedSearchCursor(ctx context.Context, encodedSearchCursor string) (*gqlmodels.PublicUser, *exceptions.Exception) {
+	userRepository := repositories.NewUserRepository(s.db)
+
+	searchCursor, exception := util.DecodeSearchCursor(encodedSearchCursor)
+	if exception != nil {
+		return nil, exception
+	}
+
+	name := ""
+	for _, field := range searchCursor.Fields {
+		if field.Name == "name" {
+			if stringValue, ok := field.Value.(string); ok {
+				name = stringValue
+			}
+		}
+	}
+	if name == "" {
+		return nil, exceptions.Searchable.CannotFindFieldInEncodedSearchCursor(encodedSearchCursor, "name")
+	}
+
+	user, exception := userRepository.GetOneByName(name)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return user.ToPublicUser(), nil
+}
 
 func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.SearchableUserInput) (*gqlmodels.SearchableUserConnection, *exceptions.Exception) {
 	startTime := time.Now()
@@ -155,17 +189,17 @@ func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.
 			"display_name": user.DisplayName,
 			"email":        user.Email,
 		}
-		searchCursor, err := util.EncodeSearchCursor(searchCursorFields)
+		encodedSearchCursor, err := util.EncodeSearchCursor(searchCursorFields)
 		if err != nil {
 			return nil, err
 		}
-		if searchCursor == nil {
+		if encodedSearchCursor == nil {
 			return nil, exceptions.Searchable.FailedToUnMarshalSearchCursor()
 		}
 
 		searchEdges[index] = &gqlmodels.SearchableUserEdge{
-			SearchCursor: *searchCursor,
-			Node:         s.convertUserToPublicUser(&user),
+			EncodedSearchCursor: *encodedSearchCursor,
+			Node:                user.ToPublicUser(),
 		}
 	}
 
@@ -175,8 +209,8 @@ func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.
 	}
 
 	if len(searchEdges) > 0 {
-		searchPageInfo.StartSearchCursor = &searchEdges[0].SearchCursor
-		searchPageInfo.EndSearchCursor = &searchEdges[len(searchEdges)-1].SearchCursor
+		searchPageInfo.StartEncodedSearchCursor = &searchEdges[0].EncodedSearchCursor
+		searchPageInfo.EndEncodedSearchCursor = &searchEdges[len(searchEdges)-1].EncodedSearchCursor
 	}
 
 	searchTime := float64(time.Since(startTime).Nanoseconds()) / 1e6
@@ -191,29 +225,3 @@ func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.
 		SearchTime:     searchTime,
 	}, nil
 }
-
-func (s *UserService) UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Exception) {
-	if err := models.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
-	}
-
-	userRepository := repositories.NewUserRepository(s.db)
-
-	updatedUser, exception := userRepository.UpdateOneById(reqDto.UserId, inputs.PartialUpdateUserInput{
-		Values: inputs.UpdateUserInput{
-			DisplayName: reqDto.Values.DisplayName,
-			Status:      reqDto.Values.Status,
-		},
-		SetNull: reqDto.SetNull,
-	})
-	if exception != nil {
-		return nil, exception
-	}
-
-	return &dtos.UpdateMeResDto{UpdatedAt: updatedUser.UpdatedAt}, nil
-}
-
-// may add some business logic of payment
-// func UpdatePlan(reqDto *dtos.UpdatePlanReqDto) (*dtos.UpdatePlanResDto, *exceptions.Exception) {
-
-// }

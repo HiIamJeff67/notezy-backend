@@ -48,6 +48,7 @@ func (d *AuthExceptionDomain) WrongPassword() *Exception {
 		Prefix:         d.Prefix,
 		Message:        "The password is not match",
 		HTTPStatusCode: http.StatusUnauthorized,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -57,6 +58,7 @@ func (d *AuthExceptionDomain) WrongAccessToken() *Exception {
 		Prefix:         d.Prefix,
 		Message:        "The access token is not match or expired",
 		HTTPStatusCode: http.StatusUnauthorized,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -66,6 +68,7 @@ func (d *AuthExceptionDomain) WrongRefreshToken() *Exception {
 		Prefix:         d.Prefix,
 		Message:        "The refresh token is not match or expired",
 		HTTPStatusCode: http.StatusUnauthorized,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -75,6 +78,7 @@ func (d *AuthExceptionDomain) WrongUserAgent() *Exception {
 		Prefix:         d.Prefix,
 		Message:        "The user agent is not match",
 		HTTPStatusCode: http.StatusUnauthorized,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -84,6 +88,7 @@ func (d *AuthExceptionDomain) WrongAuthCode() *Exception {
 		Prefix:         d.Prefix,
 		Message:        "The authentication code is not match",
 		HTTPStatusCode: http.StatusUnauthorized,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -93,6 +98,7 @@ func (d *AuthExceptionDomain) FailedToExtractOrValidateAccessToken() *Exception 
 		Prefix:         d.Prefix,
 		Message:        "Failed to get or validate the access token",
 		HTTPStatusCode: http.StatusUnauthorized,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -102,6 +108,7 @@ func (d *AuthExceptionDomain) FailedToExtractOrValidateRefreshToken() *Exception
 		Prefix:         d.Prefix,
 		Message:        "Failed to get or validate the refresh token",
 		HTTPStatusCode: http.StatusUnauthorized,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -111,6 +118,7 @@ func (d *AuthExceptionDomain) LoginBlockedDueToTryingTooManyTimes(blockedUntil t
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("Blocked the login procedure because user has tried too many times and require to wait until %v", blockedUntil),
 		HTTPStatusCode: http.StatusUnauthorized,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -122,6 +130,7 @@ func (d *AuthExceptionDomain) PermissionDeniedDueToUserRole(userRole any) *Excep
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("The current user role of %v does not have access to this operation", userRole),
 		HTTPStatusCode: http.StatusUnauthorized,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -131,6 +140,7 @@ func (d *AuthExceptionDomain) PermissionDeniedDueToUserPlan(userPlan any) *Excep
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("The current user plan of %v does not have access to this operation", userPlan),
 		HTTPStatusCode: http.StatusUnauthorized,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -148,5 +158,6 @@ func (d *AuthExceptionDomain) MissPlacingOrWrongMiddlewareOrder(optionalMessage 
 		Prefix:         d.Prefix,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }

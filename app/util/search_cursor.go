@@ -4,11 +4,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"notezy-backend/app/exceptions"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
+
+	exceptions "notezy-backend/app/exceptions"
 )
 
 type SearchCursorField struct {
@@ -57,7 +59,7 @@ func EncodeSearchCursor(data interface{}) (*string, *exceptions.Exception) {
 }
 
 func DecodeSearchCursor(encoded string) (*SearchCursor, *exceptions.Exception) {
-	if encoded == "" {
+	if len(strings.ReplaceAll(encoded, " ", "")) == 0 {
 		return nil, exceptions.Searchable.EmptyEncodedStringToDecodeSearchCursor()
 	}
 

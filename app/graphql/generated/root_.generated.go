@@ -99,10 +99,10 @@ type ComplexityRoot struct {
 	}
 
 	SearchPageInfo struct {
-		EndSearchCursor   func(childComplexity int) int
-		HasNextPage       func(childComplexity int) int
-		HasPreviousPage   func(childComplexity int) int
-		StartSearchCursor func(childComplexity int) int
+		EndEncodedSearchCursor   func(childComplexity int) int
+		HasNextPage              func(childComplexity int) int
+		HasPreviousPage          func(childComplexity int) int
+		StartEncodedSearchCursor func(childComplexity int) int
 	}
 
 	SearchableUserConnection struct {
@@ -112,9 +112,15 @@ type ComplexityRoot struct {
 		TotalCount     func(childComplexity int) int
 	}
 
+	SearchableUserCursor struct {
+		DisplayName func(childComplexity int) int
+		Email       func(childComplexity int) int
+		Name        func(childComplexity int) int
+	}
+
 	SearchableUserEdge struct {
-		Node         func(childComplexity int) int
-		SearchCursor func(childComplexity int) int
+		EncodedSearchCursor func(childComplexity int) int
+		Node                func(childComplexity int) int
 	}
 }
 
@@ -422,12 +428,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Query.SearchUsers(childComplexity, args["input"].(gqlmodels.SearchableUserInput)), true
 
-	case "SearchPageInfo.endSearchCursor":
-		if e.complexity.SearchPageInfo.EndSearchCursor == nil {
+	case "SearchPageInfo.endEncodedSearchCursor":
+		if e.complexity.SearchPageInfo.EndEncodedSearchCursor == nil {
 			break
 		}
 
-		return e.complexity.SearchPageInfo.EndSearchCursor(childComplexity), true
+		return e.complexity.SearchPageInfo.EndEncodedSearchCursor(childComplexity), true
 
 	case "SearchPageInfo.hasNextPage":
 		if e.complexity.SearchPageInfo.HasNextPage == nil {
@@ -443,12 +449,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.SearchPageInfo.HasPreviousPage(childComplexity), true
 
-	case "SearchPageInfo.startSearchCursor":
-		if e.complexity.SearchPageInfo.StartSearchCursor == nil {
+	case "SearchPageInfo.startEncodedSearchCursor":
+		if e.complexity.SearchPageInfo.StartEncodedSearchCursor == nil {
 			break
 		}
 
-		return e.complexity.SearchPageInfo.StartSearchCursor(childComplexity), true
+		return e.complexity.SearchPageInfo.StartEncodedSearchCursor(childComplexity), true
 
 	case "SearchableUserConnection.searchEdges":
 		if e.complexity.SearchableUserConnection.SearchEdges == nil {
@@ -478,19 +484,40 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.SearchableUserConnection.TotalCount(childComplexity), true
 
+	case "SearchableUserCursor.displayName":
+		if e.complexity.SearchableUserCursor.DisplayName == nil {
+			break
+		}
+
+		return e.complexity.SearchableUserCursor.DisplayName(childComplexity), true
+
+	case "SearchableUserCursor.email":
+		if e.complexity.SearchableUserCursor.Email == nil {
+			break
+		}
+
+		return e.complexity.SearchableUserCursor.Email(childComplexity), true
+
+	case "SearchableUserCursor.name":
+		if e.complexity.SearchableUserCursor.Name == nil {
+			break
+		}
+
+		return e.complexity.SearchableUserCursor.Name(childComplexity), true
+
+	case "SearchableUserEdge.encodedSearchCursor":
+		if e.complexity.SearchableUserEdge.EncodedSearchCursor == nil {
+			break
+		}
+
+		return e.complexity.SearchableUserEdge.EncodedSearchCursor(childComplexity), true
+
 	case "SearchableUserEdge.node":
 		if e.complexity.SearchableUserEdge.Node == nil {
 			break
 		}
 
 		return e.complexity.SearchableUserEdge.Node(childComplexity), true
-
-	case "SearchableUserEdge.searchCursor":
-		if e.complexity.SearchableUserEdge.SearchCursor == nil {
-			break
-		}
-
-		return e.complexity.SearchableUserEdge.SearchCursor(childComplexity), true
 
 	}
 	return 0, false
@@ -702,15 +729,15 @@ enum SearchableSortOrder {
 # =============== Current Edge (part of Output) =============== #
 interface SearchEdge {
   # node: data of the result, this should be implement in each models require search functionality
-  searchCursor: String!
+  encodedSearchCursor: String!
 }
 
 # =============== Page Info (part of Output) =============== #
 type SearchPageInfo {
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
-  startSearchCursor: String
-  endSearchCursor: String
+  startEncodedSearchCursor: String
+  endEncodedSearchCursor: String
 }
 
 # =============== Search Output (Connection) =============== #
@@ -787,11 +814,20 @@ input SearchableUserInput {
   sortOrder: SearchableSortOrder = DESC
 }
 
+# =============== Search Cursor Structure =============== #
+type SearchableUserCursor {
+  name: String!
+  displayName: String!
+  email: String!
+}
+
+# type EncodedSearchableUserCursor = String!
+
 # =============== Searchable Edge & Connection =============== #
 
 type SearchableUserEdge implements SearchEdge {
   node: PublicUser!
-  searchCursor: String!
+  encodedSearchCursor: String!
 }
 
 type SearchableUserConnection implements SearchConnection {

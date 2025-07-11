@@ -36,6 +36,7 @@ func (d *CookieExceptionDomain) NotFound(cookieName shared.ValidCookieName) *Exc
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("Cannot find the %s in the cookie", convertCamelCaseToSentenceCase(cookieName.String())),
 		HTTPStatusCode: http.StatusNotFound,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -45,5 +46,6 @@ func (d *CookieExceptionDomain) FailedToCreate(cookieName shared.ValidCookieName
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("Failed to set the %s to the cache", convertCamelCaseToSentenceCase(cookieName.String())),
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }

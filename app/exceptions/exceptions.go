@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -57,6 +59,49 @@ func IsExceptionCode(exceptionCode int) bool {
 	return exceptionCode >= MinExceptionCode && exceptionCode <= MaxExceptionCode
 }
 
+/* ============================== Location & StackTrace for Exceptions ============================== */
+
+type StackFrame struct {
+	File     string `json:"file"`
+	Line     int    `json:"line"`
+	Function string `json:"function"`
+	Package  string `json:"package"`
+}
+
+func GetStackTrace(skip int, maxTraceDepth int) []StackFrame {
+	var frames []StackFrame
+
+	for i := skip; i < skip+maxTraceDepth; i++ {
+		pc, file, line, ok := runtime.Caller(i)
+		if !ok {
+			break // the end of the trace stack
+		}
+
+		funcName := "unknown"
+		packageName := "unknown"
+
+		if fn := runtime.FuncForPC(pc); fn != nil {
+			fullFuncName := fn.Name()
+			parts := strings.Split(fullFuncName, ".")
+			if len(parts) >= 2 {
+				packageName = strings.Join(parts[:len(parts)-1], ".")
+				funcName = parts[len(parts)-1]
+			} else {
+				funcName = fullFuncName
+			}
+		}
+
+		frames = append(frames, StackFrame{
+			File:     filepath.Base(file),
+			Line:     line,
+			Function: funcName,
+			Package:  packageName,
+		})
+	}
+
+	return frames
+}
+
 /* ============================== General Exception Structure Definition ============================== */
 
 type Exception struct {
@@ -66,7 +111,8 @@ type Exception struct {
 	HTTPStatusCode int             // http status code
 	Details        any             // additional error details (optional)
 	Error          error           // original error (optional)
-
+	LastStackFrame *StackFrame     // the last location where the exception happened
+	StackTrace     []StackFrame    // the entire path to where the exception actually take place
 }
 
 type ExceptionCompareOption struct {
@@ -129,6 +175,10 @@ func (e *Exception) PanicVerbose() {
 	} else {
 		panic(fmt.Sprintf("[%d] %s", e.Code, e.Message))
 	}
+}
+
+func (e *Exception) Trace(skip int, maxTraceDepth int) {
+	e.StackTrace = GetStackTrace(skip, maxTraceDepth)
 }
 
 func (e *Exception) ToGraphQLError(ctx context.Context) *gqlerror.Error {
@@ -234,6 +284,7 @@ func (d *DatabaseExceptionDomain) NotFound(optionalMessage ...string) *Exception
 		Prefix:         d._Prefix,
 		Message:        message,
 		HTTPStatusCode: http.StatusNotFound,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -248,6 +299,7 @@ func (d *DatabaseExceptionDomain) FailedToCreate(optionalMessage ...string) *Exc
 		Prefix:         d._Prefix,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -262,6 +314,7 @@ func (d *DatabaseExceptionDomain) FailedToUpdate(optionalMessage ...string) *Exc
 		Prefix:         d._Prefix,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -276,6 +329,7 @@ func (d *DatabaseExceptionDomain) FailedToDelete(optionalMessage ...string) *Exc
 		Prefix:         d._Prefix,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -290,6 +344,7 @@ func (d *DatabaseExceptionDomain) FailedToCommitTransaction(optionalMessage ...s
 		Prefix:         d._Prefix,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -311,6 +366,7 @@ func (d *APIExceptionDomain) InternalServerWentWrong(originalException *Exceptio
 		Prefix:         d._Prefix,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 	if originalException == nil {
 		return exception
@@ -337,6 +393,7 @@ func (d *APIExceptionDomain) Timeout(time time.Duration, optionalMessage ...stri
 		Prefix:         d._Prefix,
 		Message:        message,
 		HTTPStatusCode: http.StatusRequestTimeout,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -358,6 +415,7 @@ func (d *TypeExceptionDomain) InvalidInput(optionalMessage ...string) *Exception
 		Prefix:         d._Prefix,
 		Message:        message,
 		HTTPStatusCode: http.StatusBadRequest,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -372,6 +430,7 @@ func (d *TypeExceptionDomain) InvalidDto(optionalMessage ...string) *Exception {
 		Prefix:         d._Prefix,
 		Message:        message,
 		HTTPStatusCode: http.StatusRequestTimeout,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -385,6 +444,7 @@ func (d *TypeExceptionDomain) InvalidType(value any) *Exception {
 			"actualType": fmt.Sprintf("%T", value),
 			"value":      value,
 		},
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -406,6 +466,7 @@ func (d *CommonExceptionDomain) UndefinedError(optionalMessage ...string) *Excep
 		Prefix:         d._Prefix,
 		Message:        message,
 		HTTPStatusCode: http.StatusBadRequest,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -420,6 +481,7 @@ func (d *CommonExceptionDomain) NotImplemented(optionalMessage ...string) *Excep
 		Prefix:         d._Prefix,
 		Message:        message,
 		HTTPStatusCode: http.StatusNotImplemented,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -438,6 +500,7 @@ func (d *TestExceptionDomain) FailedToMarshalTestdata(testdataPath string) *Exce
 		Prefix:         d._Prefix,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -449,6 +512,7 @@ func (d *TestExceptionDomain) FailedToUnmarshalTestdata(testdataPath string) *Ex
 		Prefix:         d._Prefix,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -460,5 +524,6 @@ func (d *TestExceptionDomain) InvalidTestdataJSONForm(testdataPath string) *Exce
 		Prefix:         d._Prefix,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }

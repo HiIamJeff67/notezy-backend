@@ -27,7 +27,7 @@ func NewUserInfoService(db *gorm.DB) UserInfoServiceInterface {
 	}
 }
 
-/* ============================== Services ============================== */
+/* ============================== Services for UserInfo ============================== */
 
 func (s *UserInfoService) GetMyInfo(reqDto *dtos.GetMyInfoReqDto) (*dtos.GetMyInfoResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {

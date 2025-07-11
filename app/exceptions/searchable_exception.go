@@ -1,6 +1,9 @@
 package exceptions
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 const (
 	_ExceptionBaseCode_Searchable ExceptionCode = SearchableExceptionSubDomainCode * ExceptionSubDomainCodeShiftAmount
@@ -36,6 +39,7 @@ func (d *SearchableExceptionDomain) InvalidNilDataToEncodeSearchCursor() *Except
 		Prefix:         d.Prefix,
 		Message:        "Invalid nil data to encode search cursor, data must be not nil",
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -45,6 +49,7 @@ func (d *SearchableExceptionDomain) InvalidNonMapToEncodeSearchCursor() *Excepti
 		Prefix:         d.Prefix,
 		Message:        "Invalid non map data to encode search cursor, data must be map[string]interface{}",
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -54,6 +59,7 @@ func (d *SearchableExceptionDomain) FailedToMarshalSearchCursor() *Exception {
 		Prefix:         d.Prefix,
 		Message:        "Failed to marshal the search cursor",
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -63,6 +69,7 @@ func (d *SearchableExceptionDomain) FailedToUnMarshalSearchCursor() *Exception {
 		Prefix:         d.Prefix,
 		Message:        "Failed to unmarshal the search cursor",
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -72,6 +79,7 @@ func (d *SearchableExceptionDomain) EmptyEncodedStringToDecodeSearchCursor() *Ex
 		Prefix:         d.Prefix,
 		Message:        "Encoded string cannot be empty",
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
@@ -81,5 +89,16 @@ func (d *SearchableExceptionDomain) FailedToDecodeBase64String() *Exception {
 		Prefix:         d.Prefix,
 		Message:        "Failed to decode base64 string",
 		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *SearchableExceptionDomain) CannotFindFieldInEncodedSearchCursor(searchCursor string, fieldName string) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 7,
+		Prefix:         d.Prefix,
+		Message:        fmt.Sprintf("Cannot find the field of %s in the search cursor: %s", fieldName, searchCursor),
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }

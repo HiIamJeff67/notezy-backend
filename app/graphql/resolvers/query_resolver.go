@@ -6,8 +6,7 @@ package resolvers
 
 import (
 	"context"
-
-	generated "notezy-backend/app/graphql/generated"
+	"notezy-backend/app/graphql/generated"
 	gqlmodels "notezy-backend/app/graphql/models"
 )
 
@@ -24,23 +23,3 @@ func (r *queryResolver) SearchUsers(ctx context.Context, input gqlmodels.Searcha
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
 type queryResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-/*
-	type QueryResolverInterface interface {
-	SearchUsers(ctx context.Context, input gqlmodels.SearchableUserInput) (*gqlmodels.SearchableUserConnection, error)
-}
-type QueryResolver struct{ *Resolver }
-func (r *QueryResolver) SearchUsers(ctx context.Context, input gqlmodels.SearchableUserInput) (*gqlmodels.SearchableUserConnection, error) {
-	result, exception := r.userService.SearchPublicUsers(ctx, input)
-	if exception != nil {
-		return nil, exception.ToGraphQLError(ctx)
-	}
-	return result, nil
-}
-*/
