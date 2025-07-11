@@ -1,0 +1,7 @@
+type Query {
+  searchUsers(input: SearchableUserInput!): SearchableUserConnection!
+}
+
+# type Mutation {}
+
+# type Subscription {}

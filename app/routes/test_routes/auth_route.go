@@ -11,6 +11,9 @@ import (
 	services "notezy-backend/app/services"
 )
 
+// the route structure is different here, since we use these routes to do the e2e test
+// like it receive a database instance and a gin router group
+// and its function name also start with the upper case letter
 func ConfigureTestAuthRoutes(db *gorm.DB, routerGroup *gin.RouterGroup) {
 	if routerGroup == nil {
 		routerGroup = TestRouterGroup

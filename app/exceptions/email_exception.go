@@ -15,15 +15,6 @@ const (
 	ExceptionPrefix_Email       ExceptionPrefix = "Email"
 )
 
-const (
-	ExceptionReason_FailedToSendEmail                      ExceptionReason = "Failed_To_Send_Email"
-	ExceptionReason_InvalidContentType                     ExceptionReason = "Invalid_Content_Type"
-	ExceptionReason_FailedToReadTemplateFileWithPath       ExceptionReason = "Failed_To_Read_Template_File_With_Path"
-	ExceptionReason_FailedToParseTemplateWithDataMap       ExceptionReason = "Faile_To_Parse_Template_With_DataMap"
-	ExceptionReason_FailedToRenderTemplate                 ExceptionReason = "Failed_To_Render_Template"
-	ExceptionReason_TemplateFileTypeAndContentTypeNotMatch ExceptionReason = "Template_File_Type_And_Content_Type_Not_Match"
-)
-
 type EmailExceptionDomain struct {
 	BaseCode ExceptionCode
 	Prefix   ExceptionPrefix
@@ -43,7 +34,6 @@ func (d *EmailExceptionDomain) FailedToSendEmailWithSubject(subject string) *Exc
 	return &Exception{
 		Code:           d.BaseCode + 1,
 		Prefix:         d.Prefix,
-		Reason:         ExceptionReason_FailedToSendEmail,
 		Message:        fmt.Sprintf("Failed to send the email with subject of %s", subject),
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -53,7 +43,6 @@ func (d *EmailExceptionDomain) InvalidContentType(contentType types.ContentType)
 	return &Exception{
 		Code:           d.BaseCode + 2,
 		Prefix:         d.Prefix,
-		Reason:         ExceptionReason_InvalidContentType,
 		Message:        fmt.Sprintf("The given content type of %v is not a valid content type", contentType),
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -63,7 +52,6 @@ func (d *EmailExceptionDomain) FailedToReadTemplateFileWithPath(templateFilePath
 	return &Exception{
 		Code:           d.BaseCode + 3,
 		Prefix:         d.Prefix,
-		Reason:         ExceptionReason_FailedToReadTemplateFileWithPath,
 		Message:        fmt.Sprintf("Failed to read the email template file from %s", templateFilePath),
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -73,7 +61,6 @@ func (d *EmailExceptionDomain) FailedToParseTemplateWithDataMap(dataMap map[stri
 	return &Exception{
 		Code:           d.BaseCode + 4,
 		Prefix:         d.Prefix,
-		Reason:         ExceptionReason_FailedToParseTemplateWithDataMap,
 		Message:        fmt.Sprintf("Failed to parse the email template with %v", dataMap),
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -83,7 +70,6 @@ func (d *EmailExceptionDomain) FailedToRenderTemplate() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 5,
 		Prefix:         d.Prefix,
-		Reason:         ExceptionReason_FailedToRenderTemplate,
 		Message:        "Failed to render the template",
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -93,7 +79,6 @@ func (d *EmailExceptionDomain) TemplateFileTypeAndContentTypeNotMatch(templateFi
 	return &Exception{
 		Code:           d.BaseCode + 6,
 		Prefix:         d.Prefix,
-		Reason:         ExceptionReason_TemplateFileTypeAndContentTypeNotMatch,
 		Message:        fmt.Sprintf("The type of the template file of %s is not match with the content type of %v", templateFileType, contentType),
 		HTTPStatusCode: http.StatusInternalServerError,
 	}

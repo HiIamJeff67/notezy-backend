@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	gqlmodels "notezy-backend/app/graphql/models"
 	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -32,6 +33,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Query() QueryResolver
 }
 
 type DirectiveRoot struct {
@@ -66,7 +68,6 @@ type ComplexityRoot struct {
 		Email       func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Plan        func(childComplexity int) int
-		PrevStatus  func(childComplexity int) int
 		Role        func(childComplexity int) int
 		Status      func(childComplexity int) int
 		Themes      func(childComplexity int) int
@@ -94,6 +95,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		SearchUsers func(childComplexity int, input gqlmodels.SearchableUserInput) int
 	}
 
 	SearchPageInfo struct {
@@ -282,13 +284,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PublicUser.Plan(childComplexity), true
 
-	case "PublicUser.prevStatus":
-		if e.complexity.PublicUser.PrevStatus == nil {
-			break
-		}
-
-		return e.complexity.PublicUser.PrevStatus(childComplexity), true
-
 	case "PublicUser.role":
 		if e.complexity.PublicUser.Role == nil {
 			break
@@ -414,6 +409,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PublicUsersToBadges.UserID(childComplexity), true
+
+	case "Query.searchUsers":
+		if e.complexity.Query.SearchUsers == nil {
+			break
+		}
+
+		args, err := ec.field_Query_searchUsers_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SearchUsers(childComplexity, args["input"].(gqlmodels.SearchableUserInput)), true
 
 	case "SearchPageInfo.endSearchCursor":
 		if e.complexity.SearchPageInfo.EndSearchCursor == nil {
@@ -653,6 +660,14 @@ var sources = []*ast.Source{
   users: [PublicUser!]!
 }
 `, BuiltIn: false},
+	{Name: "../schemas/query.graphql", Input: `type Query {
+  searchUsers(input: SearchableUserInput!): SearchableUserConnection!
+}
+
+# type Mutation {}
+
+# type Subscription {}
+`, BuiltIn: false},
 	{Name: "../schemas/scalar.graphql", Input: `scalar UUID
 scalar Time
 `, BuiltIn: false},
@@ -735,7 +750,7 @@ type PublicUser {
   # userAgent: String!
   role: UserRole!
   plan: UserPlan!
-  prevStatus: UserStatus!
+  # prevStatus: UserStatus!
   status: UserStatus!
   createdAt: Time!
   updatedAt: Time!
@@ -764,9 +779,9 @@ enum SearchableUserSortBy {
 }
 
 input SearchableUserInput {
-  query: String!
+  query: String! # the input from the frontend
   after: String # base64 encoded cursor
-  first: Int = 10
+  first: Int = 10 # the number of data we want to extract
   filters: SearchableUserFilters
   sortBy: SearchableUserSortBy = RELEVANCE
   sortOrder: SearchableSortOrder = DESC

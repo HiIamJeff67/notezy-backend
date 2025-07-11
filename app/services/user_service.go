@@ -23,7 +23,8 @@ import (
 type UserServiceInterface interface {
 	GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception)
 	GetAllUsers() (*[]schemas.User, *exceptions.Exception)
-	SearchUsers(ctx context.Context, gqlInput gqlmodels.SearchableUserInput) (*gqlmodels.SearchableUserConnection, *exceptions.Exception)
+	// GetPublicUserBySearchCursor(ctx context.Context, searchCursor string) (*gqlmodels.PublicUser, *exceptions.Exception)
+	SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.SearchableUserInput) (*gqlmodels.SearchableUserConnection, *exceptions.Exception)
 	UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Exception)
 }
 
@@ -55,8 +56,6 @@ func (s *UserService) convertUserToPublicUser(user *schemas.User) *gqlmodels.Pub
 	}
 }
 
-func (s *UserService) convertPublicUserToUser() {}
-
 /* ============================== Services ============================== */
 
 func (s *UserService) GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception) {
@@ -84,7 +83,11 @@ func (s *UserService) GetAllUsers() (*[]schemas.User, *exceptions.Exception) {
 	return users, nil
 }
 
-func (s *UserService) SearchUsers(ctx context.Context, gqlInput gqlmodels.SearchableUserInput) (*gqlmodels.SearchableUserConnection, *exceptions.Exception) {
+// func (s *User`Service) GetPublicUserBySearchCursor(ctx context.Context, searchCursor string) (*gqlmodels.PublicUser, *exceptions.Exception) {
+
+// }`
+
+func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.SearchableUserInput) (*gqlmodels.SearchableUserConnection, *exceptions.Exception) {
 	startTime := time.Now()
 
 	query := s.db.WithContext(ctx).Model(&schemas.User{})

@@ -2,18 +2,22 @@
 package graphql
 
 import (
-	"net/http"
-
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"gorm.io/gorm"
+	"github.com/gin-gonic/gin"
 
 	generated "notezy-backend/app/graphql/generated"
 	resolvers "notezy-backend/app/graphql/resolvers"
+	models "notezy-backend/app/models"
+	services "notezy-backend/app/services"
 )
 
-func NewGraphQLServer(db *gorm.DB) *handler.Server {
-	resolver := resolvers.NewResolver()
+func GraphQLHandler() gin.HandlerFunc {
+	resolver := resolvers.NewResolver(
+		services.NewUserService(
+			models.NotezyDB,
+		),
+	)
 
 	config := generated.Config{
 		Resolvers: resolver,
@@ -21,9 +25,10 @@ func NewGraphQLServer(db *gorm.DB) *handler.Server {
 
 	server := handler.NewDefaultServer(generated.NewExecutableSchema(config))
 
-	return server
+	return gin.WrapH(server)
 }
 
-func NewPlaygroundHandler() http.HandlerFunc {
-	return playground.Handler("GraphQL Playground", "/graphql")
+func PlaygroundHandler() gin.HandlerFunc {
+	h := playground.Handler("GraphQL Playground", "/graphql")
+	return gin.WrapH(h)
 }

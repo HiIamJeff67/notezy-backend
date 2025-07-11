@@ -18,13 +18,3 @@ func NewUserResolver(service services.UserServiceInterface) UserResolverInterfac
 }
 
 /* ============================== Resolvers ============================== */
-
-// func (r *UserResolver) SearchUsers(ctx context.Context, input gqlmodels.SearchableUserInput) {
-// 	// 調用 Service 層
-// 	result, exception := r.userService.SearchUsers(ctx, input)
-// 	if exception != nil {
-// 		return nil
-// 	}
-
-// 	return result, nil
-// }

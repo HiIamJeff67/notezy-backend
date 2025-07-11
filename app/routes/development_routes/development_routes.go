@@ -21,4 +21,5 @@ func ConfigureDevelopmentRoutes() {
 	configureDevelopmentUserRoutes()
 	configureDevelopmentUserInfoRoutes()
 	configureDevelopmentUserAccountRoutes()
+	configureDevelopmentGraphQLRoutes()
 }

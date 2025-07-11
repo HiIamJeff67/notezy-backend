@@ -1,13 +1,18 @@
 package exceptions
 
 import (
+	"context"
 	"fmt"
 	"net/http"
-	"notezy-backend/app/logs"
 	"strings"
 	"time"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/gin-gonic/gin"
+	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/vektah/gqlparser/v2/gqlerror"
+
+	logs "notezy-backend/app/logs"
 )
 
 /* ============================== Exception Field Type Definition ============================== */
@@ -48,27 +53,6 @@ const (
 // ExceptionPrefix_Theme ExceptionPrefix = "Theme"						 38
 )
 
-// shared reason for common domain use
-// if some individual domain require a custom reason,
-// just create one with ExceptionReason type privately whic means its variable name in lower case
-const (
-	ExceptionReason_UndefinedError            ExceptionReason = "Undefined_Error"              // database, api -> common
-	ExceptionReason_NotFound                  ExceptionReason = "Not_Found"                    // database
-	ExceptionReason_FailedToCreate            ExceptionReason = "Failed_To_Create"             // database
-	ExceptionReason_FailedToUpdate            ExceptionReason = "Failed_To_Update"             // database
-	ExceptionReason_FailedToDelete            ExceptionReason = "Failed_To_Delete"             // database
-	ExceptionReason_FailedToCommitTransaction ExceptionReason = "Failed_To_Commit_Transaction" // database
-	ExceptionReason_InvalidInput              ExceptionReason = "Invalid_Input"                // database -> type
-	ExceptionReason_InternalServerWentWrong   ExceptionReason = "Internal_Server_Went_Wrong"   // api
-	ExceptionReason_Timeout                   ExceptionReason = "Timeout"                      // api
-	ExceptionReason_InvalidDto                ExceptionReason = "Invalid_Dto"                  // api -> type
-	ExceptionReason_NotImplemented            ExceptionReason = "NotImplement"                 // database, api -> common
-	ExceptionReason_InvalidType               ExceptionReason = "Invalid_Type"                 // database, api -> type
-	ExceptionReason_InvalidTestdataForm       ExceptionReason = "Invalid_Testdata_Form"        // test
-	ExceptionReason_FailedToMarshalTestdata   ExceptionReason = "Failed_To_Marshal_Testdata"   // test
-	ExceptionReason_FailedToUnmarshalTestdata ExceptionReason = "Failed_To_Unmarshal_Testdata" // test
-)
-
 func IsExceptionCode(exceptionCode int) bool {
 	return exceptionCode >= MinExceptionCode && exceptionCode <= MaxExceptionCode
 }
@@ -78,17 +62,16 @@ func IsExceptionCode(exceptionCode int) bool {
 type Exception struct {
 	Code           ExceptionCode   // custom exception code
 	Prefix         ExceptionPrefix // custom exception prefix
-	Reason         ExceptionReason // custom exception reason
 	Message        string          // custom exception message
 	HTTPStatusCode int             // http status code
 	Details        any             // additional error details (optional)
 	Error          error           // original error (optional)
+
 }
 
 type ExceptionCompareOption struct {
 	WithCode           bool
 	WithPrefix         bool
-	WithReason         bool
 	WithMessage        bool
 	WithHTTPStatusCode bool
 	WithDetails        bool
@@ -97,16 +80,15 @@ type ExceptionCompareOption struct {
 
 func (e *Exception) GetString() string {
 	if e.Error != nil {
-		return fmt.Sprintf("[%v]%s: %v", e.Code, e.Reason, e.Error)
+		return fmt.Sprintf("[%v]: %v", e.Code, e.Error)
 	}
-	return fmt.Sprintf("[%v]%s: %s", e.Code, e.Reason, e.Message)
+	return fmt.Sprintf("[%v]: %s", e.Code, e.Message)
 }
 
 func (e *Exception) GetGinH() *gin.H {
 	return &gin.H{
 		"code":    e.Code,
 		"prefix":  e.Prefix,
-		"reason":  e.Reason,
 		"message": e.Message,
 		"status":  e.HTTPStatusCode,
 		"details": e.Details,
@@ -149,14 +131,61 @@ func (e *Exception) PanicVerbose() {
 	}
 }
 
+func (e *Exception) ToGraphQLError(ctx context.Context) *gqlerror.Error {
+	extensions := map[string]interface{}{
+		"code":       e.Code,
+		"prefix":     e.Prefix,
+		"httpStatus": e.HTTPStatusCode,
+		"timestamp":  time.Now().Format(time.RFC3339),
+	}
+
+	if e.Details != nil {
+		extensions["details"] = e.Details
+	}
+
+	var path ast.Path
+	var locations []gqlerror.Location
+
+	if ctx != nil {
+		if fieldContext := graphql.GetFieldContext(ctx); fieldContext != nil {
+			path = fieldContext.Path()
+
+			if fieldContext.Field.Position != nil {
+				locations = []gqlerror.Location{
+					{
+						Line:   fieldContext.Field.Position.Line,
+						Column: fieldContext.Field.Position.Column,
+					},
+				}
+			}
+		}
+
+		if requestOperationContext := graphql.GetOperationContext(ctx); requestOperationContext != nil {
+			if requestOperationContext.OperationName != "" {
+				extensions["operationName"] = requestOperationContext.OperationName
+			}
+		}
+	}
+
+	gqlError := &gqlerror.Error{
+		Message:    e.Message,
+		Path:       path,
+		Locations:  locations,
+		Extensions: extensions,
+	}
+
+	if e.Error != nil {
+		gqlError.Err = e.Error
+	}
+
+	return gqlError
+}
+
 func CompareExceptions(e1 *Exception, e2 *Exception, opt ExceptionCompareOption) bool {
 	if opt.WithCode && e1.Code != e2.Code {
 		return false
 	}
 	if opt.WithPrefix && e1.Prefix != e2.Prefix {
-		return false
-	}
-	if opt.WithReason && e1.Reason != e2.Reason {
 		return false
 	}
 	if opt.WithMessage && e1.Message != e2.Message {
@@ -181,9 +210,6 @@ func CompareCommonExceptions(e1 *Exception, e2 *Exception, withMessage bool) boo
 	if e1.Prefix != e2.Prefix {
 		return false
 	}
-	if e1.Reason != e2.Reason {
-		return false
-	}
 	if withMessage && e1.Message != e2.Message {
 		return false
 	}
@@ -206,7 +232,6 @@ func (d *DatabaseExceptionDomain) NotFound(optionalMessage ...string) *Exception
 	return &Exception{
 		Code:           d._BaseCode + 1,
 		Prefix:         d._Prefix,
-		Reason:         ExceptionReason_NotFound,
 		Message:        message,
 		HTTPStatusCode: http.StatusNotFound,
 	}
@@ -221,7 +246,6 @@ func (d *DatabaseExceptionDomain) FailedToCreate(optionalMessage ...string) *Exc
 	return &Exception{
 		Code:           d._BaseCode + 2,
 		Prefix:         d._Prefix,
-		Reason:         ExceptionReason_FailedToCreate,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -236,7 +260,6 @@ func (d *DatabaseExceptionDomain) FailedToUpdate(optionalMessage ...string) *Exc
 	return &Exception{
 		Code:           d._BaseCode + 3,
 		Prefix:         d._Prefix,
-		Reason:         ExceptionReason_FailedToUpdate,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -251,7 +274,6 @@ func (d *DatabaseExceptionDomain) FailedToDelete(optionalMessage ...string) *Exc
 	return &Exception{
 		Code:           d._BaseCode + 4,
 		Prefix:         d._Prefix,
-		Reason:         ExceptionReason_FailedToDelete,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -266,7 +288,6 @@ func (d *DatabaseExceptionDomain) FailedToCommitTransaction(optionalMessage ...s
 	return &Exception{
 		Code:           d._BaseCode + 5,
 		Prefix:         d._Prefix,
-		Reason:         ExceptionReason_FailedToCommitTransaction,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -288,7 +309,6 @@ func (d *APIExceptionDomain) InternalServerWentWrong(originalException *Exceptio
 	exception := &Exception{
 		Code:           d._BaseCode + 1,
 		Prefix:         d._Prefix,
-		Reason:         ExceptionReason_InternalServerWentWrong,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -315,7 +335,6 @@ func (d *APIExceptionDomain) Timeout(time time.Duration, optionalMessage ...stri
 	return &Exception{
 		Code:           d._BaseCode + 2,
 		Prefix:         d._Prefix,
-		Reason:         ExceptionReason_Timeout,
 		Message:        message,
 		HTTPStatusCode: http.StatusRequestTimeout,
 	}
@@ -337,7 +356,6 @@ func (d *TypeExceptionDomain) InvalidInput(optionalMessage ...string) *Exception
 	return &Exception{
 		Code:           d._BaseCode + 1,
 		Prefix:         d._Prefix,
-		Reason:         ExceptionReason_InvalidInput,
 		Message:        message,
 		HTTPStatusCode: http.StatusBadRequest,
 	}
@@ -352,7 +370,6 @@ func (d *TypeExceptionDomain) InvalidDto(optionalMessage ...string) *Exception {
 	return &Exception{
 		Code:           d._BaseCode + 2,
 		Prefix:         d._Prefix,
-		Reason:         ExceptionReason_InvalidDto,
 		Message:        message,
 		HTTPStatusCode: http.StatusRequestTimeout,
 	}
@@ -362,7 +379,6 @@ func (d *TypeExceptionDomain) InvalidType(value any) *Exception {
 	return &Exception{
 		Code:           d._BaseCode + 3,
 		Prefix:         d._Prefix,
-		Reason:         ExceptionReason_InvalidType,
 		Message:        fmt.Sprintf("Invalid type in %s", strings.ToLower(string(d._Prefix))),
 		HTTPStatusCode: http.StatusInternalServerError,
 		Details: map[string]any{
@@ -388,7 +404,6 @@ func (d *CommonExceptionDomain) UndefinedError(optionalMessage ...string) *Excep
 	return &Exception{
 		Code:           d._BaseCode + 1,
 		Prefix:         d._Prefix,
-		Reason:         ExceptionReason_UndefinedError,
 		Message:        message,
 		HTTPStatusCode: http.StatusBadRequest,
 	}
@@ -403,7 +418,6 @@ func (d *CommonExceptionDomain) NotImplemented(optionalMessage ...string) *Excep
 	return &Exception{
 		Code:           d._BaseCode + 2,
 		Prefix:         d._Prefix,
-		Reason:         ExceptionReason_NotImplemented,
 		Message:        message,
 		HTTPStatusCode: http.StatusNotImplemented,
 	}
@@ -422,7 +436,6 @@ func (d *TestExceptionDomain) FailedToMarshalTestdata(testdataPath string) *Exce
 	return &Exception{
 		Code:           d._BaseCode + 1,
 		Prefix:         d._Prefix,
-		Reason:         ExceptionReason_FailedToMarshalTestdata,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -434,7 +447,6 @@ func (d *TestExceptionDomain) FailedToUnmarshalTestdata(testdataPath string) *Ex
 	return &Exception{
 		Code:           d._BaseCode + 1,
 		Prefix:         d._Prefix,
-		Reason:         ExceptionReason_FailedToUnmarshalTestdata,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
 	}
@@ -446,7 +458,6 @@ func (d *TestExceptionDomain) InvalidTestdataJSONForm(testdataPath string) *Exce
 	return &Exception{
 		Code:           d._BaseCode + 1,
 		Prefix:         d._Prefix,
-		Reason:         ExceptionReason_InvalidTestdataForm,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
 	}

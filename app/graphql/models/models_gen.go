@@ -52,7 +52,6 @@ type PublicUser struct {
 	Email       string           `json:"email"`
 	Role        enums.UserRole   `json:"role"`
 	Plan        enums.UserPlan   `json:"plan"`
-	PrevStatus  enums.UserStatus `json:"prevStatus"`
 	Status      enums.UserStatus `json:"status"`
 	CreatedAt   time.Time        `json:"createdAt"`
 	UpdatedAt   time.Time        `json:"updatedAt"`

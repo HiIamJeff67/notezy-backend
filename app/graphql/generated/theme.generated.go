@@ -385,8 +385,6 @@ func (ec *executionContext) fieldContext_PublicTheme_author(_ context.Context, f
 				return ec.fieldContext_PublicUser_role(ctx, field)
 			case "plan":
 				return ec.fieldContext_PublicUser_plan(ctx, field)
-			case "prevStatus":
-				return ec.fieldContext_PublicUser_prevStatus(ctx, field)
 			case "status":
 				return ec.fieldContext_PublicUser_status(ctx, field)
 			case "createdAt":

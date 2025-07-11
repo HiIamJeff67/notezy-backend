@@ -21,10 +21,6 @@ func configureDevelopmentUserRoutes() {
 			"/getMe",
 			userController.GetMe,
 		)
-		userRoutes.GET(
-			"/all",
-			userController.GetAllUsers,
-		)
 		userRoutes.PATCH(
 			"/updateMe",
 			userController.UpdateMe,
