@@ -51,14 +51,15 @@ type ComplexityRoot struct {
 	}
 
 	PublicTheme struct {
-		Author      func(childComplexity int) int
-		CreatedAt   func(childComplexity int) int
-		DownloadURL func(childComplexity int) int
-		ID          func(childComplexity int) int
-		IsDefault   func(childComplexity int) int
-		Name        func(childComplexity int) int
-		UpdatedAt   func(childComplexity int) int
-		Version     func(childComplexity int) int
+		Author        func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
+		DownloadCount func(childComplexity int) int
+		DownloadURL   func(childComplexity int) int
+		ID            func(childComplexity int) int
+		IsDefault     func(childComplexity int) int
+		Name          func(childComplexity int) int
+		UpdatedAt     func(childComplexity int) int
+		Version       func(childComplexity int) int
 	}
 
 	PublicUser struct {
@@ -105,6 +106,40 @@ type ComplexityRoot struct {
 		StartEncodedSearchCursor func(childComplexity int) int
 	}
 
+	SearchableBadgeConnection struct {
+		SearchEdges    func(childComplexity int) int
+		SearchPageInfo func(childComplexity int) int
+		SearchTime     func(childComplexity int) int
+		TotalCount     func(childComplexity int) int
+	}
+
+	SearchableBadgeCursorFields struct {
+		ID    func(childComplexity int) int
+		Title func(childComplexity int) int
+	}
+
+	SearchableBadgeEdge struct {
+		EncodedSearchCursor func(childComplexity int) int
+		Node                func(childComplexity int) int
+	}
+
+	SearchableThemeConnection struct {
+		SearchEdges    func(childComplexity int) int
+		SearchPageInfo func(childComplexity int) int
+		SearchTime     func(childComplexity int) int
+		TotalCount     func(childComplexity int) int
+	}
+
+	SearchableThemeCursorFields struct {
+		ID   func(childComplexity int) int
+		Name func(childComplexity int) int
+	}
+
+	SearchableThemeEdge struct {
+		EncodedSearchCursor func(childComplexity int) int
+		Node                func(childComplexity int) int
+	}
+
 	SearchableUserConnection struct {
 		SearchEdges    func(childComplexity int) int
 		SearchPageInfo func(childComplexity int) int
@@ -112,7 +147,7 @@ type ComplexityRoot struct {
 		TotalCount     func(childComplexity int) int
 	}
 
-	SearchableUserCursor struct {
+	SearchableUserCursorFields struct {
 		DisplayName func(childComplexity int) int
 		Email       func(childComplexity int) int
 		Name        func(childComplexity int) int
@@ -205,6 +240,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PublicTheme.CreatedAt(childComplexity), true
+
+	case "PublicTheme.downloadCount":
+		if e.complexity.PublicTheme.DownloadCount == nil {
+			break
+		}
+
+		return e.complexity.PublicTheme.DownloadCount(childComplexity), true
 
 	case "PublicTheme.downloadURL":
 		if e.complexity.PublicTheme.DownloadURL == nil {
@@ -456,6 +498,118 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.SearchPageInfo.StartEncodedSearchCursor(childComplexity), true
 
+	case "SearchableBadgeConnection.searchEdges":
+		if e.complexity.SearchableBadgeConnection.SearchEdges == nil {
+			break
+		}
+
+		return e.complexity.SearchableBadgeConnection.SearchEdges(childComplexity), true
+
+	case "SearchableBadgeConnection.searchPageInfo":
+		if e.complexity.SearchableBadgeConnection.SearchPageInfo == nil {
+			break
+		}
+
+		return e.complexity.SearchableBadgeConnection.SearchPageInfo(childComplexity), true
+
+	case "SearchableBadgeConnection.searchTime":
+		if e.complexity.SearchableBadgeConnection.SearchTime == nil {
+			break
+		}
+
+		return e.complexity.SearchableBadgeConnection.SearchTime(childComplexity), true
+
+	case "SearchableBadgeConnection.totalCount":
+		if e.complexity.SearchableBadgeConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.SearchableBadgeConnection.TotalCount(childComplexity), true
+
+	case "SearchableBadgeCursorFields.id":
+		if e.complexity.SearchableBadgeCursorFields.ID == nil {
+			break
+		}
+
+		return e.complexity.SearchableBadgeCursorFields.ID(childComplexity), true
+
+	case "SearchableBadgeCursorFields.title":
+		if e.complexity.SearchableBadgeCursorFields.Title == nil {
+			break
+		}
+
+		return e.complexity.SearchableBadgeCursorFields.Title(childComplexity), true
+
+	case "SearchableBadgeEdge.encodedSearchCursor":
+		if e.complexity.SearchableBadgeEdge.EncodedSearchCursor == nil {
+			break
+		}
+
+		return e.complexity.SearchableBadgeEdge.EncodedSearchCursor(childComplexity), true
+
+	case "SearchableBadgeEdge.node":
+		if e.complexity.SearchableBadgeEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.SearchableBadgeEdge.Node(childComplexity), true
+
+	case "SearchableThemeConnection.searchEdges":
+		if e.complexity.SearchableThemeConnection.SearchEdges == nil {
+			break
+		}
+
+		return e.complexity.SearchableThemeConnection.SearchEdges(childComplexity), true
+
+	case "SearchableThemeConnection.searchPageInfo":
+		if e.complexity.SearchableThemeConnection.SearchPageInfo == nil {
+			break
+		}
+
+		return e.complexity.SearchableThemeConnection.SearchPageInfo(childComplexity), true
+
+	case "SearchableThemeConnection.searchTime":
+		if e.complexity.SearchableThemeConnection.SearchTime == nil {
+			break
+		}
+
+		return e.complexity.SearchableThemeConnection.SearchTime(childComplexity), true
+
+	case "SearchableThemeConnection.totalCount":
+		if e.complexity.SearchableThemeConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.SearchableThemeConnection.TotalCount(childComplexity), true
+
+	case "SearchableThemeCursorFields.id":
+		if e.complexity.SearchableThemeCursorFields.ID == nil {
+			break
+		}
+
+		return e.complexity.SearchableThemeCursorFields.ID(childComplexity), true
+
+	case "SearchableThemeCursorFields.name":
+		if e.complexity.SearchableThemeCursorFields.Name == nil {
+			break
+		}
+
+		return e.complexity.SearchableThemeCursorFields.Name(childComplexity), true
+
+	case "SearchableThemeEdge.encodedSearchCursor":
+		if e.complexity.SearchableThemeEdge.EncodedSearchCursor == nil {
+			break
+		}
+
+		return e.complexity.SearchableThemeEdge.EncodedSearchCursor(childComplexity), true
+
+	case "SearchableThemeEdge.node":
+		if e.complexity.SearchableThemeEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.SearchableThemeEdge.Node(childComplexity), true
+
 	case "SearchableUserConnection.searchEdges":
 		if e.complexity.SearchableUserConnection.SearchEdges == nil {
 			break
@@ -484,26 +638,26 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.SearchableUserConnection.TotalCount(childComplexity), true
 
-	case "SearchableUserCursor.displayName":
-		if e.complexity.SearchableUserCursor.DisplayName == nil {
+	case "SearchableUserCursorFields.displayName":
+		if e.complexity.SearchableUserCursorFields.DisplayName == nil {
 			break
 		}
 
-		return e.complexity.SearchableUserCursor.DisplayName(childComplexity), true
+		return e.complexity.SearchableUserCursorFields.DisplayName(childComplexity), true
 
-	case "SearchableUserCursor.email":
-		if e.complexity.SearchableUserCursor.Email == nil {
+	case "SearchableUserCursorFields.email":
+		if e.complexity.SearchableUserCursorFields.Email == nil {
 			break
 		}
 
-		return e.complexity.SearchableUserCursor.Email(childComplexity), true
+		return e.complexity.SearchableUserCursorFields.Email(childComplexity), true
 
-	case "SearchableUserCursor.name":
-		if e.complexity.SearchableUserCursor.Name == nil {
+	case "SearchableUserCursorFields.name":
+		if e.complexity.SearchableUserCursorFields.Name == nil {
 			break
 		}
 
-		return e.complexity.SearchableUserCursor.Name(childComplexity), true
+		return e.complexity.SearchableUserCursorFields.Name(childComplexity), true
 
 	case "SearchableUserEdge.encodedSearchCursor":
 		if e.complexity.SearchableUserEdge.EncodedSearchCursor == nil {
@@ -527,6 +681,10 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputSearchableBadgeFilters,
+		ec.unmarshalInputSearchableBadgeInput,
+		ec.unmarshalInputSearchableThemeFilters,
+		ec.unmarshalInputSearchableThemeInput,
 		ec.unmarshalInputSearchableUserFilters,
 		ec.unmarshalInputSearchableUserInput,
 	)
@@ -686,6 +844,50 @@ var sources = []*ast.Source{
 
   users: [PublicUser!]!
 }
+
+# =============== Searchable Filters & SortBy & SortOrder =============== #
+
+input SearchableBadgeFilters {
+  type: BadgeType
+}
+
+enum SearchableBadgeSortBy {
+  RELEVANCE
+  TITLE
+  CREATED_AT
+}
+
+input SearchableBadgeInput {
+  query: String!
+  after: String
+  first: Int = 10
+  filters: SearchableBadgeFilters
+  sortBy: SearchableBadgeSortBy = RELEVANCE
+  sortOrderr: SearchableSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+type SearchableBadgeCursorFields {
+  id: UUID!
+  title: String!
+}
+
+# type EncodedSearchableBadgeCursor = String!
+
+# =============== Searchable Edge & Connection =============== #
+
+type SearchableBadgeEdge implements SearchEdge {
+  node: PublicBadge!
+  encodedSearchCursor: String!
+}
+
+type SearchableBadgeConnection implements SearchConnection {
+  searchEdges: [SearchableBadgeEdge!]!
+  searchPageInfo: SearchPageInfo!
+  totalCount: Int!
+  searchTime: Float!
+}
 `, BuiltIn: false},
 	{Name: "../schemas/query.graphql", Input: `type Query {
   searchUsers(input: SearchableUserInput!): SearchableUserConnection!
@@ -754,12 +956,58 @@ interface SearchConnection {
   version: String!
   isDefault: Boolean!
   downloadURL: String
-  #   downloadCount: Int!
+  downloadCount: Int!
   createdAt: Time!
   updatedAt: Time!
 
   # relations
   author: PublicUser!
+}
+
+# =============== Searchable Filters & SortBy & Input =============== #
+
+input SearchableThemeFilters {
+  isDefault: Boolean
+  downloadCountGreaterThan: Int
+}
+
+enum SearchableThemeSortBy {
+  RELEVANCE
+  NAME
+  LAST_UPDATE
+  CREATED_AT
+}
+
+input SearchableThemeInput {
+  query: String!
+  after: String
+  first: Int = 10
+  filters: SearchableThemeFilters
+  sortBy: SearchableThemeSortBy = RELEVANCE
+  sortOrder: SearchableSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+type SearchableThemeCursorFields {
+  id: UUID!
+  name: String!
+}
+
+# type EncodedSearchableThemeCursor = String!
+
+# =============== Searchable Edge & Connection =============== #
+
+type SearchableThemeEdge implements SearchEdge {
+  node: PublicTheme!
+  encodedSearchCursor: String!
+}
+
+type SearchableThemeConnection implements SearchConnection {
+  searchEdges: [SearchableThemeEdge!]!
+  searchPageInfo: SearchPageInfo!
+  totalCount: Int!
+  searchTime: Float!
 }
 `, BuiltIn: false},
 	{Name: "../schemas/user.graphql", Input: `# the complete user structure: app/models/schemas/user_schema.go
@@ -789,6 +1037,7 @@ type PublicUser {
 }
 
 # =============== Searchable Filters & SortBy & Input =============== #
+
 input SearchableUserFilters {
   role: UserRole
   plan: UserPlan
@@ -814,8 +1063,9 @@ input SearchableUserInput {
   sortOrder: SearchableSortOrder = DESC
 }
 
-# =============== Search Cursor Structure =============== #
-type SearchableUserCursor {
+# =============== Search Cursor Fields =============== #
+
+type SearchableUserCursorFields {
   name: String!
   displayName: String!
   email: String!

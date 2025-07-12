@@ -25,6 +25,7 @@ type PublicUser {
 }
 
 # =============== Searchable Filters & SortBy & Input =============== #
+
 input SearchableUserFilters {
   role: UserRole
   plan: UserPlan
@@ -50,8 +51,9 @@ input SearchableUserInput {
   sortOrder: SearchableSortOrder = DESC
 }
 
-# =============== Search Cursor Structure =============== #
-type SearchableUserCursor {
+# =============== Search Cursor Fields =============== #
+
+type SearchableUserCursorFields {
   name: String!
   displayName: String!
   email: String!

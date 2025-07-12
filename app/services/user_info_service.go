@@ -1,13 +1,17 @@
 package services
 
 import (
+	"context"
+
+	"gorm.io/gorm"
+
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
+	gqlmodels "notezy-backend/app/graphql/models"
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
-
-	"gorm.io/gorm"
+	"notezy-backend/app/util"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -15,6 +19,9 @@ import (
 type UserInfoServiceInterface interface {
 	GetMyInfo(reqDto *dtos.GetMyInfoReqDto) (*dtos.GetMyInfoResDto, *exceptions.Exception)
 	UpdateMyInfo(reqDto *dtos.UpdateMyInfoReqDto) (*dtos.UpdateMyInfoResDto, *exceptions.Exception)
+
+	// services for public userInfos
+	GetPublicUserInfoByEncodedSearchCursor(ctx context.Context, encodedSearchCursor string) (*gqlmodels.PublicUserInfo, *exceptions.Exception)
 }
 
 type UserInfoService struct {
@@ -79,4 +86,23 @@ func (s *UserInfoService) UpdateMyInfo(reqDto *dtos.UpdateMyInfoReqDto) (*dtos.U
 	return &dtos.UpdateMyInfoResDto{
 		UpdatedAt: updatedUserInfo.UpdatedAt,
 	}, nil
+}
+
+/* ============================== Services for Public UserInfo (Only available in GraphQL) ============================== */
+
+// use the searchable user cursor (we only give the search functionality on users)
+func (s *UserInfoService) GetPublicUserInfoByEncodedSearchCursor(ctx context.Context, encodedSearchCursor string) (*gqlmodels.PublicUserInfo, *exceptions.Exception) {
+	userInfoRepository := repositories.NewUserInfoRepository(s.db)
+
+	searchCursor, exception := util.DecodeSearchCursor[gqlmodels.SearchableUserCursorFields](encodedSearchCursor)
+	if exception != nil {
+		return nil, exception
+	}
+
+	userInfo, exception := userInfoRepository.GetOneByUserName(searchCursor.Fields.Name)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return userInfo.ToPublicUserInfo(), nil
 }

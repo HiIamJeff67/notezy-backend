@@ -36,14 +36,15 @@ type PublicBadge struct {
 }
 
 type PublicTheme struct {
-	ID          uuid.UUID   `json:"id"`
-	Name        string      `json:"name"`
-	Version     string      `json:"version"`
-	IsDefault   bool        `json:"isDefault"`
-	DownloadURL *string     `json:"downloadURL,omitempty"`
-	CreatedAt   time.Time   `json:"createdAt"`
-	UpdatedAt   time.Time   `json:"updatedAt"`
-	Author      *PublicUser `json:"author"`
+	ID            uuid.UUID   `json:"id"`
+	Name          string      `json:"name"`
+	Version       string      `json:"version"`
+	IsDefault     bool        `json:"isDefault"`
+	DownloadURL   *string     `json:"downloadURL,omitempty"`
+	DownloadCount int32       `json:"downloadCount"`
+	CreatedAt     time.Time   `json:"createdAt"`
+	UpdatedAt     time.Time   `json:"updatedAt"`
+	Author        *PublicUser `json:"author"`
 }
 
 type PublicUser struct {
@@ -89,6 +90,83 @@ type SearchPageInfo struct {
 	EndEncodedSearchCursor   *string `json:"endEncodedSearchCursor,omitempty"`
 }
 
+type SearchableBadgeConnection struct {
+	SearchEdges    []*SearchableBadgeEdge `json:"searchEdges"`
+	SearchPageInfo *SearchPageInfo        `json:"searchPageInfo"`
+	TotalCount     int32                  `json:"totalCount"`
+	SearchTime     float64                `json:"searchTime"`
+}
+
+func (SearchableBadgeConnection) IsSearchConnection()                     {}
+func (this SearchableBadgeConnection) GetSearchPageInfo() *SearchPageInfo { return this.SearchPageInfo }
+func (this SearchableBadgeConnection) GetTotalCount() int32               { return this.TotalCount }
+func (this SearchableBadgeConnection) GetSearchTime() float64             { return this.SearchTime }
+
+type SearchableBadgeCursorFields struct {
+	ID    uuid.UUID `json:"id"`
+	Title string    `json:"title"`
+}
+
+type SearchableBadgeEdge struct {
+	Node                *PublicBadge `json:"node"`
+	EncodedSearchCursor string       `json:"encodedSearchCursor"`
+}
+
+func (SearchableBadgeEdge) IsSearchEdge()                       {}
+func (this SearchableBadgeEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
+
+type SearchableBadgeFilters struct {
+	Type *enums.BadgeType `json:"type,omitempty"`
+}
+
+type SearchableBadgeInput struct {
+	Query      string                  `json:"query"`
+	After      *string                 `json:"after,omitempty"`
+	First      *int32                  `json:"first,omitempty"`
+	Filters    *SearchableBadgeFilters `json:"filters,omitempty"`
+	SortBy     *SearchableBadgeSortBy  `json:"sortBy,omitempty"`
+	SortOrderr *SearchableSortOrder    `json:"sortOrderr,omitempty"`
+}
+
+type SearchableThemeConnection struct {
+	SearchEdges    []*SearchableThemeEdge `json:"searchEdges"`
+	SearchPageInfo *SearchPageInfo        `json:"searchPageInfo"`
+	TotalCount     int32                  `json:"totalCount"`
+	SearchTime     float64                `json:"searchTime"`
+}
+
+func (SearchableThemeConnection) IsSearchConnection()                     {}
+func (this SearchableThemeConnection) GetSearchPageInfo() *SearchPageInfo { return this.SearchPageInfo }
+func (this SearchableThemeConnection) GetTotalCount() int32               { return this.TotalCount }
+func (this SearchableThemeConnection) GetSearchTime() float64             { return this.SearchTime }
+
+type SearchableThemeCursorFields struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}
+
+type SearchableThemeEdge struct {
+	Node                *PublicTheme `json:"node"`
+	EncodedSearchCursor string       `json:"encodedSearchCursor"`
+}
+
+func (SearchableThemeEdge) IsSearchEdge()                       {}
+func (this SearchableThemeEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
+
+type SearchableThemeFilters struct {
+	IsDefault                *bool  `json:"isDefault,omitempty"`
+	DownloadCountGreaterThan *int32 `json:"downloadCountGreaterThan,omitempty"`
+}
+
+type SearchableThemeInput struct {
+	Query     string                  `json:"query"`
+	After     *string                 `json:"after,omitempty"`
+	First     *int32                  `json:"first,omitempty"`
+	Filters   *SearchableThemeFilters `json:"filters,omitempty"`
+	SortBy    *SearchableThemeSortBy  `json:"sortBy,omitempty"`
+	SortOrder *SearchableSortOrder    `json:"sortOrder,omitempty"`
+}
+
 type SearchableUserConnection struct {
 	SearchEdges    []*SearchableUserEdge `json:"searchEdges"`
 	SearchPageInfo *SearchPageInfo       `json:"searchPageInfo"`
@@ -101,7 +179,7 @@ func (this SearchableUserConnection) GetSearchPageInfo() *SearchPageInfo { retur
 func (this SearchableUserConnection) GetTotalCount() int32               { return this.TotalCount }
 func (this SearchableUserConnection) GetSearchTime() float64             { return this.SearchTime }
 
-type SearchableUserCursor struct {
+type SearchableUserCursorFields struct {
 	Name        string `json:"name"`
 	DisplayName string `json:"displayName"`
 	Email       string `json:"email"`
@@ -200,6 +278,63 @@ func (e CountryCode) MarshalJSON() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+type SearchableBadgeSortBy string
+
+const (
+	SearchableBadgeSortByRelevance SearchableBadgeSortBy = "RELEVANCE"
+	SearchableBadgeSortByTitle     SearchableBadgeSortBy = "TITLE"
+	SearchableBadgeSortByCreatedAt SearchableBadgeSortBy = "CREATED_AT"
+)
+
+var AllSearchableBadgeSortBy = []SearchableBadgeSortBy{
+	SearchableBadgeSortByRelevance,
+	SearchableBadgeSortByTitle,
+	SearchableBadgeSortByCreatedAt,
+}
+
+func (e SearchableBadgeSortBy) IsValid() bool {
+	switch e {
+	case SearchableBadgeSortByRelevance, SearchableBadgeSortByTitle, SearchableBadgeSortByCreatedAt:
+		return true
+	}
+	return false
+}
+
+func (e SearchableBadgeSortBy) String() string {
+	return string(e)
+}
+
+func (e *SearchableBadgeSortBy) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SearchableBadgeSortBy(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SearchableBadgeSortBy", str)
+	}
+	return nil
+}
+
+func (e SearchableBadgeSortBy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *SearchableBadgeSortBy) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e SearchableBadgeSortBy) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
 type SearchableSortOrder string
 
 const (
@@ -250,6 +385,65 @@ func (e *SearchableSortOrder) UnmarshalJSON(b []byte) error {
 }
 
 func (e SearchableSortOrder) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type SearchableThemeSortBy string
+
+const (
+	SearchableThemeSortByRelevance  SearchableThemeSortBy = "RELEVANCE"
+	SearchableThemeSortByName       SearchableThemeSortBy = "NAME"
+	SearchableThemeSortByLastUpdate SearchableThemeSortBy = "LAST_UPDATE"
+	SearchableThemeSortByCreatedAt  SearchableThemeSortBy = "CREATED_AT"
+)
+
+var AllSearchableThemeSortBy = []SearchableThemeSortBy{
+	SearchableThemeSortByRelevance,
+	SearchableThemeSortByName,
+	SearchableThemeSortByLastUpdate,
+	SearchableThemeSortByCreatedAt,
+}
+
+func (e SearchableThemeSortBy) IsValid() bool {
+	switch e {
+	case SearchableThemeSortByRelevance, SearchableThemeSortByName, SearchableThemeSortByLastUpdate, SearchableThemeSortByCreatedAt:
+		return true
+	}
+	return false
+}
+
+func (e SearchableThemeSortBy) String() string {
+	return string(e)
+}
+
+func (e *SearchableThemeSortBy) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SearchableThemeSortBy(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SearchableThemeSortBy", str)
+	}
+	return nil
+}
+
+func (e SearchableThemeSortBy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *SearchableThemeSortBy) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e SearchableThemeSortBy) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

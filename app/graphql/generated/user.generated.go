@@ -554,6 +554,8 @@ func (ec *executionContext) fieldContext_PublicUser_themes(_ context.Context, fi
 				return ec.fieldContext_PublicTheme_isDefault(ctx, field)
 			case "downloadURL":
 				return ec.fieldContext_PublicTheme_downloadURL(ctx, field)
+			case "downloadCount":
+				return ec.fieldContext_PublicTheme_downloadCount(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_PublicTheme_createdAt(ctx, field)
 			case "updatedAt":
@@ -759,8 +761,8 @@ func (ec *executionContext) fieldContext_SearchableUserConnection_searchTime(_ c
 	return fc, nil
 }
 
-func (ec *executionContext) _SearchableUserCursor_name(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableUserCursor) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchableUserCursor_name(ctx, field)
+func (ec *executionContext) _SearchableUserCursorFields_name(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableUserCursorFields) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchableUserCursorFields_name(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -790,9 +792,9 @@ func (ec *executionContext) _SearchableUserCursor_name(ctx context.Context, fiel
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchableUserCursor_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchableUserCursorFields_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "SearchableUserCursor",
+		Object:     "SearchableUserCursorFields",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -803,8 +805,8 @@ func (ec *executionContext) fieldContext_SearchableUserCursor_name(_ context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _SearchableUserCursor_displayName(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableUserCursor) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchableUserCursor_displayName(ctx, field)
+func (ec *executionContext) _SearchableUserCursorFields_displayName(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableUserCursorFields) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchableUserCursorFields_displayName(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -834,9 +836,9 @@ func (ec *executionContext) _SearchableUserCursor_displayName(ctx context.Contex
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchableUserCursor_displayName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchableUserCursorFields_displayName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "SearchableUserCursor",
+		Object:     "SearchableUserCursorFields",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -847,8 +849,8 @@ func (ec *executionContext) fieldContext_SearchableUserCursor_displayName(_ cont
 	return fc, nil
 }
 
-func (ec *executionContext) _SearchableUserCursor_email(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableUserCursor) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchableUserCursor_email(ctx, field)
+func (ec *executionContext) _SearchableUserCursorFields_email(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableUserCursorFields) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchableUserCursorFields_email(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -878,9 +880,9 @@ func (ec *executionContext) _SearchableUserCursor_email(ctx context.Context, fie
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchableUserCursor_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchableUserCursorFields_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "SearchableUserCursor",
+		Object:     "SearchableUserCursorFields",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -1292,29 +1294,29 @@ func (ec *executionContext) _SearchableUserConnection(ctx context.Context, sel a
 	return out
 }
 
-var searchableUserCursorImplementors = []string{"SearchableUserCursor"}
+var searchableUserCursorFieldsImplementors = []string{"SearchableUserCursorFields"}
 
-func (ec *executionContext) _SearchableUserCursor(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.SearchableUserCursor) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, searchableUserCursorImplementors)
+func (ec *executionContext) _SearchableUserCursorFields(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.SearchableUserCursorFields) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, searchableUserCursorFieldsImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("SearchableUserCursor")
+			out.Values[i] = graphql.MarshalString("SearchableUserCursorFields")
 		case "name":
-			out.Values[i] = ec._SearchableUserCursor_name(ctx, field, obj)
+			out.Values[i] = ec._SearchableUserCursorFields_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "displayName":
-			out.Values[i] = ec._SearchableUserCursor_displayName(ctx, field, obj)
+			out.Values[i] = ec._SearchableUserCursorFields_displayName(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "email":
-			out.Values[i] = ec._SearchableUserCursor_email(ctx, field, obj)
+			out.Values[i] = ec._SearchableUserCursorFields_email(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

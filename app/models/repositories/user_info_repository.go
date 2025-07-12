@@ -17,6 +17,7 @@ import (
 
 type UserInfoRepository interface {
 	GetOneByUserId(userId uuid.UUID) (*schemas.UserInfo, *exceptions.Exception)
+	GetOneByUserName(name string) (*schemas.UserInfo, *exceptions.Exception)
 	CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserInfoInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserInfoInput) (*schemas.UserInfo, *exceptions.Exception)
 }
@@ -38,6 +39,19 @@ func (r *userInfoRepository) GetOneByUserId(userId uuid.UUID) (*schemas.UserInfo
 	userInfo := schemas.UserInfo{}
 	result := r.db.Table(schemas.UserInfo{}.TableName()).
 		Where("user_id = ?", userId).
+		First(&userInfo)
+	if err := result.Error; err != nil {
+		return nil, exceptions.UserInfo.NotFound().WithError(err)
+	}
+
+	return &userInfo, nil
+}
+
+func (r *userInfoRepository) GetOneByUserName(name string) (*schemas.UserInfo, *exceptions.Exception) {
+	userInfo := schemas.UserInfo{}
+	result := r.db.Table(schemas.UserInfo{}.TableName()).
+		Joins("LEFT JOIN \"UserTable\" u ON u.id = user_id").
+		Where("u.name = ?", name).
 		First(&userInfo)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserInfo.NotFound().WithError(err)

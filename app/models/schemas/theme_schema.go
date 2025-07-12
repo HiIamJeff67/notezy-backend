@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	gqlmodels "notezy-backend/app/graphql/models"
 	shared "notezy-backend/shared"
 )
 
@@ -25,4 +26,19 @@ type Theme struct {
 
 func (Theme) TableName() string {
 	return shared.ValidTableName_ThemeTable.String()
+}
+
+/* ============================== Relative Type Conversion ============================== */
+
+func (t *Theme) ToPublicTheme() *gqlmodels.PublicTheme {
+	return &gqlmodels.PublicTheme{
+		ID:          t.Id,
+		Name:        t.Name,
+		Version:     t.Version,
+		IsDefault:   t.IsDefault,
+		DownloadURL: t.DownloadURL,
+		CreatedAt:   t.CreatedAt,
+		UpdatedAt:   t.UpdatedAt,
+		Author:      &gqlmodels.PublicUser{},
+	}
 }

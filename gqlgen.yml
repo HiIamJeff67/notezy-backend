@@ -125,6 +125,12 @@ autobind:
 models:
   ID:
     model: "github.com/99designs/gqlgen/graphql.ID"
+  Int:
+    model: "github.com/99designs/gqlgen/graphql.Int32"
+  Int64:
+    model: "github.com/99designs/gqlgen/graphql.Int64"
+
+  # =============== Scalars =============== #
   UUID:
     model: "notezy-backend/app/graphql/scalars.UUID"
     # marshal: notezy-backend/app/graphql/scalars.MarshalUUID
@@ -133,10 +139,6 @@ models:
     model: "notezy-backend/app/graphql/scalars.Time"
     # marshal: notezy-backend/app/graphql/scalars.MarshalTime
     # unmarshal: notezy-backend/app/graphql/scalars.UnmarshalTime
-  Int:
-    model: "github.com/99designs/gqlgen/graphql.Int32"
-  Int64:
-    model: "github.com/99designs/gqlgen/graphql.Int64"
 
   UserRole:
     model: "notezy-backend/app/models/schemas/enums.UserRole"

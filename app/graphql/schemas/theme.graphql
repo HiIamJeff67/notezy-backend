@@ -5,10 +5,56 @@ type PublicTheme {
   version: String!
   isDefault: Boolean!
   downloadURL: String
-  #   downloadCount: Int!
+  downloadCount: Int!
   createdAt: Time!
   updatedAt: Time!
 
   # relations
   author: PublicUser!
+}
+
+# =============== Searchable Filters & SortBy & Input =============== #
+
+input SearchableThemeFilters {
+  isDefault: Boolean
+  downloadCountGreaterThan: Int
+}
+
+enum SearchableThemeSortBy {
+  RELEVANCE
+  NAME
+  LAST_UPDATE
+  CREATED_AT
+}
+
+input SearchableThemeInput {
+  query: String!
+  after: String
+  first: Int = 10
+  filters: SearchableThemeFilters
+  sortBy: SearchableThemeSortBy = RELEVANCE
+  sortOrder: SearchableSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+type SearchableThemeCursorFields {
+  id: UUID!
+  name: String!
+}
+
+# type EncodedSearchableThemeCursor = String!
+
+# =============== Searchable Edge & Connection =============== #
+
+type SearchableThemeEdge implements SearchEdge {
+  node: PublicTheme!
+  encodedSearchCursor: String!
+}
+
+type SearchableThemeConnection implements SearchConnection {
+  searchEdges: [SearchableThemeEdge!]!
+  searchPageInfo: SearchPageInfo!
+  totalCount: Int!
+  searchTime: Float!
 }

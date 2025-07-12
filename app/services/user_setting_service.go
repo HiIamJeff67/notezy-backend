@@ -4,8 +4,8 @@ import (
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	models "notezy-backend/app/models"
-	"notezy-backend/app/models/inputs"
-	"notezy-backend/app/models/repositories"
+	inputs "notezy-backend/app/models/inputs"
+	repositories "notezy-backend/app/models/repositories"
 )
 
 /* ============================== Interface & Instance ============================== */

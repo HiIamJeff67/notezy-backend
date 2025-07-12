@@ -23,9 +23,11 @@ import (
 type UserServiceInterface interface {
 	GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception)
 	GetAllUsers() (*[]schemas.User, *exceptions.Exception)
-	// GetPublicUserBySearchCursor(ctx context.Context, searchCursor string) (*gqlmodels.PublicUser, *exceptions.Exception)
-	SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.SearchableUserInput) (*gqlmodels.SearchableUserConnection, *exceptions.Exception)
 	UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Exception)
+
+	// services for public users
+	GetPublicUserByEncodedSearchCursor(ctx context.Context, encodedSearchCursor string) (*gqlmodels.PublicUser, *exceptions.Exception)
+	SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.SearchableUserInput) (*gqlmodels.SearchableUserConnection, *exceptions.Exception)
 }
 
 type UserService struct {
@@ -91,30 +93,24 @@ func (s *UserService) UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDt
 
 // }
 
-/* ============================== Services for Public User ============================== */
+/* ============================== Services for Public User (Only available in GraphQL) ============================== */
 
 func (s *UserService) GetPublicUserByEncodedSearchCursor(ctx context.Context, encodedSearchCursor string) (*gqlmodels.PublicUser, *exceptions.Exception) {
 	userRepository := repositories.NewUserRepository(s.db)
 
-	searchCursor, exception := util.DecodeSearchCursor(encodedSearchCursor)
+	searchCursor, exception := util.DecodeSearchCursor[gqlmodels.SearchableUserCursorFields](encodedSearchCursor)
 	if exception != nil {
 		return nil, exception
 	}
 
-	name := ""
-	for _, field := range searchCursor.Fields {
-		if field.Name == "name" {
-			if stringValue, ok := field.Value.(string); ok {
-				name = stringValue
-			}
-		}
-	}
-	if name == "" {
-		return nil, exceptions.Searchable.CannotFindFieldInEncodedSearchCursor(encodedSearchCursor, "name")
-	}
-
-	user, exception := userRepository.GetOneByName(name)
+	user, exception := userRepository.GetOneByName(searchCursor.Fields.Name)
 	if exception != nil {
+		// try to get the user from email
+		// user, exception := userRepository.GetOneByEmail(searchCursor.Fields.Email)
+		// if exception != nil {
+		// 	return nil, exception
+		// }
+		// return user.ToPublicUser(), nil
 		return nil, exception
 	}
 
@@ -133,14 +129,14 @@ func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.
 		)
 	}
 	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
-		searchCursor, exception := util.DecodeSearchCursor(*gqlInput.After)
+		searchCursor, exception := util.DecodeSearchCursor[gqlmodels.SearchableUserCursorFields](*gqlInput.After)
 		if exception != nil {
 			return nil, exception
 		}
 
-		for _, field := range searchCursor.Fields {
-			query.Where(field.Name+" = ?", field.Value)
-		}
+		query.Where("name = ?", searchCursor.Fields.Name).
+			Where("display_name = ?", searchCursor.Fields.DisplayName).
+			Where("email = ?", searchCursor.Fields.Email)
 	}
 
 	if gqlInput.SortBy != nil && gqlInput.SortOrder != nil {
@@ -184,12 +180,14 @@ func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.
 
 	searchEdges := make([]*gqlmodels.SearchableUserEdge, len(users))
 	for index, user := range users {
-		searchCursorFields := map[string]interface{}{
-			"name":         user.Name,
-			"display_name": user.DisplayName,
-			"email":        user.Email,
+		searchCursor := util.SearchCursor[gqlmodels.SearchableUserCursorFields]{
+			Fields: gqlmodels.SearchableUserCursorFields{
+				Name:        user.Name,
+				DisplayName: user.DisplayName,
+				Email:       user.Email,
+			},
 		}
-		encodedSearchCursor, err := util.EncodeSearchCursor(searchCursorFields)
+		encodedSearchCursor, err := searchCursor.EncodeSearchCursor()
 		if err != nil {
 			return nil, err
 		}

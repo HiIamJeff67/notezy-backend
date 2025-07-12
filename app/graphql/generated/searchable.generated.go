@@ -217,6 +217,20 @@ func (ec *executionContext) _SearchConnection(ctx context.Context, sel ast.Selec
 			return graphql.Null
 		}
 		return ec._SearchableUserConnection(ctx, sel, obj)
+	case gqlmodels.SearchableThemeConnection:
+		return ec._SearchableThemeConnection(ctx, sel, &obj)
+	case *gqlmodels.SearchableThemeConnection:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SearchableThemeConnection(ctx, sel, obj)
+	case gqlmodels.SearchableBadgeConnection:
+		return ec._SearchableBadgeConnection(ctx, sel, &obj)
+	case *gqlmodels.SearchableBadgeConnection:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SearchableBadgeConnection(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -233,6 +247,20 @@ func (ec *executionContext) _SearchEdge(ctx context.Context, sel ast.SelectionSe
 			return graphql.Null
 		}
 		return ec._SearchableUserEdge(ctx, sel, obj)
+	case gqlmodels.SearchableThemeEdge:
+		return ec._SearchableThemeEdge(ctx, sel, &obj)
+	case *gqlmodels.SearchableThemeEdge:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SearchableThemeEdge(ctx, sel, obj)
+	case gqlmodels.SearchableBadgeEdge:
+		return ec._SearchableBadgeEdge(ctx, sel, &obj)
+	case *gqlmodels.SearchableBadgeEdge:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SearchableBadgeEdge(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}

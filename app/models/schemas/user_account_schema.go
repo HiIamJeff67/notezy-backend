@@ -24,3 +24,7 @@ type UserAccount struct {
 func (UserAccount) TableName() string {
 	return shared.ValidTableName_UserAccountTable.String()
 }
+
+/* ============================== Relative Type Conversions ============================== */
+// note that there's no type like PublicUserAccount,
+// since the userAccount shouldn't be public

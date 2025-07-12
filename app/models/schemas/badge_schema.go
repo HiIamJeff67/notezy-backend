@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	gqlmodels "notezy-backend/app/graphql/models"
 	enums "notezy-backend/app/models/schemas/enums"
 	shared "notezy-backend/shared"
 )
@@ -23,4 +24,18 @@ type Badge struct {
 
 func (Badge) TableName() string {
 	return shared.ValidTableName_BadgeTable.String()
+}
+
+/* ============================== Relative Type Conversions ============================== */
+
+func (b *Badge) ToPublicBadge() *gqlmodels.PublicBadge {
+	return &gqlmodels.PublicBadge{
+		ID:          b.Id,
+		Title:       b.Title,
+		Description: b.Description,
+		Type:        b.Type,
+		ImageURL:    b.ImageURL,
+		CreatedAt:   b.CreatedAt,
+		Users:       []*gqlmodels.PublicUser{},
+	}
 }

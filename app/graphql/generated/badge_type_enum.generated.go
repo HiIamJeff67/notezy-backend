@@ -57,4 +57,23 @@ func (ec *executionContext) marshalNBadgeType2notezyᚑbackendᚋappᚋmodelsᚋ
 	return res
 }
 
+func (ec *executionContext) unmarshalOBadgeType2ᚖnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐBadgeType(ctx context.Context, v any) (*enums.BadgeType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	tmp, err := graphql.UnmarshalString(v)
+	res := enums.BadgeType(tmp)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOBadgeType2ᚖnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐBadgeType(ctx context.Context, sel ast.SelectionSet, v *enums.BadgeType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	_ = sel
+	_ = ctx
+	res := graphql.MarshalString(string(*v))
+	return res
+}
+
 // endregion ***************************** type.gotpl *****************************

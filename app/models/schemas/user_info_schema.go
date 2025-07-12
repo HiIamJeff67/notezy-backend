@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	gqlmodels "notezy-backend/app/graphql/models"
 	enums "notezy-backend/app/models/schemas/enums"
 	shared "notezy-backend/shared"
 )
@@ -24,4 +25,19 @@ type UserInfo struct {
 
 func (UserInfo) TableName() string {
 	return shared.ValidTableName_UserInfoTable.String()
+}
+
+/* ============================== Relative Type Conversions ============================== */
+
+func (ui *UserInfo) ToPublicUserInfo() *gqlmodels.PublicUserInfo {
+	return &gqlmodels.PublicUserInfo{
+		CoverBackgroundURL: ui.CoverBackgroundURL,
+		AvatarURL:          ui.AvatarURL,
+		Header:             ui.Header,
+		Introduction:       ui.Introduction,
+		Gender:             ui.Gender,
+		Country:            ui.Country,
+		BirthDate:          ui.BirthDate,
+		UpdatedAt:          ui.UpdatedAt,
+	}
 }

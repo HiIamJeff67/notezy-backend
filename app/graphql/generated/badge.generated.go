@@ -361,9 +361,492 @@ func (ec *executionContext) fieldContext_PublicBadge_users(_ context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _SearchableBadgeConnection_searchEdges(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableBadgeConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchableBadgeConnection_searchEdges(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SearchEdges, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*gqlmodels.SearchableBadgeEdge)
+	fc.Result = res
+	return ec.marshalNSearchableBadgeEdge2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableBadgeEdgeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SearchableBadgeConnection_searchEdges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SearchableBadgeConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "node":
+				return ec.fieldContext_SearchableBadgeEdge_node(ctx, field)
+			case "encodedSearchCursor":
+				return ec.fieldContext_SearchableBadgeEdge_encodedSearchCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SearchableBadgeEdge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SearchableBadgeConnection_searchPageInfo(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableBadgeConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchableBadgeConnection_searchPageInfo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SearchPageInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*gqlmodels.SearchPageInfo)
+	fc.Result = res
+	return ec.marshalNSearchPageInfo2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchPageInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SearchableBadgeConnection_searchPageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SearchableBadgeConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasNextPage":
+				return ec.fieldContext_SearchPageInfo_hasNextPage(ctx, field)
+			case "hasPreviousPage":
+				return ec.fieldContext_SearchPageInfo_hasPreviousPage(ctx, field)
+			case "startEncodedSearchCursor":
+				return ec.fieldContext_SearchPageInfo_startEncodedSearchCursor(ctx, field)
+			case "endEncodedSearchCursor":
+				return ec.fieldContext_SearchPageInfo_endEncodedSearchCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SearchPageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SearchableBadgeConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableBadgeConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchableBadgeConnection_totalCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int32)
+	fc.Result = res
+	return ec.marshalNInt2int32(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SearchableBadgeConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SearchableBadgeConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SearchableBadgeConnection_searchTime(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableBadgeConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchableBadgeConnection_searchTime(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SearchTime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SearchableBadgeConnection_searchTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SearchableBadgeConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SearchableBadgeCursorFields_id(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableBadgeCursorFields) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchableBadgeCursorFields_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uuid.UUID)
+	fc.Result = res
+	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SearchableBadgeCursorFields_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SearchableBadgeCursorFields",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SearchableBadgeCursorFields_title(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableBadgeCursorFields) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchableBadgeCursorFields_title(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Title, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SearchableBadgeCursorFields_title(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SearchableBadgeCursorFields",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SearchableBadgeEdge_node(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableBadgeEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchableBadgeEdge_node(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Node, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*gqlmodels.PublicBadge)
+	fc.Result = res
+	return ec.marshalNPublicBadge2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicBadge(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SearchableBadgeEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SearchableBadgeEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PublicBadge_id(ctx, field)
+			case "title":
+				return ec.fieldContext_PublicBadge_title(ctx, field)
+			case "description":
+				return ec.fieldContext_PublicBadge_description(ctx, field)
+			case "type":
+				return ec.fieldContext_PublicBadge_type(ctx, field)
+			case "imageURL":
+				return ec.fieldContext_PublicBadge_imageURL(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PublicBadge_createdAt(ctx, field)
+			case "users":
+				return ec.fieldContext_PublicBadge_users(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PublicBadge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SearchableBadgeEdge_encodedSearchCursor(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableBadgeEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchableBadgeEdge_encodedSearchCursor(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EncodedSearchCursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SearchableBadgeEdge_encodedSearchCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SearchableBadgeEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 // endregion **************************** field.gotpl *****************************
 
 // region    **************************** input.gotpl *****************************
+
+func (ec *executionContext) unmarshalInputSearchableBadgeFilters(ctx context.Context, obj any) (gqlmodels.SearchableBadgeFilters, error) {
+	var it gqlmodels.SearchableBadgeFilters
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"type"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalOBadgeType2ᚖnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐBadgeType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputSearchableBadgeInput(ctx context.Context, obj any) (gqlmodels.SearchableBadgeInput, error) {
+	var it gqlmodels.SearchableBadgeInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["first"]; !present {
+		asMap["first"] = 10
+	}
+	if _, present := asMap["sortBy"]; !present {
+		asMap["sortBy"] = "RELEVANCE"
+	}
+	if _, present := asMap["sortOrderr"]; !present {
+		asMap["sortOrderr"] = "DESC"
+	}
+
+	fieldsInOrder := [...]string{"query", "after", "first", "filters", "sortBy", "sortOrderr"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "query":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Query = data
+		case "after":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.After = data
+		case "first":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
+			data, err := ec.unmarshalOInt2ᚖint32(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.First = data
+		case "filters":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filters"))
+			data, err := ec.unmarshalOSearchableBadgeFilters2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableBadgeFilters(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Filters = data
+		case "sortBy":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortBy"))
+			data, err := ec.unmarshalOSearchableBadgeSortBy2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableBadgeSortBy(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SortBy = data
+		case "sortOrderr":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortOrderr"))
+			data, err := ec.unmarshalOSearchableSortOrder2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableSortOrder(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SortOrderr = data
+		}
+	}
+
+	return it, nil
+}
 
 // endregion **************************** input.gotpl *****************************
 
@@ -413,6 +896,148 @@ func (ec *executionContext) _PublicBadge(ctx context.Context, sel ast.SelectionS
 			}
 		case "users":
 			out.Values[i] = ec._PublicBadge_users(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var searchableBadgeConnectionImplementors = []string{"SearchableBadgeConnection", "SearchConnection"}
+
+func (ec *executionContext) _SearchableBadgeConnection(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.SearchableBadgeConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, searchableBadgeConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SearchableBadgeConnection")
+		case "searchEdges":
+			out.Values[i] = ec._SearchableBadgeConnection_searchEdges(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "searchPageInfo":
+			out.Values[i] = ec._SearchableBadgeConnection_searchPageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCount":
+			out.Values[i] = ec._SearchableBadgeConnection_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "searchTime":
+			out.Values[i] = ec._SearchableBadgeConnection_searchTime(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var searchableBadgeCursorFieldsImplementors = []string{"SearchableBadgeCursorFields"}
+
+func (ec *executionContext) _SearchableBadgeCursorFields(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.SearchableBadgeCursorFields) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, searchableBadgeCursorFieldsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SearchableBadgeCursorFields")
+		case "id":
+			out.Values[i] = ec._SearchableBadgeCursorFields_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "title":
+			out.Values[i] = ec._SearchableBadgeCursorFields_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var searchableBadgeEdgeImplementors = []string{"SearchableBadgeEdge", "SearchEdge"}
+
+func (ec *executionContext) _SearchableBadgeEdge(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.SearchableBadgeEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, searchableBadgeEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SearchableBadgeEdge")
+		case "node":
+			out.Values[i] = ec._SearchableBadgeEdge_node(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "encodedSearchCursor":
+			out.Values[i] = ec._SearchableBadgeEdge_encodedSearchCursor(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -495,6 +1120,84 @@ func (ec *executionContext) marshalNPublicBadge2ᚖnotezyᚑbackendᚋappᚋgrap
 		return graphql.Null
 	}
 	return ec._PublicBadge(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNSearchableBadgeEdge2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableBadgeEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.SearchableBadgeEdge) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSearchableBadgeEdge2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableBadgeEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSearchableBadgeEdge2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableBadgeEdge(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchableBadgeEdge) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SearchableBadgeEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOSearchableBadgeFilters2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableBadgeFilters(ctx context.Context, v any) (*gqlmodels.SearchableBadgeFilters, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputSearchableBadgeFilters(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOSearchableBadgeSortBy2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableBadgeSortBy(ctx context.Context, v any) (*gqlmodels.SearchableBadgeSortBy, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(gqlmodels.SearchableBadgeSortBy)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOSearchableBadgeSortBy2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableBadgeSortBy(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchableBadgeSortBy) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 // endregion ***************************** type.gotpl *****************************

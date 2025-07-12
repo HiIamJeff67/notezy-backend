@@ -41,22 +41,7 @@ func (User) TableName() string {
 	return shared.ValidTableName_UserTable.String()
 }
 
-//* ============================== Trigger Hook ============================== */
-
-func (u *User) BeforeCreate(db *gorm.DB) (err error) {
-	if u.BlockLoginUtil.IsZero() {
-		// just to make the new user can login
-		u.BlockLoginUtil = time.Now().Add(-10 * time.Minute)
-	}
-	return nil
-}
-
-func (u *User) BeforeUpdate(db *gorm.DB) (err error) {
-	if db.Statement.Changed("Status") {
-		u.PrevStatus = u.Status
-	}
-	return nil
-}
+/* ============================== Relative Type Conversions ============================== */
 
 func (u *User) ToPublicUser() *gqlmodels.PublicUser {
 	return &gqlmodels.PublicUser{
@@ -72,4 +57,21 @@ func (u *User) ToPublicUser() *gqlmodels.PublicUser {
 		Badges:      []*gqlmodels.PublicBadge{},
 		Themes:      []*gqlmodels.PublicTheme{},
 	}
+}
+
+//* ============================== Trigger Hook ============================== */
+
+func (u *User) BeforeCreate(db *gorm.DB) (err error) {
+	if u.BlockLoginUtil.IsZero() {
+		// just to make the new user can login
+		u.BlockLoginUtil = time.Now().Add(-10 * time.Minute)
+	}
+	return nil
+}
+
+func (u *User) BeforeUpdate(db *gorm.DB) (err error) {
+	if db.Statement.Changed("Status") {
+		u.PrevStatus = u.Status
+	}
+	return nil
 }

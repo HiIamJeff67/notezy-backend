@@ -8,3 +8,47 @@ type PublicBadge {
 
   users: [PublicUser!]!
 }
+
+# =============== Searchable Filters & SortBy & SortOrder =============== #
+
+input SearchableBadgeFilters {
+  type: BadgeType
+}
+
+enum SearchableBadgeSortBy {
+  RELEVANCE
+  TITLE
+  CREATED_AT
+}
+
+input SearchableBadgeInput {
+  query: String!
+  after: String
+  first: Int = 10
+  filters: SearchableBadgeFilters
+  sortBy: SearchableBadgeSortBy = RELEVANCE
+  sortOrderr: SearchableSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+type SearchableBadgeCursorFields {
+  id: UUID!
+  title: String!
+}
+
+# type EncodedSearchableBadgeCursor = String!
+
+# =============== Searchable Edge & Connection =============== #
+
+type SearchableBadgeEdge implements SearchEdge {
+  node: PublicBadge!
+  encodedSearchCursor: String!
+}
+
+type SearchableBadgeConnection implements SearchConnection {
+  searchEdges: [SearchableBadgeEdge!]!
+  searchPageInfo: SearchPageInfo!
+  totalCount: Int!
+  searchTime: Float!
+}

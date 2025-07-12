@@ -1,13 +1,13 @@
 package services
 
 import (
+	"gorm.io/gorm"
+
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
-
-	"gorm.io/gorm"
 )
 
 /* ============================== Interface & Instance ============================== */
