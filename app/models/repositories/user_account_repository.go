@@ -15,26 +15,26 @@ import (
 
 /* ============================== Definitions ============================== */
 
-type UserAccountRepository interface {
+type UserAccountRepositoryInterface interface {
 	GetOneByUserId(userId uuid.UUID) (*schemas.UserAccount, *exceptions.Exception)
 	CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserAccountInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserAccountInput) (*schemas.UserAccount, *exceptions.Exception)
 }
 
-type userAccountRepository struct {
+type UserAccountRepository struct {
 	db *gorm.DB
 }
 
-func NewUserAccountRepository(db *gorm.DB) UserAccountRepository {
+func NewUserAccountRepository(db *gorm.DB) UserAccountRepositoryInterface {
 	if db == nil {
 		db = models.NotezyDB
 	}
-	return &userAccountRepository{db: db}
+	return &UserAccountRepository{db: db}
 }
 
 /* ============================== CRUD operations ============================== */
 
-func (r *userAccountRepository) GetOneByUserId(userId uuid.UUID) (*schemas.UserAccount, *exceptions.Exception) {
+func (r *UserAccountRepository) GetOneByUserId(userId uuid.UUID) (*schemas.UserAccount, *exceptions.Exception) {
 	userAccount := schemas.UserAccount{}
 	result := r.db.Table(schemas.UserAccount{}.TableName()).
 		Where("user_id = ?", userId).
@@ -46,7 +46,7 @@ func (r *userAccountRepository) GetOneByUserId(userId uuid.UUID) (*schemas.UserA
 	return &userAccount, nil
 }
 
-func (r *userAccountRepository) CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserAccountInput) (*uuid.UUID, *exceptions.Exception) {
+func (r *UserAccountRepository) CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserAccountInput) (*uuid.UUID, *exceptions.Exception) {
 	if err := models.Validator.Struct(input); err != nil {
 		return nil, exceptions.UserAccount.InvalidInput().WithError(err).Log()
 	}
@@ -65,7 +65,7 @@ func (r *userAccountRepository) CreateOneByUserId(userId uuid.UUID, input inputs
 	return &newUserAccount.Id, nil
 }
 
-func (r *userAccountRepository) UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserAccountInput) (*schemas.UserAccount, *exceptions.Exception) {
+func (r *UserAccountRepository) UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserAccountInput) (*schemas.UserAccount, *exceptions.Exception) {
 	if err := models.Validator.Struct(input); err != nil {
 		return nil, exceptions.UserAccount.InvalidInput().WithError(err).Log()
 	}

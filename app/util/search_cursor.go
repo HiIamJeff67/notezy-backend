@@ -40,7 +40,7 @@ func DecodeSearchCursor[SearchableCursorFieldType any](encoded string) (*SearchC
 
 	var fields SearchableCursorFieldType
 	if err := json.Unmarshal(jsonData, &fields); err != nil {
-		return nil, exceptions.Searchable.FailedToUnMarshalSearchCursor().WithError(err)
+		return nil, exceptions.Searchable.FailedToUnmarshalSearchCursor().WithError(err)
 	}
 
 	return &SearchCursor[SearchableCursorFieldType]{Fields: fields}, nil

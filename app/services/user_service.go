@@ -103,7 +103,7 @@ func (s *UserService) GetPublicUserByEncodedSearchCursor(ctx context.Context, en
 		return nil, exception
 	}
 
-	user, exception := userRepository.GetOneByName(searchCursor.Fields.Name)
+	publicUser, exception := userRepository.GetPublicOneByEncodedSearchCursor(searchCursor.Fields.EncodedSearchCursor)
 	if exception != nil {
 		// try to get the user from email
 		// user, exception := userRepository.GetOneByEmail(searchCursor.Fields.Email)
@@ -114,7 +114,7 @@ func (s *UserService) GetPublicUserByEncodedSearchCursor(ctx context.Context, en
 		return nil, exception
 	}
 
-	return user.ToPublicUser(), nil
+	return publicUser, nil
 }
 
 func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.SearchableUserInput) (*gqlmodels.SearchableUserConnection, *exceptions.Exception) {
@@ -134,9 +134,7 @@ func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.
 			return nil, exception
 		}
 
-		query.Where("name = ?", searchCursor.Fields.Name).
-			Where("display_name = ?", searchCursor.Fields.DisplayName).
-			Where("email = ?", searchCursor.Fields.Email)
+		query.Where("encoded_search_cursor > ?", searchCursor.Fields.EncodedSearchCursor)
 	}
 
 	if gqlInput.SortBy != nil && gqlInput.SortOrder != nil {
@@ -177,22 +175,20 @@ func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.
 	}
 
 	hasNextPage := len(users) > limit // since we fetch an additional one
-
 	searchEdges := make([]*gqlmodels.SearchableUserEdge, len(users))
+
 	for index, user := range users {
 		searchCursor := util.SearchCursor[gqlmodels.SearchableUserCursorFields]{
 			Fields: gqlmodels.SearchableUserCursorFields{
-				Name:        user.Name,
-				DisplayName: user.DisplayName,
-				Email:       user.Email,
+				EncodedSearchCursor: user.EncodedSearchCursor,
 			},
 		}
-		encodedSearchCursor, err := searchCursor.EncodeSearchCursor()
-		if err != nil {
-			return nil, err
+		encodedSearchCursor, exception := searchCursor.EncodeSearchCursor()
+		if exception != nil {
+			return nil, exception
 		}
 		if encodedSearchCursor == nil {
-			return nil, exceptions.Searchable.FailedToUnMarshalSearchCursor()
+			return nil, exceptions.Searchable.FailedToUnmarshalSearchCursor()
 		}
 
 		searchEdges[index] = &gqlmodels.SearchableUserEdge{
@@ -203,7 +199,7 @@ func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.
 
 	searchPageInfo := &gqlmodels.SearchPageInfo{
 		HasNextPage:     hasNextPage,
-		HasPreviousPage: gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) != 0,
+		HasPreviousPage: gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0,
 	}
 
 	if len(searchEdges) > 0 {

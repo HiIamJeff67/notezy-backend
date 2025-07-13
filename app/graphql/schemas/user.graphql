@@ -3,9 +3,10 @@
 
 type PublicUser {
   # id: UUID!
-  name: String! # the identifier of the PublicUser
+  encodedSearchCursor: String! # the identifier of the PublicUser
+  name: String!
   displayName: String!
-  email: String! # the secondary indentifier of the PublicUser
+  email: String!
   # password: String!
   # refreshToken: String!
   # loginCount: Int
@@ -51,15 +52,14 @@ input SearchableUserInput {
   sortOrder: SearchableSortOrder = DESC
 }
 
-# =============== Search Cursor Fields =============== #
+# =============== Searchable Cursor Fields =============== #
 
-type SearchableUserCursorFields {
-  name: String!
-  displayName: String!
-  email: String!
+# type SearchableUserEnvironmentAttributes {}
+
+input SearchableUserCursorFields {
+  encodedSearchCursor: String!
+  # environmentAttributes: SearchableUserEnvironmentAttributes
 }
-
-# type EncodedSearchableUserCursor = String!
 
 # =============== Searchable Edge & Connection =============== #
 

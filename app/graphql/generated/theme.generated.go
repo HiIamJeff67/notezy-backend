@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/google/uuid"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -31,8 +30,8 @@ import (
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _PublicTheme_id(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicTheme) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PublicTheme_id(ctx, field)
+func (ec *executionContext) _PublicTheme_encodedSearchCursor(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicTheme) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PublicTheme_encodedSearchCursor(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -45,7 +44,7 @@ func (ec *executionContext) _PublicTheme_id(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return obj.EncodedSearchCursor, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -57,19 +56,19 @@ func (ec *executionContext) _PublicTheme_id(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(uuid.UUID)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PublicTheme_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PublicTheme_encodedSearchCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PublicTheme",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type UUID does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -419,6 +418,8 @@ func (ec *executionContext) fieldContext_PublicTheme_author(_ context.Context, f
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "encodedSearchCursor":
+				return ec.fieldContext_PublicUser_encodedSearchCursor(ctx, field)
 			case "name":
 				return ec.fieldContext_PublicUser_name(ctx, field)
 			case "displayName":
@@ -640,94 +641,6 @@ func (ec *executionContext) fieldContext_SearchableThemeConnection_searchTime(_ 
 	return fc, nil
 }
 
-func (ec *executionContext) _SearchableThemeCursorFields_id(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableThemeCursorFields) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchableThemeCursorFields_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(uuid.UUID)
-	fc.Result = res
-	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_SearchableThemeCursorFields_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SearchableThemeCursorFields",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type UUID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _SearchableThemeCursorFields_name(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableThemeCursorFields) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchableThemeCursorFields_name(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_SearchableThemeCursorFields_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SearchableThemeCursorFields",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _SearchableThemeEdge_node(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableThemeEdge) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_SearchableThemeEdge_node(ctx, field)
 	if err != nil {
@@ -767,8 +680,8 @@ func (ec *executionContext) fieldContext_SearchableThemeEdge_node(_ context.Cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_PublicTheme_id(ctx, field)
+			case "encodedSearchCursor":
+				return ec.fieldContext_PublicTheme_encodedSearchCursor(ctx, field)
 			case "name":
 				return ec.fieldContext_PublicTheme_name(ctx, field)
 			case "version":
@@ -839,6 +752,33 @@ func (ec *executionContext) fieldContext_SearchableThemeEdge_encodedSearchCursor
 // endregion **************************** field.gotpl *****************************
 
 // region    **************************** input.gotpl *****************************
+
+func (ec *executionContext) unmarshalInputSearchableThemeCursorFields(ctx context.Context, obj any) (gqlmodels.SearchableThemeCursorFields, error) {
+	var it gqlmodels.SearchableThemeCursorFields
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"encodedSearchCursor"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "encodedSearchCursor":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("encodedSearchCursor"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EncodedSearchCursor = data
+		}
+	}
+
+	return it, nil
+}
 
 func (ec *executionContext) unmarshalInputSearchableThemeFilters(ctx context.Context, obj any) (gqlmodels.SearchableThemeFilters, error) {
 	var it gqlmodels.SearchableThemeFilters
@@ -965,8 +905,8 @@ func (ec *executionContext) _PublicTheme(ctx context.Context, sel ast.SelectionS
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("PublicTheme")
-		case "id":
-			out.Values[i] = ec._PublicTheme_id(ctx, field, obj)
+		case "encodedSearchCursor":
+			out.Values[i] = ec._PublicTheme_encodedSearchCursor(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -1058,50 +998,6 @@ func (ec *executionContext) _SearchableThemeConnection(ctx context.Context, sel 
 			}
 		case "searchTime":
 			out.Values[i] = ec._SearchableThemeConnection_searchTime(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var searchableThemeCursorFieldsImplementors = []string{"SearchableThemeCursorFields"}
-
-func (ec *executionContext) _SearchableThemeCursorFields(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.SearchableThemeCursorFields) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, searchableThemeCursorFieldsImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("SearchableThemeCursorFields")
-		case "id":
-			out.Values[i] = ec._SearchableThemeCursorFields_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "name":
-			out.Values[i] = ec._SearchableThemeCursorFields_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

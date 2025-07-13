@@ -1,5 +1,6 @@
 type PublicTheme {
-  id: UUID!
+  # id: UUID!
+  encodedSearchCursor: String! # the identifier of PublicTheme
   name: String!
   #   authorId: UUID!
   version: String!
@@ -36,14 +37,14 @@ input SearchableThemeInput {
   sortOrder: SearchableSortOrder = DESC
 }
 
-# =============== Search Cursor Fields =============== #
+# =============== Searchable Cursor Fields =============== #
 
-type SearchableThemeCursorFields {
-  id: UUID!
-  name: String!
+# type SearchableThemeEnvironmentAttributes {}
+
+input SearchableThemeCursorFields {
+  encodedSearchCursor: String!
+  # environmentAttributes: SearchableThemeEnvironmentAttributes
 }
-
-# type EncodedSearchableThemeCursor = String!
 
 # =============== Searchable Edge & Connection =============== #
 

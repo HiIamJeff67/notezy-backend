@@ -11,7 +11,7 @@ import (
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
-	"notezy-backend/app/util"
+	util "notezy-backend/app/util"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -99,10 +99,10 @@ func (s *UserInfoService) GetPublicUserInfoByEncodedSearchCursor(ctx context.Con
 		return nil, exception
 	}
 
-	userInfo, exception := userInfoRepository.GetOneByUserName(searchCursor.Fields.Name)
+	publicUserInfo, exception := userInfoRepository.GetPublicOneByEncodedSearchCursor(searchCursor.Fields.EncodedSearchCursor)
 	if exception != nil {
 		return nil, exception
 	}
 
-	return userInfo.ToPublicUserInfo(), nil
+	return publicUserInfo, nil
 }

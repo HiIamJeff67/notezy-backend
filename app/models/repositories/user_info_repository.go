@@ -7,6 +7,7 @@ import (
 	"github.com/jinzhu/copier"
 
 	exceptions "notezy-backend/app/exceptions"
+	gqlmodels "notezy-backend/app/graphql/models"
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
@@ -15,27 +16,29 @@ import (
 
 /* ============================== Definitions ============================== */
 
-type UserInfoRepository interface {
+type UserInfoRepositoryInterface interface {
 	GetOneByUserId(userId uuid.UUID) (*schemas.UserInfo, *exceptions.Exception)
-	GetOneByUserName(name string) (*schemas.UserInfo, *exceptions.Exception)
 	CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserInfoInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserInfoInput) (*schemas.UserInfo, *exceptions.Exception)
+
+	// repository for public userInfos
+	GetPublicOneByEncodedSearchCursor(encodedSearchCursor string) (*gqlmodels.PublicUserInfo, *exceptions.Exception)
 }
 
-type userInfoRepository struct {
+type UserInfoRepository struct {
 	db *gorm.DB
 }
 
-func NewUserInfoRepository(db *gorm.DB) UserInfoRepository {
+func NewUserInfoRepository(db *gorm.DB) UserInfoRepositoryInterface {
 	if db == nil {
 		db = models.NotezyDB
 	}
-	return &userInfoRepository{db: db}
+	return &UserInfoRepository{db: db}
 }
 
 /* ============================== CRUD operations ============================== */
 
-func (r *userInfoRepository) GetOneByUserId(userId uuid.UUID) (*schemas.UserInfo, *exceptions.Exception) {
+func (r *UserInfoRepository) GetOneByUserId(userId uuid.UUID) (*schemas.UserInfo, *exceptions.Exception) {
 	userInfo := schemas.UserInfo{}
 	result := r.db.Table(schemas.UserInfo{}.TableName()).
 		Where("user_id = ?", userId).
@@ -47,20 +50,20 @@ func (r *userInfoRepository) GetOneByUserId(userId uuid.UUID) (*schemas.UserInfo
 	return &userInfo, nil
 }
 
-func (r *userInfoRepository) GetOneByUserName(name string) (*schemas.UserInfo, *exceptions.Exception) {
+func (r *UserInfoRepository) GetPublicOneByEncodedSearchCursor(encodedSearchCursor string) (*gqlmodels.PublicUserInfo, *exceptions.Exception) {
 	userInfo := schemas.UserInfo{}
 	result := r.db.Table(schemas.UserInfo{}.TableName()).
 		Joins("LEFT JOIN \"UserTable\" u ON u.id = user_id").
-		Where("u.name = ?", name).
+		Where("u.encoded_search_cursor = ?", encodedSearchCursor).
 		First(&userInfo)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserInfo.NotFound().WithError(err)
 	}
 
-	return &userInfo, nil
+	return userInfo.ToPublicUserInfo(), nil
 }
 
-func (r *userInfoRepository) CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserInfoInput) (*uuid.UUID, *exceptions.Exception) {
+func (r *UserInfoRepository) CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserInfoInput) (*uuid.UUID, *exceptions.Exception) {
 	if err := models.Validator.Struct(input); err != nil {
 		return nil, exceptions.UserInfo.InvalidInput().WithError(err)
 	}
@@ -80,7 +83,7 @@ func (r *userInfoRepository) CreateOneByUserId(userId uuid.UUID, input inputs.Cr
 	return &newUserInfo.Id, nil
 }
 
-func (r *userInfoRepository) UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserInfoInput) (*schemas.UserInfo, *exceptions.Exception) {
+func (r *UserInfoRepository) UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserInfoInput) (*schemas.UserInfo, *exceptions.Exception) {
 	if err := models.Validator.Struct(input); err != nil {
 		return nil, exceptions.UserInfo.InvalidInput().WithError(err)
 	}

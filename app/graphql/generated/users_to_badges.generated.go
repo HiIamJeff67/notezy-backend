@@ -201,6 +201,8 @@ func (ec *executionContext) fieldContext_PublicUsersToBadges_user(_ context.Cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "encodedSearchCursor":
+				return ec.fieldContext_PublicUser_encodedSearchCursor(ctx, field)
 			case "name":
 				return ec.fieldContext_PublicUser_name(ctx, field)
 			case "displayName":
@@ -269,8 +271,8 @@ func (ec *executionContext) fieldContext_PublicUsersToBadges_badge(_ context.Con
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_PublicBadge_id(ctx, field)
+			case "encodedSearchCursor":
+				return ec.fieldContext_PublicBadge_encodedSearchCursor(ctx, field)
 			case "title":
 				return ec.fieldContext_PublicBadge_title(ctx, field)
 			case "description":

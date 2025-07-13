@@ -1,5 +1,6 @@
 type PublicBadge {
-  id: UUID!
+  # id: UUID!
+  encodedSearchCursor: String! # the identifier of the PublicBadge
   title: String!
   description: String!
   type: BadgeType!
@@ -30,14 +31,14 @@ input SearchableBadgeInput {
   sortOrderr: SearchableSortOrder = DESC
 }
 
-# =============== Search Cursor Fields =============== #
+# =============== Searchable Cursor Fields =============== #
 
-type SearchableBadgeCursorFields {
-  id: UUID!
-  title: String!
+# type SearchableBadgeEnvironmentAttributes {}
+
+input SearchableBadgeCursorFields {
+  encodedSearchCursor: String!
+  # environmentAttributes: SearchableBadgeEnvironmentAttributes
 }
-
-# type EncodedSearchableBadgeCursor = String!
 
 # =============== Searchable Edge & Connection =============== #
 

@@ -7,6 +7,7 @@ import (
 	"github.com/jinzhu/copier"
 
 	exceptions "notezy-backend/app/exceptions"
+	gqlmodels "notezy-backend/app/graphql/models"
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
@@ -15,7 +16,7 @@ import (
 
 /* ============================== Definitions ============================== */
 
-type UserRepository interface {
+type UserRepositoryInterface interface {
 	GetOneById(id uuid.UUID) (*schemas.User, *exceptions.Exception)
 	GetOneByName(name string) (*schemas.User, *exceptions.Exception)
 	GetOneByEmail(email string) (*schemas.User, *exceptions.Exception)
@@ -23,22 +24,25 @@ type UserRepository interface {
 	CreateOne(input inputs.CreateUserInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, input inputs.PartialUpdateUserInput) (*schemas.User, *exceptions.Exception)
 	DeleteOneById(id uuid.UUID, input inputs.DeleteUserInput) *exceptions.Exception
+
+	// repository for public users
+	GetPublicOneByEncodedSearchCursor(encodedSearchCursor string) (*gqlmodels.PublicUser, *exceptions.Exception)
 }
 
-type userRepository struct {
+type UserRepository struct {
 	db *gorm.DB
 }
 
-func NewUserRepository(db *gorm.DB) UserRepository {
+func NewUserRepository(db *gorm.DB) UserRepositoryInterface {
 	if db == nil {
 		db = models.NotezyDB
 	}
-	return &userRepository{db: db}
+	return &UserRepository{db: db}
 }
 
 /* ============================== CRUD operations ============================== */
 
-func (r *userRepository) GetOneById(id uuid.UUID) (*schemas.User, *exceptions.Exception) {
+func (r *UserRepository) GetOneById(id uuid.UUID) (*schemas.User, *exceptions.Exception) {
 	user := schemas.User{}
 	result := r.db.Table(schemas.User{}.TableName()).
 		Where("id = ?", id).
@@ -50,7 +54,7 @@ func (r *userRepository) GetOneById(id uuid.UUID) (*schemas.User, *exceptions.Ex
 	return &user, nil
 }
 
-func (r *userRepository) GetOneByName(name string) (*schemas.User, *exceptions.Exception) {
+func (r *UserRepository) GetOneByName(name string) (*schemas.User, *exceptions.Exception) {
 	user := schemas.User{}
 	result := r.db.Table(schemas.User{}.TableName()).
 		Where("name = ?", name).
@@ -62,7 +66,7 @@ func (r *userRepository) GetOneByName(name string) (*schemas.User, *exceptions.E
 	return &user, nil
 }
 
-func (r *userRepository) GetOneByEmail(email string) (*schemas.User, *exceptions.Exception) {
+func (r *UserRepository) GetOneByEmail(email string) (*schemas.User, *exceptions.Exception) {
 	user := schemas.User{}
 	result := r.db.Table(schemas.User{}.TableName()).
 		Where("email = ?", email).
@@ -74,7 +78,19 @@ func (r *userRepository) GetOneByEmail(email string) (*schemas.User, *exceptions
 	return &user, nil
 }
 
-func (r *userRepository) GetAll() (*[]schemas.User, *exceptions.Exception) {
+func (r *UserRepository) GetPublicOneByEncodedSearchCursor(encodedSearchCursor string) (*gqlmodels.PublicUser, *exceptions.Exception) {
+	user := schemas.User{}
+	result := r.db.Table(schemas.User{}.TableName()).
+		Where("encoded_search_cursor = ?", encodedSearchCursor).
+		First(&user)
+	if err := result.Error; err != nil {
+		return nil, exceptions.User.NotFound().WithError(err)
+	}
+
+	return user.ToPublicUser(), nil
+}
+
+func (r *UserRepository) GetAll() (*[]schemas.User, *exceptions.Exception) {
 	users := []schemas.User{}
 
 	result := r.db.Preload("UserInfo").
@@ -91,7 +107,7 @@ func (r *userRepository) GetAll() (*[]schemas.User, *exceptions.Exception) {
 	return &users, nil
 }
 
-func (r *userRepository) CreateOne(input inputs.CreateUserInput) (*uuid.UUID, *exceptions.Exception) {
+func (r *UserRepository) CreateOne(input inputs.CreateUserInput) (*uuid.UUID, *exceptions.Exception) {
 	if err := models.Validator.Struct(input); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -112,7 +128,7 @@ func (r *userRepository) CreateOne(input inputs.CreateUserInput) (*uuid.UUID, *e
 	return &newUser.Id, nil
 }
 
-func (r *userRepository) UpdateOneById(id uuid.UUID, input inputs.PartialUpdateUserInput) (*schemas.User, *exceptions.Exception) {
+func (r *UserRepository) UpdateOneById(id uuid.UUID, input inputs.PartialUpdateUserInput) (*schemas.User, *exceptions.Exception) {
 	if err := models.Validator.Struct(input); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err).Log()
 	}
@@ -140,7 +156,7 @@ func (r *userRepository) UpdateOneById(id uuid.UUID, input inputs.PartialUpdateU
 	return &updates, nil
 }
 
-func (r *userRepository) DeleteOneById(id uuid.UUID, input inputs.DeleteUserInput) *exceptions.Exception {
+func (r *UserRepository) DeleteOneById(id uuid.UUID, input inputs.DeleteUserInput) *exceptions.Exception {
 	deletedUser := schemas.User{}
 	result := r.db.Table(schemas.User{}.TableName()).
 		Where("id = ? AND name = ? AND password", id, input.Name, input.Password).

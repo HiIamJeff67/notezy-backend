@@ -26,39 +26,40 @@ type SearchEdge interface {
 }
 
 type PublicBadge struct {
-	ID          uuid.UUID       `json:"id"`
-	Title       string          `json:"title"`
-	Description string          `json:"description"`
-	Type        enums.BadgeType `json:"type"`
-	ImageURL    *string         `json:"imageURL,omitempty"`
-	CreatedAt   time.Time       `json:"createdAt"`
-	Users       []*PublicUser   `json:"users"`
+	EncodedSearchCursor string          `json:"encodedSearchCursor"`
+	Title               string          `json:"title"`
+	Description         string          `json:"description"`
+	Type                enums.BadgeType `json:"type"`
+	ImageURL            *string         `json:"imageURL,omitempty"`
+	CreatedAt           time.Time       `json:"createdAt"`
+	Users               []*PublicUser   `json:"users"`
 }
 
 type PublicTheme struct {
-	ID            uuid.UUID   `json:"id"`
-	Name          string      `json:"name"`
-	Version       string      `json:"version"`
-	IsDefault     bool        `json:"isDefault"`
-	DownloadURL   *string     `json:"downloadURL,omitempty"`
-	DownloadCount int32       `json:"downloadCount"`
-	CreatedAt     time.Time   `json:"createdAt"`
-	UpdatedAt     time.Time   `json:"updatedAt"`
-	Author        *PublicUser `json:"author"`
+	EncodedSearchCursor string      `json:"encodedSearchCursor"`
+	Name                string      `json:"name"`
+	Version             string      `json:"version"`
+	IsDefault           bool        `json:"isDefault"`
+	DownloadURL         *string     `json:"downloadURL,omitempty"`
+	DownloadCount       int32       `json:"downloadCount"`
+	CreatedAt           time.Time   `json:"createdAt"`
+	UpdatedAt           time.Time   `json:"updatedAt"`
+	Author              *PublicUser `json:"author"`
 }
 
 type PublicUser struct {
-	Name        string           `json:"name"`
-	DisplayName string           `json:"displayName"`
-	Email       string           `json:"email"`
-	Role        enums.UserRole   `json:"role"`
-	Plan        enums.UserPlan   `json:"plan"`
-	Status      enums.UserStatus `json:"status"`
-	CreatedAt   time.Time        `json:"createdAt"`
-	UpdatedAt   time.Time        `json:"updatedAt"`
-	UserInfo    *PublicUserInfo  `json:"userInfo"`
-	Badges      []*PublicBadge   `json:"badges"`
-	Themes      []*PublicTheme   `json:"themes"`
+	EncodedSearchCursor string           `json:"encodedSearchCursor"`
+	Name                string           `json:"name"`
+	DisplayName         string           `json:"displayName"`
+	Email               string           `json:"email"`
+	Role                enums.UserRole   `json:"role"`
+	Plan                enums.UserPlan   `json:"plan"`
+	Status              enums.UserStatus `json:"status"`
+	CreatedAt           time.Time        `json:"createdAt"`
+	UpdatedAt           time.Time        `json:"updatedAt"`
+	UserInfo            *PublicUserInfo  `json:"userInfo"`
+	Badges              []*PublicBadge   `json:"badges"`
+	Themes              []*PublicTheme   `json:"themes"`
 }
 
 type PublicUserInfo struct {
@@ -103,8 +104,7 @@ func (this SearchableBadgeConnection) GetTotalCount() int32               { retu
 func (this SearchableBadgeConnection) GetSearchTime() float64             { return this.SearchTime }
 
 type SearchableBadgeCursorFields struct {
-	ID    uuid.UUID `json:"id"`
-	Title string    `json:"title"`
+	EncodedSearchCursor string `json:"encodedSearchCursor"`
 }
 
 type SearchableBadgeEdge struct {
@@ -141,8 +141,7 @@ func (this SearchableThemeConnection) GetTotalCount() int32               { retu
 func (this SearchableThemeConnection) GetSearchTime() float64             { return this.SearchTime }
 
 type SearchableThemeCursorFields struct {
-	ID   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
+	EncodedSearchCursor string `json:"encodedSearchCursor"`
 }
 
 type SearchableThemeEdge struct {
@@ -180,9 +179,7 @@ func (this SearchableUserConnection) GetTotalCount() int32               { retur
 func (this SearchableUserConnection) GetSearchTime() float64             { return this.SearchTime }
 
 type SearchableUserCursorFields struct {
-	Name        string `json:"name"`
-	DisplayName string `json:"displayName"`
-	Email       string `json:"email"`
+	EncodedSearchCursor string `json:"encodedSearchCursor"`
 }
 
 type SearchableUserEdge struct {

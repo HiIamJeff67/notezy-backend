@@ -63,7 +63,7 @@ func (d *SearchableExceptionDomain) FailedToMarshalSearchCursor() *Exception {
 	}
 }
 
-func (d *SearchableExceptionDomain) FailedToUnMarshalSearchCursor() *Exception {
+func (d *SearchableExceptionDomain) FailedToUnmarshalSearchCursor() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 4,
 		Prefix:         d.Prefix,

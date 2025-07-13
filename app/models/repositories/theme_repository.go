@@ -8,6 +8,7 @@ import (
 	"github.com/jinzhu/copier"
 
 	exceptions "notezy-backend/app/exceptions"
+	gqlmodels "notezy-backend/app/graphql/models"
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
@@ -16,28 +17,31 @@ import (
 
 /* ============================== Definitions ============================== */
 
-type ThemeRepository interface {
+type ThemeRepositoryInterface interface {
 	GetOneById(id uuid.UUID) (*schemas.Theme, *exceptions.Exception)
 	GetAll() (*[]schemas.Theme, *exceptions.Exception)
 	CreateOneByAuthorId(authorId uuid.UUID, input inputs.CreateThemeInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, authorId uuid.UUID, input inputs.PartialUpdateThemeInput) (*schemas.Theme, *exceptions.Exception)
 	DeleteOneById(id uuid.UUID, authorId uuid.UUID) *exceptions.Exception
+
+	// repository for public themes
+	GetPublicOneByEncodedSearchCursor(encodedSearchCursor string) (*gqlmodels.PublicTheme, *exceptions.Exception)
 }
 
-type themeRepository struct {
+type ThemeRepository struct {
 	db *gorm.DB
 }
 
-func NewThemeRepository(db *gorm.DB) ThemeRepository {
+func NewThemeRepository(db *gorm.DB) ThemeRepositoryInterface {
 	if db == nil {
 		db = models.NotezyDB
 	}
-	return &themeRepository{db: db}
+	return &ThemeRepository{db: db}
 }
 
 /* ============================== CRUD operations ============================== */
 
-func (r *themeRepository) GetOneById(id uuid.UUID) (*schemas.Theme, *exceptions.Exception) {
+func (r *ThemeRepository) GetOneById(id uuid.UUID) (*schemas.Theme, *exceptions.Exception) {
 	theme := schemas.Theme{}
 	result := r.db.Table(schemas.Theme{}.TableName()).
 		Where("id = ?", id).
@@ -49,7 +53,19 @@ func (r *themeRepository) GetOneById(id uuid.UUID) (*schemas.Theme, *exceptions.
 	return &theme, nil
 }
 
-func (r *themeRepository) GetAll() (*[]schemas.Theme, *exceptions.Exception) {
+func (r *ThemeRepository) GetPublicOneByEncodedSearchCursor(encodedSearchCursor string) (*gqlmodels.PublicTheme, *exceptions.Exception) {
+	theme := schemas.Theme{}
+	result := r.db.Table(schemas.Theme{}.TableName()).
+		Where("encoded_search_cursor = ?", encodedSearchCursor).
+		First(&theme)
+	if err := result.Error; err != nil {
+		return nil, exceptions.Theme.NotFound().WithError(err)
+	}
+
+	return theme.ToPublicTheme(), nil
+}
+
+func (r *ThemeRepository) GetAll() (*[]schemas.Theme, *exceptions.Exception) {
 	themes := []schemas.Theme{}
 	result := r.db.Table(schemas.Theme{}.TableName()).
 		Find(&themes)
@@ -60,7 +76,7 @@ func (r *themeRepository) GetAll() (*[]schemas.Theme, *exceptions.Exception) {
 	return &themes, nil
 }
 
-func (r *themeRepository) CreateOneByAuthorId(authorId uuid.UUID, input inputs.CreateThemeInput) (*uuid.UUID, *exceptions.Exception) {
+func (r *ThemeRepository) CreateOneByAuthorId(authorId uuid.UUID, input inputs.CreateThemeInput) (*uuid.UUID, *exceptions.Exception) {
 	if err := models.Validator.Struct(input); err != nil {
 		return nil, exceptions.Theme.FailedToCreate().WithError(err)
 	}
@@ -79,7 +95,7 @@ func (r *themeRepository) CreateOneByAuthorId(authorId uuid.UUID, input inputs.C
 	return &newTheme.Id, nil
 }
 
-func (r *themeRepository) UpdateOneById(id uuid.UUID, authorId uuid.UUID, input inputs.PartialUpdateThemeInput) (*schemas.Theme, *exceptions.Exception) {
+func (r *ThemeRepository) UpdateOneById(id uuid.UUID, authorId uuid.UUID, input inputs.PartialUpdateThemeInput) (*schemas.Theme, *exceptions.Exception) {
 	if err := models.Validator.Struct(input); err != nil {
 		return nil, exceptions.Theme.FailedToCreate().WithError(err)
 	}
@@ -107,7 +123,7 @@ func (r *themeRepository) UpdateOneById(id uuid.UUID, authorId uuid.UUID, input 
 	return &updates, nil
 }
 
-func (r *themeRepository) DeleteOneById(id uuid.UUID, authorId uuid.UUID) *exceptions.Exception {
+func (r *ThemeRepository) DeleteOneById(id uuid.UUID, authorId uuid.UUID) *exceptions.Exception {
 	var deletedTheme schemas.Theme
 	result := r.db.Table(schemas.Theme{}.TableName()).
 		Where("id = ? AND author_id = ?", id, authorId).

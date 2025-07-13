@@ -10,31 +10,31 @@ import (
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
-	"notezy-backend/app/util"
+	util "notezy-backend/app/util"
 )
 
 /* ============================== Definitions ============================== */
 
-type UserSettingRepository interface {
+type UserSettingRepositoryInterface interface {
 	GetOneByUserId(userId uuid.UUID) (*schemas.UserSetting, *exceptions.Exception)
 	CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserSettingInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserSettingInput) (*schemas.UserSetting, *exceptions.Exception)
 }
 
-type userSettingRepository struct {
+type UserSettingRepository struct {
 	db *gorm.DB
 }
 
-func NewUserSettingRepository(db *gorm.DB) UserSettingRepository {
+func NewUserSettingRepository(db *gorm.DB) UserSettingRepositoryInterface {
 	if db == nil {
 		db = models.NotezyDB
 	}
-	return &userSettingRepository{db: db}
+	return &UserSettingRepository{db: db}
 }
 
 /* ============================== CRUD operations ============================== */
 
-func (r *userSettingRepository) GetOneByUserId(userId uuid.UUID) (*schemas.UserSetting, *exceptions.Exception) {
+func (r *UserSettingRepository) GetOneByUserId(userId uuid.UUID) (*schemas.UserSetting, *exceptions.Exception) {
 	userSetting := schemas.UserSetting{}
 	result := r.db.Table(schemas.UserSetting{}.TableName()).
 		Where("user_id = ?", userId).
@@ -46,7 +46,7 @@ func (r *userSettingRepository) GetOneByUserId(userId uuid.UUID) (*schemas.UserS
 	return &userSetting, nil
 }
 
-func (r *userSettingRepository) CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserSettingInput) (*uuid.UUID, *exceptions.Exception) {
+func (r *UserSettingRepository) CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserSettingInput) (*uuid.UUID, *exceptions.Exception) {
 	if err := models.Validator.Struct(input); err != nil {
 		return nil, exceptions.UserSetting.InvalidInput().WithError(err)
 	}
@@ -66,7 +66,7 @@ func (r *userSettingRepository) CreateOneByUserId(userId uuid.UUID, input inputs
 	return &newUserSetting.Id, nil
 }
 
-func (r *userSettingRepository) UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserSettingInput) (*schemas.UserSetting, *exceptions.Exception) {
+func (r *UserSettingRepository) UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserSettingInput) (*schemas.UserSetting, *exceptions.Exception) {
 	if err := models.Validator.Struct(input); err != nil {
 		return nil, exceptions.UserSetting.InvalidInput().WithError(err)
 	}
