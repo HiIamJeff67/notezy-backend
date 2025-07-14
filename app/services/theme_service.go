@@ -19,7 +19,7 @@ import (
 type ThemeServiceInterface interface {
 	// services for public themes
 	GetPublicThemeByEncodedSearchCursor(ctx context.Context, encodedSearchCursor string) (*gqlmodels.PublicTheme, *exceptions.Exception)
-	SearchPublicThemes(ctx context.Context, gqlInput gqlmodels.SearchableThemeInput) (*gqlmodels.SearchableThemeConnection, *exceptions.Exception)
+	SearchPublicThemes(ctx context.Context, gqlInput gqlmodels.SearchThemeInput) (*gqlmodels.SearchThemeConnection, *exceptions.Exception)
 }
 
 type ThemeService struct {
@@ -35,19 +35,19 @@ func NewThemeService(db *gorm.DB) ThemeServiceInterface {
 /* ============================== Services for Themes ============================== */
 
 // get the theme which are created by the current user
-func (s *ThemeService) GetMyThemes() {}
+func (s *ThemeService) GetMyThemeById() {}
 
 /* ============================== Services for Public Themes ============================== */
 
 func (s *ThemeService) GetPublicThemeByEncodedSearchCursor(ctx context.Context, encodedSearchCursor string) (*gqlmodels.PublicTheme, *exceptions.Exception) {
 	themeRepository := repositories.NewThemeRepository(s.db)
 
-	searchCursor, exception := util.DecodeSearchCursor[gqlmodels.SearchableThemeCursorFields](encodedSearchCursor)
+	searchCursor, exception := util.DecodeSearchCursor[gqlmodels.SearchThemeCursorFields](encodedSearchCursor)
 	if exception != nil {
 		return nil, exception
 	}
 
-	publicTheme, exception := themeRepository.GetPublicOneByEncodedSearchCursor(searchCursor.Fields.EncodedSearchCursor)
+	publicTheme, exception := themeRepository.GetPublicOneBySearchCursorId(searchCursor.Fields.SearchCursorID)
 	if exception != nil {
 		return nil, exception
 	}
@@ -55,7 +55,7 @@ func (s *ThemeService) GetPublicThemeByEncodedSearchCursor(ctx context.Context, 
 	return publicTheme, nil
 }
 
-func (s *ThemeService) SearchPublicThemes(ctx context.Context, gqlInput gqlmodels.SearchableThemeInput) (*gqlmodels.SearchableThemeConnection, *exceptions.Exception) {
+func (s *ThemeService) SearchPublicThemes(ctx context.Context, gqlInput gqlmodels.SearchThemeInput) (*gqlmodels.SearchThemeConnection, *exceptions.Exception) {
 	startTime := time.Now()
 
 	query := s.db.WithContext(ctx).Model(&schemas.Theme{})
@@ -67,30 +67,30 @@ func (s *ThemeService) SearchPublicThemes(ctx context.Context, gqlInput gqlmodel
 		)
 	}
 	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
-		searchCursor, exception := util.DecodeSearchCursor[gqlmodels.SearchableThemeCursorFields](*gqlInput.After)
+		searchCursor, exception := util.DecodeSearchCursor[gqlmodels.SearchThemeCursorFields](*gqlInput.After)
 		if exception != nil {
 			return nil, exception
 		}
 
-		query.Where("encoded_search_cursor > ?", searchCursor.Fields.EncodedSearchCursor)
+		query.Where("search_cursor_id > ?", searchCursor.Fields.SearchCursorID)
 	}
 
 	if gqlInput.SortBy != nil && gqlInput.SortOrder != nil {
-		cending := "ASC"
-		if *gqlInput.SortOrder == gqlmodels.SearchableSortOrderDesc {
-			cending = "DESC"
+		var cending string = gqlmodels.SearchSortOrderAsc.String()
+		if *gqlInput.SortOrder == gqlmodels.SearchSortOrderDesc {
+			cending = gqlmodels.SearchSortOrderDesc.String()
 		}
 
 		switch *gqlInput.SortBy {
-		case gqlmodels.SearchableThemeSortByName:
+		case gqlmodels.SearchThemeSortByName:
 			query.Order("name " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
-		case gqlmodels.SearchableThemeSortByLastUpdate:
+		case gqlmodels.SearchThemeSortByLastUpdate:
 			query.Order("updated_at " + cending).
 				Order("name " + cending).
 				Order("created_at " + cending)
-		case gqlmodels.SearchableThemeSortByCreatedAt:
+		case gqlmodels.SearchThemeSortByCreatedAt:
 			query.Order("created_at " + cending).
 				Order("name " + cending).
 				Order("updated_at " + cending)
@@ -113,12 +113,12 @@ func (s *ThemeService) SearchPublicThemes(ctx context.Context, gqlInput gqlmodel
 	}
 
 	hasNextPage := len(themes) > limit
-	searchEdges := make([]*gqlmodels.SearchableThemeEdge, len(themes))
+	searchEdges := make([]*gqlmodels.SearchThemeEdge, len(themes))
 
 	for index, theme := range themes {
-		searchCursor := util.SearchCursor[gqlmodels.SearchableThemeCursorFields]{
-			Fields: gqlmodels.SearchableThemeCursorFields{
-				EncodedSearchCursor: theme.EncodedSearchCursor,
+		searchCursor := util.SearchCursor[gqlmodels.SearchThemeCursorFields]{
+			Fields: gqlmodels.SearchThemeCursorFields{
+				SearchCursorID: theme.SearchCursorId,
 			},
 		}
 		encodedSearchCursor, exception := searchCursor.EncodeSearchCursor()
@@ -126,10 +126,10 @@ func (s *ThemeService) SearchPublicThemes(ctx context.Context, gqlInput gqlmodel
 			return nil, exception
 		}
 		if encodedSearchCursor == nil {
-			return nil, exceptions.Searchable.FailedToUnmarshalSearchCursor()
+			return nil, exceptions.Search.FailedToUnmarshalSearchCursor()
 		}
 
-		searchEdges[index] = &gqlmodels.SearchableThemeEdge{
+		searchEdges[index] = &gqlmodels.SearchThemeEdge{
 			EncodedSearchCursor: *encodedSearchCursor,
 			Node:                theme.ToPublicTheme(),
 		}
@@ -150,7 +150,7 @@ func (s *ThemeService) SearchPublicThemes(ctx context.Context, gqlInput gqlmodel
 		searchEdges = searchEdges[:limit]
 	}
 
-	return &gqlmodels.SearchableThemeConnection{
+	return &gqlmodels.SearchThemeConnection{
 		SearchEdges:    searchEdges,
 		SearchPageInfo: searchPageInfo,
 		TotalCount:     int32(len(searchEdges)),

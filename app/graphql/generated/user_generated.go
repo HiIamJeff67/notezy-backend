@@ -31,50 +31,6 @@ import (
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _PublicUser_encodedSearchCursor(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicUser) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PublicUser_encodedSearchCursor(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.EncodedSearchCursor, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PublicUser_encodedSearchCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PublicUser",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _PublicUser_name(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicUser) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PublicUser_name(ctx, field)
 	if err != nil {
@@ -427,194 +383,8 @@ func (ec *executionContext) fieldContext_PublicUser_updatedAt(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _PublicUser_userInfo(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicUser) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PublicUser_userInfo(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UserInfo, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*gqlmodels.PublicUserInfo)
-	fc.Result = res
-	return ec.marshalNPublicUserInfo2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUserInfo(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PublicUser_userInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PublicUser",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "coverBackgroundURL":
-				return ec.fieldContext_PublicUserInfo_coverBackgroundURL(ctx, field)
-			case "avatarURL":
-				return ec.fieldContext_PublicUserInfo_avatarURL(ctx, field)
-			case "header":
-				return ec.fieldContext_PublicUserInfo_header(ctx, field)
-			case "introduction":
-				return ec.fieldContext_PublicUserInfo_introduction(ctx, field)
-			case "gender":
-				return ec.fieldContext_PublicUserInfo_gender(ctx, field)
-			case "country":
-				return ec.fieldContext_PublicUserInfo_country(ctx, field)
-			case "birthDate":
-				return ec.fieldContext_PublicUserInfo_birthDate(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_PublicUserInfo_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PublicUserInfo", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _PublicUser_badges(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicUser) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PublicUser_badges(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Badges, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*gqlmodels.PublicBadge)
-	fc.Result = res
-	return ec.marshalNPublicBadge2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicBadgeᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PublicUser_badges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PublicUser",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "encodedSearchCursor":
-				return ec.fieldContext_PublicBadge_encodedSearchCursor(ctx, field)
-			case "title":
-				return ec.fieldContext_PublicBadge_title(ctx, field)
-			case "description":
-				return ec.fieldContext_PublicBadge_description(ctx, field)
-			case "type":
-				return ec.fieldContext_PublicBadge_type(ctx, field)
-			case "imageURL":
-				return ec.fieldContext_PublicBadge_imageURL(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_PublicBadge_createdAt(ctx, field)
-			case "users":
-				return ec.fieldContext_PublicBadge_users(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PublicBadge", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _PublicUser_themes(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicUser) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PublicUser_themes(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Themes, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*gqlmodels.PublicTheme)
-	fc.Result = res
-	return ec.marshalNPublicTheme2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicThemeᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PublicUser_themes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PublicUser",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "encodedSearchCursor":
-				return ec.fieldContext_PublicTheme_encodedSearchCursor(ctx, field)
-			case "name":
-				return ec.fieldContext_PublicTheme_name(ctx, field)
-			case "version":
-				return ec.fieldContext_PublicTheme_version(ctx, field)
-			case "isDefault":
-				return ec.fieldContext_PublicTheme_isDefault(ctx, field)
-			case "downloadURL":
-				return ec.fieldContext_PublicTheme_downloadURL(ctx, field)
-			case "downloadCount":
-				return ec.fieldContext_PublicTheme_downloadCount(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_PublicTheme_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_PublicTheme_updatedAt(ctx, field)
-			case "author":
-				return ec.fieldContext_PublicTheme_author(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PublicTheme", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _SearchableUserConnection_searchEdges(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableUserConnection) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchableUserConnection_searchEdges(ctx, field)
+func (ec *executionContext) _SearchUserConnection_searchEdges(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchUserConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchUserConnection_searchEdges(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -639,32 +409,38 @@ func (ec *executionContext) _SearchableUserConnection_searchEdges(ctx context.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*gqlmodels.SearchableUserEdge)
+	res := resTmp.([]*gqlmodels.SearchUserEdge)
 	fc.Result = res
-	return ec.marshalNSearchableUserEdge2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableUserEdgeᚄ(ctx, field.Selections, res)
+	return ec.marshalNSearchUserEdge2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserEdgeᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchableUserConnection_searchEdges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchUserConnection_searchEdges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "SearchableUserConnection",
+		Object:     "SearchUserConnection",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "node":
-				return ec.fieldContext_SearchableUserEdge_node(ctx, field)
 			case "encodedSearchCursor":
-				return ec.fieldContext_SearchableUserEdge_encodedSearchCursor(ctx, field)
+				return ec.fieldContext_SearchUserEdge_encodedSearchCursor(ctx, field)
+			case "node":
+				return ec.fieldContext_SearchUserEdge_node(ctx, field)
+			case "userInfo":
+				return ec.fieldContext_SearchUserEdge_userInfo(ctx, field)
+			case "badges":
+				return ec.fieldContext_SearchUserEdge_badges(ctx, field)
+			case "themes":
+				return ec.fieldContext_SearchUserEdge_themes(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type SearchableUserEdge", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type SearchUserEdge", field.Name)
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _SearchableUserConnection_searchPageInfo(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableUserConnection) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchableUserConnection_searchPageInfo(ctx, field)
+func (ec *executionContext) _SearchUserConnection_searchPageInfo(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchUserConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchUserConnection_searchPageInfo(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -694,9 +470,9 @@ func (ec *executionContext) _SearchableUserConnection_searchPageInfo(ctx context
 	return ec.marshalNSearchPageInfo2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchPageInfo(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchableUserConnection_searchPageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchUserConnection_searchPageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "SearchableUserConnection",
+		Object:     "SearchUserConnection",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -717,8 +493,8 @@ func (ec *executionContext) fieldContext_SearchableUserConnection_searchPageInfo
 	return fc, nil
 }
 
-func (ec *executionContext) _SearchableUserConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableUserConnection) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchableUserConnection_totalCount(ctx, field)
+func (ec *executionContext) _SearchUserConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchUserConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchUserConnection_totalCount(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -748,9 +524,9 @@ func (ec *executionContext) _SearchableUserConnection_totalCount(ctx context.Con
 	return ec.marshalNInt2int32(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchableUserConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchUserConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "SearchableUserConnection",
+		Object:     "SearchUserConnection",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -761,8 +537,8 @@ func (ec *executionContext) fieldContext_SearchableUserConnection_totalCount(_ c
 	return fc, nil
 }
 
-func (ec *executionContext) _SearchableUserConnection_searchTime(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableUserConnection) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchableUserConnection_searchTime(ctx, field)
+func (ec *executionContext) _SearchUserConnection_searchTime(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchUserConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchUserConnection_searchTime(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -792,9 +568,9 @@ func (ec *executionContext) _SearchableUserConnection_searchTime(ctx context.Con
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchableUserConnection_searchTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchUserConnection_searchTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "SearchableUserConnection",
+		Object:     "SearchUserConnection",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -805,78 +581,8 @@ func (ec *executionContext) fieldContext_SearchableUserConnection_searchTime(_ c
 	return fc, nil
 }
 
-func (ec *executionContext) _SearchableUserEdge_node(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableUserEdge) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchableUserEdge_node(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Node, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*gqlmodels.PublicUser)
-	fc.Result = res
-	return ec.marshalNPublicUser2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_SearchableUserEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SearchableUserEdge",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "encodedSearchCursor":
-				return ec.fieldContext_PublicUser_encodedSearchCursor(ctx, field)
-			case "name":
-				return ec.fieldContext_PublicUser_name(ctx, field)
-			case "displayName":
-				return ec.fieldContext_PublicUser_displayName(ctx, field)
-			case "email":
-				return ec.fieldContext_PublicUser_email(ctx, field)
-			case "role":
-				return ec.fieldContext_PublicUser_role(ctx, field)
-			case "plan":
-				return ec.fieldContext_PublicUser_plan(ctx, field)
-			case "status":
-				return ec.fieldContext_PublicUser_status(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_PublicUser_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_PublicUser_updatedAt(ctx, field)
-			case "userInfo":
-				return ec.fieldContext_PublicUser_userInfo(ctx, field)
-			case "badges":
-				return ec.fieldContext_PublicUser_badges(ctx, field)
-			case "themes":
-				return ec.fieldContext_PublicUser_themes(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PublicUser", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _SearchableUserEdge_encodedSearchCursor(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableUserEdge) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchableUserEdge_encodedSearchCursor(ctx, field)
+func (ec *executionContext) _SearchUserEdge_encodedSearchCursor(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchUserEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchUserEdge_encodedSearchCursor(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -906,9 +612,9 @@ func (ec *executionContext) _SearchableUserEdge_encodedSearchCursor(ctx context.
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchableUserEdge_encodedSearchCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchUserEdge_encodedSearchCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "SearchableUserEdge",
+		Object:     "SearchUserEdge",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -919,39 +625,279 @@ func (ec *executionContext) fieldContext_SearchableUserEdge_encodedSearchCursor(
 	return fc, nil
 }
 
+func (ec *executionContext) _SearchUserEdge_node(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchUserEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchUserEdge_node(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Node, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*gqlmodels.PublicUser)
+	fc.Result = res
+	return ec.marshalNPublicUser2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SearchUserEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SearchUserEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "name":
+				return ec.fieldContext_PublicUser_name(ctx, field)
+			case "displayName":
+				return ec.fieldContext_PublicUser_displayName(ctx, field)
+			case "email":
+				return ec.fieldContext_PublicUser_email(ctx, field)
+			case "role":
+				return ec.fieldContext_PublicUser_role(ctx, field)
+			case "plan":
+				return ec.fieldContext_PublicUser_plan(ctx, field)
+			case "status":
+				return ec.fieldContext_PublicUser_status(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PublicUser_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PublicUser_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PublicUser", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SearchUserEdge_userInfo(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchUserEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchUserEdge_userInfo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*gqlmodels.PublicUserInfo)
+	fc.Result = res
+	return ec.marshalNPublicUserInfo2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUserInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SearchUserEdge_userInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SearchUserEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "coverBackgroundURL":
+				return ec.fieldContext_PublicUserInfo_coverBackgroundURL(ctx, field)
+			case "avatarURL":
+				return ec.fieldContext_PublicUserInfo_avatarURL(ctx, field)
+			case "header":
+				return ec.fieldContext_PublicUserInfo_header(ctx, field)
+			case "introduction":
+				return ec.fieldContext_PublicUserInfo_introduction(ctx, field)
+			case "gender":
+				return ec.fieldContext_PublicUserInfo_gender(ctx, field)
+			case "country":
+				return ec.fieldContext_PublicUserInfo_country(ctx, field)
+			case "birthDate":
+				return ec.fieldContext_PublicUserInfo_birthDate(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PublicUserInfo_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PublicUserInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SearchUserEdge_badges(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchUserEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchUserEdge_badges(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Badges, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*gqlmodels.PublicBadge)
+	fc.Result = res
+	return ec.marshalNPublicBadge2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicBadgeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SearchUserEdge_badges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SearchUserEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "title":
+				return ec.fieldContext_PublicBadge_title(ctx, field)
+			case "description":
+				return ec.fieldContext_PublicBadge_description(ctx, field)
+			case "type":
+				return ec.fieldContext_PublicBadge_type(ctx, field)
+			case "imageURL":
+				return ec.fieldContext_PublicBadge_imageURL(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PublicBadge_createdAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PublicBadge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SearchUserEdge_themes(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchUserEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchUserEdge_themes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Themes, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*gqlmodels.PublicTheme)
+	fc.Result = res
+	return ec.marshalNPublicTheme2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicThemeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SearchUserEdge_themes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SearchUserEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "name":
+				return ec.fieldContext_PublicTheme_name(ctx, field)
+			case "version":
+				return ec.fieldContext_PublicTheme_version(ctx, field)
+			case "isDefault":
+				return ec.fieldContext_PublicTheme_isDefault(ctx, field)
+			case "downloadURL":
+				return ec.fieldContext_PublicTheme_downloadURL(ctx, field)
+			case "downloadCount":
+				return ec.fieldContext_PublicTheme_downloadCount(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PublicTheme_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PublicTheme_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PublicTheme", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 // endregion **************************** field.gotpl *****************************
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputSearchableUserCursorFields(ctx context.Context, obj any) (gqlmodels.SearchableUserCursorFields, error) {
-	var it gqlmodels.SearchableUserCursorFields
+func (ec *executionContext) unmarshalInputSearchUserCursorFields(ctx context.Context, obj any) (gqlmodels.SearchUserCursorFields, error) {
+	var it gqlmodels.SearchUserCursorFields
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"encodedSearchCursor"}
+	fieldsInOrder := [...]string{"searchCursorId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "encodedSearchCursor":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("encodedSearchCursor"))
+		case "searchCursorId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("searchCursorId"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.EncodedSearchCursor = data
+			it.SearchCursorID = data
 		}
 	}
 
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputSearchableUserFilters(ctx context.Context, obj any) (gqlmodels.SearchableUserFilters, error) {
-	var it gqlmodels.SearchableUserFilters
+func (ec *executionContext) unmarshalInputSearchUserFilters(ctx context.Context, obj any) (gqlmodels.SearchUserFilters, error) {
+	var it gqlmodels.SearchUserFilters
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -1012,8 +958,8 @@ func (ec *executionContext) unmarshalInputSearchableUserFilters(ctx context.Cont
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputSearchableUserInput(ctx context.Context, obj any) (gqlmodels.SearchableUserInput, error) {
-	var it gqlmodels.SearchableUserInput
+func (ec *executionContext) unmarshalInputSearchUserInput(ctx context.Context, obj any) (gqlmodels.SearchUserInput, error) {
+	var it gqlmodels.SearchUserInput
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -1059,21 +1005,21 @@ func (ec *executionContext) unmarshalInputSearchableUserInput(ctx context.Contex
 			it.First = data
 		case "filters":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filters"))
-			data, err := ec.unmarshalOSearchableUserFilters2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableUserFilters(ctx, v)
+			data, err := ec.unmarshalOSearchUserFilters2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserFilters(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Filters = data
 		case "sortBy":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortBy"))
-			data, err := ec.unmarshalOSearchableUserSortBy2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableUserSortBy(ctx, v)
+			data, err := ec.unmarshalOSearchUserSortBy2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserSortBy(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.SortBy = data
 		case "sortOrder":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortOrder"))
-			data, err := ec.unmarshalOSearchableSortOrder2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableSortOrder(ctx, v)
+			data, err := ec.unmarshalOSearchSortOrder2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchSortOrder(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -1103,11 +1049,6 @@ func (ec *executionContext) _PublicUser(ctx context.Context, sel ast.SelectionSe
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("PublicUser")
-		case "encodedSearchCursor":
-			out.Values[i] = ec._PublicUser_encodedSearchCursor(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "name":
 			out.Values[i] = ec._PublicUser_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -1148,21 +1089,6 @@ func (ec *executionContext) _PublicUser(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "userInfo":
-			out.Values[i] = ec._PublicUser_userInfo(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "badges":
-			out.Values[i] = ec._PublicUser_badges(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "themes":
-			out.Values[i] = ec._PublicUser_themes(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -1186,34 +1112,34 @@ func (ec *executionContext) _PublicUser(ctx context.Context, sel ast.SelectionSe
 	return out
 }
 
-var searchableUserConnectionImplementors = []string{"SearchableUserConnection", "SearchConnection"}
+var searchUserConnectionImplementors = []string{"SearchUserConnection", "SearchConnection"}
 
-func (ec *executionContext) _SearchableUserConnection(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.SearchableUserConnection) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, searchableUserConnectionImplementors)
+func (ec *executionContext) _SearchUserConnection(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.SearchUserConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, searchUserConnectionImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("SearchableUserConnection")
+			out.Values[i] = graphql.MarshalString("SearchUserConnection")
 		case "searchEdges":
-			out.Values[i] = ec._SearchableUserConnection_searchEdges(ctx, field, obj)
+			out.Values[i] = ec._SearchUserConnection_searchEdges(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "searchPageInfo":
-			out.Values[i] = ec._SearchableUserConnection_searchPageInfo(ctx, field, obj)
+			out.Values[i] = ec._SearchUserConnection_searchPageInfo(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "totalCount":
-			out.Values[i] = ec._SearchableUserConnection_totalCount(ctx, field, obj)
+			out.Values[i] = ec._SearchUserConnection_totalCount(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "searchTime":
-			out.Values[i] = ec._SearchableUserConnection_searchTime(ctx, field, obj)
+			out.Values[i] = ec._SearchUserConnection_searchTime(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -1240,24 +1166,39 @@ func (ec *executionContext) _SearchableUserConnection(ctx context.Context, sel a
 	return out
 }
 
-var searchableUserEdgeImplementors = []string{"SearchableUserEdge", "SearchEdge"}
+var searchUserEdgeImplementors = []string{"SearchUserEdge", "SearchEdge"}
 
-func (ec *executionContext) _SearchableUserEdge(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.SearchableUserEdge) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, searchableUserEdgeImplementors)
+func (ec *executionContext) _SearchUserEdge(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.SearchUserEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, searchUserEdgeImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("SearchableUserEdge")
-		case "node":
-			out.Values[i] = ec._SearchableUserEdge_node(ctx, field, obj)
+			out.Values[i] = graphql.MarshalString("SearchUserEdge")
+		case "encodedSearchCursor":
+			out.Values[i] = ec._SearchUserEdge_encodedSearchCursor(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "encodedSearchCursor":
-			out.Values[i] = ec._SearchableUserEdge_encodedSearchCursor(ctx, field, obj)
+		case "node":
+			out.Values[i] = ec._SearchUserEdge_node(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "userInfo":
+			out.Values[i] = ec._SearchUserEdge_userInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "badges":
+			out.Values[i] = ec._SearchUserEdge_badges(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "themes":
+			out.Values[i] = ec._SearchUserEdge_themes(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -1342,21 +1283,21 @@ func (ec *executionContext) marshalNPublicUser2ᚖnotezyᚑbackendᚋappᚋgraph
 	return ec._PublicUser(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSearchableUserConnection2notezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableUserConnection(ctx context.Context, sel ast.SelectionSet, v gqlmodels.SearchableUserConnection) graphql.Marshaler {
-	return ec._SearchableUserConnection(ctx, sel, &v)
+func (ec *executionContext) marshalNSearchUserConnection2notezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserConnection(ctx context.Context, sel ast.SelectionSet, v gqlmodels.SearchUserConnection) graphql.Marshaler {
+	return ec._SearchUserConnection(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSearchableUserConnection2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableUserConnection(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchableUserConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchUserConnection2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserConnection(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchUserConnection) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._SearchableUserConnection(ctx, sel, v)
+	return ec._SearchUserConnection(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSearchableUserEdge2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableUserEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.SearchableUserEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchUserEdge2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.SearchUserEdge) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -1380,7 +1321,7 @@ func (ec *executionContext) marshalNSearchableUserEdge2ᚕᚖnotezyᚑbackendᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSearchableUserEdge2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableUserEdge(ctx, sel, v[i])
+			ret[i] = ec.marshalNSearchUserEdge2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserEdge(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -1400,39 +1341,39 @@ func (ec *executionContext) marshalNSearchableUserEdge2ᚕᚖnotezyᚑbackendᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalNSearchableUserEdge2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableUserEdge(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchableUserEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchUserEdge2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserEdge(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchUserEdge) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._SearchableUserEdge(ctx, sel, v)
+	return ec._SearchUserEdge(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNSearchableUserInput2notezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableUserInput(ctx context.Context, v any) (gqlmodels.SearchableUserInput, error) {
-	res, err := ec.unmarshalInputSearchableUserInput(ctx, v)
+func (ec *executionContext) unmarshalNSearchUserInput2notezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserInput(ctx context.Context, v any) (gqlmodels.SearchUserInput, error) {
+	res, err := ec.unmarshalInputSearchUserInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOSearchableUserFilters2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableUserFilters(ctx context.Context, v any) (*gqlmodels.SearchableUserFilters, error) {
+func (ec *executionContext) unmarshalOSearchUserFilters2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserFilters(ctx context.Context, v any) (*gqlmodels.SearchUserFilters, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalInputSearchableUserFilters(ctx, v)
+	res, err := ec.unmarshalInputSearchUserFilters(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOSearchableUserSortBy2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableUserSortBy(ctx context.Context, v any) (*gqlmodels.SearchableUserSortBy, error) {
+func (ec *executionContext) unmarshalOSearchUserSortBy2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserSortBy(ctx context.Context, v any) (*gqlmodels.SearchUserSortBy, error) {
 	if v == nil {
 		return nil, nil
 	}
-	var res = new(gqlmodels.SearchableUserSortBy)
+	var res = new(gqlmodels.SearchUserSortBy)
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOSearchableUserSortBy2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableUserSortBy(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchableUserSortBy) graphql.Marshaler {
+func (ec *executionContext) marshalOSearchUserSortBy2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserSortBy(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchUserSortBy) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

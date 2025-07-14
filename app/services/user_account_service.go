@@ -22,9 +22,10 @@ type UserAccountService struct {
 }
 
 func NewUserAccountService(db *gorm.DB) UserAccountServiceInterface {
-	return &UserAccountService{
-		db: db,
+	if db == nil {
+		db = models.NotezyDB
 	}
+	return &UserAccountService{db: db}
 }
 
 /* ============================== Services for UserAccount ============================== */

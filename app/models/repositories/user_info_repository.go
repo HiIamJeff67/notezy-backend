@@ -22,7 +22,7 @@ type UserInfoRepositoryInterface interface {
 	UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserInfoInput) (*schemas.UserInfo, *exceptions.Exception)
 
 	// repository for public userInfos
-	GetPublicOneByEncodedSearchCursor(encodedSearchCursor string) (*gqlmodels.PublicUserInfo, *exceptions.Exception)
+	GetPublicOneBySearchCursorId(searchCursorId string) (*gqlmodels.PublicUserInfo, *exceptions.Exception)
 }
 
 type UserInfoRepository struct {
@@ -50,11 +50,11 @@ func (r *UserInfoRepository) GetOneByUserId(userId uuid.UUID) (*schemas.UserInfo
 	return &userInfo, nil
 }
 
-func (r *UserInfoRepository) GetPublicOneByEncodedSearchCursor(encodedSearchCursor string) (*gqlmodels.PublicUserInfo, *exceptions.Exception) {
+func (r *UserInfoRepository) GetPublicOneBySearchCursorId(searchCursorId string) (*gqlmodels.PublicUserInfo, *exceptions.Exception) {
 	userInfo := schemas.UserInfo{}
 	result := r.db.Table(schemas.UserInfo{}.TableName()).
 		Joins("LEFT JOIN \"UserTable\" u ON u.id = user_id").
-		Where("u.encoded_search_cursor = ?", encodedSearchCursor).
+		Where("u.search_cursor_id = ?", searchCursorId).
 		First(&userInfo)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserInfo.NotFound().WithError(err)

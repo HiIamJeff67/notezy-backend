@@ -30,50 +30,6 @@ import (
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _PublicTheme_encodedSearchCursor(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicTheme) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PublicTheme_encodedSearchCursor(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.EncodedSearchCursor, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PublicTheme_encodedSearchCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PublicTheme",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _PublicTheme_name(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicTheme) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PublicTheme_name(ctx, field)
 	if err != nil {
@@ -379,78 +335,8 @@ func (ec *executionContext) fieldContext_PublicTheme_updatedAt(_ context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _PublicTheme_author(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicTheme) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PublicTheme_author(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Author, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*gqlmodels.PublicUser)
-	fc.Result = res
-	return ec.marshalNPublicUser2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PublicTheme_author(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PublicTheme",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "encodedSearchCursor":
-				return ec.fieldContext_PublicUser_encodedSearchCursor(ctx, field)
-			case "name":
-				return ec.fieldContext_PublicUser_name(ctx, field)
-			case "displayName":
-				return ec.fieldContext_PublicUser_displayName(ctx, field)
-			case "email":
-				return ec.fieldContext_PublicUser_email(ctx, field)
-			case "role":
-				return ec.fieldContext_PublicUser_role(ctx, field)
-			case "plan":
-				return ec.fieldContext_PublicUser_plan(ctx, field)
-			case "status":
-				return ec.fieldContext_PublicUser_status(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_PublicUser_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_PublicUser_updatedAt(ctx, field)
-			case "userInfo":
-				return ec.fieldContext_PublicUser_userInfo(ctx, field)
-			case "badges":
-				return ec.fieldContext_PublicUser_badges(ctx, field)
-			case "themes":
-				return ec.fieldContext_PublicUser_themes(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PublicUser", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _SearchableThemeConnection_searchEdges(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableThemeConnection) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchableThemeConnection_searchEdges(ctx, field)
+func (ec *executionContext) _SearchThemeConnection_searchEdges(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchThemeConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchThemeConnection_searchEdges(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -475,32 +361,34 @@ func (ec *executionContext) _SearchableThemeConnection_searchEdges(ctx context.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*gqlmodels.SearchableThemeEdge)
+	res := resTmp.([]*gqlmodels.SearchThemeEdge)
 	fc.Result = res
-	return ec.marshalNSearchableThemeEdge2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableThemeEdgeᚄ(ctx, field.Selections, res)
+	return ec.marshalNSearchThemeEdge2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchThemeEdgeᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchableThemeConnection_searchEdges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchThemeConnection_searchEdges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "SearchableThemeConnection",
+		Object:     "SearchThemeConnection",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "node":
-				return ec.fieldContext_SearchableThemeEdge_node(ctx, field)
 			case "encodedSearchCursor":
-				return ec.fieldContext_SearchableThemeEdge_encodedSearchCursor(ctx, field)
+				return ec.fieldContext_SearchThemeEdge_encodedSearchCursor(ctx, field)
+			case "node":
+				return ec.fieldContext_SearchThemeEdge_node(ctx, field)
+			case "author":
+				return ec.fieldContext_SearchThemeEdge_author(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type SearchableThemeEdge", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type SearchThemeEdge", field.Name)
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _SearchableThemeConnection_searchPageInfo(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableThemeConnection) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchableThemeConnection_searchPageInfo(ctx, field)
+func (ec *executionContext) _SearchThemeConnection_searchPageInfo(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchThemeConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchThemeConnection_searchPageInfo(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -530,9 +418,9 @@ func (ec *executionContext) _SearchableThemeConnection_searchPageInfo(ctx contex
 	return ec.marshalNSearchPageInfo2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchPageInfo(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchableThemeConnection_searchPageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchThemeConnection_searchPageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "SearchableThemeConnection",
+		Object:     "SearchThemeConnection",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -553,8 +441,8 @@ func (ec *executionContext) fieldContext_SearchableThemeConnection_searchPageInf
 	return fc, nil
 }
 
-func (ec *executionContext) _SearchableThemeConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableThemeConnection) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchableThemeConnection_totalCount(ctx, field)
+func (ec *executionContext) _SearchThemeConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchThemeConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchThemeConnection_totalCount(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -584,9 +472,9 @@ func (ec *executionContext) _SearchableThemeConnection_totalCount(ctx context.Co
 	return ec.marshalNInt2int32(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchableThemeConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchThemeConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "SearchableThemeConnection",
+		Object:     "SearchThemeConnection",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -597,8 +485,8 @@ func (ec *executionContext) fieldContext_SearchableThemeConnection_totalCount(_ 
 	return fc, nil
 }
 
-func (ec *executionContext) _SearchableThemeConnection_searchTime(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableThemeConnection) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchableThemeConnection_searchTime(ctx, field)
+func (ec *executionContext) _SearchThemeConnection_searchTime(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchThemeConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchThemeConnection_searchTime(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -628,9 +516,9 @@ func (ec *executionContext) _SearchableThemeConnection_searchTime(ctx context.Co
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchableThemeConnection_searchTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchThemeConnection_searchTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "SearchableThemeConnection",
+		Object:     "SearchThemeConnection",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -641,72 +529,8 @@ func (ec *executionContext) fieldContext_SearchableThemeConnection_searchTime(_ 
 	return fc, nil
 }
 
-func (ec *executionContext) _SearchableThemeEdge_node(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableThemeEdge) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchableThemeEdge_node(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Node, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*gqlmodels.PublicTheme)
-	fc.Result = res
-	return ec.marshalNPublicTheme2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicTheme(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_SearchableThemeEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SearchableThemeEdge",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "encodedSearchCursor":
-				return ec.fieldContext_PublicTheme_encodedSearchCursor(ctx, field)
-			case "name":
-				return ec.fieldContext_PublicTheme_name(ctx, field)
-			case "version":
-				return ec.fieldContext_PublicTheme_version(ctx, field)
-			case "isDefault":
-				return ec.fieldContext_PublicTheme_isDefault(ctx, field)
-			case "downloadURL":
-				return ec.fieldContext_PublicTheme_downloadURL(ctx, field)
-			case "downloadCount":
-				return ec.fieldContext_PublicTheme_downloadCount(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_PublicTheme_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_PublicTheme_updatedAt(ctx, field)
-			case "author":
-				return ec.fieldContext_PublicTheme_author(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PublicTheme", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _SearchableThemeEdge_encodedSearchCursor(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchableThemeEdge) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchableThemeEdge_encodedSearchCursor(ctx, field)
+func (ec *executionContext) _SearchThemeEdge_encodedSearchCursor(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchThemeEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchThemeEdge_encodedSearchCursor(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -736,9 +560,9 @@ func (ec *executionContext) _SearchableThemeEdge_encodedSearchCursor(ctx context
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchableThemeEdge_encodedSearchCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchThemeEdge_encodedSearchCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "SearchableThemeEdge",
+		Object:     "SearchThemeEdge",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -749,39 +573,161 @@ func (ec *executionContext) fieldContext_SearchableThemeEdge_encodedSearchCursor
 	return fc, nil
 }
 
+func (ec *executionContext) _SearchThemeEdge_node(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchThemeEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchThemeEdge_node(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Node, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*gqlmodels.PublicTheme)
+	fc.Result = res
+	return ec.marshalNPublicTheme2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicTheme(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SearchThemeEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SearchThemeEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "name":
+				return ec.fieldContext_PublicTheme_name(ctx, field)
+			case "version":
+				return ec.fieldContext_PublicTheme_version(ctx, field)
+			case "isDefault":
+				return ec.fieldContext_PublicTheme_isDefault(ctx, field)
+			case "downloadURL":
+				return ec.fieldContext_PublicTheme_downloadURL(ctx, field)
+			case "downloadCount":
+				return ec.fieldContext_PublicTheme_downloadCount(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PublicTheme_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PublicTheme_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PublicTheme", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SearchThemeEdge_author(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchThemeEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchThemeEdge_author(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Author, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*gqlmodels.PublicUser)
+	fc.Result = res
+	return ec.marshalNPublicUser2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SearchThemeEdge_author(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SearchThemeEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "name":
+				return ec.fieldContext_PublicUser_name(ctx, field)
+			case "displayName":
+				return ec.fieldContext_PublicUser_displayName(ctx, field)
+			case "email":
+				return ec.fieldContext_PublicUser_email(ctx, field)
+			case "role":
+				return ec.fieldContext_PublicUser_role(ctx, field)
+			case "plan":
+				return ec.fieldContext_PublicUser_plan(ctx, field)
+			case "status":
+				return ec.fieldContext_PublicUser_status(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PublicUser_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PublicUser_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PublicUser", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 // endregion **************************** field.gotpl *****************************
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputSearchableThemeCursorFields(ctx context.Context, obj any) (gqlmodels.SearchableThemeCursorFields, error) {
-	var it gqlmodels.SearchableThemeCursorFields
+func (ec *executionContext) unmarshalInputSearchThemeCursorFields(ctx context.Context, obj any) (gqlmodels.SearchThemeCursorFields, error) {
+	var it gqlmodels.SearchThemeCursorFields
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"encodedSearchCursor"}
+	fieldsInOrder := [...]string{"searchCursorId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "encodedSearchCursor":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("encodedSearchCursor"))
+		case "searchCursorId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("searchCursorId"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.EncodedSearchCursor = data
+			it.SearchCursorID = data
 		}
 	}
 
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputSearchableThemeFilters(ctx context.Context, obj any) (gqlmodels.SearchableThemeFilters, error) {
-	var it gqlmodels.SearchableThemeFilters
+func (ec *executionContext) unmarshalInputSearchThemeFilters(ctx context.Context, obj any) (gqlmodels.SearchThemeFilters, error) {
+	var it gqlmodels.SearchThemeFilters
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -814,8 +760,8 @@ func (ec *executionContext) unmarshalInputSearchableThemeFilters(ctx context.Con
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputSearchableThemeInput(ctx context.Context, obj any) (gqlmodels.SearchableThemeInput, error) {
-	var it gqlmodels.SearchableThemeInput
+func (ec *executionContext) unmarshalInputSearchThemeInput(ctx context.Context, obj any) (gqlmodels.SearchThemeInput, error) {
+	var it gqlmodels.SearchThemeInput
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -861,21 +807,21 @@ func (ec *executionContext) unmarshalInputSearchableThemeInput(ctx context.Conte
 			it.First = data
 		case "filters":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filters"))
-			data, err := ec.unmarshalOSearchableThemeFilters2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableThemeFilters(ctx, v)
+			data, err := ec.unmarshalOSearchThemeFilters2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchThemeFilters(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Filters = data
 		case "sortBy":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortBy"))
-			data, err := ec.unmarshalOSearchableThemeSortBy2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableThemeSortBy(ctx, v)
+			data, err := ec.unmarshalOSearchThemeSortBy2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchThemeSortBy(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.SortBy = data
 		case "sortOrder":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortOrder"))
-			data, err := ec.unmarshalOSearchableSortOrder2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableSortOrder(ctx, v)
+			data, err := ec.unmarshalOSearchSortOrder2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchSortOrder(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -905,11 +851,6 @@ func (ec *executionContext) _PublicTheme(ctx context.Context, sel ast.SelectionS
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("PublicTheme")
-		case "encodedSearchCursor":
-			out.Values[i] = ec._PublicTheme_encodedSearchCursor(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "name":
 			out.Values[i] = ec._PublicTheme_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -942,11 +883,6 @@ func (ec *executionContext) _PublicTheme(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "author":
-			out.Values[i] = ec._PublicTheme_author(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -970,34 +906,34 @@ func (ec *executionContext) _PublicTheme(ctx context.Context, sel ast.SelectionS
 	return out
 }
 
-var searchableThemeConnectionImplementors = []string{"SearchableThemeConnection", "SearchConnection"}
+var searchThemeConnectionImplementors = []string{"SearchThemeConnection", "SearchConnection"}
 
-func (ec *executionContext) _SearchableThemeConnection(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.SearchableThemeConnection) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, searchableThemeConnectionImplementors)
+func (ec *executionContext) _SearchThemeConnection(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.SearchThemeConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, searchThemeConnectionImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("SearchableThemeConnection")
+			out.Values[i] = graphql.MarshalString("SearchThemeConnection")
 		case "searchEdges":
-			out.Values[i] = ec._SearchableThemeConnection_searchEdges(ctx, field, obj)
+			out.Values[i] = ec._SearchThemeConnection_searchEdges(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "searchPageInfo":
-			out.Values[i] = ec._SearchableThemeConnection_searchPageInfo(ctx, field, obj)
+			out.Values[i] = ec._SearchThemeConnection_searchPageInfo(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "totalCount":
-			out.Values[i] = ec._SearchableThemeConnection_totalCount(ctx, field, obj)
+			out.Values[i] = ec._SearchThemeConnection_totalCount(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "searchTime":
-			out.Values[i] = ec._SearchableThemeConnection_searchTime(ctx, field, obj)
+			out.Values[i] = ec._SearchThemeConnection_searchTime(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -1024,24 +960,29 @@ func (ec *executionContext) _SearchableThemeConnection(ctx context.Context, sel 
 	return out
 }
 
-var searchableThemeEdgeImplementors = []string{"SearchableThemeEdge", "SearchEdge"}
+var searchThemeEdgeImplementors = []string{"SearchThemeEdge", "SearchEdge"}
 
-func (ec *executionContext) _SearchableThemeEdge(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.SearchableThemeEdge) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, searchableThemeEdgeImplementors)
+func (ec *executionContext) _SearchThemeEdge(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.SearchThemeEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, searchThemeEdgeImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("SearchableThemeEdge")
-		case "node":
-			out.Values[i] = ec._SearchableThemeEdge_node(ctx, field, obj)
+			out.Values[i] = graphql.MarshalString("SearchThemeEdge")
+		case "encodedSearchCursor":
+			out.Values[i] = ec._SearchThemeEdge_encodedSearchCursor(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "encodedSearchCursor":
-			out.Values[i] = ec._SearchableThemeEdge_encodedSearchCursor(ctx, field, obj)
+		case "node":
+			out.Values[i] = ec._SearchThemeEdge_node(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "author":
+			out.Values[i] = ec._SearchThemeEdge_author(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -1126,7 +1067,7 @@ func (ec *executionContext) marshalNPublicTheme2ᚖnotezyᚑbackendᚋappᚋgrap
 	return ec._PublicTheme(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSearchableThemeEdge2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableThemeEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.SearchableThemeEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchThemeEdge2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchThemeEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.SearchThemeEdge) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -1150,7 +1091,7 @@ func (ec *executionContext) marshalNSearchableThemeEdge2ᚕᚖnotezyᚑbackend�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSearchableThemeEdge2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableThemeEdge(ctx, sel, v[i])
+			ret[i] = ec.marshalNSearchThemeEdge2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchThemeEdge(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -1170,34 +1111,34 @@ func (ec *executionContext) marshalNSearchableThemeEdge2ᚕᚖnotezyᚑbackend�
 	return ret
 }
 
-func (ec *executionContext) marshalNSearchableThemeEdge2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableThemeEdge(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchableThemeEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchThemeEdge2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchThemeEdge(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchThemeEdge) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._SearchableThemeEdge(ctx, sel, v)
+	return ec._SearchThemeEdge(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOSearchableThemeFilters2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableThemeFilters(ctx context.Context, v any) (*gqlmodels.SearchableThemeFilters, error) {
+func (ec *executionContext) unmarshalOSearchThemeFilters2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchThemeFilters(ctx context.Context, v any) (*gqlmodels.SearchThemeFilters, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalInputSearchableThemeFilters(ctx, v)
+	res, err := ec.unmarshalInputSearchThemeFilters(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOSearchableThemeSortBy2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableThemeSortBy(ctx context.Context, v any) (*gqlmodels.SearchableThemeSortBy, error) {
+func (ec *executionContext) unmarshalOSearchThemeSortBy2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchThemeSortBy(ctx context.Context, v any) (*gqlmodels.SearchThemeSortBy, error) {
 	if v == nil {
 		return nil, nil
 	}
-	var res = new(gqlmodels.SearchableThemeSortBy)
+	var res = new(gqlmodels.SearchThemeSortBy)
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOSearchableThemeSortBy2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableThemeSortBy(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchableThemeSortBy) graphql.Marshaler {
+func (ec *executionContext) marshalOSearchThemeSortBy2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchThemeSortBy(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchThemeSortBy) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

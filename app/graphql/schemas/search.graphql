@@ -2,16 +2,16 @@
 # are required to inheritence the structure (of cursor-based pagination) here
 
 # =============== Search Filters (part of Input) =============== #
-# input ExampleSearchableFilters {}
+# input ExampleSearchFilters {}
 
-# =============== Search By (part of Input) =============== #
-# enum ExampleSearchableSortBy {
+# =============== Search Sort By (part of Input) =============== #
+# enum ExampleSearchSortBy {
 #     RELEVANCE
 # }
 
-# =============== Search Order (part of Input) =============== #
+# =============== Search Sort Order (part of Input) =============== #
 # Note that this field is fixed, and should not build another one for customization
-enum SearchableSortOrder {
+enum SearchSortOrder {
   ASC
   DESC
 }
@@ -21,9 +21,9 @@ enum SearchableSortOrder {
 #     query: String!
 #     after: String
 #     first: Int = 10
-#     filters: SearchableFilters
-#     sortBy: SearchableSortBy = RELEVANCE
-#     sortOrder: SearchableSortOrder = DESC
+#     filters: SearchFilters
+#     sortBy: SearchSortBy = RELEVANCE
+#     sortOrder: SearchSortOrder = DESC
 # }
 
 # =============== Current Edge (part of Output) =============== #

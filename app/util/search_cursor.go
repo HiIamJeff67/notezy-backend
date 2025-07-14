@@ -8,42 +8,42 @@ import (
 	exceptions "notezy-backend/app/exceptions"
 )
 
-type SearchCursor[SearchableCursorFieldType any] struct {
-	Fields SearchableCursorFieldType `json:"fields"`
+type SearchCursor[SearchCursorFieldType any] struct {
+	Fields SearchCursorFieldType `json:"fields"`
 }
 
-func NewSearchCursor[SearchableCursorFieldType any](fields SearchableCursorFieldType) *SearchCursor[SearchableCursorFieldType] {
-	return &SearchCursor[SearchableCursorFieldType]{
+func NewSearchCursor[SearchCursorFieldType any](fields SearchCursorFieldType) *SearchCursor[SearchCursorFieldType] {
+	return &SearchCursor[SearchCursorFieldType]{
 		Fields: fields,
 	}
 }
 
-func (sc *SearchCursor[SearchableCursorFieldType]) EncodeSearchCursor() (*string, *exceptions.Exception) {
+func (sc *SearchCursor[SearchCursorFieldType]) EncodeSearchCursor() (*string, *exceptions.Exception) {
 	jsonData, err := json.Marshal(sc.Fields)
 	if err != nil {
-		return nil, exceptions.Searchable.FailedToMarshalSearchCursor().WithError(err)
+		return nil, exceptions.Search.FailedToMarshalSearchCursor().WithError(err)
 	}
 
 	encoded := base64.StdEncoding.EncodeToString(jsonData)
 	return &encoded, nil
 }
 
-func DecodeSearchCursor[SearchableCursorFieldType any](encoded string) (*SearchCursor[SearchableCursorFieldType], *exceptions.Exception) {
+func DecodeSearchCursor[SearchCursorFieldType any](encoded string) (*SearchCursor[SearchCursorFieldType], *exceptions.Exception) {
 	if len(strings.ReplaceAll(encoded, " ", "")) == 0 {
-		return nil, exceptions.Searchable.EmptyEncodedStringToDecodeSearchCursor()
+		return nil, exceptions.Search.EmptyEncodedStringToDecodeSearchCursor()
 	}
 
 	jsonData, err := base64.StdEncoding.DecodeString(encoded)
 	if err != nil {
-		return nil, exceptions.Searchable.FailedToDecodeBase64String().WithError(err)
+		return nil, exceptions.Search.FailedToDecodeBase64String().WithError(err)
 	}
 
-	var fields SearchableCursorFieldType
+	var fields SearchCursorFieldType
 	if err := json.Unmarshal(jsonData, &fields); err != nil {
-		return nil, exceptions.Searchable.FailedToUnmarshalSearchCursor().WithError(err)
+		return nil, exceptions.Search.FailedToUnmarshalSearchCursor().WithError(err)
 	}
 
-	return &SearchCursor[SearchableCursorFieldType]{Fields: fields}, nil
+	return &SearchCursor[SearchCursorFieldType]{Fields: fields}, nil
 }
 
 func EncodeSearchCursorFromData[SearchCursorType any](data SearchCursorType) (*string, *exceptions.Exception) {

@@ -26,40 +26,32 @@ type SearchEdge interface {
 }
 
 type PublicBadge struct {
-	EncodedSearchCursor string          `json:"encodedSearchCursor"`
-	Title               string          `json:"title"`
-	Description         string          `json:"description"`
-	Type                enums.BadgeType `json:"type"`
-	ImageURL            *string         `json:"imageURL,omitempty"`
-	CreatedAt           time.Time       `json:"createdAt"`
-	Users               []*PublicUser   `json:"users"`
+	Title       string          `json:"title"`
+	Description string          `json:"description"`
+	Type        enums.BadgeType `json:"type"`
+	ImageURL    *string         `json:"imageURL,omitempty"`
+	CreatedAt   time.Time       `json:"createdAt"`
 }
 
 type PublicTheme struct {
-	EncodedSearchCursor string      `json:"encodedSearchCursor"`
-	Name                string      `json:"name"`
-	Version             string      `json:"version"`
-	IsDefault           bool        `json:"isDefault"`
-	DownloadURL         *string     `json:"downloadURL,omitempty"`
-	DownloadCount       int32       `json:"downloadCount"`
-	CreatedAt           time.Time   `json:"createdAt"`
-	UpdatedAt           time.Time   `json:"updatedAt"`
-	Author              *PublicUser `json:"author"`
+	Name          string    `json:"name"`
+	Version       string    `json:"version"`
+	IsDefault     bool      `json:"isDefault"`
+	DownloadURL   *string   `json:"downloadURL,omitempty"`
+	DownloadCount int32     `json:"downloadCount"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
 type PublicUser struct {
-	EncodedSearchCursor string           `json:"encodedSearchCursor"`
-	Name                string           `json:"name"`
-	DisplayName         string           `json:"displayName"`
-	Email               string           `json:"email"`
-	Role                enums.UserRole   `json:"role"`
-	Plan                enums.UserPlan   `json:"plan"`
-	Status              enums.UserStatus `json:"status"`
-	CreatedAt           time.Time        `json:"createdAt"`
-	UpdatedAt           time.Time        `json:"updatedAt"`
-	UserInfo            *PublicUserInfo  `json:"userInfo"`
-	Badges              []*PublicBadge   `json:"badges"`
-	Themes              []*PublicTheme   `json:"themes"`
+	Name        string           `json:"name"`
+	DisplayName string           `json:"displayName"`
+	Email       string           `json:"email"`
+	Role        enums.UserRole   `json:"role"`
+	Plan        enums.UserPlan   `json:"plan"`
+	Status      enums.UserStatus `json:"status"`
+	CreatedAt   time.Time        `json:"createdAt"`
+	UpdatedAt   time.Time        `json:"updatedAt"`
 }
 
 type PublicUserInfo struct {
@@ -84,6 +76,44 @@ type PublicUsersToBadges struct {
 type Query struct {
 }
 
+type SearchBadgeConnection struct {
+	SearchEdges    []*SearchBadgeEdge `json:"searchEdges"`
+	SearchPageInfo *SearchPageInfo    `json:"searchPageInfo"`
+	TotalCount     int32              `json:"totalCount"`
+	SearchTime     float64            `json:"searchTime"`
+}
+
+func (SearchBadgeConnection) IsSearchConnection()                     {}
+func (this SearchBadgeConnection) GetSearchPageInfo() *SearchPageInfo { return this.SearchPageInfo }
+func (this SearchBadgeConnection) GetTotalCount() int32               { return this.TotalCount }
+func (this SearchBadgeConnection) GetSearchTime() float64             { return this.SearchTime }
+
+type SearchBadgeCursorFields struct {
+	SearchCursorID string `json:"searchCursorId"`
+}
+
+type SearchBadgeEdge struct {
+	EncodedSearchCursor string        `json:"encodedSearchCursor"`
+	Node                *PublicBadge  `json:"node"`
+	Users               []*PublicUser `json:"users"`
+}
+
+func (SearchBadgeEdge) IsSearchEdge()                       {}
+func (this SearchBadgeEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
+
+type SearchBadgeFilters struct {
+	Type *enums.BadgeType `json:"type,omitempty"`
+}
+
+type SearchBadgeInput struct {
+	Query      string              `json:"query"`
+	After      *string             `json:"after,omitempty"`
+	First      *int32              `json:"first,omitempty"`
+	Filters    *SearchBadgeFilters `json:"filters,omitempty"`
+	SortBy     *SearchBadgeSortBy  `json:"sortBy,omitempty"`
+	SortOrderr *SearchSortOrder    `json:"sortOrderr,omitempty"`
+}
+
 type SearchPageInfo struct {
 	HasNextPage              bool    `json:"hasNextPage"`
 	HasPreviousPage          bool    `json:"hasPreviousPage"`
@@ -91,106 +121,73 @@ type SearchPageInfo struct {
 	EndEncodedSearchCursor   *string `json:"endEncodedSearchCursor,omitempty"`
 }
 
-type SearchableBadgeConnection struct {
-	SearchEdges    []*SearchableBadgeEdge `json:"searchEdges"`
-	SearchPageInfo *SearchPageInfo        `json:"searchPageInfo"`
-	TotalCount     int32                  `json:"totalCount"`
-	SearchTime     float64                `json:"searchTime"`
+type SearchThemeConnection struct {
+	SearchEdges    []*SearchThemeEdge `json:"searchEdges"`
+	SearchPageInfo *SearchPageInfo    `json:"searchPageInfo"`
+	TotalCount     int32              `json:"totalCount"`
+	SearchTime     float64            `json:"searchTime"`
 }
 
-func (SearchableBadgeConnection) IsSearchConnection()                     {}
-func (this SearchableBadgeConnection) GetSearchPageInfo() *SearchPageInfo { return this.SearchPageInfo }
-func (this SearchableBadgeConnection) GetTotalCount() int32               { return this.TotalCount }
-func (this SearchableBadgeConnection) GetSearchTime() float64             { return this.SearchTime }
+func (SearchThemeConnection) IsSearchConnection()                     {}
+func (this SearchThemeConnection) GetSearchPageInfo() *SearchPageInfo { return this.SearchPageInfo }
+func (this SearchThemeConnection) GetTotalCount() int32               { return this.TotalCount }
+func (this SearchThemeConnection) GetSearchTime() float64             { return this.SearchTime }
 
-type SearchableBadgeCursorFields struct {
-	EncodedSearchCursor string `json:"encodedSearchCursor"`
+type SearchThemeCursorFields struct {
+	SearchCursorID string `json:"searchCursorId"`
 }
 
-type SearchableBadgeEdge struct {
-	Node                *PublicBadge `json:"node"`
+type SearchThemeEdge struct {
 	EncodedSearchCursor string       `json:"encodedSearchCursor"`
-}
-
-func (SearchableBadgeEdge) IsSearchEdge()                       {}
-func (this SearchableBadgeEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
-
-type SearchableBadgeFilters struct {
-	Type *enums.BadgeType `json:"type,omitempty"`
-}
-
-type SearchableBadgeInput struct {
-	Query      string                  `json:"query"`
-	After      *string                 `json:"after,omitempty"`
-	First      *int32                  `json:"first,omitempty"`
-	Filters    *SearchableBadgeFilters `json:"filters,omitempty"`
-	SortBy     *SearchableBadgeSortBy  `json:"sortBy,omitempty"`
-	SortOrderr *SearchableSortOrder    `json:"sortOrderr,omitempty"`
-}
-
-type SearchableThemeConnection struct {
-	SearchEdges    []*SearchableThemeEdge `json:"searchEdges"`
-	SearchPageInfo *SearchPageInfo        `json:"searchPageInfo"`
-	TotalCount     int32                  `json:"totalCount"`
-	SearchTime     float64                `json:"searchTime"`
-}
-
-func (SearchableThemeConnection) IsSearchConnection()                     {}
-func (this SearchableThemeConnection) GetSearchPageInfo() *SearchPageInfo { return this.SearchPageInfo }
-func (this SearchableThemeConnection) GetTotalCount() int32               { return this.TotalCount }
-func (this SearchableThemeConnection) GetSearchTime() float64             { return this.SearchTime }
-
-type SearchableThemeCursorFields struct {
-	EncodedSearchCursor string `json:"encodedSearchCursor"`
-}
-
-type SearchableThemeEdge struct {
 	Node                *PublicTheme `json:"node"`
-	EncodedSearchCursor string       `json:"encodedSearchCursor"`
+	Author              *PublicUser  `json:"author"`
 }
 
-func (SearchableThemeEdge) IsSearchEdge()                       {}
-func (this SearchableThemeEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
+func (SearchThemeEdge) IsSearchEdge()                       {}
+func (this SearchThemeEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
 
-type SearchableThemeFilters struct {
+type SearchThemeFilters struct {
 	IsDefault                *bool  `json:"isDefault,omitempty"`
 	DownloadCountGreaterThan *int32 `json:"downloadCountGreaterThan,omitempty"`
 }
 
-type SearchableThemeInput struct {
-	Query     string                  `json:"query"`
-	After     *string                 `json:"after,omitempty"`
-	First     *int32                  `json:"first,omitempty"`
-	Filters   *SearchableThemeFilters `json:"filters,omitempty"`
-	SortBy    *SearchableThemeSortBy  `json:"sortBy,omitempty"`
-	SortOrder *SearchableSortOrder    `json:"sortOrder,omitempty"`
+type SearchThemeInput struct {
+	Query     string              `json:"query"`
+	After     *string             `json:"after,omitempty"`
+	First     *int32              `json:"first,omitempty"`
+	Filters   *SearchThemeFilters `json:"filters,omitempty"`
+	SortBy    *SearchThemeSortBy  `json:"sortBy,omitempty"`
+	SortOrder *SearchSortOrder    `json:"sortOrder,omitempty"`
 }
 
-type SearchableUserConnection struct {
-	SearchEdges    []*SearchableUserEdge `json:"searchEdges"`
-	SearchPageInfo *SearchPageInfo       `json:"searchPageInfo"`
-	TotalCount     int32                 `json:"totalCount"`
-	SearchTime     float64               `json:"searchTime"`
+type SearchUserConnection struct {
+	SearchEdges    []*SearchUserEdge `json:"searchEdges"`
+	SearchPageInfo *SearchPageInfo   `json:"searchPageInfo"`
+	TotalCount     int32             `json:"totalCount"`
+	SearchTime     float64           `json:"searchTime"`
 }
 
-func (SearchableUserConnection) IsSearchConnection()                     {}
-func (this SearchableUserConnection) GetSearchPageInfo() *SearchPageInfo { return this.SearchPageInfo }
-func (this SearchableUserConnection) GetTotalCount() int32               { return this.TotalCount }
-func (this SearchableUserConnection) GetSearchTime() float64             { return this.SearchTime }
+func (SearchUserConnection) IsSearchConnection()                     {}
+func (this SearchUserConnection) GetSearchPageInfo() *SearchPageInfo { return this.SearchPageInfo }
+func (this SearchUserConnection) GetTotalCount() int32               { return this.TotalCount }
+func (this SearchUserConnection) GetSearchTime() float64             { return this.SearchTime }
 
-type SearchableUserCursorFields struct {
-	EncodedSearchCursor string `json:"encodedSearchCursor"`
+type SearchUserCursorFields struct {
+	SearchCursorID string `json:"searchCursorId"`
 }
 
-type SearchableUserEdge struct {
-	Node                *PublicUser `json:"node"`
-	EncodedSearchCursor string      `json:"encodedSearchCursor"`
+type SearchUserEdge struct {
+	EncodedSearchCursor string          `json:"encodedSearchCursor"`
+	Node                *PublicUser     `json:"node"`
+	UserInfo            *PublicUserInfo `json:"userInfo"`
+	Badges              []*PublicBadge  `json:"badges"`
+	Themes              []*PublicTheme  `json:"themes"`
 }
 
-func (SearchableUserEdge) IsSearchEdge()                       {}
-func (this SearchableUserEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
+func (SearchUserEdge) IsSearchEdge()                       {}
+func (this SearchUserEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
 
-type SearchableUserFilters struct {
+type SearchUserFilters struct {
 	Role      *enums.UserRole   `json:"role,omitempty"`
 	Plan      *enums.UserPlan   `json:"plan,omitempty"`
 	Status    *enums.UserStatus `json:"status,omitempty"`
@@ -199,13 +196,13 @@ type SearchableUserFilters struct {
 	IsOnline  *bool             `json:"isOnline,omitempty"`
 }
 
-type SearchableUserInput struct {
-	Query     string                 `json:"query"`
-	After     *string                `json:"after,omitempty"`
-	First     *int32                 `json:"first,omitempty"`
-	Filters   *SearchableUserFilters `json:"filters,omitempty"`
-	SortBy    *SearchableUserSortBy  `json:"sortBy,omitempty"`
-	SortOrder *SearchableSortOrder   `json:"sortOrder,omitempty"`
+type SearchUserInput struct {
+	Query     string             `json:"query"`
+	After     *string            `json:"after,omitempty"`
+	First     *int32             `json:"first,omitempty"`
+	Filters   *SearchUserFilters `json:"filters,omitempty"`
+	SortBy    *SearchUserSortBy  `json:"sortBy,omitempty"`
+	SortOrder *SearchSortOrder   `json:"sortOrder,omitempty"`
 }
 
 type CountryCode string
@@ -275,50 +272,50 @@ func (e CountryCode) MarshalJSON() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-type SearchableBadgeSortBy string
+type SearchBadgeSortBy string
 
 const (
-	SearchableBadgeSortByRelevance SearchableBadgeSortBy = "RELEVANCE"
-	SearchableBadgeSortByTitle     SearchableBadgeSortBy = "TITLE"
-	SearchableBadgeSortByCreatedAt SearchableBadgeSortBy = "CREATED_AT"
+	SearchBadgeSortByRelevance SearchBadgeSortBy = "RELEVANCE"
+	SearchBadgeSortByTitle     SearchBadgeSortBy = "TITLE"
+	SearchBadgeSortByCreatedAt SearchBadgeSortBy = "CREATED_AT"
 )
 
-var AllSearchableBadgeSortBy = []SearchableBadgeSortBy{
-	SearchableBadgeSortByRelevance,
-	SearchableBadgeSortByTitle,
-	SearchableBadgeSortByCreatedAt,
+var AllSearchBadgeSortBy = []SearchBadgeSortBy{
+	SearchBadgeSortByRelevance,
+	SearchBadgeSortByTitle,
+	SearchBadgeSortByCreatedAt,
 }
 
-func (e SearchableBadgeSortBy) IsValid() bool {
+func (e SearchBadgeSortBy) IsValid() bool {
 	switch e {
-	case SearchableBadgeSortByRelevance, SearchableBadgeSortByTitle, SearchableBadgeSortByCreatedAt:
+	case SearchBadgeSortByRelevance, SearchBadgeSortByTitle, SearchBadgeSortByCreatedAt:
 		return true
 	}
 	return false
 }
 
-func (e SearchableBadgeSortBy) String() string {
+func (e SearchBadgeSortBy) String() string {
 	return string(e)
 }
 
-func (e *SearchableBadgeSortBy) UnmarshalGQL(v any) error {
+func (e *SearchBadgeSortBy) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = SearchableBadgeSortBy(str)
+	*e = SearchBadgeSortBy(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid SearchableBadgeSortBy", str)
+		return fmt.Errorf("%s is not a valid SearchBadgeSortBy", str)
 	}
 	return nil
 }
 
-func (e SearchableBadgeSortBy) MarshalGQL(w io.Writer) {
+func (e SearchBadgeSortBy) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-func (e *SearchableBadgeSortBy) UnmarshalJSON(b []byte) error {
+func (e *SearchBadgeSortBy) UnmarshalJSON(b []byte) error {
 	s, err := strconv.Unquote(string(b))
 	if err != nil {
 		return err
@@ -326,54 +323,54 @@ func (e *SearchableBadgeSortBy) UnmarshalJSON(b []byte) error {
 	return e.UnmarshalGQL(s)
 }
 
-func (e SearchableBadgeSortBy) MarshalJSON() ([]byte, error) {
+func (e SearchBadgeSortBy) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil
 }
 
-type SearchableSortOrder string
+type SearchSortOrder string
 
 const (
-	SearchableSortOrderAsc  SearchableSortOrder = "ASC"
-	SearchableSortOrderDesc SearchableSortOrder = "DESC"
+	SearchSortOrderAsc  SearchSortOrder = "ASC"
+	SearchSortOrderDesc SearchSortOrder = "DESC"
 )
 
-var AllSearchableSortOrder = []SearchableSortOrder{
-	SearchableSortOrderAsc,
-	SearchableSortOrderDesc,
+var AllSearchSortOrder = []SearchSortOrder{
+	SearchSortOrderAsc,
+	SearchSortOrderDesc,
 }
 
-func (e SearchableSortOrder) IsValid() bool {
+func (e SearchSortOrder) IsValid() bool {
 	switch e {
-	case SearchableSortOrderAsc, SearchableSortOrderDesc:
+	case SearchSortOrderAsc, SearchSortOrderDesc:
 		return true
 	}
 	return false
 }
 
-func (e SearchableSortOrder) String() string {
+func (e SearchSortOrder) String() string {
 	return string(e)
 }
 
-func (e *SearchableSortOrder) UnmarshalGQL(v any) error {
+func (e *SearchSortOrder) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = SearchableSortOrder(str)
+	*e = SearchSortOrder(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid SearchableSortOrder", str)
+		return fmt.Errorf("%s is not a valid SearchSortOrder", str)
 	}
 	return nil
 }
 
-func (e SearchableSortOrder) MarshalGQL(w io.Writer) {
+func (e SearchSortOrder) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-func (e *SearchableSortOrder) UnmarshalJSON(b []byte) error {
+func (e *SearchSortOrder) UnmarshalJSON(b []byte) error {
 	s, err := strconv.Unquote(string(b))
 	if err != nil {
 		return err
@@ -381,58 +378,58 @@ func (e *SearchableSortOrder) UnmarshalJSON(b []byte) error {
 	return e.UnmarshalGQL(s)
 }
 
-func (e SearchableSortOrder) MarshalJSON() ([]byte, error) {
+func (e SearchSortOrder) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil
 }
 
-type SearchableThemeSortBy string
+type SearchThemeSortBy string
 
 const (
-	SearchableThemeSortByRelevance  SearchableThemeSortBy = "RELEVANCE"
-	SearchableThemeSortByName       SearchableThemeSortBy = "NAME"
-	SearchableThemeSortByLastUpdate SearchableThemeSortBy = "LAST_UPDATE"
-	SearchableThemeSortByCreatedAt  SearchableThemeSortBy = "CREATED_AT"
+	SearchThemeSortByRelevance  SearchThemeSortBy = "RELEVANCE"
+	SearchThemeSortByName       SearchThemeSortBy = "NAME"
+	SearchThemeSortByLastUpdate SearchThemeSortBy = "LAST_UPDATE"
+	SearchThemeSortByCreatedAt  SearchThemeSortBy = "CREATED_AT"
 )
 
-var AllSearchableThemeSortBy = []SearchableThemeSortBy{
-	SearchableThemeSortByRelevance,
-	SearchableThemeSortByName,
-	SearchableThemeSortByLastUpdate,
-	SearchableThemeSortByCreatedAt,
+var AllSearchThemeSortBy = []SearchThemeSortBy{
+	SearchThemeSortByRelevance,
+	SearchThemeSortByName,
+	SearchThemeSortByLastUpdate,
+	SearchThemeSortByCreatedAt,
 }
 
-func (e SearchableThemeSortBy) IsValid() bool {
+func (e SearchThemeSortBy) IsValid() bool {
 	switch e {
-	case SearchableThemeSortByRelevance, SearchableThemeSortByName, SearchableThemeSortByLastUpdate, SearchableThemeSortByCreatedAt:
+	case SearchThemeSortByRelevance, SearchThemeSortByName, SearchThemeSortByLastUpdate, SearchThemeSortByCreatedAt:
 		return true
 	}
 	return false
 }
 
-func (e SearchableThemeSortBy) String() string {
+func (e SearchThemeSortBy) String() string {
 	return string(e)
 }
 
-func (e *SearchableThemeSortBy) UnmarshalGQL(v any) error {
+func (e *SearchThemeSortBy) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = SearchableThemeSortBy(str)
+	*e = SearchThemeSortBy(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid SearchableThemeSortBy", str)
+		return fmt.Errorf("%s is not a valid SearchThemeSortBy", str)
 	}
 	return nil
 }
 
-func (e SearchableThemeSortBy) MarshalGQL(w io.Writer) {
+func (e SearchThemeSortBy) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-func (e *SearchableThemeSortBy) UnmarshalJSON(b []byte) error {
+func (e *SearchThemeSortBy) UnmarshalJSON(b []byte) error {
 	s, err := strconv.Unquote(string(b))
 	if err != nil {
 		return err
@@ -440,58 +437,58 @@ func (e *SearchableThemeSortBy) UnmarshalJSON(b []byte) error {
 	return e.UnmarshalGQL(s)
 }
 
-func (e SearchableThemeSortBy) MarshalJSON() ([]byte, error) {
+func (e SearchThemeSortBy) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil
 }
 
-type SearchableUserSortBy string
+type SearchUserSortBy string
 
 const (
-	SearchableUserSortByRelevance  SearchableUserSortBy = "RELEVANCE"
-	SearchableUserSortByName       SearchableUserSortBy = "NAME"
-	SearchableUserSortByLastActive SearchableUserSortBy = "LAST_ACTIVE"
-	SearchableUserSortByCreatedAt  SearchableUserSortBy = "CREATED_AT"
+	SearchUserSortByRelevance  SearchUserSortBy = "RELEVANCE"
+	SearchUserSortByName       SearchUserSortBy = "NAME"
+	SearchUserSortByLastActive SearchUserSortBy = "LAST_ACTIVE"
+	SearchUserSortByCreatedAt  SearchUserSortBy = "CREATED_AT"
 )
 
-var AllSearchableUserSortBy = []SearchableUserSortBy{
-	SearchableUserSortByRelevance,
-	SearchableUserSortByName,
-	SearchableUserSortByLastActive,
-	SearchableUserSortByCreatedAt,
+var AllSearchUserSortBy = []SearchUserSortBy{
+	SearchUserSortByRelevance,
+	SearchUserSortByName,
+	SearchUserSortByLastActive,
+	SearchUserSortByCreatedAt,
 }
 
-func (e SearchableUserSortBy) IsValid() bool {
+func (e SearchUserSortBy) IsValid() bool {
 	switch e {
-	case SearchableUserSortByRelevance, SearchableUserSortByName, SearchableUserSortByLastActive, SearchableUserSortByCreatedAt:
+	case SearchUserSortByRelevance, SearchUserSortByName, SearchUserSortByLastActive, SearchUserSortByCreatedAt:
 		return true
 	}
 	return false
 }
 
-func (e SearchableUserSortBy) String() string {
+func (e SearchUserSortBy) String() string {
 	return string(e)
 }
 
-func (e *SearchableUserSortBy) UnmarshalGQL(v any) error {
+func (e *SearchUserSortBy) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = SearchableUserSortBy(str)
+	*e = SearchUserSortBy(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid SearchableUserSortBy", str)
+		return fmt.Errorf("%s is not a valid SearchUserSortBy", str)
 	}
 	return nil
 }
 
-func (e SearchableUserSortBy) MarshalGQL(w io.Writer) {
+func (e SearchUserSortBy) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-func (e *SearchableUserSortBy) UnmarshalJSON(b []byte) error {
+func (e *SearchUserSortBy) UnmarshalJSON(b []byte) error {
 	s, err := strconv.Unquote(string(b))
 	if err != nil {
 		return err
@@ -499,7 +496,7 @@ func (e *SearchableUserSortBy) UnmarshalJSON(b []byte) error {
 	return e.UnmarshalGQL(s)
 }
 
-func (e SearchableUserSortBy) MarshalJSON() ([]byte, error) {
+func (e SearchUserSortBy) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

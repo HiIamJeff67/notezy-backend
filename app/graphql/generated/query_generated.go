@@ -17,7 +17,7 @@ import (
 // region    ************************** generated!.gotpl **************************
 
 type QueryResolver interface {
-	SearchUsers(ctx context.Context, input gqlmodels.SearchableUserInput) (*gqlmodels.SearchableUserConnection, error)
+	SearchUsers(ctx context.Context, input gqlmodels.SearchUserInput) (*gqlmodels.SearchUserConnection, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -60,13 +60,13 @@ func (ec *executionContext) field_Query_searchUsers_args(ctx context.Context, ra
 func (ec *executionContext) field_Query_searchUsers_argsInput(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (gqlmodels.SearchableUserInput, error) {
+) (gqlmodels.SearchUserInput, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSearchableUserInput2notezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableUserInput(ctx, tmp)
+		return ec.unmarshalNSearchUserInput2notezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserInput(ctx, tmp)
 	}
 
-	var zeroVal gqlmodels.SearchableUserInput
+	var zeroVal gqlmodels.SearchUserInput
 	return zeroVal, nil
 }
 
@@ -92,7 +92,7 @@ func (ec *executionContext) _Query_searchUsers(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().SearchUsers(rctx, fc.Args["input"].(gqlmodels.SearchableUserInput))
+		return ec.resolvers.Query().SearchUsers(rctx, fc.Args["input"].(gqlmodels.SearchUserInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -104,9 +104,9 @@ func (ec *executionContext) _Query_searchUsers(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*gqlmodels.SearchableUserConnection)
+	res := resTmp.(*gqlmodels.SearchUserConnection)
 	fc.Result = res
-	return ec.marshalNSearchableUserConnection2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableUserConnection(ctx, field.Selections, res)
+	return ec.marshalNSearchUserConnection2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_searchUsers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -118,15 +118,15 @@ func (ec *executionContext) fieldContext_Query_searchUsers(ctx context.Context, 
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "searchEdges":
-				return ec.fieldContext_SearchableUserConnection_searchEdges(ctx, field)
+				return ec.fieldContext_SearchUserConnection_searchEdges(ctx, field)
 			case "searchPageInfo":
-				return ec.fieldContext_SearchableUserConnection_searchPageInfo(ctx, field)
+				return ec.fieldContext_SearchUserConnection_searchPageInfo(ctx, field)
 			case "totalCount":
-				return ec.fieldContext_SearchableUserConnection_totalCount(ctx, field)
+				return ec.fieldContext_SearchUserConnection_totalCount(ctx, field)
 			case "searchTime":
-				return ec.fieldContext_SearchableUserConnection_searchTime(ctx, field)
+				return ec.fieldContext_SearchUserConnection_searchTime(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type SearchableUserConnection", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type SearchUserConnection", field.Name)
 		},
 	}
 	defer func() {

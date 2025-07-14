@@ -6,26 +6,26 @@ import (
 )
 
 const (
-	_ExceptionBaseCode_Searchable ExceptionCode = SearchableExceptionSubDomainCode * ExceptionSubDomainCodeShiftAmount
+	_ExceptionBaseCode_Search ExceptionCode = SearchExceptionSubDomainCode * ExceptionSubDomainCodeShiftAmount
 
-	SearchableExceptionSubDomainCode ExceptionCode   = 7
-	ExceptionBaseCode_Searchable     ExceptionCode   = _ExceptionBaseCode_Searchable + ReservedExceptionCode
-	ExceptionPrefix_Searchable       ExceptionPrefix = "Searchable"
+	SearchExceptionSubDomainCode ExceptionCode   = 7
+	ExceptionBaseCode_Search     ExceptionCode   = _ExceptionBaseCode_Search + ReservedExceptionCode
+	ExceptionPrefix_Search       ExceptionPrefix = "Search"
 )
 
-type SearchableExceptionDomain struct {
+type SearchExceptionDomain struct {
 	BaseCode ExceptionCode
 	Prefix   ExceptionPrefix
 	DatabaseExceptionDomain
 	APIExceptionDomain
 }
 
-var Searchable = &SearchableExceptionDomain{
-	BaseCode: ExceptionBaseCode_Searchable,
-	Prefix:   ExceptionPrefix_Searchable,
+var Search = &SearchExceptionDomain{
+	BaseCode: ExceptionBaseCode_Search,
+	Prefix:   ExceptionPrefix_Search,
 	DatabaseExceptionDomain: DatabaseExceptionDomain{
-		_BaseCode: _ExceptionBaseCode_Searchable,
-		_Prefix:   ExceptionPrefix_Searchable,
+		_BaseCode: _ExceptionBaseCode_Search,
+		_Prefix:   ExceptionPrefix_Search,
 	},
 	APIExceptionDomain: APIExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_Email,
@@ -33,7 +33,7 @@ var Searchable = &SearchableExceptionDomain{
 	},
 }
 
-func (d *SearchableExceptionDomain) InvalidNilDataToEncodeSearchCursor() *Exception {
+func (d *SearchExceptionDomain) InvalidNilDataToEncodeSearchCursor() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
 		Prefix:         d.Prefix,
@@ -43,7 +43,7 @@ func (d *SearchableExceptionDomain) InvalidNilDataToEncodeSearchCursor() *Except
 	}
 }
 
-func (d *SearchableExceptionDomain) InvalidNonMapToEncodeSearchCursor() *Exception {
+func (d *SearchExceptionDomain) InvalidNonMapToEncodeSearchCursor() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 2,
 		Prefix:         d.Prefix,
@@ -53,7 +53,7 @@ func (d *SearchableExceptionDomain) InvalidNonMapToEncodeSearchCursor() *Excepti
 	}
 }
 
-func (d *SearchableExceptionDomain) FailedToMarshalSearchCursor() *Exception {
+func (d *SearchExceptionDomain) FailedToMarshalSearchCursor() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 3,
 		Prefix:         d.Prefix,
@@ -63,7 +63,7 @@ func (d *SearchableExceptionDomain) FailedToMarshalSearchCursor() *Exception {
 	}
 }
 
-func (d *SearchableExceptionDomain) FailedToUnmarshalSearchCursor() *Exception {
+func (d *SearchExceptionDomain) FailedToUnmarshalSearchCursor() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 4,
 		Prefix:         d.Prefix,
@@ -73,7 +73,7 @@ func (d *SearchableExceptionDomain) FailedToUnmarshalSearchCursor() *Exception {
 	}
 }
 
-func (d *SearchableExceptionDomain) EmptyEncodedStringToDecodeSearchCursor() *Exception {
+func (d *SearchExceptionDomain) EmptyEncodedStringToDecodeSearchCursor() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 5,
 		Prefix:         d.Prefix,
@@ -83,7 +83,7 @@ func (d *SearchableExceptionDomain) EmptyEncodedStringToDecodeSearchCursor() *Ex
 	}
 }
 
-func (d *SearchableExceptionDomain) FailedToDecodeBase64String() *Exception {
+func (d *SearchExceptionDomain) FailedToDecodeBase64String() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 6,
 		Prefix:         d.Prefix,
@@ -93,7 +93,7 @@ func (d *SearchableExceptionDomain) FailedToDecodeBase64String() *Exception {
 	}
 }
 
-func (d *SearchableExceptionDomain) CannotFindFieldInEncodedSearchCursor(searchCursor string, fieldName string) *Exception {
+func (d *SearchExceptionDomain) CannotFindFieldInEncodedSearchCursor(searchCursor string, fieldName string) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 7,
 		Prefix:         d.Prefix,

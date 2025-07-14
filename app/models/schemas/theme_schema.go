@@ -7,21 +7,21 @@ import (
 	"gorm.io/gorm"
 
 	gqlmodels "notezy-backend/app/graphql/models"
-	"notezy-backend/app/util"
+	util "notezy-backend/app/util"
 	shared "notezy-backend/shared"
 )
 
 type Theme struct {
-	Id                  uuid.UUID `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid();"`
-	EncodedSearchCursor string    `json:"encodedSearchCursor" gorm:"column:encoded_search_cursor; unique; not null; default:'';"`
-	Name                string    `json:"name" gorm:"column:name; unique; not null;"`
-	AuthorId            uuid.UUID `json:"authorId" gorm:"column:author_id; type:uuid; not null; uniqueIndex;"`
-	Version             string    `json:"version" gorm:"column:version; not null;"`
-	IsDefault           bool      `json:"isDefault" gorm:"column:is_default; type:boolean; not null;"`
-	DownloadURL         *string   `json:"downloadURL" gorm:"column:download_url;"`
-	DownloadCount       int64     `json:"downloadCount" gorm:"column:download_count; type:bigint; not null default:'0';"`
-	CreatedAt           time.Time `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
-	UpdatedAt           time.Time `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
+	Id             uuid.UUID `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid();"`
+	SearchCursorId string    `json:"searchCursorId" gorm:"column:search_cursor_id; unique; not null; default:'';"`
+	Name           string    `json:"name" gorm:"column:name; unique; not null;"`
+	AuthorId       uuid.UUID `json:"authorId" gorm:"column:author_id; type:uuid; not null; uniqueIndex;"`
+	Version        string    `json:"version" gorm:"column:version; not null;"`
+	IsDefault      bool      `json:"isDefault" gorm:"column:is_default; type:boolean; not null;"`
+	DownloadURL    *string   `json:"downloadURL" gorm:"column:download_url;"`
+	DownloadCount  int64     `json:"downloadCount" gorm:"column:download_count; type:bigint; not null default:'0';"`
+	CreatedAt      time.Time `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
+	UpdatedAt      time.Time `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 
 	// relation
 	Author User `json:"author" gorm:"foreignKey:AuthorId; references:Id;"`
@@ -35,22 +35,21 @@ func (Theme) TableName() string {
 
 func (t *Theme) ToPublicTheme() *gqlmodels.PublicTheme {
 	return &gqlmodels.PublicTheme{
-		EncodedSearchCursor: t.EncodedSearchCursor,
-		Name:                t.Name,
-		Version:             t.Version,
-		IsDefault:           t.IsDefault,
-		DownloadURL:         t.DownloadURL,
-		CreatedAt:           t.CreatedAt,
-		UpdatedAt:           t.UpdatedAt,
-		Author:              &gqlmodels.PublicUser{},
+		Name:        t.Name,
+		Version:     t.Version,
+		IsDefault:   t.IsDefault,
+		DownloadURL: t.DownloadURL,
+		CreatedAt:   t.CreatedAt,
+		UpdatedAt:   t.UpdatedAt,
+		// Author:      &gqlmodels.PublicUser{},
 	}
 }
 
 /* ============================== Trigger Hook ============================== */
 
 func (t *Theme) BeforeCreate(tx *gorm.DB) error {
-	if t.EncodedSearchCursor == "" {
-		t.EncodedSearchCursor = util.GenerateSnowflakeID()
+	if t.SearchCursorId == "" {
+		t.SearchCursorId = util.GenerateSnowflakeID()
 	}
 	return nil
 }

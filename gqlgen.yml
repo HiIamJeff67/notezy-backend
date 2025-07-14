@@ -8,7 +8,7 @@ exec:
   package: generated
   layout: follow-schema # Only other option is "follow-schema," ie multi-file.
   dir: app/graphql/generated
-  filename: "{name}_generated.go" # optional
+  filename_template: "{name}_generated.go" # optional
 
 # Uncomment to enable federation
 # federation:

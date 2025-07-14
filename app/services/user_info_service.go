@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"strings"
 
 	"gorm.io/gorm"
 
@@ -11,6 +12,7 @@ import (
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
+	schemas "notezy-backend/app/models/schemas"
 	util "notezy-backend/app/util"
 )
 
@@ -22,6 +24,7 @@ type UserInfoServiceInterface interface {
 
 	// services for public userInfos
 	GetPublicUserInfoByEncodedSearchCursor(ctx context.Context, encodedSearchCursor string) (*gqlmodels.PublicUserInfo, *exceptions.Exception)
+	GetPublicUserInfosByEncodedSearchCursor(ctx context.Context, encodedSearchCursors []string) ([]*gqlmodels.PublicUserInfo, *exceptions.Exception)
 }
 
 type UserInfoService struct {
@@ -29,9 +32,10 @@ type UserInfoService struct {
 }
 
 func NewUserInfoService(db *gorm.DB) UserInfoServiceInterface {
-	return &UserInfoService{
-		db: db,
+	if db == nil {
+		db = models.NotezyDB
 	}
+	return &UserInfoService{db: db}
 }
 
 /* ============================== Services for UserInfo ============================== */
@@ -92,17 +96,61 @@ func (s *UserInfoService) UpdateMyInfo(reqDto *dtos.UpdateMyInfoReqDto) (*dtos.U
 
 // use the searchable user cursor (we only give the search functionality on users)
 func (s *UserInfoService) GetPublicUserInfoByEncodedSearchCursor(ctx context.Context, encodedSearchCursor string) (*gqlmodels.PublicUserInfo, *exceptions.Exception) {
-	userInfoRepository := repositories.NewUserInfoRepository(s.db)
-
-	searchCursor, exception := util.DecodeSearchCursor[gqlmodels.SearchableUserCursorFields](encodedSearchCursor)
+	searchCursor, exception := util.DecodeSearchCursor[gqlmodels.SearchUserCursorFields](encodedSearchCursor)
 	if exception != nil {
 		return nil, exception
 	}
 
-	publicUserInfo, exception := userInfoRepository.GetPublicOneByEncodedSearchCursor(searchCursor.Fields.EncodedSearchCursor)
-	if exception != nil {
-		return nil, exception
+	userInfo := schemas.UserInfo{}
+	result := s.db.Table(schemas.UserInfo{}.TableName()).
+		Joins("LEFT JOIN \"UserTable\" u ON u.id = user_id").
+		Where("u.search_cursor_id = ?", searchCursor.Fields.SearchCursorID).
+		First(&userInfo)
+	if err := result.Error; err != nil {
+		return nil, exceptions.UserInfo.NotFound().WithError(err)
 	}
 
-	return publicUserInfo, nil
+	return userInfo.ToPublicUserInfo(), nil
+}
+
+func (s *UserInfoService) GetPublicUserInfosByEncodedSearchCursor(ctx context.Context, encodedSearchCursors []string) ([]*gqlmodels.PublicUserInfo, *exceptions.Exception) {
+	if len(encodedSearchCursors) == 0 {
+		return []*gqlmodels.PublicUserInfo{}, nil
+	}
+
+	var invalidIndiceCount int = 0
+	var searchCursorIds []*string
+	for _, encodedSearchCursor := range encodedSearchCursors {
+		searchCursor, exception := util.DecodeSearchCursor[gqlmodels.SearchUserCursorFields](encodedSearchCursor)
+		if exception != nil || len(strings.ReplaceAll(searchCursor.Fields.SearchCursorID, " ", "")) == 0 {
+			invalidIndiceCount++
+		} else {
+			searchCursorIds = append(searchCursorIds, &searchCursor.Fields.SearchCursorID)
+		}
+	}
+
+	if invalidIndiceCount == len(encodedSearchCursors) {
+		return make([]*gqlmodels.PublicUserInfo, len(encodedSearchCursors)), nil
+	}
+
+	var userInfos []struct {
+		schemas.UserInfo
+		SearchCursorId string `gorm:"column:search_cursor_id"`
+	}
+
+	result := s.db.Table(schemas.UserInfo{}.TableName()+" ui").
+		Select("ui.*, u.search_cursor_id").
+		Joins("LEFT JOIN \"UserTable\" u ON u.id = ui.user_id").
+		Where("u.search_cursor_id IN ?", searchCursorIds).
+		Find(&userInfos)
+	if err := result.Error; err != nil {
+		return nil, exceptions.UserInfo.NotFound().WithError(err)
+	}
+
+	publicUserInfos := make([]*gqlmodels.PublicUserInfo, len(userInfos))
+	for index, userInfo := range userInfos {
+		publicUserInfos[index] = userInfo.UserInfo.ToPublicUserInfo()
+	}
+
+	return publicUserInfos, nil
 }

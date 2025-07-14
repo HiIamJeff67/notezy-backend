@@ -25,7 +25,7 @@ type ThemeRepositoryInterface interface {
 	DeleteOneById(id uuid.UUID, authorId uuid.UUID) *exceptions.Exception
 
 	// repository for public themes
-	GetPublicOneByEncodedSearchCursor(encodedSearchCursor string) (*gqlmodels.PublicTheme, *exceptions.Exception)
+	GetPublicOneBySearchCursorId(searchCursorId string) (*gqlmodels.PublicTheme, *exceptions.Exception)
 }
 
 type ThemeRepository struct {
@@ -53,10 +53,10 @@ func (r *ThemeRepository) GetOneById(id uuid.UUID) (*schemas.Theme, *exceptions.
 	return &theme, nil
 }
 
-func (r *ThemeRepository) GetPublicOneByEncodedSearchCursor(encodedSearchCursor string) (*gqlmodels.PublicTheme, *exceptions.Exception) {
+func (r *ThemeRepository) GetPublicOneBySearchCursorId(searchCursorId string) (*gqlmodels.PublicTheme, *exceptions.Exception) {
 	theme := schemas.Theme{}
 	result := r.db.Table(schemas.Theme{}.TableName()).
-		Where("encoded_search_cursor = ?", encodedSearchCursor).
+		Where("search_cursor_id = ?", searchCursorId).
 		First(&theme)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Theme.NotFound().WithError(err)

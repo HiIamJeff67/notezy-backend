@@ -40,9 +40,10 @@ type AuthService struct {
 }
 
 func NewAuthService(db *gorm.DB) AuthServiceInterface {
-	return &AuthService{
-		db: db,
+	if db == nil {
+		db = models.NotezyDB
 	}
+	return &AuthService{db: db}
 }
 
 /* ============================== Auxiliary Functions ============================== */

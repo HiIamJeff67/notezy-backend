@@ -43,7 +43,7 @@ const (
 // ExceptionPrefix_Context ExceptionPrefix = "Context"					 4
 // ExceptionPrefix_Email ExceptionPrefix = "Email"					     5
 // ExceptionPrefix_Test ExceptionPrefix = "Test"						 6
-// ExceptionPrefix_Searchable ExceptionPrefix = "Searchable"			 7
+// ExceptionPrefix_Search ExceptionPrefix = "Search"			 7
 
 // ExceptionPrefix_Auth ExceptionPrefix = "Auth" 			 		     31
 // ExceptionPrefix_User ExceptionPrefix = "User"                         32

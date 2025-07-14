@@ -210,27 +210,27 @@ func (ec *executionContext) _SearchConnection(ctx context.Context, sel ast.Selec
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case gqlmodels.SearchableUserConnection:
-		return ec._SearchableUserConnection(ctx, sel, &obj)
-	case *gqlmodels.SearchableUserConnection:
+	case gqlmodels.SearchUserConnection:
+		return ec._SearchUserConnection(ctx, sel, &obj)
+	case *gqlmodels.SearchUserConnection:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._SearchableUserConnection(ctx, sel, obj)
-	case gqlmodels.SearchableThemeConnection:
-		return ec._SearchableThemeConnection(ctx, sel, &obj)
-	case *gqlmodels.SearchableThemeConnection:
+		return ec._SearchUserConnection(ctx, sel, obj)
+	case gqlmodels.SearchThemeConnection:
+		return ec._SearchThemeConnection(ctx, sel, &obj)
+	case *gqlmodels.SearchThemeConnection:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._SearchableThemeConnection(ctx, sel, obj)
-	case gqlmodels.SearchableBadgeConnection:
-		return ec._SearchableBadgeConnection(ctx, sel, &obj)
-	case *gqlmodels.SearchableBadgeConnection:
+		return ec._SearchThemeConnection(ctx, sel, obj)
+	case gqlmodels.SearchBadgeConnection:
+		return ec._SearchBadgeConnection(ctx, sel, &obj)
+	case *gqlmodels.SearchBadgeConnection:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._SearchableBadgeConnection(ctx, sel, obj)
+		return ec._SearchBadgeConnection(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -240,27 +240,27 @@ func (ec *executionContext) _SearchEdge(ctx context.Context, sel ast.SelectionSe
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case gqlmodels.SearchableUserEdge:
-		return ec._SearchableUserEdge(ctx, sel, &obj)
-	case *gqlmodels.SearchableUserEdge:
+	case gqlmodels.SearchUserEdge:
+		return ec._SearchUserEdge(ctx, sel, &obj)
+	case *gqlmodels.SearchUserEdge:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._SearchableUserEdge(ctx, sel, obj)
-	case gqlmodels.SearchableThemeEdge:
-		return ec._SearchableThemeEdge(ctx, sel, &obj)
-	case *gqlmodels.SearchableThemeEdge:
+		return ec._SearchUserEdge(ctx, sel, obj)
+	case gqlmodels.SearchThemeEdge:
+		return ec._SearchThemeEdge(ctx, sel, &obj)
+	case *gqlmodels.SearchThemeEdge:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._SearchableThemeEdge(ctx, sel, obj)
-	case gqlmodels.SearchableBadgeEdge:
-		return ec._SearchableBadgeEdge(ctx, sel, &obj)
-	case *gqlmodels.SearchableBadgeEdge:
+		return ec._SearchThemeEdge(ctx, sel, obj)
+	case gqlmodels.SearchBadgeEdge:
+		return ec._SearchBadgeEdge(ctx, sel, &obj)
+	case *gqlmodels.SearchBadgeEdge:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._SearchableBadgeEdge(ctx, sel, obj)
+		return ec._SearchBadgeEdge(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -332,16 +332,16 @@ func (ec *executionContext) marshalNSearchPageInfo2ᚖnotezyᚑbackendᚋappᚋg
 	return ec._SearchPageInfo(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOSearchableSortOrder2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableSortOrder(ctx context.Context, v any) (*gqlmodels.SearchableSortOrder, error) {
+func (ec *executionContext) unmarshalOSearchSortOrder2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchSortOrder(ctx context.Context, v any) (*gqlmodels.SearchSortOrder, error) {
 	if v == nil {
 		return nil, nil
 	}
-	var res = new(gqlmodels.SearchableSortOrder)
+	var res = new(gqlmodels.SearchSortOrder)
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOSearchableSortOrder2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchableSortOrder(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchableSortOrder) graphql.Marshaler {
+func (ec *executionContext) marshalOSearchSortOrder2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchSortOrder(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchSortOrder) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

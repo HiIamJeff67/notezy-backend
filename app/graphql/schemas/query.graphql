@@ -1,5 +1,5 @@
 type Query {
-  searchUsers(input: SearchableUserInput!): SearchableUserConnection!
+  searchUsers(input: SearchUserInput!): SearchUserConnection!
 }
 
 # type Mutation {}

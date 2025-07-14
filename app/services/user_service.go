@@ -27,7 +27,7 @@ type UserServiceInterface interface {
 
 	// services for public users
 	GetPublicUserByEncodedSearchCursor(ctx context.Context, encodedSearchCursor string) (*gqlmodels.PublicUser, *exceptions.Exception)
-	SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.SearchableUserInput) (*gqlmodels.SearchableUserConnection, *exceptions.Exception)
+	SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.SearchUserInput) (*gqlmodels.SearchUserConnection, *exceptions.Exception)
 }
 
 type UserService struct {
@@ -35,9 +35,10 @@ type UserService struct {
 }
 
 func NewUserService(db *gorm.DB) UserServiceInterface {
-	return &UserService{
-		db: db,
+	if db == nil {
+		db = models.NotezyDB
 	}
+	return &UserService{db: db}
 }
 
 /* ============================== Services for Users ============================== */
@@ -98,12 +99,12 @@ func (s *UserService) UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDt
 func (s *UserService) GetPublicUserByEncodedSearchCursor(ctx context.Context, encodedSearchCursor string) (*gqlmodels.PublicUser, *exceptions.Exception) {
 	userRepository := repositories.NewUserRepository(s.db)
 
-	searchCursor, exception := util.DecodeSearchCursor[gqlmodels.SearchableUserCursorFields](encodedSearchCursor)
+	searchCursor, exception := util.DecodeSearchCursor[gqlmodels.SearchUserCursorFields](encodedSearchCursor)
 	if exception != nil {
 		return nil, exception
 	}
 
-	publicUser, exception := userRepository.GetPublicOneByEncodedSearchCursor(searchCursor.Fields.EncodedSearchCursor)
+	publicUser, exception := userRepository.GetPublicOneBySearchCursorId(searchCursor.Fields.SearchCursorID)
 	if exception != nil {
 		// try to get the user from email
 		// user, exception := userRepository.GetOneByEmail(searchCursor.Fields.Email)
@@ -117,7 +118,7 @@ func (s *UserService) GetPublicUserByEncodedSearchCursor(ctx context.Context, en
 	return publicUser, nil
 }
 
-func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.SearchableUserInput) (*gqlmodels.SearchableUserConnection, *exceptions.Exception) {
+func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.SearchUserInput) (*gqlmodels.SearchUserConnection, *exceptions.Exception) {
 	startTime := time.Now()
 
 	query := s.db.WithContext(ctx).Model(&schemas.User{})
@@ -129,30 +130,30 @@ func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.
 		)
 	}
 	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
-		searchCursor, exception := util.DecodeSearchCursor[gqlmodels.SearchableUserCursorFields](*gqlInput.After)
+		searchCursor, exception := util.DecodeSearchCursor[gqlmodels.SearchUserCursorFields](*gqlInput.After)
 		if exception != nil {
 			return nil, exception
 		}
 
-		query.Where("encoded_search_cursor > ?", searchCursor.Fields.EncodedSearchCursor)
+		query.Where("search_cursor_id > ?", searchCursor.Fields.SearchCursorID)
 	}
 
 	if gqlInput.SortBy != nil && gqlInput.SortOrder != nil {
-		cending := "ASC"
-		if *gqlInput.SortOrder == gqlmodels.SearchableSortOrderDesc {
-			cending = "DESC"
+		var cending string = gqlmodels.SearchSortOrderAsc.String()
+		if *gqlInput.SortOrder == gqlmodels.SearchSortOrderDesc {
+			cending = gqlmodels.SearchSortOrderDesc.String()
 		}
 
 		switch *gqlInput.SortBy {
-		case gqlmodels.SearchableUserSortByName:
+		case gqlmodels.SearchUserSortByName:
 			query.Order("name " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
-		case gqlmodels.SearchableUserSortByLastActive:
+		case gqlmodels.SearchUserSortByLastActive:
 			query.Order("updated_at " + cending).
 				Order("name " + cending).
 				Order("created_at " + cending)
-		case gqlmodels.SearchableUserSortByCreatedAt:
+		case gqlmodels.SearchUserSortByCreatedAt:
 			query.Order("created_at " + cending).
 				Order("name " + cending).
 				Order("updated_at " + cending)
@@ -175,12 +176,12 @@ func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.
 	}
 
 	hasNextPage := len(users) > limit // since we fetch an additional one
-	searchEdges := make([]*gqlmodels.SearchableUserEdge, len(users))
+	searchEdges := make([]*gqlmodels.SearchUserEdge, len(users))
 
 	for index, user := range users {
-		searchCursor := util.SearchCursor[gqlmodels.SearchableUserCursorFields]{
-			Fields: gqlmodels.SearchableUserCursorFields{
-				EncodedSearchCursor: user.EncodedSearchCursor,
+		searchCursor := util.SearchCursor[gqlmodels.SearchUserCursorFields]{
+			Fields: gqlmodels.SearchUserCursorFields{
+				SearchCursorID: user.SearchCursorId,
 			},
 		}
 		encodedSearchCursor, exception := searchCursor.EncodeSearchCursor()
@@ -188,10 +189,10 @@ func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.
 			return nil, exception
 		}
 		if encodedSearchCursor == nil {
-			return nil, exceptions.Searchable.FailedToUnmarshalSearchCursor()
+			return nil, exceptions.Search.FailedToUnmarshalSearchCursor()
 		}
 
-		searchEdges[index] = &gqlmodels.SearchableUserEdge{
+		searchEdges[index] = &gqlmodels.SearchUserEdge{
 			EncodedSearchCursor: *encodedSearchCursor,
 			Node:                user.ToPublicUser(),
 		}
@@ -212,7 +213,7 @@ func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.
 		searchEdges = searchEdges[:limit]
 	}
 
-	return &gqlmodels.SearchableUserConnection{
+	return &gqlmodels.SearchUserConnection{
 		SearchEdges:    searchEdges,
 		SearchPageInfo: searchPageInfo,
 		TotalCount:     int32(len(searchEdges)),

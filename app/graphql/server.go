@@ -6,6 +6,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-gonic/gin"
 
+	"notezy-backend/app/graphql/dataloaders"
 	generated "notezy-backend/app/graphql/generated"
 	resolvers "notezy-backend/app/graphql/resolvers"
 	models "notezy-backend/app/models"
@@ -14,6 +15,7 @@ import (
 
 func GraphQLHandler() gin.HandlerFunc {
 	resolver := resolvers.NewResolver(
+		dataloaders.NewDataloaders(models.NotezyDB),
 		services.NewUserService(
 			models.NotezyDB,
 		),

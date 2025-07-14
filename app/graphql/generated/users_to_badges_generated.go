@@ -201,8 +201,6 @@ func (ec *executionContext) fieldContext_PublicUsersToBadges_user(_ context.Cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "encodedSearchCursor":
-				return ec.fieldContext_PublicUser_encodedSearchCursor(ctx, field)
 			case "name":
 				return ec.fieldContext_PublicUser_name(ctx, field)
 			case "displayName":
@@ -219,12 +217,6 @@ func (ec *executionContext) fieldContext_PublicUsersToBadges_user(_ context.Cont
 				return ec.fieldContext_PublicUser_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_PublicUser_updatedAt(ctx, field)
-			case "userInfo":
-				return ec.fieldContext_PublicUser_userInfo(ctx, field)
-			case "badges":
-				return ec.fieldContext_PublicUser_badges(ctx, field)
-			case "themes":
-				return ec.fieldContext_PublicUser_themes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PublicUser", field.Name)
 		},
@@ -271,8 +263,6 @@ func (ec *executionContext) fieldContext_PublicUsersToBadges_badge(_ context.Con
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "encodedSearchCursor":
-				return ec.fieldContext_PublicBadge_encodedSearchCursor(ctx, field)
 			case "title":
 				return ec.fieldContext_PublicBadge_title(ctx, field)
 			case "description":
@@ -283,8 +273,6 @@ func (ec *executionContext) fieldContext_PublicUsersToBadges_badge(_ context.Con
 				return ec.fieldContext_PublicBadge_imageURL(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_PublicBadge_createdAt(ctx, field)
-			case "users":
-				return ec.fieldContext_PublicBadge_users(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PublicBadge", field.Name)
 		},

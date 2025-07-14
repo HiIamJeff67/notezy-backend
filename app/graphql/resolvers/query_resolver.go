@@ -11,7 +11,7 @@ import (
 )
 
 // SearchUsers is the resolver for the searchUsers field.
-func (r *queryResolver) SearchUsers(ctx context.Context, input gqlmodels.SearchableUserInput) (*gqlmodels.SearchableUserConnection, error) {
+func (r *queryResolver) SearchUsers(ctx context.Context, input gqlmodels.SearchUserInput) (*gqlmodels.SearchUserConnection, error) {
 	result, exception := r.userService.SearchPublicUsers(ctx, input)
 	if exception != nil {
 		return nil, exception.ToGraphQLError(ctx)

@@ -26,7 +26,7 @@ type UserRepositoryInterface interface {
 	DeleteOneById(id uuid.UUID, input inputs.DeleteUserInput) *exceptions.Exception
 
 	// repository for public users
-	GetPublicOneByEncodedSearchCursor(encodedSearchCursor string) (*gqlmodels.PublicUser, *exceptions.Exception)
+	GetPublicOneBySearchCursorId(searchCursorId string) (*gqlmodels.PublicUser, *exceptions.Exception)
 }
 
 type UserRepository struct {
@@ -78,10 +78,10 @@ func (r *UserRepository) GetOneByEmail(email string) (*schemas.User, *exceptions
 	return &user, nil
 }
 
-func (r *UserRepository) GetPublicOneByEncodedSearchCursor(encodedSearchCursor string) (*gqlmodels.PublicUser, *exceptions.Exception) {
+func (r *UserRepository) GetPublicOneBySearchCursorId(searchCursorId string) (*gqlmodels.PublicUser, *exceptions.Exception) {
 	user := schemas.User{}
 	result := r.db.Table(schemas.User{}.TableName()).
-		Where("encoded_search_cursor = ?", encodedSearchCursor).
+		Where("search_cursor_id = ?", searchCursorId).
 		First(&user)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.NotFound().WithError(err)

@@ -3,7 +3,7 @@
 
 type PublicUser {
   # id: UUID!
-  encodedSearchCursor: String! # the identifier of the PublicUser
+  # searchCursorId: String! # the encoded of this field is the identifier of the PublicUser
   name: String!
   displayName: String!
   email: String!
@@ -20,14 +20,14 @@ type PublicUser {
   updatedAt: Time!
 
   # relations
-  userInfo: PublicUserInfo!
-  badges: [PublicBadge!]!
-  themes: [PublicTheme!]!
+  # userInfo: PublicUserInfo!
+  # badges: [PublicBadge!]!
+  # themes: [PublicTheme!]!
 }
 
-# =============== Searchable Filters & SortBy & Input =============== #
+# =============== Search Filters & SortBy & Input =============== #
 
-input SearchableUserFilters {
+input SearchUserFilters {
   role: UserRole
   plan: UserPlan
   status: UserStatus
@@ -36,40 +36,44 @@ input SearchableUserFilters {
   isOnline: Boolean
 }
 
-enum SearchableUserSortBy {
+enum SearchUserSortBy {
   RELEVANCE
   NAME # using this to check both the name and display name fields
   LAST_ACTIVE
   CREATED_AT
 }
 
-input SearchableUserInput {
+input SearchUserInput {
   query: String! # the input from the frontend
   after: String # base64 encoded cursor
   first: Int = 10 # the number of data we want to extract
-  filters: SearchableUserFilters
-  sortBy: SearchableUserSortBy = RELEVANCE
-  sortOrder: SearchableSortOrder = DESC
+  filters: SearchUserFilters
+  sortBy: SearchUserSortBy = RELEVANCE
+  sortOrder: SearchSortOrder = DESC
 }
 
-# =============== Searchable Cursor Fields =============== #
+# =============== Search Cursor Fields =============== #
 
-# type SearchableUserEnvironmentAttributes {}
+# type SearchUserEnvironmentAttributes {}
 
-input SearchableUserCursorFields {
-  encodedSearchCursor: String!
-  # environmentAttributes: SearchableUserEnvironmentAttributes
+input SearchUserCursorFields {
+  searchCursorId: String!
+  # environmentAttributes: SearchUserEnvironmentAttributes
 }
 
-# =============== Searchable Edge & Connection =============== #
+# =============== Search Edge & Connection =============== #
 
-type SearchableUserEdge implements SearchEdge {
-  node: PublicUser!
-  encodedSearchCursor: String!
+type SearchUserEdge implements SearchEdge {
+  encodedSearchCursor: String! # the encoded search identifier
+  node: PublicUser! # the search result
+  # relations
+  userInfo: PublicUserInfo! # extension leaving for searching public user info in the future
+  badges: [PublicBadge!]! # extension leaving for searching public badge in the future
+  themes: [PublicTheme!]! # extension leaving for searching public theme in the future
 }
 
-type SearchableUserConnection implements SearchConnection {
-  searchEdges: [SearchableUserEdge!]!
+type SearchUserConnection implements SearchConnection {
+  searchEdges: [SearchUserEdge!]!
   searchPageInfo: SearchPageInfo!
   totalCount: Int!
   searchTime: Float!

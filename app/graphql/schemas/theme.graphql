@@ -1,6 +1,6 @@
 type PublicTheme {
   # id: UUID!
-  encodedSearchCursor: String! # the identifier of PublicTheme
+  # searchCursorId: String! # the encoded of this field is the identifier of the PublicTheme
   name: String!
   #   authorId: UUID!
   version: String!
@@ -11,50 +11,52 @@ type PublicTheme {
   updatedAt: Time!
 
   # relations
-  author: PublicUser!
+  # author: PublicUser!
 }
 
-# =============== Searchable Filters & SortBy & Input =============== #
+# =============== Search Filters & SortBy & Input =============== #
 
-input SearchableThemeFilters {
+input SearchThemeFilters {
   isDefault: Boolean
   downloadCountGreaterThan: Int
 }
 
-enum SearchableThemeSortBy {
+enum SearchThemeSortBy {
   RELEVANCE
   NAME
   LAST_UPDATE
   CREATED_AT
 }
 
-input SearchableThemeInput {
+input SearchThemeInput {
   query: String!
   after: String
   first: Int = 10
-  filters: SearchableThemeFilters
-  sortBy: SearchableThemeSortBy = RELEVANCE
-  sortOrder: SearchableSortOrder = DESC
+  filters: SearchThemeFilters
+  sortBy: SearchThemeSortBy = RELEVANCE
+  sortOrder: SearchSortOrder = DESC
 }
 
-# =============== Searchable Cursor Fields =============== #
+# =============== Search Cursor Fields =============== #
 
-# type SearchableThemeEnvironmentAttributes {}
+# type SearchThemeEnvironmentAttributes {}
 
-input SearchableThemeCursorFields {
-  encodedSearchCursor: String!
-  # environmentAttributes: SearchableThemeEnvironmentAttributes
+input SearchThemeCursorFields {
+  searchCursorId: String!
+  # environmentAttributes: SearchThemeEnvironmentAttributes
 }
 
-# =============== Searchable Edge & Connection =============== #
+# =============== Search Edge & Connection =============== #
 
-type SearchableThemeEdge implements SearchEdge {
-  node: PublicTheme!
-  encodedSearchCursor: String!
+type SearchThemeEdge implements SearchEdge {
+  encodedSearchCursor: String! # the search identifier
+  node: PublicTheme! # the search result
+  # relations
+  author: PublicUser! # extension for searching public user in the future
 }
 
-type SearchableThemeConnection implements SearchConnection {
-  searchEdges: [SearchableThemeEdge!]!
+type SearchThemeConnection implements SearchConnection {
+  searchEdges: [SearchThemeEdge!]!
   searchPageInfo: SearchPageInfo!
   totalCount: Int!
   searchTime: Float!
