@@ -1,6 +1,6 @@
 type PublicBadge {
   # id: UUID!
-  # searchCursorId: String! # the encoded of this field is the identifier of the PublicBadge
+  publicId: String! # the encoded of this field is the identifier of the PublicBadge
   title: String!
   description: String!
   type: BadgeType!
@@ -8,7 +8,7 @@ type PublicBadge {
   createdAt: Time!
 
   # relations
-  # users: [PublicUser!]!
+  users: [PublicUser!]!
 }
 
 # =============== Search Filters & SortBy & SortOrder =============== #
@@ -37,7 +37,7 @@ input SearchBadgeInput {
 # type SearchBadgeEnvironmentAttributes {}
 
 input SearchBadgeCursorFields {
-  searchCursorId: String!
+  publicId: String!
   # environmentAttributes: SearchBadgeEnvironmentAttributes
 }
 
@@ -46,8 +46,6 @@ input SearchBadgeCursorFields {
 type SearchBadgeEdge implements SearchEdge {
   encodedSearchCursor: String! # the search identifier
   node: PublicBadge! # the search result
-  # relations
-  users: [PublicUser!]! # extension for searching public user in the future
 }
 
 type SearchBadgeConnection implements SearchConnection {

@@ -14,7 +14,7 @@ import (
 
 type User struct {
 	Id             uuid.UUID        `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid();"`
-	SearchCursorId string           `json:"searchCursorId" gorm:"column:search_cursor_id; unique; not null; default:'';"`
+	PublicId       string           `json:"publicId" gorm:"column:public_id; unique; not null; default:'';"`
 	Name           string           `json:"name" gorm:"column:name; unique; not null; size:16;"`
 	DisplayName    string           `json:"displayName" gorm:"column:display_name; not null; size:32;"`
 	Email          string           `json:"email" gorm:"column:email; unique; not null;"`
@@ -47,6 +47,7 @@ func (User) TableName() string {
 
 func (u *User) ToPublicUser() *gqlmodels.PublicUser {
 	return &gqlmodels.PublicUser{
+		PublicID:    u.PublicId,
 		Name:        u.Name,
 		DisplayName: u.DisplayName,
 		Email:       u.Email,
@@ -55,9 +56,9 @@ func (u *User) ToPublicUser() *gqlmodels.PublicUser {
 		Status:      u.Status,
 		CreatedAt:   u.CreatedAt,
 		UpdatedAt:   u.UpdatedAt,
-		// UserInfo:    &gqlmodels.PublicUserInfo{},
-		// Badges:      []*gqlmodels.PublicBadge{},
-		// Themes:      []*gqlmodels.PublicTheme{},
+		UserInfo:    &gqlmodels.PublicUserInfo{},
+		Badges:      []*gqlmodels.PublicBadge{},
+		Themes:      []*gqlmodels.PublicTheme{},
 	}
 }
 
@@ -68,8 +69,8 @@ func (u *User) BeforeCreate(db *gorm.DB) error {
 		// just to make the new user can login
 		u.BlockLoginUtil = time.Now().Add(-10 * time.Minute)
 	}
-	if u.SearchCursorId == "" {
-		u.SearchCursorId = util.GenerateSnowflakeID()
+	if u.PublicId == "" {
+		u.PublicId = util.GenerateSnowflakeID()
 	}
 	return nil
 }

@@ -9,7 +9,6 @@ import (
 
 	exceptions "notezy-backend/app/exceptions"
 	gqlmodels "notezy-backend/app/graphql/models"
-	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	util "notezy-backend/app/util"
 )
@@ -18,7 +17,7 @@ import (
 
 type ThemeServiceInterface interface {
 	// services for public themes
-	GetPublicThemeByEncodedSearchCursor(ctx context.Context, encodedSearchCursor string) (*gqlmodels.PublicTheme, *exceptions.Exception)
+	GetPublicThemeByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicTheme, *exceptions.Exception)
 	SearchPublicThemes(ctx context.Context, gqlInput gqlmodels.SearchThemeInput) (*gqlmodels.SearchThemeConnection, *exceptions.Exception)
 }
 
@@ -39,20 +38,16 @@ func (s *ThemeService) GetMyThemeById() {}
 
 /* ============================== Services for Public Themes ============================== */
 
-func (s *ThemeService) GetPublicThemeByEncodedSearchCursor(ctx context.Context, encodedSearchCursor string) (*gqlmodels.PublicTheme, *exceptions.Exception) {
-	themeRepository := repositories.NewThemeRepository(s.db)
-
-	searchCursor, exception := util.DecodeSearchCursor[gqlmodels.SearchThemeCursorFields](encodedSearchCursor)
-	if exception != nil {
-		return nil, exception
+func (s *ThemeService) GetPublicThemeByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicTheme, *exceptions.Exception) {
+	theme := schemas.Theme{}
+	result := s.db.Table(schemas.Theme{}.TableName()).
+		Where("public_id = ?", publicId).
+		First(&theme)
+	if err := result.Error; err != nil {
+		return nil, exceptions.Theme.NotFound().WithError(err)
 	}
 
-	publicTheme, exception := themeRepository.GetPublicOneBySearchCursorId(searchCursor.Fields.SearchCursorID)
-	if exception != nil {
-		return nil, exception
-	}
-
-	return publicTheme, nil
+	return theme.ToPublicTheme(), nil
 }
 
 func (s *ThemeService) SearchPublicThemes(ctx context.Context, gqlInput gqlmodels.SearchThemeInput) (*gqlmodels.SearchThemeConnection, *exceptions.Exception) {
@@ -72,7 +67,7 @@ func (s *ThemeService) SearchPublicThemes(ctx context.Context, gqlInput gqlmodel
 			return nil, exception
 		}
 
-		query.Where("search_cursor_id > ?", searchCursor.Fields.SearchCursorID)
+		query.Where("public_id > ?", searchCursor.Fields.PublicID)
 	}
 
 	if gqlInput.SortBy != nil && gqlInput.SortOrder != nil {
@@ -118,7 +113,7 @@ func (s *ThemeService) SearchPublicThemes(ctx context.Context, gqlInput gqlmodel
 	for index, theme := range themes {
 		searchCursor := util.SearchCursor[gqlmodels.SearchThemeCursorFields]{
 			Fields: gqlmodels.SearchThemeCursorFields{
-				SearchCursorID: theme.SearchCursorId,
+				PublicID: theme.PublicId,
 			},
 		}
 		encodedSearchCursor, exception := searchCursor.EncodeSearchCursor()

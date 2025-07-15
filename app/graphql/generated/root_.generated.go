@@ -44,29 +44,37 @@ type ComplexityRoot struct {
 		CreatedAt   func(childComplexity int) int
 		Description func(childComplexity int) int
 		ImageURL    func(childComplexity int) int
+		PublicID    func(childComplexity int) int
 		Title       func(childComplexity int) int
 		Type        func(childComplexity int) int
+		Users       func(childComplexity int) int
 	}
 
 	PublicTheme struct {
+		Author        func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		DownloadCount func(childComplexity int) int
 		DownloadURL   func(childComplexity int) int
 		IsDefault     func(childComplexity int) int
 		Name          func(childComplexity int) int
+		PublicID      func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
 		Version       func(childComplexity int) int
 	}
 
 	PublicUser struct {
+		Badges      func(childComplexity int) int
 		CreatedAt   func(childComplexity int) int
 		DisplayName func(childComplexity int) int
 		Email       func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Plan        func(childComplexity int) int
+		PublicID    func(childComplexity int) int
 		Role        func(childComplexity int) int
 		Status      func(childComplexity int) int
+		Themes      func(childComplexity int) int
 		UpdatedAt   func(childComplexity int) int
+		UserInfo    func(childComplexity int) int
 	}
 
 	PublicUserInfo struct {
@@ -102,7 +110,6 @@ type ComplexityRoot struct {
 	SearchBadgeEdge struct {
 		EncodedSearchCursor func(childComplexity int) int
 		Node                func(childComplexity int) int
-		Users               func(childComplexity int) int
 	}
 
 	SearchPageInfo struct {
@@ -120,7 +127,6 @@ type ComplexityRoot struct {
 	}
 
 	SearchThemeEdge struct {
-		Author              func(childComplexity int) int
 		EncodedSearchCursor func(childComplexity int) int
 		Node                func(childComplexity int) int
 	}
@@ -133,11 +139,8 @@ type ComplexityRoot struct {
 	}
 
 	SearchUserEdge struct {
-		Badges              func(childComplexity int) int
 		EncodedSearchCursor func(childComplexity int) int
 		Node                func(childComplexity int) int
-		Themes              func(childComplexity int) int
-		UserInfo            func(childComplexity int) int
 	}
 }
 
@@ -181,6 +184,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PublicBadge.ImageURL(childComplexity), true
 
+	case "PublicBadge.publicId":
+		if e.complexity.PublicBadge.PublicID == nil {
+			break
+		}
+
+		return e.complexity.PublicBadge.PublicID(childComplexity), true
+
 	case "PublicBadge.title":
 		if e.complexity.PublicBadge.Title == nil {
 			break
@@ -194,6 +204,20 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PublicBadge.Type(childComplexity), true
+
+	case "PublicBadge.users":
+		if e.complexity.PublicBadge.Users == nil {
+			break
+		}
+
+		return e.complexity.PublicBadge.Users(childComplexity), true
+
+	case "PublicTheme.author":
+		if e.complexity.PublicTheme.Author == nil {
+			break
+		}
+
+		return e.complexity.PublicTheme.Author(childComplexity), true
 
 	case "PublicTheme.createdAt":
 		if e.complexity.PublicTheme.CreatedAt == nil {
@@ -230,6 +254,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PublicTheme.Name(childComplexity), true
 
+	case "PublicTheme.publicId":
+		if e.complexity.PublicTheme.PublicID == nil {
+			break
+		}
+
+		return e.complexity.PublicTheme.PublicID(childComplexity), true
+
 	case "PublicTheme.updatedAt":
 		if e.complexity.PublicTheme.UpdatedAt == nil {
 			break
@@ -243,6 +274,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PublicTheme.Version(childComplexity), true
+
+	case "PublicUser.badges":
+		if e.complexity.PublicUser.Badges == nil {
+			break
+		}
+
+		return e.complexity.PublicUser.Badges(childComplexity), true
 
 	case "PublicUser.createdAt":
 		if e.complexity.PublicUser.CreatedAt == nil {
@@ -279,6 +317,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PublicUser.Plan(childComplexity), true
 
+	case "PublicUser.publicId":
+		if e.complexity.PublicUser.PublicID == nil {
+			break
+		}
+
+		return e.complexity.PublicUser.PublicID(childComplexity), true
+
 	case "PublicUser.role":
 		if e.complexity.PublicUser.Role == nil {
 			break
@@ -293,12 +338,26 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PublicUser.Status(childComplexity), true
 
+	case "PublicUser.themes":
+		if e.complexity.PublicUser.Themes == nil {
+			break
+		}
+
+		return e.complexity.PublicUser.Themes(childComplexity), true
+
 	case "PublicUser.updatedAt":
 		if e.complexity.PublicUser.UpdatedAt == nil {
 			break
 		}
 
 		return e.complexity.PublicUser.UpdatedAt(childComplexity), true
+
+	case "PublicUser.userInfo":
+		if e.complexity.PublicUser.UserInfo == nil {
+			break
+		}
+
+		return e.complexity.PublicUser.UserInfo(childComplexity), true
 
 	case "PublicUserInfo.avatarURL":
 		if e.complexity.PublicUserInfo.AvatarURL == nil {
@@ -445,13 +504,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.SearchBadgeEdge.Node(childComplexity), true
 
-	case "SearchBadgeEdge.users":
-		if e.complexity.SearchBadgeEdge.Users == nil {
-			break
-		}
-
-		return e.complexity.SearchBadgeEdge.Users(childComplexity), true
-
 	case "SearchPageInfo.endEncodedSearchCursor":
 		if e.complexity.SearchPageInfo.EndEncodedSearchCursor == nil {
 			break
@@ -508,13 +560,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.SearchThemeConnection.TotalCount(childComplexity), true
 
-	case "SearchThemeEdge.author":
-		if e.complexity.SearchThemeEdge.Author == nil {
-			break
-		}
-
-		return e.complexity.SearchThemeEdge.Author(childComplexity), true
-
 	case "SearchThemeEdge.encodedSearchCursor":
 		if e.complexity.SearchThemeEdge.EncodedSearchCursor == nil {
 			break
@@ -557,13 +602,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.SearchUserConnection.TotalCount(childComplexity), true
 
-	case "SearchUserEdge.badges":
-		if e.complexity.SearchUserEdge.Badges == nil {
-			break
-		}
-
-		return e.complexity.SearchUserEdge.Badges(childComplexity), true
-
 	case "SearchUserEdge.encodedSearchCursor":
 		if e.complexity.SearchUserEdge.EncodedSearchCursor == nil {
 			break
@@ -577,20 +615,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.SearchUserEdge.Node(childComplexity), true
-
-	case "SearchUserEdge.themes":
-		if e.complexity.SearchUserEdge.Themes == nil {
-			break
-		}
-
-		return e.complexity.SearchUserEdge.Themes(childComplexity), true
-
-	case "SearchUserEdge.userInfo":
-		if e.complexity.SearchUserEdge.UserInfo == nil {
-			break
-		}
-
-		return e.complexity.SearchUserEdge.UserInfo(childComplexity), true
 
 	}
 	return 0, false
@@ -758,12 +782,15 @@ var sources = []*ast.Source{
 `, BuiltIn: false},
 	{Name: "../schemas/badge.graphql", Input: `type PublicBadge {
   # id: UUID!
-  # searchCursorId: String! # the encoded of this field is the identifier of the PublicBadge
+  publicId: String! # the encoded of this field is the identifier of the PublicBadge
   title: String!
   description: String!
   type: BadgeType!
   imageURL: String
   createdAt: Time!
+
+  # relations
+  users: [PublicUser!]!
 }
 
 # =============== Search Filters & SortBy & SortOrder =============== #
@@ -792,7 +819,7 @@ input SearchBadgeInput {
 # type SearchBadgeEnvironmentAttributes {}
 
 input SearchBadgeCursorFields {
-  searchCursorId: String!
+  publicId: String!
   # environmentAttributes: SearchBadgeEnvironmentAttributes
 }
 
@@ -801,8 +828,6 @@ input SearchBadgeCursorFields {
 type SearchBadgeEdge implements SearchEdge {
   encodedSearchCursor: String! # the search identifier
   node: PublicBadge! # the search result
-  # relations
-  users: [PublicUser!]! # extension for searching public user in the future
 }
 
 type SearchBadgeConnection implements SearchConnection {
@@ -874,7 +899,7 @@ interface SearchConnection {
 `, BuiltIn: false},
 	{Name: "../schemas/theme.graphql", Input: `type PublicTheme {
   # id: UUID!
-  # searchCursorId: String! # the encoded of this field is the identifier of the PublicTheme
+  publicId: String! # the encoded of this field is the identifier of the PublicTheme
   name: String!
   #   authorId: UUID!
   version: String!
@@ -883,6 +908,9 @@ interface SearchConnection {
   downloadCount: Int!
   createdAt: Time!
   updatedAt: Time!
+
+  # relations
+  author: PublicUser!
 }
 
 # =============== Search Filters & SortBy & Input =============== #
@@ -913,7 +941,7 @@ input SearchThemeInput {
 # type SearchThemeEnvironmentAttributes {}
 
 input SearchThemeCursorFields {
-  searchCursorId: String!
+  publicId: String!
   # environmentAttributes: SearchThemeEnvironmentAttributes
 }
 
@@ -922,8 +950,6 @@ input SearchThemeCursorFields {
 type SearchThemeEdge implements SearchEdge {
   encodedSearchCursor: String! # the search identifier
   node: PublicTheme! # the search result
-  # relations
-  author: PublicUser! # extension for searching public user in the future
 }
 
 type SearchThemeConnection implements SearchConnection {
@@ -938,7 +964,7 @@ type SearchThemeConnection implements SearchConnection {
 
 type PublicUser {
   # id: UUID!
-  # searchCursorId: String! # the encoded of this field is the identifier of the PublicUser
+  publicId: String! # the encoded of this field is the identifier of the PublicUser
   name: String!
   displayName: String!
   email: String!
@@ -953,6 +979,11 @@ type PublicUser {
   status: UserStatus!
   createdAt: Time!
   updatedAt: Time!
+
+  # relations
+  userInfo: PublicUserInfo!
+  badges: [PublicBadge!]!
+  themes: [PublicTheme!]!
 }
 
 # =============== Search Filters & SortBy & Input =============== #
@@ -986,9 +1017,13 @@ input SearchUserInput {
 
 # type SearchUserEnvironmentAttributes {}
 
+# use the below fields to encoded it into base64
+# and included some attributes as weights of the search algorithm
+# for better search experience
 input SearchUserCursorFields {
-  searchCursorId: String!
+  publicId: String!
   # environmentAttributes: SearchUserEnvironmentAttributes
+  # add some weight to effect the searching result here
 }
 
 # =============== Search Edge & Connection =============== #
@@ -996,10 +1031,6 @@ input SearchUserCursorFields {
 type SearchUserEdge implements SearchEdge {
   encodedSearchCursor: String! # the encoded search identifier
   node: PublicUser! # the search result
-  # relations
-  userInfo: PublicUserInfo! # extension leaving for searching public user info in the future
-  badges: [PublicBadge!]! # extension leaving for searching public badge in the future
-  themes: [PublicTheme!]! # extension leaving for searching public theme in the future
 }
 
 type SearchUserConnection implements SearchConnection {

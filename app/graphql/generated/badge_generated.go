@@ -31,6 +31,50 @@ import (
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _PublicBadge_publicId(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicBadge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PublicBadge_publicId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PublicID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PublicBadge_publicId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublicBadge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PublicBadge_title(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicBadge) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PublicBadge_title(ctx, field)
 	if err != nil {
@@ -248,6 +292,76 @@ func (ec *executionContext) fieldContext_PublicBadge_createdAt(_ context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _PublicBadge_users(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicBadge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PublicBadge_users(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Users, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*gqlmodels.PublicUser)
+	fc.Result = res
+	return ec.marshalNPublicUser2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUserᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PublicBadge_users(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublicBadge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "publicId":
+				return ec.fieldContext_PublicUser_publicId(ctx, field)
+			case "name":
+				return ec.fieldContext_PublicUser_name(ctx, field)
+			case "displayName":
+				return ec.fieldContext_PublicUser_displayName(ctx, field)
+			case "email":
+				return ec.fieldContext_PublicUser_email(ctx, field)
+			case "role":
+				return ec.fieldContext_PublicUser_role(ctx, field)
+			case "plan":
+				return ec.fieldContext_PublicUser_plan(ctx, field)
+			case "status":
+				return ec.fieldContext_PublicUser_status(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PublicUser_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PublicUser_updatedAt(ctx, field)
+			case "userInfo":
+				return ec.fieldContext_PublicUser_userInfo(ctx, field)
+			case "badges":
+				return ec.fieldContext_PublicUser_badges(ctx, field)
+			case "themes":
+				return ec.fieldContext_PublicUser_themes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PublicUser", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _SearchBadgeConnection_searchEdges(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchBadgeConnection) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_SearchBadgeConnection_searchEdges(ctx, field)
 	if err != nil {
@@ -291,8 +405,6 @@ func (ec *executionContext) fieldContext_SearchBadgeConnection_searchEdges(_ con
 				return ec.fieldContext_SearchBadgeEdge_encodedSearchCursor(ctx, field)
 			case "node":
 				return ec.fieldContext_SearchBadgeEdge_node(ctx, field)
-			case "users":
-				return ec.fieldContext_SearchBadgeEdge_users(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SearchBadgeEdge", field.Name)
 		},
@@ -525,6 +637,8 @@ func (ec *executionContext) fieldContext_SearchBadgeEdge_node(_ context.Context,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "publicId":
+				return ec.fieldContext_PublicBadge_publicId(ctx, field)
 			case "title":
 				return ec.fieldContext_PublicBadge_title(ctx, field)
 			case "description":
@@ -535,70 +649,10 @@ func (ec *executionContext) fieldContext_SearchBadgeEdge_node(_ context.Context,
 				return ec.fieldContext_PublicBadge_imageURL(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_PublicBadge_createdAt(ctx, field)
+			case "users":
+				return ec.fieldContext_PublicBadge_users(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PublicBadge", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _SearchBadgeEdge_users(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchBadgeEdge) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchBadgeEdge_users(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Users, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*gqlmodels.PublicUser)
-	fc.Result = res
-	return ec.marshalNPublicUser2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUserᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_SearchBadgeEdge_users(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "SearchBadgeEdge",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "name":
-				return ec.fieldContext_PublicUser_name(ctx, field)
-			case "displayName":
-				return ec.fieldContext_PublicUser_displayName(ctx, field)
-			case "email":
-				return ec.fieldContext_PublicUser_email(ctx, field)
-			case "role":
-				return ec.fieldContext_PublicUser_role(ctx, field)
-			case "plan":
-				return ec.fieldContext_PublicUser_plan(ctx, field)
-			case "status":
-				return ec.fieldContext_PublicUser_status(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_PublicUser_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_PublicUser_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PublicUser", field.Name)
 		},
 	}
 	return fc, nil
@@ -615,20 +669,20 @@ func (ec *executionContext) unmarshalInputSearchBadgeCursorFields(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"searchCursorId"}
+	fieldsInOrder := [...]string{"publicId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "searchCursorId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("searchCursorId"))
+		case "publicId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("publicId"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.SearchCursorID = data
+			it.PublicID = data
 		}
 	}
 
@@ -753,6 +807,11 @@ func (ec *executionContext) _PublicBadge(ctx context.Context, sel ast.SelectionS
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("PublicBadge")
+		case "publicId":
+			out.Values[i] = ec._PublicBadge_publicId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "title":
 			out.Values[i] = ec._PublicBadge_title(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -772,6 +831,11 @@ func (ec *executionContext) _PublicBadge(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._PublicBadge_imageURL(ctx, field, obj)
 		case "createdAt":
 			out.Values[i] = ec._PublicBadge_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "users":
+			out.Values[i] = ec._PublicBadge_users(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -870,11 +934,6 @@ func (ec *executionContext) _SearchBadgeEdge(ctx context.Context, sel ast.Select
 			}
 		case "node":
 			out.Values[i] = ec._SearchBadgeEdge_node(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "users":
-			out.Values[i] = ec._SearchBadgeEdge_users(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

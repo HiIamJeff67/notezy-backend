@@ -13,7 +13,7 @@ import (
 
 type UserInfoDataloaderInterface interface {
 	GetLoader() *gophersdataloader.Loader[string, *gqlmodels.PublicUserInfo]
-	batchFunc() gophersdataloader.BatchFunc[string, *gqlmodels.PublicUserInfo]
+	batchFunction() gophersdataloader.BatchFunc[string, *gqlmodels.PublicUserInfo]
 }
 
 type UserInfoDataloader struct {
@@ -27,7 +27,7 @@ func NewUserInfoDataloader(db *gorm.DB) UserInfoDataloaderInterface {
 		userInfoService: userInfoService,
 	}
 	dataloader.loader = gophersdataloader.NewBatchedLoader(
-		dataloader.batchFunc(),
+		dataloader.batchFunction(),
 		gophersdataloader.WithWait[string, *gqlmodels.PublicUserInfo](time.Microsecond),
 	)
 
@@ -38,18 +38,18 @@ func (d *UserInfoDataloader) GetLoader() *gophersdataloader.Loader[string, *gqlm
 	return d.loader
 }
 
-func (d *UserInfoDataloader) batchFunc() gophersdataloader.BatchFunc[string, *gqlmodels.PublicUserInfo] {
-	return func(ctx context.Context, encodedSearchCursors []string) []*gophersdataloader.Result[*gqlmodels.PublicUserInfo] {
-		publicUserInfos, exception := d.userInfoService.GetPublicUserInfosByEncodedSearchCursor(ctx, encodedSearchCursors)
+func (d *UserInfoDataloader) batchFunction() gophersdataloader.BatchFunc[string, *gqlmodels.PublicUserInfo] {
+	return func(ctx context.Context, publicIds []string) []*gophersdataloader.Result[*gqlmodels.PublicUserInfo] {
+		publicUserInfos, exception := d.userInfoService.GetPublicUserInfosByPublicIds(ctx, publicIds)
 		if exception != nil {
-			results := make([]*gophersdataloader.Result[*gqlmodels.PublicUserInfo], len(encodedSearchCursors))
+			results := make([]*gophersdataloader.Result[*gqlmodels.PublicUserInfo], len(publicIds))
 			for i := range results {
 				results[i] = &gophersdataloader.Result[*gqlmodels.PublicUserInfo]{Error: exception.Error}
 			}
 			return results
 		}
 
-		results := make([]*gophersdataloader.Result[*gqlmodels.PublicUserInfo], len(encodedSearchCursors))
+		results := make([]*gophersdataloader.Result[*gqlmodels.PublicUserInfo], len(publicIds))
 		for i, publicUserInfo := range publicUserInfos {
 			results[i] = &gophersdataloader.Result[*gqlmodels.PublicUserInfo]{Data: publicUserInfo}
 		}

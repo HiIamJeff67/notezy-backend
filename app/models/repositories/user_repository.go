@@ -7,7 +7,6 @@ import (
 	"github.com/jinzhu/copier"
 
 	exceptions "notezy-backend/app/exceptions"
-	gqlmodels "notezy-backend/app/graphql/models"
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
@@ -24,9 +23,6 @@ type UserRepositoryInterface interface {
 	CreateOne(input inputs.CreateUserInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, input inputs.PartialUpdateUserInput) (*schemas.User, *exceptions.Exception)
 	DeleteOneById(id uuid.UUID, input inputs.DeleteUserInput) *exceptions.Exception
-
-	// repository for public users
-	GetPublicOneBySearchCursorId(searchCursorId string) (*gqlmodels.PublicUser, *exceptions.Exception)
 }
 
 type UserRepository struct {
@@ -76,18 +72,6 @@ func (r *UserRepository) GetOneByEmail(email string) (*schemas.User, *exceptions
 	}
 
 	return &user, nil
-}
-
-func (r *UserRepository) GetPublicOneBySearchCursorId(searchCursorId string) (*gqlmodels.PublicUser, *exceptions.Exception) {
-	user := schemas.User{}
-	result := r.db.Table(schemas.User{}.TableName()).
-		Where("search_cursor_id = ?", searchCursorId).
-		First(&user)
-	if err := result.Error; err != nil {
-		return nil, exceptions.User.NotFound().WithError(err)
-	}
-
-	return user.ToPublicUser(), nil
 }
 
 func (r *UserRepository) GetAll() (*[]schemas.User, *exceptions.Exception) {

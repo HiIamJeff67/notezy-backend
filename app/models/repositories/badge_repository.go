@@ -5,7 +5,6 @@ import (
 	"gorm.io/gorm"
 
 	exceptions "notezy-backend/app/exceptions"
-	gqlmodels "notezy-backend/app/graphql/models"
 	models "notezy-backend/app/models"
 	schemas "notezy-backend/app/models/schemas"
 )
@@ -14,9 +13,6 @@ import (
 
 type BadgeRepositoryInterface interface {
 	GetOneById(id uuid.UUID) (*schemas.Badge, *exceptions.Exception)
-
-	// repository for public badges
-	GetPublicOneBySearchCursorId(searchCursorId string) (*gqlmodels.PublicBadge, *exceptions.Exception)
 }
 
 type BadgeRepository struct {
@@ -42,16 +38,4 @@ func (r *BadgeRepository) GetOneById(id uuid.UUID) (*schemas.Badge, *exceptions.
 	}
 
 	return &badge, nil
-}
-
-func (r *BadgeRepository) GetPublicOneBySearchCursorId(searchCursorId string) (*gqlmodels.PublicBadge, *exceptions.Exception) {
-	badge := schemas.Badge{}
-	result := r.db.Table(schemas.Badge{}.TableName()).
-		Where("search_cursor_id = ?", searchCursorId).
-		First(&badge)
-	if err := result.Error; err != nil {
-		return nil, exceptions.Badge.NotFound().WithError(err)
-	}
-
-	return badge.ToPublicBadge(), nil
 }

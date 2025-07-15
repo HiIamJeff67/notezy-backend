@@ -182,11 +182,13 @@ func (s *AuthService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDt
 		exception.Log()
 	}
 
-	// ssend the welcome email to the registered user
-	exception = emails.SendWelcomeEmail(newUser.Email, newUser.Name, newUser.Status.String())
-	if exception != nil {
-		exception.Log()
-	}
+	go func() {
+		// ssend the welcome email to the registered user
+		exception = emails.SendWelcomeEmail(newUser.Email, newUser.Name, newUser.Status.String())
+		if exception != nil {
+			exception.Log()
+		}
+	}()
 
 	return &dtos.RegisterResDto{
 		AccessToken:  *accessToken,

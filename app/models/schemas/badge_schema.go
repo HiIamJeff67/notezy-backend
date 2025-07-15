@@ -13,13 +13,13 @@ import (
 )
 
 type Badge struct {
-	Id             uuid.UUID       `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid()"`
-	SearchCursorId string          `json:"searchCursorId" gorm:"column:search_cursor_id; unique; not null; default:'';"`
-	Title          string          `json:"title" gorm:"column:title; not null; size:64;"`
-	Description    string          `json:"description" gorm:"column:description; not null; size:256;"`
-	Type           enums.BadgeType `json:"type" gorm:"column:type; type:BadgeType; not null; default:'Bronze';"`
-	ImageURL       *string         `json:"imageURL" gorm:"column:image_url;"`
-	CreatedAt      time.Time       `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
+	Id          uuid.UUID       `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid()"`
+	PublicId    string          `json:"publicId" gorm:"column:public_id; unique; not null; default:'';"`
+	Title       string          `json:"title" gorm:"column:title; not null; size:64;"`
+	Description string          `json:"description" gorm:"column:description; not null; size:256;"`
+	Type        enums.BadgeType `json:"type" gorm:"column:type; type:BadgeType; not null; default:'Bronze';"`
+	ImageURL    *string         `json:"imageURL" gorm:"column:image_url;"`
+	CreatedAt   time.Time       `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 
 	// relation
 	Users []User `json:"users" gorm:"-"` // many2many:\"UsersToBadgesTable\"; foreignKey:Id; joinForeignKey:BadgeId; references:Id; joinReferences:UserId;
@@ -33,20 +33,21 @@ func (Badge) TableName() string {
 
 func (b *Badge) ToPublicBadge() *gqlmodels.PublicBadge {
 	return &gqlmodels.PublicBadge{
+		PublicID:    b.PublicId,
 		Title:       b.Title,
 		Description: b.Description,
 		Type:        b.Type,
 		ImageURL:    b.ImageURL,
 		CreatedAt:   b.CreatedAt,
-		// Users:       []*gqlmodels.PublicUser{},
+		Users:       []*gqlmodels.PublicUser{},
 	}
 }
 
 /* ============================== Trigger Hook ============================== */
 
 func (b *Badge) BeforeCreate(db *gorm.DB) error {
-	if b.SearchCursorId == "" {
-		b.SearchCursorId = util.GenerateSnowflakeID()
+	if b.PublicId == "" {
+		b.PublicId = util.GenerateSnowflakeID()
 	}
 	return nil
 }

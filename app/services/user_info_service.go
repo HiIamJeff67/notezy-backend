@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"strings"
 
 	"gorm.io/gorm"
 
@@ -13,7 +12,6 @@ import (
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
-	util "notezy-backend/app/util"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -23,8 +21,8 @@ type UserInfoServiceInterface interface {
 	UpdateMyInfo(reqDto *dtos.UpdateMyInfoReqDto) (*dtos.UpdateMyInfoResDto, *exceptions.Exception)
 
 	// services for public userInfos
-	GetPublicUserInfoByEncodedSearchCursor(ctx context.Context, encodedSearchCursor string) (*gqlmodels.PublicUserInfo, *exceptions.Exception)
-	GetPublicUserInfosByEncodedSearchCursor(ctx context.Context, encodedSearchCursors []string) ([]*gqlmodels.PublicUserInfo, *exceptions.Exception)
+	GetPublicUserInfoByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicUserInfo, *exceptions.Exception)
+	GetPublicUserInfosByPublicIds(ctx context.Context, publicIds []string) ([]*gqlmodels.PublicUserInfo, *exceptions.Exception)
 }
 
 type UserInfoService struct {
@@ -95,16 +93,11 @@ func (s *UserInfoService) UpdateMyInfo(reqDto *dtos.UpdateMyInfoReqDto) (*dtos.U
 /* ============================== Services for Public UserInfo (Only available in GraphQL) ============================== */
 
 // use the searchable user cursor (we only give the search functionality on users)
-func (s *UserInfoService) GetPublicUserInfoByEncodedSearchCursor(ctx context.Context, encodedSearchCursor string) (*gqlmodels.PublicUserInfo, *exceptions.Exception) {
-	searchCursor, exception := util.DecodeSearchCursor[gqlmodels.SearchUserCursorFields](encodedSearchCursor)
-	if exception != nil {
-		return nil, exception
-	}
-
+func (s *UserInfoService) GetPublicUserInfoByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicUserInfo, *exceptions.Exception) {
 	userInfo := schemas.UserInfo{}
 	result := s.db.Table(schemas.UserInfo{}.TableName()).
 		Joins("LEFT JOIN \"UserTable\" u ON u.id = user_id").
-		Where("u.search_cursor_id = ?", searchCursor.Fields.SearchCursorID).
+		Where("u.public_id = ?", publicId).
 		First(&userInfo)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserInfo.NotFound().WithError(err)
@@ -113,35 +106,16 @@ func (s *UserInfoService) GetPublicUserInfoByEncodedSearchCursor(ctx context.Con
 	return userInfo.ToPublicUserInfo(), nil
 }
 
-func (s *UserInfoService) GetPublicUserInfosByEncodedSearchCursor(ctx context.Context, encodedSearchCursors []string) ([]*gqlmodels.PublicUserInfo, *exceptions.Exception) {
-	if len(encodedSearchCursors) == 0 {
+func (s *UserInfoService) GetPublicUserInfosByPublicIds(ctx context.Context, publicIds []string) ([]*gqlmodels.PublicUserInfo, *exceptions.Exception) {
+	if len(publicIds) == 0 {
 		return []*gqlmodels.PublicUserInfo{}, nil
 	}
 
-	var invalidIndiceCount int = 0
-	var searchCursorIds []*string
-	for _, encodedSearchCursor := range encodedSearchCursors {
-		searchCursor, exception := util.DecodeSearchCursor[gqlmodels.SearchUserCursorFields](encodedSearchCursor)
-		if exception != nil || len(strings.ReplaceAll(searchCursor.Fields.SearchCursorID, " ", "")) == 0 {
-			invalidIndiceCount++
-		} else {
-			searchCursorIds = append(searchCursorIds, &searchCursor.Fields.SearchCursorID)
-		}
-	}
-
-	if invalidIndiceCount == len(encodedSearchCursors) {
-		return make([]*gqlmodels.PublicUserInfo, len(encodedSearchCursors)), nil
-	}
-
-	var userInfos []struct {
-		schemas.UserInfo
-		SearchCursorId string `gorm:"column:search_cursor_id"`
-	}
-
+	var userInfos []schemas.UserInfo
 	result := s.db.Table(schemas.UserInfo{}.TableName()+" ui").
-		Select("ui.*, u.search_cursor_id").
+		Select("ui.*, u.public_id").
 		Joins("LEFT JOIN \"UserTable\" u ON u.id = ui.user_id").
-		Where("u.search_cursor_id IN ?", searchCursorIds).
+		Where("u.public_id IN ?", publicIds).
 		Find(&userInfos)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserInfo.NotFound().WithError(err)
@@ -149,7 +123,7 @@ func (s *UserInfoService) GetPublicUserInfosByEncodedSearchCursor(ctx context.Co
 
 	publicUserInfos := make([]*gqlmodels.PublicUserInfo, len(userInfos))
 	for index, userInfo := range userInfos {
-		publicUserInfos[index] = userInfo.UserInfo.ToPublicUserInfo()
+		publicUserInfos[index] = userInfo.ToPublicUserInfo()
 	}
 
 	return publicUserInfos, nil

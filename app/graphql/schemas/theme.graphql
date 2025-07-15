@@ -1,6 +1,6 @@
 type PublicTheme {
   # id: UUID!
-  # searchCursorId: String! # the encoded of this field is the identifier of the PublicTheme
+  publicId: String! # the encoded of this field is the identifier of the PublicTheme
   name: String!
   #   authorId: UUID!
   version: String!
@@ -11,7 +11,7 @@ type PublicTheme {
   updatedAt: Time!
 
   # relations
-  # author: PublicUser!
+  author: PublicUser!
 }
 
 # =============== Search Filters & SortBy & Input =============== #
@@ -42,7 +42,7 @@ input SearchThemeInput {
 # type SearchThemeEnvironmentAttributes {}
 
 input SearchThemeCursorFields {
-  searchCursorId: String!
+  publicId: String!
   # environmentAttributes: SearchThemeEnvironmentAttributes
 }
 
@@ -51,8 +51,6 @@ input SearchThemeCursorFields {
 type SearchThemeEdge implements SearchEdge {
   encodedSearchCursor: String! # the search identifier
   node: PublicTheme! # the search result
-  # relations
-  author: PublicUser! # extension for searching public user in the future
 }
 
 type SearchThemeConnection implements SearchConnection {

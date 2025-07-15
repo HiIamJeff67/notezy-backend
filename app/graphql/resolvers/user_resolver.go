@@ -21,9 +21,9 @@ func NewUserResolver(service services.UserServiceInterface) UserResolverInterfac
 
 /* ============================== Resolvers ============================== */
 
-// edge resolver [PublicUser -> PublicUserInfo]
-func (r *UserResolver) UserInfo(ctx context.Context, obj *gqlmodels.SearchUserEdge) (*gqlmodels.PublicUserInfo, error) {
-	future := r.dataloader.UserInfoDataloader.Load(ctx, obj.EncodedSearchCursor)
+// resolver [PublicUser -> PublicUserInfo]
+func (r *UserResolver) UserInfo(ctx context.Context, obj *gqlmodels.PublicUser) (*gqlmodels.PublicUserInfo, error) {
+	future := r.dataloader.UserInfoDataloader.Load(ctx, obj.PublicID)
 	userInfo, err := future()
 	if err != nil {
 		return nil, err

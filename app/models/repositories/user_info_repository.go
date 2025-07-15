@@ -7,7 +7,6 @@ import (
 	"github.com/jinzhu/copier"
 
 	exceptions "notezy-backend/app/exceptions"
-	gqlmodels "notezy-backend/app/graphql/models"
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
@@ -20,9 +19,6 @@ type UserInfoRepositoryInterface interface {
 	GetOneByUserId(userId uuid.UUID) (*schemas.UserInfo, *exceptions.Exception)
 	CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserInfoInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserInfoInput) (*schemas.UserInfo, *exceptions.Exception)
-
-	// repository for public userInfos
-	GetPublicOneBySearchCursorId(searchCursorId string) (*gqlmodels.PublicUserInfo, *exceptions.Exception)
 }
 
 type UserInfoRepository struct {
@@ -48,19 +44,6 @@ func (r *UserInfoRepository) GetOneByUserId(userId uuid.UUID) (*schemas.UserInfo
 	}
 
 	return &userInfo, nil
-}
-
-func (r *UserInfoRepository) GetPublicOneBySearchCursorId(searchCursorId string) (*gqlmodels.PublicUserInfo, *exceptions.Exception) {
-	userInfo := schemas.UserInfo{}
-	result := r.db.Table(schemas.UserInfo{}.TableName()).
-		Joins("LEFT JOIN \"UserTable\" u ON u.id = user_id").
-		Where("u.search_cursor_id = ?", searchCursorId).
-		First(&userInfo)
-	if err := result.Error; err != nil {
-		return nil, exceptions.UserInfo.NotFound().WithError(err)
-	}
-
-	return userInfo.ToPublicUserInfo(), nil
 }
 
 func (r *UserInfoRepository) CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserInfoInput) (*uuid.UUID, *exceptions.Exception) {

@@ -8,7 +8,6 @@ import (
 	"github.com/jinzhu/copier"
 
 	exceptions "notezy-backend/app/exceptions"
-	gqlmodels "notezy-backend/app/graphql/models"
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
@@ -23,9 +22,6 @@ type ThemeRepositoryInterface interface {
 	CreateOneByAuthorId(authorId uuid.UUID, input inputs.CreateThemeInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, authorId uuid.UUID, input inputs.PartialUpdateThemeInput) (*schemas.Theme, *exceptions.Exception)
 	DeleteOneById(id uuid.UUID, authorId uuid.UUID) *exceptions.Exception
-
-	// repository for public themes
-	GetPublicOneBySearchCursorId(searchCursorId string) (*gqlmodels.PublicTheme, *exceptions.Exception)
 }
 
 type ThemeRepository struct {
@@ -51,18 +47,6 @@ func (r *ThemeRepository) GetOneById(id uuid.UUID) (*schemas.Theme, *exceptions.
 	}
 
 	return &theme, nil
-}
-
-func (r *ThemeRepository) GetPublicOneBySearchCursorId(searchCursorId string) (*gqlmodels.PublicTheme, *exceptions.Exception) {
-	theme := schemas.Theme{}
-	result := r.db.Table(schemas.Theme{}.TableName()).
-		Where("search_cursor_id = ?", searchCursorId).
-		First(&theme)
-	if err := result.Error; err != nil {
-		return nil, exceptions.Theme.NotFound().WithError(err)
-	}
-
-	return theme.ToPublicTheme(), nil
 }
 
 func (r *ThemeRepository) GetAll() (*[]schemas.Theme, *exceptions.Exception) {

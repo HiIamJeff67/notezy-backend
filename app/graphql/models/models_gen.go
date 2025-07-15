@@ -26,24 +26,29 @@ type SearchEdge interface {
 }
 
 type PublicBadge struct {
+	PublicID    string          `json:"publicId"`
 	Title       string          `json:"title"`
 	Description string          `json:"description"`
 	Type        enums.BadgeType `json:"type"`
 	ImageURL    *string         `json:"imageURL,omitempty"`
 	CreatedAt   time.Time       `json:"createdAt"`
+	Users       []*PublicUser   `json:"users"`
 }
 
 type PublicTheme struct {
-	Name          string    `json:"name"`
-	Version       string    `json:"version"`
-	IsDefault     bool      `json:"isDefault"`
-	DownloadURL   *string   `json:"downloadURL,omitempty"`
-	DownloadCount int32     `json:"downloadCount"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
+	PublicID      string      `json:"publicId"`
+	Name          string      `json:"name"`
+	Version       string      `json:"version"`
+	IsDefault     bool        `json:"isDefault"`
+	DownloadURL   *string     `json:"downloadURL,omitempty"`
+	DownloadCount int32       `json:"downloadCount"`
+	CreatedAt     time.Time   `json:"createdAt"`
+	UpdatedAt     time.Time   `json:"updatedAt"`
+	Author        *PublicUser `json:"author"`
 }
 
 type PublicUser struct {
+	PublicID    string           `json:"publicId"`
 	Name        string           `json:"name"`
 	DisplayName string           `json:"displayName"`
 	Email       string           `json:"email"`
@@ -52,6 +57,9 @@ type PublicUser struct {
 	Status      enums.UserStatus `json:"status"`
 	CreatedAt   time.Time        `json:"createdAt"`
 	UpdatedAt   time.Time        `json:"updatedAt"`
+	UserInfo    *PublicUserInfo  `json:"userInfo"`
+	Badges      []*PublicBadge   `json:"badges"`
+	Themes      []*PublicTheme   `json:"themes"`
 }
 
 type PublicUserInfo struct {
@@ -89,13 +97,12 @@ func (this SearchBadgeConnection) GetTotalCount() int32               { return t
 func (this SearchBadgeConnection) GetSearchTime() float64             { return this.SearchTime }
 
 type SearchBadgeCursorFields struct {
-	SearchCursorID string `json:"searchCursorId"`
+	PublicID string `json:"publicId"`
 }
 
 type SearchBadgeEdge struct {
-	EncodedSearchCursor string        `json:"encodedSearchCursor"`
-	Node                *PublicBadge  `json:"node"`
-	Users               []*PublicUser `json:"users"`
+	EncodedSearchCursor string       `json:"encodedSearchCursor"`
+	Node                *PublicBadge `json:"node"`
 }
 
 func (SearchBadgeEdge) IsSearchEdge()                       {}
@@ -134,13 +141,12 @@ func (this SearchThemeConnection) GetTotalCount() int32               { return t
 func (this SearchThemeConnection) GetSearchTime() float64             { return this.SearchTime }
 
 type SearchThemeCursorFields struct {
-	SearchCursorID string `json:"searchCursorId"`
+	PublicID string `json:"publicId"`
 }
 
 type SearchThemeEdge struct {
 	EncodedSearchCursor string       `json:"encodedSearchCursor"`
 	Node                *PublicTheme `json:"node"`
-	Author              *PublicUser  `json:"author"`
 }
 
 func (SearchThemeEdge) IsSearchEdge()                       {}
@@ -173,15 +179,12 @@ func (this SearchUserConnection) GetTotalCount() int32               { return th
 func (this SearchUserConnection) GetSearchTime() float64             { return this.SearchTime }
 
 type SearchUserCursorFields struct {
-	SearchCursorID string `json:"searchCursorId"`
+	PublicID string `json:"publicId"`
 }
 
 type SearchUserEdge struct {
-	EncodedSearchCursor string          `json:"encodedSearchCursor"`
-	Node                *PublicUser     `json:"node"`
-	UserInfo            *PublicUserInfo `json:"userInfo"`
-	Badges              []*PublicBadge  `json:"badges"`
-	Themes              []*PublicTheme  `json:"themes"`
+	EncodedSearchCursor string      `json:"encodedSearchCursor"`
+	Node                *PublicUser `json:"node"`
 }
 
 func (SearchUserEdge) IsSearchEdge()                       {}

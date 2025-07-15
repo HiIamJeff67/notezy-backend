@@ -3,7 +3,7 @@
 
 type PublicUser {
   # id: UUID!
-  # searchCursorId: String! # the encoded of this field is the identifier of the PublicUser
+  publicId: String! # the encoded of this field is the identifier of the PublicUser
   name: String!
   displayName: String!
   email: String!
@@ -20,9 +20,9 @@ type PublicUser {
   updatedAt: Time!
 
   # relations
-  # userInfo: PublicUserInfo!
-  # badges: [PublicBadge!]!
-  # themes: [PublicTheme!]!
+  userInfo: PublicUserInfo!
+  badges: [PublicBadge!]!
+  themes: [PublicTheme!]!
 }
 
 # =============== Search Filters & SortBy & Input =============== #
@@ -56,9 +56,13 @@ input SearchUserInput {
 
 # type SearchUserEnvironmentAttributes {}
 
+# use the below fields to encoded it into base64
+# and included some attributes as weights of the search algorithm
+# for better search experience
 input SearchUserCursorFields {
-  searchCursorId: String!
+  publicId: String!
   # environmentAttributes: SearchUserEnvironmentAttributes
+  # add some weight to effect the searching result here
 }
 
 # =============== Search Edge & Connection =============== #
@@ -66,10 +70,6 @@ input SearchUserCursorFields {
 type SearchUserEdge implements SearchEdge {
   encodedSearchCursor: String! # the encoded search identifier
   node: PublicUser! # the search result
-  # relations
-  userInfo: PublicUserInfo! # extension leaving for searching public user info in the future
-  badges: [PublicBadge!]! # extension leaving for searching public badge in the future
-  themes: [PublicTheme!]! # extension leaving for searching public theme in the future
 }
 
 type SearchUserConnection implements SearchConnection {
