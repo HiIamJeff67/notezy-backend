@@ -36,7 +36,7 @@ func NewUserInfoService(db *gorm.DB) UserInfoServiceInterface {
 	return &UserInfoService{db: db}
 }
 
-/* ============================== Services for UserInfo ============================== */
+/* ============================== Service Methods for UserInfo ============================== */
 
 func (s *UserInfoService) GetMyInfo(reqDto *dtos.GetMyInfoReqDto) (*dtos.GetMyInfoResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {
@@ -90,7 +90,7 @@ func (s *UserInfoService) UpdateMyInfo(reqDto *dtos.UpdateMyInfoReqDto) (*dtos.U
 	}, nil
 }
 
-/* ============================== Services for Public UserInfo (Only available in GraphQL) ============================== */
+/* ============================== Service Methods for Public UserInfo (Only available in GraphQL) ============================== */
 
 // use the searchable user cursor (we only give the search functionality on users)
 func (s *UserInfoService) GetPublicUserInfoByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicUserInfo, *exceptions.Exception) {

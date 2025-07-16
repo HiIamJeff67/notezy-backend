@@ -41,7 +41,7 @@ func NewUserService(db *gorm.DB) UserServiceInterface {
 	return &UserService{db: db}
 }
 
-/* ============================== Services for Users ============================== */
+/* ============================== Service Methods for Users ============================== */
 
 func (s *UserService) GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {
@@ -94,7 +94,7 @@ func (s *UserService) UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDt
 
 // }
 
-/* ============================== Services for Public User (Only available in GraphQL) ============================== */
+/* ============================== Service Methods for Public User (Only available in GraphQL) ============================== */
 
 func (s *UserService) GetPublicUserByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicUser, *exceptions.Exception) {
 	user := schemas.User{}

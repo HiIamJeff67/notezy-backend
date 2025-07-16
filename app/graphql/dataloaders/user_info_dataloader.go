@@ -2,56 +2,60 @@ package dataloaders
 
 import (
 	"context"
-	"time"
 
 	gophersdataloader "github.com/graph-gophers/dataloader/v7"
 	"gorm.io/gorm"
 
 	gqlmodels "notezy-backend/app/graphql/models"
 	services "notezy-backend/app/services"
+	constants "notezy-backend/shared/constants"
 )
 
+type UserInfoLoaderType = gophersdataloader.Loader[string, *gqlmodels.PublicUserInfo]
+type UserInfoBatchFunctionType = gophersdataloader.BatchFunc[string, *gqlmodels.PublicUserInfo]
+type UserInfoResultType = gophersdataloader.Result[*gqlmodels.PublicUserInfo]
+
 type UserInfoDataloaderInterface interface {
-	GetLoader() *gophersdataloader.Loader[string, *gqlmodels.PublicUserInfo]
-	batchFunction() gophersdataloader.BatchFunc[string, *gqlmodels.PublicUserInfo]
+	GetLoader() *UserInfoLoaderType
+	batchFunction() UserInfoBatchFunctionType
 }
 
 type UserInfoDataloader struct {
 	userInfoService services.UserInfoServiceInterface
-	loader          *gophersdataloader.Loader[string, *gqlmodels.PublicUserInfo]
+	loader          *UserInfoLoaderType
 }
 
 func NewUserInfoDataloader(db *gorm.DB) UserInfoDataloaderInterface {
-	userInfoService := services.NewUserInfoService(db)
 	dataloader := &UserInfoDataloader{
-		userInfoService: userInfoService,
+		userInfoService: services.NewUserInfoService(db),
 	}
 	dataloader.loader = gophersdataloader.NewBatchedLoader(
 		dataloader.batchFunction(),
-		gophersdataloader.WithWait[string, *gqlmodels.PublicUserInfo](time.Microsecond),
+		gophersdataloader.WithWait[string, *gqlmodels.PublicUserInfo](constants.LoaderDelayOfUserInfo),
 	)
 
 	return dataloader
 }
 
-func (d *UserInfoDataloader) GetLoader() *gophersdataloader.Loader[string, *gqlmodels.PublicUserInfo] {
+func (d *UserInfoDataloader) GetLoader() *UserInfoLoaderType {
 	return d.loader
 }
 
-func (d *UserInfoDataloader) batchFunction() gophersdataloader.BatchFunc[string, *gqlmodels.PublicUserInfo] {
-	return func(ctx context.Context, publicIds []string) []*gophersdataloader.Result[*gqlmodels.PublicUserInfo] {
+// this batch function will fetch the PublicUserInfos using the publicIds of the "PublicUsers"
+func (d *UserInfoDataloader) batchFunction() UserInfoBatchFunctionType {
+	return func(ctx context.Context, publicIds []string) []*UserInfoResultType {
 		publicUserInfos, exception := d.userInfoService.GetPublicUserInfosByPublicIds(ctx, publicIds)
 		if exception != nil {
-			results := make([]*gophersdataloader.Result[*gqlmodels.PublicUserInfo], len(publicIds))
+			results := make([]*UserInfoResultType, len(publicIds))
 			for i := range results {
-				results[i] = &gophersdataloader.Result[*gqlmodels.PublicUserInfo]{Error: exception.Error}
+				results[i] = &UserInfoResultType{Error: exception.Error}
 			}
 			return results
 		}
 
-		results := make([]*gophersdataloader.Result[*gqlmodels.PublicUserInfo], len(publicIds))
+		results := make([]*UserInfoResultType, len(publicIds))
 		for i, publicUserInfo := range publicUserInfos {
-			results[i] = &gophersdataloader.Result[*gqlmodels.PublicUserInfo]{Data: publicUserInfo}
+			results[i] = &UserInfoResultType{Data: publicUserInfo}
 		}
 
 		return results

@@ -19,6 +19,9 @@ func GraphQLHandler() gin.HandlerFunc {
 		services.NewUserService(
 			models.NotezyDB,
 		),
+		services.NewThemeService(
+			models.NotezyDB,
+		),
 	)
 
 	config := generated.Config{

@@ -6,13 +6,23 @@ package resolvers
 
 import (
 	"context"
-	"notezy-backend/app/graphql/generated"
+
+	generated "notezy-backend/app/graphql/generated"
 	gqlmodels "notezy-backend/app/graphql/models"
 )
 
 // SearchUsers is the resolver for the searchUsers field.
 func (r *queryResolver) SearchUsers(ctx context.Context, input gqlmodels.SearchUserInput) (*gqlmodels.SearchUserConnection, error) {
 	result, exception := r.userService.SearchPublicUsers(ctx, input)
+	if exception != nil {
+		return nil, exception.ToGraphQLError(ctx)
+	}
+	return result, nil
+}
+
+// SearchThemes is the resolver for the searchThemes field.
+func (r *queryResolver) SearchThemes(ctx context.Context, input gqlmodels.SearchThemeInput) (*gqlmodels.SearchThemeConnection, error) {
+	result, exception := r.themeService.SearchPublicThemes(ctx, input)
 	if exception != nil {
 		return nil, exception.ToGraphQLError(ctx)
 	}

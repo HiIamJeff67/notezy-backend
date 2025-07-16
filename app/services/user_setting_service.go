@@ -28,7 +28,7 @@ func NewUserSettingService(db *gorm.DB) UserSettingServiceInterface {
 	return &UserSettingService{db: db}
 }
 
-/* ============================== Services for UserSetting ============================== */
+/* ============================== Service Methods for UserSetting ============================== */
 
 func (s *UserSettingService) GetMySetting(reqDto *dtos.GetMySettingReqDto) (*dtos.GetMySettingResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {

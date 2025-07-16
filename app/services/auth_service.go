@@ -62,7 +62,7 @@ func (s *AuthService) checkPasswordHash(hashedPassword string, password string) 
 	return err == nil
 }
 
-/* ============================== Services for Authentication ============================== */
+/* ============================== Service Methods for Authentication ============================== */
 
 func (s *AuthService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {

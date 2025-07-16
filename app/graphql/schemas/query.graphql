@@ -1,5 +1,6 @@
 type Query {
   searchUsers(input: SearchUserInput!): SearchUserConnection!
+  searchThemes(input: SearchThemeInput!): SearchThemeConnection!
 }
 
 # type Mutation {}

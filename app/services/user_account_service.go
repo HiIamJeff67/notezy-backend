@@ -28,7 +28,7 @@ func NewUserAccountService(db *gorm.DB) UserAccountServiceInterface {
 	return &UserAccountService{db: db}
 }
 
-/* ============================== Services for UserAccount ============================== */
+/* ============================== Service Methods for UserAccount ============================== */
 
 func (s *UserAccountService) GetMyAccount(reqDto *dtos.GetMyAccountReqDto) (*dtos.GetMyAccountResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {

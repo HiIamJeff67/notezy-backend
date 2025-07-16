@@ -31,12 +31,12 @@ func NewThemeService(db *gorm.DB) ThemeServiceInterface {
 	}
 }
 
-/* ============================== Services for Themes ============================== */
+/* ============================== Service Methods for Themes ============================== */
 
 // get the theme which are created by the current user
 func (s *ThemeService) GetMyThemeById() {}
 
-/* ============================== Services for Public Themes ============================== */
+/* ============================== Service Methods for Public Themes ============================== */
 
 func (s *ThemeService) GetPublicThemeByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicTheme, *exceptions.Exception) {
 	theme := schemas.Theme{}

@@ -97,7 +97,8 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		SearchUsers func(childComplexity int, input gqlmodels.SearchUserInput) int
+		SearchThemes func(childComplexity int, input gqlmodels.SearchThemeInput) int
+		SearchUsers  func(childComplexity int, input gqlmodels.SearchUserInput) int
 	}
 
 	SearchBadgeConnection struct {
@@ -449,6 +450,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PublicUsersToBadges.UserID(childComplexity), true
+
+	case "Query.searchThemes":
+		if e.complexity.Query.SearchThemes == nil {
+			break
+		}
+
+		args, err := ec.field_Query_searchThemes_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SearchThemes(childComplexity, args["input"].(gqlmodels.SearchThemeInput)), true
 
 	case "Query.searchUsers":
 		if e.complexity.Query.SearchUsers == nil {
@@ -839,6 +852,7 @@ type SearchBadgeConnection implements SearchConnection {
 `, BuiltIn: false},
 	{Name: "../schemas/query.graphql", Input: `type Query {
   searchUsers(input: SearchUserInput!): SearchUserConnection!
+  searchThemes(input: SearchThemeInput!): SearchThemeConnection!
 }
 
 # type Mutation {}

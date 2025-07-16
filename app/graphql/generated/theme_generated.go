@@ -1126,6 +1126,20 @@ func (ec *executionContext) marshalNPublicTheme2ᚖnotezyᚑbackendᚋappᚋgrap
 	return ec._PublicTheme(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNSearchThemeConnection2notezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchThemeConnection(ctx context.Context, sel ast.SelectionSet, v gqlmodels.SearchThemeConnection) graphql.Marshaler {
+	return ec._SearchThemeConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSearchThemeConnection2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchThemeConnection(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchThemeConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SearchThemeConnection(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNSearchThemeEdge2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchThemeEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.SearchThemeEdge) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -1178,6 +1192,11 @@ func (ec *executionContext) marshalNSearchThemeEdge2ᚖnotezyᚑbackendᚋappᚋ
 		return graphql.Null
 	}
 	return ec._SearchThemeEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNSearchThemeInput2notezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchThemeInput(ctx context.Context, v any) (gqlmodels.SearchThemeInput, error) {
+	res, err := ec.unmarshalInputSearchThemeInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOSearchThemeFilters2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchThemeFilters(ctx context.Context, v any) (*gqlmodels.SearchThemeFilters, error) {
