@@ -21,7 +21,6 @@ import (
 
 type ExceptionCode int
 type ExceptionPrefix string
-type ExceptionReason string
 
 const (
 	// the first 3 digits are the class of exceptions
@@ -393,6 +392,23 @@ func (d *APIExceptionDomain) Timeout(time time.Duration, optionalMessage ...stri
 		Prefix:         d._Prefix,
 		Message:        message,
 		HTTPStatusCode: http.StatusRequestTimeout,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+/* ============================== GraphQL Exception Domain Definition ============================== */
+
+type GraphQLExceptionDomain struct {
+	_BaseCode ExceptionCode
+	_Prefix   ExceptionPrefix
+}
+
+func (d *GraphQLExceptionDomain) InvalidSourceInBatchFunction(dataloaderName string) *Exception {
+	return &Exception{
+		Code:           d._BaseCode + 1,
+		Prefix:         d._Prefix,
+		Message:        fmt.Sprintf("Invalid source field detected while working on jobs in the batch function of %s", dataloaderName),
+		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }

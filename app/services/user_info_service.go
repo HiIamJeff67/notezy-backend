@@ -22,7 +22,7 @@ type UserInfoServiceInterface interface {
 
 	// services for public userInfos
 	GetPublicUserInfoByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicUserInfo, *exceptions.Exception)
-	GetPublicUserInfosByPublicIds(ctx context.Context, publicIds []string) ([]*gqlmodels.PublicUserInfo, *exceptions.Exception)
+	GetPublicUserInfosByPublicIds(ctx context.Context, publicIds []string, requiredStatic bool) ([]*gqlmodels.PublicUserInfo, *exceptions.Exception)
 }
 
 type UserInfoService struct {
@@ -106,24 +106,42 @@ func (s *UserInfoService) GetPublicUserInfoByPublicId(ctx context.Context, publi
 	return userInfo.ToPublicUserInfo(), nil
 }
 
-func (s *UserInfoService) GetPublicUserInfosByPublicIds(ctx context.Context, publicIds []string) ([]*gqlmodels.PublicUserInfo, *exceptions.Exception) {
+func (s *UserInfoService) GetPublicUserInfosByPublicIds(ctx context.Context, publicIds []string, requiredStatic bool) ([]*gqlmodels.PublicUserInfo, *exceptions.Exception) {
 	if len(publicIds) == 0 {
 		return []*gqlmodels.PublicUserInfo{}, nil
 	}
 
-	var userInfos []schemas.UserInfo
+	var userInfosWithPublicUserIds []*struct {
+		schemas.UserInfo
+		UserPublicId string `gorm:"column:public_id"`
+	}
 	result := s.db.Table(schemas.UserInfo{}.TableName()+" ui").
 		Select("ui.*, u.public_id").
 		Joins("LEFT JOIN \"UserTable\" u ON u.id = ui.user_id").
 		Where("u.public_id IN ?", publicIds).
-		Find(&userInfos)
+		Find(&userInfosWithPublicUserIds)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserInfo.NotFound().WithError(err)
 	}
 
-	publicUserInfos := make([]*gqlmodels.PublicUserInfo, len(userInfos))
-	for index, userInfo := range userInfos {
-		publicUserInfos[index] = userInfo.ToPublicUserInfo()
+	if requiredStatic {
+		publicIdToIndexMap := make(map[string]int)
+		for index, publidId := range publicIds {
+			publicIdToIndexMap[publidId] = index
+		}
+
+		publicUserInfos := make([]*gqlmodels.PublicUserInfo, len(userInfosWithPublicUserIds))
+		for _, userInfoWithPublicUserId := range userInfosWithPublicUserIds {
+			index := publicIdToIndexMap[userInfoWithPublicUserId.UserPublicId]
+			publicUserInfos[index] = userInfoWithPublicUserId.UserInfo.ToPublicUserInfo()
+		}
+
+		return publicUserInfos, nil
+	}
+
+	publicUserInfos := make([]*gqlmodels.PublicUserInfo, 0)
+	for _, userInfoWithPublicUserId := range userInfosWithPublicUserIds {
+		publicUserInfos = append(publicUserInfos, userInfoWithPublicUserId.UserInfo.ToPublicUserInfo())
 	}
 
 	return publicUserInfos, nil

@@ -13,6 +13,7 @@ type ThemeExceptionDomain struct {
 	Prefix   ExceptionPrefix
 	DatabaseExceptionDomain
 	APIExceptionDomain
+	GraphQLExceptionDomain
 	TypeExceptionDomain
 	CommonExceptionDomain
 }
@@ -25,6 +26,10 @@ var Theme = &ThemeExceptionDomain{
 		_Prefix:   ExceptionPrefix_Theme,
 	},
 	APIExceptionDomain: APIExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_Theme,
+		_Prefix:   ExceptionPrefix_Theme,
+	},
+	GraphQLExceptionDomain: GraphQLExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_Theme,
 		_Prefix:   ExceptionPrefix_Theme,
 	},

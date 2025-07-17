@@ -22,6 +22,7 @@ type UserExceptionDomain struct {
 	// instead we make methods for UserExceptionDomain
 	DatabaseExceptionDomain
 	APIExceptionDomain
+	GraphQLExceptionDomain
 	TypeExceptionDomain
 	CommonExceptionDomain
 }
@@ -34,6 +35,10 @@ var User = &UserExceptionDomain{
 		_Prefix:   ExceptionPrefix_User,
 	},
 	APIExceptionDomain: APIExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_User,
+		_Prefix:   ExceptionPrefix_User,
+	},
+	GraphQLExceptionDomain: GraphQLExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_User,
 		_Prefix:   ExceptionPrefix_User,
 	},

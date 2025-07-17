@@ -14,9 +14,10 @@ import (
 /* ============================== Interface & Instance ============================== */
 
 type BadgeServiceInterface interface {
+	// services for public badges
 	GetPublicBadgeByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicBadge, *exceptions.Exception)
-	GetPublicBadgeByPublicUserId(ctx context.Context, publicId string) (*gqlmodels.PublicBadge, *exceptions.Exception)
-	GetPublicBadgesByPublicUserIds(ctx context.Context, publicIds []string) ([]*gqlmodels.PublicBadge, *exceptions.Exception)
+	GetPublicBadgeByUserPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicBadge, *exceptions.Exception)
+	GetPublicBadgesByUserPublicIds(ctx context.Context, publicIds []string, requiredStatic bool) ([]*gqlmodels.PublicBadge, *exceptions.Exception)
 }
 
 type BadgeService struct {
@@ -46,7 +47,7 @@ func (s *BadgeService) GetPublicBadgeByPublicId(ctx context.Context, publicId st
 	return badge.ToPublicBadge(), nil
 }
 
-func (s *BadgeService) GetPublicBadgeByPublicUserId(ctx context.Context, publicId string) (*gqlmodels.PublicBadge, *exceptions.Exception) {
+func (s *BadgeService) GetPublicBadgeByUserPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicBadge, *exceptions.Exception) {
 	badge := schemas.Badge{}
 	result := s.db.Table(schemas.Badge{}.TableName()+" b").
 		Select("b.*, utb.user_id").
@@ -61,25 +62,43 @@ func (s *BadgeService) GetPublicBadgeByPublicUserId(ctx context.Context, publicI
 	return badge.ToPublicBadge(), nil
 }
 
-func (s *BadgeService) GetPublicBadgesByPublicUserIds(ctx context.Context, publicIds []string) ([]*gqlmodels.PublicBadge, *exceptions.Exception) {
+func (s *BadgeService) GetPublicBadgesByUserPublicIds(ctx context.Context, publicIds []string, requiredStatic bool) ([]*gqlmodels.PublicBadge, *exceptions.Exception) {
 	if len(publicIds) == 0 {
 		return []*gqlmodels.PublicBadge{}, nil
 	}
 
-	var badges []*schemas.Badge
+	var badgesWithPublicUserIds []*struct {
+		schemas.Badge
+		UserPublicId string `gorm:"column:public_id"`
+	}
 	result := s.db.Table(schemas.Badge{}.TableName()+" b").
-		Select("b.*, utb.user_id").
-		Joins("LEFT JOIN \"UsersToBadgesTable\" ON utb.badge_id = b.id").
+		Select("b.*, u.public_id").
+		Joins("LEFT JOIN \"UsersToBadgesTable\" utb ON utb.badge_id = b.id").
 		Joins("LEFT JOIN \"UserTable\" u ON u.id = utb.user_id").
 		Where("u.public_id IN ?", publicIds).
-		Find(&badges)
+		Find(&badgesWithPublicUserIds)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Badge.NotFound().WithError(err)
 	}
 
-	publicBadges := make([]*gqlmodels.PublicBadge, len(badges))
-	for index, badge := range badges {
-		publicBadges[index] = badge.ToPublicBadge()
+	if requiredStatic {
+		publicIdToIndexMap := make(map[string]int)
+		for index, publicId := range publicIds {
+			publicIdToIndexMap[publicId] = index
+		}
+
+		publicBadges := make([]*gqlmodels.PublicBadge, len(badgesWithPublicUserIds))
+		for _, badgeWithPublicUserId := range badgesWithPublicUserIds {
+			index := publicIdToIndexMap[badgeWithPublicUserId.PublicId]
+			publicBadges[index] = badgeWithPublicUserId.Badge.ToPublicBadge()
+		}
+
+		return publicBadges, nil
+	}
+
+	publicBadges := make([]*gqlmodels.PublicBadge, 0)
+	for _, badgeWithPublicUserId := range badgesWithPublicUserIds {
+		publicBadges = append(publicBadges, badgeWithPublicUserId.Badge.ToPublicBadge())
 	}
 
 	return publicBadges, nil
