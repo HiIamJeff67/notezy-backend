@@ -21,8 +21,8 @@ type UserInfoServiceInterface interface {
 	UpdateMyInfo(reqDto *dtos.UpdateMyInfoReqDto) (*dtos.UpdateMyInfoResDto, *exceptions.Exception)
 
 	// services for public userInfos
-	GetPublicUserInfoByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicUserInfo, *exceptions.Exception)
-	GetPublicUserInfosByPublicIds(ctx context.Context, publicIds []string, requiredStatic bool) ([]*gqlmodels.PublicUserInfo, *exceptions.Exception)
+	GetPublicUserInfoByUserPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicUserInfo, *exceptions.Exception)
+	GetPublicUserInfosByUserPublicIds(ctx context.Context, publicIds []string) ([]*gqlmodels.PublicUserInfo, *exceptions.Exception)
 }
 
 type UserInfoService struct {
@@ -93,7 +93,7 @@ func (s *UserInfoService) UpdateMyInfo(reqDto *dtos.UpdateMyInfoReqDto) (*dtos.U
 /* ============================== Service Methods for Public UserInfo (Only available in GraphQL) ============================== */
 
 // use the searchable user cursor (we only give the search functionality on users)
-func (s *UserInfoService) GetPublicUserInfoByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicUserInfo, *exceptions.Exception) {
+func (s *UserInfoService) GetPublicUserInfoByUserPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicUserInfo, *exceptions.Exception) {
 	userInfo := schemas.UserInfo{}
 	result := s.db.Table(schemas.UserInfo{}.TableName()).
 		Joins("LEFT JOIN \"UserTable\" u ON u.id = user_id").
@@ -106,42 +106,46 @@ func (s *UserInfoService) GetPublicUserInfoByPublicId(ctx context.Context, publi
 	return userInfo.ToPublicUserInfo(), nil
 }
 
-func (s *UserInfoService) GetPublicUserInfosByPublicIds(ctx context.Context, publicIds []string, requiredStatic bool) ([]*gqlmodels.PublicUserInfo, *exceptions.Exception) {
+func (s *UserInfoService) GetPublicUserInfosByUserPublicIds(ctx context.Context, publicIds []string) ([]*gqlmodels.PublicUserInfo, *exceptions.Exception) {
 	if len(publicIds) == 0 {
 		return []*gqlmodels.PublicUserInfo{}, nil
 	}
 
+	uniquePublicIds := make([]string, 0)
+	seen := make(map[string]bool)
+	for _, publicId := range publicIds {
+		if !seen[publicId] {
+			uniquePublicIds = append(uniquePublicIds, publicId)
+			seen[publicId] = true
+		}
+	}
+	if len(uniquePublicIds) == 0 {
+		return make([]*gqlmodels.PublicUserInfo, len(publicIds)), nil
+	}
+
 	var userInfosWithPublicUserIds []*struct {
 		schemas.UserInfo
-		UserPublicId string `gorm:"column:public_id"`
+		UserPublicId string `gorm:"column:user_public_id"`
 	}
 	result := s.db.Table(schemas.UserInfo{}.TableName()+" ui").
-		Select("ui.*, u.public_id").
+		Select("ui.*, u.public_id as user_public_id").
 		Joins("LEFT JOIN \"UserTable\" u ON u.id = ui.user_id").
-		Where("u.public_id IN ?", publicIds).
+		Where("u.public_id IN ?", uniquePublicIds).
 		Find(&userInfosWithPublicUserIds)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserInfo.NotFound().WithError(err)
 	}
 
-	if requiredStatic {
-		publicIdToIndexMap := make(map[string]int)
-		for index, publidId := range publicIds {
-			publicIdToIndexMap[publidId] = index
-		}
-
-		publicUserInfos := make([]*gqlmodels.PublicUserInfo, len(userInfosWithPublicUserIds))
-		for _, userInfoWithPublicUserId := range userInfosWithPublicUserIds {
-			index := publicIdToIndexMap[userInfoWithPublicUserId.UserPublicId]
-			publicUserInfos[index] = userInfoWithPublicUserId.UserInfo.ToPublicUserInfo()
-		}
-
-		return publicUserInfos, nil
+	publicIdToIndexesMap := make(map[string][]int)
+	for index, publidId := range publicIds {
+		publicIdToIndexesMap[publidId] = append(publicIdToIndexesMap[publidId], index)
 	}
 
-	publicUserInfos := make([]*gqlmodels.PublicUserInfo, 0)
+	publicUserInfos := make([]*gqlmodels.PublicUserInfo, len(publicIds))
 	for _, userInfoWithPublicUserId := range userInfosWithPublicUserIds {
-		publicUserInfos = append(publicUserInfos, userInfoWithPublicUserId.UserInfo.ToPublicUserInfo())
+		for _, index := range publicIdToIndexesMap[userInfoWithPublicUserId.UserPublicId] {
+			publicUserInfos[index] = userInfoWithPublicUserId.UserInfo.ToPublicUserInfo()
+		}
 	}
 
 	return publicUserInfos, nil

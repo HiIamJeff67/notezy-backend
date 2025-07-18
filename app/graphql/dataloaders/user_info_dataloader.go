@@ -6,7 +6,7 @@ import (
 	gophersdataloader "github.com/graph-gophers/dataloader/v7"
 	"gorm.io/gorm"
 
-	"notezy-backend/app/exceptions"
+	exceptions "notezy-backend/app/exceptions"
 	gqlmodels "notezy-backend/app/graphql/models"
 	services "notezy-backend/app/services"
 	constants "notezy-backend/shared/constants"
@@ -21,8 +21,8 @@ const (
 )
 
 type UserInfoLoaderKey struct {
-	ID     string             `json:"id"`
-	Source LoadUserInfoSource `json:"source"`
+	PublicId string             `json:"publicId"`
+	Source   LoadUserInfoSource `json:"source"`
 }
 
 type UserInfoLoaderType = gophersdataloader.Loader[UserInfoLoaderKey, *gqlmodels.PublicUserInfo]
@@ -66,44 +66,46 @@ func (d *UserInfoDataloader) GetLoader() *UserInfoLoaderType {
 func (d *UserInfoDataloader) batchFunction() UserInfoBatchFunctionType {
 	return func(ctx context.Context, keys []UserInfoLoaderKey) []*UserInfoResultType {
 		keysBySource := make(map[LoadUserInfoSource][]string)
-		keyToIndexMap := make(map[UserInfoLoaderKey]int)
+		keyToIndexesMap := make(map[UserInfoLoaderKey][]int)
 
 		for index, key := range keys {
-			keysBySource[key.Source] = append(keysBySource[key.Source], key.ID)
-			keyToIndexMap[key] = index
+			keysBySource[key.Source] = append(keysBySource[key.Source], key.PublicId)
+			keyToIndexesMap[key] = append(keyToIndexesMap[key], index)
 		}
 
 		results := make([]*UserInfoResultType, len(keys))
 
-		for source, ids := range keysBySource {
+		for source, publicIds := range keysBySource {
 			var publicUserInfos []*gqlmodels.PublicUserInfo
 			var exception *exceptions.Exception
 
 			switch source {
 			case LoadUserInfoSource_UserPublicId:
 				// make sure we get the result in the same order
-				// so the order of "publicUserInfos" is the same as the "ids"
-				publicUserInfos, exception = d.userInfoService.GetPublicUserInfosByPublicIds(ctx, ids, true)
+				// so the order of "publicUserInfos" is the same as the "publicIds"
+				publicUserInfos, exception = d.userInfoService.GetPublicUserInfosByUserPublicIds(ctx, publicIds)
 			default:
-				exception = exceptions.UserInfo.NotFound().WithDetails(
-					"Failed to fetch user info in a batch, source field is invalid",
-				)
+				exception = exceptions.UserInfo.InvalidSourceInBatchFunction()
 			}
 
 			if exception != nil {
-				for _, id := range ids {
-					key := UserInfoLoaderKey{ID: id, Source: source}
-					if index, exists := keyToIndexMap[key]; exists {
-						results[index] = &UserInfoResultType{Error: exception.Error}
+				for _, publicId := range publicIds {
+					key := UserInfoLoaderKey{PublicId: publicId, Source: source}
+					if _, exists := keyToIndexesMap[key]; exists {
+						for _, index := range keyToIndexesMap[key] {
+							results[index] = &UserInfoResultType{Error: exception.Error}
+						}
 					}
 				}
 				continue
 			}
 
 			for index, publicUserInfo := range publicUserInfos {
-				key := UserInfoLoaderKey{ID: ids[index], Source: source}
-				if originalIndex, exists := keyToIndexMap[key]; exists {
-					results[originalIndex] = &UserInfoResultType{Data: publicUserInfo}
+				key := UserInfoLoaderKey{PublicId: publicIds[index], Source: source}
+				if _, exists := keyToIndexesMap[key]; exists {
+					for _, originalIndex := range keyToIndexesMap[key] {
+						results[originalIndex] = &UserInfoResultType{Data: publicUserInfo}
+					}
 				}
 			}
 		}
@@ -114,12 +116,12 @@ func (d *UserInfoDataloader) batchFunction() UserInfoBatchFunctionType {
 
 /* ============================== Load Functions ============================== */
 
-func (d *UserInfoDataloader) LoadByUserPublicId(originalContext context.Context, id string) (*gqlmodels.PublicUserInfo, error) {
+func (d *UserInfoDataloader) LoadByUserPublicId(originalContext context.Context, publicId string) (*gqlmodels.PublicUserInfo, error) {
 	future := d.loader.Load(
 		originalContext,
 		UserInfoLoaderKey{
-			ID:     id,
-			Source: LoadUserInfoSource_UserPublicId,
+			PublicId: publicId,
+			Source:   LoadUserInfoSource_UserPublicId,
 		},
 	)
 

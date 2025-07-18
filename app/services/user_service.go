@@ -27,6 +27,7 @@ type UserServiceInterface interface {
 
 	// services for public users
 	GetPublicUserByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicUser, *exceptions.Exception)
+	GetPublicAuthorByThemePublicIds(ctx context.Context, publicIds []string) ([]*gqlmodels.PublicUser, *exceptions.Exception)
 	SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.SearchUserInput) (*gqlmodels.SearchUserConnection, *exceptions.Exception)
 }
 
@@ -106,6 +107,51 @@ func (s *UserService) GetPublicUserByPublicId(ctx context.Context, publicId stri
 	}
 
 	return user.ToPublicUser(), nil
+}
+
+func (s *UserService) GetPublicAuthorByThemePublicIds(ctx context.Context, publicIds []string) ([]*gqlmodels.PublicUser, *exceptions.Exception) {
+	if len(publicIds) == 0 {
+		return []*gqlmodels.PublicUser{}, nil
+	}
+
+	uniquePublicIds := make([]string, 0)
+	seen := make(map[string]bool)
+	for _, publicId := range publicIds {
+		if !seen[publicId] {
+			uniquePublicIds = append(uniquePublicIds, publicId)
+			seen[publicId] = true
+		}
+	}
+	if len(uniquePublicIds) == 0 {
+		return make([]*gqlmodels.PublicUser, len(publicIds)), nil
+	}
+
+	var authorsWithPublicThemeIds []*struct {
+		schemas.User
+		ThemePublicId string `gorm:"theme_public_id"`
+	}
+	result := s.db.Table(schemas.User{}.TableName()+" u").
+		Select("u.*, t.public_id as theme_public_id").
+		Joins("LEFT JOIN \"ThemeTable\" t ON t.author_id = u.id").
+		Where("t.public_id IN ?", uniquePublicIds).
+		Find(&authorsWithPublicThemeIds)
+	if err := result.Error; err != nil {
+		return nil, exceptions.User.NotFound().WithError(err)
+	}
+
+	publicIdToIndexesMap := make(map[string][]int)
+	for index, publicId := range publicIds {
+		publicIdToIndexesMap[publicId] = append(publicIdToIndexesMap[publicId], index)
+	}
+
+	publicUsers := make([]*gqlmodels.PublicUser, len(publicIds))
+	for _, authorWithPublicThemeId := range authorsWithPublicThemeIds {
+		for _, index := range publicIdToIndexesMap[authorWithPublicThemeId.ThemePublicId] {
+			publicUsers[index] = authorWithPublicThemeId.ToPublicUser()
+		}
+	}
+
+	return publicUsers, nil
 }
 
 func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.SearchUserInput) (*gqlmodels.SearchUserConnection, *exceptions.Exception) {

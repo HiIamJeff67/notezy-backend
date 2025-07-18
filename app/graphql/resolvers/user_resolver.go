@@ -25,10 +25,10 @@ func NewUserResolver() UserResolverInterface {
 
 // [PublicUser ---PublicUser.PublicId---> PublicUserInfo]
 func (r *UserResolver) UserInfo(ctx context.Context, obj *gqlmodels.PublicUser) (*gqlmodels.PublicUserInfo, error) {
-	return r.dataloader.UserInfoLoader.LoadByUserPublicId(ctx, obj.PublicID)
+	return r.dataloader.UserInfoDataLoader.LoadByUserPublicId(ctx, obj.PublicID)
 }
 
 // [PublicUser ---PublicUser.PublicId---> PublicBadges]
 func (r *UserResolver) Badge(ctx context.Context, obj *gqlmodels.PublicUser) (*gqlmodels.PublicBadge, error) {
-	return r.dataloader.BadgeLoader.LoadByUserPublicId(ctx, obj.PublicID)
+	return r.dataloader.BadgeDataLoader.LoadByUserPublicId(ctx, obj.PublicID)
 }

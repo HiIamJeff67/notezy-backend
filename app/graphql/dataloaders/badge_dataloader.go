@@ -21,8 +21,8 @@ const (
 )
 
 type BadgeLoaderKey struct {
-	ID     string          `json:"id"`
-	Source LoadBadgeSource `json:"source"`
+	PublicId string          `json:"publicId"`
+	Source   LoadBadgeSource `json:"source"`
 }
 
 type BadgeLoaderType = gophersdataloader.Loader[BadgeLoaderKey, *gqlmodels.PublicBadge]
@@ -65,42 +65,44 @@ func (d *BadgeDataloader) GetLoader() *BadgeLoaderType {
 func (d *BadgeDataloader) batchFunction() BadgeBatchFunctionType {
 	return func(ctx context.Context, keys []BadgeLoaderKey) []*BadgeResultType {
 		keysBySource := make(map[LoadBadgeSource][]string)
-		keyToIndexMap := make(map[BadgeLoaderKey]int)
+		keyToIndexesMap := make(map[BadgeLoaderKey][]int)
 
 		for index, key := range keys {
-			keysBySource[key.Source] = append(keysBySource[key.Source], key.ID)
-			keyToIndexMap[key] = index
+			keysBySource[key.Source] = append(keysBySource[key.Source], key.PublicId)
+			keyToIndexesMap[key] = append(keyToIndexesMap[key], index)
 		}
 
 		results := make([]*BadgeResultType, len(keys))
 
-		for source, ids := range keysBySource {
+		for source, publicIds := range keysBySource {
 			var publicBadges []*gqlmodels.PublicBadge
 			var exception *exceptions.Exception
 
 			switch source {
 			case LoadBadgeSource_UserPublicId:
-				publicBadges, exception = d.badgeService.GetPublicBadgesByUserPublicIds(ctx, ids, true)
+				publicBadges, exception = d.badgeService.GetPublicBadgesByUserPublicIds(ctx, publicIds)
 			default:
-				exception = exceptions.Badge.NotFound().WithDetails(
-					"Failed to fetch badge in a batch, source field is invalid",
-				)
+				exception = exceptions.Badge.InvalidSourceInBatchFunction()
 			}
 
 			if exception != nil {
-				for _, id := range ids {
-					key := BadgeLoaderKey{ID: id, Source: source}
-					if index, exists := keyToIndexMap[key]; exists {
-						results[index] = &BadgeResultType{Error: exception.Error}
+				for _, publicId := range publicIds {
+					key := BadgeLoaderKey{PublicId: publicId, Source: source}
+					if _, exists := keyToIndexesMap[key]; exists {
+						for _, index := range keyToIndexesMap[key] {
+							results[index] = &BadgeResultType{Error: exception.Error}
+						}
 					}
 				}
 				continue
 			}
 
 			for index, publicBadge := range publicBadges {
-				key := BadgeLoaderKey{ID: ids[index], Source: source}
-				if originalIndex, exists := keyToIndexMap[key]; exists {
-					results[originalIndex] = &BadgeResultType{Data: publicBadge}
+				key := BadgeLoaderKey{PublicId: publicIds[index], Source: source}
+				if _, exists := keyToIndexesMap[key]; exists {
+					for _, originalIndex := range keyToIndexesMap[key] {
+						results[originalIndex] = &BadgeResultType{Data: publicBadge}
+					}
 				}
 			}
 		}
@@ -111,12 +113,12 @@ func (d *BadgeDataloader) batchFunction() BadgeBatchFunctionType {
 
 /* ============================== Load Functions ============================== */
 
-func (d *BadgeDataloader) LoadByUserPublicId(originalContext context.Context, id string) (*gqlmodels.PublicBadge, error) {
+func (d *BadgeDataloader) LoadByUserPublicId(originalContext context.Context, publicId string) (*gqlmodels.PublicBadge, error) {
 	future := d.loader.Load(
 		originalContext,
 		BadgeLoaderKey{
-			ID:     id,
-			Source: LoadBadgeSource_UserPublicId,
+			PublicId: publicId,
+			Source:   LoadBadgeSource_UserPublicId,
 		},
 	)
 

@@ -403,11 +403,11 @@ type GraphQLExceptionDomain struct {
 	_Prefix   ExceptionPrefix
 }
 
-func (d *GraphQLExceptionDomain) InvalidSourceInBatchFunction(dataloaderName string) *Exception {
+func (d *GraphQLExceptionDomain) InvalidSourceInBatchFunction() *Exception {
 	return &Exception{
 		Code:           d._BaseCode + 1,
 		Prefix:         d._Prefix,
-		Message:        fmt.Sprintf("Invalid source field detected while working on jobs in the batch function of %s", dataloaderName),
+		Message:        fmt.Sprintf("Invalid source field detected while working on jobs in the batch function of %s", d._Prefix),
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}

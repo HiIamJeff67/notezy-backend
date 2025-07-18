@@ -7,14 +7,16 @@ import (
 /* ============================== Interface & Instance ============================== */
 
 type Dataloaders struct {
-	UserInfoLoader UserInfoDataloaderInterface
-	BadgeLoader    BadgeDataloaderInterface
+	UserDataLoader     UserDataloaderInterface
+	UserInfoDataLoader UserInfoDataloaderInterface
+	BadgeDataLoader    BadgeDataloaderInterface
 }
 
 func NewDataloaders(db *gorm.DB) Dataloaders {
 	return Dataloaders{
-		UserInfoLoader: NewUserInfoDataloader(db),
-		BadgeLoader:    NewBadgeDataloader(db),
+		UserDataLoader:     NewUserDataloader(db),
+		UserInfoDataLoader: NewUserInfoDataloader(db),
+		BadgeDataLoader:    NewBadgeDataloader(db),
 	}
 }
 
