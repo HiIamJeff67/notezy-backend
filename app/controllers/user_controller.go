@@ -34,7 +34,7 @@ func NewUserController(service services.UserServiceInterface) UserControllerInte
 // with AuthMiddleware()
 func (c *UserController) GetMe(ctx *gin.Context) {
 	var reqDto dtos.GetMeReqDto
-	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.User.InternalServerWentWrong(exception)
@@ -86,7 +86,7 @@ func (c *UserController) GetAllUsers(ctx *gin.Context) {
 // with AuthMiddleware()
 func (c *UserController) UpdateMe(ctx *gin.Context) {
 	var reqDto dtos.UpdateMeReqDto
-	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.User.InternalServerWentWrong(exception)

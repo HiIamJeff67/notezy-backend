@@ -15,7 +15,12 @@ func configureDevelopmentUserInfoRoutes() {
 	)
 
 	userInfoRoutes := DevelopmentRouterGroup.Group("/userInfo")
-	userInfoRoutes.Use(middlewares.AuthMiddleware())
+	userInfoRoutes.Use(
+		middlewares.CORSMiddleware(),
+		middlewares.DomainWhitelistMiddleware(),
+		middlewares.AuthMiddleware(),
+		middlewares.RateLimitMiddleware(1),
+	)
 	{
 		userInfoRoutes.GET(
 			"/getMyInfo",

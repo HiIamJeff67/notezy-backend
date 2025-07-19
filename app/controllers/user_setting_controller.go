@@ -29,7 +29,7 @@ func NewUserSettingController(service services.UserSettingServiceInterface) User
 
 func (c *UserSettingController) GetMySetting(ctx *gin.Context) {
 	var reqDto dtos.GetMySettingReqDto
-	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.UserSetting.InternalServerWentWrong(exception)

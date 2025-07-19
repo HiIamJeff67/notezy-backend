@@ -33,7 +33,7 @@ func NewUserInfoController(service services.UserInfoServiceInterface) UserInfoCo
 // with AuthMiddleware()
 func (c *UserInfoController) GetMyInfo(ctx *gin.Context) {
 	var reqDto dtos.GetMyInfoReqDto
-	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.UserInfo.InternalServerWentWrong(exception)
@@ -70,7 +70,7 @@ func (c *UserInfoController) GetMyInfo(ctx *gin.Context) {
 // with AuthMiddleware()
 func (c *UserInfoController) UpdateMyInfo(ctx *gin.Context) {
 	var reqDto dtos.UpdateMyInfoReqDto
-	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.UserInfo.InternalServerWentWrong(exception)

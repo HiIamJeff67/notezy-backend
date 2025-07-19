@@ -164,6 +164,7 @@ func (s *AuthService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDt
 	exception = caches.SetUserDataCache(
 		*newUserId,
 		caches.UserDataCache{
+			PublicId:           newUser.PublicId,
 			Name:               newUser.Name,
 			DisplayName:        newUser.DisplayName,
 			Email:              newUser.Email,
@@ -261,10 +262,15 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 		return nil, exception
 	}
 
-	// update the access token of the user
-	exception = caches.UpdateUserDataCache(user.Id, caches.UpdateUserDataCacheDto{AccessToken: accessToken})
+	// update the user data cache
+	exception = caches.UpdateUserDataCache(
+		user.Id,
+		caches.UpdateUserDataCacheDto{
+			AccessToken: accessToken,
+		},
+	)
 	if exception != nil {
-		return nil, exception
+		exception.Log()
 	}
 
 	// update the refresh token and the status of the user

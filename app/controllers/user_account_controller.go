@@ -33,7 +33,7 @@ func NewUserAccountController(service services.UserAccountServiceInterface) User
 // with AuthMiddleware
 func (c *UserAccountController) GetMyAccount(ctx *gin.Context) {
 	var reqDto dtos.GetMyAccountReqDto
-	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.UserAccount.InternalServerWentWrong(exception)
@@ -70,7 +70,7 @@ func (c *UserAccountController) GetMyAccount(ctx *gin.Context) {
 // with AuthMiddleware
 func (c *UserAccountController) UpdateMyAccount(ctx *gin.Context) {
 	var reqDto dtos.UpdateMyAccountReqDto
-	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.UserAccount.InternalServerWentWrong(exception)

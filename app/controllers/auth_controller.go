@@ -114,7 +114,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 // with AuthMiddleware()
 func (c *AuthController) Logout(ctx *gin.Context) {
 	var reqDto dtos.LogoutReqDto
-	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.Auth.InternalServerWentWrong(exception)
@@ -185,7 +185,7 @@ func (c *AuthController) SendAuthCode(ctx *gin.Context) {
 // with AuthMiddleware()
 func (c *AuthController) ValidateEmail(ctx *gin.Context) {
 	var reqDto dtos.ValidateEmailReqDto
-	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.Auth.InternalServerWentWrong(exception)
@@ -231,7 +231,7 @@ func (c *AuthController) ValidateEmail(ctx *gin.Context) {
 // with AuthMiddleware()
 func (c *AuthController) ResetEmail(ctx *gin.Context) {
 	var reqDto dtos.ResetEmailReqDto
-	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.Auth.InternalServerWentWrong(exception)
@@ -312,7 +312,7 @@ func (c *AuthController) ForgetPassword(ctx *gin.Context) {
 // with AuthMiddleware()
 func (c *AuthController) DeleteMe(ctx *gin.Context) {
 	var reqDto dtos.DeleteMeReqDto
-	userId, exception := contexts.FetchAndConvertContextFieldToUUID(ctx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.Auth.InternalServerWentWrong(exception)

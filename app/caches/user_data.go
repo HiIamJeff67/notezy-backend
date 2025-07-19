@@ -18,6 +18,7 @@ import (
 )
 
 type UserDataCache struct {
+	PublicId           string           // user
 	Name               string           // user
 	DisplayName        string           // user
 	Email              string           // user
@@ -33,6 +34,7 @@ type UserDataCache struct {
 }
 
 type UpdateUserDataCacheDto struct {
+	PublicId           *string
 	Name               *string
 	DisplayName        *string
 	Email              *string
@@ -68,7 +70,8 @@ func formatKey(id uuid.UUID) string {
 }
 
 func isValidUserCacheData(userDataCache *UserDataCache) bool {
-	if strings.ReplaceAll(userDataCache.Name, " ", "") == "" ||
+	if strings.ReplaceAll(userDataCache.PublicId, " ", "") == "" ||
+		strings.ReplaceAll(userDataCache.Name, " ", "") == "" ||
 		strings.ReplaceAll(userDataCache.DisplayName, " ", "") == "" ||
 		strings.ReplaceAll(userDataCache.Email, " ", "") == "" ||
 		strings.ReplaceAll(userDataCache.AccessToken, " ", "") == "" ||

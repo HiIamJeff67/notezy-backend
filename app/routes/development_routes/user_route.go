@@ -15,7 +15,12 @@ func configureDevelopmentUserRoutes() {
 	)
 
 	userRoutes := DevelopmentRouterGroup.Group("/user")
-	userRoutes.Use(middlewares.AuthMiddleware())
+	userRoutes.Use(
+		middlewares.CORSMiddleware(),
+		middlewares.DomainWhitelistMiddleware(),
+		middlewares.AuthMiddleware(),
+		middlewares.RateLimitMiddleware(1),
+	)
 	{
 		userRoutes.GET(
 			"/getMe",

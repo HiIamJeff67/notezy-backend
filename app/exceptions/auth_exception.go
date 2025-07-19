@@ -122,6 +122,16 @@ func (d *AuthExceptionDomain) LoginBlockedDueToTryingTooManyTimes(blockedUntil t
 	}
 }
 
+func (d *AuthExceptionDomain) NoClientIPOrReferenceToClient() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 9,
+		Prefix:         d.Prefix,
+		Message:        "Cannot extract or find any reference to the client",
+		HTTPStatusCode: http.StatusUnauthorized,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
 /* ========================= Handling Permission Denied ========================= */
 
 func (d *AuthExceptionDomain) PermissionDeniedDueToUserRole(userRole any) *Exception {
@@ -140,6 +150,26 @@ func (d *AuthExceptionDomain) PermissionDeniedDueToUserPlan(userPlan any) *Excep
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("The current user plan of %v does not have access to this operation", userPlan),
 		HTTPStatusCode: http.StatusUnauthorized,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *AuthExceptionDomain) PermissionDeniedDueToInvalidRequestOriginDomain(origin string) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 13,
+		Prefix:         d.Prefix,
+		Message:        fmt.Sprintf("The current request origin domain of %s is invalid", origin),
+		HTTPStatusCode: http.StatusUnauthorized,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *AuthExceptionDomain) PermissionDeniedDueToTooManyRequests() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 14,
+		Prefix:         d.Prefix,
+		Message:        "Too many requests, please wait for a while",
+		HTTPStatusCode: http.StatusTooManyRequests,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }

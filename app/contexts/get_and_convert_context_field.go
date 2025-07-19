@@ -7,10 +7,10 @@ import (
 	exceptions "notezy-backend/app/exceptions"
 )
 
-func FetchAndConvertContextFieldToUUID(ctx *gin.Context, name string) (*uuid.UUID, *exceptions.Exception) {
+func GetAndConvertContextFieldToUUID(ctx *gin.Context, name string) (*uuid.UUID, *exceptions.Exception) {
 	value, exist := ctx.Get(name)
 	if !exist {
-		return nil, exceptions.Context.FailedToFetchContextFieldOfSpecificName(name)
+		return nil, exceptions.Context.FailedToGetContextFieldOfSpecificName(name)
 	}
 
 	valueString, ok := value.(string)

@@ -12,7 +12,7 @@ import (
 	exceptions "notezy-backend/app/exceptions"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
-	"notezy-backend/app/tokens"
+	tokens "notezy-backend/app/tokens"
 	types "notezy-backend/shared/types"
 )
 
@@ -87,12 +87,21 @@ func _validateRefreshToken(refreshToken string) (*schemas.User, *exceptions.Exce
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		// clear all the previous field first for security
+		ctx.Set("userId", "")
+		ctx.Set("publicId", "")
+		ctx.Set("name", "")
+		ctx.Set("displayName", "")
+		ctx.Set("email", "")
+		ctx.Set("accessToken", "")
+
 		// nest if statement bcs we will skip the accessToken validation if it failed
 		if accessToken, exception := _extractAccessToken(ctx); exception == nil { // if extract the accessToken successfully
 			if claims, userDataCache, exception := _validateAccessTokenAndUserAgent(accessToken); exception == nil { // if validate the accessToken successfully
 				if currentUserAgent := ctx.GetHeader("User-Agent"); currentUserAgent == claims.UserAgent { // if the userAgent is matched
 					// if everything above is all fine, we should get the valid userDataCache and claims
 					ctx.Set("userId", claims.Id)
+					ctx.Set("publicId", userDataCache.PublicId)
 					ctx.Set("name", userDataCache.Name)
 					ctx.Set("displayName", userDataCache.DisplayName)
 					ctx.Set("email", userDataCache.Email)
@@ -139,6 +148,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		ctx.Set("userId", _user.Id.String())
+		ctx.Set("publicId", _user.PublicId)
 		ctx.Set("name", _user.Name)
 		ctx.Set("displayName", _user.DisplayName)
 		ctx.Set("email", _user.Email)

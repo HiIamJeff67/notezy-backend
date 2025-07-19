@@ -28,7 +28,7 @@ var Context = &ContextExceptionDomain{
 	},
 }
 
-func (d *ContextExceptionDomain) FailedToFetchContextFieldOfSpecificName(name string) *Exception {
+func (d *ContextExceptionDomain) FailedToGetContextFieldOfSpecificName(name string) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
 		Prefix:         d.Prefix,
