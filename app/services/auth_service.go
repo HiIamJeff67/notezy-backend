@@ -20,6 +20,7 @@ import (
 	constants "notezy-backend/shared/constants"
 
 	authsql "notezy-backend/app/models/sql/auth"
+	usersql "notezy-backend/app/models/sql/user"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -262,15 +263,67 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 		return nil, exception
 	}
 
-	// update the user data cache
-	exception = caches.UpdateUserDataCache(
-		user.Id,
-		caches.UpdateUserDataCacheDto{
-			AccessToken: accessToken,
-		},
-	)
-	if exception != nil {
-		exception.Log()
+	// check if the user data cache exists
+	if _, exception := caches.GetUserDataCache(user.Id); exception == nil {
+		// then just update the existing user data cache
+		exception = caches.UpdateUserDataCache(
+			user.Id,
+			caches.UpdateUserDataCacheDto{
+				AccessToken: accessToken,
+			},
+		)
+		if exception != nil {
+			exception.Log()
+		}
+	} else { // else if it does not exist
+		// then we have to first get the relative data from differenct tables
+		// we done this by one custom sql so it's not that slow...
+		// once we have the required data, we set it as the user data cache
+		output := struct {
+			PublicId           string           `gorm:"public_id"`
+			Name               string           `gorm:"name"`
+			DisplayName        string           `gorm:"display_name"`
+			Email              string           `gorm:"email"`
+			Role               enums.UserRole   `gorm:"role"`
+			Plan               enums.UserPlan   `gorm:"plan"`
+			Status             enums.UserStatus `gorm:"status"`
+			AvatarURL          *string          `gorm:"avatar_url"`
+			Language           enums.Language   `gorm:"language"`
+			GeneralSettingCode int64            `gorm:"general_setting_code"`
+			PrivacySettingCode int64            `gorm:"privacy_setting_code"`
+			UpdatedAt          time.Time        `gorm:"updated_at"`
+		}{}
+		result := s.db.Raw(usersql.GetUserDataCacheByIdSQL, user.Id).Scan(&output)
+		if err := result.Error; err != nil {
+			// should be exists in database
+			return nil, exceptions.User.NotFound().WithError(err).Log()
+		}
+
+		newUserDataCache := caches.UserDataCache{
+			PublicId:           output.PublicId,
+			Name:               output.Name,
+			DisplayName:        output.DisplayName,
+			Email:              output.Email,
+			AccessToken:        *accessToken,
+			Role:               output.Role,
+			Plan:               output.Plan,
+			Status:             output.Status,
+			AvatarURL:          "",
+			Language:           output.Language,
+			GeneralSettingCode: output.GeneralSettingCode,
+			PrivacySettingCode: output.PrivacySettingCode,
+			UpdatedAt:          output.UpdatedAt,
+		}
+		if output.AvatarURL != nil {
+			newUserDataCache.AvatarURL = *output.AvatarURL
+		}
+		exception := caches.SetUserDataCache(
+			user.Id,
+			newUserDataCache,
+		)
+		if exception != nil {
+			return nil, exception.Log()
+		}
 	}
 
 	// update the refresh token and the status of the user
@@ -339,7 +392,7 @@ func (s *AuthService) SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendA
 		Name      string `json:"name"`
 		UserAgent string `json:"userAgent"`
 	}{}
-	result := s.db.Raw(authsql.UpdateAuthCodeQuery, authCode, authCodeExpiredAt, reqDto.Email).Scan(&output)
+	result := s.db.Raw(authsql.UpdateAuthCodeSQL, authCode, authCodeExpiredAt, reqDto.Email).Scan(&output)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserAccount.FailedToUpdate().WithError(err)
 	}
@@ -363,7 +416,7 @@ func (s *AuthService) ValidateEmail(reqDto *dtos.ValidateEmailReqDto) (*dtos.Val
 	output := struct {
 		UpdatedAt time.Time `json:"updatedAt"`
 	}{}
-	result := s.db.Raw(authsql.ValidateEmailQuery, reqDto.UserId, reqDto.AuthCode).Scan(&output)
+	result := s.db.Raw(authsql.ValidateEmailSQL, reqDto.UserId, reqDto.AuthCode).Scan(&output)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.FailedToUpdate().WithError(err)
 	}
@@ -386,7 +439,7 @@ func (s *AuthService) ResetEmail(reqDto *dtos.ResetEmailReqDto) (*dtos.ResetEmai
 	output := struct {
 		UpdatedAt time.Time `json:"updatedAt"`
 	}{}
-	result := s.db.Raw(authsql.ResetEmailQuery, reqDto.NewEmail, reqDto.AuthCode, reqDto.UserId).Scan(&output)
+	result := s.db.Raw(authsql.ResetEmailSQL, reqDto.NewEmail, reqDto.AuthCode, reqDto.UserId).Scan(&output)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.FailedToUpdate().WithError(err)
 	}
@@ -486,7 +539,7 @@ func (s *AuthService) DeleteMe(reqDto *dtos.DeleteMeReqDto) (*dtos.DeleteMeResDt
 	output := struct {
 		DeletedAt time.Time `json:"deletedAt" gorm:"deleted_at"`
 	}{}
-	result := s.db.Raw(authsql.DeleteMeQuery, reqDto.UserId, reqDto.AuthCode).Scan(&output)
+	result := s.db.Raw(authsql.DeleteMeSQL, reqDto.UserId, reqDto.AuthCode).Scan(&output)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.FailedToUpdate().WithError(err)
 	}

@@ -1,3 +1,4 @@
+-- name: DeleteMe
 DELETE FROM "UserTable" u
 USING "UserAccountTable" ua
 WHERE u.id = ?

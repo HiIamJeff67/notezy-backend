@@ -33,6 +33,7 @@ type UserResultType = gophersdataloader.Result[*gqlmodels.PublicUser]
 type UserDataloaderInterface interface {
 	GetLoader() *UserLoaderType
 	batchFunction() UserBatchFunctionType
+	LoadByThemePublicId(originalContext context.Context, publicId string) (*gqlmodels.PublicUser, error)
 }
 
 type UserDataloader struct {

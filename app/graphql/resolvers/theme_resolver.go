@@ -2,8 +2,9 @@ package resolvers
 
 import (
 	"context"
+
 	gqlmodels "notezy-backend/app/graphql/models"
-	"notezy-backend/app/services"
+	services "notezy-backend/app/services"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -22,8 +23,9 @@ func NewThemeReolsver(service services.ThemeServiceInterface) ThemeResolverInter
 }
 
 /* ============================== Resolver Methods ============================== */
+// [MainSchema(as the filename) ---Indicator of MainSchema---> RelativeSchema(has the relationship between the MainSchema)]
 
 // [PublicTheme ---PublicTheme.PublicId---> PublicUser]
-func (r *ThemeResolver) Auther(ctx context.Context, obj *gqlmodels.PublicTheme) {
-	// future := r.dataloader.
+func (r *ThemeResolver) Auther(ctx context.Context, obj *gqlmodels.PublicTheme) (*gqlmodels.PublicUser, error) {
+	return r.dataloader.UserDataLoader.LoadByThemePublicId(ctx, obj.PublicID)
 }

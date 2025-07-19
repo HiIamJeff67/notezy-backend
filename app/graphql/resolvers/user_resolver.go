@@ -22,6 +22,7 @@ func NewUserResolver() UserResolverInterface {
 }
 
 /* ============================== Resolver Methods ============================== */
+// [MainSchema(as the filename) ---Indicator of MainSchema---> RelativeSchema(has the relationship between the MainSchema)]
 
 // [PublicUser ---PublicUser.PublicId---> PublicUserInfo]
 func (r *UserResolver) UserInfo(ctx context.Context, obj *gqlmodels.PublicUser) (*gqlmodels.PublicUserInfo, error) {

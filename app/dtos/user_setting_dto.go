@@ -18,8 +18,8 @@ type UpdateMySettingReqDto struct {
 	UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 	PartialUpdateDto[struct {
 		Language           enums.Language `json:"language" validate:"omitempty"`
-		GeneralSettingCode int            `json:"generalSettingCode" validate:"omitempty"`
-		PrivacySettingCode int            `json:"privacySettingCode" validate:"omitempty"`
+		GeneralSettingCode int64          `json:"generalSettingCode" validate:"omitempty"`
+		PrivacySettingCode int64          `json:"privacySettingCode" validate:"omitempty"`
 	}]
 }
 
@@ -27,8 +27,8 @@ type UpdateMySettingReqDto struct {
 
 type GetMySettingResDto struct {
 	Language           enums.Language `json:"language"`
-	GeneralSettingCode int            `json:"generalSettingCode"`
-	PrivacySettingCode int            `json:"privacySettingCode"`
+	GeneralSettingCode int64          `json:"generalSettingCode"`
+	PrivacySettingCode int64          `json:"privacySettingCode"`
 }
 
 type UpdateMySettingResDto struct {
