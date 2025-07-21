@@ -89,3 +89,25 @@ func (d *EmailExceptionDomain) TemplateFileTypeAndContentTypeNotMatch(templateFi
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
+
+/* ============================== For EmailWorker Routine ============================== */
+
+func (d *EmailExceptionDomain) FailedToSendEmailByWorkers(workerId int, numOfRetries int, maxRetries int) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 101,
+		Prefix:         d.Prefix,
+		Message:        fmt.Sprintf("Worker %d failed to send email (attempt %d/%d)", workerId, numOfRetries, maxRetries),
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *EmailExceptionDomain) FailedToEnqueueTaskToEmailWorkerManager() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 102,
+		Prefix:         d.Prefix,
+		Message:        "Failed to enqueue the given task to email worker manager",
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}

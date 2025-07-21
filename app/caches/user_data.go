@@ -53,7 +53,7 @@ const (
 )
 
 var (
-	UserDataRange           = types.Range{Start: 0, Size: 8} // server number: 0 - 7 (included)
+	UserDataRange           = types.Range{Start: 0, Size: 4} // server number: 0 - 3 (included)
 	MaxUserDataServerNumber = UserDataRange.Start + UserDataRange.Size - 1
 )
 

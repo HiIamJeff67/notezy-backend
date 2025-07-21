@@ -2,7 +2,6 @@ package emails
 
 import (
 	exceptions "notezy-backend/app/exceptions"
-	util "notezy-backend/app/util"
 	types "notezy-backend/shared/types"
 )
 
@@ -13,14 +12,6 @@ const (
 var _welcomeEmailRenderer = &HTMLEmailRenderer{
 	TemplatePath: "app/emails/templates/welcome_email_template.html",
 	DataMap:      map[string]any{},
-}
-
-var _welcomeEmailSender = &EmailSender{
-	Host:     util.GetEnv("SMTP_HOST", "smtp.gmail.com"),
-	Port:     util.GetIntEnv("SMTP_PORT", 587),
-	UserName: util.GetEnv("NOTEZY_OFFICIAL_GMAIL", ""),
-	Password: util.GetEnv("NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD", ""),
-	From:     util.GetEnv("NOTEZY_OFFICIAL_NAME", "") + "<" + util.GetEnv("NOTEZY_OFFICIAL_GMAIL", "") + ">",
 }
 
 func SendWelcomeEmail(to string, name string, status string) *exceptions.Exception {
@@ -34,7 +25,14 @@ func SendWelcomeEmail(to string, name string, status string) *exceptions.Excepti
 		return exception
 	}
 
-	exception = _welcomeEmailSender.Send(to, WelcomeEmailSubject, body, types.ContentType_HTML)
+	emailObject := EmailObject{
+		To:          to,
+		Subject:     WelcomeEmailSubject,
+		Body:        body,
+		ContentType: types.ContentType_HTML,
+	}
+
+	exception = CommonEmailWorkerManager.Enqueue(emailObject, EmailTaskType_Welcome, 3, 1)
 	if exception != nil {
 		return exception
 	}

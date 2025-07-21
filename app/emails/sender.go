@@ -4,8 +4,11 @@ import (
 	"gopkg.in/gomail.v2"
 
 	exceptions "notezy-backend/app/exceptions"
+	util "notezy-backend/app/util"
 	types "notezy-backend/shared/types"
 )
+
+/* ============================== Initialization & Instance ============================== */
 
 type EmailSender struct {
 	Host     string
@@ -15,7 +18,17 @@ type EmailSender struct {
 	From     string
 }
 
-func (s *EmailSender) Send(to string, subject string, body string, contentType types.ContentType) *exceptions.Exception {
+var CommonEmailSender = &EmailSender{
+	Host:     util.GetEnv("SMTP_HOST", "smtp.gmail.com"),
+	Port:     util.GetIntEnv("SMTP_PORT", 587),
+	UserName: util.GetEnv("NOTEZY_OFFICIAL_GMAIL", ""),
+	Password: util.GetEnv("NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD", ""),
+	From:     util.GetEnv("NOTEZY_OFFICIAL_NAME", "") + "<" + util.GetEnv("NOTEZY_OFFICIAL_GMAIL", "") + ">",
+}
+
+/* ============================== Methods ============================== */
+
+func (s *EmailSender) SyncSend(to string, subject string, body string, contentType types.ContentType) *exceptions.Exception {
 	if !contentType.IsValidEnum() {
 		return exceptions.Email.InvalidContentType(contentType)
 	}

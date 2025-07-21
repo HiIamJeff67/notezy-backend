@@ -5,7 +5,6 @@ import (
 	"time"
 
 	exceptions "notezy-backend/app/exceptions"
-	util "notezy-backend/app/util"
 	types "notezy-backend/shared/types"
 )
 
@@ -16,14 +15,6 @@ const (
 var _validationEmailRenderer = &HTMLEmailRenderer{
 	TemplatePath: "app/emails/templates/validation_email_template.html",
 	DataMap:      map[string]any{},
-}
-
-var _validationEmailSender = &EmailSender{
-	Host:     util.GetEnv("SMTP_HOST", "smtp.gmail.com"),
-	Port:     util.GetIntEnv("SMTP_PORT", 587),
-	UserName: util.GetEnv("NOTEZY_OFFICIAL_GMAIL", ""),
-	Password: util.GetEnv("NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD", ""),
-	From:     util.GetEnv("NOTEZY_OFFICIAL_NAME", "") + "<" + util.GetEnv("NOTEZY_OFFICIAL_GMAIL", "") + ">",
 }
 
 func SendValidationEmail(to string, name string, authCode string, userAgent string, expiredAt time.Time) *exceptions.Exception {
@@ -45,7 +36,14 @@ func SendValidationEmail(to string, name string, authCode string, userAgent stri
 		return exception
 	}
 
-	exception = _validationEmailSender.Send(to, ValidationEmailSubject, body, types.ContentType_HTML)
+	emailObject := EmailObject{
+		To:          to,
+		Subject:     ValidationEmailSubject,
+		Body:        body,
+		ContentType: types.ContentType_HTML,
+	}
+
+	exception = CommonEmailWorkerManager.Enqueue(emailObject, EmailTaskType_Validation, 3, 2)
 	if exception != nil {
 		return exception
 	}

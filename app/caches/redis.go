@@ -17,8 +17,7 @@ var (
 	RedisClientMap             map[int]*redis.Client                       = make(map[int]*redis.Client)
 	RedisClientToConfig        map[*redis.Client]shared.CacheManagerConfig = make(map[*redis.Client]shared.CacheManagerConfig)
 	PurposeToServerNumberRange                                             = map[shared.ValidCachePurpose]types.Range{
-		shared.ValidCachePurpose_UserData:    UserDataRange,    // server number: 0 - 7 (included)
-		shared.ValidCachePurpose_RecentPages: RecentPagesRange, // server number: 8 - 15 (included)
+		shared.ValidCachePurpose_UserData: UserDataRange, // server number: 0 - 3 (included)
 	}
 	Ctx = context.Background()
 
