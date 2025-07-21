@@ -32,7 +32,7 @@ func SendWelcomeEmail(to string, name string, status string) *exceptions.Excepti
 		ContentType: types.ContentType_HTML,
 	}
 
-	exception = CommonEmailWorkerManager.Enqueue(emailObject, EmailTaskType_Welcome, 3, 1)
+	exception = NotezyEmailWorkerManager.Enqueue(emailObject, EmailTaskType_Welcome, 3, 1)
 	if exception != nil {
 		return exception
 	}

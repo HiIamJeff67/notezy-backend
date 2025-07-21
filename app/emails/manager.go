@@ -4,12 +4,13 @@ import (
 	"container/heap"
 	"context"
 	"fmt"
-	exceptions "notezy-backend/app/exceptions"
-	"notezy-backend/app/logs"
-	"notezy-backend/shared/constants"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	exceptions "notezy-backend/app/exceptions"
+	logs "notezy-backend/app/logs"
+	constants "notezy-backend/shared/constants"
 )
 
 /* ============================== Initialization & Instance ============================== */
@@ -42,7 +43,7 @@ func NewEmailWorkerManager(maxWorkers int, sender EmailSender) *EmailWorkerManag
 }
 
 var (
-	CommonEmailWorkerManager = NewEmailWorkerManager(16, *CommonEmailSender)
+	NotezyEmailWorkerManager = NewEmailWorkerManager(16, *NotezyEmailSender)
 )
 
 /* ============================== Aulixary Functions ============================== */

@@ -18,7 +18,7 @@ type EmailSender struct {
 	From     string
 }
 
-var CommonEmailSender = &EmailSender{
+var NotezyEmailSender = &EmailSender{
 	Host:     util.GetEnv("SMTP_HOST", "smtp.gmail.com"),
 	Port:     util.GetIntEnv("SMTP_PORT", 587),
 	UserName: util.GetEnv("NOTEZY_OFFICIAL_GMAIL", ""),

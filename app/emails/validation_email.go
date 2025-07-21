@@ -43,7 +43,7 @@ func SendValidationEmail(to string, name string, authCode string, userAgent stri
 		ContentType: types.ContentType_HTML,
 	}
 
-	exception = CommonEmailWorkerManager.Enqueue(emailObject, EmailTaskType_Validation, 3, 2)
+	exception = NotezyEmailWorkerManager.Enqueue(emailObject, EmailTaskType_Validation, 3, 2)
 	if exception != nil {
 		return exception
 	}
