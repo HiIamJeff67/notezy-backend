@@ -28,17 +28,17 @@ type EmailWorkerManager struct {
 
 	monitorTicker *time.Ticker
 	isMonitoring  int32
-	monitorMutex  sync.Mutex
 }
 
 func NewEmailWorkerManager(maxWorkers int, sender EmailSender) *EmailWorkerManager {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &EmailWorkerManager{
-		maxWorkers:  maxWorkers,
-		ctx:         ctx,
-		cancel:      cancel,
-		emailSender: sender,
-		buffer:      NewEmailBuffer(),
+		maxWorkers:   maxWorkers,
+		ctx:          ctx,
+		cancel:       cancel,
+		emailSender:  sender,
+		buffer:       NewEmailBuffer(),
+		isMonitoring: 0,
 	}
 }
 
@@ -53,20 +53,6 @@ func (ewm *EmailWorkerManager) generateTaskId() string {
 }
 
 /* ============================== Private Methods ============================== */
-
-// using atomic operations on checking the monitoring state
-func (ewm *EmailWorkerManager) isCurrentlyMonitoring() bool {
-	return atomic.LoadInt32(&ewm.isMonitoring) == 1
-}
-
-// using atomic operations on setting the monitoring state
-func (ewm *EmailWorkerManager) setMonitoringState(state bool) {
-	if state {
-		atomic.StoreInt32(&ewm.isMonitoring, 1)
-	} else {
-		atomic.StoreInt32(&ewm.isMonitoring, 0)
-	}
-}
 
 func (ewm *EmailWorkerManager) processTask(task *EmailTask, workerId int) {
 	exception := ewm.emailSender.SyncSend(task.Object.To, task.Object.Subject, task.Object.Body, task.Object.ContentType)
@@ -135,25 +121,22 @@ func (ewm *EmailWorkerManager) dispatchTasks() {
 // it won't logging enoggh informations for actual monitoring
 // it's only used to maintain the necessary conditions between workers and tasks(as the producer & consumer model)
 func (ewm *EmailWorkerManager) tryStartMonitoring() {
-	if ewm.isCurrentlyMonitoring() {
+	if !atomic.CompareAndSwapInt32(&ewm.isMonitoring, 0, 1) {
+		// if the current ewm.isMonitoring == 0 (compare "addr" and "old"(0 in this case))
+		// then ewm.isMonitoring = "new"(1 in this case) and return true
+		// else return false
+
+		// the task of the current go routine is unnecessary to process anymore,
+		// since there's some other (1 go routine) which has ensured the email worker manager is working
+		// on dispatching the email worker to send the emails including the enqueued emails of current go routine
 		return
 	}
 
-	// only using the monitorMutex while creating the ticker
-	ewm.monitorMutex.Lock()
-	defer ewm.monitorMutex.Unlock()
-
-	// check if the manager is monitoring again after we lock its mutex
-	if ewm.isCurrentlyMonitoring() {
-		return
-	}
-
-	ewm.setMonitoringState(true)
 	ewm.monitorTicker = time.NewTicker(constants.EmailWorkerManagerTickerDuration)
 
 	go func() {
 		defer func() {
-			ewm.setMonitoringState(false)
+			atomic.StoreInt32(&ewm.isMonitoring, 0)
 			logs.FInfo("Stopped queue monitoring")
 		}()
 
@@ -167,13 +150,12 @@ func (ewm *EmailWorkerManager) tryStartMonitoring() {
 				ewm.dispatchTasks() // call the method to dispatch the task
 
 				ewm.bufferMutex.RLock()
-				isEmpty := ewm.buffer.IsEmpty()
-				ewm.bufferMutex.RUnlock()
-
-				if isEmpty && ewm.GetActiveWorkerCount() == 0 {
+				if ewm.buffer.IsEmpty() && ewm.GetActiveWorkerCount() == 0 {
 					ewm.monitorTicker.Stop()
+					ewm.bufferMutex.RUnlock()
 					return
 				}
+				ewm.bufferMutex.RUnlock()
 			}
 		}
 	}()
@@ -220,7 +202,7 @@ func (ewm *EmailWorkerManager) GetStats() map[string]interface{} {
 		"bufferSize":    bufferSize,
 		"activeWorkers": ewm.GetActiveWorkerCount(),
 		"maxWorkers":    ewm.maxWorkers,
-		"isMonitoring":  ewm.isCurrentlyMonitoring(),
+		"isMonitoring":  atomic.LoadInt32(&ewm.isMonitoring) == 1,
 	}
 }
 
