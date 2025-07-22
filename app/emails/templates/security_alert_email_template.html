@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Alert - Notezy</title>
+    <style>
+        /* Reset styles */
+        body, table, td, div, p, a { 
+            margin: 0; 
+            padding: 0; 
+            border: 0; 
+            font-size: 100%; 
+            vertical-align: baseline; 
+        }
+        
+        body { 
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.6; 
+            color: #e0e0e0; 
+            background-color: #0a0a0a;
+            width: 100% !important;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        
+        table {
+            border-collapse: collapse;
+        }
+        
+        .container {
+            max-width: 600px;
+            background-color: #1a1a1a;
+            margin: 20px auto;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .header { 
+            background-color: #2d2d2d;
+            padding: 40px 20px; 
+            text-align: center; 
+        }
+        
+        .header h1 {
+            color: #ffffff;
+            font-size: 28px;
+            margin: 20px 0 0 0;
+            font-weight: bold;
+        }
+        
+        .alert-icon {
+            width: 60px;
+            height: 60px;
+            background-color: #dc2626;
+            margin: 0 auto 20px;
+            text-align: center;
+            line-height: 60px;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            border-radius: 8px;
+        }
+        
+        .content { 
+            padding: 40px 30px; 
+            background-color: #1a1a1a;
+        }
+        
+        .content h2 {
+            color: #ffffff;
+            font-size: 20px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .content p {
+            color: #b0b0b0;
+            margin-bottom: 16px;
+            font-size: 16px;
+        }
+        
+        .highlight {
+            color: #228B22;
+            font-weight: bold;
+        }
+        
+        .alert-container {
+            background-color: #2d1b1b;
+            border: 2px solid #dc2626;
+            border-left: 4px solid #dc2626;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 5px;
+        }
+        
+        .alert-header {
+            color: #dc2626;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+        
+        .alert-type {
+            color: #fca5a5;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .alert-reason {
+            color: #ffffff;
+            font-size: 14px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .info-box {
+            background-color: #2a2a2a;
+            border: 1px solid #404040;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 5px;
+        }
+        
+        .info-box h3 {
+            color: #ffffff;
+            font-size: 16px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .info-box ul {
+            margin: 10px 0;
+            padding-left: 20px;
+            color: #d0d0d0;
+        }
+        
+        .info-box li {
+            margin-bottom: 8px;
+        }
+        
+        .info-box strong {
+            color: #ffffff;
+        }
+        
+        .detail-table {
+            width: 100%;
+            margin: 20px 0;
+            background-color: #242424;
+            border: 1px solid #404040;
+            border-radius: 5px;
+        }
+        
+        .detail-row {
+            border-bottom: 1px solid #404040;
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            background-color: #2a2a2a;
+            padding: 15px 20px;
+            font-weight: bold;
+            color: #ffffff;
+            width: 30%;
+            vertical-align: top;
+        }
+        
+        .detail-value {
+            padding: 15px 20px;
+            color: #d0d0d0;
+            vertical-align: top;
+        }
+        
+        .button {
+            display: inline-block;
+            padding: 16px 32px;
+            background-color: #dc2626;
+            color: #ffffff !important;
+            text-decoration: none;
+            margin: 25px 0;
+            font-weight: bold;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+        
+        .button-secondary {
+            display: inline-block;
+            padding: 16px 32px;
+            background-color: #8B4513;
+            color: #ffffff !important;
+            text-decoration: none;
+            margin: 10px 10px;
+            font-weight: bold;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+        
+        .footer { 
+            background-color: #0f0f0f;
+            padding: 25px 20px; 
+            text-align: center; 
+            font-size: 13px; 
+            color: #888;
+        }
+        
+        .footer p {
+            margin: 8px 0;
+        }
+        
+        .footer a {
+            color: #228B22;
+            text-decoration: none;
+        }
+        
+        .divider {
+            height: 1px;
+            background-color: #333;
+            margin: 30px 0;
+        }
+        
+        .security-tips {
+            background-color: #242424;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 5px;
+        }
+        
+        .security-tips h3 {
+            color: #ffffff;
+            font-size: 16px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .security-tips ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #b0b0b0;
+        }
+        
+        .security-tips li {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .team-highlight {
+            color: #8B4513;
+            font-weight: bold;
+        }
+        
+        .status-active {
+            color: #228B22;
+        }
+        
+        .status-suspended {
+            color: #dc2626;
+        }
+        
+        .status-locked {
+            color: #f59e0b;
+        }
+    </style>
+</head>
+<body>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td align="center" bgcolor="#0a0a0a">
+                <table class="container" width="600" cellpadding="0" cellspacing="0" border="0">
+                    <!-- Header -->
+                    <tr>
+                        <td class="header">
+                            <div class="alert-icon">⚠️</div>
+                            <h1>Security Alert</h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td class="content">
+                            <h2>Hello <span class="highlight">{{.UserName}}</span>,</h2>
+                            
+                            <p>We detected suspicious activity on your <strong>Notezy</strong> account and wanted to notify you immediately.</p>
+                            
+                            <div class="alert-container">
+                                <div class="alert-header">🚨 Security Alert</div>
+                                <div class="alert-type">Alert Type: {{.AlertType}}</div>
+                                <div class="alert-reason">{{.Reason}}</div>
+                            </div>
+                            
+                            <div class="info-box">
+                                <h3>📋 Alert Details</h3>
+                                <table class="detail-table" cellpadding="0" cellspacing="0" border="0">
+                                    <tr class="detail-row">
+                                        <td class="detail-label">Account Status:</td>
+                                        <td class="detail-value">
+                                            <span class="status-{{.Status}}"><strong>{{.Status}}</strong></span>
+                                        </td>
+                                    </tr>
+                                    <tr class="detail-row">
+                                        <td class="detail-label">Time of Occurrence:</td>
+                                        <td class="detail-value">{{.TimeOfOccurrence}}</td>
+                                    </tr>
+                                    <tr class="detail-row">
+                                        <td class="detail-label">Additional Details:</td>
+                                        <td class="detail-value">{{.OtherDetails}}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="https://notezy.app/security/review" class="button">Review Account Security</a>
+                                <br>
+                                <a href="https://notezy.app/account/settings" class="button-secondary">Account Settings</a>
+                                <a href="https://notezy.app/support" class="button-secondary">Contact Support</a>
+                            </div>
+                            
+                            <div class="divider"></div>
+                            
+                            <div class="security-tips">
+                                <h3>🛡️ What Should You Do?</h3>
+                                <ul>
+                                    <li><strong>Review your recent account activity</strong> immediately</li>
+                                    <li><strong>Change your password</strong> if you suspect unauthorized access</li>
+                                    <li><strong>Enable two-factor authentication</strong> for additional security</li>
+                                    <li><strong>Check for any unfamiliar devices</strong> connected to your account</li>
+                                    <li><strong>Contact us</strong> if you didn't initiate this activity</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="info-box">
+                                <h3>🔐 Security Reminder</h3>
+                                <p><strong>Was this you?</strong> If you recognize this activity, no further action is needed. If not, please secure your account immediately.</p>
+                                <p><strong>Notezy will never ask</strong> for your password, verification codes, or sensitive information via email.</p>
+                            </div>
+                            
+                            <div class="divider"></div>
+                            
+                            <p>If you have any questions or concerns about this security alert, please don't hesitate to <a href="mailto:security@notezy.app" style="color: #228B22;">contact our security team</a>.</p>
+                            
+                            <p style="margin-top: 30px;">
+                                Stay safe and secure,<br>
+                                <span class="team-highlight">The Notezy Security Team</span>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td class="footer">
+                            <p>This security alert was sent to the email address associated with account: <span class="highlight">{{.UserName}}</span></p>
+                            <p>Alert generated automatically by Notezy Security Systems</p>
+                            <div style="margin: 15px 0;">
+                                <a href="https://notezy.app/security">Security Center</a> | 
+                                <a href="https://notezy.app/privacy">Privacy Policy</a> | 
+                                <a href="mailto:security@notezy.app">Report Security Issue</a>
+                            </div>
+                            <p>&copy; 2025 Notezy. All rights reserved.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

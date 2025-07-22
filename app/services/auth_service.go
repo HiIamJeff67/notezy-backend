@@ -184,13 +184,11 @@ func (s *AuthService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDt
 		exception.Log()
 	}
 
-	go func() {
-		// ssend the welcome email to the registered user
-		exception = emails.SendWelcomeEmail(newUser.Email, newUser.Name, newUser.Status.String())
-		if exception != nil {
-			exception.Log()
-		}
-	}()
+	// send the welcome email to the registered user
+	exception = emails.SyncSendWelcomeEmail(newUser.Email, newUser.Name, newUser.Status.String())
+	if exception != nil {
+		exception.Log()
+	}
 
 	return &dtos.RegisterResDto{
 		AccessToken:  *accessToken,
@@ -397,7 +395,7 @@ func (s *AuthService) SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendA
 		return nil, exceptions.UserAccount.FailedToUpdate().WithError(err)
 	}
 
-	exception := emails.SendValidationEmail(reqDto.Email, output.Name, authCode, output.UserAgent, authCodeExpiredAt)
+	exception := emails.SyncSendValidationEmail(reqDto.Email, output.Name, authCode, output.UserAgent, authCodeExpiredAt)
 	if exception != nil {
 		return nil, exception
 	}

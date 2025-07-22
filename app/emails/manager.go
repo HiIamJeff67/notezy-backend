@@ -27,7 +27,7 @@ type EmailWorkerManager struct {
 	bufferMutex sync.RWMutex
 
 	monitorTicker *time.Ticker
-	isMonitoring  bool
+	isMonitoring  int32
 	monitorMutex  sync.Mutex
 }
 
@@ -53,6 +53,20 @@ func (ewm *EmailWorkerManager) generateTaskId() string {
 }
 
 /* ============================== Private Methods ============================== */
+
+// using atomic operations on checking the monitoring state
+func (ewm *EmailWorkerManager) isCurrentlyMonitoring() bool {
+	return atomic.LoadInt32(&ewm.isMonitoring) == 1
+}
+
+// using atomic operations on setting the monitoring state
+func (ewm *EmailWorkerManager) setMonitoringState(state bool) {
+	if state {
+		atomic.StoreInt32(&ewm.isMonitoring, 1)
+	} else {
+		atomic.StoreInt32(&ewm.isMonitoring, 0)
+	}
+}
 
 func (ewm *EmailWorkerManager) processTask(task *EmailTask, workerId int) {
 	exception := ewm.emailSender.SyncSend(task.Object.To, task.Object.Subject, task.Object.Body, task.Object.ContentType)
@@ -120,23 +134,30 @@ func (ewm *EmailWorkerManager) dispatchTasks() {
 // so that the entire producer & consumer model of handling the email will work
 // it won't logging enoggh informations for actual monitoring
 // it's only used to maintain the necessary conditions between workers and tasks(as the producer & consumer model)
-func (ewm *EmailWorkerManager) startMonitoring() {
-	ewm.monitorMutex.Lock()
-	defer ewm.monitorMutex.Unlock()
-
-	if ewm.isMonitoring {
+func (ewm *EmailWorkerManager) tryStartMonitoring() {
+	if ewm.isCurrentlyMonitoring() {
 		return
 	}
 
-	ewm.isMonitoring = true
+	// only using the monitorMutex while creating the ticker
+	ewm.monitorMutex.Lock()
+	defer ewm.monitorMutex.Unlock()
+
+	// check if the manager is monitoring again after we lock its mutex
+	if ewm.isCurrentlyMonitoring() {
+		return
+	}
+
+	ewm.setMonitoringState(true)
 	ewm.monitorTicker = time.NewTicker(constants.EmailWorkerManagerTickerDuration)
 
 	go func() {
 		defer func() {
-			ewm.monitorMutex.Lock()
-			ewm.isMonitoring = false
-			ewm.monitorMutex.Unlock()
+			ewm.setMonitoringState(false)
+			logs.FInfo("Stopped queue monitoring")
 		}()
+
+		logs.FInfo("Started queue monitoring")
 
 		for {
 			select {
@@ -151,14 +172,11 @@ func (ewm *EmailWorkerManager) startMonitoring() {
 
 				if isEmpty && ewm.GetActiveWorkerCount() == 0 {
 					ewm.monitorTicker.Stop()
-					logs.FInfo("Stopped queue monitoring, no tasks and no active workers")
 					return
 				}
 			}
 		}
 	}()
-
-	logs.FInfo("Started queue monitoring")
 }
 
 func (ewm *EmailWorkerManager) enqueueTask(task *EmailTask) error {
@@ -170,7 +188,7 @@ func (ewm *EmailWorkerManager) enqueueTask(task *EmailTask) error {
 	logs.FInfo("Enqueued email task: ID=%s, Type=%s, Priority=%d, Queue size: %d",
 		task.ID, task.Type, task.Priority, bufferSize)
 
-	ewm.startMonitoring()
+	ewm.tryStartMonitoring()
 
 	return nil
 }
@@ -202,7 +220,7 @@ func (ewm *EmailWorkerManager) GetStats() map[string]interface{} {
 		"bufferSize":    bufferSize,
 		"activeWorkers": ewm.GetActiveWorkerCount(),
 		"maxWorkers":    ewm.maxWorkers,
-		"isMonitoring":  ewm.isMonitoring,
+		"isMonitoring":  ewm.isCurrentlyMonitoring(),
 	}
 }
 
@@ -221,6 +239,10 @@ func (ewm *EmailWorkerManager) Enqueue(
 		MaxRetries: maxRetries,
 		Priority:   priority,
 	}
+	err := ewm.enqueueTask(task)
+	if err != nil {
+		return exceptions.Email.FailedToEnqueueTaskToEmailWorkerManager().WithError(err)
+	}
 
-	return exceptions.Email.FailedToEnqueueTaskToEmailWorkerManager().WithError(ewm.enqueueTask(task))
+	return nil
 }

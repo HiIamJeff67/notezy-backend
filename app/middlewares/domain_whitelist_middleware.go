@@ -3,11 +3,12 @@ package middlewares
 import (
 	"net/http"
 	"net/url"
-	exceptions "notezy-backend/app/exceptions"
-	"notezy-backend/app/util"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+
+	exceptions "notezy-backend/app/exceptions"
+	util "notezy-backend/app/util"
 )
 
 func isAllowedOrigin(origin string, allowedDomains []string) bool {

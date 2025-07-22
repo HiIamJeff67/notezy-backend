@@ -1,7 +1,6 @@
 package emails
 
 import (
-	"fmt"
 	"time"
 
 	exceptions "notezy-backend/app/exceptions"
@@ -17,19 +16,23 @@ var _validationEmailRenderer = &HTMLEmailRenderer{
 	DataMap:      map[string]any{},
 }
 
-func SendValidationEmail(to string, name string, authCode string, userAgent string, expiredAt time.Time) *exceptions.Exception {
+func SyncSendValidationEmail(
+	to string,
+	userName string,
+	authCode string,
+	userAgent string,
+	expiredAt time.Time,
+) *exceptions.Exception {
 	remainingMinutes := int(time.Until(expiredAt).Minutes())
 
 	_validationEmailRenderer.DataMap = map[string]any{
-		"Name":          name,
+		"UserName":      userName,
 		"Email":         to,
 		"AuthCode":      authCode,
 		"UserAgent":     userAgent,
 		"ExpiryMinutes": remainingMinutes,
 		"RequestTime":   time.Now().Format("2006-01-02 15:04:05 MST"),
 	}
-
-	fmt.Printf("Sending validation email to: %s with code: %s\n", to, authCode)
 
 	body, exception := _validationEmailRenderer.Render()
 	if exception != nil {
@@ -48,6 +51,5 @@ func SendValidationEmail(to string, name string, authCode string, userAgent stri
 		return exception
 	}
 
-	fmt.Printf("Validation email sent successfully to: %s\n", to)
 	return nil
 }

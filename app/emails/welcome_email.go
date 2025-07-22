@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	WelcomeEmailSubject = "Welcome to Notezy - The Account Registration Was Successfully Done"
+	WelcomeEmailSubject = "Welcome to Notezy - Thanks for the Registration"
 )
 
 var _welcomeEmailRenderer = &HTMLEmailRenderer{
@@ -14,9 +14,13 @@ var _welcomeEmailRenderer = &HTMLEmailRenderer{
 	DataMap:      map[string]any{},
 }
 
-func SendWelcomeEmail(to string, name string, status string) *exceptions.Exception {
+func SyncSendWelcomeEmail(
+	to string,
+	userName string,
+	status string,
+) *exceptions.Exception {
 	_welcomeEmailRenderer.DataMap = map[string]any{
-		"UserName": name,
+		"UserName": userName,
 		"Email":    to,
 		"Status":   status,
 	}
