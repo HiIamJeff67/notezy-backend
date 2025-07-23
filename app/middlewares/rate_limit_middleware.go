@@ -3,15 +3,16 @@ package middlewares
 import (
 	"fmt"
 	"net/http"
-	"notezy-backend/app/contexts"
-	exceptions "notezy-backend/app/exceptions"
-	"notezy-backend/app/logs"
-	"notezy-backend/shared/constants"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
+
+	contexts "notezy-backend/app/contexts"
+	exceptions "notezy-backend/app/exceptions"
+	logs "notezy-backend/app/logs"
+	constants "notezy-backend/shared/constants"
 )
 
 /* ============================== Implementation of Leaky Bucket Algorithm ============================== */
@@ -40,7 +41,7 @@ func (lb *LeakyBucket) Allow() bool {
 
 	validRequests := make([]time.Time, 0)
 	for _, reqArrivalTime := range lb.requestArrivalTimes {
-		if now.Sub(reqArrivalTime) < time.Second {
+		if now.Sub(reqArrivalTime) < constants.MinIntervalTimeOfLastRequest {
 			validRequests = append(validRequests, reqArrivalTime)
 		}
 	}

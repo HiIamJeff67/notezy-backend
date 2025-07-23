@@ -16,8 +16,6 @@ func configureDevelopmentUserInfoRoutes() {
 
 	userInfoRoutes := DevelopmentRouterGroup.Group("/userInfo")
 	userInfoRoutes.Use(
-		middlewares.CORSMiddleware(),
-		middlewares.DomainWhitelistMiddleware(),
 		middlewares.AuthMiddleware(),
 		middlewares.RateLimitMiddleware(1),
 	)

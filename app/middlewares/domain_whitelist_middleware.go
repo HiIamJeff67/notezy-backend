@@ -2,24 +2,18 @@ package middlewares
 
 import (
 	"net/http"
-	"net/url"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 
 	exceptions "notezy-backend/app/exceptions"
+	logs "notezy-backend/app/logs"
 	util "notezy-backend/app/util"
 )
 
 func isAllowedOrigin(origin string, allowedDomains []string) bool {
-	parsedURL, err := url.Parse(origin)
-	if err != nil {
-		return false
-	}
-
-	host := parsedURL.Host
 	for _, allowed := range allowedDomains {
-		if host == allowed {
+		if origin == allowed || (origin[len(origin)-1] == '/' && origin[0:len(origin)-1] == allowed) {
 			return true
 		}
 	}
@@ -27,14 +21,8 @@ func isAllowedOrigin(origin string, allowedDomains []string) bool {
 }
 
 func isAllowedReferer(referer string, allowedDomains []string) bool {
-	parsedURL, err := url.Parse(referer)
-	if err != nil {
-		return false
-	}
-
-	host := parsedURL.Host
 	for _, allowed := range allowedDomains {
-		if host == allowed {
+		if referer == allowed || (referer[len(referer)-1] == '/' && referer[0:len(referer)-1] == allowed) {
 			return true
 		}
 	}
@@ -53,6 +41,10 @@ func DomainWhitelistMiddleware() gin.HandlerFunc {
 		origin := ctx.GetHeader("Origin")
 		if origin != "" {
 			if !isAllowedOrigin(origin, allowedDomains) {
+				logs.FAlert("Blocked Origin: %s, allowed origins: ", origin)
+				for _, domain := range allowedDomains {
+					logs.Alert(domain)
+				}
 				ctx.AbortWithStatusJSON(http.StatusForbidden,
 					exceptions.Auth.PermissionDeniedDueToInvalidRequestOriginDomain(origin).GetGinH())
 				return
@@ -62,6 +54,7 @@ func DomainWhitelistMiddleware() gin.HandlerFunc {
 		referer := ctx.GetHeader("Referer")
 		if referer != "" && origin == "" {
 			if !isAllowedReferer(referer, allowedDomains) {
+				logs.FAlert("Blocked Referer: %s", referer)
 				ctx.AbortWithStatusJSON(http.StatusForbidden,
 					exceptions.Auth.PermissionDeniedDueToInvalidRequestOriginDomain(referer).GetGinH())
 				return

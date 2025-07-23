@@ -16,10 +16,6 @@ func configureDevelopmentAuthRoutes() {
 	)
 
 	authRoutes := DevelopmentRouterGroup.Group("/auth")
-	authRoutes.Use(
-		middlewares.CORSMiddleware(),
-		middlewares.DomainWhitelistMiddleware(),
-	)
 	{
 		authRoutes.POST(
 			"/register",

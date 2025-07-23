@@ -16,6 +16,7 @@ func CORSMiddleware() gin.HandlerFunc {
 
 		if ctx.Request.Method == "OPTIONS" {
 			ctx.Status(200)
+			ctx.Abort() // abort the following since its a pre request
 			return
 		}
 

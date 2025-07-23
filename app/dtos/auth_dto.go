@@ -10,7 +10,7 @@ import (
 // make sure do NOT use the access token or refresh token as the request dto
 
 type RegisterReqDto struct {
-	Name      string `json:"name" validate:"required,min=6,max=16"`
+	Name      string `json:"name" validate:"required,min=6,max=16,alphanum"`
 	Email     string `json:"email" validate:"required,email"`
 	Password  string `json:"password" validate:"required,min=8,isstrongpassword"`
 	UserAgent string `json:"userAgent" validate:"required"`
