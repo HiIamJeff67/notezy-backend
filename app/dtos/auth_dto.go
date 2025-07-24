@@ -23,7 +23,7 @@ type LoginReqDto struct {
 }
 
 type LogoutReqDto struct {
-	UserId uuid.UUID // extracted from the access token of authMiddleware
+	UserId uuid.UUID // extracted from the access token of AuthMiddleware
 }
 
 type SendAuthCodeReqDto struct {

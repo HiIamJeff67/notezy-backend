@@ -15,7 +15,7 @@ var (
 )
 
 func ConfigureTestRoutes(db *gorm.DB) {
-	TestRouterGroup = TestRouter.Group(constants.TestBaseURL)
+	TestRouterGroup = TestRouter.Group("/" + constants.TestBaseURL)
 	fmt.Println("Router group path:", TestRouterGroup.BasePath())
 
 	ConfigureTestAuthRoutes(db, TestRouterGroup)

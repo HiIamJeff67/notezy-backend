@@ -10,7 +10,7 @@ import (
 
 var RefreshToken = NewCookieHandler(
 	shared.ValidCookieName_RefreshToken,                    // name
-	constants.BaseURL,                                      // path
+	constants.CurrentBaseURL,                               // path
 	time.Now().Add(constants.ExpirationTimeOfRefreshToken), // expires
 	true,                    // secure
 	true,                    // httpOnly

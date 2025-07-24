@@ -10,7 +10,7 @@ import (
 
 var AccessToken = NewCookieHandler(
 	shared.ValidCookieName_AccessToken,                    // name
-	constants.BaseURL,                                     // path
+	constants.CurrentBaseURL,                              // path
 	time.Now().Add(constants.ExpirationTimeOfAccessToken), // expires
 	true,                 // secure
 	true,                 // httpOnly

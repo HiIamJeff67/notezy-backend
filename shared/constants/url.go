@@ -7,12 +7,12 @@ const (
 )
 
 const (
-	APIBaseURL         = "/api"                                                             // the basic api route url
-	DevelopmentBaseURL = APIBaseURL + "/" + DevelopmentNamespace + "/" + DevelopmentVersion // the current development version of api
-	ProductionBaseURL  = APIBaseURL + "/" + ProductionNamespace + "/" + ProductionVersion
-	TestBaseURL        = APIBaseURL + "/" + TestNamespace + "/" + TestVersion
+	APIGroupBase       = "api"                                                                // the basic api route name space
+	DevelopmentBaseURL = APIGroupBase + "/" + DevelopmentNamespace + "/" + DevelopmentVersion // the current development version of api
+	ProductionBaseURL  = APIGroupBase + "/" + ProductionNamespace + "/" + ProductionVersion
+	TestBaseURL        = APIGroupBase + "/" + TestNamespace + "/" + TestVersion
 )
 
 const (
-	BaseURL = DevelopmentBaseURL // use in the entire project apis
+	CurrentBaseURL = DevelopmentBaseURL // use in the entire project apis
 )
