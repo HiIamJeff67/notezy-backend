@@ -15,8 +15,7 @@ func CORSMiddleware() gin.HandlerFunc {
 		ctx.Header("Access-Control-Max-Age", "86400") // 24 hours
 
 		if ctx.Request.Method == "OPTIONS" {
-			ctx.Status(200)
-			ctx.Abort() // abort the following since its a pre request
+			ctx.AbortWithStatus(204) // abort the following since its a pre request
 			return
 		}
 

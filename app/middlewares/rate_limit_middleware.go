@@ -136,6 +136,7 @@ func RateLimitMiddleware(requestsPerSecond int) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		key, exception := generateRateLimitKeyByPublicId(ctx)
 		if exception != nil {
+			exception.Log()
 			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
 			return
 		}
@@ -158,6 +159,7 @@ func UnauthorizedRateLimitMiddleware(requestsPerSecond int) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		key, exception := generateRateLimitKeyByClientIP(ctx)
 		if exception != nil {
+			exception.Log()
 			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
 			return
 		}

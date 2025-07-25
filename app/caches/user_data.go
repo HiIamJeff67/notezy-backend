@@ -18,19 +18,19 @@ import (
 )
 
 type UserDataCache struct {
-	PublicId           string           // user
-	Name               string           // user
-	DisplayName        string           // user
-	Email              string           // user
-	AccessToken        string           // only here
-	Role               enums.UserRole   // user
-	Plan               enums.UserPlan   // user
-	Status             enums.UserStatus // user
-	AvatarURL          string           // user info
-	Language           enums.Language   // user setting
-	GeneralSettingCode int64            // user setting
-	PrivacySettingCode int64            // user setting
-	UpdatedAt          time.Time        // cache
+	PublicId           string           `json:"publicId"`           // user
+	Name               string           `json:"name"`               // user
+	DisplayName        string           `json:"displayName"`        // user
+	Email              string           `json:"email"`              // user
+	AccessToken        string           `json:"accessToken"`        // only here
+	Role               enums.UserRole   `json:"role"`               // user
+	Plan               enums.UserPlan   `json:"plan"`               // user
+	Status             enums.UserStatus `json:"status"`             // user
+	AvatarURL          string           `json:"avatarURL"`          // user info
+	Language           enums.Language   `json:"language"`           // user setting
+	GeneralSettingCode int64            `json:"generalSettingCode"` // user setting
+	PrivacySettingCode int64            `json:"privacySettingCode"` // user setting
+	UpdatedAt          time.Time        `json:"updatedAt"`          // cache
 }
 
 type UpdateUserDataCacheDto struct {

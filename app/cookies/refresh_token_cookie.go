@@ -2,17 +2,18 @@ package cookies
 
 import (
 	"net/http"
-	"time"
 
 	shared "notezy-backend/shared"
-	constants "notezy-backend/shared/constants"
+	"notezy-backend/shared/constants"
 )
 
 var RefreshToken = NewCookieHandler(
-	shared.ValidCookieName_RefreshToken,                    // name
-	constants.CurrentBaseURL,                               // path
-	time.Now().Add(constants.ExpirationTimeOfRefreshToken), // expires
-	true,                    // secure
-	true,                    // httpOnly
-	http.SameSiteStrictMode, // sameSite
+	shared.ValidCookieName_RefreshToken,    // name
+	"/"+constants.CurrentBaseURL,           // path
+	constants.ExpirationTimeOfRefreshToken, // duration
+	true,                                   // secure
+	true,                                   // httpOnly
+	http.SameSiteStrictMode,                // sameSite
 )
+
+// Note: make sure the path should start with "/" because we want this work at the all the subpath from constants.CurrentBaseURL

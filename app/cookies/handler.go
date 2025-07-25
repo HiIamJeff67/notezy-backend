@@ -18,18 +18,18 @@ type CookieHandlerInterface interface {
 type CookieHandler struct {
 	name     shared.ValidCookieName
 	path     string
-	expires  time.Time
+	duration time.Duration
 	secure   bool
 	httpOnly bool
 	sameSite http.SameSite
 }
 
 // a constructor of the cookie handler
-func NewCookieHandler(name shared.ValidCookieName, path string, expires time.Time, secure, httpOnly bool, sameSite http.SameSite) *CookieHandler {
+func NewCookieHandler(name shared.ValidCookieName, path string, duration time.Duration, secure, httpOnly bool, sameSite http.SameSite) *CookieHandler {
 	return &CookieHandler{
 		name:     name,
 		path:     path,
-		expires:  expires,
+		duration: duration,
 		secure:   secure,
 		httpOnly: httpOnly,
 		sameSite: sameSite,
@@ -48,11 +48,12 @@ func (h *CookieHandler) SetCookie(ctx *gin.Context, value string) {
 	http.SetCookie(ctx.Writer, &http.Cookie{
 		Name:     h.name.String(),
 		Path:     h.path,
-		Expires:  h.expires,
+		Expires:  time.Now().Add(h.duration),
 		Secure:   h.secure,
 		HttpOnly: h.httpOnly,
 		SameSite: h.sameSite,
 		Value:    value,
+		Domain:   "",
 	})
 }
 

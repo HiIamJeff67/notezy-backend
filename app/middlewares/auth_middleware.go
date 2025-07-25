@@ -18,14 +18,12 @@ import (
 
 func _extractAccessToken(ctx *gin.Context) (string, *exceptions.Exception) {
 	accessToken, exception := cookies.AccessToken.GetCookie(ctx)
-	if exception != nil || strings.ReplaceAll(accessToken, " ", "") == "" {
+	if exception != nil || len(strings.ReplaceAll(accessToken, " ", "")) == 0 {
 		authHeader := ctx.GetHeader("Authorization")
-		if strings.HasPrefix(authHeader, "Bearer ") {
-			accessToken = strings.TrimPrefix(authHeader, "Bearer ")
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			return "", exceptions.Auth.FailedToExtractOrValidateAccessToken()
 		}
-	}
-	if accessToken == "" {
-		return "", exceptions.Auth.FailedToExtractOrValidateAccessToken()
+		accessToken = strings.TrimPrefix(authHeader, "Bearer ")
 	}
 	return accessToken, nil
 }
@@ -117,18 +115,21 @@ func AuthMiddleware() gin.HandlerFunc {
 		// this means the old accessToken can no longer get any data of the user
 		refreshToken, exception := _extractRefreshToken(ctx)
 		if exception != nil { // if failed to extract the refreshToken
+			exception.Log()
 			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
 			return
 		}
 
 		_user, exception := _validateRefreshToken(refreshToken)
 		if exception != nil {
+			exception.Log()
 			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
 			return
 		}
 
 		// if we can't check the userAgent in accessToken, then we check it in our database
 		if currentUserAgent := ctx.GetHeader("User-Agent"); currentUserAgent != _user.UserAgent {
+			exception.Log()
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, exceptions.Auth.WrongUserAgent().GetGinH())
 			return
 		}
@@ -137,6 +138,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		// then we need to generate the new accessToken, and storing it in the cache, and regarding the entire validation as successful
 		newAccessToken, exception := tokens.GenerateAccessToken(_user.Id.String(), _user.Name, _user.Email, _user.UserAgent)
 		if exception != nil {
+			exception.Log()
 			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
 			return
 		}
@@ -144,6 +146,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		// at this stage, make sure we update the cache of the user data
 		exception = caches.UpdateUserDataCache(_user.Id, caches.UpdateUserDataCacheDto{AccessToken: newAccessToken})
 		if exception != nil {
+			exception.Log()
 			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
 		}
 
