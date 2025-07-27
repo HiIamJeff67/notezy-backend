@@ -31,6 +31,7 @@ var Context = &ContextExceptionDomain{
 func (d *ContextExceptionDomain) FailedToGetContextFieldOfSpecificName(name string) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
+		Reason:         "FailedToGetContextFieldOfSpecificName",
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("Failed to find and fetch the context field with name of %s since it is not exist in the current context", name),
 		HTTPStatusCode: http.StatusInternalServerError,
@@ -41,6 +42,7 @@ func (d *ContextExceptionDomain) FailedToGetContextFieldOfSpecificName(name stri
 func (d *ContextExceptionDomain) FailedToConvertContextFieldToSpecificType(typeName string) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 2,
+		Reason:         "FailedToConvertContextFieldToSpecificType",
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("Failed to convert context field from type of any to type of %s", typeName),
 		HTTPStatusCode: http.StatusInternalServerError,

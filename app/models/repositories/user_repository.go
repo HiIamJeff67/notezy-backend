@@ -106,7 +106,14 @@ func (r *UserRepository) CreateOne(input inputs.CreateUserInput) (*uuid.UUID, *e
 	result := r.db.Table(schemas.User{}.TableName()).
 		Create(&newUser)
 	if err := result.Error; err != nil {
-		return nil, exceptions.User.FailedToCreate().WithError(err)
+		switch err.Error() {
+		case "ERROR: duplicate key value violates unique constraint \"uni_UserTable_name\" (SQLSTATE 23505)":
+			return nil, exceptions.User.DuplicateName(input.Name)
+		case "ERROR: duplicate key value violates unique constraint \"uni_UserTable_email\" (SQLSTATE 23505)":
+			return nil, exceptions.User.DuplicateEmail(input.Email)
+		default:
+			return nil, exceptions.User.FailedToCreate() // .WithError(err) <- don't show the database error to outside
+		}
 	}
 
 	return &newUser.Id, nil

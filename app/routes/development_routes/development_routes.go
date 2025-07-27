@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"notezy-backend/app/middlewares"
+	middlewares "notezy-backend/app/middlewares"
 	constants "notezy-backend/shared/constants"
 )
 
@@ -20,6 +20,7 @@ func ConfigureDevelopmentRoutes() {
 	DevelopmentRouterGroup.OPTIONS("/*path", func(ctx *gin.Context) { ctx.Status(200) })
 	fmt.Println("Router group path:", DevelopmentRouterGroup.BasePath())
 
+	configureStaticRoutes()
 	configureDevelopmentAuthRoutes()
 	configureDevelopmentUserRoutes()
 	configureDevelopmentUserInfoRoutes()

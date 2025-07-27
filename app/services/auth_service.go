@@ -185,8 +185,12 @@ func (s *AuthService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDt
 	}
 
 	// send the welcome email to the registered user
-	exception = emails.SyncSendWelcomeEmail(newUser.Email, newUser.Name, newUser.Status.String())
-	if exception != nil {
+
+	if exception = emails.SyncSendWelcomeEmail(
+		newUser.Email,
+		newUser.Name,
+		newUser.Status.String(),
+	); exception != nil {
 		exception.Log()
 	}
 
@@ -250,6 +254,17 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 
 	if user.UserAgent != reqDto.UserAgent {
 		// send a security email to warn the user
+		if exception := emails.SyncSendSecurityAlertEmail(
+			user.Email,
+			user.Name,
+			user.Status.String(),
+			"Login in Different Place",
+			"Your account has a recent login action in other place",
+			time.Now(),
+			"",
+		); exception != nil {
+			exception.Log()
+		}
 	}
 
 	accessToken, exception := tokens.GenerateAccessToken(user.Id.String(), user.Name, user.Email, user.UserAgent)
@@ -264,13 +279,12 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 	// check if the user data cache exists
 	if _, exception := caches.GetUserDataCache(user.Id); exception == nil {
 		// then just update the existing user data cache
-		exception = caches.UpdateUserDataCache(
+		if exception = caches.UpdateUserDataCache(
 			user.Id,
 			caches.UpdateUserDataCacheDto{
 				AccessToken: accessToken,
 			},
-		)
-		if exception != nil {
+		); exception != nil {
 			exception.Log()
 		}
 	} else { // else if it does not exist

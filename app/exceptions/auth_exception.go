@@ -45,6 +45,7 @@ var Auth = &AuthExceptionDomain{
 func (d *AuthExceptionDomain) WrongPassword() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
+		Reason:         "WrongPassword",
 		Prefix:         d.Prefix,
 		Message:        "The password is not match",
 		HTTPStatusCode: http.StatusUnauthorized,
@@ -55,6 +56,7 @@ func (d *AuthExceptionDomain) WrongPassword() *Exception {
 func (d *AuthExceptionDomain) WrongAccessToken() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 2,
+		Reason:         "WrongAccessToken",
 		Prefix:         d.Prefix,
 		Message:        "The access token is not match or expired",
 		HTTPStatusCode: http.StatusUnauthorized,
@@ -65,6 +67,7 @@ func (d *AuthExceptionDomain) WrongAccessToken() *Exception {
 func (d *AuthExceptionDomain) WrongRefreshToken() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 3,
+		Reason:         "WrongRefreshToken",
 		Prefix:         d.Prefix,
 		Message:        "The refresh token is not match or expired",
 		HTTPStatusCode: http.StatusUnauthorized,
@@ -75,6 +78,7 @@ func (d *AuthExceptionDomain) WrongRefreshToken() *Exception {
 func (d *AuthExceptionDomain) WrongUserAgent() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 4,
+		Reason:         "WrongUserAgent",
 		Prefix:         d.Prefix,
 		Message:        "The user agent is not match",
 		HTTPStatusCode: http.StatusUnauthorized,
@@ -85,6 +89,7 @@ func (d *AuthExceptionDomain) WrongUserAgent() *Exception {
 func (d *AuthExceptionDomain) WrongAuthCode() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 5,
+		Reason:         "WrongAuthCode",
 		Prefix:         d.Prefix,
 		Message:        "The authentication code is not match",
 		HTTPStatusCode: http.StatusUnauthorized,
@@ -95,6 +100,7 @@ func (d *AuthExceptionDomain) WrongAuthCode() *Exception {
 func (d *AuthExceptionDomain) FailedToExtractOrValidateAccessToken() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 6,
+		Reason:         "FailedToExtractOrValidateAccessToken",
 		Prefix:         d.Prefix,
 		Message:        "Failed to get or validate the access token",
 		HTTPStatusCode: http.StatusUnauthorized,
@@ -105,6 +111,7 @@ func (d *AuthExceptionDomain) FailedToExtractOrValidateAccessToken() *Exception 
 func (d *AuthExceptionDomain) FailedToExtractOrValidateRefreshToken() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 7,
+		Reason:         "FailedToExtractOrValidateRefreshToken",
 		Prefix:         d.Prefix,
 		Message:        "Failed to get or validate the refresh token",
 		HTTPStatusCode: http.StatusUnauthorized,
@@ -115,6 +122,7 @@ func (d *AuthExceptionDomain) FailedToExtractOrValidateRefreshToken() *Exception
 func (d *AuthExceptionDomain) LoginBlockedDueToTryingTooManyTimes(blockedUntil time.Time) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 8,
+		Reason:         "LoginBlockedDueToTryingTooManyTimes",
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("Blocked the login procedure because user has tried too many times and require to wait until %v", blockedUntil),
 		HTTPStatusCode: http.StatusUnauthorized,
@@ -125,6 +133,7 @@ func (d *AuthExceptionDomain) LoginBlockedDueToTryingTooManyTimes(blockedUntil t
 func (d *AuthExceptionDomain) NoClientIPOrReferenceToClient() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 9,
+		Reason:         "NoClientIPOrReferenceToClient",
 		Prefix:         d.Prefix,
 		Message:        "Cannot extract or find any reference to the client",
 		HTTPStatusCode: http.StatusUnauthorized,
@@ -136,7 +145,8 @@ func (d *AuthExceptionDomain) NoClientIPOrReferenceToClient() *Exception {
 
 func (d *AuthExceptionDomain) PermissionDeniedDueToUserRole(userRole any) *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 11,
+		Code:           d.BaseCode + 101,
+		Reason:         "PermissionDeniedDueToUserRole",
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("The current user role of %v does not have access to this operation", userRole),
 		HTTPStatusCode: http.StatusUnauthorized,
@@ -146,7 +156,8 @@ func (d *AuthExceptionDomain) PermissionDeniedDueToUserRole(userRole any) *Excep
 
 func (d *AuthExceptionDomain) PermissionDeniedDueToUserPlan(userPlan any) *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 12,
+		Code:           d.BaseCode + 102,
+		Reason:         "PermissionDeniedDueToUserPlan",
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("The current user plan of %v does not have access to this operation", userPlan),
 		HTTPStatusCode: http.StatusUnauthorized,
@@ -156,7 +167,8 @@ func (d *AuthExceptionDomain) PermissionDeniedDueToUserPlan(userPlan any) *Excep
 
 func (d *AuthExceptionDomain) PermissionDeniedDueToInvalidRequestOriginDomain(origin string) *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 13,
+		Code:           d.BaseCode + 103,
+		Reason:         "PermissionDeniedDueToInvalidRequestOriginDomain",
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("The current request origin domain of %s is invalid", origin),
 		HTTPStatusCode: http.StatusUnauthorized,
@@ -166,7 +178,8 @@ func (d *AuthExceptionDomain) PermissionDeniedDueToInvalidRequestOriginDomain(or
 
 func (d *AuthExceptionDomain) PermissionDeniedDueToTooManyRequests() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 14,
+		Code:           d.BaseCode + 104,
+		Reason:         "PermissionDeniedDueToTooManyRequests",
 		Prefix:         d.Prefix,
 		Message:        "Too many requests, please wait for a while",
 		HTTPStatusCode: http.StatusTooManyRequests,
@@ -184,7 +197,8 @@ func (d *AuthExceptionDomain) MissPlacingOrWrongMiddlewareOrder(optionalMessage 
 	}
 
 	return &Exception{
-		Code:           d.BaseCode + 101,
+		Code:           d.BaseCode + 201,
+		Reason:         "MissPlacingOrWrongMiddlewareOrder",
 		Prefix:         d.Prefix,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,

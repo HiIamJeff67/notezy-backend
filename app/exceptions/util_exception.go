@@ -33,6 +33,7 @@ var Util = &UtilExceptionDomain{
 func (d *UtilExceptionDomain) AccessTokenSecretKeyNotFound() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
+		Reason:         "AccessTokenSecretKeyNotFound",
 		Prefix:         d.Prefix,
 		Message:        "The environment variables of access token secret key is not found",
 		HTTPStatusCode: http.StatusInternalServerError,
@@ -43,6 +44,7 @@ func (d *UtilExceptionDomain) AccessTokenSecretKeyNotFound() *Exception {
 func (d *UtilExceptionDomain) RefreshTokenSecretKeyNotFound() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 2,
+		Reason:         "RefreshTokenSecretKeyNotFound",
 		Prefix:         d.Prefix,
 		Message:        "The environment variables of refresh token secret key is not found",
 		HTTPStatusCode: http.StatusInternalServerError,
@@ -53,6 +55,7 @@ func (d *UtilExceptionDomain) RefreshTokenSecretKeyNotFound() *Exception {
 func (d *UtilExceptionDomain) FailedToGenerateAccessToken() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 3,
+		Reason:         "FailedToGenerateAccessToken",
 		Prefix:         d.Prefix,
 		Message:        "Failed to generate the access token",
 		HTTPStatusCode: http.StatusInternalServerError,
@@ -63,6 +66,7 @@ func (d *UtilExceptionDomain) FailedToGenerateAccessToken() *Exception {
 func (d *UtilExceptionDomain) FailedToGenerateRefreshToken() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 4,
+		Reason:         "FailedToGenerateRefreshToken",
 		Prefix:         d.Prefix,
 		Message:        "Failed to generate the refresh token",
 		HTTPStatusCode: http.StatusInternalServerError,
@@ -73,6 +77,7 @@ func (d *UtilExceptionDomain) FailedToGenerateRefreshToken() *Exception {
 func (d *UtilExceptionDomain) FailedToParseAccessToken() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 5,
+		Reason:         "FailedToParseAccessToken",
 		Prefix:         d.Prefix,
 		Message:        "Failed to parse the access token",
 		HTTPStatusCode: http.StatusInternalServerError,
@@ -83,6 +88,7 @@ func (d *UtilExceptionDomain) FailedToParseAccessToken() *Exception {
 func (d *UtilExceptionDomain) FailedToParseRefreshToken() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 6,
+		Reason:         "FailedToParseRefreshToken",
 		Prefix:         d.Prefix,
 		Message:        "Failed to parse the refresh token",
 		HTTPStatusCode: http.StatusInternalServerError,
@@ -95,6 +101,7 @@ func (d *UtilExceptionDomain) FailedToParseRefreshToken() *Exception {
 func (d *UtilExceptionDomain) FailedToGenerateHashValue() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 11,
+		Reason:         "FailedToGenerateHashValue",
 		Prefix:         d.Prefix,
 		Message:        "Failed to generate the hash value",
 		HTTPStatusCode: http.StatusInternalServerError,
@@ -107,6 +114,7 @@ func (d *UtilExceptionDomain) FailedToGenerateHashValue() *Exception {
 func (d *UtilExceptionDomain) FailedToReadFile() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 21,
+		Reason:         "FailedToReadFile",
 		Prefix:         d.Prefix,
 		Message:        "Failed to read the file",
 		HTTPStatusCode: http.StatusInternalServerError,
@@ -117,6 +125,7 @@ func (d *UtilExceptionDomain) FailedToReadFile() *Exception {
 func (d *UtilExceptionDomain) FailedToPreprocessPartialUpdate(values interface{}, setNull *map[string]bool, existingValues interface{}) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 22,
+		Reason:         "FailedToPreprocessPartialUpdate",
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("Failed to preprocess partial update with value: %v, setNull: %v, and existingValues: %v", values, setNull, existingValues),
 		HTTPStatusCode: http.StatusInternalServerError,

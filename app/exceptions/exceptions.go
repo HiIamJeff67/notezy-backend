@@ -105,6 +105,7 @@ func GetStackTrace(skip int, maxTraceDepth int) []StackFrame {
 
 type Exception struct {
 	Code           ExceptionCode   // custom exception code
+	Reason         string          // exception reason(for the convenience of frontend to error handling)
 	Prefix         ExceptionPrefix // custom exception prefix
 	Message        string          // custom exception message
 	HTTPStatusCode int             // http status code
@@ -125,14 +126,15 @@ type ExceptionCompareOption struct {
 
 func (e *Exception) GetString() string {
 	if e.Error != nil {
-		return fmt.Sprintf("[%v]: %v", e.Code, e.Error)
+		return fmt.Sprintf("[%v]%s: %v", e.Code, e.Reason, e.Error)
 	}
-	return fmt.Sprintf("[%v]: %s", e.Code, e.Message)
+	return fmt.Sprintf("[%v]%s: %s", e.Code, e.Reason, e.Message)
 }
 
 func (e *Exception) GetGinH() *gin.H {
 	return &gin.H{
 		"code":    e.Code,
+		"reason":  e.Reason,
 		"prefix":  e.Prefix,
 		"message": e.Message,
 		"status":  e.HTTPStatusCode,
@@ -153,26 +155,26 @@ func (e *Exception) WithError(err error) *Exception {
 
 func (e *Exception) Log() *Exception {
 	if e.Error != nil {
-		logs.FError("[%d] %s: %v", e.Code, e.Message, e.Error)
+		logs.FError("[%d]%s: %s(%v)", e.Code, e.Reason, e.Message, e.Error.Error())
 	} else {
-		logs.FError("[%d] %s", e.Code, e.Message)
+		logs.FError("[%d]%s (%v)", e.Code, e.Reason, e.Message)
 	}
 	return e
 }
 
 func (e *Exception) Panic() {
 	if e.Error != nil {
-		panic(fmt.Sprintf("[%d] %s: %s", e.Code, e.Message, e.Error.Error()))
+		panic(fmt.Sprintf("[%d]%s: %s(%v)", e.Code, e.Reason, e.Message, e.Error.Error()))
 	} else {
-		panic(fmt.Sprintf("[%d] %s", e.Code, e.Message))
+		panic(fmt.Sprintf("[%d]%s (%v)", e.Code, e.Reason, e.Message))
 	}
 }
 
 func (e *Exception) PanicVerbose() {
 	if e.Error != nil {
-		panic(fmt.Sprintf("[%d] %s: %v", e.Code, e.Message, e.Error))
+		panic(fmt.Sprintf("[%d]%s: %v", e.Code, e.Reason, e.Error.Error()))
 	} else {
-		panic(fmt.Sprintf("[%d] %s", e.Code, e.Message))
+		panic(fmt.Sprintf("[%d]%s", e.Code, e.Reason))
 	}
 }
 

@@ -53,7 +53,9 @@ func (c *AuthController) Register(ctx *gin.Context) {
 	resDto, exception := c.authService.Register(&reqDto)
 	if exception != nil {
 		exception.Log()
-		if !exceptions.CompareCommonExceptions(exceptions.Auth.InvalidDto(), exception, false) {
+		if !exceptions.CompareCommonExceptions(exceptions.Auth.InvalidDto(), exception, false) &&
+			!exceptions.CompareCommonExceptions(exceptions.User.DuplicateName(reqDto.Name), exception, true) &&
+			!exceptions.CompareCommonExceptions(exceptions.User.DuplicateEmail(reqDto.Email), exception, true) {
 			exception = exceptions.Auth.InternalServerWentWrong(exception)
 		}
 		ctx.JSON(exception.HTTPStatusCode, gin.H{
@@ -93,7 +95,8 @@ func (c *AuthController) Login(ctx *gin.Context) {
 	resDto, exception := c.authService.Login(&reqDto)
 	if exception != nil {
 		exception.Log()
-		if !exceptions.CompareCommonExceptions(exceptions.Auth.InvalidDto(), exception, false) {
+		if !exceptions.CompareCommonExceptions(exceptions.Auth.InvalidDto(), exception, false) &&
+			!exceptions.CompareCommonExceptions(exceptions.Auth.WrongPassword(), exception, true) {
 			exception = exceptions.Auth.InternalServerWentWrong(exception)
 		}
 		ctx.JSON(exception.HTTPStatusCode, gin.H{

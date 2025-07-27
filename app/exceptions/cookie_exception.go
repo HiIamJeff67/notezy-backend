@@ -33,6 +33,7 @@ var Cookie = &CookieExceptionDomain{
 func (d *CookieExceptionDomain) NotFound(cookieName shared.ValidCookieName) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
+		Reason:         "NotFound",
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("Cannot find the %s in the cookie", convertCamelCaseToSentenceCase(cookieName.String())),
 		HTTPStatusCode: http.StatusNotFound,
@@ -43,6 +44,7 @@ func (d *CookieExceptionDomain) NotFound(cookieName shared.ValidCookieName) *Exc
 func (d *CookieExceptionDomain) FailedToCreate(cookieName shared.ValidCookieName) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 2,
+		Reason:         "FailedToCreate",
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("Failed to set the %s to the cache", convertCamelCaseToSentenceCase(cookieName.String())),
 		HTTPStatusCode: http.StatusInternalServerError,
