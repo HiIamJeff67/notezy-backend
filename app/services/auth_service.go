@@ -356,8 +356,9 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 	}
 
 	return &dtos.LoginResDto{
-		AccessToken: *accessToken,
-		UpdatedAt:   updatedUser.UpdatedAt,
+		AccessToken:  *accessToken,
+		RefreshToken: updatedUser.RefreshToken,
+		UpdatedAt:    updatedUser.UpdatedAt,
 	}, nil
 }
 

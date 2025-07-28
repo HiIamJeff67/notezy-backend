@@ -50,6 +50,9 @@ func (c *AuthController) Register(ctx *gin.Context) {
 		return
 	}
 
+	cookies.AccessToken.DeleteCookie(ctx)
+	cookies.RefreshToken.DeleteCookie(ctx)
+
 	resDto, exception := c.authService.Register(&reqDto)
 	if exception != nil {
 		exception.Log()
@@ -92,6 +95,9 @@ func (c *AuthController) Login(ctx *gin.Context) {
 		return
 	}
 
+	cookies.AccessToken.DeleteCookie(ctx)
+	cookies.RefreshToken.DeleteCookie(ctx)
+
 	resDto, exception := c.authService.Login(&reqDto)
 	if exception != nil {
 		exception.Log()
@@ -107,9 +113,15 @@ func (c *AuthController) Login(ctx *gin.Context) {
 		return
 	}
 
+	cookies.AccessToken.SetCookie(ctx, resDto.AccessToken)
+	cookies.RefreshToken.SetCookie(ctx, resDto.RefreshToken)
+
 	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      resDto,
+		"success": true,
+		"data": gin.H{ // make sure we don't response with the refresh token
+			"accessToken": resDto.AccessToken,
+			"updatedAt":   resDto.UpdatedAt,
+		},
 		"exception": nil,
 	})
 }

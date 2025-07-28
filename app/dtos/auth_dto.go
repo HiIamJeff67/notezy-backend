@@ -62,8 +62,9 @@ type RegisterResDto struct {
 }
 
 type LoginResDto struct {
-	AccessToken string    `json:"accessToken"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	AccessToken  string    `json:"accessToken"`
+	RefreshToken string    `json:"refreshToken"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
 type LogoutResDto struct {
