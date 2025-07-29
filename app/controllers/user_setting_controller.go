@@ -32,7 +32,7 @@ func (c *UserSettingController) GetMySetting(ctx *gin.Context) {
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
 		exception.Log()
-		exception = exceptions.UserSetting.InternalServerWentWrong(exception)
+		exception = exceptions.UserSetting.InternalServerWentWrong(nil)
 		ctx.JSON(exception.HTTPStatusCode, gin.H{
 			"success":   false,
 			"data":      nil,
@@ -45,8 +45,8 @@ func (c *UserSettingController) GetMySetting(ctx *gin.Context) {
 	resDto, exception := c.userSettingService.GetMySetting(&reqDto)
 	if exception != nil {
 		exception.Log()
-		if !exceptions.CompareCommonExceptions(exceptions.UserSetting.InvalidDto(), exception, false) {
-			exception = exceptions.UserSetting.InternalServerWentWrong(exception)
+		if exception.IsInternal {
+			exception = exceptions.UserSetting.InternalServerWentWrong(nil)
 		}
 		ctx.JSON(exception.HTTPStatusCode, gin.H{
 			"success":   false,

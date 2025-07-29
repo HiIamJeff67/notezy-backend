@@ -37,7 +37,7 @@ func (c *UserController) GetMe(ctx *gin.Context) {
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
 		exception.Log()
-		exception = exceptions.User.InternalServerWentWrong(exception)
+		exception = exceptions.User.InternalServerWentWrong(nil)
 		ctx.JSON(exception.HTTPStatusCode, gin.H{
 			"success":   false,
 			"data":      nil,
@@ -50,8 +50,8 @@ func (c *UserController) GetMe(ctx *gin.Context) {
 	resDto, exception := c.userService.GetMe(&reqDto)
 	if exception != nil {
 		exception.Log()
-		if !exceptions.CompareCommonExceptions(exceptions.User.InvalidDto(), exception, false) {
-			exception = exceptions.User.InternalServerWentWrong(exception)
+		if exception.IsInternal {
+			exception = exceptions.User.InternalServerWentWrong(nil)
 		}
 		ctx.JSON(exception.HTTPStatusCode, gin.H{
 			"success":   false,
@@ -89,7 +89,7 @@ func (c *UserController) UpdateMe(ctx *gin.Context) {
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
 		exception.Log()
-		exception = exceptions.User.InternalServerWentWrong(exception)
+		exception = exceptions.User.InternalServerWentWrong(nil)
 		ctx.JSON(exception.HTTPStatusCode, gin.H{
 			"success":   false,
 			"data":      nil,
@@ -111,8 +111,8 @@ func (c *UserController) UpdateMe(ctx *gin.Context) {
 	resDto, exception := c.userService.UpdateMe(&reqDto)
 	if exception != nil {
 		exception.Log()
-		if !exceptions.CompareCommonExceptions(exceptions.User.InvalidDto(), exception, false) {
-			exception = exceptions.User.InternalServerWentWrong(exception)
+		if exception.IsInternal {
+			exception = exceptions.User.InternalServerWentWrong(nil)
 		}
 		ctx.JSON(exception.HTTPStatusCode, gin.H{
 			"success":   false,

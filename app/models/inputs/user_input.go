@@ -22,7 +22,7 @@ type UpdateUserInput struct {
 	Password       *string           `json:"password" validate:"omitempty,min=8,max=1024" gorm:"column:password;"`               // validate:"omitempty,min=8,max=1024"
 	RefreshToken   *string           `json:"refreshToken" validate:"omitempty" gorm:"column:refresh_token;"`                     // validate:"omitempty"
 	LoginCount     *int32            `json:"loginCount" validate:"omitempty,min=0" gorm:"column:login_count;"`                   // validate:"omitempty,min=0"
-	BlockLoginUtil *time.Time        `json:"BlockLoginUntil" validate:"omitempty" gorm:"column:block_login_until"`               // validate:"omitempty"
+	BlockLoginUtil *time.Time        `json:"blockLoginUntil" validate:"omitempty" gorm:"column:block_login_until"`               // validate:"omitempty"
 	UserAgent      *string           `json:"userAgent" validate:"omitempty" gorm:"column:user_agent;"`                           // validate:"omitempty"
 	Role           *enums.UserRole   `json:"role" validate:"omitempty,isrole" gorm:"column:role;"`                               // validate:"omitempty,isrole"
 	Plan           *enums.UserPlan   `json:"plan" validate:"omitempty,isplan" gorm:"column:plan;"`                               // validate:"omitempty,isplan"

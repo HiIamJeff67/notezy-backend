@@ -105,8 +105,9 @@ func GetStackTrace(skip int, maxTraceDepth int) []StackFrame {
 
 type Exception struct {
 	Code           ExceptionCode   // custom exception code
-	Reason         string          // exception reason(for the convenience of frontend to error handling)
 	Prefix         ExceptionPrefix // custom exception prefix
+	Reason         string          // exception reason(for the convenience of frontend to error handling)
+	IsInternal     bool            // to indicate whether this exception can passing to the frontend or not
 	Message        string          // custom exception message
 	HTTPStatusCode int             // http status code
 	Details        any             // additional error details (optional)
@@ -118,6 +119,8 @@ type Exception struct {
 type ExceptionCompareOption struct {
 	WithCode           bool
 	WithPrefix         bool
+	WithReason         bool
+	WithIsInteral      bool
 	WithMessage        bool
 	WithHTTPStatusCode bool
 	WithDetails        bool
@@ -239,6 +242,12 @@ func CompareExceptions(e1 *Exception, e2 *Exception, opt ExceptionCompareOption)
 	if opt.WithPrefix && e1.Prefix != e2.Prefix {
 		return false
 	}
+	if opt.WithReason && e1.Reason != e2.Reason {
+		return false
+	}
+	if opt.WithIsInteral && e1.IsInternal != e2.IsInternal {
+		return false
+	}
 	if opt.WithMessage && e1.Message != e2.Message {
 		return false
 	}
@@ -259,6 +268,12 @@ func CompareCommonExceptions(e1 *Exception, e2 *Exception, withMessage bool) boo
 		return false
 	}
 	if e1.Prefix != e2.Prefix {
+		return false
+	}
+	if e1.Reason != e2.Reason {
+		return false
+	}
+	if e1.IsInternal != e2.IsInternal {
 		return false
 	}
 	if withMessage && e1.Message != e2.Message {
@@ -283,6 +298,8 @@ func (d *DatabaseExceptionDomain) NotFound(optionalMessage ...string) *Exception
 	return &Exception{
 		Code:           d._BaseCode + 1,
 		Prefix:         d._Prefix,
+		Reason:         "NotFound",
+		IsInternal:     false,
 		Message:        message,
 		HTTPStatusCode: http.StatusNotFound,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -298,6 +315,8 @@ func (d *DatabaseExceptionDomain) FailedToCreate(optionalMessage ...string) *Exc
 	return &Exception{
 		Code:           d._BaseCode + 2,
 		Prefix:         d._Prefix,
+		Reason:         "FailedToCreate",
+		IsInternal:     false,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -313,6 +332,8 @@ func (d *DatabaseExceptionDomain) FailedToUpdate(optionalMessage ...string) *Exc
 	return &Exception{
 		Code:           d._BaseCode + 3,
 		Prefix:         d._Prefix,
+		Reason:         "FailedToUpdate",
+		IsInternal:     false,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -328,6 +349,8 @@ func (d *DatabaseExceptionDomain) FailedToDelete(optionalMessage ...string) *Exc
 	return &Exception{
 		Code:           d._BaseCode + 4,
 		Prefix:         d._Prefix,
+		Reason:         "FailedToDelete",
+		IsInternal:     false,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -343,6 +366,8 @@ func (d *DatabaseExceptionDomain) FailedToCommitTransaction(optionalMessage ...s
 	return &Exception{
 		Code:           d._BaseCode + 5,
 		Prefix:         d._Prefix,
+		Reason:         "FailedToCommitTransaction",
+		IsInternal:     true,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -365,6 +390,8 @@ func (d *APIExceptionDomain) InternalServerWentWrong(originalException *Exceptio
 	exception := &Exception{
 		Code:           d._BaseCode + 1,
 		Prefix:         d._Prefix,
+		Reason:         "InternalServerWentWrong",
+		IsInternal:     true,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -392,6 +419,8 @@ func (d *APIExceptionDomain) Timeout(time time.Duration, optionalMessage ...stri
 	return &Exception{
 		Code:           d._BaseCode + 2,
 		Prefix:         d._Prefix,
+		Reason:         "Timeout",
+		IsInternal:     false,
 		Message:        message,
 		HTTPStatusCode: http.StatusRequestTimeout,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -409,6 +438,8 @@ func (d *GraphQLExceptionDomain) InvalidSourceInBatchFunction() *Exception {
 	return &Exception{
 		Code:           d._BaseCode + 1,
 		Prefix:         d._Prefix,
+		Reason:         "InvalidSourceInBatchFunction",
+		IsInternal:     true,
 		Message:        fmt.Sprintf("Invalid source field detected while working on jobs in the batch function of %s", d._Prefix),
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -431,6 +462,8 @@ func (d *TypeExceptionDomain) InvalidInput(optionalMessage ...string) *Exception
 	return &Exception{
 		Code:           d._BaseCode + 1,
 		Prefix:         d._Prefix,
+		Reason:         "InvalidInput",
+		IsInternal:     true,
 		Message:        message,
 		HTTPStatusCode: http.StatusBadRequest,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -446,6 +479,8 @@ func (d *TypeExceptionDomain) InvalidDto(optionalMessage ...string) *Exception {
 	return &Exception{
 		Code:           d._BaseCode + 2,
 		Prefix:         d._Prefix,
+		Reason:         "InvalidDto",
+		IsInternal:     false,
 		Message:        message,
 		HTTPStatusCode: http.StatusRequestTimeout,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -456,6 +491,8 @@ func (d *TypeExceptionDomain) InvalidType(value any) *Exception {
 	return &Exception{
 		Code:           d._BaseCode + 3,
 		Prefix:         d._Prefix,
+		Reason:         "InvalidType",
+		IsInternal:     true,
 		Message:        fmt.Sprintf("Invalid type in %s", strings.ToLower(string(d._Prefix))),
 		HTTPStatusCode: http.StatusInternalServerError,
 		Details: map[string]any{
@@ -482,6 +519,8 @@ func (d *CommonExceptionDomain) UndefinedError(optionalMessage ...string) *Excep
 	return &Exception{
 		Code:           d._BaseCode + 1,
 		Prefix:         d._Prefix,
+		Reason:         "UndefinedError",
+		IsInternal:     true,
 		Message:        message,
 		HTTPStatusCode: http.StatusBadRequest,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -497,6 +536,8 @@ func (d *CommonExceptionDomain) NotImplemented(optionalMessage ...string) *Excep
 	return &Exception{
 		Code:           d._BaseCode + 2,
 		Prefix:         d._Prefix,
+		Reason:         "NotImplemented",
+		IsInternal:     true,
 		Message:        message,
 		HTTPStatusCode: http.StatusNotImplemented,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -516,6 +557,8 @@ func (d *TestExceptionDomain) FailedToMarshalTestdata(testdataPath string) *Exce
 	return &Exception{
 		Code:           d._BaseCode + 1,
 		Prefix:         d._Prefix,
+		Reason:         "FailedToMarshalTestdata",
+		IsInternal:     true,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -528,6 +571,8 @@ func (d *TestExceptionDomain) FailedToUnmarshalTestdata(testdataPath string) *Ex
 	return &Exception{
 		Code:           d._BaseCode + 1,
 		Prefix:         d._Prefix,
+		Reason:         "FailedToUnmarshalTestdata",
+		IsInternal:     true,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -540,6 +585,8 @@ func (d *TestExceptionDomain) InvalidTestdataJSONForm(testdataPath string) *Exce
 	return &Exception{
 		Code:           d._BaseCode + 1,
 		Prefix:         d._Prefix,
+		Reason:         "InvalidTestdataJSONForm",
+		IsInternal:     true,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],

@@ -48,8 +48,9 @@ func convertCamelCaseToSentenceCase(camelCaseString string) string {
 func (d *CacheExceptionSubDomain) NotFound(cachePurpose shared.ValidCachePurpose) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
-		Reason:         "NotFound",
 		Prefix:         d.Prefix,
+		Reason:         "NotFound",
+		IsInternal:     true,
 		Message:        fmt.Sprintf("Cannot find the %s in the cache server", convertCamelCaseToSentenceCase(cachePurpose.String())),
 		HTTPStatusCode: http.StatusNotFound,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -59,8 +60,9 @@ func (d *CacheExceptionSubDomain) NotFound(cachePurpose shared.ValidCachePurpose
 func (d *CacheExceptionSubDomain) FailedToCreate(cachePurpose shared.ValidCachePurpose) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 2,
-		Reason:         "FailedToCreate",
 		Prefix:         d.Prefix,
+		Reason:         "FailedToCreate",
+		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to set the %s to the cache server", convertCamelCaseToSentenceCase(cachePurpose.String())),
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -70,8 +72,9 @@ func (d *CacheExceptionSubDomain) FailedToCreate(cachePurpose shared.ValidCacheP
 func (d *CacheExceptionSubDomain) FailedToUpdate(cachePurpose shared.ValidCachePurpose) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 3,
-		Reason:         "FailedToUpdate",
 		Prefix:         d.Prefix,
+		Reason:         "FailedToUpdate",
+		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to update the %s in the cache server", convertCamelCaseToSentenceCase(cachePurpose.String())),
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -81,8 +84,9 @@ func (d *CacheExceptionSubDomain) FailedToUpdate(cachePurpose shared.ValidCacheP
 func (d *CacheExceptionSubDomain) FailedToDelete(cachePurpose shared.ValidCachePurpose) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 4,
-		Reason:         "FailedToDelete",
 		Prefix:         d.Prefix,
+		Reason:         "FailedToDelete",
+		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to delete the %s in the cache server", convertCamelCaseToSentenceCase(cachePurpose.String())),
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -94,8 +98,9 @@ func (d *CacheExceptionSubDomain) FailedToDelete(cachePurpose shared.ValidCacheP
 func (d *CacheExceptionSubDomain) FailedToConnectToServer(serverNumber int) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
-		Reason:         "FailedToConnectToServer",
 		Prefix:         d.Prefix,
+		Reason:         "FailedToConnectToServer",
+		IsInternal:     true,
 		Message:        fmt.Sprintf("Error on connecting to the redis client server of %v", serverNumber),
 		HTTPStatusCode: http.StatusBadGateway,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -116,8 +121,9 @@ func (d *CacheExceptionSubDomain) FailedToDisconnectToServer(serverNumber int) *
 func (d *CacheExceptionSubDomain) ClientInstanceDoesNotExist(serverNumber int) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 3,
-		Reason:         "ClientInstanceDoesNotExist",
 		Prefix:         d.Prefix,
+		Reason:         "ClientInstanceDoesNotExist",
+		IsInternal:     true,
 		Message:        fmt.Sprintf("The client instance with server number of %v does not exist", serverNumber),
 		HTTPStatusCode: http.StatusBadGateway,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -127,8 +133,9 @@ func (d *CacheExceptionSubDomain) ClientInstanceDoesNotExist(serverNumber int) *
 func (d *CacheExceptionSubDomain) ClientConfigDoesNotExist() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 4,
-		Reason:         "ClientConfigDoesNotExist",
 		Prefix:         d.Prefix,
+		Reason:         "ClientConfigDoesNotExist",
+		IsInternal:     true,
 		Message:        "The config of the client instance does not exist",
 		HTTPStatusCode: http.StatusBadGateway,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -140,8 +147,9 @@ func (d *CacheExceptionSubDomain) ClientConfigDoesNotExist() *Exception {
 func (d *CacheExceptionSubDomain) InvalidCacheDataStruct(cachedDataStruct any) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 11,
-		Reason:         "InvalidCacheDataStruct",
 		Prefix:         d.Prefix,
+		Reason:         "InvalidCacheDataStruct",
+		IsInternal:     true,
 		Message:        fmt.Sprintf("Invalid cached data struct detected %v", cachedDataStruct),
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -151,8 +159,9 @@ func (d *CacheExceptionSubDomain) InvalidCacheDataStruct(cachedDataStruct any) *
 func (d *CacheExceptionSubDomain) FailedToConvertStructToJson() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 12,
-		Reason:         "FailedToConvertStructToJson",
 		Prefix:         d.Prefix,
+		Reason:         "FailedToConvertStructToJson",
+		IsInternal:     true,
 		Message:        "Failed to convert struct to json",
 		HTTPStatusCode: http.StatusForbidden,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -162,8 +171,9 @@ func (d *CacheExceptionSubDomain) FailedToConvertStructToJson() *Exception {
 func (d *CacheExceptionSubDomain) FailedToConvertJsonToStruct() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 13,
-		Reason:         "FailedToConvertJsonToStruct",
 		Prefix:         d.Prefix,
+		Reason:         "FailedToConvertJsonToStruct",
+		IsInternal:     true,
 		Message:        "Failed to convert json to struct",
 		HTTPStatusCode: http.StatusForbidden,
 		LastStackFrame: &GetStackTrace(2, 1)[0],

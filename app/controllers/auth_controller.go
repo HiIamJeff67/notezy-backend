@@ -56,10 +56,8 @@ func (c *AuthController) Register(ctx *gin.Context) {
 	resDto, exception := c.authService.Register(&reqDto)
 	if exception != nil {
 		exception.Log()
-		if !exceptions.CompareCommonExceptions(exceptions.Auth.InvalidDto(), exception, false) &&
-			!exceptions.CompareCommonExceptions(exceptions.User.DuplicateName(reqDto.Name), exception, true) &&
-			!exceptions.CompareCommonExceptions(exceptions.User.DuplicateEmail(reqDto.Email), exception, true) {
-			exception = exceptions.Auth.InternalServerWentWrong(exception)
+		if exception.IsInternal {
+			exception = exceptions.Auth.InternalServerWentWrong(nil)
 		}
 		ctx.JSON(exception.HTTPStatusCode, gin.H{
 			"success":   false,
@@ -101,9 +99,8 @@ func (c *AuthController) Login(ctx *gin.Context) {
 	resDto, exception := c.authService.Login(&reqDto)
 	if exception != nil {
 		exception.Log()
-		if !exceptions.CompareCommonExceptions(exceptions.Auth.InvalidDto(), exception, false) &&
-			!exceptions.CompareCommonExceptions(exceptions.Auth.WrongPassword(), exception, true) {
-			exception = exceptions.Auth.InternalServerWentWrong(exception)
+		if exception.IsInternal {
+			exception = exceptions.Auth.InternalServerWentWrong(nil)
 		}
 		ctx.JSON(exception.HTTPStatusCode, gin.H{
 			"success":   false,
@@ -132,7 +129,7 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
 		exception.Log()
-		exception = exceptions.Auth.InternalServerWentWrong(exception)
+		exception = exceptions.Auth.InternalServerWentWrong(nil)
 		ctx.JSON(exception.HTTPStatusCode, gin.H{
 			"success":   false,
 			"data":      nil,
@@ -145,8 +142,8 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 	resDto, exception := c.authService.Logout(&reqDto)
 	if exception != nil {
 		exception.Log()
-		if !exceptions.CompareCommonExceptions(exceptions.Auth.InvalidDto(), exception, false) {
-			exception = exceptions.Auth.InternalServerWentWrong(exception)
+		if exception.IsInternal {
+			exception = exceptions.Auth.InternalServerWentWrong(nil)
 		}
 		ctx.JSON(exception.HTTPStatusCode, gin.H{
 			"success":   false,
@@ -179,8 +176,8 @@ func (c *AuthController) SendAuthCode(ctx *gin.Context) {
 	resDto, exception := c.authService.SendAuthCode(&reqDto)
 	if exception != nil {
 		exception.Log()
-		if !exceptions.CompareCommonExceptions(exceptions.Auth.InvalidDto(), exception, false) {
-			exception = exceptions.Auth.InternalServerWentWrong(exception)
+		if exception.IsInternal {
+			exception = exceptions.Auth.InternalServerWentWrong(nil)
 		}
 		ctx.JSON(exception.HTTPStatusCode, gin.H{
 			"success":   false,
@@ -203,7 +200,7 @@ func (c *AuthController) ValidateEmail(ctx *gin.Context) {
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
 		exception.Log()
-		exception = exceptions.Auth.InternalServerWentWrong(exception)
+		exception = exceptions.Auth.InternalServerWentWrong(nil)
 		ctx.JSON(exception.HTTPStatusCode, gin.H{
 			"success":   false,
 			"data":      nil,
@@ -225,8 +222,8 @@ func (c *AuthController) ValidateEmail(ctx *gin.Context) {
 	resDto, exception := c.authService.ValidateEmail(&reqDto)
 	if exception != nil {
 		exception.Log()
-		if !exceptions.CompareCommonExceptions(exceptions.Auth.InvalidDto(), exception, false) {
-			exception = exceptions.Auth.InternalServerWentWrong(exception)
+		if exception.IsInternal {
+			exception = exceptions.Auth.InternalServerWentWrong(nil)
 		}
 		ctx.JSON(exception.HTTPStatusCode, gin.H{
 			"success":   false,
@@ -249,7 +246,7 @@ func (c *AuthController) ResetEmail(ctx *gin.Context) {
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
 		exception.Log()
-		exception = exceptions.Auth.InternalServerWentWrong(exception)
+		exception = exceptions.Auth.InternalServerWentWrong(nil)
 		ctx.JSON(exception.HTTPStatusCode, gin.H{
 			"success":   false,
 			"data":      nil,
@@ -271,8 +268,8 @@ func (c *AuthController) ResetEmail(ctx *gin.Context) {
 	resDto, exception := c.authService.ResetEmail(&reqDto)
 	if exception != nil {
 		exception.Log()
-		if !exceptions.CompareCommonExceptions(exceptions.Auth.InvalidDto(), exception, false) {
-			exception = exceptions.Auth.InternalServerWentWrong(exception)
+		if exception.IsInternal {
+			exception = exceptions.Auth.InternalServerWentWrong(nil)
 		}
 		ctx.JSON(exception.HTTPStatusCode, gin.H{
 			"success":   false,
@@ -306,8 +303,8 @@ func (c *AuthController) ForgetPassword(ctx *gin.Context) {
 	resDto, exception := c.authService.ForgetPassword(&reqDto)
 	if exception != nil {
 		exception.Log()
-		if !exceptions.CompareCommonExceptions(exceptions.Auth.InvalidDto(), exception, false) {
-			exception = exceptions.Auth.InternalServerWentWrong(exception)
+		if exception.IsInternal {
+			exception = exceptions.Auth.InternalServerWentWrong(nil)
 		}
 		ctx.JSON(exception.HTTPStatusCode, gin.H{
 			"success":   false,
@@ -330,7 +327,7 @@ func (c *AuthController) DeleteMe(ctx *gin.Context) {
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
 		exception.Log()
-		exception = exceptions.Auth.InternalServerWentWrong(exception)
+		exception = exceptions.Auth.InternalServerWentWrong(nil)
 		ctx.JSON(exception.HTTPStatusCode, gin.H{
 			"success":   false,
 			"data":      nil,
@@ -352,8 +349,8 @@ func (c *AuthController) DeleteMe(ctx *gin.Context) {
 	resDto, exception := c.authService.DeleteMe(&reqDto)
 	if exception != nil {
 		exception.Log()
-		if !exceptions.CompareCommonExceptions(exceptions.Auth.InvalidDto(), exception, false) {
-			exception = exceptions.Auth.InternalServerWentWrong(exception)
+		if exception.IsInternal {
+			exception = exceptions.Auth.InternalServerWentWrong(nil)
 		}
 		ctx.JSON(exception.HTTPStatusCode, gin.H{
 			"success":   false,

@@ -45,8 +45,9 @@ var Auth = &AuthExceptionDomain{
 func (d *AuthExceptionDomain) WrongPassword() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
-		Reason:         "WrongPassword",
 		Prefix:         d.Prefix,
+		Reason:         "WrongPassword",
+		IsInternal:     false,
 		Message:        "The password is not match",
 		HTTPStatusCode: http.StatusUnauthorized,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -56,8 +57,9 @@ func (d *AuthExceptionDomain) WrongPassword() *Exception {
 func (d *AuthExceptionDomain) WrongAccessToken() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 2,
-		Reason:         "WrongAccessToken",
 		Prefix:         d.Prefix,
+		Reason:         "WrongAccessToken",
+		IsInternal:     true,
 		Message:        "The access token is not match or expired",
 		HTTPStatusCode: http.StatusUnauthorized,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -67,8 +69,9 @@ func (d *AuthExceptionDomain) WrongAccessToken() *Exception {
 func (d *AuthExceptionDomain) WrongRefreshToken() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 3,
-		Reason:         "WrongRefreshToken",
 		Prefix:         d.Prefix,
+		Reason:         "WrongRefreshToken",
+		IsInternal:     true,
 		Message:        "The refresh token is not match or expired",
 		HTTPStatusCode: http.StatusUnauthorized,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -78,8 +81,9 @@ func (d *AuthExceptionDomain) WrongRefreshToken() *Exception {
 func (d *AuthExceptionDomain) WrongUserAgent() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 4,
-		Reason:         "WrongUserAgent",
 		Prefix:         d.Prefix,
+		Reason:         "WrongUserAgent",
+		IsInternal:     true,
 		Message:        "The user agent is not match",
 		HTTPStatusCode: http.StatusUnauthorized,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -89,8 +93,9 @@ func (d *AuthExceptionDomain) WrongUserAgent() *Exception {
 func (d *AuthExceptionDomain) WrongAuthCode() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 5,
-		Reason:         "WrongAuthCode",
 		Prefix:         d.Prefix,
+		Reason:         "WrongAuthCode",
+		IsInternal:     false,
 		Message:        "The authentication code is not match",
 		HTTPStatusCode: http.StatusUnauthorized,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -100,8 +105,9 @@ func (d *AuthExceptionDomain) WrongAuthCode() *Exception {
 func (d *AuthExceptionDomain) FailedToExtractOrValidateAccessToken() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 6,
-		Reason:         "FailedToExtractOrValidateAccessToken",
 		Prefix:         d.Prefix,
+		Reason:         "FailedToExtractOrValidateAccessToken",
+		IsInternal:     true,
 		Message:        "Failed to get or validate the access token",
 		HTTPStatusCode: http.StatusUnauthorized,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -111,8 +117,9 @@ func (d *AuthExceptionDomain) FailedToExtractOrValidateAccessToken() *Exception 
 func (d *AuthExceptionDomain) FailedToExtractOrValidateRefreshToken() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 7,
-		Reason:         "FailedToExtractOrValidateRefreshToken",
 		Prefix:         d.Prefix,
+		Reason:         "FailedToExtractOrValidateRefreshToken",
+		IsInternal:     true,
 		Message:        "Failed to get or validate the refresh token",
 		HTTPStatusCode: http.StatusUnauthorized,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -122,8 +129,9 @@ func (d *AuthExceptionDomain) FailedToExtractOrValidateRefreshToken() *Exception
 func (d *AuthExceptionDomain) LoginBlockedDueToTryingTooManyTimes(blockedUntil time.Time) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 8,
-		Reason:         "LoginBlockedDueToTryingTooManyTimes",
 		Prefix:         d.Prefix,
+		Reason:         "LoginBlockedDueToTryingTooManyTimes",
+		IsInternal:     false,
 		Message:        fmt.Sprintf("Blocked the login procedure because user has tried too many times and require to wait until %v", blockedUntil),
 		HTTPStatusCode: http.StatusUnauthorized,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -133,8 +141,9 @@ func (d *AuthExceptionDomain) LoginBlockedDueToTryingTooManyTimes(blockedUntil t
 func (d *AuthExceptionDomain) NoClientIPOrReferenceToClient() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 9,
-		Reason:         "NoClientIPOrReferenceToClient",
 		Prefix:         d.Prefix,
+		Reason:         "NoClientIPOrReferenceToClient",
+		IsInternal:     true,
 		Message:        "Cannot extract or find any reference to the client",
 		HTTPStatusCode: http.StatusUnauthorized,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -146,8 +155,9 @@ func (d *AuthExceptionDomain) NoClientIPOrReferenceToClient() *Exception {
 func (d *AuthExceptionDomain) PermissionDeniedDueToUserRole(userRole any) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 101,
-		Reason:         "PermissionDeniedDueToUserRole",
 		Prefix:         d.Prefix,
+		Reason:         "PermissionDeniedDueToUserRole",
+		IsInternal:     false,
 		Message:        fmt.Sprintf("The current user role of %v does not have access to this operation", userRole),
 		HTTPStatusCode: http.StatusUnauthorized,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -157,8 +167,9 @@ func (d *AuthExceptionDomain) PermissionDeniedDueToUserRole(userRole any) *Excep
 func (d *AuthExceptionDomain) PermissionDeniedDueToUserPlan(userPlan any) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 102,
-		Reason:         "PermissionDeniedDueToUserPlan",
 		Prefix:         d.Prefix,
+		Reason:         "PermissionDeniedDueToUserPlan",
+		IsInternal:     false,
 		Message:        fmt.Sprintf("The current user plan of %v does not have access to this operation", userPlan),
 		HTTPStatusCode: http.StatusUnauthorized,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -168,8 +179,9 @@ func (d *AuthExceptionDomain) PermissionDeniedDueToUserPlan(userPlan any) *Excep
 func (d *AuthExceptionDomain) PermissionDeniedDueToInvalidRequestOriginDomain(origin string) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 103,
-		Reason:         "PermissionDeniedDueToInvalidRequestOriginDomain",
 		Prefix:         d.Prefix,
+		Reason:         "PermissionDeniedDueToInvalidRequestOriginDomain",
+		IsInternal:     true,
 		Message:        fmt.Sprintf("The current request origin domain of %s is invalid", origin),
 		HTTPStatusCode: http.StatusUnauthorized,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -179,8 +191,9 @@ func (d *AuthExceptionDomain) PermissionDeniedDueToInvalidRequestOriginDomain(or
 func (d *AuthExceptionDomain) PermissionDeniedDueToTooManyRequests() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 104,
-		Reason:         "PermissionDeniedDueToTooManyRequests",
 		Prefix:         d.Prefix,
+		Reason:         "PermissionDeniedDueToTooManyRequests",
+		IsInternal:     false,
 		Message:        "Too many requests, please wait for a while",
 		HTTPStatusCode: http.StatusTooManyRequests,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -198,8 +211,9 @@ func (d *AuthExceptionDomain) MissPlacingOrWrongMiddlewareOrder(optionalMessage 
 
 	return &Exception{
 		Code:           d.BaseCode + 201,
-		Reason:         "MissPlacingOrWrongMiddlewareOrder",
 		Prefix:         d.Prefix,
+		Reason:         "MissPlacingOrWrongMiddlewareOrder",
+		IsInternal:     true,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],

@@ -62,8 +62,9 @@ var User = &UserExceptionDomain{
 func (d *UserExceptionDomain) DuplicateName(name string) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
-		Reason:         "DuplicateName",
 		Prefix:         d.Prefix,
+		Reason:         "DuplicateName",
+		IsInternal:     false,
 		Message:        fmt.Sprintf("The name of %s is already be used", name),
 		HTTPStatusCode: http.StatusConflict,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -73,8 +74,9 @@ func (d *UserExceptionDomain) DuplicateName(name string) *Exception {
 func (d *UserExceptionDomain) DuplicateEmail(email string) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 2,
-		Reason:         "DuplicateEmail",
 		Prefix:         d.Prefix,
+		Reason:         "DuplicateEmail",
+		IsInternal:     false,
 		Message:        fmt.Sprintf("The email of %s is already be used", email),
 		HTTPStatusCode: http.StatusConflict,
 		LastStackFrame: &GetStackTrace(2, 1)[0],

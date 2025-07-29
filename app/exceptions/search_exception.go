@@ -36,8 +36,9 @@ var Search = &SearchExceptionDomain{
 func (d *SearchExceptionDomain) InvalidNilDataToEncodeSearchCursor() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
-		Reason:         "InvalidNilDataToEncodeSearchCursor",
 		Prefix:         d.Prefix,
+		Reason:         "InvalidNilDataToEncodeSearchCursor",
+		IsInternal:     true,
 		Message:        "Invalid nil data to encode search cursor, data must be not nil",
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -47,8 +48,9 @@ func (d *SearchExceptionDomain) InvalidNilDataToEncodeSearchCursor() *Exception 
 func (d *SearchExceptionDomain) InvalidNonMapToEncodeSearchCursor() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 2,
-		Reason:         "InvalidNonMapToEncodeSearchCursor",
 		Prefix:         d.Prefix,
+		Reason:         "InvalidNonMapToEncodeSearchCursor",
+		IsInternal:     true,
 		Message:        "Invalid non map data to encode search cursor, data must be map[string]interface{}",
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -58,8 +60,9 @@ func (d *SearchExceptionDomain) InvalidNonMapToEncodeSearchCursor() *Exception {
 func (d *SearchExceptionDomain) FailedToMarshalSearchCursor() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 3,
-		Reason:         "FailedToMarshalSearchCursor",
 		Prefix:         d.Prefix,
+		Reason:         "FailedToMarshalSearchCursor",
+		IsInternal:     true,
 		Message:        "Failed to marshal the search cursor",
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -69,8 +72,9 @@ func (d *SearchExceptionDomain) FailedToMarshalSearchCursor() *Exception {
 func (d *SearchExceptionDomain) FailedToUnmarshalSearchCursor() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 4,
-		Reason:         "FailedToUnmarshalSearchCursor",
 		Prefix:         d.Prefix,
+		Reason:         "FailedToUnmarshalSearchCursor",
+		IsInternal:     true,
 		Message:        "Failed to unmarshal the search cursor",
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -80,8 +84,9 @@ func (d *SearchExceptionDomain) FailedToUnmarshalSearchCursor() *Exception {
 func (d *SearchExceptionDomain) EmptyEncodedStringToDecodeSearchCursor() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 5,
-		Reason:         "EmptyEncodedStringToDecodeSearchCursor",
 		Prefix:         d.Prefix,
+		Reason:         "EmptyEncodedStringToDecodeSearchCursor",
+		IsInternal:     true,
 		Message:        "Encoded string cannot be empty",
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -91,8 +96,9 @@ func (d *SearchExceptionDomain) EmptyEncodedStringToDecodeSearchCursor() *Except
 func (d *SearchExceptionDomain) FailedToDecodeBase64String() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 6,
-		Reason:         "FailedToDecodeBase64String",
 		Prefix:         d.Prefix,
+		Reason:         "FailedToDecodeBase64String",
+		IsInternal:     true,
 		Message:        "Failed to decode base64 string",
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -102,8 +108,9 @@ func (d *SearchExceptionDomain) FailedToDecodeBase64String() *Exception {
 func (d *SearchExceptionDomain) CannotFindFieldInEncodedSearchCursor(searchCursor string, fieldName string) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 7,
-		Reason:         "CannotFindFieldInEncodedSearchCursor",
 		Prefix:         d.Prefix,
+		Reason:         "CannotFindFieldInEncodedSearchCursor",
+		IsInternal:     true,
 		Message:        fmt.Sprintf("Cannot find the field of %s in the search cursor: %s", fieldName, searchCursor),
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],

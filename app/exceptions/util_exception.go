@@ -33,8 +33,9 @@ var Util = &UtilExceptionDomain{
 func (d *UtilExceptionDomain) AccessTokenSecretKeyNotFound() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
-		Reason:         "AccessTokenSecretKeyNotFound",
 		Prefix:         d.Prefix,
+		Reason:         "AccessTokenSecretKeyNotFound",
+		IsInternal:     true,
 		Message:        "The environment variables of access token secret key is not found",
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -44,8 +45,9 @@ func (d *UtilExceptionDomain) AccessTokenSecretKeyNotFound() *Exception {
 func (d *UtilExceptionDomain) RefreshTokenSecretKeyNotFound() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 2,
-		Reason:         "RefreshTokenSecretKeyNotFound",
 		Prefix:         d.Prefix,
+		Reason:         "RefreshTokenSecretKeyNotFound",
+		IsInternal:     true,
 		Message:        "The environment variables of refresh token secret key is not found",
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -55,8 +57,9 @@ func (d *UtilExceptionDomain) RefreshTokenSecretKeyNotFound() *Exception {
 func (d *UtilExceptionDomain) FailedToGenerateAccessToken() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 3,
-		Reason:         "FailedToGenerateAccessToken",
 		Prefix:         d.Prefix,
+		Reason:         "FailedToGenerateAccessToken",
+		IsInternal:     true,
 		Message:        "Failed to generate the access token",
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -66,8 +69,9 @@ func (d *UtilExceptionDomain) FailedToGenerateAccessToken() *Exception {
 func (d *UtilExceptionDomain) FailedToGenerateRefreshToken() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 4,
-		Reason:         "FailedToGenerateRefreshToken",
 		Prefix:         d.Prefix,
+		Reason:         "FailedToGenerateRefreshToken",
+		IsInternal:     true,
 		Message:        "Failed to generate the refresh token",
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -77,8 +81,9 @@ func (d *UtilExceptionDomain) FailedToGenerateRefreshToken() *Exception {
 func (d *UtilExceptionDomain) FailedToParseAccessToken() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 5,
-		Reason:         "FailedToParseAccessToken",
 		Prefix:         d.Prefix,
+		Reason:         "FailedToParseAccessToken",
+		IsInternal:     true,
 		Message:        "Failed to parse the access token",
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -88,8 +93,9 @@ func (d *UtilExceptionDomain) FailedToParseAccessToken() *Exception {
 func (d *UtilExceptionDomain) FailedToParseRefreshToken() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 6,
-		Reason:         "FailedToParseRefreshToken",
 		Prefix:         d.Prefix,
+		Reason:         "FailedToParseRefreshToken",
+		IsInternal:     true,
 		Message:        "Failed to parse the refresh token",
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -101,8 +107,9 @@ func (d *UtilExceptionDomain) FailedToParseRefreshToken() *Exception {
 func (d *UtilExceptionDomain) FailedToGenerateHashValue() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 11,
-		Reason:         "FailedToGenerateHashValue",
 		Prefix:         d.Prefix,
+		Reason:         "FailedToGenerateHashValue",
+		IsInternal:     true,
 		Message:        "Failed to generate the hash value",
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -114,8 +121,9 @@ func (d *UtilExceptionDomain) FailedToGenerateHashValue() *Exception {
 func (d *UtilExceptionDomain) FailedToReadFile() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 21,
-		Reason:         "FailedToReadFile",
 		Prefix:         d.Prefix,
+		Reason:         "FailedToReadFile",
+		IsInternal:     true,
 		Message:        "Failed to read the file",
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -125,8 +133,9 @@ func (d *UtilExceptionDomain) FailedToReadFile() *Exception {
 func (d *UtilExceptionDomain) FailedToPreprocessPartialUpdate(values interface{}, setNull *map[string]bool, existingValues interface{}) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 22,
-		Reason:         "FailedToPreprocessPartialUpdate",
 		Prefix:         d.Prefix,
+		Reason:         "FailedToPreprocessPartialUpdate",
+		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to preprocess partial update with value: %v, setNull: %v, and existingValues: %v", values, setNull, existingValues),
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
