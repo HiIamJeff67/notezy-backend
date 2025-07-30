@@ -14,8 +14,8 @@ import (
 /* ============================== Interface & Instance ============================== */
 
 type UserControllerInterface interface {
+	GetUserData(ctx *gin.Context)
 	GetMe(ctx *gin.Context)
-	GetAllUsers(ctx *gin.Context)
 	UpdateMe(ctx *gin.Context)
 }
 
@@ -32,8 +32,8 @@ func NewUserController(service services.UserServiceInterface) UserControllerInte
 /* ============================== Controllers ============================== */
 
 // with AuthMiddleware()
-func (c *UserController) GetMe(ctx *gin.Context) {
-	var reqDto dtos.GetMeReqDto
+func (c *UserController) GetUserData(ctx *gin.Context) {
+	var reqDto dtos.GetUserDataReqDto
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
 		exception.Log()
@@ -47,7 +47,7 @@ func (c *UserController) GetMe(ctx *gin.Context) {
 	}
 	reqDto.UserId = *userId
 
-	resDto, exception := c.userService.GetMe(&reqDto)
+	resDto, exception := c.userService.GetUserData(&reqDto)
 	if exception != nil {
 		exception.Log()
 		if exception.IsInternal {
@@ -69,10 +69,41 @@ func (c *UserController) GetMe(ctx *gin.Context) {
 }
 
 // with AuthMiddleware()
-func (c *UserController) GetAllUsers(ctx *gin.Context) {
-	resDto, exception := c.userService.GetAllUsers()
+func (c *UserController) GetMe(ctx *gin.Context) {
+	var reqDto dtos.GetMeReqDto
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
 	if exception != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": exception.Log().Error})
+		exception.Log()
+		exception = exceptions.User.InternalServerWentWrong(nil)
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
+		return
+	}
+	reqDto.UserId = *userId
+	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
+		exception := exceptions.User.InvalidDto().WithError(err)
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
+		return
+	}
+
+	resDto, exception := c.userService.GetMe(&reqDto)
+	if exception != nil {
+		exception.Log()
+		if exception.IsInternal {
+			exception = exceptions.User.InternalServerWentWrong(nil)
+		}
+		ctx.JSON(exception.HTTPStatusCode, gin.H{
+			"success":   false,
+			"data":      nil,
+			"exception": exception.GetGinH(),
+		})
 		return
 	}
 

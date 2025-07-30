@@ -11,6 +11,10 @@ import (
 
 /* ============================== Request DTO ============================== */
 
+type GetUserDataReqDto struct {
+	UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+}
+
 type GetMeReqDto struct {
 	UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 }
@@ -35,7 +39,18 @@ type UpdatePlanReqDto struct {
 
 /* ============================== Response DTO ============================== */
 
-type GetMeResDto = caches.UserDataCache
+type GetUserDataResDto = caches.UserDataCache
+
+type GetMeResDto struct {
+	PublicId    string           `json:"publicId"`
+	Name        string           `json:"name"`
+	DisplayName string           `json:"displayName"`
+	Email       string           `json:"email"`
+	Role        enums.UserRole   `json:"role"`
+	Plan        enums.UserPlan   `json:"plan"`
+	Status      enums.UserStatus `json:"status"`
+	CreatedAt   time.Time        `json:"createdAt"`
+}
 
 type UpdateMeResDto struct {
 	UpdatedAt time.Time

@@ -21,8 +21,8 @@ import (
 /* ============================== Interface & Instance ============================== */
 
 type UserServiceInterface interface {
+	GetUserData(reqDto *dtos.GetUserDataReqDto) (*dtos.GetUserDataResDto, *exceptions.Exception)
 	GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception)
-	GetAllUsers() (*[]schemas.User, *exceptions.Exception)
 	UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Exception)
 
 	// services for public users
@@ -44,7 +44,7 @@ func NewUserService(db *gorm.DB) UserServiceInterface {
 
 /* ============================== Service Methods for Users ============================== */
 
-func (s *UserService) GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception) {
+func (s *UserService) GetUserData(reqDto *dtos.GetUserDataReqDto) (*dtos.GetUserDataResDto, *exceptions.Exception) {
 	if err := models.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -57,16 +57,28 @@ func (s *UserService) GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *excep
 	return userDataCache, nil
 }
 
-// for temporary use
-func (s *UserService) GetAllUsers() (*[]schemas.User, *exceptions.Exception) {
-	userRepository := repositories.NewUserRepository(nil)
+func (s *UserService) GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception) {
+	if err := models.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
 
-	users, exception := userRepository.GetAll()
+	userRepository := repositories.NewUserRepository(s.db)
+
+	user, exception := userRepository.GetOneById(reqDto.UserId)
 	if exception != nil {
 		return nil, exception
 	}
 
-	return users, nil
+	return &dtos.GetMeResDto{
+		PublicId:    user.PublicId,
+		Name:        user.Name,
+		DisplayName: user.DisplayName,
+		Email:       user.Email,
+		Role:        user.Role,
+		Plan:        user.Plan,
+		Status:      user.Status,
+		CreatedAt:   user.CreatedAt,
+	}, nil
 }
 
 func (s *UserService) UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Exception) {

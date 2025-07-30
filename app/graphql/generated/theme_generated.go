@@ -424,8 +424,6 @@ func (ec *executionContext) fieldContext_PublicTheme_author(_ context.Context, f
 				return ec.fieldContext_PublicUser_name(ctx, field)
 			case "displayName":
 				return ec.fieldContext_PublicUser_displayName(ctx, field)
-			case "email":
-				return ec.fieldContext_PublicUser_email(ctx, field)
 			case "role":
 				return ec.fieldContext_PublicUser_role(ctx, field)
 			case "plan":
@@ -434,8 +432,6 @@ func (ec *executionContext) fieldContext_PublicTheme_author(_ context.Context, f
 				return ec.fieldContext_PublicUser_status(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_PublicUser_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_PublicUser_updatedAt(ctx, field)
 			case "userInfo":
 				return ec.fieldContext_PublicUser_userInfo(ctx, field)
 			case "badges":

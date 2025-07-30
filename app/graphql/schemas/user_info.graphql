@@ -8,5 +8,5 @@ type PublicUserInfo {
   gender: UserGender!
   country: Country
   birthDate: Time!
-  updatedAt: Time!
+  # updatedAt: Time!
 }

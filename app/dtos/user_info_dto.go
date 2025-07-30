@@ -35,7 +35,7 @@ type GetMyInfoResDto struct {
 	Header             *string          `json:"header"`
 	Introduction       *string          `json:"introduction"`
 	Gender             enums.UserGender `json:"gender"`
-	Country            enums.Country    `json:"country"`
+	Country            *enums.Country   `json:"country"`
 	BirthDate          time.Time        `json:"birthDate"`
 	UpdatedAt          time.Time        `json:"updatedAt"`
 }

@@ -163,50 +163,6 @@ func (ec *executionContext) fieldContext_PublicUser_displayName(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _PublicUser_email(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicUser) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PublicUser_email(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Email, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PublicUser_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PublicUser",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _PublicUser_role(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicUser) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PublicUser_role(ctx, field)
 	if err != nil {
@@ -383,50 +339,6 @@ func (ec *executionContext) fieldContext_PublicUser_createdAt(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _PublicUser_updatedAt(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicUser) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PublicUser_updatedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PublicUser_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PublicUser",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _PublicUser_userInfo(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicUser) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PublicUser_userInfo(ctx, field)
 	if err != nil {
@@ -480,8 +392,6 @@ func (ec *executionContext) fieldContext_PublicUser_userInfo(_ context.Context, 
 				return ec.fieldContext_PublicUserInfo_country(ctx, field)
 			case "birthDate":
 				return ec.fieldContext_PublicUserInfo_birthDate(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_PublicUserInfo_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PublicUserInfo", field.Name)
 		},
@@ -894,8 +804,6 @@ func (ec *executionContext) fieldContext_SearchUserEdge_node(_ context.Context, 
 				return ec.fieldContext_PublicUser_name(ctx, field)
 			case "displayName":
 				return ec.fieldContext_PublicUser_displayName(ctx, field)
-			case "email":
-				return ec.fieldContext_PublicUser_email(ctx, field)
 			case "role":
 				return ec.fieldContext_PublicUser_role(ctx, field)
 			case "plan":
@@ -904,8 +812,6 @@ func (ec *executionContext) fieldContext_SearchUserEdge_node(_ context.Context, 
 				return ec.fieldContext_PublicUser_status(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_PublicUser_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_PublicUser_updatedAt(ctx, field)
 			case "userInfo":
 				return ec.fieldContext_PublicUser_userInfo(ctx, field)
 			case "badges":
@@ -1118,11 +1024,6 @@ func (ec *executionContext) _PublicUser(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "email":
-			out.Values[i] = ec._PublicUser_email(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "role":
 			out.Values[i] = ec._PublicUser_role(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -1140,11 +1041,6 @@ func (ec *executionContext) _PublicUser(ctx context.Context, sel ast.SelectionSe
 			}
 		case "createdAt":
 			out.Values[i] = ec._PublicUser_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "updatedAt":
-			out.Values[i] = ec._PublicUser_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

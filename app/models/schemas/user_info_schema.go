@@ -38,6 +38,5 @@ func (ui *UserInfo) ToPublicUserInfo() *gqlmodels.PublicUserInfo {
 		Gender:             ui.Gender,
 		Country:            ui.Country,
 		BirthDate:          ui.BirthDate,
-		UpdatedAt:          ui.UpdatedAt,
 	}
 }

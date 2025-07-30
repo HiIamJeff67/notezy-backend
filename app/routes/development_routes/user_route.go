@@ -21,10 +21,14 @@ func configureDevelopmentUserRoutes() {
 	)
 	{
 		userRoutes.GET(
+			"/getUserData",
+			userController.GetUserData,
+		)
+		userRoutes.GET(
 			"/getMe",
 			userController.GetMe,
 		)
-		userRoutes.PATCH(
+		userRoutes.PUT(
 			"/updateMe",
 			userController.UpdateMe,
 		)

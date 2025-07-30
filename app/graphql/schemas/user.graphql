@@ -6,7 +6,7 @@ type PublicUser {
   publicId: String! # the encoded of this field is the identifier of the PublicUser
   name: String!
   displayName: String!
-  email: String!
+  # email: String!
   # password: String!
   # refreshToken: String!
   # loginCount: Int
@@ -17,7 +17,7 @@ type PublicUser {
   # prevStatus: UserStatus!
   status: UserStatus!
   createdAt: Time!
-  updatedAt: Time!
+  # updatedAt: Time!
 
   # relations
   userInfo: PublicUserInfo!

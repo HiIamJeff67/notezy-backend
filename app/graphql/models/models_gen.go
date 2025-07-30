@@ -51,12 +51,10 @@ type PublicUser struct {
 	PublicID    string           `json:"publicId"`
 	Name        string           `json:"name"`
 	DisplayName string           `json:"displayName"`
-	Email       string           `json:"email"`
 	Role        enums.UserRole   `json:"role"`
 	Plan        enums.UserPlan   `json:"plan"`
 	Status      enums.UserStatus `json:"status"`
 	CreatedAt   time.Time        `json:"createdAt"`
-	UpdatedAt   time.Time        `json:"updatedAt"`
 	UserInfo    *PublicUserInfo  `json:"userInfo"`
 	Badges      []*PublicBadge   `json:"badges"`
 	Themes      []*PublicTheme   `json:"themes"`
@@ -70,7 +68,6 @@ type PublicUserInfo struct {
 	Gender             enums.UserGender `json:"gender"`
 	Country            *enums.Country   `json:"country,omitempty"`
 	BirthDate          time.Time        `json:"birthDate"`
-	UpdatedAt          time.Time        `json:"updatedAt"`
 }
 
 type PublicUsersToBadges struct {

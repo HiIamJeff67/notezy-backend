@@ -66,14 +66,12 @@ type ComplexityRoot struct {
 		Badges      func(childComplexity int) int
 		CreatedAt   func(childComplexity int) int
 		DisplayName func(childComplexity int) int
-		Email       func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Plan        func(childComplexity int) int
 		PublicID    func(childComplexity int) int
 		Role        func(childComplexity int) int
 		Status      func(childComplexity int) int
 		Themes      func(childComplexity int) int
-		UpdatedAt   func(childComplexity int) int
 		UserInfo    func(childComplexity int) int
 	}
 
@@ -85,7 +83,6 @@ type ComplexityRoot struct {
 		Gender             func(childComplexity int) int
 		Header             func(childComplexity int) int
 		Introduction       func(childComplexity int) int
-		UpdatedAt          func(childComplexity int) int
 	}
 
 	PublicUsersToBadges struct {
@@ -297,13 +294,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PublicUser.DisplayName(childComplexity), true
 
-	case "PublicUser.email":
-		if e.complexity.PublicUser.Email == nil {
-			break
-		}
-
-		return e.complexity.PublicUser.Email(childComplexity), true
-
 	case "PublicUser.name":
 		if e.complexity.PublicUser.Name == nil {
 			break
@@ -345,13 +335,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PublicUser.Themes(childComplexity), true
-
-	case "PublicUser.updatedAt":
-		if e.complexity.PublicUser.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.PublicUser.UpdatedAt(childComplexity), true
 
 	case "PublicUser.userInfo":
 		if e.complexity.PublicUser.UserInfo == nil {
@@ -408,13 +391,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PublicUserInfo.Introduction(childComplexity), true
-
-	case "PublicUserInfo.updatedAt":
-		if e.complexity.PublicUserInfo.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.PublicUserInfo.UpdatedAt(childComplexity), true
 
 	case "PublicUsersToBadges.badge":
 		if e.complexity.PublicUsersToBadges.Badge == nil {
@@ -981,7 +957,7 @@ type PublicUser {
   publicId: String! # the encoded of this field is the identifier of the PublicUser
   name: String!
   displayName: String!
-  email: String!
+  # email: String!
   # password: String!
   # refreshToken: String!
   # loginCount: Int
@@ -992,7 +968,7 @@ type PublicUser {
   # prevStatus: UserStatus!
   status: UserStatus!
   createdAt: Time!
-  updatedAt: Time!
+  # updatedAt: Time!
 
   # relations
   userInfo: PublicUserInfo!
@@ -1064,7 +1040,7 @@ type SearchUserConnection implements SearchConnection {
   gender: UserGender!
   country: Country
   birthDate: Time!
-  updatedAt: Time!
+  # updatedAt: Time!
 }
 `, BuiltIn: false},
 	{Name: "../schemas/users_to_badges.graphql", Input: `type PublicUsersToBadges {
