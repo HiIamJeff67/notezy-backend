@@ -141,3 +141,53 @@ func (d *UtilExceptionDomain) FailedToPreprocessPartialUpdate(values interface{}
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
+
+/* ============================== Handling Get Block Time Error ============================== */
+
+func (d *UtilExceptionDomain) InvalidLoginCount(loginCount int32) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 31,
+		Prefix:         d.Prefix,
+		Reason:         "InvalidLoginCount",
+		IsInternal:     true,
+		Message:        fmt.Sprintf("The given loginCount is invalid: %d", loginCount),
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *UtilExceptionDomain) InvalidAuthCodeRequestTimes(authCodeRequestTimes int32) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 32,
+		Prefix:         d.Prefix,
+		Reason:         "InvalidAuthCodeRequestTimes",
+		IsInternal:     true,
+		Message:        fmt.Sprintf("The given loginCount is invalid: %d", authCodeRequestTimes),
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *UtilExceptionDomain) NotRequiredToBlockLogin(loginCount int32) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 33,
+		Prefix:         d.Prefix,
+		Reason:         "NotRequiredToBlock",
+		IsInternal:     true,
+		Message:        fmt.Sprintf("The loginCount of %d is no need to block", loginCount),
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *UtilExceptionDomain) NotRequiredToBlockAuthCode(authCodeRequestTime int32) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 34,
+		Prefix:         d.Prefix,
+		Reason:         "NotRequiredToBlockAuthCode",
+		IsInternal:     true,
+		Message:        fmt.Sprintf("The authCodeRequestTime of %d is no need to block", authCodeRequestTime),
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}

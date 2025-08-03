@@ -52,6 +52,7 @@ const (
 // ExceptionPrefix_UsersToBadges ExceptionPrefix = "UsersToBadges"       36
 // ExceptionPrefix_Badge ExceptionPrefix = "Badge"                       37
 // ExceptionPrefix_Theme ExceptionPrefix = "Theme"						 38
+// ExceptionPrefix_Parser ExceptionPrefix = "Parser"				     39
 )
 
 func IsExceptionCode(exceptionCode int) bool {
@@ -160,7 +161,7 @@ func (e *Exception) Log() *Exception {
 	if e.Error != nil {
 		logs.FError("[%d]%s: %s(%v)", e.Code, e.Reason, e.Message, e.Error.Error())
 	} else {
-		logs.FError("[%d]%s (%v)", e.Code, e.Reason, e.Message)
+		logs.FError("[%d]%s %s", e.Code, e.Reason, e.Message)
 	}
 	return e
 }
@@ -290,7 +291,7 @@ type DatabaseExceptionDomain struct {
 }
 
 func (d *DatabaseExceptionDomain) NotFound(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("%s not found", strings.ToLower(string(d._Prefix)))
+	message := fmt.Sprintf("%s not found", string(d._Prefix))
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
 	}
@@ -307,7 +308,7 @@ func (d *DatabaseExceptionDomain) NotFound(optionalMessage ...string) *Exception
 }
 
 func (d *DatabaseExceptionDomain) FailedToCreate(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Failed to create the %s", strings.ToLower(string(d._Prefix)))
+	message := fmt.Sprintf("Failed to create the %s", string(d._Prefix))
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
 	}
@@ -324,7 +325,7 @@ func (d *DatabaseExceptionDomain) FailedToCreate(optionalMessage ...string) *Exc
 }
 
 func (d *DatabaseExceptionDomain) FailedToUpdate(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Failed to update the %s", strings.ToLower(string(d._Prefix)))
+	message := fmt.Sprintf("Failed to update the %s", string(d._Prefix))
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
 	}
@@ -341,7 +342,7 @@ func (d *DatabaseExceptionDomain) FailedToUpdate(optionalMessage ...string) *Exc
 }
 
 func (d *DatabaseExceptionDomain) FailedToDelete(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Failed to delete the %s", strings.ToLower(string(d._Prefix)))
+	message := fmt.Sprintf("Failed to delete the %s", string(d._Prefix))
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
 	}
@@ -358,7 +359,7 @@ func (d *DatabaseExceptionDomain) FailedToDelete(optionalMessage ...string) *Exc
 }
 
 func (d *DatabaseExceptionDomain) FailedToCommitTransaction(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Failed to commit the transaction in %s", strings.ToLower(string(d._Prefix)))
+	message := fmt.Sprintf("Failed to commit the transaction in %s", string(d._Prefix))
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
 	}
@@ -388,7 +389,7 @@ func (d *APIExceptionDomain) InternalServerWentWrong(originalException *Exceptio
 	}
 
 	exception := &Exception{
-		Code:           d._BaseCode + 1,
+		Code:           d._BaseCode + 11,
 		Prefix:         d._Prefix,
 		Reason:         "InternalServerWentWrong",
 		IsInternal:     true,
@@ -411,13 +412,13 @@ func (d *APIExceptionDomain) InternalServerWentWrong(originalException *Exceptio
 }
 
 func (d *APIExceptionDomain) Timeout(time time.Duration, optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Timeout in %s with %v", strings.ToLower(string(d._Prefix)), time)
+	message := fmt.Sprintf("Timeout in %s with %v", string(d._Prefix), time)
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
 	}
 
 	return &Exception{
-		Code:           d._BaseCode + 2,
+		Code:           d._BaseCode + 12,
 		Prefix:         d._Prefix,
 		Reason:         "Timeout",
 		IsInternal:     false,
@@ -436,7 +437,7 @@ type GraphQLExceptionDomain struct {
 
 func (d *GraphQLExceptionDomain) InvalidSourceInBatchFunction() *Exception {
 	return &Exception{
-		Code:           d._BaseCode + 1,
+		Code:           d._BaseCode + 21,
 		Prefix:         d._Prefix,
 		Reason:         "InvalidSourceInBatchFunction",
 		IsInternal:     true,
@@ -454,13 +455,13 @@ type TypeExceptionDomain struct {
 }
 
 func (d *TypeExceptionDomain) InvalidInput(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Invalid input object detected in %s", strings.ToLower(string(d._Prefix)))
+	message := fmt.Sprintf("Invalid input object detected in %s", string(d._Prefix))
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
 	}
 
 	return &Exception{
-		Code:           d._BaseCode + 1,
+		Code:           d._BaseCode + 31,
 		Prefix:         d._Prefix,
 		Reason:         "InvalidInput",
 		IsInternal:     true,
@@ -471,29 +472,29 @@ func (d *TypeExceptionDomain) InvalidInput(optionalMessage ...string) *Exception
 }
 
 func (d *TypeExceptionDomain) InvalidDto(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Invalid dto detected in %s", strings.ToLower(string(d._Prefix)))
+	message := fmt.Sprintf("Invalid dto detected in %s", string(d._Prefix))
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
 	}
 
 	return &Exception{
-		Code:           d._BaseCode + 2,
+		Code:           d._BaseCode + 32,
 		Prefix:         d._Prefix,
 		Reason:         "InvalidDto",
 		IsInternal:     false,
 		Message:        message,
-		HTTPStatusCode: http.StatusRequestTimeout,
+		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
 func (d *TypeExceptionDomain) InvalidType(value any) *Exception {
 	return &Exception{
-		Code:           d._BaseCode + 3,
+		Code:           d._BaseCode + 33,
 		Prefix:         d._Prefix,
 		Reason:         "InvalidType",
 		IsInternal:     true,
-		Message:        fmt.Sprintf("Invalid type in %s", strings.ToLower(string(d._Prefix))),
+		Message:        fmt.Sprintf("Invalid type in %s", string(d._Prefix)),
 		HTTPStatusCode: http.StatusInternalServerError,
 		Details: map[string]any{
 			"actualType": fmt.Sprintf("%T", value),
@@ -511,13 +512,13 @@ type CommonExceptionDomain struct {
 }
 
 func (d *CommonExceptionDomain) UndefinedError(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Undefined error happened in %s", strings.ToLower(string(d._Prefix)))
+	message := fmt.Sprintf("Undefined error happened in %s", string(d._Prefix))
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
 	}
 
 	return &Exception{
-		Code:           d._BaseCode + 1,
+		Code:           d._BaseCode + 41,
 		Prefix:         d._Prefix,
 		Reason:         "UndefinedError",
 		IsInternal:     true,
@@ -528,13 +529,13 @@ func (d *CommonExceptionDomain) UndefinedError(optionalMessage ...string) *Excep
 }
 
 func (d *CommonExceptionDomain) NotImplemented(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Not yet implemented the methods in %s", strings.ToLower(string(d._Prefix)))
+	message := fmt.Sprintf("Not yet implemented the methods in %s", string(d._Prefix))
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
 	}
 
 	return &Exception{
-		Code:           d._BaseCode + 2,
+		Code:           d._BaseCode + 42,
 		Prefix:         d._Prefix,
 		Reason:         "NotImplemented",
 		IsInternal:     true,
@@ -555,7 +556,7 @@ func (d *TestExceptionDomain) FailedToMarshalTestdata(testdataPath string) *Exce
 	message := fmt.Sprintf("Failed to marshal testdata from %v", testdataPath)
 
 	return &Exception{
-		Code:           d._BaseCode + 1,
+		Code:           d._BaseCode + 51,
 		Prefix:         d._Prefix,
 		Reason:         "FailedToMarshalTestdata",
 		IsInternal:     true,
@@ -569,7 +570,7 @@ func (d *TestExceptionDomain) FailedToUnmarshalTestdata(testdataPath string) *Ex
 	message := fmt.Sprintf("Failed to unmarshal testdata from %v", testdataPath)
 
 	return &Exception{
-		Code:           d._BaseCode + 1,
+		Code:           d._BaseCode + 52,
 		Prefix:         d._Prefix,
 		Reason:         "FailedToUnmarshalTestdata",
 		IsInternal:     true,
@@ -583,7 +584,7 @@ func (d *TestExceptionDomain) InvalidTestdataJSONForm(testdataPath string) *Exce
 	message := fmt.Sprintf("Invalid testdata json form from %v", testdataPath)
 
 	return &Exception{
-		Code:           d._BaseCode + 1,
+		Code:           d._BaseCode + 53,
 		Prefix:         d._Prefix,
 		Reason:         "InvalidTestdataJSONForm",
 		IsInternal:     true,

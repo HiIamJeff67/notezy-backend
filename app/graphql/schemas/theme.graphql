@@ -2,6 +2,7 @@ type PublicTheme {
   # id: UUID!
   publicId: String! # the encoded of this field is the identifier of the PublicTheme
   name: String!
+  isDark: Boolean!
   #   authorId: UUID!
   version: String!
   isDefault: Boolean!

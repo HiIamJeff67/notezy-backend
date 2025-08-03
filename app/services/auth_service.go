@@ -142,7 +142,13 @@ func (s *AuthService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDt
 	}
 
 	// Create user account
-	_, exception = userAccountRepository.CreateOneByUserId(*newUserId, inputs.CreateUserAccountInput{AuthCode: authCode, AuthCodeExpiredAt: authCodeExpiredAt})
+	_, exception = userAccountRepository.CreateOneByUserId(
+		*newUserId,
+		inputs.CreateUserAccountInput{
+			AuthCode:          authCode,
+			AuthCodeExpiredAt: authCodeExpiredAt,
+		},
+	)
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -223,21 +229,22 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 		return nil, exceptions.Auth.InvalidDto()
 	}
 
-	if user.BlockLoginUtil.After(time.Now()) {
-		return nil, exceptions.Auth.LoginBlockedDueToTryingTooManyTimes(user.BlockLoginUtil)
+	if user.BlockLoginUntil.After(time.Now()) {
+		return nil, exceptions.Auth.LoginBlockedDueToTryingTooManyTimes(user.BlockLoginUntil)
 	}
 
 	if !s.checkPasswordHash(user.Password, reqDto.Password) {
 		newLoginCount := user.LoginCount + 1
-		blockLoginUntil := util.GetLoginBlockedUntilByLoginCount(newLoginCount)
+		blockLoginUntil, exception := util.GetLoginBlockedUntilByLoginCount(newLoginCount)
+		if exception != nil {
+			return nil, exception
+		}
 		updateInvalidUserInput := inputs.UpdateUserInput{
 			LoginCount: &newLoginCount,
 		}
-		if blockLoginUntil != nil {
-			updateInvalidUserInput.BlockLoginUtil = blockLoginUntil
-		}
+		updateInvalidUserInput.BlockLoginUtil = blockLoginUntil // we don't care if blockLoginUntil is nil or not, since we always set the SetNull to nil
 
-		_, exception := userRepository.UpdateOneById(user.Id, inputs.PartialUpdateUserInput{
+		_, exception = userRepository.UpdateOneById(user.Id, inputs.PartialUpdateUserInput{
 			Values:  updateInvalidUserInput,
 			SetNull: nil,
 		})
@@ -306,9 +313,13 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 			UpdatedAt          time.Time        `gorm:"updated_at"`
 		}{}
 		result := s.db.Raw(usersql.GetUserDataCacheByIdSQL, user.Id).Scan(&output)
-		if err := result.Error; err != nil {
+		if err := result.Error; err != nil || result.RowsAffected == 0 {
+			exception := exceptions.User.NotFound().WithError(err).Log()
+			if err != nil {
+				exception.WithError(err)
+			}
 			// should be exists in database
-			return nil, exceptions.User.NotFound().WithError(err).Log()
+			return nil, exception
 		}
 
 		newUserDataCache := caches.UserDataCache{
@@ -401,23 +412,36 @@ func (s *AuthService) SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendA
 
 	authCode := util.GenerateAuthCode()
 	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
+	blockAuthCodeUntil := util.GetAuthCodeBlockUntil()
 	output := struct {
-		Name      string `json:"name"`
-		UserAgent string `json:"userAgent"`
+		Name               string    `json:"name"`
+		UserAgent          string    `json:"userAgent"`
+		BlockAuthCodeUntil time.Time `json:"blockAuthCodeUntil"`
+		Now                time.Time `json:"now"`
 	}{}
-	result := s.db.Raw(authsql.UpdateAuthCodeSQL, authCode, authCodeExpiredAt, reqDto.Email).Scan(&output)
-	if err := result.Error; err != nil {
-		return nil, exceptions.UserAccount.FailedToUpdate().WithError(err)
+	result := s.db.Raw(authsql.UpdateAuthCodeSQL, authCode, authCodeExpiredAt, blockAuthCodeUntil, reqDto.Email).Scan(&output)
+	if err := result.Error; err != nil || result.RowsAffected == 0 {
+		exception := exceptions.Auth.AuthCodeBlockedDueToTryingTooManyTimes(output.BlockAuthCodeUntil)
+		if err != nil {
+			exception.WithError(err)
+		}
+		return nil, exception
 	}
 
-	exception := emails.SyncSendValidationEmail(reqDto.Email, output.Name, authCode, output.UserAgent, authCodeExpiredAt)
-	if exception != nil {
+	if exception := emails.SyncSendValidationEmail(
+		reqDto.Email,
+		output.Name,
+		authCode,
+		output.UserAgent,
+		authCodeExpiredAt,
+	); exception != nil {
 		return nil, exception
 	}
 
 	return &dtos.SendAuthCodeResDto{
-		AuthCodeExpiredAt: authCodeExpiredAt,
-		UpdatedAt:         time.Now(),
+		AuthCodeExpiredAt:  authCodeExpiredAt,
+		BlockAuthCodeUntil: blockAuthCodeUntil,
+		UpdatedAt:          time.Now(),
 	}, nil
 }
 

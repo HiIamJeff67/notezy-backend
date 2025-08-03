@@ -8,9 +8,8 @@ import (
 )
 
 const (
-	_ExceptionBaseCode_Auth ExceptionCode = AuthExceptionSubDomainCode * ExceptionSubDomainCodeShiftAmount
-
 	AuthExceptionSubDomainCode ExceptionCode   = 31
+	_ExceptionBaseCode_Auth    ExceptionCode   = AuthExceptionSubDomainCode * ExceptionSubDomainCodeShiftAmount // the actual exception code, but we need to reserved spaces for some predefined exceptions
 	ExceptionBaseCode_Auth     ExceptionCode   = _ExceptionBaseCode_Auth + ReservedExceptionCode
 	ExceptionPrefix_Auth       ExceptionPrefix = "Auth"
 )
@@ -138,9 +137,21 @@ func (d *AuthExceptionDomain) LoginBlockedDueToTryingTooManyTimes(blockedUntil t
 	}
 }
 
-func (d *AuthExceptionDomain) NoClientIPOrReferenceToClient() *Exception {
+func (d *AuthExceptionDomain) AuthCodeBlockedDueToTryingTooManyTimes(blockedUntil time.Time) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 9,
+		Prefix:         d.Prefix,
+		Reason:         "AuthCodeBlockedDueToTryingTooManyTimes",
+		IsInternal:     false,
+		Message:        fmt.Sprintf("Blocked the generating auth code procedure because user has tried too many times and require to wait until %v", blockedUntil),
+		HTTPStatusCode: http.StatusTooManyRequests,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *AuthExceptionDomain) NoClientIPOrReferenceToClient() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 10,
 		Prefix:         d.Prefix,
 		Reason:         "NoClientIPOrReferenceToClient",
 		IsInternal:     true,
@@ -181,7 +192,7 @@ func (d *AuthExceptionDomain) PermissionDeniedDueToInvalidRequestOriginDomain(or
 		Code:           d.BaseCode + 103,
 		Prefix:         d.Prefix,
 		Reason:         "PermissionDeniedDueToInvalidRequestOriginDomain",
-		IsInternal:     true,
+		IsInternal:     false,
 		Message:        fmt.Sprintf("The current request origin domain of %s is invalid", origin),
 		HTTPStatusCode: http.StatusUnauthorized,
 		LastStackFrame: &GetStackTrace(2, 1)[0],

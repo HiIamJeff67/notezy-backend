@@ -118,6 +118,50 @@ func (ec *executionContext) fieldContext_PublicTheme_name(_ context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _PublicTheme_isDark(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicTheme) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PublicTheme_isDark(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsDark, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PublicTheme_isDark(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublicTheme",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PublicTheme_version(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicTheme) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PublicTheme_version(ctx, field)
 	if err != nil {
@@ -724,6 +768,8 @@ func (ec *executionContext) fieldContext_SearchThemeEdge_node(_ context.Context,
 				return ec.fieldContext_PublicTheme_publicId(ctx, field)
 			case "name":
 				return ec.fieldContext_PublicTheme_name(ctx, field)
+			case "isDark":
+				return ec.fieldContext_PublicTheme_isDark(ctx, field)
 			case "version":
 				return ec.fieldContext_PublicTheme_version(ctx, field)
 			case "isDefault":
@@ -908,6 +954,11 @@ func (ec *executionContext) _PublicTheme(ctx context.Context, sel ast.SelectionS
 			}
 		case "name":
 			out.Values[i] = ec._PublicTheme_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isDark":
+			out.Values[i] = ec._PublicTheme_isDark(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

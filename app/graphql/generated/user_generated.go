@@ -502,6 +502,8 @@ func (ec *executionContext) fieldContext_PublicUser_themes(_ context.Context, fi
 				return ec.fieldContext_PublicTheme_publicId(ctx, field)
 			case "name":
 				return ec.fieldContext_PublicTheme_name(ctx, field)
+			case "isDark":
+				return ec.fieldContext_PublicTheme_isDark(ctx, field)
 			case "version":
 				return ec.fieldContext_PublicTheme_version(ctx, field)
 			case "isDefault":

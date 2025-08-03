@@ -55,6 +55,7 @@ type ComplexityRoot struct {
 		CreatedAt     func(childComplexity int) int
 		DownloadCount func(childComplexity int) int
 		DownloadURL   func(childComplexity int) int
+		IsDark        func(childComplexity int) int
 		IsDefault     func(childComplexity int) int
 		Name          func(childComplexity int) int
 		PublicID      func(childComplexity int) int
@@ -237,6 +238,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PublicTheme.DownloadURL(childComplexity), true
+
+	case "PublicTheme.isDark":
+		if e.complexity.PublicTheme.IsDark == nil {
+			break
+		}
+
+		return e.complexity.PublicTheme.IsDark(childComplexity), true
 
 	case "PublicTheme.isDefault":
 		if e.complexity.PublicTheme.IsDefault == nil {
@@ -891,6 +899,7 @@ interface SearchConnection {
   # id: UUID!
   publicId: String! # the encoded of this field is the identifier of the PublicTheme
   name: String!
+  isDark: Boolean!
   #   authorId: UUID!
   version: String!
   isDefault: Boolean!

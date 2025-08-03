@@ -38,6 +38,7 @@ type PublicBadge struct {
 type PublicTheme struct {
 	PublicID      string      `json:"publicId"`
 	Name          string      `json:"name"`
+	IsDark        bool        `json:"isDark"`
 	Version       string      `json:"version"`
 	IsDefault     bool        `json:"isDefault"`
 	DownloadURL   *string     `json:"downloadURL,omitempty"`

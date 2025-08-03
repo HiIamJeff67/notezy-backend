@@ -28,7 +28,7 @@ func TestGetLoginBlockedUntilByLoginCount(t *testing.T) {
 		t, "testdata/get_blocked_time_testdata/get_login_blocked_until_by_login_count_testdata.json",
 	)
 	for _, c := range cases {
-		got := util.GetLoginBlockedUntilByLoginCount(c.Args.LoginCount)
+		got, _ := util.GetLoginBlockedUntilByLoginCount(c.Args.LoginCount)
 		if c.Returns.ShouldBlock {
 			assert.NotNil(t, got)
 			assert.True(t, got.After(time.Now().Add(-1*time.Second)))

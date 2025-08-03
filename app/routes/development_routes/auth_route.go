@@ -33,7 +33,7 @@ func configureDevelopmentAuthRoutes() {
 			middlewares.RateLimitMiddleware(1),
 			authController.Logout,
 		)
-		authRoutes.GET(
+		authRoutes.POST(
 			"/sendAuthCode",
 			middlewares.UnauthorizedRateLimitMiddleware(1), // may implement a block middleware to block user using this route within 1 minute
 			authController.SendAuthCode,

@@ -72,8 +72,9 @@ type LogoutResDto struct {
 }
 
 type SendAuthCodeResDto struct {
-	AuthCodeExpiredAt time.Time `json:"authCodeExpiredAt"`
-	UpdatedAt         time.Time `json:"updatedAt"`
+	AuthCodeExpiredAt  time.Time `json:"authCodeExpiredAt"`
+	BlockAuthCodeUntil time.Time `json:"blockAuthCodeUntil"`
+	UpdatedAt          time.Time `json:"updatedAt"`
 }
 
 type ValidateEmailResDto struct {

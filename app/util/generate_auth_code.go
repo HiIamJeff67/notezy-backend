@@ -3,14 +3,17 @@ package util
 import (
 	"math/rand/v2"
 	"strconv"
+)
 
-	constants "notezy-backend/shared/constants"
+const (
+	MaxLengthOfAuthCode int = 6
+	MaxAuthCode         int = 999999
 )
 
 func GenerateAuthCode() string {
-	randomNumber := rand.IntN(constants.MaxAuthCode + 1)
+	randomNumber := rand.IntN(MaxAuthCode + 1)
 	stringRandomNumber := strconv.Itoa(randomNumber)
-	for len(stringRandomNumber) < constants.MaxLengthOfAuthCode {
+	for len(stringRandomNumber) < MaxLengthOfAuthCode {
 		stringRandomNumber = "0" + stringRandomNumber
 	}
 	return stringRandomNumber
