@@ -17,7 +17,7 @@ import (
 /* ============================== Definitions ============================== */
 
 type ThemeRepositoryInterface interface {
-	GetOneById(id uuid.UUID) (*schemas.Theme, *exceptions.Exception)
+	GetOneById(id uuid.UUID, preloads *[]schemas.ThemeRelation) (*schemas.Theme, *exceptions.Exception)
 	GetAll() (*[]schemas.Theme, *exceptions.Exception)
 	CreateOneByAuthorId(authorId uuid.UUID, input inputs.CreateThemeInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, authorId uuid.UUID, input inputs.PartialUpdateThemeInput) (*schemas.Theme, *exceptions.Exception)
@@ -37,10 +37,16 @@ func NewThemeRepository(db *gorm.DB) ThemeRepositoryInterface {
 
 /* ============================== CRUD operations ============================== */
 
-func (r *ThemeRepository) GetOneById(id uuid.UUID) (*schemas.Theme, *exceptions.Exception) {
+func (r *ThemeRepository) GetOneById(id uuid.UUID, preloads *[]schemas.ThemeRelation) (*schemas.Theme, *exceptions.Exception) {
 	theme := schemas.Theme{}
-	result := r.db.Table(schemas.Theme{}.TableName()).
-		Where("id = ?", id).
+	db := r.db.Table(schemas.Theme{}.TableName())
+	if preloads != nil {
+		for _, preload := range *preloads {
+			db = db.Preload(string(preload))
+		}
+	}
+
+	result := db.Where("id = ?", id).
 		First(&theme)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Theme.NotFound().WithError(err)
@@ -84,7 +90,7 @@ func (r *ThemeRepository) UpdateOneById(id uuid.UUID, authorId uuid.UUID, input 
 		return nil, exceptions.Theme.FailedToCreate().WithError(err)
 	}
 
-	existingTheme, exception := r.GetOneById(id)
+	existingTheme, exception := r.GetOneById(id, nil)
 	if exception != nil || existingTheme == nil {
 		return nil, exception
 	}

@@ -25,9 +25,17 @@ type Badge struct {
 	Users []User `json:"users" gorm:"-"` // many2many:\"UsersToBadgesTable\"; foreignKey:Id; joinForeignKey:BadgeId; references:Id; joinReferences:UserId;
 }
 
+// Badge Table Name
 func (Badge) TableName() string {
 	return shared.ValidTableName_BadgeTable.String()
 }
+
+// Badge Table Relations
+type BadgeRelation string
+
+const (
+	BadgeRelation_Users BadgeRelation = "Users"
+)
 
 /* ============================== Relative Type Conversions ============================== */
 

@@ -64,7 +64,7 @@ func (s *UserService) GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *excep
 
 	userRepository := repositories.NewUserRepository(s.db)
 
-	user, exception := userRepository.GetOneById(reqDto.UserId)
+	user, exception := userRepository.GetOneById(reqDto.UserId, nil)
 	if exception != nil {
 		return nil, exception
 	}

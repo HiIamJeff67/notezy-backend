@@ -17,6 +17,15 @@ type UsersToBadges struct {
 	Badge Badge `gorm:"foreignKey:BadgeId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
 
+// Users To Badges Table Name
 func (UsersToBadges) TableName() string {
 	return shared.ValidTableName_UsersToBadgesTable.String()
 }
+
+// Users To Badges Table Relation
+type UsersToBadgesRelation string
+
+const (
+	UsersToBadgesRelation_User                        = "User"
+	UsersToBadgesRelation_Badge UsersToBadgesRelation = "Badge"
+)

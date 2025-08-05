@@ -18,6 +18,7 @@ type UserSetting struct {
 	UpdatedAt          time.Time      `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 }
 
+// User Setting Table Name
 func (UserSetting) TableName() string {
 	return shared.ValidTableName_UserSettingTable.String()
 }

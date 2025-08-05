@@ -71,7 +71,7 @@ func _validateRefreshToken(refreshToken string) (*schemas.User, *exceptions.Exce
 	}
 
 	userRepository := repositories.NewUserRepository(nil)
-	user, exception := userRepository.GetOneById(userId)
+	user, exception := userRepository.GetOneById(userId, nil)
 	if exception != nil { // if there's not such user with the parsed id
 		return nil, exception
 	}

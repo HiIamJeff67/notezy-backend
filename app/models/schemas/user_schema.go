@@ -38,10 +38,21 @@ type User struct {
 	Themes      []Theme     `json:"themes" gorm:"foreignKey:AuthorId;"`
 }
 
-// force gorm to use the given table name
+// User Table Name
 func (User) TableName() string {
 	return shared.ValidTableName_UserTable.String()
 }
+
+// User Table Relations
+type UserRelation shared.ValidTableName
+
+const (
+	UserRelation_UserInfo    UserRelation = "UserInfo"
+	UserRelation_UserAccount UserRelation = "UserAccount"
+	UserRelation_UserSetting UserRelation = "UserSetting"
+	UserRelation_Badges      UserRelation = "Badges"
+	UserRelation_Themes      UserRelation = "Themes"
+)
 
 /* ============================== Relative Type Conversions ============================== */
 

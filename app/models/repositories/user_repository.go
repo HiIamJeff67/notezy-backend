@@ -16,9 +16,9 @@ import (
 /* ============================== Definitions ============================== */
 
 type UserRepositoryInterface interface {
-	GetOneById(id uuid.UUID) (*schemas.User, *exceptions.Exception)
-	GetOneByName(name string) (*schemas.User, *exceptions.Exception)
-	GetOneByEmail(email string) (*schemas.User, *exceptions.Exception)
+	GetOneById(id uuid.UUID, preloads *[]schemas.UserRelation) (*schemas.User, *exceptions.Exception)
+	GetOneByName(name string, preloads *[]schemas.UserRelation) (*schemas.User, *exceptions.Exception)
+	GetOneByEmail(email string, preloads *[]schemas.UserRelation) (*schemas.User, *exceptions.Exception)
 	GetAll() (*[]schemas.User, *exceptions.Exception)
 	CreateOne(input inputs.CreateUserInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, input inputs.PartialUpdateUserInput) (*schemas.User, *exceptions.Exception)
@@ -38,10 +38,16 @@ func NewUserRepository(db *gorm.DB) UserRepositoryInterface {
 
 /* ============================== CRUD operations ============================== */
 
-func (r *UserRepository) GetOneById(id uuid.UUID) (*schemas.User, *exceptions.Exception) {
+func (r *UserRepository) GetOneById(id uuid.UUID, preloads *[]schemas.UserRelation) (*schemas.User, *exceptions.Exception) {
 	user := schemas.User{}
-	result := r.db.Table(schemas.User{}.TableName()).
-		Where("id = ?", id).
+	db := r.db.Table(schemas.User{}.TableName())
+	if preloads != nil {
+		for _, preload := range *preloads {
+			db = db.Preload(string(preload))
+		}
+	}
+
+	result := db.Where("id = ?", id).
 		First(&user)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.NotFound().WithError(err)
@@ -50,10 +56,16 @@ func (r *UserRepository) GetOneById(id uuid.UUID) (*schemas.User, *exceptions.Ex
 	return &user, nil
 }
 
-func (r *UserRepository) GetOneByName(name string) (*schemas.User, *exceptions.Exception) {
+func (r *UserRepository) GetOneByName(name string, preloads *[]schemas.UserRelation) (*schemas.User, *exceptions.Exception) {
 	user := schemas.User{}
-	result := r.db.Table(schemas.User{}.TableName()).
-		Where("name = ?", name).
+	db := r.db.Table(schemas.User{}.TableName())
+	if preloads != nil {
+		for _, preload := range *preloads {
+			db = db.Preload(string(preload))
+		}
+	}
+
+	result := db.Where("name = ?", name).
 		First(&user)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.NotFound().WithError(err)
@@ -62,10 +74,16 @@ func (r *UserRepository) GetOneByName(name string) (*schemas.User, *exceptions.E
 	return &user, nil
 }
 
-func (r *UserRepository) GetOneByEmail(email string) (*schemas.User, *exceptions.Exception) {
+func (r *UserRepository) GetOneByEmail(email string, preloads *[]schemas.UserRelation) (*schemas.User, *exceptions.Exception) {
 	user := schemas.User{}
-	result := r.db.Table(schemas.User{}.TableName()).
-		Where("email = ?", email).
+	db := r.db.Table(schemas.User{}.TableName())
+	if preloads != nil {
+		for _, preload := range *preloads {
+			db = db.Preload(string(preload))
+		}
+	}
+
+	result := db.Where("email = ?", email).
 		First(&user)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.NotFound().WithError(err)
@@ -124,7 +142,7 @@ func (r *UserRepository) UpdateOneById(id uuid.UUID, input inputs.PartialUpdateU
 		return nil, exceptions.User.InvalidInput().WithError(err).Log()
 	}
 
-	existingUser, exception := r.GetOneById(id)
+	existingUser, exception := r.GetOneById(id, nil)
 	if exception != nil || existingUser == nil {
 		return nil, exception
 	}

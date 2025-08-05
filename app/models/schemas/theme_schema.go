@@ -28,9 +28,17 @@ type Theme struct {
 	Author User `json:"author" gorm:"foreignKey:AuthorId; references:Id;"`
 }
 
+// Theme Table Name
 func (Theme) TableName() string {
 	return shared.ValidTableName_ThemeTable.String()
 }
+
+// Theme Table Relations
+type ThemeRelation string
+
+const (
+	ThemeRelation_Author ThemeRelation = "Themes"
+)
 
 /* ============================== Relative Type Conversion ============================== */
 

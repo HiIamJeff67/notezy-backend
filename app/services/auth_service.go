@@ -183,6 +183,7 @@ func (s *AuthService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDt
 			Language:           enums.Language_English,
 			GeneralSettingCode: 0,
 			PrivacySettingCode: 0,
+			CreatedAt:          newUser.CreatedAt,
 			UpdatedAt:          newUser.UpdatedAt,
 		},
 	)
@@ -218,11 +219,11 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 	var user *schemas.User = nil
 	var exception *exceptions.Exception = nil
 	if util.IsAlphaNumberString(reqDto.Account) { // if the account field contains user name
-		if user, exception = userRepository.GetOneByName(reqDto.Account); exception != nil {
+		if user, exception = userRepository.GetOneByName(reqDto.Account, nil); exception != nil {
 			return nil, exception
 		}
 	} else if util.IsEmailString(reqDto.Account) { // if the account field contains email
-		if user, exception = userRepository.GetOneByEmail(reqDto.Account); exception != nil {
+		if user, exception = userRepository.GetOneByEmail(reqDto.Account, nil); exception != nil {
 			return nil, exception
 		}
 	} else {
@@ -310,6 +311,7 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 			Language           enums.Language   `gorm:"language"`
 			GeneralSettingCode int64            `gorm:"general_setting_code"`
 			PrivacySettingCode int64            `gorm:"privacy_setting_code"`
+			CreatedAt          time.Time        `gorm:"created_at"`
 			UpdatedAt          time.Time        `gorm:"updated_at"`
 		}{}
 		result := s.db.Raw(usersql.GetUserDataCacheByIdSQL, user.Id).Scan(&output)
@@ -335,6 +337,7 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 			Language:           output.Language,
 			GeneralSettingCode: output.GeneralSettingCode,
 			PrivacySettingCode: output.PrivacySettingCode,
+			CreatedAt:          output.CreatedAt,
 			UpdatedAt:          output.UpdatedAt,
 		}
 		if output.AvatarURL != nil {
@@ -480,6 +483,7 @@ func (s *AuthService) ResetEmail(reqDto *dtos.ResetEmailReqDto) (*dtos.ResetEmai
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.FailedToUpdate().WithError(err)
 	}
+
 	if result.RowsAffected == 0 {
 		return nil, exceptions.User.NotFound()
 	}
@@ -514,16 +518,21 @@ func (s *AuthService) ForgetPassword(reqDto *dtos.ForgetPasswordReqDto) (*dtos.F
 
 	var user *schemas.User = nil
 	var exception *exceptions.Exception = nil
-	if util.IsAlphaNumberString(reqDto.Account) { // if the account field contains user name
-		if user, exception = userRepository.GetOneByName(reqDto.Account); exception != nil {
+	var preloads = []schemas.UserRelation{schemas.UserRelation_UserAccount, schemas.UserRelation_UserInfo, schemas.UserRelation_UserSetting}
+	if util.IsEmailString(reqDto.Account) { // if the account field contains email
+		if user, exception = userRepository.GetOneByEmail(reqDto.Account, &preloads); exception != nil {
 			return nil, exception
 		}
-	} else if util.IsEmailString(reqDto.Account) { // if the account field contains email
-		if user, exception = userRepository.GetOneByEmail(reqDto.Account); exception != nil {
+	} else if util.IsAlphaNumberString(reqDto.Account) { // if the account field contains user name
+		if user, exception = userRepository.GetOneByName(reqDto.Account, &preloads); exception != nil {
 			return nil, exception
 		}
 	} else {
 		return nil, exceptions.Auth.InvalidDto()
+	}
+
+	if reqDto.AuthCode != user.UserAccount.AuthCode {
+		return nil, exceptions.Auth.WrongAuthCode()
 	}
 
 	accessToken, exception := tokens.GenerateAccessToken(user.Id.String(), user.Name, user.Email, user.UserAgent)
@@ -538,7 +547,27 @@ func (s *AuthService) ForgetPassword(reqDto *dtos.ForgetPasswordReqDto) (*dtos.F
 	// update the access token of the user
 	exception = caches.UpdateUserDataCache(user.Id, caches.UpdateUserDataCacheDto{AccessToken: accessToken})
 	if exception != nil {
-		return nil, exception
+		exception.Log() // if the cache does not exist the user, then just skip this update operation
+		// and also try to set the new user cache data
+		exception = caches.SetUserDataCache(user.Id, caches.UserDataCache{
+			PublicId:           user.PublicId,
+			Name:               user.Name,
+			DisplayName:        user.DisplayName,
+			Email:              user.Email,
+			AccessToken:        *accessToken,
+			Role:               user.Role,
+			Plan:               user.Plan,
+			Status:             user.Status,
+			AvatarURL:          *user.UserInfo.AvatarURL,
+			Language:           user.UserSetting.Language,
+			GeneralSettingCode: user.UserSetting.GeneralSettingCode,
+			PrivacySettingCode: user.UserSetting.PrivacySettingCode,
+			CreatedAt:          user.CreatedAt,
+			UpdatedAt:          user.UpdatedAt,
+		})
+		if exception != nil {
+			exception.Log() // if the set operation also failed, then just log it without abort the following
+		}
 	}
 
 	hashedPassword, exception := s.hashPassword(reqDto.NewPassword)

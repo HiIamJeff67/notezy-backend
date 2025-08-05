@@ -22,7 +22,7 @@ type UserDataCache struct {
 	Name               string           `json:"name"`               // user
 	DisplayName        string           `json:"displayName"`        // user
 	Email              string           `json:"email"`              // user
-	AccessToken        string           `json:"accessToken"`        // only here
+	AccessToken        string           `json:"accessToken"`        // !only here
 	Role               enums.UserRole   `json:"role"`               // user
 	Plan               enums.UserPlan   `json:"plan"`               // user
 	Status             enums.UserStatus `json:"status"`             // user
@@ -30,7 +30,8 @@ type UserDataCache struct {
 	Language           enums.Language   `json:"language"`           // user setting
 	GeneralSettingCode int64            `json:"generalSettingCode"` // user setting
 	PrivacySettingCode int64            `json:"privacySettingCode"` // user setting
-	UpdatedAt          time.Time        `json:"updatedAt"`          // cache
+	CreatedAt          time.Time        `json:"createdAt"`          // user
+	UpdatedAt          time.Time        `json:"updatedAt"`          // user
 }
 
 type UpdateUserDataCacheDto struct {

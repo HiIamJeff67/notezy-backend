@@ -23,6 +23,7 @@ type UserInfo struct {
 	UpdatedAt          time.Time        `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 }
 
+// User Info Table Name
 func (UserInfo) TableName() string {
 	return shared.ValidTableName_UserInfoTable.String()
 }
