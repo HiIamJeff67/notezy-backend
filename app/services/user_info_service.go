@@ -5,6 +5,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"notezy-backend/app/caches"
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	gqlmodels "notezy-backend/app/graphql/models"
@@ -83,6 +84,13 @@ func (s *UserInfoService) UpdateMyInfo(reqDto *dtos.UpdateMyInfoReqDto) (*dtos.U
 	})
 	if exception != nil {
 		return nil, exception
+	}
+
+	exception = caches.UpdateUserDataCache(reqDto.UserId, caches.UpdateUserDataCacheDto{
+		AvatarURL: reqDto.Values.AvatarURL,
+	})
+	if exception != nil {
+		exception.Log()
 	}
 
 	return &dtos.UpdateMyInfoResDto{

@@ -102,12 +102,13 @@ func (r *ThemeRepository) UpdateOneById(id uuid.UUID, authorId uuid.UUID, input 
 
 	result := r.db.Table(schemas.Theme{}.TableName()).
 		Where("id = ? AND author_id = ?", id, authorId).
+		Select("*").
 		Updates(&updates)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Theme.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 { // check if we do update it or not
-		return nil, exceptions.Theme.FailedToUpdate()
+		return nil, exceptions.Theme.NoChanges()
 	}
 
 	return &updates, nil

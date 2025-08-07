@@ -83,12 +83,13 @@ func (r *UserSettingRepository) UpdateOneByUserId(userId uuid.UUID, input inputs
 
 	result := r.db.Table(schemas.UserSetting{}.TableName()).
 		Where("user_id = ?").
+		Select("*").
 		Updates(&updates)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserSetting.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return nil, exceptions.UserSetting.NotFound()
+		return nil, exceptions.UserSetting.NoChanges()
 	}
 
 	return &updates, nil

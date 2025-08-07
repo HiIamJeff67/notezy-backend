@@ -154,12 +154,13 @@ func (r *UserRepository) UpdateOneById(id uuid.UUID, input inputs.PartialUpdateU
 
 	result := r.db.Table(schemas.User{}.TableName()).
 		Where("id = ?", id).
+		Select("*").
 		Updates(&updates)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return nil, exceptions.User.NotFound()
+		return nil, exceptions.User.NoChanges()
 	}
 
 	return &updates, nil
@@ -174,7 +175,7 @@ func (r *UserRepository) DeleteOneById(id uuid.UUID, input inputs.DeleteUserInpu
 		return exceptions.User.FailedToDelete().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.User.NotFound()
+		return exceptions.User.NoChanges()
 	}
 
 	return nil

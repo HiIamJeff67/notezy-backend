@@ -358,6 +358,18 @@ func (d *DatabaseExceptionDomain) FailedToDelete(optionalMessage ...string) *Exc
 	}
 }
 
+func (d *DatabaseExceptionDomain) NoChanges() *Exception {
+	return &Exception{
+		Code:           d._BaseCode + 5,
+		Prefix:         d._Prefix,
+		Reason:         "NoChanges",
+		IsInternal:     false,
+		Message:        fmt.Sprintf("No Changes on %s", string(d._Prefix)),
+		HTTPStatusCode: http.StatusNotModified,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
 func (d *DatabaseExceptionDomain) FailedToCommitTransaction(optionalMessage ...string) *Exception {
 	message := fmt.Sprintf("Failed to commit the transaction in %s", string(d._Prefix))
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
@@ -365,7 +377,7 @@ func (d *DatabaseExceptionDomain) FailedToCommitTransaction(optionalMessage ...s
 	}
 
 	return &Exception{
-		Code:           d._BaseCode + 5,
+		Code:           d._BaseCode + 6,
 		Prefix:         d._Prefix,
 		Reason:         "FailedToCommitTransaction",
 		IsInternal:     true,

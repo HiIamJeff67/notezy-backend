@@ -99,6 +99,23 @@ func (s *UserService) UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDt
 		return nil, exception
 	}
 
+	if reqDto.Values.DisplayName != nil {
+		exception = caches.UpdateUserDataCache(reqDto.UserId, caches.UpdateUserDataCacheDto{
+			DisplayName: reqDto.Values.DisplayName,
+		})
+		if exception != nil {
+			exception.Log()
+		}
+	}
+	if reqDto.Values.Status != nil {
+		exception = caches.UpdateUserDataCache(reqDto.UserId, caches.UpdateUserDataCacheDto{
+			Status: reqDto.Values.Status,
+		})
+		if exception != nil {
+			exception.Log()
+		}
+	}
+
 	return &dtos.UpdateMeResDto{UpdatedAt: updatedUser.UpdatedAt}, nil
 }
 

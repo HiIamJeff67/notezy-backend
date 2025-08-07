@@ -1,8 +1,8 @@
-// app/util/partial_update_processor.go
 package util
 
 import (
 	"reflect"
+	"strings"
 )
 
 func PartialUpdatePreprocess[T any, S any](values T, setNull *map[string]bool, existingValues S) (S, error) {
@@ -23,54 +23,56 @@ func PartialUpdatePreprocess[T any, S any](values T, setNull *map[string]bool, e
 		valuesType = valuesType.Elem()
 	}
 
-	// iterate the existingField which is the entire struct of the database table
-	for i := 0; i < existingReflect.NumField(); i++ {
-		existingField := existingReflect.Field(i)
-		existingFieldType := existingType.Field(i)
-		fieldName := existingFieldType.Name
+	// 第一步：處理 setNull 標記，將對應欄位設為 nil
+	if setNull != nil {
+		for fieldName, shouldSetNull := range *setNull {
+			if shouldSetNull {
+				// 在 existingValues 中找到對應欄位
+				existingField, found := findFieldByName(existingReflect, existingType, fieldName)
+				if found && existingField.CanSet() {
+					// 設置為零值（對於 pointer 就是 nil）
+					existingField.Set(reflect.Zero(existingField.Type()))
+				}
+			}
+		}
+	}
 
-		// check if the field in existingField can be modified
-		if !existingField.CanSet() {
+	// 第二步：處理 values 中的非零值，替換到 existingValues
+	for i := 0; i < valuesReflect.NumField(); i++ {
+		valuesField := valuesReflect.Field(i)
+		valuesFieldType := valuesType.Field(i)
+		fieldName := valuesFieldType.Name
+
+		// 跳過零值欄位
+		if isZeroValue(valuesField) {
 			continue
 		}
 
-		// 1. check if there's a true value in setNull which indicating we need to set it to null
-		if setNull != nil {
-			if shouldSetNull, exists := (*setNull)[fieldName]; exists && shouldSetNull {
-				// setting the zero value（which is nil for pointer）
-				existingField.Set(reflect.Zero(existingField.Type()))
-				continue
-			}
+		// 在 existingValues 中找到對應欄位
+		existingField, found := findFieldByName(existingReflect, existingType, fieldName)
+		if !found || !existingField.CanSet() {
+			continue
 		}
 
-		// 2. check if there's a corresponding field in valuesField
-		valuesField, hasCorrespondingField := findFieldByName(valuesReflect, valuesType, fieldName)
-		if hasCorrespondingField {
-			if valuesField.Kind() == reflect.Ptr && !valuesField.IsNil() { // check if there's non-nil value in valuesField
-				// new value in valuesField, setting it to the existingField
-				if existingField.Kind() == reflect.Ptr {
-					// both of them are pointers
-					existingField.Set(valuesField)
-				} else {
-					// existingField is NOT a pointer, valuesField is a pointer
-					existingField.Set(valuesField.Elem())
-				}
-				continue
-			} else if valuesField.Kind() != reflect.Ptr { // if the valuesField is not pointer, set it directly
-				if existingField.Kind() == reflect.Ptr {
-					// existingField is a pointer, valuesField is NOT a pointer
-					newValue := reflect.New(existingField.Type().Elem())
-					newValue.Elem().Set(valuesField)
-					existingField.Set(newValue)
-				} else {
-					// neither existingField nor valuesField are pointers
-					existingField.Set(valuesField)
-				}
-				continue
+		// 根據類型進行適當的設置
+		if valuesField.Kind() == reflect.Ptr && !valuesField.IsNil() {
+			// values 欄位是非 nil 的 pointer
+			if existingField.Kind() == reflect.Ptr {
+				existingField.Set(valuesField)
+			} else {
+				existingField.Set(valuesField.Elem())
+			}
+		} else if valuesField.Kind() != reflect.Ptr {
+			// values 欄位不是 pointer，直接設置
+			if existingField.Kind() == reflect.Ptr {
+				// 創建新的 pointer
+				newValue := reflect.New(existingField.Type().Elem())
+				newValue.Elem().Set(valuesField)
+				existingField.Set(newValue)
+			} else {
+				existingField.Set(valuesField)
 			}
 		}
-
-		// 3. leave the existingField
 	}
 
 	return existingValues, nil
@@ -82,5 +84,22 @@ func findFieldByName(structReflect reflect.Value, structType reflect.Type, field
 			return structReflect.Field(i), true
 		}
 	}
+
+	capitalizedFieldName := strings.Title(fieldName)
+	for i := 0; i < structReflect.NumField(); i++ {
+		if structType.Field(i).Name == capitalizedFieldName {
+			return structReflect.Field(i), true
+		}
+	}
+
 	return reflect.Value{}, false
+}
+
+func isZeroValue(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Ptr, reflect.Interface, reflect.Slice, reflect.Map, reflect.Chan, reflect.Func:
+		return v.IsNil()
+	default:
+		return v.IsZero()
+	}
 }

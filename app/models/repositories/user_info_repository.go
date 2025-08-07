@@ -83,12 +83,13 @@ func (r *UserInfoRepository) UpdateOneByUserId(userId uuid.UUID, input inputs.Pa
 
 	result := r.db.Table(schemas.UserInfo{}.TableName()).
 		Where("user_id = ?", userId).
+		Select("*").
 		Updates(&updates)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserInfo.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return nil, exceptions.UserInfo.NotFound()
+		return nil, exceptions.UserInfo.NoChanges()
 	}
 
 	return &updates, nil
