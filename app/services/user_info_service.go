@@ -13,6 +13,7 @@ import (
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
+	validation "notezy-backend/app/validation"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -40,7 +41,7 @@ func NewUserInfoService(db *gorm.DB) UserInfoServiceInterface {
 /* ============================== Service Methods for UserInfo ============================== */
 
 func (s *UserInfoService) GetMyInfo(reqDto *dtos.GetMyInfoReqDto) (*dtos.GetMyInfoResDto, *exceptions.Exception) {
-	if err := models.Validator.Struct(reqDto); err != nil {
+	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
@@ -64,7 +65,7 @@ func (s *UserInfoService) GetMyInfo(reqDto *dtos.GetMyInfoReqDto) (*dtos.GetMyIn
 }
 
 func (s *UserInfoService) UpdateMyInfo(reqDto *dtos.UpdateMyInfoReqDto) (*dtos.UpdateMyInfoResDto, *exceptions.Exception) {
-	if err := models.Validator.Struct(reqDto); err != nil {
+	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 

@@ -17,6 +17,7 @@ import (
 	enums "notezy-backend/app/models/schemas/enums"
 	tokens "notezy-backend/app/tokens"
 	util "notezy-backend/app/util"
+	"notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
 
 	authsql "notezy-backend/app/models/sql/auth"
@@ -66,7 +67,7 @@ func (s *AuthService) checkPasswordHash(hashedPassword string, password string) 
 /* ============================== Service Methods for Authentication ============================== */
 
 func (s *AuthService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Exception) {
-	if err := models.Validator.Struct(reqDto); err != nil {
+	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Auth.InvalidDto().WithError(err)
 	}
 
@@ -209,7 +210,7 @@ func (s *AuthService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDt
 }
 
 func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception) {
-	if err := models.Validator.Struct(reqDto); err != nil {
+	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
@@ -218,7 +219,7 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 	// otherwise, the user should provide their account and password
 	var user *schemas.User = nil
 	var exception *exceptions.Exception = nil
-	if util.IsAlphaNumberString(reqDto.Account) { // if the account field contains user name
+	if util.IsAlphaAndNumberString(reqDto.Account) { // if the account field contains user name
 		if user, exception = userRepository.GetOneByName(reqDto.Account, nil); exception != nil {
 			return nil, exception
 		}
@@ -377,7 +378,7 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 }
 
 func (s *AuthService) Logout(reqDto *dtos.LogoutReqDto) (*dtos.LogoutResDto, *exceptions.Exception) {
-	if err := models.Validator.Struct(reqDto); err != nil {
+	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Auth.InvalidDto().WithError(err)
 	}
 
@@ -409,8 +410,8 @@ func (s *AuthService) Logout(reqDto *dtos.LogoutReqDto) (*dtos.LogoutResDto, *ex
 }
 
 func (s *AuthService) SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendAuthCodeResDto, *exceptions.Exception) {
-	if err := models.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err).Log()
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
 	authCode := util.GenerateAuthCode()
@@ -449,7 +450,7 @@ func (s *AuthService) SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendA
 }
 
 func (s *AuthService) ValidateEmail(reqDto *dtos.ValidateEmailReqDto) (*dtos.ValidateEmailResDto, *exceptions.Exception) {
-	if err := models.Validator.Struct(reqDto); err != nil {
+	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
@@ -470,7 +471,7 @@ func (s *AuthService) ValidateEmail(reqDto *dtos.ValidateEmailReqDto) (*dtos.Val
 }
 
 func (s *AuthService) ResetEmail(reqDto *dtos.ResetEmailReqDto) (*dtos.ResetEmailResDto, *exceptions.Exception) {
-	if err := models.Validator.Struct(reqDto); err != nil {
+	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
@@ -510,7 +511,7 @@ func (s *AuthService) ResetEmail(reqDto *dtos.ResetEmailReqDto) (*dtos.ResetEmai
 }
 
 func (s *AuthService) ForgetPassword(reqDto *dtos.ForgetPasswordReqDto) (*dtos.ForgetPasswordResDto, *exceptions.Exception) {
-	if err := models.Validator.Struct(reqDto); err != nil {
+	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
@@ -523,7 +524,7 @@ func (s *AuthService) ForgetPassword(reqDto *dtos.ForgetPasswordReqDto) (*dtos.F
 		if user, exception = userRepository.GetOneByEmail(reqDto.Account, &preloads); exception != nil {
 			return nil, exception
 		}
-	} else if util.IsAlphaNumberString(reqDto.Account) { // if the account field contains user name
+	} else if util.IsAlphaAndNumberString(reqDto.Account) { // if the account field contains user name
 		if user, exception = userRepository.GetOneByName(reqDto.Account, &preloads); exception != nil {
 			return nil, exception
 		}
@@ -598,7 +599,7 @@ func (s *AuthService) ForgetPassword(reqDto *dtos.ForgetPasswordReqDto) (*dtos.F
 }
 
 func (s *AuthService) DeleteMe(reqDto *dtos.DeleteMeReqDto) (*dtos.DeleteMeResDto, *exceptions.Exception) {
-	if err := models.Validator.Struct(reqDto); err != nil {
+	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 

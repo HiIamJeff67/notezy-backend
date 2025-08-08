@@ -47,10 +47,6 @@ func (r *UserAccountRepository) GetOneByUserId(userId uuid.UUID) (*schemas.UserA
 }
 
 func (r *UserAccountRepository) CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserAccountInput) (*uuid.UUID, *exceptions.Exception) {
-	if err := models.Validator.Struct(input); err != nil {
-		return nil, exceptions.UserAccount.InvalidInput().WithError(err).Log()
-	}
-
 	var newUserAccount schemas.UserAccount
 	newUserAccount.UserId = userId
 	if err := copier.Copy(&newUserAccount, &input); err != nil {
@@ -66,10 +62,6 @@ func (r *UserAccountRepository) CreateOneByUserId(userId uuid.UUID, input inputs
 }
 
 func (r *UserAccountRepository) UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserAccountInput) (*schemas.UserAccount, *exceptions.Exception) {
-	if err := models.Validator.Struct(input); err != nil {
-		return nil, exceptions.UserAccount.InvalidInput().WithError(err).Log()
-	}
-
 	existingUserAccount, exception := r.GetOneByUserId(userId)
 	if exception != nil || existingUserAccount == nil {
 		return nil, exception

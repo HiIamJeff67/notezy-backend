@@ -110,10 +110,6 @@ func (r *UserRepository) GetAll() (*[]schemas.User, *exceptions.Exception) {
 }
 
 func (r *UserRepository) CreateOne(input inputs.CreateUserInput) (*uuid.UUID, *exceptions.Exception) {
-	if err := models.Validator.Struct(input); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
-	}
-
 	// note that the create operation in gorm will NOT return anything
 	// but the default value we set in gorm field in the above struct will be returned if we specified it in the "returning"
 	var newUser schemas.User
@@ -138,10 +134,6 @@ func (r *UserRepository) CreateOne(input inputs.CreateUserInput) (*uuid.UUID, *e
 }
 
 func (r *UserRepository) UpdateOneById(id uuid.UUID, input inputs.PartialUpdateUserInput) (*schemas.User, *exceptions.Exception) {
-	if err := models.Validator.Struct(input); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err).Log()
-	}
-
 	existingUser, exception := r.GetOneById(id, nil)
 	if exception != nil || existingUser == nil {
 		return nil, exception

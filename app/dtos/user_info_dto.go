@@ -17,13 +17,13 @@ type GetMyInfoReqDto struct {
 type UpdateMyInfoReqDto struct {
 	UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 	PartialUpdateDto[struct {
-		CoverBackgroundURL *string           `json:"coverBackgroundURL" validate:"omitempty"`
-		AvatarURL          *string           `json:"avatarURL" validate:"omitempty"`
-		Header             *string           `json:"header" validate:"omitempty"`
-		Introduction       *string           `json:"introduction" validate:"omitempty"`
-		Gender             *enums.UserGender `json:"gender" validate:"omitempty"`
-		Country            *enums.Country    `json:"country" validate:"omitempty"`
-		BirthDate          *time.Time        `json:"birthDate" validate:"omitempty"`
+		CoverBackgroundURL *string           `json:"coverBackgroundURL" validate:"omitnil,isimageurl"`
+		AvatarURL          *string           `json:"avatarURL" validate:"omitnil,isimageurl"`
+		Header             *string           `json:"header" validate:"omitnil,min=0,max=64"`
+		Introduction       *string           `json:"introduction" validate:"omitnil,min=0,max=256"`
+		Gender             *enums.UserGender `json:"gender" validate:"omitnil,isgender"`
+		Country            *enums.Country    `json:"country" validate:"omitnil,iscountry"`
+		BirthDate          *time.Time        `json:"birthDate" validate:"omitnil,notfuture"`
 	}]
 }
 

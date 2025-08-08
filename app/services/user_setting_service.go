@@ -1,13 +1,14 @@
 package services
 
 import (
+	"gorm.io/gorm"
+
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
-
-	"gorm.io/gorm"
+	validation "notezy-backend/app/validation"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -31,7 +32,7 @@ func NewUserSettingService(db *gorm.DB) UserSettingServiceInterface {
 /* ============================== Service Methods for UserSetting ============================== */
 
 func (s *UserSettingService) GetMySetting(reqDto *dtos.GetMySettingReqDto) (*dtos.GetMySettingResDto, *exceptions.Exception) {
-	if err := models.Validator.Struct(reqDto); err != nil {
+	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
@@ -50,7 +51,7 @@ func (s *UserSettingService) GetMySetting(reqDto *dtos.GetMySettingReqDto) (*dto
 }
 
 func (s *UserSettingService) UpdateMySetting(reqDto *dtos.UpdateMySettingReqDto) (*dtos.UpdateMySettingResDto, *exceptions.Exception) {
-	if err := models.Validator.Struct(reqDto); err != nil {
+	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 

@@ -109,7 +109,7 @@ func TestIsAlphaNumberString(t *testing.T) {
 		t, "testdata/string_testdata/is_alpha_number_string_testdata.json",
 	)
 	for _, c := range cases {
-		got := util.IsAlphaNumberString(c.Args.S)
+		got := util.IsAlphaOrNumberString(c.Args.S)
 		assert.Equal(t, c.Returns, got)
 	}
 }

@@ -22,8 +22,8 @@ type GetMeReqDto struct {
 type UpdateMeReqDto struct {
 	UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 	PartialUpdateDto[struct {
-		DisplayName *string           `json:"displayName" validate:"omitempty"`
-		Status      *enums.UserStatus `json:"status" validate:"omitempty"`
+		DisplayName *string           `json:"displayName" validate:"omitnil,min=6,max=32,alphaandnum"`
+		Status      *enums.UserStatus `json:"status" validate:"omitnil,isstatus"`
 	}]
 }
 
@@ -53,7 +53,7 @@ type GetMeResDto struct {
 }
 
 type UpdateMeResDto struct {
-	UpdatedAt time.Time
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 type UpdateRoleResDto struct {

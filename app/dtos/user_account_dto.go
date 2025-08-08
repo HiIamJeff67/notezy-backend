@@ -17,10 +17,10 @@ type GetMyAccountReqDto struct {
 type UpdateMyAccountReqDto struct {
 	UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 	PartialUpdateDto[struct {
-		CountryCode       *enums.CountryCode `json:"countryCode" validate:"omitempty"`
-		PhoneNumber       *string            `json:"phoneNumber" validate:"omitempty"`
-		GoogleCredential  *string            `json:"googleCrendential" validate:"omitempty"`
-		DiscordCredential *string            `json:"discordCrendential" validate:"omitempty"`
+		CountryCode       *enums.CountryCode `json:"countryCode" validate:"omitnil,iscountrycode"`
+		PhoneNumber       *string            `json:"phoneNumber" validate:"omitnil,max=0,max=15,isnumberstring"`
+		GoogleCredential  *string            `json:"googleCrendential" validate:"omitnil"`
+		DiscordCredential *string            `json:"discordCrendential" validate:"omitnil"`
 	}]
 }
 

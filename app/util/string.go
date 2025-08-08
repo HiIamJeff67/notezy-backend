@@ -1,6 +1,7 @@
 package util
 
 import (
+	"regexp"
 	"strings"
 	"unicode"
 )
@@ -29,15 +30,42 @@ func IsStringIn(s string, strs []string) bool {
 	return false
 }
 
-func IsEmailString(s string) bool {
-	return strings.Contains(s, "@")
+func IsNumberString(s string) bool {
+	for _, r := range s {
+		if !unicode.IsDigit(r) {
+			return false
+		}
+	}
+
+	return true
 }
 
-func IsAlphaNumberString(s string) bool {
+func IsEmailString(s string) bool {
+	return regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`).MatchString(s)
+}
+
+func IsAlphaOrNumberString(s string) bool {
 	for _, r := range s {
 		if !unicode.IsLetter(r) && !unicode.IsDigit(r) {
 			return false
 		}
 	}
 	return true
+}
+
+func IsAlphaAndNumberString(s string) bool {
+	var hasLetter = false
+	var hasDigit = false
+
+	for _, r := range s {
+		if unicode.IsLetter(r) {
+			hasLetter = true
+		} else if unicode.IsDigit(r) {
+			hasDigit = true
+		} else {
+			return false
+		}
+	}
+
+	return hasLetter && hasDigit
 }

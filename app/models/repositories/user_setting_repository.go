@@ -47,10 +47,6 @@ func (r *UserSettingRepository) GetOneByUserId(userId uuid.UUID) (*schemas.UserS
 }
 
 func (r *UserSettingRepository) CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserSettingInput) (*uuid.UUID, *exceptions.Exception) {
-	if err := models.Validator.Struct(input); err != nil {
-		return nil, exceptions.UserSetting.InvalidInput().WithError(err)
-	}
-
 	var newUserSetting schemas.UserSetting
 	newUserSetting.UserId = userId
 	if err := copier.Copy(&newUserSetting, &input); err != nil {
@@ -67,10 +63,6 @@ func (r *UserSettingRepository) CreateOneByUserId(userId uuid.UUID, input inputs
 }
 
 func (r *UserSettingRepository) UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserSettingInput) (*schemas.UserSetting, *exceptions.Exception) {
-	if err := models.Validator.Struct(input); err != nil {
-		return nil, exceptions.UserSetting.InvalidInput().WithError(err)
-	}
-
 	existingUserSetting, exception := r.GetOneByUserId(userId)
 	if exception != nil || existingUserSetting == nil {
 		return nil, exception
