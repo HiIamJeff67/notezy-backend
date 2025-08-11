@@ -1,43 +1,41 @@
 package util
 
 import (
-	"notezy-backend/app/exceptions"
 	"regexp"
 
 	"github.com/google/uuid"
 	"github.com/vmihailenco/msgpack/v5"
+
+	exceptions "notezy-backend/app/exceptions"
 )
 
 type ShelfNode struct {
-	Id          string                `json:"id" validate:"required"`
-	Name        string                `json:"name" validate:"required,min=1,max=64"`
-	Parent      *ShelfNode            `json:"parent" validate:"omitempty"`
-	Children    map[string]*ShelfNode `json:"children" validate:"omitempty"`
-	MaterialIds map[uuid.UUID]bool    `json:"materialIds" validate:"omitempty"` // leaves
+	Id          string                `json:"id"`
+	Name        string                `json:"name"`
+	Parent      *ShelfNode            `json:"parent"` // if the ShelfNode is a root, the Parent field MUST be nil
+	Children    map[string]*ShelfNode `json:"children"`
+	MaterialIds map[uuid.UUID]bool    `json:"materialIds"` // leaves
 }
 
 /* ============================== Constructor ============================== */
 
-func NewShelfNode(name string, parent *ShelfNode) *ShelfNode {
-	if !isValidShelfName(name) {
-
+func NewShelfNode(name string, parent *ShelfNode) (*ShelfNode, *exceptions.Exception) {
+	if !IsValidShelfName(name) {
+		return nil, exceptions.Shelf.FailedToConstructNewShelfNode("name")
 	}
-	shelfNodeId := GenerateSnowflakeID()
-	return &ShelfNode{
+
+	shelfNodeId := GenerateUniqueSnowflakeID()
+	result := &ShelfNode{
 		Id:          shelfNodeId,
 		Name:        name,
 		Parent:      parent,
 		Children:    make(map[string]*ShelfNode),
 		MaterialIds: make(map[uuid.UUID]bool),
 	}
+	return result, nil
 }
 
 /* ============================== Private Methods ============================== */
-
-func isValidShelfName(name string) bool {
-	illegal := regexp.MustCompile(`[\/\\:\*\?"<>\|]`)
-	return !illegal.MatchString(name)
-}
 
 func hasCycle(cur *ShelfNode, visited map[string]bool) bool {
 	if cur == nil {
@@ -87,6 +85,10 @@ func isParent(cur *ShelfNode, target *ShelfNode) bool {
 }
 
 /* ============================== Public Methods ============================== */
+
+func IsValidShelfName(name string) bool {
+	return !regexp.MustCompile(`[\/\\:\*\?"<>\|]`).MatchString(name)
+}
 
 func EncodeShelfNode(node *ShelfNode) ([]byte, *exceptions.Exception) {
 	result, err := msgpack.Marshal(node)

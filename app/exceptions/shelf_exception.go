@@ -85,3 +85,15 @@ func (d *ShelfExceptionDomain) InsertParentIntoItsChildren(destination interface
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
+
+func (d *ShelfExceptionDomain) FailedToConstructNewShelfNode(field string) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 5,
+		Prefix:         d.Prefix,
+		Reason:         "FailedToConstructNewShelfNode",
+		IsInternal:     false,
+		Message:        fmt.Sprintf("The field of %s in ShelfNode is not pass by the validator", field),
+		HTTPStatusCode: http.StatusConflict,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}

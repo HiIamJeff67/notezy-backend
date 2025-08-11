@@ -8,7 +8,6 @@ import (
 
 	gqlmodels "notezy-backend/app/graphql/models"
 	enums "notezy-backend/app/models/schemas/enums"
-	util "notezy-backend/app/util"
 	shared "notezy-backend/shared"
 )
 
@@ -55,7 +54,7 @@ func (b *Badge) ToPublicBadge() *gqlmodels.PublicBadge {
 
 func (b *Badge) BeforeCreate(db *gorm.DB) error {
 	if b.PublicId == "" {
-		b.PublicId = util.GenerateSnowflakeID()
+		b.PublicId = uuid.NewString()
 	}
 	return nil
 }

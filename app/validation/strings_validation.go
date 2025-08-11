@@ -91,4 +91,8 @@ func RegisterStringsValidation(validate *validator.Validate) {
 
 		return false
 	})
+	validate.RegisterValidation("isshelfname", func(fl validator.FieldLevel) bool {
+		shelfName := fl.Field().String()
+		return !regexp.MustCompile(`[\/\\:\*\?"<>\|]`).MatchString(shelfName)
+	})
 }

@@ -7,7 +7,6 @@ import (
 	"gorm.io/gorm"
 
 	gqlmodels "notezy-backend/app/graphql/models"
-	util "notezy-backend/app/util"
 	shared "notezy-backend/shared"
 )
 
@@ -60,7 +59,7 @@ func (t *Theme) ToPublicTheme() *gqlmodels.PublicTheme {
 
 func (t *Theme) BeforeCreate(tx *gorm.DB) error {
 	if t.PublicId == "" {
-		t.PublicId = util.GenerateSnowflakeID()
+		t.PublicId = uuid.NewString()
 	}
 	return nil
 }

@@ -8,7 +8,6 @@ import (
 
 	gqlmodels "notezy-backend/app/graphql/models"
 	enums "notezy-backend/app/models/schemas/enums"
-	util "notezy-backend/app/util"
 	shared "notezy-backend/shared"
 )
 
@@ -79,7 +78,7 @@ func (u *User) BeforeCreate(db *gorm.DB) error {
 		u.BlockLoginUntil = time.Now().Add(-10 * time.Minute)
 	}
 	if u.PublicId == "" {
-		u.PublicId = util.GenerateSnowflakeID()
+		u.PublicId = uuid.NewString()
 	}
 	return nil
 }
