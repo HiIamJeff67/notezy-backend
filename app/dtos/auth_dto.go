@@ -10,16 +10,16 @@ import (
 // make sure do NOT use the access token or refresh token as the request dto
 
 type RegisterReqDto struct {
-	Name      string `json:"name" validate:"required,min=6,max=16,alphanum"`
+	Name      string `json:"name" validate:"required,min=6,max=16,alphaandnum"`
 	Email     string `json:"email" validate:"required,email"`
-	Password  string `json:"password" validate:"required,min=8,isstrongpassword"`
-	UserAgent string `json:"userAgent" validate:"required"`
+	Password  string `json:"password" validate:"required,min=8,max=1024,isstrongpassword"`
+	UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 }
 
 type LoginReqDto struct {
-	Account   string `json:"account" validate:"required"`
+	Account   string `json:"account" validate:"required,account"`
 	Password  string `json:"password" validate:"required"` // don't validate other additions while login
-	UserAgent string `json:"userAgent" validate:"required"`
+	UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 }
 
 type LogoutReqDto struct {
@@ -28,30 +28,30 @@ type LogoutReqDto struct {
 
 type SendAuthCodeReqDto struct {
 	Email     string `json:"email" validate:"required,email"`
-	UserAgent string `json:"userAgent" validate:"required"`
+	UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 }
 
 type ValidateEmailReqDto struct {
 	UserId   uuid.UUID // extracted from the access token of AuthMiddleware()
-	AuthCode string    `json:"authCode" validate:"required"`
+	AuthCode string    `json:"authCode" validate:"required,isnumberstring,len=6"`
 }
 
 type ResetEmailReqDto struct {
 	UserId   uuid.UUID // extracted from the access token of AuthMiddleware()
 	NewEmail string    `json:"newEmail" validate:"required,email"`
-	AuthCode string    `json:"authCode" validate:"required"`
+	AuthCode string    `json:"authCode" validate:"required,isnumberstring,len=6"`
 }
 
 type ForgetPasswordReqDto struct {
-	Account     string `json:"account" validate:"required"`
-	NewPassword string `json:"newPassword" validation:"required,min=8,isstrongpassword"`
-	AuthCode    string `json:"authCode" validate:"required"`
-	UserAgent   string `json:"userAgent" validate:"required"`
+	Account     string `json:"account" validate:"required,account"`
+	NewPassword string `json:"newPassword" validation:"required,min=8,max=1024,isstrongpassword"`
+	AuthCode    string `json:"authCode" validate:"required,isnumberstring,len=6"`
+	UserAgent   string `json:"userAgent" validate:"required,isuseragent"`
 }
 
 type DeleteMeReqDto struct {
-	UserId   uuid.UUID  // extracted from the access token of AuthMiddleware()
-	AuthCode *time.Time `json:"authCode" validate:"omitempty"`
+	UserId   uuid.UUID // extracted from the access token of AuthMiddleware()
+	AuthCode time.Time `json:"authCode" validate:"required,isnumberstring,len=6"`
 }
 
 /* ============================== Response DTO ============================== */

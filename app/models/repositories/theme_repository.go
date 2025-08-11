@@ -67,10 +67,6 @@ func (r *ThemeRepository) GetAll() (*[]schemas.Theme, *exceptions.Exception) {
 }
 
 func (r *ThemeRepository) CreateOneByAuthorId(authorId uuid.UUID, input inputs.CreateThemeInput) (*uuid.UUID, *exceptions.Exception) {
-	if err := models.Validator.Struct(input); err != nil {
-		return nil, exceptions.Theme.FailedToCreate().WithError(err)
-	}
-
 	var newTheme schemas.Theme
 	newTheme.AuthorId = authorId
 	if err := copier.Copy(&newTheme, &input); err != nil {
@@ -86,10 +82,6 @@ func (r *ThemeRepository) CreateOneByAuthorId(authorId uuid.UUID, input inputs.C
 }
 
 func (r *ThemeRepository) UpdateOneById(id uuid.UUID, authorId uuid.UUID, input inputs.PartialUpdateThemeInput) (*schemas.Theme, *exceptions.Exception) {
-	if err := models.Validator.Struct(input); err != nil {
-		return nil, exceptions.Theme.FailedToCreate().WithError(err)
-	}
-
 	existingTheme, exception := r.GetOneById(id, nil)
 	if exception != nil || existingTheme == nil {
 		return nil, exception
@@ -102,12 +94,13 @@ func (r *ThemeRepository) UpdateOneById(id uuid.UUID, authorId uuid.UUID, input 
 
 	result := r.db.Table(schemas.Theme{}.TableName()).
 		Where("id = ? AND author_id = ?", id, authorId).
+		Select("*").
 		Updates(&updates)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Theme.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 { // check if we do update it or not
-		return nil, exceptions.Theme.FailedToUpdate()
+		return nil, exceptions.Theme.NoChanges()
 	}
 
 	return &updates, nil

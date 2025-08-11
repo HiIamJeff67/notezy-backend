@@ -47,10 +47,6 @@ func (r *UserInfoRepository) GetOneByUserId(userId uuid.UUID) (*schemas.UserInfo
 }
 
 func (r *UserInfoRepository) CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserInfoInput) (*uuid.UUID, *exceptions.Exception) {
-	if err := models.Validator.Struct(input); err != nil {
-		return nil, exceptions.UserInfo.InvalidInput().WithError(err)
-	}
-
 	var newUserInfo schemas.UserInfo
 	newUserInfo.UserId = userId
 	if err := copier.Copy(&newUserInfo, &input); err != nil {
@@ -67,10 +63,6 @@ func (r *UserInfoRepository) CreateOneByUserId(userId uuid.UUID, input inputs.Cr
 }
 
 func (r *UserInfoRepository) UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserInfoInput) (*schemas.UserInfo, *exceptions.Exception) {
-	if err := models.Validator.Struct(input); err != nil {
-		return nil, exceptions.UserInfo.InvalidInput().WithError(err)
-	}
-
 	existingUserInfo, exception := r.GetOneByUserId(userId)
 	if exception != nil || existingUserInfo == nil {
 		return nil, exception
@@ -83,12 +75,13 @@ func (r *UserInfoRepository) UpdateOneByUserId(userId uuid.UUID, input inputs.Pa
 
 	result := r.db.Table(schemas.UserInfo{}.TableName()).
 		Where("user_id = ?", userId).
+		Select("*").
 		Updates(&updates)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserInfo.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return nil, exceptions.UserInfo.NotFound()
+		return nil, exceptions.UserInfo.NoChanges()
 	}
 
 	return &updates, nil

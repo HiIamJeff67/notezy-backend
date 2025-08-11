@@ -110,10 +110,6 @@ func (r *UserRepository) GetAll() (*[]schemas.User, *exceptions.Exception) {
 }
 
 func (r *UserRepository) CreateOne(input inputs.CreateUserInput) (*uuid.UUID, *exceptions.Exception) {
-	if err := models.Validator.Struct(input); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
-	}
-
 	// note that the create operation in gorm will NOT return anything
 	// but the default value we set in gorm field in the above struct will be returned if we specified it in the "returning"
 	var newUser schemas.User
@@ -138,10 +134,6 @@ func (r *UserRepository) CreateOne(input inputs.CreateUserInput) (*uuid.UUID, *e
 }
 
 func (r *UserRepository) UpdateOneById(id uuid.UUID, input inputs.PartialUpdateUserInput) (*schemas.User, *exceptions.Exception) {
-	if err := models.Validator.Struct(input); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err).Log()
-	}
-
 	existingUser, exception := r.GetOneById(id, nil)
 	if exception != nil || existingUser == nil {
 		return nil, exception
@@ -154,12 +146,13 @@ func (r *UserRepository) UpdateOneById(id uuid.UUID, input inputs.PartialUpdateU
 
 	result := r.db.Table(schemas.User{}.TableName()).
 		Where("id = ?", id).
+		Select("*").
 		Updates(&updates)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return nil, exceptions.User.NotFound()
+		return nil, exceptions.User.NoChanges()
 	}
 
 	return &updates, nil
@@ -174,7 +167,7 @@ func (r *UserRepository) DeleteOneById(id uuid.UUID, input inputs.DeleteUserInpu
 		return exceptions.User.FailedToDelete().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.User.NotFound()
+		return exceptions.User.NoChanges()
 	}
 
 	return nil

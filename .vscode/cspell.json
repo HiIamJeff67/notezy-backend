@@ -1,43 +1,41 @@
 {
-    "version": "0.2",
-    "language": "en,go",
-    "dictionaries": [
-        "go",
-        "sql"
-    ],
-    "enabled": false,
-    "ignoreRegExpList": [
-        "/[nN][oO][tT][eE][zZ][yY][a-zA-Z]*/",
-        "/go[a-zA-Z]*/",
-        "/gorm/",
-        "/gin/",
-        "/gin-[a-zA-Z]*/",
-        "/endless/",
-        "/is[a-z]+/", // we ignore this spell error for customized validation properties
-        "/English/",
-        "/Enterprise/",
-        "/go-randomdata/"
-    ],
-    "words": [
-        "NotezyDB",
-        "Trancate",
-        "endless",
-        "gin",
-        "GinAddr",
-        "dtos",
-        "comail",
-        "colog",
-        "fileln",
-        "NANP",
-        "alphanum",
-        "timestamptz",
-        "dbname",
-        "sslmode",
-        "enumlabel",
-        "enumtypid",
-        "enumsortorder",
-        "serial",
-        "Pallinder",
-        "randomdata",
-    ]
+  "version": "0.2",
+  "language": "en,go",
+  "dictionaries": ["go", "sql"],
+  "enabled": false,
+  "ignoreRegExpList": [
+    "/[nN][oO][tT][eE][zZ][yY][a-zA-Z]*/",
+    "/go[a-zA-Z]*/",
+    "/gorm/",
+    "/gin/",
+    "/gin-[a-zA-Z]*/",
+    "/endless/",
+    "/is[a-z]+/", // we ignore this spell error for customized validation properties
+    "/English/",
+    "/Enterprise/",
+    "/go-randomdata/"
+  ],
+  "words": [
+    "NotezyDB",
+    "Trancate",
+    "endless",
+    "gin",
+    "GinAddr",
+    "dtos",
+    "comail",
+    "colog",
+    "fileln",
+    "NANP",
+    "alphanum",
+    "alphaandnum",
+    "timestamptz",
+    "dbname",
+    "sslmode",
+    "enumlabel",
+    "enumtypid",
+    "enumsortorder",
+    "serial",
+    "Pallinder",
+    "randomdata"
+  ]
 }

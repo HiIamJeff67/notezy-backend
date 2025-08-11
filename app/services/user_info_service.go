@@ -5,6 +5,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"notezy-backend/app/caches"
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	gqlmodels "notezy-backend/app/graphql/models"
@@ -12,6 +13,7 @@ import (
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
+	validation "notezy-backend/app/validation"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -39,7 +41,7 @@ func NewUserInfoService(db *gorm.DB) UserInfoServiceInterface {
 /* ============================== Service Methods for UserInfo ============================== */
 
 func (s *UserInfoService) GetMyInfo(reqDto *dtos.GetMyInfoReqDto) (*dtos.GetMyInfoResDto, *exceptions.Exception) {
-	if err := models.Validator.Struct(reqDto); err != nil {
+	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
@@ -63,7 +65,7 @@ func (s *UserInfoService) GetMyInfo(reqDto *dtos.GetMyInfoReqDto) (*dtos.GetMyIn
 }
 
 func (s *UserInfoService) UpdateMyInfo(reqDto *dtos.UpdateMyInfoReqDto) (*dtos.UpdateMyInfoResDto, *exceptions.Exception) {
-	if err := models.Validator.Struct(reqDto); err != nil {
+	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
@@ -83,6 +85,13 @@ func (s *UserInfoService) UpdateMyInfo(reqDto *dtos.UpdateMyInfoReqDto) (*dtos.U
 	})
 	if exception != nil {
 		return nil, exception
+	}
+
+	exception = caches.UpdateUserDataCache(reqDto.UserId, caches.UpdateUserDataCacheDto{
+		AvatarURL: reqDto.Values.AvatarURL,
+	})
+	if exception != nil {
+		exception.Log()
 	}
 
 	return &dtos.UpdateMyInfoResDto{

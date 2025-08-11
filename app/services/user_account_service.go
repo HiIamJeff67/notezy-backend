@@ -8,6 +8,7 @@ import (
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
+	validation "notezy-backend/app/validation"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -31,7 +32,7 @@ func NewUserAccountService(db *gorm.DB) UserAccountServiceInterface {
 /* ============================== Service Methods for UserAccount ============================== */
 
 func (s *UserAccountService) GetMyAccount(reqDto *dtos.GetMyAccountReqDto) (*dtos.GetMyAccountResDto, *exceptions.Exception) {
-	if err := models.Validator.Struct(reqDto); err != nil {
+	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
@@ -51,7 +52,7 @@ func (s *UserAccountService) GetMyAccount(reqDto *dtos.GetMyAccountReqDto) (*dto
 }
 
 func (s *UserAccountService) UpdateMyAccount(reqDto *dtos.UpdateMyAccountReqDto) (*dtos.UpdateMyAccountResDto, *exceptions.Exception) {
-	if err := models.Validator.Struct(reqDto); err != nil {
+	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 

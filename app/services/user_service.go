@@ -16,6 +16,7 @@ import (
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	util "notezy-backend/app/util"
+	validation "notezy-backend/app/validation"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -45,7 +46,7 @@ func NewUserService(db *gorm.DB) UserServiceInterface {
 /* ============================== Service Methods for Users ============================== */
 
 func (s *UserService) GetUserData(reqDto *dtos.GetUserDataReqDto) (*dtos.GetUserDataResDto, *exceptions.Exception) {
-	if err := models.Validator.Struct(reqDto); err != nil {
+	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
@@ -58,7 +59,7 @@ func (s *UserService) GetUserData(reqDto *dtos.GetUserDataReqDto) (*dtos.GetUser
 }
 
 func (s *UserService) GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception) {
-	if err := models.Validator.Struct(reqDto); err != nil {
+	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
@@ -82,7 +83,7 @@ func (s *UserService) GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *excep
 }
 
 func (s *UserService) UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Exception) {
-	if err := models.Validator.Struct(reqDto); err != nil {
+	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
@@ -97,6 +98,23 @@ func (s *UserService) UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDt
 	})
 	if exception != nil {
 		return nil, exception
+	}
+
+	if reqDto.Values.DisplayName != nil {
+		exception = caches.UpdateUserDataCache(reqDto.UserId, caches.UpdateUserDataCacheDto{
+			DisplayName: reqDto.Values.DisplayName,
+		})
+		if exception != nil {
+			exception.Log()
+		}
+	}
+	if reqDto.Values.Status != nil {
+		exception = caches.UpdateUserDataCache(reqDto.UserId, caches.UpdateUserDataCacheDto{
+			Status: reqDto.Values.Status,
+		})
+		if exception != nil {
+			exception.Log()
+		}
 	}
 
 	return &dtos.UpdateMeResDto{UpdatedAt: updatedUser.UpdatedAt}, nil

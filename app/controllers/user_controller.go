@@ -8,6 +8,7 @@ import (
 	contexts "notezy-backend/app/contexts"
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
+	logs "notezy-backend/app/logs"
 	services "notezy-backend/app/services"
 )
 
@@ -84,6 +85,7 @@ func (c *UserController) GetMe(ctx *gin.Context) {
 	}
 	reqDto.UserId = *userId
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
+		logs.Error(err)
 		exception := exceptions.User.InvalidDto().WithError(err)
 		ctx.JSON(exception.HTTPStatusCode, gin.H{
 			"success":   false,
