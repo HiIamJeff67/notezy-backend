@@ -39,7 +39,7 @@ func NewCookieHandler(name shared.ValidCookieName, path string, duration time.Du
 func (h *CookieHandler) GetCookie(ctx *gin.Context) (string, *exceptions.Exception) {
 	value, err := ctx.Cookie(h.name.String())
 	if err != nil {
-		return "", exceptions.Cookie.NotFound(h.name).WithError(err)
+		return "", exceptions.Cookie.NotFound(string(h.name)).WithError(err)
 	}
 	return value, nil
 }

@@ -53,6 +53,7 @@ const (
 // ExceptionPrefix_Badge ExceptionPrefix = "Badge"                       37
 // ExceptionPrefix_Theme ExceptionPrefix = "Theme"						 38
 // ExceptionPrefix_Parser ExceptionPrefix = "Parser"				     39
+// ExceptionPrefix_Shelf ExceptionPrefix = "Shelf"   					 40
 )
 
 func IsExceptionCode(exceptionCode int) bool {

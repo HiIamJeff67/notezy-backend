@@ -3,8 +3,6 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
-
-	shared "notezy-backend/shared"
 )
 
 const (
@@ -30,25 +28,25 @@ var Cookie = &CookieExceptionDomain{
 	},
 }
 
-func (d *CookieExceptionDomain) NotFound(cookieName shared.ValidCookieName) *Exception {
+func (d *CookieExceptionDomain) NotFound(cookieName string) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
 		Prefix:         d.Prefix,
 		Reason:         "NotFound",
 		IsInternal:     true,
-		Message:        fmt.Sprintf("Cannot find the %s in the cookie", convertCamelCaseToSentenceCase(cookieName.String())),
+		Message:        fmt.Sprintf("Cannot find the %s in the cookie", convertCamelCaseToSentenceCase(cookieName)),
 		HTTPStatusCode: http.StatusNotFound,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
-func (d *CookieExceptionDomain) FailedToCreate(cookieName shared.ValidCookieName) *Exception {
+func (d *CookieExceptionDomain) FailedToCreate(cookieName string) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 2,
 		Prefix:         d.Prefix,
 		Reason:         "FailedToCreate",
 		IsInternal:     true,
-		Message:        fmt.Sprintf("Failed to set the %s to the cache", convertCamelCaseToSentenceCase(cookieName.String())),
+		Message:        fmt.Sprintf("Failed to set the %s to the cache", convertCamelCaseToSentenceCase(cookieName)),
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}

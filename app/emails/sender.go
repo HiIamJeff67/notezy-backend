@@ -30,7 +30,7 @@ var NotezyEmailSender = &EmailSender{
 
 func (s *EmailSender) SyncSend(to string, subject string, body string, contentType types.ContentType) *exceptions.Exception {
 	if !contentType.IsValidEnum() {
-		return exceptions.Email.InvalidContentType(contentType)
+		return exceptions.Email.InvalidContentType(string(contentType))
 	}
 
 	contentTypeString := contentType.String()

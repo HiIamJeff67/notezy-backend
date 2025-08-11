@@ -3,8 +3,6 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
-
-	types "notezy-backend/shared/types"
 )
 
 const (
@@ -42,7 +40,7 @@ func (d *EmailExceptionDomain) FailedToSendEmailWithSubject(subject string) *Exc
 	}
 }
 
-func (d *EmailExceptionDomain) InvalidContentType(contentType types.ContentType) *Exception {
+func (d *EmailExceptionDomain) InvalidContentType(contentType string) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 2,
 		Prefix:         d.Prefix,
@@ -90,7 +88,7 @@ func (d *EmailExceptionDomain) FailedToRenderTemplate() *Exception {
 	}
 }
 
-func (d *EmailExceptionDomain) TemplateFileTypeAndContentTypeNotMatch(templateFileType string, contentType types.ContentType) *Exception {
+func (d *EmailExceptionDomain) TemplateFileTypeAndContentTypeNotMatch(templateFileType string, contentType string) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 6,
 		Prefix:         d.Prefix,

@@ -97,7 +97,7 @@ func GetUserDataCache(id uuid.UUID) (*UserDataCache, *exceptions.Exception) {
 	formattedKey := formatKey(id)
 	cacheString, err := redisClient.Get(formattedKey).Result()
 	if err != nil {
-		return nil, exceptions.Cache.NotFound(shared.ValidCachePurpose_UserData).WithError(err)
+		return nil, exceptions.Cache.NotFound(string(shared.ValidCachePurpose_UserData)).WithError(err)
 	}
 
 	var userDataCache UserDataCache
@@ -130,7 +130,7 @@ func SetUserDataCache(id uuid.UUID, userData UserDataCache) *exceptions.Exceptio
 	formattedKey := formatKey(id)
 	err = redisClient.Set(formattedKey, string(userDataJson), _userDataCacheExpiresIn).Err()
 	if err != nil {
-		return exceptions.Cache.FailedToCreate(shared.ValidCachePurpose_UserData).WithError(err)
+		return exceptions.Cache.FailedToCreate(string(shared.ValidCachePurpose_UserData)).WithError(err)
 	}
 
 	logs.FInfo("Successfully set the cached user data in the server with server number of %d", serverNumber)
@@ -161,7 +161,7 @@ func UpdateUserDataCache(id uuid.UUID, dto UpdateUserDataCacheDto) *exceptions.E
 	formattedKey := formatKey(id)
 	err = redisClient.Set(formattedKey, string(userDataJson), _userDataCacheExpiresIn).Err()
 	if err != nil {
-		return exceptions.Cache.FailedToUpdate(shared.ValidCachePurpose_UserData).WithError(err)
+		return exceptions.Cache.FailedToUpdate(string(shared.ValidCachePurpose_UserData)).WithError(err)
 	}
 
 	logs.FInfo("Successfully update the cached user data in the server with server number of %d", serverNumber)
@@ -179,7 +179,7 @@ func DeleteUserDataCache(id uuid.UUID) *exceptions.Exception {
 	formattedKey := formatKey(id)
 	err := redisClient.Del(formattedKey).Err()
 	if err != nil {
-		return exceptions.Cache.FailedToDelete(shared.ValidCachePurpose_UserData).WithError(err)
+		return exceptions.Cache.FailedToDelete(string(shared.ValidCachePurpose_UserData)).WithError(err)
 	}
 
 	logs.FInfo("Successfully delete the cached user data in the server with server number of %d", serverNumber)

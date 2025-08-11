@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"unicode"
-
-	shared "notezy-backend/shared"
 )
 
 const (
@@ -45,49 +43,49 @@ func convertCamelCaseToSentenceCase(camelCaseString string) string {
 }
 
 /* ============================== Handling Cached Data in the Servers (overriding methods) ============================== */
-func (d *CacheExceptionSubDomain) NotFound(cachePurpose shared.ValidCachePurpose) *Exception {
+func (d *CacheExceptionSubDomain) NotFound(cachePurpose string) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
 		Prefix:         d.Prefix,
 		Reason:         "NotFound",
 		IsInternal:     true,
-		Message:        fmt.Sprintf("Cannot find the %s in the cache server", convertCamelCaseToSentenceCase(cachePurpose.String())),
+		Message:        fmt.Sprintf("Cannot find the %s in the cache server", convertCamelCaseToSentenceCase(cachePurpose)),
 		HTTPStatusCode: http.StatusNotFound,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
-func (d *CacheExceptionSubDomain) FailedToCreate(cachePurpose shared.ValidCachePurpose) *Exception {
+func (d *CacheExceptionSubDomain) FailedToCreate(cachePurpose string) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 2,
 		Prefix:         d.Prefix,
 		Reason:         "FailedToCreate",
 		IsInternal:     true,
-		Message:        fmt.Sprintf("Failed to set the %s to the cache server", convertCamelCaseToSentenceCase(cachePurpose.String())),
+		Message:        fmt.Sprintf("Failed to set the %s to the cache server", convertCamelCaseToSentenceCase(cachePurpose)),
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
-func (d *CacheExceptionSubDomain) FailedToUpdate(cachePurpose shared.ValidCachePurpose) *Exception {
+func (d *CacheExceptionSubDomain) FailedToUpdate(cachePurpose string) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 3,
 		Prefix:         d.Prefix,
 		Reason:         "FailedToUpdate",
 		IsInternal:     true,
-		Message:        fmt.Sprintf("Failed to update the %s in the cache server", convertCamelCaseToSentenceCase(cachePurpose.String())),
+		Message:        fmt.Sprintf("Failed to update the %s in the cache server", convertCamelCaseToSentenceCase(cachePurpose)),
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
-func (d *CacheExceptionSubDomain) FailedToDelete(cachePurpose shared.ValidCachePurpose) *Exception {
+func (d *CacheExceptionSubDomain) FailedToDelete(cachePurpose string) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 4,
 		Prefix:         d.Prefix,
 		Reason:         "FailedToDelete",
 		IsInternal:     true,
-		Message:        fmt.Sprintf("Failed to delete the %s in the cache server", convertCamelCaseToSentenceCase(cachePurpose.String())),
+		Message:        fmt.Sprintf("Failed to delete the %s in the cache server", convertCamelCaseToSentenceCase(cachePurpose)),
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
