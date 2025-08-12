@@ -6,7 +6,7 @@ import (
 	"slices"
 )
 
-/* ============================== UserStatus Definition ============================== */
+/* ============================== Definition ============================== */
 type UserStatus string
 
 const (
@@ -15,6 +15,23 @@ const (
 	UserStatus_DoNotDisturb UserStatus = "DoNotDisturb"
 	UserStatus_Offline      UserStatus = "Offline"
 )
+
+/* ========================= All Instances ========================= */
+
+var AllUserStatuses = []UserStatus{
+	UserStatus_Online,
+	UserStatus_AFK,
+	UserStatus_DoNotDisturb,
+	UserStatus_Offline,
+}
+var AllUserStatusStrings = []string{
+	string(UserStatus_Online),
+	string(UserStatus_AFK),
+	string(UserStatus_DoNotDisturb),
+	string(UserStatus_Offline),
+}
+
+/* ============================== Methods ============================== */
 
 func (s UserStatus) Name() string {
 	return reflect.TypeOf(s).Name()
@@ -42,18 +59,4 @@ func (s UserStatus) String() string {
 
 func (s *UserStatus) IsValidEnum() bool {
 	return slices.Contains(AllUserStatuses, *s)
-}
-
-/* ========================= All UserStatuses ========================= */
-var AllUserStatuses = []UserStatus{
-	UserStatus_Online,
-	UserStatus_AFK,
-	UserStatus_DoNotDisturb,
-	UserStatus_Offline,
-}
-var AllUserStatusStrings = []string{
-	string(UserStatus_Online),
-	string(UserStatus_AFK),
-	string(UserStatus_DoNotDisturb),
-	string(UserStatus_Offline),
 }

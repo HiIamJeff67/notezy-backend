@@ -5,10 +5,8 @@ import (
 	"math/rand"
 	"sync"
 	"time"
-)
 
-const (
-	MaxSnowflakeSequence = 4096
+	constants "notezy-backend/shared/constants"
 )
 
 var (
@@ -22,7 +20,7 @@ var (
 func GenerateRepeatableSnowflakeID() string {
 	timestamp := time.Now().UnixMilli()
 	machineID := 1
-	sequence := rand.Intn(MaxSnowflakeSequence)
+	sequence := rand.Intn(constants.MaxSnowflakeSequence)
 
 	return fmt.Sprintf("%d%03d%04d", timestamp, machineID, sequence)
 }
@@ -36,7 +34,7 @@ func GenerateUniqueSnowflakeID() string {
 	nowNanosecond := time.Now().UnixNano()
 	if nowNanosecond == lastNanosecond {
 		sequence++
-		if sequence > MaxSnowflakeSequence-1 {
+		if sequence > constants.MaxSnowflakeSequence-1 {
 			// sequence overflow, wait for the next nanosecond
 			for nowNanosecond <= lastNanosecond {
 				nowNanosecond = time.Now().UnixNano()

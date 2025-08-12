@@ -6,7 +6,8 @@ import (
 	"slices"
 )
 
-/* ============================== UserGener Definition ============================== */
+/* ============================== Definition ============================== */
+
 type UserGender string
 
 const (
@@ -14,6 +15,21 @@ const (
 	UserGender_Female         UserGender = "Female"
 	UserGender_PreferNotToSay UserGender = "PreferNotToSay"
 )
+
+/* ========================= All Instances ========================= */
+
+var AllUserGenders = []UserGender{
+	UserGender_Male,
+	UserGender_Female,
+	UserGender_PreferNotToSay,
+}
+var AllUserGenderStrings = []string{
+	string(UserGender_Male),
+	string(UserGender_Female),
+	string(UserGender_PreferNotToSay),
+}
+
+/* ============================== Methods ============================== */
 
 func (g UserGender) Name() string {
 	return reflect.TypeOf(g).Name()
@@ -41,16 +57,4 @@ func (g UserGender) String() string {
 
 func (g *UserGender) IsValidEnum() bool {
 	return slices.Contains(AllUserGenders, *g)
-}
-
-/* ========================= All UserGenders ========================= */
-var AllUserGenders = []UserGender{
-	UserGender_Male,
-	UserGender_Female,
-	UserGender_PreferNotToSay,
-}
-var AllUserGenderStrings = []string{
-	string(UserGender_Male),
-	string(UserGender_Female),
-	string(UserGender_PreferNotToSay),
 }

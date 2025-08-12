@@ -5,7 +5,8 @@ import (
 	"reflect"
 )
 
-/* ============================== Country Definition ============================== */
+/* ============================== Definition ============================== */
+
 type Country string
 
 const (
@@ -19,6 +20,33 @@ const (
 	Country_Australia             Country = "Australia"
 	Country_Canada                Country = "Canada"
 )
+
+/* ========================= All Instances ========================= */
+
+var AllCountries = []Country{
+	Country_Taiwan,
+	Country_Japan,
+	Country_Malaysia,
+	Country_Singapore,
+	Country_China,
+	Country_UnitedStatusOfAmerica,
+	Country_UnitedKingdom,
+	Country_Australia,
+	Country_Canada,
+}
+var AllCountryStrings = []string{
+	string(Country_Taiwan),
+	string(Country_Japan),
+	string(Country_Malaysia),
+	string(Country_Singapore),
+	string(Country_China),
+	string(Country_UnitedStatusOfAmerica),
+	string(Country_UnitedKingdom),
+	string(Country_Australia),
+	string(Country_Canada),
+}
+
+/* ============================== Methods ============================== */
 
 func (c Country) Name() string {
 	return reflect.TypeOf(c).Name()
@@ -51,28 +79,4 @@ func (c *Country) IsValidEnum() bool {
 		}
 	}
 	return false
-}
-
-/* ========================= All Countries ========================= */
-var AllCountries = []Country{
-	Country_Taiwan,
-	Country_Japan,
-	Country_Malaysia,
-	Country_Singapore,
-	Country_China,
-	Country_UnitedStatusOfAmerica,
-	Country_UnitedKingdom,
-	Country_Australia,
-	Country_Canada,
-}
-var AllCountryStrings = []string{
-	string(Country_Taiwan),
-	string(Country_Japan),
-	string(Country_Malaysia),
-	string(Country_Singapore),
-	string(Country_China),
-	string(Country_UnitedStatusOfAmerica),
-	string(Country_UnitedKingdom),
-	string(Country_Australia),
-	string(Country_Canada),
 }

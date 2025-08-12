@@ -5,7 +5,8 @@ import (
 	"reflect"
 )
 
-/* ============================== BadgeType Definition ============================== */
+/* ============================== Definition ============================== */
+
 type BadgeType string
 
 const (
@@ -15,6 +16,25 @@ const (
 	BadgeType_Bronze  BadgeType = "Bronze"
 	BadgeType_Steel   BadgeType = "Steel"
 )
+
+/* ========================= All Instances ========================= */
+
+var AllBadgeTypes = []BadgeType{
+	BadgeType_Diamond,
+	BadgeType_Golden,
+	BadgeType_Silver,
+	BadgeType_Bronze,
+	BadgeType_Steel,
+}
+var AllBadgeTypeStrings = []string{
+	string(BadgeType_Diamond),
+	string(BadgeType_Golden),
+	string(BadgeType_Silver),
+	string(BadgeType_Bronze),
+	string(BadgeType_Steel),
+}
+
+/* ============================== Methods ============================== */
 
 func (bt BadgeType) Name() string {
 	return reflect.TypeOf(bt).Name()
@@ -47,20 +67,4 @@ func (bt *BadgeType) IsValidEnum() bool {
 		}
 	}
 	return false
-}
-
-/* ========================= All BadgeTypes ========================= */
-var AllBadgeTypes = []BadgeType{
-	BadgeType_Diamond,
-	BadgeType_Golden,
-	BadgeType_Silver,
-	BadgeType_Bronze,
-	BadgeType_Steel,
-}
-var AllBadgeTypeStrings = []string{
-	string(BadgeType_Diamond),
-	string(BadgeType_Golden),
-	string(BadgeType_Silver),
-	string(BadgeType_Bronze),
-	string(BadgeType_Steel),
 }

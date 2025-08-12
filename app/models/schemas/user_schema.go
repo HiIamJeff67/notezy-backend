@@ -33,8 +33,9 @@ type User struct {
 	UserInfo    UserInfo    `json:"userInfo" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UserAccount UserAccount `json:"userAccount" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UserSetting UserSetting `json:"userSetting" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	Badges      []Badge     `json:"badges" gorm:"many2many:\"UsersToBadgesTable\"; foreignKey:Id; joinForeignKey:UserId; references:Id; joinReferences:BadgeId;"`
 	Themes      []Theme     `json:"themes" gorm:"foreignKey:AuthorId;"`
+	Badges      []Badge     `json:"badges" gorm:"many2many:\"UsersToBadgesTable\"; foreignKey:Id; joinForeignKey:UserId; references:Id; joinReferences:BadgeId;"`
+	Shelves     []Shelf     `json:"shelves" gorm:"many2many:\"UsersToShelvesTable\"; foreignKey:Id; joinForeignKey:UserId; references:Id; joinReferences:ShelfId;"`
 }
 
 // User Table Name
@@ -51,6 +52,7 @@ const (
 	UserRelation_UserSetting UserRelation = "UserSetting"
 	UserRelation_Badges      UserRelation = "Badges"
 	UserRelation_Themes      UserRelation = "Themes"
+	UserRelation_Shelves     UserRelation = "Shelves"
 )
 
 /* ============================== Relative Type Conversions ============================== */

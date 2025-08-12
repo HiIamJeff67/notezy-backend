@@ -6,7 +6,8 @@ import (
 	"slices"
 )
 
-/* ============================== Language Definition ============================== */
+/* ============================== Definition ============================== */
+
 type Language string
 
 const (
@@ -16,6 +17,25 @@ const (
 	Language_Japanese           Language = "Japanese"
 	Language_Korean             Language = "Korean"
 )
+
+/* ========================= All Instances ========================= */
+
+var AllLanguages = []Language{
+	Language_English,
+	Language_TraditionalChinese,
+	Language_SimpleChinese,
+	Language_Japanese,
+	Language_Korean,
+}
+var AllLanguageStrings = []string{
+	string(Language_English),
+	string(Language_TraditionalChinese),
+	string(Language_SimpleChinese),
+	string(Language_Japanese),
+	string(Language_Korean),
+}
+
+/* ============================== Methods ============================== */
 
 func (l Language) Name() string {
 	return reflect.TypeOf(l).Name()
@@ -43,20 +63,4 @@ func (l Language) String() string {
 
 func (l *Language) IsValidEnum() bool {
 	return slices.Contains(AllLanguages, *l)
-}
-
-/* ========================= All Languages ========================= */
-var AllLanguages = []Language{
-	Language_English,
-	Language_TraditionalChinese,
-	Language_SimpleChinese,
-	Language_Japanese,
-	Language_Korean,
-}
-var AllLanguageStrings = []string{
-	string(Language_English),
-	string(Language_TraditionalChinese),
-	string(Language_SimpleChinese),
-	string(Language_Japanese),
-	string(Language_Korean),
 }

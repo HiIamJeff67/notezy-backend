@@ -47,7 +47,7 @@ func (d *ShelfExceptionDomain) CallingMethodsWithNilValue() *Exception {
 	}
 }
 
-func (d *ShelfExceptionDomain) FailedToEncode(node interface{}) *Exception {
+func (d *ShelfExceptionDomain) FailedToEncode(node any) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 2,
 		Prefix:         d.Prefix,
@@ -71,7 +71,7 @@ func (d *ShelfExceptionDomain) FailedToDecode(data []byte) *Exception {
 	}
 }
 
-func (d *ShelfExceptionDomain) InsertParentIntoItsChildren(destination interface{}, target interface{}) *Exception {
+func (d *ShelfExceptionDomain) InsertParentIntoItsChildren(destination any, target any) *Exception {
 	return &Exception{
 		Code:       d.BaseCode + 4,
 		Prefix:     d.Prefix,
@@ -81,7 +81,7 @@ func (d *ShelfExceptionDomain) InsertParentIntoItsChildren(destination interface
 			"Failed to insert %v into %v since %v is one of the child of %v, insert a parent node into its children is not allowed",
 			target, destination, destination, target,
 		),
-		HTTPStatusCode: http.StatusConflict,
+		HTTPStatusCode: http.StatusNotAcceptable,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
@@ -93,7 +93,19 @@ func (d *ShelfExceptionDomain) FailedToConstructNewShelfNode(field string) *Exce
 		Reason:         "FailedToConstructNewShelfNode",
 		IsInternal:     false,
 		Message:        fmt.Sprintf("The field of %s in ShelfNode is not pass by the validator", field),
-		HTTPStatusCode: http.StatusConflict,
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *ShelfExceptionDomain) CannotEncodeNonRootShelfNode(node any) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 6,
+		Prefix:         d.Prefix,
+		Reason:         "CannotEncodeNonRootShelfNode",
+		IsInternal:     true,
+		Message:        fmt.Sprintf("Cannot encoded the ShelfNode of %v which is not the root node", node),
+		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }

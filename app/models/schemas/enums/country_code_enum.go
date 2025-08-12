@@ -5,7 +5,8 @@ import (
 	"reflect"
 )
 
-/* ============================== CountryCode Definition ============================== */
+/* ============================== Definition ============================== */
+
 type CountryCode string
 
 const (
@@ -18,6 +19,31 @@ const (
 	CountryCode_UnitedKingdom CountryCode = "COUNTRY_CODE_44"
 	CountryCode_Australia     CountryCode = "COUNTRY_CODE_61"
 )
+
+/* ========================= All Instances ========================= */
+
+var AllCountryCodes = []CountryCode{
+	CountryCode_Taiwan,
+	CountryCode_Japan,
+	CountryCode_Malaysia,
+	CountryCode_Singapore,
+	CountryCode_China,
+	CountryCode_NANP, // NANP stands for North American Numbering Plan, it's used in United States of America and Canada
+	CountryCode_UnitedKingdom,
+	CountryCode_Australia,
+}
+var AllCountryCodeStrings = []string{
+	string(CountryCode_Taiwan),
+	string(CountryCode_Japan),
+	string(CountryCode_Malaysia),
+	string(CountryCode_Singapore),
+	string(CountryCode_China),
+	string(CountryCode_NANP),
+	string(CountryCode_UnitedKingdom),
+	string(CountryCode_Australia),
+}
+
+/* ============================== Methods ============================== */
 
 func (cc CountryCode) Name() string {
 	return reflect.TypeOf(cc).Name()
@@ -50,26 +76,4 @@ func (cc *CountryCode) IsValidEnum() bool {
 		}
 	}
 	return false
-}
-
-/* ========================= All CountryCodes ========================= */
-var AllCountryCodes = []CountryCode{
-	CountryCode_Taiwan,
-	CountryCode_Japan,
-	CountryCode_Malaysia,
-	CountryCode_Singapore,
-	CountryCode_China,
-	CountryCode_NANP, // NANP stands for North American Numbering Plan, it's used in United States of America and Canada
-	CountryCode_UnitedKingdom,
-	CountryCode_Australia,
-}
-var AllCountryCodeStrings = []string{
-	string(CountryCode_Taiwan),
-	string(CountryCode_Japan),
-	string(CountryCode_Malaysia),
-	string(CountryCode_Singapore),
-	string(CountryCode_China),
-	string(CountryCode_NANP),
-	string(CountryCode_UnitedKingdom),
-	string(CountryCode_Australia),
 }

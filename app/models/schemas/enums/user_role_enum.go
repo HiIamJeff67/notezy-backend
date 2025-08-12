@@ -6,7 +6,8 @@ import (
 	"slices"
 )
 
-/* ============================== UserRole Definition ============================== */
+/* ============================== Definition ============================== */
+
 type UserRole string
 
 const (
@@ -14,6 +15,24 @@ const (
 	UserRole_Normal UserRole = "Normal"
 	UserRole_Guest  UserRole = "Guest"
 )
+
+/* ========================= All Instances ========================= */
+
+// All the userRoles placing in the descending order
+var AllUserRoles = []UserRole{
+	UserRole_Admin,
+	UserRole_Normal,
+	UserRole_Guest,
+}
+
+// All the userRole strings placing in the descending order
+var AllUserRoleStrings = []string{
+	string(UserRole_Admin),
+	string(UserRole_Normal),
+	string(UserRole_Guest),
+}
+
+/* ============================== Methods ============================== */
 
 func (r UserRole) Name() string {
 	return reflect.TypeOf(r).Name()
@@ -43,20 +62,4 @@ func (r UserRole) String() string {
 
 func (r *UserRole) IsValidEnum() bool {
 	return slices.Contains(AllUserRoles, *r)
-}
-
-/* ========================= All UserRoles ========================= */
-
-// All the userRoles placing in the descending order
-var AllUserRoles = []UserRole{
-	UserRole_Admin,
-	UserRole_Normal,
-	UserRole_Guest,
-}
-
-// All the userRole strings placing in the descending order
-var AllUserRoleStrings = []string{
-	string(UserRole_Admin),
-	string(UserRole_Normal),
-	string(UserRole_Guest),
 }

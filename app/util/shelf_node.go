@@ -10,26 +10,30 @@ import (
 )
 
 type ShelfNode struct {
-	Id          string                `json:"id"`
-	Name        string                `json:"name"`
-	Parent      *ShelfNode            `json:"parent"` // if the ShelfNode is a root, the Parent field MUST be nil
-	Children    map[string]*ShelfNode `json:"children"`
-	MaterialIds map[uuid.UUID]bool    `json:"materialIds"` // leaves
+	Id          uuid.UUID                `json:"id"`
+	Name        string                   `json:"name"`
+	Parent      *ShelfNode               `json:"parent"` // if the ShelfNode is a root, the Parent field MUST be nil
+	Children    map[uuid.UUID]*ShelfNode `json:"children"`
+	MaterialIds map[uuid.UUID]bool       `json:"materialIds"` // leaves
 }
 
 /* ============================== Constructor ============================== */
 
-func NewShelfNode(name string, parent *ShelfNode) (*ShelfNode, *exceptions.Exception) {
+func NewShelfNode(
+	ownerId uuid.UUID, // since only the owner can create his/her own shelf
+	name string,
+	parent *ShelfNode,
+) (*ShelfNode, *exceptions.Exception) {
 	if !IsValidShelfName(name) {
 		return nil, exceptions.Shelf.FailedToConstructNewShelfNode("name")
 	}
 
-	shelfNodeId := GenerateUniqueSnowflakeID()
+	shelfNodeId := uuid.New()
 	result := &ShelfNode{
 		Id:          shelfNodeId,
 		Name:        name,
 		Parent:      parent,
-		Children:    make(map[string]*ShelfNode),
+		Children:    make(map[uuid.UUID]*ShelfNode),
 		MaterialIds: make(map[uuid.UUID]bool),
 	}
 	return result, nil
@@ -37,7 +41,7 @@ func NewShelfNode(name string, parent *ShelfNode) (*ShelfNode, *exceptions.Excep
 
 /* ============================== Private Methods ============================== */
 
-func hasCycle(cur *ShelfNode, visited map[string]bool) bool {
+func hasCycle(cur *ShelfNode, visited map[uuid.UUID]bool) bool {
 	if cur == nil {
 		return false
 	}
@@ -91,6 +95,10 @@ func IsValidShelfName(name string) bool {
 }
 
 func EncodeShelfNode(node *ShelfNode) ([]byte, *exceptions.Exception) {
+	if node.Parent != nil {
+		return nil, exceptions.Shelf.CannotEncodeNonRootShelfNode(node)
+	}
+
 	result, err := msgpack.Marshal(node)
 	if err != nil {
 		return nil, exceptions.Shelf.FailedToEncode(node).WithError(err)
@@ -120,12 +128,12 @@ func (node *ShelfNode) GetAllParents() []*ShelfNode {
 	return parents
 }
 
-func (node *ShelfNode) GetAllParentIds() []string {
+func (node *ShelfNode) GetAllParentIds() []uuid.UUID {
 	if node == nil {
-		return make([]string, 0)
+		return make([]uuid.UUID, 0)
 	}
 
-	var parents []string
+	var parents []uuid.UUID
 	var cur *ShelfNode = node
 	for cur != nil {
 		cur = cur.Parent
@@ -134,12 +142,12 @@ func (node *ShelfNode) GetAllParentIds() []string {
 	return parents
 }
 
-func (node *ShelfNode) GetAllParentIdsInSet() map[string]bool {
+func (node *ShelfNode) GetAllParentIdsInSet() map[uuid.UUID]bool {
 	if node == nil {
-		return make(map[string]bool)
+		return make(map[uuid.UUID]bool)
 	}
 
-	parentsSet := make(map[string]bool)
+	parentsSet := make(map[uuid.UUID]bool)
 	var cur *ShelfNode = node
 	cur = cur.Parent
 	for cur != nil {
@@ -156,7 +164,7 @@ func (node *ShelfNode) IsChildrenCircular() bool {
 		return false
 	}
 
-	visited := map[string]bool{}
+	visited := map[uuid.UUID]bool{}
 	return hasCycle(node, visited)
 }
 
@@ -183,13 +191,13 @@ func (node *ShelfNode) IsChildOf(target *ShelfNode) bool {
 // Check if the current node as `node` contains a subpath as `path`.
 // If `path` is a subpath started from the `root`, it will return true else false.
 // Note that the path only contains the id of the ShelfNode.
-func (root *ShelfNode) IsSubpath(path []string) bool {
+func (root *ShelfNode) HasSubpathOf(path []uuid.UUID) bool {
 	if root == nil {
 		return false
 	}
 
 	var cur *ShelfNode = &ShelfNode{
-		Children: map[string]*ShelfNode{
+		Children: map[uuid.UUID]*ShelfNode{
 			root.Id: root,
 		},
 	}
