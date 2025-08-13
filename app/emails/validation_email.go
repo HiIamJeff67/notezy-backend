@@ -40,10 +40,10 @@ func SyncSendValidationEmail(
 	}
 
 	emailObject := EmailObject{
-		To:          to,
-		Subject:     ValidationEmailSubject,
-		Body:        body,
-		ContentType: types.ContentType_HTML,
+		To:               to,
+		Subject:          ValidationEmailSubject,
+		Body:             body,
+		EmailContentType: types.EmailContentType_HTML,
 	}
 
 	exception = NotezyEmailWorkerManager.Enqueue(emailObject, EmailTaskType_Validation, 3, 2)

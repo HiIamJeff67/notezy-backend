@@ -55,7 +55,7 @@ func (ewm *EmailWorkerManager) generateTaskId() string {
 /* ============================== Private Methods ============================== */
 
 func (ewm *EmailWorkerManager) processTask(task *EmailTask, workerId int) {
-	exception := ewm.emailSender.SyncSend(task.Object.To, task.Object.Subject, task.Object.Body, task.Object.ContentType)
+	exception := ewm.emailSender.SyncSend(task.Object.To, task.Object.Subject, task.Object.Body, task.Object.EmailContentType)
 	if exception != nil {
 		exceptions.Email.FailedToSendEmailByWorkers(workerId, task.Retries+1, task.MaxRetries).Log()
 

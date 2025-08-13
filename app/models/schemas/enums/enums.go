@@ -34,6 +34,7 @@ func IsValidEnumValues[EnumValue interface {
 		BadgeType |
 		AccessControlPermission |
 		MaterialType |
+		MaterialContentType |
 		string
 }](value EnumValue, validateValues []EnumValue) bool {
 	return slices.Contains(validateValues, value)
@@ -52,4 +53,5 @@ var MigratingEnums = map[string][]string{
 	new(BadgeType).Name():               AllBadgeTypeStrings,
 	new(AccessControlPermission).Name(): AllAccessControlPermissionStrings,
 	new(MaterialType).Name():            AllMaterialTypeStrings,
+	new(MaterialContentType).Name():     AllMaterialContentTypeStrings,
 }

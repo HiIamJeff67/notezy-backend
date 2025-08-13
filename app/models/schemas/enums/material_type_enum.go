@@ -32,30 +32,30 @@ var AllMaterialTypeStrings = []string{
 
 /* ============================== Methods ============================== */
 
-func (m MaterialType) Name() string {
-	return reflect.TypeOf(m).Name()
+func (mt MaterialType) Name() string {
+	return reflect.TypeOf(mt).Name()
 }
 
-func (m *MaterialType) Scan(value any) error {
+func (mt *MaterialType) Scan(value any) error {
 	switch v := value.(type) {
 	case []byte:
-		*m = MaterialType(string(v))
+		*mt = MaterialType(string(v))
 		return nil
 	case string:
-		*m = MaterialType(v)
+		*mt = MaterialType(v)
 		return nil
 	}
-	return scanError(value, m)
+	return scanError(value, mt)
 }
 
-func (m MaterialType) Value() (driver.Value, error) {
-	return string(m), nil
+func (mt MaterialType) Value() (driver.Value, error) {
+	return string(mt), nil
 }
 
-func (m MaterialType) String() string {
-	return string(m)
+func (mt MaterialType) String() string {
+	return string(mt)
 }
 
-func (m *MaterialType) IsValidEnum() bool {
-	return slices.Contains(AllMaterialTypes, *m)
+func (mt *MaterialType) IsValidEnum() bool {
+	return slices.Contains(AllMaterialTypes, *mt)
 }

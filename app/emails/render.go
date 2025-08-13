@@ -19,7 +19,7 @@ type HTMLEmailRenderer struct {
 
 func (r *HTMLEmailRenderer) Render() (string, *exceptions.Exception) {
 	if templateFileType := strings.Split(r.TemplatePath, ".")[1]; !util.IsStringIn(templateFileType, []string{"html"}) {
-		return "", exceptions.Email.TemplateFileTypeAndContentTypeNotMatch(templateFileType, string(types.ContentType_HTML))
+		return "", exceptions.Email.TemplateFileTypeAndEmailContentTypeNotMatch(templateFileType, string(types.EmailContentType_HTML))
 	}
 	templateBytes, err := os.ReadFile(r.TemplatePath)
 	if err != nil {
@@ -47,7 +47,7 @@ type PlainTextEmailRenderer struct {
 
 func (r *PlainTextEmailRenderer) Render() (string, *exceptions.Exception) {
 	if templateFileType := strings.Split(r.TemplatePath, ".")[1]; util.IsStringIn(templateFileType, []string{"txt", "log", "conf", "ini", "csv"}) {
-		return "", exceptions.Email.TemplateFileTypeAndContentTypeNotMatch(templateFileType, string(types.ContentType_PlainText))
+		return "", exceptions.Email.TemplateFileTypeAndEmailContentTypeNotMatch(templateFileType, string(types.EmailContentType_PlainText))
 	}
 	templateBytes, err := os.ReadFile(r.TemplatePath)
 	if err != nil {
@@ -75,7 +75,7 @@ type MarkdownEmailRenderer struct {
 
 func (r *MarkdownEmailRenderer) Render() (string, *exceptions.Exception) {
 	if templateFileType := strings.Split(r.TemplatePath, ".")[1]; util.IsStringIn(templateFileType, []string{"md"}) {
-		return "", exceptions.Email.TemplateFileTypeAndContentTypeNotMatch(templateFileType, string(types.ContentType_PlainText))
+		return "", exceptions.Email.TemplateFileTypeAndEmailContentTypeNotMatch(templateFileType, string(types.EmailContentType_PlainText))
 	}
 	templateBytes, err := os.ReadFile(r.TemplatePath)
 	if err != nil {

@@ -14,12 +14,13 @@ import (
 ==================================================================================================== */
 
 type Material struct {
-	Id        uuid.UUID          `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid();"`
-	Name      string             `json:"name" gorm:"column:name; size:128; not null; default:'undefined';"`
-	Content   []byte             `json:"content" gorm:"column:content; type:bytea; default:'null';"`
-	Type      enums.MaterialType `json:"type" gorm:"column:type; type:MaterialType; not null; default:'Notebook';"`
-	UpdatedAt time.Time          `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
-	CreatedAt time.Time          `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
+	Id          uuid.UUID                 `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid();"`
+	Name        string                    `json:"name" gorm:"column:name; size:128; not null; default:'undefined';"`
+	Content     []byte                    `json:"content" gorm:"column:content; type:bytea; default:'null';"`
+	Type        enums.MaterialType        `json:"type" gorm:"column:type; type:MaterialType; not null; default:'Notebook';"`
+	ContentType enums.MaterialContentType `json:"contentType" gorm:"column:content_type; type:MaterialContentType; not null; default:'text/markdown';"`
+	UpdatedAt   time.Time                 `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
+	CreatedAt   time.Time                 `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 }
 
 // Material Table Name

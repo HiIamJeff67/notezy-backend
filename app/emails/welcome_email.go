@@ -30,10 +30,10 @@ func SyncSendWelcomeEmail(
 	}
 
 	emailObject := EmailObject{
-		To:          to,
-		Subject:     WelcomeEmailSubject,
-		Body:        body,
-		ContentType: types.ContentType_HTML,
+		To:               to,
+		Subject:          WelcomeEmailSubject,
+		Body:             body,
+		EmailContentType: types.EmailContentType_HTML,
 	}
 
 	exception = NotezyEmailWorkerManager.Enqueue(emailObject, EmailTaskType_Welcome, 3, 1)

@@ -39,10 +39,10 @@ func SyncSendSecurityAlertEmail(
 	}
 
 	emailObject := EmailObject{
-		To:          to,
-		Subject:     SecurityAlertEmailSubject,
-		Body:        body,
-		ContentType: types.ContentType_HTML,
+		To:               to,
+		Subject:          SecurityAlertEmailSubject,
+		Body:             body,
+		EmailContentType: types.EmailContentType_HTML,
 	}
 
 	exception = NotezyEmailWorkerManager.Enqueue(emailObject, EmailTaskType_Security, 3, 5)

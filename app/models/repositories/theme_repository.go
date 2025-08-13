@@ -57,6 +57,7 @@ func (r *ThemeRepository) GetOneById(id uuid.UUID, preloads *[]schemas.ThemeRela
 
 func (r *ThemeRepository) GetAll() (*[]schemas.Theme, *exceptions.Exception) {
 	themes := []schemas.Theme{}
+
 	result := r.db.Table(schemas.Theme{}.TableName()).
 		Find(&themes)
 	if err := result.Error; err != nil {
@@ -72,6 +73,7 @@ func (r *ThemeRepository) CreateOneByAuthorId(authorId uuid.UUID, input inputs.C
 	if err := copier.Copy(&newTheme, &input); err != nil {
 		return nil, exceptions.Theme.FailedToCreate().WithError(err)
 	}
+
 	result := r.db.Table(schemas.Theme{}.TableName()).
 		Create(&newTheme)
 	if err := result.Error; err != nil {
@@ -108,6 +110,7 @@ func (r *ThemeRepository) UpdateOneById(id uuid.UUID, authorId uuid.UUID, input 
 
 func (r *ThemeRepository) DeleteOneById(id uuid.UUID, authorId uuid.UUID) *exceptions.Exception {
 	var deletedTheme schemas.Theme
+
 	result := r.db.Table(schemas.Theme{}.TableName()).
 		Where("id = ? AND author_id = ?", id, authorId).
 		Clauses(clause.Returning{}).

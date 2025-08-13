@@ -17,10 +17,10 @@ const (
 )
 
 type EmailObject struct {
-	To          string `json:"to"`
-	Subject     string `json:"subject"`
-	Body        string `json:"body"`
-	ContentType types.ContentType
+	To               string `json:"to"`
+	Subject          string `json:"subject"`
+	Body             string `json:"body"`
+	EmailContentType types.EmailContentType
 }
 
 type EmailTask struct {

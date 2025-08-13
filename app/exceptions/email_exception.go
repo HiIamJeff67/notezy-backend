@@ -40,11 +40,11 @@ func (d *EmailExceptionDomain) FailedToSendEmailWithSubject(subject string) *Exc
 	}
 }
 
-func (d *EmailExceptionDomain) InvalidContentType(contentType string) *Exception {
+func (d *EmailExceptionDomain) InvalidEmailContentType(contentType string) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 2,
 		Prefix:         d.Prefix,
-		Reason:         "InvalidContentType",
+		Reason:         "InvalidEmailContentType",
 		IsInternal:     true,
 		Message:        fmt.Sprintf("The given content type of %v is not a valid content type", contentType),
 		HTTPStatusCode: http.StatusInternalServerError,
@@ -88,11 +88,11 @@ func (d *EmailExceptionDomain) FailedToRenderTemplate() *Exception {
 	}
 }
 
-func (d *EmailExceptionDomain) TemplateFileTypeAndContentTypeNotMatch(templateFileType string, contentType string) *Exception {
+func (d *EmailExceptionDomain) TemplateFileTypeAndEmailContentTypeNotMatch(templateFileType string, contentType string) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 6,
 		Prefix:         d.Prefix,
-		Reason:         "TemplateFileTypeAndContentTypeNotMatch",
+		Reason:         "TemplateFileTypeAndEmailContentTypeNotMatch",
 		IsInternal:     true,
 		Message:        fmt.Sprintf("The type of the template file of %s is not match with the content type of %v", templateFileType, contentType),
 		HTTPStatusCode: http.StatusInternalServerError,

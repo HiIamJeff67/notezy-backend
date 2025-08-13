@@ -91,6 +91,9 @@ func isParent(cur *ShelfNode, target *ShelfNode) bool {
 /* ============================== Public Methods ============================== */
 
 func IsValidShelfName(name string) bool {
+	if len(name) > 128 {
+		return false
+	}
 	return !regexp.MustCompile(`[\/\\:\*\?"<>\|]`).MatchString(name)
 }
 
