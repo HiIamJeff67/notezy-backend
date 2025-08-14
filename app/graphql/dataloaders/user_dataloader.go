@@ -2,13 +2,14 @@ package dataloaders
 
 import (
 	"context"
-	"notezy-backend/app/exceptions"
-	gqlmodels "notezy-backend/app/graphql/models"
-	"notezy-backend/app/services"
-	"notezy-backend/shared/constants"
 
 	gophersdataloader "github.com/graph-gophers/dataloader/v7"
 	"gorm.io/gorm"
+
+	exceptions "notezy-backend/app/exceptions"
+	gqlmodels "notezy-backend/app/graphql/models"
+	services "notezy-backend/app/services"
+	constants "notezy-backend/shared/constants"
 )
 
 /* ============================== Enum Keys & Type ============================== */

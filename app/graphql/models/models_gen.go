@@ -25,6 +25,15 @@ type SearchEdge interface {
 	GetEncodedSearchCursor() string
 }
 
+type PrivateShelf struct {
+	ID               uuid.UUID     `json:"id"`
+	Name             string        `json:"name"`
+	EncodedStructure []byte        `json:"encodedStructure"`
+	UpdatedAt        time.Time     `json:"UpdatedAt"`
+	CreatedAt        time.Time     `json:"CreatedAt"`
+	Users            []*PublicUser `json:"users"`
+}
+
 type PublicBadge struct {
 	PublicID    string          `json:"publicId"`
 	Title       string          `json:"title"`
@@ -124,6 +133,38 @@ type SearchPageInfo struct {
 	HasPreviousPage          bool    `json:"hasPreviousPage"`
 	StartEncodedSearchCursor *string `json:"startEncodedSearchCursor,omitempty"`
 	EndEncodedSearchCursor   *string `json:"endEncodedSearchCursor,omitempty"`
+}
+
+type SearchShelfConnection struct {
+	SearchEdges    []*SearchShelfEdge `json:"searchEdges"`
+	SearchPageInfo *SearchPageInfo    `json:"searchPageInfo"`
+	TotalCount     int32              `json:"totalCount"`
+	SearchTime     float64            `json:"searchTime"`
+}
+
+func (SearchShelfConnection) IsSearchConnection()                     {}
+func (this SearchShelfConnection) GetSearchPageInfo() *SearchPageInfo { return this.SearchPageInfo }
+func (this SearchShelfConnection) GetTotalCount() int32               { return this.TotalCount }
+func (this SearchShelfConnection) GetSearchTime() float64             { return this.SearchTime }
+
+type SearchShelfCursorFields struct {
+	ID uuid.UUID `json:"id"`
+}
+
+type SearchShelfEdge struct {
+	EncodedSearchCursor string        `json:"encodedSearchCursor"`
+	Node                *PrivateShelf `json:"node"`
+}
+
+func (SearchShelfEdge) IsSearchEdge()                       {}
+func (this SearchShelfEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
+
+type SearchShelfInput struct {
+	Query     string             `json:"query"`
+	After     *string            `json:"after,omitempty"`
+	First     *int32             `json:"first,omitempty"`
+	SortBy    *SearchShelfSortBy `json:"sortBy,omitempty"`
+	SortOrder *SearchSortOrder   `json:"sortOrder,omitempty"`
 }
 
 type SearchThemeConnection struct {
@@ -325,6 +366,65 @@ func (e *SearchBadgeSortBy) UnmarshalJSON(b []byte) error {
 }
 
 func (e SearchBadgeSortBy) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type SearchShelfSortBy string
+
+const (
+	SearchShelfSortByRelevance  SearchShelfSortBy = "RELEVANCE"
+	SearchShelfSortByName       SearchShelfSortBy = "NAME"
+	SearchShelfSortByLastUpdate SearchShelfSortBy = "LAST_UPDATE"
+	SearchShelfSortByCreatedAt  SearchShelfSortBy = "CREATED_AT"
+)
+
+var AllSearchShelfSortBy = []SearchShelfSortBy{
+	SearchShelfSortByRelevance,
+	SearchShelfSortByName,
+	SearchShelfSortByLastUpdate,
+	SearchShelfSortByCreatedAt,
+}
+
+func (e SearchShelfSortBy) IsValid() bool {
+	switch e {
+	case SearchShelfSortByRelevance, SearchShelfSortByName, SearchShelfSortByLastUpdate, SearchShelfSortByCreatedAt:
+		return true
+	}
+	return false
+}
+
+func (e SearchShelfSortBy) String() string {
+	return string(e)
+}
+
+func (e *SearchShelfSortBy) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SearchShelfSortBy(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SearchShelfSortBy", str)
+	}
+	return nil
+}
+
+func (e SearchShelfSortBy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *SearchShelfSortBy) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e SearchShelfSortBy) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

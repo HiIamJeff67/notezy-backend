@@ -9,3 +9,8 @@ const (
 const (
 	MinIntervalTimeOfLastRequest = time.Microsecond
 )
+
+const (
+	DefaultSearchLimit = 10
+	MaxSearchLimit     = 100
+)

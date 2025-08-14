@@ -6,6 +6,8 @@ package resolvers
 
 import (
 	"context"
+	"notezy-backend/app/contexts"
+	"notezy-backend/app/exceptions"
 	"notezy-backend/app/graphql/generated"
 	gqlmodels "notezy-backend/app/graphql/models"
 )
@@ -16,6 +18,7 @@ func (r *queryResolver) SearchUsers(ctx context.Context, input gqlmodels.SearchU
 	if exception != nil {
 		return nil, exception.ToGraphQLError(ctx)
 	}
+
 	return result, nil
 }
 
@@ -25,6 +28,29 @@ func (r *queryResolver) SearchThemes(ctx context.Context, input gqlmodels.Search
 	if exception != nil {
 		return nil, exception.ToGraphQLError(ctx)
 	}
+
+	return result, nil
+}
+
+// SearchShelves is the resolver for the searchShelves field.
+func (r *queryResolver) SearchShelves(ctx context.Context, input gqlmodels.SearchShelfInput) (*gqlmodels.SearchShelfConnection, error) {
+	ginCtx, exception := contexts.GetAndConvertContextToGinContext(ctx)
+	if exception != nil {
+		return nil, exception.ToGraphQLError(ctx)
+	}
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ginCtx, "userId")
+	if exception != nil {
+		return nil, exception.ToGraphQLError(ctx)
+	}
+	if userId == nil {
+		return nil, exceptions.Context.FailedToGetCorrectContextValue(userId).ToGraphQLError(ctx)
+	}
+
+	result, exception := r.shelfService.SearchPrivateShelves(ctx, *userId, input)
+	if exception != nil {
+		return nil, exception.ToGraphQLError(ctx)
+	}
+
 	return result, nil
 }
 

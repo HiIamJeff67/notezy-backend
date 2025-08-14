@@ -17,6 +17,7 @@ import (
 	schemas "notezy-backend/app/models/schemas"
 	util "notezy-backend/app/util"
 	validation "notezy-backend/app/validation"
+	constants "notezy-backend/shared/constants"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -230,10 +231,11 @@ func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.
 		}
 	}
 
-	limit := 10
+	limit := constants.DefaultSearchLimit
 	if gqlInput.First != nil && *gqlInput.First > 0 {
 		limit = int(*gqlInput.First)
 	}
+	limit = max(limit, constants.MaxSearchLimit)
 	query = query.Limit(limit + 1)
 
 	var users []schemas.User

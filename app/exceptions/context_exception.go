@@ -51,3 +51,39 @@ func (d *ContextExceptionDomain) FailedToConvertContextFieldToSpecificType(typeN
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
+
+func (d *ContextExceptionDomain) FailedToGetCorrectContextValue(v interface{}) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 3,
+		Prefix:         d.Prefix,
+		Reason:         "FailedToGetCorrectContextValue",
+		IsInternal:     true,
+		Message:        fmt.Sprintf("Failed to get correct context value, got %v instead", v),
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *ContextExceptionDomain) FailedToConvertContextToGinContext() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 4,
+		Prefix:         d.Prefix,
+		Reason:         "FailedToConvertContextToGinContext",
+		IsInternal:     true,
+		Message:        "Failed to convert from context.Context to gin.Context",
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *ContextExceptionDomain) FailedToConvertGinContextToContext() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 5,
+		Prefix:         d.Prefix,
+		Reason:         "FailedToConvertGinContextToContext",
+		IsInternal:     true,
+		Message:        "Failed to convert from gin.Context to context.Context",
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}

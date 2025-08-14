@@ -1,6 +1,8 @@
 package contexts
 
 import (
+	"context"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
@@ -24,4 +26,12 @@ func GetAndConvertContextFieldToUUID(ctx *gin.Context, name string) (*uuid.UUID,
 	}
 
 	return &id, nil
+}
+
+func GetAndConvertContextToGinContext(ctx context.Context) (*gin.Context, *exceptions.Exception) {
+	ginCtx, ok := ctx.Value("ginContext").(*gin.Context)
+	if !ok {
+		return nil, exceptions.Context.FailedToConvertContextToGinContext()
+	}
+	return ginCtx, nil
 }

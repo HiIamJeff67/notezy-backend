@@ -13,16 +13,19 @@ type Resolver struct {
 	dataloader   dataloaders.Dataloaders
 	userService  services.UserServiceInterface
 	themeService services.ThemeServiceInterface
+	shelfService services.ShelfServiceInterface
 }
 
 func NewResolver(
 	dataloader dataloaders.Dataloaders,
 	userService services.UserServiceInterface,
 	themeService services.ThemeServiceInterface,
+	shelfService services.ShelfServiceInterface,
 ) *Resolver {
 	return &Resolver{
 		dataloader:   dataloader,
 		userService:  userService,
 		themeService: themeService,
+		shelfService: shelfService,
 	}
 }

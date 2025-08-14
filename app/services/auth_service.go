@@ -17,7 +17,7 @@ import (
 	enums "notezy-backend/app/models/schemas/enums"
 	tokens "notezy-backend/app/tokens"
 	util "notezy-backend/app/util"
-	"notezy-backend/app/validation"
+	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
 
 	authsql "notezy-backend/app/models/sql/auth"

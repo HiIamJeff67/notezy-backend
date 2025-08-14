@@ -1,21 +1,26 @@
 package repositories
 
 import (
-	"notezy-backend/app/exceptions"
-	"notezy-backend/app/models"
-	"notezy-backend/app/models/inputs"
-	"notezy-backend/app/models/schemas"
-	util "notezy-backend/app/util"
-
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+
+	exceptions "notezy-backend/app/exceptions"
+	models "notezy-backend/app/models"
+	inputs "notezy-backend/app/models/inputs"
+	schemas "notezy-backend/app/models/schemas"
+	util "notezy-backend/app/util"
 )
 
 /* ============================== Definitions ============================== */
 
 type MaterialRepositoryInterface interface {
+	GetOneById(id uuid.UUID) (*schemas.Material, *exceptions.Exception)
+	GetOneByName(name string) (*schemas.Material, *exceptions.Exception)
+	CreateOne(input inputs.CreateMaterialInput) (*uuid.UUID, *exceptions.Exception)
+	UpdateOneById(id uuid.UUID, input inputs.PartialUpdateMaterialInput) (*schemas.Material, *exceptions.Exception)
+	DeleteOneById(id uuid.UUID) *exceptions.Exception
 }
 
 type MaterialRepository struct {

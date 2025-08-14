@@ -10,7 +10,7 @@ import (
 
 type UserResolverInterface interface {
 	UserInfo(ctx context.Context, obj *gqlmodels.PublicUser) (*gqlmodels.PublicUserInfo, error)
-	// Badge(ctx context.Context, obj *gqlmodels.PublicUser) (*gqlmodels.PublicBadge, error)
+	Badge(ctx context.Context, obj *gqlmodels.PublicUser) (*gqlmodels.PublicBadge, error)
 }
 
 type UserResolver struct {

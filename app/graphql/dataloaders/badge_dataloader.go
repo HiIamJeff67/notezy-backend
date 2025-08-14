@@ -6,7 +6,7 @@ import (
 	gophersdataloader "github.com/graph-gophers/dataloader/v7"
 	"gorm.io/gorm"
 
-	"notezy-backend/app/exceptions"
+	exceptions "notezy-backend/app/exceptions"
 	gqlmodels "notezy-backend/app/graphql/models"
 	services "notezy-backend/app/services"
 	constants "notezy-backend/shared/constants"

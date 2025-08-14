@@ -2,6 +2,8 @@
 package graphql
 
 import (
+	"context"
+
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-gonic/gin"
@@ -22,6 +24,9 @@ func GraphQLHandler() gin.HandlerFunc {
 		services.NewThemeService(
 			models.NotezyDB,
 		),
+		services.NewShelfService(
+			models.NotezyDB,
+		),
 	)
 
 	config := generated.Config{
@@ -30,7 +35,11 @@ func GraphQLHandler() gin.HandlerFunc {
 
 	server := handler.NewDefaultServer(generated.NewExecutableSchema(config))
 
-	return gin.WrapH(server)
+	return func(c *gin.Context) {
+		// place the gin.Context into the context.Context
+		ctx := context.WithValue(c.Request.Context(), "ginContext", c)
+		server.ServeHTTP(c.Writer, c.Request.WithContext(ctx))
+	}
 }
 
 func PlaygroundHandler() gin.HandlerFunc {

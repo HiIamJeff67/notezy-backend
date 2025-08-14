@@ -139,7 +139,12 @@ models:
     model: "notezy-backend/app/graphql/scalars.Time"
     # marshal: notezy-backend/app/graphql/scalars.MarshalTime
     # unmarshal: notezy-backend/app/graphql/scalars.UnmarshalTime
+  Base64Bytes:
+    model: "notezy-backend/app/graphql/scalars.Base64Bytes"
+    # marshal: notezy-backend/app/graphql/scalar.MarshalBase64Bytes
+    # unmarshal: notezy-backend/app/graphql/scalar.UnmarshalBase64Bytes
 
+  # =============== Enums =============== #
   UserRole:
     model: "notezy-backend/app/models/schemas/enums.UserRole"
   UserPlan:
@@ -154,6 +159,10 @@ models:
     model: "notezy-backend/app/models/schemas/enums.Language"
   BadgeType:
     model: "notezy-backend/app/models/schemas/enums.BadgeType"
+  MaterialType:
+    model: "notezy-backend/app/models/schemas/enums.MaterialType"
+  MaterialContentType:
+    model: "notezy-backend/app/models/schemas/enums.MaterialContentType"
 
   User:
     model: "notezy-backend/app/models/schemas.User"
@@ -169,6 +178,10 @@ models:
     model: "notezy-backend/app/models/schemas.Badge"
   UsersToBadges:
     model: "notezy-backend/app/models/schemas.UsersToBadges"
+  Shelf:
+    model: "notezy-backend/app/models/schemas.Shelf"
+  Material:
+    model: "notezy-backend/app/models/schemas.Material"
 
   # The GraphQL spec explicitly states that the Int type is a signed 32-bit
   # integer. Using Go int or int64 to represent it can lead to unexpected

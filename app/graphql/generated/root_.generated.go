@@ -40,6 +40,15 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	PrivateShelf struct {
+		CreatedAt        func(childComplexity int) int
+		EncodedStructure func(childComplexity int) int
+		ID               func(childComplexity int) int
+		Name             func(childComplexity int) int
+		UpdatedAt        func(childComplexity int) int
+		Users            func(childComplexity int) int
+	}
+
 	PublicBadge struct {
 		CreatedAt   func(childComplexity int) int
 		Description func(childComplexity int) int
@@ -95,8 +104,9 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		SearchThemes func(childComplexity int, input gqlmodels.SearchThemeInput) int
-		SearchUsers  func(childComplexity int, input gqlmodels.SearchUserInput) int
+		SearchShelves func(childComplexity int, input gqlmodels.SearchShelfInput) int
+		SearchThemes  func(childComplexity int, input gqlmodels.SearchThemeInput) int
+		SearchUsers   func(childComplexity int, input gqlmodels.SearchUserInput) int
 	}
 
 	SearchBadgeConnection struct {
@@ -116,6 +126,18 @@ type ComplexityRoot struct {
 		HasNextPage              func(childComplexity int) int
 		HasPreviousPage          func(childComplexity int) int
 		StartEncodedSearchCursor func(childComplexity int) int
+	}
+
+	SearchShelfConnection struct {
+		SearchEdges    func(childComplexity int) int
+		SearchPageInfo func(childComplexity int) int
+		SearchTime     func(childComplexity int) int
+		TotalCount     func(childComplexity int) int
+	}
+
+	SearchShelfEdge struct {
+		EncodedSearchCursor func(childComplexity int) int
+		Node                func(childComplexity int) int
 	}
 
 	SearchThemeConnection struct {
@@ -161,6 +183,48 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "PrivateShelf.CreatedAt":
+		if e.complexity.PrivateShelf.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateShelf.CreatedAt(childComplexity), true
+
+	case "PrivateShelf.encodedStructure":
+		if e.complexity.PrivateShelf.EncodedStructure == nil {
+			break
+		}
+
+		return e.complexity.PrivateShelf.EncodedStructure(childComplexity), true
+
+	case "PrivateShelf.id":
+		if e.complexity.PrivateShelf.ID == nil {
+			break
+		}
+
+		return e.complexity.PrivateShelf.ID(childComplexity), true
+
+	case "PrivateShelf.name":
+		if e.complexity.PrivateShelf.Name == nil {
+			break
+		}
+
+		return e.complexity.PrivateShelf.Name(childComplexity), true
+
+	case "PrivateShelf.UpdatedAt":
+		if e.complexity.PrivateShelf.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateShelf.UpdatedAt(childComplexity), true
+
+	case "PrivateShelf.users":
+		if e.complexity.PrivateShelf.Users == nil {
+			break
+		}
+
+		return e.complexity.PrivateShelf.Users(childComplexity), true
 
 	case "PublicBadge.createdAt":
 		if e.complexity.PublicBadge.CreatedAt == nil {
@@ -435,6 +499,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PublicUsersToBadges.UserID(childComplexity), true
 
+	case "Query.searchShelves":
+		if e.complexity.Query.SearchShelves == nil {
+			break
+		}
+
+		args, err := ec.field_Query_searchShelves_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SearchShelves(childComplexity, args["input"].(gqlmodels.SearchShelfInput)), true
+
 	case "Query.searchThemes":
 		if e.complexity.Query.SearchThemes == nil {
 			break
@@ -528,6 +604,48 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.SearchPageInfo.StartEncodedSearchCursor(childComplexity), true
+
+	case "SearchShelfConnection.searchEdges":
+		if e.complexity.SearchShelfConnection.SearchEdges == nil {
+			break
+		}
+
+		return e.complexity.SearchShelfConnection.SearchEdges(childComplexity), true
+
+	case "SearchShelfConnection.searchPageInfo":
+		if e.complexity.SearchShelfConnection.SearchPageInfo == nil {
+			break
+		}
+
+		return e.complexity.SearchShelfConnection.SearchPageInfo(childComplexity), true
+
+	case "SearchShelfConnection.searchTime":
+		if e.complexity.SearchShelfConnection.SearchTime == nil {
+			break
+		}
+
+		return e.complexity.SearchShelfConnection.SearchTime(childComplexity), true
+
+	case "SearchShelfConnection.totalCount":
+		if e.complexity.SearchShelfConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.SearchShelfConnection.TotalCount(childComplexity), true
+
+	case "SearchShelfEdge.encodedSearchCursor":
+		if e.complexity.SearchShelfEdge.EncodedSearchCursor == nil {
+			break
+		}
+
+		return e.complexity.SearchShelfEdge.EncodedSearchCursor(childComplexity), true
+
+	case "SearchShelfEdge.node":
+		if e.complexity.SearchShelfEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.SearchShelfEdge.Node(childComplexity), true
 
 	case "SearchThemeConnection.searchEdges":
 		if e.complexity.SearchThemeConnection.SearchEdges == nil {
@@ -624,6 +742,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputSearchBadgeCursorFields,
 		ec.unmarshalInputSearchBadgeFilters,
 		ec.unmarshalInputSearchBadgeInput,
+		ec.unmarshalInputSearchShelfCursorFields,
+		ec.unmarshalInputSearchShelfInput,
 		ec.unmarshalInputSearchThemeCursorFields,
 		ec.unmarshalInputSearchThemeFilters,
 		ec.unmarshalInputSearchThemeInput,
@@ -837,6 +957,7 @@ type SearchBadgeConnection implements SearchConnection {
 	{Name: "../schemas/query.graphql", Input: `type Query {
   searchUsers(input: SearchUserInput!): SearchUserConnection!
   searchThemes(input: SearchThemeInput!): SearchThemeConnection!
+  searchShelves(input: SearchShelfInput!): SearchShelfConnection!
 }
 
 # type Mutation {}
@@ -845,6 +966,7 @@ type SearchBadgeConnection implements SearchConnection {
 `, BuiltIn: false},
 	{Name: "../schemas/scalar.graphql", Input: `scalar UUID
 scalar Time
+scalar Base64Bytes
 `, BuiltIn: false},
 	{Name: "../schemas/search.graphql", Input: `# every schemas or graphql types which want to be searchable
 # are required to inheritence the structure (of cursor-based pagination) here
@@ -876,8 +998,8 @@ enum SearchSortOrder {
 
 # =============== Current Edge (part of Output) =============== #
 interface SearchEdge {
-  # node: data of the result, this should be implement in each models require search functionality
   encodedSearchCursor: String!
+  # node: the data of the result, this should be implement in each models require search functionality
 }
 
 # =============== Page Info (part of Output) =============== #
@@ -890,6 +1012,57 @@ type SearchPageInfo {
 
 # =============== Search Output (Connection) =============== #
 interface SearchConnection {
+  searchPageInfo: SearchPageInfo!
+  totalCount: Int!
+  searchTime: Float!
+}
+`, BuiltIn: false},
+	{Name: "../schemas/shelf.graphql", Input: `type PrivateShelf {
+  id: UUID!
+  name: String!
+  encodedStructure: Base64Bytes!
+  UpdatedAt: Time!
+  CreatedAt: Time!
+
+  # relations
+  users: [PublicUser!]!
+}
+
+# =============== Search SortBy & Input =============== #
+
+enum SearchShelfSortBy {
+  RELEVANCE
+  NAME
+  LAST_UPDATE
+  CREATED_AT
+}
+
+input SearchShelfInput {
+  query: String!
+  after: String
+  first: Int = 10
+  sortBy: SearchShelfSortBy = RELEVANCE
+  sortOrder: SearchSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+# type SearchShelfEnvironmentAttributes {}
+
+input SearchShelfCursorFields {
+  id: UUID!
+  # environmentAttributes: SearchShelfEnvironmentAttributes
+}
+
+# =============== Search Edge & Connection =============== #
+
+type SearchShelfEdge implements SearchEdge {
+  encodedSearchCursor: String!
+  node: PrivateShelf!
+}
+
+type SearchShelfConnection implements SearchConnection {
+  searchEdges: [SearchShelfEdge!]!
   searchPageInfo: SearchPageInfo!
   totalCount: Int!
   searchTime: Float!

@@ -67,8 +67,8 @@ func (u *User) ToPublicUser() *gqlmodels.PublicUser {
 		Status:      u.Status,
 		CreatedAt:   u.CreatedAt,
 		UserInfo:    &gqlmodels.PublicUserInfo{},
-		Badges:      []*gqlmodels.PublicBadge{},
-		Themes:      []*gqlmodels.PublicTheme{},
+		Badges:      make([]*gqlmodels.PublicBadge, 0),
+		Themes:      make([]*gqlmodels.PublicTheme, 0),
 	}
 }
 

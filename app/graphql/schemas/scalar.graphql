@@ -1,2 +1,3 @@
 scalar UUID
 scalar Time
+scalar Base64Bytes

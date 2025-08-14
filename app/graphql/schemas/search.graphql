@@ -28,8 +28,8 @@ enum SearchSortOrder {
 
 # =============== Current Edge (part of Output) =============== #
 interface SearchEdge {
-  # node: data of the result, this should be implement in each models require search functionality
   encodedSearchCursor: String!
+  # node: the data of the result, this should be implement in each models require search functionality
 }
 
 # =============== Page Info (part of Output) =============== #

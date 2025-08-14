@@ -11,6 +11,7 @@ import (
 	gqlmodels "notezy-backend/app/graphql/models"
 	schemas "notezy-backend/app/models/schemas"
 	util "notezy-backend/app/util"
+	constants "notezy-backend/shared/constants"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -96,10 +97,11 @@ func (s *ThemeService) SearchPublicThemes(ctx context.Context, gqlInput gqlmodel
 		}
 	}
 
-	limit := 10
+	limit := constants.DefaultSearchLimit
 	if gqlInput.First != nil && *gqlInput.First > 0 {
 		limit = int(*gqlInput.First)
 	}
+	limit = max(limit, constants.MaxSearchLimit)
 	query = query.Limit(limit + 1)
 
 	var themes []schemas.Theme

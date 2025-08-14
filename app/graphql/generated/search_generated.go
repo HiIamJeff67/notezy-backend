@@ -224,6 +224,13 @@ func (ec *executionContext) _SearchConnection(ctx context.Context, sel ast.Selec
 			return graphql.Null
 		}
 		return ec._SearchThemeConnection(ctx, sel, obj)
+	case gqlmodels.SearchShelfConnection:
+		return ec._SearchShelfConnection(ctx, sel, &obj)
+	case *gqlmodels.SearchShelfConnection:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SearchShelfConnection(ctx, sel, obj)
 	case gqlmodels.SearchBadgeConnection:
 		return ec._SearchBadgeConnection(ctx, sel, &obj)
 	case *gqlmodels.SearchBadgeConnection:
@@ -254,6 +261,13 @@ func (ec *executionContext) _SearchEdge(ctx context.Context, sel ast.SelectionSe
 			return graphql.Null
 		}
 		return ec._SearchThemeEdge(ctx, sel, obj)
+	case gqlmodels.SearchShelfEdge:
+		return ec._SearchShelfEdge(ctx, sel, &obj)
+	case *gqlmodels.SearchShelfEdge:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SearchShelfEdge(ctx, sel, obj)
 	case gqlmodels.SearchBadgeEdge:
 		return ec._SearchBadgeEdge(ctx, sel, &obj)
 	case *gqlmodels.SearchBadgeEdge:

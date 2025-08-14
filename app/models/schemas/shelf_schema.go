@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	gqlmodels "notezy-backend/app/graphql/models"
 	shared "notezy-backend/shared"
 )
 
@@ -31,3 +32,16 @@ type ShelfRelations shared.ValidTableName
 const (
 	ShelfRelations_Users ShelfRelations = "Users"
 )
+
+/* ============================== Relative Tyoe Conversion ============================== */
+
+func (s *Shelf) ToPrivateShelf() *gqlmodels.PrivateShelf {
+	return &gqlmodels.PrivateShelf{
+		ID:               s.Id,
+		Name:             s.Name,
+		EncodedStructure: s.EncodedStructure,
+		UpdatedAt:        s.UpdatedAt,
+		CreatedAt:        s.CreatedAt,
+		Users:            make([]*gqlmodels.PublicUser, 0),
+	}
+}
