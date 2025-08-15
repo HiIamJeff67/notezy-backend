@@ -8,10 +8,14 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	"notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	gqlmodels "notezy-backend/app/graphql/models"
+	"notezy-backend/app/models/inputs"
+	"notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	util "notezy-backend/app/util"
+	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
 )
 
@@ -34,7 +38,33 @@ func NewShelfService(db *gorm.DB) ShelfServiceInterface {
 
 /* ============================== Service Methods for Shelves ============================== */
 
-func (s *ShelfService) GetRecentShelves() {}
+// TODO: Build Create Shelf Service
+
+func (s *ShelfService) SynchronizeShelves(reqDto *dtos.SynchronizeShelvesReqDto) (*dtos.SynchronizeShelvesResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
+	shelfRepository := repositories.NewShelfRepository(s.db)
+
+	var partialUpdateShelfInputs []inputs.PartialUpdateShelfInput
+	for _, partialUpdate := range reqDto.PartialUpdates {
+		partialUpdateShelfInputs = append(partialUpdateShelfInputs, inputs.PartialUpdateShelfInput{
+			Values: inputs.UpdateShelfInput{
+				Name:             partialUpdate.Values.Name,
+				EncodedStructure: partialUpdate.Values.EncodedStructure,
+			},
+			SetNull: partialUpdate.SetNull,
+		})
+	}
+
+	exception := shelfRepository.DirectlyUpdateManyByIds(reqDto.ShelfIds, reqDto.OwnerId, partialUpdateShelfInputs)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.SynchronizeShelvesResDto{UpdatedAt: time.Now()}, nil
+}
 
 /* ============================== Service Methods for  ============================== */
 

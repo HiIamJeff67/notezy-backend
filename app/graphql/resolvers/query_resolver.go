@@ -6,10 +6,11 @@ package resolvers
 
 import (
 	"context"
-	"notezy-backend/app/contexts"
-	"notezy-backend/app/exceptions"
-	"notezy-backend/app/graphql/generated"
+	contexts "notezy-backend/app/contexts"
+	exceptions "notezy-backend/app/exceptions"
+	generated "notezy-backend/app/graphql/generated"
 	gqlmodels "notezy-backend/app/graphql/models"
+	constants "notezy-backend/shared/constants"
 )
 
 // SearchUsers is the resolver for the searchUsers field.
@@ -38,7 +39,7 @@ func (r *queryResolver) SearchShelves(ctx context.Context, input gqlmodels.Searc
 	if exception != nil {
 		return nil, exception.ToGraphQLError(ctx)
 	}
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ginCtx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ginCtx, constants.ContextFieldName_User_Id)
 	if exception != nil {
 		return nil, exception.ToGraphQLError(ctx)
 	}

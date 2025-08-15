@@ -7,16 +7,17 @@ import (
 
 	exceptions "notezy-backend/app/exceptions"
 	enums "notezy-backend/app/models/schemas/enums"
+	constants "notezy-backend/shared/constants"
 )
 
 // This UserRoleMiddleware() MUST be processed AFTER the AuthMiddleware()
 // so that it can parse the existing accessToken
 func UserRoleMiddleware(atLeastUserRole enums.UserRole) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		currentUserRoleValue, exists := ctx.Get("userRole")
+		currentUserRoleValue, exists := ctx.Get(constants.ContextFieldName_User_Role.String())
 		if !exists {
 			exception := exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
-				"Does not find the userRole, " +
+				"Cannot find the userRole, " +
 					"please make sure the AuthMiddleware() is placing before the UserRoleMiddleware()",
 			)
 			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
@@ -36,14 +37,12 @@ func UserRoleMiddleware(atLeastUserRole enums.UserRole) gin.HandlerFunc {
 		//  => the current user doest not have access to do the following
 		// else if they are the same, then we just pass the below iteration check
 		if currentUserRole == atLeastUserRole {
-			ctx.Set("userRole", currentUserRole)
 			ctx.Next()
 			return
 		}
 		// from high level roles to low level roles
 		for _, enum := range enums.AllUserRoles {
 			if enum == currentUserRole {
-				ctx.Set("userRole", currentUserRole)
 				ctx.Next()
 				return
 			} else if enum == atLeastUserRole {
@@ -77,10 +76,10 @@ Note: If the allowedRoles is empty, all types of the UserRole will pass
 */
 func AllowedUserRolesMiddleware(allowedRoles []enums.UserRole) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		currentUserRoleValue, exists := ctx.Get("userRole")
+		currentUserRoleValue, exists := ctx.Get(constants.ContextFieldName_User_Role.String())
 		if !exists {
 			exception := exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
-				"Does not find the userRole, " +
+				"Cannot find the userRole, " +
 					"please make sure the AuthMiddleware() is placing before the UserRoleMiddleware()",
 			)
 			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
@@ -94,13 +93,11 @@ func AllowedUserRolesMiddleware(allowedRoles []enums.UserRole) gin.HandlerFunc {
 		}
 
 		if len(allowedRoles) == 0 {
-			ctx.Set("userRole", currentUserRole)
 			ctx.Next()
 			return
 		}
 		for _, enum := range allowedRoles {
 			if enum == currentUserRole {
-				ctx.Set("userRole", currentUserRole)
 				ctx.Next()
 				return
 			}

@@ -21,7 +21,7 @@ type Badge struct {
 	CreatedAt   time.Time       `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 
 	// relation
-	Users []User `json:"users" gorm:"-"` // many2many:\"UsersToBadgesTable\"; foreignKey:Id; joinForeignKey:BadgeId; references:Id; joinReferences:UserId;
+	UsersToBadges []UsersToBadges `json:"usersToBadges" gorm:"foreignKey:BadgeId;"`
 }
 
 // Badge Table Name
@@ -33,7 +33,7 @@ func (Badge) TableName() string {
 type BadgeRelation string
 
 const (
-	BadgeRelation_Users BadgeRelation = "Users"
+	BadgeRelation_UsersToBadges BadgeRelation = "UsersToBadges"
 )
 
 /* ============================== Relative Type Conversions ============================== */

@@ -30,12 +30,12 @@ type User struct {
 	CreatedAt       time.Time        `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 
 	// relations
-	UserInfo    UserInfo    `json:"userInfo" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	UserAccount UserAccount `json:"userAccount" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	UserSetting UserSetting `json:"userSetting" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	Themes      []Theme     `json:"themes" gorm:"foreignKey:AuthorId;"`
-	Badges      []Badge     `json:"badges" gorm:"many2many:\"UsersToBadgesTable\"; foreignKey:Id; joinForeignKey:UserId; references:Id; joinReferences:BadgeId;"`
-	Shelves     []Shelf     `json:"shelves" gorm:"many2many:\"UsersToShelvesTable\"; foreignKey:Id; joinForeignKey:UserId; references:Id; joinReferences:ShelfId;"`
+	UserInfo       UserInfo         `json:"userInfo" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	UserAccount    UserAccount      `json:"userAccount" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	UserSetting    UserSetting      `json:"userSetting" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	Themes         []Theme          `json:"themes" gorm:"foreignKey:AuthorId;"`
+	UsersToBadges  []UsersToBadges  `json:"usersToBadges" gorm:"foreignKey:UserId;"`
+	UsersToShelves []UsersToShelves `json:"usersToShelves" gorm:"foreignKey:UserId;"`
 }
 
 // User Table Name
@@ -47,12 +47,12 @@ func (User) TableName() string {
 type UserRelation shared.ValidTableName
 
 const (
-	UserRelation_UserInfo    UserRelation = "UserInfo"
-	UserRelation_UserAccount UserRelation = "UserAccount"
-	UserRelation_UserSetting UserRelation = "UserSetting"
-	UserRelation_Badges      UserRelation = "Badges"
-	UserRelation_Themes      UserRelation = "Themes"
-	UserRelation_Shelves     UserRelation = "Shelves"
+	UserRelation_UserInfo       UserRelation = "UserInfo"
+	UserRelation_UserAccount    UserRelation = "UserAccount"
+	UserRelation_UserSetting    UserRelation = "UserSetting"
+	UserRelation_Themes         UserRelation = "Themes"
+	UserRelation_UsersToBadges  UserRelation = "UsersToBadges"
+	UserRelation_UsersToShelves UserRelation = "UsersToShelves"
 )
 
 /* ============================== Relative Type Conversions ============================== */

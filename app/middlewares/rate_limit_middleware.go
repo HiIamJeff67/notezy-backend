@@ -96,8 +96,8 @@ func getRateLimiter(key string, requestsPerSecond int) *LeakyBucket {
  * the middleware MUST be use after AuthMiddleware() so that the publicId is ensured
  * Note that this generating function is safe enough, since it uses publicId to get the rate limit key
  */
-func generateRateLimitKeyByPublicId(ctx *gin.Context) (string, *exceptions.Exception) {
-	if publicIdInterface, exists := ctx.Get("publicId"); exists {
+func generateRateLimitKeyByUserPublicId(ctx *gin.Context) (string, *exceptions.Exception) {
+	if publicIdInterface, exists := ctx.Get(constants.ContextFieldName_User_PublicId.String()); exists {
 		if publicId, ok := publicIdInterface.(string); ok && len(strings.TrimSpace(publicId)) > 0 {
 			return fmt.Sprintf("user:%s", publicId), nil
 		}
@@ -119,7 +119,7 @@ func logRateLimitExceeded(ctx *gin.Context, key string, limit int) {
 	userAgent := ctx.GetHeader("User-Agent")
 
 	var publicId string
-	if publicIdInterface, exists := ctx.Get("publicId"); exists {
+	if publicIdInterface, exists := ctx.Get(constants.ContextFieldName_User_PublicId.String()); exists {
 		if publicIdStr, ok := publicIdInterface.(string); ok && len(strings.TrimSpace(publicIdStr)) > 0 {
 			publicId = fmt.Sprintf("publicId: %s", publicIdStr)
 		}
@@ -134,7 +134,7 @@ func logRateLimitExceeded(ctx *gin.Context, key string, limit int) {
 
 func RateLimitMiddleware(requestsPerSecond int) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		key, exception := generateRateLimitKeyByPublicId(ctx)
+		key, exception := generateRateLimitKeyByUserPublicId(ctx)
 		if exception != nil {
 			exception.Log()
 			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())

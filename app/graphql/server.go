@@ -13,6 +13,7 @@ import (
 	resolvers "notezy-backend/app/graphql/resolvers"
 	models "notezy-backend/app/models"
 	services "notezy-backend/app/services"
+	constants "notezy-backend/shared/constants"
 )
 
 func GraphQLHandler() gin.HandlerFunc {
@@ -37,7 +38,7 @@ func GraphQLHandler() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		// place the gin.Context into the context.Context
-		ctx := context.WithValue(c.Request.Context(), "ginContext", c)
+		ctx := context.WithValue(c.Request.Context(), constants.ContextFieldName_Gin_Context, c)
 		server.ServeHTTP(c.Writer, c.Request.WithContext(ctx))
 	}
 }

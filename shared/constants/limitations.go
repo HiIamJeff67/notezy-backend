@@ -11,6 +11,10 @@ const (
 )
 
 const (
+	MaxDatabaseUpdateParameters = 65535
+)
+
+const (
 	DefaultSearchLimit = 10
 	MaxSearchLimit     = 100
 )

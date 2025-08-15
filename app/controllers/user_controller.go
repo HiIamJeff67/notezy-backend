@@ -10,6 +10,7 @@ import (
 	exceptions "notezy-backend/app/exceptions"
 	logs "notezy-backend/app/logs"
 	services "notezy-backend/app/services"
+	constants "notezy-backend/shared/constants"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -35,7 +36,7 @@ func NewUserController(service services.UserServiceInterface) UserControllerInte
 // with AuthMiddleware()
 func (c *UserController) GetUserData(ctx *gin.Context) {
 	var reqDto dtos.GetUserDataReqDto
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.User.InternalServerWentWrong(nil)
@@ -72,7 +73,7 @@ func (c *UserController) GetUserData(ctx *gin.Context) {
 // with AuthMiddleware()
 func (c *UserController) GetMe(ctx *gin.Context) {
 	var reqDto dtos.GetMeReqDto
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.User.InternalServerWentWrong(nil)
@@ -119,7 +120,7 @@ func (c *UserController) GetMe(ctx *gin.Context) {
 // with AuthMiddleware()
 func (c *UserController) UpdateMe(ctx *gin.Context) {
 	var reqDto dtos.UpdateMeReqDto
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.User.InternalServerWentWrong(nil)

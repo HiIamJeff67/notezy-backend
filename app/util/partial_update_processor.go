@@ -103,3 +103,12 @@ func isZeroValue(v reflect.Value) bool {
 		return v.IsZero()
 	}
 }
+
+/* ============================== Helper functions for directly partial update operations ============================== */
+
+func CheckSetNull(setNullMap *map[string]bool, fieldName string) bool {
+	if setNullMap != nil {
+		return (*setNullMap)[fieldName]
+	}
+	return false
+}

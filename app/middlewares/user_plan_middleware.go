@@ -7,16 +7,17 @@ import (
 
 	exceptions "notezy-backend/app/exceptions"
 	enums "notezy-backend/app/models/schemas/enums"
+	constants "notezy-backend/shared/constants"
 )
 
 // This UserPlanMiddleware() MUST be processed AFTER the AuthMiddleware()
 // so that it can parse the existing accessToken
 func UserPlanMiddleware(atLeastUserPlan enums.UserPlan) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		currentUserPlanValue, exists := ctx.Get("userPlan")
+		currentUserPlanValue, exists := ctx.Get(constants.ContextFieldName_User_Plan.String())
 		if !exists {
 			exception := exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
-				"Does not find the userPlan, " +
+				"Cannot find the userPlan, " +
 					"please make sure the AuthMiddleware() is placing before the UserPlanMiddleware()",
 			)
 			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
@@ -36,14 +37,12 @@ func UserPlanMiddleware(atLeastUserPlan enums.UserPlan) gin.HandlerFunc {
 		//  => the current user doest not have access to do the following
 		// else if they are the same, then we just pass the below iteration check
 		if currentUserPlan == atLeastUserPlan {
-			ctx.Set("userPlan", currentUserPlan)
 			ctx.Next()
 			return
 		}
 		// from high level plans to low level plans
 		for _, enum := range enums.AllUserPlans {
 			if enum == currentUserPlan {
-				ctx.Set("userPlan", currentUserPlan)
 				ctx.Next()
 				return
 			} else if enum == atLeastUserPlan {
@@ -77,10 +76,10 @@ Note: If the allowedPlans is empty, all types of the UserPlan will pass
 */
 func AllowedUserPlanMiddleware(allowedPlan []enums.UserPlan) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		currentUserPlanValue, exists := ctx.Get("userPlan")
+		currentUserPlanValue, exists := ctx.Get(constants.ContextFieldName_User_Plan.String())
 		if !exists {
 			exception := exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
-				"Does not find the userPlan, " +
+				"Cannot find the userPlan, " +
 					"please make sure the AuthMiddleware() is placing before the AllowedUserPlanMiddleware()",
 			)
 			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
@@ -94,13 +93,11 @@ func AllowedUserPlanMiddleware(allowedPlan []enums.UserPlan) gin.HandlerFunc {
 		}
 
 		if len(allowedPlan) == 0 {
-			ctx.Set("userPlan", currentUserPlan)
 			ctx.Next()
 			return
 		}
 		for _, enum := range allowedPlan {
 			if enum == currentUserPlan {
-				ctx.Set("userPlan", currentUserPlan)
 				ctx.Next()
 				return
 			}

@@ -7,12 +7,13 @@ import (
 	"github.com/google/uuid"
 
 	exceptions "notezy-backend/app/exceptions"
+	constants "notezy-backend/shared/constants"
 )
 
-func GetAndConvertContextFieldToUUID(ctx *gin.Context, name string) (*uuid.UUID, *exceptions.Exception) {
-	value, exist := ctx.Get(name)
+func GetAndConvertContextFieldToUUID(ctx *gin.Context, name constants.ContextFieldName) (*uuid.UUID, *exceptions.Exception) {
+	value, exist := ctx.Get(name.String())
 	if !exist {
-		return nil, exceptions.Context.FailedToGetContextFieldOfSpecificName(name)
+		return nil, exceptions.Context.FailedToGetContextFieldOfSpecificName(name.String())
 	}
 
 	valueString, ok := value.(string)
@@ -29,7 +30,7 @@ func GetAndConvertContextFieldToUUID(ctx *gin.Context, name string) (*uuid.UUID,
 }
 
 func GetAndConvertContextToGinContext(ctx context.Context) (*gin.Context, *exceptions.Exception) {
-	ginCtx, ok := ctx.Value("ginContext").(*gin.Context)
+	ginCtx, ok := ctx.Value(constants.ContextFieldName_Gin_Context).(*gin.Context)
 	if !ok {
 		return nil, exceptions.Context.FailedToConvertContextToGinContext()
 	}

@@ -9,6 +9,7 @@ import (
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	services "notezy-backend/app/services"
+	constants "notezy-backend/shared/constants"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -29,7 +30,7 @@ func NewUserSettingController(service services.UserSettingServiceInterface) User
 
 func (c *UserSettingController) GetMySetting(ctx *gin.Context) {
 	var reqDto dtos.GetMySettingReqDto
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.UserSetting.InternalServerWentWrong(nil)

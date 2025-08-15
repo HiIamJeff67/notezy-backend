@@ -10,6 +10,7 @@ import (
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	services "notezy-backend/app/services"
+	constants "notezy-backend/shared/constants"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -126,7 +127,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 // with AuthMiddleware()
 func (c *AuthController) Logout(ctx *gin.Context) {
 	var reqDto dtos.LogoutReqDto
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.Auth.InternalServerWentWrong(nil)
@@ -197,7 +198,7 @@ func (c *AuthController) SendAuthCode(ctx *gin.Context) {
 // with AuthMiddleware()
 func (c *AuthController) ValidateEmail(ctx *gin.Context) {
 	var reqDto dtos.ValidateEmailReqDto
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.Auth.InternalServerWentWrong(nil)
@@ -243,7 +244,7 @@ func (c *AuthController) ValidateEmail(ctx *gin.Context) {
 // with AuthMiddleware()
 func (c *AuthController) ResetEmail(ctx *gin.Context) {
 	var reqDto dtos.ResetEmailReqDto
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.Auth.InternalServerWentWrong(nil)
@@ -324,7 +325,7 @@ func (c *AuthController) ForgetPassword(ctx *gin.Context) {
 // with AuthMiddleware()
 func (c *AuthController) DeleteMe(ctx *gin.Context) {
 	var reqDto dtos.DeleteMeReqDto
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.Auth.InternalServerWentWrong(nil)

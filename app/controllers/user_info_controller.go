@@ -9,6 +9,7 @@ import (
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	services "notezy-backend/app/services"
+	constants "notezy-backend/shared/constants"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -33,7 +34,7 @@ func NewUserInfoController(service services.UserInfoServiceInterface) UserInfoCo
 // with AuthMiddleware()
 func (c *UserInfoController) GetMyInfo(ctx *gin.Context) {
 	var reqDto dtos.GetMyInfoReqDto
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.UserInfo.InternalServerWentWrong(nil)
@@ -70,7 +71,7 @@ func (c *UserInfoController) GetMyInfo(ctx *gin.Context) {
 // with AuthMiddleware()
 func (c *UserInfoController) UpdateMyInfo(ctx *gin.Context) {
 	var reqDto dtos.UpdateMyInfoReqDto
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, "userId")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.UserInfo.InternalServerWentWrong(nil)

@@ -13,6 +13,7 @@ import (
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	tokens "notezy-backend/app/tokens"
+	constants "notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
 )
 
@@ -86,24 +87,28 @@ func _validateRefreshToken(refreshToken string) (*schemas.User, *exceptions.Exce
 func AuthMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// clear all the previous field first for security
-		ctx.Set("userId", "")
-		ctx.Set("publicId", "")
-		ctx.Set("name", "")
-		ctx.Set("displayName", "")
-		ctx.Set("email", "")
-		ctx.Set("accessToken", "")
+		ctx.Set(constants.ContextFieldName_User_Id.String(), "")
+		ctx.Set(constants.ContextFieldName_User_PublicId.String(), "")
+		ctx.Set(constants.ContextFieldName_User_Name.String(), "")
+		ctx.Set(constants.ContextFieldName_User_DisplayName.String(), "")
+		ctx.Set(constants.ContextFieldName_User_Email.String(), "")
+		ctx.Set(constants.ContextFieldName_AccessToken.String(), "")
+		ctx.Set(constants.ContextFieldName_User_Role.String(), "")
+		ctx.Set(constants.ContextFieldName_User_Plan.String(), "")
 
 		// nest if statement bcs we will skip the accessToken validation if it failed
 		if accessToken, exception := _extractAccessToken(ctx); exception == nil { // if extract the accessToken successfully
 			if claims, userDataCache, exception := _validateAccessTokenAndUserAgent(accessToken); exception == nil { // if validate the accessToken successfully
 				if currentUserAgent := ctx.GetHeader("User-Agent"); currentUserAgent == claims.UserAgent { // if the userAgent is matched
 					// if everything above is all fine, we should get the valid userDataCache and claims
-					ctx.Set("userId", claims.Id)
-					ctx.Set("publicId", userDataCache.PublicId)
-					ctx.Set("name", userDataCache.Name)
-					ctx.Set("displayName", userDataCache.DisplayName)
-					ctx.Set("email", userDataCache.Email)
-					ctx.Set("accessToken", accessToken)
+					ctx.Set(constants.ContextFieldName_User_Id.String(), claims.Id)
+					ctx.Set(constants.ContextFieldName_User_PublicId.String(), userDataCache.PublicId)
+					ctx.Set(constants.ContextFieldName_User_Name.String(), userDataCache.Name)
+					ctx.Set(constants.ContextFieldName_User_DisplayName.String(), userDataCache.DisplayName)
+					ctx.Set(constants.ContextFieldName_User_Email.String(), userDataCache.Email)
+					ctx.Set(constants.ContextFieldName_AccessToken.String(), accessToken)
+					ctx.Set(constants.ContextFieldName_User_Role.String(), userDataCache.Role)
+					ctx.Set(constants.ContextFieldName_User_Plan.String(), userDataCache.Plan)
 					ctx.Next()
 					return
 				}
@@ -150,12 +155,14 @@ func AuthMiddleware() gin.HandlerFunc {
 			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
 		}
 
-		ctx.Set("userId", _user.Id.String())
-		ctx.Set("publicId", _user.PublicId)
-		ctx.Set("name", _user.Name)
-		ctx.Set("displayName", _user.DisplayName)
-		ctx.Set("email", _user.Email)
-		ctx.Set("accessToken", newAccessToken)
+		ctx.Set(constants.ContextFieldName_User_Id.String(), _user.Id.String())
+		ctx.Set(constants.ContextFieldName_User_PublicId.String(), _user.PublicId)
+		ctx.Set(constants.ContextFieldName_User_Name.String(), _user.Name)
+		ctx.Set(constants.ContextFieldName_User_DisplayName.String(), _user.DisplayName)
+		ctx.Set(constants.ContextFieldName_User_Email.String(), _user.Email)
+		ctx.Set(constants.ContextFieldName_AccessToken.String(), newAccessToken)
+		ctx.Set(constants.ContextFieldName_User_Role.String(), _user.Role)
+		ctx.Set(constants.ContextFieldName_User_Plan.String(), _user.Plan)
 		ctx.Next()
 	}
 }

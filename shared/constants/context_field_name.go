@@ -13,3 +13,7 @@ const (
 	ContextFieldName_User_Plan        ContextFieldName = "user-plan"
 	ContextFieldName_Gin_Context      ContextFieldName = "gin-Context"
 )
+
+func (cfn ContextFieldName) String() string {
+	return string(cfn)
+}
