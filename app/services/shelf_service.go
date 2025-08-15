@@ -8,11 +8,11 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	"notezy-backend/app/dtos"
+	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	gqlmodels "notezy-backend/app/graphql/models"
-	"notezy-backend/app/models/inputs"
-	"notezy-backend/app/models/repositories"
+	inputs "notezy-backend/app/models/inputs"
+	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	util "notezy-backend/app/util"
 	validation "notezy-backend/app/validation"
@@ -22,6 +22,9 @@ import (
 /* ============================== Interface & Instance ============================== */
 
 type ShelfServiceInterface interface {
+	CreateShelf(reqDto *dtos.CreateShelfReqDto) (*dtos.CreateShelfResDto, *exceptions.Exception)
+	SynchronizeShelves(reqDto *dtos.SynchronizeShelvesReqDto) (*dtos.SynchronizeShelvesResDto, *exceptions.Exception)
+
 	// services for private shelves
 	SearchPrivateShelves(ctx context.Context, ownerId uuid.UUID, gqlInput gqlmodels.SearchShelfInput) (*gqlmodels.SearchShelfConnection, *exceptions.Exception)
 }
@@ -38,7 +41,20 @@ func NewShelfService(db *gorm.DB) ShelfServiceInterface {
 
 /* ============================== Service Methods for Shelves ============================== */
 
-// TODO: Build Create Shelf Service
+func (s *ShelfService) CreateShelf(reqDto *dtos.CreateShelfReqDto) (*dtos.CreateShelfResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
+	shelfRepository := repositories.NewShelfRepository(s.db)
+
+	_, exception := shelfRepository.CreateOneByOwnerId(reqDto.OwnerId, inputs.CreateShelfInput{Name: reqDto.Name})
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.CreateShelfResDto{CreatedAt: time.Now()}, nil
+}
 
 func (s *ShelfService) SynchronizeShelves(reqDto *dtos.SynchronizeShelvesReqDto) (*dtos.SynchronizeShelvesResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
@@ -47,9 +63,16 @@ func (s *ShelfService) SynchronizeShelves(reqDto *dtos.SynchronizeShelvesReqDto)
 
 	shelfRepository := repositories.NewShelfRepository(s.db)
 
-	var partialUpdateShelfInputs []inputs.PartialUpdateShelfInput
+	var updateInputs []inputs.PartialUpdateShelfInput
 	for _, partialUpdate := range reqDto.PartialUpdates {
-		partialUpdateShelfInputs = append(partialUpdateShelfInputs, inputs.PartialUpdateShelfInput{
+		shelfRootNode, exception := util.DecodeShelfNode(*partialUpdate.Values.EncodedStructure)
+		if exception != nil {
+			return nil, exception
+		}
+		if shelfRootNode.IsChildrenCircular() {
+			return nil, exceptions.Shelf.CircularChildrenDetectedInShelfNode()
+		}
+		updateInputs = append(updateInputs, inputs.PartialUpdateShelfInput{
 			Values: inputs.UpdateShelfInput{
 				Name:             partialUpdate.Values.Name,
 				EncodedStructure: partialUpdate.Values.EncodedStructure,
@@ -58,7 +81,7 @@ func (s *ShelfService) SynchronizeShelves(reqDto *dtos.SynchronizeShelvesReqDto)
 		})
 	}
 
-	exception := shelfRepository.DirectlyUpdateManyByIds(reqDto.ShelfIds, reqDto.OwnerId, partialUpdateShelfInputs)
+	exception := shelfRepository.DirectlyUpdateManyByIds(reqDto.ShelfIds, reqDto.OwnerId, updateInputs)
 	if exception != nil {
 		return nil, exception
 	}

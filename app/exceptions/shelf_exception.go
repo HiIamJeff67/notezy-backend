@@ -16,6 +16,7 @@ const (
 type ShelfExceptionDomain struct {
 	BaseCode ExceptionCode
 	Prefix   ExceptionPrefix
+	APIExceptionDomain
 	DatabaseExceptionDomain
 	TypeExceptionDomain
 }
@@ -23,6 +24,10 @@ type ShelfExceptionDomain struct {
 var Shelf = &ShelfExceptionDomain{
 	BaseCode: ExceptionBaseCode_Shelf,
 	Prefix:   ExceptionPrefix_Shelf,
+	APIExceptionDomain: APIExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_Shelf,
+		_Prefix:   ExceptionPrefix_Shelf,
+	},
 	DatabaseExceptionDomain: DatabaseExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_Shelf,
 		_Prefix:   ExceptionPrefix_Shelf,
@@ -105,6 +110,18 @@ func (d *ShelfExceptionDomain) CannotEncodeNonRootShelfNode(node any) *Exception
 		Reason:         "CannotEncodeNonRootShelfNode",
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Cannot encoded the ShelfNode of %v which is not the root node", node),
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *ShelfExceptionDomain) CircularChildrenDetectedInShelfNode() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 7,
+		Prefix:         d.Prefix,
+		Reason:         "CircularChildrenDetectedInShelfNode",
+		IsInternal:     false,
+		Message:        "Circular children detected in the given ShelfNode which is an invalid structure",
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}

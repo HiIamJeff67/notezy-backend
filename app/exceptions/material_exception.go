@@ -11,6 +11,7 @@ const (
 type MaterialExceptionDomain struct {
 	BaseCode ExceptionCode
 	Prefix   ExceptionPrefix
+	APIExceptionDomain
 	DatabaseExceptionDomain
 	TypeExceptionDomain
 }
@@ -18,6 +19,10 @@ type MaterialExceptionDomain struct {
 var Material = &MaterialExceptionDomain{
 	BaseCode: ExceptionBaseCode_Material,
 	Prefix:   ExceptionPrefix_Material,
+	APIExceptionDomain: APIExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_Material,
+		_Prefix:   ExceptionPrefix_Material,
+	},
 	DatabaseExceptionDomain: DatabaseExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_Material,
 		_Prefix:   ExceptionPrefix_Material,
