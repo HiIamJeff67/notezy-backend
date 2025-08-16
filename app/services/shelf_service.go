@@ -14,9 +14,9 @@ import (
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
-	util "notezy-backend/app/util"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
+	lib "notezy-backend/shared/lib"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -65,7 +65,7 @@ func (s *ShelfService) SynchronizeShelves(reqDto *dtos.SynchronizeShelvesReqDto)
 
 	var updateInputs []inputs.PartialUpdateShelfInput
 	for _, partialUpdate := range reqDto.PartialUpdates {
-		shelfRootNode, exception := util.DecodeShelfNode(*partialUpdate.Values.EncodedStructure)
+		shelfRootNode, exception := lib.DecodeShelfNode(*partialUpdate.Values.EncodedStructure)
 		if exception != nil {
 			return nil, exception
 		}
@@ -104,7 +104,7 @@ func (s *ShelfService) SearchPrivateShelves(ctx context.Context, ownerId uuid.UU
 		)
 	}
 	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
-		searchCursor, exception := util.DecodeSearchCursor[gqlmodels.SearchShelfCursorFields](*gqlInput.After)
+		searchCursor, exception := lib.DecodeSearchCursor[gqlmodels.SearchShelfCursorFields](*gqlInput.After)
 		if exception != nil {
 			return nil, exception
 		}
@@ -154,7 +154,7 @@ func (s *ShelfService) SearchPrivateShelves(ctx context.Context, ownerId uuid.UU
 	searchEdges := make([]*gqlmodels.SearchShelfEdge, len(shelves))
 
 	for index, shelf := range shelves {
-		searchCursor := util.SearchCursor[gqlmodels.SearchShelfCursorFields]{
+		searchCursor := lib.SearchCursor[gqlmodels.SearchShelfCursorFields]{
 			Fields: gqlmodels.SearchShelfCursorFields{
 				ID: shelf.Id,
 			},

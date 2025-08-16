@@ -86,7 +86,7 @@ func (d *ShelfExceptionDomain) InsertParentIntoItsChildren(destination any, targ
 			"Failed to insert %v into %v since %v is one of the child of %v, insert a parent node into its children is not allowed",
 			target, destination, destination, target,
 		),
-		HTTPStatusCode: http.StatusNotAcceptable,
+		HTTPStatusCode: http.StatusBadRequest,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
@@ -98,7 +98,7 @@ func (d *ShelfExceptionDomain) FailedToConstructNewShelfNode(field string) *Exce
 		Reason:         "FailedToConstructNewShelfNode",
 		IsInternal:     false,
 		Message:        fmt.Sprintf("The field of %s in ShelfNode is not pass by the validator", field),
-		HTTPStatusCode: http.StatusInternalServerError,
+		HTTPStatusCode: http.StatusBadRequest,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
@@ -122,7 +122,31 @@ func (d *ShelfExceptionDomain) CircularChildrenDetectedInShelfNode() *Exception 
 		Reason:         "CircularChildrenDetectedInShelfNode",
 		IsInternal:     false,
 		Message:        "Circular children detected in the given ShelfNode which is an invalid structure",
-		HTTPStatusCode: http.StatusInternalServerError,
+		HTTPStatusCode: http.StatusBadRequest,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *ShelfExceptionDomain) RepeatedShelfNodesDetected() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 8,
+		Prefix:         d.Prefix,
+		Reason:         "RepeatedShelfNodesDetected",
+		IsInternal:     false,
+		Message:        "Invalid ShelfNode structure with repeated shelf nodes detected in the same tree which is violating the uniqueness",
+		HTTPStatusCode: http.StatusBadRequest,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *ShelfExceptionDomain) RepeatedMaterialIdsDetected() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 8,
+		Prefix:         d.Prefix,
+		Reason:         "RepeatedMaterialIdsDetected",
+		IsInternal:     false,
+		Message:        "Invalid ShelfNode structure with repeated material ids detected in the same tree which is violating the uniqueness",
+		HTTPStatusCode: http.StatusBadRequest,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }

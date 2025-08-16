@@ -14,14 +14,15 @@ import (
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
 	util "notezy-backend/app/util"
-	"notezy-backend/shared/constants"
+	constants "notezy-backend/shared/constants"
+	lib "notezy-backend/shared/lib"
 )
 
 /* ============================== Definitions ============================== */
 
 type ShelfRepositoryInterface interface {
-	GetOneById(id uuid.UUID, ownerId uuid.UUID, preloads *[]schemas.ShelfRelations) (*schemas.Shelf, *exceptions.Exception)
-	GetOneByName(name string, ownerId uuid.UUID, preloads *[]schemas.ShelfRelations) (*schemas.Shelf, *exceptions.Exception)
+	GetOneById(id uuid.UUID, ownerId uuid.UUID, preloads *[]schemas.ShelfRelation) (*schemas.Shelf, *exceptions.Exception)
+	GetOneByName(name string, ownerId uuid.UUID, preloads *[]schemas.ShelfRelation) (*schemas.Shelf, *exceptions.Exception)
 	CreateOneByOwnerId(ownerId uuid.UUID, input inputs.CreateShelfInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, ownerId uuid.UUID, input inputs.PartialUpdateShelfInput) (*schemas.Shelf, *exceptions.Exception)
 	DirectlyUpdateOneById(id uuid.UUID, ownerId uuid.UUID, input inputs.PartialUpdateShelfInput) *exceptions.Exception
@@ -58,7 +59,7 @@ func (r *ShelfRepository) getNumOfPartialUpdateArguments(numOfRows int) int {
 
 /* ============================== CRUD operations ============================== */
 
-func (r *ShelfRepository) GetOneById(id uuid.UUID, ownerId uuid.UUID, preloads *[]schemas.ShelfRelations) (*schemas.Shelf, *exceptions.Exception) {
+func (r *ShelfRepository) GetOneById(id uuid.UUID, ownerId uuid.UUID, preloads *[]schemas.ShelfRelation) (*schemas.Shelf, *exceptions.Exception) {
 	shelf := schemas.Shelf{}
 	db := r.db.Table(schemas.Shelf{}.TableName())
 	if preloads != nil {
@@ -76,7 +77,7 @@ func (r *ShelfRepository) GetOneById(id uuid.UUID, ownerId uuid.UUID, preloads *
 	return &shelf, nil
 }
 
-func (r *ShelfRepository) GetOneByName(name string, ownerId uuid.UUID, preloads *[]schemas.ShelfRelations) (*schemas.Shelf, *exceptions.Exception) {
+func (r *ShelfRepository) GetOneByName(name string, ownerId uuid.UUID, preloads *[]schemas.ShelfRelation) (*schemas.Shelf, *exceptions.Exception) {
 	shelf := schemas.Shelf{}
 	db := r.db.Table(schemas.Shelf{}.TableName())
 	if preloads != nil {
@@ -97,11 +98,11 @@ func (r *ShelfRepository) GetOneByName(name string, ownerId uuid.UUID, preloads 
 func (r *ShelfRepository) CreateOneByOwnerId(ownerId uuid.UUID, input inputs.CreateShelfInput) (*uuid.UUID, *exceptions.Exception) {
 	var newShelf schemas.Shelf
 	newShelf.OwnerId = ownerId
-	rootNode, exception := util.NewShelfNode(ownerId, input.Name, nil)
+	rootNode, exception := lib.NewShelfNode(ownerId, input.Name, nil)
 	if exception != nil {
 		return nil, exception
 	}
-	encodedStructure, exception := util.EncodeShelfNode(rootNode)
+	encodedStructure, exception := lib.EncodeShelfNode(rootNode)
 	if exception != nil {
 		return nil, exception
 	}

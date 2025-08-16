@@ -13,9 +13,9 @@ import (
 type Theme struct {
 	Id            uuid.UUID `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid();"`
 	PublicId      string    `json:"publicId" gorm:"column:public_id; unique; not null; default:'';"`
+	AuthorId      uuid.UUID `json:"authorId" gorm:"column:author_id; type:uuid; not null; uniqueIndex;"`
 	Name          string    `json:"name" gorm:"column:name; unique; not null;"`
 	IsDark        bool      `json:"isDark" gorm:"column:is_dark; type:boolean; not null; default:true;"`
-	AuthorId      uuid.UUID `json:"authorId" gorm:"column:author_id; type:uuid; not null; uniqueIndex;"`
 	Version       string    `json:"version" gorm:"column:version; not null;"`
 	IsDefault     bool      `json:"isDefault" gorm:"column:is_default; type:boolean; not null;"`
 	DownloadURL   *string   `json:"downloadURL" gorm:"column:download_url;"`

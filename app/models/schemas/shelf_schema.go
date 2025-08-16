@@ -18,6 +18,7 @@ type Shelf struct {
 	CreatedAt        time.Time `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 
 	// relations
+	Materials      []Material       `json:"materials" gorm:"foreignKey:RootShelfId;"`
 	UsersToShelves []UsersToShelves `json:"usersToShelves" gorm:"foreignKey:ShelfId;"`
 }
 
@@ -27,10 +28,11 @@ func (Shelf) TableName() string {
 }
 
 // Shelf Table Relations
-type ShelfRelations shared.ValidTableName
+type ShelfRelation shared.ValidTableName
 
 const (
-	ShelfRelations_UsersToShelves ShelfRelations = "UsersToShelves"
+	ShelfRelation_Materials      ShelfRelation = "Materials"
+	ShelfRelation_UsersToShelves ShelfRelation = "UsersToShelves"
 )
 
 /* ============================== Relative Tyoe Conversion ============================== */

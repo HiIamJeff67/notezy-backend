@@ -18,3 +18,9 @@ const (
 	DefaultSearchLimit = 10
 	MaxSearchLimit     = 100
 )
+
+const (
+	CheckPointPerTraverse  = 1000000 // 10^6
+	MaxTraverseTimeout     = 8 * time.Second
+	MaxNumOfTraversedNodes = 1000000000 // 10^9
+)

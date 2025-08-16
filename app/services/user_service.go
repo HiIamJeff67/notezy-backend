@@ -15,9 +15,9 @@ import (
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
-	util "notezy-backend/app/util"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
+	lib "notezy-backend/shared/lib"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -197,7 +197,7 @@ func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.
 		)
 	}
 	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
-		searchCursor, exception := util.DecodeSearchCursor[gqlmodels.SearchUserCursorFields](*gqlInput.After)
+		searchCursor, exception := lib.DecodeSearchCursor[gqlmodels.SearchUserCursorFields](*gqlInput.After)
 		if exception != nil {
 			return nil, exception
 		}
@@ -247,7 +247,7 @@ func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.
 	searchEdges := make([]*gqlmodels.SearchUserEdge, len(users))
 
 	for index, user := range users {
-		searchCursor := util.SearchCursor[gqlmodels.SearchUserCursorFields]{
+		searchCursor := lib.SearchCursor[gqlmodels.SearchUserCursorFields]{
 			Fields: gqlmodels.SearchUserCursorFields{
 				PublicID: user.PublicId,
 			},
