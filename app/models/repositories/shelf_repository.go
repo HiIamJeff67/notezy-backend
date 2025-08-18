@@ -98,7 +98,7 @@ func (r *ShelfRepository) GetOneByName(name string, ownerId uuid.UUID, preloads 
 func (r *ShelfRepository) CreateOneByOwnerId(ownerId uuid.UUID, input inputs.CreateShelfInput) (*uuid.UUID, *exceptions.Exception) {
 	var newShelf schemas.Shelf
 	newShelf.OwnerId = ownerId
-	rootNode, exception := lib.NewShelfNode(ownerId, input.Name, nil)
+	rootNode, exception := lib.NewShelfNode(ownerId, input.Name)
 	if exception != nil {
 		return nil, exception
 	}
