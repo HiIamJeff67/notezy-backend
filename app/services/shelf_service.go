@@ -69,7 +69,12 @@ func (s *ShelfService) SynchronizeShelves(reqDto *dtos.SynchronizeShelvesReqDto)
 		if exception != nil {
 			return nil, exception
 		}
-		if shelfRootNode.IsChildrenCircular() {
+		isSimple, exception := shelfRootNode.IsChildrenSimple()
+		if exception != nil {
+			exception.Log() // the system should not run into this section, may due to malicious attack
+			return nil, exception
+		}
+		if !isSimple {
 			return nil, exceptions.Shelf.CircularChildrenDetectedInShelfNode()
 		}
 		updateInputs = append(updateInputs, inputs.PartialUpdateShelfInput{

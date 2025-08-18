@@ -20,7 +20,9 @@ const (
 )
 
 const (
-	CheckPointPerTraverse  = 1000000 // 10^6
-	MaxTraverseTimeout     = 8 * time.Second
-	MaxNumOfTraversedNodes = 1000000000 // 10^9
+	CheckPointPerShelfTreeTraverse  = 1e+3
+	MaxShelfTreeTraverseTimeout     = 8 * time.Second
+	MaxNumOfShelfTreeTraversedNodes = 1e+5
+	MaxShelfTreeWidth               = 1e+5
+	MaxShelfTreeDepth               = 100 // note that the maximum width is bounded by the msgpack encoding algorithm
 )

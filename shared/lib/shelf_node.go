@@ -48,52 +48,67 @@ func NewShelfNode(
 /* ============================== Private Methods ============================== */
 
 // Check if the `target` is a child of `node`.
-func isChild(node *ShelfNode, target *ShelfNode) bool {
+func isChild(node *ShelfNode, target *ShelfNode) (isChild bool, exception *exceptions.Exception) {
 	if node == nil || target == nil {
-		return false
+		return false, exceptions.Shelf.CallingMethodsWithNilValue()
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), constants.MaxTraverseTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), constants.MaxShelfTreeTraverseTimeout)
 	defer cancel()
 
 	queue := make([]ShelfNodeWithDepth, 0)
 	queue = append(queue, ShelfNodeWithDepth{Node: node, Depth: 0})
 	visited := map[uuid.UUID]bool{}
 	traverseCount := 0
+	maxWidth := 0
+	maxDepth := 0
 
 	for len(queue) > 0 {
-		if traverseCount%constants.CheckPointPerTraverse == 0 {
-			select {
-			case <-ctx.Done():
-				exceptions.Shelf.Timeout(constants.MaxTraverseTimeout).Panic()
-				return false
-			default:
-				// no-op
-			}
+		levelSize := len(queue)
+		maxWidth = max(maxWidth, levelSize)
+		maxDepth++
+
+		if maxWidth > constants.MaxShelfTreeWidth {
+			return false, exceptions.Shelf.MaximumWidthExceeded(maxWidth, constants.MaxShelfTreeWidth)
 		}
-		traverseCount++
-
-		current := queue[0]
-		queue = queue[1:] // pop
-
-		if visited[current.Node.Id] {
-			exceptions.Shelf.CircularChildrenDetectedInShelfNode().Panic()
-			return false
+		if maxDepth > constants.MaxShelfTreeDepth {
+			return false, exceptions.Shelf.MaximumDepthExceeded(maxDepth, constants.MaxShelfTreeDepth)
 		}
-		visited[current.Node.Id] = true
-
-		for _, child := range current.Node.Children {
-			if child == target {
-				return true
+		for i := 0; i < levelSize; i++ {
+			if traverseCount > constants.MaxNumOfShelfTreeTraversedNodes {
+				return false, exceptions.Shelf.MaximumTraverseCountExceeded(traverseCount, constants.MaxNumOfShelfTreeTraversedNodes)
 			}
-			queue = append(queue, ShelfNodeWithDepth{
-				Node:  child,
-				Depth: current.Depth + 1,
-			})
+			if traverseCount%constants.CheckPointPerShelfTreeTraverse == 0 {
+				select {
+				case <-ctx.Done():
+					return false, exceptions.Shelf.Timeout(constants.MaxShelfTreeTraverseTimeout)
+				default:
+					// no-op
+				}
+			}
+			traverseCount++
+
+			current := queue[0]
+			queue = queue[1:] // pop
+
+			if visited[current.Node.Id] {
+				return false, exceptions.Shelf.CircularChildrenDetectedInShelfNode()
+			}
+			visited[current.Node.Id] = true
+
+			for _, child := range current.Node.Children {
+				if child == target {
+					return true, nil
+				}
+				queue = append(queue, ShelfNodeWithDepth{
+					Node:  child,
+					Depth: current.Depth + 1,
+				})
+			}
 		}
 	}
 
-	return false
+	return false, nil
 }
 
 /* ============================== Public Methods ============================== */
@@ -125,50 +140,70 @@ func DecodeShelfNode(data []byte) (*ShelfNode, *exceptions.Exception) {
 	return &node, nil
 }
 
-// Check if the children of the given ShelfNode have any cycles.
-// If there's any cycles detected, it will return true else false.
-func (node *ShelfNode) IsChildrenCircular() bool {
+// Check if the children of the given ShelfNode is a simple tree
+// which means it shouldn't contain any cycles.
+// If there's any cycles detected, it will return false else true.
+// Note that if there's any other exceptions, it will also return false as well.
+func (node *ShelfNode) IsChildrenSimple() (hasCycle bool, exception *exceptions.Exception) {
 	if node == nil {
-		return false
+		return false, exceptions.Shelf.CallingMethodsWithNilValue()
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), constants.MaxTraverseTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), constants.MaxShelfTreeTraverseTimeout)
 	defer cancel()
 
 	queue := make([]ShelfNodeWithDepth, 0)
 	queue = append(queue, ShelfNodeWithDepth{Node: node, Depth: 0})
 	visited := map[uuid.UUID]bool{}
 	traverseCount := 0
+	maxWidth := 0
+	maxDepth := 0
 
 	for len(queue) > 0 {
-		if traverseCount%constants.CheckPointPerTraverse == 0 {
-			select {
-			case <-ctx.Done():
-				exceptions.Shelf.Timeout(constants.MaxTraverseTimeout).Panic()
-				return true
-			default:
-				// no-op
+		levelSize := len(queue)
+		maxWidth = max(maxWidth, levelSize)
+		maxDepth++
+
+		if maxWidth > constants.MaxShelfTreeWidth {
+			return false, exceptions.Shelf.MaximumWidthExceeded(maxWidth, constants.MaxShelfTreeWidth)
+		}
+		if maxDepth > constants.MaxShelfTreeDepth {
+			return false, exceptions.Shelf.MaximumDepthExceeded(maxDepth, constants.MaxShelfTreeDepth)
+		}
+
+		for i := 0; i < levelSize; i++ {
+			if traverseCount > constants.MaxNumOfShelfTreeTraversedNodes {
+				return false, exceptions.Shelf.MaximumTraverseCountExceeded(traverseCount, constants.MaxNumOfShelfTreeTraversedNodes)
+			}
+			if traverseCount%constants.CheckPointPerShelfTreeTraverse == 0 {
+				select {
+				case <-ctx.Done():
+					return false, exceptions.Shelf.Timeout(constants.MaxShelfTreeTraverseTimeout)
+				default:
+					// no-op
+				}
+			}
+
+			current := queue[0]
+			queue = queue[1:] // pop
+			traverseCount++
+
+			if visited[current.Node.Id] {
+				return false, nil
+			}
+			visited[current.Node.Id] = true
+
+			for _, child := range current.Node.Children {
+				queue = append(queue, ShelfNodeWithDepth{
+					Node:  child,
+					Depth: current.Depth + 1,
+				})
 			}
 		}
-		traverseCount++
 
-		current := queue[0]
-		queue = queue[1:] // pop
-
-		if visited[current.Node.Id] {
-			return true
-		}
-		visited[current.Node.Id] = true
-
-		for _, child := range current.Node.Children {
-			queue = append(queue, ShelfNodeWithDepth{
-				Node:  child,
-				Depth: current.Depth + 1,
-			})
-		}
 	}
 
-	return false
+	return true, nil
 }
 
 // Check if the current node as `node` has a child of the given node as `target`.
@@ -178,7 +213,13 @@ func (node *ShelfNode) HasChildOf(target *ShelfNode) bool {
 		return false
 	}
 
-	return isChild(node, target)
+	isNodeAChildOfTarget, exception := isChild(node, target)
+	if exception != nil {
+		exception.Log()
+		return false
+	}
+
+	return isNodeAChildOfTarget
 }
 
 // Check if current node as `node` is a child of the the given node as `target`.
@@ -188,7 +229,13 @@ func (node *ShelfNode) IsChildOf(target *ShelfNode) bool {
 		return false
 	}
 
-	return isChild(target, node)
+	isTargetAChildOfNode, exception := isChild(target, node)
+	if exception != nil {
+		exception.Log()
+		return false
+	}
+
+	return isTargetAChildOfNode
 }
 
 // Check if the current node as `node` contains a subpath as `path`.
@@ -229,8 +276,8 @@ func (root *ShelfNode) HasSubpathOf(path []uuid.UUID) bool {
 func (node *ShelfNode) AnalysisAndGenerateSummary() (
 	totalShelfNodes int,
 	totalMaterials int,
-	maxWidth int64,
-	maxDepth int64,
+	maxWidth int,
+	maxDepth int,
 	uniqueMaterialIds []uuid.UUID,
 	exception *exceptions.Exception,
 ) {
@@ -238,7 +285,7 @@ func (node *ShelfNode) AnalysisAndGenerateSummary() (
 		return 0, 0, 0, 0, make([]uuid.UUID, 0), exceptions.Shelf.CallingMethodsWithNilValue()
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), constants.MaxTraverseTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), constants.MaxShelfTreeTraverseTimeout)
 	defer cancel()
 
 	queue := make([]ShelfNodeWithDepth, 0)
@@ -249,20 +296,32 @@ func (node *ShelfNode) AnalysisAndGenerateSummary() (
 
 	for len(queue) > 0 {
 		levelSize := len(queue)
-		maxWidth = max(maxWidth, int64(levelSize))
+		maxWidth = max(maxWidth, levelSize)
 		maxDepth++
 
+		if maxWidth > constants.MaxShelfTreeWidth {
+			return 0, 0, 0, 0, make([]uuid.UUID, 0),
+				exceptions.Shelf.MaximumWidthExceeded(maxWidth, constants.MaxShelfTreeWidth)
+		}
+		if maxDepth > constants.MaxShelfTreeDepth {
+			return 0, 0, 0, 0, make([]uuid.UUID, 0),
+				exceptions.Shelf.MaximumDepthExceeded(maxDepth, constants.MaxShelfTreeDepth)
+		}
+
 		for i := 0; i < levelSize; i++ {
-			if totalShelfNodes%constants.CheckPointPerTraverse == 0 {
+			if totalShelfNodes > constants.MaxNumOfShelfTreeTraversedNodes {
+				return 0, 0, 0, 0, make([]uuid.UUID, 0),
+					exceptions.Shelf.MaximumTraverseCountExceeded(totalShelfNodes, constants.MaxNumOfShelfTreeTraversedNodes)
+			}
+			if totalShelfNodes%constants.CheckPointPerShelfTreeTraverse == 0 {
 				select {
 				case <-ctx.Done():
-					exceptions.Shelf.Timeout(constants.MaxTraverseTimeout).Panic()
 					return totalShelfNodes,
 						totalMaterials,
 						maxWidth,
 						maxDepth,
 						uniqueMaterialIds,
-						exceptions.Shelf.Timeout(constants.MaxTraverseTimeout)
+						exceptions.Shelf.Timeout(constants.MaxShelfTreeTraverseTimeout)
 				default:
 					// no-op
 				}
