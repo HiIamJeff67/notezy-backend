@@ -317,9 +317,9 @@ func (ec *executionContext) _PublicTheme_downloadCount(ctx context.Context, fiel
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int32)
+	res := resTmp.(int64)
 	fc.Result = res
-	return ec.marshalNInt2int32(ctx, field.Selections, res)
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PublicTheme_downloadCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -329,7 +329,7 @@ func (ec *executionContext) fieldContext_PublicTheme_downloadCount(_ context.Con
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil

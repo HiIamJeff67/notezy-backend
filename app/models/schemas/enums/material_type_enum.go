@@ -14,6 +14,7 @@ const (
 	MaterialType_Textbook      MaterialType = "Textbook"
 	MaterialType_Notebook      MaterialType = "Notebook"
 	MaterialType_LearningCards MaterialType = "LearningCards"
+	MaterialType_Workflow      MaterialType = "Workflow"
 )
 
 /* ============================== All Instances ============================== */

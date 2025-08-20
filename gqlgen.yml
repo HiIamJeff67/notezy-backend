@@ -123,9 +123,9 @@ autobind:
 # your liking
 
 models:
-  ID:
-    model: "github.com/99designs/gqlgen/graphql.ID"
   Int:
+    model: "github.com/99designs/gqlgen/graphql.Int32"
+  Int32:
     model: "github.com/99designs/gqlgen/graphql.Int32"
   Int64:
     model: "github.com/99designs/gqlgen/graphql.Int64"
@@ -159,6 +159,8 @@ models:
     model: "notezy-backend/app/models/schemas/enums.Language"
   BadgeType:
     model: "notezy-backend/app/models/schemas/enums.BadgeType"
+  AccessControlPermission:
+    model: "notezy-backend/app/models/schemas/enums.AccessControlPermission"
   MaterialType:
     model: "notezy-backend/app/models/schemas/enums.MaterialType"
   MaterialContentType:

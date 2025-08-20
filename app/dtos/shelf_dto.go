@@ -19,7 +19,7 @@ type SynchronizeShelvesReqDto struct {
 	PartialUpdates []PartialUpdateDto[struct {
 		Name             *string `json:"name" validate:"omitnil,max=128,isshelfname"`
 		EncodedStructure *[]byte `json:"encodedStructure" validate:"omitnil"`
-	}]
+	}] `json:"partialUpdates" validate:"required"`
 }
 
 /* ============================== Response DTO ============================== */

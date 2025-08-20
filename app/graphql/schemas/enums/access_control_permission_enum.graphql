@@ -1,0 +1,5 @@
+enum AccessControlPermission {
+  Read
+  Write
+  Admin
+}

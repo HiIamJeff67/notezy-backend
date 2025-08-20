@@ -164,10 +164,20 @@ func (r *ShelfRepository) DirectlyUpdateManyByIds(ids []uuid.UUID, ownerId uuid.
 		// safetly dereference all the values
 		args = append(args, util.DerefOrNil(inputs[index].Values.Name))
 		args = append(args, util.DerefOrNil(inputs[index].Values.EncodedStructure))
+		args = append(args, util.DerefOrNil(inputs[index].Values.EncodedStructureByteSize))
+		args = append(args, util.DerefOrNil(inputs[index].Values.TotalShelfNodes))
+		args = append(args, util.DerefOrNil(inputs[index].Values.TotalMaterials))
+		args = append(args, util.DerefOrNil(inputs[index].Values.MaxWidth))
+		args = append(args, util.DerefOrNil(inputs[index].Values.MaxDepth))
 
 		// safetly dereference all the setNulls
 		args = append(args, util.CheckSetNull(inputs[index].SetNull, "Name"))
 		args = append(args, util.CheckSetNull(inputs[index].SetNull, "EncodedStructure"))
+		args = append(args, util.CheckSetNull(inputs[index].SetNull, "EncodedStructureByteSize"))
+		args = append(args, util.CheckSetNull(inputs[index].SetNull, "TotalShelfNodes"))
+		args = append(args, util.CheckSetNull(inputs[index].SetNull, "TotalMaterials"))
+		args = append(args, util.CheckSetNull(inputs[index].SetNull, "MaxWidth"))
+		args = append(args, util.CheckSetNull(inputs[index].SetNull, "MaxDepth"))
 	}
 
 	sql := fmt.Sprintf(`
@@ -181,6 +191,26 @@ func (r *ShelfRepository) DirectlyUpdateManyByIds(ids []uuid.UUID, ownerId uuid.
 					WHEN v.set_null_encoded_structure THEN NULL
 					ELSE COALESCE(v.encoded_structure, s.encoded_structure)
 				END,
+				encoded_structure_byte_size = CASE
+					WHEN v.encoded_structure_byte_size THEN NULL
+					ELSE COALESCE(v.encoded_structure_byte_size, s.encoded_structure_byte_size)
+				END, 
+				total_shelf_nodes = CASE
+					WHEN v.total_shelf_nodes THEN NULL
+					ELSE COALESCE(v.total_shelf_nodes, s.total_shelf_nodes)
+				END, 
+				total_materials = CASE
+					WHEN v.total_materials THEN NULL
+					ELSE COALESCE(v.total_materials, s.total_materials)
+				END, 
+				max_width = CASE
+					WHEN v.max_width THEN NULL
+					ELSE COALESCE(v.max_width, s.max_width)
+				END, 
+				max_depth = CASE
+					WHEN v.max_depth THEN NULL
+					ELSE COALESCE(v.max_depth, s.max_depth)
+				END, 
 				updated_at = NOW()
 			FROM (VALUES %s) AS v(id, name, encoded_structure, set_null_name, set_null_encoded_structure)
 			WHERE s.id = v.id AND s.owner_id = ?;

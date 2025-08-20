@@ -69,18 +69,23 @@ func (s *ShelfService) SynchronizeShelves(reqDto *dtos.SynchronizeShelvesReqDto)
 		if exception != nil {
 			return nil, exception
 		}
-		isSimple, exception := shelfRootNode.IsChildrenSimple()
+		summary, exception := shelfRootNode.AnalysisAndGenerateSummary()
 		if exception != nil {
 			exception.Log() // the system should not run into this section, may due to malicious attack
 			return nil, exception
 		}
-		if !isSimple {
+		if summary == nil {
 			return nil, exceptions.Shelf.CircularChildrenDetectedInShelfNode()
 		}
 		updateInputs = append(updateInputs, inputs.PartialUpdateShelfInput{
 			Values: inputs.UpdateShelfInput{
-				Name:             partialUpdate.Values.Name,
-				EncodedStructure: partialUpdate.Values.EncodedStructure,
+				Name:                     partialUpdate.Values.Name,
+				EncodedStructure:         partialUpdate.Values.EncodedStructure,
+				EncodedStructureByteSize: &summary.EncodedStructureByteSize,
+				TotalShelfNodes:          &summary.TotalShelfNodes,
+				TotalMaterials:           &summary.TotalMaterials,
+				MaxWidth:                 &summary.MaxWidth,
+				MaxDepth:                 &summary.MaxDepth,
 			},
 			SetNull: partialUpdate.SetNull,
 		})

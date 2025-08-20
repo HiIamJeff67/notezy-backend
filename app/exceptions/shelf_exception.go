@@ -40,7 +40,7 @@ var Shelf = &ShelfExceptionDomain{
 
 /* ============================== Handling Structure Error of ShelfNode ============================== */
 
-func (d *ShelfExceptionDomain) MaximumWidthExceeded(currentWidth int, maxWidth int) *Exception {
+func (d *ShelfExceptionDomain) MaximumWidthExceeded(currentWidth int32, maxWidth int32) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
 		Prefix:         d.Prefix,
@@ -52,7 +52,7 @@ func (d *ShelfExceptionDomain) MaximumWidthExceeded(currentWidth int, maxWidth i
 	}
 }
 
-func (d *ShelfExceptionDomain) MaximumDepthExceeded(currentDepth int, maxDepth int) *Exception {
+func (d *ShelfExceptionDomain) MaximumDepthExceeded(currentDepth int32, maxDepth int32) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 2,
 		Prefix:         d.Prefix,
@@ -64,7 +64,7 @@ func (d *ShelfExceptionDomain) MaximumDepthExceeded(currentDepth int, maxDepth i
 	}
 }
 
-func (d *ShelfExceptionDomain) MaximumTraverseCountExceeded(currentTraverseCount int, maxTraverseCount int) *Exception {
+func (d *ShelfExceptionDomain) MaximumTraverseCountExceeded(currentTraverseCount int32, maxTraverseCount int32) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 3,
 		Prefix:         d.Prefix,

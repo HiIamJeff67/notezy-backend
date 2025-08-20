@@ -2,11 +2,16 @@ type PrivateShelf {
   id: UUID!
   name: String!
   encodedStructure: Base64Bytes!
-  UpdatedAt: Time!
-  CreatedAt: Time!
+  encodedStructureByteSize: Int64!
+  totalShelfNodes: Int32!
+  totalMaterials: Int32!
+  maxWidth: Int32!
+  maxDepth: Int32!
+  updatedAt: Time!
+  createdAt: Time!
 
   # relations
-  users: [PublicUser!]!
+  usersToShelves: [PrivateUsersToShelves!]!
 }
 
 # =============== Search SortBy & Input =============== #

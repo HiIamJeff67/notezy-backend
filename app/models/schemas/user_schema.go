@@ -19,7 +19,7 @@ type User struct {
 	Email           string           `json:"email" gorm:"column:email; unique; not null;"`               // validate:"required,email"
 	Password        string           `json:"password" gorm:"column:password; not null; size:1024;"`      // validate:"required,min=8,max=1024"      // since we store the hashed password which is quite long
 	RefreshToken    string           `json:"refreshToken" gorm:"column:refresh_token; not null;"`        // validate:"omitnil"
-	LoginCount      int32            `json:"loginCount" gorm:"column:login_count; type:integer not null; default:0;"`
+	LoginCount      int32            `json:"loginCount" gorm:"column:login_count; type:integer; not null; default:0;"`
 	BlockLoginUntil time.Time        `json:"blockLoginUntil" gorm:"column:block_login_until; type:timestamptz; not null;"`
 	UserAgent       string           `json:"userAgent" gorm:"column:user_agent; not null;"`                      // validate:"required,isuseragent"
 	Role            enums.UserRole   `json:"role" gorm:"column:role; type:UserRole; not null; default:'Guest';"` // validate:"omitnil,isrole"

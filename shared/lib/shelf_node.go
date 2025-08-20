@@ -47,6 +47,19 @@ func NewShelfNode(
 // Note: The below time and space analysis will use N as the number of ShelfNode, and M as the number of material ids in the entire tree
 /* ============================== Private Methods ============================== */
 
+func (node *ShelfNode) estimateSingleNodeSize() int64 {
+	// 36 bytes for UUID + 20 bytes for the approximate structure cost
+	// + approximate estimate UTF-8 to be 2 bytes/char
+	var size int64 = int64(56 + len(node.Name)*2)
+
+	childrenCount := int64(len(node.Children))
+	materialCount := int64(len(node.MaterialIds))
+	size += (childrenCount + materialCount) * 36 // for each key of UUID data type
+	size += (childrenCount + materialCount) * 1  // null/reference overhead and boolean value
+
+	return size
+}
+
 // Check if the `target` is a child of `node`.
 func isChild(node *ShelfNode, target *ShelfNode) (isChild bool, exception *exceptions.Exception) {
 	if node == nil || target == nil {
@@ -59,13 +72,13 @@ func isChild(node *ShelfNode, target *ShelfNode) (isChild bool, exception *excep
 	queue := make([]ShelfNodeWithDepth, 0)
 	queue = append(queue, ShelfNodeWithDepth{Node: node, Depth: 0})
 	visited := map[uuid.UUID]bool{}
-	traverseCount := 0
-	maxWidth := 0
-	maxDepth := 0
+	var traverseCount int32 = 0
+	var maxWidth int32 = 0
+	var maxDepth int32 = 0
 
 	for len(queue) > 0 {
 		levelSize := len(queue)
-		maxWidth = max(maxWidth, levelSize)
+		maxWidth = max(maxWidth, int32(levelSize))
 		maxDepth++
 
 		if maxWidth > constants.MaxShelfTreeWidth {
@@ -144,7 +157,7 @@ func DecodeShelfNode(data []byte) (*ShelfNode, *exceptions.Exception) {
 // which means it shouldn't contain any cycles.
 // If there's any cycles detected, it will return false else true.
 // Note that if there's any other exceptions, it will also return false as well.
-func (node *ShelfNode) IsChildrenSimple() (hasCycle bool, exception *exceptions.Exception) {
+func (node *ShelfNode) IsChildrenSimple() (isSimple bool, exception *exceptions.Exception) {
 	if node == nil {
 		return false, exceptions.Shelf.CallingMethodsWithNilValue()
 	}
@@ -155,13 +168,13 @@ func (node *ShelfNode) IsChildrenSimple() (hasCycle bool, exception *exceptions.
 	queue := make([]ShelfNodeWithDepth, 0)
 	queue = append(queue, ShelfNodeWithDepth{Node: node, Depth: 0})
 	visited := map[uuid.UUID]bool{}
-	traverseCount := 0
-	maxWidth := 0
-	maxDepth := 0
+	var traverseCount int32 = 0
+	var maxWidth int32 = 0
+	var maxDepth int32 = 0
 
 	for len(queue) > 0 {
 		levelSize := len(queue)
-		maxWidth = max(maxWidth, levelSize)
+		maxWidth = max(maxWidth, int32(levelSize))
 		maxDepth++
 
 		if maxWidth > constants.MaxShelfTreeWidth {
@@ -265,6 +278,15 @@ func (root *ShelfNode) HasSubpathOf(path []uuid.UUID) bool {
 
 /* ============================== Methods for Services ============================== */
 
+type ShelfSummary struct {
+	EncodedStructureByteSize int64
+	TotalShelfNodes          int32
+	TotalMaterials           int32
+	MaxWidth                 int32
+	MaxDepth                 int32
+	UniqueMaterialIds        []uuid.UUID
+}
+
 // Traverse the entire shelf tree by using breadth first search and mean while analysis to collect some informations,
 // return a generated summary including :
 //   - total number of shelf nodes
@@ -274,15 +296,11 @@ func (root *ShelfNode) HasSubpathOf(path []uuid.UUID) bool {
 //   - unique material ids in a list
 //   - a exception if there's any error happened
 func (node *ShelfNode) AnalysisAndGenerateSummary() (
-	totalShelfNodes int,
-	totalMaterials int,
-	maxWidth int,
-	maxDepth int,
-	uniqueMaterialIds []uuid.UUID,
+	summary *ShelfSummary,
 	exception *exceptions.Exception,
 ) {
 	if node == nil {
-		return 0, 0, 0, 0, make([]uuid.UUID, 0), exceptions.Shelf.CallingMethodsWithNilValue()
+		return nil, exceptions.Shelf.CallingMethodsWithNilValue()
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), constants.MaxShelfTreeTraverseTimeout)
@@ -292,36 +310,33 @@ func (node *ShelfNode) AnalysisAndGenerateSummary() (
 	queue = append(queue, ShelfNodeWithDepth{Node: node, Depth: 0})
 	visited := map[uuid.UUID]bool{}
 	uniqueMaterialIdsSet := map[uuid.UUID]bool{}
+	uniqueMaterialIds := make([]uuid.UUID, 0)
+	var encodedStructureByteSize int64 = 0
+	var totalShelfNodes int32 = 0
+	var maxWidth int32 = 0
+	var maxDepth int32 = 0
 	// the return value of totalShelfNodes does the same thing as the traverseCount
 
 	for len(queue) > 0 {
 		levelSize := len(queue)
-		maxWidth = max(maxWidth, levelSize)
+		maxWidth = max(maxWidth, int32(levelSize))
 		maxDepth++
 
 		if maxWidth > constants.MaxShelfTreeWidth {
-			return 0, 0, 0, 0, make([]uuid.UUID, 0),
-				exceptions.Shelf.MaximumWidthExceeded(maxWidth, constants.MaxShelfTreeWidth)
+			return nil, exceptions.Shelf.MaximumWidthExceeded(maxWidth, constants.MaxShelfTreeWidth)
 		}
 		if maxDepth > constants.MaxShelfTreeDepth {
-			return 0, 0, 0, 0, make([]uuid.UUID, 0),
-				exceptions.Shelf.MaximumDepthExceeded(maxDepth, constants.MaxShelfTreeDepth)
+			return nil, exceptions.Shelf.MaximumDepthExceeded(maxDepth, constants.MaxShelfTreeDepth)
 		}
 
 		for i := 0; i < levelSize; i++ {
 			if totalShelfNodes > constants.MaxNumOfShelfTreeTraversedNodes {
-				return 0, 0, 0, 0, make([]uuid.UUID, 0),
-					exceptions.Shelf.MaximumTraverseCountExceeded(totalShelfNodes, constants.MaxNumOfShelfTreeTraversedNodes)
+				return nil, exceptions.Shelf.MaximumTraverseCountExceeded(totalShelfNodes, constants.MaxNumOfShelfTreeTraversedNodes)
 			}
 			if totalShelfNodes%constants.CheckPointPerShelfTreeTraverse == 0 {
 				select {
 				case <-ctx.Done():
-					return totalShelfNodes,
-						totalMaterials,
-						maxWidth,
-						maxDepth,
-						uniqueMaterialIds,
-						exceptions.Shelf.Timeout(constants.MaxShelfTreeTraverseTimeout)
+					return nil, exceptions.Shelf.Timeout(constants.MaxShelfTreeTraverseTimeout)
 				default:
 					// no-op
 				}
@@ -332,9 +347,11 @@ func (node *ShelfNode) AnalysisAndGenerateSummary() (
 			totalShelfNodes++
 
 			if visited[current.Node.Id] {
-				return 0, 0, 0, 0, make([]uuid.UUID, 0), exceptions.Shelf.RepeatedShelfNodesDetected()
+				return nil, exceptions.Shelf.RepeatedShelfNodesDetected()
 			}
 			visited[current.Node.Id] = true
+
+			encodedStructureByteSize += current.Node.estimateSingleNodeSize()
 
 			for materialId, exist := range current.Node.MaterialIds {
 				if !exist {
@@ -342,7 +359,7 @@ func (node *ShelfNode) AnalysisAndGenerateSummary() (
 				}
 
 				if uniqueMaterialIdsSet[materialId] {
-					return 0, 0, 0, 0, make([]uuid.UUID, 0), exceptions.Shelf.RepeatedMaterialIdsDetected()
+					return nil, exceptions.Shelf.RepeatedMaterialIdsDetected()
 				}
 				uniqueMaterialIdsSet[materialId] = true
 				uniqueMaterialIds = append(uniqueMaterialIds, materialId)
@@ -357,11 +374,14 @@ func (node *ShelfNode) AnalysisAndGenerateSummary() (
 		}
 	}
 
-	return totalShelfNodes,
-		len(uniqueMaterialIds),
-		maxWidth,
-		maxDepth,
-		uniqueMaterialIds,
+	return &ShelfSummary{
+			encodedStructureByteSize,
+			totalShelfNodes,
+			int32(len(uniqueMaterialIds)),
+			maxWidth,
+			maxDepth,
+			uniqueMaterialIds,
+		},
 		nil
 }
 

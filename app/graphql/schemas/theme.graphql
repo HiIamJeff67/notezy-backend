@@ -7,7 +7,7 @@ type PublicTheme {
   version: String!
   isDefault: Boolean!
   downloadURL: String
-  downloadCount: Int!
+  downloadCount: Int64!
   createdAt: Time!
   updatedAt: Time!
 

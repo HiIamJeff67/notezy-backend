@@ -1,0 +1,12 @@
+enum MaterialContentType {
+  Text_Plain
+  Text_HTML
+  Text_Markdown
+  Image_PNG
+  Image_JPG
+  Image_JPEG
+  Image_GIF
+  Image_SVG
+  Video_MP3
+  VIDEO_MP4
+}

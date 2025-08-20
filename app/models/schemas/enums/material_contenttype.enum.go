@@ -12,16 +12,16 @@ type MaterialContentType string
 
 const (
 	// basic types
-	MaterialContentType_PlainText MaterialContentType = "text/plain"
-	MaterialContentType_HTML      MaterialContentType = "text/html"
-	MaterialContentType_Markdown  MaterialContentType = "text/markdown"
-	MaterialContentType_PNG       MaterialContentType = "image/png"
-	MaterialContentType_JPG       MaterialContentType = "image/jpg"
-	MaterialContentType_JPEG      MaterialContentType = "image/jpeg"
-	MaterialContentType_GIF       MaterialContentType = "image/gif"
-	MaterialContentType_SVG       MaterialContentType = "image/svg"
-	MaterialContentType_MP3       MaterialContentType = "video/mp3"
-	MaterialContentType_MP4       MaterialContentType = "video/mp4"
+	MaterialContentType_PlainText MaterialContentType = "Text_Plain"
+	MaterialContentType_HTML      MaterialContentType = "Text_HTML"
+	MaterialContentType_Markdown  MaterialContentType = "Text_Markdown"
+	MaterialContentType_PNG       MaterialContentType = "Image_PNG"
+	MaterialContentType_JPG       MaterialContentType = "Image_JPG"
+	MaterialContentType_JPEG      MaterialContentType = "Image_JPEG"
+	MaterialContentType_GIF       MaterialContentType = "Image_GIF"
+	MaterialContentType_SVG       MaterialContentType = "Image_SVG"
+	MaterialContentType_MP3       MaterialContentType = "Video_MP3"
+	MaterialContentType_MP4       MaterialContentType = "Video_MP4"
 
 	// custom types of Notezy
 	// some charts, cards, drawing boards, etc.

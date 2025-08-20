@@ -163,8 +163,228 @@ func (ec *executionContext) fieldContext_PrivateShelf_encodedStructure(_ context
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateShelf_UpdatedAt(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateShelf) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateShelf_UpdatedAt(ctx, field)
+func (ec *executionContext) _PrivateShelf_encodedStructureByteSize(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateShelf) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateShelf_encodedStructureByteSize(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EncodedStructureByteSize, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PrivateShelf_encodedStructureByteSize(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PrivateShelf",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PrivateShelf_totalShelfNodes(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateShelf) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateShelf_totalShelfNodes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalShelfNodes, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int32)
+	fc.Result = res
+	return ec.marshalNInt322int32(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PrivateShelf_totalShelfNodes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PrivateShelf",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int32 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PrivateShelf_totalMaterials(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateShelf) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateShelf_totalMaterials(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalMaterials, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int32)
+	fc.Result = res
+	return ec.marshalNInt322int32(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PrivateShelf_totalMaterials(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PrivateShelf",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int32 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PrivateShelf_maxWidth(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateShelf) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateShelf_maxWidth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MaxWidth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int32)
+	fc.Result = res
+	return ec.marshalNInt322int32(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PrivateShelf_maxWidth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PrivateShelf",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int32 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PrivateShelf_maxDepth(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateShelf) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateShelf_maxDepth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MaxDepth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int32)
+	fc.Result = res
+	return ec.marshalNInt322int32(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PrivateShelf_maxDepth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PrivateShelf",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int32 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PrivateShelf_updatedAt(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateShelf) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateShelf_updatedAt(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -194,7 +414,7 @@ func (ec *executionContext) _PrivateShelf_UpdatedAt(ctx context.Context, field g
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PrivateShelf_UpdatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PrivateShelf_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PrivateShelf",
 		Field:      field,
@@ -207,8 +427,8 @@ func (ec *executionContext) fieldContext_PrivateShelf_UpdatedAt(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateShelf_CreatedAt(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateShelf) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateShelf_CreatedAt(ctx, field)
+func (ec *executionContext) _PrivateShelf_createdAt(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateShelf) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateShelf_createdAt(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -238,7 +458,7 @@ func (ec *executionContext) _PrivateShelf_CreatedAt(ctx context.Context, field g
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PrivateShelf_CreatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PrivateShelf_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PrivateShelf",
 		Field:      field,
@@ -251,8 +471,8 @@ func (ec *executionContext) fieldContext_PrivateShelf_CreatedAt(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateShelf_users(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateShelf) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateShelf_users(ctx, field)
+func (ec *executionContext) _PrivateShelf_usersToShelves(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateShelf) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateShelf_usersToShelves(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -265,7 +485,7 @@ func (ec *executionContext) _PrivateShelf_users(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Users, nil
+		return obj.UsersToShelves, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -277,12 +497,12 @@ func (ec *executionContext) _PrivateShelf_users(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*gqlmodels.PublicUser)
+	res := resTmp.([]*gqlmodels.PrivateUsersToShelves)
 	fc.Result = res
-	return ec.marshalNPublicUser2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUserᚄ(ctx, field.Selections, res)
+	return ec.marshalNPrivateUsersToShelves2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateUsersToShelvesᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PrivateShelf_users(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PrivateShelf_usersToShelves(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PrivateShelf",
 		Field:      field,
@@ -290,28 +510,22 @@ func (ec *executionContext) fieldContext_PrivateShelf_users(_ context.Context, f
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "publicId":
-				return ec.fieldContext_PublicUser_publicId(ctx, field)
-			case "name":
-				return ec.fieldContext_PublicUser_name(ctx, field)
-			case "displayName":
-				return ec.fieldContext_PublicUser_displayName(ctx, field)
-			case "role":
-				return ec.fieldContext_PublicUser_role(ctx, field)
-			case "plan":
-				return ec.fieldContext_PublicUser_plan(ctx, field)
-			case "status":
-				return ec.fieldContext_PublicUser_status(ctx, field)
+			case "userId":
+				return ec.fieldContext_PrivateUsersToShelves_userId(ctx, field)
+			case "shelfId":
+				return ec.fieldContext_PrivateUsersToShelves_shelfId(ctx, field)
+			case "permission":
+				return ec.fieldContext_PrivateUsersToShelves_permission(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PrivateUsersToShelves_updatedAt(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_PublicUser_createdAt(ctx, field)
-			case "userInfo":
-				return ec.fieldContext_PublicUser_userInfo(ctx, field)
-			case "badges":
-				return ec.fieldContext_PublicUser_badges(ctx, field)
-			case "themes":
-				return ec.fieldContext_PublicUser_themes(ctx, field)
+				return ec.fieldContext_PrivateUsersToShelves_createdAt(ctx, field)
+			case "user":
+				return ec.fieldContext_PrivateUsersToShelves_user(ctx, field)
+			case "shelf":
+				return ec.fieldContext_PrivateUsersToShelves_shelf(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type PublicUser", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type PrivateUsersToShelves", field.Name)
 		},
 	}
 	return fc, nil
@@ -598,12 +812,22 @@ func (ec *executionContext) fieldContext_SearchShelfEdge_node(_ context.Context,
 				return ec.fieldContext_PrivateShelf_name(ctx, field)
 			case "encodedStructure":
 				return ec.fieldContext_PrivateShelf_encodedStructure(ctx, field)
-			case "UpdatedAt":
-				return ec.fieldContext_PrivateShelf_UpdatedAt(ctx, field)
-			case "CreatedAt":
-				return ec.fieldContext_PrivateShelf_CreatedAt(ctx, field)
-			case "users":
-				return ec.fieldContext_PrivateShelf_users(ctx, field)
+			case "encodedStructureByteSize":
+				return ec.fieldContext_PrivateShelf_encodedStructureByteSize(ctx, field)
+			case "totalShelfNodes":
+				return ec.fieldContext_PrivateShelf_totalShelfNodes(ctx, field)
+			case "totalMaterials":
+				return ec.fieldContext_PrivateShelf_totalMaterials(ctx, field)
+			case "maxWidth":
+				return ec.fieldContext_PrivateShelf_maxWidth(ctx, field)
+			case "maxDepth":
+				return ec.fieldContext_PrivateShelf_maxDepth(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PrivateShelf_updatedAt(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PrivateShelf_createdAt(ctx, field)
+			case "usersToShelves":
+				return ec.fieldContext_PrivateShelf_usersToShelves(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PrivateShelf", field.Name)
 		},
@@ -741,18 +965,43 @@ func (ec *executionContext) _PrivateShelf(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "UpdatedAt":
-			out.Values[i] = ec._PrivateShelf_UpdatedAt(ctx, field, obj)
+		case "encodedStructureByteSize":
+			out.Values[i] = ec._PrivateShelf_encodedStructureByteSize(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "CreatedAt":
-			out.Values[i] = ec._PrivateShelf_CreatedAt(ctx, field, obj)
+		case "totalShelfNodes":
+			out.Values[i] = ec._PrivateShelf_totalShelfNodes(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "users":
-			out.Values[i] = ec._PrivateShelf_users(ctx, field, obj)
+		case "totalMaterials":
+			out.Values[i] = ec._PrivateShelf_totalMaterials(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "maxWidth":
+			out.Values[i] = ec._PrivateShelf_maxWidth(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "maxDepth":
+			out.Values[i] = ec._PrivateShelf_maxDepth(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._PrivateShelf_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._PrivateShelf_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "usersToShelves":
+			out.Values[i] = ec._PrivateShelf_usersToShelves(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

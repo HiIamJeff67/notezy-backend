@@ -43,15 +43,16 @@ const (
 
 func (t *Theme) ToPublicTheme() *gqlmodels.PublicTheme {
 	return &gqlmodels.PublicTheme{
-		PublicID:    t.PublicId,
-		Name:        t.Name,
-		IsDark:      t.IsDark,
-		Version:     t.Version,
-		IsDefault:   t.IsDefault,
-		DownloadURL: t.DownloadURL,
-		CreatedAt:   t.CreatedAt,
-		UpdatedAt:   t.UpdatedAt,
-		Author:      &gqlmodels.PublicUser{},
+		PublicID:      t.PublicId,
+		Name:          t.Name,
+		IsDark:        t.IsDark,
+		Version:       t.Version,
+		IsDefault:     t.IsDefault,
+		DownloadURL:   t.DownloadURL,
+		DownloadCount: t.DownloadCount,
+		CreatedAt:     t.CreatedAt,
+		UpdatedAt:     t.UpdatedAt,
+		Author:        &gqlmodels.PublicUser{},
 	}
 }
 

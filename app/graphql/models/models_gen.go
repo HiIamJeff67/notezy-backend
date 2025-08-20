@@ -26,12 +26,27 @@ type SearchEdge interface {
 }
 
 type PrivateShelf struct {
-	ID               uuid.UUID     `json:"id"`
-	Name             string        `json:"name"`
-	EncodedStructure []byte        `json:"encodedStructure"`
-	UpdatedAt        time.Time     `json:"UpdatedAt"`
-	CreatedAt        time.Time     `json:"CreatedAt"`
-	Users            []*PublicUser `json:"users"`
+	ID                       uuid.UUID                `json:"id"`
+	Name                     string                   `json:"name"`
+	EncodedStructure         []byte                   `json:"encodedStructure"`
+	EncodedStructureByteSize int64                    `json:"encodedStructureByteSize"`
+	TotalShelfNodes          int32                    `json:"totalShelfNodes"`
+	TotalMaterials           int32                    `json:"totalMaterials"`
+	MaxWidth                 int32                    `json:"maxWidth"`
+	MaxDepth                 int32                    `json:"maxDepth"`
+	UpdatedAt                time.Time                `json:"updatedAt"`
+	CreatedAt                time.Time                `json:"createdAt"`
+	UsersToShelves           []*PrivateUsersToShelves `json:"usersToShelves"`
+}
+
+type PrivateUsersToShelves struct {
+	UserID     uuid.UUID                     `json:"userId"`
+	ShelfID    uuid.UUID                     `json:"shelfId"`
+	Permission enums.AccessControlPermission `json:"permission"`
+	UpdatedAt  time.Time                     `json:"updatedAt"`
+	CreatedAt  time.Time                     `json:"createdAt"`
+	User       *PublicUser                   `json:"user"`
+	Shelf      *PrivateShelf                 `json:"shelf"`
 }
 
 type PublicBadge struct {
@@ -51,7 +66,7 @@ type PublicTheme struct {
 	Version       string      `json:"version"`
 	IsDefault     bool        `json:"isDefault"`
 	DownloadURL   *string     `json:"downloadURL,omitempty"`
-	DownloadCount int32       `json:"downloadCount"`
+	DownloadCount int64       `json:"downloadCount"`
 	CreatedAt     time.Time   `json:"createdAt"`
 	UpdatedAt     time.Time   `json:"updatedAt"`
 	Author        *PublicUser `json:"author"`

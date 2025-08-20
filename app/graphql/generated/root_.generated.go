@@ -41,12 +41,27 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	PrivateShelf struct {
-		CreatedAt        func(childComplexity int) int
-		EncodedStructure func(childComplexity int) int
-		ID               func(childComplexity int) int
-		Name             func(childComplexity int) int
-		UpdatedAt        func(childComplexity int) int
-		Users            func(childComplexity int) int
+		CreatedAt                func(childComplexity int) int
+		EncodedStructure         func(childComplexity int) int
+		EncodedStructureByteSize func(childComplexity int) int
+		ID                       func(childComplexity int) int
+		MaxDepth                 func(childComplexity int) int
+		MaxWidth                 func(childComplexity int) int
+		Name                     func(childComplexity int) int
+		TotalMaterials           func(childComplexity int) int
+		TotalShelfNodes          func(childComplexity int) int
+		UpdatedAt                func(childComplexity int) int
+		UsersToShelves           func(childComplexity int) int
+	}
+
+	PrivateUsersToShelves struct {
+		CreatedAt  func(childComplexity int) int
+		Permission func(childComplexity int) int
+		Shelf      func(childComplexity int) int
+		ShelfID    func(childComplexity int) int
+		UpdatedAt  func(childComplexity int) int
+		User       func(childComplexity int) int
+		UserID     func(childComplexity int) int
 	}
 
 	PublicBadge struct {
@@ -184,7 +199,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	_ = ec
 	switch typeName + "." + field {
 
-	case "PrivateShelf.CreatedAt":
+	case "PrivateShelf.createdAt":
 		if e.complexity.PrivateShelf.CreatedAt == nil {
 			break
 		}
@@ -198,12 +213,33 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateShelf.EncodedStructure(childComplexity), true
 
+	case "PrivateShelf.encodedStructureByteSize":
+		if e.complexity.PrivateShelf.EncodedStructureByteSize == nil {
+			break
+		}
+
+		return e.complexity.PrivateShelf.EncodedStructureByteSize(childComplexity), true
+
 	case "PrivateShelf.id":
 		if e.complexity.PrivateShelf.ID == nil {
 			break
 		}
 
 		return e.complexity.PrivateShelf.ID(childComplexity), true
+
+	case "PrivateShelf.maxDepth":
+		if e.complexity.PrivateShelf.MaxDepth == nil {
+			break
+		}
+
+		return e.complexity.PrivateShelf.MaxDepth(childComplexity), true
+
+	case "PrivateShelf.maxWidth":
+		if e.complexity.PrivateShelf.MaxWidth == nil {
+			break
+		}
+
+		return e.complexity.PrivateShelf.MaxWidth(childComplexity), true
 
 	case "PrivateShelf.name":
 		if e.complexity.PrivateShelf.Name == nil {
@@ -212,19 +248,82 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateShelf.Name(childComplexity), true
 
-	case "PrivateShelf.UpdatedAt":
+	case "PrivateShelf.totalMaterials":
+		if e.complexity.PrivateShelf.TotalMaterials == nil {
+			break
+		}
+
+		return e.complexity.PrivateShelf.TotalMaterials(childComplexity), true
+
+	case "PrivateShelf.totalShelfNodes":
+		if e.complexity.PrivateShelf.TotalShelfNodes == nil {
+			break
+		}
+
+		return e.complexity.PrivateShelf.TotalShelfNodes(childComplexity), true
+
+	case "PrivateShelf.updatedAt":
 		if e.complexity.PrivateShelf.UpdatedAt == nil {
 			break
 		}
 
 		return e.complexity.PrivateShelf.UpdatedAt(childComplexity), true
 
-	case "PrivateShelf.users":
-		if e.complexity.PrivateShelf.Users == nil {
+	case "PrivateShelf.usersToShelves":
+		if e.complexity.PrivateShelf.UsersToShelves == nil {
 			break
 		}
 
-		return e.complexity.PrivateShelf.Users(childComplexity), true
+		return e.complexity.PrivateShelf.UsersToShelves(childComplexity), true
+
+	case "PrivateUsersToShelves.createdAt":
+		if e.complexity.PrivateUsersToShelves.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateUsersToShelves.CreatedAt(childComplexity), true
+
+	case "PrivateUsersToShelves.permission":
+		if e.complexity.PrivateUsersToShelves.Permission == nil {
+			break
+		}
+
+		return e.complexity.PrivateUsersToShelves.Permission(childComplexity), true
+
+	case "PrivateUsersToShelves.shelf":
+		if e.complexity.PrivateUsersToShelves.Shelf == nil {
+			break
+		}
+
+		return e.complexity.PrivateUsersToShelves.Shelf(childComplexity), true
+
+	case "PrivateUsersToShelves.shelfId":
+		if e.complexity.PrivateUsersToShelves.ShelfID == nil {
+			break
+		}
+
+		return e.complexity.PrivateUsersToShelves.ShelfID(childComplexity), true
+
+	case "PrivateUsersToShelves.updatedAt":
+		if e.complexity.PrivateUsersToShelves.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateUsersToShelves.UpdatedAt(childComplexity), true
+
+	case "PrivateUsersToShelves.user":
+		if e.complexity.PrivateUsersToShelves.User == nil {
+			break
+		}
+
+		return e.complexity.PrivateUsersToShelves.User(childComplexity), true
+
+	case "PrivateUsersToShelves.userId":
+		if e.complexity.PrivateUsersToShelves.UserID == nil {
+			break
+		}
+
+		return e.complexity.PrivateUsersToShelves.UserID(childComplexity), true
 
 	case "PublicBadge.createdAt":
 		if e.complexity.PublicBadge.CreatedAt == nil {
@@ -832,6 +931,12 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
+	{Name: "../schemas/enums/access_control_permission_enum.graphql", Input: `enum AccessControlPermission {
+  Read
+  Write
+  Admin
+}
+`, BuiltIn: false},
 	{Name: "../schemas/enums/badge_type_enum.graphql", Input: `enum BadgeType {
   Diamond
   Golden
@@ -869,6 +974,26 @@ var sources = []*ast.Source{
   SimpleChinese
   Japanese
   Korean
+}
+`, BuiltIn: false},
+	{Name: "../schemas/enums/material_content_type_enum.graphql", Input: `enum MaterialContentType {
+  Text_Plain
+  Text_HTML
+  Text_Markdown
+  Image_PNG
+  Image_JPG
+  Image_JPEG
+  Image_GIF
+  Image_SVG
+  Video_MP3
+  VIDEO_MP4
+}
+`, BuiltIn: false},
+	{Name: "../schemas/enums/material_type_enum.graphql", Input: `enum MaterialType {
+  Textbook
+  Notebook
+  LearningCards
+  Workflow
 }
 `, BuiltIn: false},
 	{Name: "../schemas/enums/user_gender_enum.graphql", Input: `enum UserGender {
@@ -964,7 +1089,9 @@ type SearchBadgeConnection implements SearchConnection {
 
 # type Subscription {}
 `, BuiltIn: false},
-	{Name: "../schemas/scalar.graphql", Input: `scalar UUID
+	{Name: "../schemas/scalar.graphql", Input: `scalar Int32
+scalar Int64
+scalar UUID
 scalar Time
 scalar Base64Bytes
 `, BuiltIn: false},
@@ -1021,11 +1148,16 @@ interface SearchConnection {
   id: UUID!
   name: String!
   encodedStructure: Base64Bytes!
-  UpdatedAt: Time!
-  CreatedAt: Time!
+  encodedStructureByteSize: Int64!
+  totalShelfNodes: Int32!
+  totalMaterials: Int32!
+  maxWidth: Int32!
+  maxDepth: Int32!
+  updatedAt: Time!
+  createdAt: Time!
 
   # relations
-  users: [PublicUser!]!
+  usersToShelves: [PrivateUsersToShelves!]!
 }
 
 # =============== Search SortBy & Input =============== #
@@ -1077,7 +1209,7 @@ type SearchShelfConnection implements SearchConnection {
   version: String!
   isDefault: Boolean!
   downloadURL: String
-  downloadCount: Int!
+  downloadCount: Int64!
   createdAt: Time!
   updatedAt: Time!
 
@@ -1232,6 +1364,17 @@ type SearchUserConnection implements SearchConnection {
 
   user: PublicUser!
   badge: PublicBadge!
+}
+`, BuiltIn: false},
+	{Name: "../schemas/users_to_shelves.graphql", Input: `type PrivateUsersToShelves {
+  userId: UUID!
+  shelfId: UUID!
+  permission: AccessControlPermission!
+  updatedAt: Time!
+  createdAt: Time!
+
+  user: PublicUser!
+  shelf: PrivateShelf!
 }
 `, BuiltIn: false},
 }

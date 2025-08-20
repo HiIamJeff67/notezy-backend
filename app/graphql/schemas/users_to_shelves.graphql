@@ -1,0 +1,10 @@
+type PrivateUsersToShelves {
+  userId: UUID!
+  shelfId: UUID!
+  permission: AccessControlPermission!
+  updatedAt: Time!
+  createdAt: Time!
+
+  user: PublicUser!
+  shelf: PrivateShelf!
+}
