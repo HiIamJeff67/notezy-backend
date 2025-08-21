@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 
 	gqlmodels "notezy-backend/app/graphql/models"
-	shared "notezy-backend/shared"
+	types "notezy-backend/shared/types"
 )
 
 type Theme struct {
@@ -29,7 +29,7 @@ type Theme struct {
 
 // Theme Table Name
 func (Theme) TableName() string {
-	return shared.ValidTableName_ThemeTable.String()
+	return types.ValidTableName_ThemeTable.String()
 }
 
 // Theme Table Relations

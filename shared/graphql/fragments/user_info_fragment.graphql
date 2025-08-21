@@ -1,0 +1,9 @@
+fragment FragmentedBasicPublicUserInfo on PublicUserInfo {
+  avatarURL
+  coverBackgroundURL
+  header
+  introduction
+  gender
+  country
+  birthDate
+}

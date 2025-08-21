@@ -3,12 +3,12 @@ package cookies
 import (
 	"net/http"
 
-	shared "notezy-backend/shared"
 	constants "notezy-backend/shared/constants"
+	types "notezy-backend/shared/types"
 )
 
 var RefreshToken = NewCookieHandler(
-	shared.ValidCookieName_RefreshToken,    // name
+	types.ValidCookieName_RefreshToken,     // name
 	"/"+constants.CurrentBaseURL,           // path
 	constants.ExpirationTimeOfRefreshToken, // duration
 	true,                                   // secure

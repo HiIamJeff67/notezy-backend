@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	exceptions "notezy-backend/app/exceptions"
-	shared "notezy-backend/shared"
+	types "notezy-backend/shared/types"
 )
 
 type CookieHandlerInterface interface {
@@ -16,7 +16,7 @@ type CookieHandlerInterface interface {
 }
 
 type CookieHandler struct {
-	name     shared.ValidCookieName
+	name     types.ValidCookieName
 	path     string
 	duration time.Duration
 	secure   bool
@@ -25,7 +25,7 @@ type CookieHandler struct {
 }
 
 // a constructor of the cookie handler
-func NewCookieHandler(name shared.ValidCookieName, path string, duration time.Duration, secure, httpOnly bool, sameSite http.SameSite) *CookieHandler {
+func NewCookieHandler(name types.ValidCookieName, path string, duration time.Duration, secure, httpOnly bool, sameSite http.SameSite) *CookieHandler {
 	return &CookieHandler{
 		name:     name,
 		path:     path,

@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	enums "notezy-backend/app/models/schemas/enums"
-	shared "notezy-backend/shared"
+	types "notezy-backend/shared/types"
 )
 
 type UserAccount struct {
@@ -26,7 +26,7 @@ type UserAccount struct {
 
 // User Account Table Name
 func (UserAccount) TableName() string {
-	return shared.ValidTableName_UserAccountTable.String()
+	return types.ValidTableName_UserAccountTable.String()
 }
 
 /* ============================== Relative Type Conversions ============================== */

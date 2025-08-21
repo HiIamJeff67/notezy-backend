@@ -9,22 +9,38 @@ import (
 
 	exceptions "notezy-backend/app/exceptions"
 	logs "notezy-backend/app/logs"
-	shared "notezy-backend/shared"
+	util "notezy-backend/app/util"
 	types "notezy-backend/shared/types"
 )
 
+type CacheManagerConfig struct {
+	Host     string
+	Port     string
+	Password string
+	DB       int
+}
+
 var (
-	RedisClientMap             map[int]*redis.Client                       = make(map[int]*redis.Client)
-	RedisClientToConfig        map[*redis.Client]shared.CacheManagerConfig = make(map[*redis.Client]shared.CacheManagerConfig)
-	PurposeToServerNumberRange                                             = map[shared.ValidCachePurpose]types.Range{
-		shared.ValidCachePurpose_UserData: UserDataRange, // server number: 0 - 3 (included)
+	RedisCacheManagerConfigTemplate = CacheManagerConfig{
+		Host:     util.GetEnv("REDIS_HOST", "notezy-redis"),
+		Port:     util.GetEnv("REDIS_PORT", "6379"),
+		Password: util.GetEnv("REDIS_PASSWORD", ""),
+		DB:       util.GetIntEnv("REDIS_INIT_DB", 0),
+	}
+)
+
+var (
+	RedisClientMap             map[int]*redis.Client                = make(map[int]*redis.Client)
+	RedisClientToConfig        map[*redis.Client]CacheManagerConfig = make(map[*redis.Client]CacheManagerConfig)
+	PurposeToServerNumberRange                                      = map[types.ValidCachePurpose]types.Range{
+		types.ValidCachePurpose_UserData: UserDataRange, // server number: 0 - 3 (included)
 	}
 	Ctx = context.Background()
 
 	redisMapMutex sync.Mutex // since the map in go is not thread-safe, we need this mutex lock
 )
 
-func ConnectToRedis(config shared.CacheManagerConfig) *redis.Client {
+func ConnectToRedis(config CacheManagerConfig) *redis.Client {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     config.Host + ":" + config.Port,
 		Password: config.Password,
@@ -86,7 +102,7 @@ func ConnectToAllRedis() bool {
 			wg.Add(1) // increase the counter by 1
 			go func(dbIndex int) {
 				defer wg.Done() // decrease the counter by 1 after this gorountine function returned
-				currentConfig := shared.RedisCacheManagerConfigTemplate
+				currentConfig := RedisCacheManagerConfigTemplate
 				currentConfig.DB = dbIndex // modify the server number of the client
 				res := ConnectToRedis(currentConfig)
 				resultCh <- (res != nil)

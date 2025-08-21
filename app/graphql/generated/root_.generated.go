@@ -48,20 +48,10 @@ type ComplexityRoot struct {
 		MaxDepth                 func(childComplexity int) int
 		MaxWidth                 func(childComplexity int) int
 		Name                     func(childComplexity int) int
+		Owner                    func(childComplexity int) int
 		TotalMaterials           func(childComplexity int) int
 		TotalShelfNodes          func(childComplexity int) int
 		UpdatedAt                func(childComplexity int) int
-		UsersToShelves           func(childComplexity int) int
-	}
-
-	PrivateUsersToShelves struct {
-		CreatedAt  func(childComplexity int) int
-		Permission func(childComplexity int) int
-		Shelf      func(childComplexity int) int
-		ShelfID    func(childComplexity int) int
-		UpdatedAt  func(childComplexity int) int
-		User       func(childComplexity int) int
-		UserID     func(childComplexity int) int
 	}
 
 	PublicBadge struct {
@@ -108,14 +98,6 @@ type ComplexityRoot struct {
 		Gender             func(childComplexity int) int
 		Header             func(childComplexity int) int
 		Introduction       func(childComplexity int) int
-	}
-
-	PublicUsersToBadges struct {
-		Badge     func(childComplexity int) int
-		BadgeID   func(childComplexity int) int
-		CreatedAt func(childComplexity int) int
-		User      func(childComplexity int) int
-		UserID    func(childComplexity int) int
 	}
 
 	Query struct {
@@ -248,6 +230,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateShelf.Name(childComplexity), true
 
+	case "PrivateShelf.owner":
+		if e.complexity.PrivateShelf.Owner == nil {
+			break
+		}
+
+		return e.complexity.PrivateShelf.Owner(childComplexity), true
+
 	case "PrivateShelf.totalMaterials":
 		if e.complexity.PrivateShelf.TotalMaterials == nil {
 			break
@@ -268,62 +257,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateShelf.UpdatedAt(childComplexity), true
-
-	case "PrivateShelf.usersToShelves":
-		if e.complexity.PrivateShelf.UsersToShelves == nil {
-			break
-		}
-
-		return e.complexity.PrivateShelf.UsersToShelves(childComplexity), true
-
-	case "PrivateUsersToShelves.createdAt":
-		if e.complexity.PrivateUsersToShelves.CreatedAt == nil {
-			break
-		}
-
-		return e.complexity.PrivateUsersToShelves.CreatedAt(childComplexity), true
-
-	case "PrivateUsersToShelves.permission":
-		if e.complexity.PrivateUsersToShelves.Permission == nil {
-			break
-		}
-
-		return e.complexity.PrivateUsersToShelves.Permission(childComplexity), true
-
-	case "PrivateUsersToShelves.shelf":
-		if e.complexity.PrivateUsersToShelves.Shelf == nil {
-			break
-		}
-
-		return e.complexity.PrivateUsersToShelves.Shelf(childComplexity), true
-
-	case "PrivateUsersToShelves.shelfId":
-		if e.complexity.PrivateUsersToShelves.ShelfID == nil {
-			break
-		}
-
-		return e.complexity.PrivateUsersToShelves.ShelfID(childComplexity), true
-
-	case "PrivateUsersToShelves.updatedAt":
-		if e.complexity.PrivateUsersToShelves.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.PrivateUsersToShelves.UpdatedAt(childComplexity), true
-
-	case "PrivateUsersToShelves.user":
-		if e.complexity.PrivateUsersToShelves.User == nil {
-			break
-		}
-
-		return e.complexity.PrivateUsersToShelves.User(childComplexity), true
-
-	case "PrivateUsersToShelves.userId":
-		if e.complexity.PrivateUsersToShelves.UserID == nil {
-			break
-		}
-
-		return e.complexity.PrivateUsersToShelves.UserID(childComplexity), true
 
 	case "PublicBadge.createdAt":
 		if e.complexity.PublicBadge.CreatedAt == nil {
@@ -562,41 +495,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PublicUserInfo.Introduction(childComplexity), true
-
-	case "PublicUsersToBadges.badge":
-		if e.complexity.PublicUsersToBadges.Badge == nil {
-			break
-		}
-
-		return e.complexity.PublicUsersToBadges.Badge(childComplexity), true
-
-	case "PublicUsersToBadges.badgeId":
-		if e.complexity.PublicUsersToBadges.BadgeID == nil {
-			break
-		}
-
-		return e.complexity.PublicUsersToBadges.BadgeID(childComplexity), true
-
-	case "PublicUsersToBadges.createdAt":
-		if e.complexity.PublicUsersToBadges.CreatedAt == nil {
-			break
-		}
-
-		return e.complexity.PublicUsersToBadges.CreatedAt(childComplexity), true
-
-	case "PublicUsersToBadges.user":
-		if e.complexity.PublicUsersToBadges.User == nil {
-			break
-		}
-
-		return e.complexity.PublicUsersToBadges.User(childComplexity), true
-
-	case "PublicUsersToBadges.userId":
-		if e.complexity.PublicUsersToBadges.UserID == nil {
-			break
-		}
-
-		return e.complexity.PublicUsersToBadges.UserID(childComplexity), true
 
 	case "Query.searchShelves":
 		if e.complexity.Query.SearchShelves == nil {
@@ -931,13 +829,13 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../schemas/enums/access_control_permission_enum.graphql", Input: `enum AccessControlPermission {
+	{Name: "../../../shared/graphql/schemas/enums/access_control_permission_enum.graphql", Input: `enum AccessControlPermission {
   Read
   Write
   Admin
 }
 `, BuiltIn: false},
-	{Name: "../schemas/enums/badge_type_enum.graphql", Input: `enum BadgeType {
+	{Name: "../../../shared/graphql/schemas/enums/badge_type_enum.graphql", Input: `enum BadgeType {
   Diamond
   Golden
   Silver
@@ -945,7 +843,7 @@ var sources = []*ast.Source{
   Steel
 }
 `, BuiltIn: false},
-	{Name: "../schemas/enums/country_code_enum.graphql", Input: `enum CountryCode {
+	{Name: "../../../shared/graphql/schemas/enums/country_code_enum.graphql", Input: `enum CountryCode {
   COUNTRY_CODE_886 # Taiwan
   COUNTRY_CODE_81 # Japan
   COUNTRY_CODE_60 # Malaysia
@@ -956,7 +854,7 @@ var sources = []*ast.Source{
   COUNTRY_CODE_61 # Australia
 }
 `, BuiltIn: false},
-	{Name: "../schemas/enums/country_enum.graphql", Input: `enum Country {
+	{Name: "../../../shared/graphql/schemas/enums/country_enum.graphql", Input: `enum Country {
   Taiwan
   Japan
   Malaysia
@@ -968,7 +866,7 @@ var sources = []*ast.Source{
   Canada
 }
 `, BuiltIn: false},
-	{Name: "../schemas/enums/language_enum.graphql", Input: `enum Language {
+	{Name: "../../../shared/graphql/schemas/enums/language_enum.graphql", Input: `enum Language {
   English
   TraditionalChinese
   SimpleChinese
@@ -976,7 +874,7 @@ var sources = []*ast.Source{
   Korean
 }
 `, BuiltIn: false},
-	{Name: "../schemas/enums/material_content_type_enum.graphql", Input: `enum MaterialContentType {
+	{Name: "../../../shared/graphql/schemas/enums/material_content_type_enum.graphql", Input: `enum MaterialContentType {
   Text_Plain
   Text_HTML
   Text_Markdown
@@ -989,40 +887,40 @@ var sources = []*ast.Source{
   VIDEO_MP4
 }
 `, BuiltIn: false},
-	{Name: "../schemas/enums/material_type_enum.graphql", Input: `enum MaterialType {
+	{Name: "../../../shared/graphql/schemas/enums/material_type_enum.graphql", Input: `enum MaterialType {
   Textbook
   Notebook
   LearningCards
   Workflow
 }
 `, BuiltIn: false},
-	{Name: "../schemas/enums/user_gender_enum.graphql", Input: `enum UserGender {
+	{Name: "../../../shared/graphql/schemas/enums/user_gender_enum.graphql", Input: `enum UserGender {
   Male
   Female
   PreferNotToSay
 }
 `, BuiltIn: false},
-	{Name: "../schemas/enums/user_plan_enum.graphql", Input: `enum UserPlan {
+	{Name: "../../../shared/graphql/schemas/enums/user_plan_enum.graphql", Input: `enum UserPlan {
   Enterprise
   Ultimate
   Pro
   Free
 }
 `, BuiltIn: false},
-	{Name: "../schemas/enums/user_role_enum.graphql", Input: `enum UserRole {
+	{Name: "../../../shared/graphql/schemas/enums/user_role_enum.graphql", Input: `enum UserRole {
   Admin
   Normal
   Guest
 }
 `, BuiltIn: false},
-	{Name: "../schemas/enums/user_status_enum.graphql", Input: `enum UserStatus {
+	{Name: "../../../shared/graphql/schemas/enums/user_status_enum.graphql", Input: `enum UserStatus {
   Online
   AFK
   DoNotDisturb
   Offline
 }
 `, BuiltIn: false},
-	{Name: "../schemas/badge.graphql", Input: `type PublicBadge {
+	{Name: "../../../shared/graphql/schemas/badge.graphql", Input: `type PublicBadge {
   # id: UUID!
   publicId: String! # the encoded of this field is the identifier of the PublicBadge
   title: String!
@@ -1079,7 +977,7 @@ type SearchBadgeConnection implements SearchConnection {
   searchTime: Float!
 }
 `, BuiltIn: false},
-	{Name: "../schemas/query.graphql", Input: `type Query {
+	{Name: "../../../shared/graphql/schemas/query.graphql", Input: `type Query {
   searchUsers(input: SearchUserInput!): SearchUserConnection!
   searchThemes(input: SearchThemeInput!): SearchThemeConnection!
   searchShelves(input: SearchShelfInput!): SearchShelfConnection!
@@ -1089,13 +987,13 @@ type SearchBadgeConnection implements SearchConnection {
 
 # type Subscription {}
 `, BuiltIn: false},
-	{Name: "../schemas/scalar.graphql", Input: `scalar Int32
+	{Name: "../../../shared/graphql/schemas/scalar.graphql", Input: `scalar Int32
 scalar Int64
 scalar UUID
 scalar Time
 scalar Base64Bytes
 `, BuiltIn: false},
-	{Name: "../schemas/search.graphql", Input: `# every schemas or graphql types which want to be searchable
+	{Name: "../../../shared/graphql/schemas/search.graphql", Input: `# every schemas or graphql types which want to be searchable
 # are required to inheritence the structure (of cursor-based pagination) here
 
 # =============== Search Filters (part of Input) =============== #
@@ -1144,7 +1042,7 @@ interface SearchConnection {
   searchTime: Float!
 }
 `, BuiltIn: false},
-	{Name: "../schemas/shelf.graphql", Input: `type PrivateShelf {
+	{Name: "../../../shared/graphql/schemas/shelf.graphql", Input: `type PrivateShelf {
   id: UUID!
   name: String!
   encodedStructure: Base64Bytes!
@@ -1157,7 +1055,7 @@ interface SearchConnection {
   createdAt: Time!
 
   # relations
-  usersToShelves: [PrivateUsersToShelves!]!
+  owner: [PublicUser!]!
 }
 
 # =============== Search SortBy & Input =============== #
@@ -1200,7 +1098,7 @@ type SearchShelfConnection implements SearchConnection {
   searchTime: Float!
 }
 `, BuiltIn: false},
-	{Name: "../schemas/theme.graphql", Input: `type PublicTheme {
+	{Name: "../../../shared/graphql/schemas/theme.graphql", Input: `type PublicTheme {
   # id: UUID!
   publicId: String! # the encoded of this field is the identifier of the PublicTheme
   name: String!
@@ -1263,7 +1161,7 @@ type SearchThemeConnection implements SearchConnection {
   searchTime: Float!
 }
 `, BuiltIn: false},
-	{Name: "../schemas/user.graphql", Input: `# the complete user structure: app/models/schemas/user_schema.go
+	{Name: "../../../shared/graphql/schemas/user.graphql", Input: `# the complete user structure: app/models/schemas/user_schema.go
 # this schema file is only use for go graphql to improve better user experience
 
 type PublicUser {
@@ -1344,37 +1242,17 @@ type SearchUserConnection implements SearchConnection {
   searchTime: Float!
 }
 `, BuiltIn: false},
-	{Name: "../schemas/user_info.graphql", Input: `type PublicUserInfo {
+	{Name: "../../../shared/graphql/schemas/user_info.graphql", Input: `type PublicUserInfo {
   # id: UUID!
   # userId: UUID!
-  coverBackgroundURL: String
   avatarURL: String
+  coverBackgroundURL: String
   header: String
   introduction: String
   gender: UserGender!
   country: Country
   birthDate: Time!
   # updatedAt: Time!
-}
-`, BuiltIn: false},
-	{Name: "../schemas/users_to_badges.graphql", Input: `type PublicUsersToBadges {
-  userId: UUID!
-  badgeId: UUID!
-  createdAt: Time!
-
-  user: PublicUser!
-  badge: PublicBadge!
-}
-`, BuiltIn: false},
-	{Name: "../schemas/users_to_shelves.graphql", Input: `type PrivateUsersToShelves {
-  userId: UUID!
-  shelfId: UUID!
-  permission: AccessControlPermission!
-  updatedAt: Time!
-  createdAt: Time!
-
-  user: PublicUser!
-  shelf: PrivateShelf!
 }
 `, BuiltIn: false},
 }

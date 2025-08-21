@@ -8,7 +8,7 @@ import (
 
 	gqlmodels "notezy-backend/app/graphql/models"
 	enums "notezy-backend/app/models/schemas/enums"
-	shared "notezy-backend/shared"
+	types "notezy-backend/shared/types"
 )
 
 type Badge struct {
@@ -26,7 +26,7 @@ type Badge struct {
 
 // Badge Table Name
 func (Badge) TableName() string {
-	return shared.ValidTableName_BadgeTable.String()
+	return types.ValidTableName_BadgeTable.String()
 }
 
 // Badge Table Relations

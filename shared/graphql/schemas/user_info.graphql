@@ -1,8 +1,8 @@
 type PublicUserInfo {
   # id: UUID!
   # userId: UUID!
-  coverBackgroundURL: String
   avatarURL: String
+  coverBackgroundURL: String
   header: String
   introduction: String
   gender: UserGender!

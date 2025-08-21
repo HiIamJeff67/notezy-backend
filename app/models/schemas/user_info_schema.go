@@ -7,7 +7,7 @@ import (
 
 	gqlmodels "notezy-backend/app/graphql/models"
 	enums "notezy-backend/app/models/schemas/enums"
-	shared "notezy-backend/shared"
+	types "notezy-backend/shared/types"
 )
 
 type UserInfo struct {
@@ -25,7 +25,7 @@ type UserInfo struct {
 
 // User Info Table Name
 func (UserInfo) TableName() string {
-	return shared.ValidTableName_UserInfoTable.String()
+	return types.ValidTableName_UserInfoTable.String()
 }
 
 /* ============================== Relative Type Conversions ============================== */

@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	enums "notezy-backend/app/models/schemas/enums"
-	shared "notezy-backend/shared"
+	types "notezy-backend/shared/types"
 )
 
 type UserSetting struct {
@@ -20,7 +20,7 @@ type UserSetting struct {
 
 // User Setting Table Name
 func (UserSetting) TableName() string {
-	return shared.ValidTableName_UserSettingTable.String()
+	return types.ValidTableName_UserSettingTable.String()
 }
 
 /* ============================== Relative Type Conversion ============================== */

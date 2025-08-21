@@ -11,7 +11,7 @@ type PrivateShelf {
   createdAt: Time!
 
   # relations
-  usersToShelves: [PrivateUsersToShelves!]!
+  owner: [PublicUser!]!
 }
 
 # =============== Search SortBy & Input =============== #

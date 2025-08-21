@@ -471,8 +471,8 @@ func (ec *executionContext) fieldContext_PrivateShelf_createdAt(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateShelf_usersToShelves(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateShelf) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateShelf_usersToShelves(ctx, field)
+func (ec *executionContext) _PrivateShelf_owner(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateShelf) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateShelf_owner(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -485,7 +485,7 @@ func (ec *executionContext) _PrivateShelf_usersToShelves(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.UsersToShelves, nil
+		return obj.Owner, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -497,12 +497,12 @@ func (ec *executionContext) _PrivateShelf_usersToShelves(ctx context.Context, fi
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*gqlmodels.PrivateUsersToShelves)
+	res := resTmp.([]*gqlmodels.PublicUser)
 	fc.Result = res
-	return ec.marshalNPrivateUsersToShelves2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateUsersToShelvesᚄ(ctx, field.Selections, res)
+	return ec.marshalNPublicUser2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUserᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PrivateShelf_usersToShelves(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PrivateShelf_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PrivateShelf",
 		Field:      field,
@@ -510,22 +510,28 @@ func (ec *executionContext) fieldContext_PrivateShelf_usersToShelves(_ context.C
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "userId":
-				return ec.fieldContext_PrivateUsersToShelves_userId(ctx, field)
-			case "shelfId":
-				return ec.fieldContext_PrivateUsersToShelves_shelfId(ctx, field)
-			case "permission":
-				return ec.fieldContext_PrivateUsersToShelves_permission(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_PrivateUsersToShelves_updatedAt(ctx, field)
+			case "publicId":
+				return ec.fieldContext_PublicUser_publicId(ctx, field)
+			case "name":
+				return ec.fieldContext_PublicUser_name(ctx, field)
+			case "displayName":
+				return ec.fieldContext_PublicUser_displayName(ctx, field)
+			case "role":
+				return ec.fieldContext_PublicUser_role(ctx, field)
+			case "plan":
+				return ec.fieldContext_PublicUser_plan(ctx, field)
+			case "status":
+				return ec.fieldContext_PublicUser_status(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_PrivateUsersToShelves_createdAt(ctx, field)
-			case "user":
-				return ec.fieldContext_PrivateUsersToShelves_user(ctx, field)
-			case "shelf":
-				return ec.fieldContext_PrivateUsersToShelves_shelf(ctx, field)
+				return ec.fieldContext_PublicUser_createdAt(ctx, field)
+			case "userInfo":
+				return ec.fieldContext_PublicUser_userInfo(ctx, field)
+			case "badges":
+				return ec.fieldContext_PublicUser_badges(ctx, field)
+			case "themes":
+				return ec.fieldContext_PublicUser_themes(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type PrivateUsersToShelves", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type PublicUser", field.Name)
 		},
 	}
 	return fc, nil
@@ -826,8 +832,8 @@ func (ec *executionContext) fieldContext_SearchShelfEdge_node(_ context.Context,
 				return ec.fieldContext_PrivateShelf_updatedAt(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_PrivateShelf_createdAt(ctx, field)
-			case "usersToShelves":
-				return ec.fieldContext_PrivateShelf_usersToShelves(ctx, field)
+			case "owner":
+				return ec.fieldContext_PrivateShelf_owner(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PrivateShelf", field.Name)
 		},
@@ -1000,8 +1006,8 @@ func (ec *executionContext) _PrivateShelf(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "usersToShelves":
-			out.Values[i] = ec._PrivateShelf_usersToShelves(ctx, field, obj)
+		case "owner":
+			out.Values[i] = ec._PrivateShelf_owner(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

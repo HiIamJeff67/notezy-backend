@@ -11,19 +11,37 @@ import (
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
 	util "notezy-backend/app/util"
-	shared "notezy-backend/shared"
+	types "notezy-backend/shared/types"
 )
+
+type DatabaseConfig struct {
+	Host     string
+	User     string
+	Password string
+	DBName   string
+	Port     string // the port inside the container, so please leave this as 5432 for PostgreSQL
+}
 
 var (
 	// the main database instance of the application (we use a different one for e2e testing, etc.)
 	NotezyDB *gorm.DB
 
 	// maintain the static information about the database instance and its config
-	DatabaseInstanceToConfig = map[*gorm.DB]shared.DatabaseConfig{}
+	DatabaseInstanceToConfig = map[*gorm.DB]DatabaseConfig{}
 	DatabaseNameToInstance   = map[string]*gorm.DB{}
 )
 
-func ConnectToDatabase(config shared.DatabaseConfig) *gorm.DB {
+var (
+	PostgresDatabaseConfig = DatabaseConfig{
+		Host:     util.GetEnv("DB_HOST", "notezy-db"),
+		User:     util.GetEnv("DB_USER", "master"),
+		Password: util.GetEnv("DB_PASSWORD", ""),
+		DBName:   util.GetEnv("DB_NAME", "notezy-db"),
+		Port:     util.GetEnv("DOCKER_DB_PORT", "5432"),
+	}
+)
+
+func ConnectToDatabase(config DatabaseConfig) *gorm.DB {
 	var dbArgs string = fmt.Sprintf(
 		"host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
 		config.Host,
@@ -76,7 +94,7 @@ func DisconnectToDatabase(db *gorm.DB) bool {
 	return true
 }
 
-func TruncateTablesInDatabase(tableName shared.ValidTableName, db *gorm.DB) bool {
+func TruncateTablesInDatabase(tableName types.ValidTableName, db *gorm.DB) bool {
 	result := db.Exec("TRUNCATE TABLE \"%s\" RESTART IDENTITY CASCADE;")
 	if err := result.Error; err != nil {
 		logs.FError("Failed to truncate %s database %s table", DatabaseInstanceToConfig[db].DBName, tableName)

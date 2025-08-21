@@ -29,47 +29,6 @@ import (
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _PublicUserInfo_coverBackgroundURL(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicUserInfo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PublicUserInfo_coverBackgroundURL(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CoverBackgroundURL, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PublicUserInfo_coverBackgroundURL(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PublicUserInfo",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _PublicUserInfo_avatarURL(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicUserInfo) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PublicUserInfo_avatarURL(ctx, field)
 	if err != nil {
@@ -99,6 +58,47 @@ func (ec *executionContext) _PublicUserInfo_avatarURL(ctx context.Context, field
 }
 
 func (ec *executionContext) fieldContext_PublicUserInfo_avatarURL(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublicUserInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublicUserInfo_coverBackgroundURL(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicUserInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PublicUserInfo_coverBackgroundURL(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CoverBackgroundURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PublicUserInfo_coverBackgroundURL(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PublicUserInfo",
 		Field:      field,
@@ -345,10 +345,10 @@ func (ec *executionContext) _PublicUserInfo(ctx context.Context, sel ast.Selecti
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("PublicUserInfo")
-		case "coverBackgroundURL":
-			out.Values[i] = ec._PublicUserInfo_coverBackgroundURL(ctx, field, obj)
 		case "avatarURL":
 			out.Values[i] = ec._PublicUserInfo_avatarURL(ctx, field, obj)
+		case "coverBackgroundURL":
+			out.Values[i] = ec._PublicUserInfo_coverBackgroundURL(ctx, field, obj)
 		case "header":
 			out.Values[i] = ec._PublicUserInfo_header(ctx, field, obj)
 		case "introduction":

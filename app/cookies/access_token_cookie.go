@@ -3,12 +3,12 @@ package cookies
 import (
 	"net/http"
 
-	shared "notezy-backend/shared"
 	constants "notezy-backend/shared/constants"
+	types "notezy-backend/shared/types"
 )
 
 var AccessToken = NewCookieHandler(
-	shared.ValidCookieName_AccessToken,    // name
+	types.ValidCookieName_AccessToken,     // name
 	"/"+constants.CurrentBaseURL,          // path
 	constants.ExpirationTimeOfAccessToken, // duration
 	true,                                  // secure

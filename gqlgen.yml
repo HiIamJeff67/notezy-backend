@@ -1,7 +1,7 @@
 # Where are all the schema files located? globs are supported eg  src/**/*.graphqls
 schema:
-  - app/graphql/schemas/enums/*.graphql
-  - app/graphql/schemas/*.graphql
+  - shared/graphql/schemas/enums/*.graphql
+  - shared/graphql/schemas/*.graphql
 
 # Where should the generated server code go?
 exec:
@@ -131,6 +131,7 @@ models:
     model: "github.com/99designs/gqlgen/graphql.Int64"
 
   # =============== Scalars =============== #
+
   UUID:
     model: "notezy-backend/app/graphql/scalars.UUID"
     # marshal: notezy-backend/app/graphql/scalars.MarshalUUID
@@ -144,7 +145,8 @@ models:
     # marshal: notezy-backend/app/graphql/scalar.MarshalBase64Bytes
     # unmarshal: notezy-backend/app/graphql/scalar.UnmarshalBase64Bytes
 
-  # =============== Enums =============== #
+  # ============================== Corresponded Enums Which Have Prebuilt in Gorm ============================== #
+
   UserRole:
     model: "notezy-backend/app/models/schemas/enums.UserRole"
   UserPlan:
@@ -165,6 +167,8 @@ models:
     model: "notezy-backend/app/models/schemas/enums.MaterialType"
   MaterialContentType:
     model: "notezy-backend/app/models/schemas/enums.MaterialContentType"
+
+  # ============================== Corresponded Schemas Which Have Prebuilt in Gorm ============================== #
 
   User:
     model: "notezy-backend/app/models/schemas.User"

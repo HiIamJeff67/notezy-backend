@@ -1,0 +1,19 @@
+fragment FragmentedBasicPrivateShelf on PrivateShelf {
+  id
+  name
+  encodedStructure
+  encodedStructureByteSize
+  totalShelfNodes
+  totalMaterials
+  maxWidth
+  maxDepth
+  updatedAt
+  createdAt
+}
+
+fragment FragmentedPrivateShelf on PrivateShelf {
+  ...FragmentedBasicPrivateShelf
+  owner {
+    ...FragmentedBasicPublicUser
+  }
+}

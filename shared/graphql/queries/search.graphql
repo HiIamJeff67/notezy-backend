@@ -1,0 +1,56 @@
+query SearchUsers($input: SearchUserInput!) {
+  searchUsers(input: $input) {
+    searchEdges {
+      encodedSearchCursor
+      node {
+        ...FragmentedPublicUser
+      }
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}
+
+query SearchThemes($input: SearchThemeInput!) {
+  searchThemes(input: $input) {
+    searchEdges {
+      encodedSearchCursor
+      node {
+        ...FragmentedPublicTheme
+      }
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}
+
+query SearchShelves($input: SearchShelfInput!) {
+  searchShelves(input: $input) {
+    searchEdges {
+      node {
+        ...FragmentedPrivateShelf
+      }
+      encodedSearchCursor
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}

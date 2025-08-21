@@ -378,10 +378,10 @@ func (ec *executionContext) fieldContext_PublicUser_userInfo(_ context.Context, 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "coverBackgroundURL":
-				return ec.fieldContext_PublicUserInfo_coverBackgroundURL(ctx, field)
 			case "avatarURL":
 				return ec.fieldContext_PublicUserInfo_avatarURL(ctx, field)
+			case "coverBackgroundURL":
+				return ec.fieldContext_PublicUserInfo_coverBackgroundURL(ctx, field)
 			case "header":
 				return ec.fieldContext_PublicUserInfo_header(ctx, field)
 			case "introduction":

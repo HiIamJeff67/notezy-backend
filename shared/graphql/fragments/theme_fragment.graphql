@@ -1,0 +1,18 @@
+fragment FragmentedBasicPublicTheme on PublicTheme {
+  publicId
+  name
+  isDark
+  version
+  isDefault
+  downloadURL
+  downloadCount
+  createdAt
+  updatedAt
+}
+
+fragment FragmentedPublicTheme on PublicTheme {
+  ...FragmentedBasicPublicTheme
+  author {
+    ...FragmentedBasicPublicUser
+  }
+}

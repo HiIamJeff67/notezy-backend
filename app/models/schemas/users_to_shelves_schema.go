@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	enums "notezy-backend/app/models/schemas/enums"
-	shared "notezy-backend/shared"
+	types "notezy-backend/shared/types"
 )
 
 type UsersToShelves struct {
@@ -23,11 +23,11 @@ type UsersToShelves struct {
 
 // Users To Shelves Table Name
 func (UsersToShelves) TableName() string {
-	return shared.ValidTableName_UsersToShelvesTable.String()
+	return types.ValidTableName_UsersToShelvesTable.String()
 }
 
 // Users To Shelves Table Relations
-type UsersToShelvesRelation shared.ValidTableName
+type UsersToShelvesRelation types.ValidTableName
 
 const (
 	UsersToShelvesRelation_User  UsersToShelvesRelation = "User"

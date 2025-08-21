@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	enums "notezy-backend/app/models/schemas/enums"
-	shared "notezy-backend/shared"
+	types "notezy-backend/shared/types"
 )
 
 /* ====================================================================================================
@@ -19,7 +19,7 @@ type Material struct {
 	Name        string                    `json:"name" gorm:"column:name; size:128; not null; default:'undefined';"`
 	Content     []byte                    `json:"content" gorm:"column:content; type:bytea; default:'null';"`
 	Type        enums.MaterialType        `json:"type" gorm:"column:type; type:MaterialType; not null; default:'Notebook';"`
-	ContentType enums.MaterialContentType `json:"contentType" gorm:"column:content_type; type:MaterialContentType; not null; default:'text/markdown';"`
+	ContentType enums.MaterialContentType `json:"contentType" gorm:"column:content_type; type:MaterialContentType; not null; default:'Text_Markdown';"`
 	UpdatedAt   time.Time                 `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt   time.Time                 `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 
@@ -29,7 +29,7 @@ type Material struct {
 
 // Material Table Name
 func (Material) TableName() string {
-	return shared.ValidTableName_MaterialTable.String()
+	return types.ValidTableName_MaterialTable.String()
 }
 
 // Material Table Relations

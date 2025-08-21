@@ -1,0 +1,8 @@
+fragment FragmentedBasicPublicBadge on PublicBadge {
+  publicId
+  title
+  description
+  type
+  imageURL
+  createdAt
+}

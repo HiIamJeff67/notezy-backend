@@ -1,9 +1,10 @@
 package tokens
 
 import (
-	"notezy-backend/app/exceptions"
-	"notezy-backend/shared"
 	"time"
+
+	exceptions "notezy-backend/app/exceptions"
+	util "notezy-backend/app/util"
 )
 
 var _jwtAccessTokenSecret []byte
@@ -15,8 +16,8 @@ const (
 )
 
 func init() {
-	accessTokenSecretKey := shared.GetEnv("JWT_ACCESS_TOKEN_SECRET_KEY", "")
-	refreshTokenSecretKey := shared.GetEnv("JWT_REFRESH_TOKEN_SECRET_KEY", "")
+	accessTokenSecretKey := util.GetEnv("JWT_ACCESS_TOKEN_SECRET_KEY", "")
+	refreshTokenSecretKey := util.GetEnv("JWT_REFRESH_TOKEN_SECRET_KEY", "")
 	if accessTokenSecretKey == "" {
 		exceptions.Util.AccessTokenSecretKeyNotFound()
 	}

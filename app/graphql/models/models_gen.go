@@ -26,27 +26,17 @@ type SearchEdge interface {
 }
 
 type PrivateShelf struct {
-	ID                       uuid.UUID                `json:"id"`
-	Name                     string                   `json:"name"`
-	EncodedStructure         []byte                   `json:"encodedStructure"`
-	EncodedStructureByteSize int64                    `json:"encodedStructureByteSize"`
-	TotalShelfNodes          int32                    `json:"totalShelfNodes"`
-	TotalMaterials           int32                    `json:"totalMaterials"`
-	MaxWidth                 int32                    `json:"maxWidth"`
-	MaxDepth                 int32                    `json:"maxDepth"`
-	UpdatedAt                time.Time                `json:"updatedAt"`
-	CreatedAt                time.Time                `json:"createdAt"`
-	UsersToShelves           []*PrivateUsersToShelves `json:"usersToShelves"`
-}
-
-type PrivateUsersToShelves struct {
-	UserID     uuid.UUID                     `json:"userId"`
-	ShelfID    uuid.UUID                     `json:"shelfId"`
-	Permission enums.AccessControlPermission `json:"permission"`
-	UpdatedAt  time.Time                     `json:"updatedAt"`
-	CreatedAt  time.Time                     `json:"createdAt"`
-	User       *PublicUser                   `json:"user"`
-	Shelf      *PrivateShelf                 `json:"shelf"`
+	ID                       uuid.UUID     `json:"id"`
+	Name                     string        `json:"name"`
+	EncodedStructure         []byte        `json:"encodedStructure"`
+	EncodedStructureByteSize int64         `json:"encodedStructureByteSize"`
+	TotalShelfNodes          int32         `json:"totalShelfNodes"`
+	TotalMaterials           int32         `json:"totalMaterials"`
+	MaxWidth                 int32         `json:"maxWidth"`
+	MaxDepth                 int32         `json:"maxDepth"`
+	UpdatedAt                time.Time     `json:"updatedAt"`
+	CreatedAt                time.Time     `json:"createdAt"`
+	Owner                    []*PublicUser `json:"owner"`
 }
 
 type PublicBadge struct {
@@ -86,21 +76,13 @@ type PublicUser struct {
 }
 
 type PublicUserInfo struct {
-	CoverBackgroundURL *string          `json:"coverBackgroundURL,omitempty"`
 	AvatarURL          *string          `json:"avatarURL,omitempty"`
+	CoverBackgroundURL *string          `json:"coverBackgroundURL,omitempty"`
 	Header             *string          `json:"header,omitempty"`
 	Introduction       *string          `json:"introduction,omitempty"`
 	Gender             enums.UserGender `json:"gender"`
 	Country            *enums.Country   `json:"country,omitempty"`
 	BirthDate          time.Time        `json:"birthDate"`
-}
-
-type PublicUsersToBadges struct {
-	UserID    uuid.UUID    `json:"userId"`
-	BadgeID   uuid.UUID    `json:"badgeId"`
-	CreatedAt time.Time    `json:"createdAt"`
-	User      *PublicUser  `json:"user"`
-	Badge     *PublicBadge `json:"badge"`
 }
 
 type Query struct {

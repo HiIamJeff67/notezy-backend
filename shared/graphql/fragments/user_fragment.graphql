@@ -1,0 +1,22 @@
+fragment FragmentedBasicPublicUser on PublicUser {
+  publicId
+  name
+  displayName
+  role
+  plan
+  status
+  createdAt
+}
+
+fragment FragmentedPublicUser on PublicUser {
+  ...FragmentedBasicPublicUser
+  userInfo {
+    ...FragmentedBasicPublicUserInfo
+  }
+  badges {
+    ...FragmentedBasicPublicBadge
+  }
+  themes {
+    ...FragmentedBasicPublicTheme
+  }
+}

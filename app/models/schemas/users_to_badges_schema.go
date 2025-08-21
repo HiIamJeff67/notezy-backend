@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	shared "notezy-backend/shared"
+	types "notezy-backend/shared/types"
 )
 
 type UsersToBadges struct {
@@ -20,7 +20,7 @@ type UsersToBadges struct {
 
 // Users To Badges Table Name
 func (UsersToBadges) TableName() string {
-	return shared.ValidTableName_UsersToBadgesTable.String()
+	return types.ValidTableName_UsersToBadgesTable.String()
 }
 
 // Users To Badges Table Relations

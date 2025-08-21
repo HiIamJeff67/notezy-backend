@@ -9,7 +9,6 @@ import (
 
 	models "notezy-backend/app/models"
 	testroutes "notezy-backend/app/routes/test_routes"
-	shared "notezy-backend/shared"
 	test "notezy-backend/test"
 )
 
@@ -25,7 +24,7 @@ type testAuthFeatureProcedure struct {
 }
 
 func (p *testAuthFeatureProcedure) BeforeAll(t *testing.T) {
-	p.testDB = models.ConnectToDatabase(shared.PostgresDatabaseConfig)
+	p.testDB = models.ConnectToDatabase(models.PostgresDatabaseConfig)
 	gin.SetMode(gin.TestMode)
 	p.testRouter = gin.New()
 	p.testRouterGroup = p.testRouter.Group(testAuthRouteNamespace)

@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	gqlmodels "notezy-backend/app/graphql/models"
-	shared "notezy-backend/shared"
+	types "notezy-backend/shared/types"
 )
 
 type Shelf struct {
@@ -29,11 +29,11 @@ type Shelf struct {
 
 // Shelf Table Name
 func (Shelf) TableName() string {
-	return shared.ValidTableName_ShelfTable.String()
+	return types.ValidTableName_ShelfTable.String()
 }
 
 // Shelf Table Relations
-type ShelfRelation shared.ValidTableName
+type ShelfRelation types.ValidTableName
 
 const (
 	ShelfRelation_Materials      ShelfRelation = "Materials"
@@ -54,6 +54,6 @@ func (s *Shelf) ToPrivateShelf() *gqlmodels.PrivateShelf {
 		MaxDepth:                 s.MaxDepth,
 		UpdatedAt:                s.UpdatedAt,
 		CreatedAt:                s.CreatedAt,
-		UsersToShelves:           make([]*gqlmodels.PrivateUsersToShelves, 0),
+		Owner:                    make([]*gqlmodels.PublicUser, 0),
 	}
 }

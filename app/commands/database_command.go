@@ -6,7 +6,7 @@ import (
 	app "notezy-backend/app"
 	logs "notezy-backend/app/logs"
 	models "notezy-backend/app/models"
-	shared "notezy-backend/shared"
+	types "notezy-backend/shared/types"
 )
 
 var viewAllAvailableDatabasesCommand = &cobra.Command{
@@ -26,8 +26,8 @@ var migrateDatabaseCommand = &cobra.Command{
 	Short: "Create or update database schema.",
 	Long:  "Use models package to create or update database table schema.",
 	Run: func(cmd *cobra.Command, args []string) {
-		db := models.ConnectToDatabase(shared.PostgresDatabaseConfig)
-		logs.FInfo("Start the process of migrating database schema to %v.", shared.PostgresDatabaseConfig.DBName)
+		db := models.ConnectToDatabase(models.PostgresDatabaseConfig)
+		logs.FInfo("Start the process of migrating database schema to %v.", models.PostgresDatabaseConfig.DBName)
 		app.MigrateDatabaseSchema(db)
 		models.DisconnectToDatabase(db)
 	},
@@ -50,7 +50,7 @@ var truncateDatabaseCommand = &cobra.Command{
 			return
 		}
 
-		validTableName, isValidTableName := shared.ConvertToValidTableName(tableNameStr)
+		validTableName, isValidTableName := types.ConvertToValidTableName(tableNameStr)
 		if !isValidTableName {
 			logs.FError("The table name of %s is not in the database %s", tableNameStr, databaseNameStr)
 			return
