@@ -44,7 +44,7 @@ func NewShelfRepository(db *gorm.DB) ShelfRepositoryInterface {
 /* ============================== Helper functions ============================== */
 
 func (r *ShelfRepository) getPartialUpdatePlaceholderUnit() string {
-	return "(?, ?, ?, ?, ?)"
+	return "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 }
 
 func (r *ShelfRepository) getNumOfPartialUpdateArguments(numOfRows int) int {
@@ -108,13 +108,18 @@ func (r *ShelfRepository) CreateOneByOwnerId(ownerId uuid.UUID, input inputs.Cre
 	}
 	newShelf.EncodedStructure = encodedStructure
 	if err := copier.Copy(&newShelf, &input); err != nil {
-		return nil, exceptions.Theme.FailedToCreate().WithError(err)
+		return nil, exceptions.Shelf.FailedToCreate().WithError(err)
 	}
 
 	result := r.db.Table(schemas.Shelf{}.TableName()).
 		Create(&newShelf)
 	if err := result.Error; err != nil {
-		return nil, exceptions.Shelf.FailedToCreate().WithError(err)
+		switch err.Error() {
+		case "ERROR: duplicate key value violates unique constraint \"shelf_idx_owner_id_name\" (SQLSTATE 23505)":
+			return nil, exceptions.Shelf.DuplicateName(input.Name)
+		default:
+			return nil, exceptions.Shelf.FailedToCreate().WithError(err)
+		}
 	}
 
 	return &newShelf.Id, nil

@@ -40,9 +40,21 @@ var Shelf = &ShelfExceptionDomain{
 
 /* ============================== Handling Structure Error of ShelfNode ============================== */
 
-func (d *ShelfExceptionDomain) MaximumWidthExceeded(currentWidth int32, maxWidth int32) *Exception {
+func (d *ShelfExceptionDomain) DuplicateName(name string) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
+		Prefix:         d.Prefix,
+		Reason:         "DuplicateName",
+		IsInternal:     false,
+		Message:        fmt.Sprintf("The name of %s is already be used", name),
+		HTTPStatusCode: http.StatusConflict,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *ShelfExceptionDomain) MaximumWidthExceeded(currentWidth int32, maxWidth int32) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 2,
 		Prefix:         d.Prefix,
 		Reason:         "MaximumWidthExceeded",
 		IsInternal:     false,
@@ -54,7 +66,7 @@ func (d *ShelfExceptionDomain) MaximumWidthExceeded(currentWidth int32, maxWidth
 
 func (d *ShelfExceptionDomain) MaximumDepthExceeded(currentDepth int32, maxDepth int32) *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 2,
+		Code:           d.BaseCode + 3,
 		Prefix:         d.Prefix,
 		Reason:         "MaximumDepthExceeded",
 		IsInternal:     false,
@@ -66,7 +78,7 @@ func (d *ShelfExceptionDomain) MaximumDepthExceeded(currentDepth int32, maxDepth
 
 func (d *ShelfExceptionDomain) MaximumTraverseCountExceeded(currentTraverseCount int32, maxTraverseCount int32) *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 3,
+		Code:           d.BaseCode + 4,
 		Prefix:         d.Prefix,
 		Reason:         "MaximumTraverseCountExceeded",
 		IsInternal:     false,
@@ -78,7 +90,7 @@ func (d *ShelfExceptionDomain) MaximumTraverseCountExceeded(currentTraverseCount
 
 func (d *ShelfExceptionDomain) CallingMethodsWithNilValue() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 4,
+		Code:           d.BaseCode + 5,
 		Prefix:         d.Prefix,
 		Reason:         "CallingMethodWithNilValue",
 		IsInternal:     true,
@@ -90,7 +102,7 @@ func (d *ShelfExceptionDomain) CallingMethodsWithNilValue() *Exception {
 
 func (d *ShelfExceptionDomain) FailedToEncode(node any) *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 5,
+		Code:           d.BaseCode + 6,
 		Prefix:         d.Prefix,
 		Reason:         "FailedToEncode",
 		IsInternal:     true,
@@ -102,7 +114,7 @@ func (d *ShelfExceptionDomain) FailedToEncode(node any) *Exception {
 
 func (d *ShelfExceptionDomain) FailedToDecode(data []byte) *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 6,
+		Code:           d.BaseCode + 7,
 		Prefix:         d.Prefix,
 		Reason:         "FailedToDecode",
 		IsInternal:     true,
@@ -114,7 +126,7 @@ func (d *ShelfExceptionDomain) FailedToDecode(data []byte) *Exception {
 
 func (d *ShelfExceptionDomain) InsertParentIntoItsChildren(destination any, target any) *Exception {
 	return &Exception{
-		Code:       d.BaseCode + 7,
+		Code:       d.BaseCode + 8,
 		Prefix:     d.Prefix,
 		Reason:     "InsertParentIntoItsChildren",
 		IsInternal: false,
@@ -129,7 +141,7 @@ func (d *ShelfExceptionDomain) InsertParentIntoItsChildren(destination any, targ
 
 func (d *ShelfExceptionDomain) FailedToConstructNewShelfNode(field string) *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 8,
+		Code:           d.BaseCode + 9,
 		Prefix:         d.Prefix,
 		Reason:         "FailedToConstructNewShelfNode",
 		IsInternal:     false,
@@ -141,7 +153,7 @@ func (d *ShelfExceptionDomain) FailedToConstructNewShelfNode(field string) *Exce
 
 func (d *ShelfExceptionDomain) CannotEncodeNonRootShelfNode(node any) *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 9,
+		Code:           d.BaseCode + 10,
 		Prefix:         d.Prefix,
 		Reason:         "CannotEncodeNonRootShelfNode",
 		IsInternal:     true,
@@ -153,7 +165,7 @@ func (d *ShelfExceptionDomain) CannotEncodeNonRootShelfNode(node any) *Exception
 
 func (d *ShelfExceptionDomain) CircularChildrenDetectedInShelfNode() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 10,
+		Code:           d.BaseCode + 11,
 		Prefix:         d.Prefix,
 		Reason:         "CircularChildrenDetectedInShelfNode",
 		IsInternal:     false,
@@ -165,7 +177,7 @@ func (d *ShelfExceptionDomain) CircularChildrenDetectedInShelfNode() *Exception 
 
 func (d *ShelfExceptionDomain) RepeatedShelfNodesDetected() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 11,
+		Code:           d.BaseCode + 12,
 		Prefix:         d.Prefix,
 		Reason:         "RepeatedShelfNodesDetected",
 		IsInternal:     false,
@@ -177,7 +189,7 @@ func (d *ShelfExceptionDomain) RepeatedShelfNodesDetected() *Exception {
 
 func (d *ShelfExceptionDomain) RepeatedMaterialIdsDetected() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 12,
+		Code:           d.BaseCode + 13,
 		Prefix:         d.Prefix,
 		Reason:         "RepeatedMaterialIdsDetected",
 		IsInternal:     false,

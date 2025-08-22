@@ -20,6 +20,10 @@ func configureDevelopmentShelfRoutes() {
 		middlewares.RateLimitMiddleware(1),
 	)
 	{
+		shelfRoutes.GET(
+			"/getRecentShelves",
+			shelfController.GetRecentShelves,
+		)
 		shelfRoutes.POST(
 			"/createShelf",
 			shelfController.CreateShelf,

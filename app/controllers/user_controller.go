@@ -40,11 +40,7 @@ func (c *UserController) GetUserData(ctx *gin.Context) {
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.User.InternalServerWentWrong(nil)
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 	reqDto.UserId = *userId
@@ -55,11 +51,7 @@ func (c *UserController) GetUserData(ctx *gin.Context) {
 		if exception.IsInternal {
 			exception = exceptions.User.InternalServerWentWrong(nil)
 		}
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 
@@ -77,22 +69,14 @@ func (c *UserController) GetMe(ctx *gin.Context) {
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.User.InternalServerWentWrong(nil)
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 	reqDto.UserId = *userId
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		logs.Error(err)
 		exception := exceptions.User.InvalidDto().WithError(err)
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 
@@ -102,11 +86,7 @@ func (c *UserController) GetMe(ctx *gin.Context) {
 		if exception.IsInternal {
 			exception = exceptions.User.InternalServerWentWrong(nil)
 		}
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 
@@ -124,21 +104,13 @@ func (c *UserController) UpdateMe(ctx *gin.Context) {
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.User.InternalServerWentWrong(nil)
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 	reqDto.UserId = *userId
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		exception := exceptions.User.InvalidDto().WithError(err)
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 
@@ -148,11 +120,7 @@ func (c *UserController) UpdateMe(ctx *gin.Context) {
 		if exception.IsInternal {
 			exception = exceptions.User.InternalServerWentWrong(nil)
 		}
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 

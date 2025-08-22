@@ -11,6 +11,7 @@ import (
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	gqlmodels "notezy-backend/app/graphql/models"
+	"notezy-backend/app/logs"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
@@ -22,6 +23,7 @@ import (
 /* ============================== Interface & Instance ============================== */
 
 type ShelfServiceInterface interface {
+	GetRecentShelves(reqDto *dtos.GetRecentShelvesReqDto) (*[]dtos.GetRecentShelvesResDto, *exceptions.Exception)
 	CreateShelf(reqDto *dtos.CreateShelfReqDto) (*dtos.CreateShelfResDto, *exceptions.Exception)
 	SynchronizeShelves(reqDto *dtos.SynchronizeShelvesReqDto) (*dtos.SynchronizeShelvesResDto, *exceptions.Exception)
 
@@ -40,6 +42,31 @@ func NewShelfService(db *gorm.DB) ShelfServiceInterface {
 }
 
 /* ============================== Service Methods for Shelves ============================== */
+
+func (s *ShelfService) GetRecentShelves(reqDto *dtos.GetRecentShelvesReqDto) (*[]dtos.GetRecentShelvesResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
+	resDto := []dtos.GetRecentShelvesResDto{}
+	db := s.db.Model(&schemas.Shelf{})
+
+	query := db.Where("owner_id = ?", reqDto.OwnerId)
+	if len(strings.ReplaceAll(reqDto.Query, " ", "")) > 0 {
+		query = query.Where("name ILIKE ?", "%"+reqDto.Query+"%")
+	}
+	logs.Info(reqDto.OwnerId)
+
+	result := query.Order("updated_at DESC").
+		Limit(int(reqDto.Limit)).
+		Offset(int(reqDto.Offset)).
+		Find(&resDto)
+	if err := result.Error; err != nil {
+		return nil, exceptions.Shelf.NotFound().WithError(err)
+	}
+
+	return &resDto, nil
+}
 
 func (s *ShelfService) CreateShelf(reqDto *dtos.CreateShelfReqDto) (*dtos.CreateShelfResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {

@@ -15,6 +15,7 @@ import (
 /* ============================== Interface & Instance ============================== */
 
 type ShelfControllerInterface interface {
+	GetRecentShelves(ctx *gin.Context)
 	CreateShelf(ctx *gin.Context)
 	SynchronizeShelves(ctx *gin.Context)
 }
@@ -31,21 +32,58 @@ func NewShelfController(service services.ShelfServiceInterface) ShelfControllerI
 
 /* ============================== Controllers ============================== */
 
-// with AuthMiddleware
+// with AuthMiddleware()
+func (c *ShelfController) GetRecentShelves(ctx *gin.Context) {
+	var reqDto dtos.GetRecentShelvesReqDto
+
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+	if exception != nil {
+		exception.Log()
+		exception = exceptions.Shelf.InternalServerWentWrong(nil)
+		exception.ResponseWithJSON(ctx)
+		return
+	}
+	reqDto.OwnerId = *userId
+	if err := ctx.ShouldBindQuery(&reqDto); err != nil {
+		exception.Log()
+		exception := exceptions.User.InvalidInput().WithError(err)
+		exception.ResponseWithJSON(ctx)
+		return
+	}
+
+	resDto, exception := c.shelfService.GetRecentShelves(&reqDto)
+	if exception != nil {
+		exception.Log()
+		if exception.IsInternal {
+			exception = exceptions.Shelf.InternalServerWentWrong(nil)
+		}
+		exception.ResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+// with AuthMiddleware()
 func (c *ShelfController) CreateShelf(ctx *gin.Context) {
 	var reqDto dtos.CreateShelfReqDto
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.Shelf.InternalServerWentWrong(nil)
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 	reqDto.OwnerId = *userId
+	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
+		exception := exceptions.Shelf.InvalidDto().WithError(err)
+		exception.ResponseWithJSON(ctx)
+		return
+	}
 
 	resDto, exception := c.shelfService.CreateShelf(&reqDto)
 	if exception != nil {
@@ -53,11 +91,7 @@ func (c *ShelfController) CreateShelf(ctx *gin.Context) {
 		if exception.IsInternal {
 			exception = exceptions.Shelf.InternalServerWentWrong(nil)
 		}
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 
@@ -75,14 +109,15 @@ func (c *ShelfController) SynchronizeShelves(ctx *gin.Context) {
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.Shelf.InternalServerWentWrong(nil)
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 	reqDto.OwnerId = *userId
+	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
+		exception := exceptions.Shelf.InvalidDto().WithError(err)
+		exception.ResponseWithJSON(ctx)
+		return
+	}
 
 	resDto, exception := c.shelfService.SynchronizeShelves(&reqDto)
 	if exception != nil {
@@ -90,11 +125,7 @@ func (c *ShelfController) SynchronizeShelves(ctx *gin.Context) {
 		if exception.IsInternal {
 			exception = exceptions.Shelf.InternalServerWentWrong(nil)
 		}
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 

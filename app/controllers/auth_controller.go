@@ -43,11 +43,7 @@ func (c *AuthController) Register(ctx *gin.Context) {
 	reqDto.UserAgent = ctx.GetHeader("User-Agent")
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 
@@ -60,11 +56,7 @@ func (c *AuthController) Register(ctx *gin.Context) {
 		if exception.IsInternal {
 			exception = exceptions.Auth.InternalServerWentWrong(nil)
 		}
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 
@@ -86,11 +78,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 	reqDto.UserAgent = ctx.GetHeader("User-Agent")
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 
@@ -103,11 +91,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 		if exception.IsInternal {
 			exception = exceptions.Auth.InternalServerWentWrong(nil)
 		}
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 
@@ -131,11 +115,7 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.Auth.InternalServerWentWrong(nil)
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 	reqDto.UserId = *userId
@@ -146,11 +126,7 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 		if exception.IsInternal {
 			exception = exceptions.Auth.InternalServerWentWrong(nil)
 		}
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 
@@ -166,11 +142,7 @@ func (c *AuthController) SendAuthCode(ctx *gin.Context) {
 	reqDto.UserAgent = ctx.GetHeader("User-Agent")
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 
@@ -180,11 +152,7 @@ func (c *AuthController) SendAuthCode(ctx *gin.Context) {
 		if exception.IsInternal {
 			exception = exceptions.Auth.InternalServerWentWrong(nil)
 		}
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 
@@ -202,21 +170,13 @@ func (c *AuthController) ValidateEmail(ctx *gin.Context) {
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.Auth.InternalServerWentWrong(nil)
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 	reqDto.UserId = *userId
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 
@@ -226,11 +186,7 @@ func (c *AuthController) ValidateEmail(ctx *gin.Context) {
 		if exception.IsInternal {
 			exception = exceptions.Auth.InternalServerWentWrong(nil)
 		}
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 
@@ -248,21 +204,13 @@ func (c *AuthController) ResetEmail(ctx *gin.Context) {
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.Auth.InternalServerWentWrong(nil)
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 	reqDto.UserId = *userId
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 
@@ -272,11 +220,7 @@ func (c *AuthController) ResetEmail(ctx *gin.Context) {
 		if exception.IsInternal {
 			exception = exceptions.Auth.InternalServerWentWrong(nil)
 		}
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 
@@ -293,11 +237,7 @@ func (c *AuthController) ForgetPassword(ctx *gin.Context) {
 	reqDto.UserAgent = ctx.GetHeader("User-Agent")
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 
@@ -307,11 +247,7 @@ func (c *AuthController) ForgetPassword(ctx *gin.Context) {
 		if exception.IsInternal {
 			exception = exceptions.Auth.InternalServerWentWrong(nil)
 		}
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 
@@ -329,21 +265,13 @@ func (c *AuthController) DeleteMe(ctx *gin.Context) {
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.Auth.InternalServerWentWrong(nil)
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 	reqDto.UserId = *userId
 	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 
@@ -353,11 +281,7 @@ func (c *AuthController) DeleteMe(ctx *gin.Context) {
 		if exception.IsInternal {
 			exception = exceptions.Auth.InternalServerWentWrong(nil)
 		}
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 

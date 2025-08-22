@@ -14,7 +14,9 @@ import (
 
 /* ============================== Interface & Instance ============================== */
 
-type UserSettingControllerInterface interface{}
+type UserSettingControllerInterface interface {
+	GetMySetting(ctx *gin.Context)
+}
 
 type UserSettingController struct {
 	userSettingService services.UserSettingServiceInterface
@@ -34,11 +36,7 @@ func (c *UserSettingController) GetMySetting(ctx *gin.Context) {
 	if exception != nil {
 		exception.Log()
 		exception = exceptions.UserSetting.InternalServerWentWrong(nil)
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 	reqDto.UserId = *userId
@@ -49,11 +47,7 @@ func (c *UserSettingController) GetMySetting(ctx *gin.Context) {
 		if exception.IsInternal {
 			exception = exceptions.UserSetting.InternalServerWentWrong(nil)
 		}
-		ctx.JSON(exception.HTTPStatusCode, gin.H{
-			"success":   false,
-			"data":      nil,
-			"exception": exception.GetGinH(),
-		})
+		exception.ResponseWithJSON(ctx)
 		return
 	}
 

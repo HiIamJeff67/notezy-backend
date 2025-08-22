@@ -148,6 +148,14 @@ func (e *Exception) GetGinH() *gin.H {
 	}
 }
 
+func (e *Exception) ResponseWithJSON(ctx *gin.Context) {
+	ctx.JSON(e.HTTPStatusCode, gin.H{
+		"success":   false,
+		"data":      nil,
+		"exception": e.GetGinH(),
+	})
+}
+
 func (e *Exception) WithDetails(details any) *Exception {
 	e.Details = details
 	return e

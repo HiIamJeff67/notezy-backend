@@ -8,6 +8,11 @@ import (
 
 /* ============================== Request DTO ============================== */
 
+type GetRecentShelvesReqDto struct {
+	OwnerId uuid.UUID // extracted from the access token of AuthMiddleware()
+	GetManyDto
+}
+
 type CreateShelfReqDto struct {
 	OwnerId uuid.UUID // extracted from the access token of AuthMiddleware()
 	Name    string    `json:"name" validate:"required,max=128"`
@@ -23,6 +28,18 @@ type SynchronizeShelvesReqDto struct {
 }
 
 /* ============================== Response DTO ============================== */
+
+type GetRecentShelvesResDto struct {
+	Name                     string    `json:"name"`
+	EncodedStructure         []byte    `json:"encodedStructure"`
+	EncodedStructureByteSize int64     `json:"encodedStructureByteSize"`
+	TotalShelfNodes          int32     `json:"totalShelfNodes"`
+	TotalMaterials           int32     `json:"totalMaterials"`
+	MaxWidth                 int32     `json:"maxWidth"`
+	MaxDepth                 int32     `json:"maxDepth"`
+	UpdatedAt                time.Time `json:"updatedAt"`
+	CreatedAt                time.Time `json:"createdAt"`
+}
 
 type CreateShelfResDto struct {
 	CreatedAt time.Time `json:"createdAt"`
