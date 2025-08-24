@@ -36,20 +36,14 @@ func (c *UserInfoController) GetMyInfo(ctx *gin.Context) {
 	var reqDto dtos.GetMyInfoReqDto
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
-		exception.Log()
-		exception = exceptions.UserInfo.InternalServerWentWrong(nil)
-		exception.ResponseWithJSON(ctx)
+		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
-	reqDto.UserId = *userId
+	reqDto.ContextFields.UserId = *userId
 
 	resDto, exception := c.userInfoService.GetMyInfo(&reqDto)
 	if exception != nil {
-		exception.Log()
-		if exception.IsInternal {
-			exception = exceptions.UserInfo.InternalServerWentWrong(nil)
-		}
-		exception.ResponseWithJSON(ctx)
+		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
 
@@ -65,13 +59,11 @@ func (c *UserInfoController) UpdateMyInfo(ctx *gin.Context) {
 	var reqDto dtos.UpdateMyInfoReqDto
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
-		exception.Log()
-		exception = exceptions.UserInfo.InternalServerWentWrong(nil)
-		exception.ResponseWithJSON(ctx)
+		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
-	reqDto.UserId = *userId
-	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
+	reqDto.ContextFields.UserId = *userId
+	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 		exception := exceptions.UserInfo.InvalidDto().WithError(err)
 		exception.ResponseWithJSON(ctx)
 		return
@@ -79,11 +71,7 @@ func (c *UserInfoController) UpdateMyInfo(ctx *gin.Context) {
 
 	resDto, exception := c.userInfoService.UpdateMyInfo(&reqDto)
 	if exception != nil {
-		exception.Log()
-		if exception.IsInternal {
-			exception = exceptions.UserInfo.InternalServerWentWrong(nil)
-		}
-		exception.ResponseWithJSON(ctx)
+		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
 

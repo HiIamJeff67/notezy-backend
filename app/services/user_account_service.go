@@ -38,7 +38,7 @@ func (s *UserAccountService) GetMyAccount(reqDto *dtos.GetMyAccountReqDto) (*dto
 
 	userAccountRepository := repositories.NewUserAccountRepository(s.db)
 
-	userAccount, exception := userAccountRepository.GetOneByUserId(reqDto.UserId)
+	userAccount, exception := userAccountRepository.GetOneByUserId(reqDto.ContextFields.UserId)
 	if exception != nil {
 		return nil, exception
 	}
@@ -58,14 +58,14 @@ func (s *UserAccountService) UpdateMyAccount(reqDto *dtos.UpdateMyAccountReqDto)
 
 	userAccountRepository := repositories.NewUserAccountRepository(s.db)
 
-	updatedUserAccount, exception := userAccountRepository.UpdateOneByUserId(reqDto.UserId, inputs.PartialUpdateUserAccountInput{
+	updatedUserAccount, exception := userAccountRepository.UpdateOneByUserId(reqDto.ContextFields.UserId, inputs.PartialUpdateUserAccountInput{
 		Values: inputs.UpdateUserAccountInput{
-			CountryCode:       reqDto.Values.CountryCode,
-			PhoneNumber:       reqDto.Values.PhoneNumber,
-			GoogleCredential:  reqDto.Values.GoogleCredential,
-			DiscordCredential: reqDto.Values.DiscordCredential,
+			CountryCode:       reqDto.Body.Values.CountryCode,
+			PhoneNumber:       reqDto.Body.Values.PhoneNumber,
+			GoogleCredential:  reqDto.Body.Values.GoogleCredential,
+			DiscordCredential: reqDto.Body.Values.DiscordCredential,
 		},
-		SetNull: reqDto.SetNull,
+		SetNull: reqDto.Body.SetNull,
 	})
 	if exception != nil {
 		return nil, exception

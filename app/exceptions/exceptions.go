@@ -156,6 +156,17 @@ func (e *Exception) ResponseWithJSON(ctx *gin.Context) {
 	})
 }
 
+func (e *Exception) SafelyResponseWithJSON(ctx *gin.Context) {
+	if e.IsInternal {
+		e = e.InternalServerWentWrong(e)
+	}
+	ctx.JSON(e.HTTPStatusCode, gin.H{
+		"success":   false,
+		"data":      nil,
+		"exception": e.GetGinH(),
+	})
+}
+
 func (e *Exception) WithDetails(details any) *Exception {
 	e.Details = details
 	return e
@@ -292,6 +303,71 @@ func CompareCommonExceptions(e1 *Exception, e2 *Exception, withMessage bool) boo
 	return true
 }
 
+/* ============================== General Exception Define in the Top Layer ============================== */
+
+func UndefinedError(optionalMessage ...string) *Exception {
+	message := "Undefined error happened"
+	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
+		message = optionalMessage[0]
+	}
+
+	return &Exception{
+		Code:           99900001,
+		Prefix:         "General",
+		Reason:         "UndefinedError",
+		IsInternal:     true,
+		Message:        message,
+		HTTPStatusCode: http.StatusBadRequest,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func NotImplemented(optionalMessage ...string) *Exception {
+	message := "Not yet implemented the methods"
+	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
+		message = optionalMessage[0]
+	}
+
+	return &Exception{
+		Code:           99900002,
+		Prefix:         "General",
+		Reason:         "NotImplemented",
+		IsInternal:     true,
+		Message:        message,
+		HTTPStatusCode: http.StatusNotImplemented,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (e *Exception) InternalServerWentWrong(originalException *Exception, optionalMessage ...string) *Exception {
+	message := "Something went wrong"
+	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
+		message = optionalMessage[0]
+	}
+
+	exception := &Exception{
+		Code:           99900003,
+		Prefix:         "General",
+		Reason:         "InternalServerWentWrong",
+		IsInternal:     true,
+		Message:        message,
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+	if originalException == nil {
+		return exception
+	}
+
+	if originalException.Error != nil {
+		exception.Error = originalException.Error
+	}
+	if originalException.Details != nil {
+		exception.Message = originalException.Message
+	}
+
+	return exception
+}
+
 /* ============================== Database Exception Domain Definition ============================== */
 
 type DatabaseExceptionDomain struct {
@@ -403,35 +479,6 @@ type APIExceptionDomain struct {
 	_Prefix   ExceptionPrefix
 }
 
-func (d *APIExceptionDomain) InternalServerWentWrong(originalException *Exception, optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Something went wrong in %v", d._Prefix)
-	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
-		message = optionalMessage[0]
-	}
-
-	exception := &Exception{
-		Code:           d._BaseCode + 11,
-		Prefix:         d._Prefix,
-		Reason:         "InternalServerWentWrong",
-		IsInternal:     true,
-		Message:        message,
-		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
-	}
-	if originalException == nil {
-		return exception
-	}
-
-	if originalException.Error != nil {
-		exception.Error = originalException.Error
-	}
-	if originalException.Details != nil {
-		exception.Message = originalException.Message
-	}
-
-	return exception
-}
-
 func (d *APIExceptionDomain) Timeout(time time.Duration, optionalMessage ...string) *Exception {
 	message := fmt.Sprintf("Timeout in %s with %v", string(d._Prefix), time)
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
@@ -439,7 +486,7 @@ func (d *APIExceptionDomain) Timeout(time time.Duration, optionalMessage ...stri
 	}
 
 	return &Exception{
-		Code:           d._BaseCode + 12,
+		Code:           d._BaseCode + 11,
 		Prefix:         d._Prefix,
 		Reason:         "Timeout",
 		IsInternal:     false,
@@ -521,47 +568,6 @@ func (d *TypeExceptionDomain) InvalidType(value any) *Exception {
 			"actualType": fmt.Sprintf("%T", value),
 			"value":      value,
 		},
-		LastStackFrame: &GetStackTrace(2, 1)[0],
-	}
-}
-
-/* ============================== Common Exception Domain Definition ============================== */
-
-type CommonExceptionDomain struct {
-	_BaseCode ExceptionCode
-	_Prefix   ExceptionPrefix
-}
-
-func (d *CommonExceptionDomain) UndefinedError(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Undefined error happened in %s", string(d._Prefix))
-	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
-		message = optionalMessage[0]
-	}
-
-	return &Exception{
-		Code:           d._BaseCode + 41,
-		Prefix:         d._Prefix,
-		Reason:         "UndefinedError",
-		IsInternal:     true,
-		Message:        message,
-		HTTPStatusCode: http.StatusBadRequest,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
-	}
-}
-
-func (d *CommonExceptionDomain) NotImplemented(optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Not yet implemented the methods in %s", string(d._Prefix))
-	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
-		message = optionalMessage[0]
-	}
-
-	return &Exception{
-		Code:           d._BaseCode + 42,
-		Prefix:         d._Prefix,
-		Reason:         "NotImplemented",
-		IsInternal:     true,
-		Message:        message,
-		HTTPStatusCode: http.StatusNotImplemented,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }

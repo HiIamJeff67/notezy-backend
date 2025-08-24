@@ -10,48 +10,103 @@ import (
 // make sure do NOT use the access token or refresh token as the request dto
 
 type RegisterReqDto struct {
-	Name      string `json:"name" validate:"required,min=6,max=16,alphaandnum"`
-	Email     string `json:"email" validate:"required,email"`
-	Password  string `json:"password" validate:"required,min=8,max=1024,isstrongpassword"`
-	UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		any,
+		struct {
+			Name     string `json:"name" validate:"required,min=6,max=16,alphaandnum"`
+			Email    string `json:"email" validate:"required,email"`
+			Password string `json:"password" validate:"required,min=8,max=1024,isstrongpassword"`
+		},
+	]
 }
 
 type LoginReqDto struct {
-	Account   string `json:"account" validate:"required,account"`
-	Password  string `json:"password" validate:"required"` // don't validate other additions while login
-	UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		any,
+		struct {
+			Account  string `json:"account" validate:"required,account"`
+			Password string `json:"password" validate:"required"` // don't validate other additions while login
+		},
+	]
 }
 
 type LogoutReqDto struct {
-	UserId uuid.UUID // extracted from the access token of AuthMiddleware
+	NotezyRequest[
+		any,
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware
+		},
+		any,
+	]
 }
 
 type SendAuthCodeReqDto struct {
-	Email     string `json:"email" validate:"required,email"`
-	UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		any,
+		struct {
+			Email string `json:"email" validate:"required,email"`
+		},
+	]
 }
 
 type ValidateEmailReqDto struct {
-	UserId   uuid.UUID // extracted from the access token of AuthMiddleware()
-	AuthCode string    `json:"authCode" validate:"required,isnumberstring,len=6"`
+	NotezyRequest[
+		any,
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			AuthCode string `json:"authCode" validate:"required,isnumberstring,len=6"`
+		},
+	]
 }
 
 type ResetEmailReqDto struct {
-	UserId   uuid.UUID // extracted from the access token of AuthMiddleware()
-	NewEmail string    `json:"newEmail" validate:"required,email"`
-	AuthCode string    `json:"authCode" validate:"required,isnumberstring,len=6"`
+	NotezyRequest[
+		any,
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			NewEmail string `json:"newEmail" validate:"required,email"`
+			AuthCode string `json:"authCode" validate:"required,isnumberstring,len=6"`
+		},
+	]
 }
 
 type ForgetPasswordReqDto struct {
-	Account     string `json:"account" validate:"required,account"`
-	NewPassword string `json:"newPassword" validation:"required,min=8,max=1024,isstrongpassword"`
-	AuthCode    string `json:"authCode" validate:"required,isnumberstring,len=6"`
-	UserAgent   string `json:"userAgent" validate:"required,isuseragent"`
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		any,
+		struct {
+			Account     string `json:"account" validate:"required,account"`
+			NewPassword string `json:"newPassword" validation:"required,min=8,max=1024,isstrongpassword"`
+			AuthCode    string `json:"authCode" validate:"required,isnumberstring,len=6"`
+		},
+	]
 }
 
 type DeleteMeReqDto struct {
-	UserId   uuid.UUID // extracted from the access token of AuthMiddleware()
-	AuthCode time.Time `json:"authCode" validate:"required,isnumberstring,len=6"`
+	NotezyRequest[
+		any,
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			AuthCode time.Time `json:"authCode" validate:"required,isnumberstring,len=6"`
+		},
+	]
 }
 
 /* ============================== Response DTO ============================== */

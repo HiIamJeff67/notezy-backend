@@ -19,7 +19,6 @@ type AuthExceptionDomain struct {
 	Prefix   ExceptionPrefix
 	APIExceptionDomain
 	TypeExceptionDomain
-	CommonExceptionDomain
 }
 
 var Auth = &AuthExceptionDomain{
@@ -30,10 +29,6 @@ var Auth = &AuthExceptionDomain{
 		_Prefix:   ExceptionPrefix_Auth,
 	},
 	TypeExceptionDomain: TypeExceptionDomain{
-		_BaseCode: _ExceptionBaseCode_Auth,
-		_Prefix:   ExceptionPrefix_Auth,
-	},
-	CommonExceptionDomain: CommonExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_Auth,
 		_Prefix:   ExceptionPrefix_Auth,
 	},

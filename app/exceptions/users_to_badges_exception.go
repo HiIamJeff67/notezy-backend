@@ -14,7 +14,6 @@ type UsersToBadgesExceptionDomain struct {
 	DatabaseExceptionDomain
 	APIExceptionDomain
 	TypeExceptionDomain
-	CommonExceptionDomain
 }
 
 var UsersToBadges = &UsersToBadgesExceptionDomain{
@@ -29,10 +28,6 @@ var UsersToBadges = &UsersToBadgesExceptionDomain{
 		_Prefix:   ExceptionPrefix_UsersToBadges,
 	},
 	TypeExceptionDomain: TypeExceptionDomain{
-		_BaseCode: _ExceptionBaseCode_UsersToBadges,
-		_Prefix:   ExceptionPrefix_UsersToBadges,
-	},
-	CommonExceptionDomain: CommonExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_UsersToBadges,
 		_Prefix:   ExceptionPrefix_UsersToBadges,
 	},

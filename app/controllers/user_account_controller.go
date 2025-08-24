@@ -36,20 +36,14 @@ func (c *UserAccountController) GetMyAccount(ctx *gin.Context) {
 	var reqDto dtos.GetMyAccountReqDto
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
-		exception.Log()
-		exception = exceptions.UserAccount.InternalServerWentWrong(exception)
-		exception.ResponseWithJSON(ctx)
+		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
-	reqDto.UserId = *userId
+	reqDto.ContextFields.UserId = *userId
 
 	resDto, exception := c.userAccountService.GetMyAccount(&reqDto)
 	if exception != nil {
-		exception.Log()
-		if exception.IsInternal {
-			exception = exceptions.UserAccount.InternalServerWentWrong(exception)
-		}
-		exception.ResponseWithJSON(ctx)
+		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
 
@@ -65,13 +59,11 @@ func (c *UserAccountController) UpdateMyAccount(ctx *gin.Context) {
 	var reqDto dtos.UpdateMyAccountReqDto
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
-		exception.Log()
-		exception = exceptions.UserAccount.InternalServerWentWrong(exception)
-		exception.ResponseWithJSON(ctx)
+		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
-	reqDto.UserId = *userId
-	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
+	reqDto.ContextFields.UserId = *userId
+	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 		exception := exceptions.UserAccount.InvalidDto().WithError(err)
 		exception.ResponseWithJSON(ctx)
 		return
@@ -79,11 +71,7 @@ func (c *UserAccountController) UpdateMyAccount(ctx *gin.Context) {
 
 	resDto, exception := c.userAccountService.UpdateMyAccount(&reqDto)
 	if exception != nil {
-		exception.Log()
-		if exception.IsInternal {
-			exception = exceptions.UserAccount.InternalServerWentWrong(exception)
-		}
-		exception.ResponseWithJSON(ctx)
+		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
 

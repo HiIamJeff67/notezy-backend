@@ -51,7 +51,7 @@ func (s *UserService) GetUserData(reqDto *dtos.GetUserDataReqDto) (*dtos.GetUser
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	userDataCache, exception := caches.GetUserDataCache(reqDto.UserId)
+	userDataCache, exception := caches.GetUserDataCache(reqDto.ContextFields.UserId)
 	if exception != nil {
 		return nil, exception
 	}
@@ -66,7 +66,7 @@ func (s *UserService) GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *excep
 
 	userRepository := repositories.NewUserRepository(s.db)
 
-	user, exception := userRepository.GetOneById(reqDto.UserId, nil)
+	user, exception := userRepository.GetOneById(reqDto.ContextFields.UserId, nil)
 	if exception != nil {
 		return nil, exception
 	}
@@ -90,28 +90,28 @@ func (s *UserService) UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDt
 
 	userRepository := repositories.NewUserRepository(s.db)
 
-	updatedUser, exception := userRepository.UpdateOneById(reqDto.UserId, inputs.PartialUpdateUserInput{
+	updatedUser, exception := userRepository.UpdateOneById(reqDto.ContextFields.UserId, inputs.PartialUpdateUserInput{
 		Values: inputs.UpdateUserInput{
-			DisplayName: reqDto.Values.DisplayName,
-			Status:      reqDto.Values.Status,
+			DisplayName: reqDto.Body.Values.DisplayName,
+			Status:      reqDto.Body.Values.Status,
 		},
-		SetNull: reqDto.SetNull,
+		SetNull: reqDto.Body.SetNull,
 	})
 	if exception != nil {
 		return nil, exception
 	}
 
-	if reqDto.Values.DisplayName != nil {
-		exception = caches.UpdateUserDataCache(reqDto.UserId, caches.UpdateUserDataCacheDto{
-			DisplayName: reqDto.Values.DisplayName,
+	if reqDto.Body.Values.DisplayName != nil {
+		exception = caches.UpdateUserDataCache(reqDto.ContextFields.UserId, caches.UpdateUserDataCacheDto{
+			DisplayName: reqDto.Body.Values.DisplayName,
 		})
 		if exception != nil {
 			exception.Log()
 		}
 	}
-	if reqDto.Values.Status != nil {
-		exception = caches.UpdateUserDataCache(reqDto.UserId, caches.UpdateUserDataCacheDto{
-			Status: reqDto.Values.Status,
+	if reqDto.Body.Values.Status != nil {
+		exception = caches.UpdateUserDataCache(reqDto.ContextFields.UserId, caches.UpdateUserDataCacheDto{
+			Status: reqDto.Body.Values.Status,
 		})
 		if exception != nil {
 			exception.Log()

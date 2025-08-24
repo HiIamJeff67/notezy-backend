@@ -15,7 +15,6 @@ type BadgeExceptionDomain struct {
 	APIExceptionDomain
 	GraphQLExceptionDomain
 	TypeExceptionDomain
-	CommonExceptionDomain
 }
 
 var Badge = &BadgeExceptionDomain{
@@ -34,10 +33,6 @@ var Badge = &BadgeExceptionDomain{
 		_Prefix:   ExceptionPrefix_Badge,
 	},
 	TypeExceptionDomain: TypeExceptionDomain{
-		_BaseCode: _ExceptionBaseCode_Badge,
-		_Prefix:   ExceptionPrefix_Badge,
-	},
-	CommonExceptionDomain: CommonExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_Badge,
 		_Prefix:   ExceptionPrefix_Badge,
 	},

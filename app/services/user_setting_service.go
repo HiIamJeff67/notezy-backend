@@ -38,7 +38,7 @@ func (s *UserSettingService) GetMySetting(reqDto *dtos.GetMySettingReqDto) (*dto
 
 	userSettingRepository := repositories.NewUserSettingRepository(nil)
 
-	userSetting, exception := userSettingRepository.GetOneByUserId(reqDto.UserId)
+	userSetting, exception := userSettingRepository.GetOneByUserId(reqDto.ContextFields.UserId)
 	if exception != nil {
 		return nil, exception
 	}
@@ -57,13 +57,13 @@ func (s *UserSettingService) UpdateMySetting(reqDto *dtos.UpdateMySettingReqDto)
 
 	userSettingRepository := repositories.NewUserSettingRepository(nil)
 
-	updatedUserSetting, exception := userSettingRepository.UpdateOneByUserId(reqDto.UserId, inputs.PartialUpdateUserSettingInput{
+	updatedUserSetting, exception := userSettingRepository.UpdateOneByUserId(reqDto.ContextFields.UserId, inputs.PartialUpdateUserSettingInput{
 		Values: inputs.UpdateUserSettingInput{
-			Language:           &reqDto.Values.Language,
-			GeneralSettingCode: &reqDto.Values.GeneralSettingCode,
-			PrivacySettingCode: &reqDto.Values.PrivacySettingCode,
+			Language:           &reqDto.Body.Values.Language,
+			GeneralSettingCode: &reqDto.Body.Values.GeneralSettingCode,
+			PrivacySettingCode: &reqDto.Body.Values.PrivacySettingCode,
 		},
-		SetNull: reqDto.SetNull,
+		SetNull: reqDto.Body.SetNull,
 	})
 	if exception != nil {
 		return nil, exception

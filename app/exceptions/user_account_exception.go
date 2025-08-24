@@ -14,7 +14,6 @@ type UserAccountExceptionDomain struct {
 	DatabaseExceptionDomain
 	APIExceptionDomain
 	TypeExceptionDomain
-	CommonExceptionDomain
 }
 
 var UserAccount = &UserAccountExceptionDomain{
@@ -29,10 +28,6 @@ var UserAccount = &UserAccountExceptionDomain{
 		_Prefix:   ExceptionPrefix_UserAccount,
 	},
 	TypeExceptionDomain: TypeExceptionDomain{
-		_BaseCode: _ExceptionBaseCode_UserAccount,
-		_Prefix:   ExceptionPrefix_UserAccount,
-	},
-	CommonExceptionDomain: CommonExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_UserAccount,
 		_Prefix:   ExceptionPrefix_UserAccount,
 	},

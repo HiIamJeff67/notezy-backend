@@ -40,8 +40,8 @@ func NewAuthController(service services.AuthServiceInterface) AuthControllerInte
 
 func (c *AuthController) Register(ctx *gin.Context) {
 	var reqDto dtos.RegisterReqDto
-	reqDto.UserAgent = ctx.GetHeader("User-Agent")
-	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
+	reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
 		exception.ResponseWithJSON(ctx)
 		return
@@ -52,11 +52,7 @@ func (c *AuthController) Register(ctx *gin.Context) {
 
 	resDto, exception := c.authService.Register(&reqDto)
 	if exception != nil {
-		exception.Log()
-		if exception.IsInternal {
-			exception = exceptions.Auth.InternalServerWentWrong(nil)
-		}
-		exception.ResponseWithJSON(ctx)
+		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
 
@@ -75,8 +71,8 @@ func (c *AuthController) Register(ctx *gin.Context) {
 
 func (c *AuthController) Login(ctx *gin.Context) {
 	var reqDto dtos.LoginReqDto
-	reqDto.UserAgent = ctx.GetHeader("User-Agent")
-	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
+	reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
 		exception.ResponseWithJSON(ctx)
 		return
@@ -87,11 +83,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 
 	resDto, exception := c.authService.Login(&reqDto)
 	if exception != nil {
-		exception.Log()
-		if exception.IsInternal {
-			exception = exceptions.Auth.InternalServerWentWrong(nil)
-		}
-		exception.ResponseWithJSON(ctx)
+		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
 
@@ -113,20 +105,14 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 	var reqDto dtos.LogoutReqDto
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
-		exception.Log()
-		exception = exceptions.Auth.InternalServerWentWrong(nil)
-		exception.ResponseWithJSON(ctx)
+		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
-	reqDto.UserId = *userId
+	reqDto.ContextFields.UserId = *userId
 
 	resDto, exception := c.authService.Logout(&reqDto)
 	if exception != nil {
-		exception.Log()
-		if exception.IsInternal {
-			exception = exceptions.Auth.InternalServerWentWrong(nil)
-		}
-		exception.ResponseWithJSON(ctx)
+		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
 
@@ -139,8 +125,8 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 
 func (c *AuthController) SendAuthCode(ctx *gin.Context) {
 	var reqDto dtos.SendAuthCodeReqDto
-	reqDto.UserAgent = ctx.GetHeader("User-Agent")
-	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
+	reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
 		exception.ResponseWithJSON(ctx)
 		return
@@ -148,11 +134,7 @@ func (c *AuthController) SendAuthCode(ctx *gin.Context) {
 
 	resDto, exception := c.authService.SendAuthCode(&reqDto)
 	if exception != nil {
-		exception.Log()
-		if exception.IsInternal {
-			exception = exceptions.Auth.InternalServerWentWrong(nil)
-		}
-		exception.ResponseWithJSON(ctx)
+		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
 
@@ -168,13 +150,11 @@ func (c *AuthController) ValidateEmail(ctx *gin.Context) {
 	var reqDto dtos.ValidateEmailReqDto
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
-		exception.Log()
-		exception = exceptions.Auth.InternalServerWentWrong(nil)
-		exception.ResponseWithJSON(ctx)
+		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
-	reqDto.UserId = *userId
-	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
+	reqDto.ContextFields.UserId = *userId
+	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
 		exception.ResponseWithJSON(ctx)
 		return
@@ -182,11 +162,7 @@ func (c *AuthController) ValidateEmail(ctx *gin.Context) {
 
 	resDto, exception := c.authService.ValidateEmail(&reqDto)
 	if exception != nil {
-		exception.Log()
-		if exception.IsInternal {
-			exception = exceptions.Auth.InternalServerWentWrong(nil)
-		}
-		exception.ResponseWithJSON(ctx)
+		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
 
@@ -202,13 +178,11 @@ func (c *AuthController) ResetEmail(ctx *gin.Context) {
 	var reqDto dtos.ResetEmailReqDto
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
-		exception.Log()
-		exception = exceptions.Auth.InternalServerWentWrong(nil)
-		exception.ResponseWithJSON(ctx)
+		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
-	reqDto.UserId = *userId
-	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
+	reqDto.ContextFields.UserId = *userId
+	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
 		exception.ResponseWithJSON(ctx)
 		return
@@ -216,11 +190,7 @@ func (c *AuthController) ResetEmail(ctx *gin.Context) {
 
 	resDto, exception := c.authService.ResetEmail(&reqDto)
 	if exception != nil {
-		exception.Log()
-		if exception.IsInternal {
-			exception = exceptions.Auth.InternalServerWentWrong(nil)
-		}
-		exception.ResponseWithJSON(ctx)
+		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
 
@@ -234,8 +204,8 @@ func (c *AuthController) ResetEmail(ctx *gin.Context) {
 // ! this should not use any middleware, bcs we want the user to set it by providing the account
 func (c *AuthController) ForgetPassword(ctx *gin.Context) {
 	var reqDto dtos.ForgetPasswordReqDto
-	reqDto.UserAgent = ctx.GetHeader("User-Agent")
-	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
+	reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
 		exception.ResponseWithJSON(ctx)
 		return
@@ -243,11 +213,7 @@ func (c *AuthController) ForgetPassword(ctx *gin.Context) {
 
 	resDto, exception := c.authService.ForgetPassword(&reqDto)
 	if exception != nil {
-		exception.Log()
-		if exception.IsInternal {
-			exception = exceptions.Auth.InternalServerWentWrong(nil)
-		}
-		exception.ResponseWithJSON(ctx)
+		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
 
@@ -263,13 +229,11 @@ func (c *AuthController) DeleteMe(ctx *gin.Context) {
 	var reqDto dtos.DeleteMeReqDto
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
-		exception.Log()
-		exception = exceptions.Auth.InternalServerWentWrong(nil)
-		exception.ResponseWithJSON(ctx)
+		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
-	reqDto.UserId = *userId
-	if err := ctx.ShouldBindJSON(&reqDto); err != nil {
+	reqDto.ContextFields.UserId = *userId
+	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 		exception := exceptions.Auth.InvalidDto().WithError(err)
 		exception.ResponseWithJSON(ctx)
 		return
@@ -277,11 +241,7 @@ func (c *AuthController) DeleteMe(ctx *gin.Context) {
 
 	resDto, exception := c.authService.DeleteMe(&reqDto)
 	if exception != nil {
-		exception.Log()
-		if exception.IsInternal {
-			exception = exceptions.Auth.InternalServerWentWrong(nil)
-		}
-		exception.ResponseWithJSON(ctx)
+		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
 

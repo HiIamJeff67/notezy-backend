@@ -15,7 +15,6 @@ type UserInfoExceptionDomain struct {
 	APIExceptionDomain
 	GraphQLExceptionDomain
 	TypeExceptionDomain
-	CommonExceptionDomain
 }
 
 var UserInfo = &UserInfoExceptionDomain{
@@ -34,10 +33,6 @@ var UserInfo = &UserInfoExceptionDomain{
 		_Prefix:   ExceptionPrefix_UserInfo,
 	},
 	TypeExceptionDomain: TypeExceptionDomain{
-		_BaseCode: _ExceptionBaseCode_UserInfo,
-		_Prefix:   ExceptionPrefix_UserInfo,
-	},
-	CommonExceptionDomain: CommonExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_UserInfo,
 		_Prefix:   ExceptionPrefix_UserInfo,
 	},

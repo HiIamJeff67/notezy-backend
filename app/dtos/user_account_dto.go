@@ -11,17 +11,30 @@ import (
 /* ============================== Request DTO ============================== */
 
 type GetMyAccountReqDto struct {
-	UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+	NotezyRequest[
+		any,
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		any,
+	]
 }
 
 type UpdateMyAccountReqDto struct {
-	UserId uuid.UUID // extracted from the access token of AuthMiddleware()
-	PartialUpdateDto[struct {
-		CountryCode       *enums.CountryCode `json:"countryCode" validate:"omitnil,iscountrycode"`
-		PhoneNumber       *string            `json:"phoneNumber" validate:"omitnil,max=0,max=15,isnumberstring"`
-		GoogleCredential  *string            `json:"googleCrendential" validate:"omitnil"`
-		DiscordCredential *string            `json:"discordCrendential" validate:"omitnil"`
-	}]
+	NotezyRequest[
+		any,
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			PartialUpdateDto[struct {
+				CountryCode       *enums.CountryCode `json:"countryCode" validate:"omitnil,iscountrycode"`
+				PhoneNumber       *string            `json:"phoneNumber" validate:"omitnil,max=0,max=15,isnumberstring"`
+				GoogleCredential  *string            `json:"googleCrendential" validate:"omitnil"`
+				DiscordCredential *string            `json:"discordCrendential" validate:"omitnil"`
+			}]
+		},
+	]
 }
 
 /* ============================== Response DTO ============================== */

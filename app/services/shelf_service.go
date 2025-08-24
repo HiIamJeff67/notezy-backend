@@ -11,7 +11,7 @@ import (
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	gqlmodels "notezy-backend/app/graphql/models"
-	"notezy-backend/app/logs"
+	logs "notezy-backend/app/logs"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
@@ -51,15 +51,15 @@ func (s *ShelfService) GetRecentShelves(reqDto *dtos.GetRecentShelvesReqDto) (*[
 	resDto := []dtos.GetRecentShelvesResDto{}
 	db := s.db.Model(&schemas.Shelf{})
 
-	query := db.Where("owner_id = ?", reqDto.OwnerId)
-	if len(strings.ReplaceAll(reqDto.Query, " ", "")) > 0 {
-		query = query.Where("name ILIKE ?", "%"+reqDto.Query+"%")
+	query := db.Where("owner_id = ?", reqDto.ContextFields.OwnerId)
+	if len(strings.ReplaceAll(reqDto.Body.Query, " ", "")) > 0 {
+		query = query.Where("name ILIKE ?", "%"+reqDto.Body.Query+"%")
 	}
-	logs.Info(reqDto.OwnerId)
+	logs.Info(reqDto.ContextFields.OwnerId)
 
 	result := query.Order("updated_at DESC").
-		Limit(int(reqDto.Limit)).
-		Offset(int(reqDto.Offset)).
+		Limit(int(reqDto.Body.Limit)).
+		Offset(int(reqDto.Body.Offset)).
 		Find(&resDto)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Shelf.NotFound().WithError(err)
@@ -73,14 +73,26 @@ func (s *ShelfService) CreateShelf(reqDto *dtos.CreateShelfReqDto) (*dtos.Create
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	shelfRepository := repositories.NewShelfRepository(s.db)
-
-	_, exception := shelfRepository.CreateOneByOwnerId(reqDto.OwnerId, inputs.CreateShelfInput{Name: reqDto.Name})
+	rootNode, exception := lib.NewShelfNode(reqDto.ContextFields.OwnerId, reqDto.Body.Name)
+	if exception != nil {
+		return nil, exception
+	}
+	encodedStructure, exception := lib.EncodeShelfNode(rootNode)
 	if exception != nil {
 		return nil, exception
 	}
 
-	return &dtos.CreateShelfResDto{CreatedAt: time.Now()}, nil
+	shelfRepository := repositories.NewShelfRepository(s.db)
+
+	_, exception = shelfRepository.CreateOneByOwnerId(reqDto.ContextFields.OwnerId, inputs.CreateShelfInput{Name: reqDto.Body.Name, EncodedStructure: encodedStructure})
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.CreateShelfResDto{
+		EncodedStructure: encodedStructure,
+		CreatedAt:        time.Now(),
+	}, nil
 }
 
 func (s *ShelfService) SynchronizeShelves(reqDto *dtos.SynchronizeShelvesReqDto) (*dtos.SynchronizeShelvesResDto, *exceptions.Exception) {
@@ -91,7 +103,7 @@ func (s *ShelfService) SynchronizeShelves(reqDto *dtos.SynchronizeShelvesReqDto)
 	shelfRepository := repositories.NewShelfRepository(s.db)
 
 	var updateInputs []inputs.PartialUpdateShelfInput
-	for _, partialUpdate := range reqDto.PartialUpdates {
+	for _, partialUpdate := range reqDto.Body.PartialUpdates {
 		shelfRootNode, exception := lib.DecodeShelfNode(*partialUpdate.Values.EncodedStructure)
 		if exception != nil {
 			return nil, exception
@@ -118,7 +130,7 @@ func (s *ShelfService) SynchronizeShelves(reqDto *dtos.SynchronizeShelvesReqDto)
 		})
 	}
 
-	exception := shelfRepository.DirectlyUpdateManyByIds(reqDto.ShelfIds, reqDto.OwnerId, updateInputs)
+	exception := shelfRepository.DirectlyUpdateManyByIds(reqDto.Body.ShelfIds, reqDto.ContextFields.OwnerId, updateInputs)
 	if exception != nil {
 		return nil, exception
 	}

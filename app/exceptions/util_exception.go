@@ -16,16 +16,11 @@ const (
 type UtilExceptionDomain struct {
 	BaseCode ExceptionCode
 	Prefix   ExceptionPrefix
-	CommonExceptionDomain
 }
 
 var Util = &UtilExceptionDomain{
 	BaseCode: ExceptionBaseCode_Util,
 	Prefix:   ExceptionPrefix_Util,
-	CommonExceptionDomain: CommonExceptionDomain{
-		_BaseCode: _ExceptionBaseCode_Util,
-		_Prefix:   ExceptionPrefix_Util,
-	},
 }
 
 /* ============================== Handling Exception on Json Web Tokens ============================== */

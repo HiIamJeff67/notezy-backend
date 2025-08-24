@@ -15,7 +15,6 @@ type ThemeExceptionDomain struct {
 	APIExceptionDomain
 	GraphQLExceptionDomain
 	TypeExceptionDomain
-	CommonExceptionDomain
 }
 
 var Theme = &ThemeExceptionDomain{
@@ -34,10 +33,6 @@ var Theme = &ThemeExceptionDomain{
 		_Prefix:   ExceptionPrefix_Theme,
 	},
 	TypeExceptionDomain: TypeExceptionDomain{
-		_BaseCode: _ExceptionBaseCode_Theme,
-		_Prefix:   ExceptionPrefix_Theme,
-	},
-	CommonExceptionDomain: CommonExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_Theme,
 		_Prefix:   ExceptionPrefix_Theme,
 	},

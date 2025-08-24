@@ -12,29 +12,62 @@ import (
 /* ============================== Request DTO ============================== */
 
 type GetUserDataReqDto struct {
-	UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+	NotezyRequest[
+		any,
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		any,
+	]
 }
 
 type GetMeReqDto struct {
-	UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+	NotezyRequest[
+		any,
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		any,
+	]
 }
 
 type UpdateMeReqDto struct {
-	UserId uuid.UUID // extracted from the access token of AuthMiddleware()
-	PartialUpdateDto[struct {
-		DisplayName *string           `json:"displayName" validate:"omitnil,min=6,max=32,alphaandnum"`
-		Status      *enums.UserStatus `json:"status" validate:"omitnil,isstatus"`
-	}]
+	NotezyRequest[
+		any,
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			PartialUpdateDto[struct {
+				DisplayName *string           `json:"displayName" validate:"omitnil,min=6,max=32,alphaandnum"`
+				Status      *enums.UserStatus `json:"status" validate:"omitnil,isstatus"`
+			}]
+		},
+	]
 }
 
 type UpdateRoleReqDto struct {
-	UserId uuid.UUID      // extracted from the access token of AuthMiddleware()
-	Role   enums.UserRole `json:"role" validate:"required,isrole"`
+	NotezyRequest[
+		any,
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			Role enums.UserRole `json:"role" validate:"required,isrole"`
+		},
+	]
 }
 
 type UpdatePlanReqDto struct {
-	UserId uuid.UUID      // extracted from the access token of AuthMiddleware()
-	Plan   enums.UserPlan `json:"plan" validate:"required,isplan"`
+	NotezyRequest[
+		any,
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			Plan enums.UserPlan `json:"plan" validate:"required,isplan"`
+		},
+	]
 }
 
 /* ============================== Response DTO ============================== */

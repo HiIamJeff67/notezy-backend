@@ -1,7 +1,8 @@
 package inputs
 
 type CreateShelfInput struct {
-	Name string `json:"name" gorm:"column:name;"`
+	Name             string `json:"name" gorm:"column:name;"`
+	EncodedStructure []byte `json:"encodedStructure" gorm:"column:encoded_structure;"`
 }
 
 type UpdateShelfInput struct {

@@ -78,18 +78,18 @@ func (s *AuthService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDt
 	userAccountRepository := repositories.NewUserAccountRepository(tx)
 	userSettingRepository := repositories.NewUserSettingRepository(tx)
 
-	hashedPassword, exception := s.hashPassword(reqDto.Password)
+	hashedPassword, exception := s.hashPassword(reqDto.Body.Password)
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
 
 	createUserInputData := inputs.CreateUserInput{
-		Name:        reqDto.Name,
+		Name:        reqDto.Body.Name,
 		DisplayName: util.GenerateRandomFakeName(), // we generate a default display name for the new user
-		Email:       reqDto.Email,
+		Email:       reqDto.Body.Email,
 		Password:    hashedPassword,
-		UserAgent:   reqDto.UserAgent,
+		UserAgent:   reqDto.Header.UserAgent,
 	}
 	newUserId, exception := userRepository.CreateOne(createUserInputData)
 	if exception != nil {
@@ -219,12 +219,12 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 	// otherwise, the user should provide their account and password
 	var user *schemas.User = nil
 	var exception *exceptions.Exception = nil
-	if util.IsAlphaAndNumberString(reqDto.Account) { // if the account field contains user name
-		if user, exception = userRepository.GetOneByName(reqDto.Account, nil); exception != nil {
+	if util.IsAlphaAndNumberString(reqDto.Body.Account) { // if the account field contains user name
+		if user, exception = userRepository.GetOneByName(reqDto.Body.Account, nil); exception != nil {
 			return nil, exception
 		}
-	} else if util.IsEmailString(reqDto.Account) { // if the account field contains email
-		if user, exception = userRepository.GetOneByEmail(reqDto.Account, nil); exception != nil {
+	} else if util.IsEmailString(reqDto.Body.Account) { // if the account field contains email
+		if user, exception = userRepository.GetOneByEmail(reqDto.Body.Account, nil); exception != nil {
 			return nil, exception
 		}
 	} else {
@@ -235,7 +235,7 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 		return nil, exceptions.Auth.LoginBlockedDueToTryingTooManyTimes(user.BlockLoginUntil)
 	}
 
-	if !s.checkPasswordHash(user.Password, reqDto.Password) {
+	if !s.checkPasswordHash(user.Password, reqDto.Body.Password) {
 		newLoginCount := user.LoginCount + 1
 		blockLoginUntil, exception := util.GetLoginBlockedUntilByLoginCount(newLoginCount)
 		if exception != nil {
@@ -261,7 +261,7 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 		return nil, exceptions.Auth.WrongPassword()
 	}
 
-	if user.UserAgent != reqDto.UserAgent {
+	if user.UserAgent != reqDto.Header.UserAgent {
 		// send a security email to warn the user
 		if exception := emails.SyncSendSecurityAlertEmail(
 			user.Email,
@@ -361,7 +361,7 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 			Values: inputs.UpdateUserInput{
 				Status:       &user.PrevStatus,
 				RefreshToken: refreshToken,
-				UserAgent:    &reqDto.UserAgent,
+				UserAgent:    &reqDto.Header.UserAgent,
 				LoginCount:   &zeroLoginCount,
 			},
 			SetNull: nil,
@@ -387,7 +387,7 @@ func (s *AuthService) Logout(reqDto *dtos.LogoutReqDto) (*dtos.LogoutResDto, *ex
 	offlineStatus := enums.UserStatus_Offline
 	emptyString := ""
 	updatedUser, exception := userRepository.UpdateOneById(
-		reqDto.UserId,
+		reqDto.ContextFields.UserId,
 		inputs.PartialUpdateUserInput{
 			Values: inputs.UpdateUserInput{
 				Status:       &offlineStatus,
@@ -399,7 +399,7 @@ func (s *AuthService) Logout(reqDto *dtos.LogoutReqDto) (*dtos.LogoutResDto, *ex
 		return nil, exception
 	}
 
-	exception = caches.DeleteUserDataCache(reqDto.UserId)
+	exception = caches.DeleteUserDataCache(reqDto.ContextFields.UserId)
 	if exception != nil {
 		return nil, exception
 	}
@@ -423,7 +423,7 @@ func (s *AuthService) SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendA
 		BlockAuthCodeUntil time.Time `json:"blockAuthCodeUntil"`
 		Now                time.Time `json:"now"`
 	}{}
-	result := s.db.Raw(authsql.UpdateAuthCodeSQL, authCode, authCodeExpiredAt, blockAuthCodeUntil, reqDto.Email).Scan(&output)
+	result := s.db.Raw(authsql.UpdateAuthCodeSQL, authCode, authCodeExpiredAt, blockAuthCodeUntil, reqDto.Body.Email).Scan(&output)
 	if err := result.Error; err != nil || result.RowsAffected == 0 {
 		exception := exceptions.Auth.AuthCodeBlockedDueToTryingTooManyTimes(output.BlockAuthCodeUntil)
 		if err != nil {
@@ -433,7 +433,7 @@ func (s *AuthService) SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendA
 	}
 
 	if exception := emails.SyncSendValidationEmail(
-		reqDto.Email,
+		reqDto.Body.Email,
 		output.Name,
 		authCode,
 		output.UserAgent,
@@ -457,7 +457,7 @@ func (s *AuthService) ValidateEmail(reqDto *dtos.ValidateEmailReqDto) (*dtos.Val
 	output := struct {
 		UpdatedAt time.Time `json:"updatedAt"`
 	}{}
-	result := s.db.Raw(authsql.ValidateEmailSQL, reqDto.UserId, reqDto.AuthCode).Scan(&output)
+	result := s.db.Raw(authsql.ValidateEmailSQL, reqDto.ContextFields.UserId, reqDto.Body.AuthCode).Scan(&output)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.FailedToUpdate().WithError(err)
 	}
@@ -480,7 +480,7 @@ func (s *AuthService) ResetEmail(reqDto *dtos.ResetEmailReqDto) (*dtos.ResetEmai
 	output := struct {
 		UpdatedAt time.Time `json:"updatedAt"`
 	}{}
-	result := s.db.Raw(authsql.ResetEmailSQL, reqDto.NewEmail, reqDto.AuthCode, reqDto.UserId).Scan(&output)
+	result := s.db.Raw(authsql.ResetEmailSQL, reqDto.Body.NewEmail, reqDto.Body.AuthCode, reqDto.ContextFields.UserId).Scan(&output)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.FailedToUpdate().WithError(err)
 	}
@@ -492,7 +492,7 @@ func (s *AuthService) ResetEmail(reqDto *dtos.ResetEmailReqDto) (*dtos.ResetEmai
 	authCode := util.GenerateAuthCode()
 	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
 	_, exception := userAccountRepository.UpdateOneByUserId(
-		reqDto.UserId,
+		reqDto.ContextFields.UserId,
 		inputs.PartialUpdateUserAccountInput{
 			Values: inputs.UpdateUserAccountInput{
 				AuthCode:          &authCode,
@@ -520,19 +520,19 @@ func (s *AuthService) ForgetPassword(reqDto *dtos.ForgetPasswordReqDto) (*dtos.F
 	var user *schemas.User = nil
 	var exception *exceptions.Exception = nil
 	var preloads = []schemas.UserRelation{schemas.UserRelation_UserAccount, schemas.UserRelation_UserInfo, schemas.UserRelation_UserSetting}
-	if util.IsEmailString(reqDto.Account) { // if the account field contains email
-		if user, exception = userRepository.GetOneByEmail(reqDto.Account, &preloads); exception != nil {
+	if util.IsEmailString(reqDto.Body.Account) { // if the account field contains email
+		if user, exception = userRepository.GetOneByEmail(reqDto.Body.Account, &preloads); exception != nil {
 			return nil, exception
 		}
-	} else if util.IsAlphaAndNumberString(reqDto.Account) { // if the account field contains user name
-		if user, exception = userRepository.GetOneByName(reqDto.Account, &preloads); exception != nil {
+	} else if util.IsAlphaAndNumberString(reqDto.Body.Account) { // if the account field contains user name
+		if user, exception = userRepository.GetOneByName(reqDto.Body.Account, &preloads); exception != nil {
 			return nil, exception
 		}
 	} else {
 		return nil, exceptions.Auth.InvalidDto()
 	}
 
-	if reqDto.AuthCode != user.UserAccount.AuthCode {
+	if reqDto.Body.AuthCode != user.UserAccount.AuthCode {
 		return nil, exceptions.Auth.WrongAuthCode()
 	}
 
@@ -571,7 +571,7 @@ func (s *AuthService) ForgetPassword(reqDto *dtos.ForgetPasswordReqDto) (*dtos.F
 		}
 	}
 
-	hashedPassword, exception := s.hashPassword(reqDto.NewPassword)
+	hashedPassword, exception := s.hashPassword(reqDto.Body.NewPassword)
 	if exception != nil {
 		return nil, exception
 	}
@@ -584,7 +584,7 @@ func (s *AuthService) ForgetPassword(reqDto *dtos.ForgetPasswordReqDto) (*dtos.F
 			Values: inputs.UpdateUserInput{
 				Password:     &hashedPassword,
 				RefreshToken: refreshToken,
-				UserAgent:    &reqDto.UserAgent,
+				UserAgent:    &reqDto.Header.UserAgent,
 				LoginCount:   &zeroLoginCount,
 			},
 			SetNull: nil,
@@ -606,7 +606,7 @@ func (s *AuthService) DeleteMe(reqDto *dtos.DeleteMeReqDto) (*dtos.DeleteMeResDt
 	output := struct {
 		DeletedAt time.Time `json:"deletedAt" gorm:"deleted_at"`
 	}{}
-	result := s.db.Raw(authsql.DeleteMeSQL, reqDto.UserId, reqDto.AuthCode).Scan(&output)
+	result := s.db.Raw(authsql.DeleteMeSQL, reqDto.ContextFields.UserId, reqDto.Body.AuthCode).Scan(&output)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.FailedToUpdate().WithError(err)
 	}

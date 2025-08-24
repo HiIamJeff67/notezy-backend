@@ -15,7 +15,6 @@ import (
 	schemas "notezy-backend/app/models/schemas"
 	util "notezy-backend/app/util"
 	constants "notezy-backend/shared/constants"
-	lib "notezy-backend/shared/lib"
 )
 
 /* ============================== Definitions ============================== */
@@ -98,15 +97,6 @@ func (r *ShelfRepository) GetOneByName(name string, ownerId uuid.UUID, preloads 
 func (r *ShelfRepository) CreateOneByOwnerId(ownerId uuid.UUID, input inputs.CreateShelfInput) (*uuid.UUID, *exceptions.Exception) {
 	var newShelf schemas.Shelf
 	newShelf.OwnerId = ownerId
-	rootNode, exception := lib.NewShelfNode(ownerId, input.Name)
-	if exception != nil {
-		return nil, exception
-	}
-	encodedStructure, exception := lib.EncodeShelfNode(rootNode)
-	if exception != nil {
-		return nil, exception
-	}
-	newShelf.EncodedStructure = encodedStructure
 	if err := copier.Copy(&newShelf, &input); err != nil {
 		return nil, exceptions.Shelf.FailedToCreate().WithError(err)
 	}

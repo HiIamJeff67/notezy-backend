@@ -56,7 +56,7 @@ func UserPlanMiddleware(atLeastUserPlan enums.UserPlan) gin.HandlerFunc {
 
 		// if some how we can't find the currentUserPlan or atLeastUserPlan
 		// then we raise an undefined error at the end
-		exception := exceptions.Auth.UndefinedError(
+		exception := exceptions.UndefinedError(
 			"Cannot find atLeastUserPlan or currentUserPlan in UserRoleMiddleware",
 		)
 		ctx.AbortWithStatusJSON(

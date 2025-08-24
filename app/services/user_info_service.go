@@ -47,7 +47,7 @@ func (s *UserInfoService) GetMyInfo(reqDto *dtos.GetMyInfoReqDto) (*dtos.GetMyIn
 
 	userInfoRepository := repositories.NewUserInfoRepository(s.db)
 
-	userInfo, exception := userInfoRepository.GetOneByUserId(reqDto.UserId)
+	userInfo, exception := userInfoRepository.GetOneByUserId(reqDto.ContextFields.UserId)
 	if exception != nil {
 		return nil, exception
 	}
@@ -71,24 +71,24 @@ func (s *UserInfoService) UpdateMyInfo(reqDto *dtos.UpdateMyInfoReqDto) (*dtos.U
 
 	userInfoRepository := repositories.NewUserInfoRepository(s.db)
 
-	updatedUserInfo, exception := userInfoRepository.UpdateOneByUserId(reqDto.UserId, inputs.PartialUpdateUserInfoInput{
+	updatedUserInfo, exception := userInfoRepository.UpdateOneByUserId(reqDto.ContextFields.UserId, inputs.PartialUpdateUserInfoInput{
 		Values: inputs.UpdateUserInfoInput{
-			CoverBackgroundURL: reqDto.Values.CoverBackgroundURL,
-			AvatarURL:          reqDto.Values.AvatarURL,
-			Header:             reqDto.Values.Header,
-			Introduction:       reqDto.Values.Introduction,
-			Gender:             reqDto.Values.Gender,
-			Country:            reqDto.Values.Country,
-			BirthDate:          reqDto.Values.BirthDate,
+			CoverBackgroundURL: reqDto.Body.Values.CoverBackgroundURL,
+			AvatarURL:          reqDto.Body.Values.AvatarURL,
+			Header:             reqDto.Body.Values.Header,
+			Introduction:       reqDto.Body.Values.Introduction,
+			Gender:             reqDto.Body.Values.Gender,
+			Country:            reqDto.Body.Values.Country,
+			BirthDate:          reqDto.Body.Values.BirthDate,
 		},
-		SetNull: reqDto.SetNull,
+		SetNull: reqDto.Body.SetNull,
 	})
 	if exception != nil {
 		return nil, exception
 	}
 
-	exception = caches.UpdateUserDataCache(reqDto.UserId, caches.UpdateUserDataCacheDto{
-		AvatarURL: reqDto.Values.AvatarURL,
+	exception = caches.UpdateUserDataCache(reqDto.ContextFields.UserId, caches.UpdateUserDataCacheDto{
+		AvatarURL: reqDto.Body.Values.AvatarURL,
 	})
 	if exception != nil {
 		exception.Log()

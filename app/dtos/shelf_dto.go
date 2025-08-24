@@ -9,22 +9,43 @@ import (
 /* ============================== Request DTO ============================== */
 
 type GetRecentShelvesReqDto struct {
-	OwnerId uuid.UUID // extracted from the access token of AuthMiddleware()
-	GetManyDto
+	NotezyRequest[
+		any,
+		struct {
+			OwnerId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			GetManyDto
+		},
+	]
 }
 
 type CreateShelfReqDto struct {
-	OwnerId uuid.UUID // extracted from the access token of AuthMiddleware()
-	Name    string    `json:"name" validate:"required,max=128"`
+	NotezyRequest[
+		any,
+		struct {
+			OwnerId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			Name string `json:"name" validate:"required,max=128"`
+		},
+	]
 }
 
 type SynchronizeShelvesReqDto struct {
-	OwnerId        uuid.UUID   // extracted from the access token of AuthMiddleware()
-	ShelfIds       []uuid.UUID `json:"shelfIds" validate:"required"`
-	PartialUpdates []PartialUpdateDto[struct {
-		Name             *string `json:"name" validate:"omitnil,max=128,isshelfname"`
-		EncodedStructure *[]byte `json:"encodedStructure" validate:"omitnil"`
-	}] `json:"partialUpdates" validate:"required"`
+	NotezyRequest[
+		any,
+		struct {
+			OwnerId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			ShelfIds       []uuid.UUID `json:"shelfIds" validate:"required"`
+			PartialUpdates []PartialUpdateDto[struct {
+				Name             *string `json:"name" validate:"omitnil,max=128,isshelfname"`
+				EncodedStructure *[]byte `json:"encodedStructure" validate:"omitnil"`
+			}] `json:"partialUpdates" validate:"required"`
+		},
+	]
 }
 
 /* ============================== Response DTO ============================== */
@@ -42,7 +63,8 @@ type GetRecentShelvesResDto struct {
 }
 
 type CreateShelfResDto struct {
-	CreatedAt time.Time `json:"createdAt"`
+	EncodedStructure []byte    `json:"encodedStructure"`
+	CreatedAt        time.Time `json:"createdAt"`
 }
 
 type SynchronizeShelvesResDto struct {

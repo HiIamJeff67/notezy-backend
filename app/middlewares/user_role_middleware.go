@@ -56,7 +56,7 @@ func UserRoleMiddleware(atLeastUserRole enums.UserRole) gin.HandlerFunc {
 
 		// if some how we can't find the userDataCache.Role or atLeastUserRole
 		// then we raise an undefined error at the end
-		exception := exceptions.Auth.UndefinedError(
+		exception := exceptions.UndefinedError(
 			"Cannot find atLeastUserRole or userDataCache.Role in UserRoleMiddleware",
 		)
 		ctx.AbortWithStatusJSON(
