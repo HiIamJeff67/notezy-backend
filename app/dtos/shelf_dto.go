@@ -41,8 +41,9 @@ type SynchronizeShelvesReqDto struct {
 		struct {
 			ShelfIds       []uuid.UUID `json:"shelfIds" validate:"required"`
 			PartialUpdates []PartialUpdateDto[struct {
-				Name             *string `json:"name" validate:"omitnil,max=128,isshelfname"`
-				EncodedStructure *[]byte `json:"encodedStructure" validate:"omitnil"`
+				Name             *string    `json:"name" validate:"omitnil,max=128,isshelfname"`
+				EncodedStructure *[]byte    `json:"encodedStructure" validate:"omitnil"`
+				LastAnalyzedAt   *time.Time `json:"lastAnalyzedAt" validate:"omitnil,notfuture"`
 			}] `json:"partialUpdates" validate:"required"`
 		},
 	]
@@ -60,10 +61,13 @@ type GetRecentShelvesResDto struct {
 	MaxDepth                 int32     `json:"maxDepth"`
 	UpdatedAt                time.Time `json:"updatedAt"`
 	CreatedAt                time.Time `json:"createdAt"`
+	LastAnalyzedAt           time.Time `json:"lastAnalyzedAt"`
 }
 
 type CreateShelfResDto struct {
+	Id               uuid.UUID `json:"id"`
 	EncodedStructure []byte    `json:"encodedStructure"`
+	LastAnalyzedAt   time.Time `json:"lastAnalyzedAt"`
 	CreatedAt        time.Time `json:"createdAt"`
 }
 

@@ -19,6 +19,7 @@ type Shelf struct {
 	TotalMaterials           int32     `json:"totalMaterials" gorm:"column:total_materials; type:integer; not null; default:0;"`
 	MaxWidth                 int32     `json:"maxWidth" gorm:"column:max_width; type:integer; not null; default:1;"`
 	MaxDepth                 int32     `json:"maxDepth" gorm:"column:max_depth; type:integer; not null; default:1;"`
+	LastAnalyzedAt           time.Time `json:"lastAnalyzedAt" gorm:"column:last_analyzed_at; type:timestamptz; not null; default:NOW();"`
 	UpdatedAt                time.Time `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt                time.Time `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 

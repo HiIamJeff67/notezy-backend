@@ -84,13 +84,25 @@ func (s *ShelfService) CreateShelf(reqDto *dtos.CreateShelfReqDto) (*dtos.Create
 
 	shelfRepository := repositories.NewShelfRepository(s.db)
 
-	_, exception = shelfRepository.CreateOneByOwnerId(reqDto.ContextFields.OwnerId, inputs.CreateShelfInput{Name: reqDto.Body.Name, EncodedStructure: encodedStructure})
+	now := time.Now()
+	shelfId, exception := shelfRepository.CreateOneByOwnerId(
+		reqDto.ContextFields.OwnerId,
+		inputs.CreateShelfInput{
+			Name:             reqDto.Body.Name,
+			EncodedStructure: encodedStructure,
+			LastAnalyzedAt:   &now,
+		})
 	if exception != nil {
 		return nil, exception
 	}
+	if shelfId == nil {
+		return nil, exceptions.Shelf.FailedToCreate("got nil shelf id")
+	}
 
 	return &dtos.CreateShelfResDto{
+		Id:               *shelfId,
 		EncodedStructure: encodedStructure,
+		LastAnalyzedAt:   now,
 		CreatedAt:        time.Now(),
 	}, nil
 }
@@ -116,6 +128,7 @@ func (s *ShelfService) SynchronizeShelves(reqDto *dtos.SynchronizeShelvesReqDto)
 		if summary == nil {
 			return nil, exceptions.Shelf.CircularChildrenDetectedInShelfNode()
 		}
+		now := time.Now()
 		updateInputs = append(updateInputs, inputs.PartialUpdateShelfInput{
 			Values: inputs.UpdateShelfInput{
 				Name:                     partialUpdate.Values.Name,
@@ -125,6 +138,7 @@ func (s *ShelfService) SynchronizeShelves(reqDto *dtos.SynchronizeShelvesReqDto)
 				TotalMaterials:           &summary.TotalMaterials,
 				MaxWidth:                 &summary.MaxWidth,
 				MaxDepth:                 &summary.MaxDepth,
+				LastAnalyzedAt:           &now,
 			},
 			SetNull: partialUpdate.SetNull,
 		})
@@ -135,7 +149,9 @@ func (s *ShelfService) SynchronizeShelves(reqDto *dtos.SynchronizeShelvesReqDto)
 		return nil, exception
 	}
 
-	return &dtos.SynchronizeShelvesResDto{UpdatedAt: time.Now()}, nil
+	return &dtos.SynchronizeShelvesResDto{
+		UpdatedAt: time.Now(),
+	}, nil
 }
 
 /* ============================== Service Methods for  ============================== */

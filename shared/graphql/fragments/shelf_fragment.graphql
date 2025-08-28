@@ -7,6 +7,7 @@ fragment FragmentedBasicPrivateShelf on PrivateShelf {
   totalMaterials
   maxWidth
   maxDepth
+  lastAnalyzedAt
   updatedAt
   createdAt
 }

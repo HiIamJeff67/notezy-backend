@@ -45,6 +45,7 @@ type ComplexityRoot struct {
 		EncodedStructure         func(childComplexity int) int
 		EncodedStructureByteSize func(childComplexity int) int
 		ID                       func(childComplexity int) int
+		LastAnalyzedAt           func(childComplexity int) int
 		MaxDepth                 func(childComplexity int) int
 		MaxWidth                 func(childComplexity int) int
 		Name                     func(childComplexity int) int
@@ -208,6 +209,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateShelf.ID(childComplexity), true
+
+	case "PrivateShelf.lastAnalyzedAt":
+		if e.complexity.PrivateShelf.LastAnalyzedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateShelf.LastAnalyzedAt(childComplexity), true
 
 	case "PrivateShelf.maxDepth":
 		if e.complexity.PrivateShelf.MaxDepth == nil {
@@ -932,68 +940,8 @@ var sources = []*ast.Source{
   # relations
   users: [PublicUser!]!
 }
-
-# =============== Search Filters & SortBy & SortOrder =============== #
-
-input SearchBadgeFilters {
-  type: BadgeType
-}
-
-enum SearchBadgeSortBy {
-  RELEVANCE
-  TITLE
-  CREATED_AT
-}
-
-input SearchBadgeInput {
-  query: String!
-  after: String
-  first: Int = 10
-  filters: SearchBadgeFilters
-  sortBy: SearchBadgeSortBy = RELEVANCE
-  sortOrderr: SearchSortOrder = DESC
-}
-
-# =============== Search Cursor Fields =============== #
-
-# type SearchBadgeEnvironmentAttributes {}
-
-input SearchBadgeCursorFields {
-  publicId: String!
-  # environmentAttributes: SearchBadgeEnvironmentAttributes
-}
-
-# =============== Search Edge & Connection =============== #
-
-type SearchBadgeEdge implements SearchEdge {
-  encodedSearchCursor: String! # the search identifier
-  node: PublicBadge! # the search result
-}
-
-type SearchBadgeConnection implements SearchConnection {
-  searchEdges: [SearchBadgeEdge!]!
-  searchPageInfo: SearchPageInfo!
-  totalCount: Int!
-  searchTime: Float!
-}
 `, BuiltIn: false},
-	{Name: "../../../shared/graphql/schemas/query.graphql", Input: `type Query {
-  searchUsers(input: SearchUserInput!): SearchUserConnection!
-  searchThemes(input: SearchThemeInput!): SearchThemeConnection!
-  searchShelves(input: SearchShelfInput!): SearchShelfConnection!
-}
-
-# type Mutation {}
-
-# type Subscription {}
-`, BuiltIn: false},
-	{Name: "../../../shared/graphql/schemas/scalar.graphql", Input: `scalar Int32
-scalar Int64
-scalar UUID
-scalar Time
-scalar Base64Bytes
-`, BuiltIn: false},
-	{Name: "../../../shared/graphql/schemas/search.graphql", Input: `# every schemas or graphql types which want to be searchable
+	{Name: "../../../shared/graphql/schemas/fields.graphql", Input: `# every schemas or graphql types which want to be searchable
 # are required to inheritence the structure (of cursor-based pagination) here
 
 # =============== Search Filters (part of Input) =============== #
@@ -1042,23 +990,67 @@ interface SearchConnection {
   searchTime: Float!
 }
 `, BuiltIn: false},
-	{Name: "../../../shared/graphql/schemas/shelf.graphql", Input: `type PrivateShelf {
-  id: UUID!
-  name: String!
-  encodedStructure: Base64Bytes!
-  encodedStructureByteSize: Int64!
-  totalShelfNodes: Int32!
-  totalMaterials: Int32!
-  maxWidth: Int32!
-  maxDepth: Int32!
-  updatedAt: Time!
-  createdAt: Time!
-
-  # relations
-  owner: [PublicUser!]!
+	{Name: "../../../shared/graphql/schemas/query.graphql", Input: `type Query {
+  searchUsers(input: SearchUserInput!): SearchUserConnection!
+  searchThemes(input: SearchThemeInput!): SearchThemeConnection!
+  searchShelves(input: SearchShelfInput!): SearchShelfConnection!
 }
 
-# =============== Search SortBy & Input =============== #
+# type Mutation {}
+
+# type Subscription {}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/scalar.graphql", Input: `scalar Int32
+scalar Int64
+scalar UUID
+scalar Time
+scalar Base64Bytes
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/search_badges.graphql", Input: `# =============== Search Filters & SortBy & SortOrder =============== #
+
+input SearchBadgeFilters {
+  type: BadgeType
+}
+
+enum SearchBadgeSortBy {
+  RELEVANCE
+  TITLE
+  CREATED_AT
+}
+
+input SearchBadgeInput {
+  query: String!
+  after: String
+  first: Int = 10
+  filters: SearchBadgeFilters
+  sortBy: SearchBadgeSortBy = RELEVANCE
+  sortOrderr: SearchSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+# type SearchBadgeEnvironmentAttributes {}
+
+input SearchBadgeCursorFields {
+  publicId: String!
+  # environmentAttributes: SearchBadgeEnvironmentAttributes
+}
+
+# =============== Search Edge & Connection =============== #
+
+type SearchBadgeEdge implements SearchEdge {
+  encodedSearchCursor: String! # the search identifier
+  node: PublicBadge! # the search result
+}
+
+type SearchBadgeConnection implements SearchConnection {
+  searchEdges: [SearchBadgeEdge!]!
+  searchPageInfo: SearchPageInfo!
+  totalCount: Int!
+  searchTime: Float!
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/search_shelves.graphql", Input: `# =============== Search SortBy & Input =============== #
 
 enum SearchShelfSortBy {
   RELEVANCE
@@ -1098,24 +1090,7 @@ type SearchShelfConnection implements SearchConnection {
   searchTime: Float!
 }
 `, BuiltIn: false},
-	{Name: "../../../shared/graphql/schemas/theme.graphql", Input: `type PublicTheme {
-  # id: UUID!
-  publicId: String! # the encoded of this field is the identifier of the PublicTheme
-  name: String!
-  isDark: Boolean!
-  #   authorId: UUID!
-  version: String!
-  isDefault: Boolean!
-  downloadURL: String
-  downloadCount: Int64!
-  createdAt: Time!
-  updatedAt: Time!
-
-  # relations
-  author: PublicUser!
-}
-
-# =============== Search Filters & SortBy & Input =============== #
+	{Name: "../../../shared/graphql/schemas/search_themes.graphql", Input: `# =============== Search Filters & SortBy & Input =============== #
 
 input SearchThemeFilters {
   isDefault: Boolean
@@ -1161,34 +1136,7 @@ type SearchThemeConnection implements SearchConnection {
   searchTime: Float!
 }
 `, BuiltIn: false},
-	{Name: "../../../shared/graphql/schemas/user.graphql", Input: `# the complete user structure: app/models/schemas/user_schema.go
-# this schema file is only use for go graphql to improve better user experience
-
-type PublicUser {
-  # id: UUID!
-  publicId: String! # the encoded of this field is the identifier of the PublicUser
-  name: String!
-  displayName: String!
-  # email: String!
-  # password: String!
-  # refreshToken: String!
-  # loginCount: Int
-  # blockLoginUtil: Time!
-  # userAgent: String!
-  role: UserRole!
-  plan: UserPlan!
-  # prevStatus: UserStatus!
-  status: UserStatus!
-  createdAt: Time!
-  # updatedAt: Time!
-
-  # relations
-  userInfo: PublicUserInfo!
-  badges: [PublicBadge!]!
-  themes: [PublicTheme!]!
-}
-
-# =============== Search Filters & SortBy & Input =============== #
+	{Name: "../../../shared/graphql/schemas/search_users.graphql", Input: `# =============== Search Filters & SortBy & Input =============== #
 
 input SearchUserFilters {
   role: UserRole
@@ -1240,6 +1188,67 @@ type SearchUserConnection implements SearchConnection {
   searchPageInfo: SearchPageInfo!
   totalCount: Int!
   searchTime: Float!
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/shelf.graphql", Input: `type PrivateShelf {
+  id: UUID!
+  name: String!
+  encodedStructure: Base64Bytes!
+  encodedStructureByteSize: Int64!
+  totalShelfNodes: Int32!
+  totalMaterials: Int32!
+  maxWidth: Int32!
+  maxDepth: Int32!
+  lastAnalyzedAt: Time!
+  updatedAt: Time!
+  createdAt: Time!
+
+  # relations
+  owner: [PublicUser!]!
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/theme.graphql", Input: `type PublicTheme {
+  # id: UUID!
+  publicId: String! # the encoded of this field is the identifier of the PublicTheme
+  name: String!
+  isDark: Boolean!
+  #   authorId: UUID!
+  version: String!
+  isDefault: Boolean!
+  downloadURL: String
+  downloadCount: Int64!
+  createdAt: Time!
+  updatedAt: Time!
+
+  # relations
+  author: PublicUser!
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/user.graphql", Input: `# the complete user structure: app/models/schemas/user_schema.go
+# this schema file is only use for go graphql to improve better user experience
+
+type PublicUser {
+  # id: UUID!
+  publicId: String! # the encoded of this field is the identifier of the PublicUser
+  name: String!
+  displayName: String!
+  # email: String!
+  # password: String!
+  # refreshToken: String!
+  # loginCount: Int
+  # blockLoginUtil: Time!
+  # userAgent: String!
+  role: UserRole!
+  plan: UserPlan!
+  # prevStatus: UserStatus!
+  status: UserStatus!
+  createdAt: Time!
+  # updatedAt: Time!
+
+  # relations
+  userInfo: PublicUserInfo!
+  badges: [PublicBadge!]!
+  themes: [PublicTheme!]!
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/user_info.graphql", Input: `type PublicUserInfo {

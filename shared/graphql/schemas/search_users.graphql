@@ -1,0 +1,53 @@
+# =============== Search Filters & SortBy & Input =============== #
+
+input SearchUserFilters {
+  role: UserRole
+  plan: UserPlan
+  status: UserStatus
+  hasAvatar: Boolean
+  country: Country
+  isOnline: Boolean
+}
+
+enum SearchUserSortBy {
+  RELEVANCE
+  NAME # using this to check both the name and display name fields
+  LAST_ACTIVE
+  CREATED_AT
+}
+
+input SearchUserInput {
+  query: String! # the input from the frontend
+  after: String # base64 encoded cursor
+  first: Int = 10 # the number of data we want to extract
+  filters: SearchUserFilters
+  sortBy: SearchUserSortBy = RELEVANCE
+  sortOrder: SearchSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+# type SearchUserEnvironmentAttributes {}
+
+# use the below fields to encoded it into base64
+# and included some attributes as weights of the search algorithm
+# for better search experience
+input SearchUserCursorFields {
+  publicId: String!
+  # environmentAttributes: SearchUserEnvironmentAttributes
+  # add some weight to effect the searching result here
+}
+
+# =============== Search Edge & Connection =============== #
+
+type SearchUserEdge implements SearchEdge {
+  encodedSearchCursor: String! # the encoded search identifier
+  node: PublicUser! # the search result
+}
+
+type SearchUserConnection implements SearchConnection {
+  searchEdges: [SearchUserEdge!]!
+  searchPageInfo: SearchPageInfo!
+  totalCount: Int!
+  searchTime: Float!
+}

@@ -1,0 +1,45 @@
+# =============== Search Filters & SortBy & Input =============== #
+
+input SearchThemeFilters {
+  isDefault: Boolean
+  downloadCountGreaterThan: Int
+}
+
+enum SearchThemeSortBy {
+  RELEVANCE
+  NAME
+  LAST_UPDATE
+  CREATED_AT
+}
+
+input SearchThemeInput {
+  query: String!
+  after: String
+  first: Int = 10
+  filters: SearchThemeFilters
+  sortBy: SearchThemeSortBy = RELEVANCE
+  sortOrder: SearchSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+# type SearchThemeEnvironmentAttributes {}
+
+input SearchThemeCursorFields {
+  publicId: String!
+  # environmentAttributes: SearchThemeEnvironmentAttributes
+}
+
+# =============== Search Edge & Connection =============== #
+
+type SearchThemeEdge implements SearchEdge {
+  encodedSearchCursor: String! # the search identifier
+  node: PublicTheme! # the search result
+}
+
+type SearchThemeConnection implements SearchConnection {
+  searchEdges: [SearchThemeEdge!]!
+  searchPageInfo: SearchPageInfo!
+  totalCount: Int!
+  searchTime: Float!
+}
