@@ -117,7 +117,7 @@ func (r *UserRepository) CreateOne(input inputs.CreateUserInput) (*uuid.UUID, *e
 		return nil, exceptions.User.FailedToCreate().WithError(err)
 	}
 
-	result := r.db.Table(schemas.User{}.TableName()).
+	result := r.db.Model(&schemas.User{}).
 		Create(&newUser)
 	if err := result.Error; err != nil {
 		switch err.Error() {
@@ -144,7 +144,7 @@ func (r *UserRepository) UpdateOneById(id uuid.UUID, input inputs.PartialUpdateU
 		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(input.Values, input.SetNull, *existingUser)
 	}
 
-	result := r.db.Table(schemas.User{}.TableName()).
+	result := r.db.Model(&schemas.User{}).
 		Where("id = ?", id).
 		Select("*").
 		Updates(&updates)
@@ -159,10 +159,9 @@ func (r *UserRepository) UpdateOneById(id uuid.UUID, input inputs.PartialUpdateU
 }
 
 func (r *UserRepository) DeleteOneById(id uuid.UUID, input inputs.DeleteUserInput) *exceptions.Exception {
-	deletedUser := schemas.User{}
-	result := r.db.Table(schemas.User{}.TableName()).
+	result := r.db.Model(&schemas.User{}).
 		Where("id = ? AND name = ? AND password", id, input.Name, input.Password).
-		Delete(&deletedUser)
+		Delete(&schemas.User{})
 	if err := result.Error; err != nil {
 		return exceptions.User.FailedToDelete().WithError(err)
 	}

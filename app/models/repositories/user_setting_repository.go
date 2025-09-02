@@ -53,7 +53,7 @@ func (r *UserSettingRepository) CreateOneByUserId(userId uuid.UUID, input inputs
 		return nil, exceptions.UserSetting.FailedToCreate().WithError(err)
 	}
 
-	result := r.db.Table(schemas.UserSetting{}.TableName()).
+	result := r.db.Model(&schemas.UserSetting{}).
 		Create(&newUserSetting)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserSetting.FailedToCreate().WithError(err)
@@ -73,7 +73,7 @@ func (r *UserSettingRepository) UpdateOneByUserId(userId uuid.UUID, input inputs
 		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(input.Values, input.SetNull, *existingUserSetting)
 	}
 
-	result := r.db.Table(schemas.UserSetting{}.TableName()).
+	result := r.db.Model(&schemas.UserSetting{}).
 		Where("user_id = ?").
 		Select("*").
 		Updates(&updates)

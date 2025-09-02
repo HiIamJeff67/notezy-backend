@@ -3,16 +3,17 @@ package repositories
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 
 	exceptions "notezy-backend/app/exceptions"
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
+	"notezy-backend/app/models/schemas/enums"
 	util "notezy-backend/app/util"
 	constants "notezy-backend/shared/constants"
 )
@@ -21,12 +22,16 @@ import (
 
 type ShelfRepositoryInterface interface {
 	GetOneById(id uuid.UUID, ownerId uuid.UUID, preloads *[]schemas.ShelfRelation) (*schemas.Shelf, *exceptions.Exception)
-	GetOneByName(name string, ownerId uuid.UUID, preloads *[]schemas.ShelfRelation) (*schemas.Shelf, *exceptions.Exception)
 	CreateOneByOwnerId(ownerId uuid.UUID, input inputs.CreateShelfInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, ownerId uuid.UUID, input inputs.PartialUpdateShelfInput) (*schemas.Shelf, *exceptions.Exception)
 	DirectlyUpdateOneById(id uuid.UUID, ownerId uuid.UUID, input inputs.PartialUpdateShelfInput) *exceptions.Exception
 	DirectlyUpdateManyByIds(ids []uuid.UUID, ownerId uuid.UUID, inputs []inputs.PartialUpdateShelfInput) *exceptions.Exception
-	DeleteOneById(id uuid.UUID, ownerId uuid.UUID) *exceptions.Exception
+	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID) (time.Time, *exceptions.Exception)
+	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID) (time.Time, *exceptions.Exception)
+	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID) (time.Time, *exceptions.Exception)
+	SoftDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID) (time.Time, *exceptions.Exception)
+	HardDeleteOneById(id uuid.UUID, userId uuid.UUID) (time.Time, *exceptions.Exception)
+	HardDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID) (time.Time, *exceptions.Exception)
 }
 
 type ShelfRepository struct {
@@ -59,33 +64,22 @@ func (r *ShelfRepository) getNumOfPartialUpdateArguments(numOfRows int) int {
 /* ============================== CRUD operations ============================== */
 
 func (r *ShelfRepository) GetOneById(id uuid.UUID, ownerId uuid.UUID, preloads *[]schemas.ShelfRelation) (*schemas.Shelf, *exceptions.Exception) {
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Read,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Admin,
+	}
+
 	shelf := schemas.Shelf{}
-	db := r.db.Table(schemas.Shelf{}.TableName())
+	db := r.db.Model(&schemas.Shelf{}).
+		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON \"ShelfTable\".id = uts.shelf_id")
 	if preloads != nil {
 		for _, preload := range *preloads {
 			db = db.Preload(string(preload))
 		}
 	}
 
-	result := db.Where("id = ? AND owner_id = ?", id, ownerId).
-		First(&shelf)
-	if err := result.Error; err != nil {
-		return nil, exceptions.Shelf.NotFound().WithError(err)
-	}
-
-	return &shelf, nil
-}
-
-func (r *ShelfRepository) GetOneByName(name string, ownerId uuid.UUID, preloads *[]schemas.ShelfRelation) (*schemas.Shelf, *exceptions.Exception) {
-	shelf := schemas.Shelf{}
-	db := r.db.Table(schemas.Shelf{}.TableName())
-	if preloads != nil {
-		for _, preload := range *preloads {
-			db = db.Preload(string(preload))
-		}
-	}
-
-	result := db.Where("name = ? AND owner_id = ?", name, ownerId).
+	result := db.Where("\"ShelfTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?", id, ownerId, allowedPermissions).
 		First(&shelf)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Shelf.NotFound().WithError(err)
@@ -101,7 +95,7 @@ func (r *ShelfRepository) CreateOneByOwnerId(ownerId uuid.UUID, input inputs.Cre
 		return nil, exceptions.Shelf.FailedToCreate().WithError(err)
 	}
 
-	result := r.db.Table(schemas.Shelf{}.TableName()).
+	result := r.db.Model(&schemas.Shelf{}).
 		Create(&newShelf)
 	if err := result.Error; err != nil {
 		switch err.Error() {
@@ -111,11 +105,30 @@ func (r *ShelfRepository) CreateOneByOwnerId(ownerId uuid.UUID, input inputs.Cre
 			return nil, exceptions.Shelf.FailedToCreate().WithError(err)
 		}
 	}
+	if newShelf.Id != input.Id {
+		return nil, exceptions.Shelf.FailedToCreate().WithDetails("Create different id shelf")
+	}
+
+	// create the users to shelves relation with the permission of admin
+	newUsersToShelves := schemas.UsersToShelves{
+		UserId:     ownerId,
+		ShelfId:    input.Id,
+		Permission: enums.AccessControlPermission_Admin,
+	}
+	result = r.db.Model(&schemas.UsersToShelves{}).
+		Create(&newUsersToShelves)
+	if err := result.Error; err != nil {
+		return nil, exceptions.Shelf.FailedToCreate().WithError(err)
+	}
 
 	return &newShelf.Id, nil
 }
 
 func (r *ShelfRepository) UpdateOneById(id uuid.UUID, ownerId uuid.UUID, input inputs.PartialUpdateShelfInput) (*schemas.Shelf, *exceptions.Exception) {
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Admin,
+	}
 	existingShelf, exception := r.GetOneById(id, ownerId, nil)
 	if exception != nil || existingShelf == nil {
 		return nil, exception
@@ -126,8 +139,9 @@ func (r *ShelfRepository) UpdateOneById(id uuid.UUID, ownerId uuid.UUID, input i
 		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(input.Values, input.SetNull, *existingShelf)
 	}
 
-	result := r.db.Table(schemas.Shelf{}.TableName()).
-		Where("id = ? AND owner_id = ?", id, ownerId).
+	result := r.db.Model(&schemas.Shelf{}).
+		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON \"ShelfTable\".id = uts.shelf_id").
+		Where("\"ShelfTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?", id, ownerId, allowedPermissions).
 		Select("*").
 		Updates(&updates)
 	if err := result.Error; err != nil {
@@ -147,6 +161,11 @@ func (r *ShelfRepository) DirectlyUpdateOneById(id uuid.UUID, ownerId uuid.UUID,
 func (r *ShelfRepository) DirectlyUpdateManyByIds(ids []uuid.UUID, ownerId uuid.UUID, inputs []inputs.PartialUpdateShelfInput) *exceptions.Exception {
 	if len(ids) != len(inputs) || len(ids) == 0 {
 		return exceptions.Shelf.NoChanges()
+	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Admin,
 	}
 
 	placeholders := make([]string, 0, len(ids))
@@ -208,10 +227,12 @@ func (r *ShelfRepository) DirectlyUpdateManyByIds(ids []uuid.UUID, ownerId uuid.
 				END, 
 				updated_at = NOW()
 			FROM (VALUES %s) AS v(id, name, encoded_structure, set_null_name, set_null_encoded_structure)
-			WHERE s.id = v.id AND s.owner_id = ?;
+			LEFT JOIN "UsersToShelvesTable" AS uts ON s.id = uts.shelf_id
+			WHERE s.id = v.id AND uts.user_id = ? AND uts.permission IN ?;
 		`, schemas.Shelf{}.TableName(), strings.Join(placeholders, ","))
 
 	args = append(args, ownerId)
+	args = append(args, allowedPermissions)
 
 	result := r.db.Raw(sql, args...)
 	if err := result.Error; err != nil {
@@ -224,19 +245,124 @@ func (r *ShelfRepository) DirectlyUpdateManyByIds(ids []uuid.UUID, ownerId uuid.
 	return nil
 }
 
-func (r *ShelfRepository) DeleteOneById(id uuid.UUID, ownerId uuid.UUID) *exceptions.Exception {
-	var deletedShelf schemas.Shelf
+func (r *ShelfRepository) RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID) (time.Time, *exceptions.Exception) {
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Admin,
+	}
 
-	result := r.db.Table(schemas.Shelf{}.TableName()).
-		Where("id = ? AND owner_id = ?", id, ownerId).
-		Clauses(clause.Returning{}).
-		Delete(&deletedShelf)
+	now := time.Now()
+	result := r.db.Model(&schemas.Shelf{}).
+		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON \"ShelfTable\".id = uts.shelf_id").
+		Where("\"ShelfTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?", id, userId, allowedPermissions).
+		Select("deleted_at").
+		Updates(map[string]interface{}{"deleted_at": nil})
 	if err := result.Error; err != nil {
-		return exceptions.Shelf.FailedToDelete().WithError(err)
+		return now, exceptions.Shelf.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.Shelf.NotFound()
+		return now, exceptions.Shelf.NotFound()
 	}
 
-	return nil
+	return now, nil
+}
+
+func (r *ShelfRepository) RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID) (time.Time, *exceptions.Exception) {
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Admin,
+	}
+
+	now := time.Now()
+	result := r.db.Model(&schemas.Shelf{}).
+		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON \"ShelfTable\".id = uts.shelf_id").
+		Where("\"ShelfTable\".id IN ? AND uts.user_id = ? AND uts.permission IN ?", ids, userId, allowedPermissions).
+		Select("deleted_at").
+		Updates(map[string]interface{}{"deleted_at": nil})
+	if err := result.Error; err != nil {
+		return now, exceptions.Shelf.FailedToUpdate().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return now, exceptions.Shelf.NotFound()
+	}
+
+	return now, nil
+}
+
+func (r *ShelfRepository) SoftDeleteOneById(id uuid.UUID, userId uuid.UUID) (time.Time, *exceptions.Exception) {
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Admin,
+	}
+
+	now := time.Now()
+	result := r.db.Model(&schemas.Shelf{}).
+		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON \"ShelfTable\".id = uts.shelf_id").
+		Where("\"ShelfTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?", id, userId, allowedPermissions).
+		Update("deleted_at", now)
+	if err := result.Error; err != nil {
+		return now, exceptions.Shelf.FailedToUpdate().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return now, exceptions.Shelf.NotFound()
+	}
+
+	return now, nil
+}
+
+func (r *ShelfRepository) SoftDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID) (time.Time, *exceptions.Exception) {
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Admin,
+	}
+
+	now := time.Now()
+	result := r.db.Model(&schemas.Shelf{}).
+		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON \"ShelfTable\".id = uts.shelf_id").
+		Where("\"ShelfTable\".id IN ? AND uts.user_id = ? AND uts.permission IN ?", ids, userId, allowedPermissions).
+		Update("deleted_at", now)
+	if err := result.Error; err != nil {
+		return now, exceptions.Shelf.FailedToUpdate().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return now, exceptions.Shelf.NotFound()
+	}
+
+	return now, nil
+}
+
+func (r *ShelfRepository) HardDeleteOneById(id uuid.UUID, userId uuid.UUID) (time.Time, *exceptions.Exception) {
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Admin,
+	}
+
+	now := time.Now()
+	result := r.db.Model(&schemas.Shelf{}).
+		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON \"ShelfTable\".id = uts.shelf_id").
+		Where("\"ShelfTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?", id, userId, allowedPermissions).
+		Delete(&schemas.Shelf{})
+	if err := result.Error; err != nil {
+		return now, exceptions.Shelf.FailedToUpdate().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return now, exceptions.Shelf.NotFound()
+	}
+
+	return now, nil
+}
+
+func (r *ShelfRepository) HardDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID) (time.Time, *exceptions.Exception) {
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Admin,
+	}
+
+	now := time.Now()
+	result := r.db.Model(&schemas.Shelf{}).
+		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON \"ShelfTable\".id = uts.shelf_id").
+		Where("\"ShelfTable\".id IN ? AND uts.user_id = ? AND uts.permission IN ?", ids, userId, allowedPermissions).
+		Delete(&schemas.Shelf{})
+	if err := result.Error; err != nil {
+		return now, exceptions.Shelf.FailedToUpdate().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return now, exceptions.Shelf.NotFound()
+	}
+
+	return now, nil
 }

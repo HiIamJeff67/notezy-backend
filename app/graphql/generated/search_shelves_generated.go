@@ -322,6 +322,8 @@ func (ec *executionContext) fieldContext_SearchShelfEdge_node(_ context.Context,
 				return ec.fieldContext_PrivateShelf_maxDepth(ctx, field)
 			case "lastAnalyzedAt":
 				return ec.fieldContext_PrivateShelf_lastAnalyzedAt(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_PrivateShelf_deletedAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_PrivateShelf_updatedAt(ctx, field)
 			case "createdAt":

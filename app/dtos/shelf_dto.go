@@ -10,7 +10,9 @@ import (
 
 type GetRecentShelvesReqDto struct {
 	NotezyRequest[
-		any,
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
 		struct {
 			OwnerId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
@@ -20,9 +22,25 @@ type GetRecentShelvesReqDto struct {
 	]
 }
 
+type GetMyShelfByIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			OwnerId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			ShelfId uuid.UUID `json:"shelfId" validate:"required"`
+		},
+	]
+}
+
 type CreateShelfReqDto struct {
 	NotezyRequest[
-		any,
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
 		struct {
 			OwnerId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
@@ -34,7 +52,9 @@ type CreateShelfReqDto struct {
 
 type SynchronizeShelvesReqDto struct {
 	NotezyRequest[
-		any,
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
 		struct {
 			OwnerId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
@@ -49,19 +69,92 @@ type SynchronizeShelvesReqDto struct {
 	]
 }
 
+type RestoreMyShelfReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			OwnerId uuid.UUID
+		},
+		struct {
+			ShelfId uuid.UUID `json:"shelfId" validate:"required"`
+		},
+	]
+}
+
+type RestoreMyShelvesReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			OwnerId uuid.UUID
+		},
+		struct {
+			ShelfIds []uuid.UUID `json:"shelfIds" validate:"required"`
+		},
+	]
+}
+
+type DeleteMyShelfReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			OwnerId uuid.UUID
+		},
+		struct {
+			ShelfId uuid.UUID `json:"shelfId" validate:"required"`
+		},
+	]
+}
+
+type DeleteMyShelvesReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			OwnerId uuid.UUID
+		},
+		struct {
+			ShelfIds []uuid.UUID `json:"shelfIds" validate:"required"`
+		},
+	]
+}
+
 /* ============================== Response DTO ============================== */
 
 type GetRecentShelvesResDto struct {
-	Name                     string    `json:"name"`
-	EncodedStructure         []byte    `json:"encodedStructure"`
-	EncodedStructureByteSize int64     `json:"encodedStructureByteSize"`
-	TotalShelfNodes          int32     `json:"totalShelfNodes"`
-	TotalMaterials           int32     `json:"totalMaterials"`
-	MaxWidth                 int32     `json:"maxWidth"`
-	MaxDepth                 int32     `json:"maxDepth"`
-	UpdatedAt                time.Time `json:"updatedAt"`
-	CreatedAt                time.Time `json:"createdAt"`
-	LastAnalyzedAt           time.Time `json:"lastAnalyzedAt"`
+	Id                       uuid.UUID  `json:"id"`
+	Name                     string     `json:"name"`
+	EncodedStructure         []byte     `json:"encodedStructure"`
+	EncodedStructureByteSize int64      `json:"encodedStructureByteSize"`
+	TotalShelfNodes          int32      `json:"totalShelfNodes"`
+	TotalMaterials           int32      `json:"totalMaterials"`
+	MaxWidth                 int32      `json:"maxWidth"`
+	MaxDepth                 int32      `json:"maxDepth"`
+	LastAnalyzedAt           time.Time  `json:"lastAnalyzedAt"`
+	DeletedAt                *time.Time `json:"deletedAt"`
+	UpdatedAt                time.Time  `json:"updatedAt"`
+	CreatedAt                time.Time  `json:"createdAt"`
+}
+
+type GetMyShelfByIdResDto struct {
+	Id                       uuid.UUID  `json:"id"`
+	Name                     string     `json:"name"`
+	EncodedStructure         []byte     `json:"encodedStructure"`
+	EncodedStructureByteSize int64      `json:"encodedStructureByteSize"`
+	TotalShelfNodes          int32      `json:"totalShelfNodes"`
+	TotalMaterials           int32      `json:"totalMaterials"`
+	MaxWidth                 int32      `json:"maxWidth"`
+	MaxDepth                 int32      `json:"maxDepth"`
+	LastAnalyzedAt           time.Time  `json:"lastAnalyzedAt"`
+	DeletedAt                *time.Time `json:"deletedAt"`
+	UpdatedAt                time.Time  `json:"updatedAt"`
+	CreatedAt                time.Time  `json:"createdAt"`
 }
 
 type CreateShelfResDto struct {
@@ -73,4 +166,20 @@ type CreateShelfResDto struct {
 
 type SynchronizeShelvesResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type RestoreMyShelfResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type RestoreMyShelvesResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type DeleteMyShelfResDto struct {
+	DeletedAt time.Time `json:"deletedAt"`
+}
+
+type DeleteMyShelvesResDto struct {
+	DeletedAt time.Time `json:"deletedAt"`
 }

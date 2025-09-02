@@ -1,5 +1,3 @@
-version: "3.7"
-
 services:
   notezy-redis:
     container_name: ${DOCKER_REDIS_SERVICE_NAME}

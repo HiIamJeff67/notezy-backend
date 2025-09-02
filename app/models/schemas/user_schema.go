@@ -33,9 +33,9 @@ type User struct {
 	UserInfo       UserInfo         `json:"userInfo" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UserAccount    UserAccount      `json:"userAccount" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UserSetting    UserSetting      `json:"userSetting" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	Themes         []Theme          `json:"themes" gorm:"foreignKey:AuthorId;"`
-	UsersToBadges  []UsersToBadges  `json:"usersToBadges" gorm:"foreignKey:UserId;"`
-	UsersToShelves []UsersToShelves `json:"usersToShelves" gorm:"foreignKey:UserId;"`
+	Themes         []Theme          `json:"themes" gorm:"foreignKey:AuthorId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	UsersToBadges  []UsersToBadges  `json:"usersToBadges" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	UsersToShelves []UsersToShelves `json:"usersToShelves" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
 
 // User Table Name

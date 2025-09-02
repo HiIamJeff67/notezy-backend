@@ -42,6 +42,7 @@ type DirectiveRoot struct {
 type ComplexityRoot struct {
 	PrivateShelf struct {
 		CreatedAt                func(childComplexity int) int
+		DeletedAt                func(childComplexity int) int
 		EncodedStructure         func(childComplexity int) int
 		EncodedStructureByteSize func(childComplexity int) int
 		ID                       func(childComplexity int) int
@@ -188,6 +189,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateShelf.CreatedAt(childComplexity), true
+
+	case "PrivateShelf.deletedAt":
+		if e.complexity.PrivateShelf.DeletedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateShelf.DeletedAt(childComplexity), true
 
 	case "PrivateShelf.encodedStructure":
 		if e.complexity.PrivateShelf.EncodedStructure == nil {
@@ -1200,6 +1208,7 @@ type SearchUserConnection implements SearchConnection {
   maxWidth: Int32!
   maxDepth: Int32!
   lastAnalyzedAt: Time!
+  deletedAt: Time
   updatedAt: Time!
   createdAt: Time!
 

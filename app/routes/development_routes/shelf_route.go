@@ -21,6 +21,10 @@ func configureDevelopmentShelfRoutes() {
 	)
 	{
 		shelfRoutes.GET(
+			"/getMyShelfById",
+			shelfController.GetMyShelfById,
+		)
+		shelfRoutes.GET(
 			"/getRecentShelves",
 			shelfController.GetRecentShelves,
 		)
@@ -31,6 +35,22 @@ func configureDevelopmentShelfRoutes() {
 		shelfRoutes.PUT(
 			"/synchronizeShelves",
 			shelfController.SynchronizeShelves,
+		)
+		shelfRoutes.POST(
+			"/restoreMyShelf",
+			shelfController.RestoreMyShelf,
+		)
+		shelfRoutes.POST(
+			"/restoreMyShelves",
+			shelfController.RestoreMyShelves,
+		)
+		shelfRoutes.DELETE(
+			"/deleteMyShelf",
+			shelfController.DeleteMyShelf,
+		)
+		shelfRoutes.DELETE(
+			"/deleteMyShelves",
+			shelfController.DeleteMyShelves,
 		)
 	}
 }

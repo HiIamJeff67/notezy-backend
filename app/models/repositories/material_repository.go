@@ -1,26 +1,32 @@
 package repositories
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 
 	exceptions "notezy-backend/app/exceptions"
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
+	"notezy-backend/app/models/schemas/enums"
 	util "notezy-backend/app/util"
 )
 
 /* ============================== Definitions ============================== */
 
 type MaterialRepositoryInterface interface {
-	GetOneById(id uuid.UUID) (*schemas.Material, *exceptions.Exception)
-	GetOneByName(name string) (*schemas.Material, *exceptions.Exception)
+	GetOneById(id uuid.UUID, userId uuid.UUID) (*schemas.Material, *exceptions.Exception)
 	CreateOne(input inputs.CreateMaterialInput) (*uuid.UUID, *exceptions.Exception)
-	UpdateOneById(id uuid.UUID, input inputs.PartialUpdateMaterialInput) (*schemas.Material, *exceptions.Exception)
-	DeleteOneById(id uuid.UUID) *exceptions.Exception
+	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateMaterialInput) (*schemas.Material, *exceptions.Exception)
+	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID) *exceptions.Exception
+	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID) *exceptions.Exception
+	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID) *exceptions.Exception
+	SoftDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID) *exceptions.Exception
+	HardDeleteOneById(id uuid.UUID, userId uuid.UUID) *exceptions.Exception
+	HardDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID) *exceptions.Exception
 }
 
 type MaterialRepository struct {
@@ -36,24 +42,19 @@ func NewMaterialRepository(db *gorm.DB) MaterialRepositoryInterface {
 
 /* ============================== CRUD operations ============================== */
 
-func (r *MaterialRepository) GetOneById(id uuid.UUID) (*schemas.Material, *exceptions.Exception) {
-	material := schemas.Material{}
-
-	result := r.db.Table(schemas.Material{}.TableName()).
-		Where("id = ?", id).
-		First(&material)
-	if err := result.Error; err != nil {
-		return nil, exceptions.Material.NotFound().WithError(err)
+func (r *MaterialRepository) GetOneById(id uuid.UUID, userId uuid.UUID) (*schemas.Material, *exceptions.Exception) {
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Read,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Admin,
 	}
-
-	return &material, nil
-}
-
-func (r *MaterialRepository) GetOneByName(name string) (*schemas.Material, *exceptions.Exception) {
 	material := schemas.Material{}
 
-	result := r.db.Table(schemas.Material{}.TableName()).
-		Where("name = ?", name).
+	result := r.db.Model(&schemas.Material{}).
+		Select("\"MaterialTable\".*").
+		Joins("LEFT JOIN \"ShelfTable\" s ON \"MaterialTable\".root_shelf_id = s.id").
+		Joins("LEFT JOIN \"UsersToShelves\" uts ON s.id = uts.shelf_id").
+		Where("\"MaterialTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?", id, userId, allowedPermissions).
 		First(&material)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Material.NotFound().WithError(err)
@@ -68,7 +69,7 @@ func (r *MaterialRepository) CreateOne(input inputs.CreateMaterialInput) (*uuid.
 		return nil, exceptions.Theme.FailedToCreate().WithError(err)
 	}
 
-	result := r.db.Table(schemas.Material{}.TableName()).
+	result := r.db.Model(&schemas.Material{}).
 		Create(&newMaterial)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Material.FailedToCreate().WithError(err)
@@ -77,8 +78,12 @@ func (r *MaterialRepository) CreateOne(input inputs.CreateMaterialInput) (*uuid.
 	return &newMaterial.Id, nil
 }
 
-func (r *MaterialRepository) UpdateOneById(id uuid.UUID, input inputs.PartialUpdateMaterialInput) (*schemas.Material, *exceptions.Exception) {
-	existingMaterial, exception := r.GetOneById(id)
+func (r *MaterialRepository) UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateMaterialInput) (*schemas.Material, *exceptions.Exception) {
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Admin,
+	}
+	existingMaterial, exception := r.GetOneById(id, userId) // get and check the permission of the current user
 	if exception != nil || existingMaterial == nil {
 		return nil, exception
 	}
@@ -88,8 +93,10 @@ func (r *MaterialRepository) UpdateOneById(id uuid.UUID, input inputs.PartialUpd
 		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(input.Values, input.SetNull, *existingMaterial)
 	}
 
-	result := r.db.Table(schemas.Material{}.TableName()).
-		Where("id = ?", id).
+	result := r.db.Model(&schemas.Material{}).
+		Joins("LEFT JOIN \"ShelfTable\" s ON \"MaterialTable\".root_shelf_id = s.id").
+		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON s.id = uts.shelf_id").
+		Where("\"MaterialTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?", id, userId, allowedPermissions).
 		Select("*").
 		Updates(&updates)
 	if err := result.Error; err != nil {
@@ -102,13 +109,118 @@ func (r *MaterialRepository) UpdateOneById(id uuid.UUID, input inputs.PartialUpd
 	return &updates, nil
 }
 
-func (r *MaterialRepository) DeleteOneById(id uuid.UUID) *exceptions.Exception {
-	var deletedMaterial schemas.Material
+func (r *MaterialRepository) RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID) *exceptions.Exception {
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Admin,
+	}
 
-	result := r.db.Table(schemas.Material{}.TableName()).
-		Where("id = ?", id).
-		Clauses(clause.Returning{}).
-		Delete(&deletedMaterial)
+	result := r.db.Model(&schemas.Material{}).
+		Joins("LEFT JOIN \"ShelfTable\" s ON \"MaterialTable\".root_shelf_id = s.id").
+		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON s.id = uts.shelf_id").
+		Where("\"MaterialTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?", id, userId, allowedPermissions).
+		Select("deleted_at").
+		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
+	if err := result.Error; err != nil {
+		return exceptions.Material.FailedToUpdate().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return exceptions.Material.NotFound()
+	}
+
+	return nil
+}
+
+func (r *MaterialRepository) RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID) *exceptions.Exception {
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Admin,
+	}
+
+	result := r.db.Model(&schemas.Material{}).
+		Joins("LEFT JOIN \"ShelfTable\" s ON \"MaterialTable\".root_shelf_id = s.id").
+		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON s.id = uts.shelf_id").
+		Where("\"MaterialTable\".id IN ? AND uts.user_id = ? AND uts.permission IN ?", ids, userId, allowedPermissions).
+		Select("deleted_at").
+		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
+	if err := result.Error; err != nil {
+		return exceptions.Material.FailedToUpdate().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return exceptions.Material.NotFound()
+	}
+
+	return nil
+}
+
+func (r *MaterialRepository) SoftDeleteOneById(id uuid.UUID, userId uuid.UUID) *exceptions.Exception {
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Admin,
+	}
+
+	result := r.db.Model(&schemas.Material{}).
+		Joins("LEFT JOIN \"ShelfTable\" s ON \"MaterialTable\".root_shelf_id = s.id").
+		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON s.id = uts.shelf_id").
+		Where("\"MaterialTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?", id, userId, allowedPermissions).
+		Update("deleted_at", time.Now())
+	if err := result.Error; err != nil {
+		return exceptions.Material.FailedToUpdate().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return exceptions.Material.NotFound()
+	}
+
+	return nil
+}
+
+func (r *MaterialRepository) SoftDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID) *exceptions.Exception {
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Admin,
+	}
+
+	result := r.db.Model(&schemas.Material{}).
+		Joins("LEFT JOIN \"ShelfTable\" s ON \"MaterialTable\".root_shelf_id = s.id").
+		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON s.id = uts.shelf_id").
+		Where("\"MaterialTable\".id IN ? AND uts.user_id = ? AND uts.permission IN ?", ids, userId, allowedPermissions).
+		Update("deleted_at", time.Now())
+	if err := result.Error; err != nil {
+		return exceptions.Material.FailedToUpdate().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return exceptions.Material.NotFound()
+	}
+
+	return nil
+}
+
+func (r *MaterialRepository) HardDeleteOneById(id uuid.UUID, userId uuid.UUID) *exceptions.Exception {
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Admin,
+	}
+
+	result := r.db.Model(&schemas.Material{}).
+		Joins("LEFT JOIN \"ShelfTable\" s ON \"MaterialTable\".root_shelf_id = s.id").
+		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON s.id = uts.shelf_id").
+		Where("\"MaterialTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?", id, userId, allowedPermissions).
+		Delete(&schemas.Material{})
+	if err := result.Error; err != nil {
+		return exceptions.Material.FailedToDelete().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return exceptions.Material.NotFound()
+	}
+
+	return nil
+}
+
+func (r *MaterialRepository) HardDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID) *exceptions.Exception {
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Admin,
+	}
+
+	result := r.db.Model(&schemas.Material{}).
+		Joins("LEFT JOIN \"ShelfTable\" s ON \"MaterialTable\".root_shelf_id = s.id").
+		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON s.id = uts.shelf_id").
+		Where("\"MaterialTable\".id IN ? AND uts.user_id = ? AND uts.permission IN ?", ids, userId, allowedPermissions).
+		Delete(&schemas.Material{})
 	if err := result.Error; err != nil {
 		return exceptions.Material.FailedToDelete().WithError(err)
 	}

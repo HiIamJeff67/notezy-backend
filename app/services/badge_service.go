@@ -51,7 +51,7 @@ func (s *BadgeService) GetPublicBadgeByUserPublicId(ctx context.Context, publicI
 	badge := schemas.Badge{}
 	result := s.db.Table(schemas.Badge{}.TableName()+" b").
 		Select("b.*, utb.user_id").
-		Joins("LEFT JOIN \"UsersToBadgesTable\" ON utb.badge_id = b.id").
+		Joins("LEFT JOIN \"UsersToBadgesTable\" utb ON utb.badge_id = b.id").
 		Joins("LEFT JOIN \"UserTable\" u ON u.id = utb.user_id").
 		Where("u.public_id = ?", publicId).
 		First(&badge)

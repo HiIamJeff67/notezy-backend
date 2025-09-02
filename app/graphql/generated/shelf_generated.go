@@ -426,6 +426,47 @@ func (ec *executionContext) fieldContext_PrivateShelf_lastAnalyzedAt(_ context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _PrivateShelf_deletedAt(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateShelf) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateShelf_deletedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DeletedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PrivateShelf_deletedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PrivateShelf",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PrivateShelf_updatedAt(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateShelf) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PrivateShelf_updatedAt(ctx, field)
 	if err != nil {
@@ -648,6 +689,8 @@ func (ec *executionContext) _PrivateShelf(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "deletedAt":
+			out.Values[i] = ec._PrivateShelf_deletedAt(ctx, field, obj)
 		case "updatedAt":
 			out.Values[i] = ec._PrivateShelf_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

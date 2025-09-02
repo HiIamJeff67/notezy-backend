@@ -35,6 +35,7 @@ type PrivateShelf struct {
 	MaxWidth                 int32         `json:"maxWidth"`
 	MaxDepth                 int32         `json:"maxDepth"`
 	LastAnalyzedAt           time.Time     `json:"lastAnalyzedAt"`
+	DeletedAt                *time.Time    `json:"deletedAt,omitempty"`
 	UpdatedAt                time.Time     `json:"updatedAt"`
 	CreatedAt                time.Time     `json:"createdAt"`
 	Owner                    []*PublicUser `json:"owner"`

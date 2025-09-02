@@ -8,6 +8,7 @@ type PrivateShelf {
   maxWidth: Int32!
   maxDepth: Int32!
   lastAnalyzedAt: Time!
+  deletedAt: Time
   updatedAt: Time!
   createdAt: Time!
 

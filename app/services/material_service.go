@@ -1,3 +1,3 @@
 package services
 
-type MaterialInterface interface{}
+type MaterialServiceInterface interface{}

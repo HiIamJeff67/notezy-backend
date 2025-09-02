@@ -53,7 +53,7 @@ func (r *UserAccountRepository) CreateOneByUserId(userId uuid.UUID, input inputs
 		return nil, exceptions.UserAccount.FailedToCreate().WithError(err)
 	}
 
-	result := r.db.Table(schemas.UserAccount{}.TableName()).
+	result := r.db.Model(&schemas.UserAccount{}).
 		Create(&newUserAccount)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserAccount.FailedToCreate().WithError(err)
@@ -72,7 +72,7 @@ func (r *UserAccountRepository) UpdateOneByUserId(userId uuid.UUID, input inputs
 		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(input.Values, input.SetNull, *existingUserAccount)
 	}
 
-	result := r.db.Table(schemas.UserAccount{}.TableName()).
+	result := r.db.Model(&schemas.UserAccount{}).
 		Where("user_id = ?", userId).
 		Select("*").
 		Updates(&updates)

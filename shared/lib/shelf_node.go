@@ -3,6 +3,7 @@ package lib
 import (
 	"context"
 	"regexp"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/vmihailenco/msgpack/v5"
@@ -13,10 +14,10 @@ import (
 
 // The node data type of the shelf which is present in M-way Tree structure.
 type ShelfNode struct {
-	Id          uuid.UUID                `json:"id"`
-	Name        string                   `json:"name"`
-	Children    map[uuid.UUID]*ShelfNode `json:"children"`
-	MaterialIds map[uuid.UUID]bool       `json:"materialIds"` // leaves
+	Id               uuid.UUID                `json:"id"`
+	Name             string                   `json:"name"`
+	Children         map[uuid.UUID]*ShelfNode `json:"children"`
+	MaterialIdToName map[uuid.UUID]string     `json:"materialIdToName"` // leaves
 }
 
 type ShelfNodeWithDepth struct {
@@ -36,10 +37,10 @@ func NewShelfNode(
 
 	shelfNodeId := uuid.New()
 	result := &ShelfNode{
-		Id:          shelfNodeId,
-		Name:        name,
-		Children:    make(map[uuid.UUID]*ShelfNode),
-		MaterialIds: make(map[uuid.UUID]bool),
+		Id:               shelfNodeId,
+		Name:             name,
+		Children:         make(map[uuid.UUID]*ShelfNode),
+		MaterialIdToName: make(map[uuid.UUID]string),
 	}
 	return result, nil
 }
@@ -47,15 +48,14 @@ func NewShelfNode(
 // Note: The below time and space analysis will use N as the number of ShelfNode, and M as the number of material ids in the entire tree
 /* ============================== Private Methods ============================== */
 
-func (node *ShelfNode) estimateSingleNodeSize() int64 {
+func (node *ShelfNode) estimateSingleNodeSize(materialNameCharacterCount int64) int64 {
 	// 36 bytes for UUID + 20 bytes for the approximate structure cost
 	// + approximate estimate UTF-8 to be 2 bytes/char
 	var size int64 = int64(56 + len(node.Name)*2)
 
 	childrenCount := int64(len(node.Children))
-	materialCount := int64(len(node.MaterialIds))
-	size += (childrenCount + materialCount) * 36 // for each key of UUID data type
-	size += (childrenCount + materialCount) * 1  // null/reference overhead and boolean value
+	size += (childrenCount + materialNameCharacterCount) * 36 // for each key of UUID data type
+	size += childrenCount + materialNameCharacterCount*20     // null/reference overhead and string value with 10 characters
 
 	return size
 }
@@ -351,19 +351,29 @@ func (node *ShelfNode) AnalysisAndGenerateSummary() (
 			}
 			visited[current.Node.Id] = true
 
-			encodedStructureByteSize += current.Node.estimateSingleNodeSize()
+			uniqueMaterialNamesSet := map[string]bool{}
+			var materialNameCharacterCount int64 = 0
 
-			for materialId, exist := range current.Node.MaterialIds {
-				if !exist {
+			for materialId, materialName := range current.Node.MaterialIdToName {
+				if len(strings.ReplaceAll(materialName, " ", "")) == 0 {
 					continue
 				}
+
+				if uniqueMaterialNamesSet[materialName] {
+					return nil, exceptions.Shelf.RepeatedMaterialNamesDetectedInAShelf()
+				}
+				uniqueMaterialNamesSet[materialName] = true
 
 				if uniqueMaterialIdsSet[materialId] {
 					return nil, exceptions.Shelf.RepeatedMaterialIdsDetected()
 				}
 				uniqueMaterialIdsSet[materialId] = true
 				uniqueMaterialIds = append(uniqueMaterialIds, materialId)
+
+				materialNameCharacterCount += int64(len(materialName))
 			}
+
+			encodedStructureByteSize += current.Node.estimateSingleNodeSize(materialNameCharacterCount)
 
 			for _, child := range current.Node.Children {
 				queue = append(queue, ShelfNodeWithDepth{
@@ -401,24 +411,27 @@ func (destination *ShelfNode) InsertShelfNode(target *ShelfNode) *exceptions.Exc
 
 // Insert the Material with id of `targetId` into the MaterialIds field of the `destination`,
 // Note that this function MUST ONLY be called with passing the new Material
-func (destination *ShelfNode) InsertMaterialById(targetId uuid.UUID) *exceptions.Exception {
+func (destination *ShelfNode) InsertMaterialById(targetId uuid.UUID, targetName string) *exceptions.Exception {
 	if destination == nil {
 		return exceptions.Shelf.CallingMethodsWithNilValue()
 	}
 
-	destination.MaterialIds[targetId] = true
+	destination.MaterialIdToName[targetId] = targetName
 	return nil
 }
 
 // Insert the all the Materials with each of id inside the `targetIds` into the MaterialIds field of the `destination`,
 // Note that this function MUST ONLY be called with passing the new Materials
-func (destination *ShelfNode) InsertMaterialsByIds(targetIds []uuid.UUID) *exceptions.Exception {
+func (destination *ShelfNode) InsertMaterialsByIds(targetIdToName []struct {
+	id   uuid.UUID
+	name string
+}) *exceptions.Exception {
 	if destination == nil {
 		return exceptions.Shelf.CallingMethodsWithNilValue()
 	}
 
-	for _, targetId := range targetIds {
-		destination.MaterialIds[targetId] = true
+	for _, target := range targetIdToName {
+		destination.MaterialIdToName[target.id] = target.name
 	}
 	return nil
 }

@@ -198,3 +198,15 @@ func (d *ShelfExceptionDomain) RepeatedMaterialIdsDetected() *Exception {
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
+
+func (d *ShelfExceptionDomain) RepeatedMaterialNamesDetectedInAShelf() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 14,
+		Prefix:         d.Prefix,
+		Reason:         "RepeatedMaterialNamesDetectedInAShelf",
+		IsInternal:     false,
+		Message:        "Invalid ShelfNode structure with repeated material names detected in the same shelf which is violating the uniqueness",
+		HTTPStatusCode: http.StatusBadRequest,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}

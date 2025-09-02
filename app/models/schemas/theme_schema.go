@@ -24,7 +24,7 @@ type Theme struct {
 	UpdatedAt     time.Time `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 
 	// relation
-	Author User `json:"author" gorm:"foreignKey:AuthorId; references:Id;"`
+	Author User `json:"author" gorm:"foreignKey:AuthorId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
 
 // Theme Table Name

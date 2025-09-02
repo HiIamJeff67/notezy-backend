@@ -1,8 +1,13 @@
 package inputs
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type CreateShelfInput struct {
+	Id               uuid.UUID  `json:"id" gorm:"column:id;"`
 	Name             string     `json:"name" gorm:"column:name;"`
 	EncodedStructure []byte     `json:"encodedStructure" gorm:"column:encoded_structure;"`
 	LastAnalyzedAt   *time.Time `json:"lastAnalyzedAt" gorm:"column:last_analyzed_at;"`

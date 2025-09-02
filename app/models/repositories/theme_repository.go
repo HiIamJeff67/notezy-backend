@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
@@ -74,7 +73,7 @@ func (r *ThemeRepository) CreateOneByAuthorId(authorId uuid.UUID, input inputs.C
 		return nil, exceptions.Theme.FailedToCreate().WithError(err)
 	}
 
-	result := r.db.Table(schemas.Theme{}.TableName()).
+	result := r.db.Model(&schemas.Theme{}).
 		Create(&newTheme)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Theme.FailedToCreate().WithError(err)
@@ -94,7 +93,7 @@ func (r *ThemeRepository) UpdateOneById(id uuid.UUID, authorId uuid.UUID, input 
 		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(input.Values, input.SetNull, *existingTheme)
 	}
 
-	result := r.db.Table(schemas.Theme{}.TableName()).
+	result := r.db.Model(&schemas.Theme{}).
 		Where("id = ? AND author_id = ?", id, authorId).
 		Select("*").
 		Updates(&updates)
@@ -109,12 +108,17 @@ func (r *ThemeRepository) UpdateOneById(id uuid.UUID, authorId uuid.UUID, input 
 }
 
 func (r *ThemeRepository) DeleteOneById(id uuid.UUID, authorId uuid.UUID) *exceptions.Exception {
-	var deletedTheme schemas.Theme
+	// * If you need to use the funcionality of RETURNING from PostgreSQL
+	// var deletedTheme schemas.Theme
 
-	result := r.db.Table(schemas.Theme{}.TableName()).
+	// result := r.db.Table(schemas.Theme{}.TableName()).
+	// 	Where("id = ? AND author_id = ?", id, authorId).
+	// 	Clauses(clause.Returning{}).
+	// 	Delete(&deletedTheme)
+
+	result := r.db.Model(&schemas.Theme{}).
 		Where("id = ? AND author_id = ?", id, authorId).
-		Clauses(clause.Returning{}).
-		Delete(&deletedTheme)
+		Delete(&schemas.Theme{})
 	if err := result.Error; err != nil {
 		return exceptions.Theme.FailedToDelete().WithError(err)
 	}
