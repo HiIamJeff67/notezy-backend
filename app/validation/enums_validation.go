@@ -40,4 +40,12 @@ func RegisterEnumsValidation(validate *validator.Validate) {
 		val := fl.Field().String()
 		return util.IsStringIn(val, enums.AllBadgeTypeStrings)
 	})
+	validate.RegisterValidation("ismaterialtype", func(fl validator.FieldLevel) bool {
+		val := fl.Field().String()
+		return util.IsStringIn(val, enums.AllMaterialTypeStrings)
+	})
+	validate.RegisterValidation("ismaterialcontenttype", func(fl validator.FieldLevel) bool {
+		val := fl.Field().String()
+		return util.IsStringIn(val, enums.AllMaterialContentTypeStrings)
+	})
 }

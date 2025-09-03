@@ -20,6 +20,7 @@ type RegisterReqDto struct {
 			Email    string `json:"email" validate:"required,email"`
 			Password string `json:"password" validate:"required,min=8,max=1024,isstrongpassword"`
 		},
+		any,
 	]
 }
 
@@ -33,6 +34,7 @@ type LoginReqDto struct {
 			Account  string `json:"account" validate:"required,account"`
 			Password string `json:"password" validate:"required"` // don't validate other additions while login
 		},
+		any,
 	]
 }
 
@@ -42,6 +44,7 @@ type LogoutReqDto struct {
 		struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware
 		},
+		any,
 		any,
 	]
 }
@@ -55,6 +58,7 @@ type SendAuthCodeReqDto struct {
 		struct {
 			Email string `json:"email" validate:"required,email"`
 		},
+		any,
 	]
 }
 
@@ -67,6 +71,7 @@ type ValidateEmailReqDto struct {
 		struct {
 			AuthCode string `json:"authCode" validate:"required,isnumberstring,len=6"`
 		},
+		any,
 	]
 }
 
@@ -80,6 +85,7 @@ type ResetEmailReqDto struct {
 			NewEmail string `json:"newEmail" validate:"required,email"`
 			AuthCode string `json:"authCode" validate:"required,isnumberstring,len=6"`
 		},
+		any,
 	]
 }
 
@@ -94,6 +100,7 @@ type ForgetPasswordReqDto struct {
 			NewPassword string `json:"newPassword" validation:"required,min=8,max=1024,isstrongpassword"`
 			AuthCode    string `json:"authCode" validate:"required,isnumberstring,len=6"`
 		},
+		any,
 	]
 }
 
@@ -106,6 +113,7 @@ type DeleteMeReqDto struct {
 		struct {
 			AuthCode time.Time `json:"authCode" validate:"required,isnumberstring,len=6"`
 		},
+		any,
 	]
 }
 

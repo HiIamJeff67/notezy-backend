@@ -17,6 +17,7 @@ type GetMyInfoReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		any,
+		any,
 	]
 }
 
@@ -37,6 +38,7 @@ type UpdateMyInfoReqDto struct {
 				BirthDate          *time.Time        `json:"birthDate" validate:"omitnil,notfuture"`
 			}]
 		},
+		any,
 	]
 }
 

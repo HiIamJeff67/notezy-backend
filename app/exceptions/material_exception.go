@@ -1,5 +1,7 @@
 package exceptions
 
+import "net/http"
+
 const (
 	_ExceptionBaseCode_Material ExceptionCode = MaterialExceptionSubDomainCode * ExceptionSubDomainCodeShiftAmount
 
@@ -31,4 +33,16 @@ var Material = &MaterialExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_Material,
 		_Prefix:   ExceptionPrefix_Material,
 	},
+}
+
+func (d *MaterialExceptionDomain) NoPermission() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 1,
+		Prefix:         d.Prefix,
+		Reason:         "NoPermission",
+		IsInternal:     false,
+		Message:        "You have no permission to do this",
+		HTTPStatusCode: http.StatusBadRequest,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
 }

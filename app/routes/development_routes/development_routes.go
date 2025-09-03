@@ -16,7 +16,10 @@ var (
 
 func ConfigureDevelopmentRoutes() {
 	DevelopmentRouterGroup = DevelopmentRouter.Group("/" + constants.DevelopmentBaseURL) // use in development mode
-	DevelopmentRouterGroup.Use(middlewares.CORSMiddleware(), middlewares.DomainWhitelistMiddleware())
+	DevelopmentRouterGroup.Use(
+		middlewares.CORSMiddleware(),
+		middlewares.DomainWhitelistMiddleware(),
+	)
 	DevelopmentRouterGroup.OPTIONS("/*path", func(ctx *gin.Context) { ctx.Status(200) })
 	fmt.Println("Router group path:", DevelopmentRouterGroup.BasePath())
 
@@ -27,4 +30,5 @@ func ConfigureDevelopmentRoutes() {
 	configureDevelopmentUserAccountRoutes()
 	configureDevelopmentGraphQLRoutes()
 	configureDevelopmentShelfRoutes()
+	configureDevelopmentMaterialRoutes()
 }

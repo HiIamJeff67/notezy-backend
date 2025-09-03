@@ -11,11 +11,10 @@ import (
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	gqlmodels "notezy-backend/app/graphql/models"
-	logs "notezy-backend/app/logs"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
-	"notezy-backend/app/models/schemas/enums"
+	enums "notezy-backend/app/models/schemas/enums"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
 	lib "notezy-backend/shared/lib"
@@ -25,13 +24,13 @@ import (
 
 type ShelfServiceInterface interface {
 	GetMyShelfById(reqDto *dtos.GetMyShelfByIdReqDto) (*dtos.GetMyShelfByIdResDto, *exceptions.Exception)
-	GetRecentShelves(reqDto *dtos.GetRecentShelvesReqDto) (*[]dtos.GetRecentShelvesResDto, *exceptions.Exception)
+	SearchRecentShelves(reqDto *dtos.SearchRecentShelvesReqDto) (*dtos.SearchRecentShelvesResDto, *exceptions.Exception)
 	CreateShelf(reqDto *dtos.CreateShelfReqDto) (*dtos.CreateShelfResDto, *exceptions.Exception)
 	SynchronizeShelves(reqDto *dtos.SynchronizeShelvesReqDto) (*dtos.SynchronizeShelvesResDto, *exceptions.Exception)
-	RestoreMyShelf(reqDto *dtos.RestoreMyShelfReqDto) (*dtos.RestoreMyShelfResDto, *exceptions.Exception)
-	RestoreMyShelves(reqDto *dtos.RestoreMyShelvesReqDto) (*dtos.RestoreMyShelvesResDto, *exceptions.Exception)
-	DeleteMyShelf(reqDto *dtos.DeleteMyShelfReqDto) (*dtos.DeleteMyShelfResDto, *exceptions.Exception)
-	DeleteMyShelves(reqDto *dtos.DeleteMyShelvesReqDto) (*dtos.DeleteMyShelvesResDto, *exceptions.Exception)
+	RestoreMyShelfById(reqDto *dtos.RestoreMyShelfReqDto) (*dtos.RestoreMyShelfResDto, *exceptions.Exception)
+	RestoreMyShelvesByIds(reqDto *dtos.RestoreMyShelvesReqDto) (*dtos.RestoreMyShelvesResDto, *exceptions.Exception)
+	DeleteMyShelfById(reqDto *dtos.DeleteMyShelfReqDto) (*dtos.DeleteMyShelfResDto, *exceptions.Exception)
+	DeleteMyShelvesByIds(reqDto *dtos.DeleteMyShelvesReqDto) (*dtos.DeleteMyShelvesResDto, *exceptions.Exception)
 
 	// services for private shelves
 	SearchPrivateShelves(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchShelfInput) (*gqlmodels.SearchShelfConnection, *exceptions.Exception)
@@ -47,7 +46,7 @@ func NewShelfService(db *gorm.DB) ShelfServiceInterface {
 	}
 }
 
-/* ============================== Service Methods for Shelves ============================== */
+/* ============================== Service Methods for Shelf ============================== */
 
 func (s *ShelfService) GetMyShelfById(reqDto *dtos.GetMyShelfByIdReqDto) (*dtos.GetMyShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
@@ -77,23 +76,21 @@ func (s *ShelfService) GetMyShelfById(reqDto *dtos.GetMyShelfByIdReqDto) (*dtos.
 	}, nil
 }
 
-func (s *ShelfService) GetRecentShelves(reqDto *dtos.GetRecentShelvesReqDto) (*[]dtos.GetRecentShelvesResDto, *exceptions.Exception) {
+func (s *ShelfService) SearchRecentShelves(reqDto *dtos.SearchRecentShelvesReqDto) (*dtos.SearchRecentShelvesResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	resDto := []dtos.GetRecentShelvesResDto{}
-	db := s.db.Model(&schemas.Shelf{})
+	resDto := dtos.SearchRecentShelvesResDto{}
 
-	query := db.Where("owner_id = ?", reqDto.ContextFields.OwnerId)
-	if len(strings.ReplaceAll(reqDto.Body.Query, " ", "")) > 0 {
-		query = query.Where("name ILIKE ?", "%"+reqDto.Body.Query+"%")
+	query := s.db.Model(&schemas.Shelf{}).Where("owner_id = ?", reqDto.ContextFields.OwnerId)
+	if len(strings.ReplaceAll(reqDto.Param.Query, " ", "")) > 0 {
+		query = query.Where("name ILIKE ?", "%"+reqDto.Param.Query+"%")
 	}
-	logs.Info(reqDto.ContextFields.OwnerId)
 
 	result := query.Order("updated_at DESC").
-		Limit(int(reqDto.Body.Limit)).
-		Offset(int(reqDto.Body.Offset)).
+		Limit(int(reqDto.Param.Limit)).
+		Offset(int(reqDto.Param.Offset)).
 		Find(&resDto)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Shelf.NotFound().WithError(err)
@@ -189,71 +186,71 @@ func (s *ShelfService) SynchronizeShelves(reqDto *dtos.SynchronizeShelvesReqDto)
 	}, nil
 }
 
-func (s *ShelfService) RestoreMyShelf(reqDto *dtos.RestoreMyShelfReqDto) (*dtos.RestoreMyShelfResDto, *exceptions.Exception) {
+func (s *ShelfService) RestoreMyShelfById(reqDto *dtos.RestoreMyShelfReqDto) (*dtos.RestoreMyShelfResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
 	shelfRepository := repositories.NewShelfRepository(s.db)
 
-	updatedAt, exception := shelfRepository.RestoreSoftDeletedOneById(reqDto.Body.ShelfId, reqDto.ContextFields.OwnerId)
+	exception := shelfRepository.RestoreSoftDeletedOneById(reqDto.Body.ShelfId, reqDto.ContextFields.OwnerId)
 	if exception != nil {
 		return nil, exception
 	}
 
 	return &dtos.RestoreMyShelfResDto{
-		UpdatedAt: updatedAt,
+		UpdatedAt: time.Now(),
 	}, nil
 }
 
-func (s *ShelfService) RestoreMyShelves(reqDto *dtos.RestoreMyShelvesReqDto) (*dtos.RestoreMyShelvesResDto, *exceptions.Exception) {
+func (s *ShelfService) RestoreMyShelvesByIds(reqDto *dtos.RestoreMyShelvesReqDto) (*dtos.RestoreMyShelvesResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
 	shelfRepository := repositories.NewShelfRepository(s.db)
 
-	updatedAt, exception := shelfRepository.RestoreSoftDeletedManyByIds(reqDto.Body.ShelfIds, reqDto.ContextFields.OwnerId)
+	exception := shelfRepository.RestoreSoftDeletedManyByIds(reqDto.Body.ShelfIds, reqDto.ContextFields.OwnerId)
 	if exception != nil {
 		return nil, exception
 	}
 
 	return &dtos.RestoreMyShelvesResDto{
-		UpdatedAt: updatedAt,
+		UpdatedAt: time.Now(),
 	}, nil
 }
 
-func (s *ShelfService) DeleteMyShelf(reqDto *dtos.DeleteMyShelfReqDto) (*dtos.DeleteMyShelfResDto, *exceptions.Exception) {
+func (s *ShelfService) DeleteMyShelfById(reqDto *dtos.DeleteMyShelfReqDto) (*dtos.DeleteMyShelfResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
 	shelfRepository := repositories.NewShelfRepository(s.db)
 
-	deletedAt, exception := shelfRepository.SoftDeleteOneById(reqDto.Body.ShelfId, reqDto.ContextFields.OwnerId)
+	exception := shelfRepository.SoftDeleteOneById(reqDto.Body.ShelfId, reqDto.ContextFields.OwnerId)
 	if exception != nil {
 		return nil, exception
 	}
 
 	return &dtos.DeleteMyShelfResDto{
-		DeletedAt: deletedAt,
+		DeletedAt: time.Now(),
 	}, nil
 }
 
-func (s *ShelfService) DeleteMyShelves(reqDto *dtos.DeleteMyShelvesReqDto) (*dtos.DeleteMyShelvesResDto, *exceptions.Exception) {
+func (s *ShelfService) DeleteMyShelvesByIds(reqDto *dtos.DeleteMyShelvesReqDto) (*dtos.DeleteMyShelvesResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
 	shelfRepository := repositories.NewShelfRepository(s.db)
 
-	deletedAt, exception := shelfRepository.SoftDeleteManyByIds(reqDto.Body.ShelfIds, reqDto.ContextFields.OwnerId)
+	exception := shelfRepository.SoftDeleteManyByIds(reqDto.Body.ShelfIds, reqDto.ContextFields.OwnerId)
 	if exception != nil {
 		return nil, exception
 	}
 
 	return &dtos.DeleteMyShelvesResDto{
-		DeletedAt: deletedAt,
+		DeletedAt: time.Now(),
 	}, nil
 }
 

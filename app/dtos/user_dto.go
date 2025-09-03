@@ -18,6 +18,7 @@ type GetUserDataReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		any,
+		any,
 	]
 }
 
@@ -27,6 +28,7 @@ type GetMeReqDto struct {
 		struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
+		any,
 		any,
 	]
 }
@@ -43,6 +45,7 @@ type UpdateMeReqDto struct {
 				Status      *enums.UserStatus `json:"status" validate:"omitnil,isstatus"`
 			}]
 		},
+		any,
 	]
 }
 
@@ -55,6 +58,7 @@ type UpdateRoleReqDto struct {
 		struct {
 			Role enums.UserRole `json:"role" validate:"required,isrole"`
 		},
+		any,
 	]
 }
 
@@ -67,6 +71,7 @@ type UpdatePlanReqDto struct {
 		struct {
 			Plan enums.UserPlan `json:"plan" validate:"required,isplan"`
 		},
+		any,
 	]
 }
 

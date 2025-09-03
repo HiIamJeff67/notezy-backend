@@ -17,6 +17,7 @@ type GetMyAccountReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		any,
+		any,
 	]
 }
 
@@ -34,6 +35,7 @@ type UpdateMyAccountReqDto struct {
 				DiscordCredential *string            `json:"discordCrendential" validate:"omitnil"`
 			}]
 		},
+		any,
 	]
 }
 

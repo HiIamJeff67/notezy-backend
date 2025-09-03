@@ -14,46 +14,45 @@ import (
 
 /* ============================== Interface & Instance ============================== */
 
-type ShelfControllerInterface interface {
-	GetMyShelfById(ctx *gin.Context)
-	SearchRecentShelves(ctx *gin.Context)
-	CreateShelf(ctx *gin.Context)
-	SynchronizeShelves(ctx *gin.Context)
-	RestoreMyShelfById(ctx *gin.Context)
-	RestoreMyShelvesByIds(ctx *gin.Context)
-	DeleteMyShelfById(ctx *gin.Context)
-	DeleteMyShelvesByIds(ctx *gin.Context)
+type MaterialControllerInterface interface {
+	GetMyMaterialById(ctx *gin.Context)
+	SearchMyMaterialsByShelfId(ctx *gin.Context)
+	CreateTextbookMaterial(ctx *gin.Context)
+	RestoreMyMaterialById(ctx *gin.Context)
+	RestoreMyMaterialsByIds(ctx *gin.Context)
+	DeleteMyMaterialById(ctx *gin.Context)
+	DeleteMyMaterialsByIds(ctx *gin.Context)
 }
 
-type ShelfController struct {
-	shelfService services.ShelfServiceInterface
+type MaterialController struct {
+	materialService services.MaterialServiceInterface
 }
 
-func NewShelfController(service services.ShelfServiceInterface) ShelfControllerInterface {
-	return &ShelfController{
-		shelfService: service,
+func NewMaterialController(service services.MaterialServiceInterface) MaterialControllerInterface {
+	return &MaterialController{
+		materialService: service,
 	}
 }
 
-/* ============================== Controllers ============================== */
+/* ============================== Controller ============================== */
 
-// with AuthMiddleware()
-func (c *ShelfController) GetMyShelfById(ctx *gin.Context) {
-	var reqDto dtos.GetMyShelfByIdReqDto
+// with AuthMiddleware
+func (c *MaterialController) GetMyMaterialById(ctx *gin.Context) {
+	var reqDto dtos.GetMyMaterialByIdReqDto
 	reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
-	reqDto.ContextFields.OwnerId = *userId
+	reqDto.ContextFields.UserId = *userId
 	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-		exception := exceptions.Shelf.InvalidDto().WithError(err)
+		exception := exceptions.Material.InvalidDto().WithError(err)
 		exception.ResponseWithJSON(ctx)
 		return
 	}
 
-	resDto, exception := c.shelfService.GetMyShelfById(&reqDto)
+	resDto, exception := c.materialService.GetMyMaterialById(&reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -66,23 +65,28 @@ func (c *ShelfController) GetMyShelfById(ctx *gin.Context) {
 	})
 }
 
-// with AuthMiddleware()
-func (c *ShelfController) SearchRecentShelves(ctx *gin.Context) {
-	var reqDto dtos.SearchRecentShelvesReqDto
+// with AuthMiddleware
+func (c *MaterialController) SearchMyMaterialsByShelfId(ctx *gin.Context) {
+	var reqDto dtos.SearchMyMaterialsByShelfIdReqDto
 	reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
-	reqDto.ContextFields.OwnerId = *userId
+	reqDto.ContextFields.UserId = *userId
 	if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
 		exception.Log()
 		exceptions.User.InvalidInput().WithError(err).ResponseWithJSON(ctx)
 		return
 	}
+	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+		exception := exceptions.Material.InvalidDto().WithError(err)
+		exception.ResponseWithJSON(ctx)
+		return
+	}
 
-	resDto, exception := c.shelfService.SearchRecentShelves(&reqDto)
+	resDto, exception := c.materialService.SearchMyMaterialsByShelfId(&reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -95,23 +99,41 @@ func (c *ShelfController) SearchRecentShelves(ctx *gin.Context) {
 	})
 }
 
-// with AuthMiddleware()
-func (c *ShelfController) CreateShelf(ctx *gin.Context) {
-	var reqDto dtos.CreateShelfReqDto
+// NOT yet done, have to prepare the storage first
+// with AuthMiddleware
+func (c *MaterialController) CreateTextbookMaterial(ctx *gin.Context) {
+	var reqDto dtos.CreateMaterialReqDto
 	reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
-	reqDto.ContextFields.OwnerId = *userId
+	reqDto.ContextFields.UserId = *userId
 	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-		exception := exceptions.Shelf.InvalidDto().WithError(err)
+		exception := exceptions.Material.InvalidDto().WithError(err)
+		exception.ResponseWithJSON(ctx)
+		return
+	}
+}
+
+// with AuthMiddleware
+func (c *MaterialController) RestoreMyMaterialById(ctx *gin.Context) {
+	var reqDto dtos.RestoreMyMaterialByIdReqDto
+	reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+	if exception != nil {
+		exception.Log().SafelyResponseWithJSON(ctx)
+		return
+	}
+	reqDto.ContextFields.UserId = *userId
+	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+		exception := exceptions.Material.InvalidDto().WithError(err)
 		exception.ResponseWithJSON(ctx)
 		return
 	}
 
-	resDto, exception := c.shelfService.CreateShelf(&reqDto)
+	resDto, exception := c.materialService.RestoreMyMaterialById(&reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -124,23 +146,23 @@ func (c *ShelfController) CreateShelf(ctx *gin.Context) {
 	})
 }
 
-// with AuthMiddleware()
-func (c *ShelfController) SynchronizeShelves(ctx *gin.Context) {
-	var reqDto dtos.SynchronizeShelvesReqDto
+// with AuthMiddleware
+func (c *MaterialController) RestoreMyMaterialsByIds(ctx *gin.Context) {
+	var reqDto dtos.RestoreMyMaterialsByIdsReqDto
 	reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
-	reqDto.ContextFields.OwnerId = *userId
+	reqDto.ContextFields.UserId = *userId
 	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-		exception := exceptions.Shelf.InvalidDto().WithError(err)
+		exception := exceptions.Material.InvalidDto().WithError(err)
 		exception.ResponseWithJSON(ctx)
 		return
 	}
 
-	resDto, exception := c.shelfService.SynchronizeShelves(&reqDto)
+	resDto, exception := c.materialService.RestoreMyMaterialsByIds(&reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -153,23 +175,23 @@ func (c *ShelfController) SynchronizeShelves(ctx *gin.Context) {
 	})
 }
 
-// with AuthMiddleware()
-func (c *ShelfController) RestoreMyShelfById(ctx *gin.Context) {
-	var reqDto dtos.RestoreMyShelfReqDto
+// with AuthMiddleware
+func (c *MaterialController) DeleteMyMaterialById(ctx *gin.Context) {
+	var reqDto dtos.DeleteMyMaterialByIdReqDto
 	reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
-	reqDto.ContextFields.OwnerId = *userId
+	reqDto.ContextFields.UserId = *userId
 	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-		exception := exceptions.Shelf.InvalidDto().WithError(err)
+		exception := exceptions.Material.InvalidDto().WithError(err)
 		exception.ResponseWithJSON(ctx)
 		return
 	}
 
-	resDto, exception := c.shelfService.RestoreMyShelfById(&reqDto)
+	resDto, exception := c.materialService.DeleteMyMaterialById(&reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -182,81 +204,23 @@ func (c *ShelfController) RestoreMyShelfById(ctx *gin.Context) {
 	})
 }
 
-// with AuthMiddleware()
-func (c *ShelfController) RestoreMyShelvesByIds(ctx *gin.Context) {
-	var reqDto dtos.RestoreMyShelvesReqDto
+// with AuthMiddleware
+func (c *MaterialController) DeleteMyMaterialsByIds(ctx *gin.Context) {
+	var reqDto dtos.DeleteMyMaterialsByIdsReqDto
 	reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
-	reqDto.ContextFields.OwnerId = *userId
+	reqDto.ContextFields.UserId = *userId
 	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-		exception := exceptions.Shelf.InvalidDto().WithError(err)
+		exception := exceptions.Material.InvalidDto().WithError(err)
 		exception.ResponseWithJSON(ctx)
 		return
 	}
 
-	resDto, exception := c.shelfService.RestoreMyShelvesByIds(&reqDto)
-	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      resDto,
-		"exception": nil,
-	})
-}
-
-// with AuthMiddleware()
-func (c *ShelfController) DeleteMyShelfById(ctx *gin.Context) {
-	var reqDto dtos.DeleteMyShelfReqDto
-	reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
-	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
-		return
-	}
-	reqDto.ContextFields.OwnerId = *userId
-	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-		exception := exceptions.Shelf.InvalidDto().WithError(err)
-		exception.ResponseWithJSON(ctx)
-		return
-	}
-
-	resDto, exception := c.shelfService.DeleteMyShelfById(&reqDto)
-	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      resDto,
-		"exception": nil,
-	})
-}
-
-// with AuthMiddleware()
-func (c *ShelfController) DeleteMyShelvesByIds(ctx *gin.Context) {
-	var reqDto dtos.DeleteMyShelvesReqDto
-	reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
-	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
-		return
-	}
-	reqDto.ContextFields.OwnerId = *userId
-	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-		exception := exceptions.Shelf.InvalidDto().WithError(err)
-		exception.ResponseWithJSON(ctx)
-		return
-	}
-
-	resDto, exception := c.shelfService.DeleteMyShelvesByIds(&reqDto)
+	resDto, exception := c.materialService.DeleteMyMaterialsByIds(&reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return

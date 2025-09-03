@@ -17,6 +17,7 @@ func configureDevelopmentShelfRoutes() {
 	shelfRoutes := DevelopmentRouterGroup.Group("/shelf")
 	shelfRoutes.Use(
 		middlewares.AuthMiddleware(),
+		// middlewares.UserRoleMiddleware(enums.UserRole_Normal),
 		middlewares.RateLimitMiddleware(1),
 	)
 	{
@@ -26,7 +27,7 @@ func configureDevelopmentShelfRoutes() {
 		)
 		shelfRoutes.GET(
 			"/getRecentShelves",
-			shelfController.GetRecentShelves,
+			shelfController.SearchRecentShelves,
 		)
 		shelfRoutes.POST(
 			"/createShelf",
@@ -38,19 +39,19 @@ func configureDevelopmentShelfRoutes() {
 		)
 		shelfRoutes.POST(
 			"/restoreMyShelf",
-			shelfController.RestoreMyShelf,
+			shelfController.RestoreMyShelfById,
 		)
 		shelfRoutes.POST(
 			"/restoreMyShelves",
-			shelfController.RestoreMyShelves,
+			shelfController.RestoreMyShelvesByIds,
 		)
 		shelfRoutes.DELETE(
 			"/deleteMyShelf",
-			shelfController.DeleteMyShelf,
+			shelfController.DeleteMyShelfById,
 		)
 		shelfRoutes.DELETE(
 			"/deleteMyShelves",
-			shelfController.DeleteMyShelves,
+			shelfController.DeleteMyShelvesByIds,
 		)
 	}
 }

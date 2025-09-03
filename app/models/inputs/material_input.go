@@ -1,19 +1,26 @@
 package inputs
 
-import "notezy-backend/app/models/schemas/enums"
+import (
+	"notezy-backend/app/models/schemas/enums"
+
+	"github.com/google/uuid"
+)
 
 type CreateMaterialInput struct {
-	Name        string                    `json:"name" gorm:"column:name;"`
-	ContentURL  string                    `json:"contentURL" gorm:"column:content_url;"`
-	Type        enums.MaterialType        `json:"type" gorm:"column:type;"`
-	ContentType enums.MaterialContentType `json:"contentType" gorm:"column:content_type;"`
+	RootShelfId   uuid.UUID                 `json:"rootShelfId" gorm:"column:root_shelf_id;"`
+	ParentShelfId uuid.UUID                 `json:"parentShelfId" gorm:"column:parent_shelf_id;"`
+	Name          string                    `json:"name" gorm:"column:name;"`
+	Type          enums.MaterialType        `json:"type" gorm:"column:type;"`
+	ContentURL    string                    `json:"contentURL" gorm:"column:content_url;"`
+	ContentType   enums.MaterialContentType `json:"contentType" gorm:"column:content_type;"`
 }
 
 type UpdateMaterialInput struct {
-	Name        *string                    `json:"name" gorm:"column:name;"`
-	ContentURL  *[]string                  `json:"contentURL" gorm:"column:content_url;"`
-	Type        *enums.MaterialType        `json:"type" gorm:"column:type;"`
-	ContentType *enums.MaterialContentType `json:"contentType" gorm:"column:content_type;"`
+	ParentShelfId *uuid.UUID                 `json:"parentShelfId" gorm:"column:parent_shelf_id"`
+	Name          *string                    `json:"name" gorm:"column:name;"`
+	Type          *enums.MaterialType        `json:"type" gorm:"column:type;"`
+	ContentURL    *[]string                  `json:"contentURL" gorm:"column:content_url;"`
+	ContentType   *enums.MaterialContentType `json:"contentType" gorm:"column:content_type;"`
 }
 
 type PartialUpdateMaterialInput = PartialUpdateInput[UpdateMaterialInput]

@@ -17,6 +17,7 @@ type GetMySettingReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		any,
+		any,
 	]
 }
 
@@ -33,6 +34,7 @@ type UpdateMySettingReqDto struct {
 				PrivacySettingCode int64          `json:"privacySettingCode" validate:"omitnil,min=0,max=999999999"`
 			}]
 		},
+		any,
 	]
 }
 

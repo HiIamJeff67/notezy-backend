@@ -8,20 +8,6 @@ import (
 
 /* ============================== Request DTO ============================== */
 
-type GetRecentShelvesReqDto struct {
-	NotezyRequest[
-		struct {
-			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
-		},
-		struct {
-			OwnerId uuid.UUID // extracted from the access token of AuthMiddleware()
-		},
-		struct {
-			GetManyDto
-		},
-	]
-}
-
 type GetMyShelfByIdReqDto struct {
 	NotezyRequest[
 		struct {
@@ -32,6 +18,22 @@ type GetMyShelfByIdReqDto struct {
 		},
 		struct {
 			ShelfId uuid.UUID `json:"shelfId" validate:"required"`
+		},
+		any,
+	]
+}
+
+type SearchRecentShelvesReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			OwnerId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		any,
+		struct {
+			SimpleSearchDto
 		},
 	]
 }
@@ -47,6 +49,7 @@ type CreateShelfReqDto struct {
 		struct {
 			Name string `json:"name" validate:"required,max=128"`
 		},
+		any,
 	]
 }
 
@@ -66,6 +69,7 @@ type SynchronizeShelvesReqDto struct {
 				LastAnalyzedAt   *time.Time `json:"lastAnalyzedAt" validate:"omitnil,notfuture"`
 			}] `json:"partialUpdates" validate:"required"`
 		},
+		any,
 	]
 }
 
@@ -80,6 +84,7 @@ type RestoreMyShelfReqDto struct {
 		struct {
 			ShelfId uuid.UUID `json:"shelfId" validate:"required"`
 		},
+		any,
 	]
 }
 
@@ -92,8 +97,9 @@ type RestoreMyShelvesReqDto struct {
 			OwnerId uuid.UUID
 		},
 		struct {
-			ShelfIds []uuid.UUID `json:"shelfIds" validate:"required"`
+			ShelfIds []uuid.UUID `json:"shelfIds" validate:"required,min=1,max=32"`
 		},
+		any,
 	]
 }
 
@@ -108,6 +114,7 @@ type DeleteMyShelfReqDto struct {
 		struct {
 			ShelfId uuid.UUID `json:"shelfId" validate:"required"`
 		},
+		any,
 	]
 }
 
@@ -120,14 +127,15 @@ type DeleteMyShelvesReqDto struct {
 			OwnerId uuid.UUID
 		},
 		struct {
-			ShelfIds []uuid.UUID `json:"shelfIds" validate:"required"`
+			ShelfIds []uuid.UUID `json:"shelfIds" validate:"required,min=1,max=32"`
 		},
+		any,
 	]
 }
 
 /* ============================== Response DTO ============================== */
 
-type GetRecentShelvesResDto struct {
+type GetMyShelfByIdResDto struct {
 	Id                       uuid.UUID  `json:"id"`
 	Name                     string     `json:"name"`
 	EncodedStructure         []byte     `json:"encodedStructure"`
@@ -142,7 +150,7 @@ type GetRecentShelvesResDto struct {
 	CreatedAt                time.Time  `json:"createdAt"`
 }
 
-type GetMyShelfByIdResDto struct {
+type SearchRecentShelvesResDto []struct {
 	Id                       uuid.UUID  `json:"id"`
 	Name                     string     `json:"name"`
 	EncodedStructure         []byte     `json:"encodedStructure"`

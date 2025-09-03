@@ -11,15 +11,16 @@ import (
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
-	"notezy-backend/app/models/schemas/enums"
+	enums "notezy-backend/app/models/schemas/enums"
 	util "notezy-backend/app/util"
 )
 
 /* ============================== Definitions ============================== */
 
 type MaterialRepositoryInterface interface {
+	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermission []enums.AccessControlPermission) bool
 	GetOneById(id uuid.UUID, userId uuid.UUID) (*schemas.Material, *exceptions.Exception)
-	CreateOne(input inputs.CreateMaterialInput) (*uuid.UUID, *exceptions.Exception)
+	CreateOne(userId uuid.UUID, input inputs.CreateMaterialInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateMaterialInput) (*schemas.Material, *exceptions.Exception)
 	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID) *exceptions.Exception
 	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID) *exceptions.Exception
@@ -42,6 +43,20 @@ func NewMaterialRepository(db *gorm.DB) MaterialRepositoryInterface {
 
 /* ============================== CRUD operations ============================== */
 
+func (r *MaterialRepository) HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermission []enums.AccessControlPermission) bool {
+	var count int64 = 0
+	result := r.db.Model(&schemas.Material{}).
+		Joins("LEFT JOIN \"ShelfTable\" s ON \"MaterialTable\".root_shelf_id = s.id").
+		Joins("LEFT JOIN \"UsersToShelvesTabe\" uts ON s.id = uts.shelf_id").
+		Where("\"MaterialTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?", id, userId, allowedPermission).
+		Count(&count)
+	if err := result.Error; err != nil || count == 0 {
+		return false
+	}
+
+	return true
+}
+
 func (r *MaterialRepository) GetOneById(id uuid.UUID, userId uuid.UUID) (*schemas.Material, *exceptions.Exception) {
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Read,
@@ -53,7 +68,7 @@ func (r *MaterialRepository) GetOneById(id uuid.UUID, userId uuid.UUID) (*schema
 	result := r.db.Model(&schemas.Material{}).
 		Select("\"MaterialTable\".*").
 		Joins("LEFT JOIN \"ShelfTable\" s ON \"MaterialTable\".root_shelf_id = s.id").
-		Joins("LEFT JOIN \"UsersToShelves\" uts ON s.id = uts.shelf_id").
+		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON s.id = uts.shelf_id").
 		Where("\"MaterialTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?", id, userId, allowedPermissions).
 		First(&material)
 	if err := result.Error; err != nil {
@@ -63,7 +78,17 @@ func (r *MaterialRepository) GetOneById(id uuid.UUID, userId uuid.UUID) (*schema
 	return &material, nil
 }
 
-func (r *MaterialRepository) CreateOne(input inputs.CreateMaterialInput) (*uuid.UUID, *exceptions.Exception) {
+func (r *MaterialRepository) CreateOne(userId uuid.UUID, input inputs.CreateMaterialInput) (*uuid.UUID, *exceptions.Exception) {
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Admin,
+	}
+	shelfRepository := NewShelfRepository(r.db)
+	hasPermission := shelfRepository.HasPermission(input.RootShelfId, userId, allowedPermissions)
+	if !hasPermission {
+		return nil, exceptions.Material.NoPermission()
+	}
+
 	var newMaterial schemas.Material
 	if err := copier.Copy(&newMaterial, &input); err != nil {
 		return nil, exceptions.Theme.FailedToCreate().WithError(err)
