@@ -193,7 +193,7 @@ func (ewm *EmailWorkerManager) Shutdown() {
 	logs.FInfo("Email worker manager stopped")
 }
 
-func (ewm *EmailWorkerManager) GetStats() map[string]interface{} {
+func (ewm *EmailWorkerManager) GetStatus() map[string]interface{} {
 	ewm.bufferMutex.RLock()
 	bufferSize := ewm.buffer.Len()
 	ewm.bufferMutex.RUnlock()
