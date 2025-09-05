@@ -42,7 +42,8 @@ const (
 // ExceptionPrefix_Context ExceptionPrefix = "Context"					 4
 // ExceptionPrefix_Email ExceptionPrefix = "Email"					     5
 // ExceptionPrefix_Test ExceptionPrefix = "Test"						 6
-// ExceptionPrefix_Search ExceptionPrefix = "Search"			 7
+// ExceptionPrefix_Search ExceptionPrefix = "Search"			         7
+// ExceptionPrefix_Storage ExceptionPrefix = "Storage"				     8
 
 // ExceptionPrefix_Auth ExceptionPrefix = "Auth" 			 		     31
 // ExceptionPrefix_User ExceptionPrefix = "User"                         32
@@ -54,6 +55,7 @@ const (
 // ExceptionPrefix_Theme ExceptionPrefix = "Theme"						 38
 // ExceptionPrefix_Parser ExceptionPrefix = "Parser"				     39
 // ExceptionPrefix_Shelf ExceptionPrefix = "Shelf"   					 40
+// ExceptionPrefix_Material ExceptionPrefix = "Material"				 41
 )
 
 func IsExceptionCode(exceptionCode int) bool {
@@ -317,7 +319,7 @@ func UndefinedError(optionalMessage ...string) *Exception {
 		Reason:         "UndefinedError",
 		IsInternal:     true,
 		Message:        message,
-		HTTPStatusCode: http.StatusBadRequest,
+		HTTPStatusCode: http.StatusNotImplemented,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }

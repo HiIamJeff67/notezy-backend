@@ -26,3 +26,8 @@ const (
 	MaxShelfTreeWidth               = 1e+5
 	MaxShelfTreeDepth               = 100 // note that the maximum width is bounded by the msgpack encoding algorithm
 )
+
+const (
+	MaxInMemoryStorageFileSize int64 = 5 * MB
+	MaxS3StorageFileSize       int64 = 5 * MB
+)

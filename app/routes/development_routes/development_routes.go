@@ -31,4 +31,7 @@ func ConfigureDevelopmentRoutes() {
 	configureDevelopmentGraphQLRoutes()
 	configureDevelopmentShelfRoutes()
 	configureDevelopmentMaterialRoutes()
+
+	// test
+	configureStorageRoutes()
 }

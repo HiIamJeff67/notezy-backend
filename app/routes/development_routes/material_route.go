@@ -5,12 +5,14 @@ import (
 	middlewares "notezy-backend/app/middlewares"
 	models "notezy-backend/app/models"
 	services "notezy-backend/app/services"
+	storages "notezy-backend/app/storages"
 )
 
 func configureDevelopmentMaterialRoutes() {
 	materialController := controllers.NewMaterialController(
 		services.NewMaterialService(
 			models.NotezyDB,
+			storages.InMemoryStorage,
 		),
 	)
 

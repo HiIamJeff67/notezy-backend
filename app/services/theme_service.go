@@ -41,7 +41,8 @@ func (s *ThemeService) GetMyThemeById() {}
 
 func (s *ThemeService) GetPublicThemeByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicTheme, *exceptions.Exception) {
 	theme := schemas.Theme{}
-	result := s.db.Table(schemas.Theme{}.TableName()).
+	result := s.db.WithContext(ctx).
+		Model(&schemas.Theme{}).
 		Where("public_id = ?", publicId).
 		First(&theme)
 	if err := result.Error; err != nil {

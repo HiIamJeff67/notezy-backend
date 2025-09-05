@@ -52,7 +52,7 @@ func (c *MaterialController) GetMyMaterialById(ctx *gin.Context) {
 		return
 	}
 
-	resDto, exception := c.materialService.GetMyMaterialById(&reqDto)
+	resDto, exception := c.materialService.GetMyMaterialById(ctx.Request.Context(), &reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -86,7 +86,7 @@ func (c *MaterialController) SearchMyMaterialsByShelfId(ctx *gin.Context) {
 		return
 	}
 
-	resDto, exception := c.materialService.SearchMyMaterialsByShelfId(&reqDto)
+	resDto, exception := c.materialService.SearchMyMaterialsByShelfId(ctx.Request.Context(), &reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -109,12 +109,19 @@ func (c *MaterialController) CreateTextbookMaterial(ctx *gin.Context) {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
+	userPublicId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_PublicId)
+	if exception != nil {
+		exception.Log().SafelyResponseWithJSON(ctx)
+		return
+	}
 	reqDto.ContextFields.UserId = *userId
+	reqDto.ContextFields.UserPublicId = *userPublicId
 	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 		exception := exceptions.Material.InvalidDto().WithError(err)
 		exception.ResponseWithJSON(ctx)
 		return
 	}
+
 }
 
 // with AuthMiddleware

@@ -14,12 +14,13 @@ import (
 ==================================================================================================== */
 
 type Material struct {
-	Id            uuid.UUID                 `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid();"`
-	RootShelfId   uuid.UUID                 `json:"rootShelfId" gorm:"column:root_shelf_id; type:uuid; not null; index;"`
+	Id            uuid.UUID                 `json:"id" gorm:"column:id; type:uuid; primaryKey; not null;"`
+	RootShelfId   uuid.UUID                 `json:"rootShelfId" gorm:"column:root_shelf_id; type:uuid; primaryKey; not null; index;"`
 	ParentShelfId uuid.UUID                 `json:"parentShelfId" gorm:"column:parent_shelf_id; type:uuid; not null;"`
 	Name          string                    `json:"name" gorm:"column:name; size:128; not null; default:'undefined';"`
 	Type          enums.MaterialType        `json:"type" gorm:"column:type; type:MaterialType; not null; default:'Notebook';"`
-	ContentURL    string                    `json:"contentURL" gorm:"column:content_url; not null; default:'';"`
+	Size          int64                     `json:"size" gorm:"column:size; type:bigint; not null; default:0"`
+	ContentKey    string                    `json:"contentKey" gorm:"column:content_key; not null; default:'';"`
 	ContentType   enums.MaterialContentType `json:"contentType" gorm:"column:content_type; type:MaterialContentType; not null; default:'Text_Markdown';"`
 	DeletedAt     *time.Time                `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz;"`
 	UpdatedAt     time.Time                 `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`

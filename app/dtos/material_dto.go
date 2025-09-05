@@ -48,7 +48,8 @@ type CreateMaterialReqDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+			UserId       uuid.UUID // extracted from the access token of AuthMiddleware()
+			UserPublicId uuid.UUID // extracted from the AuthMiddleware()
 		},
 		struct {
 			RootShelfId   uuid.UUID `json:"rootShelfId" validate:"required"`
@@ -127,25 +128,14 @@ type GetMyMaterialByIdResDto struct {
 	ParentShelfId uuid.UUID                 `json:"parentShelfId"`
 	Name          string                    `json:"name"`
 	Type          enums.MaterialType        `json:"type"`
-	ContentURL    string                    `json:"contentURL"`
+	DownloadURL   string                    `json:"downloadURL"`
 	ContentType   enums.MaterialContentType `json:"contentType"`
 	DeletedAt     *time.Time                `json:"deletedAt"`
 	UpdatedAt     time.Time                 `json:"updatedAt"`
 	CreatedAt     time.Time                 `json:"createdAt"`
 }
 
-type SearchMyMaterialsByShelfIdResDto []struct {
-	Id            uuid.UUID                 `json:"id"`
-	RootShelfId   uuid.UUID                 `json:"rootShelfId"`
-	ParentShelfId uuid.UUID                 `json:"parentShelfId"`
-	Name          string                    `json:"name"`
-	Type          enums.MaterialContentType `json:"type"`
-	ContentURL    string                    `json:"contentURL"`
-	ContentType   enums.MaterialContentType `json:"contentType"`
-	DeletedAt     *time.Time                `json:"deletedAt"`
-	UpdatedAt     time.Time                 `json:"updatedAt"`
-	CreatedAt     time.Time                 `json:"createdAt"`
-}
+type SearchMyMaterialsByShelfIdResDto []GetMyMaterialByIdResDto
 
 type CreateMaterialResDto struct {
 	CreatedAt time.Time `json:"createdAt"`

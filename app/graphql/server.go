@@ -38,6 +38,9 @@ func GraphQLHandler() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		// place the gin.Context into the context.Context
+		// since we need the fields extracted by the middlewares
+		// which are stored in the gin.Context fields,
+		// and gin.Context.Request.Context() will not include this part
 		ctx := context.WithValue(c.Request.Context(), constants.ContextFieldName_Gin_Context, c)
 		server.ServeHTTP(c.Writer, c.Request.WithContext(ctx))
 	}

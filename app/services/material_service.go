@@ -1,9 +1,12 @@
 package services
 
 import (
+	"bytes"
+	"context"
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 
 	dtos "notezy-backend/app/dtos"
@@ -12,15 +15,16 @@ import (
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
+	storages "notezy-backend/app/storages"
 	validation "notezy-backend/app/validation"
 )
 
 /* ============================== Interface & Instance ============================== */
 
 type MaterialServiceInterface interface {
-	GetMyMaterialById(reqDto *dtos.GetMyMaterialByIdReqDto) (*dtos.GetMyMaterialByIdResDto, *exceptions.Exception)
-	SearchMyMaterialsByShelfId(reqDto *dtos.SearchMyMaterialsByShelfIdReqDto) (*dtos.SearchMyMaterialsByShelfIdResDto, *exceptions.Exception)
-	CreateTextbookMaterial(reqDto *dtos.CreateMaterialReqDto) (*dtos.CreateMaterialResDto, *exceptions.Exception)
+	GetMyMaterialById(ctx context.Context, reqDto *dtos.GetMyMaterialByIdReqDto) (*dtos.GetMyMaterialByIdResDto, *exceptions.Exception)
+	SearchMyMaterialsByShelfId(ctx context.Context, reqDto *dtos.SearchMyMaterialsByShelfIdReqDto) (*dtos.SearchMyMaterialsByShelfIdResDto, *exceptions.Exception)
+	CreateTextbookMaterial(ctx context.Context, reqDto *dtos.CreateMaterialReqDto) (*dtos.CreateMaterialResDto, *exceptions.Exception)
 	RestoreMyMaterialById(reqDto *dtos.RestoreMyMaterialByIdReqDto) (*dtos.RestoreMyMaterialByIdResDto, *exceptions.Exception)
 	RestoreMyMaterialsByIds(reqDto *dtos.RestoreMyMaterialsByIdsReqDto) (*dtos.RestoreMyMaterialsByIdsResDto, *exceptions.Exception)
 	DeleteMyMaterialById(reqDto *dtos.DeleteMyMaterialByIdReqDto) (*dtos.DeleteMyMaterialByIdResDto, *exceptions.Exception)
@@ -28,18 +32,20 @@ type MaterialServiceInterface interface {
 }
 
 type MaterialService struct {
-	db *gorm.DB
+	db      *gorm.DB
+	storage storages.StorageInterface
 }
 
-func NewMaterialService(db *gorm.DB) MaterialServiceInterface {
+func NewMaterialService(db *gorm.DB, storage storages.StorageInterface) MaterialServiceInterface {
 	return &MaterialService{
-		db: db,
+		db:      db,
+		storage: storage,
 	}
 }
 
 /* ============================== Service Methods for Material ============================== */
 
-func (s *MaterialService) GetMyMaterialById(reqDto *dtos.GetMyMaterialByIdReqDto) (*dtos.GetMyMaterialByIdResDto, *exceptions.Exception) {
+func (s *MaterialService) GetMyMaterialById(ctx context.Context, reqDto *dtos.GetMyMaterialByIdReqDto) (*dtos.GetMyMaterialByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -51,13 +57,18 @@ func (s *MaterialService) GetMyMaterialById(reqDto *dtos.GetMyMaterialByIdReqDto
 		return nil, exception
 	}
 
+	downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, material.ContentKey, nil)
+	if exception != nil {
+		return nil, exception
+	}
+
 	return &dtos.GetMyMaterialByIdResDto{
 		Id:            material.Id,
 		RootShelfId:   material.RootShelfId,
 		ParentShelfId: material.ParentShelfId,
 		Name:          material.Name,
 		Type:          material.Type,
-		ContentURL:    material.ContentURL,
+		DownloadURL:   downloadURL,
 		ContentType:   material.ContentType,
 		DeletedAt:     material.DeletedAt,
 		UpdatedAt:     material.UpdatedAt,
@@ -65,7 +76,7 @@ func (s *MaterialService) GetMyMaterialById(reqDto *dtos.GetMyMaterialByIdReqDto
 	}, nil
 }
 
-func (s *MaterialService) SearchMyMaterialsByShelfId(reqDto *dtos.SearchMyMaterialsByShelfIdReqDto) (*dtos.SearchMyMaterialsByShelfIdResDto, *exceptions.Exception) {
+func (s *MaterialService) SearchMyMaterialsByShelfId(ctx context.Context, reqDto *dtos.SearchMyMaterialsByShelfIdReqDto) (*dtos.SearchMyMaterialsByShelfIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -75,7 +86,8 @@ func (s *MaterialService) SearchMyMaterialsByShelfId(reqDto *dtos.SearchMyMateri
 		enums.AccessControlPermission_Write,
 		enums.AccessControlPermission_Admin,
 	}
-	resDto := dtos.SearchMyMaterialsByShelfIdResDto{}
+
+	materials := []schemas.Material{}
 
 	query := s.db.Model(&schemas.Material{}).
 		Joins("LEFT JOIN \"ShelfTable\" s ON \"MaterialTable\".root_shelf_id = s.id").
@@ -92,32 +104,67 @@ func (s *MaterialService) SearchMyMaterialsByShelfId(reqDto *dtos.SearchMyMateri
 	result := query.Order("updated_at DESC").
 		Limit(int(reqDto.Param.Limit)).
 		Offset(int(reqDto.Param.Offset)).
-		Find(&resDto)
+		Find(&materials)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Material.NotFound().WithError(err)
+	}
+
+	resDto := dtos.SearchMyMaterialsByShelfIdResDto{}
+	for _, material := range materials {
+		downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, material.ContentKey, nil)
+		if exception != nil {
+			return nil, exception
+		}
+		resDto = append(resDto, dtos.GetMyMaterialByIdResDto{
+			Id:            material.Id,
+			RootShelfId:   material.RootShelfId,
+			ParentShelfId: material.ParentShelfId,
+			Name:          material.Name,
+			Type:          material.Type,
+			DownloadURL:   downloadURL,
+			ContentType:   material.ContentType,
+			DeletedAt:     material.DeletedAt,
+			UpdatedAt:     material.UpdatedAt,
+			CreatedAt:     material.CreatedAt,
+		})
 	}
 
 	return &resDto, nil
 }
 
-func (s *MaterialService) CreateTextbookMaterial(reqDto *dtos.CreateMaterialReqDto) (*dtos.CreateMaterialResDto, *exceptions.Exception) {
+func (s *MaterialService) CreateTextbookMaterial(ctx context.Context, reqDto *dtos.CreateMaterialReqDto) (*dtos.CreateMaterialResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
 	materialRepository := repositories.NewMaterialRepository(s.db)
 
+	newMaterialId := uuid.New()
+	newContentKey := s.storage.GenerateKey(
+		reqDto.ContextFields.UserPublicId.String(),
+		newMaterialId.String(),
+	)
+	zeroSize := int64(0)
 	_, exception := materialRepository.CreateOne(
 		reqDto.ContextFields.UserId,
 		inputs.CreateMaterialInput{
+			Id:            newMaterialId,
 			RootShelfId:   reqDto.Body.RootShelfId,
 			ParentShelfId: reqDto.Body.ParentShelfId,
 			Name:          reqDto.Body.Name,
+			Size:          zeroSize,
 			Type:          enums.MaterialType_Textbook,
-			ContentURL:    "",
+			ContentKey:    newContentKey,
 			ContentType:   enums.MaterialContentType_Markdown,
 		},
 	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	newContent := bytes.NewReader([]byte{})
+
+	_, exception = s.storage.PutObjectByKey(ctx, newContentKey, newContent, zeroSize)
 	if exception != nil {
 		return nil, exception
 	}
