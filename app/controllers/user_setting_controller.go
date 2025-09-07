@@ -5,16 +5,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	contexts "notezy-backend/app/contexts"
 	dtos "notezy-backend/app/dtos"
 	services "notezy-backend/app/services"
-	constants "notezy-backend/shared/constants"
 )
 
 /* ============================== Interface & Instance ============================== */
 
 type UserSettingControllerInterface interface {
-	GetMySetting(ctx *gin.Context)
+	GetMySetting(ctx *gin.Context, reqDto *dtos.GetMySettingReqDto)
 }
 
 type UserSettingController struct {
@@ -27,18 +25,10 @@ func NewUserSettingController(service services.UserSettingServiceInterface) User
 	}
 }
 
-/* ============================== Controllers ============================== */
+/* ============================== Controller ============================== */
 
-func (c *UserSettingController) GetMySetting(ctx *gin.Context) {
-	var reqDto dtos.GetMySettingReqDto
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
-	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
-		return
-	}
-	reqDto.ContextFields.UserId = *userId
-
-	resDto, exception := c.userSettingService.GetMySetting(&reqDto)
+func (c *UserSettingController) GetMySetting(ctx *gin.Context, reqDto *dtos.GetMySettingReqDto) {
+	resDto, exception := c.userSettingService.GetMySetting(reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return

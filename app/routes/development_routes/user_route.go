@@ -1,6 +1,7 @@
 package developmentroutes
 
 import (
+	binders "notezy-backend/app/binders"
 	controllers "notezy-backend/app/controllers"
 	middlewares "notezy-backend/app/middlewares"
 	models "notezy-backend/app/models"
@@ -8,6 +9,7 @@ import (
 )
 
 func configureDevelopmentUserRoutes() {
+	userBinder := binders.NewUserBinder()
 	userController := controllers.NewUserController(
 		services.NewUserService(
 			models.NotezyDB,
@@ -22,15 +24,21 @@ func configureDevelopmentUserRoutes() {
 	{
 		userRoutes.GET(
 			"/getUserData",
-			userController.GetUserData,
+			userBinder.BindGetUserData(
+				userController.GetUserData,
+			),
 		)
 		userRoutes.GET(
 			"/getMe",
-			userController.GetMe,
+			userBinder.BindGetMe(
+				userController.GetMe,
+			),
 		)
 		userRoutes.PUT(
 			"/updateMe",
-			userController.UpdateMe,
+			userBinder.BindUpdateMe(
+				userController.UpdateMe,
+			),
 		)
 	}
 }

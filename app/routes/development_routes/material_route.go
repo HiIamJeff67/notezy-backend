@@ -1,6 +1,7 @@
 package developmentroutes
 
 import (
+	binders "notezy-backend/app/binders"
 	controllers "notezy-backend/app/controllers"
 	middlewares "notezy-backend/app/middlewares"
 	models "notezy-backend/app/models"
@@ -9,6 +10,7 @@ import (
 )
 
 func configureDevelopmentMaterialRoutes() {
+	materialBinder := binders.NewMaterialBinder()
 	materialController := controllers.NewMaterialController(
 		services.NewMaterialService(
 			models.NotezyDB,
@@ -25,31 +27,45 @@ func configureDevelopmentMaterialRoutes() {
 	{
 		materialRoutes.GET(
 			"/getMyMaterialById",
-			materialController.GetMyMaterialById,
+			materialBinder.BindGetMyMaterialById(
+				materialController.GetMyMaterialById,
+			),
 		)
 		materialRoutes.POST(
 			"/searchMyMaterialsByShelfId",
-			materialController.SearchMyMaterialsByShelfId,
+			materialBinder.BindSearchMyMaterialsByShelfId(
+				materialController.SearchMyMaterialsByShelfId,
+			),
 		)
 		materialRoutes.POST(
 			"/createTextbookMaterial",
-			materialController.CreateTextbookMaterial,
+			materialBinder.BindCreateTextbookMaterial(
+				materialController.CreateTextbookMaterial,
+			),
 		)
 		materialRoutes.PUT(
 			"/restoreMyMaterialById",
-			materialController.RestoreMyMaterialById,
+			materialBinder.BindRestoreMyMaterialById(
+				materialController.RestoreMyMaterialById,
+			),
 		)
 		materialRoutes.PUT(
 			"/restoreMyMaterialsByIds",
-			materialController.RestoreMyMaterialsByIds,
+			materialBinder.BindRestoreMyMaterialsByIds(
+				materialController.RestoreMyMaterialsByIds,
+			),
 		)
 		materialRoutes.DELETE(
 			"/deleteMyMaterialById",
-			materialController.DeleteMyMaterialById,
+			materialBinder.BindDeleteMyMaterialById(
+				materialController.DeleteMyMaterialById,
+			),
 		)
 		materialRoutes.DELETE(
 			"/deleteMyMaterialsByIds",
-			materialController.DeleteMyMaterialsByIds,
+			materialBinder.BindDeleteMyMaterialsByIds(
+				materialController.DeleteMyMaterialsByIds,
+			),
 		)
 	}
 }

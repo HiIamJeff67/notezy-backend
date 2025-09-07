@@ -1,6 +1,7 @@
 package developmentroutes
 
 import (
+	binders "notezy-backend/app/binders"
 	controllers "notezy-backend/app/controllers"
 	middlewares "notezy-backend/app/middlewares"
 	models "notezy-backend/app/models"
@@ -8,6 +9,7 @@ import (
 )
 
 func configureDevelopmentShelfRoutes() {
+	shelfBinder := binders.NewShelfBinder()
 	shelfController := controllers.NewShelfController(
 		services.NewShelfService(
 			models.NotezyDB,
@@ -23,35 +25,51 @@ func configureDevelopmentShelfRoutes() {
 	{
 		shelfRoutes.GET(
 			"/getMyShelfById",
-			shelfController.GetMyShelfById,
+			shelfBinder.BindGetMyShelfById(
+				shelfController.GetMyShelfById,
+			),
 		)
 		shelfRoutes.GET(
-			"/getRecentShelves",
-			shelfController.SearchRecentShelves,
+			"/searchRecentShelves",
+			shelfBinder.BindSearchRecentShelves(
+				shelfController.SearchRecentShelves,
+			),
 		)
 		shelfRoutes.POST(
 			"/createShelf",
-			shelfController.CreateShelf,
+			shelfBinder.BindCreateShelf(
+				shelfController.CreateShelf,
+			),
 		)
 		shelfRoutes.PUT(
 			"/synchronizeShelves",
-			shelfController.SynchronizeShelves,
+			shelfBinder.BindSynchronizeShelves(
+				shelfController.SynchronizeShelves,
+			),
 		)
 		shelfRoutes.POST(
 			"/restoreMyShelf",
-			shelfController.RestoreMyShelfById,
+			shelfBinder.BindRestoreMyShelfById(
+				shelfController.RestoreMyShelfById,
+			),
 		)
 		shelfRoutes.POST(
 			"/restoreMyShelves",
-			shelfController.RestoreMyShelvesByIds,
+			shelfBinder.BindRestoreMyShelvesByIds(
+				shelfController.RestoreMyShelvesByIds,
+			),
 		)
 		shelfRoutes.DELETE(
 			"/deleteMyShelf",
-			shelfController.DeleteMyShelfById,
+			shelfBinder.BindDeleteMyShelfById(
+				shelfController.DeleteMyShelfById,
+			),
 		)
 		shelfRoutes.DELETE(
 			"/deleteMyShelves",
-			shelfController.DeleteMyShelvesByIds,
+			shelfBinder.BindDeleteMyShelvesByIds(
+				shelfController.DeleteMyShelvesByIds,
+			),
 		)
 	}
 }

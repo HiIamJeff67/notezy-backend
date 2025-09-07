@@ -5,25 +5,22 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	contexts "notezy-backend/app/contexts"
 	cookies "notezy-backend/app/cookies"
 	dtos "notezy-backend/app/dtos"
-	exceptions "notezy-backend/app/exceptions"
 	services "notezy-backend/app/services"
-	constants "notezy-backend/shared/constants"
 )
 
 /* ============================== Interface & Instance ============================== */
 
 type AuthControllerInterface interface {
-	Register(ctx *gin.Context)
-	Login(ctx *gin.Context)
-	Logout(ctx *gin.Context)
-	SendAuthCode(ctx *gin.Context)
-	ValidateEmail(ctx *gin.Context)
-	ResetEmail(ctx *gin.Context)
-	ForgetPassword(ctx *gin.Context)
-	DeleteMe(ctx *gin.Context)
+	Register(ctx *gin.Context, reqDto *dtos.RegisterReqDto)
+	Login(ctx *gin.Context, reqDto *dtos.LoginReqDto)
+	Logout(ctx *gin.Context, reqDto *dtos.LogoutReqDto)
+	SendAuthCode(ctx *gin.Context, reqDto *dtos.SendAuthCodeReqDto)
+	ValidateEmail(ctx *gin.Context, reqDto *dtos.ValidateEmailReqDto)
+	ResetEmail(ctx *gin.Context, reqDto *dtos.ResetEmailReqDto)
+	ForgetPassword(ctx *gin.Context, reqDto *dtos.ForgetPasswordReqDto)
+	DeleteMe(ctx *gin.Context, reqDto *dtos.DeleteMeReqDto)
 }
 
 type AuthController struct {
@@ -36,21 +33,13 @@ func NewAuthController(service services.AuthServiceInterface) AuthControllerInte
 	}
 }
 
-/* ============================== Controllers ============================== */
+/* ============================== Controller ============================== */
 
-func (c *AuthController) Register(ctx *gin.Context) {
-	var reqDto dtos.RegisterReqDto
-	reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-		exception := exceptions.Auth.InvalidDto().WithError(err)
-		exception.ResponseWithJSON(ctx)
-		return
-	}
-
+func (c *AuthController) Register(ctx *gin.Context, reqDto *dtos.RegisterReqDto) {
 	cookies.AccessToken.DeleteCookie(ctx)
 	cookies.RefreshToken.DeleteCookie(ctx)
 
-	resDto, exception := c.authService.Register(&reqDto)
+	resDto, exception := c.authService.Register(reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -69,19 +58,11 @@ func (c *AuthController) Register(ctx *gin.Context) {
 	})
 }
 
-func (c *AuthController) Login(ctx *gin.Context) {
-	var reqDto dtos.LoginReqDto
-	reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-		exception := exceptions.Auth.InvalidDto().WithError(err)
-		exception.ResponseWithJSON(ctx)
-		return
-	}
-
+func (c *AuthController) Login(ctx *gin.Context, reqDto *dtos.LoginReqDto) {
 	cookies.AccessToken.DeleteCookie(ctx)
 	cookies.RefreshToken.DeleteCookie(ctx)
 
-	resDto, exception := c.authService.Login(&reqDto)
+	resDto, exception := c.authService.Login(reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -101,16 +82,11 @@ func (c *AuthController) Login(ctx *gin.Context) {
 }
 
 // with AuthMiddleware()
-func (c *AuthController) Logout(ctx *gin.Context) {
-	var reqDto dtos.LogoutReqDto
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
-	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
-		return
-	}
-	reqDto.ContextFields.UserId = *userId
+func (c *AuthController) Logout(ctx *gin.Context, reqDto *dtos.LogoutReqDto) {
+	cookies.AccessToken.DeleteCookie(ctx)
+	cookies.RefreshToken.DeleteCookie(ctx)
 
-	resDto, exception := c.authService.Logout(&reqDto)
+	resDto, exception := c.authService.Logout(reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -123,16 +99,8 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 	})
 }
 
-func (c *AuthController) SendAuthCode(ctx *gin.Context) {
-	var reqDto dtos.SendAuthCodeReqDto
-	reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-		exception := exceptions.Auth.InvalidDto().WithError(err)
-		exception.ResponseWithJSON(ctx)
-		return
-	}
-
-	resDto, exception := c.authService.SendAuthCode(&reqDto)
+func (c *AuthController) SendAuthCode(ctx *gin.Context, reqDto *dtos.SendAuthCodeReqDto) {
+	resDto, exception := c.authService.SendAuthCode(reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -146,21 +114,8 @@ func (c *AuthController) SendAuthCode(ctx *gin.Context) {
 }
 
 // with AuthMiddleware()
-func (c *AuthController) ValidateEmail(ctx *gin.Context) {
-	var reqDto dtos.ValidateEmailReqDto
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
-	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
-		return
-	}
-	reqDto.ContextFields.UserId = *userId
-	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-		exception := exceptions.Auth.InvalidDto().WithError(err)
-		exception.ResponseWithJSON(ctx)
-		return
-	}
-
-	resDto, exception := c.authService.ValidateEmail(&reqDto)
+func (c *AuthController) ValidateEmail(ctx *gin.Context, reqDto *dtos.ValidateEmailReqDto) {
+	resDto, exception := c.authService.ValidateEmail(reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -174,21 +129,8 @@ func (c *AuthController) ValidateEmail(ctx *gin.Context) {
 }
 
 // with AuthMiddleware()
-func (c *AuthController) ResetEmail(ctx *gin.Context) {
-	var reqDto dtos.ResetEmailReqDto
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
-	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
-		return
-	}
-	reqDto.ContextFields.UserId = *userId
-	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-		exception := exceptions.Auth.InvalidDto().WithError(err)
-		exception.ResponseWithJSON(ctx)
-		return
-	}
-
-	resDto, exception := c.authService.ResetEmail(&reqDto)
+func (c *AuthController) ResetEmail(ctx *gin.Context, reqDto *dtos.ResetEmailReqDto) {
+	resDto, exception := c.authService.ResetEmail(reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -202,16 +144,8 @@ func (c *AuthController) ResetEmail(ctx *gin.Context) {
 }
 
 // ! this should not use any middleware, bcs we want the user to set it by providing the account
-func (c *AuthController) ForgetPassword(ctx *gin.Context) {
-	var reqDto dtos.ForgetPasswordReqDto
-	reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-		exception := exceptions.Auth.InvalidDto().WithError(err)
-		exception.ResponseWithJSON(ctx)
-		return
-	}
-
-	resDto, exception := c.authService.ForgetPassword(&reqDto)
+func (c *AuthController) ForgetPassword(ctx *gin.Context, reqDto *dtos.ForgetPasswordReqDto) {
+	resDto, exception := c.authService.ForgetPassword(reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -225,21 +159,8 @@ func (c *AuthController) ForgetPassword(ctx *gin.Context) {
 }
 
 // with AuthMiddleware()
-func (c *AuthController) DeleteMe(ctx *gin.Context) {
-	var reqDto dtos.DeleteMeReqDto
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
-	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
-		return
-	}
-	reqDto.ContextFields.UserId = *userId
-	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-		exception := exceptions.Auth.InvalidDto().WithError(err)
-		exception.ResponseWithJSON(ctx)
-		return
-	}
-
-	resDto, exception := c.authService.DeleteMe(&reqDto)
+func (c *AuthController) DeleteMe(ctx *gin.Context, reqDto *dtos.DeleteMeReqDto) {
+	resDto, exception := c.authService.DeleteMe(reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return

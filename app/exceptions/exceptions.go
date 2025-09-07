@@ -44,6 +44,7 @@ const (
 // ExceptionPrefix_Test ExceptionPrefix = "Test"						 6
 // ExceptionPrefix_Search ExceptionPrefix = "Search"			         7
 // ExceptionPrefix_Storage ExceptionPrefix = "Storage"				     8
+// ExceptionPrefix_Adapter ExceptionPrefix = "Adapter"					 9
 
 // ExceptionPrefix_Auth ExceptionPrefix = "Auth" 			 		     31
 // ExceptionPrefix_User ExceptionPrefix = "User"                         32

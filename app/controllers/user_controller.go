@@ -5,20 +5,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	contexts "notezy-backend/app/contexts"
 	dtos "notezy-backend/app/dtos"
-	exceptions "notezy-backend/app/exceptions"
-	logs "notezy-backend/app/logs"
 	services "notezy-backend/app/services"
-	constants "notezy-backend/shared/constants"
 )
 
 /* ============================== Interface & Instance ============================== */
 
 type UserControllerInterface interface {
-	GetUserData(ctx *gin.Context)
-	GetMe(ctx *gin.Context)
-	UpdateMe(ctx *gin.Context)
+	GetUserData(ctx *gin.Context, reqDto *dtos.GetUserDataReqDto)
+	GetMe(ctx *gin.Context, reqDto *dtos.GetMeReqDto)
+	UpdateMe(ctx *gin.Context, reqDto *dtos.UpdateMeReqDto)
 }
 
 type UserController struct {
@@ -34,16 +30,8 @@ func NewUserController(service services.UserServiceInterface) UserControllerInte
 /* ============================== Controllers ============================== */
 
 // with AuthMiddleware()
-func (c *UserController) GetUserData(ctx *gin.Context) {
-	var reqDto dtos.GetUserDataReqDto
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
-	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
-		return
-	}
-	reqDto.ContextFields.UserId = *userId
-
-	resDto, exception := c.userService.GetUserData(&reqDto)
+func (c *UserController) GetUserData(ctx *gin.Context, reqDto *dtos.GetUserDataReqDto) {
+	resDto, exception := c.userService.GetUserData(reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -57,22 +45,8 @@ func (c *UserController) GetUserData(ctx *gin.Context) {
 }
 
 // with AuthMiddleware()
-func (c *UserController) GetMe(ctx *gin.Context) {
-	var reqDto dtos.GetMeReqDto
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
-	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
-		return
-	}
-	reqDto.ContextFields.UserId = *userId
-	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-		logs.Error(err)
-		exception := exceptions.User.InvalidDto().WithError(err)
-		exception.ResponseWithJSON(ctx)
-		return
-	}
-
-	resDto, exception := c.userService.GetMe(&reqDto)
+func (c *UserController) GetMe(ctx *gin.Context, reqDto *dtos.GetMeReqDto) {
+	resDto, exception := c.userService.GetMe(reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -86,21 +60,8 @@ func (c *UserController) GetMe(ctx *gin.Context) {
 }
 
 // with AuthMiddleware()
-func (c *UserController) UpdateMe(ctx *gin.Context) {
-	var reqDto dtos.UpdateMeReqDto
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
-	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
-		return
-	}
-	reqDto.ContextFields.UserId = *userId
-	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-		exception := exceptions.User.InvalidDto().WithError(err)
-		exception.ResponseWithJSON(ctx)
-		return
-	}
-
-	resDto, exception := c.userService.UpdateMe(&reqDto)
+func (c *UserController) UpdateMe(ctx *gin.Context, reqDto *dtos.UpdateMeReqDto) {
+	resDto, exception := c.userService.UpdateMe(reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return

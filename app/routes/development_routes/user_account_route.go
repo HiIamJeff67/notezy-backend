@@ -1,6 +1,7 @@
 package developmentroutes
 
 import (
+	binders "notezy-backend/app/binders"
 	controllers "notezy-backend/app/controllers"
 	middlewares "notezy-backend/app/middlewares"
 	models "notezy-backend/app/models"
@@ -8,6 +9,7 @@ import (
 )
 
 func configureDevelopmentUserAccountRoutes() {
+	userAccountBinder := binders.NewUserAccountBinder()
 	userAccountController := controllers.NewUserAccountController(
 		services.NewUserAccountService(
 			models.NotezyDB,
@@ -22,11 +24,15 @@ func configureDevelopmentUserAccountRoutes() {
 	{
 		userAccountRoutes.GET(
 			"/getMyAccount",
-			userAccountController.GetMyAccount,
+			userAccountBinder.BindGetMyAccount(
+				userAccountController.GetMyAccount,
+			),
 		)
 		userAccountRoutes.PUT(
 			"/updateMyAccount",
-			userAccountController.UpdateMyAccount,
+			userAccountBinder.BindUpdateMyAccount(
+				userAccountController.UpdateMyAccount,
+			),
 		)
 	}
 }

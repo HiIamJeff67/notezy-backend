@@ -5,18 +5,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	contexts "notezy-backend/app/contexts"
 	dtos "notezy-backend/app/dtos"
-	exceptions "notezy-backend/app/exceptions"
 	services "notezy-backend/app/services"
-	constants "notezy-backend/shared/constants"
 )
 
 /* ============================== Interface & Instance ============================== */
 
 type UserInfoControllerInterface interface {
-	GetMyInfo(ctx *gin.Context)
-	UpdateMyInfo(ctx *gin.Context)
+	GetMyInfo(ctx *gin.Context, reqDto *dtos.GetMyInfoReqDto)
+	UpdateMyInfo(ctx *gin.Context, reqDto *dtos.UpdateMyInfoReqDto)
 }
 
 type UserInfoController struct {
@@ -29,19 +26,11 @@ func NewUserInfoController(service services.UserInfoServiceInterface) UserInfoCo
 	}
 }
 
-/* ============================== Controllers ============================== */
+/* ============================== Controller ============================== */
 
 // with AuthMiddleware()
-func (c *UserInfoController) GetMyInfo(ctx *gin.Context) {
-	var reqDto dtos.GetMyInfoReqDto
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
-	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
-		return
-	}
-	reqDto.ContextFields.UserId = *userId
-
-	resDto, exception := c.userInfoService.GetMyInfo(&reqDto)
+func (c *UserInfoController) GetMyInfo(ctx *gin.Context, reqDto *dtos.GetMyInfoReqDto) {
+	resDto, exception := c.userInfoService.GetMyInfo(reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -55,21 +44,8 @@ func (c *UserInfoController) GetMyInfo(ctx *gin.Context) {
 }
 
 // with AuthMiddleware()
-func (c *UserInfoController) UpdateMyInfo(ctx *gin.Context) {
-	var reqDto dtos.UpdateMyInfoReqDto
-	userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
-	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
-		return
-	}
-	reqDto.ContextFields.UserId = *userId
-	if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-		exception := exceptions.UserInfo.InvalidDto().WithError(err)
-		exception.ResponseWithJSON(ctx)
-		return
-	}
-
-	resDto, exception := c.userInfoService.UpdateMyInfo(&reqDto)
+func (c *UserInfoController) UpdateMyInfo(ctx *gin.Context, reqDto *dtos.UpdateMyInfoReqDto) {
+	resDto, exception := c.userInfoService.UpdateMyInfo(reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return

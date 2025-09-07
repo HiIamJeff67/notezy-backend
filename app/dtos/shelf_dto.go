@@ -73,7 +73,7 @@ type SynchronizeShelvesReqDto struct {
 	]
 }
 
-type RestoreMyShelfReqDto struct {
+type RestoreMyShelfByIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -88,7 +88,7 @@ type RestoreMyShelfReqDto struct {
 	]
 }
 
-type RestoreMyShelvesReqDto struct {
+type RestoreMyShelvesByIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -103,7 +103,7 @@ type RestoreMyShelvesReqDto struct {
 	]
 }
 
-type DeleteMyShelfReqDto struct {
+type DeleteMyShelfByIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -118,7 +118,7 @@ type DeleteMyShelfReqDto struct {
 	]
 }
 
-type DeleteMyShelvesReqDto struct {
+type DeleteMyShelvesByIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -176,18 +176,18 @@ type SynchronizeShelvesResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type RestoreMyShelfResDto struct {
+type RestoreMyShelfByIdResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type RestoreMyShelvesResDto struct {
+type RestoreMyShelvesByIdsResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type DeleteMyShelfResDto struct {
+type DeleteMyShelfByIdResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`
 }
 
-type DeleteMyShelvesResDto struct {
+type DeleteMyShelvesByIdsResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`
 }

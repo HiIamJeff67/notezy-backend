@@ -28,6 +28,7 @@ const (
 )
 
 const (
+	MaxNonVideoFileSize        int64 = 5 * MB
 	MaxInMemoryStorageFileSize int64 = 5 * MB
 	MaxS3StorageFileSize       int64 = 5 * MB
 )

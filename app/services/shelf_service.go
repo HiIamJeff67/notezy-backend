@@ -27,10 +27,10 @@ type ShelfServiceInterface interface {
 	SearchRecentShelves(reqDto *dtos.SearchRecentShelvesReqDto) (*dtos.SearchRecentShelvesResDto, *exceptions.Exception)
 	CreateShelf(reqDto *dtos.CreateShelfReqDto) (*dtos.CreateShelfResDto, *exceptions.Exception)
 	SynchronizeShelves(reqDto *dtos.SynchronizeShelvesReqDto) (*dtos.SynchronizeShelvesResDto, *exceptions.Exception)
-	RestoreMyShelfById(reqDto *dtos.RestoreMyShelfReqDto) (*dtos.RestoreMyShelfResDto, *exceptions.Exception)
-	RestoreMyShelvesByIds(reqDto *dtos.RestoreMyShelvesReqDto) (*dtos.RestoreMyShelvesResDto, *exceptions.Exception)
-	DeleteMyShelfById(reqDto *dtos.DeleteMyShelfReqDto) (*dtos.DeleteMyShelfResDto, *exceptions.Exception)
-	DeleteMyShelvesByIds(reqDto *dtos.DeleteMyShelvesReqDto) (*dtos.DeleteMyShelvesResDto, *exceptions.Exception)
+	RestoreMyShelfById(reqDto *dtos.RestoreMyShelfByIdReqDto) (*dtos.RestoreMyShelfByIdResDto, *exceptions.Exception)
+	RestoreMyShelvesByIds(reqDto *dtos.RestoreMyShelvesByIdsReqDto) (*dtos.RestoreMyShelvesByIdsResDto, *exceptions.Exception)
+	DeleteMyShelfById(reqDto *dtos.DeleteMyShelfByIdReqDto) (*dtos.DeleteMyShelfByIdResDto, *exceptions.Exception)
+	DeleteMyShelvesByIds(reqDto *dtos.DeleteMyShelvesByIdsReqDto) (*dtos.DeleteMyShelvesByIdsResDto, *exceptions.Exception)
 
 	// services for private shelves
 	SearchPrivateShelves(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchShelfInput) (*gqlmodels.SearchShelfConnection, *exceptions.Exception)
@@ -186,7 +186,7 @@ func (s *ShelfService) SynchronizeShelves(reqDto *dtos.SynchronizeShelvesReqDto)
 	}, nil
 }
 
-func (s *ShelfService) RestoreMyShelfById(reqDto *dtos.RestoreMyShelfReqDto) (*dtos.RestoreMyShelfResDto, *exceptions.Exception) {
+func (s *ShelfService) RestoreMyShelfById(reqDto *dtos.RestoreMyShelfByIdReqDto) (*dtos.RestoreMyShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -198,12 +198,12 @@ func (s *ShelfService) RestoreMyShelfById(reqDto *dtos.RestoreMyShelfReqDto) (*d
 		return nil, exception
 	}
 
-	return &dtos.RestoreMyShelfResDto{
+	return &dtos.RestoreMyShelfByIdResDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
 
-func (s *ShelfService) RestoreMyShelvesByIds(reqDto *dtos.RestoreMyShelvesReqDto) (*dtos.RestoreMyShelvesResDto, *exceptions.Exception) {
+func (s *ShelfService) RestoreMyShelvesByIds(reqDto *dtos.RestoreMyShelvesByIdsReqDto) (*dtos.RestoreMyShelvesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -215,12 +215,12 @@ func (s *ShelfService) RestoreMyShelvesByIds(reqDto *dtos.RestoreMyShelvesReqDto
 		return nil, exception
 	}
 
-	return &dtos.RestoreMyShelvesResDto{
+	return &dtos.RestoreMyShelvesByIdsResDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
 
-func (s *ShelfService) DeleteMyShelfById(reqDto *dtos.DeleteMyShelfReqDto) (*dtos.DeleteMyShelfResDto, *exceptions.Exception) {
+func (s *ShelfService) DeleteMyShelfById(reqDto *dtos.DeleteMyShelfByIdReqDto) (*dtos.DeleteMyShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -232,12 +232,12 @@ func (s *ShelfService) DeleteMyShelfById(reqDto *dtos.DeleteMyShelfReqDto) (*dto
 		return nil, exception
 	}
 
-	return &dtos.DeleteMyShelfResDto{
+	return &dtos.DeleteMyShelfByIdResDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
 
-func (s *ShelfService) DeleteMyShelvesByIds(reqDto *dtos.DeleteMyShelvesReqDto) (*dtos.DeleteMyShelvesResDto, *exceptions.Exception) {
+func (s *ShelfService) DeleteMyShelvesByIds(reqDto *dtos.DeleteMyShelvesByIdsReqDto) (*dtos.DeleteMyShelvesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -249,7 +249,7 @@ func (s *ShelfService) DeleteMyShelvesByIds(reqDto *dtos.DeleteMyShelvesReqDto) 
 		return nil, exception
 	}
 
-	return &dtos.DeleteMyShelvesResDto{
+	return &dtos.DeleteMyShelvesByIdsResDto{
 		DeletedAt: time.Now(),
 	}, nil
 }

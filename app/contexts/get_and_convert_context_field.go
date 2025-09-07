@@ -30,7 +30,7 @@ func GetAndConvertContextFieldToUUID(ctx *gin.Context, name constants.ContextFie
 }
 
 func GetAndConvertContextToGinContext(ctx context.Context) (*gin.Context, *exceptions.Exception) {
-	ginCtx, ok := ctx.Value(constants.ContextFieldName_Gin_Context).(*gin.Context)
+	ginCtx, ok := ctx.Value(constants.ContextFieldName_GinContext).(*gin.Context)
 	if !ok {
 		return nil, exceptions.Context.FailedToConvertContextToGinContext()
 	}

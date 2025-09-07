@@ -2,9 +2,11 @@ package developmentroutes
 
 import (
 	"net/http"
-	"notezy-backend/app/storages"
 
 	"github.com/gin-gonic/gin"
+
+	logs "notezy-backend/app/logs"
+	storages "notezy-backend/app/storages"
 )
 
 func configureStorageRoutes() {
@@ -23,6 +25,7 @@ func configureStorageRoutes() {
 					return
 				}
 				defer rc.Close()
+				logs.Info("Successfully get the files!")
 				ctx.Data(http.StatusOK, object.ContentType, object.Data)
 			},
 		)
