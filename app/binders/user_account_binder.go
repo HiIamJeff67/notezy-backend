@@ -28,6 +28,9 @@ func NewUserAccountBinder() UserAccountBinderInterface {
 func (b *UserAccountBinder) BindGetMyAccount(controllerFunc types.ControllerFunc[*dtos.GetMyAccountReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.GetMyAccountReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
@@ -42,12 +45,16 @@ func (b *UserAccountBinder) BindGetMyAccount(controllerFunc types.ControllerFunc
 func (b *UserAccountBinder) BindUpdateMyAccount(controllerFunc types.ControllerFunc[*dtos.UpdateMyAccountReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.UpdateMyAccountReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
+
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.UserAccount.InvalidDto().WithError(err)
 			exception.ResponseWithJSON(ctx)

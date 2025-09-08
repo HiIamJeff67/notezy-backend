@@ -2,6 +2,7 @@ package enums
 
 import (
 	"database/sql/driver"
+	"fmt"
 	"reflect"
 	"slices"
 )
@@ -63,4 +64,13 @@ func (l Language) String() string {
 
 func (l *Language) IsValidEnum() bool {
 	return slices.Contains(AllLanguages, *l)
+}
+
+func ConvertStringToLanguage(enumString string) (*Language, error) {
+	for _, language := range AllLanguages {
+		if string(language) == enumString {
+			return &language, nil
+		}
+	}
+	return nil, fmt.Errorf("invalid language: %s", enumString)
 }

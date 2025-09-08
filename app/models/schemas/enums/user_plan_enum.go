@@ -2,6 +2,7 @@ package enums
 
 import (
 	"database/sql/driver"
+	"fmt"
 	"reflect"
 	"slices"
 )
@@ -63,4 +64,13 @@ func (p UserPlan) String() string {
 
 func (p *UserPlan) IsValidEnum() bool {
 	return slices.Contains(AllUserPlans, *p)
+}
+
+func ConvertStringToUserPlan(enumString string) (*UserPlan, error) {
+	for _, userPlan := range AllUserPlans {
+		if string(userPlan) == enumString {
+			return &userPlan, nil
+		}
+	}
+	return nil, fmt.Errorf("invalid user plan: %s", enumString)
 }

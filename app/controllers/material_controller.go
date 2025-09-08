@@ -15,6 +15,8 @@ type MaterialControllerInterface interface {
 	GetMyMaterialById(ctx *gin.Context, reqDto *dtos.GetMyMaterialByIdReqDto)
 	SearchMyMaterialsByShelfId(ctx *gin.Context, reqDto *dtos.SearchMyMaterialsByShelfIdReqDto)
 	CreateTextbookMaterial(ctx *gin.Context, reqDto *dtos.CreateMaterialReqDto)
+	SaveMyTextbookMaterialById(ctx *gin.Context, reqDto *dtos.SaveMyMaterialByIdReqDto)
+	MoveMyTextMaterialById(ctx *gin.Context, reqDto *dtos.MoveMyMaterialByIdReqDto)
 	RestoreMyMaterialById(ctx *gin.Context, reqDto *dtos.RestoreMyMaterialByIdReqDto)
 	RestoreMyMaterialsByIds(ctx *gin.Context, reqDto *dtos.RestoreMyMaterialsByIdsReqDto)
 	DeleteMyMaterialById(ctx *gin.Context, reqDto *dtos.DeleteMyMaterialByIdReqDto)
@@ -66,6 +68,36 @@ func (c *MaterialController) SearchMyMaterialsByShelfId(ctx *gin.Context, reqDto
 // with AuthMiddleware
 func (c *MaterialController) CreateTextbookMaterial(ctx *gin.Context, reqDto *dtos.CreateMaterialReqDto) {
 	resDto, exception := c.materialService.CreateTextbookMaterial(ctx, reqDto)
+	if exception != nil {
+		exception.Log().SafelyResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": false,
+	})
+}
+
+// with AuthMiddleware, MultipartAdapter
+func (c *MaterialController) SaveMyTextbookMaterialById(ctx *gin.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) {
+	resDto, exception := c.materialService.SaveMyTextbookMaterialById(ctx, reqDto)
+	if exception != nil {
+		exception.Log().SafelyResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": false,
+	})
+}
+
+// with AuthMiddleware, MultipartAdapter
+func (c *MaterialController) MoveMyTextMaterialById(ctx *gin.Context, reqDto *dtos.MoveMyMaterialByIdReqDto) {
+	resDto, exception := c.materialService.MoveMyMaterialById(ctx, reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return

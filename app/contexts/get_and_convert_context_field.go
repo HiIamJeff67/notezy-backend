@@ -2,6 +2,7 @@ package contexts
 
 import (
 	"context"
+	"mime/multipart"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -35,4 +36,12 @@ func GetAndConvertContextToGinContext(ctx context.Context) (*gin.Context, *excep
 		return nil, exceptions.Context.FailedToConvertContextToGinContext()
 	}
 	return ginCtx, nil
+}
+
+func GetAndConvertContextToMultipartFileHeaders(ctx *gin.Context) ([]*multipart.FileHeader, *exceptions.Exception) {
+	fileHeadersInterface, exist := ctx.Get(constants.ContextFieldName_FormDataFileHeaders.String())
+	if exist {
+		return fileHeadersInterface.([]*multipart.FileHeader), nil
+	}
+	return nil, exceptions.Context.FailedToConvertContextFieldToSpecificType("[]*multipart.FileHeader")
 }

@@ -2,6 +2,7 @@ package enums
 
 import (
 	"database/sql/driver"
+	"fmt"
 	"reflect"
 	"slices"
 )
@@ -57,4 +58,13 @@ func (g UserGender) String() string {
 
 func (g *UserGender) IsValidEnum() bool {
 	return slices.Contains(AllUserGenders, *g)
+}
+
+func ConvertStringToUserGender(enumString string) (*UserGender, error) {
+	for _, userGender := range AllUserGenders {
+		if string(userGender) == enumString {
+			return &userGender, nil
+		}
+	}
+	return nil, fmt.Errorf("invalid user gender: %s", enumString)
 }

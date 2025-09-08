@@ -12,7 +12,9 @@ import (
 
 type GetMyInfoReqDto struct {
 	NotezyRequest[
-		any,
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
 		struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
@@ -23,7 +25,9 @@ type GetMyInfoReqDto struct {
 
 type UpdateMyInfoReqDto struct {
 	NotezyRequest[
-		any,
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
 		struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},

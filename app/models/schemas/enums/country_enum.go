@@ -2,6 +2,7 @@ package enums
 
 import (
 	"database/sql/driver"
+	"fmt"
 	"reflect"
 )
 
@@ -79,4 +80,13 @@ func (c *Country) IsValidEnum() bool {
 		}
 	}
 	return false
+}
+
+func ConvertStringToCountry(enumString string) (*Country, error) {
+	for _, country := range AllCountries {
+		if string(country) == enumString {
+			return &country, nil
+		}
+	}
+	return nil, fmt.Errorf("invalid country: %s", enumString)
 }

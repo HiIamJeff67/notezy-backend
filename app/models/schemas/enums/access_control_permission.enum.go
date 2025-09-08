@@ -2,6 +2,7 @@ package enums
 
 import (
 	"database/sql/driver"
+	"fmt"
 	"reflect"
 	"slices"
 )
@@ -58,4 +59,13 @@ func (a AccessControlPermission) String() string {
 
 func (a *AccessControlPermission) IsValidEnum() bool {
 	return slices.Contains(AllAccessControlPermissions, *a)
+}
+
+func ConvertStringToAccessControlPermission(enumString string) (*AccessControlPermission, error) {
+	for _, accessControlPermission := range AllAccessControlPermissions {
+		if string(accessControlPermission) == enumString {
+			return &accessControlPermission, nil
+		}
+	}
+	return nil, fmt.Errorf("invalid access control permission: %s", enumString)
 }

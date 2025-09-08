@@ -13,7 +13,9 @@ import (
 
 type GetUserDataReqDto struct {
 	NotezyRequest[
-		any,
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
 		struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
@@ -24,7 +26,9 @@ type GetUserDataReqDto struct {
 
 type GetMeReqDto struct {
 	NotezyRequest[
-		any,
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
 		struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
@@ -35,7 +39,9 @@ type GetMeReqDto struct {
 
 type UpdateMeReqDto struct {
 	NotezyRequest[
-		any,
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
 		struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},

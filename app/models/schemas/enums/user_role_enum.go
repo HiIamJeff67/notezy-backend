@@ -2,6 +2,7 @@ package enums
 
 import (
 	"database/sql/driver"
+	"fmt"
 	"reflect"
 	"slices"
 )
@@ -62,4 +63,13 @@ func (r UserRole) String() string {
 
 func (r *UserRole) IsValidEnum() bool {
 	return slices.Contains(AllUserRoles, *r)
+}
+
+func ConvertStringToUserRole(enumString string) (*UserRole, error) {
+	for _, userRole := range AllUserRoles {
+		if string(userRole) == enumString {
+			return &userRole, nil
+		}
+	}
+	return nil, fmt.Errorf("invalid user role: %s", enumString)
 }

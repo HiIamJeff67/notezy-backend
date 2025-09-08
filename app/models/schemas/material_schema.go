@@ -15,7 +15,7 @@ import (
 
 type Material struct {
 	Id            uuid.UUID                 `json:"id" gorm:"column:id; type:uuid; primaryKey; not null;"`
-	RootShelfId   uuid.UUID                 `json:"rootShelfId" gorm:"column:root_shelf_id; type:uuid; primaryKey; not null; index;"`
+	RootShelfId   uuid.UUID                 `json:"rootShelfId" gorm:"column:root_shelf_id; type:uuid; not null; index;"`
 	ParentShelfId uuid.UUID                 `json:"parentShelfId" gorm:"column:parent_shelf_id; type:uuid; not null;"`
 	Name          string                    `json:"name" gorm:"column:name; size:128; not null; default:'undefined';"`
 	Type          enums.MaterialType        `json:"type" gorm:"column:type; type:MaterialType; not null; default:'Notebook';"`

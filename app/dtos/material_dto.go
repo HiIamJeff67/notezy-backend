@@ -1,6 +1,7 @@
 package dtos
 
 import (
+	"io"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,7 +20,8 @@ type GetMyMaterialByIdReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			MaterialId uuid.UUID `json:"materialId" validate:"required"`
+			MaterialId  uuid.UUID `json:"materialId" validate:"required"`
+			RootShelfId uuid.UUID `json:"rootShelfId" validate:"required"`
 		},
 		any,
 	]
@@ -34,7 +36,7 @@ type SearchMyMaterialsByShelfIdReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			ShelfId uuid.UUID `json:"shelfId" validate:"required"`
+			RootShelfId uuid.UUID `json:"rootShelfId" validate:"required"`
 		},
 		struct {
 			SimpleSearchDto
@@ -60,6 +62,47 @@ type CreateMaterialReqDto struct {
 	]
 }
 
+type SaveMyMaterialByIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			MaterialId    uuid.UUID `json:"materialId" validate:"required"`
+			RootShelfId   uuid.UUID `json:"rootShelfId" validate:"required"`
+			PartialUpdate PartialUpdateDto[struct {
+				// we are not allowed the user to move the material to other shelves by this API
+				Name *string `json:"name" validate:"omitnil,min=1,max=128"`
+			}]
+			ContentFile io.Reader `json:"contentFile" validate:"omitnil"` // extracted from the context of MultipartAdapter()
+			Size        *int64    `json:"size" validate:"omitnil"`
+			// Note that io.Reader is an interface, it can be nil although we declare the type of io.Reader instead of *io.Reader
+		},
+		any,
+	]
+}
+
+type MoveMyMaterialByIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			MaterialId               uuid.UUID `json:"materialId" validate:"required"`
+			SourceRootShelfId        uuid.UUID `json:"sourceRootShelfId" validate:"required"`
+			DestinationRootShelfId   uuid.UUID `json:"destinationRootShelfId" validate:"required"`
+			DestinationParentShelfId uuid.UUID `json:"parentShelfId" validate:"required"`
+		},
+		any,
+	]
+}
+
 type RestoreMyMaterialByIdReqDto struct {
 	NotezyRequest[
 		struct {
@@ -69,7 +112,8 @@ type RestoreMyMaterialByIdReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			MaterialId uuid.UUID `json:"materialId" validate:"required"`
+			MaterialId  uuid.UUID `json:"materialId" validate:"required"`
+			RootShelfId uuid.UUID `json:"rootShelfId" validate:"required"`
 		},
 		any,
 	]
@@ -85,6 +129,7 @@ type RestoreMyMaterialsByIdsReqDto struct {
 		},
 		struct {
 			MaterialIds []uuid.UUID `json:"materialIds" validate:"required,min=1,max=32"`
+			RootShelfId uuid.UUID   `json:"rootShelfId" validate:"required"`
 		},
 		any,
 	]
@@ -99,7 +144,8 @@ type DeleteMyMaterialByIdReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			MaterialId uuid.UUID `json:"materialId" validate:"required"`
+			MaterialId  uuid.UUID `json:"materialId" validate:"required"`
+			RootShelfId uuid.UUID `json:"rootShelfId" validate:"required"`
 		},
 		any,
 	]
@@ -115,6 +161,7 @@ type DeleteMyMaterialsByIdsReqDto struct {
 		},
 		struct {
 			MaterialIds []uuid.UUID `json:"materialIds" validate:"required,min=1,max=32"`
+			RootShelfId uuid.UUID   `json:"rootShelfId" validate:"required"`
 		},
 		any,
 	]
@@ -139,6 +186,14 @@ type SearchMyMaterialsByShelfIdResDto []GetMyMaterialByIdResDto
 
 type CreateMaterialResDto struct {
 	CreatedAt time.Time `json:"createdAt"`
+}
+
+type SaveMyMaterialByIdResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type MoveMyMaterialByIdResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 type RestoreMyMaterialByIdResDto struct {

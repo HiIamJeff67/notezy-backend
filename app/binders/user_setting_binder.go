@@ -1,12 +1,12 @@
 package binders
 
 import (
+	"github.com/gin-gonic/gin"
+
 	contexts "notezy-backend/app/contexts"
-	"notezy-backend/app/dtos"
+	dtos "notezy-backend/app/dtos"
 	constants "notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
-
-	"github.com/gin-gonic/gin"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -26,6 +26,9 @@ func NewUserSettingBinder() UserSettingBinderInterface {
 func (b *UserSettingBinder) BindGetMySetting(controllerFunc types.ControllerFunc[*dtos.GetMySettingReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.GetMySettingReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)

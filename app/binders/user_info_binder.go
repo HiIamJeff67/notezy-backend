@@ -28,6 +28,9 @@ func NewUserInfoBinder() UserInfoBinderInterface {
 func (b *UserInfoBinder) BindGetMyInfo(controllerFunc types.ControllerFunc[*dtos.GetMyInfoReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.GetMyInfoReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
@@ -42,12 +45,16 @@ func (b *UserInfoBinder) BindGetMyInfo(controllerFunc types.ControllerFunc[*dtos
 func (b *UserInfoBinder) BindUpdateMyInfo(controllerFunc types.ControllerFunc[*dtos.UpdateMyInfoReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.UpdateMyInfoReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
+
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.UserInfo.InvalidDto().WithError(err)
 			exception.ResponseWithJSON(ctx)

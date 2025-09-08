@@ -34,7 +34,9 @@ func NewAuthBinder() AuthBinderInterface {
 func (b *AuthBinder) BindRegister(controllerFunc types.ControllerFunc[*dtos.RegisterReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.RegisterReqDto
+
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Auth.InvalidDto().WithError(err)
 			exception.ResponseWithJSON(ctx)
@@ -48,7 +50,9 @@ func (b *AuthBinder) BindRegister(controllerFunc types.ControllerFunc[*dtos.Regi
 func (b *AuthBinder) BindLogin(controllerFunc types.ControllerFunc[*dtos.LoginReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.LoginReqDto
+
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Auth.InvalidDto().WithError(err)
 			exception.ResponseWithJSON(ctx)
@@ -62,6 +66,7 @@ func (b *AuthBinder) BindLogin(controllerFunc types.ControllerFunc[*dtos.LoginRe
 func (b *AuthBinder) BindLogout(controllerFunc types.ControllerFunc[*dtos.LogoutReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.LogoutReqDto
+
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
@@ -76,6 +81,9 @@ func (b *AuthBinder) BindLogout(controllerFunc types.ControllerFunc[*dtos.Logout
 func (b *AuthBinder) BindSendAuthCode(controllerFunc types.ControllerFunc[*dtos.SendAuthCodeReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.SendAuthCodeReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Auth.InvalidDto().WithError(err)
@@ -90,12 +98,16 @@ func (b *AuthBinder) BindSendAuthCode(controllerFunc types.ControllerFunc[*dtos.
 func (b *AuthBinder) BindValidateEmail(controllerFunc types.ControllerFunc[*dtos.ValidateEmailReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.ValidateEmailReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
+
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Auth.InvalidDto().WithError(err)
 			exception.ResponseWithJSON(ctx)
@@ -109,12 +121,16 @@ func (b *AuthBinder) BindValidateEmail(controllerFunc types.ControllerFunc[*dtos
 func (b *AuthBinder) BindResetEmail(controllerFunc types.ControllerFunc[*dtos.ResetEmailReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.ResetEmailReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
+
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Auth.InvalidDto().WithError(err)
 			exception.ResponseWithJSON(ctx)
@@ -128,12 +144,15 @@ func (b *AuthBinder) BindResetEmail(controllerFunc types.ControllerFunc[*dtos.Re
 func (b *AuthBinder) BindForgetPassword(controllerFunc types.ControllerFunc[*dtos.ForgetPasswordReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.ForgetPasswordReqDto
+
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Auth.InvalidDto().WithError(err)
 			exception.ResponseWithJSON(ctx)
 			return
 		}
+
 		controllerFunc(ctx, &reqDto)
 	}
 }
@@ -141,12 +160,16 @@ func (b *AuthBinder) BindForgetPassword(controllerFunc types.ControllerFunc[*dto
 func (b *AuthBinder) BindDeleteMe(controllerFunc types.ControllerFunc[*dtos.DeleteMeReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.DeleteMeReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
+
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Auth.InvalidDto().WithError(err)
 			exception.ResponseWithJSON(ctx)

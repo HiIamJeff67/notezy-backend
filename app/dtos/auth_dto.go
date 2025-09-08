@@ -40,7 +40,9 @@ type LoginReqDto struct {
 
 type LogoutReqDto struct {
 	NotezyRequest[
-		any,
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
 		struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware
 		},
@@ -64,7 +66,9 @@ type SendAuthCodeReqDto struct {
 
 type ValidateEmailReqDto struct {
 	NotezyRequest[
-		any,
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
 		struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
@@ -77,7 +81,9 @@ type ValidateEmailReqDto struct {
 
 type ResetEmailReqDto struct {
 	NotezyRequest[
-		any,
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
 		struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
@@ -106,7 +112,9 @@ type ForgetPasswordReqDto struct {
 
 type DeleteMeReqDto struct {
 	NotezyRequest[
-		any,
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
 		struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},

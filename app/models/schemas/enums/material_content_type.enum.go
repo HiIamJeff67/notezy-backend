@@ -2,6 +2,7 @@ package enums
 
 import (
 	"database/sql/driver"
+	"fmt"
 	"reflect"
 	"slices"
 )
@@ -12,16 +13,15 @@ type MaterialContentType string
 
 const (
 	// basic types
-	MaterialContentType_PlainText MaterialContentType = "Text_Plain"
-	MaterialContentType_HTML      MaterialContentType = "Text_HTML"
-	MaterialContentType_Markdown  MaterialContentType = "Text_Markdown"
-	MaterialContentType_PNG       MaterialContentType = "Image_PNG"
-	MaterialContentType_JPG       MaterialContentType = "Image_JPG"
-	MaterialContentType_JPEG      MaterialContentType = "Image_JPEG"
-	MaterialContentType_GIF       MaterialContentType = "Image_GIF"
-	MaterialContentType_SVG       MaterialContentType = "Image_SVG"
-	MaterialContentType_MP3       MaterialContentType = "Video_MP3"
-	MaterialContentType_MP4       MaterialContentType = "Video_MP4"
+	MaterialContentType_PlainText MaterialContentType = "text/plain"
+	MaterialContentType_HTML      MaterialContentType = "text/html"
+	MaterialContentType_PNG       MaterialContentType = "image/png"
+	MaterialContentType_JPG       MaterialContentType = "image/jpg"
+	MaterialContentType_JPEG      MaterialContentType = "image/jpeg"
+	MaterialContentType_GIF       MaterialContentType = "image/gif"
+	MaterialContentType_SVG       MaterialContentType = "image/svg"
+	MaterialContentType_MP3       MaterialContentType = "video/mp3"
+	MaterialContentType_MP4       MaterialContentType = "video/mp4"
 
 	// custom types of Notezy
 	// some charts, cards, drawing boards, etc.
@@ -32,7 +32,6 @@ const (
 var AllMaterialContentTypes = []MaterialContentType{
 	MaterialContentType_PlainText,
 	MaterialContentType_HTML,
-	MaterialContentType_Markdown,
 	MaterialContentType_PNG,
 	MaterialContentType_JPG,
 	MaterialContentType_JPEG,
@@ -45,7 +44,6 @@ var AllMaterialContentTypes = []MaterialContentType{
 var AllMaterialContentTypeStrings = []string{
 	string(MaterialContentType_PlainText),
 	string(MaterialContentType_HTML),
-	string(MaterialContentType_Markdown),
 	string(MaterialContentType_PNG),
 	string(MaterialContentType_JPG),
 	string(MaterialContentType_JPEG),
@@ -83,4 +81,13 @@ func (mct MaterialContentType) String() string {
 
 func (mct *MaterialContentType) IsValidEnum() bool {
 	return slices.Contains(AllMaterialContentTypes, *mct)
+}
+
+func ConvertStringToMaterialContentType(enumString string) (*MaterialContentType, error) {
+	for _, materialContentType := range AllMaterialContentTypes {
+		if string(materialContentType) == enumString {
+			return &materialContentType, nil
+		}
+	}
+	return nil, fmt.Errorf("invalid material content type: %s", enumString)
 }

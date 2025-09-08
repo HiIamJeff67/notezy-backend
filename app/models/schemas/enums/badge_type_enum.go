@@ -2,6 +2,7 @@ package enums
 
 import (
 	"database/sql/driver"
+	"fmt"
 	"reflect"
 )
 
@@ -67,4 +68,13 @@ func (bt *BadgeType) IsValidEnum() bool {
 		}
 	}
 	return false
+}
+
+func ConvertStringToBadgeType(enumString string) (*BadgeType, error) {
+	for _, badgeType := range AllBadgeTypes {
+		if string(badgeType) == enumString {
+			return &badgeType, nil
+		}
+	}
+	return nil, fmt.Errorf("invalid badge type: %s", enumString)
 }

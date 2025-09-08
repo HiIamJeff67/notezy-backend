@@ -575,6 +575,74 @@ func (d *TypeExceptionDomain) InvalidType(value any) *Exception {
 	}
 }
 
+/* ============================== File Exception Domain Definition ============================== */
+
+type FileExceptionDomain struct {
+	_BaseCode ExceptionCode
+	_Prefix   ExceptionPrefix
+}
+
+// action should be for examples: "read", "write", "execute", "update", "delete", etc.
+func (d *FileExceptionDomain) NoPermission(action string) *Exception {
+	return &Exception{
+		Code:           d._BaseCode + 41,
+		Prefix:         d._Prefix,
+		Reason:         "NoPermission",
+		IsInternal:     false,
+		Message:        fmt.Sprintf("You don't have any permission to %s this file", action),
+		HTTPStatusCode: http.StatusBadRequest,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *FileExceptionDomain) TooManyFiles(numberOfFiles int64) *Exception {
+	return &Exception{
+		Code:           d._BaseCode + 42,
+		Prefix:         d._Prefix,
+		Reason:         "TooManyFiles",
+		IsInternal:     false,
+		Message:        fmt.Sprintf("Passing %d of files is not allowed in this operation", numberOfFiles),
+		HTTPStatusCode: http.StatusTooManyRequests,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *FileExceptionDomain) CannotOpenFiles() *Exception {
+	return &Exception{
+		Code:           d._BaseCode + 43,
+		Prefix:         d._Prefix,
+		Reason:         "CannotOpenFiles",
+		IsInternal:     true,
+		Message:        "Failed to open the files",
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *FileExceptionDomain) CannotPeekFiles() *Exception {
+	return &Exception{
+		Code:           d._BaseCode + 44,
+		Prefix:         d._Prefix,
+		Reason:         "CannotPeekFiles",
+		IsInternal:     true,
+		Message:        "Failed to peek the files",
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *FileExceptionDomain) CannotCloseFiles() *Exception {
+	return &Exception{
+		Code:           d._BaseCode + 45,
+		Prefix:         d._Prefix,
+		Reason:         "CannotCloseFiles",
+		IsInternal:     true,
+		Message:        "Failed to close the files",
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
 /* ============================== Test Exception Domain Definition ============================== */
 
 type TestExceptionDomain struct {
@@ -586,7 +654,7 @@ func (d *TestExceptionDomain) FailedToMarshalTestdata(testdataPath string) *Exce
 	message := fmt.Sprintf("Failed to marshal testdata from %v", testdataPath)
 
 	return &Exception{
-		Code:           d._BaseCode + 51,
+		Code:           d._BaseCode + 91,
 		Prefix:         d._Prefix,
 		Reason:         "FailedToMarshalTestdata",
 		IsInternal:     true,
@@ -600,7 +668,7 @@ func (d *TestExceptionDomain) FailedToUnmarshalTestdata(testdataPath string) *Ex
 	message := fmt.Sprintf("Failed to unmarshal testdata from %v", testdataPath)
 
 	return &Exception{
-		Code:           d._BaseCode + 52,
+		Code:           d._BaseCode + 92,
 		Prefix:         d._Prefix,
 		Reason:         "FailedToUnmarshalTestdata",
 		IsInternal:     true,
@@ -614,7 +682,7 @@ func (d *TestExceptionDomain) InvalidTestdataJSONForm(testdataPath string) *Exce
 	message := fmt.Sprintf("Invalid testdata json form from %v", testdataPath)
 
 	return &Exception{
-		Code:           d._BaseCode + 53,
+		Code:           d._BaseCode + 93,
 		Prefix:         d._Prefix,
 		Reason:         "InvalidTestdataJSONForm",
 		IsInternal:     true,
