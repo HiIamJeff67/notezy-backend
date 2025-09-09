@@ -25,6 +25,8 @@ const (
 	MaxNumOfShelfTreeTraversedNodes = 1e+5
 	MaxShelfTreeWidth               = 1e+5
 	MaxShelfTreeDepth               = 100 // note that the maximum width is bounded by the msgpack encoding algorithm
+
+	MaxShelvesToSynchronize = 20
 )
 
 const (

@@ -104,6 +104,8 @@ func (s *ShelfService) CreateShelf(reqDto *dtos.CreateShelfReqDto) (*dtos.Create
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
+	shelfRepository := repositories.NewShelfRepository(s.db)
+
 	rootNode, exception := lib.NewShelfNode(reqDto.ContextFields.OwnerId, reqDto.Body.Name)
 	if exception != nil {
 		return nil, exception
@@ -112,8 +114,6 @@ func (s *ShelfService) CreateShelf(reqDto *dtos.CreateShelfReqDto) (*dtos.Create
 	if exception != nil {
 		return nil, exception
 	}
-
-	shelfRepository := repositories.NewShelfRepository(s.db)
 
 	now := time.Now()
 	shelfId, exception := shelfRepository.CreateOneByOwnerId(
@@ -144,6 +144,13 @@ func (s *ShelfService) SynchronizeShelves(reqDto *dtos.SynchronizeShelvesReqDto)
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
+	if len(reqDto.Body.ShelfIds) != len(reqDto.Body.PartialUpdates) {
+		return nil, exceptions.Shelf.NumberOfShelfIdsAndShelvesNotMatch()
+	}
+	if len(reqDto.Body.ShelfIds) > constants.MaxShelvesToSynchronize {
+		return nil, exceptions.Shelf.CannotSynchronizeTooManyShelves()
+	}
+
 	shelfRepository := repositories.NewShelfRepository(s.db)
 
 	var updateInputs []inputs.PartialUpdateShelfInput
@@ -154,7 +161,7 @@ func (s *ShelfService) SynchronizeShelves(reqDto *dtos.SynchronizeShelvesReqDto)
 		}
 		summary, exception := shelfRootNode.AnalysisAndGenerateSummary()
 		if exception != nil {
-			exception.Log() // the system should not run into this section, may due to malicious attack
+			exception.Log() // if it runs to this section, this means we may receive a malicious request
 			return nil, exception
 		}
 		if summary == nil {

@@ -68,7 +68,8 @@ type SaveMyMaterialByIdReqDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+			UserId       uuid.UUID // extracted from the access token of AuthMiddleware()
+			UserPublicId uuid.UUID // extracted from the AuthMiddleware()
 		},
 		struct {
 			MaterialId    uuid.UUID `json:"materialId" validate:"required"`

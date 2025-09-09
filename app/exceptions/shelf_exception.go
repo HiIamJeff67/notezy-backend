@@ -222,3 +222,29 @@ func (d *ShelfExceptionDomain) RepeatedMaterialNamesDetectedInAShelf() *Exceptio
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
+
+/* ============================== Handling Service Layer Errors ============================== */
+
+func (d *ShelfExceptionDomain) CannotSynchronizeTooManyShelves() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 51,
+		Prefix:         d.Prefix,
+		Reason:         "CannotSynchronizeTooManyShelves",
+		IsInternal:     false,
+		Message:        "Cannot synchronize too many shelves",
+		HTTPStatusCode: http.StatusTooManyRequests,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *ShelfExceptionDomain) NumberOfShelfIdsAndShelvesNotMatch() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 52,
+		Prefix:         d.Prefix,
+		Reason:         "NumberOfShelfIdsAndShelvesNotMatch",
+		IsInternal:     false,
+		Message:        "The number of shelf ids and shelves are not matched",
+		HTTPStatusCode: http.StatusBadRequest,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
