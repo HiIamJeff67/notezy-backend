@@ -129,6 +129,13 @@ func (b *MaterialBinder) BindSaveMyMaterialById(controllerFunc types.ControllerF
 		}
 		reqDto.ContextFields.UserId = *userId
 
+		userPublicId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_PublicId)
+		if exception != nil {
+			exception.Log().SafelyResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserPublicId = *userPublicId
+
 		// extract the fileHeader from the context field, and make sure it's only one fileHeader
 		fileHeaders, exception := contexts.GetAndConvertContextToMultipartFileHeaders(ctx)
 		if exception != nil {

@@ -48,25 +48,25 @@ func configureDevelopmentShelfRoutes() {
 			),
 		)
 		shelfRoutes.POST(
-			"/restoreMyShelf",
+			"/restoreMyShelfById",
 			shelfBinder.BindRestoreMyShelfById(
 				shelfController.RestoreMyShelfById,
 			),
 		)
 		shelfRoutes.POST(
-			"/restoreMyShelves",
+			"/restoreMyShelvesByIds",
 			shelfBinder.BindRestoreMyShelvesByIds(
 				shelfController.RestoreMyShelvesByIds,
 			),
 		)
 		shelfRoutes.DELETE(
-			"/deleteMyShelf",
+			"/deleteMyShelfById",
 			shelfBinder.BindDeleteMyShelfById(
 				shelfController.DeleteMyShelfById,
 			),
 		)
 		shelfRoutes.DELETE(
-			"/deleteMyShelves",
+			"/deleteMyShelvesByIds",
 			shelfBinder.BindDeleteMyShelvesByIds(
 				shelfController.DeleteMyShelvesByIds,
 			),

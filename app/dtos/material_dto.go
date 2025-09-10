@@ -77,9 +77,9 @@ type SaveMyMaterialByIdReqDto struct {
 			PartialUpdate PartialUpdateDto[struct {
 				// we are not allowed the user to move the material to other shelves by this API
 				Name *string `json:"name" validate:"omitnil,min=1,max=128"`
-			}]
-			ContentFile io.Reader `json:"contentFile" validate:"omitnil"` // extracted from the context of MultipartAdapter()
-			Size        *int64    `json:"size" validate:"omitnil"`
+			}] `json:"partialUpdate" validate:"required"`
+			ContentFile io.Reader `json:"contentFile" validate:"omitnil"` // from the context of MultipartAdapter()
+			Size        *int64    `json:"size" validate:"omitnil"`        // extracted from the opened contentFile
 			// Note that io.Reader is an interface, it can be nil although we declare the type of io.Reader instead of *io.Reader
 		},
 		any,

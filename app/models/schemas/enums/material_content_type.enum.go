@@ -20,8 +20,6 @@ const (
 	MaterialContentType_JPEG      MaterialContentType = "image/jpeg"
 	MaterialContentType_GIF       MaterialContentType = "image/gif"
 	MaterialContentType_SVG       MaterialContentType = "image/svg"
-	MaterialContentType_MP3       MaterialContentType = "video/mp3"
-	MaterialContentType_MP4       MaterialContentType = "video/mp4"
 
 	// custom types of Notezy
 	// some charts, cards, drawing boards, etc.
@@ -37,8 +35,6 @@ var AllMaterialContentTypes = []MaterialContentType{
 	MaterialContentType_JPEG,
 	MaterialContentType_GIF,
 	MaterialContentType_SVG,
-	MaterialContentType_MP3,
-	MaterialContentType_MP4,
 }
 
 var AllMaterialContentTypeStrings = []string{
@@ -49,8 +45,6 @@ var AllMaterialContentTypeStrings = []string{
 	string(MaterialContentType_JPEG),
 	string(MaterialContentType_GIF),
 	string(MaterialContentType_SVG),
-	string(MaterialContentType_MP3),
-	string(MaterialContentType_MP4),
 }
 
 /* ============================== Methods ============================== */

@@ -44,12 +44,24 @@ func configureDevelopmentMaterialRoutes() {
 			),
 		)
 		materialRoutes.PUT(
+			"/saveMyMaterialById",
+			materialBinder.BindSaveMyMaterialById(
+				materialController.SaveMyTextbookMaterialById,
+			),
+		)
+		materialRoutes.PUT(
+			"/moveMyMaterialById",
+			materialBinder.BindMoveMyMaterialById(
+				materialController.MoveMyTextMaterialById,
+			),
+		)
+		materialRoutes.PATCH(
 			"/restoreMyMaterialById",
 			materialBinder.BindRestoreMyMaterialById(
 				materialController.RestoreMyMaterialById,
 			),
 		)
-		materialRoutes.PUT(
+		materialRoutes.PATCH(
 			"/restoreMyMaterialsByIds",
 			materialBinder.BindRestoreMyMaterialsByIds(
 				materialController.RestoreMyMaterialsByIds,

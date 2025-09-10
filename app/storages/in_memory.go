@@ -10,7 +10,7 @@ import (
 	"time"
 
 	exceptions "notezy-backend/app/exceptions"
-	"notezy-backend/app/util"
+	util "notezy-backend/app/util"
 	constants "notezy-backend/shared/constants"
 )
 
