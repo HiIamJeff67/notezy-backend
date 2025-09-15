@@ -1,7 +1,7 @@
 type Query {
   searchUsers(input: SearchUserInput!): SearchUserConnection!
   searchThemes(input: SearchThemeInput!): SearchThemeConnection!
-  searchShelves(input: SearchShelfInput!): SearchShelfConnection!
+  searchRootShelves(input: SearchRootShelfInput!): SearchRootShelfConnection!
 }
 
 # type Mutation {}

@@ -12,28 +12,28 @@ import (
 
 /* ============================== Interface & Instance ============================== */
 
-type ShelfBinderInterface interface {
-	BindGetMyShelfById(controllerFunc types.ControllerFunc[*dtos.GetMyShelfByIdReqDto]) gin.HandlerFunc
-	BindSearchRecentShelves(controllerFunc types.ControllerFunc[*dtos.SearchRecentShelvesReqDto]) gin.HandlerFunc
-	BindCreateShelf(controllerFunc types.ControllerFunc[*dtos.CreateShelfReqDto]) gin.HandlerFunc
-	BindSynchronizeShelves(controllerFunc types.ControllerFunc[*dtos.SynchronizeShelvesReqDto]) gin.HandlerFunc
-	BindRestoreMyShelfById(controllerFunc types.ControllerFunc[*dtos.RestoreMyShelfByIdReqDto]) gin.HandlerFunc
-	BindRestoreMyShelvesByIds(controllerFunc types.ControllerFunc[*dtos.RestoreMyShelvesByIdsReqDto]) gin.HandlerFunc
-	BindDeleteMyShelfById(controllerFunc types.ControllerFunc[*dtos.DeleteMyShelfByIdReqDto]) gin.HandlerFunc
-	BindDeleteMyShelvesByIds(controllerFunc types.ControllerFunc[*dtos.DeleteMyShelvesByIdsReqDto]) gin.HandlerFunc
+type SubShelfBinderInterface interface {
+	BindGetMySubShelfById(controllerFunc types.ControllerFunc[*dtos.GetMySubShelfByIdReqDto]) gin.HandlerFunc
+	BindGetAllSubShelvesByRootShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllSubShelvesByRootShelfIdReqDto]) gin.HandlerFunc
+	BindCreateSubShelfByRootShelfId(controllerFunc types.ControllerFunc[*dtos.CreateSubShelfByRootShelfIdReqDto]) gin.HandlerFunc
+	BindRenameMySubShelfById(controllerFunc types.ControllerFunc[*dtos.RenameMySubShelfByIdReqDto]) gin.HandlerFunc
+	BindMoveMySubShelf(controllerFunc types.ControllerFunc[*dtos.MoveMySubShelfReqDto]) gin.HandlerFunc
+	BindMoveMySubShelves(controllerFunc types.ControllerFunc[*dtos.MoveMySubShelvesReqDto]) gin.HandlerFunc
+	BindDeleteMySubShelfById(controllerFunc types.ControllerFunc[*dtos.DeleteMySubShelfByIdReqDto]) gin.HandlerFunc
+	BindDeleteMySubShelvesByIds(controllerFunc types.ControllerFunc[*dtos.DeleteMySubShelvesByIdsReqDto]) gin.HandlerFunc
 }
 
-type ShelfBinder struct{}
+type SubShelfBinder struct{}
 
-func NewShelfBinder() ShelfBinderInterface {
-	return &ShelfBinder{}
+func NewSubShelfBinder() SubShelfBinderInterface {
+	return &SubShelfBinder{}
 }
 
 /* ============================== Binder ============================== */
 
-func (b *ShelfBinder) BindGetMyShelfById(controllerFunc types.ControllerFunc[*dtos.GetMyShelfByIdReqDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindGetMySubShelfById(controllerFunc types.ControllerFunc[*dtos.GetMySubShelfByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.GetMyShelfByIdReqDto
+		var reqDto dtos.GetMySubShelfByIdReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -42,30 +42,7 @@ func (b *ShelfBinder) BindGetMyShelfById(controllerFunc types.ControllerFunc[*dt
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
-		reqDto.ContextFields.OwnerId = *userId
-
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Shelf.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
-			return
-		}
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
-func (b *ShelfBinder) BindSearchRecentShelves(controllerFunc types.ControllerFunc[*dtos.SearchRecentShelvesReqDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.SearchRecentShelvesReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.OwnerId = *userId
+		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
 			exception.Log()
@@ -77,9 +54,9 @@ func (b *ShelfBinder) BindSearchRecentShelves(controllerFunc types.ControllerFun
 	}
 }
 
-func (b *ShelfBinder) BindCreateShelf(controllerFunc types.ControllerFunc[*dtos.CreateShelfReqDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindGetAllSubShelvesByRootShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllSubShelvesByRootShelfIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.CreateShelfReqDto
+		var reqDto dtos.GetAllSubShelvesByRootShelfIdReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -88,7 +65,30 @@ func (b *ShelfBinder) BindCreateShelf(controllerFunc types.ControllerFunc[*dtos.
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
-		reqDto.ContextFields.OwnerId = *userId
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
+			exception.Log()
+			exceptions.User.InvalidInput().WithError(err).ResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *SubShelfBinder) BindCreateSubShelfByRootShelfId(controllerFunc types.ControllerFunc[*dtos.CreateSubShelfByRootShelfIdReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.CreateSubShelfByRootShelfIdReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Shelf.InvalidDto().WithError(err)
@@ -100,9 +100,9 @@ func (b *ShelfBinder) BindCreateShelf(controllerFunc types.ControllerFunc[*dtos.
 	}
 }
 
-func (b *ShelfBinder) BindSynchronizeShelves(controllerFunc types.ControllerFunc[*dtos.SynchronizeShelvesReqDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindRenameMySubShelfById(controllerFunc types.ControllerFunc[*dtos.RenameMySubShelfByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.SynchronizeShelvesReqDto
+		var reqDto dtos.RenameMySubShelfByIdReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -111,7 +111,7 @@ func (b *ShelfBinder) BindSynchronizeShelves(controllerFunc types.ControllerFunc
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
-		reqDto.ContextFields.OwnerId = *userId
+		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Shelf.InvalidDto().WithError(err)
@@ -123,9 +123,9 @@ func (b *ShelfBinder) BindSynchronizeShelves(controllerFunc types.ControllerFunc
 	}
 }
 
-func (b *ShelfBinder) BindRestoreMyShelfById(controllerFunc types.ControllerFunc[*dtos.RestoreMyShelfByIdReqDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindMoveMySubShelf(controllerFunc types.ControllerFunc[*dtos.MoveMySubShelfReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.RestoreMyShelfByIdReqDto
+		var reqDto dtos.MoveMySubShelfReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -134,7 +134,7 @@ func (b *ShelfBinder) BindRestoreMyShelfById(controllerFunc types.ControllerFunc
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
-		reqDto.ContextFields.OwnerId = *userId
+		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Shelf.InvalidDto().WithError(err)
@@ -146,9 +146,9 @@ func (b *ShelfBinder) BindRestoreMyShelfById(controllerFunc types.ControllerFunc
 	}
 }
 
-func (b *ShelfBinder) BindRestoreMyShelvesByIds(controllerFunc types.ControllerFunc[*dtos.RestoreMyShelvesByIdsReqDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindMoveMySubShelves(controllerFunc types.ControllerFunc[*dtos.MoveMySubShelvesReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.RestoreMyShelvesByIdsReqDto
+		var reqDto dtos.MoveMySubShelvesReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -157,7 +157,7 @@ func (b *ShelfBinder) BindRestoreMyShelvesByIds(controllerFunc types.ControllerF
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
-		reqDto.ContextFields.OwnerId = *userId
+		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Shelf.InvalidDto().WithError(err)
@@ -169,9 +169,9 @@ func (b *ShelfBinder) BindRestoreMyShelvesByIds(controllerFunc types.ControllerF
 	}
 }
 
-func (b *ShelfBinder) BindDeleteMyShelfById(controllerFunc types.ControllerFunc[*dtos.DeleteMyShelfByIdReqDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindDeleteMySubShelfById(controllerFunc types.ControllerFunc[*dtos.DeleteMySubShelfByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.DeleteMyShelfByIdReqDto
+		var reqDto dtos.DeleteMySubShelfByIdReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -180,7 +180,7 @@ func (b *ShelfBinder) BindDeleteMyShelfById(controllerFunc types.ControllerFunc[
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
-		reqDto.ContextFields.OwnerId = *userId
+		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Shelf.InvalidDto().WithError(err)
@@ -192,9 +192,9 @@ func (b *ShelfBinder) BindDeleteMyShelfById(controllerFunc types.ControllerFunc[
 	}
 }
 
-func (b *ShelfBinder) BindDeleteMyShelvesByIds(controllerFunc types.ControllerFunc[*dtos.DeleteMyShelvesByIdsReqDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindDeleteMySubShelvesByIds(controllerFunc types.ControllerFunc[*dtos.DeleteMySubShelvesByIdsReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.DeleteMyShelvesByIdsReqDto
+		var reqDto dtos.DeleteMySubShelvesByIdsReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -203,7 +203,7 @@ func (b *ShelfBinder) BindDeleteMyShelvesByIds(controllerFunc types.ControllerFu
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
-		reqDto.ContextFields.OwnerId = *userId
+		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Shelf.InvalidDto().WithError(err)

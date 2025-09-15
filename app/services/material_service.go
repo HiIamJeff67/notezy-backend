@@ -58,8 +58,8 @@ func (s *MaterialService) GetMyMaterialById(ctx context.Context, reqDto *dtos.Ge
 	materialRepository := repositories.NewMaterialRepository(s.db)
 
 	material, exception := materialRepository.GetOneById(
-		reqDto.Body.MaterialId,
-		reqDto.Body.RootShelfId,
+		reqDto.Param.MaterialId,
+		reqDto.Param.RootShelfId,
 		reqDto.ContextFields.UserId,
 	)
 	if exception != nil {
@@ -72,16 +72,14 @@ func (s *MaterialService) GetMyMaterialById(ctx context.Context, reqDto *dtos.Ge
 	}
 
 	return &dtos.GetMyMaterialByIdResDto{
-		Id:            material.Id,
-		RootShelfId:   material.RootShelfId,
-		ParentShelfId: material.ParentShelfId,
-		Name:          material.Name,
-		Type:          material.Type,
-		DownloadURL:   downloadURL,
-		ContentType:   material.ContentType,
-		DeletedAt:     material.DeletedAt,
-		UpdatedAt:     material.UpdatedAt,
-		CreatedAt:     material.CreatedAt,
+		Id:               material.Id,
+		ParentSubShelfId: material.ParentSubShelfId,
+		Name:             material.Name,
+		Type:             material.Type,
+		DownloadURL:      downloadURL,
+		ContentType:      material.ContentType,
+		UpdatedAt:        material.UpdatedAt,
+		CreatedAt:        material.CreatedAt,
 	}, nil
 }
 
@@ -100,8 +98,8 @@ func (s *MaterialService) SearchMyMaterialsByShelfId(ctx context.Context, reqDto
 
 	query := s.db.Model(&schemas.Material{}).
 		Joins("LEFT JOIN \"ShelfTable\" s ON \"MaterialTable\".root_shelf_id = s.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON s.id = uts.shelf_id").
-		Where("uts.shelf_id = ? AND uts.user_id = ? AND uts.permission IN ?",
+		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON s.id = uts.root_shelf_id").
+		Where("uts.root_shelf_id = ? AND uts.user_id = ? AND uts.permission IN ?",
 			reqDto.Body.RootShelfId,
 			reqDto.ContextFields.UserId,
 			allowedPermissions,
@@ -125,16 +123,14 @@ func (s *MaterialService) SearchMyMaterialsByShelfId(ctx context.Context, reqDto
 			return nil, exception
 		}
 		resDto = append(resDto, dtos.GetMyMaterialByIdResDto{
-			Id:            material.Id,
-			RootShelfId:   material.RootShelfId,
-			ParentShelfId: material.ParentShelfId,
-			Name:          material.Name,
-			Type:          material.Type,
-			DownloadURL:   downloadURL,
-			ContentType:   material.ContentType,
-			DeletedAt:     material.DeletedAt,
-			UpdatedAt:     material.UpdatedAt,
-			CreatedAt:     material.CreatedAt,
+			Id:               material.Id,
+			ParentSubShelfId: material.ParentSubShelfId,
+			Name:             material.Name,
+			Type:             material.Type,
+			DownloadURL:      downloadURL,
+			ContentType:      material.ContentType,
+			UpdatedAt:        material.UpdatedAt,
+			CreatedAt:        material.CreatedAt,
 		})
 	}
 

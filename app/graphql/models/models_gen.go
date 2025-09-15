@@ -25,20 +25,41 @@ type SearchEdge interface {
 	GetEncodedSearchCursor() string
 }
 
-type PrivateShelf struct {
-	ID                       uuid.UUID     `json:"id"`
-	Name                     string        `json:"name"`
-	EncodedStructure         []byte        `json:"encodedStructure"`
-	EncodedStructureByteSize int64         `json:"encodedStructureByteSize"`
-	TotalShelfNodes          int32         `json:"totalShelfNodes"`
-	TotalMaterials           int32         `json:"totalMaterials"`
-	MaxWidth                 int32         `json:"maxWidth"`
-	MaxDepth                 int32         `json:"maxDepth"`
-	LastAnalyzedAt           time.Time     `json:"lastAnalyzedAt"`
-	DeletedAt                *time.Time    `json:"deletedAt,omitempty"`
-	UpdatedAt                time.Time     `json:"updatedAt"`
-	CreatedAt                time.Time     `json:"createdAt"`
-	Owner                    []*PublicUser `json:"owner"`
+type PrivateMaterial struct {
+	ID               uuid.UUID                 `json:"id"`
+	ParentSubShelfID uuid.UUID                 `json:"parentSubShelfId"`
+	Name             string                    `json:"name"`
+	Type             enums.MaterialType        `json:"type"`
+	Size             int64                     `json:"size"`
+	ContentKey       string                    `json:"contentKey"`
+	ContentType      enums.MaterialContentType `json:"contentType"`
+	UpdatedAt        time.Time                 `json:"updatedAt"`
+	CreatedAt        time.Time                 `json:"createdAt"`
+	ParentSubShelf   *PrivateSubShelf          `json:"parentSubShelf"`
+}
+
+type PrivateRootShelf struct {
+	ID              uuid.UUID     `json:"id"`
+	Name            string        `json:"name"`
+	TotalShelfNodes int32         `json:"totalShelfNodes"`
+	TotalMaterials  int32         `json:"totalMaterials"`
+	LastAnalyzedAt  time.Time     `json:"lastAnalyzedAt"`
+	UpdatedAt       time.Time     `json:"updatedAt"`
+	CreatedAt       time.Time     `json:"createdAt"`
+	Owner           []*PublicUser `json:"owner"`
+}
+
+type PrivateSubShelf struct {
+	ID             uuid.UUID          `json:"id"`
+	Name           string             `json:"name"`
+	RootShelfID    uuid.UUID          `json:"rootShelfId"`
+	PrevSubShelfID uuid.UUID          `json:"prevSubShelfId"`
+	Path           []*string          `json:"path"`
+	UpdatedAt      time.Time          `json:"updatedAt"`
+	CreatedAt      time.Time          `json:"createdAt"`
+	RootShelf      *PrivateRootShelf  `json:"rootShelf"`
+	NextSubShelves []*PrivateSubShelf `json:"nextSubShelves"`
+	Materials      []*PrivateMaterial `json:"materials"`
 }
 
 type PublicBadge struct {
@@ -134,36 +155,36 @@ type SearchPageInfo struct {
 	EndEncodedSearchCursor   *string `json:"endEncodedSearchCursor,omitempty"`
 }
 
-type SearchShelfConnection struct {
-	SearchEdges    []*SearchShelfEdge `json:"searchEdges"`
-	SearchPageInfo *SearchPageInfo    `json:"searchPageInfo"`
-	TotalCount     int32              `json:"totalCount"`
-	SearchTime     float64            `json:"searchTime"`
+type SearchRootShelfConnection struct {
+	SearchEdges    []*SearchRootShelfEdge `json:"searchEdges"`
+	SearchPageInfo *SearchPageInfo        `json:"searchPageInfo"`
+	TotalCount     int32                  `json:"totalCount"`
+	SearchTime     float64                `json:"searchTime"`
 }
 
-func (SearchShelfConnection) IsSearchConnection()                     {}
-func (this SearchShelfConnection) GetSearchPageInfo() *SearchPageInfo { return this.SearchPageInfo }
-func (this SearchShelfConnection) GetTotalCount() int32               { return this.TotalCount }
-func (this SearchShelfConnection) GetSearchTime() float64             { return this.SearchTime }
+func (SearchRootShelfConnection) IsSearchConnection()                     {}
+func (this SearchRootShelfConnection) GetSearchPageInfo() *SearchPageInfo { return this.SearchPageInfo }
+func (this SearchRootShelfConnection) GetTotalCount() int32               { return this.TotalCount }
+func (this SearchRootShelfConnection) GetSearchTime() float64             { return this.SearchTime }
 
-type SearchShelfCursorFields struct {
+type SearchRootShelfCursorFields struct {
 	ID uuid.UUID `json:"id"`
 }
 
-type SearchShelfEdge struct {
-	EncodedSearchCursor string        `json:"encodedSearchCursor"`
-	Node                *PrivateShelf `json:"node"`
+type SearchRootShelfEdge struct {
+	EncodedSearchCursor string            `json:"encodedSearchCursor"`
+	Node                *PrivateRootShelf `json:"node"`
 }
 
-func (SearchShelfEdge) IsSearchEdge()                       {}
-func (this SearchShelfEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
+func (SearchRootShelfEdge) IsSearchEdge()                       {}
+func (this SearchRootShelfEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
 
-type SearchShelfInput struct {
-	Query     string             `json:"query"`
-	After     *string            `json:"after,omitempty"`
-	First     *int32             `json:"first,omitempty"`
-	SortBy    *SearchShelfSortBy `json:"sortBy,omitempty"`
-	SortOrder *SearchSortOrder   `json:"sortOrder,omitempty"`
+type SearchRootShelfInput struct {
+	Query     string                 `json:"query"`
+	After     *string                `json:"after,omitempty"`
+	First     *int32                 `json:"first,omitempty"`
+	SortBy    *SearchRootShelfSortBy `json:"sortBy,omitempty"`
+	SortOrder *SearchSortOrder       `json:"sortOrder,omitempty"`
 }
 
 type SearchThemeConnection struct {
@@ -370,52 +391,52 @@ func (e SearchBadgeSortBy) MarshalJSON() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-type SearchShelfSortBy string
+type SearchRootShelfSortBy string
 
 const (
-	SearchShelfSortByRelevance  SearchShelfSortBy = "RELEVANCE"
-	SearchShelfSortByName       SearchShelfSortBy = "NAME"
-	SearchShelfSortByLastUpdate SearchShelfSortBy = "LAST_UPDATE"
-	SearchShelfSortByCreatedAt  SearchShelfSortBy = "CREATED_AT"
+	SearchRootShelfSortByRelevance  SearchRootShelfSortBy = "RELEVANCE"
+	SearchRootShelfSortByName       SearchRootShelfSortBy = "NAME"
+	SearchRootShelfSortByLastUpdate SearchRootShelfSortBy = "LAST_UPDATE"
+	SearchRootShelfSortByCreatedAt  SearchRootShelfSortBy = "CREATED_AT"
 )
 
-var AllSearchShelfSortBy = []SearchShelfSortBy{
-	SearchShelfSortByRelevance,
-	SearchShelfSortByName,
-	SearchShelfSortByLastUpdate,
-	SearchShelfSortByCreatedAt,
+var AllSearchRootShelfSortBy = []SearchRootShelfSortBy{
+	SearchRootShelfSortByRelevance,
+	SearchRootShelfSortByName,
+	SearchRootShelfSortByLastUpdate,
+	SearchRootShelfSortByCreatedAt,
 }
 
-func (e SearchShelfSortBy) IsValid() bool {
+func (e SearchRootShelfSortBy) IsValid() bool {
 	switch e {
-	case SearchShelfSortByRelevance, SearchShelfSortByName, SearchShelfSortByLastUpdate, SearchShelfSortByCreatedAt:
+	case SearchRootShelfSortByRelevance, SearchRootShelfSortByName, SearchRootShelfSortByLastUpdate, SearchRootShelfSortByCreatedAt:
 		return true
 	}
 	return false
 }
 
-func (e SearchShelfSortBy) String() string {
+func (e SearchRootShelfSortBy) String() string {
 	return string(e)
 }
 
-func (e *SearchShelfSortBy) UnmarshalGQL(v any) error {
+func (e *SearchRootShelfSortBy) UnmarshalGQL(v any) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = SearchShelfSortBy(str)
+	*e = SearchRootShelfSortBy(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid SearchShelfSortBy", str)
+		return fmt.Errorf("%s is not a valid SearchRootShelfSortBy", str)
 	}
 	return nil
 }
 
-func (e SearchShelfSortBy) MarshalGQL(w io.Writer) {
+func (e SearchRootShelfSortBy) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-func (e *SearchShelfSortBy) UnmarshalJSON(b []byte) error {
+func (e *SearchRootShelfSortBy) UnmarshalJSON(b []byte) error {
 	s, err := strconv.Unquote(string(b))
 	if err != nil {
 		return err
@@ -423,7 +444,7 @@ func (e *SearchShelfSortBy) UnmarshalJSON(b []byte) error {
 	return e.UnmarshalGQL(s)
 }
 
-func (e SearchShelfSortBy) MarshalJSON() ([]byte, error) {
+func (e SearchRootShelfSortBy) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

@@ -1,0 +1,14 @@
+type PrivateMaterial {
+  id: UUID!
+  parentSubShelfId: UUID!
+  name: String!
+  type: MaterialType!
+  size: Int64!
+  contentKey: String!
+  contentType: MaterialContentType!
+  updatedAt: Time!
+  createdAt: Time!
+
+  # relations
+  parentSubShelf: PrivateSubShelf!
+}

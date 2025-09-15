@@ -1,38 +1,38 @@
 # =============== Search SortBy & Input =============== #
 
-enum SearchShelfSortBy {
+enum SearchRootShelfSortBy {
   RELEVANCE
   NAME
   LAST_UPDATE
   CREATED_AT
 }
 
-input SearchShelfInput {
+input SearchRootShelfInput {
   query: String!
   after: String
   first: Int = 10
-  sortBy: SearchShelfSortBy = RELEVANCE
+  sortBy: SearchRootShelfSortBy = RELEVANCE
   sortOrder: SearchSortOrder = DESC
 }
 
 # =============== Search Cursor Fields =============== #
 
-# type SearchShelfEnvironmentAttributes {}
+# type SearchRootShelfEnvironmentAttributes {}
 
-input SearchShelfCursorFields {
+input SearchRootShelfCursorFields {
   id: UUID!
-  # environmentAttributes: SearchShelfEnvironmentAttributes
+  # environmentAttributes: SearchRootShelfEnvironmentAttributes
 }
 
 # =============== Search Edge & Connection =============== #
 
-type SearchShelfEdge implements SearchEdge {
+type SearchRootShelfEdge implements SearchEdge {
   encodedSearchCursor: String!
-  node: PrivateShelf!
+  node: PrivateRootShelf!
 }
 
-type SearchShelfConnection implements SearchConnection {
-  searchEdges: [SearchShelfEdge!]!
+type SearchRootShelfConnection implements SearchConnection {
+  searchEdges: [SearchRootShelfEdge!]!
   searchPageInfo: SearchPageInfo!
   totalCount: Int!
   searchTime: Float!

@@ -10,9 +10,10 @@ const (
 	ValidTableName_BadgeTable          ValidTableName = "BadgeTable"
 	ValidTableName_UsersToBadgesTable  ValidTableName = "UsersToBadgesTable"
 	ValidTableName_ThemeTable          ValidTableName = "ThemeTable"
-	ValidTableName_ShelfTable          ValidTableName = "ShelfTable"
+	ValidTableName_RootShelfTable      ValidTableName = "RootShelfTable"
 	ValidTableName_UsersToShelvesTable ValidTableName = "UsersToShelvesTable"
 	ValidTableName_MaterialTable       ValidTableName = "MaterialTable"
+	ValidTableName_SubShelfTable       ValidTableName = "SubShelfTable"
 )
 
 var _validTableNames = map[string]ValidTableName{
@@ -23,9 +24,10 @@ var _validTableNames = map[string]ValidTableName{
 	"BadgeTable":          ValidTableName_BadgeTable,
 	"UsersToBadgesTable":  ValidTableName_UsersToBadgesTable,
 	"ThemeTable":          ValidTableName_ThemeTable,
-	"ShelfTable":          ValidTableName_ShelfTable,
+	"RootShelfTable":      ValidTableName_RootShelfTable,
 	"UsersToShelvesTable": ValidTableName_UsersToShelvesTable,
 	"MaterialTable":       ValidTableName_MaterialTable,
+	"SubShelfTable":       ValidTableName_SubShelfTable,
 }
 
 func (tn ValidTableName) String() string {

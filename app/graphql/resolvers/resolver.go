@@ -10,22 +10,22 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	dataloader   dataloaders.Dataloaders
-	userService  services.UserServiceInterface
-	themeService services.ThemeServiceInterface
-	shelfService services.ShelfServiceInterface
+	dataloader       dataloaders.Dataloaders
+	userService      services.UserServiceInterface
+	themeService     services.ThemeServiceInterface
+	rootShelfService services.RootShelfServiceInterface
 }
 
 func NewResolver(
 	dataloader dataloaders.Dataloaders,
 	userService services.UserServiceInterface,
 	themeService services.ThemeServiceInterface,
-	shelfService services.ShelfServiceInterface,
+	rootShelfService services.RootShelfServiceInterface,
 ) *Resolver {
 	return &Resolver{
-		dataloader:   dataloader,
-		userService:  userService,
-		themeService: themeService,
-		shelfService: shelfService,
+		dataloader:       dataloader,
+		userService:      userService,
+		themeService:     themeService,
+		rootShelfService: rootShelfService,
 	}
 }

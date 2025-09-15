@@ -47,9 +47,9 @@ func (b *MaterialBinder) BindGetMyMaterialById(controllerFunc types.ControllerFu
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Material.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
+			exception.Log()
+			exceptions.User.InvalidInput().WithError(err).ResponseWithJSON(ctx)
 			return
 		}
 

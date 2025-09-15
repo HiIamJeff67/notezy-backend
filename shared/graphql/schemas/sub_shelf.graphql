@@ -1,0 +1,14 @@
+type PrivateSubShelf {
+  id: UUID!
+  name: String!
+  rootShelfId: UUID!
+  prevSubShelfId: UUID!
+  path: [String]!
+  updatedAt: Time!
+  createdAt: Time!
+
+  # relations
+  rootShelf: PrivateRootShelf!
+  nextSubShelves: [PrivateSubShelf!]!
+  materials: [PrivateMaterial!]!
+}

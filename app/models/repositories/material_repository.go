@@ -126,7 +126,7 @@ func (r *MaterialRepository) CreateOne(
 		enums.AccessControlPermission_Admin,
 	}
 
-	shelfRepository := NewShelfRepository(r.db)
+	shelfRepository := NewRootShelfRepository(r.db)
 	hasPermission := shelfRepository.HasPermission(rootShelfId, userId, allowedPermissions)
 	if !hasPermission {
 		return nil, exceptions.Material.NoPermission("create")
@@ -171,7 +171,7 @@ func (r *MaterialRepository) UpdateOneById(
 
 	// if the root shelf id is required to be updated in the database
 	if input.Values.RootShelfId != nil && (input.SetNull == nil || !(*input.SetNull)["RootShelfId"]) {
-		shelfRepository := NewShelfRepository(r.db)
+		shelfRepository := NewRootShelfRepository(r.db)
 		// check if the user has the enough permission to the destination shelf
 		if hasPermissionOfNewShelf := shelfRepository.HasPermission(*input.Values.RootShelfId, userId, allowedPermissions); !hasPermissionOfNewShelf {
 			return nil, exceptions.Shelf.NoPermission()

@@ -19,7 +19,7 @@ import (
 type QueryResolver interface {
 	SearchUsers(ctx context.Context, input gqlmodels.SearchUserInput) (*gqlmodels.SearchUserConnection, error)
 	SearchThemes(ctx context.Context, input gqlmodels.SearchThemeInput) (*gqlmodels.SearchThemeConnection, error)
-	SearchShelves(ctx context.Context, input gqlmodels.SearchShelfInput) (*gqlmodels.SearchShelfConnection, error)
+	SearchRootShelves(ctx context.Context, input gqlmodels.SearchRootShelfInput) (*gqlmodels.SearchRootShelfConnection, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -49,26 +49,26 @@ func (ec *executionContext) field_Query___type_argsName(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Query_searchShelves_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Query_searchRootShelves_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Query_searchShelves_argsInput(ctx, rawArgs)
+	arg0, err := ec.field_Query_searchRootShelves_argsInput(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
 	args["input"] = arg0
 	return args, nil
 }
-func (ec *executionContext) field_Query_searchShelves_argsInput(
+func (ec *executionContext) field_Query_searchRootShelves_argsInput(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (gqlmodels.SearchShelfInput, error) {
+) (gqlmodels.SearchRootShelfInput, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSearchShelfInput2notezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchShelfInput(ctx, tmp)
+		return ec.unmarshalNSearchRootShelfInput2notezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchRootShelfInput(ctx, tmp)
 	}
 
-	var zeroVal gqlmodels.SearchShelfInput
+	var zeroVal gqlmodels.SearchRootShelfInput
 	return zeroVal, nil
 }
 
@@ -256,8 +256,8 @@ func (ec *executionContext) fieldContext_Query_searchThemes(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_searchShelves(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_searchShelves(ctx, field)
+func (ec *executionContext) _Query_searchRootShelves(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_searchRootShelves(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -270,7 +270,7 @@ func (ec *executionContext) _Query_searchShelves(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().SearchShelves(rctx, fc.Args["input"].(gqlmodels.SearchShelfInput))
+		return ec.resolvers.Query().SearchRootShelves(rctx, fc.Args["input"].(gqlmodels.SearchRootShelfInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -282,12 +282,12 @@ func (ec *executionContext) _Query_searchShelves(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*gqlmodels.SearchShelfConnection)
+	res := resTmp.(*gqlmodels.SearchRootShelfConnection)
 	fc.Result = res
-	return ec.marshalNSearchShelfConnection2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchShelfConnection(ctx, field.Selections, res)
+	return ec.marshalNSearchRootShelfConnection2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchRootShelfConnection(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_searchShelves(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_searchRootShelves(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -296,15 +296,15 @@ func (ec *executionContext) fieldContext_Query_searchShelves(ctx context.Context
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "searchEdges":
-				return ec.fieldContext_SearchShelfConnection_searchEdges(ctx, field)
+				return ec.fieldContext_SearchRootShelfConnection_searchEdges(ctx, field)
 			case "searchPageInfo":
-				return ec.fieldContext_SearchShelfConnection_searchPageInfo(ctx, field)
+				return ec.fieldContext_SearchRootShelfConnection_searchPageInfo(ctx, field)
 			case "totalCount":
-				return ec.fieldContext_SearchShelfConnection_totalCount(ctx, field)
+				return ec.fieldContext_SearchRootShelfConnection_totalCount(ctx, field)
 			case "searchTime":
-				return ec.fieldContext_SearchShelfConnection_searchTime(ctx, field)
+				return ec.fieldContext_SearchRootShelfConnection_searchTime(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type SearchShelfConnection", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type SearchRootShelfConnection", field.Name)
 		},
 	}
 	defer func() {
@@ -314,7 +314,7 @@ func (ec *executionContext) fieldContext_Query_searchShelves(ctx context.Context
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_searchShelves_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_searchRootShelves_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -527,7 +527,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "searchShelves":
+		case "searchRootShelves":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -536,7 +536,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_searchShelves(ctx, field)
+				res = ec._Query_searchRootShelves(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

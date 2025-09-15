@@ -19,11 +19,11 @@ type GetMyMaterialByIdReqDto struct {
 		struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
+		any,
 		struct {
 			MaterialId  uuid.UUID `json:"materialId" validate:"required"`
 			RootShelfId uuid.UUID `json:"rootShelfId" validate:"required"`
 		},
-		any,
 	]
 }
 
@@ -171,16 +171,15 @@ type DeleteMyMaterialsByIdsReqDto struct {
 /* ============================== Response DTO ============================== */
 
 type GetMyMaterialByIdResDto struct {
-	Id            uuid.UUID                 `json:"id"`
-	RootShelfId   uuid.UUID                 `json:"rootShelfId"`
-	ParentShelfId uuid.UUID                 `json:"parentShelfId"`
-	Name          string                    `json:"name"`
-	Type          enums.MaterialType        `json:"type"`
-	DownloadURL   string                    `json:"downloadURL"`
-	ContentType   enums.MaterialContentType `json:"contentType"`
-	DeletedAt     *time.Time                `json:"deletedAt"`
-	UpdatedAt     time.Time                 `json:"updatedAt"`
-	CreatedAt     time.Time                 `json:"createdAt"`
+	Id               uuid.UUID                 `json:"id"`
+	ParentSubShelfId uuid.UUID                 `json:"rootSubShelfId"`
+	Name             string                    `json:"name"`
+	Type             enums.MaterialType        `json:"type"`
+	Size             int64                     `json:"size"`
+	DownloadURL      string                    `json:"downloadURL"`
+	ContentType      enums.MaterialContentType `json:"contentType"`
+	UpdatedAt        time.Time                 `json:"updatedAt"`
+	CreatedAt        time.Time                 `json:"createdAt"`
 }
 
 type SearchMyMaterialsByShelfIdResDto []GetMyMaterialByIdResDto

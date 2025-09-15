@@ -25,7 +25,7 @@ func GraphQLHandler() gin.HandlerFunc {
 		services.NewThemeService(
 			models.NotezyDB,
 		),
-		services.NewShelfService(
+		services.NewRootShelfService(
 			models.NotezyDB,
 		),
 	)

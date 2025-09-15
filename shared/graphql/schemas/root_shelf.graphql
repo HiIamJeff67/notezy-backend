@@ -1,14 +1,9 @@
-type PrivateShelf {
+type PrivateRootShelf {
   id: UUID!
   name: String!
-  encodedStructure: Base64Bytes!
-  encodedStructureByteSize: Int64!
   totalShelfNodes: Int32!
   totalMaterials: Int32!
-  maxWidth: Int32!
-  maxDepth: Int32!
   lastAnalyzedAt: Time!
-  deletedAt: Time
   updatedAt: Time!
   createdAt: Time!
 

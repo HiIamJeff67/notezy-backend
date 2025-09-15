@@ -10,7 +10,8 @@ var MigratingTables = []any{
 	&Badge{},
 	&UsersToBadges{},
 	&Theme{},
-	&Shelf{},
+	&RootShelf{},
+	&SubShelf{},
 	&UsersToShelves{},
 	&Material{},
 }
