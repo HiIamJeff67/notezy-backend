@@ -32,8 +32,18 @@ func StartApplication() {
 	caches.DisconnectToAllRedis()
 }
 
-func MigrateDatabaseSchema(db *gorm.DB) {
-	models.MigrateToDatabase(db)
+func MigrateDatabaseSchemas(db *gorm.DB) {
+	// execute the below migrations in sequence
+
+	if !models.MigrateEnumsToDatabase(db) {
+		return
+	}
+	if !models.MigrateTablesToDatabase(db) {
+		return
+	}
+	if !models.MigrateTriggersToDatabase(db) {
+		return
+	}
 }
 
 func TrancateDatabaseTable(tableName types.ValidTableName, db *gorm.DB) {

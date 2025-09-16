@@ -16,10 +16,12 @@ type RootShelf struct {
 	TotalShelfNodes int32     `json:"totalShelfNodes" gorm:"column:total_shelf_nodes; type:integer; not null; default:1;"`
 	TotalMaterials  int32     `json:"totalMaterials" gorm:"column:total_materials; type:integer; not null; default:0;"`
 	LastAnalyzedAt  time.Time `json:"lastAnalyzedAt" gorm:"column:last_analyzed_at; type:timestamptz; not null; default:NOW();"`
+	DeletedAt       time.Time `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz;"`
 	UpdatedAt       time.Time `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt       time.Time `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 
 	// relations
+	SubShelves     []SubShelf       `json:"subShelves" gorm:"foreignKey:RootShelfId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UsersToShelves []UsersToShelves `json:"usersToShelves" gorm:"foreignKey:ShelfId; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
 

@@ -59,6 +59,18 @@ func configureDevelopmentSubShelfRoutes() {
 				subShelfController.MoveMySubShelves,
 			),
 		)
+		subShelfRoutes.PATCH(
+			"/restoreMySubShelfById",
+			subShelfBinder.BindRestoreMySubShelfById(
+				subShelfController.RestoreMySubShelfById,
+			),
+		)
+		subShelfRoutes.PATCH(
+			"/restoreMySubShelvesByIds",
+			subShelfBinder.BindRestoreMySubShelvesByIds(
+				subShelfController.RestoreMySubShelvesByIds,
+			),
+		)
 		subShelfRoutes.DELETE(
 			"/deleteMySubShelfById",
 			subShelfBinder.BindDeleteMySubShelfById(

@@ -10,7 +10,9 @@ import (
 	logs "notezy-backend/app/logs"
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
+	"notezy-backend/app/models/schemas/triggers"
 	util "notezy-backend/app/util"
+	"notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
 )
 
@@ -105,8 +107,9 @@ func TruncateTablesInDatabase(tableName types.ValidTableName, db *gorm.DB) bool 
 	return true
 }
 
-func MigrateToDatabase(db *gorm.DB) bool {
-	logs.Info("Migrating enums found in models/migration.go ...")
+func MigrateEnumsToDatabase(db *gorm.DB) bool {
+	logs.Info("Migrating enums found in models/schemas/enums/migrate.go ...")
+
 	for name, values := range enums.MigratingEnums {
 		name = strings.ToLower(name)
 
@@ -178,7 +181,14 @@ func MigrateToDatabase(db *gorm.DB) bool {
 		}
 	}
 
-	logs.Info("Migrating tables found in models/migration.go ...")
+	logs.Info("Migration of enums is done")
+
+	return true
+}
+
+func MigrateTablesToDatabase(db *gorm.DB) bool {
+	logs.Info("Migrating tables found in models/schemas/migrate.go ...")
+
 	for _, table := range schemas.MigratingTables {
 		if err := db.AutoMigrate(table); err != nil {
 			logs.FError("Failed to migrate table: %v", err)
@@ -186,7 +196,30 @@ func MigrateToDatabase(db *gorm.DB) bool {
 		}
 	}
 
-	logs.Info("Migration done")
+	logs.Info("Migration of tables is done")
+
+	return true
+}
+
+func MigrateTriggersToDatabase(db *gorm.DB) bool {
+	logs.Info("Migrating triggers found in models/schemas/triggers/migrate.go")
+
+	for _, sql := range triggers.MigratingTriggerSQLs {
+		// split the sql statements(treated as string) in every embed files by the sql seperator
+		statements := strings.Split(sql, constants.SQLSeperator)
+		for _, stmt := range statements {
+			stmt = strings.TrimSpace(stmt)
+			if stmt == "" { // skip empty string
+				continue
+			}
+			if err := db.Exec(stmt).Error; err != nil {
+				logs.FError("Failed to execute trigger SQL statement: %v", err)
+				return false
+			}
+		}
+	}
+
+	logs.Info("Migration of triggers is done")
 
 	return true
 }

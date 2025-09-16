@@ -14,8 +14,9 @@ type SubShelf struct {
 	RootShelfId    uuid.UUID   `json:"rootShelfId" gorm:"column:root_shelf_id; type:uuid; not null; uniqueIndex:sub_shelf_idx_name_root_shelf_id_path;"`
 	PrevSubShelfId *uuid.UUID  `json:"prevSubShelfId" gorm:"column:prev_sub_shelf_id; type:uuid;"`
 	Path           []uuid.UUID `json:"path" gorm:"column:path; type:uuid[]; not null; check:path_length_check,length(path) >= 0 AND length(path) <= 100; uniqueIndex:sub_shelf_idx_name_root_shelf_id_path;"`
+	DeletedAt      time.Time   `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz;"`
 	UpdatedAt      time.Time   `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
-	CreatedAt      time.Time   `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime: true;"`
+	CreatedAt      time.Time   `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 
 	// relations
 	RootShelf      RootShelf  `json:"rootShelf" gorm:"foreignKey:RootShelfId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`

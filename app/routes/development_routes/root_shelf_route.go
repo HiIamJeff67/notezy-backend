@@ -47,6 +47,18 @@ func configureDevelopmentRootShelfRoutes() {
 				rootShelfController.UpdateMyRootShelfById,
 			),
 		)
+		rootShelfRoutes.PATCH(
+			"/restoreMyRootShelfById",
+			rootShelfBinder.BindRestoreMyRootShelfById(
+				rootShelfController.RestoreMyRootShelfById,
+			),
+		)
+		rootShelfRoutes.PATCH(
+			"/restoreMyRootShelvesByIds",
+			rootShelfBinder.BindRestoreMyRootShelvesByIds(
+				rootShelfController.RestoreMyRootShelvesByIds,
+			),
+		)
 		rootShelfRoutes.DELETE(
 			"/deleteMyRootShelfById",
 			rootShelfBinder.BindDeleteMyRootShelfById(

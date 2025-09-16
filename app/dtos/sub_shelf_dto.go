@@ -106,6 +106,36 @@ type MoveMySubShelvesReqDto struct {
 	]
 }
 
+type RestoreMySubShelfByIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			SubShelfId uuid.UUID `json:"subShelfId" validate:"required"`
+		},
+		any,
+	]
+}
+
+type RestoreMySubShelvesByIdsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			SubShelfIds []uuid.UUID `json:"subShelfIds" validate:"required"`
+		},
+		any,
+	]
+}
+
 type DeleteMySubShelfByIdReqDto struct {
 	NotezyRequest[
 		struct {
@@ -163,6 +193,14 @@ type MoveMySubShelfResDto struct {
 }
 
 type MoveMySubShelvesResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type RestoreMySubShelfByIdResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type RestoreMySubShelvesByIdsResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 

@@ -26,6 +26,8 @@ type SubShelfServiceInterface interface {
 	RenameMySubShelfById(reqDto *dtos.RenameMySubShelfByIdReqDto) (*dtos.RenameMySubShelfByIdResDto, *exceptions.Exception)
 	MoveMySubShelf(reqDto *dtos.MoveMySubShelfReqDto) (*dtos.MoveMySubShelfResDto, *exceptions.Exception)
 	MoveMySubShelves(reqDto *dtos.MoveMySubShelvesReqDto) (*dtos.MoveMySubShelvesResDto, *exceptions.Exception)
+	RestoreMySubShelfById(reqDto *dtos.RestoreMySubShelfByIdReqDto) (*dtos.RestoreMySubShelfByIdResDto, *exceptions.Exception)
+	RestoreMySubShelvesByIds(reqDto *dtos.RestoreMySubShelvesByIdsReqDto) (*dtos.RestoreMySubShelvesByIdsResDto, *exceptions.Exception)
 	DeleteMySubShelfById(reqDto *dtos.DeleteMySubShelfByIdReqDto) (*dtos.DeleteMySubShelfByIdResDto, *exceptions.Exception)
 	DeleteMySubShelvesByIds(reqDto *dtos.DeleteMySubShelvesByIdsReqDto) (*dtos.DeleteMySubShelvesByIdsResDto, *exceptions.Exception)
 }
@@ -292,6 +294,44 @@ func (s *SubShelfService) MoveMySubShelves(reqDto *dtos.MoveMySubShelvesReqDto) 
 	}, nil
 }
 
+func (s *SubShelfService) RestoreMySubShelfById(reqDto *dtos.RestoreMySubShelfByIdReqDto) (
+	*dtos.RestoreMySubShelfByIdResDto, *exceptions.Exception,
+) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
+	subShelfRepository := repositories.NewSubShelfRepository(s.db)
+
+	exception := subShelfRepository.RestoreSoftDeletedOneById(reqDto.Body.SubShelfId, reqDto.ContextFields.UserId)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.RestoreMySubShelfByIdResDto{
+		UpdatedAt: time.Now(),
+	}, nil
+}
+
+func (s *SubShelfService) RestoreMySubShelvesByIds(reqDto *dtos.RestoreMySubShelvesByIdsReqDto) (
+	*dtos.RestoreMySubShelvesByIdsResDto, *exceptions.Exception,
+) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
+	subShelfRepository := repositories.NewSubShelfRepository(s.db)
+
+	exception := subShelfRepository.RestoreSoftDeletedManyByIds(reqDto.Body.SubShelfIds, reqDto.ContextFields.UserId)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.RestoreMySubShelvesByIdsResDto{
+		UpdatedAt: time.Now(),
+	}, nil
+}
+
 func (s *SubShelfService) DeleteMySubShelfById(reqDto *dtos.DeleteMySubShelfByIdReqDto) (
 	*dtos.DeleteMySubShelfByIdResDto, *exceptions.Exception,
 ) {
@@ -301,7 +341,7 @@ func (s *SubShelfService) DeleteMySubShelfById(reqDto *dtos.DeleteMySubShelfById
 
 	subShelfRepository := repositories.NewSubShelfRepository(s.db)
 
-	exception := subShelfRepository.DeleteOneById(reqDto.Body.SubShelfId, reqDto.ContextFields.UserId)
+	exception := subShelfRepository.SoftDeleteOneById(reqDto.Body.SubShelfId, reqDto.ContextFields.UserId)
 	if exception != nil {
 		return nil, exception
 	}
@@ -320,7 +360,7 @@ func (s *SubShelfService) DeleteMySubShelvesByIds(reqDto *dtos.DeleteMySubShelve
 
 	subShelfRepository := repositories.NewSubShelfRepository(s.db)
 
-	exception := subShelfRepository.DeleteManyByIds(reqDto.Body.SubShelfIds, reqDto.ContextFields.UserId)
+	exception := subShelfRepository.SoftDeleteManyByIds(reqDto.Body.SubShelfIds, reqDto.ContextFields.UserId)
 	if exception != nil {
 		return nil, exception
 	}

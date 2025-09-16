@@ -71,6 +71,36 @@ type UpdateMyRootShelfByIdReqDto struct {
 	]
 }
 
+type RestoreMyRootShelfByIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			OwnerId uuid.UUID
+		},
+		struct {
+			RootShelfId uuid.UUID `json:"rootShelfId" validate:"required"`
+		},
+		any,
+	]
+}
+
+type RestoreMyRootShelvesByIdsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			OwnerId uuid.UUID
+		},
+		struct {
+			RootShelfIds []uuid.UUID `json:"rootShelfIds" validate:"required"`
+		},
+		any,
+	]
+}
+
 type DeleteMyRootShelfByIdReqDto struct {
 	NotezyRequest[
 		struct {
@@ -122,6 +152,14 @@ type CreateRootShelfResDto struct {
 }
 
 type UpdateMyRootShelfByIdResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type RestoreMyRootShelfByIdResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type RestoreMyRootShelvesByIdsResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 

@@ -1,0 +1,10 @@
+package triggers
+
+import shelfmaterialcascadingtriggersql "notezy-backend/app/models/schemas/triggers/shelf_material_cascading_triggers"
+
+var MigratingTriggerSQLs = []string{
+	shelfmaterialcascadingtriggersql.CascadingSoftDeleteRootShelfTriggerSQL,
+	shelfmaterialcascadingtriggersql.CascadingSoftDeleteSubShelfTriggerSQL,
+	shelfmaterialcascadingtriggersql.CascadingRestoreRootShelfTriggerSQL,
+	shelfmaterialcascadingtriggersql.CascadingRestoreSubShelfTriggerSQL,
+}

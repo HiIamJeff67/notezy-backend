@@ -28,7 +28,7 @@ var migrateDatabaseCommand = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		db := models.ConnectToDatabase(models.PostgresDatabaseConfig)
 		logs.FInfo("Start the process of migrating database schema to %v.", models.PostgresDatabaseConfig.DBName)
-		app.MigrateDatabaseSchema(db)
+		app.MigrateDatabaseSchemas(db)
 		models.DisconnectToDatabase(db)
 	},
 }

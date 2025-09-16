@@ -39,19 +39,3 @@ func IsValidEnumValues[EnumValue interface {
 }](value EnumValue, validateValues []EnumValue) bool {
 	return slices.Contains(validateValues, value)
 }
-
-/* ========================= Map to Handling Migrating Enums ========================= */
-// place the enums here to migrate
-var MigratingEnums = map[string][]string{
-	new(UserRole).Name():                AllUserRoleStrings,
-	new(UserPlan).Name():                AllUserPlanStrings,
-	new(UserStatus).Name():              AllUserStatusStrings,
-	new(UserGender).Name():              AllUserGenderStrings,
-	new(Country).Name():                 AllCountryStrings,
-	new(CountryCode).Name():             AllCountryCodeStrings,
-	new(Language).Name():                AllLanguageStrings,
-	new(BadgeType).Name():               AllBadgeTypeStrings,
-	new(AccessControlPermission).Name(): AllAccessControlPermissionStrings,
-	new(MaterialType).Name():            AllMaterialTypeStrings,
-	new(MaterialContentType).Name():     AllMaterialContentTypeStrings,
-}
