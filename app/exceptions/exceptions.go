@@ -182,6 +182,7 @@ func (e *Exception) WithError(err error) *Exception {
 
 func (e *Exception) Log() *Exception {
 	if e.Error != nil {
+		logs.Alert(e)
 		logs.FError("[%d]%s: %s(%v)", e.Code, e.Reason, e.Message, e.Error.Error())
 	} else {
 		logs.FError("[%d]%s %s", e.Code, e.Reason, e.Message)

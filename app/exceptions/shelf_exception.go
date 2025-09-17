@@ -223,6 +223,18 @@ func (d *ShelfExceptionDomain) RepeatedMaterialNamesDetectedInAShelf() *Exceptio
 	}
 }
 
+func (d *ShelfExceptionDomain) InvalidPath() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 25,
+		Prefix:         d.Prefix,
+		Reason:         "InvalidPath",
+		IsInternal:     false,
+		Message:        "The given path is invalid, the relative operations are skipped",
+		HTTPStatusCode: http.StatusBadRequest,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
 /* ============================== Handling Service Layer Errors ============================== */
 
 func (d *ShelfExceptionDomain) CannotSynchronizeTooManyShelves() *Exception {

@@ -18,7 +18,7 @@ type GetMyRootShelfByIdReqDto struct {
 		},
 		any,
 		struct {
-			RootShelfId uuid.UUID `json:"rootShelfId" validate:"required"`
+			RootShelfId uuid.UUID `form:"rootShelfId" validate:"required"`
 		},
 	]
 }
@@ -134,13 +134,14 @@ type DeleteMyRootShelvesByIdsReqDto struct {
 /* ============================== Response DTO ============================== */
 
 type GetMyRootShelfByIdResDto struct {
-	Id              uuid.UUID `json:"id"`
-	Name            string    `json:"name"`
-	TotalShelfNodes int32     `json:"totalShelfNodes"`
-	TotalMaterials  int32     `json:"totalMaterials"`
-	LastAnalyzedAt  time.Time `json:"lastAnalyzedAt"`
-	UpdatedAt       time.Time `json:"updatedAt"`
-	CreatedAt       time.Time `json:"createdAt"`
+	Id              uuid.UUID  `json:"id"`
+	Name            string     `json:"name"`
+	TotalShelfNodes int32      `json:"totalShelfNodes"`
+	TotalMaterials  int32      `json:"totalMaterials"`
+	LastAnalyzedAt  time.Time  `json:"lastAnalyzedAt"`
+	DeletedAt       *time.Time `json:"deletedAt"`
+	UpdatedAt       time.Time  `json:"updatedAt"`
+	CreatedAt       time.Time  `json:"createdAt"`
 }
 
 type SearchRecentRootShelvesResDto []GetMyRootShelfByIdResDto

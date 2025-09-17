@@ -20,7 +20,7 @@ func configureDevelopmentRootShelfRoutes() {
 	rootShelfRoutes.Use(
 		middlewares.AuthMiddleware(),
 		// middlewares.UserRoleMiddleware(enums.UserRole_Normal),
-		middlewares.RateLimitMiddleware(1),
+		// middlewares.RateLimitMiddleware(1),
 	)
 	{
 		rootShelfRoutes.GET(

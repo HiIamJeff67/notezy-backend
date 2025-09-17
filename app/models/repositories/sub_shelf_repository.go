@@ -19,10 +19,10 @@ import (
 
 type SubShelfRepositoryInterface interface {
 	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission) bool
-	GetOneById(id uuid.UUID, userId uuid.UUID, preloads *[]schemas.SubShelfRelation) (*schemas.SubShelf, *exceptions.Exception)
-	GetAllByRootShelfId(rootShelfId uuid.UUID, userId uuid.UUID, preloads *[]schemas.SubShelfRelation) (*[]schemas.SubShelf, *exceptions.Exception)
 	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads *[]schemas.SubShelfRelation, allowedPermissions []enums.AccessControlPermission) (*schemas.SubShelf, *exceptions.Exception)
 	CheckPermissionAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads *[]schemas.SubShelfRelation, allowedPermissions []enums.AccessControlPermission) (*[]schemas.SubShelf, *exceptions.Exception)
+	GetOneById(id uuid.UUID, userId uuid.UUID, preloads *[]schemas.SubShelfRelation) (*schemas.SubShelf, *exceptions.Exception)
+	GetAllByRootShelfId(rootShelfId uuid.UUID, userId uuid.UUID, preloads *[]schemas.SubShelfRelation) (*[]schemas.SubShelf, *exceptions.Exception)
 	CreateOneByUserId(userId uuid.UUID, input inputs.CreateSubShelfInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateSubShelfInput) (*schemas.SubShelf, *exceptions.Exception)
 	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID) *exceptions.Exception
@@ -52,76 +52,18 @@ func (r *SubShelfRepository) HasPermission(
 	allowedPermissions []enums.AccessControlPermission,
 ) bool {
 	var count int64 = 0
+
+	subQuery := r.db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
 	result := r.db.Model(&schemas.SubShelf{}).
-		Joins("LEFT JOIN \"RootShelfTable\" rs ON \"SubShelfTable\".root_shelf_id = rs.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON rs.id = uts.root_shelf_id").
-		Where("\"SubShelfTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?", id, userId, allowedPermissions).
+		Where("id = ? AND EXISTS (?)", id, subQuery).
 		Count(&count)
 	if err := result.Error; err != nil || count == 0 {
 		return false
 	}
 
 	return true
-}
-
-func (r *SubShelfRepository) GetOneById(
-	id uuid.UUID,
-	userId uuid.UUID,
-	preloads *[]schemas.SubShelfRelation,
-) (*schemas.SubShelf, *exceptions.Exception) {
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Read,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Admin,
-	}
-
-	subShelf := schemas.SubShelf{}
-	db := r.db.Model(&schemas.SubShelf{}).
-		Joins("LEFT JOIN \"RootShelfTable\" rs ON \"SubShelfTable\".root_shelf_id = rc.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON rs.id = uts.root_shelf_id")
-	if preloads != nil {
-		for _, preload := range *preloads {
-			db = db.Preload(string(preload))
-		}
-	}
-
-	result := db.Where("\"SubShelfTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?", id, userId, allowedPermissions).
-		First(&subShelf)
-	if err := result.Error; err != nil {
-		return nil, exceptions.Shelf.FailedToCreate()
-	}
-
-	return &subShelf, nil
-}
-
-func (r *SubShelfRepository) GetAllByRootShelfId(
-	rootShelfId uuid.UUID,
-	userId uuid.UUID,
-	preloads *[]schemas.SubShelfRelation,
-) (*[]schemas.SubShelf, *exceptions.Exception) {
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Read,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Admin,
-	}
-
-	subShelves := []schemas.SubShelf{}
-	db := r.db.Model(&schemas.SubShelf{}).
-		Joins("LEFT JOIN \"RootShelfTable\" rs ON \"SubShelfTable\".root_shelf_id = rs.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON rs.id = uts.root_shelf_id")
-	if preloads != nil {
-		for _, preload := range *preloads {
-			db = db.Preload(string(preload))
-		}
-	}
-
-	result := db.Where("\"SubShelfTable\".root_shelf_id = ? AND uts.user_id = ? AND uts.permission IN ?", rootShelfId, userId, allowedPermissions).
-		Find(&subShelves)
-	if err := result.Error; err != nil {
-		return nil, exceptions.Shelf.NotFound().WithError(err)
-	}
-
-	return &subShelves, nil
 }
 
 func (r *SubShelfRepository) CheckPermissionAndGetOneById(
@@ -131,17 +73,22 @@ func (r *SubShelfRepository) CheckPermissionAndGetOneById(
 	allowedPermissions []enums.AccessControlPermission,
 ) (*schemas.SubShelf, *exceptions.Exception) {
 	subShelf := schemas.SubShelf{}
+
+	subQuery := r.db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?",
+			userId, allowedPermissions,
+		)
 	db := r.db.Model(&schemas.SubShelf{}).
-		Joins("LEFT JOIN \"RootShelfTable\" rs ON \"SubShelfTable\".root_shelf_id = rc.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON rs.id = uts.root_shelf_id")
+		Where("id = ? AND EXISTS (?)", id, subQuery)
+
 	if preloads != nil {
 		for _, preload := range *preloads {
 			db = db.Preload(string(preload))
 		}
 	}
 
-	result := db.Where("\"SubShelfTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?", id, userId, allowedPermissions).
-		First(&subShelf)
+	result := db.First(&subShelf)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Shelf.NotFound().WithError(err)
 	}
@@ -156,17 +103,70 @@ func (r *SubShelfRepository) CheckPermissionAndGetManyByIds(
 	allowedPermissions []enums.AccessControlPermission,
 ) (*[]schemas.SubShelf, *exceptions.Exception) {
 	subShelves := []schemas.SubShelf{}
+
+	subQuery := r.db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?",
+			userId, allowedPermissions,
+		)
 	db := r.db.Model(&schemas.SubShelf{}).
-		Joins("LEFT JOIN \"RootShelfTable\" rs ON \"SubShelfTable\".root_shelf_id = rc.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON rs.id = uts.root_shelf_id")
+		Where("id IN ? AND EXISTS (?)", ids, subQuery)
+
 	if preloads != nil {
 		for _, preload := range *preloads {
 			db = db.Preload(string(preload))
 		}
 	}
 
-	result := db.Where("\"SubShelfTable\".id IN ? AND uts.user_id = ? AND uts.permission IN ?", ids, userId, allowedPermissions).
-		Find(&subShelves)
+	result := db.Find(&subShelves)
+	if err := result.Error; err != nil {
+		return nil, exceptions.Shelf.NotFound().WithError(err)
+	}
+
+	return &subShelves, nil
+}
+
+func (r *SubShelfRepository) GetOneById(
+	id uuid.UUID,
+	userId uuid.UUID,
+	preloads *[]schemas.SubShelfRelation,
+) (*schemas.SubShelf, *exceptions.Exception) {
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Read,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Admin,
+	}
+
+	return r.CheckPermissionAndGetOneById(id, userId, preloads, allowedPermissions)
+}
+
+func (r *SubShelfRepository) GetAllByRootShelfId(
+	rootShelfId uuid.UUID,
+	userId uuid.UUID,
+	preloads *[]schemas.SubShelfRelation,
+) (*[]schemas.SubShelf, *exceptions.Exception) {
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Read,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Admin,
+	}
+
+	subShelves := []schemas.SubShelf{}
+
+	subQuery := r.db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?",
+			userId, allowedPermissions,
+		)
+	db := r.db.Model(&schemas.SubShelf{}).
+		Where("root_shelf_id = ? AND EXISTS (?)", rootShelfId, subQuery)
+	if preloads != nil {
+		for _, preload := range *preloads {
+			db = db.Preload(string(preload))
+		}
+	}
+
+	result := db.Find(&subShelves)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Shelf.NotFound().WithError(err)
 	}
@@ -183,17 +183,16 @@ func (r *SubShelfRepository) CreateOneByUserId(
 		enums.AccessControlPermission_Admin,
 	}
 
-	rootShelfrepository := NewRootShelfRepository(r.db)
-	if hasPermission := rootShelfrepository.HasPermission(input.RootShelfId, userId, allowedPermissions); !hasPermission {
-		return nil, exceptions.Shelf.NoPermission()
+	var newSubShelf schemas.SubShelf
+	if input.PrevSubShelfId != nil {
+		prevSubShelf, exception := r.CheckPermissionAndGetOneById(*input.PrevSubShelfId, userId, nil, allowedPermissions)
+		if exception != nil {
+			return nil, exception
+		}
+		prevSubShelf.Path = append(prevSubShelf.Path, prevSubShelf.Id)
+		newSubShelf.Path = prevSubShelf.Path
 	}
 
-	var newSubShelf schemas.SubShelf
-	if len(input.Path) == 0 {
-		newSubShelf.PrevSubShelfId = nil
-	} else {
-		newSubShelf.PrevSubShelfId = &input.Path[len(input.Path)-1]
-	}
 	if err := copier.Copy(&newSubShelf, &input); err != nil {
 		return nil, exceptions.Shelf.InvalidInput().WithError(err)
 	}
@@ -228,9 +227,7 @@ func (r *SubShelfRepository) UpdateOneById(
 	}
 
 	result := r.db.Model(&schemas.SubShelf{}).
-		Joins("LEFT JOIN \"RootShelfTable\" rs ON \"SubShelfTable\".root_shelf_id = rc.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON rs.id = uts.root_shelf_id").
-		Where("\"SubShelfTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?", id, userId, allowedPermissions).
+		Where("id = ?", id).
 		Select("*").
 		Updates(&updates)
 	if err := result.Error; err != nil {
@@ -251,10 +248,11 @@ func (r *SubShelfRepository) RestoreSoftDeletedOneById(
 		enums.AccessControlPermission_Admin,
 	}
 
+	subQuery := r.db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
 	result := r.db.Model(&schemas.SubShelf{}).
-		Joins("LEFT JOIN \"RootShelfTable\" rs ON \"SubShelfTable\".root_shelf_id = rc.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON rs.id = uts.root_shelf_id").
-		Where("\"SubShelfTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?", id, userId, allowedPermissions).
+		Where("id = ? AND EXISTS (?)", id, subQuery).
 		Select("deleted_at").
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
 	if err := result.Error; err != nil {
@@ -275,10 +273,11 @@ func (r *SubShelfRepository) RestoreSoftDeletedManyByIds(
 		enums.AccessControlPermission_Admin,
 	}
 
+	subQuery := r.db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
 	result := r.db.Model(&schemas.SubShelf{}).
-		Joins("LEFT JOIN \"RootShelfTable\" rs ON \"SubShelfTable\".root_shelf_id = rc.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON rs.id = uts.root_shelf_id").
-		Where("\"SubShelfTable\".id IN ? AND uts.user_id = ? AND uts.permission IN ?", ids, userId, allowedPermissions).
+		Where("id IN ? AND EXISTS (?)", ids, subQuery).
 		Select("deleted_at").
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
 	if err := result.Error; err != nil {
@@ -299,16 +298,17 @@ func (r *SubShelfRepository) SoftDeleteOneById(
 		enums.AccessControlPermission_Admin,
 	}
 
+	subQuery := r.db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
 	result := r.db.Model(&schemas.SubShelf{}).
-		Joins("LEFT JOIN \"RootShelfTable\" rs ON \"SubShelfTable\".root_shelf_id = rc.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON rs.id = uts.root_shelf_id").
-		Where("\"SubShelfTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?", id, userId, allowedPermissions).
+		Where("id = ? AND EXISTS (?)", id, subQuery).
 		Update("deleted_at", time.Now())
 	if err := result.Error; err != nil {
 		return exceptions.Shelf.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.Shelf.NotFound()
+		return exceptions.Shelf.NoChanges()
 	}
 
 	return nil
@@ -322,10 +322,11 @@ func (r *SubShelfRepository) SoftDeleteManyByIds(
 		enums.AccessControlPermission_Admin,
 	}
 
+	subQuery := r.db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
 	result := r.db.Model(&schemas.SubShelf{}).
-		Joins("LEFT JOIN \"RootShelfTable\" rs ON \"SubShelfTable\".root_shelf_id = rc.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON rs.id = uts.root_shelf_id").
-		Where("\"SubShelfTable\".id IN ? AND uts.user_id = ? AND uts.permission IN ?", ids, userId, allowedPermissions).
+		Where("id IN ? AND EXISTS (?)", ids, subQuery).
 		Update("deleted_at", time.Now())
 	if err := result.Error; err != nil {
 		return exceptions.Shelf.FailedToUpdate().WithError(err)
@@ -345,10 +346,11 @@ func (r *SubShelfRepository) HardDeleteOneById(
 		enums.AccessControlPermission_Admin,
 	}
 
+	subQuery := r.db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
 	result := r.db.Model(&schemas.SubShelf{}).
-		Joins("LEFT JOIN \"RootShelfTable\" rs ON \"SubShelfTable\".root_shelf_id = rc.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON rs.id = uts.root_shelf_id").
-		Where("\"SubShelfTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?", id, userId, allowedPermissions).
+		Where("id = ? AND EXISTS (?)", id, subQuery).
 		Delete(&schemas.SubShelf{})
 	if err := result.Error; err != nil {
 		return exceptions.Shelf.FailedToDelete().WithError(err)
@@ -368,10 +370,11 @@ func (r *SubShelfRepository) HardDeleteManyByIds(
 		enums.AccessControlPermission_Admin,
 	}
 
+	subQuery := r.db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
 	result := r.db.Model(&schemas.SubShelf{}).
-		Joins("LEFT JOIN \"RootShelfTable\" rs ON \"SubShelfTable\".root_shelf_id = rc.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON rs.id = uts.root_shelf_id").
-		Where("\"SubShelfTable\".id IN ? AND uts.user_id = ? AND uts.permission IN ?", ids, userId, allowedPermissions).
+		Where("id IN ? AND EXISTS (?)", ids, subQuery).
 		Delete(&schemas.SubShelf{})
 	if err := result.Error; err != nil {
 		return exceptions.Shelf.FailedToUpdate().WithError(err)

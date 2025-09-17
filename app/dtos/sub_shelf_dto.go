@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	types "notezy-backend/shared/types"
 )
 
 /* ============================== Request DTO ============================== */
@@ -47,10 +49,9 @@ type CreateSubShelfByRootShelfIdReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			RootShelfId uuid.UUID `json:"rootShelfId" validate:"required"`
-			Name        string    `json:"name" validate:"required,min=1,max=128"`
-			// PrevSubShelfId *uuid.UUID `json:"prevSubShelfId" validate:"omitnil"` // automatically set by the repository
-			Path []uuid.UUID `json:"path" validate:"required,min=0,max=100"`
+			RootShelfId    uuid.UUID  `json:"rootShelfId" validate:"required"`
+			Name           string     `json:"name" validate:"required,min=1,max=128"`
+			PrevSubShelfId *uuid.UUID `json:"prevSubShelfId" validate:"omitnil"`
 		},
 		any,
 	]
@@ -65,7 +66,7 @@ type RenameMySubShelfByIdReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			RootShelfId uuid.UUID `json:"rootShelfId" validate:"required"`
+			SubShelfId uuid.UUID `json:"subShelfId" validate:"required"`
 			PartialUpdateDto[struct {
 				Name *string `json:"name" validate:"omitnil,min=1,max=128"`
 			}]
@@ -169,16 +170,17 @@ type DeleteMySubShelvesByIdsReqDto struct {
 /* ============================== Response DTO ============================== */
 
 type GetMySubShelfByIdResDto struct {
-	Id             uuid.UUID   `json:"id"`
-	Name           string      `json:"name"`
-	RootShelfId    uuid.UUID   `json:"rootShelfId"`
-	PrevSubShelfId *uuid.UUID  `json:"prevSubShelfId"`
-	Path           []uuid.UUID `json:"path"`
-	UpdatedAt      time.Time   `json:"updatedAt"`
-	CreatedAt      time.Time   `json:"createdAt"`
+	Id             uuid.UUID       `json:"id"`
+	Name           string          `json:"name"`
+	RootShelfId    uuid.UUID       `json:"rootShelfId"`
+	PrevSubShelfId *uuid.UUID      `json:"prevSubShelfId"`
+	Path           types.UUIDArray `json:"path"`
+	DeletedAt      *time.Time      `json:"deletedAt"`
+	UpdatedAt      time.Time       `json:"updatedAt"`
+	CreatedAt      time.Time       `json:"createdAt"`
 }
 
-type GetAllSubShelvesByRootShelfIdResDto = []GetMySubShelfByIdReqDto
+type GetAllSubShelvesByRootShelfIdResDto = []GetMySubShelfByIdResDto
 
 type CreateSubShelfByRootShelfIdResDto struct {
 	CreatedAt time.Time `json:"createdAt"`

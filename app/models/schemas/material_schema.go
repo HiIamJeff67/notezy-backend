@@ -16,8 +16,8 @@ type Material struct {
 	Type             enums.MaterialType        `json:"type" gorm:"column:type; type:MaterialType; not null; default:'Notebook';"`
 	Size             int64                     `json:"size" gorm:"column:size; type:bigint; not null; default:0;"`
 	ContentKey       string                    `json:"contentKey" gorm:"column:content_key; unique; not null;"`
-	ContentType      enums.MaterialContentType `json:"contentType" gorm:"column:content_type; type:MaterialContentType; not null; default:'Text_Markdown';"`
-	DeletedAt        time.Time                 `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz;"`
+	ContentType      enums.MaterialContentType `json:"contentType" gorm:"column:content_type; type:MaterialContentType; not null; default:'text/plain';"`
+	DeletedAt        *time.Time                `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz; default:null;"`
 	UpdatedAt        time.Time                 `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt        time.Time                 `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 

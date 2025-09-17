@@ -4,9 +4,8 @@ BEGIN
     IF OLD.deleted_at IS NOT NULL AND NEW.deleted_at IS NULL THEN
         UPDATE "MaterialTable"
         SET deleted_at = NULL
-        FROM updated_sub_shelves
-        WHERE "MaterialTable".parent_sub_shelf_id = NEW.id
-        AND "MaterialTable".deleted_at = OLD.deleted_at;
+        WHERE parent_sub_shelf_id = NEW.id
+        AND deleted_at = OLD.deleted_at;
     END IF;
 
     RETURN NEW;

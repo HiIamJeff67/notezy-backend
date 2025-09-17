@@ -12,6 +12,10 @@ clear-build-db:
 clear-hotreload-db: # the same as the build version of db
 	docker exec -i notezy-db psql -U jeff -d notezy-db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 
+clear-go-cache:
+	go clean -modcache
+	go mod download
+
 test-auth-e2e:
 	docker-compose run --rm notezy-api go test ./test/e2e/auth
 

@@ -1,7 +1,10 @@
 package binders
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	contexts "notezy-backend/app/contexts"
 	dtos "notezy-backend/app/dtos"
@@ -46,11 +49,18 @@ func (b *SubShelfBinder) BindGetMySubShelfById(controllerFunc types.ControllerFu
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
-			exception.Log()
-			exceptions.User.InvalidInput().WithError(err).ResponseWithJSON(ctx)
+		// for the uuid in the parameter, we MUST extract it and parse it manually
+		subShelfIdString := ctx.Query("subShelfId")
+		if subShelfIdString == "" {
+			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("subShelfId is required")).Log().ResponseWithJSON(ctx)
 			return
 		}
+		subShelfId, err := uuid.Parse(subShelfIdString)
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithError(err).Log().ResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.SubShelfId = subShelfId
 
 		controllerFunc(ctx, &reqDto)
 	}
@@ -69,11 +79,18 @@ func (b *SubShelfBinder) BindGetAllSubShelvesByRootShelfId(controllerFunc types.
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
-			exception.Log()
-			exceptions.User.InvalidInput().WithError(err).ResponseWithJSON(ctx)
+		// for the uuid in the parameter, we MUST extract it and parse it manually
+		rootShelfIdString := ctx.Query("rootShelfId")
+		if rootShelfIdString == "" {
+			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("rootShelfId is required")).ResponseWithJSON(ctx)
 			return
 		}
+		rootShelfId, err := uuid.Parse(rootShelfIdString)
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithError(err).ResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.RootShelfId = rootShelfId
 
 		controllerFunc(ctx, &reqDto)
 	}

@@ -70,6 +70,7 @@ func (s *RootShelfService) GetMyRootShelfById(reqDto *dtos.GetMyRootShelfByIdReq
 		TotalShelfNodes: shelf.TotalShelfNodes,
 		TotalMaterials:  shelf.TotalMaterials,
 		LastAnalyzedAt:  shelf.LastAnalyzedAt,
+		DeletedAt:       shelf.DeletedAt,
 		UpdatedAt:       shelf.UpdatedAt,
 		CreatedAt:       shelf.CreatedAt,
 	}, nil
@@ -130,7 +131,7 @@ func (s *RootShelfService) UpdateMyRootShelfById(reqDto *dtos.UpdateMyRootShelfB
 
 	rootShelfRepository := repositories.NewRootShelfRepository(s.db)
 
-	exception := rootShelfRepository.DirectlyUpdateOneById(reqDto.Body.RootShelfId, reqDto.ContextFields.UserId, inputs.PartialUpdateRootShelfInput{
+	rootShelf, exception := rootShelfRepository.UpdateOneById(reqDto.Body.RootShelfId, reqDto.ContextFields.UserId, inputs.PartialUpdateRootShelfInput{
 		Values: inputs.UpdateRootShelfInput{
 			Name: reqDto.Body.Values.Name,
 		},
@@ -141,7 +142,7 @@ func (s *RootShelfService) UpdateMyRootShelfById(reqDto *dtos.UpdateMyRootShelfB
 	}
 
 	return &dtos.UpdateMyRootShelfByIdResDto{
-		UpdatedAt: time.Now(),
+		UpdatedAt: rootShelf.UpdatedAt,
 	}, nil
 }
 
@@ -305,7 +306,7 @@ func (s *RootShelfService) SearchPrivateShelves(ctx context.Context, userId uuid
 
 		searchEdges[index] = &gqlmodels.SearchRootShelfEdge{
 			EncodedSearchCursor: *encodedSearchCursor,
-			Node:                shelf.ToPrivateShelf(),
+			Node:                shelf.ToPrivateRootShelf(),
 		}
 	}
 

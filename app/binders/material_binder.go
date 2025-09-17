@@ -48,8 +48,7 @@ func (b *MaterialBinder) BindGetMyMaterialById(controllerFunc types.ControllerFu
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
-			exception.Log()
-			exceptions.User.InvalidInput().WithError(err).ResponseWithJSON(ctx)
+			exceptions.Material.InvalidInput().WithError(err).Log().ResponseWithJSON(ctx)
 			return
 		}
 
@@ -71,8 +70,7 @@ func (b *MaterialBinder) BindSearchMyMaterialsByShelfId(controllerFunc types.Con
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
-			exception.Log()
-			exceptions.User.InvalidInput().WithError(err).ResponseWithJSON(ctx)
+			exceptions.Material.InvalidInput().WithError(err).Log().ResponseWithJSON(ctx)
 			return
 		}
 

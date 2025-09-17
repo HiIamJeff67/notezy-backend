@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	pg "github.com/lib/pq"
 	"gorm.io/gorm"
 
 	dtos "notezy-backend/app/dtos"
@@ -49,7 +50,7 @@ func (s *SubShelfService) GetMySubShelfById(reqDto *dtos.GetMySubShelfByIdReqDto
 	*dtos.GetMySubShelfByIdResDto, *exceptions.Exception,
 ) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.Shelf.InvalidInput().WithError(err)
 	}
 
 	subShelfRepository := repositories.NewSubShelfRepository(s.db)
@@ -69,6 +70,7 @@ func (s *SubShelfService) GetMySubShelfById(reqDto *dtos.GetMySubShelfByIdReqDto
 		RootShelfId:    subShelf.RootShelfId,
 		PrevSubShelfId: subShelf.PrevSubShelfId,
 		Path:           subShelf.Path,
+		DeletedAt:      subShelf.DeletedAt,
 		UpdatedAt:      subShelf.UpdatedAt,
 		CreatedAt:      subShelf.CreatedAt,
 	}, nil
@@ -78,7 +80,7 @@ func (s *SubShelfService) GetAllSubShelvesByRootShelfId(reqDto *dtos.GetAllSubSh
 	*dtos.GetAllSubShelvesByRootShelfIdResDto, *exceptions.Exception,
 ) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.Shelf.InvalidInput().WithError(err)
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -88,12 +90,15 @@ func (s *SubShelfService) GetAllSubShelvesByRootShelfId(reqDto *dtos.GetAllSubSh
 	}
 
 	resDto := dtos.GetAllSubShelvesByRootShelfIdResDto{}
+
+	subQuery := s.db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?",
+			reqDto.ContextFields.UserId, allowedPermissions,
+		)
 	result := s.db.Model(&schemas.SubShelf{}).
-		Joins("LEFT JOIN \"RootShelfTable\" rs ON \"SubShelfTable\".root_shelf_id = rs.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON rs.id = uts.root_shelf_id").
-		Where("\"SubShelfTable\".root_shelf_id = ? AND uts.user_id = ? AND uts.permission IN ?",
-			reqDto.Param.RootShelfId, reqDto.ContextFields.UserId, allowedPermissions,
-		).Find(&resDto)
+		Where("root_shelf_id = ? AND EXISTS (?)", reqDto.Param.RootShelfId, subQuery).
+		Find(&resDto)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Shelf.NotFound().WithError(err)
 	}
@@ -105,7 +110,7 @@ func (s *SubShelfService) CreateSubShelfByRootShelfId(reqDto *dtos.CreateSubShel
 	*dtos.CreateSubShelfByRootShelfIdResDto, *exceptions.Exception,
 ) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.Shelf.InvalidInput().WithError(err)
 	}
 
 	subShelfRepository := repositories.NewSubShelfRepository(s.db)
@@ -113,9 +118,9 @@ func (s *SubShelfService) CreateSubShelfByRootShelfId(reqDto *dtos.CreateSubShel
 	_, exception := subShelfRepository.CreateOneByUserId(
 		reqDto.ContextFields.UserId,
 		inputs.CreateSubShelfInput{
-			Name:        reqDto.Body.Name,
-			RootShelfId: reqDto.Body.RootShelfId,
-			Path:        reqDto.Body.Path,
+			Name:           reqDto.Body.Name,
+			RootShelfId:    reqDto.Body.RootShelfId,
+			PrevSubShelfId: reqDto.Body.PrevSubShelfId,
 		},
 	)
 	if exception != nil {
@@ -131,13 +136,13 @@ func (s *SubShelfService) RenameMySubShelfById(reqDto *dtos.RenameMySubShelfById
 	*dtos.RenameMySubShelfByIdResDto, *exceptions.Exception,
 ) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.Shelf.InvalidInput().WithError(err)
 	}
 
 	subShelfRepository := repositories.NewSubShelfRepository(s.db)
 
 	subShelf, exception := subShelfRepository.UpdateOneById(
-		reqDto.Body.RootShelfId,
+		reqDto.Body.SubShelfId,
 		reqDto.ContextFields.UserId,
 		inputs.PartialUpdateSubShelfInput{
 			Values: inputs.UpdateSubShelfInput{
@@ -159,7 +164,11 @@ func (s *SubShelfService) MoveMySubShelf(reqDto *dtos.MoveMySubShelfReqDto) (
 	*dtos.MoveMySubShelfResDto, *exceptions.Exception,
 ) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.Shelf.InvalidInput().WithError(err)
+	}
+
+	if reqDto.Body.SourceSubShelfId == reqDto.Body.DestinationSubShelfId {
+		return nil, exceptions.Shelf.NoChanges()
 	}
 
 	subShelfRepository := repositories.NewSubShelfRepository(s.db)
@@ -206,14 +215,12 @@ func (s *SubShelfService) MoveMySubShelf(reqDto *dtos.MoveMySubShelfReqDto) (
 	}
 
 	to.Path = append(to.Path, to.Id)
-	update := schemas.SubShelf{
-		RootShelfId:    to.RootShelfId,
-		PrevSubShelfId: &reqDto.Body.DestinationSubShelfId,
-		Path:           to.Path,
-	}
-	result := s.db.Model(&schemas.SubShelf{}).
-		Where("id = ?", reqDto.Body.SourceSubShelfId).
-		Updates(&update)
+	result := s.db.Exec(`
+        UPDATE "SubShelfTable" 
+        SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW() 
+        WHERE id = ?`,
+		to.RootShelfId, reqDto.Body.DestinationSubShelfId, pg.Array(to.Path), reqDto.Body.SourceSubShelfId,
+	)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
 	}
@@ -227,7 +234,7 @@ func (s *SubShelfService) MoveMySubShelves(reqDto *dtos.MoveMySubShelvesReqDto) 
 	*dtos.MoveMySubShelvesResDto, *exceptions.Exception,
 ) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.Shelf.InvalidInput().WithError(err)
 	}
 
 	subShelfRepository := repositories.NewSubShelfRepository(s.db)
@@ -255,36 +262,50 @@ func (s *SubShelfService) MoveMySubShelves(reqDto *dtos.MoveMySubShelvesReqDto) 
 	if exception != nil {
 		return nil, exception
 	}
+	if to.Path == nil {
+		to.Path = []uuid.UUID{}
+	}
 
 	sourceSubShelfIdMap := make(map[uuid.UUID]bool, 0)
 	for _, from := range *froms {
 		if len(from.Path)+len(to.Path) > constants.MaxShelfTreeDepth {
-			return nil, exceptions.Shelf.MaximumDepthExceeded(
+			exceptions.Shelf.MaximumDepthExceeded(
 				int32(len(from.Path)+len(to.Path)),
 				constants.MaxShelfTreeDepth,
-			)
+			).Log()
+			// sourceSubShelfIdMap[from.Id] = false
+		} else if from.Id == to.Id {
+			exceptions.Shelf.InsertParentIntoItsChildren(to.Id, from.Id).Log()
+			// sourceSubShelfIdMap[from.Id] = false
+		} else {
+			sourceSubShelfIdMap[from.Id] = true
 		}
-		sourceSubShelfIdMap[from.Id] = true
 	}
 
 	for _, parent := range to.Path {
 		if sourceSubShelfIdMap[parent] {
-			return nil, exceptions.Shelf.InsertParentIntoItsChildren(
+			exceptions.Shelf.InsertParentIntoItsChildren(
 				reqDto.Body.DestinationSubShelfId,
 				parent,
-			)
+			).Log()
+			sourceSubShelfIdMap[parent] = false // has to invalid the sub shelf
+		}
+	}
+
+	validSourceSubShelfIds := []uuid.UUID{}
+	for sourceSubShelfId, exist := range sourceSubShelfIdMap {
+		if exist {
+			validSourceSubShelfIds = append(validSourceSubShelfIds, sourceSubShelfId)
 		}
 	}
 
 	to.Path = append(to.Path, to.Id)
-	update := schemas.SubShelf{
-		RootShelfId:    to.RootShelfId,
-		PrevSubShelfId: &reqDto.Body.DestinationSubShelfId,
-		Path:           to.Path,
-	}
-	result := s.db.Model(&schemas.SubShelf{}).
-		Where("id IN ?", reqDto.Body.SourceSubShelfIds).
-		Updates(&update)
+	result := s.db.Exec(`
+        UPDATE "SubShelfTable" 
+        SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW() 
+        WHERE id IN ?`,
+		to.RootShelfId, reqDto.Body.DestinationSubShelfId, pg.Array(to.Path), validSourceSubShelfIds,
+	)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
 	}
@@ -298,7 +319,7 @@ func (s *SubShelfService) RestoreMySubShelfById(reqDto *dtos.RestoreMySubShelfBy
 	*dtos.RestoreMySubShelfByIdResDto, *exceptions.Exception,
 ) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.Shelf.InvalidInput().WithError(err)
 	}
 
 	subShelfRepository := repositories.NewSubShelfRepository(s.db)
@@ -317,7 +338,7 @@ func (s *SubShelfService) RestoreMySubShelvesByIds(reqDto *dtos.RestoreMySubShel
 	*dtos.RestoreMySubShelvesByIdsResDto, *exceptions.Exception,
 ) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.Shelf.InvalidInput().WithError(err)
 	}
 
 	subShelfRepository := repositories.NewSubShelfRepository(s.db)
@@ -336,7 +357,7 @@ func (s *SubShelfService) DeleteMySubShelfById(reqDto *dtos.DeleteMySubShelfById
 	*dtos.DeleteMySubShelfByIdResDto, *exceptions.Exception,
 ) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.Shelf.InvalidInput().WithError(err)
 	}
 
 	subShelfRepository := repositories.NewSubShelfRepository(s.db)
@@ -355,7 +376,7 @@ func (s *SubShelfService) DeleteMySubShelvesByIds(reqDto *dtos.DeleteMySubShelve
 	*dtos.DeleteMySubShelvesByIdsResDto, *exceptions.Exception,
 ) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.Shelf.InvalidInput().WithError(err)
 	}
 
 	subShelfRepository := repositories.NewSubShelfRepository(s.db)

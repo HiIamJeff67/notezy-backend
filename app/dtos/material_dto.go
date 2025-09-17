@@ -178,6 +178,7 @@ type GetMyMaterialByIdResDto struct {
 	Size             int64                     `json:"size"`
 	DownloadURL      string                    `json:"downloadURL"`
 	ContentType      enums.MaterialContentType `json:"contentType"`
+	DeletedAt        *time.Time                `json:"deletedAt"`
 	UpdatedAt        time.Time                 `json:"updatedAt"`
 	CreatedAt        time.Time                 `json:"createdAt"`
 }

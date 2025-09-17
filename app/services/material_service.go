@@ -78,6 +78,7 @@ func (s *MaterialService) GetMyMaterialById(ctx context.Context, reqDto *dtos.Ge
 		Type:             material.Type,
 		DownloadURL:      downloadURL,
 		ContentType:      material.ContentType,
+		DeletedAt:        material.DeletedAt,
 		UpdatedAt:        material.UpdatedAt,
 		CreatedAt:        material.CreatedAt,
 	}, nil
