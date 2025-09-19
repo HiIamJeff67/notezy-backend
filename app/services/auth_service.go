@@ -521,11 +521,11 @@ func (s *AuthService) ForgetPassword(reqDto *dtos.ForgetPasswordReqDto) (*dtos.F
 	var exception *exceptions.Exception = nil
 	var preloads = []schemas.UserRelation{schemas.UserRelation_UserAccount, schemas.UserRelation_UserInfo, schemas.UserRelation_UserSetting}
 	if util.IsEmailString(reqDto.Body.Account) { // if the account field contains email
-		if user, exception = userRepository.GetOneByEmail(reqDto.Body.Account, &preloads); exception != nil {
+		if user, exception = userRepository.GetOneByEmail(reqDto.Body.Account, preloads); exception != nil {
 			return nil, exception
 		}
 	} else if util.IsAlphaAndNumberString(reqDto.Body.Account) { // if the account field contains user name
-		if user, exception = userRepository.GetOneByName(reqDto.Body.Account, &preloads); exception != nil {
+		if user, exception = userRepository.GetOneByName(reqDto.Body.Account, preloads); exception != nil {
 			return nil, exception
 		}
 	} else {

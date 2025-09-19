@@ -19,8 +19,8 @@ import (
 
 type RootShelfRepositoryInterface interface {
 	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermission []enums.AccessControlPermission) bool
-	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads *[]schemas.RootShelfRelation, allowedPermissions []enums.AccessControlPermission) (*schemas.RootShelf, *exceptions.Exception)
-	GetOneById(id uuid.UUID, userId uuid.UUID, preloads *[]schemas.RootShelfRelation) (*schemas.RootShelf, *exceptions.Exception)
+	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RootShelfRelation, allowedPermissions []enums.AccessControlPermission) (*schemas.RootShelf, *exceptions.Exception)
+	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RootShelfRelation) (*schemas.RootShelf, *exceptions.Exception)
 	CreateOneByOwnerId(ownerId uuid.UUID, input inputs.CreateRootShelfInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateRootShelfInput) (*schemas.RootShelf, *exceptions.Exception)
 	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID) *exceptions.Exception
@@ -67,7 +67,7 @@ func (r *RootShelfRepository) HasPermission(
 func (r *RootShelfRepository) CheckPermissionAndGetOneById(
 	id uuid.UUID,
 	userId uuid.UUID,
-	preloads *[]schemas.RootShelfRelation,
+	preloads []schemas.RootShelfRelation,
 	allowedPermissions []enums.AccessControlPermission,
 ) (*schemas.RootShelf, *exceptions.Exception) {
 	rootShelf := schemas.RootShelf{}
@@ -78,8 +78,8 @@ func (r *RootShelfRepository) CheckPermissionAndGetOneById(
 	db := r.db.Model(&schemas.RootShelf{}).
 		Where("\"RootShelfTable\".id = ? AND EXISTS (?)", id, subQuery)
 
-	if preloads != nil {
-		for _, preload := range *preloads {
+	if len(preloads) > 0 {
+		for _, preload := range preloads {
 			db = db.Preload(string(preload))
 		}
 	}
@@ -95,7 +95,7 @@ func (r *RootShelfRepository) CheckPermissionAndGetOneById(
 func (r *RootShelfRepository) GetOneById(
 	id uuid.UUID,
 	userId uuid.UUID,
-	preloads *[]schemas.RootShelfRelation,
+	preloads []schemas.RootShelfRelation,
 ) (*schemas.RootShelf, *exceptions.Exception) {
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Read,

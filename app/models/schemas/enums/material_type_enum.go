@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+	"strings"
 )
 
 /* ============================== Definition ============================== */
@@ -106,7 +107,7 @@ func (mt MaterialType) IsContentTypeAllowed(contentType MaterialContentType) boo
 
 func (mt MaterialType) IsContentTypeStringAllowed(contentTypeString string) bool {
 	for _, allowedContentTypeString := range MaterialTypeToAllowedContentTypeStrings[mt] {
-		if contentTypeString == allowedContentTypeString {
+		if strings.Contains(allowedContentTypeString, contentTypeString) {
 			return true
 		}
 	}

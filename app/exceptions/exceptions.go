@@ -644,6 +644,30 @@ func (d *FileExceptionDomain) CannotCloseFiles() *Exception {
 	}
 }
 
+func (d *FileExceptionDomain) CannotReadFileBytes() *Exception {
+	return &Exception{
+		Code:           d._BaseCode + 46,
+		Prefix:         d._Prefix,
+		Reason:         "CannotReadFileBytes",
+		IsInternal:     true,
+		Message:        "Failed to read the file into bytes",
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *FileExceptionDomain) FailedToDetectContentType() *Exception {
+	return &Exception{
+		Code:           d._BaseCode + 47,
+		Prefix:         d._Prefix,
+		Reason:         "FailedToDetectContentType",
+		IsInternal:     true,
+		Message:        "Failed to detect content type, the given file may be invalid",
+		HTTPStatusCode: http.StatusUnsupportedMediaType,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
 /* ============================== Test Exception Domain Definition ============================== */
 
 type TestExceptionDomain struct {

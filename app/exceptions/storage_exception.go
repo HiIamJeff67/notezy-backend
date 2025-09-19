@@ -18,6 +18,7 @@ type StorageExceptionDomain struct {
 	Prefix   ExceptionPrefix
 	APIExceptionDomain
 	TypeExceptionDomain
+	FileExceptionDomain
 }
 
 var Storage = &StorageExceptionDomain{
@@ -28,6 +29,10 @@ var Storage = &StorageExceptionDomain{
 		_Prefix:   ExceptionPrefix_Storage,
 	},
 	TypeExceptionDomain: TypeExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_Storage,
+		_Prefix:   ExceptionPrefix_Storage,
+	},
+	FileExceptionDomain: FileExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_Storage,
 		_Prefix:   ExceptionPrefix_Storage,
 	},

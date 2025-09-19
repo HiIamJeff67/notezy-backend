@@ -1,6 +1,7 @@
 package developmentroutes
 
 import (
+	"notezy-backend/app/adapters"
 	binders "notezy-backend/app/binders"
 	controllers "notezy-backend/app/controllers"
 	middlewares "notezy-backend/app/middlewares"
@@ -44,15 +45,16 @@ func configureDevelopmentMaterialRoutes() {
 			),
 		)
 		materialRoutes.PUT(
-			"/saveMyMaterialById",
-			materialBinder.BindSaveMyMaterialById(
+			"/saveMyTextbookMaterialById",
+			adapters.MultipartAdapter(),
+			materialBinder.BindSaveMyTextbookMaterialById(
 				materialController.SaveMyTextbookMaterialById,
 			),
 		)
 		materialRoutes.PUT(
 			"/moveMyMaterialById",
 			materialBinder.BindMoveMyMaterialById(
-				materialController.MoveMyTextMaterialById,
+				materialController.MoveMyMaterialById,
 			),
 		)
 		materialRoutes.PATCH(

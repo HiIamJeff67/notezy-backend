@@ -244,7 +244,7 @@ func (s *SubShelfService) MoveMySubShelves(reqDto *dtos.MoveMySubShelvesReqDto) 
 		enums.AccessControlPermission_Admin,
 	}
 
-	froms, exception := subShelfRepository.CheckPermissionAndGetManyByIds(
+	froms, exception := subShelfRepository.CheckPermissionsAndGetManyByIds(
 		reqDto.Body.SourceSubShelfIds,
 		reqDto.ContextFields.UserId,
 		nil,
@@ -267,7 +267,7 @@ func (s *SubShelfService) MoveMySubShelves(reqDto *dtos.MoveMySubShelvesReqDto) 
 	}
 
 	sourceSubShelfIdMap := make(map[uuid.UUID]bool, 0)
-	for _, from := range *froms {
+	for _, from := range froms {
 		if len(from.Path)+len(to.Path) > constants.MaxShelfTreeDepth {
 			exceptions.Shelf.MaximumDepthExceeded(
 				int32(len(from.Path)+len(to.Path)),

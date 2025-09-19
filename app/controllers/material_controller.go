@@ -16,7 +16,7 @@ type MaterialControllerInterface interface {
 	SearchMyMaterialsByShelfId(ctx *gin.Context, reqDto *dtos.SearchMyMaterialsByShelfIdReqDto)
 	CreateTextbookMaterial(ctx *gin.Context, reqDto *dtos.CreateMaterialReqDto)
 	SaveMyTextbookMaterialById(ctx *gin.Context, reqDto *dtos.SaveMyMaterialByIdReqDto)
-	MoveMyTextMaterialById(ctx *gin.Context, reqDto *dtos.MoveMyMaterialByIdReqDto)
+	MoveMyMaterialById(ctx *gin.Context, reqDto *dtos.MoveMyMaterialByIdReqDto)
 	RestoreMyMaterialById(ctx *gin.Context, reqDto *dtos.RestoreMyMaterialByIdReqDto)
 	RestoreMyMaterialsByIds(ctx *gin.Context, reqDto *dtos.RestoreMyMaterialsByIdsReqDto)
 	DeleteMyMaterialById(ctx *gin.Context, reqDto *dtos.DeleteMyMaterialByIdReqDto)
@@ -96,7 +96,7 @@ func (c *MaterialController) SaveMyTextbookMaterialById(ctx *gin.Context, reqDto
 }
 
 // with AuthMiddleware, MultipartAdapter
-func (c *MaterialController) MoveMyTextMaterialById(ctx *gin.Context, reqDto *dtos.MoveMyMaterialByIdReqDto) {
+func (c *MaterialController) MoveMyMaterialById(ctx *gin.Context, reqDto *dtos.MoveMyMaterialByIdReqDto) {
 	resDto, exception := c.materialService.MoveMyMaterialById(ctx, reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)

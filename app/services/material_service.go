@@ -1,11 +1,8 @@
 package services
 
 import (
-	"bufio"
 	"bytes"
 	"context"
-	"io"
-	"net/http"
 	"strings"
 	"time"
 
@@ -59,7 +56,6 @@ func (s *MaterialService) GetMyMaterialById(ctx context.Context, reqDto *dtos.Ge
 
 	material, exception := materialRepository.GetOneById(
 		reqDto.Param.MaterialId,
-		reqDto.Param.RootShelfId,
 		reqDto.ContextFields.UserId,
 	)
 	if exception != nil {
@@ -78,6 +74,7 @@ func (s *MaterialService) GetMyMaterialById(ctx context.Context, reqDto *dtos.Ge
 		Type:             material.Type,
 		DownloadURL:      downloadURL,
 		ContentType:      material.ContentType,
+		ParseMediaType:   material.ParseMediaType,
 		DeletedAt:        material.DeletedAt,
 		UpdatedAt:        material.UpdatedAt,
 		CreatedAt:        material.CreatedAt,
@@ -98,10 +95,10 @@ func (s *MaterialService) SearchMyMaterialsByShelfId(ctx context.Context, reqDto
 	materials := []schemas.Material{}
 
 	query := s.db.Model(&schemas.Material{}).
-		Joins("LEFT JOIN \"ShelfTable\" s ON \"MaterialTable\".root_shelf_id = s.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON s.id = uts.root_shelf_id").
-		Where("uts.root_shelf_id = ? AND uts.user_id = ? AND uts.permission IN ?",
-			reqDto.Body.RootShelfId,
+		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"MaterialTable\".parent_sub_shelf_id = ss.id").
+		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
+		Where("ss.id = ? AND uts.user_id = ? AND uts.permission IN ?",
+			reqDto.Body.ParentSubShelfId,
 			reqDto.ContextFields.UserId,
 			allowedPermissions,
 		)
@@ -130,6 +127,8 @@ func (s *MaterialService) SearchMyMaterialsByShelfId(ctx context.Context, reqDto
 			Type:             material.Type,
 			DownloadURL:      downloadURL,
 			ContentType:      material.ContentType,
+			ParseMediaType:   material.ParseMediaType,
+			DeletedAt:        material.DeletedAt,
 			UpdatedAt:        material.UpdatedAt,
 			CreatedAt:        material.CreatedAt,
 		})
@@ -153,16 +152,16 @@ func (s *MaterialService) CreateTextbookMaterial(ctx context.Context, reqDto *dt
 	)
 	zeroSize := int64(0)
 	_, exception := materialRepository.CreateOne(
+		reqDto.Body.ParentSubShelfId,
 		reqDto.ContextFields.UserId,
-		reqDto.Body.RootShelfId,
 		inputs.CreateMaterialInput{
-			Id:            newMaterialId,
-			ParentShelfId: reqDto.Body.ParentShelfId,
-			Name:          reqDto.Body.Name,
-			Size:          zeroSize,
-			Type:          enums.MaterialType_Textbook,
-			ContentKey:    newContentKey,
-			ContentType:   enums.MaterialContentType_PlainText,
+			Id:               newMaterialId,
+			ParentSubShelfId: reqDto.Body.ParentSubShelfId,
+			Name:             reqDto.Body.Name,
+			Size:             zeroSize,
+			Type:             enums.MaterialType_Textbook,
+			ContentKey:       newContentKey,
+			ContentType:      enums.MaterialContentType_PlainText,
 		},
 	)
 	if exception != nil {
@@ -172,7 +171,7 @@ func (s *MaterialService) CreateTextbookMaterial(ctx context.Context, reqDto *dt
 
 	newContentFile := bytes.NewReader([]byte{})
 
-	object, exception := s.storage.GetObject(newContentKey, newContentFile, zeroSize)
+	object, exception := s.storage.NewObject(newContentKey, newContentFile, zeroSize)
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -202,66 +201,63 @@ func (s *MaterialService) SaveMyTextbookMaterialById(ctx context.Context, reqDto
 	tx := s.db.Begin()
 	materialRepository := repositories.NewMaterialRepository(tx)
 
-	hasContentFile := reqDto.Body.ContentFile != nil
-
+	partialUpdate := inputs.PartialUpdateMaterialInput{
+		Values: inputs.UpdateMaterialInput{
+			Name: reqDto.Body.Name,
+			// content key remain the same here
+		},
+		SetNull: nil,
+	}
+	var object *storages.Object = nil // initialize the object first to be nil
+	var contentKey = s.storage.GetKey(reqDto.ContextFields.UserPublicId.String(), reqDto.Body.MaterialId.String())
 	// check if the material content type is allowed in the material type of textbook
 	materialType := enums.MaterialType_Textbook
-	var contentType *enums.MaterialContentType = nil // initialize the content type to be nil
-	var object *storages.Object = nil                // initialize the object first to be nil
-	var contentKey = s.storage.GetKey(reqDto.ContextFields.UserPublicId.String(), reqDto.Body.MaterialId.String())
+	// check if there does exist a file in the reqDto
+	hasContentFile := reqDto.Body.ContentFile != nil
+
+	// if there does exist a file, extract the data in it and get its content type, parse media type, and actual size, etc.
 	if hasContentFile {
 		var exception *exceptions.Exception = nil // initialize the exception while checking the file
-		bufReader := bufio.NewReader(reqDto.Body.ContentFile)
-		peekBytes, err := bufReader.Peek(512) // try to peek the first 512 bytes
-		if err != nil && err != io.EOF {      // if err == io.EOF, then the total number of bytes is not greater than 512
-			tx.Rollback()
-			return nil, exceptions.Material.CannotPeekFiles()
-		}
-		actualContentType := http.DetectContentType(peekBytes)
-		if !materialType.IsContentTypeStringAllowed(actualContentType) {
-			tx.Rollback()
-			return nil, exceptions.Material.MaterialContentTypeNotAllowedInMaterialType(
-				reqDto.Body.MaterialId.String(),
-				materialType.String(),
-				actualContentType,
-				materialType.AllowedContentTypeStrings(),
-			)
-		}
-		contentType, err := enums.ConvertStringToMaterialContentType(actualContentType)
-		if contentType == nil {
-			exception := exceptions.Material.InvalidType(contentType)
-			if err != nil {
-				exception.WithError(err)
-			}
-			exception.Log()
-		}
 
 		var fileHeaderSize int64 = 0
 		if reqDto.Body.Size != nil {
 			fileHeaderSize = *reqDto.Body.Size
 		}
 
-		object, exception = s.storage.GetObject(contentKey, reqDto.Body.ContentFile, fileHeaderSize)
+		object, exception = s.storage.NewObject(contentKey, reqDto.Body.ContentFile, fileHeaderSize)
 		if exception != nil {
 			tx.Rollback()
 			return nil, exception
 		}
+
+		if !materialType.IsContentTypeStringAllowed(object.ContentType) {
+			tx.Rollback()
+			return nil, exceptions.Material.MaterialContentTypeNotAllowedInMaterialType(
+				reqDto.Body.MaterialId.String(),
+				materialType.String(),
+				object.ContentType,
+				materialType.AllowedContentTypeStrings(),
+			)
+		}
+		contentType, err := enums.ConvertStringToMaterialContentType(object.ContentType)
+		if contentType == nil {
+			exception := exceptions.Material.InvalidType(contentType)
+			if err != nil {
+				exception.WithError(err)
+			}
+			exception.Log()
+		} else {
+			partialUpdate.Values.ContentType = contentType
+			partialUpdate.Values.ParseMediaType = object.ParseMediaType
+		}
 	}
 
-	partialUpdate := inputs.PartialUpdateMaterialInput{
-		Values: inputs.UpdateMaterialInput{
-			Name: reqDto.Body.PartialUpdate.Values.Name,
-			// content key remain the same here
-			ContentType: contentType, // since content type is just a pointer, we can directly place it here
-		},
-		SetNull: reqDto.Body.PartialUpdate.SetNull,
-	}
 	if object != nil {
 		partialUpdate.Values.Size = &object.Size
 	}
 	material, exception := materialRepository.UpdateOneById(
 		reqDto.Body.MaterialId,
-		reqDto.Body.RootShelfId,
+		reqDto.Body.ParentSubShelfId,
 		reqDto.ContextFields.UserId,
 		&materialType,
 		partialUpdate,
@@ -299,13 +295,12 @@ func (s *MaterialService) MoveMyMaterialById(ctx context.Context, reqDto *dtos.M
 
 	material, exception := materialRepository.UpdateOneById(
 		reqDto.Body.MaterialId,
-		reqDto.Body.SourceRootShelfId,
+		reqDto.Body.SourceParentSubShelfId,
 		reqDto.ContextFields.UserId,
 		nil,
 		inputs.PartialUpdateMaterialInput{
 			Values: inputs.UpdateMaterialInput{
-				RootShelfId:   &reqDto.Body.DestinationRootShelfId,
-				ParentShelfId: &reqDto.Body.DestinationParentShelfId,
+				ParentSubShelfId: &reqDto.Body.DestinationParentSubShelfId,
 			},
 			SetNull: nil,
 		},
@@ -328,7 +323,6 @@ func (s *MaterialService) RestoreMyMaterialById(reqDto *dtos.RestoreMyMaterialBy
 
 	exception := materialRepository.RestoreSoftDeletedOneById(
 		reqDto.Body.MaterialId,
-		reqDto.Body.RootShelfId,
 		reqDto.ContextFields.UserId,
 	)
 	if exception != nil {
@@ -349,7 +343,6 @@ func (s *MaterialService) RestoreMyMaterialsByIds(reqDto *dtos.RestoreMyMaterial
 
 	exception := materialRepository.RestoreSoftDeletedManyByIds(
 		reqDto.Body.MaterialIds,
-		reqDto.Body.RootShelfId,
 		reqDto.ContextFields.UserId,
 	)
 	if exception != nil {
@@ -370,7 +363,6 @@ func (s *MaterialService) DeleteMyMaterialById(reqDto *dtos.DeleteMyMaterialById
 
 	exception := materialRepository.SoftDeleteOneById(
 		reqDto.Body.MaterialId,
-		reqDto.Body.RootShelfId,
 		reqDto.ContextFields.UserId,
 	)
 	if exception != nil {
@@ -391,7 +383,6 @@ func (s *MaterialService) DeleteMyMaterialsByIds(reqDto *dtos.DeleteMyMaterialsB
 
 	exception := materialRepository.SoftDeleteManyByIds(
 		reqDto.Body.MaterialIds,
-		reqDto.Body.RootShelfId,
 		reqDto.ContextFields.UserId,
 	)
 	if exception != nil {

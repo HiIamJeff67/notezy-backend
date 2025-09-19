@@ -16,8 +16,8 @@ import (
 /* ============================== Definitions ============================== */
 
 type ThemeRepositoryInterface interface {
-	GetOneById(id uuid.UUID, preloads *[]schemas.ThemeRelation) (*schemas.Theme, *exceptions.Exception)
-	GetAll() (*[]schemas.Theme, *exceptions.Exception)
+	GetOneById(id uuid.UUID, preloads []schemas.ThemeRelation) (*schemas.Theme, *exceptions.Exception)
+	GetAll() ([]schemas.Theme, *exceptions.Exception)
 	CreateOneByAuthorId(authorId uuid.UUID, input inputs.CreateThemeInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, authorId uuid.UUID, input inputs.PartialUpdateThemeInput) (*schemas.Theme, *exceptions.Exception)
 	DeleteOneById(id uuid.UUID, authorId uuid.UUID) *exceptions.Exception
@@ -36,11 +36,11 @@ func NewThemeRepository(db *gorm.DB) ThemeRepositoryInterface {
 
 /* ============================== CRUD operations ============================== */
 
-func (r *ThemeRepository) GetOneById(id uuid.UUID, preloads *[]schemas.ThemeRelation) (*schemas.Theme, *exceptions.Exception) {
+func (r *ThemeRepository) GetOneById(id uuid.UUID, preloads []schemas.ThemeRelation) (*schemas.Theme, *exceptions.Exception) {
 	theme := schemas.Theme{}
 	db := r.db.Table(schemas.Theme{}.TableName())
-	if preloads != nil {
-		for _, preload := range *preloads {
+	if len(preloads) > 0 {
+		for _, preload := range preloads {
 			db = db.Preload(string(preload))
 		}
 	}
@@ -54,7 +54,7 @@ func (r *ThemeRepository) GetOneById(id uuid.UUID, preloads *[]schemas.ThemeRela
 	return &theme, nil
 }
 
-func (r *ThemeRepository) GetAll() (*[]schemas.Theme, *exceptions.Exception) {
+func (r *ThemeRepository) GetAll() ([]schemas.Theme, *exceptions.Exception) {
 	themes := []schemas.Theme{}
 
 	result := r.db.Table(schemas.Theme{}.TableName()).
@@ -63,7 +63,7 @@ func (r *ThemeRepository) GetAll() (*[]schemas.Theme, *exceptions.Exception) {
 		return nil, exceptions.Theme.NotFound().WithError(err)
 	}
 
-	return &themes, nil
+	return themes, nil
 }
 
 func (r *ThemeRepository) CreateOneByAuthorId(authorId uuid.UUID, input inputs.CreateThemeInput) (*uuid.UUID, *exceptions.Exception) {

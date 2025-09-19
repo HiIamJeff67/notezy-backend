@@ -16,10 +16,10 @@ import (
 /* ============================== Definitions ============================== */
 
 type UserRepositoryInterface interface {
-	GetOneById(id uuid.UUID, preloads *[]schemas.UserRelation) (*schemas.User, *exceptions.Exception)
-	GetOneByName(name string, preloads *[]schemas.UserRelation) (*schemas.User, *exceptions.Exception)
-	GetOneByEmail(email string, preloads *[]schemas.UserRelation) (*schemas.User, *exceptions.Exception)
-	GetAll() (*[]schemas.User, *exceptions.Exception)
+	GetOneById(id uuid.UUID, preloads []schemas.UserRelation) (*schemas.User, *exceptions.Exception)
+	GetOneByName(name string, preloads []schemas.UserRelation) (*schemas.User, *exceptions.Exception)
+	GetOneByEmail(email string, preloads []schemas.UserRelation) (*schemas.User, *exceptions.Exception)
+	GetAll() ([]schemas.User, *exceptions.Exception)
 	CreateOne(input inputs.CreateUserInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, input inputs.PartialUpdateUserInput) (*schemas.User, *exceptions.Exception)
 	DeleteOneById(id uuid.UUID, input inputs.DeleteUserInput) *exceptions.Exception
@@ -38,11 +38,11 @@ func NewUserRepository(db *gorm.DB) UserRepositoryInterface {
 
 /* ============================== CRUD operations ============================== */
 
-func (r *UserRepository) GetOneById(id uuid.UUID, preloads *[]schemas.UserRelation) (*schemas.User, *exceptions.Exception) {
+func (r *UserRepository) GetOneById(id uuid.UUID, preloads []schemas.UserRelation) (*schemas.User, *exceptions.Exception) {
 	user := schemas.User{}
 	db := r.db.Table(schemas.User{}.TableName())
-	if preloads != nil {
-		for _, preload := range *preloads {
+	if len(preloads) > 0 {
+		for _, preload := range preloads {
 			db = db.Preload(string(preload))
 		}
 	}
@@ -56,11 +56,11 @@ func (r *UserRepository) GetOneById(id uuid.UUID, preloads *[]schemas.UserRelati
 	return &user, nil
 }
 
-func (r *UserRepository) GetOneByName(name string, preloads *[]schemas.UserRelation) (*schemas.User, *exceptions.Exception) {
+func (r *UserRepository) GetOneByName(name string, preloads []schemas.UserRelation) (*schemas.User, *exceptions.Exception) {
 	user := schemas.User{}
 	db := r.db.Table(schemas.User{}.TableName())
-	if preloads != nil {
-		for _, preload := range *preloads {
+	if len(preloads) > 0 {
+		for _, preload := range preloads {
 			db = db.Preload(string(preload))
 		}
 	}
@@ -74,11 +74,11 @@ func (r *UserRepository) GetOneByName(name string, preloads *[]schemas.UserRelat
 	return &user, nil
 }
 
-func (r *UserRepository) GetOneByEmail(email string, preloads *[]schemas.UserRelation) (*schemas.User, *exceptions.Exception) {
+func (r *UserRepository) GetOneByEmail(email string, preloads []schemas.UserRelation) (*schemas.User, *exceptions.Exception) {
 	user := schemas.User{}
 	db := r.db.Table(schemas.User{}.TableName())
-	if preloads != nil {
-		for _, preload := range *preloads {
+	if len(preloads) > 0 {
+		for _, preload := range preloads {
 			db = db.Preload(string(preload))
 		}
 	}
@@ -92,7 +92,7 @@ func (r *UserRepository) GetOneByEmail(email string, preloads *[]schemas.UserRel
 	return &user, nil
 }
 
-func (r *UserRepository) GetAll() (*[]schemas.User, *exceptions.Exception) {
+func (r *UserRepository) GetAll() ([]schemas.User, *exceptions.Exception) {
 	users := []schemas.User{}
 
 	result := r.db.Preload("UserInfo").
@@ -106,7 +106,7 @@ func (r *UserRepository) GetAll() (*[]schemas.User, *exceptions.Exception) {
 		return nil, exceptions.User.NotFound().WithError(result.Error)
 	}
 
-	return &users, nil
+	return users, nil
 }
 
 func (r *UserRepository) CreateOne(input inputs.CreateUserInput) (*uuid.UUID, *exceptions.Exception) {

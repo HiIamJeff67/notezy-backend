@@ -22,17 +22,19 @@ type PresignOptions struct {
 }
 
 type Object struct {
-	Key          string
-	Data         []byte
-	Size         int64
-	ContentType  string
-	LastModified time.Time
-	ETag         string
+	Key            string
+	Data           []byte
+	Size           int64
+	ContentType    string
+	ParseMediaType string
+	LastModified   time.Time
+	ETag           string
 }
 
 type StorageInterface interface {
+	ListAllInTerminal()
 	GetKey(ownerIndicator string, objectIndicator string) string
-	GetObject(key string, reader io.Reader, size int64) (*Object, *exceptions.Exception)
+	NewObject(key string, reader io.Reader, size int64) (*Object, *exceptions.Exception)
 	PutObjectByKey(ctx context.Context, key string, object *Object) *exceptions.Exception
 	GetObjectByKey(ctx context.Context, key string, option *GetOptions) (io.ReadCloser, *Object, *exceptions.Exception)
 	DeleteObjectByKey(ctx context.Context, key string) *exceptions.Exception

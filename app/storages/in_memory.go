@@ -6,10 +6,13 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
+	"net/http"
+	"strings"
 	"sync"
 	"time"
 
 	exceptions "notezy-backend/app/exceptions"
+	logs "notezy-backend/app/logs"
 	util "notezy-backend/app/util"
 	constants "notezy-backend/shared/constants"
 )
@@ -17,11 +20,12 @@ import (
 /* ============================== Interface & Constructor ============================== */
 
 type InMemoryObject struct {
-	Data        []byte
-	ContentType string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	ETag        string
+	Data           []byte
+	ContentType    string
+	ParseMediaType string
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	ETag           string
 }
 
 type inMemoryStorage struct {
@@ -37,7 +41,13 @@ func newInMemoryStorage() StorageInterface {
 
 var InMemoryStorage = newInMemoryStorage()
 
-/* ============================== Helper methods ============================== */
+/* ============================== Helper Functions ============================== */
+
+func (s *inMemoryStorage) ListAllInTerminal() {
+	logs.Info(s.data)
+}
+
+/* ============================== Implementations ============================== */
 
 func (s *inMemoryStorage) GetKey(ownerIndicator string, objectIndicator string) string {
 	salt := util.GetEnv("STORAGE_KEY_SALT", "")
@@ -50,7 +60,7 @@ func (s *inMemoryStorage) GenerateETag(data []byte) string {
 	return "In-Memory-ETag<" + string(int32(len(data))) + ">" + time.Now().String()
 }
 
-func (s *inMemoryStorage) GetObject(key string, reader io.Reader, size int64) (*Object, *exceptions.Exception) {
+func (s *inMemoryStorage) NewObject(key string, reader io.Reader, size int64) (*Object, *exceptions.Exception) {
 	if size > constants.MaxInMemoryStorageFileSize {
 		return nil, exceptions.Storage.ObjectTooLarge(size, constants.MaxInMemoryStorageFileSize)
 	}
@@ -66,26 +76,35 @@ func (s *inMemoryStorage) GetObject(key string, reader io.Reader, size int64) (*
 		return nil, exceptions.Storage.ObjectTooLarge(actualSize, constants.MaxInMemoryStorageFileSize)
 	}
 
+	contentTypes := strings.Split(http.DetectContentType(b), "; ")
+	if len(contentTypes) == 0 {
+		return nil, exceptions.Storage.FailedToDetectContentType()
+	}
+
 	eTag := s.GenerateETag(b)
 	now := time.Now()
 
-	return &Object{
-		Key:          key,
-		Data:         b,
-		Size:         actualSize,
-		ContentType:  "application/octec-stream",
-		LastModified: now,
-		ETag:         eTag,
-	}, nil
-}
+	object := Object{
+		Key:            key,
+		Data:           b,
+		Size:           actualSize,
+		ContentType:    contentTypes[0],
+		ParseMediaType: "charset=utf-8",
+		LastModified:   now,
+		ETag:           eTag,
+	}
+	if len(contentTypes) > 1 {
+		object.ParseMediaType = contentTypes[1]
+	}
 
-/* ============================== Implementations ============================== */
+	return &object, nil
+}
 
 func (s *inMemoryStorage) PutObjectByKey(ctx context.Context, key string, object *Object) *exceptions.Exception {
 	s.storageMutex.Lock()
 	s.data[key] = &InMemoryObject{
 		Data:        object.Data,
-		ContentType: "application/octet-stream",
+		ContentType: object.ContentType,
 		CreatedAt:   object.LastModified,
 		UpdatedAt:   object.LastModified,
 		ETag:        object.ETag,
@@ -133,5 +152,5 @@ func (s *inMemoryStorage) PresignPutObjectByKey(ctx context.Context, key string,
 
 // For Testing：return localhost URL, give the frontend ability to visit
 func (s *inMemoryStorage) PresignGetObjectByKey(ctx context.Context, key string, option *PresignOptions) (string, *exceptions.Exception) {
-	return "http://localhost:8080/storage/mock/files/" + key, nil
+	return "localhost:" + util.GetEnv("GIN_PORT", "7777") + "/" + constants.DevelopmentBaseURL + "/" + "storage/mock/files/" + key, nil
 }

@@ -12,7 +12,7 @@ import (
 /* ============================== Definitions ============================== */
 
 type BadgeRepositoryInterface interface {
-	GetOneById(id uuid.UUID, preloads *[]schemas.BadgeRelation) (*schemas.Badge, *exceptions.Exception)
+	GetOneById(id uuid.UUID, preloads []schemas.BadgeRelation) (*schemas.Badge, *exceptions.Exception)
 }
 
 type BadgeRepository struct {
@@ -28,11 +28,11 @@ func NewBadgeRepository(db *gorm.DB) BadgeRepositoryInterface {
 
 /* ============================== CRUD operations ============================== */
 
-func (r *BadgeRepository) GetOneById(id uuid.UUID, preloads *[]schemas.BadgeRelation) (*schemas.Badge, *exceptions.Exception) {
+func (r *BadgeRepository) GetOneById(id uuid.UUID, preloads []schemas.BadgeRelation) (*schemas.Badge, *exceptions.Exception) {
 	badge := schemas.Badge{}
 	db := r.db.Table(schemas.Badge{}.TableName())
-	if preloads != nil {
-		for _, preload := range *preloads {
+	if len(preloads) > 0 {
+		for _, preload := range preloads {
 			db = db.Preload(string(preload))
 		}
 	}

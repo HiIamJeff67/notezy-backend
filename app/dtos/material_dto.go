@@ -21,8 +21,7 @@ type GetMyMaterialByIdReqDto struct {
 		},
 		any,
 		struct {
-			MaterialId  uuid.UUID `json:"materialId" validate:"required"`
-			RootShelfId uuid.UUID `json:"rootShelfId" validate:"required"`
+			MaterialId uuid.UUID `json:"materialId" validate:"required"`
 		},
 	]
 }
@@ -36,7 +35,7 @@ type SearchMyMaterialsByShelfIdReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			RootShelfId uuid.UUID `json:"rootShelfId" validate:"required"`
+			ParentSubShelfId uuid.UUID `json:"parentSubShelfId" validate:"required"`
 		},
 		struct {
 			SimpleSearchDto
@@ -54,9 +53,8 @@ type CreateMaterialReqDto struct {
 			UserPublicId uuid.UUID // extracted from the AuthMiddleware()
 		},
 		struct {
-			RootShelfId   uuid.UUID `json:"rootShelfId" validate:"required"`
-			ParentShelfId uuid.UUID `json:"parentShelfId" validate:"required"`
-			Name          string    `json:"name" validate:"required,min=1,max=128"`
+			ParentSubShelfId uuid.UUID `json:"parentSubShelfId" validate:"required"`
+			Name             string    `json:"name" validate:"required,min=1,max=128"`
 		},
 		any,
 	]
@@ -72,14 +70,11 @@ type SaveMyMaterialByIdReqDto struct {
 			UserPublicId uuid.UUID // extracted from the AuthMiddleware()
 		},
 		struct {
-			MaterialId    uuid.UUID `json:"materialId" validate:"required"`
-			RootShelfId   uuid.UUID `json:"rootShelfId" validate:"required"`
-			PartialUpdate PartialUpdateDto[struct {
-				// we are not allowed the user to move the material to other shelves by this API
-				Name *string `json:"name" validate:"omitnil,min=1,max=128"`
-			}] `json:"partialUpdate" validate:"required"`
-			ContentFile io.Reader `json:"contentFile" validate:"omitnil"` // from the context of MultipartAdapter()
-			Size        *int64    `json:"size" validate:"omitnil"`        // extracted from the opened contentFile
+			MaterialId       uuid.UUID `json:"materialId" validate:"required"`
+			ParentSubShelfId uuid.UUID `json:"parentSubShelfId" validate:"required"`
+			Name             *string   `json:"name" validate:"omitnil,min=1,max=128"`
+			ContentFile      io.Reader `json:"contentFile" validate:"omitnil"` // from the context of MultipartAdapter()
+			Size             *int64    `json:"size" validate:"omitnil"`        // extracted from the opened contentFile
 			// Note that io.Reader is an interface, it can be nil although we declare the type of io.Reader instead of *io.Reader
 		},
 		any,
@@ -95,10 +90,9 @@ type MoveMyMaterialByIdReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			MaterialId               uuid.UUID `json:"materialId" validate:"required"`
-			SourceRootShelfId        uuid.UUID `json:"sourceRootShelfId" validate:"required"`
-			DestinationRootShelfId   uuid.UUID `json:"destinationRootShelfId" validate:"required"`
-			DestinationParentShelfId uuid.UUID `json:"parentShelfId" validate:"required"`
+			MaterialId                  uuid.UUID `json:"materialId" validate:"required"`
+			SourceParentSubShelfId      uuid.UUID `json:"sourceParentSubShelfId" validate:"required"`
+			DestinationParentSubShelfId uuid.UUID `json:"destinationParentSubShelfId" validate:"required"`
 		},
 		any,
 	]
@@ -113,8 +107,7 @@ type RestoreMyMaterialByIdReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			MaterialId  uuid.UUID `json:"materialId" validate:"required"`
-			RootShelfId uuid.UUID `json:"rootShelfId" validate:"required"`
+			MaterialId uuid.UUID `json:"materialId" validate:"required"`
 		},
 		any,
 	]
@@ -130,7 +123,6 @@ type RestoreMyMaterialsByIdsReqDto struct {
 		},
 		struct {
 			MaterialIds []uuid.UUID `json:"materialIds" validate:"required,min=1,max=32"`
-			RootShelfId uuid.UUID   `json:"rootShelfId" validate:"required"`
 		},
 		any,
 	]
@@ -145,8 +137,7 @@ type DeleteMyMaterialByIdReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			MaterialId  uuid.UUID `json:"materialId" validate:"required"`
-			RootShelfId uuid.UUID `json:"rootShelfId" validate:"required"`
+			MaterialId uuid.UUID `json:"materialId" validate:"required"`
 		},
 		any,
 	]
@@ -162,7 +153,6 @@ type DeleteMyMaterialsByIdsReqDto struct {
 		},
 		struct {
 			MaterialIds []uuid.UUID `json:"materialIds" validate:"required,min=1,max=32"`
-			RootShelfId uuid.UUID   `json:"rootShelfId" validate:"required"`
 		},
 		any,
 	]
@@ -172,12 +162,13 @@ type DeleteMyMaterialsByIdsReqDto struct {
 
 type GetMyMaterialByIdResDto struct {
 	Id               uuid.UUID                 `json:"id"`
-	ParentSubShelfId uuid.UUID                 `json:"rootSubShelfId"`
+	ParentSubShelfId uuid.UUID                 `json:"parentSubShelfId"`
 	Name             string                    `json:"name"`
 	Type             enums.MaterialType        `json:"type"`
 	Size             int64                     `json:"size"`
 	DownloadURL      string                    `json:"downloadURL"`
 	ContentType      enums.MaterialContentType `json:"contentType"`
+	ParseMediaType   string                    `json:"parseMediaType"`
 	DeletedAt        *time.Time                `json:"deletedAt"`
 	UpdatedAt        time.Time                 `json:"updatedAt"`
 	CreatedAt        time.Time                 `json:"createdAt"`

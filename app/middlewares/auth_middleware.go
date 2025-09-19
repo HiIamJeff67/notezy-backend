@@ -72,7 +72,10 @@ func _validateRefreshToken(refreshToken string) (*schemas.User, *exceptions.Exce
 	}
 
 	userRepository := repositories.NewUserRepository(nil)
-	user, exception := userRepository.GetOneById(userId, nil)
+	user, exception := userRepository.GetOneById(userId, []schemas.UserRelation{
+		schemas.UserRelation_UserInfo,
+		schemas.UserRelation_UserSetting,
+	})
 	if exception != nil { // if there's not such user with the parsed id
 		return nil, exception
 	}
@@ -151,8 +154,30 @@ func AuthMiddleware() gin.HandlerFunc {
 		// at this stage, make sure we update the cache of the user data
 		exception = caches.UpdateUserDataCache(_user.Id, caches.UpdateUserDataCacheDto{AccessToken: newAccessToken})
 		if exception != nil {
-			exception.Log()
-			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
+			exception.WithDetails("trying to set the new user data instead").Log()
+			newUserDataCache := caches.UserDataCache{
+				PublicId:           _user.PublicId,
+				Name:               _user.Name,
+				DisplayName:        _user.DisplayName,
+				Email:              _user.Email,
+				AccessToken:        *newAccessToken,
+				Role:               _user.Role,
+				Plan:               _user.Plan,
+				Status:             _user.Status,
+				Language:           _user.UserSetting.Language,
+				GeneralSettingCode: _user.UserSetting.GeneralSettingCode,
+				PrivacySettingCode: _user.UserSetting.PrivacySettingCode,
+				CreatedAt:          _user.CreatedAt,
+				UpdatedAt:          _user.UpdatedAt,
+			}
+			if _user.UserInfo.AvatarURL != nil {
+				newUserDataCache.AvatarURL = *_user.UserInfo.AvatarURL
+			}
+			exception = caches.SetUserDataCache(_user.Id, newUserDataCache)
+			if exception != nil {
+				ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
+				return
+			}
 		}
 
 		ctx.Set(constants.ContextFieldName_User_Id.String(), _user.Id.String())

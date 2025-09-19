@@ -1,9 +1,11 @@
 package binders
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	contexts "notezy-backend/app/contexts"
 	dtos "notezy-backend/app/dtos"
@@ -18,7 +20,7 @@ type MaterialBinderInterface interface {
 	BindGetMyMaterialById(controllerFunc types.ControllerFunc[*dtos.GetMyMaterialByIdReqDto]) gin.HandlerFunc
 	BindSearchMyMaterialsByShelfId(controllerFunc types.ControllerFunc[*dtos.SearchMyMaterialsByShelfIdReqDto]) gin.HandlerFunc
 	BindCreateTextbookMaterial(controllerFunc types.ControllerFunc[*dtos.CreateMaterialReqDto]) gin.HandlerFunc
-	BindSaveMyMaterialById(controllerFunc types.ControllerFunc[*dtos.SaveMyMaterialByIdReqDto]) gin.HandlerFunc
+	BindSaveMyTextbookMaterialById(controllerFunc types.ControllerFunc[*dtos.SaveMyMaterialByIdReqDto]) gin.HandlerFunc
 	BindMoveMyMaterialById(controllerFunc types.ControllerFunc[*dtos.MoveMyMaterialByIdReqDto]) gin.HandlerFunc
 	BindRestoreMyMaterialById(controllerFunc types.ControllerFunc[*dtos.RestoreMyMaterialByIdReqDto]) gin.HandlerFunc
 	BindRestoreMyMaterialsByIds(controllerFunc types.ControllerFunc[*dtos.RestoreMyMaterialsByIdsReqDto]) gin.HandlerFunc
@@ -47,10 +49,18 @@ func (b *MaterialBinder) BindGetMyMaterialById(controllerFunc types.ControllerFu
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
-			exceptions.Material.InvalidInput().WithError(err).Log().ResponseWithJSON(ctx)
+		// for the uuid in the parameter, we MUST extract it and parse it manually
+		materialIdString := ctx.Query("materialId")
+		if materialIdString == "" {
+			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("materialId is required")).Log().ResponseWithJSON(ctx)
 			return
 		}
+		materialId, err := uuid.Parse(materialIdString)
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithError(err).Log().ResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.MaterialId = materialId
 
 		controllerFunc(ctx, &reqDto)
 	}
@@ -114,7 +124,7 @@ func (b *MaterialBinder) BindCreateTextbookMaterial(controllerFunc types.Control
 	}
 }
 
-func (b *MaterialBinder) BindSaveMyMaterialById(controllerFunc types.ControllerFunc[*dtos.SaveMyMaterialByIdReqDto]) gin.HandlerFunc {
+func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.ControllerFunc[*dtos.SaveMyMaterialByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.SaveMyMaterialByIdReqDto
 
