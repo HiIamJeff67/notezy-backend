@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	gqlmodels "notezy-backend/app/graphql/models"
 	types "notezy-backend/shared/types"
 )
 
@@ -40,3 +41,21 @@ const (
 	SubShelfRelation_NextSubShelves SubShelfRelation = "NextSubShelves"
 	SubShelfRelation_Materials      SubShelfRelation = "Materials"
 )
+
+/* ============================== Relative Type Conversion ============================== */
+
+func (ss *SubShelf) ToPrivateSubShelf() *gqlmodels.PrivateSubShelf {
+	return &gqlmodels.PrivateSubShelf{
+		ID:             ss.Id,
+		Name:           ss.Name,
+		RootShelfID:    ss.RootShelfId,
+		PrevSubShelfID: ss.PrevSubShelfId,
+		Path:           ss.Path,
+		DeletedAt:      ss.DeletedAt,
+		UpdatedAt:      ss.UpdatedAt,
+		CreatedAt:      ss.CreatedAt,
+		RootShelf:      nil,
+		NextSubShelves: make([]*gqlmodels.PrivateSubShelf, 0),
+		Materials:      make([]*gqlmodels.PrivateMaterial, 0),
+	}
+}

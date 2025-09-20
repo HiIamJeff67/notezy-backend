@@ -13,6 +13,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/graph-gophers/dataloader/v7 v7.1.0
 	github.com/jinzhu/copier v0.4.0
+	github.com/lib/pq v1.10.9
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
 	github.com/vektah/gqlparser/v2 v2.5.30
@@ -21,7 +22,6 @@ require (
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
-	github.com/lib/pq v1.10.9
 )
 
 require (

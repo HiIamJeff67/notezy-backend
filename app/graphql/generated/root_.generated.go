@@ -44,10 +44,12 @@ type ComplexityRoot struct {
 		ContentKey       func(childComplexity int) int
 		ContentType      func(childComplexity int) int
 		CreatedAt        func(childComplexity int) int
+		DeletedAt        func(childComplexity int) int
 		ID               func(childComplexity int) int
 		Name             func(childComplexity int) int
 		ParentSubShelf   func(childComplexity int) int
 		ParentSubShelfID func(childComplexity int) int
+		ParseMediaType   func(childComplexity int) int
 		Size             func(childComplexity int) int
 		Type             func(childComplexity int) int
 		UpdatedAt        func(childComplexity int) int
@@ -55,6 +57,7 @@ type ComplexityRoot struct {
 
 	PrivateRootShelf struct {
 		CreatedAt       func(childComplexity int) int
+		DeletedAt       func(childComplexity int) int
 		ID              func(childComplexity int) int
 		LastAnalyzedAt  func(childComplexity int) int
 		Name            func(childComplexity int) int
@@ -66,6 +69,7 @@ type ComplexityRoot struct {
 
 	PrivateSubShelf struct {
 		CreatedAt      func(childComplexity int) int
+		DeletedAt      func(childComplexity int) int
 		ID             func(childComplexity int) int
 		Materials      func(childComplexity int) int
 		Name           func(childComplexity int) int
@@ -225,6 +229,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateMaterial.CreatedAt(childComplexity), true
 
+	case "PrivateMaterial.deletedAt":
+		if e.complexity.PrivateMaterial.DeletedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateMaterial.DeletedAt(childComplexity), true
+
 	case "PrivateMaterial.id":
 		if e.complexity.PrivateMaterial.ID == nil {
 			break
@@ -253,6 +264,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateMaterial.ParentSubShelfID(childComplexity), true
 
+	case "PrivateMaterial.parseMediaType":
+		if e.complexity.PrivateMaterial.ParseMediaType == nil {
+			break
+		}
+
+		return e.complexity.PrivateMaterial.ParseMediaType(childComplexity), true
+
 	case "PrivateMaterial.size":
 		if e.complexity.PrivateMaterial.Size == nil {
 			break
@@ -280,6 +298,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateRootShelf.CreatedAt(childComplexity), true
+
+	case "PrivateRootShelf.deletedAt":
+		if e.complexity.PrivateRootShelf.DeletedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateRootShelf.DeletedAt(childComplexity), true
 
 	case "PrivateRootShelf.id":
 		if e.complexity.PrivateRootShelf.ID == nil {
@@ -336,6 +361,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateSubShelf.CreatedAt(childComplexity), true
+
+	case "PrivateSubShelf.deletedAt":
+		if e.complexity.PrivateSubShelf.DeletedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateSubShelf.DeletedAt(childComplexity), true
 
 	case "PrivateSubShelf.id":
 		if e.complexity.PrivateSubShelf.ID == nil {
@@ -1132,6 +1164,8 @@ interface SearchConnection {
   size: Int64!
   contentKey: String!
   contentType: MaterialContentType!
+  parseMediaType: String!
+  deletedAt: Time
   updatedAt: Time!
   createdAt: Time!
 
@@ -1155,6 +1189,7 @@ interface SearchConnection {
   totalShelfNodes: Int32!
   totalMaterials: Int32!
   lastAnalyzedAt: Time!
+  deletedAt: Time
   updatedAt: Time!
   createdAt: Time!
 
@@ -1356,8 +1391,9 @@ type SearchUserConnection implements SearchConnection {
   id: UUID!
   name: String!
   rootShelfId: UUID!
-  prevSubShelfId: UUID!
-  path: [String]!
+  prevSubShelfId: UUID
+  path: [UUID!]!
+  deletedAt: Time
   updatedAt: Time!
   createdAt: Time!
 

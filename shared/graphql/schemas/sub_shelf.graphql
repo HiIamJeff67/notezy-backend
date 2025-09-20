@@ -2,8 +2,9 @@ type PrivateSubShelf {
   id: UUID!
   name: String!
   rootShelfId: UUID!
-  prevSubShelfId: UUID!
-  path: [String]!
+  prevSubShelfId: UUID
+  path: [UUID!]!
+  deletedAt: Time
   updatedAt: Time!
   createdAt: Time!
 

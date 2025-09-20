@@ -47,7 +47,7 @@ type CreateRootShelfReqDto struct {
 			OwnerId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			Name string `json:"name" validate:"required,max=128"`
+			Name string `json:"name" validate:"required,min=1,max=128"`
 		},
 		any,
 	]
@@ -95,7 +95,7 @@ type RestoreMyRootShelvesByIdsReqDto struct {
 			OwnerId uuid.UUID
 		},
 		struct {
-			RootShelfIds []uuid.UUID `json:"rootShelfIds" validate:"required"`
+			RootShelfIds []uuid.UUID `json:"rootShelfIds" validate:"required,min=1,max=128"`
 		},
 		any,
 	]
@@ -125,7 +125,7 @@ type DeleteMyRootShelvesByIdsReqDto struct {
 			OwnerId uuid.UUID
 		},
 		struct {
-			RootShelfIds []uuid.UUID `json:"rootShelfIds" validate:"required,min=1,max=32"`
+			RootShelfIds []uuid.UUID `json:"rootShelfIds" validate:"required,min=1,max=128"`
 		},
 		any,
 	]

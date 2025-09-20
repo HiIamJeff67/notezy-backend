@@ -22,6 +22,7 @@ type MaterialBinderInterface interface {
 	BindCreateTextbookMaterial(controllerFunc types.ControllerFunc[*dtos.CreateMaterialReqDto]) gin.HandlerFunc
 	BindSaveMyTextbookMaterialById(controllerFunc types.ControllerFunc[*dtos.SaveMyMaterialByIdReqDto]) gin.HandlerFunc
 	BindMoveMyMaterialById(controllerFunc types.ControllerFunc[*dtos.MoveMyMaterialByIdReqDto]) gin.HandlerFunc
+	BindMoveMyMaterialsByIds(controllerFunc types.ControllerFunc[*dtos.MoveMyMaterialsByIdsReqDto]) gin.HandlerFunc
 	BindRestoreMyMaterialById(controllerFunc types.ControllerFunc[*dtos.RestoreMyMaterialByIdReqDto]) gin.HandlerFunc
 	BindRestoreMyMaterialsByIds(controllerFunc types.ControllerFunc[*dtos.RestoreMyMaterialsByIdsReqDto]) gin.HandlerFunc
 	BindDeleteMyMaterialById(controllerFunc types.ControllerFunc[*dtos.DeleteMyMaterialByIdReqDto]) gin.HandlerFunc
@@ -79,14 +80,21 @@ func (b *MaterialBinder) BindSearchMyMaterialsByShelfId(controllerFunc types.Con
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
-			exceptions.Material.InvalidInput().WithError(err).Log().ResponseWithJSON(ctx)
+		// for the uuid in the parameter, we MUST extract it and parse it manually
+		parentSubShelfIdString := ctx.Query("parentSubShelfId")
+		if parentSubShelfIdString == "" {
+			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("parentSubShelfId is required")).Log().ResponseWithJSON(ctx)
 			return
 		}
+		parentSubShelfId, err := uuid.Parse(parentSubShelfIdString)
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithError(err).Log().ResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.ParentSubShelfId = parentSubShelfId
 
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Material.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
+			exceptions.Material.InvalidInput().WithError(err).Log().ResponseWithJSON(ctx)
 			return
 		}
 
@@ -188,6 +196,29 @@ func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.Con
 func (b *MaterialBinder) BindMoveMyMaterialById(controllerFunc types.ControllerFunc[*dtos.MoveMyMaterialByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.MoveMyMaterialByIdReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exception := exceptions.Material.InvalidDto().WithError(err)
+			exception.ResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *MaterialBinder) BindMoveMyMaterialsByIds(controllerFunc types.ControllerFunc[*dtos.MoveMyMaterialsByIdsReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.MoveMyMaterialsByIdsReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 

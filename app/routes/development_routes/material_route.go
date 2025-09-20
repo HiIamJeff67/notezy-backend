@@ -32,7 +32,7 @@ func configureDevelopmentMaterialRoutes() {
 				materialController.GetMyMaterialById,
 			),
 		)
-		materialRoutes.POST(
+		materialRoutes.GET(
 			"/searchMyMaterialsByShelfId",
 			materialBinder.BindSearchMyMaterialsByShelfId(
 				materialController.SearchMyMaterialsByShelfId,
@@ -55,6 +55,12 @@ func configureDevelopmentMaterialRoutes() {
 			"/moveMyMaterialById",
 			materialBinder.BindMoveMyMaterialById(
 				materialController.MoveMyMaterialById,
+			),
+		)
+		materialRoutes.PUT(
+			"/moveMyMaterialsByIds",
+			materialBinder.BindMoveMyMaterialsByIds(
+				materialController.MoveMyMaterialsByIds,
 			),
 		)
 		materialRoutes.PATCH(

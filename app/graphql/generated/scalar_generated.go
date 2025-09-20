@@ -106,4 +106,70 @@ func (ec *executionContext) marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx
 	return res
 }
 
+func (ec *executionContext) unmarshalNUUID2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx context.Context, v any) ([]uuid.UUID, error) {
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]uuid.UUID, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNUUID2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx context.Context, sel ast.SelectionSet, v []uuid.UUID) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOTime2ᚖtimeᚐTime(ctx context.Context, v any) (*time.Time, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := scalars.UnmarshalTime(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel ast.SelectionSet, v *time.Time) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	_ = sel
+	_ = ctx
+	res := scalars.MarshalTime(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx context.Context, v any) (*uuid.UUID, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := scalars.UnmarshalUUID(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx context.Context, sel ast.SelectionSet, v *uuid.UUID) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	_ = sel
+	_ = ctx
+	res := scalars.MarshalUUID(*v)
+	return res
+}
+
 // endregion ***************************** type.gotpl *****************************

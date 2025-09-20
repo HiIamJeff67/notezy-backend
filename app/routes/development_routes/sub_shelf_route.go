@@ -42,9 +42,9 @@ func configureDevelopmentSubShelfRoutes() {
 			),
 		)
 		subShelfRoutes.PUT(
-			"/renameMySubShelfById",
-			subShelfBinder.BindRenameMySubShelfById(
-				subShelfController.RenameMySubShelfById,
+			"/updateMySubShelfById",
+			subShelfBinder.BindUpdateMySubShelfById(
+				subShelfController.UpdateMySubShelfById,
 			),
 		)
 		subShelfRoutes.PUT(

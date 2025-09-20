@@ -26,7 +26,8 @@ type MaterialServiceInterface interface {
 	SearchMyMaterialsByShelfId(ctx context.Context, reqDto *dtos.SearchMyMaterialsByShelfIdReqDto) (*dtos.SearchMyMaterialsByShelfIdResDto, *exceptions.Exception)
 	CreateTextbookMaterial(ctx context.Context, reqDto *dtos.CreateMaterialReqDto) (*dtos.CreateMaterialResDto, *exceptions.Exception)
 	SaveMyTextbookMaterialById(ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception)
-	MoveMyMaterialById(ctx context.Context, reqDto *dtos.MoveMyMaterialByIdReqDto) (*dtos.MoveMyMaterialByIdResDto, *exceptions.Exception)
+	MoveMyMaterialById(reqDto *dtos.MoveMyMaterialByIdReqDto) (*dtos.MoveMyMaterialByIdResDto, *exceptions.Exception)
+	MoveMyMaterialsByIds(reqDto *dtos.MoveMyMaterialsByIdsReqDto) (*dtos.MoveMyMaterialsByIdsResDto, *exceptions.Exception)
 	RestoreMyMaterialById(reqDto *dtos.RestoreMyMaterialByIdReqDto) (*dtos.RestoreMyMaterialByIdResDto, *exceptions.Exception)
 	RestoreMyMaterialsByIds(reqDto *dtos.RestoreMyMaterialsByIdsReqDto) (*dtos.RestoreMyMaterialsByIdsResDto, *exceptions.Exception)
 	DeleteMyMaterialById(reqDto *dtos.DeleteMyMaterialByIdReqDto) (*dtos.DeleteMyMaterialByIdResDto, *exceptions.Exception)
@@ -98,7 +99,7 @@ func (s *MaterialService) SearchMyMaterialsByShelfId(ctx context.Context, reqDto
 		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"MaterialTable\".parent_sub_shelf_id = ss.id").
 		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
 		Where("ss.id = ? AND uts.user_id = ? AND uts.permission IN ?",
-			reqDto.Body.ParentSubShelfId,
+			reqDto.Param.ParentSubShelfId,
 			reqDto.ContextFields.UserId,
 			allowedPermissions,
 		)
@@ -286,31 +287,81 @@ func (s *MaterialService) SaveMyTextbookMaterialById(ctx context.Context, reqDto
 	}, nil
 }
 
-func (s *MaterialService) MoveMyMaterialById(ctx context.Context, reqDto *dtos.MoveMyMaterialByIdReqDto) (*dtos.MoveMyMaterialByIdResDto, *exceptions.Exception) {
+func (s *MaterialService) MoveMyMaterialById(reqDto *dtos.MoveMyMaterialByIdReqDto) (*dtos.MoveMyMaterialByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
 	materialRepository := repositories.NewMaterialRepository(s.db)
 
-	material, exception := materialRepository.UpdateOneById(
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Admin,
+	}
+
+	material, exception := materialRepository.CheckPermissionAndGetOneById(
 		reqDto.Body.MaterialId,
-		reqDto.Body.SourceParentSubShelfId,
 		reqDto.ContextFields.UserId,
 		nil,
-		inputs.PartialUpdateMaterialInput{
-			Values: inputs.UpdateMaterialInput{
-				ParentSubShelfId: &reqDto.Body.DestinationParentSubShelfId,
-			},
-			SetNull: nil,
-		},
+		allowedPermissions,
 	)
 	if exception != nil {
 		return nil, exception
 	}
 
+	result := s.db.Exec(`
+		UPDATE "MaterialTable"
+		SET "parent_sub_shelf_id" = ?, "updated_at" = NOW()
+		WHERE id = ?`,
+		reqDto.Body.DestinationParentSubShelfId, material.Id,
+	)
+	if err := result.Error; err != nil {
+		return nil, exceptions.Material.FailedToUpdate().WithError(err)
+	}
+
 	return &dtos.MoveMyMaterialByIdResDto{
 		UpdatedAt: material.UpdatedAt,
+	}, nil
+}
+
+func (s *MaterialService) MoveMyMaterialsByIds(reqDto *dtos.MoveMyMaterialsByIdsReqDto) (*dtos.MoveMyMaterialsByIdsResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
+	materialRepository := repositories.NewMaterialRepository(s.db)
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Admin,
+	}
+
+	materials, exception := materialRepository.CheckPermissionsAndGetManyByIds(
+		reqDto.Body.MaterialIds,
+		reqDto.ContextFields.UserId,
+		nil,
+		allowedPermissions,
+	)
+	if exception != nil {
+		return nil, exception
+	}
+	materialIds := []uuid.UUID{}
+	for _, material := range materials {
+		materialIds = append(materialIds, material.Id)
+	}
+
+	result := s.db.Exec(`
+		UPDATE "MaterialTable"
+		SET "parent_sub_shelf_id" = ?, "updated_at" = NOW()
+		WHERE id IN ?`,
+		reqDto.Body.DestinationParentSubShelfId, materialIds, // use the extracted material to update
+	)
+	if err := result.Error; err != nil {
+		return nil, exceptions.Material.FailedToUpdate().WithError(err)
+	}
+
+	return &dtos.MoveMyMaterialsByIdsResDto{
+		UpdatedAt: time.Now(),
 	}, nil
 }
 

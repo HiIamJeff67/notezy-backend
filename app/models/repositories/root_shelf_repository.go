@@ -61,7 +61,7 @@ func (r *RootShelfRepository) HasPermission(
 		return false
 	}
 
-	return true
+	return count > 0
 }
 
 func (r *RootShelfRepository) CheckPermissionAndGetOneById(

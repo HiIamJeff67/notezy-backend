@@ -33,6 +33,8 @@ type PrivateMaterial struct {
 	Size             int64                     `json:"size"`
 	ContentKey       string                    `json:"contentKey"`
 	ContentType      enums.MaterialContentType `json:"contentType"`
+	ParseMediaType   string                    `json:"parseMediaType"`
+	DeletedAt        *time.Time                `json:"deletedAt,omitempty"`
 	UpdatedAt        time.Time                 `json:"updatedAt"`
 	CreatedAt        time.Time                 `json:"createdAt"`
 	ParentSubShelf   *PrivateSubShelf          `json:"parentSubShelf"`
@@ -44,6 +46,7 @@ type PrivateRootShelf struct {
 	TotalShelfNodes int32         `json:"totalShelfNodes"`
 	TotalMaterials  int32         `json:"totalMaterials"`
 	LastAnalyzedAt  time.Time     `json:"lastAnalyzedAt"`
+	DeletedAt       *time.Time    `json:"deletedAt,omitempty"`
 	UpdatedAt       time.Time     `json:"updatedAt"`
 	CreatedAt       time.Time     `json:"createdAt"`
 	Owner           []*PublicUser `json:"owner"`
@@ -53,8 +56,9 @@ type PrivateSubShelf struct {
 	ID             uuid.UUID          `json:"id"`
 	Name           string             `json:"name"`
 	RootShelfID    uuid.UUID          `json:"rootShelfId"`
-	PrevSubShelfID uuid.UUID          `json:"prevSubShelfId"`
-	Path           []*string          `json:"path"`
+	PrevSubShelfID *uuid.UUID         `json:"prevSubShelfId,omitempty"`
+	Path           []uuid.UUID        `json:"path"`
+	DeletedAt      *time.Time         `json:"deletedAt,omitempty"`
 	UpdatedAt      time.Time          `json:"updatedAt"`
 	CreatedAt      time.Time          `json:"createdAt"`
 	RootShelf      *PrivateRootShelf  `json:"rootShelf"`

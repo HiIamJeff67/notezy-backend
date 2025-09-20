@@ -57,7 +57,7 @@ type CreateSubShelfByRootShelfIdReqDto struct {
 	]
 }
 
-type RenameMySubShelfByIdReqDto struct {
+type UpdateMySubShelfByIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -131,7 +131,7 @@ type RestoreMySubShelvesByIdsReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			SubShelfIds []uuid.UUID `json:"subShelfIds" validate:"required"`
+			SubShelfIds []uuid.UUID `json:"subShelfIds" validate:"required,min=1,max=128"`
 		},
 		any,
 	]
@@ -161,7 +161,7 @@ type DeleteMySubShelvesByIdsReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			SubShelfIds []uuid.UUID `json:"subShelfIds" validate:"required"`
+			SubShelfIds []uuid.UUID `json:"subShelfIds" validate:"required,min=1,max=128"`
 		},
 		any,
 	]
@@ -186,7 +186,7 @@ type CreateSubShelfByRootShelfIdResDto struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-type RenameMySubShelfByIdResDto struct {
+type UpdateMySubShelfByIdResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 

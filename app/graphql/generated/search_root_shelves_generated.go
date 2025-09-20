@@ -314,6 +314,8 @@ func (ec *executionContext) fieldContext_SearchRootShelfEdge_node(_ context.Cont
 				return ec.fieldContext_PrivateRootShelf_totalMaterials(ctx, field)
 			case "lastAnalyzedAt":
 				return ec.fieldContext_PrivateRootShelf_lastAnalyzedAt(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_PrivateRootShelf_deletedAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_PrivateRootShelf_updatedAt(ctx, field)
 			case "createdAt":

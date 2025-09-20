@@ -184,14 +184,11 @@ func (ec *executionContext) _PrivateSubShelf_prevSubShelfId(ctx context.Context,
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(uuid.UUID)
+	res := resTmp.(*uuid.UUID)
 	fc.Result = res
-	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+	return ec.marshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateSubShelf_prevSubShelfId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -233,9 +230,9 @@ func (ec *executionContext) _PrivateSubShelf_path(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*string)
+	res := resTmp.([]uuid.UUID)
 	fc.Result = res
-	return ec.marshalNString2ᚕᚖstring(ctx, field.Selections, res)
+	return ec.marshalNUUID2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateSubShelf_path(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -245,7 +242,48 @@ func (ec *executionContext) fieldContext_PrivateSubShelf_path(_ context.Context,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PrivateSubShelf_deletedAt(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateSubShelf) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateSubShelf_deletedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DeletedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PrivateSubShelf_deletedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PrivateSubShelf",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -388,6 +426,8 @@ func (ec *executionContext) fieldContext_PrivateSubShelf_rootShelf(_ context.Con
 				return ec.fieldContext_PrivateRootShelf_totalMaterials(ctx, field)
 			case "lastAnalyzedAt":
 				return ec.fieldContext_PrivateRootShelf_lastAnalyzedAt(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_PrivateRootShelf_deletedAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_PrivateRootShelf_updatedAt(ctx, field)
 			case "createdAt":
@@ -450,6 +490,8 @@ func (ec *executionContext) fieldContext_PrivateSubShelf_nextSubShelves(_ contex
 				return ec.fieldContext_PrivateSubShelf_prevSubShelfId(ctx, field)
 			case "path":
 				return ec.fieldContext_PrivateSubShelf_path(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_PrivateSubShelf_deletedAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_PrivateSubShelf_updatedAt(ctx, field)
 			case "createdAt":
@@ -520,6 +562,10 @@ func (ec *executionContext) fieldContext_PrivateSubShelf_materials(_ context.Con
 				return ec.fieldContext_PrivateMaterial_contentKey(ctx, field)
 			case "contentType":
 				return ec.fieldContext_PrivateMaterial_contentType(ctx, field)
+			case "parseMediaType":
+				return ec.fieldContext_PrivateMaterial_parseMediaType(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_PrivateMaterial_deletedAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_PrivateMaterial_updatedAt(ctx, field)
 			case "createdAt":
@@ -573,14 +619,13 @@ func (ec *executionContext) _PrivateSubShelf(ctx context.Context, sel ast.Select
 			}
 		case "prevSubShelfId":
 			out.Values[i] = ec._PrivateSubShelf_prevSubShelfId(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "path":
 			out.Values[i] = ec._PrivateSubShelf_path(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "deletedAt":
+			out.Values[i] = ec._PrivateSubShelf_deletedAt(ctx, field, obj)
 		case "updatedAt":
 			out.Values[i] = ec._PrivateSubShelf_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

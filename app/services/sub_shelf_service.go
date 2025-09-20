@@ -24,7 +24,7 @@ type SubShelfServiceInterface interface {
 	GetMySubShelfById(reqDto *dtos.GetMySubShelfByIdReqDto) (*dtos.GetMySubShelfByIdResDto, *exceptions.Exception)
 	GetAllSubShelvesByRootShelfId(reqDto *dtos.GetAllSubShelvesByRootShelfIdReqDto) (*dtos.GetAllSubShelvesByRootShelfIdResDto, *exceptions.Exception)
 	CreateSubShelfByRootShelfId(reqDto *dtos.CreateSubShelfByRootShelfIdReqDto) (*dtos.CreateSubShelfByRootShelfIdResDto, *exceptions.Exception)
-	RenameMySubShelfById(reqDto *dtos.RenameMySubShelfByIdReqDto) (*dtos.RenameMySubShelfByIdResDto, *exceptions.Exception)
+	UpdateMySubShelfById(reqDto *dtos.UpdateMySubShelfByIdReqDto) (*dtos.UpdateMySubShelfByIdResDto, *exceptions.Exception)
 	MoveMySubShelf(reqDto *dtos.MoveMySubShelfReqDto) (*dtos.MoveMySubShelfResDto, *exceptions.Exception)
 	MoveMySubShelves(reqDto *dtos.MoveMySubShelvesReqDto) (*dtos.MoveMySubShelvesResDto, *exceptions.Exception)
 	RestoreMySubShelfById(reqDto *dtos.RestoreMySubShelfByIdReqDto) (*dtos.RestoreMySubShelfByIdResDto, *exceptions.Exception)
@@ -132,8 +132,8 @@ func (s *SubShelfService) CreateSubShelfByRootShelfId(reqDto *dtos.CreateSubShel
 	}, nil
 }
 
-func (s *SubShelfService) RenameMySubShelfById(reqDto *dtos.RenameMySubShelfByIdReqDto) (
-	*dtos.RenameMySubShelfByIdResDto, *exceptions.Exception,
+func (s *SubShelfService) UpdateMySubShelfById(reqDto *dtos.UpdateMySubShelfByIdReqDto) (
+	*dtos.UpdateMySubShelfByIdResDto, *exceptions.Exception,
 ) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Shelf.InvalidInput().WithError(err)
@@ -155,7 +155,7 @@ func (s *SubShelfService) RenameMySubShelfById(reqDto *dtos.RenameMySubShelfById
 		return nil, exception
 	}
 
-	return &dtos.RenameMySubShelfByIdResDto{
+	return &dtos.UpdateMySubShelfByIdResDto{
 		UpdatedAt: subShelf.UpdatedAt,
 	}, nil
 }

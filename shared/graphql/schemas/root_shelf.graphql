@@ -4,6 +4,7 @@ type PrivateRootShelf {
   totalShelfNodes: Int32!
   totalMaterials: Int32!
   lastAnalyzedAt: Time!
+  deletedAt: Time
   updatedAt: Time!
   createdAt: Time!
 

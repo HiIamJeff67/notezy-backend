@@ -19,6 +19,7 @@ import (
 
 type SubShelfRepositoryInterface interface {
 	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission) bool
+	HasPermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission) bool
 	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation, allowedPermissions []enums.AccessControlPermission) (*schemas.SubShelf, *exceptions.Exception)
 	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation, allowedPermissions []enums.AccessControlPermission) ([]schemas.SubShelf, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation) (*schemas.SubShelf, *exceptions.Exception)
@@ -63,7 +64,27 @@ func (r *SubShelfRepository) HasPermission(
 		return false
 	}
 
-	return true
+	return count > 0
+}
+
+func (r *SubShelfRepository) HasPermissions(
+	ids []uuid.UUID,
+	userId uuid.UUID,
+	allowedPermissions []enums.AccessControlPermission,
+) bool {
+	var count int64 = 0
+
+	subQuery := r.db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
+	result := r.db.Model(&schemas.SubShelf{}).
+		Where("id IN ? AND EXISTS (?)", ids, subQuery).
+		Count(&count)
+	if err := result.Error; err != nil || count == 0 {
+		return false
+	}
+
+	return count > 0
 }
 
 func (r *SubShelfRepository) CheckPermissionAndGetOneById(
@@ -121,6 +142,9 @@ func (r *SubShelfRepository) CheckPermissionsAndGetManyByIds(
 	result := db.Find(&subShelves)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Shelf.NotFound().WithError(err)
+	}
+	if len(subShelves) == 0 {
+		return nil, exceptions.Shelf.NotFound()
 	}
 
 	return subShelves, nil

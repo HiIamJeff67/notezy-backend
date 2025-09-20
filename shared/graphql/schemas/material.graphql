@@ -6,6 +6,8 @@ type PrivateMaterial {
   size: Int64!
   contentKey: String!
   contentType: MaterialContentType!
+  parseMediaType: String!
+  deletedAt: Time
   updatedAt: Time!
   createdAt: Time!
 

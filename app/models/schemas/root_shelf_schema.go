@@ -38,16 +38,18 @@ const (
 	RootShelfRelation_UsersToShelves RootShelfRelation = "UsersToShelves"
 )
 
-/* ============================== Relative Tyoe Conversion ============================== */
+/* ============================== Relative Type Conversion ============================== */
 
-func (s *RootShelf) ToPrivateRootShelf() *gqlmodels.PrivateRootShelf {
+func (rs *RootShelf) ToPrivateRootShelf() *gqlmodels.PrivateRootShelf {
 	return &gqlmodels.PrivateRootShelf{
-		ID:              s.Id,
-		Name:            s.Name,
-		TotalShelfNodes: s.TotalShelfNodes,
-		TotalMaterials:  s.TotalMaterials,
-		UpdatedAt:       s.UpdatedAt,
-		CreatedAt:       s.CreatedAt,
+		ID:              rs.Id,
+		Name:            rs.Name,
+		TotalShelfNodes: rs.TotalShelfNodes,
+		TotalMaterials:  rs.TotalMaterials,
+		LastAnalyzedAt:  rs.LastAnalyzedAt,
+		DeletedAt:       rs.DeletedAt,
+		UpdatedAt:       rs.UpdatedAt,
+		CreatedAt:       rs.CreatedAt,
 		Owner:           make([]*gqlmodels.PublicUser, 0),
 	}
 }

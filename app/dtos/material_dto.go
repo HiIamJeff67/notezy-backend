@@ -34,10 +34,9 @@ type SearchMyMaterialsByShelfIdReqDto struct {
 		struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
+		any,
 		struct {
 			ParentSubShelfId uuid.UUID `json:"parentSubShelfId" validate:"required"`
-		},
-		struct {
 			SimpleSearchDto
 		},
 	]
@@ -91,8 +90,23 @@ type MoveMyMaterialByIdReqDto struct {
 		},
 		struct {
 			MaterialId                  uuid.UUID `json:"materialId" validate:"required"`
-			SourceParentSubShelfId      uuid.UUID `json:"sourceParentSubShelfId" validate:"required"`
 			DestinationParentSubShelfId uuid.UUID `json:"destinationParentSubShelfId" validate:"required"`
+		},
+		any,
+	]
+}
+
+type MoveMyMaterialsByIdsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			MaterialIds                 []uuid.UUID `json:"materialIds" validate:"required,min=1,max=128"`
+			DestinationParentSubShelfId uuid.UUID   `json:"destinationParentSubShelfId" validate:"required"`
 		},
 		any,
 	]
@@ -122,7 +136,7 @@ type RestoreMyMaterialsByIdsReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			MaterialIds []uuid.UUID `json:"materialIds" validate:"required,min=1,max=32"`
+			MaterialIds []uuid.UUID `json:"materialIds" validate:"required,min=1,max=128"`
 		},
 		any,
 	]
@@ -152,7 +166,7 @@ type DeleteMyMaterialsByIdsReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			MaterialIds []uuid.UUID `json:"materialIds" validate:"required,min=1,max=32"`
+			MaterialIds []uuid.UUID `json:"materialIds" validate:"required,min=1,max=128"`
 		},
 		any,
 	]
@@ -185,6 +199,10 @@ type SaveMyMaterialByIdResDto struct {
 }
 
 type MoveMyMaterialByIdResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type MoveMyMaterialsByIdsResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 

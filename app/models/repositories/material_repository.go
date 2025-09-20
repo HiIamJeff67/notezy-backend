@@ -25,6 +25,7 @@ type MaterialRepositoryInterface interface {
 	GetOneById(id uuid.UUID, userId uuid.UUID) (*schemas.Material, *exceptions.Exception)
 	CreateOne(subShelfId uuid.UUID, userId uuid.UUID, input inputs.CreateMaterialInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, subShelfId uuid.UUID, userId uuid.UUID, matchedMaterialType *enums.MaterialType, input inputs.PartialUpdateMaterialInput) (*schemas.Material, *exceptions.Exception)
+
 	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID) *exceptions.Exception
 	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID) *exceptions.Exception
 	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID) *exceptions.Exception
@@ -64,7 +65,7 @@ func (r *MaterialRepository) HasPermission(
 		return false
 	}
 
-	return true
+	return count > 0
 }
 
 func (r *MaterialRepository) HasPermissions(
@@ -85,7 +86,7 @@ func (r *MaterialRepository) HasPermissions(
 		return false
 	}
 
-	return true
+	return count > 0
 }
 
 func (r *MaterialRepository) CheckPermissionAndGetOneById(
@@ -138,9 +139,12 @@ func (r *MaterialRepository) CheckPermissionsAndGetManyByIds(
 		}
 	}
 
-	result := db.First(&materials)
+	result := db.Find(&materials)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Material.NotFound().WithError(err)
+	}
+	if len(materials) == 0 {
+		return nil, exceptions.Material.NotFound()
 	}
 
 	return materials, nil
