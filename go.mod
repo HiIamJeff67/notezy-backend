@@ -17,7 +17,6 @@ require (
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
 	github.com/vektah/gqlparser/v2 v2.5.30
-	github.com/vmihailenco/msgpack/v5 v5.4.1
 	golang.org/x/crypto v0.39.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gorm.io/driver/postgres v1.5.11
@@ -32,7 +31,6 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
-	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 )
 

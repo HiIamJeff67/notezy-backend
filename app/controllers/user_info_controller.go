@@ -28,7 +28,7 @@ func NewUserInfoController(service services.UserInfoServiceInterface) UserInfoCo
 
 /* ============================== Controller ============================== */
 
-// with AuthMiddleware()
+// with AuthMiddleware
 func (c *UserInfoController) GetMyInfo(ctx *gin.Context, reqDto *dtos.GetMyInfoReqDto) {
 	resDto, exception := c.userInfoService.GetMyInfo(reqDto)
 	if exception != nil {
@@ -43,7 +43,7 @@ func (c *UserInfoController) GetMyInfo(ctx *gin.Context, reqDto *dtos.GetMyInfoR
 	})
 }
 
-// with AuthMiddleware()
+// with AuthMiddleware
 func (c *UserInfoController) UpdateMyInfo(ctx *gin.Context, reqDto *dtos.UpdateMyInfoReqDto) {
 	resDto, exception := c.userInfoService.UpdateMyInfo(reqDto)
 	if exception != nil {

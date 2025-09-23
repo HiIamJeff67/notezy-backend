@@ -18,7 +18,8 @@ import (
 
 type MaterialBinderInterface interface {
 	BindGetMyMaterialById(controllerFunc types.ControllerFunc[*dtos.GetMyMaterialByIdReqDto]) gin.HandlerFunc
-	BindSearchMyMaterialsByShelfId(controllerFunc types.ControllerFunc[*dtos.SearchMyMaterialsByShelfIdReqDto]) gin.HandlerFunc
+	BindGetAllMyMaterialsByParentSubShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllMyMaterialsByParentSubShelfIdReqDto]) gin.HandlerFunc
+	BindGetAllMyMaterialsByRootShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllMyMaterialsByRootShelfIdReqDto]) gin.HandlerFunc
 	BindCreateTextbookMaterial(controllerFunc types.ControllerFunc[*dtos.CreateMaterialReqDto]) gin.HandlerFunc
 	BindSaveMyTextbookMaterialById(controllerFunc types.ControllerFunc[*dtos.SaveMyMaterialByIdReqDto]) gin.HandlerFunc
 	BindMoveMyMaterialById(controllerFunc types.ControllerFunc[*dtos.MoveMyMaterialByIdReqDto]) gin.HandlerFunc
@@ -67,9 +68,9 @@ func (b *MaterialBinder) BindGetMyMaterialById(controllerFunc types.ControllerFu
 	}
 }
 
-func (b *MaterialBinder) BindSearchMyMaterialsByShelfId(controllerFunc types.ControllerFunc[*dtos.SearchMyMaterialsByShelfIdReqDto]) gin.HandlerFunc {
+func (b *MaterialBinder) BindGetAllMyMaterialsByParentSubShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllMyMaterialsByParentSubShelfIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.SearchMyMaterialsByShelfIdReqDto
+		var reqDto dtos.GetAllMyMaterialsByParentSubShelfIdReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -97,6 +98,36 @@ func (b *MaterialBinder) BindSearchMyMaterialsByShelfId(controllerFunc types.Con
 			exceptions.Material.InvalidInput().WithError(err).Log().ResponseWithJSON(ctx)
 			return
 		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *MaterialBinder) BindGetAllMyMaterialsByRootShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllMyMaterialsByRootShelfIdReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.GetAllMyMaterialsByRootShelfIdReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		// for the uuid in the parameter, we MUST extract it and parse it manually
+		rootShelfIdString := ctx.Query("rootShelfId")
+		if rootShelfIdString == "" {
+			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("rootShelfId is required")).Log().ResponseWithJSON(ctx)
+			return
+		}
+		rootShelfId, err := uuid.Parse(rootShelfIdString)
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithError(err).Log().ResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.RootShelfId = rootShelfId
 
 		controllerFunc(ctx, &reqDto)
 	}

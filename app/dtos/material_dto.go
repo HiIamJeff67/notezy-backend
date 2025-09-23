@@ -26,7 +26,7 @@ type GetMyMaterialByIdReqDto struct {
 	]
 }
 
-type SearchMyMaterialsByShelfIdReqDto struct {
+type GetAllMyMaterialsByParentSubShelfIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -37,7 +37,21 @@ type SearchMyMaterialsByShelfIdReqDto struct {
 		any,
 		struct {
 			ParentSubShelfId uuid.UUID `json:"parentSubShelfId" validate:"required"`
-			SimpleSearchDto
+		},
+	]
+}
+
+type GetAllMyMaterialsByRootShelfIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		any,
+		struct {
+			RootShelfId uuid.UUID `json:"rootShelfId" validate:"required"`
 		},
 	]
 }
@@ -188,7 +202,9 @@ type GetMyMaterialByIdResDto struct {
 	CreatedAt        time.Time                 `json:"createdAt"`
 }
 
-type SearchMyMaterialsByShelfIdResDto []GetMyMaterialByIdResDto
+type GetAllMyMaterialsByParentSubShelfIdResDto []GetMyMaterialByIdResDto
+
+type GetAllMyMaterialsByRootShelfIdResDto []GetMyMaterialByIdResDto
 
 type CreateMaterialResDto struct {
 	CreatedAt time.Time `json:"createdAt"`

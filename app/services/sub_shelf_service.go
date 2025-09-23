@@ -183,6 +183,7 @@ func (s *SubShelfService) MoveMySubShelf(reqDto *dtos.MoveMySubShelfReqDto) (
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
+		false,
 	)
 	if exception != nil {
 		return nil, exception
@@ -192,15 +193,16 @@ func (s *SubShelfService) MoveMySubShelf(reqDto *dtos.MoveMySubShelfReqDto) (
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
+		false,
 	)
 	if exception != nil {
 		return nil, exception
 	}
 
-	if len(from.Path)+len(to.Path) > constants.MaxShelfTreeDepth {
+	if len(from.Path)+len(to.Path) > int(constants.MaxSubShelvesOfRootShelf) {
 		return nil, exceptions.Shelf.MaximumDepthExceeded(
 			int32(len(from.Path)+len(to.Path)),
-			constants.MaxShelfTreeDepth,
+			constants.MaxSubShelvesOfRootShelf,
 		)
 	}
 
@@ -218,7 +220,7 @@ func (s *SubShelfService) MoveMySubShelf(reqDto *dtos.MoveMySubShelfReqDto) (
 	result := s.db.Exec(`
         UPDATE "SubShelfTable" 
         SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW() 
-        WHERE id = ?`,
+        WHERE id = ? AND deleted_at IS NULL`,
 		to.RootShelfId, reqDto.Body.DestinationSubShelfId, pg.Array(to.Path), reqDto.Body.SourceSubShelfId,
 	)
 	if err := result.Error; err != nil {
@@ -249,6 +251,7 @@ func (s *SubShelfService) MoveMySubShelves(reqDto *dtos.MoveMySubShelvesReqDto) 
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
+		false,
 	)
 	if exception != nil {
 		return nil, exception
@@ -258,6 +261,7 @@ func (s *SubShelfService) MoveMySubShelves(reqDto *dtos.MoveMySubShelvesReqDto) 
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
+		false,
 	)
 	if exception != nil {
 		return nil, exception
@@ -268,10 +272,10 @@ func (s *SubShelfService) MoveMySubShelves(reqDto *dtos.MoveMySubShelvesReqDto) 
 
 	sourceSubShelfIdMap := make(map[uuid.UUID]bool, 0)
 	for _, from := range froms {
-		if len(from.Path)+len(to.Path) > constants.MaxShelfTreeDepth {
+		if len(from.Path)+len(to.Path) > int(constants.MaxSubShelvesOfRootShelf) {
 			exceptions.Shelf.MaximumDepthExceeded(
 				int32(len(from.Path)+len(to.Path)),
-				constants.MaxShelfTreeDepth,
+				constants.MaxSubShelvesOfRootShelf,
 			).Log()
 			// sourceSubShelfIdMap[from.Id] = false
 		} else if from.Id == to.Id {
@@ -303,7 +307,7 @@ func (s *SubShelfService) MoveMySubShelves(reqDto *dtos.MoveMySubShelvesReqDto) 
 	result := s.db.Exec(`
         UPDATE "SubShelfTable" 
         SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW() 
-        WHERE id IN ?`,
+        WHERE id IN ? AND deleted_at IS NULL`,
 		to.RootShelfId, reqDto.Body.DestinationSubShelfId, pg.Array(to.Path), validSourceSubShelfIds,
 	)
 	if err := result.Error; err != nil {

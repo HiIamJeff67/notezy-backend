@@ -20,13 +20,12 @@ const (
 )
 
 const (
-	CheckPointPerShelfTreeTraverse  = 1e+3
-	MaxShelfTreeTraverseTimeout     = 8 * time.Second
-	MaxNumOfShelfTreeTraversedNodes = 1e+5
-	MaxShelfTreeWidth               = 1e+5
-	MaxShelfTreeDepth               = 100 // note that the maximum width is bounded by the msgpack encoding algorithm
-
-	MaxShelvesToSynchronize = 20
+	// limitation of a root shelf
+	MaxSubShelvesOfRootShelf int32 = 1e+5 // max number of the sub folders
+	MaxMaterialsOfRootShelf  int32 = 1e+5 // max number of files
+	// limitation of a sub shelf
+	MaxSubShelvesOfSubShelf int32 = 1e+3
+	MaxMaterialsOfSubShelf  int32 = 1e+3
 )
 
 const (

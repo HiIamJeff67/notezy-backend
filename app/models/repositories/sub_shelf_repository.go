@@ -20,8 +20,8 @@ import (
 type SubShelfRepositoryInterface interface {
 	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission) bool
 	HasPermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission) bool
-	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation, allowedPermissions []enums.AccessControlPermission) (*schemas.SubShelf, *exceptions.Exception)
-	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation, allowedPermissions []enums.AccessControlPermission) ([]schemas.SubShelf, *exceptions.Exception)
+	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation, allowedPermissions []enums.AccessControlPermission, includeDeleted bool) (*schemas.SubShelf, *exceptions.Exception)
+	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation, allowedPermissions []enums.AccessControlPermission, includeDeleted bool) ([]schemas.SubShelf, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation) (*schemas.SubShelf, *exceptions.Exception)
 	GetAllByRootShelfId(rootShelfId uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation) ([]schemas.SubShelf, *exceptions.Exception)
 	CreateOneByUserId(userId uuid.UUID, input inputs.CreateSubShelfInput) (*uuid.UUID, *exceptions.Exception)
@@ -92,6 +92,7 @@ func (r *SubShelfRepository) CheckPermissionAndGetOneById(
 	userId uuid.UUID,
 	preloads []schemas.SubShelfRelation,
 	allowedPermissions []enums.AccessControlPermission,
+	includeDeleted bool,
 ) (*schemas.SubShelf, *exceptions.Exception) {
 	subShelf := schemas.SubShelf{}
 
@@ -102,6 +103,10 @@ func (r *SubShelfRepository) CheckPermissionAndGetOneById(
 		)
 	db := r.db.Model(&schemas.SubShelf{}).
 		Where("id = ? AND EXISTS (?)", id, subQuery)
+
+	if !includeDeleted {
+		db = db.Where("\"SubShelfTable\".deleted_at IS NULL")
+	}
 
 	if len(preloads) > 0 {
 		for _, preload := range preloads {
@@ -122,6 +127,7 @@ func (r *SubShelfRepository) CheckPermissionsAndGetManyByIds(
 	userId uuid.UUID,
 	preloads []schemas.SubShelfRelation,
 	allowedPermissions []enums.AccessControlPermission,
+	includeDeleted bool,
 ) ([]schemas.SubShelf, *exceptions.Exception) {
 	subShelves := []schemas.SubShelf{}
 
@@ -132,6 +138,10 @@ func (r *SubShelfRepository) CheckPermissionsAndGetManyByIds(
 		)
 	db := r.db.Model(&schemas.SubShelf{}).
 		Where("id IN ? AND EXISTS (?)", ids, subQuery)
+
+	if !includeDeleted {
+		db = db.Where("\"SubShelfTable\".deleted_at IS NULL")
+	}
 
 	if len(preloads) > 0 {
 		for _, preload := range preloads {
@@ -161,7 +171,7 @@ func (r *SubShelfRepository) GetOneById(
 		enums.AccessControlPermission_Admin,
 	}
 
-	return r.CheckPermissionAndGetOneById(id, userId, preloads, allowedPermissions)
+	return r.CheckPermissionAndGetOneById(id, userId, preloads, allowedPermissions, false)
 }
 
 func (r *SubShelfRepository) GetAllByRootShelfId(
@@ -209,7 +219,13 @@ func (r *SubShelfRepository) CreateOneByUserId(
 
 	var newSubShelf schemas.SubShelf
 	if input.PrevSubShelfId != nil {
-		prevSubShelf, exception := r.CheckPermissionAndGetOneById(*input.PrevSubShelfId, userId, nil, allowedPermissions)
+		prevSubShelf, exception := r.CheckPermissionAndGetOneById(
+			*input.PrevSubShelfId,
+			userId,
+			nil,
+			allowedPermissions,
+			false,
+		)
 		if exception != nil {
 			return nil, exception
 		}
@@ -240,7 +256,13 @@ func (r *SubShelfRepository) UpdateOneById(
 		enums.AccessControlPermission_Admin,
 	}
 
-	existingSubShelf, exception := r.CheckPermissionAndGetOneById(id, userId, nil, allowedPermissions)
+	existingSubShelf, exception := r.CheckPermissionAndGetOneById(
+		id,
+		userId,
+		nil,
+		allowedPermissions,
+		false,
+	)
 	if exception != nil {
 		return nil, exception
 	}
@@ -251,7 +273,7 @@ func (r *SubShelfRepository) UpdateOneById(
 	}
 
 	result := r.db.Model(&schemas.SubShelf{}).
-		Where("id = ?", id).
+		Where("id = ? AND deleted_at IS NULL", id).
 		Select("*").
 		Updates(&updates)
 	if err := result.Error; err != nil {

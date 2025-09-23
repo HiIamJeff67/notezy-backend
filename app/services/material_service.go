@@ -3,7 +3,6 @@ package services
 import (
 	"bytes"
 	"context"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -17,13 +16,15 @@ import (
 	enums "notezy-backend/app/models/schemas/enums"
 	storages "notezy-backend/app/storages"
 	validation "notezy-backend/app/validation"
+	constants "notezy-backend/shared/constants"
 )
 
 /* ============================== Interface & Instance ============================== */
 
 type MaterialServiceInterface interface {
 	GetMyMaterialById(ctx context.Context, reqDto *dtos.GetMyMaterialByIdReqDto) (*dtos.GetMyMaterialByIdResDto, *exceptions.Exception)
-	SearchMyMaterialsByShelfId(ctx context.Context, reqDto *dtos.SearchMyMaterialsByShelfIdReqDto) (*dtos.SearchMyMaterialsByShelfIdResDto, *exceptions.Exception)
+	GetAllMyMaterialsByParentSubShelfId(ctx context.Context, reqDto *dtos.GetAllMyMaterialsByParentSubShelfIdReqDto) (*dtos.GetAllMyMaterialsByParentSubShelfIdResDto, *exceptions.Exception)
+	GetAllMyMaterialsByRootShelfId(ctx context.Context, reqDto *dtos.GetAllMyMaterialsByRootShelfIdReqDto) (*dtos.GetAllMyMaterialsByRootShelfIdResDto, *exceptions.Exception)
 	CreateTextbookMaterial(ctx context.Context, reqDto *dtos.CreateMaterialReqDto) (*dtos.CreateMaterialResDto, *exceptions.Exception)
 	SaveMyTextbookMaterialById(ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception)
 	MoveMyMaterialById(reqDto *dtos.MoveMyMaterialByIdReqDto) (*dtos.MoveMyMaterialByIdResDto, *exceptions.Exception)
@@ -48,7 +49,9 @@ func NewMaterialService(db *gorm.DB, storage storages.StorageInterface) Material
 
 /* ============================== Service Methods for Material ============================== */
 
-func (s *MaterialService) GetMyMaterialById(ctx context.Context, reqDto *dtos.GetMyMaterialByIdReqDto) (*dtos.GetMyMaterialByIdResDto, *exceptions.Exception) {
+func (s *MaterialService) GetMyMaterialById(
+	ctx context.Context, reqDto *dtos.GetMyMaterialByIdReqDto,
+) (*dtos.GetMyMaterialByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -82,7 +85,9 @@ func (s *MaterialService) GetMyMaterialById(ctx context.Context, reqDto *dtos.Ge
 	}, nil
 }
 
-func (s *MaterialService) SearchMyMaterialsByShelfId(ctx context.Context, reqDto *dtos.SearchMyMaterialsByShelfIdReqDto) (*dtos.SearchMyMaterialsByShelfIdResDto, *exceptions.Exception) {
+func (s *MaterialService) GetAllMyMaterialsByParentSubShelfId(
+	ctx context.Context, reqDto *dtos.GetAllMyMaterialsByParentSubShelfIdReqDto,
+) (*dtos.GetAllMyMaterialsByParentSubShelfIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -103,19 +108,65 @@ func (s *MaterialService) SearchMyMaterialsByShelfId(ctx context.Context, reqDto
 			reqDto.ContextFields.UserId,
 			allowedPermissions,
 		)
-	if len(strings.ReplaceAll(reqDto.Param.Query, " ", "")) > 0 {
-		query = query.Where("\"MaterialTable\".name ILIKE ?", "%"+reqDto.Param.Query+"%")
-	}
 
-	result := query.Order("updated_at DESC").
-		Limit(int(reqDto.Param.Limit)).
-		Offset(int(reqDto.Param.Offset)).
+	result := query.Order("name ASC").
+		Limit(int(constants.MaxMaterialsOfSubShelf)).
 		Find(&materials)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Material.NotFound().WithError(err)
 	}
 
-	resDto := dtos.SearchMyMaterialsByShelfIdResDto{}
+	resDto := dtos.GetAllMyMaterialsByParentSubShelfIdResDto{}
+	for _, material := range materials {
+		downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, material.ContentKey, nil)
+		if exception != nil {
+			return nil, exception
+		}
+		resDto = append(resDto, dtos.GetMyMaterialByIdResDto{
+			Id:               material.Id,
+			ParentSubShelfId: material.ParentSubShelfId,
+			Name:             material.Name,
+			Type:             material.Type,
+			DownloadURL:      downloadURL,
+			ContentType:      material.ContentType,
+			ParseMediaType:   material.ParseMediaType,
+			DeletedAt:        material.DeletedAt,
+			UpdatedAt:        material.UpdatedAt,
+			CreatedAt:        material.CreatedAt,
+		})
+	}
+
+	return &resDto, nil
+}
+
+func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
+	ctx context.Context, reqDto *dtos.GetAllMyMaterialsByRootShelfIdReqDto,
+) (*dtos.GetAllMyMaterialsByRootShelfIdResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Read,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Admin,
+	}
+
+	materials := []schemas.Material{}
+
+	result := s.db.Model(&schemas.Material{}).
+		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"MaterialTable\".parent_sub_shelf_id = ss.id").
+		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
+		Where("ss.root_shelf_id = ? AND uts.user_id = ? AND uts.permission IN ?",
+			reqDto.Param.RootShelfId, reqDto.ContextFields.UserId, allowedPermissions,
+		).Limit(int(constants.MaxMaterialsOfRootShelf)).
+		Order("name ASC").
+		Find(&materials)
+	if err := result.Error; err != nil {
+		return nil, exceptions.Material.NotFound()
+	}
+
+	resDto := dtos.GetAllMyMaterialsByRootShelfIdResDto{}
 	for _, material := range materials {
 		downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, material.ContentKey, nil)
 		if exception != nil {
@@ -194,7 +245,9 @@ func (s *MaterialService) CreateTextbookMaterial(ctx context.Context, reqDto *dt
 	}, nil
 }
 
-func (s *MaterialService) SaveMyTextbookMaterialById(ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception) {
+func (s *MaterialService) SaveMyTextbookMaterialById(
+	ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto,
+) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -287,7 +340,9 @@ func (s *MaterialService) SaveMyTextbookMaterialById(ctx context.Context, reqDto
 	}, nil
 }
 
-func (s *MaterialService) MoveMyMaterialById(reqDto *dtos.MoveMyMaterialByIdReqDto) (*dtos.MoveMyMaterialByIdResDto, *exceptions.Exception) {
+func (s *MaterialService) MoveMyMaterialById(
+	reqDto *dtos.MoveMyMaterialByIdReqDto,
+) (*dtos.MoveMyMaterialByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -304,6 +359,7 @@ func (s *MaterialService) MoveMyMaterialById(reqDto *dtos.MoveMyMaterialByIdReqD
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
+		false, // exclude the deleted materials
 	)
 	if exception != nil {
 		return nil, exception
@@ -312,7 +368,7 @@ func (s *MaterialService) MoveMyMaterialById(reqDto *dtos.MoveMyMaterialByIdReqD
 	result := s.db.Exec(`
 		UPDATE "MaterialTable"
 		SET "parent_sub_shelf_id" = ?, "updated_at" = NOW()
-		WHERE id = ?`,
+		WHERE id = ? AND deleted_at IS NULL`,
 		reqDto.Body.DestinationParentSubShelfId, material.Id,
 	)
 	if err := result.Error; err != nil {
@@ -324,7 +380,9 @@ func (s *MaterialService) MoveMyMaterialById(reqDto *dtos.MoveMyMaterialByIdReqD
 	}, nil
 }
 
-func (s *MaterialService) MoveMyMaterialsByIds(reqDto *dtos.MoveMyMaterialsByIdsReqDto) (*dtos.MoveMyMaterialsByIdsResDto, *exceptions.Exception) {
+func (s *MaterialService) MoveMyMaterialsByIds(
+	reqDto *dtos.MoveMyMaterialsByIdsReqDto,
+) (*dtos.MoveMyMaterialsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -341,6 +399,7 @@ func (s *MaterialService) MoveMyMaterialsByIds(reqDto *dtos.MoveMyMaterialsByIds
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
+		false, // exclude the deleted materials
 	)
 	if exception != nil {
 		return nil, exception
@@ -353,7 +412,7 @@ func (s *MaterialService) MoveMyMaterialsByIds(reqDto *dtos.MoveMyMaterialsByIds
 	result := s.db.Exec(`
 		UPDATE "MaterialTable"
 		SET "parent_sub_shelf_id" = ?, "updated_at" = NOW()
-		WHERE id IN ?`,
+		WHERE id IN ? AND deleted_at IS NULL`,
 		reqDto.Body.DestinationParentSubShelfId, materialIds, // use the extracted material to update
 	)
 	if err := result.Error; err != nil {
@@ -365,7 +424,9 @@ func (s *MaterialService) MoveMyMaterialsByIds(reqDto *dtos.MoveMyMaterialsByIds
 	}, nil
 }
 
-func (s *MaterialService) RestoreMyMaterialById(reqDto *dtos.RestoreMyMaterialByIdReqDto) (*dtos.RestoreMyMaterialByIdResDto, *exceptions.Exception) {
+func (s *MaterialService) RestoreMyMaterialById(
+	reqDto *dtos.RestoreMyMaterialByIdReqDto,
+) (*dtos.RestoreMyMaterialByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -385,7 +446,9 @@ func (s *MaterialService) RestoreMyMaterialById(reqDto *dtos.RestoreMyMaterialBy
 	}, nil
 }
 
-func (s *MaterialService) RestoreMyMaterialsByIds(reqDto *dtos.RestoreMyMaterialsByIdsReqDto) (*dtos.RestoreMyMaterialsByIdsResDto, *exceptions.Exception) {
+func (s *MaterialService) RestoreMyMaterialsByIds(
+	reqDto *dtos.RestoreMyMaterialsByIdsReqDto,
+) (*dtos.RestoreMyMaterialsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -405,7 +468,9 @@ func (s *MaterialService) RestoreMyMaterialsByIds(reqDto *dtos.RestoreMyMaterial
 	}, nil
 }
 
-func (s *MaterialService) DeleteMyMaterialById(reqDto *dtos.DeleteMyMaterialByIdReqDto) (*dtos.DeleteMyMaterialByIdResDto, *exceptions.Exception) {
+func (s *MaterialService) DeleteMyMaterialById(
+	reqDto *dtos.DeleteMyMaterialByIdReqDto,
+) (*dtos.DeleteMyMaterialByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -425,7 +490,9 @@ func (s *MaterialService) DeleteMyMaterialById(reqDto *dtos.DeleteMyMaterialById
 	}, nil
 }
 
-func (s *MaterialService) DeleteMyMaterialsByIds(reqDto *dtos.DeleteMyMaterialsByIdsReqDto) (*dtos.DeleteMyMaterialsByIdsResDto, *exceptions.Exception) {
+func (s *MaterialService) DeleteMyMaterialsByIds(
+	reqDto *dtos.DeleteMyMaterialsByIdsReqDto,
+) (*dtos.DeleteMyMaterialsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}

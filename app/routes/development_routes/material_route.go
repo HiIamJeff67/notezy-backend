@@ -1,7 +1,7 @@
 package developmentroutes
 
 import (
-	"notezy-backend/app/adapters"
+	adapters "notezy-backend/app/adapters"
 	binders "notezy-backend/app/binders"
 	controllers "notezy-backend/app/controllers"
 	middlewares "notezy-backend/app/middlewares"
@@ -33,9 +33,15 @@ func configureDevelopmentMaterialRoutes() {
 			),
 		)
 		materialRoutes.GET(
-			"/searchMyMaterialsByShelfId",
-			materialBinder.BindSearchMyMaterialsByShelfId(
-				materialController.SearchMyMaterialsByShelfId,
+			"/getAllMyMaterialsByParentSubShelfId",
+			materialBinder.BindGetAllMyMaterialsByParentSubShelfId(
+				materialController.GetAllMyMaterialsByParentSubShelfId,
+			),
+		)
+		materialRoutes.GET(
+			"/getAllMyMaterialsByRootShelfId",
+			materialBinder.BindGetAllMyMaterialsByRootShelfId(
+				materialController.GetAllMyMaterialsByRootShelfId,
 			),
 		)
 		materialRoutes.POST(

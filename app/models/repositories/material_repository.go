@@ -20,8 +20,8 @@ import (
 type MaterialRepositoryInterface interface {
 	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission) bool
 	HasPermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission) bool
-	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.MaterialRelation, allowedPermissions []enums.AccessControlPermission) (*schemas.Material, *exceptions.Exception)
-	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.MaterialRelation, allowedPermissions []enums.AccessControlPermission) ([]schemas.Material, *exceptions.Exception)
+	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.MaterialRelation, allowedPermissions []enums.AccessControlPermission, includeDeleted bool) (*schemas.Material, *exceptions.Exception)
+	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.MaterialRelation, allowedPermissions []enums.AccessControlPermission, includeDeleted bool) ([]schemas.Material, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID) (*schemas.Material, *exceptions.Exception)
 	CreateOne(subShelfId uuid.UUID, userId uuid.UUID, input inputs.CreateMaterialInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, subShelfId uuid.UUID, userId uuid.UUID, matchedMaterialType *enums.MaterialType, input inputs.PartialUpdateMaterialInput) (*schemas.Material, *exceptions.Exception)
@@ -94,6 +94,7 @@ func (r *MaterialRepository) CheckPermissionAndGetOneById(
 	userId uuid.UUID,
 	preloads []schemas.MaterialRelation,
 	allowedPermissions []enums.AccessControlPermission,
+	includeDeleted bool,
 ) (*schemas.Material, *exceptions.Exception) {
 	material := schemas.Material{}
 
@@ -103,6 +104,9 @@ func (r *MaterialRepository) CheckPermissionAndGetOneById(
 		Where("\"MaterialTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?",
 			id, userId, allowedPermissions,
 		)
+	if !includeDeleted {
+		db = db.Where("\"MaterialTable\".deleted_at IS NULL")
+	}
 
 	if len(preloads) > 0 {
 		for _, preload := range preloads {
@@ -123,6 +127,7 @@ func (r *MaterialRepository) CheckPermissionsAndGetManyByIds(
 	userId uuid.UUID,
 	preloads []schemas.MaterialRelation,
 	allowedPermissions []enums.AccessControlPermission,
+	includeDeleted bool,
 ) ([]schemas.Material, *exceptions.Exception) {
 	materials := []schemas.Material{}
 
@@ -132,6 +137,9 @@ func (r *MaterialRepository) CheckPermissionsAndGetManyByIds(
 		Where("\"MaterialTable\".id IN ? AND uts.user_id = ? AND uts.permission IN ?",
 			ids, userId, allowedPermissions,
 		)
+	if !includeDeleted {
+		db = db.Where("\"MaterialTable\".deleted_at IS NULL")
+	}
 
 	if len(preloads) > 0 {
 		for _, preload := range preloads {
@@ -160,7 +168,7 @@ func (r *MaterialRepository) GetOneById(
 		enums.AccessControlPermission_Admin,
 	}
 
-	return r.CheckPermissionAndGetOneById(id, userId, nil, allowedPermissions)
+	return r.CheckPermissionAndGetOneById(id, userId, nil, allowedPermissions, false)
 }
 
 func (r *MaterialRepository) CreateOne(
@@ -206,32 +214,50 @@ func (r *MaterialRepository) UpdateOneById(
 	}
 
 	// get and check the permission of the current user to the source shelf
-	existingMaterial, exception := r.CheckPermissionAndGetOneById(id, userId, nil, allowedPermissions)
+	existingMaterial, exception := r.CheckPermissionAndGetOneById(
+		id,
+		userId,
+		nil,
+		allowedPermissions,
+		false,
+	)
 	if exception != nil || existingMaterial == nil {
 		return nil, exception
 	}
 
 	// check if the material type is matched
 	if matchedMaterialType != nil && existingMaterial.Type != *matchedMaterialType {
-		return nil, exceptions.Material.MaterialTypeNotMatch(existingMaterial.Id.String(), existingMaterial.Type, matchedMaterialType)
+		return nil, exceptions.Material.MaterialTypeNotMatch(
+			existingMaterial.Id.String(),
+			existingMaterial.Type,
+			matchedMaterialType,
+		)
 	}
 
 	// if the root shelf id is required to be updated in the database
 	if input.Values.ParentSubShelfId != nil && (input.SetNull == nil || !(*input.SetNull)["ParentSubShelfId"]) {
 		subShelfRepository := NewSubShelfRepository(r.db)
 		// check if the user has the enough permission to the destination shelf
-		if hasPermissionOfNewSubShelf := subShelfRepository.HasPermission(*input.Values.ParentSubShelfId, userId, allowedPermissions); !hasPermissionOfNewSubShelf {
+		if hasPermissionOfNewSubShelf := subShelfRepository.HasPermission(
+			*input.Values.ParentSubShelfId,
+			userId,
+			allowedPermissions,
+		); !hasPermissionOfNewSubShelf {
 			return nil, exceptions.Shelf.NoPermission()
 		}
 	}
 
 	updates, err := util.PartialUpdatePreprocess(input.Values, input.SetNull, *existingMaterial)
 	if err != nil {
-		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(input.Values, input.SetNull, *existingMaterial)
+		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(
+			input.Values,
+			input.SetNull,
+			*existingMaterial,
+		)
 	}
 
 	result := r.db.Model(&schemas.Material{}).
-		Where("id = ?", id). // no need to check the permission here, since we have done that part on the above
+		Where("id = ? AND deleted_at IS NULL", id). // no need to check the permission here, since we have done that part on the above
 		Select("*").
 		Updates(&updates)
 	if err := result.Error; err != nil {

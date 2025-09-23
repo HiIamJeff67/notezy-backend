@@ -19,7 +19,7 @@ import (
 
 type RootShelfRepositoryInterface interface {
 	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermission []enums.AccessControlPermission) bool
-	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RootShelfRelation, allowedPermissions []enums.AccessControlPermission) (*schemas.RootShelf, *exceptions.Exception)
+	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RootShelfRelation, allowedPermissions []enums.AccessControlPermission, includeDeleted bool) (*schemas.RootShelf, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RootShelfRelation) (*schemas.RootShelf, *exceptions.Exception)
 	CreateOneByOwnerId(ownerId uuid.UUID, input inputs.CreateRootShelfInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateRootShelfInput) (*schemas.RootShelf, *exceptions.Exception)
@@ -69,6 +69,7 @@ func (r *RootShelfRepository) CheckPermissionAndGetOneById(
 	userId uuid.UUID,
 	preloads []schemas.RootShelfRelation,
 	allowedPermissions []enums.AccessControlPermission,
+	includeDeleted bool,
 ) (*schemas.RootShelf, *exceptions.Exception) {
 	rootShelf := schemas.RootShelf{}
 
@@ -77,6 +78,10 @@ func (r *RootShelfRepository) CheckPermissionAndGetOneById(
 		Where("root_shelf_id = \"RootShelfTable\".id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
 	db := r.db.Model(&schemas.RootShelf{}).
 		Where("\"RootShelfTable\".id = ? AND EXISTS (?)", id, subQuery)
+
+	if !includeDeleted {
+		db = db.Where("\"RootShelfTable\".deleted_at IS NULL")
+	}
 
 	if len(preloads) > 0 {
 		for _, preload := range preloads {
@@ -103,10 +108,13 @@ func (r *RootShelfRepository) GetOneById(
 		enums.AccessControlPermission_Admin,
 	}
 
-	return r.CheckPermissionAndGetOneById(id, userId, preloads, allowedPermissions)
+	return r.CheckPermissionAndGetOneById(id, userId, preloads, allowedPermissions, false)
 }
 
-func (r *RootShelfRepository) CreateOneByOwnerId(ownerId uuid.UUID, input inputs.CreateRootShelfInput) (*uuid.UUID, *exceptions.Exception) {
+func (r *RootShelfRepository) CreateOneByOwnerId(
+	ownerId uuid.UUID,
+	input inputs.CreateRootShelfInput,
+) (*uuid.UUID, *exceptions.Exception) {
 	var newRootShelf schemas.RootShelf
 	newRootShelf.OwnerId = ownerId
 	if err := copier.Copy(&newRootShelf, &input); err != nil {
@@ -149,7 +157,13 @@ func (r *RootShelfRepository) UpdateOneById(
 		enums.AccessControlPermission_Admin,
 	}
 
-	existingRootShelf, exception := r.CheckPermissionAndGetOneById(id, userId, nil, allowedPermissions)
+	existingRootShelf, exception := r.CheckPermissionAndGetOneById(
+		id,
+		userId,
+		nil,
+		allowedPermissions,
+		false,
+	)
 	if exception != nil {
 		return nil, exception
 	}
@@ -162,7 +176,7 @@ func (r *RootShelfRepository) UpdateOneById(
 	}
 
 	result := r.db.Model(&schemas.RootShelf{}).
-		Where("id = ?", id).
+		Where("id = ? AND deleted_at IS NULL", id).
 		Select("*").
 		Updates(&updates)
 	if err := result.Error; err != nil {

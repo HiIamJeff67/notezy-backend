@@ -34,7 +34,7 @@ func NewRootShelfController(service services.RootShelfServiceInterface) RootShel
 
 /* ============================== Controller ============================== */
 
-// with AuthMiddleware()
+// with AuthMiddleware
 func (c *RootShelfController) GetMyRootShelfById(ctx *gin.Context, reqDto *dtos.GetMyRootShelfByIdReqDto) {
 	resDto, exception := c.rootShelfService.GetMyRootShelfById(reqDto)
 	if exception != nil {
@@ -49,7 +49,7 @@ func (c *RootShelfController) GetMyRootShelfById(ctx *gin.Context, reqDto *dtos.
 	})
 }
 
-// with AuthMiddleware()
+// with AuthMiddleware
 func (c *RootShelfController) SearchRecentRootShelves(ctx *gin.Context, reqDto *dtos.SearchRecentRootShelvesReqDto) {
 	resDto, exception := c.rootShelfService.SearchRecentRootShelves(reqDto)
 	if exception != nil {
@@ -64,7 +64,7 @@ func (c *RootShelfController) SearchRecentRootShelves(ctx *gin.Context, reqDto *
 	})
 }
 
-// with AuthMiddleware()
+// with AuthMiddleware
 func (c *RootShelfController) CreateRootShelf(ctx *gin.Context, reqDto *dtos.CreateRootShelfReqDto) {
 	resDto, exception := c.rootShelfService.CreateRootShelf(reqDto)
 	if exception != nil {
@@ -79,7 +79,7 @@ func (c *RootShelfController) CreateRootShelf(ctx *gin.Context, reqDto *dtos.Cre
 	})
 }
 
-// with AuthMiddleware()
+// with AuthMiddleware
 func (c *RootShelfController) UpdateMyRootShelfById(ctx *gin.Context, reqDto *dtos.UpdateMyRootShelfByIdReqDto) {
 	resDto, exception := c.rootShelfService.UpdateMyRootShelfById(reqDto)
 	if exception != nil {
@@ -94,7 +94,7 @@ func (c *RootShelfController) UpdateMyRootShelfById(ctx *gin.Context, reqDto *dt
 	})
 }
 
-// with AuthMiddleware()
+// with AuthMiddleware
 func (c *RootShelfController) RestoreMyRootShelfById(ctx *gin.Context, reqDto *dtos.RestoreMyRootShelfByIdReqDto) {
 	resDto, exception := c.rootShelfService.RestoreMyRootShelfById(reqDto)
 	if exception != nil {
@@ -109,7 +109,7 @@ func (c *RootShelfController) RestoreMyRootShelfById(ctx *gin.Context, reqDto *d
 	})
 }
 
-// with AuthMiddleware()
+// with AuthMiddleware
 func (c *RootShelfController) RestoreMyRootShelvesByIds(ctx *gin.Context, reqDto *dtos.RestoreMyRootShelvesByIdsReqDto) {
 	resDto, exception := c.rootShelfService.RestoreMyRootShelvesByIds(reqDto)
 	if exception != nil {
@@ -124,7 +124,7 @@ func (c *RootShelfController) RestoreMyRootShelvesByIds(ctx *gin.Context, reqDto
 	})
 }
 
-// with AuthMiddleware()
+// with AuthMiddleware
 func (c *RootShelfController) DeleteMyRootShelfById(ctx *gin.Context, reqDto *dtos.DeleteMyRootShelfByIdReqDto) {
 	resDto, exception := c.rootShelfService.DeleteMyRootShelfById(reqDto)
 	if exception != nil {
@@ -139,7 +139,7 @@ func (c *RootShelfController) DeleteMyRootShelfById(ctx *gin.Context, reqDto *dt
 	})
 }
 
-// with AuthMiddleware()
+// with AuthMiddleware
 func (c *RootShelfController) DeleteMyRootShelvesByIds(ctx *gin.Context, reqDto *dtos.DeleteMyRootShelvesByIdsReqDto) {
 	resDto, exception := c.rootShelfService.DeleteMyRootShelvesByIds(reqDto)
 	if exception != nil {

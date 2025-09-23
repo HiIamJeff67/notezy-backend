@@ -13,7 +13,8 @@ import (
 
 type MaterialControllerInterface interface {
 	GetMyMaterialById(ctx *gin.Context, reqDto *dtos.GetMyMaterialByIdReqDto)
-	SearchMyMaterialsByShelfId(ctx *gin.Context, reqDto *dtos.SearchMyMaterialsByShelfIdReqDto)
+	GetAllMyMaterialsByParentSubShelfId(ctx *gin.Context, reqDto *dtos.GetAllMyMaterialsByParentSubShelfIdReqDto)
+	GetAllMyMaterialsByRootShelfId(ctx *gin.Context, reqDto *dtos.GetAllMyMaterialsByRootShelfIdReqDto)
 	CreateTextbookMaterial(ctx *gin.Context, reqDto *dtos.CreateMaterialReqDto)
 	SaveMyTextbookMaterialById(ctx *gin.Context, reqDto *dtos.SaveMyMaterialByIdReqDto)
 	MoveMyMaterialById(ctx *gin.Context, reqDto *dtos.MoveMyMaterialByIdReqDto)
@@ -52,8 +53,23 @@ func (c *MaterialController) GetMyMaterialById(ctx *gin.Context, reqDto *dtos.Ge
 }
 
 // with AuthMiddleware
-func (c *MaterialController) SearchMyMaterialsByShelfId(ctx *gin.Context, reqDto *dtos.SearchMyMaterialsByShelfIdReqDto) {
-	resDto, exception := c.materialService.SearchMyMaterialsByShelfId(ctx.Request.Context(), reqDto)
+func (c *MaterialController) GetAllMyMaterialsByParentSubShelfId(ctx *gin.Context, reqDto *dtos.GetAllMyMaterialsByParentSubShelfIdReqDto) {
+	resDto, exception := c.materialService.GetAllMyMaterialsByParentSubShelfId(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+// with AuthMiddleware
+func (c *MaterialController) GetAllMyMaterialsByRootShelfId(ctx *gin.Context, reqDto *dtos.GetAllMyMaterialsByRootShelfIdReqDto) {
+	resDto, exception := c.materialService.GetAllMyMaterialsByRootShelfId(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return

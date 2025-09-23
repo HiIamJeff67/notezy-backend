@@ -29,7 +29,7 @@ func NewUserController(service services.UserServiceInterface) UserControllerInte
 
 /* ============================== Controllers ============================== */
 
-// with AuthMiddleware()
+// with AuthMiddleware
 func (c *UserController) GetUserData(ctx *gin.Context, reqDto *dtos.GetUserDataReqDto) {
 	resDto, exception := c.userService.GetUserData(reqDto)
 	if exception != nil {
@@ -44,7 +44,7 @@ func (c *UserController) GetUserData(ctx *gin.Context, reqDto *dtos.GetUserDataR
 	})
 }
 
-// with AuthMiddleware()
+// with AuthMiddleware
 func (c *UserController) GetMe(ctx *gin.Context, reqDto *dtos.GetMeReqDto) {
 	resDto, exception := c.userService.GetMe(reqDto)
 	if exception != nil {
@@ -59,7 +59,7 @@ func (c *UserController) GetMe(ctx *gin.Context, reqDto *dtos.GetMeReqDto) {
 	})
 }
 
-// with AuthMiddleware()
+// with AuthMiddleware
 func (c *UserController) UpdateMe(ctx *gin.Context, reqDto *dtos.UpdateMeReqDto) {
 	resDto, exception := c.userService.UpdateMe(reqDto)
 	if exception != nil {
