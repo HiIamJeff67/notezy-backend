@@ -82,7 +82,11 @@ func (r *ThemeRepository) CreateOneByAuthorId(authorId uuid.UUID, input inputs.C
 	return &newTheme.Id, nil
 }
 
-func (r *ThemeRepository) UpdateOneById(id uuid.UUID, authorId uuid.UUID, input inputs.PartialUpdateThemeInput) (*schemas.Theme, *exceptions.Exception) {
+func (r *ThemeRepository) UpdateOneById(
+	id uuid.UUID,
+	authorId uuid.UUID,
+	input inputs.PartialUpdateThemeInput,
+) (*schemas.Theme, *exceptions.Exception) {
 	existingTheme, exception := r.GetOneById(id, nil)
 	if exception != nil || existingTheme == nil {
 		return nil, exception

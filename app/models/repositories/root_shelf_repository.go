@@ -13,13 +13,14 @@ import (
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
 	util "notezy-backend/app/util"
+	types "notezy-backend/shared/types"
 )
 
 /* ============================== Definitions ============================== */
 
 type RootShelfRepositoryInterface interface {
-	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermission []enums.AccessControlPermission) bool
-	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RootShelfRelation, allowedPermissions []enums.AccessControlPermission, includeDeleted bool) (*schemas.RootShelf, *exceptions.Exception)
+	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermission []enums.AccessControlPermission, onlyDeleted types.Ternary) bool
+	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RootShelfRelation, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) (*schemas.RootShelf, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RootShelfRelation) (*schemas.RootShelf, *exceptions.Exception)
 	CreateOneByOwnerId(ownerId uuid.UUID, input inputs.CreateRootShelfInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateRootShelfInput) (*schemas.RootShelf, *exceptions.Exception)
@@ -48,15 +49,24 @@ func (r *RootShelfRepository) HasPermission(
 	id uuid.UUID,
 	userId uuid.UUID,
 	allowedPermissions []enums.AccessControlPermission,
+	onlyDeleted types.Ternary,
 ) bool {
 	var count int64 = 0
 
 	subQuery := r.db.Model(&schemas.UsersToShelves{}).
 		Select("1").
 		Where("root_shelf_id = \"RootShelfTable\".id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
-	result := r.db.Model(&schemas.RootShelf{}).
-		Where("id = ? AND EXISTS (?)", id, subQuery).
-		Count(&count)
+	db := r.db.Model(&schemas.RootShelf{}).
+		Where("id = ? AND EXISTS (?)", id, subQuery)
+
+	switch onlyDeleted {
+	case types.Ternary_Positive:
+		db = db.Where("deleted_at IS NOT NULL")
+	case types.Ternary_Negative:
+		db = db.Where("deleted_at IS NULL")
+	}
+
+	result := db.Count(&count)
 	if err := result.Error; err != nil || count == 0 {
 		return false
 	}
@@ -69,7 +79,7 @@ func (r *RootShelfRepository) CheckPermissionAndGetOneById(
 	userId uuid.UUID,
 	preloads []schemas.RootShelfRelation,
 	allowedPermissions []enums.AccessControlPermission,
-	includeDeleted bool,
+	onlyDeleted types.Ternary,
 ) (*schemas.RootShelf, *exceptions.Exception) {
 	rootShelf := schemas.RootShelf{}
 
@@ -79,7 +89,12 @@ func (r *RootShelfRepository) CheckPermissionAndGetOneById(
 	db := r.db.Model(&schemas.RootShelf{}).
 		Where("\"RootShelfTable\".id = ? AND EXISTS (?)", id, subQuery)
 
-	if !includeDeleted {
+	switch onlyDeleted {
+	case types.Ternary_Positive:
+		db = db.Where("\"RootShelfTable\".deleted_at IS NOT NULL")
+	case types.Ternary_Neutral:
+		break
+	case types.Ternary_Negative:
 		db = db.Where("\"RootShelfTable\".deleted_at IS NULL")
 	}
 
@@ -108,7 +123,13 @@ func (r *RootShelfRepository) GetOneById(
 		enums.AccessControlPermission_Admin,
 	}
 
-	return r.CheckPermissionAndGetOneById(id, userId, preloads, allowedPermissions, false)
+	return r.CheckPermissionAndGetOneById(
+		id,
+		userId,
+		preloads,
+		allowedPermissions,
+		types.Ternary_Negative,
+	)
 }
 
 func (r *RootShelfRepository) CreateOneByOwnerId(
@@ -162,7 +183,7 @@ func (r *RootShelfRepository) UpdateOneById(
 		userId,
 		nil,
 		allowedPermissions,
-		false,
+		types.Ternary_Negative,
 	)
 	if exception != nil {
 		return nil, exception

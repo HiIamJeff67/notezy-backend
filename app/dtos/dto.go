@@ -20,7 +20,7 @@ type NotezyRequest[H, C, B, P any] struct {
 
 type SimpleSearchDto struct {
 	Query  string `form:"query" validate:"omitempty,max=256"`
-	Limit  int32  `form:"limit" validate:"omitempty,min=1"`
+	Limit  int32  `form:"limit" validate:"omitempty,min=1,max=100"`
 	Offset int32  `form:"offset" validate:"omitempty,min=0"`
 }
 

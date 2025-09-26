@@ -13,15 +13,16 @@ import (
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
 	util "notezy-backend/app/util"
+	types "notezy-backend/shared/types"
 )
 
 /* ============================== Definitions ============================== */
 
 type SubShelfRepositoryInterface interface {
-	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission) bool
-	HasPermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission) bool
-	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation, allowedPermissions []enums.AccessControlPermission, includeDeleted bool) (*schemas.SubShelf, *exceptions.Exception)
-	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation, allowedPermissions []enums.AccessControlPermission, includeDeleted bool) ([]schemas.SubShelf, *exceptions.Exception)
+	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) bool
+	HasPermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) bool
+	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) (*schemas.SubShelf, *exceptions.Exception)
+	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) ([]schemas.SubShelf, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation) (*schemas.SubShelf, *exceptions.Exception)
 	GetAllByRootShelfId(rootShelfId uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation) ([]schemas.SubShelf, *exceptions.Exception)
 	CreateOneByUserId(userId uuid.UUID, input inputs.CreateSubShelfInput) (*uuid.UUID, *exceptions.Exception)
@@ -51,15 +52,26 @@ func (r *SubShelfRepository) HasPermission(
 	id uuid.UUID,
 	userId uuid.UUID,
 	allowedPermissions []enums.AccessControlPermission,
+	onlyDeleted types.Ternary,
 ) bool {
 	var count int64 = 0
 
 	subQuery := r.db.Model(&schemas.UsersToShelves{}).
 		Select("1").
-		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
-	result := r.db.Model(&schemas.SubShelf{}).
-		Where("id = ? AND EXISTS (?)", id, subQuery).
-		Count(&count)
+		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?",
+			userId, allowedPermissions,
+		)
+	db := r.db.Model(&schemas.SubShelf{}).
+		Where("id = ? AND EXISTS (?)", id, subQuery)
+
+	switch onlyDeleted {
+	case types.Ternary_Positive:
+		db = db.Where("deleted_at IS NOT NULL")
+	case types.Ternary_Negative:
+		db = db.Where("deleted_at IS NULL")
+	}
+
+	result := db.Count(&count)
 	if err := result.Error; err != nil || count == 0 {
 		return false
 	}
@@ -71,15 +83,24 @@ func (r *SubShelfRepository) HasPermissions(
 	ids []uuid.UUID,
 	userId uuid.UUID,
 	allowedPermissions []enums.AccessControlPermission,
+	onlyDeleted types.Ternary,
 ) bool {
 	var count int64 = 0
 
 	subQuery := r.db.Model(&schemas.UsersToShelves{}).
 		Select("1").
 		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
-	result := r.db.Model(&schemas.SubShelf{}).
-		Where("id IN ? AND EXISTS (?)", ids, subQuery).
-		Count(&count)
+	db := r.db.Model(&schemas.SubShelf{}).
+		Where("id IN ? AND EXISTS (?)", ids, subQuery)
+
+	switch onlyDeleted {
+	case types.Ternary_Positive:
+		db = db.Where("deleted_at IS NOT NULL")
+	case types.Ternary_Negative:
+		db = db.Where("deleted_at IS NULL")
+	}
+
+	result := db.Count(&count)
 	if err := result.Error; err != nil || count == 0 {
 		return false
 	}
@@ -92,7 +113,7 @@ func (r *SubShelfRepository) CheckPermissionAndGetOneById(
 	userId uuid.UUID,
 	preloads []schemas.SubShelfRelation,
 	allowedPermissions []enums.AccessControlPermission,
-	includeDeleted bool,
+	onlyDeleted types.Ternary,
 ) (*schemas.SubShelf, *exceptions.Exception) {
 	subShelf := schemas.SubShelf{}
 
@@ -104,7 +125,12 @@ func (r *SubShelfRepository) CheckPermissionAndGetOneById(
 	db := r.db.Model(&schemas.SubShelf{}).
 		Where("id = ? AND EXISTS (?)", id, subQuery)
 
-	if !includeDeleted {
+	switch onlyDeleted {
+	case types.Ternary_Positive:
+		db = db.Where("\"SubShelfTable\".deleted_at IS NOT NULL")
+	case types.Ternary_Neutral:
+		break
+	case types.Ternary_Negative:
 		db = db.Where("\"SubShelfTable\".deleted_at IS NULL")
 	}
 
@@ -127,7 +153,7 @@ func (r *SubShelfRepository) CheckPermissionsAndGetManyByIds(
 	userId uuid.UUID,
 	preloads []schemas.SubShelfRelation,
 	allowedPermissions []enums.AccessControlPermission,
-	includeDeleted bool,
+	onlyDeleted types.Ternary,
 ) ([]schemas.SubShelf, *exceptions.Exception) {
 	subShelves := []schemas.SubShelf{}
 
@@ -139,7 +165,12 @@ func (r *SubShelfRepository) CheckPermissionsAndGetManyByIds(
 	db := r.db.Model(&schemas.SubShelf{}).
 		Where("id IN ? AND EXISTS (?)", ids, subQuery)
 
-	if !includeDeleted {
+	switch onlyDeleted {
+	case types.Ternary_Positive:
+		db = db.Where("\"SubShelfTable\".deleted_at IS NOT NULL")
+	case types.Ternary_Neutral:
+		break
+	case types.Ternary_Negative:
 		db = db.Where("\"SubShelfTable\".deleted_at IS NULL")
 	}
 
@@ -171,7 +202,13 @@ func (r *SubShelfRepository) GetOneById(
 		enums.AccessControlPermission_Admin,
 	}
 
-	return r.CheckPermissionAndGetOneById(id, userId, preloads, allowedPermissions, false)
+	return r.CheckPermissionAndGetOneById(
+		id,
+		userId,
+		preloads,
+		allowedPermissions,
+		types.Ternary_Negative,
+	)
 }
 
 func (r *SubShelfRepository) GetAllByRootShelfId(
@@ -224,7 +261,7 @@ func (r *SubShelfRepository) CreateOneByUserId(
 			userId,
 			nil,
 			allowedPermissions,
-			false,
+			types.Ternary_Negative,
 		)
 		if exception != nil {
 			return nil, exception
@@ -261,7 +298,7 @@ func (r *SubShelfRepository) UpdateOneById(
 		userId,
 		nil,
 		allowedPermissions,
-		false,
+		types.Ternary_Negative,
 	)
 	if exception != nil {
 		return nil, exception

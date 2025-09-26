@@ -13,7 +13,8 @@ import (
 
 type SubShelfControllerInterface interface {
 	GetMySubShelfById(ctx *gin.Context, reqDto *dtos.GetMySubShelfByIdReqDto)
-	GetAllSubShelvesByRootShelfId(ctx *gin.Context, reqDto *dtos.GetAllSubShelvesByRootShelfIdReqDto)
+	GetMySubShelvesByPrevSubShelfId(ctx *gin.Context, reqDto *dtos.GetMySubShelvesByPrevSubShelfIdReqDto)
+	GetAllMySubShelvesByRootShelfId(ctx *gin.Context, reqDto *dtos.GetAllMySubShelvesByRootShelfIdReqDto)
 	CreateSubShelfByRootShelfId(ctx *gin.Context, reqDto *dtos.CreateSubShelfByRootShelfIdReqDto)
 	UpdateMySubShelfById(ctx *gin.Context, reqDto *dtos.UpdateMySubShelfByIdReqDto)
 	MoveMySubShelf(ctx *gin.Context, reqDto *dtos.MoveMySubShelfReqDto)
@@ -52,8 +53,23 @@ func (c *SubShelfController) GetMySubShelfById(ctx *gin.Context, reqDto *dtos.Ge
 }
 
 // with AuthMiddleware
-func (c *SubShelfController) GetAllSubShelvesByRootShelfId(ctx *gin.Context, reqDto *dtos.GetAllSubShelvesByRootShelfIdReqDto) {
-	resDto, exception := c.subShelfService.GetAllSubShelvesByRootShelfId(reqDto)
+func (c *SubShelfController) GetMySubShelvesByPrevSubShelfId(ctx *gin.Context, reqDto *dtos.GetMySubShelvesByPrevSubShelfIdReqDto) {
+	resDto, exception := c.subShelfService.GetMySubShelvesByPrevSubShelfId(reqDto)
+	if exception != nil {
+		exception.Log().SafelyResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+// with AuthMiddleware
+func (c *SubShelfController) GetAllMySubShelvesByRootShelfId(ctx *gin.Context, reqDto *dtos.GetAllMySubShelvesByRootShelfIdReqDto) {
+	resDto, exception := c.subShelfService.GetAllMySubShelvesByRootShelfId(reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return

@@ -30,9 +30,15 @@ func configureDevelopmentSubShelfRoutes() {
 			),
 		)
 		subShelfRoutes.GET(
-			"/getAllSubShelvesByRootShelfId",
-			subShelfBinder.BindGetAllSubShelvesByRootShelfId(
-				subShelfController.GetAllSubShelvesByRootShelfId,
+			"/getMySubShelvesByPrevSubShelfId",
+			subShelfBinder.BindGetMySubShelvesByPrevSubShelfId(
+				subShelfController.GetMySubShelvesByPrevSubShelfId,
+			),
+		)
+		subShelfRoutes.GET(
+			"/getAllMySubShelvesByRootShelfId",
+			subShelfBinder.BindGetAllMySubShelvesByRootShelfId(
+				subShelfController.GetAllMySubShelvesByRootShelfId,
 			),
 		)
 		subShelfRoutes.POST(

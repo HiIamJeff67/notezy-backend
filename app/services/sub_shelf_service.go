@@ -16,13 +16,15 @@ import (
 	enums "notezy-backend/app/models/schemas/enums"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
+	types "notezy-backend/shared/types"
 )
 
 /* ============================== Interface & Instance ============================== */
 
 type SubShelfServiceInterface interface {
 	GetMySubShelfById(reqDto *dtos.GetMySubShelfByIdReqDto) (*dtos.GetMySubShelfByIdResDto, *exceptions.Exception)
-	GetAllSubShelvesByRootShelfId(reqDto *dtos.GetAllSubShelvesByRootShelfIdReqDto) (*dtos.GetAllSubShelvesByRootShelfIdResDto, *exceptions.Exception)
+	GetMySubShelvesByPrevSubShelfId(reqDto *dtos.GetMySubShelvesByPrevSubShelfIdReqDto) (*dtos.GetMySubShelvesByPrevSubShelfIdResDto, *exceptions.Exception)
+	GetAllMySubShelvesByRootShelfId(reqDto *dtos.GetAllMySubShelvesByRootShelfIdReqDto) (*dtos.GetAllMySubShelvesByRootShelfIdResDto, *exceptions.Exception)
 	CreateSubShelfByRootShelfId(reqDto *dtos.CreateSubShelfByRootShelfIdReqDto) (*dtos.CreateSubShelfByRootShelfIdResDto, *exceptions.Exception)
 	UpdateMySubShelfById(reqDto *dtos.UpdateMySubShelfByIdReqDto) (*dtos.UpdateMySubShelfByIdResDto, *exceptions.Exception)
 	MoveMySubShelf(reqDto *dtos.MoveMySubShelfReqDto) (*dtos.MoveMySubShelfResDto, *exceptions.Exception)
@@ -76,8 +78,8 @@ func (s *SubShelfService) GetMySubShelfById(reqDto *dtos.GetMySubShelfByIdReqDto
 	}, nil
 }
 
-func (s *SubShelfService) GetAllSubShelvesByRootShelfId(reqDto *dtos.GetAllSubShelvesByRootShelfIdReqDto) (
-	*dtos.GetAllSubShelvesByRootShelfIdResDto, *exceptions.Exception,
+func (s *SubShelfService) GetMySubShelvesByPrevSubShelfId(reqDto *dtos.GetMySubShelvesByPrevSubShelfIdReqDto) (
+	*dtos.GetMySubShelvesByPrevSubShelfIdResDto, *exceptions.Exception,
 ) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Shelf.InvalidInput().WithError(err)
@@ -89,7 +91,37 @@ func (s *SubShelfService) GetAllSubShelvesByRootShelfId(reqDto *dtos.GetAllSubSh
 		enums.AccessControlPermission_Admin,
 	}
 
-	resDto := dtos.GetAllSubShelvesByRootShelfIdResDto{}
+	resDto := dtos.GetMySubShelvesByPrevSubShelfIdResDto{}
+
+	subQuery := s.db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?",
+			reqDto.ContextFields.UserId, allowedPermissions,
+		)
+	result := s.db.Model(&schemas.SubShelf{}).
+		Where("prev_sub_shelf_id = ? AND EXISTS (?)", reqDto.Param.PrevSubShelfId, subQuery).
+		Find(&resDto)
+	if err := result.Error; err != nil {
+		return nil, exceptions.Shelf.NotFound().WithError(err)
+	}
+
+	return &resDto, nil
+}
+
+func (s *SubShelfService) GetAllMySubShelvesByRootShelfId(reqDto *dtos.GetAllMySubShelvesByRootShelfIdReqDto) (
+	*dtos.GetAllMySubShelvesByRootShelfIdResDto, *exceptions.Exception,
+) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Shelf.InvalidInput().WithError(err)
+	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Read,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Admin,
+	}
+
+	resDto := dtos.GetAllMySubShelvesByRootShelfIdResDto{}
 
 	subQuery := s.db.Model(&schemas.UsersToShelves{}).
 		Select("1").
@@ -115,7 +147,7 @@ func (s *SubShelfService) CreateSubShelfByRootShelfId(reqDto *dtos.CreateSubShel
 
 	subShelfRepository := repositories.NewSubShelfRepository(s.db)
 
-	_, exception := subShelfRepository.CreateOneByUserId(
+	subShelfId, exception := subShelfRepository.CreateOneByUserId(
 		reqDto.ContextFields.UserId,
 		inputs.CreateSubShelfInput{
 			Name:           reqDto.Body.Name,
@@ -128,6 +160,7 @@ func (s *SubShelfService) CreateSubShelfByRootShelfId(reqDto *dtos.CreateSubShel
 	}
 
 	return &dtos.CreateSubShelfByRootShelfIdResDto{
+		Id:        *subShelfId,
 		CreatedAt: time.Now(),
 	}, nil
 }
@@ -183,7 +216,7 @@ func (s *SubShelfService) MoveMySubShelf(reqDto *dtos.MoveMySubShelfReqDto) (
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		false,
+		types.Ternary_Negative,
 	)
 	if exception != nil {
 		return nil, exception
@@ -193,7 +226,7 @@ func (s *SubShelfService) MoveMySubShelf(reqDto *dtos.MoveMySubShelfReqDto) (
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		false,
+		types.Ternary_Negative,
 	)
 	if exception != nil {
 		return nil, exception
@@ -251,7 +284,7 @@ func (s *SubShelfService) MoveMySubShelves(reqDto *dtos.MoveMySubShelvesReqDto) 
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		false,
+		types.Ternary_Negative,
 	)
 	if exception != nil {
 		return nil, exception
@@ -261,7 +294,7 @@ func (s *SubShelfService) MoveMySubShelves(reqDto *dtos.MoveMySubShelvesReqDto) 
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		false,
+		types.Ternary_Negative,
 	)
 	if exception != nil {
 		return nil, exception

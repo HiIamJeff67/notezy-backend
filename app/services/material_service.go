@@ -17,6 +17,7 @@ import (
 	storages "notezy-backend/app/storages"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
+	types "notezy-backend/shared/types"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -347,6 +348,7 @@ func (s *MaterialService) MoveMyMaterialById(
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
+	subShelfRepository := repositories.NewSubShelfRepository(s.db)
 	materialRepository := repositories.NewMaterialRepository(s.db)
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -354,12 +356,20 @@ func (s *MaterialService) MoveMyMaterialById(
 		enums.AccessControlPermission_Admin,
 	}
 
+	if hasPermission := subShelfRepository.HasPermission(
+		reqDto.Body.DestinationParentSubShelfId,
+		reqDto.ContextFields.UserId,
+		nil,
+		types.Ternary_Negative,
+	); !hasPermission {
+		return nil, exceptions.Shelf.NoPermission()
+	}
 	material, exception := materialRepository.CheckPermissionAndGetOneById(
 		reqDto.Body.MaterialId,
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		false, // exclude the deleted materials
+		types.Ternary_Negative, // exclude the deleted materials
 	)
 	if exception != nil {
 		return nil, exception
@@ -399,7 +409,7 @@ func (s *MaterialService) MoveMyMaterialsByIds(
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		false, // exclude the deleted materials
+		types.Ternary_Negative, // exclude the deleted materials
 	)
 	if exception != nil {
 		return nil, exception

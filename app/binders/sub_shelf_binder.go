@@ -17,7 +17,8 @@ import (
 
 type SubShelfBinderInterface interface {
 	BindGetMySubShelfById(controllerFunc types.ControllerFunc[*dtos.GetMySubShelfByIdReqDto]) gin.HandlerFunc
-	BindGetAllSubShelvesByRootShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllSubShelvesByRootShelfIdReqDto]) gin.HandlerFunc
+	BindGetMySubShelvesByPrevSubShelfId(controllerFunc types.ControllerFunc[*dtos.GetMySubShelvesByPrevSubShelfIdReqDto]) gin.HandlerFunc
+	BindGetAllMySubShelvesByRootShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllMySubShelvesByRootShelfIdReqDto]) gin.HandlerFunc
 	BindCreateSubShelfByRootShelfId(controllerFunc types.ControllerFunc[*dtos.CreateSubShelfByRootShelfIdReqDto]) gin.HandlerFunc
 	BindUpdateMySubShelfById(controllerFunc types.ControllerFunc[*dtos.UpdateMySubShelfByIdReqDto]) gin.HandlerFunc
 	BindMoveMySubShelf(controllerFunc types.ControllerFunc[*dtos.MoveMySubShelfReqDto]) gin.HandlerFunc
@@ -66,9 +67,39 @@ func (b *SubShelfBinder) BindGetMySubShelfById(controllerFunc types.ControllerFu
 	}
 }
 
-func (b *SubShelfBinder) BindGetAllSubShelvesByRootShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllSubShelvesByRootShelfIdReqDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindGetMySubShelvesByPrevSubShelfId(controllerFunc types.ControllerFunc[*dtos.GetMySubShelvesByPrevSubShelfIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.GetAllSubShelvesByRootShelfIdReqDto
+		var reqDto dtos.GetMySubShelvesByPrevSubShelfIdReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		// for the uuid in the parameter, we MUST extract it and parse it manually
+		prevSubShelfIdString := ctx.Query("prevSubShelfId")
+		if prevSubShelfIdString == "" {
+			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("prevSubShelfId is required")).ResponseWithJSON(ctx)
+			return
+		}
+		prevSubShelfId, err := uuid.Parse(prevSubShelfIdString)
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithError(err).ResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.PrevSubShelfId = prevSubShelfId
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *SubShelfBinder) BindGetAllMySubShelvesByRootShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllMySubShelvesByRootShelfIdReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.GetAllMySubShelvesByRootShelfIdReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
