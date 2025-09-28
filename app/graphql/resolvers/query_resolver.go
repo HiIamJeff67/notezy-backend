@@ -6,16 +6,17 @@ package resolvers
 
 import (
 	"context"
-	"fmt"
+	"notezy-backend/app/contexts"
 	"notezy-backend/app/graphql/generated"
 	gqlmodels "notezy-backend/app/graphql/models"
+	"notezy-backend/shared/constants"
 )
 
 // SearchUsers is the resolver for the searchUsers field.
 func (r *queryResolver) SearchUsers(ctx context.Context, input gqlmodels.SearchUserInput) (*gqlmodels.SearchUserConnection, error) {
 	result, exception := r.userService.SearchPublicUsers(ctx, input)
 	if exception != nil {
-		return nil, exception.ToGraphQLError(ctx)
+		return nil, exception.Log().ToGraphQLError(ctx)
 	}
 
 	return result, nil
@@ -25,7 +26,7 @@ func (r *queryResolver) SearchUsers(ctx context.Context, input gqlmodels.SearchU
 func (r *queryResolver) SearchThemes(ctx context.Context, input gqlmodels.SearchThemeInput) (*gqlmodels.SearchThemeConnection, error) {
 	result, exception := r.themeService.SearchPublicThemes(ctx, input)
 	if exception != nil {
-		return nil, exception.ToGraphQLError(ctx)
+		return nil, exception.Log().ToGraphQLError(ctx)
 	}
 
 	return result, nil
@@ -33,7 +34,22 @@ func (r *queryResolver) SearchThemes(ctx context.Context, input gqlmodels.Search
 
 // SearchRootShelves is the resolver for the searchRootShelves field.
 func (r *queryResolver) SearchRootShelves(ctx context.Context, input gqlmodels.SearchRootShelfInput) (*gqlmodels.SearchRootShelfConnection, error) {
-	panic(fmt.Errorf("not implemented: SearchRootShelves - searchRootShelves"))
+	ginContext, exception := contexts.GetAndConvertContextToGinContext(ctx)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ginContext, constants.ContextFieldName_User_Id)
+	if exception != nil {
+		exception.Log().SafelyResponseWithJSON(ginContext)
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+	result, exception := r.rootShelfService.SearchPrivateShelves(ctx, *userId, input)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	return result, nil
 }
 
 // Query returns generated.QueryResolver implementation.

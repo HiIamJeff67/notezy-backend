@@ -99,8 +99,10 @@ type MoveMySubShelfReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			SourceSubShelfId      uuid.UUID `json:"sourceSubShelfId" validate:"required"`
-			DestinationSubShelfId uuid.UUID `json:"destinationSubShelfId" validate:"required"`
+			SourceRootShelfId      uuid.UUID  `json:"sourceRootShelfId" validate:"required"`
+			SourceSubShelfId       uuid.UUID  `json:"sourceSubShelfId" validate:"required"`
+			DestinationRootShelfId uuid.UUID  `json:"destinationRootShelfId" validate:"required"`
+			DestinationSubShelfId  *uuid.UUID `json:"destinationSubShelfId" validate:"omitnil"`
 		},
 		any,
 	]
@@ -115,8 +117,10 @@ type MoveMySubShelvesReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			SourceSubShelfIds     []uuid.UUID `json:"sourceSubShelfIds" validate:"required"`
-			DestinationSubShelfId uuid.UUID   `json:"destinationSubShelfId" validate:"required"`
+			SourceRootShelfId      uuid.UUID   `json:"sourceRootShelfId" validate:"required"`
+			SourceSubShelfIds      []uuid.UUID `json:"sourceSubShelfIds" validate:"required"`
+			DestinationRootShelfId uuid.UUID   `json:"destinationRootShelfId" validate:"required"`
+			DestinationSubShelfId  *uuid.UUID  `json:"destinationSubShelfId" validate:"omitnil"`
 		},
 		any,
 	]

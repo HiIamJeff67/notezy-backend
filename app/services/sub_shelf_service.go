@@ -200,7 +200,8 @@ func (s *SubShelfService) MoveMySubShelf(reqDto *dtos.MoveMySubShelfReqDto) (
 		return nil, exceptions.Shelf.InvalidInput().WithError(err)
 	}
 
-	if reqDto.Body.SourceSubShelfId == reqDto.Body.DestinationSubShelfId {
+	if reqDto.Body.DestinationSubShelfId != nil &&
+		reqDto.Body.SourceSubShelfId == *reqDto.Body.DestinationSubShelfId {
 		return nil, exceptions.Shelf.NoChanges()
 	}
 
@@ -221,43 +222,62 @@ func (s *SubShelfService) MoveMySubShelf(reqDto *dtos.MoveMySubShelfReqDto) (
 	if exception != nil {
 		return nil, exception
 	}
-	to, exception := subShelfRepository.CheckPermissionAndGetOneById(
-		reqDto.Body.DestinationSubShelfId,
-		reqDto.ContextFields.UserId,
-		nil,
-		allowedPermissions,
-		types.Ternary_Negative,
-	)
-	if exception != nil {
-		return nil, exception
+	if from.RootShelfId != reqDto.Body.SourceRootShelfId {
+		return nil, exceptions.Shelf.NotFound()
 	}
 
-	if len(from.Path)+len(to.Path) > int(constants.MaxSubShelvesOfRootShelf) {
-		return nil, exceptions.Shelf.MaximumDepthExceeded(
-			int32(len(from.Path)+len(to.Path)),
-			constants.MaxSubShelvesOfRootShelf,
+	if reqDto.Body.DestinationSubShelfId != nil {
+		to, exception := subShelfRepository.CheckPermissionAndGetOneById(
+			*reqDto.Body.DestinationSubShelfId,
+			reqDto.ContextFields.UserId,
+			nil,
+			allowedPermissions,
+			types.Ternary_Negative,
 		)
-	}
+		if exception != nil {
+			return nil, exception
+		}
+		if to.RootShelfId != reqDto.Body.DestinationRootShelfId {
+			return nil, exceptions.Shelf.NotFound()
+		}
 
-	// check if to.Path contain any from.Id, if it's true, then it means the user is trying to move the sub shelf to its child
-	for _, parent := range to.Path {
-		if parent == reqDto.Body.SourceSubShelfId {
-			return nil, exceptions.Shelf.InsertParentIntoItsChildren(
-				reqDto.Body.DestinationSubShelfId,
-				reqDto.Body.SourceSubShelfId,
+		if len(from.Path)+len(to.Path) > int(constants.MaxSubShelvesOfRootShelf) {
+			return nil, exceptions.Shelf.MaximumDepthExceeded(
+				int32(len(from.Path)+len(to.Path)),
+				constants.MaxSubShelvesOfRootShelf,
 			)
 		}
-	}
 
-	to.Path = append(to.Path, to.Id)
-	result := s.db.Exec(`
-        UPDATE "SubShelfTable" 
-        SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW() 
-        WHERE id = ? AND deleted_at IS NULL`,
-		to.RootShelfId, reqDto.Body.DestinationSubShelfId, pg.Array(to.Path), reqDto.Body.SourceSubShelfId,
-	)
-	if err := result.Error; err != nil {
-		return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
+		// check if to.Path contain any from.Id, if it's true, then it means the user is trying to move the sub shelf to its child
+		for _, parent := range to.Path {
+			if parent == reqDto.Body.SourceSubShelfId {
+				return nil, exceptions.Shelf.InsertParentIntoItsChildren(
+					reqDto.Body.DestinationSubShelfId,
+					reqDto.Body.SourceSubShelfId,
+				)
+			}
+		}
+
+		to.Path = append(to.Path, to.Id)
+		result := s.db.Exec(`
+			UPDATE "SubShelfTable" 
+			SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW() 
+			WHERE id = ? AND deleted_at IS NULL`,
+			reqDto.Body.DestinationRootShelfId, reqDto.Body.DestinationSubShelfId, pg.Array(to.Path), reqDto.Body.SourceSubShelfId,
+		)
+		if err := result.Error; err != nil {
+			return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
+		}
+	} else {
+		result := s.db.Exec(`
+			UPDATE "SubShelfTable" 
+			SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW() 
+			WHERE id = ? AND deleted_at IS NULL`,
+			reqDto.Body.DestinationRootShelfId, nil, pg.Array([]uuid.UUID{}), reqDto.Body.SourceSubShelfId,
+		)
+		if err := result.Error; err != nil {
+			return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
+		}
 	}
 
 	return &dtos.MoveMySubShelfResDto{
@@ -289,62 +309,88 @@ func (s *SubShelfService) MoveMySubShelves(reqDto *dtos.MoveMySubShelvesReqDto) 
 	if exception != nil {
 		return nil, exception
 	}
-	to, exception := subShelfRepository.CheckPermissionAndGetOneById(
-		reqDto.Body.DestinationSubShelfId,
-		reqDto.ContextFields.UserId,
-		nil,
-		allowedPermissions,
-		types.Ternary_Negative,
-	)
-	if exception != nil {
-		return nil, exception
-	}
-	if to.Path == nil {
-		to.Path = []uuid.UUID{}
-	}
-
-	sourceSubShelfIdMap := make(map[uuid.UUID]bool, 0)
 	for _, from := range froms {
-		if len(from.Path)+len(to.Path) > int(constants.MaxSubShelvesOfRootShelf) {
-			exceptions.Shelf.MaximumDepthExceeded(
-				int32(len(from.Path)+len(to.Path)),
-				constants.MaxSubShelvesOfRootShelf,
-			).Log()
-			// sourceSubShelfIdMap[from.Id] = false
-		} else if from.Id == to.Id {
-			exceptions.Shelf.InsertParentIntoItsChildren(to.Id, from.Id).Log()
-			// sourceSubShelfIdMap[from.Id] = false
-		} else {
-			sourceSubShelfIdMap[from.Id] = true
+		if from.RootShelfId != reqDto.Body.SourceRootShelfId {
+			return nil, exceptions.Shelf.NotFound()
 		}
 	}
 
-	for _, parent := range to.Path {
-		if sourceSubShelfIdMap[parent] {
-			exceptions.Shelf.InsertParentIntoItsChildren(
-				reqDto.Body.DestinationSubShelfId,
-				parent,
-			).Log()
-			sourceSubShelfIdMap[parent] = false // has to invalid the sub shelf
+	if reqDto.Body.DestinationSubShelfId != nil {
+		to, exception := subShelfRepository.CheckPermissionAndGetOneById(
+			*reqDto.Body.DestinationSubShelfId,
+			reqDto.ContextFields.UserId,
+			nil,
+			allowedPermissions,
+			types.Ternary_Negative,
+		)
+		if exception != nil {
+			return nil, exception
 		}
-	}
-
-	validSourceSubShelfIds := []uuid.UUID{}
-	for sourceSubShelfId, exist := range sourceSubShelfIdMap {
-		if exist {
-			validSourceSubShelfIds = append(validSourceSubShelfIds, sourceSubShelfId)
+		if to.RootShelfId != reqDto.Body.DestinationRootShelfId {
+			return nil, exceptions.Shelf.NotFound()
 		}
-	}
+		if to.Path == nil {
+			to.Path = []uuid.UUID{}
+		}
 
-	to.Path = append(to.Path, to.Id)
-	result := s.db.Exec(`
-        UPDATE "SubShelfTable" 
-        SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW() 
-        WHERE id IN ? AND deleted_at IS NULL`,
-		to.RootShelfId, reqDto.Body.DestinationSubShelfId, pg.Array(to.Path), validSourceSubShelfIds,
-	)
-	if err := result.Error; err != nil {
-		return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
+		sourceSubShelfIdMap := make(map[uuid.UUID]bool, 0)
+		for _, from := range froms {
+			if len(from.Path)+len(to.Path) > int(constants.MaxSubShelvesOfRootShelf) {
+				exceptions.Shelf.MaximumDepthExceeded(
+					int32(len(from.Path)+len(to.Path)),
+					constants.MaxSubShelvesOfRootShelf,
+				).Log()
+				// sourceSubShelfIdMap[from.Id] = false
+			} else if from.Id == to.Id { // handling inserting node to itself here
+				exceptions.Shelf.InsertParentIntoItsChildren(to.Id, from.Id).Log()
+				// sourceSubShelfIdMap[from.Id] = false
+			} else {
+				sourceSubShelfIdMap[from.Id] = true
+			}
+		}
+
+		for _, parent := range to.Path { // handling inserting node to its parent here
+			if sourceSubShelfIdMap[parent] {
+				exceptions.Shelf.InsertParentIntoItsChildren(
+					reqDto.Body.DestinationSubShelfId,
+					parent,
+				).Log()
+				sourceSubShelfIdMap[parent] = false // has to invalid the sub shelf
+			}
+		}
+
+		validSourceSubShelfIds := []uuid.UUID{}
+		for sourceSubShelfId, exist := range sourceSubShelfIdMap {
+			if exist {
+				validSourceSubShelfIds = append(validSourceSubShelfIds, sourceSubShelfId)
+			}
+		}
+
+		to.Path = append(to.Path, to.Id)
+		result := s.db.Exec(`
+			UPDATE "SubShelfTable" 
+			SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW() 
+			WHERE id IN ? AND deleted_at IS NULL`,
+			reqDto.Body.DestinationRootShelfId, reqDto.Body.DestinationSubShelfId, pg.Array(to.Path), validSourceSubShelfIds,
+		)
+		if err := result.Error; err != nil {
+			return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
+		}
+	} else {
+		validSourceSubShelfIds := []uuid.UUID{}
+		for _, from := range froms {
+			validSourceSubShelfIds = append(validSourceSubShelfIds, from.Id)
+		}
+
+		result := s.db.Exec(`
+			UPDATE "SubShelfTable" 
+			SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW() 
+			WHERE id IN ? AND deleted_at IS NULL`,
+			reqDto.Body.DestinationRootShelfId, nil, pg.Array([]uuid.UUID{}), validSourceSubShelfIds,
+		)
+		if err := result.Error; err != nil {
+			return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
+		}
 	}
 
 	return &dtos.MoveMySubShelvesResDto{
