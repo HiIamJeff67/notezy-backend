@@ -223,9 +223,11 @@ func (s *SubShelfService) MoveMySubShelf(reqDto *dtos.MoveMySubShelfReqDto) (
 		types.Ternary_Negative,
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 	if from.RootShelfId != reqDto.Body.SourceRootShelfId {
+		tx.Rollback()
 		return nil, exceptions.Shelf.NotFound()
 	}
 
@@ -272,74 +274,6 @@ func (s *SubShelfService) MoveMySubShelf(reqDto *dtos.MoveMySubShelfReqDto) (
 		if err := result.Error; err != nil {
 			return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
 		}
-
-		if reqDto.Body.SourceRootShelfId != reqDto.Body.DestinationRootShelfId {
-			var childSubShelves []struct {
-				Id   uuid.UUID       `json:"id"`
-				Path types.UUIDArray `json:"path"`
-			}
-
-			err := tx.Model(&schemas.SubShelf{}).
-				Select("id, path").
-				Where("root_shelf_id = ? AND path @> ARRAY[?]::uuid[] AND deleted_at IS NULL",
-					reqDto.Body.SourceRootShelfId,
-					reqDto.Body.SourceSubShelfId).
-				Find(&childSubShelves).Error
-
-			if err != nil {
-				tx.Rollback()
-				return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
-			}
-
-			if len(childSubShelves) > 0 {
-				var caseStatements []string
-				var args []interface{}
-				var ids []uuid.UUID
-
-				for _, child := range childSubShelves {
-					sourceIndex := -1
-					for i, pathItem := range child.Path {
-						if pathItem == reqDto.Body.SourceSubShelfId {
-							sourceIndex = i
-							break
-						}
-					}
-
-					if sourceIndex >= 0 {
-						var newPath types.UUIDArray
-						newPath = append(newPath, to.Path...)
-						newPath = append(newPath, reqDto.Body.SourceSubShelfId)
-						if sourceIndex+1 < len(child.Path) {
-							newPath = append(newPath, child.Path[sourceIndex+1:]...)
-						}
-
-						caseStatements = append(caseStatements, "WHEN id = ? THEN ?::uuid[]")
-						args = append(args, child.Id, pg.Array(newPath))
-						ids = append(ids, child.Id)
-					}
-				}
-
-				if len(caseStatements) > 0 {
-					query := fmt.Sprintf(`
-                        UPDATE "SubShelfTable" 
-                        SET "root_shelf_id" = ?, 
-                            "path" = CASE %s END,
-                            "updated_at" = NOW() 
-                        WHERE id IN ? AND deleted_at IS NULL`,
-						strings.Join(caseStatements, " "))
-
-					queryArgs := []interface{}{reqDto.Body.DestinationRootShelfId}
-					queryArgs = append(queryArgs, args...)
-					queryArgs = append(queryArgs, ids)
-
-					result := tx.Exec(query, queryArgs...)
-					if err := result.Error; err != nil {
-						tx.Rollback()
-						return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
-					}
-				}
-			}
-		}
 	} else {
 		result := tx.Exec(`
 			UPDATE "SubShelfTable" 
@@ -348,7 +282,77 @@ func (s *SubShelfService) MoveMySubShelf(reqDto *dtos.MoveMySubShelfReqDto) (
 			reqDto.Body.DestinationRootShelfId, nil, pg.Array([]uuid.UUID{}), reqDto.Body.SourceSubShelfId,
 		)
 		if err := result.Error; err != nil {
+			tx.Rollback()
 			return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
+		}
+	}
+
+	// cascading update child sub shelves
+	if reqDto.Body.SourceRootShelfId != reqDto.Body.DestinationRootShelfId {
+		var childSubShelves []struct {
+			Id   uuid.UUID       `json:"id"`
+			Path types.UUIDArray `json:"path"`
+		}
+
+		err := tx.Model(&schemas.SubShelf{}).
+			Select("id, path").
+			Where("root_shelf_id = ? AND path @> ARRAY[?]::uuid[] AND deleted_at IS NULL",
+				reqDto.Body.SourceRootShelfId,
+				reqDto.Body.SourceSubShelfId).
+			Find(&childSubShelves).Error
+
+		if err != nil {
+			tx.Rollback()
+			return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
+		}
+
+		if len(childSubShelves) > 0 {
+			var caseStatements []string
+			var args []interface{}
+			var ids []uuid.UUID
+
+			for _, child := range childSubShelves {
+				sourceIndex := -1
+				for i, pathItem := range child.Path {
+					if pathItem == reqDto.Body.SourceSubShelfId {
+						sourceIndex = i
+						break
+					}
+				}
+
+				if sourceIndex >= 0 {
+					// 新的 path 應該是：[SourceSubShelfId] + 原本在 SourceSubShelfId 之後的部分
+					var newPath types.UUIDArray
+					newPath = append(newPath, reqDto.Body.SourceSubShelfId)
+					if sourceIndex+1 < len(child.Path) {
+						newPath = append(newPath, child.Path[sourceIndex+1:]...)
+					}
+
+					caseStatements = append(caseStatements, "WHEN id = ? THEN ?::uuid[]")
+					args = append(args, child.Id, pg.Array(newPath))
+					ids = append(ids, child.Id)
+				}
+			}
+
+			if len(caseStatements) > 0 {
+				query := fmt.Sprintf(`
+                    UPDATE "SubShelfTable" 
+                    SET "root_shelf_id" = ?, 
+                        "path" = CASE %s END,
+                        "updated_at" = NOW() 
+                    WHERE id IN ? AND deleted_at IS NULL`,
+					strings.Join(caseStatements, " "))
+
+				queryArgs := []interface{}{reqDto.Body.DestinationRootShelfId}
+				queryArgs = append(queryArgs, args...)
+				queryArgs = append(queryArgs, ids)
+
+				result := tx.Exec(query, queryArgs...)
+				if err := result.Error; err != nil {
+					tx.Rollback()
+					return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
+				}
+			}
 		}
 	}
 
