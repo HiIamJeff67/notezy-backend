@@ -27,6 +27,7 @@ type MaterialServiceInterface interface {
 	GetAllMyMaterialsByParentSubShelfId(ctx context.Context, reqDto *dtos.GetAllMyMaterialsByParentSubShelfIdReqDto) (*dtos.GetAllMyMaterialsByParentSubShelfIdResDto, *exceptions.Exception)
 	GetAllMyMaterialsByRootShelfId(ctx context.Context, reqDto *dtos.GetAllMyMaterialsByRootShelfIdReqDto) (*dtos.GetAllMyMaterialsByRootShelfIdResDto, *exceptions.Exception)
 	CreateTextbookMaterial(ctx context.Context, reqDto *dtos.CreateMaterialReqDto) (*dtos.CreateMaterialResDto, *exceptions.Exception)
+	UpdateMyTextbookMaterialById(reqDto *dtos.UpdateMyMaterialByIdReqDto) (*dtos.UpdateMyMaterialByIdResDto, *exceptions.Exception)
 	SaveMyTextbookMaterialById(ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception)
 	MoveMyMaterialById(reqDto *dtos.MoveMyMaterialByIdReqDto) (*dtos.MoveMyMaterialByIdResDto, *exceptions.Exception)
 	MoveMyMaterialsByIds(reqDto *dtos.MoveMyMaterialsByIdsReqDto) (*dtos.MoveMyMaterialsByIdsResDto, *exceptions.Exception)
@@ -236,13 +237,50 @@ func (s *MaterialService) CreateTextbookMaterial(ctx context.Context, reqDto *dt
 		return nil, exception
 	}
 
+	downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, newContentKey, nil)
+	if exception != nil {
+		return nil, exception
+	}
+
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return nil, exceptions.Material.FailedToCommitTransaction().WithError(err)
 	}
 
 	return &dtos.CreateMaterialResDto{
-		CreatedAt: time.Now(),
+		Id:          newMaterialId,
+		DownloadURL: downloadURL,
+		CreatedAt:   time.Now(),
+	}, nil
+}
+
+func (s *MaterialService) UpdateMyTextbookMaterialById(reqDto *dtos.UpdateMyMaterialByIdReqDto,
+) (*dtos.UpdateMyMaterialByIdResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
+	materialResitory := repositories.NewMaterialRepository(s.db)
+
+	materialType := enums.MaterialType_Textbook
+
+	material, exception := materialResitory.UpdateOneById(
+		reqDto.Body.MaterialId,
+		reqDto.ContextFields.UserId,
+		&materialType,
+		inputs.PartialUpdateMaterialInput{
+			Values: inputs.UpdateMaterialInput{
+				Name: reqDto.Body.Values.Name,
+			},
+			SetNull: reqDto.Body.SetNull,
+		},
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.UpdateMyMaterialByIdResDto{
+		UpdatedAt: material.UpdatedAt,
 	}, nil
 }
 
@@ -252,67 +290,65 @@ func (s *MaterialService) SaveMyTextbookMaterialById(
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
+	// check if there does exist a file in the reqDto
+	if reqDto.Body.ContentFile == nil {
+		return nil, exceptions.Material.InvalidDto()
+	}
 
 	tx := s.db.Begin()
 	materialRepository := repositories.NewMaterialRepository(tx)
 
 	partialUpdate := inputs.PartialUpdateMaterialInput{
 		Values: inputs.UpdateMaterialInput{
-			Name: reqDto.Body.Name,
 			// content key remain the same here
 		},
 		SetNull: nil,
 	}
-	var object *storages.Object = nil // initialize the object first to be nil
 	var contentKey = s.storage.GetKey(reqDto.ContextFields.UserPublicId.String(), reqDto.Body.MaterialId.String())
+
+	var fileHeaderSize int64 = 0
+	if reqDto.ContextFields.Size != nil {
+		fileHeaderSize = *reqDto.ContextFields.Size
+	}
+
+	// extract the data in it and get its content type, parse media type, and actual size, etc.
+	object, exception := s.storage.NewObject(contentKey, reqDto.Body.ContentFile, fileHeaderSize)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+	if object == nil {
+		tx.Rollback()
+		return nil, exceptions.Material.CannotGetFileObjects()
+	}
+
 	// check if the material content type is allowed in the material type of textbook
 	materialType := enums.MaterialType_Textbook
-	// check if there does exist a file in the reqDto
-	hasContentFile := reqDto.Body.ContentFile != nil
-
-	// if there does exist a file, extract the data in it and get its content type, parse media type, and actual size, etc.
-	if hasContentFile {
-		var exception *exceptions.Exception = nil // initialize the exception while checking the file
-
-		var fileHeaderSize int64 = 0
-		if reqDto.Body.Size != nil {
-			fileHeaderSize = *reqDto.Body.Size
-		}
-
-		object, exception = s.storage.NewObject(contentKey, reqDto.Body.ContentFile, fileHeaderSize)
-		if exception != nil {
-			tx.Rollback()
-			return nil, exception
-		}
-
-		if !materialType.IsContentTypeStringAllowed(object.ContentType) {
-			tx.Rollback()
-			return nil, exceptions.Material.MaterialContentTypeNotAllowedInMaterialType(
-				reqDto.Body.MaterialId.String(),
-				materialType.String(),
-				object.ContentType,
-				materialType.AllowedContentTypeStrings(),
-			)
-		}
-		contentType, err := enums.ConvertStringToMaterialContentType(object.ContentType)
-		if contentType == nil {
-			exception := exceptions.Material.InvalidType(contentType)
-			if err != nil {
-				exception.WithError(err)
-			}
-			exception.Log()
-		} else {
-			partialUpdate.Values.ContentType = contentType
-			partialUpdate.Values.ParseMediaType = object.ParseMediaType
-		}
+	if !materialType.IsContentTypeStringAllowed(object.ContentType) {
+		tx.Rollback()
+		return nil, exceptions.Material.MaterialContentTypeNotAllowedInMaterialType(
+			reqDto.Body.MaterialId.String(),
+			materialType.String(),
+			object.ContentType,
+			materialType.AllowedContentTypeStrings(),
+		)
 	}
 
-	if object != nil {
-		partialUpdate.Values.Size = &object.Size
+	contentType, err := enums.ConvertStringToMaterialContentType(object.ContentType)
+	if contentType == nil {
+		exception := exceptions.Material.InvalidType(contentType)
+		if err != nil {
+			exception.WithError(err)
+		}
+		return nil, exception
 	}
+
+	partialUpdate.Values.ContentType = contentType
+	partialUpdate.Values.ParseMediaType = object.ParseMediaType
+	partialUpdate.Values.Size = &object.Size
+
 	material, exception := materialRepository.UpdateOneById(
 		reqDto.Body.MaterialId,
-		reqDto.Body.ParentSubShelfId,
 		reqDto.ContextFields.UserId,
 		&materialType,
 		partialUpdate,
@@ -323,12 +359,10 @@ func (s *MaterialService) SaveMyTextbookMaterialById(
 	}
 
 	// if there does exist a file, then put the file at the end to ensure the entire operation is consistent
-	if hasContentFile {
-		exception = s.storage.PutObjectByKey(ctx, material.ContentKey, object)
-		if exception != nil {
-			tx.Rollback()
-			return nil, exception
-		}
+	exception = s.storage.PutObjectByKey(ctx, material.ContentKey, object)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
 	}
 
 	if err := tx.Commit().Error; err != nil {

@@ -21,6 +21,7 @@ type MaterialBinderInterface interface {
 	BindGetAllMyMaterialsByParentSubShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllMyMaterialsByParentSubShelfIdReqDto]) gin.HandlerFunc
 	BindGetAllMyMaterialsByRootShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllMyMaterialsByRootShelfIdReqDto]) gin.HandlerFunc
 	BindCreateTextbookMaterial(controllerFunc types.ControllerFunc[*dtos.CreateMaterialReqDto]) gin.HandlerFunc
+	BindUpdateMyTextbookMaterialById(controllerFunc types.ControllerFunc[*dtos.UpdateMyMaterialByIdReqDto]) gin.HandlerFunc
 	BindSaveMyTextbookMaterialById(controllerFunc types.ControllerFunc[*dtos.SaveMyMaterialByIdReqDto]) gin.HandlerFunc
 	BindMoveMyMaterialById(controllerFunc types.ControllerFunc[*dtos.MoveMyMaterialByIdReqDto]) gin.HandlerFunc
 	BindMoveMyMaterialsByIds(controllerFunc types.ControllerFunc[*dtos.MoveMyMaterialsByIdsReqDto]) gin.HandlerFunc
@@ -163,6 +164,29 @@ func (b *MaterialBinder) BindCreateTextbookMaterial(controllerFunc types.Control
 	}
 }
 
+func (b *MaterialBinder) BindUpdateMyTextbookMaterialById(controllerFunc types.ControllerFunc[*dtos.UpdateMyMaterialByIdReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.UpdateMyMaterialByIdReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exception := exceptions.Material.InvalidDto().WithError(err)
+			exception.ResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
 func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.ControllerFunc[*dtos.SaveMyMaterialByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.SaveMyMaterialByIdReqDto
@@ -204,7 +228,7 @@ func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.Con
 				return
 			}
 			reqDto.Body.ContentFile = fileInterface // bind the file interface here
-			reqDto.Body.Size = &fileHeaders[0].Size
+			reqDto.ContextFields.Size = &fileHeaders[0].Size
 
 			// make sure the file is closed at the end
 			defer func(f io.Reader) {

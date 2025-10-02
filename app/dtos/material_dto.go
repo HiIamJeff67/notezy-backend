@@ -73,6 +73,24 @@ type CreateMaterialReqDto struct {
 	]
 }
 
+type UpdateMyMaterialByIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			MaterialId uuid.UUID `json:"materialId" validate:"required"`
+			PartialUpdateDto[struct {
+				Name *string `json:"name" validate:"omitnil,min=1,max=128"`
+			}]
+		},
+		any,
+	]
+}
+
 type SaveMyMaterialByIdReqDto struct {
 	NotezyRequest[
 		struct {
@@ -81,13 +99,11 @@ type SaveMyMaterialByIdReqDto struct {
 		struct {
 			UserId       uuid.UUID // extracted from the access token of AuthMiddleware()
 			UserPublicId uuid.UUID // extracted from the AuthMiddleware()
+			Size         *int64    // extracted from the opened contentFile
 		},
 		struct {
-			MaterialId       uuid.UUID `json:"materialId" validate:"required"`
-			ParentSubShelfId uuid.UUID `json:"parentSubShelfId" validate:"required"`
-			Name             *string   `json:"name" validate:"omitnil,min=1,max=128"`
-			ContentFile      io.Reader `json:"contentFile" validate:"omitnil"` // from the context of MultipartAdapter()
-			Size             *int64    `json:"size" validate:"omitnil"`        // extracted from the opened contentFile
+			MaterialId  uuid.UUID `json:"materialId" validate:"required"`
+			ContentFile io.Reader `json:"contentFile" validate:"required"` // from the context of MultipartAdapter()
 			// Note that io.Reader is an interface, it can be nil although we declare the type of io.Reader instead of *io.Reader
 		},
 		any,
@@ -207,7 +223,13 @@ type GetAllMyMaterialsByParentSubShelfIdResDto []GetMyMaterialByIdResDto
 type GetAllMyMaterialsByRootShelfIdResDto []GetMyMaterialByIdResDto
 
 type CreateMaterialResDto struct {
-	CreatedAt time.Time `json:"createdAt"`
+	Id          uuid.UUID `json:"id"`
+	DownloadURL string    `json:"downloadURL"`
+	CreatedAt   time.Time `json:"createdAt"`
+}
+
+type UpdateMyMaterialByIdResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 type SaveMyMaterialByIdResDto struct {

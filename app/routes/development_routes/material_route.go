@@ -51,6 +51,12 @@ func configureDevelopmentMaterialRoutes() {
 			),
 		)
 		materialRoutes.PUT(
+			"/updateMyTextbookMaterialById",
+			materialBinder.BindUpdateMyTextbookMaterialById(
+				materialController.UpdateMyTextbookMaterialById,
+			),
+		)
+		materialRoutes.PUT(
 			"/saveMyTextbookMaterialById",
 			adapters.MultipartAdapter(),
 			materialBinder.BindSaveMyTextbookMaterialById(

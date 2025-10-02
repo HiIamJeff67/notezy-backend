@@ -608,9 +608,21 @@ func (d *FileExceptionDomain) TooManyFiles(numberOfFiles int64) *Exception {
 	}
 }
 
-func (d *FileExceptionDomain) CannotOpenFiles() *Exception {
+func (d *FileExceptionDomain) CannotGetFileObjects() *Exception {
 	return &Exception{
 		Code:           d._BaseCode + 43,
+		Prefix:         d._Prefix,
+		Reason:         "CannotGetFileObjects",
+		IsInternal:     true,
+		Message:        "Failed to get file objects",
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *FileExceptionDomain) CannotOpenFiles() *Exception {
+	return &Exception{
+		Code:           d._BaseCode + 44,
 		Prefix:         d._Prefix,
 		Reason:         "CannotOpenFiles",
 		IsInternal:     true,
@@ -622,7 +634,7 @@ func (d *FileExceptionDomain) CannotOpenFiles() *Exception {
 
 func (d *FileExceptionDomain) CannotPeekFiles() *Exception {
 	return &Exception{
-		Code:           d._BaseCode + 44,
+		Code:           d._BaseCode + 45,
 		Prefix:         d._Prefix,
 		Reason:         "CannotPeekFiles",
 		IsInternal:     true,
@@ -634,7 +646,7 @@ func (d *FileExceptionDomain) CannotPeekFiles() *Exception {
 
 func (d *FileExceptionDomain) CannotCloseFiles() *Exception {
 	return &Exception{
-		Code:           d._BaseCode + 45,
+		Code:           d._BaseCode + 46,
 		Prefix:         d._Prefix,
 		Reason:         "CannotCloseFiles",
 		IsInternal:     true,
@@ -646,7 +658,7 @@ func (d *FileExceptionDomain) CannotCloseFiles() *Exception {
 
 func (d *FileExceptionDomain) CannotReadFileBytes() *Exception {
 	return &Exception{
-		Code:           d._BaseCode + 46,
+		Code:           d._BaseCode + 47,
 		Prefix:         d._Prefix,
 		Reason:         "CannotReadFileBytes",
 		IsInternal:     true,
@@ -658,7 +670,7 @@ func (d *FileExceptionDomain) CannotReadFileBytes() *Exception {
 
 func (d *FileExceptionDomain) FailedToDetectContentType() *Exception {
 	return &Exception{
-		Code:           d._BaseCode + 47,
+		Code:           d._BaseCode + 48,
 		Prefix:         d._Prefix,
 		Reason:         "FailedToDetectContentType",
 		IsInternal:     true,

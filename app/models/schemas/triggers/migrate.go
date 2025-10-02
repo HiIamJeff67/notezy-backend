@@ -7,4 +7,5 @@ var MigratingTriggerSQLs = []string{
 	shelfmaterialcascadingtriggersql.CascadingSoftDeleteSubShelfTriggerSQL,
 	shelfmaterialcascadingtriggersql.CascadingRestoreRootShelfTriggerSQL,
 	shelfmaterialcascadingtriggersql.CascadingRestoreSubShelfTriggerSQL,
+	shelfmaterialcascadingtriggersql.CascadingMoveSubShelfTriggerSQL,
 }

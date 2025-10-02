@@ -15,3 +15,6 @@ var CascadingRestoreRootShelfTriggerSQL string
 
 //go:embed cascading_restore_soft_deleted_sub_shelf_trigger.sql
 var CascadingRestoreSubShelfTriggerSQL string
+
+//go:embed cascading_move_sub_shelf_trigger.sql
+var CascadingMoveSubShelfTriggerSQL string
