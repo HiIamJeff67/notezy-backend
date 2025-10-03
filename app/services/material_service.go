@@ -109,7 +109,7 @@ func (s *MaterialService) GetAllMyMaterialsByParentSubShelfId(
 			reqDto.Param.ParentSubShelfId,
 			reqDto.ContextFields.UserId,
 			allowedPermissions,
-		)
+		).Where("\"MaterialTable\".deleted_at IS NULL")
 
 	result := query.Order("name ASC").
 		Limit(int(constants.MaxMaterialsOfSubShelf)).
@@ -161,7 +161,8 @@ func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
 		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
 		Where("ss.root_shelf_id = ? AND uts.user_id = ? AND uts.permission IN ?",
 			reqDto.Param.RootShelfId, reqDto.ContextFields.UserId, allowedPermissions,
-		).Limit(int(constants.MaxMaterialsOfRootShelf)).
+		).Where("\"MaterialTable\".deleted_at IS NULL").
+		Limit(int(constants.MaxMaterialsOfRootShelf)).
 		Order("name ASC").
 		Find(&materials)
 	if err := result.Error; err != nil {

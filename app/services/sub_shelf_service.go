@@ -99,8 +99,9 @@ func (s *SubShelfService) GetMySubShelvesByPrevSubShelfId(reqDto *dtos.GetMySubS
 			reqDto.ContextFields.UserId, allowedPermissions,
 		)
 	result := s.db.Model(&schemas.SubShelf{}).
-		Where("prev_sub_shelf_id = ? AND EXISTS (?)", reqDto.Param.PrevSubShelfId, subQuery).
-		Find(&resDto)
+		Where("prev_sub_shelf_id = ? AND EXISTS (?) AND \"SubShelfTable\".deleted_at IS NULL",
+			reqDto.Param.PrevSubShelfId, subQuery,
+		).Find(&resDto)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Shelf.NotFound().WithError(err)
 	}
@@ -129,7 +130,9 @@ func (s *SubShelfService) GetAllMySubShelvesByRootShelfId(reqDto *dtos.GetAllMyS
 			reqDto.ContextFields.UserId, allowedPermissions,
 		)
 	result := s.db.Model(&schemas.SubShelf{}).
-		Where("root_shelf_id = ? AND EXISTS (?) AND deleted_at IS NULL", reqDto.Param.RootShelfId, subQuery).
+		Where("root_shelf_id = ? AND EXISTS (?) AND \"SubShelfTable\".deleted_at IS NULL",
+			reqDto.Param.RootShelfId, subQuery,
+		).
 		Find(&resDto)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Shelf.NotFound().WithError(err)

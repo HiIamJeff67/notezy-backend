@@ -11,14 +11,14 @@ import (
 
 type Material struct {
 	Id               uuid.UUID                 `json:"id" gorm:"column:id; type:uuid; primaryKey; not null;"`
-	ParentSubShelfId uuid.UUID                 `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id; type:uuid; not null; uniqueIndex:material_idx_parent_sub_shelf_id_name;"`
-	Name             string                    `json:"name" gorm:"column:name; size:128; not null; default:'undefined'; uniqueIndex:material_idx_parent_sub_shelf_id_name;"`
+	ParentSubShelfId uuid.UUID                 `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id; type:uuid; not null; uniqueIndex:material_idx_parent_sub_shelf_id_name_deleted_at;"`
+	Name             string                    `json:"name" gorm:"column:name; size:128; not null; default:'undefined'; uniqueIndex:material_idx_parent_sub_shelf_id_name_deleted_at;"`
 	Type             enums.MaterialType        `json:"type" gorm:"column:type; type:MaterialType; not null; default:'Notebook';"`
 	Size             int64                     `json:"size" gorm:"column:size; type:bigint; not null; default:0;"`
 	ContentKey       string                    `json:"contentKey" gorm:"column:content_key; unique; not null;"`
 	ContentType      enums.MaterialContentType `json:"contentType" gorm:"column:content_type; type:MaterialContentType; not null; default:'text/plain';"`
 	ParseMediaType   string                    `json:"parseMediaType" gorm:"column:parse_media_type; not null; default:'utf-8';"`
-	DeletedAt        *time.Time                `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz; default:null;"`
+	DeletedAt        *time.Time                `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz; default:null; uniqueIndex:material_idx_parent_sub_shelf_id_name_deleted_at;"`
 	UpdatedAt        time.Time                 `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt        time.Time                 `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 
@@ -28,6 +28,7 @@ type Material struct {
 
 // Constraints:
 // Material.ParentSubShelfId + Material.Name as the unique constraints (That means the material name should be unique in the current sub shelf layer)
+// 	  Also add the DeletedAt as a part of the constraints, since the user may create couple files with the same name, and delete it, and then create it again and again...
 
 // Material Table Name
 func (Material) TableName() string {

@@ -28,7 +28,7 @@ type SubShelf struct {
 // Contraints:
 // 1. SubShelf.PrevSubShelfId != SubShelf.Id (Do NOT point to itself)
 // 2. Use Name + RootShelfId + Path as the unique constraints (That means in some specific layers of a RootShelf, the name of a SubShelf should be unique)
-// 	  Also add the DeletedAt as a part of the constraints, since the user may create couple files with the same name, and delete it, and then create it again and again...
+// 	  Also add the DeletedAt as a part of the constraints, since the user may create couple folders with the same name, and delete it, and then create it again and again...
 // 3. The maximum length of SubShelf.Path should be less than or equal to 100
 
 func (SubShelf) TableName() string {
