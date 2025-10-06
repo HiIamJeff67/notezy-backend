@@ -205,17 +205,16 @@ type DeleteMyMaterialsByIdsReqDto struct {
 /* ============================== Response DTO ============================== */
 
 type GetMyMaterialByIdResDto struct {
-	Id               uuid.UUID                 `json:"id"`
-	ParentSubShelfId uuid.UUID                 `json:"parentSubShelfId"`
-	Name             string                    `json:"name"`
-	Type             enums.MaterialType        `json:"type"`
-	Size             int64                     `json:"size"`
-	DownloadURL      string                    `json:"downloadURL"`
-	ContentType      enums.MaterialContentType `json:"contentType"`
-	ParseMediaType   string                    `json:"parseMediaType"`
-	DeletedAt        *time.Time                `json:"deletedAt"`
-	UpdatedAt        time.Time                 `json:"updatedAt"`
-	CreatedAt        time.Time                 `json:"createdAt"`
+	Id               uuid.UUID          `json:"id"`
+	ParentSubShelfId uuid.UUID          `json:"parentSubShelfId"`
+	Name             string             `json:"name"`
+	Type             enums.MaterialType `json:"type"`
+	Size             int64              `json:"size"`
+	DownloadURL      string             `json:"downloadURL"`
+	ParseMediaType   string             `json:"parseMediaType"`
+	DeletedAt        *time.Time         `json:"deletedAt"`
+	UpdatedAt        time.Time          `json:"updatedAt"`
+	CreatedAt        time.Time          `json:"createdAt"`
 }
 
 type GetAllMyMaterialsByParentSubShelfIdResDto []GetMyMaterialByIdResDto

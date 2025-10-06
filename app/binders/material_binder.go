@@ -1,8 +1,11 @@
 package binders
 
 import (
+	"bufio"
 	"fmt"
 	"io"
+	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -221,14 +224,41 @@ func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.Con
 				return
 			}
 
+			fileHeader := fileHeaders[0]
+
+			// check the file size
+			if fileHeader.Size > constants.MaxTextbookFileSize {
+				exceptions.Material.FileTooLarge(fileHeader.Size, constants.MaxTextbookFileSize).Log().SafelyResponseWithJSON(ctx)
+				return
+			}
+
 			// try to open the file
-			fileInterface, err := fileHeaders[0].Open()
+			fileInterface, err := fileHeader.Open()
 			if err != nil {
 				exceptions.Material.CannotOpenFiles().WithError(err).Log().SafelyResponseWithJSON(ctx)
 				return
 			}
 			reqDto.Body.ContentFile = fileInterface // bind the file interface here
 			reqDto.ContextFields.Size = &fileHeaders[0].Size
+
+			// peek the first few bytes of the given file
+			bufferedReader := bufio.NewReader(fileInterface)
+			peekedBytes, err := bufferedReader.Peek(int(constants.PeekFileSize))
+			if err != nil && err != io.EOF {
+				fileInterface.Close()
+				exceptions.Material.CannotPeekFiles().WithError(err).Log().SafelyResponseWithJSON(ctx)
+				return
+			}
+
+			// detect the content type from the peeked bytes
+			detectedContentType := http.DetectContentType(peekedBytes)
+			// note that the content type may be detected in text/plain sometimes
+			if !strings.HasPrefix(detectedContentType, "application/json") &&
+				!strings.HasPrefix(detectedContentType, "text/plain") {
+				fileInterface.Close()
+				exceptions.Material.InvalidType(detectedContentType).Log().SafelyResponseWithJSON(ctx)
+				return
+			}
 
 			// make sure the file is closed at the end
 			defer func(f io.Reader) {

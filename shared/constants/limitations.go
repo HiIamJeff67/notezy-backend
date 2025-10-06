@@ -26,10 +26,16 @@ const (
 	// limitation of a sub shelf
 	MaxSubShelvesOfSubShelf int32 = 1e+3
 	MaxMaterialsOfSubShelf  int32 = 1e+3
+
+	PeekFileSize            int64 = 256 * Byte
+	MaxTextbookFileSize     int64 = 5 * MB
+	MaxNotebookFileSize     int64 = 5 * MB
+	MaxLearningCardFileSize int64 = 1 * MB
+	MaxWorkFlowFileSize     int64 = 10 * MB
 )
 
 const (
-	MaxNonVideoFileSize        int64 = 5 * MB
-	MaxInMemoryStorageFileSize int64 = 5 * MB
-	MaxS3StorageFileSize       int64 = 5 * MB
+	MaxNonVideoFileSize        int64 = 10 * MB
+	MaxInMemoryStorageFileSize int64 = 10 * MB
+	MaxS3StorageFileSize       int64 = 10 * MB
 )

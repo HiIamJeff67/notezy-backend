@@ -67,6 +67,8 @@ func (b *AuthBinder) BindLogout(controllerFunc types.ControllerFunc[*dtos.Logout
 	return func(ctx *gin.Context) {
 		var reqDto dtos.LogoutReqDto
 
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
@@ -84,7 +86,6 @@ func (b *AuthBinder) BindSendAuthCode(controllerFunc types.ControllerFunc[*dtos.
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Auth.InvalidDto().WithError(err)
 			exception.ResponseWithJSON(ctx)

@@ -83,14 +83,14 @@ func (c *AuthController) Login(ctx *gin.Context, reqDto *dtos.LoginReqDto) {
 
 // with AuthMiddleware
 func (c *AuthController) Logout(ctx *gin.Context, reqDto *dtos.LogoutReqDto) {
-	cookies.AccessToken.DeleteCookie(ctx)
-	cookies.RefreshToken.DeleteCookie(ctx)
-
 	resDto, exception := c.authService.Logout(reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
 	}
+
+	cookies.AccessToken.DeleteCookie(ctx)
+	cookies.RefreshToken.DeleteCookie(ctx)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"success":   true,

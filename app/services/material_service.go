@@ -79,8 +79,6 @@ func (s *MaterialService) GetMyMaterialById(
 		Name:             material.Name,
 		Type:             material.Type,
 		DownloadURL:      downloadURL,
-		ContentType:      material.ContentType,
-		ParseMediaType:   material.ParseMediaType,
 		DeletedAt:        material.DeletedAt,
 		UpdatedAt:        material.UpdatedAt,
 		CreatedAt:        material.CreatedAt,
@@ -130,8 +128,6 @@ func (s *MaterialService) GetAllMyMaterialsByParentSubShelfId(
 			Name:             material.Name,
 			Type:             material.Type,
 			DownloadURL:      downloadURL,
-			ContentType:      material.ContentType,
-			ParseMediaType:   material.ParseMediaType,
 			DeletedAt:        material.DeletedAt,
 			UpdatedAt:        material.UpdatedAt,
 			CreatedAt:        material.CreatedAt,
@@ -181,8 +177,6 @@ func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
 			Name:             material.Name,
 			Type:             material.Type,
 			DownloadURL:      downloadURL,
-			ContentType:      material.ContentType,
-			ParseMediaType:   material.ParseMediaType,
 			DeletedAt:        material.DeletedAt,
 			UpdatedAt:        material.UpdatedAt,
 			CreatedAt:        material.CreatedAt,
@@ -216,7 +210,6 @@ func (s *MaterialService) CreateTextbookMaterial(ctx context.Context, reqDto *dt
 			Size:             zeroSize,
 			Type:             enums.MaterialType_Textbook,
 			ContentKey:       newContentKey,
-			ContentType:      enums.MaterialContentType_PlainText,
 		},
 	)
 	if exception != nil {
@@ -323,28 +316,7 @@ func (s *MaterialService) SaveMyTextbookMaterialById(
 		return nil, exceptions.Material.CannotGetFileObjects()
 	}
 
-	// check if the material content type is allowed in the material type of textbook
 	materialType := enums.MaterialType_Textbook
-	if !materialType.IsContentTypeStringAllowed(object.ContentType) {
-		tx.Rollback()
-		return nil, exceptions.Material.MaterialContentTypeNotAllowedInMaterialType(
-			reqDto.Body.MaterialId.String(),
-			materialType.String(),
-			object.ContentType,
-			materialType.AllowedContentTypeStrings(),
-		)
-	}
-
-	contentType, err := enums.ConvertStringToMaterialContentType(object.ContentType)
-	if contentType == nil {
-		exception := exceptions.Material.InvalidType(contentType)
-		if err != nil {
-			exception.WithError(err)
-		}
-		return nil, exception
-	}
-
-	partialUpdate.Values.ContentType = contentType
 	partialUpdate.Values.ParseMediaType = object.ParseMediaType
 	partialUpdate.Values.Size = &object.Size
 
