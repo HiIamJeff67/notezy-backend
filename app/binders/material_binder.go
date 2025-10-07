@@ -23,9 +23,9 @@ type MaterialBinderInterface interface {
 	BindGetMyMaterialById(controllerFunc types.ControllerFunc[*dtos.GetMyMaterialByIdReqDto]) gin.HandlerFunc
 	BindGetAllMyMaterialsByParentSubShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllMyMaterialsByParentSubShelfIdReqDto]) gin.HandlerFunc
 	BindGetAllMyMaterialsByRootShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllMyMaterialsByRootShelfIdReqDto]) gin.HandlerFunc
-	BindCreateTextbookMaterial(controllerFunc types.ControllerFunc[*dtos.CreateMaterialReqDto]) gin.HandlerFunc
-	BindUpdateMyTextbookMaterialById(controllerFunc types.ControllerFunc[*dtos.UpdateMyMaterialByIdReqDto]) gin.HandlerFunc
-	BindSaveMyTextbookMaterialById(controllerFunc types.ControllerFunc[*dtos.SaveMyMaterialByIdReqDto]) gin.HandlerFunc
+	BindCreateNotebookMaterial(controllerFunc types.ControllerFunc[*dtos.CreateMaterialReqDto]) gin.HandlerFunc
+	BindUpdateMyNotebookMaterialById(controllerFunc types.ControllerFunc[*dtos.UpdateMyMaterialByIdReqDto]) gin.HandlerFunc
+	BindSaveMyNotebookMaterialById(controllerFunc types.ControllerFunc[*dtos.SaveMyMaterialByIdReqDto]) gin.HandlerFunc
 	BindMoveMyMaterialById(controllerFunc types.ControllerFunc[*dtos.MoveMyMaterialByIdReqDto]) gin.HandlerFunc
 	BindMoveMyMaterialsByIds(controllerFunc types.ControllerFunc[*dtos.MoveMyMaterialsByIdsReqDto]) gin.HandlerFunc
 	BindRestoreMyMaterialById(controllerFunc types.ControllerFunc[*dtos.RestoreMyMaterialByIdReqDto]) gin.HandlerFunc
@@ -137,7 +137,7 @@ func (b *MaterialBinder) BindGetAllMyMaterialsByRootShelfId(controllerFunc types
 	}
 }
 
-func (b *MaterialBinder) BindCreateTextbookMaterial(controllerFunc types.ControllerFunc[*dtos.CreateMaterialReqDto]) gin.HandlerFunc {
+func (b *MaterialBinder) BindCreateNotebookMaterial(controllerFunc types.ControllerFunc[*dtos.CreateMaterialReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.CreateMaterialReqDto
 
@@ -167,7 +167,7 @@ func (b *MaterialBinder) BindCreateTextbookMaterial(controllerFunc types.Control
 	}
 }
 
-func (b *MaterialBinder) BindUpdateMyTextbookMaterialById(controllerFunc types.ControllerFunc[*dtos.UpdateMyMaterialByIdReqDto]) gin.HandlerFunc {
+func (b *MaterialBinder) BindUpdateMyNotebookMaterialById(controllerFunc types.ControllerFunc[*dtos.UpdateMyMaterialByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.UpdateMyMaterialByIdReqDto
 
@@ -190,7 +190,7 @@ func (b *MaterialBinder) BindUpdateMyTextbookMaterialById(controllerFunc types.C
 	}
 }
 
-func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.ControllerFunc[*dtos.SaveMyMaterialByIdReqDto]) gin.HandlerFunc {
+func (b *MaterialBinder) BindSaveMyNotebookMaterialById(controllerFunc types.ControllerFunc[*dtos.SaveMyMaterialByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.SaveMyMaterialByIdReqDto
 
@@ -227,8 +227,8 @@ func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.Con
 			fileHeader := fileHeaders[0]
 
 			// check the file size
-			if fileHeader.Size > constants.MaxTextbookFileSize {
-				exceptions.Material.FileTooLarge(fileHeader.Size, constants.MaxTextbookFileSize).Log().SafelyResponseWithJSON(ctx)
+			if fileHeader.Size > constants.MaxNotebookFileSize {
+				exceptions.Material.FileTooLarge(fileHeader.Size, constants.MaxNotebookFileSize).Log().SafelyResponseWithJSON(ctx)
 				return
 			}
 
@@ -238,8 +238,6 @@ func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.Con
 				exceptions.Material.CannotOpenFiles().WithError(err).Log().SafelyResponseWithJSON(ctx)
 				return
 			}
-			reqDto.Body.ContentFile = fileInterface // bind the file interface here
-			reqDto.ContextFields.Size = &fileHeaders[0].Size
 
 			// peek the first few bytes of the given file
 			bufferedReader := bufio.NewReader(fileInterface)
@@ -259,6 +257,26 @@ func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.Con
 				exceptions.Material.InvalidType(detectedContentType).Log().SafelyResponseWithJSON(ctx)
 				return
 			}
+
+			// try to reset(restore) the reading pointer to the beginning of the file
+			if seeker, ok := fileInterface.(io.Seeker); ok { // try using seeker to do so
+				_, err := seeker.Seek(0, io.SeekStart)
+				if err != nil {
+					fileInterface.Close()
+					exceptions.Material.CannotOpenFiles().WithError(err).Log().SafelyResponseWithJSON(ctx)
+					return
+				}
+			} else { // if it cannot be seeked, then re-open the file
+				fileInterface.Close()
+				fileInterface, err = fileHeader.Open()
+				if err != nil {
+					exceptions.Material.CannotOpenFiles().WithError(err).Log().SafelyResponseWithJSON(ctx)
+					return
+				}
+			}
+
+			reqDto.Body.ContentFile = fileInterface // bind the file interface here
+			reqDto.ContextFields.Size = &fileHeaders[0].Size
 
 			// make sure the file is closed at the end
 			defer func(f io.Reader) {

@@ -15,9 +15,9 @@ type MaterialControllerInterface interface {
 	GetMyMaterialById(ctx *gin.Context, reqDto *dtos.GetMyMaterialByIdReqDto)
 	GetAllMyMaterialsByParentSubShelfId(ctx *gin.Context, reqDto *dtos.GetAllMyMaterialsByParentSubShelfIdReqDto)
 	GetAllMyMaterialsByRootShelfId(ctx *gin.Context, reqDto *dtos.GetAllMyMaterialsByRootShelfIdReqDto)
-	CreateTextbookMaterial(ctx *gin.Context, reqDto *dtos.CreateMaterialReqDto)
-	UpdateMyTextbookMaterialById(ctx *gin.Context, reqDto *dtos.UpdateMyMaterialByIdReqDto)
-	SaveMyTextbookMaterialById(ctx *gin.Context, reqDto *dtos.SaveMyMaterialByIdReqDto)
+	CreateNotebookMaterial(ctx *gin.Context, reqDto *dtos.CreateMaterialReqDto)
+	UpdateMyNotebookMaterialById(ctx *gin.Context, reqDto *dtos.UpdateMyMaterialByIdReqDto)
+	SaveMyNotebookMaterialById(ctx *gin.Context, reqDto *dtos.SaveMyMaterialByIdReqDto)
 	MoveMyMaterialById(ctx *gin.Context, reqDto *dtos.MoveMyMaterialByIdReqDto)
 	MoveMyMaterialsByIds(ctx *gin.Context, reqDto *dtos.MoveMyMaterialsByIdsReqDto)
 	RestoreMyMaterialById(ctx *gin.Context, reqDto *dtos.RestoreMyMaterialByIdReqDto)
@@ -84,8 +84,8 @@ func (c *MaterialController) GetAllMyMaterialsByRootShelfId(ctx *gin.Context, re
 }
 
 // with AuthMiddleware
-func (c *MaterialController) CreateTextbookMaterial(ctx *gin.Context, reqDto *dtos.CreateMaterialReqDto) {
-	resDto, exception := c.materialService.CreateTextbookMaterial(ctx.Request.Context(), reqDto)
+func (c *MaterialController) CreateNotebookMaterial(ctx *gin.Context, reqDto *dtos.CreateMaterialReqDto) {
+	resDto, exception := c.materialService.CreateNotebookMaterial(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -99,8 +99,8 @@ func (c *MaterialController) CreateTextbookMaterial(ctx *gin.Context, reqDto *dt
 }
 
 // with AuthMiddleware
-func (c *MaterialController) UpdateMyTextbookMaterialById(ctx *gin.Context, reqDto *dtos.UpdateMyMaterialByIdReqDto) {
-	resDto, exception := c.materialService.UpdateMyTextbookMaterialById(reqDto)
+func (c *MaterialController) UpdateMyNotebookMaterialById(ctx *gin.Context, reqDto *dtos.UpdateMyMaterialByIdReqDto) {
+	resDto, exception := c.materialService.UpdateMyNotebookMaterialById(reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -114,8 +114,8 @@ func (c *MaterialController) UpdateMyTextbookMaterialById(ctx *gin.Context, reqD
 }
 
 // with AuthMiddleware, MultipartAdapter
-func (c *MaterialController) SaveMyTextbookMaterialById(ctx *gin.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) {
-	resDto, exception := c.materialService.SaveMyTextbookMaterialById(ctx.Request.Context(), reqDto)
+func (c *MaterialController) SaveMyNotebookMaterialById(ctx *gin.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) {
+	resDto, exception := c.materialService.SaveMyNotebookMaterialById(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
