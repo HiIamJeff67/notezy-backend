@@ -45,15 +45,21 @@ func configureDevelopmentMaterialRoutes() {
 			),
 		)
 		materialRoutes.POST(
+			"/createTextbookMaterial",
+			materialBinder.BindCreateTextbookMaterial(
+				materialController.CreateTextbookMaterial,
+			),
+		)
+		materialRoutes.POST(
 			"/createNotebookMaterial",
 			materialBinder.BindCreateNotebookMaterial(
 				materialController.CreateNotebookMaterial,
 			),
 		)
 		materialRoutes.PUT(
-			"/updateMyNotebookMaterialById",
-			materialBinder.BindUpdateMyNotebookMaterialById(
-				materialController.UpdateMyNotebookMaterialById,
+			"/updateMyMaterialById",
+			materialBinder.BindUpdateMyMaterialById(
+				materialController.UpdateMyMaterialById,
 			),
 		)
 		materialRoutes.PUT(

@@ -56,7 +56,24 @@ type GetAllMyMaterialsByRootShelfIdReqDto struct {
 	]
 }
 
-type CreateMaterialReqDto struct {
+type CreateTextbookMaterialReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId       uuid.UUID // extracted from the access token of AuthMiddleware()
+			UserPublicId uuid.UUID // extracted from the AuthMiddleware()
+		},
+		struct {
+			ParentSubShelfId uuid.UUID `json:"parentSubShelfId" validate:"required"`
+			Name             string    `json:"name" validate:"required,min=1,max=128"`
+		},
+		any,
+	]
+}
+
+type CreateNotebookMaterialReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -86,6 +103,7 @@ type UpdateMyMaterialByIdReqDto struct {
 			PartialUpdateDto[struct {
 				Name *string `json:"name" validate:"omitnil,min=1,max=128"`
 			}]
+			MaterialType enums.MaterialType `json:"type" validate:"required,ismaterialtype"` // for extra validation on the type
 		},
 		any,
 	]
@@ -221,7 +239,13 @@ type GetAllMyMaterialsByParentSubShelfIdResDto []GetMyMaterialByIdResDto
 
 type GetAllMyMaterialsByRootShelfIdResDto []GetMyMaterialByIdResDto
 
-type CreateMaterialResDto struct {
+type CreateTextbookMaterialResDto struct {
+	Id          uuid.UUID `json:"id"`
+	DownloadURL string    `json:"downloadURL"`
+	CreatedAt   time.Time `json:"createdAt"`
+}
+
+type CreateNotebookMaterialResDto struct {
 	Id          uuid.UUID `json:"id"`
 	DownloadURL string    `json:"downloadURL"`
 	CreatedAt   time.Time `json:"createdAt"`

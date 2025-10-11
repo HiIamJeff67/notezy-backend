@@ -11,7 +11,7 @@ import (
 	gqlmodels "notezy-backend/app/graphql/models"
 	schemas "notezy-backend/app/models/schemas"
 	constants "notezy-backend/shared/constants"
-	lib "notezy-backend/shared/lib"
+	searchcursor "notezy-backend/shared/lib/searchcursor"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -64,7 +64,7 @@ func (s *ThemeService) SearchPublicThemes(ctx context.Context, gqlInput gqlmodel
 		)
 	}
 	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
-		searchCursor, exception := lib.DecodeSearchCursor[gqlmodels.SearchThemeCursorFields](*gqlInput.After)
+		searchCursor, exception := searchcursor.Decode[gqlmodels.SearchThemeCursorFields](*gqlInput.After)
 		if exception != nil {
 			return nil, exception
 		}
@@ -114,12 +114,12 @@ func (s *ThemeService) SearchPublicThemes(ctx context.Context, gqlInput gqlmodel
 	searchEdges := make([]*gqlmodels.SearchThemeEdge, len(themes))
 
 	for index, theme := range themes {
-		searchCursor := lib.SearchCursor[gqlmodels.SearchThemeCursorFields]{
+		searchCursor := searchcursor.SearchCursor[gqlmodels.SearchThemeCursorFields]{
 			Fields: gqlmodels.SearchThemeCursorFields{
 				PublicID: theme.PublicId,
 			},
 		}
-		encodedSearchCursor, exception := searchCursor.EncodeSearchCursor()
+		encodedSearchCursor, exception := searchCursor.Encode()
 		if exception != nil {
 			return nil, exception
 		}

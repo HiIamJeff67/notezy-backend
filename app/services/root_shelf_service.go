@@ -18,7 +18,7 @@ import (
 	enums "notezy-backend/app/models/schemas/enums"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
-	lib "notezy-backend/shared/lib"
+	searchcursor "notezy-backend/shared/lib/searchcursor"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -245,7 +245,7 @@ func (s *RootShelfService) SearchPrivateShelves(ctx context.Context, userId uuid
 		)
 	}
 	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
-		searchCursor, exception := lib.DecodeSearchCursor[gqlmodels.SearchRootShelfCursorFields](*gqlInput.After)
+		searchCursor, exception := searchcursor.Decode[gqlmodels.SearchRootShelfCursorFields](*gqlInput.After)
 		if exception != nil {
 			return nil, exception
 		}
@@ -295,12 +295,12 @@ func (s *RootShelfService) SearchPrivateShelves(ctx context.Context, userId uuid
 	searchEdges := make([]*gqlmodels.SearchRootShelfEdge, len(shelves))
 
 	for index, shelf := range shelves {
-		searchCursor := lib.SearchCursor[gqlmodels.SearchRootShelfCursorFields]{
+		searchCursor := searchcursor.SearchCursor[gqlmodels.SearchRootShelfCursorFields]{
 			Fields: gqlmodels.SearchRootShelfCursorFields{
 				ID: shelf.Id,
 			},
 		}
-		encodedSearchCursor, exception := searchCursor.EncodeSearchCursor()
+		encodedSearchCursor, exception := searchCursor.Encode()
 		if exception != nil {
 			return nil, exception
 		}

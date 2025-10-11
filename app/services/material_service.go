@@ -26,8 +26,10 @@ type MaterialServiceInterface interface {
 	GetMyMaterialById(ctx context.Context, reqDto *dtos.GetMyMaterialByIdReqDto) (*dtos.GetMyMaterialByIdResDto, *exceptions.Exception)
 	GetAllMyMaterialsByParentSubShelfId(ctx context.Context, reqDto *dtos.GetAllMyMaterialsByParentSubShelfIdReqDto) (*dtos.GetAllMyMaterialsByParentSubShelfIdResDto, *exceptions.Exception)
 	GetAllMyMaterialsByRootShelfId(ctx context.Context, reqDto *dtos.GetAllMyMaterialsByRootShelfIdReqDto) (*dtos.GetAllMyMaterialsByRootShelfIdResDto, *exceptions.Exception)
-	CreateNotebookMaterial(ctx context.Context, reqDto *dtos.CreateMaterialReqDto) (*dtos.CreateMaterialResDto, *exceptions.Exception)
-	UpdateMyNotebookMaterialById(reqDto *dtos.UpdateMyMaterialByIdReqDto) (*dtos.UpdateMyMaterialByIdResDto, *exceptions.Exception)
+	CreateTextbookMaterial(ctx context.Context, reqDto *dtos.CreateTextbookMaterialReqDto) (*dtos.CreateTextbookMaterialResDto, *exceptions.Exception)
+	CreateNotebookMaterial(ctx context.Context, reqDto *dtos.CreateNotebookMaterialReqDto) (*dtos.CreateNotebookMaterialResDto, *exceptions.Exception)
+	UpdateMyMaterialById(reqDto *dtos.UpdateMyMaterialByIdReqDto) (*dtos.UpdateMyMaterialByIdResDto, *exceptions.Exception)
+	SaveMyTextbookMaterialById(ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception)
 	SaveMyNotebookMaterialById(ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception)
 	MoveMyMaterialById(reqDto *dtos.MoveMyMaterialByIdReqDto) (*dtos.MoveMyMaterialByIdResDto, *exceptions.Exception)
 	MoveMyMaterialsByIds(reqDto *dtos.MoveMyMaterialsByIdsReqDto) (*dtos.MoveMyMaterialsByIdsResDto, *exceptions.Exception)
@@ -186,7 +188,69 @@ func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
 	return &resDto, nil
 }
 
-func (s *MaterialService) CreateNotebookMaterial(ctx context.Context, reqDto *dtos.CreateMaterialReqDto) (*dtos.CreateMaterialResDto, *exceptions.Exception) {
+func (s *MaterialService) CreateTextbookMaterial(ctx context.Context, reqDto *dtos.CreateTextbookMaterialReqDto) (*dtos.CreateTextbookMaterialResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
+	tx := s.db.Begin()
+	materialRepository := repositories.NewMaterialRepository(tx)
+
+	newMaterialId := uuid.New()
+	newContentKey := s.storage.GetKey(
+		reqDto.ContextFields.UserPublicId.String(),
+		newMaterialId.String(),
+	)
+	zeroSize := int64(0)
+	_, exception := materialRepository.CreateOne(
+		reqDto.Body.ParentSubShelfId,
+		reqDto.ContextFields.UserId,
+		inputs.CreateMaterialInput{
+			Id:               newMaterialId,
+			ParentSubShelfId: reqDto.Body.ParentSubShelfId,
+			Name:             reqDto.Body.Name,
+			Size:             zeroSize,
+			Type:             enums.MaterialType_Textbook,
+			ContentKey:       newContentKey,
+		},
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	newContentFile := bytes.NewReader([]byte{})
+
+	object, exception := s.storage.NewObject(newContentKey, newContentFile, zeroSize)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	exception = s.storage.PutObjectByKey(ctx, newContentKey, object)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, newContentKey, nil)
+	if exception != nil {
+		return nil, exception
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.Material.FailedToCommitTransaction().WithError(err)
+	}
+
+	return &dtos.CreateTextbookMaterialResDto{
+		Id:          newMaterialId,
+		DownloadURL: downloadURL,
+		CreatedAt:   time.Now(),
+	}, nil
+}
+
+func (s *MaterialService) CreateNotebookMaterial(ctx context.Context, reqDto *dtos.CreateNotebookMaterialReqDto) (*dtos.CreateNotebookMaterialResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -241,14 +305,14 @@ func (s *MaterialService) CreateNotebookMaterial(ctx context.Context, reqDto *dt
 		return nil, exceptions.Material.FailedToCommitTransaction().WithError(err)
 	}
 
-	return &dtos.CreateMaterialResDto{
+	return &dtos.CreateNotebookMaterialResDto{
 		Id:          newMaterialId,
 		DownloadURL: downloadURL,
 		CreatedAt:   time.Now(),
 	}, nil
 }
 
-func (s *MaterialService) UpdateMyNotebookMaterialById(reqDto *dtos.UpdateMyMaterialByIdReqDto,
+func (s *MaterialService) UpdateMyMaterialById(reqDto *dtos.UpdateMyMaterialByIdReqDto,
 ) (*dtos.UpdateMyMaterialByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
@@ -256,12 +320,10 @@ func (s *MaterialService) UpdateMyNotebookMaterialById(reqDto *dtos.UpdateMyMate
 
 	materialResitory := repositories.NewMaterialRepository(s.db)
 
-	materialType := enums.MaterialType_Notebook
-
 	material, exception := materialResitory.UpdateOneById(
 		reqDto.Body.MaterialId,
 		reqDto.ContextFields.UserId,
-		&materialType,
+		&reqDto.Body.MaterialType,
 		inputs.PartialUpdateMaterialInput{
 			Values: inputs.UpdateMaterialInput{
 				Name: reqDto.Body.Values.Name,
@@ -278,9 +340,8 @@ func (s *MaterialService) UpdateMyNotebookMaterialById(reqDto *dtos.UpdateMyMate
 	}, nil
 }
 
-func (s *MaterialService) SaveMyNotebookMaterialById(
-	ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto,
-) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception) {
+// helper function for Save Material Services
+func (s *MaterialService) saveMyMaterialById(ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto, materialType enums.MaterialType) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -316,7 +377,6 @@ func (s *MaterialService) SaveMyNotebookMaterialById(
 		return nil, exceptions.Material.CannotGetFileObjects()
 	}
 
-	materialType := enums.MaterialType_Notebook
 	partialUpdate.Values.ParseMediaType = object.ParseMediaType
 	partialUpdate.Values.Size = &object.Size
 
@@ -346,6 +406,16 @@ func (s *MaterialService) SaveMyNotebookMaterialById(
 	return &dtos.SaveMyMaterialByIdResDto{
 		UpdatedAt: material.UpdatedAt,
 	}, nil
+}
+
+func (s *MaterialService) SaveMyTextbookMaterialById(ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception) {
+	return s.saveMyMaterialById(ctx, reqDto, enums.MaterialType_Textbook)
+}
+
+func (s *MaterialService) SaveMyNotebookMaterialById(
+	ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto,
+) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception) {
+	return s.saveMyMaterialById(ctx, reqDto, enums.MaterialType_Notebook)
 }
 
 func (s *MaterialService) MoveMyMaterialById(

@@ -24,6 +24,7 @@ type MaterialContentType string
 
 const (
 	// basic types
+	MaterialContentType_JSON      MaterialContentType = "application/json"
 	MaterialContentType_PlainText MaterialContentType = "text/plain"
 	MaterialContentType_HTML      MaterialContentType = "text/html"
 	MaterialContentType_PNG       MaterialContentType = "image/png"

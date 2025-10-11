@@ -15,8 +15,9 @@ type MaterialControllerInterface interface {
 	GetMyMaterialById(ctx *gin.Context, reqDto *dtos.GetMyMaterialByIdReqDto)
 	GetAllMyMaterialsByParentSubShelfId(ctx *gin.Context, reqDto *dtos.GetAllMyMaterialsByParentSubShelfIdReqDto)
 	GetAllMyMaterialsByRootShelfId(ctx *gin.Context, reqDto *dtos.GetAllMyMaterialsByRootShelfIdReqDto)
-	CreateNotebookMaterial(ctx *gin.Context, reqDto *dtos.CreateMaterialReqDto)
-	UpdateMyNotebookMaterialById(ctx *gin.Context, reqDto *dtos.UpdateMyMaterialByIdReqDto)
+	CreateTextbookMaterial(ctx *gin.Context, reqDto *dtos.CreateTextbookMaterialReqDto)
+	CreateNotebookMaterial(ctx *gin.Context, reqDto *dtos.CreateNotebookMaterialReqDto)
+	UpdateMyMaterialById(ctx *gin.Context, reqDto *dtos.UpdateMyMaterialByIdReqDto)
 	SaveMyNotebookMaterialById(ctx *gin.Context, reqDto *dtos.SaveMyMaterialByIdReqDto)
 	MoveMyMaterialById(ctx *gin.Context, reqDto *dtos.MoveMyMaterialByIdReqDto)
 	MoveMyMaterialsByIds(ctx *gin.Context, reqDto *dtos.MoveMyMaterialsByIdsReqDto)
@@ -84,7 +85,22 @@ func (c *MaterialController) GetAllMyMaterialsByRootShelfId(ctx *gin.Context, re
 }
 
 // with AuthMiddleware
-func (c *MaterialController) CreateNotebookMaterial(ctx *gin.Context, reqDto *dtos.CreateMaterialReqDto) {
+func (c *MaterialController) CreateTextbookMaterial(ctx *gin.Context, reqDto *dtos.CreateTextbookMaterialReqDto) {
+	resDto, exception := c.materialService.CreateTextbookMaterial(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": false,
+	})
+}
+
+// with AuthMiddleware
+func (c *MaterialController) CreateNotebookMaterial(ctx *gin.Context, reqDto *dtos.CreateNotebookMaterialReqDto) {
 	resDto, exception := c.materialService.CreateNotebookMaterial(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
@@ -99,8 +115,23 @@ func (c *MaterialController) CreateNotebookMaterial(ctx *gin.Context, reqDto *dt
 }
 
 // with AuthMiddleware
-func (c *MaterialController) UpdateMyNotebookMaterialById(ctx *gin.Context, reqDto *dtos.UpdateMyMaterialByIdReqDto) {
-	resDto, exception := c.materialService.UpdateMyNotebookMaterialById(reqDto)
+func (c *MaterialController) UpdateMyMaterialById(ctx *gin.Context, reqDto *dtos.UpdateMyMaterialByIdReqDto) {
+	resDto, exception := c.materialService.UpdateMyMaterialById(reqDto)
+	if exception != nil {
+		exception.Log().SafelyResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": false,
+	})
+}
+
+// with AuthMiddleware, MultipartAdapter
+func (c *MaterialController) SaveMyTextbookMaterialById(ctx *gin.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) {
+	resDto, exception := c.materialService.SaveMyTextbookMaterialById(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return

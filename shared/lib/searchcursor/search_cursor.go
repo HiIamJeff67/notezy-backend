@@ -1,4 +1,4 @@
-package lib
+package searchcursor
 
 import (
 	"encoding/base64"
@@ -8,17 +8,22 @@ import (
 	exceptions "notezy-backend/app/exceptions"
 )
 
+// we may name other search cursors based on their functionality.
+// ex. ImprovableSearchCursor, AlphaNameSearchCursor, TimeBasedSearchCursor,
+//     ClosestSeachCursor, ReachableSearchCursor, etc.
+
+// This `SearchCursor` is a general and common search cursor used as default in most of the search scenarios
 type SearchCursor[SearchCursorFieldType any] struct {
 	Fields SearchCursorFieldType `json:"fields"`
 }
 
-func NewSearchCursor[SearchCursorFieldType any](fields SearchCursorFieldType) *SearchCursor[SearchCursorFieldType] {
+func New[SearchCursorFieldType any](fields SearchCursorFieldType) *SearchCursor[SearchCursorFieldType] {
 	return &SearchCursor[SearchCursorFieldType]{
 		Fields: fields,
 	}
 }
 
-func (sc *SearchCursor[SearchCursorFieldType]) EncodeSearchCursor() (*string, *exceptions.Exception) {
+func (sc *SearchCursor[SearchCursorFieldType]) Encode() (*string, *exceptions.Exception) {
 	jsonData, err := json.Marshal(sc.Fields)
 	if err != nil {
 		return nil, exceptions.Search.FailedToMarshalSearchCursor().WithError(err)
@@ -28,7 +33,7 @@ func (sc *SearchCursor[SearchCursorFieldType]) EncodeSearchCursor() (*string, *e
 	return &encoded, nil
 }
 
-func DecodeSearchCursor[SearchCursorFieldType any](encoded string) (*SearchCursor[SearchCursorFieldType], *exceptions.Exception) {
+func Decode[SearchCursorFieldType any](encoded string) (*SearchCursor[SearchCursorFieldType], *exceptions.Exception) {
 	if len(strings.ReplaceAll(encoded, " ", "")) == 0 {
 		return nil, exceptions.Search.EmptyEncodedStringToDecodeSearchCursor()
 	}
@@ -46,7 +51,7 @@ func DecodeSearchCursor[SearchCursorFieldType any](encoded string) (*SearchCurso
 	return &SearchCursor[SearchCursorFieldType]{Fields: fields}, nil
 }
 
-func EncodeSearchCursorFromData[SearchCursorType any](data SearchCursorType) (*string, *exceptions.Exception) {
-	cursor := NewSearchCursor(data)
-	return cursor.EncodeSearchCursor()
+func EncodeFromData[SearchCursorType any](data SearchCursorType) (*string, *exceptions.Exception) {
+	cursor := New(data)
+	return cursor.Encode()
 }

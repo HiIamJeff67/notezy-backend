@@ -12,7 +12,7 @@ services:
     # should be the same as DB_HOST(hosting service)
     container_name: ${DOCKER_DB_SERVICE_NAME}
     # restart: always
-    image: postgis/postgis:16-3.4-alpine
+    image: postgres:16
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
