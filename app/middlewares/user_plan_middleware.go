@@ -1,8 +1,6 @@
 package middlewares
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
 	exceptions "notezy-backend/app/exceptions"
@@ -16,17 +14,17 @@ func UserPlanMiddleware(atLeastUserPlan enums.UserPlan) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		currentUserPlanValue, exists := ctx.Get(constants.ContextFieldName_User_Plan.String())
 		if !exists {
-			exception := exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
+			exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
 				"Cannot find the userPlan, " +
 					"please make sure the AuthMiddleware() is placing before the UserPlanMiddleware()",
-			)
-			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
+			).Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 		currentUserPlan, ok := currentUserPlanValue.(enums.UserPlan)
 		if !ok {
-			exception := exceptions.User.InvalidType("the userPlan is not in the correct enum type")
-			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
+			exceptions.User.InvalidType("the userPlan is not in the correct enum type").
+				Log().
+				SafelyResponseWithJSON(ctx)
 			return
 		}
 
@@ -46,23 +44,18 @@ func UserPlanMiddleware(atLeastUserPlan enums.UserPlan) gin.HandlerFunc {
 				ctx.Next()
 				return
 			} else if enum == atLeastUserPlan {
-				ctx.AbortWithStatusJSON(
-					http.StatusUnauthorized,
-					exceptions.Auth.PermissionDeniedDueToUserPlan(currentUserPlan).GetGinH(),
-				)
+				exceptions.Auth.PermissionDeniedDueToUserPlan(currentUserPlan).
+					Log().
+					SafelyResponseWithJSON(ctx)
 				return
 			}
 		}
 
 		// if some how we can't find the currentUserPlan or atLeastUserPlan
 		// then we raise an undefined error at the end
-		exception := exceptions.UndefinedError(
+		exceptions.UndefinedError(
 			"Cannot find atLeastUserPlan or currentUserPlan in UserRoleMiddleware",
-		)
-		ctx.AbortWithStatusJSON(
-			exception.HTTPStatusCode,
-			exception.GetGinH(),
-		)
+		).Log().SafelyResponseWithJSON(ctx)
 	}
 }
 
@@ -78,17 +71,15 @@ func AllowedUserPlanMiddleware(allowedPlan []enums.UserPlan) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		currentUserPlanValue, exists := ctx.Get(constants.ContextFieldName_User_Plan.String())
 		if !exists {
-			exception := exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
+			exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
 				"Cannot find the userPlan, " +
 					"please make sure the AuthMiddleware() is placing before the AllowedUserPlanMiddleware()",
-			)
-			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
+			).Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 		currentUserPlan, ok := currentUserPlanValue.(enums.UserPlan)
 		if !ok {
-			exception := exceptions.User.InvalidType("the userPlan is not in the correct enum type")
-			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
+			exceptions.User.InvalidType("the userPlan is not in the correct enum type").Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 
@@ -103,10 +94,6 @@ func AllowedUserPlanMiddleware(allowedPlan []enums.UserPlan) gin.HandlerFunc {
 			}
 		}
 
-		exception := exceptions.Auth.PermissionDeniedDueToUserRole(currentUserPlan)
-		ctx.AbortWithStatusJSON(
-			exception.HTTPStatusCode,
-			exception.GetGinH(),
-		)
+		exceptions.Auth.PermissionDeniedDueToUserRole(currentUserPlan).Log().SafelyResponseWithJSON(ctx)
 	}
 }

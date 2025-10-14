@@ -11,6 +11,20 @@ import (
 	constants "notezy-backend/shared/constants"
 )
 
+func GetAndConvertContextFieldToBoolean(ctx *gin.Context, name constants.ContextFieldName) (*bool, *exceptions.Exception) {
+	value, exist := ctx.Get(name.String())
+	if !exist {
+		return nil, exceptions.Context.FailedToGetContextFieldOfSpecificName(name.String())
+	}
+
+	valueBoolean, ok := value.(bool)
+	if !ok {
+		return nil, exceptions.Context.FailedToConvertContextFieldToSpecificType("bool")
+	}
+
+	return &valueBoolean, nil
+}
+
 func GetAndConvertContextFieldToUUID(ctx *gin.Context, name constants.ContextFieldName) (*uuid.UUID, *exceptions.Exception) {
 	value, exist := ctx.Get(name.String())
 	if !exist {

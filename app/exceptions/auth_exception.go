@@ -96,33 +96,9 @@ func (d *AuthExceptionDomain) WrongAuthCode() *Exception {
 	}
 }
 
-func (d *AuthExceptionDomain) FailedToExtractOrValidateAccessToken() *Exception {
-	return &Exception{
-		Code:           d.BaseCode + 6,
-		Prefix:         d.Prefix,
-		Reason:         "FailedToExtractOrValidateAccessToken",
-		IsInternal:     true,
-		Message:        "Failed to get or validate the access token",
-		HTTPStatusCode: http.StatusUnauthorized,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
-	}
-}
-
-func (d *AuthExceptionDomain) FailedToExtractOrValidateRefreshToken() *Exception {
-	return &Exception{
-		Code:           d.BaseCode + 7,
-		Prefix:         d.Prefix,
-		Reason:         "FailedToExtractOrValidateRefreshToken",
-		IsInternal:     true,
-		Message:        "Failed to get or validate the refresh token",
-		HTTPStatusCode: http.StatusUnauthorized,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
-	}
-}
-
 func (d *AuthExceptionDomain) LoginBlockedDueToTryingTooManyTimes(blockedUntil time.Time) *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 8,
+		Code:           d.BaseCode + 6,
 		Prefix:         d.Prefix,
 		Reason:         "LoginBlockedDueToTryingTooManyTimes",
 		IsInternal:     false,
@@ -134,7 +110,7 @@ func (d *AuthExceptionDomain) LoginBlockedDueToTryingTooManyTimes(blockedUntil t
 
 func (d *AuthExceptionDomain) AuthCodeBlockedDueToTryingTooManyTimes(blockedUntil time.Time) *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 9,
+		Code:           d.BaseCode + 7,
 		Prefix:         d.Prefix,
 		Reason:         "AuthCodeBlockedDueToTryingTooManyTimes",
 		IsInternal:     false,
@@ -146,7 +122,7 @@ func (d *AuthExceptionDomain) AuthCodeBlockedDueToTryingTooManyTimes(blockedUnti
 
 func (d *AuthExceptionDomain) NoClientIPOrReferenceToClient() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 10,
+		Code:           d.BaseCode + 8,
 		Prefix:         d.Prefix,
 		Reason:         "NoClientIPOrReferenceToClient",
 		IsInternal:     true,

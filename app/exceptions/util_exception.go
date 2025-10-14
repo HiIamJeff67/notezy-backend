@@ -23,85 +23,11 @@ var Util = &UtilExceptionDomain{
 	Prefix:   ExceptionPrefix_Util,
 }
 
-/* ============================== Handling Exception on Json Web Tokens ============================== */
-
-func (d *UtilExceptionDomain) AccessTokenSecretKeyNotFound() *Exception {
-	return &Exception{
-		Code:           d.BaseCode + 1,
-		Prefix:         d.Prefix,
-		Reason:         "AccessTokenSecretKeyNotFound",
-		IsInternal:     true,
-		Message:        "The environment variables of access token secret key is not found",
-		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
-	}
-}
-
-func (d *UtilExceptionDomain) RefreshTokenSecretKeyNotFound() *Exception {
-	return &Exception{
-		Code:           d.BaseCode + 2,
-		Prefix:         d.Prefix,
-		Reason:         "RefreshTokenSecretKeyNotFound",
-		IsInternal:     true,
-		Message:        "The environment variables of refresh token secret key is not found",
-		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
-	}
-}
-
-func (d *UtilExceptionDomain) FailedToGenerateAccessToken() *Exception {
-	return &Exception{
-		Code:           d.BaseCode + 3,
-		Prefix:         d.Prefix,
-		Reason:         "FailedToGenerateAccessToken",
-		IsInternal:     true,
-		Message:        "Failed to generate the access token",
-		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
-	}
-}
-
-func (d *UtilExceptionDomain) FailedToGenerateRefreshToken() *Exception {
-	return &Exception{
-		Code:           d.BaseCode + 4,
-		Prefix:         d.Prefix,
-		Reason:         "FailedToGenerateRefreshToken",
-		IsInternal:     true,
-		Message:        "Failed to generate the refresh token",
-		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
-	}
-}
-
-func (d *UtilExceptionDomain) FailedToParseAccessToken() *Exception {
-	return &Exception{
-		Code:           d.BaseCode + 5,
-		Prefix:         d.Prefix,
-		Reason:         "FailedToParseAccessToken",
-		IsInternal:     true,
-		Message:        "Failed to parse the access token",
-		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
-	}
-}
-
-func (d *UtilExceptionDomain) FailedToParseRefreshToken() *Exception {
-	return &Exception{
-		Code:           d.BaseCode + 6,
-		Prefix:         d.Prefix,
-		Reason:         "FailedToParseRefreshToken",
-		IsInternal:     true,
-		Message:        "Failed to parse the refresh token",
-		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
-	}
-}
-
 /* ============================== Handing Exception on Hash ============================== */
 
 func (d *UtilExceptionDomain) FailedToGenerateHashValue() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 11,
+		Code:           d.BaseCode + 1,
 		Prefix:         d.Prefix,
 		Reason:         "FailedToGenerateHashValue",
 		IsInternal:     true,

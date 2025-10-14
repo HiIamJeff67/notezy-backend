@@ -3,6 +3,7 @@ package developmentroutes
 import (
 	binders "notezy-backend/app/binders"
 	controllers "notezy-backend/app/controllers"
+	interceptors "notezy-backend/app/interceptors"
 	middlewares "notezy-backend/app/middlewares"
 	models "notezy-backend/app/models"
 	enums "notezy-backend/app/models/schemas/enums"
@@ -52,6 +53,7 @@ func configureDevelopmentAuthRoutes() {
 			"/validateEmail",
 			middlewares.AuthMiddleware(),
 			middlewares.RateLimitMiddleware(1),
+			interceptors.RefreshAccessTokenInterceptor(),
 			authBinder.BindValidateEmail(
 				authController.ValidateEmail,
 			),
@@ -61,6 +63,7 @@ func configureDevelopmentAuthRoutes() {
 			middlewares.AuthMiddleware(),
 			middlewares.UserRoleMiddleware(enums.UserRole_Normal),
 			middlewares.RateLimitMiddleware(1),
+			interceptors.RefreshAccessTokenInterceptor(),
 			authBinder.BindResetEmail(
 				authController.ResetEmail,
 			),

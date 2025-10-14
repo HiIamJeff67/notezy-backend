@@ -21,7 +21,8 @@ type UserDataCache struct {
 	Name               string           `json:"name"`               // user
 	DisplayName        string           `json:"displayName"`        // user
 	Email              string           `json:"email"`              // user
-	AccessToken        string           `json:"accessToken"`        // !only here
+	AccessToken        string           `json:"accessToken"`        // !only here: note that it may be expired, but it is the newest one
+	CSRFToken          string           `json:"csrfToken"`          // !only here: note that it may be expired, but it is the newest one
 	Role               enums.UserRole   `json:"role"`               // user
 	Plan               enums.UserPlan   `json:"plan"`               // user
 	Status             enums.UserStatus `json:"status"`             // user
@@ -39,6 +40,7 @@ type UpdateUserDataCacheDto struct {
 	DisplayName        *string
 	Email              *string
 	AccessToken        *string
+	CSRFToken          *string
 	Role               *enums.UserRole
 	Plan               *enums.UserPlan
 	Status             *enums.UserStatus
@@ -90,7 +92,7 @@ func GetUserDataCache(id uuid.UUID) (*UserDataCache, *exceptions.Exception) {
 	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
 	redisClient, ok := RedisClientMap[serverNumber]
 	if !ok {
-		return nil, exceptions.Cache.ClientInstanceDoesNotExist(serverNumber)
+		return nil, exceptions.Cache.ClientInstanceDoesNotExist()
 	}
 
 	formattedKey := formatKey(id)
@@ -118,7 +120,7 @@ func SetUserDataCache(id uuid.UUID, userData UserDataCache) *exceptions.Exceptio
 	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
 	redisClient, ok := RedisClientMap[serverNumber]
 	if !ok {
-		return exceptions.Cache.ClientInstanceDoesNotExist(serverNumber)
+		return exceptions.Cache.ClientInstanceDoesNotExist()
 	}
 
 	userDataJson, err := json.Marshal(userData)
@@ -141,7 +143,7 @@ func UpdateUserDataCache(id uuid.UUID, dto UpdateUserDataCacheDto) *exceptions.E
 	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
 	redisClient, ok := RedisClientMap[serverNumber]
 	if !ok {
-		return exceptions.Cache.ClientInstanceDoesNotExist(serverNumber)
+		return exceptions.Cache.ClientInstanceDoesNotExist()
 	}
 
 	userData, exception := GetUserDataCache(id)
@@ -172,7 +174,7 @@ func DeleteUserDataCache(id uuid.UUID) *exceptions.Exception {
 	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
 	redisClient, ok := RedisClientMap[serverNumber]
 	if !ok {
-		return exceptions.Cache.ClientInstanceDoesNotExist(serverNumber)
+		return exceptions.Cache.ClientInstanceDoesNotExist()
 	}
 
 	formattedKey := formatKey(id)

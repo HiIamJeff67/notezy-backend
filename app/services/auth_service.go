@@ -119,6 +119,13 @@ func (s *AuthService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDt
 		tx.Rollback()
 		return nil, exception
 	}
+	// Generate csrfToken
+	csrfToken, exception := tokens.GenerateCSRFToken()
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
 	// Generate authCode and its expiration time
 	authCode := util.GenerateAuthCode()
 	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
@@ -177,6 +184,7 @@ func (s *AuthService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDt
 			DisplayName:        newUser.DisplayName,
 			Email:              newUser.Email,
 			AccessToken:        *accessToken,
+			CSRFToken:          *csrfToken,
 			Role:               newUser.Role,
 			Plan:               newUser.Plan,
 			Status:             newUser.Status,
@@ -284,6 +292,10 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 	if exception != nil {
 		return nil, exception
 	}
+	csrfToken, exception := tokens.GenerateCSRFToken()
+	if exception != nil {
+		return nil, exception
+	}
 
 	// check if the user data cache exists
 	if _, exception := caches.GetUserDataCache(user.Id); exception == nil {
@@ -331,6 +343,7 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 			DisplayName:        output.DisplayName,
 			Email:              output.Email,
 			AccessToken:        *accessToken,
+			CSRFToken:          *csrfToken,
 			Role:               output.Role,
 			Plan:               output.Plan,
 			Status:             output.Status,
@@ -544,6 +557,10 @@ func (s *AuthService) ForgetPassword(reqDto *dtos.ForgetPasswordReqDto) (*dtos.F
 	if exception != nil {
 		return nil, exception
 	}
+	csrfToken, exception := tokens.GenerateCSRFToken()
+	if exception != nil {
+		return nil, exception
+	}
 
 	// update the access token of the user
 	exception = caches.UpdateUserDataCache(user.Id, caches.UpdateUserDataCacheDto{AccessToken: accessToken})
@@ -556,6 +573,7 @@ func (s *AuthService) ForgetPassword(reqDto *dtos.ForgetPasswordReqDto) (*dtos.F
 			DisplayName:        user.DisplayName,
 			Email:              user.Email,
 			AccessToken:        *accessToken,
+			CSRFToken:          *csrfToken,
 			Role:               user.Role,
 			Plan:               user.Plan,
 			Status:             user.Status,

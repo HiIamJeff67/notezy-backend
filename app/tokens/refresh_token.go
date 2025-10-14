@@ -9,10 +9,10 @@ import (
 	types "notezy-backend/shared/types"
 )
 
-/* ============================== Generate Tokens Functions ============================== */
+/* ============================== Generate Token Functions ============================== */
 
 func GenerateRefreshToken(id string, name string, email string, userAgent string) (*string, *exceptions.Exception) {
-	claims := types.Claims{
+	claims := types.JWTClaims{
 		Id:        id,
 		Name:      name,
 		Email:     email,
@@ -26,27 +26,33 @@ func GenerateRefreshToken(id string, name string, email string, userAgent string
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	result, err := token.SignedString(_jwtRefreshTokenSecret)
 	if err != nil {
-		return nil, exceptions.Util.FailedToGenerateRefreshToken().WithError(err)
+		return nil, exceptions.Token.FailedToGenerateRefreshToken().WithError(err)
 	}
 
 	return &result, nil
 }
 
-/* ============================== Parse Tokens Functions ============================== */
+/* ============================== Parse Token Functions ============================== */
 
-func ParseRefreshToken(tokenString string) (*types.Claims, *exceptions.Exception) {
+func ParseRefreshToken(tokenString string) (*types.JWTClaims, *exceptions.Exception) {
 	refreshToken, err := jwt.ParseWithClaims(
 		tokenString,
-		&types.Claims{},
+		&types.JWTClaims{},
 		func(token *jwt.Token) (any, error) { return _jwtRefreshTokenSecret, nil },
 	)
 	if err != nil {
-		return nil, exceptions.Util.FailedToParseRefreshToken().WithError(err)
+		return nil, exceptions.Token.FailedToParseRefreshToken().WithError(err)
 	}
 
-	if claims, ok := refreshToken.Claims.(*types.Claims); ok && refreshToken.Valid {
+	if claims, ok := refreshToken.Claims.(*types.JWTClaims); ok && refreshToken.Valid {
 		return claims, nil
 	}
 
-	return nil, exceptions.Util.FailedToParseRefreshToken().WithError(jwt.ErrTokenInvalidClaims)
+	return nil, exceptions.Token.FailedToParseRefreshToken().WithError(jwt.ErrTokenInvalidClaims)
+}
+
+/* ============================== Utility Functions ============================== */
+
+func GetRefreshTokenExpiresIn() time.Duration {
+	return _refreshTokenExpiresIn
 }

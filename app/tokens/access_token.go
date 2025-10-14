@@ -1,17 +1,18 @@
 package tokens
 
 import (
-	"notezy-backend/app/exceptions"
-	"notezy-backend/shared/types"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+
+	exceptions "notezy-backend/app/exceptions"
+	types "notezy-backend/shared/types"
 )
 
-/* ============================== Generate Tokens Function ============================== */
+/* ============================== Generate Token Functions ============================== */
 
 func GenerateAccessToken(id string, name string, email string, userAgent string) (*string, *exceptions.Exception) {
-	claims := types.Claims{
+	claims := types.JWTClaims{
 		Id:        id,
 		Name:      name,
 		Email:     email,
@@ -25,27 +26,33 @@ func GenerateAccessToken(id string, name string, email string, userAgent string)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	result, err := token.SignedString(_jwtAccessTokenSecret)
 	if err != nil {
-		return nil, exceptions.Util.FailedToGenerateAccessToken().WithError(err)
+		return nil, exceptions.Token.FailedToGenerateAccessToken().WithError(err)
 	}
 
 	return &result, nil
 }
 
-/* ============================== Parse Tokens Function ============================== */
+/* ============================== Parse Token Functions ============================== */
 
-func ParseAccessToken(tokenString string) (*types.Claims, *exceptions.Exception) {
+func ParseAccessToken(tokenString string) (*types.JWTClaims, *exceptions.Exception) {
 	accessToken, err := jwt.ParseWithClaims(
 		tokenString,
-		&types.Claims{},
+		&types.JWTClaims{},
 		func(token *jwt.Token) (any, error) { return _jwtAccessTokenSecret, nil },
 	)
 	if err != nil {
-		return nil, exceptions.Util.FailedToParseAccessToken().WithError(err)
+		return nil, exceptions.Token.FailedToParseAccessToken().WithError(err)
 	}
 
-	if claims, ok := accessToken.Claims.(*types.Claims); ok && accessToken.Valid {
+	if claims, ok := accessToken.Claims.(*types.JWTClaims); ok && accessToken.Valid {
 		return claims, nil
 	}
 
-	return nil, exceptions.Util.FailedToParseAccessToken().WithError(jwt.ErrTokenInvalidClaims)
+	return nil, exceptions.Token.FailedToParseAccessToken().WithError(jwt.ErrTokenInvalidClaims)
+}
+
+/* ============================== Utility Functions ============================== */
+
+func GetAccessTokenExpiresIn() time.Duration {
+	return _accessTokenExpiresIn
 }

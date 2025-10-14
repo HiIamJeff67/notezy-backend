@@ -116,13 +116,13 @@ func (d *CacheExceptionSubDomain) FailedToDisconnectToServer(serverNumber int) *
 	}
 }
 
-func (d *CacheExceptionSubDomain) ClientInstanceDoesNotExist(serverNumber int) *Exception {
+func (d *CacheExceptionSubDomain) ClientInstanceDoesNotExist() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 3,
 		Prefix:         d.Prefix,
 		Reason:         "ClientInstanceDoesNotExist",
 		IsInternal:     true,
-		Message:        fmt.Sprintf("The client instance with server number of %v does not exist", serverNumber),
+		Message:        "The client instance does not exist, maybe the authentication is expired",
 		HTTPStatusCode: http.StatusBadGateway,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}

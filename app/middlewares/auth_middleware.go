@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -22,7 +21,7 @@ func _extractAccessToken(ctx *gin.Context) (string, *exceptions.Exception) {
 	if exception != nil || len(strings.ReplaceAll(accessToken, " ", "")) == 0 {
 		authHeader := ctx.GetHeader("Authorization")
 		if !strings.HasPrefix(authHeader, "Bearer ") {
-			return "", exceptions.Auth.FailedToExtractOrValidateAccessToken()
+			return "", exceptions.Token.FailedToExtractOrValidateAccessToken()
 		}
 		accessToken = strings.TrimPrefix(authHeader, "Bearer ")
 	}
@@ -32,12 +31,12 @@ func _extractAccessToken(ctx *gin.Context) (string, *exceptions.Exception) {
 func _extractRefreshToken(ctx *gin.Context) (string, *exceptions.Exception) {
 	refreshToken, exception := cookies.RefreshToken.GetCookie(ctx)
 	if exception != nil || strings.ReplaceAll(refreshToken, " ", "") == "" {
-		return "", exceptions.Auth.FailedToExtractOrValidateRefreshToken()
+		return "", exceptions.Token.FailedToExtractOrValidateRefreshToken()
 	}
 	return refreshToken, nil
 }
 
-func _validateAccessTokenAndUserAgent(accessToken string) (*types.Claims, *caches.UserDataCache, *exceptions.Exception) {
+func _validateAccessTokenAndUserAgent(accessToken string) (*types.JWTClaims, *caches.UserDataCache, *exceptions.Exception) {
 	claims, exception := tokens.ParseAccessToken(accessToken)
 	if exception != nil { // if failed to parse the accessToken
 		return nil, nil, exception
@@ -45,7 +44,7 @@ func _validateAccessTokenAndUserAgent(accessToken string) (*types.Claims, *cache
 
 	userId, err := uuid.Parse(claims.Id)
 	if err != nil { // if the id is invalid somehow
-		return nil, nil, exceptions.Util.FailedToParseAccessToken().WithError(err)
+		return nil, nil, exceptions.Token.FailedToParseAccessToken().WithError(err)
 	}
 
 	userDataCache, exception := caches.GetUserDataCache(userId)
@@ -68,7 +67,7 @@ func _validateRefreshToken(refreshToken string) (*schemas.User, *exceptions.Exce
 
 	userId, err := uuid.Parse(claims.Id)
 	if err != nil { // if the id is invalid somehow
-		return nil, exceptions.Util.FailedToParseAccessToken().WithError(err)
+		return nil, exceptions.Token.FailedToParseAccessToken().WithError(err)
 	}
 
 	userRepository := repositories.NewUserRepository(nil)
@@ -90,14 +89,15 @@ func _validateRefreshToken(refreshToken string) (*schemas.User, *exceptions.Exce
 func AuthMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// clear all the previous field first for security
-		ctx.Set(constants.ContextFieldName_User_Id.String(), "")
-		ctx.Set(constants.ContextFieldName_User_PublicId.String(), "")
-		ctx.Set(constants.ContextFieldName_User_Name.String(), "")
-		ctx.Set(constants.ContextFieldName_User_DisplayName.String(), "")
-		ctx.Set(constants.ContextFieldName_User_Email.String(), "")
-		ctx.Set(constants.ContextFieldName_AccessToken.String(), "")
-		ctx.Set(constants.ContextFieldName_User_Role.String(), "")
-		ctx.Set(constants.ContextFieldName_User_Plan.String(), "")
+		ctx.Set(constants.ContextFieldName_User_Id.String(), nil)
+		ctx.Set(constants.ContextFieldName_User_PublicId.String(), nil)
+		ctx.Set(constants.ContextFieldName_User_Name.String(), nil)
+		ctx.Set(constants.ContextFieldName_User_DisplayName.String(), nil)
+		ctx.Set(constants.ContextFieldName_User_Email.String(), nil)
+		ctx.Set(constants.ContextFieldName_IsNewAccessToken.String(), nil)
+		ctx.Set(constants.ContextFieldName_AccessToken.String(), nil)
+		ctx.Set(constants.ContextFieldName_User_Role.String(), nil)
+		ctx.Set(constants.ContextFieldName_User_Plan.String(), nil)
 
 		// nest if statement bcs we will skip the accessToken validation if it failed
 		if accessToken, exception := _extractAccessToken(ctx); exception == nil { // if extract the accessToken successfully
@@ -109,6 +109,7 @@ func AuthMiddleware() gin.HandlerFunc {
 					ctx.Set(constants.ContextFieldName_User_Name.String(), userDataCache.Name)
 					ctx.Set(constants.ContextFieldName_User_DisplayName.String(), userDataCache.DisplayName)
 					ctx.Set(constants.ContextFieldName_User_Email.String(), userDataCache.Email)
+					ctx.Set(constants.ContextFieldName_IsNewAccessToken.String(), false)
 					ctx.Set(constants.ContextFieldName_AccessToken.String(), accessToken)
 					ctx.Set(constants.ContextFieldName_User_Role.String(), userDataCache.Role)
 					ctx.Set(constants.ContextFieldName_User_Plan.String(), userDataCache.Plan)
@@ -123,22 +124,19 @@ func AuthMiddleware() gin.HandlerFunc {
 		// this means the old accessToken can no longer get any data of the user
 		refreshToken, exception := _extractRefreshToken(ctx)
 		if exception != nil { // if failed to extract the refreshToken
-			exception.Log()
-			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
+			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 
 		_user, exception := _validateRefreshToken(refreshToken)
 		if exception != nil {
-			exception.Log()
-			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
+			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 
 		// if we can't check the userAgent in accessToken, then we check it in our database
 		if currentUserAgent := ctx.GetHeader("User-Agent"); currentUserAgent != _user.UserAgent {
-			exception.Log()
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, exceptions.Auth.WrongUserAgent().GetGinH())
+			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 
@@ -146,8 +144,13 @@ func AuthMiddleware() gin.HandlerFunc {
 		// then we need to generate the new accessToken, and storing it in the cache, and regarding the entire validation as successful
 		newAccessToken, exception := tokens.GenerateAccessToken(_user.Id.String(), _user.Name, _user.Email, _user.UserAgent)
 		if exception != nil {
-			exception.Log()
-			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
+			exception.Log().SafelyResponseWithJSON(ctx)
+			return
+		}
+		// also generate a new CSRF token, and storing it in the cache
+		newCSRFToken, exception := tokens.GenerateCSRFToken()
+		if exception != nil {
+			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 
@@ -161,6 +164,7 @@ func AuthMiddleware() gin.HandlerFunc {
 				DisplayName:        _user.DisplayName,
 				Email:              _user.Email,
 				AccessToken:        *newAccessToken,
+				CSRFToken:          *newCSRFToken,
 				Role:               _user.Role,
 				Plan:               _user.Plan,
 				Status:             _user.Status,
@@ -175,7 +179,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			}
 			exception = caches.SetUserDataCache(_user.Id, newUserDataCache)
 			if exception != nil {
-				ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
+				exception.Log().SafelyResponseWithJSON(ctx)
 				return
 			}
 		}
@@ -185,7 +189,8 @@ func AuthMiddleware() gin.HandlerFunc {
 		ctx.Set(constants.ContextFieldName_User_Name.String(), _user.Name)
 		ctx.Set(constants.ContextFieldName_User_DisplayName.String(), _user.DisplayName)
 		ctx.Set(constants.ContextFieldName_User_Email.String(), _user.Email)
-		ctx.Set(constants.ContextFieldName_AccessToken.String(), newAccessToken)
+		ctx.Set(constants.ContextFieldName_IsNewAccessToken.String(), true)
+		ctx.Set(constants.ContextFieldName_AccessToken.String(), *newAccessToken)
 		ctx.Set(constants.ContextFieldName_User_Role.String(), _user.Role)
 		ctx.Set(constants.ContextFieldName_User_Plan.String(), _user.Plan)
 		ctx.Next()
