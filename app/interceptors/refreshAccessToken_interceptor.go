@@ -11,6 +11,9 @@ import (
 	constants "notezy-backend/shared/constants"
 )
 
+// To rewrite the response with adding additional field of `newAccessToken`,
+// Note : It should be placed below the `AuthMiddleware`,
+// so that it can access the `AccessToken` in the context field
 func RefreshAccessTokenInterceptor() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		interceptor := &Interceptor{

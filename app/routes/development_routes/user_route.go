@@ -3,6 +3,7 @@ package developmentroutes
 import (
 	binders "notezy-backend/app/binders"
 	controllers "notezy-backend/app/controllers"
+	"notezy-backend/app/interceptors"
 	middlewares "notezy-backend/app/middlewares"
 	models "notezy-backend/app/models"
 	services "notezy-backend/app/services"
@@ -20,6 +21,7 @@ func configureDevelopmentUserRoutes() {
 	userRoutes.Use(
 		middlewares.AuthMiddleware(),
 		middlewares.RateLimitMiddleware(1),
+		interceptors.RefreshAccessTokenInterceptor(),
 	)
 	{
 		userRoutes.GET(

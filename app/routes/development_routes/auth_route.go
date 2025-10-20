@@ -53,6 +53,7 @@ func configureDevelopmentAuthRoutes() {
 			"/validateEmail",
 			middlewares.AuthMiddleware(),
 			middlewares.RateLimitMiddleware(1),
+			middlewares.CSRFMiddleware(),
 			interceptors.RefreshAccessTokenInterceptor(),
 			authBinder.BindValidateEmail(
 				authController.ValidateEmail,
@@ -61,8 +62,9 @@ func configureDevelopmentAuthRoutes() {
 		authRoutes.PUT(
 			"/resetEmail",
 			middlewares.AuthMiddleware(),
-			middlewares.UserRoleMiddleware(enums.UserRole_Normal),
 			middlewares.RateLimitMiddleware(1),
+			middlewares.UserRoleMiddleware(enums.UserRole_Normal),
+			middlewares.CSRFMiddleware(),
 			interceptors.RefreshAccessTokenInterceptor(),
 			authBinder.BindResetEmail(
 				authController.ResetEmail,
@@ -79,6 +81,7 @@ func configureDevelopmentAuthRoutes() {
 			"/deleteMe",
 			middlewares.AuthMiddleware(),
 			middlewares.RateLimitMiddleware(1),
+			middlewares.CSRFMiddleware(),
 			authBinder.BindDeleteMe(
 				authController.DeleteMe,
 			),

@@ -129,12 +129,14 @@ type DeleteMeReqDto struct {
 type RegisterResDto struct {
 	AccessToken  string    `json:"accessToken"`
 	RefreshToken string    `json:"refreshToken"`
+	CSRFToken    string    `json:"csrfToken"`
 	CreatedAt    time.Time `json:"createdAt"`
 }
 
 type LoginResDto struct {
 	AccessToken  string    `json:"accessToken"`
 	RefreshToken string    `json:"refreshToken"`
+	CSRFToken    string    `json:"csrfToken"`
 	UpdatedAt    time.Time `json:"updatedAt"`
 }
 

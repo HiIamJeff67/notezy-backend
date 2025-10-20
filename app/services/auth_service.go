@@ -213,6 +213,7 @@ func (s *AuthService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDt
 	return &dtos.RegisterResDto{
 		AccessToken:  *accessToken,
 		RefreshToken: *refreshToken,
+		CSRFToken:    *csrfToken,
 		CreatedAt:    newUser.CreatedAt,
 	}, nil
 }
@@ -235,7 +236,9 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 		if user, exception = userRepository.GetOneByEmail(reqDto.Body.Account, nil); exception != nil {
 			return nil, exception
 		}
-	} else {
+	}
+
+	if user == nil {
 		return nil, exceptions.Auth.InvalidDto()
 	}
 
@@ -386,6 +389,7 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 	return &dtos.LoginResDto{
 		AccessToken:  *accessToken,
 		RefreshToken: updatedUser.RefreshToken,
+		CSRFToken:    *csrfToken,
 		UpdatedAt:    updatedUser.UpdatedAt,
 	}, nil
 }
