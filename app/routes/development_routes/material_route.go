@@ -35,6 +35,12 @@ func configureDevelopmentMaterialRoutes() {
 			),
 		)
 		materialRoutes.GET(
+			"/getMyMaterialAndItsParentById",
+			materialBinder.BindGetMyMaterialAndItsParentById(
+				materialController.GetMyMaterialAndItsParentById,
+			),
+		)
+		materialRoutes.GET(
 			"/getAllMyMaterialsByParentSubShelfId",
 			materialBinder.BindGetAllMyMaterialsByParentSubShelfId(
 				materialController.GetAllMyMaterialsByParentSubShelfId,

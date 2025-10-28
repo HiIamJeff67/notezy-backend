@@ -7,11 +7,27 @@ import (
 	"github.com/google/uuid"
 
 	enums "notezy-backend/app/models/schemas/enums"
+	"notezy-backend/shared/types"
 )
 
 /* ============================== Request DTO ============================== */
 
 type GetMyMaterialByIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		any,
+		struct {
+			MaterialId uuid.UUID `json:"materialId" validate:"required"`
+		},
+	]
+}
+
+type GetMyMaterialAndItsParentByIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -229,10 +245,28 @@ type GetMyMaterialByIdResDto struct {
 	Type             enums.MaterialType `json:"type"`
 	Size             int64              `json:"size"`
 	DownloadURL      string             `json:"downloadURL"`
-	ParseMediaType   string             `json:"parseMediaType"`
 	DeletedAt        *time.Time         `json:"deletedAt"`
 	UpdatedAt        time.Time          `json:"updatedAt"`
 	CreatedAt        time.Time          `json:"createdAt"`
+}
+
+type GetMyMaterialAndItsParentByIdResDto struct {
+	Id                           uuid.UUID          `json:"id"`
+	Name                         string             `json:"name"`
+	Type                         enums.MaterialType `json:"type"`
+	Size                         int64              `json:"size"`
+	DownloadURL                  string             `json:"downloadURL"`
+	DeletedAt                    *time.Time         `json:"deletedAt"`
+	UpdatedAt                    time.Time          `json:"updatedAt"`
+	CreatedAt                    time.Time          `json:"createdAt"`
+	RootShelfId                  uuid.UUID          `json:"rootShelfId"`
+	ParentSubShelfId             uuid.UUID          `json:"parentSubShelfId"`
+	ParentSubShelfName           string             `json:"parentSubShelfName"`
+	ParentSubShelfPrevSubShelfId *uuid.UUID         `json:"parentSubShelfPrevSubShelfId"`
+	ParentSubShelfPath           types.UUIDArray    `json:"parentSubShelfPath"`
+	ParentSubShelfDeletedAt      time.Time          `json:"parentSubShelfDeletedAt"`
+	ParentSubShelfUpdatedAt      time.Time          `json:"parentSubShelfUpdatedAt"`
+	ParentSubShelfCreatedAt      time.Time          `json:"parentSubShelfCreatedAt"`
 }
 
 type GetAllMyMaterialsByParentSubShelfIdResDto []GetMyMaterialByIdResDto

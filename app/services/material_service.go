@@ -3,6 +3,7 @@ package services
 import (
 	"bytes"
 	"context"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,6 +15,7 @@ import (
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
+	materialsql "notezy-backend/app/models/sql/material"
 	storages "notezy-backend/app/storages"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
@@ -24,6 +26,7 @@ import (
 
 type MaterialServiceInterface interface {
 	GetMyMaterialById(ctx context.Context, reqDto *dtos.GetMyMaterialByIdReqDto) (*dtos.GetMyMaterialByIdResDto, *exceptions.Exception)
+	GetMyMaterialAndItsParentById(ctx context.Context, reqDto *dtos.GetMyMaterialAndItsParentByIdReqDto) (*dtos.GetMyMaterialAndItsParentByIdResDto, *exceptions.Exception)
 	GetAllMyMaterialsByParentSubShelfId(ctx context.Context, reqDto *dtos.GetAllMyMaterialsByParentSubShelfIdReqDto) (*dtos.GetAllMyMaterialsByParentSubShelfIdResDto, *exceptions.Exception)
 	GetAllMyMaterialsByRootShelfId(ctx context.Context, reqDto *dtos.GetAllMyMaterialsByRootShelfIdReqDto) (*dtos.GetAllMyMaterialsByRootShelfIdResDto, *exceptions.Exception)
 	CreateTextbookMaterial(ctx context.Context, reqDto *dtos.CreateTextbookMaterialReqDto) (*dtos.CreateTextbookMaterialResDto, *exceptions.Exception)
@@ -84,6 +87,74 @@ func (s *MaterialService) GetMyMaterialById(
 		DeletedAt:        material.DeletedAt,
 		UpdatedAt:        material.UpdatedAt,
 		CreatedAt:        material.CreatedAt,
+	}, nil
+}
+
+func (s *MaterialService) GetMyMaterialAndItsParentById(
+	ctx context.Context, reqDto *dtos.GetMyMaterialAndItsParentByIdReqDto,
+) (*dtos.GetMyMaterialAndItsParentByIdResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Read,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Admin,
+	}
+	onlyDeleted := types.Ternary_Negative
+	output := struct {
+		Id                           uuid.UUID          `gorm:"id"`
+		Name                         string             `gorm:"name"`
+		Type                         enums.MaterialType `gorm:"type"`
+		Size                         int64              `gorm:"size"`
+		ContentKey                   string             `gorm:"content_key"`
+		DeletedAt                    *time.Time         `gorm:"deleted_at"`
+		UpdatedAt                    time.Time          `gorm:"updated_at"`
+		CreatedAt                    time.Time          `gorm:"created_at"`
+		RootShelfId                  uuid.UUID          `gorm:"root_shelf_id"`
+		ParentSubShelfId             uuid.UUID          `gorm:"parent_sub_shelf_id"`
+		ParentSubShelfName           string             `gorm:"parent_sub_shelf_name"`
+		ParentSubShelfPrevSubShelfId *uuid.UUID         `gorm:"parent_sub_shelf_prev_sub_shelf_id"`
+		ParentSubShelfPath           types.UUIDArray    `gorm:"parent_sub_shelf_path"`
+		ParentSubShelfDeletedAt      time.Time          `gorm:"parent_sub_shelf_deleted_at"`
+		ParentSubShelfUpdatedAt      time.Time          `gorm:"parent_sub_shelf_updated_at"`
+		ParentSubShelfCreatedAt      time.Time          `gorm:"parent_sub_shelf_created_at"`
+	}{}
+	result := s.db.Raw(materialsql.GetMyMaterialAndItsParentByIdSQL,
+		reqDto.Param.MaterialId, reqDto.ContextFields.UserId, allowedPermissions, onlyDeleted, onlyDeleted,
+	).Scan(&output)
+	if err := result.Error; err != nil || result.RowsAffected == 0 || len(strings.TrimSpace(output.ContentKey)) == 0 {
+		exception := exceptions.Material.NotFound().WithError(err).Log()
+		if err != nil {
+			exception.WithError(err)
+		}
+		// should be exists in database
+		return nil, exception
+	}
+
+	downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, output.ContentKey, nil)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.GetMyMaterialAndItsParentByIdResDto{
+		Id:                           output.Id,
+		Name:                         output.Name,
+		Type:                         output.Type,
+		Size:                         output.Size,
+		DownloadURL:                  downloadURL,
+		DeletedAt:                    output.DeletedAt,
+		UpdatedAt:                    output.UpdatedAt,
+		CreatedAt:                    output.CreatedAt,
+		RootShelfId:                  output.RootShelfId,
+		ParentSubShelfId:             output.ParentSubShelfId,
+		ParentSubShelfName:           output.ParentSubShelfName,
+		ParentSubShelfPrevSubShelfId: output.ParentSubShelfPrevSubShelfId,
+		ParentSubShelfPath:           output.ParentSubShelfPath,
+		ParentSubShelfDeletedAt:      output.ParentSubShelfDeletedAt,
+		ParentSubShelfUpdatedAt:      output.ParentSubShelfUpdatedAt,
+		ParentSubShelfCreatedAt:      output.ParentSubShelfCreatedAt,
 	}, nil
 }
 

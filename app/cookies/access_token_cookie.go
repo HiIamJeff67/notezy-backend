@@ -9,11 +9,11 @@ import (
 
 var AccessToken = NewCookieHandler(
 	types.ValidCookieName_AccessToken,     // name
-	"/"+constants.CurrentBaseURL,          // path
+	"/",                                   // path
 	constants.ExpirationTimeOfAccessToken, // duration
 	true,                                  // secure
 	true,                                  // httpOnly
 	http.SameSiteLaxMode,                  // sameSite
 )
 
-// Note: make sure the path should start with "/" because we want this work at the all the subpath from constants.CurrentBaseURL
+// Note: make sure the path should start with "/" because we want this work at the all the subpath from "/"

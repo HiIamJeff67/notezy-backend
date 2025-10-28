@@ -18,7 +18,7 @@ func MultipartAdapter() gin.HandlerFunc {
 		form, err := ctx.MultipartForm()
 		if err != nil {
 			exceptions.Adapter.
-				InvalidMultipartForm().
+				InvalidMultipartForm().WithError(err).
 				Log().SafelyResponseWithJSON(ctx)
 			ctx.Abort()
 			return

@@ -22,6 +22,7 @@ import (
 
 type MaterialBinderInterface interface {
 	BindGetMyMaterialById(controllerFunc types.ControllerFunc[*dtos.GetMyMaterialByIdReqDto]) gin.HandlerFunc
+	BindGetMyMaterialAndItsParentById(controllerFunc types.ControllerFunc[*dtos.GetMyMaterialAndItsParentByIdReqDto]) gin.HandlerFunc
 	BindGetAllMyMaterialsByParentSubShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllMyMaterialsByParentSubShelfIdReqDto]) gin.HandlerFunc
 	BindGetAllMyMaterialsByRootShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllMyMaterialsByRootShelfIdReqDto]) gin.HandlerFunc
 	BindCreateTextbookMaterial(controllerFunc types.ControllerFunc[*dtos.CreateTextbookMaterialReqDto]) gin.HandlerFunc
@@ -47,6 +48,36 @@ func NewMaterialBinder() MaterialBinderInterface {
 func (b *MaterialBinder) BindGetMyMaterialById(controllerFunc types.ControllerFunc[*dtos.GetMyMaterialByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.GetMyMaterialByIdReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		// for the uuid in the parameter, we MUST extract it and parse it manually
+		materialIdString := ctx.Query("materialId")
+		if materialIdString == "" {
+			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("materialId is required")).Log().ResponseWithJSON(ctx)
+			return
+		}
+		materialId, err := uuid.Parse(materialIdString)
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithError(err).Log().ResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.MaterialId = materialId
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *MaterialBinder) BindGetMyMaterialAndItsParentById(controllerFunc types.ControllerFunc[*dtos.GetMyMaterialAndItsParentByIdReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.GetMyMaterialAndItsParentByIdReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
