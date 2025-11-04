@@ -132,6 +132,30 @@ func (d *AuthExceptionDomain) NoClientIPOrReferenceToClient() *Exception {
 	}
 }
 
+func (d *AuthExceptionDomain) InvalidRateLimitTokenCount() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 9,
+		Prefix:         d.Prefix,
+		Reason:         "InvalidRateLimitTokenCount",
+		IsInternal:     true,
+		Message:        "The rate limit token count is invalid",
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *AuthExceptionDomain) RateLimitExceeded() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 10,
+		Prefix:         d.Prefix,
+		Reason:         "RateLimitExceeded",
+		IsInternal:     false,
+		Message:        "The rate limit token count is exceeded, please try again later",
+		HTTPStatusCode: http.StatusBadRequest,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
 /* ========================= Handling Permission Denied ========================= */
 
 func (d *AuthExceptionDomain) PermissionDeniedDueToUserRole(userRole any) *Exception {

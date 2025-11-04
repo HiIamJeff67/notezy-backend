@@ -20,7 +20,7 @@ func configureDevelopmentUserRoutes() {
 	userRoutes := DevelopmentRouterGroup.Group("/user")
 	userRoutes.Use(
 		middlewares.AuthMiddleware(),
-		middlewares.RateLimitMiddleware(1),
+		middlewares.AuthorizedRateLimitMiddleware(),
 		interceptors.RefreshAccessTokenInterceptor(),
 	)
 	{

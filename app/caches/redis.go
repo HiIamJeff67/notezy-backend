@@ -33,7 +33,8 @@ var (
 	RedisClientMap             map[int]*redis.Client                = make(map[int]*redis.Client)
 	RedisClientToConfig        map[*redis.Client]CacheManagerConfig = make(map[*redis.Client]CacheManagerConfig)
 	PurposeToServerNumberRange                                      = map[types.ValidCachePurpose]types.Range{
-		types.ValidCachePurpose_UserData: UserDataRange, // server number: 0 - 3 (included)
+		types.ValidCachePurpose_UserData:   UserDataRange,  // server number: 0 - 3 (included)
+		types.ValidCachePurpose_RateLimite: RateLimitRange, // server number: 4 - 7 (included)
 	}
 	Ctx = context.Background()
 

@@ -31,14 +31,12 @@ func ConfigureTestAuthRoutes(db *gorm.DB, routerGroup *gin.RouterGroup) {
 	{
 		authRoutes.POST(
 			"/register",
-			middlewares.UnauthorizedRateLimitMiddleware(1),
 			authBinder.BindRegister(
 				authController.Register,
 			),
 		)
 		authRoutes.POST(
 			"/login",
-			middlewares.UnauthorizedRateLimitMiddleware(1),
 			authBinder.BindLogin(
 				authController.Login,
 			),
@@ -46,14 +44,13 @@ func ConfigureTestAuthRoutes(db *gorm.DB, routerGroup *gin.RouterGroup) {
 		authRoutes.POST(
 			"/logout",
 			middlewares.AuthMiddleware(),
-			middlewares.RateLimitMiddleware(1),
+			middlewares.AuthorizedRateLimitMiddleware(),
 			authBinder.BindLogout(
 				authController.Logout,
 			),
 		)
 		authRoutes.POST(
 			"/sendAuthCode",
-			middlewares.UnauthorizedRateLimitMiddleware(1), // may implement a block middleware to block user using this route within 1 minute
 			authBinder.BindSendAuthCode(
 				authController.SendAuthCode,
 			),
@@ -61,7 +58,7 @@ func ConfigureTestAuthRoutes(db *gorm.DB, routerGroup *gin.RouterGroup) {
 		authRoutes.PUT(
 			"/validateEmail",
 			middlewares.AuthMiddleware(),
-			middlewares.RateLimitMiddleware(1),
+			middlewares.AuthorizedRateLimitMiddleware(),
 			authBinder.BindValidateEmail(
 				authController.ValidateEmail,
 			),
@@ -70,14 +67,13 @@ func ConfigureTestAuthRoutes(db *gorm.DB, routerGroup *gin.RouterGroup) {
 			"/resetEmail",
 			middlewares.AuthMiddleware(),
 			middlewares.UserRoleMiddleware(enums.UserRole_Normal),
-			middlewares.RateLimitMiddleware(1),
+			middlewares.AuthorizedRateLimitMiddleware(),
 			authBinder.BindResetEmail(
 				authController.ResetEmail,
 			),
 		)
 		authRoutes.PUT(
 			"/forgetPassword",
-			middlewares.UnauthorizedRateLimitMiddleware(1),
 			authBinder.BindForgetPassword(
 				authController.ForgetPassword,
 			),
@@ -85,7 +81,7 @@ func ConfigureTestAuthRoutes(db *gorm.DB, routerGroup *gin.RouterGroup) {
 		authRoutes.DELETE(
 			"/deleteMe",
 			middlewares.AuthMiddleware(),
-			middlewares.RateLimitMiddleware(1),
+			middlewares.AuthorizedRateLimitMiddleware(),
 			authBinder.BindDeleteMe(
 				authController.DeleteMe,
 			),

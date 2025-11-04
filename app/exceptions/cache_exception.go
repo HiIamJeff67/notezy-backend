@@ -93,9 +93,33 @@ func (d *CacheExceptionSubDomain) FailedToDelete(cachePurpose string) *Exception
 
 /* ============================== Handling Connection of the Servers ============================== */
 
+func (d *CacheExceptionSubDomain) RedisServerNumberNotFound() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 11,
+		Prefix:         d.Prefix,
+		Reason:         "RedisServerNumberNotFound",
+		IsInternal:     true,
+		Message:        "Redis server number not found or out of range",
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *CacheExceptionSubDomain) BackendServerNameNotReferenced(cachePurpose string) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 12,
+		Prefix:         d.Prefix,
+		Reason:         "BackendServerNameNotReferenced",
+		IsInternal:     true,
+		Message:        fmt.Sprintf("The backend server name is not referenced to %s", cachePurpose),
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
 func (d *CacheExceptionSubDomain) FailedToConnectToServer(serverNumber int) *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 1,
+		Code:           d.BaseCode + 13,
 		Prefix:         d.Prefix,
 		Reason:         "FailedToConnectToServer",
 		IsInternal:     true,
@@ -107,7 +131,7 @@ func (d *CacheExceptionSubDomain) FailedToConnectToServer(serverNumber int) *Exc
 
 func (d *CacheExceptionSubDomain) FailedToDisconnectToServer(serverNumber int) *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 2,
+		Code:           d.BaseCode + 14,
 		Reason:         "FailedToDisconnectToServer",
 		Prefix:         d.Prefix,
 		Message:        fmt.Sprintf("Error on disconnecting to the redis client server of %v", serverNumber),
@@ -118,7 +142,7 @@ func (d *CacheExceptionSubDomain) FailedToDisconnectToServer(serverNumber int) *
 
 func (d *CacheExceptionSubDomain) ClientInstanceDoesNotExist() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 3,
+		Code:           d.BaseCode + 15,
 		Prefix:         d.Prefix,
 		Reason:         "ClientInstanceDoesNotExist",
 		IsInternal:     true,
@@ -130,7 +154,7 @@ func (d *CacheExceptionSubDomain) ClientInstanceDoesNotExist() *Exception {
 
 func (d *CacheExceptionSubDomain) ClientConfigDoesNotExist() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 4,
+		Code:           d.BaseCode + 16,
 		Prefix:         d.Prefix,
 		Reason:         "ClientConfigDoesNotExist",
 		IsInternal:     true,
@@ -144,7 +168,7 @@ func (d *CacheExceptionSubDomain) ClientConfigDoesNotExist() *Exception {
 
 func (d *CacheExceptionSubDomain) InvalidCacheDataStruct(cachedDataStruct any) *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 11,
+		Code:           d.BaseCode + 21,
 		Prefix:         d.Prefix,
 		Reason:         "InvalidCacheDataStruct",
 		IsInternal:     true,
@@ -156,7 +180,7 @@ func (d *CacheExceptionSubDomain) InvalidCacheDataStruct(cachedDataStruct any) *
 
 func (d *CacheExceptionSubDomain) FailedToConvertStructToJson() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 12,
+		Code:           d.BaseCode + 22,
 		Prefix:         d.Prefix,
 		Reason:         "FailedToConvertStructToJson",
 		IsInternal:     true,
@@ -168,12 +192,24 @@ func (d *CacheExceptionSubDomain) FailedToConvertStructToJson() *Exception {
 
 func (d *CacheExceptionSubDomain) FailedToConvertJsonToStruct() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 13,
+		Code:           d.BaseCode + 23,
 		Prefix:         d.Prefix,
 		Reason:         "FailedToConvertJsonToStruct",
 		IsInternal:     true,
 		Message:        "Failed to convert json to struct",
 		HTTPStatusCode: http.StatusForbidden,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *CacheExceptionSubDomain) InvalidFormattedKey() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 24,
+		Prefix:         d.Prefix,
+		Reason:         "InvalidFormattedKey",
+		IsInternal:     true,
+		Message:        "Invalid formattedkey",
+		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }

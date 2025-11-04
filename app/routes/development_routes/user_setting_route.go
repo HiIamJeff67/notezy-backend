@@ -19,7 +19,7 @@ func configureUserSettingRoutes() {
 	userSettingRoutes := DevelopmentRouterGroup.Group("/userSetting")
 	userSettingRoutes.Use(
 		middlewares.AuthMiddleware(),
-		middlewares.RateLimitMiddleware(1),
+		middlewares.AuthorizedRateLimitMiddleware(),
 	)
 	{
 		userSettingRoutes.GET(

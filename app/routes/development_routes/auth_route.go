@@ -22,14 +22,12 @@ func configureDevelopmentAuthRoutes() {
 	{
 		authRoutes.POST(
 			"/register",
-			middlewares.UnauthorizedRateLimitMiddleware(1),
 			authBinder.BindRegister(
 				authController.Register,
 			),
 		)
 		authRoutes.POST(
 			"/login",
-			middlewares.UnauthorizedRateLimitMiddleware(1),
 			authBinder.BindLogin(
 				authController.Login,
 			),
@@ -37,14 +35,14 @@ func configureDevelopmentAuthRoutes() {
 		authRoutes.POST(
 			"/logout",
 			middlewares.AuthMiddleware(),
-			middlewares.RateLimitMiddleware(1),
+			middlewares.AuthorizedRateLimitMiddleware(),
 			authBinder.BindLogout(
 				authController.Logout,
 			),
 		)
 		authRoutes.POST(
 			"/sendAuthCode",
-			middlewares.UnauthorizedRateLimitMiddleware(1), // may implement a block middleware to block user using this route within 1 minute
+
 			authBinder.BindSendAuthCode(
 				authController.SendAuthCode,
 			),
@@ -52,7 +50,7 @@ func configureDevelopmentAuthRoutes() {
 		authRoutes.PUT(
 			"/validateEmail",
 			middlewares.AuthMiddleware(),
-			middlewares.RateLimitMiddleware(1),
+			middlewares.AuthorizedRateLimitMiddleware(),
 			middlewares.CSRFMiddleware(),
 			interceptors.RefreshAccessTokenInterceptor(),
 			authBinder.BindValidateEmail(
@@ -62,7 +60,7 @@ func configureDevelopmentAuthRoutes() {
 		authRoutes.PUT(
 			"/resetEmail",
 			middlewares.AuthMiddleware(),
-			middlewares.RateLimitMiddleware(1),
+			middlewares.AuthorizedRateLimitMiddleware(),
 			middlewares.UserRoleMiddleware(enums.UserRole_Normal),
 			middlewares.CSRFMiddleware(),
 			interceptors.RefreshAccessTokenInterceptor(),
@@ -72,7 +70,6 @@ func configureDevelopmentAuthRoutes() {
 		)
 		authRoutes.PUT(
 			"/forgetPassword",
-			middlewares.UnauthorizedRateLimitMiddleware(1),
 			authBinder.BindForgetPassword(
 				authController.ForgetPassword,
 			),
@@ -80,7 +77,7 @@ func configureDevelopmentAuthRoutes() {
 		authRoutes.DELETE(
 			"/deleteMe",
 			middlewares.AuthMiddleware(),
-			middlewares.RateLimitMiddleware(1),
+			middlewares.AuthorizedRateLimitMiddleware(),
 			middlewares.CSRFMiddleware(),
 			authBinder.BindDeleteMe(
 				authController.DeleteMe,

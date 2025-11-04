@@ -67,8 +67,8 @@ func hashUserDataIdentifier(identifier uuid.UUID) int {
 	return int(h.Sum32()) % UserDataRange.Size
 }
 
-func formatKey(id uuid.UUID) string {
-	return fmt.Sprintf("UserId:%s", id.String())
+func formatUserDataKey(id uuid.UUID) string {
+	return fmt.Sprintf("%s:%s", types.ValidCachePurpose_UserData.String(), id.String())
 }
 
 func isValidUserCacheData(userDataCache *UserDataCache) bool {
@@ -85,7 +85,7 @@ func isValidUserCacheData(userDataCache *UserDataCache) bool {
 	return true
 }
 
-/* ========================= CRUD Operations of the Cache ========================= */
+/* ========================= CRUD Operations ========================= */
 
 func GetUserDataCache(id uuid.UUID) (*UserDataCache, *exceptions.Exception) {
 	hash := hashUserDataIdentifier(id)
@@ -95,7 +95,7 @@ func GetUserDataCache(id uuid.UUID) (*UserDataCache, *exceptions.Exception) {
 		return nil, exceptions.Cache.ClientInstanceDoesNotExist()
 	}
 
-	formattedKey := formatKey(id)
+	formattedKey := formatUserDataKey(id)
 	cacheString, err := redisClient.Get(formattedKey).Result()
 	if err != nil {
 		return nil, exceptions.Cache.NotFound(string(types.ValidCachePurpose_UserData)).WithError(err)
@@ -111,9 +111,9 @@ func GetUserDataCache(id uuid.UUID) (*UserDataCache, *exceptions.Exception) {
 	return &userDataCache, nil
 }
 
-func SetUserDataCache(id uuid.UUID, userData UserDataCache) *exceptions.Exception {
-	if !isValidUserCacheData(&userData) { // strictly check when setting the cache data
-		return exceptions.Cache.InvalidCacheDataStruct(userData)
+func SetUserDataCache(id uuid.UUID, userDataCache UserDataCache) *exceptions.Exception {
+	if !isValidUserCacheData(&userDataCache) { // strictly check when setting the cache data
+		return exceptions.Cache.InvalidCacheDataStruct(userDataCache)
 	}
 
 	hash := hashUserDataIdentifier(id)
@@ -123,15 +123,14 @@ func SetUserDataCache(id uuid.UUID, userData UserDataCache) *exceptions.Exceptio
 		return exceptions.Cache.ClientInstanceDoesNotExist()
 	}
 
-	userDataJson, err := json.Marshal(userData)
+	userDataJson, err := json.Marshal(userDataCache)
 	if err != nil {
 		return exceptions.Cache.FailedToConvertStructToJson().WithError(err)
 	}
 
-	formattedKey := formatKey(id)
-	err = redisClient.Set(formattedKey, string(userDataJson), _userDataCacheExpiresIn).Err()
-	if err != nil {
-		return exceptions.Cache.FailedToCreate(string(types.ValidCachePurpose_UserData)).WithError(err)
+	formattedKey := formatUserDataKey(id)
+	if err = redisClient.Set(formattedKey, string(userDataJson), _userDataCacheExpiresIn).Err(); err != nil {
+		return exceptions.Cache.FailedToCreate(types.ValidCachePurpose_UserData.String()).WithError(err)
 	}
 
 	logs.FInfo("Successfully set the cached user data in the server with server number of %d", serverNumber)
@@ -146,22 +145,21 @@ func UpdateUserDataCache(id uuid.UUID, dto UpdateUserDataCacheDto) *exceptions.E
 		return exceptions.Cache.ClientInstanceDoesNotExist()
 	}
 
-	userData, exception := GetUserDataCache(id)
+	userDataCache, exception := GetUserDataCache(id)
 	if exception != nil {
 		return exception
 	}
-	userData.UpdatedAt = time.Now()
-	if err := copier.Copy(&userData, &dto); err != nil {
+	userDataCache.UpdatedAt = time.Now()
+	if err := copier.Copy(&userDataCache, &dto); err != nil {
 		return exceptions.Cache.FailedToConvertStructToJson().WithError(err)
 	}
-	userDataJson, err := json.Marshal(userData)
+	userDataJson, err := json.Marshal(userDataCache)
 	if err != nil {
 		return exceptions.Cache.FailedToConvertStructToJson().WithError(err)
 	}
 
-	formattedKey := formatKey(id)
-	err = redisClient.Set(formattedKey, string(userDataJson), _userDataCacheExpiresIn).Err()
-	if err != nil {
+	formattedKey := formatUserDataKey(id)
+	if err = redisClient.Set(formattedKey, string(userDataJson), _userDataCacheExpiresIn).Err(); err != nil {
 		return exceptions.Cache.FailedToUpdate(string(types.ValidCachePurpose_UserData)).WithError(err)
 	}
 
@@ -177,7 +175,7 @@ func DeleteUserDataCache(id uuid.UUID) *exceptions.Exception {
 		return exceptions.Cache.ClientInstanceDoesNotExist()
 	}
 
-	formattedKey := formatKey(id)
+	formattedKey := formatUserDataKey(id)
 	err := redisClient.Del(formattedKey).Err()
 	if err != nil {
 		return exceptions.Cache.FailedToDelete(string(types.ValidCachePurpose_UserData)).WithError(err)

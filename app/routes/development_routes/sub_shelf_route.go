@@ -21,7 +21,7 @@ func configureDevelopmentSubShelfRoutes() {
 	subShelfRoutes.Use(
 		middlewares.AuthMiddleware(),
 		// middlewares.UserRoleMiddleware(enums.UserRole_Normal),
-		middlewares.RateLimitMiddleware(1),
+		middlewares.AuthorizedRateLimitMiddleware(),
 		interceptors.RefreshAccessTokenInterceptor(),
 	)
 	{
