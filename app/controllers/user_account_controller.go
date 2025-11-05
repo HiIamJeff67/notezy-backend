@@ -30,7 +30,7 @@ func NewUserAccountController(service services.UserAccountServiceInterface) User
 
 // with AuthMiddleware
 func (c *UserAccountController) GetMyAccount(ctx *gin.Context, reqDto *dtos.GetMyAccountReqDto) {
-	resDto, exception := c.userAccountService.GetMyAccount(reqDto)
+	resDto, exception := c.userAccountService.GetMyAccount(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -45,7 +45,7 @@ func (c *UserAccountController) GetMyAccount(ctx *gin.Context, reqDto *dtos.GetM
 
 // with AuthMiddleware
 func (c *UserAccountController) UpdateMyAccount(ctx *gin.Context, reqDto *dtos.UpdateMyAccountReqDto) {
-	resDto, exception := c.userAccountService.UpdateMyAccount(reqDto)
+	resDto, exception := c.userAccountService.UpdateMyAccount(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return

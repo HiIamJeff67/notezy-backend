@@ -132,7 +132,7 @@ func (c *MaterialController) CreateNotebookMaterial(ctx *gin.Context, reqDto *dt
 
 // with AuthMiddleware
 func (c *MaterialController) UpdateMyMaterialById(ctx *gin.Context, reqDto *dtos.UpdateMyMaterialByIdReqDto) {
-	resDto, exception := c.materialService.UpdateMyMaterialById(reqDto)
+	resDto, exception := c.materialService.UpdateMyMaterialById(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -177,7 +177,7 @@ func (c *MaterialController) SaveMyNotebookMaterialById(ctx *gin.Context, reqDto
 
 // with AuthMiddleware, MultipartAdapter
 func (c *MaterialController) MoveMyMaterialById(ctx *gin.Context, reqDto *dtos.MoveMyMaterialByIdReqDto) {
-	resDto, exception := c.materialService.MoveMyMaterialById(reqDto)
+	resDto, exception := c.materialService.MoveMyMaterialById(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -192,7 +192,7 @@ func (c *MaterialController) MoveMyMaterialById(ctx *gin.Context, reqDto *dtos.M
 
 // with AuthMiddleware
 func (c *MaterialController) MoveMyMaterialsByIds(ctx *gin.Context, reqDto *dtos.MoveMyMaterialsByIdsReqDto) {
-	resDto, exception := c.materialService.MoveMyMaterialsByIds(reqDto)
+	resDto, exception := c.materialService.MoveMyMaterialsByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -207,7 +207,7 @@ func (c *MaterialController) MoveMyMaterialsByIds(ctx *gin.Context, reqDto *dtos
 
 // with AuthMiddleware
 func (c *MaterialController) RestoreMyMaterialById(ctx *gin.Context, reqDto *dtos.RestoreMyMaterialByIdReqDto) {
-	resDto, exception := c.materialService.RestoreMyMaterialById(reqDto)
+	resDto, exception := c.materialService.RestoreMyMaterialById(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -222,7 +222,7 @@ func (c *MaterialController) RestoreMyMaterialById(ctx *gin.Context, reqDto *dto
 
 // with AuthMiddleware
 func (c *MaterialController) RestoreMyMaterialsByIds(ctx *gin.Context, reqDto *dtos.RestoreMyMaterialsByIdsReqDto) {
-	resDto, exception := c.materialService.RestoreMyMaterialsByIds(reqDto)
+	resDto, exception := c.materialService.RestoreMyMaterialsByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -237,7 +237,7 @@ func (c *MaterialController) RestoreMyMaterialsByIds(ctx *gin.Context, reqDto *d
 
 // with AuthMiddleware
 func (c *MaterialController) DeleteMyMaterialById(ctx *gin.Context, reqDto *dtos.DeleteMyMaterialByIdReqDto) {
-	resDto, exception := c.materialService.DeleteMyMaterialById(reqDto)
+	resDto, exception := c.materialService.DeleteMyMaterialById(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -252,7 +252,7 @@ func (c *MaterialController) DeleteMyMaterialById(ctx *gin.Context, reqDto *dtos
 
 // with AuthMiddleware
 func (c *MaterialController) DeleteMyMaterialsByIds(ctx *gin.Context, reqDto *dtos.DeleteMyMaterialsByIdsReqDto) {
-	resDto, exception := c.materialService.DeleteMyMaterialsByIds(reqDto)
+	resDto, exception := c.materialService.DeleteMyMaterialsByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return

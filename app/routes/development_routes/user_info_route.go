@@ -1,21 +1,13 @@
 package developmentroutes
 
 import (
-	binders "notezy-backend/app/binders"
-	controllers "notezy-backend/app/controllers"
-	"notezy-backend/app/interceptors"
+	interceptors "notezy-backend/app/interceptors"
 	middlewares "notezy-backend/app/middlewares"
-	models "notezy-backend/app/models"
-	services "notezy-backend/app/services"
+	modules "notezy-backend/app/modules"
 )
 
 func configureDevelopmentUserInfoRoutes() {
-	userInfoBinder := binders.NewUserInfoBinder()
-	userInfoController := controllers.NewUserInfoController(
-		services.NewUserInfoService(
-			models.NotezyDB,
-		),
-	)
+	userInfoModule := modules.NewUserInfoModule()
 
 	userInfoRoutes := DevelopmentRouterGroup.Group("/userInfo")
 	userInfoRoutes.Use(
@@ -26,14 +18,14 @@ func configureDevelopmentUserInfoRoutes() {
 	{
 		userInfoRoutes.GET(
 			"/getMyInfo",
-			userInfoBinder.BindGetMyInfo(
-				userInfoController.GetMyInfo,
+			userInfoModule.Binder.BindGetMyInfo(
+				userInfoModule.Controller.GetMyInfo,
 			),
 		)
 		userInfoRoutes.PUT(
 			"/updateMyInfo",
-			userInfoBinder.BindUpdateMyInfo(
-				userInfoController.UpdateMyInfo,
+			userInfoModule.Binder.BindUpdateMyInfo(
+				userInfoModule.Controller.UpdateMyInfo,
 			),
 		)
 	}

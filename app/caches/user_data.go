@@ -107,7 +107,7 @@ func GetUserDataCache(id uuid.UUID) (*UserDataCache, *exceptions.Exception) {
 		return nil, exceptions.Cache.FailedToConvertJsonToStruct().WithError(err)
 	}
 
-	logs.FInfo("Successfully get the cached user data in the server with server number of %d", serverNumber)
+	logs.FDebug("Successfully get the cached user data in the server with server number of %d", serverNumber)
 	return &userDataCache, nil
 }
 
@@ -133,7 +133,7 @@ func SetUserDataCache(id uuid.UUID, userDataCache UserDataCache) *exceptions.Exc
 		return exceptions.Cache.FailedToCreate(types.ValidCachePurpose_UserData.String()).WithError(err)
 	}
 
-	logs.FInfo("Successfully set the cached user data in the server with server number of %d", serverNumber)
+	logs.FDebug("Successfully set the cached user data in the server with server number of %d", serverNumber)
 	return nil
 }
 
@@ -163,7 +163,7 @@ func UpdateUserDataCache(id uuid.UUID, dto UpdateUserDataCacheDto) *exceptions.E
 		return exceptions.Cache.FailedToUpdate(string(types.ValidCachePurpose_UserData)).WithError(err)
 	}
 
-	logs.FInfo("Successfully update the cached user data in the server with server number of %d", serverNumber)
+	logs.FDebug("Successfully update the cached user data in the server with server number of %d", serverNumber)
 	return nil
 }
 
@@ -181,6 +181,6 @@ func DeleteUserDataCache(id uuid.UUID) *exceptions.Exception {
 		return exceptions.Cache.FailedToDelete(string(types.ValidCachePurpose_UserData)).WithError(err)
 	}
 
-	logs.FInfo("Successfully delete the cached user data in the server with server number of %d", serverNumber)
+	logs.FDebug("Successfully delete the cached user data in the server with server number of %d", serverNumber)
 	return nil
 }

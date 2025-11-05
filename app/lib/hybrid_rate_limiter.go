@@ -9,7 +9,7 @@ import (
 
 	caches "notezy-backend/app/caches"
 	logs "notezy-backend/app/logs"
-	"notezy-backend/shared/constants"
+	constants "notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
 )
 
@@ -65,6 +65,27 @@ func NewHybridRateLimiter(
 	return hrl
 }
 
+func (hrl *HybridRateLimiter) appendPendingTask(key string, tokens int32) {
+	hrl.pendingTasksMutex.Lock()
+	defer hrl.pendingTasksMutex.Unlock()
+
+	if existingTask, exists := hrl.pendingTasks[key]; exists {
+		hrl.pendingTasks[key] = HybridRateLimitTask{
+			NumOfChangingTokens: existingTask.NumOfChangingTokens + tokens,
+			IsAccumulated:       true,
+			Retries:             existingTask.Retries,
+			MaxRetries:          3,
+		}
+	} else {
+		hrl.pendingTasks[key] = HybridRateLimitTask{
+			NumOfChangingTokens: tokens,
+			IsAccumulated:       true,
+			Retries:             0,
+			MaxRetries:          3,
+		}
+	}
+}
+
 func (hrl *HybridRateLimiter) reappendTasks(failedTasks map[string]HybridRateLimitTask) {
 	hrl.pendingTasksMutex.Lock()
 	defer hrl.pendingTasksMutex.Unlock()
@@ -90,9 +111,9 @@ func (hrl *HybridRateLimiter) batchSync() {
 		return
 	}
 
-	syncData := make(map[string]HybridRateLimitTask)
+	fetchedPendingTasks := make(map[string]HybridRateLimitTask)
 	for key, task := range hrl.pendingTasks {
-		syncData[key] = task
+		fetchedPendingTasks[key] = task
 	}
 	hrl.pendingTasks = make(map[string]HybridRateLimitTask)
 	hrl.pendingTasksMutex.Unlock()
@@ -101,9 +122,9 @@ func (hrl *HybridRateLimiter) batchSync() {
 		userDtos := make([]struct {
 			UserId         uuid.UUID                                 `json:"userId"`
 			SynchronizeDto caches.SynchronizeRateLimitRecordCacheDto `json:"synchronizeDto"`
-		}, 0, len(syncData))
+		}, 0, len(fetchedPendingTasks))
 
-		for userIdStr, task := range syncData {
+		for userIdStr, task := range fetchedPendingTasks {
 			userId, err := uuid.Parse(userIdStr)
 			if err != nil {
 				logs.FError("Failed to parse user ID %s: %v", userIdStr, err)
@@ -124,7 +145,7 @@ func (hrl *HybridRateLimiter) batchSync() {
 
 		if err := caches.BatchSynchronizeRateLimitRecordCachesByUserIds(userDtos, hrl.BackendServerName); err != nil {
 			logs.FError("Failed to batch sync user rate limits to Redis: %v", err)
-			hrl.reappendTasks(syncData)
+			hrl.reappendTasks(fetchedPendingTasks)
 		} else if len(userDtos) > 0 {
 			logs.FInfo("Batch synced %d user rate limits to Redis", len(userDtos))
 		}
@@ -132,9 +153,9 @@ func (hrl *HybridRateLimiter) batchSync() {
 		clientDtos := make([]struct {
 			Fingerprint    string                                    `json:"fingerprint"`
 			SynchronizeDto caches.SynchronizeRateLimitRecordCacheDto `json:"synchronizeDto"`
-		}, 0, len(syncData))
+		}, 0, len(fetchedPendingTasks))
 
-		for fingerprint, task := range syncData {
+		for fingerprint, task := range fetchedPendingTasks {
 			clientDtos = append(clientDtos, struct {
 				Fingerprint    string                                    `json:"fingerprint"`
 				SynchronizeDto caches.SynchronizeRateLimitRecordCacheDto `json:"synchronizeDto"`
@@ -149,30 +170,9 @@ func (hrl *HybridRateLimiter) batchSync() {
 
 		if err := caches.BatchSynchronizeRateLimitRecordCachesByFingerprints(clientDtos, hrl.BackendServerName); err != nil {
 			logs.FError("Failed to batch sync client IP rate limits to Redis: %v", err)
-			hrl.reappendTasks(syncData)
+			hrl.reappendTasks(fetchedPendingTasks)
 		} else if len(clientDtos) > 0 {
 			logs.FInfo("Batch synced %d client IP rate limits to Redis", len(clientDtos))
-		}
-	}
-}
-
-func (hrl *HybridRateLimiter) appendPendingTask(key string, tokens int32) {
-	hrl.pendingTasksMutex.Lock()
-	defer hrl.pendingTasksMutex.Unlock()
-
-	if existingTask, exists := hrl.pendingTasks[key]; exists {
-		hrl.pendingTasks[key] = HybridRateLimitTask{
-			NumOfChangingTokens: existingTask.NumOfChangingTokens + tokens,
-			IsAccumulated:       true,
-			Retries:             existingTask.Retries,
-			MaxRetries:          3,
-		}
-	} else {
-		hrl.pendingTasks[key] = HybridRateLimitTask{
-			NumOfChangingTokens: tokens,
-			IsAccumulated:       true,
-			Retries:             0,
-			MaxRetries:          3,
 		}
 	}
 }
@@ -208,7 +208,7 @@ func (hrl *HybridRateLimiter) checkBucketLimitByFingerprint(fingerprint string, 
 		totalTokensUsed += rateLimitRecordCache.NumOfTokens
 	}
 
-	return max(0, hrl.UserLimit-totalTokensUsed-n)
+	return hrl.UserLimit - totalTokensUsed - n
 }
 
 func (hrl *HybridRateLimiter) AllowByFingerprint(fingerprint string) (bool, int32) {
@@ -259,7 +259,7 @@ func (hrl *HybridRateLimiter) checkBucketLimitByUserId(userId uuid.UUID, fingerp
 
 	logs.Info("The current tokens used by the user: ", totalTokensUsed)
 
-	return max(0, hrl.UserLimit-totalTokensUsed-n)
+	return hrl.UserLimit - totalTokensUsed - n
 }
 
 func (hrl *HybridRateLimiter) AllowByUserId(userId uuid.UUID, fingerprint string) (bool, int32) {

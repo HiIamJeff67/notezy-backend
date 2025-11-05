@@ -31,7 +31,7 @@ func NewUserController(service services.UserServiceInterface) UserControllerInte
 
 // with AuthMiddleware
 func (c *UserController) GetUserData(ctx *gin.Context, reqDto *dtos.GetUserDataReqDto) {
-	resDto, exception := c.userService.GetUserData(reqDto)
+	resDto, exception := c.userService.GetUserData(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -46,7 +46,7 @@ func (c *UserController) GetUserData(ctx *gin.Context, reqDto *dtos.GetUserDataR
 
 // with AuthMiddleware
 func (c *UserController) GetMe(ctx *gin.Context, reqDto *dtos.GetMeReqDto) {
-	resDto, exception := c.userService.GetMe(reqDto)
+	resDto, exception := c.userService.GetMe(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -61,7 +61,7 @@ func (c *UserController) GetMe(ctx *gin.Context, reqDto *dtos.GetMeReqDto) {
 
 // with AuthMiddleware
 func (c *UserController) UpdateMe(ctx *gin.Context, reqDto *dtos.UpdateMeReqDto) {
-	resDto, exception := c.userService.UpdateMe(reqDto)
+	resDto, exception := c.userService.UpdateMe(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return

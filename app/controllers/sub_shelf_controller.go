@@ -39,7 +39,7 @@ func NewSubShelfController(service services.SubShelfServiceInterface) SubShelfCo
 
 // with AuthMiddleware
 func (c *SubShelfController) GetMySubShelfById(ctx *gin.Context, reqDto *dtos.GetMySubShelfByIdReqDto) {
-	resDto, exception := c.subShelfService.GetMySubShelfById(reqDto)
+	resDto, exception := c.subShelfService.GetMySubShelfById(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -54,7 +54,7 @@ func (c *SubShelfController) GetMySubShelfById(ctx *gin.Context, reqDto *dtos.Ge
 
 // with AuthMiddleware
 func (c *SubShelfController) GetMySubShelvesByPrevSubShelfId(ctx *gin.Context, reqDto *dtos.GetMySubShelvesByPrevSubShelfIdReqDto) {
-	resDto, exception := c.subShelfService.GetMySubShelvesByPrevSubShelfId(reqDto)
+	resDto, exception := c.subShelfService.GetMySubShelvesByPrevSubShelfId(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -69,7 +69,7 @@ func (c *SubShelfController) GetMySubShelvesByPrevSubShelfId(ctx *gin.Context, r
 
 // with AuthMiddleware
 func (c *SubShelfController) GetAllMySubShelvesByRootShelfId(ctx *gin.Context, reqDto *dtos.GetAllMySubShelvesByRootShelfIdReqDto) {
-	resDto, exception := c.subShelfService.GetAllMySubShelvesByRootShelfId(reqDto)
+	resDto, exception := c.subShelfService.GetAllMySubShelvesByRootShelfId(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -84,7 +84,7 @@ func (c *SubShelfController) GetAllMySubShelvesByRootShelfId(ctx *gin.Context, r
 
 // with AuthMiddleware
 func (c *SubShelfController) CreateSubShelfByRootShelfId(ctx *gin.Context, reqDto *dtos.CreateSubShelfByRootShelfIdReqDto) {
-	resDto, exception := c.subShelfService.CreateSubShelfByRootShelfId(reqDto)
+	resDto, exception := c.subShelfService.CreateSubShelfByRootShelfId(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -99,7 +99,7 @@ func (c *SubShelfController) CreateSubShelfByRootShelfId(ctx *gin.Context, reqDt
 
 // with AuthMiddleware
 func (c *SubShelfController) UpdateMySubShelfById(ctx *gin.Context, reqDto *dtos.UpdateMySubShelfByIdReqDto) {
-	resDto, exception := c.subShelfService.UpdateMySubShelfById(reqDto)
+	resDto, exception := c.subShelfService.UpdateMySubShelfById(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -114,7 +114,7 @@ func (c *SubShelfController) UpdateMySubShelfById(ctx *gin.Context, reqDto *dtos
 
 // with AuthMiddleware
 func (c *SubShelfController) MoveMySubShelf(ctx *gin.Context, reqDto *dtos.MoveMySubShelfReqDto) {
-	resDto, exception := c.subShelfService.MoveMySubShelf(reqDto)
+	resDto, exception := c.subShelfService.MoveMySubShelf(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -129,7 +129,7 @@ func (c *SubShelfController) MoveMySubShelf(ctx *gin.Context, reqDto *dtos.MoveM
 
 // with AuthMiddleware
 func (c *SubShelfController) MoveMySubShelves(ctx *gin.Context, reqDto *dtos.MoveMySubShelvesReqDto) {
-	resDto, exception := c.subShelfService.MoveMySubShelves(reqDto)
+	resDto, exception := c.subShelfService.MoveMySubShelves(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -144,7 +144,7 @@ func (c *SubShelfController) MoveMySubShelves(ctx *gin.Context, reqDto *dtos.Mov
 
 // with AuthMiddleware
 func (c *SubShelfController) DeleteMySubShelfById(ctx *gin.Context, reqDto *dtos.DeleteMySubShelfByIdReqDto) {
-	resDto, exception := c.subShelfService.DeleteMySubShelfById(reqDto)
+	resDto, exception := c.subShelfService.DeleteMySubShelfById(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -158,7 +158,7 @@ func (c *SubShelfController) DeleteMySubShelfById(ctx *gin.Context, reqDto *dtos
 }
 
 func (c *SubShelfController) RestoreMySubShelfById(ctx *gin.Context, reqDto *dtos.RestoreMySubShelfByIdReqDto) {
-	resDto, exception := c.subShelfService.RestoreMySubShelfById(reqDto)
+	resDto, exception := c.subShelfService.RestoreMySubShelfById(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -171,7 +171,7 @@ func (c *SubShelfController) RestoreMySubShelfById(ctx *gin.Context, reqDto *dto
 	})
 }
 func (c *SubShelfController) RestoreMySubShelvesByIds(ctx *gin.Context, reqDto *dtos.RestoreMySubShelvesByIdsReqDto) {
-	resDto, exception := c.subShelfService.RestoreMySubShelvesByIds(reqDto)
+	resDto, exception := c.subShelfService.RestoreMySubShelvesByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -186,7 +186,7 @@ func (c *SubShelfController) RestoreMySubShelvesByIds(ctx *gin.Context, reqDto *
 
 // with AuthMiddleware
 func (c *SubShelfController) DeleteMySubShelvesByIds(ctx *gin.Context, reqDto *dtos.DeleteMySubShelvesByIdsReqDto) {
-	resDto, exception := c.subShelfService.DeleteMySubShelvesByIds(reqDto)
+	resDto, exception := c.subShelfService.DeleteMySubShelvesByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return

@@ -1,50 +1,42 @@
 package developmentroutes
 
 import (
-	binders "notezy-backend/app/binders"
-	controllers "notezy-backend/app/controllers"
 	interceptors "notezy-backend/app/interceptors"
 	middlewares "notezy-backend/app/middlewares"
-	models "notezy-backend/app/models"
 	enums "notezy-backend/app/models/schemas/enums"
-	services "notezy-backend/app/services"
+	modules "notezy-backend/app/modules"
 )
 
 func configureDevelopmentAuthRoutes() {
-	authBinder := binders.NewAuthBinder()
-	authController := controllers.NewAuthController(
-		services.NewAuthService(
-			models.NotezyDB,
-		),
-	)
+	authModule := modules.NewAuthModule()
 
 	authRoutes := DevelopmentRouterGroup.Group("/auth")
 	{
 		authRoutes.POST(
 			"/register",
-			authBinder.BindRegister(
-				authController.Register,
+			authModule.Binder.BindRegister(
+				authModule.Controller.Register,
 			),
 		)
 		authRoutes.POST(
 			"/login",
-			authBinder.BindLogin(
-				authController.Login,
+			authModule.Binder.BindLogin(
+				authModule.Controller.Login,
 			),
 		)
 		authRoutes.POST(
 			"/logout",
 			middlewares.AuthMiddleware(),
 			middlewares.AuthorizedRateLimitMiddleware(),
-			authBinder.BindLogout(
-				authController.Logout,
+			authModule.Binder.BindLogout(
+				authModule.Controller.Logout,
 			),
 		)
 		authRoutes.POST(
 			"/sendAuthCode",
 
-			authBinder.BindSendAuthCode(
-				authController.SendAuthCode,
+			authModule.Binder.BindSendAuthCode(
+				authModule.Controller.SendAuthCode,
 			),
 		)
 		authRoutes.PUT(
@@ -53,8 +45,8 @@ func configureDevelopmentAuthRoutes() {
 			middlewares.AuthorizedRateLimitMiddleware(),
 			middlewares.CSRFMiddleware(),
 			interceptors.RefreshAccessTokenInterceptor(),
-			authBinder.BindValidateEmail(
-				authController.ValidateEmail,
+			authModule.Binder.BindValidateEmail(
+				authModule.Controller.ValidateEmail,
 			),
 		)
 		authRoutes.PUT(
@@ -64,14 +56,14 @@ func configureDevelopmentAuthRoutes() {
 			middlewares.UserRoleMiddleware(enums.UserRole_Normal),
 			middlewares.CSRFMiddleware(),
 			interceptors.RefreshAccessTokenInterceptor(),
-			authBinder.BindResetEmail(
-				authController.ResetEmail,
+			authModule.Binder.BindResetEmail(
+				authModule.Controller.ResetEmail,
 			),
 		)
 		authRoutes.PUT(
 			"/forgetPassword",
-			authBinder.BindForgetPassword(
-				authController.ForgetPassword,
+			authModule.Binder.BindForgetPassword(
+				authModule.Controller.ForgetPassword,
 			),
 		)
 		authRoutes.DELETE(
@@ -79,8 +71,8 @@ func configureDevelopmentAuthRoutes() {
 			middlewares.AuthMiddleware(),
 			middlewares.AuthorizedRateLimitMiddleware(),
 			middlewares.CSRFMiddleware(),
-			authBinder.BindDeleteMe(
-				authController.DeleteMe,
+			authModule.Binder.BindDeleteMe(
+				authModule.Controller.DeleteMe,
 			),
 		)
 	}

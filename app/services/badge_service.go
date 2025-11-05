@@ -35,9 +35,13 @@ func NewBadgeService(db *gorm.DB) BadgeServiceInterface {
 
 /* ============================== SErvices for Public Badge ============================== */
 
-func (s *BadgeService) GetPublicBadgeByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicBadge, *exceptions.Exception) {
+func (s *BadgeService) GetPublicBadgeByPublicId(
+	ctx context.Context, publicId string,
+) (*gqlmodels.PublicBadge, *exceptions.Exception) {
+	db := s.db.WithContext(ctx)
+
 	badge := schemas.Badge{}
-	result := s.db.Table(schemas.Badge{}.TableName()).
+	result := db.Table(schemas.Badge{}.TableName()).
 		Where("public_id = ?", publicId).
 		First(&badge)
 	if err := result.Error; err != nil {
@@ -47,9 +51,13 @@ func (s *BadgeService) GetPublicBadgeByPublicId(ctx context.Context, publicId st
 	return badge.ToPublicBadge(), nil
 }
 
-func (s *BadgeService) GetPublicBadgeByUserPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicBadge, *exceptions.Exception) {
+func (s *BadgeService) GetPublicBadgeByUserPublicId(
+	ctx context.Context, publicId string,
+) (*gqlmodels.PublicBadge, *exceptions.Exception) {
+	db := s.db.WithContext(ctx)
+
 	badge := schemas.Badge{}
-	result := s.db.Table(schemas.Badge{}.TableName()+" b").
+	result := db.Table(schemas.Badge{}.TableName()+" b").
 		Select("b.*, utb.user_id").
 		Joins("LEFT JOIN \"UsersToBadgesTable\" utb ON utb.badge_id = b.id").
 		Joins("LEFT JOIN \"UserTable\" u ON u.id = utb.user_id").
@@ -62,10 +70,14 @@ func (s *BadgeService) GetPublicBadgeByUserPublicId(ctx context.Context, publicI
 	return badge.ToPublicBadge(), nil
 }
 
-func (s *BadgeService) GetPublicBadgesByUserPublicIds(ctx context.Context, publicIds []string) ([]*gqlmodels.PublicBadge, *exceptions.Exception) {
+func (s *BadgeService) GetPublicBadgesByUserPublicIds(
+	ctx context.Context, publicIds []string,
+) ([]*gqlmodels.PublicBadge, *exceptions.Exception) {
 	if len(publicIds) == 0 {
 		return []*gqlmodels.PublicBadge{}, nil
 	}
+
+	db := s.db.WithContext(ctx)
 
 	uniquePublicIds := make([]string, 0)
 	seen := make(map[string]bool)
@@ -83,7 +95,7 @@ func (s *BadgeService) GetPublicBadgesByUserPublicIds(ctx context.Context, publi
 		schemas.Badge
 		UserPublicId string `gorm:"column:user_public_id"`
 	}
-	result := s.db.Table(schemas.Badge{}.TableName()+" b").
+	result := db.Table(schemas.Badge{}.TableName()+" b").
 		Select("b.*, u.public_id as user_public_id").
 		Joins("LEFT JOIN \"UsersToBadgesTable\" utb ON utb.badge_id = b.id").
 		Joins("LEFT JOIN \"UserTable\" u ON u.id = utb.user_id").

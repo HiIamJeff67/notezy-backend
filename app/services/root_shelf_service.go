@@ -24,42 +24,54 @@ import (
 /* ============================== Interface & Instance ============================== */
 
 type RootShelfServiceInterface interface {
-	GetMyRootShelfById(reqDto *dtos.GetMyRootShelfByIdReqDto) (*dtos.GetMyRootShelfByIdResDto, *exceptions.Exception)
-	SearchRecentRootShelves(reqDto *dtos.SearchRecentRootShelvesReqDto) (*dtos.SearchRecentRootShelvesResDto, *exceptions.Exception)
-	CreateRootShelf(reqDto *dtos.CreateRootShelfReqDto) (*dtos.CreateRootShelfResDto, *exceptions.Exception)
-	UpdateMyRootShelfById(reqDto *dtos.UpdateMyRootShelfByIdReqDto) (*dtos.UpdateMyRootShelfByIdResDto, *exceptions.Exception)
-	RestoreMyRootShelfById(reqDto *dtos.RestoreMyRootShelfByIdReqDto) (*dtos.RestoreMyRootShelfByIdResDto, *exceptions.Exception)
-	RestoreMyRootShelvesByIds(reqDto *dtos.RestoreMyRootShelvesByIdsReqDto) (*dtos.RestoreMyRootShelvesByIdsResDto, *exceptions.Exception)
-	DeleteMyRootShelfById(reqDto *dtos.DeleteMyRootShelfByIdReqDto) (*dtos.DeleteMyRootShelfByIdResDto, *exceptions.Exception)
-	DeleteMyRootShelvesByIds(reqDto *dtos.DeleteMyRootShelvesByIdsReqDto) (*dtos.DeleteMyRootShelvesByIdsResDto, *exceptions.Exception)
+	GetMyRootShelfById(ctx context.Context, reqDto *dtos.GetMyRootShelfByIdReqDto) (*dtos.GetMyRootShelfByIdResDto, *exceptions.Exception)
+	SearchRecentRootShelves(ctx context.Context, reqDto *dtos.SearchRecentRootShelvesReqDto) (*dtos.SearchRecentRootShelvesResDto, *exceptions.Exception)
+	CreateRootShelf(ctx context.Context, reqDto *dtos.CreateRootShelfReqDto) (*dtos.CreateRootShelfResDto, *exceptions.Exception)
+	UpdateMyRootShelfById(ctx context.Context, reqDto *dtos.UpdateMyRootShelfByIdReqDto) (*dtos.UpdateMyRootShelfByIdResDto, *exceptions.Exception)
+	RestoreMyRootShelfById(ctx context.Context, reqDto *dtos.RestoreMyRootShelfByIdReqDto) (*dtos.RestoreMyRootShelfByIdResDto, *exceptions.Exception)
+	RestoreMyRootShelvesByIds(ctx context.Context, reqDto *dtos.RestoreMyRootShelvesByIdsReqDto) (*dtos.RestoreMyRootShelvesByIdsResDto, *exceptions.Exception)
+	DeleteMyRootShelfById(ctx context.Context, reqDto *dtos.DeleteMyRootShelfByIdReqDto) (*dtos.DeleteMyRootShelfByIdResDto, *exceptions.Exception)
+	DeleteMyRootShelvesByIds(ctx context.Context, reqDto *dtos.DeleteMyRootShelvesByIdsReqDto) (*dtos.DeleteMyRootShelvesByIdsResDto, *exceptions.Exception)
 
 	// services for private shelves
 	SearchPrivateShelves(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRootShelfInput) (*gqlmodels.SearchRootShelfConnection, *exceptions.Exception)
 }
 
 type RootShelfService struct {
-	db *gorm.DB
+	db                  *gorm.DB
+	rootShelfRepository repositories.RootShelfRepositoryInterface
 }
 
-func NewRootShelfService(db *gorm.DB) RootShelfServiceInterface {
+func NewRootShelfService(
+	db *gorm.DB,
+	rootShelfRepository repositories.RootShelfRepositoryInterface,
+) RootShelfServiceInterface {
 	if db == nil {
 		db = models.NotezyDB
 	}
 	return &RootShelfService{
-		db: db,
+		db:                  db,
+		rootShelfRepository: rootShelfRepository,
 	}
 }
 
 /* ============================== Service Methods for Shelf ============================== */
 
-func (s *RootShelfService) GetMyRootShelfById(reqDto *dtos.GetMyRootShelfByIdReqDto) (*dtos.GetMyRootShelfByIdResDto, *exceptions.Exception) {
+func (s *RootShelfService) GetMyRootShelfById(
+	ctx context.Context, reqDto *dtos.GetMyRootShelfByIdReqDto,
+) (*dtos.GetMyRootShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	rootShelfRepository := repositories.NewRootShelfRepository(s.db)
+	db := s.db.WithContext(ctx)
 
-	shelf, exception := rootShelfRepository.GetOneById(reqDto.Param.RootShelfId, reqDto.ContextFields.UserId, nil)
+	shelf, exception := s.rootShelfRepository.GetOneById(
+		db,
+		reqDto.Param.RootShelfId,
+		reqDto.ContextFields.UserId,
+		nil,
+	)
 	if exception != nil {
 		return nil, exception
 	}
@@ -76,14 +88,18 @@ func (s *RootShelfService) GetMyRootShelfById(reqDto *dtos.GetMyRootShelfByIdReq
 	}, nil
 }
 
-func (s *RootShelfService) SearchRecentRootShelves(reqDto *dtos.SearchRecentRootShelvesReqDto) (*dtos.SearchRecentRootShelvesResDto, *exceptions.Exception) {
+func (s *RootShelfService) SearchRecentRootShelves(
+	ctx context.Context, reqDto *dtos.SearchRecentRootShelvesReqDto,
+) (*dtos.SearchRecentRootShelvesResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
+	db := s.db.WithContext(ctx)
+
 	resDto := dtos.SearchRecentRootShelvesResDto{}
 
-	query := s.db.Model(&schemas.RootShelf{}).
+	query := db.Model(&schemas.RootShelf{}).
 		Where("owner_id = ? AND \"RootShelfTable\".deleted_at IS NULL",
 			reqDto.ContextFields.UserId,
 		)
@@ -102,15 +118,18 @@ func (s *RootShelfService) SearchRecentRootShelves(reqDto *dtos.SearchRecentRoot
 	return &resDto, nil
 }
 
-func (s *RootShelfService) CreateRootShelf(reqDto *dtos.CreateRootShelfReqDto) (*dtos.CreateRootShelfResDto, *exceptions.Exception) {
+func (s *RootShelfService) CreateRootShelf(
+	ctx context.Context, reqDto *dtos.CreateRootShelfReqDto,
+) (*dtos.CreateRootShelfResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	rootShelfRepository := repositories.NewRootShelfRepository(s.db)
+	db := s.db.WithContext(ctx)
 
 	now := time.Now()
-	shelfId, exception := rootShelfRepository.CreateOneByOwnerId(
+	shelfId, exception := s.rootShelfRepository.CreateOneByOwnerId(
+		db,
 		reqDto.ContextFields.OwnerId,
 		inputs.CreateRootShelfInput{
 			Name:           reqDto.Body.Name,
@@ -127,19 +146,25 @@ func (s *RootShelfService) CreateRootShelf(reqDto *dtos.CreateRootShelfReqDto) (
 	}, nil
 }
 
-func (s *RootShelfService) UpdateMyRootShelfById(reqDto *dtos.UpdateMyRootShelfByIdReqDto) (*dtos.UpdateMyRootShelfByIdResDto, *exceptions.Exception) {
+func (s *RootShelfService) UpdateMyRootShelfById(
+	ctx context.Context, reqDto *dtos.UpdateMyRootShelfByIdReqDto,
+) (*dtos.UpdateMyRootShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	rootShelfRepository := repositories.NewRootShelfRepository(s.db)
+	db := s.db.WithContext(ctx)
 
-	rootShelf, exception := rootShelfRepository.UpdateOneById(reqDto.Body.RootShelfId, reqDto.ContextFields.UserId, inputs.PartialUpdateRootShelfInput{
-		Values: inputs.UpdateRootShelfInput{
-			Name: reqDto.Body.Values.Name,
-		},
-		SetNull: reqDto.Body.SetNull,
-	})
+	rootShelf, exception := s.rootShelfRepository.UpdateOneById(
+		db,
+		reqDto.Body.RootShelfId,
+		reqDto.ContextFields.UserId,
+		inputs.PartialUpdateRootShelfInput{
+			Values: inputs.UpdateRootShelfInput{
+				Name: reqDto.Body.Values.Name,
+			},
+			SetNull: reqDto.Body.SetNull,
+		})
 	if exception != nil {
 		return nil, exception
 	}
@@ -149,16 +174,20 @@ func (s *RootShelfService) UpdateMyRootShelfById(reqDto *dtos.UpdateMyRootShelfB
 	}, nil
 }
 
-func (s *RootShelfService) RestoreMyRootShelfById(reqDto *dtos.RestoreMyRootShelfByIdReqDto) (
-	*dtos.RestoreMyRootShelfByIdResDto, *exceptions.Exception,
-) {
+func (s *RootShelfService) RestoreMyRootShelfById(
+	ctx context.Context, reqDto *dtos.RestoreMyRootShelfByIdReqDto,
+) (*dtos.RestoreMyRootShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	rootShelfRepository := repositories.NewRootShelfRepository(s.db)
+	db := s.db.WithContext(ctx)
 
-	exception := rootShelfRepository.RestoreSoftDeletedOneById(reqDto.Body.RootShelfId, reqDto.ContextFields.OwnerId)
+	exception := s.rootShelfRepository.RestoreSoftDeletedOneById(
+		db,
+		reqDto.Body.RootShelfId,
+		reqDto.ContextFields.OwnerId,
+	)
 	if exception != nil {
 		return nil, exception
 	}
@@ -168,16 +197,20 @@ func (s *RootShelfService) RestoreMyRootShelfById(reqDto *dtos.RestoreMyRootShel
 	}, nil
 }
 
-func (s *RootShelfService) RestoreMyRootShelvesByIds(reqDto *dtos.RestoreMyRootShelvesByIdsReqDto) (
-	*dtos.RestoreMyRootShelvesByIdsResDto, *exceptions.Exception,
-) {
+func (s *RootShelfService) RestoreMyRootShelvesByIds(
+	ctx context.Context, reqDto *dtos.RestoreMyRootShelvesByIdsReqDto,
+) (*dtos.RestoreMyRootShelvesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	rootShelfRepository := repositories.NewRootShelfRepository(s.db)
+	db := s.db.WithContext(ctx)
 
-	exception := rootShelfRepository.RestoreSoftDeletedManyByIds(reqDto.Body.RootShelfIds, reqDto.ContextFields.OwnerId)
+	exception := s.rootShelfRepository.RestoreSoftDeletedManyByIds(
+		db,
+		reqDto.Body.RootShelfIds,
+		reqDto.ContextFields.OwnerId,
+	)
 	if exception != nil {
 		return nil, exception
 	}
@@ -187,16 +220,20 @@ func (s *RootShelfService) RestoreMyRootShelvesByIds(reqDto *dtos.RestoreMyRootS
 	}, nil
 }
 
-func (s *RootShelfService) DeleteMyRootShelfById(reqDto *dtos.DeleteMyRootShelfByIdReqDto) (
-	*dtos.DeleteMyRootShelfByIdResDto, *exceptions.Exception,
-) {
+func (s *RootShelfService) DeleteMyRootShelfById(
+	ctx context.Context, reqDto *dtos.DeleteMyRootShelfByIdReqDto,
+) (*dtos.DeleteMyRootShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	rootShelfRepository := repositories.NewRootShelfRepository(s.db)
+	db := s.db.WithContext(ctx)
 
-	exception := rootShelfRepository.SoftDeleteOneById(reqDto.Body.RootShelfId, reqDto.ContextFields.OwnerId)
+	exception := s.rootShelfRepository.SoftDeleteOneById(
+		db,
+		reqDto.Body.RootShelfId,
+		reqDto.ContextFields.OwnerId,
+	)
 	if exception != nil {
 		return nil, exception
 	}
@@ -206,14 +243,20 @@ func (s *RootShelfService) DeleteMyRootShelfById(reqDto *dtos.DeleteMyRootShelfB
 	}, nil
 }
 
-func (s *RootShelfService) DeleteMyRootShelvesByIds(reqDto *dtos.DeleteMyRootShelvesByIdsReqDto) (*dtos.DeleteMyRootShelvesByIdsResDto, *exceptions.Exception) {
+func (s *RootShelfService) DeleteMyRootShelvesByIds(
+	ctx context.Context, reqDto *dtos.DeleteMyRootShelvesByIdsReqDto,
+) (*dtos.DeleteMyRootShelvesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	rootShelfRepository := repositories.NewRootShelfRepository(s.db)
+	db := s.db.WithContext(ctx)
 
-	exception := rootShelfRepository.SoftDeleteManyByIds(reqDto.Body.RootShelfIds, reqDto.ContextFields.OwnerId)
+	exception := s.rootShelfRepository.SoftDeleteManyByIds(
+		db,
+		reqDto.Body.RootShelfIds,
+		reqDto.ContextFields.OwnerId,
+	)
 	if exception != nil {
 		return nil, exception
 	}
@@ -225,7 +268,9 @@ func (s *RootShelfService) DeleteMyRootShelvesByIds(reqDto *dtos.DeleteMyRootShe
 
 /* ============================== Service Methods for  ============================== */
 
-func (s *RootShelfService) SearchPrivateShelves(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRootShelfInput) (*gqlmodels.SearchRootShelfConnection, *exceptions.Exception) {
+func (s *RootShelfService) SearchPrivateShelves(
+	ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRootShelfInput,
+) (*gqlmodels.SearchRootShelfConnection, *exceptions.Exception) {
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Read,
 		enums.AccessControlPermission_Write,
@@ -233,7 +278,9 @@ func (s *RootShelfService) SearchPrivateShelves(ctx context.Context, userId uuid
 	}
 	startTime := time.Now()
 
-	query := s.db.WithContext(ctx).Model(&schemas.RootShelf{}).
+	db := s.db.WithContext(ctx)
+
+	query := db.WithContext(ctx).Model(&schemas.RootShelf{}).
 		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON \"RootShelfTable\".id = uts.root_shelf_id").
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
 		Where("\"RootShelfTable\".deleted_at IS NULL")

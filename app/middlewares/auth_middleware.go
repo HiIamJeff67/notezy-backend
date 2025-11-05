@@ -70,11 +70,14 @@ func _validateRefreshToken(refreshToken string) (*schemas.User, *exceptions.Exce
 		return nil, exceptions.Token.FailedToParseAccessToken().WithError(err)
 	}
 
-	userRepository := repositories.NewUserRepository(nil)
-	user, exception := userRepository.GetOneById(userId, []schemas.UserRelation{
-		schemas.UserRelation_UserInfo,
-		schemas.UserRelation_UserSetting,
-	})
+	userRepository := repositories.NewUserRepository()
+	user, exception := userRepository.GetOneById(
+		nil,
+		userId,
+		[]schemas.UserRelation{
+			schemas.UserRelation_UserInfo,
+			schemas.UserRelation_UserSetting,
+		})
 	if exception != nil { // if there's not such user with the parsed id
 		return nil, exception
 	}

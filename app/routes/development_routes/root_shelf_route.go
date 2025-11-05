@@ -1,21 +1,13 @@
 package developmentroutes
 
 import (
-	binders "notezy-backend/app/binders"
-	controllers "notezy-backend/app/controllers"
 	interceptors "notezy-backend/app/interceptors"
 	middlewares "notezy-backend/app/middlewares"
-	models "notezy-backend/app/models"
-	services "notezy-backend/app/services"
+	modules "notezy-backend/app/modules"
 )
 
 func configureDevelopmentRootShelfRoutes() {
-	rootShelfBinder := binders.NewRootShelfBinder()
-	rootShelfController := controllers.NewRootShelfController(
-		services.NewRootShelfService(
-			models.NotezyDB,
-		),
-	)
+	rootShelfModule := modules.NewRootShelfModule()
 
 	rootShelfRoutes := DevelopmentRouterGroup.Group("/rootShelf")
 	rootShelfRoutes.Use(
@@ -27,50 +19,50 @@ func configureDevelopmentRootShelfRoutes() {
 	{
 		rootShelfRoutes.GET(
 			"/getMyRootShelfById",
-			rootShelfBinder.BindGetMyRootShelfById(
-				rootShelfController.GetMyRootShelfById,
+			rootShelfModule.Binder.BindGetMyRootShelfById(
+				rootShelfModule.Controller.GetMyRootShelfById,
 			),
 		)
 		rootShelfRoutes.GET(
 			"/searchRecentRootShelves",
-			rootShelfBinder.BindSearchRecentRootShelves(
-				rootShelfController.SearchRecentRootShelves,
+			rootShelfModule.Binder.BindSearchRecentRootShelves(
+				rootShelfModule.Controller.SearchRecentRootShelves,
 			),
 		)
 		rootShelfRoutes.POST(
 			"/createRootShelf",
-			rootShelfBinder.BindCreateRootShelf(
-				rootShelfController.CreateRootShelf,
+			rootShelfModule.Binder.BindCreateRootShelf(
+				rootShelfModule.Controller.CreateRootShelf,
 			),
 		)
 		rootShelfRoutes.PUT(
 			"/updateMyRootShelfById",
-			rootShelfBinder.BindUpdateMyRootShelfById(
-				rootShelfController.UpdateMyRootShelfById,
+			rootShelfModule.Binder.BindUpdateMyRootShelfById(
+				rootShelfModule.Controller.UpdateMyRootShelfById,
 			),
 		)
 		rootShelfRoutes.PATCH(
 			"/restoreMyRootShelfById",
-			rootShelfBinder.BindRestoreMyRootShelfById(
-				rootShelfController.RestoreMyRootShelfById,
+			rootShelfModule.Binder.BindRestoreMyRootShelfById(
+				rootShelfModule.Controller.RestoreMyRootShelfById,
 			),
 		)
 		rootShelfRoutes.PATCH(
 			"/restoreMyRootShelvesByIds",
-			rootShelfBinder.BindRestoreMyRootShelvesByIds(
-				rootShelfController.RestoreMyRootShelvesByIds,
+			rootShelfModule.Binder.BindRestoreMyRootShelvesByIds(
+				rootShelfModule.Controller.RestoreMyRootShelvesByIds,
 			),
 		)
 		rootShelfRoutes.DELETE(
 			"/deleteMyRootShelfById",
-			rootShelfBinder.BindDeleteMyRootShelfById(
-				rootShelfController.DeleteMyRootShelfById,
+			rootShelfModule.Binder.BindDeleteMyRootShelfById(
+				rootShelfModule.Controller.DeleteMyRootShelfById,
 			),
 		)
 		rootShelfRoutes.DELETE(
 			"/deleteMyRootShelvesByIds",
-			rootShelfBinder.BindDeleteMyRootShelvesByIds(
-				rootShelfController.DeleteMyRootShelvesByIds,
+			rootShelfModule.Binder.BindDeleteMyRootShelvesByIds(
+				rootShelfModule.Controller.DeleteMyRootShelvesByIds,
 			),
 		)
 	}

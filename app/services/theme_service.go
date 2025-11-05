@@ -39,9 +39,13 @@ func (s *ThemeService) GetMyThemeById() {}
 
 /* ============================== Service Methods for Public Themes ============================== */
 
-func (s *ThemeService) GetPublicThemeByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicTheme, *exceptions.Exception) {
+func (s *ThemeService) GetPublicThemeByPublicId(
+	ctx context.Context, publicId string,
+) (*gqlmodels.PublicTheme, *exceptions.Exception) {
+	db := s.db.WithContext(ctx)
+
 	theme := schemas.Theme{}
-	result := s.db.WithContext(ctx).
+	result := db.WithContext(ctx).
 		Model(&schemas.Theme{}).
 		Where("public_id = ?", publicId).
 		First(&theme)
@@ -52,10 +56,15 @@ func (s *ThemeService) GetPublicThemeByPublicId(ctx context.Context, publicId st
 	return theme.ToPublicTheme(), nil
 }
 
-func (s *ThemeService) SearchPublicThemes(ctx context.Context, gqlInput gqlmodels.SearchThemeInput) (*gqlmodels.SearchThemeConnection, *exceptions.Exception) {
+func (s *ThemeService) SearchPublicThemes(
+	ctx context.Context,
+	gqlInput gqlmodels.SearchThemeInput,
+) (*gqlmodels.SearchThemeConnection, *exceptions.Exception) {
 	startTime := time.Now()
 
-	query := s.db.WithContext(ctx).Model(&schemas.Theme{})
+	db := s.db.WithContext(ctx)
+
+	query := db.Model(&schemas.Theme{})
 
 	if len(strings.ReplaceAll(gqlInput.Query, " ", "")) > 0 {
 		query = query.Where(

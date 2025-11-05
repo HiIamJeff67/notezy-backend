@@ -30,7 +30,7 @@ func NewUserInfoController(service services.UserInfoServiceInterface) UserInfoCo
 
 // with AuthMiddleware
 func (c *UserInfoController) GetMyInfo(ctx *gin.Context, reqDto *dtos.GetMyInfoReqDto) {
-	resDto, exception := c.userInfoService.GetMyInfo(reqDto)
+	resDto, exception := c.userInfoService.GetMyInfo(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -45,7 +45,7 @@ func (c *UserInfoController) GetMyInfo(ctx *gin.Context, reqDto *dtos.GetMyInfoR
 
 // with AuthMiddleware
 func (c *UserInfoController) UpdateMyInfo(ctx *gin.Context, reqDto *dtos.UpdateMyInfoReqDto) {
-	resDto, exception := c.userInfoService.UpdateMyInfo(reqDto)
+	resDto, exception := c.userInfoService.UpdateMyInfo(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return

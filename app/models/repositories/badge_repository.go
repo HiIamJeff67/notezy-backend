@@ -12,32 +12,36 @@ import (
 /* ============================== Definitions ============================== */
 
 type BadgeRepositoryInterface interface {
-	GetOneById(id uuid.UUID, preloads []schemas.BadgeRelation) (*schemas.Badge, *exceptions.Exception)
+	GetOneById(db *gorm.DB, id uuid.UUID, preloads []schemas.BadgeRelation) (*schemas.Badge, *exceptions.Exception)
 }
 
-type BadgeRepository struct {
-	db *gorm.DB
-}
+type BadgeRepository struct{}
 
-func NewBadgeRepository(db *gorm.DB) BadgeRepositoryInterface {
-	if db == nil {
-		db = models.NotezyDB
-	}
-	return &BadgeRepository{db: db}
+func NewBadgeRepository() BadgeRepositoryInterface {
+	return &BadgeRepository{}
 }
 
 /* ============================== CRUD operations ============================== */
 
-func (r *BadgeRepository) GetOneById(id uuid.UUID, preloads []schemas.BadgeRelation) (*schemas.Badge, *exceptions.Exception) {
+func (r *BadgeRepository) GetOneById(
+	db *gorm.DB,
+	id uuid.UUID,
+	preloads []schemas.BadgeRelation,
+) (*schemas.Badge, *exceptions.Exception) {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
 	badge := schemas.Badge{}
-	db := r.db.Table(schemas.Badge{}.TableName())
+
+	query := db.Table(schemas.Badge{}.TableName())
 	if len(preloads) > 0 {
 		for _, preload := range preloads {
 			db = db.Preload(string(preload))
 		}
 	}
 
-	result := db.Where("id = ?", id).
+	result := query.Where("id = ?", id).
 		First(&badge)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Badge.NotFound().WithError(err)

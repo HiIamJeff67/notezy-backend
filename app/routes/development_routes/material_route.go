@@ -2,23 +2,13 @@ package developmentroutes
 
 import (
 	adapters "notezy-backend/app/adapters"
-	binders "notezy-backend/app/binders"
-	controllers "notezy-backend/app/controllers"
 	interceptors "notezy-backend/app/interceptors"
 	middlewares "notezy-backend/app/middlewares"
-	models "notezy-backend/app/models"
-	services "notezy-backend/app/services"
-	storages "notezy-backend/app/storages"
+	modules "notezy-backend/app/modules"
 )
 
 func configureDevelopmentMaterialRoutes() {
-	materialBinder := binders.NewMaterialBinder()
-	materialController := controllers.NewMaterialController(
-		services.NewMaterialService(
-			models.NotezyDB,
-			storages.InMemoryStorage,
-		),
-	)
+	materialModule := modules.NewMaterialModule()
 
 	materialRoutes := DevelopmentRouterGroup.Group("/material")
 	materialRoutes.Use(
@@ -30,87 +20,87 @@ func configureDevelopmentMaterialRoutes() {
 	{
 		materialRoutes.GET(
 			"/getMyMaterialById",
-			materialBinder.BindGetMyMaterialById(
-				materialController.GetMyMaterialById,
+			materialModule.Binder.BindGetMyMaterialById(
+				materialModule.Controller.GetMyMaterialById,
 			),
 		)
 		materialRoutes.GET(
 			"/getMyMaterialAndItsParentById",
-			materialBinder.BindGetMyMaterialAndItsParentById(
-				materialController.GetMyMaterialAndItsParentById,
+			materialModule.Binder.BindGetMyMaterialAndItsParentById(
+				materialModule.Controller.GetMyMaterialAndItsParentById,
 			),
 		)
 		materialRoutes.GET(
 			"/getAllMyMaterialsByParentSubShelfId",
-			materialBinder.BindGetAllMyMaterialsByParentSubShelfId(
-				materialController.GetAllMyMaterialsByParentSubShelfId,
+			materialModule.Binder.BindGetAllMyMaterialsByParentSubShelfId(
+				materialModule.Controller.GetAllMyMaterialsByParentSubShelfId,
 			),
 		)
 		materialRoutes.GET(
 			"/getAllMyMaterialsByRootShelfId",
-			materialBinder.BindGetAllMyMaterialsByRootShelfId(
-				materialController.GetAllMyMaterialsByRootShelfId,
+			materialModule.Binder.BindGetAllMyMaterialsByRootShelfId(
+				materialModule.Controller.GetAllMyMaterialsByRootShelfId,
 			),
 		)
 		materialRoutes.POST(
 			"/createTextbookMaterial",
-			materialBinder.BindCreateTextbookMaterial(
-				materialController.CreateTextbookMaterial,
+			materialModule.Binder.BindCreateTextbookMaterial(
+				materialModule.Controller.CreateTextbookMaterial,
 			),
 		)
 		materialRoutes.POST(
 			"/createNotebookMaterial",
-			materialBinder.BindCreateNotebookMaterial(
-				materialController.CreateNotebookMaterial,
+			materialModule.Binder.BindCreateNotebookMaterial(
+				materialModule.Controller.CreateNotebookMaterial,
 			),
 		)
 		materialRoutes.PUT(
 			"/updateMyMaterialById",
-			materialBinder.BindUpdateMyMaterialById(
-				materialController.UpdateMyMaterialById,
+			materialModule.Binder.BindUpdateMyMaterialById(
+				materialModule.Controller.UpdateMyMaterialById,
 			),
 		)
 		materialRoutes.PUT(
 			"/saveMyNotebookMaterialById",
 			adapters.MultipartAdapter(),
-			materialBinder.BindSaveMyNotebookMaterialById(
-				materialController.SaveMyNotebookMaterialById,
+			materialModule.Binder.BindSaveMyNotebookMaterialById(
+				materialModule.Controller.SaveMyNotebookMaterialById,
 			),
 		)
 		materialRoutes.PUT(
 			"/moveMyMaterialById",
-			materialBinder.BindMoveMyMaterialById(
-				materialController.MoveMyMaterialById,
+			materialModule.Binder.BindMoveMyMaterialById(
+				materialModule.Controller.MoveMyMaterialById,
 			),
 		)
 		materialRoutes.PUT(
 			"/moveMyMaterialsByIds",
-			materialBinder.BindMoveMyMaterialsByIds(
-				materialController.MoveMyMaterialsByIds,
+			materialModule.Binder.BindMoveMyMaterialsByIds(
+				materialModule.Controller.MoveMyMaterialsByIds,
 			),
 		)
 		materialRoutes.PATCH(
 			"/restoreMyMaterialById",
-			materialBinder.BindRestoreMyMaterialById(
-				materialController.RestoreMyMaterialById,
+			materialModule.Binder.BindRestoreMyMaterialById(
+				materialModule.Controller.RestoreMyMaterialById,
 			),
 		)
 		materialRoutes.PATCH(
 			"/restoreMyMaterialsByIds",
-			materialBinder.BindRestoreMyMaterialsByIds(
-				materialController.RestoreMyMaterialsByIds,
+			materialModule.Binder.BindRestoreMyMaterialsByIds(
+				materialModule.Controller.RestoreMyMaterialsByIds,
 			),
 		)
 		materialRoutes.DELETE(
 			"/deleteMyMaterialById",
-			materialBinder.BindDeleteMyMaterialById(
-				materialController.DeleteMyMaterialById,
+			materialModule.Binder.BindDeleteMyMaterialById(
+				materialModule.Controller.DeleteMyMaterialById,
 			),
 		)
 		materialRoutes.DELETE(
 			"/deleteMyMaterialsByIds",
-			materialBinder.BindDeleteMyMaterialsByIds(
-				materialController.DeleteMyMaterialsByIds,
+			materialModule.Binder.BindDeleteMyMaterialsByIds(
+				materialModule.Controller.DeleteMyMaterialsByIds,
 			),
 		)
 	}

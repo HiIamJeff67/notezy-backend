@@ -5,11 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"notezy-backend/app/binders"
-	controllers "notezy-backend/app/controllers"
 	middlewares "notezy-backend/app/middlewares"
 	enums "notezy-backend/app/models/schemas/enums"
-	services "notezy-backend/app/services"
+	modules "notezy-backend/app/modules"
 )
 
 // the route structure is different here, since we use these routes to do the e2e test
@@ -20,47 +18,42 @@ func ConfigureTestAuthRoutes(db *gorm.DB, routerGroup *gin.RouterGroup) {
 		routerGroup = TestRouterGroup
 	}
 
-	authBinder := binders.NewAuthBinder()
-	authController := controllers.NewAuthController(
-		services.NewAuthService(
-			db,
-		),
-	)
+	authModule := modules.NewAuthModule()
 
 	authRoutes := routerGroup.Group("/auth")
 	{
 		authRoutes.POST(
 			"/register",
-			authBinder.BindRegister(
-				authController.Register,
+			authModule.Binder.BindRegister(
+				authModule.Controller.Register,
 			),
 		)
 		authRoutes.POST(
 			"/login",
-			authBinder.BindLogin(
-				authController.Login,
+			authModule.Binder.BindLogin(
+				authModule.Controller.Login,
 			),
 		)
 		authRoutes.POST(
 			"/logout",
 			middlewares.AuthMiddleware(),
 			middlewares.AuthorizedRateLimitMiddleware(),
-			authBinder.BindLogout(
-				authController.Logout,
+			authModule.Binder.BindLogout(
+				authModule.Controller.Logout,
 			),
 		)
 		authRoutes.POST(
 			"/sendAuthCode",
-			authBinder.BindSendAuthCode(
-				authController.SendAuthCode,
+			authModule.Binder.BindSendAuthCode(
+				authModule.Controller.SendAuthCode,
 			),
 		)
 		authRoutes.PUT(
 			"/validateEmail",
 			middlewares.AuthMiddleware(),
 			middlewares.AuthorizedRateLimitMiddleware(),
-			authBinder.BindValidateEmail(
-				authController.ValidateEmail,
+			authModule.Binder.BindValidateEmail(
+				authModule.Controller.ValidateEmail,
 			),
 		)
 		authRoutes.PUT(
@@ -68,22 +61,22 @@ func ConfigureTestAuthRoutes(db *gorm.DB, routerGroup *gin.RouterGroup) {
 			middlewares.AuthMiddleware(),
 			middlewares.UserRoleMiddleware(enums.UserRole_Normal),
 			middlewares.AuthorizedRateLimitMiddleware(),
-			authBinder.BindResetEmail(
-				authController.ResetEmail,
+			authModule.Binder.BindResetEmail(
+				authModule.Controller.ResetEmail,
 			),
 		)
 		authRoutes.PUT(
 			"/forgetPassword",
-			authBinder.BindForgetPassword(
-				authController.ForgetPassword,
+			authModule.Binder.BindForgetPassword(
+				authModule.Controller.ForgetPassword,
 			),
 		)
 		authRoutes.DELETE(
 			"/deleteMe",
 			middlewares.AuthMiddleware(),
 			middlewares.AuthorizedRateLimitMiddleware(),
-			authBinder.BindDeleteMe(
-				authController.DeleteMe,
+			authModule.Binder.BindDeleteMe(
+				authModule.Controller.DeleteMe,
 			),
 		)
 	}

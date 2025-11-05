@@ -28,7 +28,7 @@ func NewUserSettingController(service services.UserSettingServiceInterface) User
 /* ============================== Controller ============================== */
 
 func (c *UserSettingController) GetMySetting(ctx *gin.Context, reqDto *dtos.GetMySettingReqDto) {
-	resDto, exception := c.userSettingService.GetMySetting(reqDto)
+	resDto, exception := c.userSettingService.GetMySetting(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return

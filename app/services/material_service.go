@@ -31,26 +31,35 @@ type MaterialServiceInterface interface {
 	GetAllMyMaterialsByRootShelfId(ctx context.Context, reqDto *dtos.GetAllMyMaterialsByRootShelfIdReqDto) (*dtos.GetAllMyMaterialsByRootShelfIdResDto, *exceptions.Exception)
 	CreateTextbookMaterial(ctx context.Context, reqDto *dtos.CreateTextbookMaterialReqDto) (*dtos.CreateTextbookMaterialResDto, *exceptions.Exception)
 	CreateNotebookMaterial(ctx context.Context, reqDto *dtos.CreateNotebookMaterialReqDto) (*dtos.CreateNotebookMaterialResDto, *exceptions.Exception)
-	UpdateMyMaterialById(reqDto *dtos.UpdateMyMaterialByIdReqDto) (*dtos.UpdateMyMaterialByIdResDto, *exceptions.Exception)
+	UpdateMyMaterialById(ctx context.Context, reqDto *dtos.UpdateMyMaterialByIdReqDto) (*dtos.UpdateMyMaterialByIdResDto, *exceptions.Exception)
 	SaveMyTextbookMaterialById(ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception)
 	SaveMyNotebookMaterialById(ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception)
-	MoveMyMaterialById(reqDto *dtos.MoveMyMaterialByIdReqDto) (*dtos.MoveMyMaterialByIdResDto, *exceptions.Exception)
-	MoveMyMaterialsByIds(reqDto *dtos.MoveMyMaterialsByIdsReqDto) (*dtos.MoveMyMaterialsByIdsResDto, *exceptions.Exception)
-	RestoreMyMaterialById(reqDto *dtos.RestoreMyMaterialByIdReqDto) (*dtos.RestoreMyMaterialByIdResDto, *exceptions.Exception)
-	RestoreMyMaterialsByIds(reqDto *dtos.RestoreMyMaterialsByIdsReqDto) (*dtos.RestoreMyMaterialsByIdsResDto, *exceptions.Exception)
-	DeleteMyMaterialById(reqDto *dtos.DeleteMyMaterialByIdReqDto) (*dtos.DeleteMyMaterialByIdResDto, *exceptions.Exception)
-	DeleteMyMaterialsByIds(reqDto *dtos.DeleteMyMaterialsByIdsReqDto) (*dtos.DeleteMyMaterialsByIdsResDto, *exceptions.Exception)
+	MoveMyMaterialById(ctx context.Context, reqDto *dtos.MoveMyMaterialByIdReqDto) (*dtos.MoveMyMaterialByIdResDto, *exceptions.Exception)
+	MoveMyMaterialsByIds(ctx context.Context, reqDto *dtos.MoveMyMaterialsByIdsReqDto) (*dtos.MoveMyMaterialsByIdsResDto, *exceptions.Exception)
+	RestoreMyMaterialById(ctx context.Context, reqDto *dtos.RestoreMyMaterialByIdReqDto) (*dtos.RestoreMyMaterialByIdResDto, *exceptions.Exception)
+	RestoreMyMaterialsByIds(ctx context.Context, reqDto *dtos.RestoreMyMaterialsByIdsReqDto) (*dtos.RestoreMyMaterialsByIdsResDto, *exceptions.Exception)
+	DeleteMyMaterialById(ctx context.Context, reqDto *dtos.DeleteMyMaterialByIdReqDto) (*dtos.DeleteMyMaterialByIdResDto, *exceptions.Exception)
+	DeleteMyMaterialsByIds(ctx context.Context, reqDto *dtos.DeleteMyMaterialsByIdsReqDto) (*dtos.DeleteMyMaterialsByIdsResDto, *exceptions.Exception)
 }
 
 type MaterialService struct {
-	db      *gorm.DB
-	storage storages.StorageInterface
+	db                 *gorm.DB
+	storage            storages.StorageInterface
+	subShelfRepository repositories.SubShelfRepositoryInterface
+	materialRepository repositories.MaterialRepositoryInterface
 }
 
-func NewMaterialService(db *gorm.DB, storage storages.StorageInterface) MaterialServiceInterface {
+func NewMaterialService(
+	db *gorm.DB,
+	storage storages.StorageInterface,
+	subShelfRepository repositories.SubShelfRepositoryInterface,
+	materialRepository repositories.MaterialRepositoryInterface,
+) MaterialServiceInterface {
 	return &MaterialService{
-		db:      db,
-		storage: storage,
+		db:                 db,
+		storage:            storage,
+		subShelfRepository: subShelfRepository,
+		materialRepository: materialRepository,
 	}
 }
 
@@ -63,9 +72,10 @@ func (s *MaterialService) GetMyMaterialById(
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	materialRepository := repositories.NewMaterialRepository(s.db)
+	db := s.db.WithContext(ctx)
 
-	material, exception := materialRepository.GetOneById(
+	material, exception := s.materialRepository.GetOneById(
+		db,
 		reqDto.Param.MaterialId,
 		reqDto.ContextFields.UserId,
 	)
@@ -97,6 +107,8 @@ func (s *MaterialService) GetMyMaterialAndItsParentById(
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
+	db := s.db.WithContext(ctx)
+
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Read,
 		enums.AccessControlPermission_Write,
@@ -121,7 +133,7 @@ func (s *MaterialService) GetMyMaterialAndItsParentById(
 		ParentSubShelfUpdatedAt      time.Time          `gorm:"parent_sub_shelf_updated_at"`
 		ParentSubShelfCreatedAt      time.Time          `gorm:"parent_sub_shelf_created_at"`
 	}{}
-	result := s.db.Raw(materialsql.GetMyMaterialAndItsParentByIdSQL,
+	result := db.Raw(materialsql.GetMyMaterialAndItsParentByIdSQL,
 		reqDto.Param.MaterialId, reqDto.ContextFields.UserId, allowedPermissions, onlyDeleted, onlyDeleted,
 	).Scan(&output)
 	if err := result.Error; err != nil || result.RowsAffected == 0 || len(strings.TrimSpace(output.ContentKey)) == 0 {
@@ -165,6 +177,8 @@ func (s *MaterialService) GetAllMyMaterialsByParentSubShelfId(
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
+	db := s.db.WithContext(ctx)
+
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Read,
 		enums.AccessControlPermission_Write,
@@ -173,7 +187,7 @@ func (s *MaterialService) GetAllMyMaterialsByParentSubShelfId(
 
 	materials := []schemas.Material{}
 
-	query := s.db.Model(&schemas.Material{}).
+	query := db.Model(&schemas.Material{}).
 		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"MaterialTable\".parent_sub_shelf_id = ss.id").
 		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
 		Where("ss.id = ? AND uts.user_id = ? AND uts.permission IN ?",
@@ -217,6 +231,8 @@ func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
+	db := s.db.WithContext(ctx)
+
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Read,
 		enums.AccessControlPermission_Write,
@@ -225,7 +241,7 @@ func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
 
 	materials := []schemas.Material{}
 
-	result := s.db.Model(&schemas.Material{}).
+	result := db.Model(&schemas.Material{}).
 		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"MaterialTable\".parent_sub_shelf_id = ss.id").
 		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
 		Where("ss.root_shelf_id = ? AND uts.user_id = ? AND uts.permission IN ?",
@@ -259,13 +275,14 @@ func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
 	return &resDto, nil
 }
 
-func (s *MaterialService) CreateTextbookMaterial(ctx context.Context, reqDto *dtos.CreateTextbookMaterialReqDto) (*dtos.CreateTextbookMaterialResDto, *exceptions.Exception) {
+func (s *MaterialService) CreateTextbookMaterial(
+	ctx context.Context, reqDto *dtos.CreateTextbookMaterialReqDto,
+) (*dtos.CreateTextbookMaterialResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	tx := s.db.Begin()
-	materialRepository := repositories.NewMaterialRepository(tx)
+	tx := s.db.WithContext(ctx).Begin()
 
 	newMaterialId := uuid.New()
 	newContentKey := s.storage.GetKey(
@@ -273,7 +290,8 @@ func (s *MaterialService) CreateTextbookMaterial(ctx context.Context, reqDto *dt
 		newMaterialId.String(),
 	)
 	zeroSize := int64(0)
-	_, exception := materialRepository.CreateOne(
+	_, exception := s.materialRepository.CreateOne(
+		tx,
 		reqDto.Body.ParentSubShelfId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateMaterialInput{
@@ -321,13 +339,14 @@ func (s *MaterialService) CreateTextbookMaterial(ctx context.Context, reqDto *dt
 	}, nil
 }
 
-func (s *MaterialService) CreateNotebookMaterial(ctx context.Context, reqDto *dtos.CreateNotebookMaterialReqDto) (*dtos.CreateNotebookMaterialResDto, *exceptions.Exception) {
+func (s *MaterialService) CreateNotebookMaterial(
+	ctx context.Context, reqDto *dtos.CreateNotebookMaterialReqDto,
+) (*dtos.CreateNotebookMaterialResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	tx := s.db.Begin()
-	materialRepository := repositories.NewMaterialRepository(tx)
+	tx := s.db.WithContext(ctx).Begin()
 
 	newMaterialId := uuid.New()
 	newContentKey := s.storage.GetKey(
@@ -335,7 +354,8 @@ func (s *MaterialService) CreateNotebookMaterial(ctx context.Context, reqDto *dt
 		newMaterialId.String(),
 	)
 	zeroSize := int64(0)
-	_, exception := materialRepository.CreateOne(
+	_, exception := s.materialRepository.CreateOne(
+		tx,
 		reqDto.Body.ParentSubShelfId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateMaterialInput{
@@ -383,15 +403,17 @@ func (s *MaterialService) CreateNotebookMaterial(ctx context.Context, reqDto *dt
 	}, nil
 }
 
-func (s *MaterialService) UpdateMyMaterialById(reqDto *dtos.UpdateMyMaterialByIdReqDto,
+func (s *MaterialService) UpdateMyMaterialById(
+	ctx context.Context, reqDto *dtos.UpdateMyMaterialByIdReqDto,
 ) (*dtos.UpdateMyMaterialByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	materialResitory := repositories.NewMaterialRepository(s.db)
+	db := s.db.WithContext(ctx)
 
-	material, exception := materialResitory.UpdateOneById(
+	material, exception := s.materialRepository.UpdateOneById(
+		db,
 		reqDto.Body.MaterialId,
 		reqDto.ContextFields.UserId,
 		&reqDto.Body.MaterialType,
@@ -412,7 +434,9 @@ func (s *MaterialService) UpdateMyMaterialById(reqDto *dtos.UpdateMyMaterialById
 }
 
 // helper function for Save Material Services
-func (s *MaterialService) saveMyMaterialById(ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto, materialType enums.MaterialType) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception) {
+func (s *MaterialService) saveMyMaterialById(
+	ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto, materialType enums.MaterialType,
+) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -421,8 +445,7 @@ func (s *MaterialService) saveMyMaterialById(ctx context.Context, reqDto *dtos.S
 		return nil, exceptions.Material.InvalidDto()
 	}
 
-	tx := s.db.Begin()
-	materialRepository := repositories.NewMaterialRepository(tx)
+	tx := s.db.WithContext(ctx).Begin()
 
 	partialUpdate := inputs.PartialUpdateMaterialInput{
 		Values: inputs.UpdateMaterialInput{
@@ -451,7 +474,8 @@ func (s *MaterialService) saveMyMaterialById(ctx context.Context, reqDto *dtos.S
 	partialUpdate.Values.ParseMediaType = object.ParseMediaType
 	partialUpdate.Values.Size = &object.Size
 
-	material, exception := materialRepository.UpdateOneById(
+	material, exception := s.materialRepository.UpdateOneById(
+		tx,
 		reqDto.Body.MaterialId,
 		reqDto.ContextFields.UserId,
 		&materialType,
@@ -479,7 +503,9 @@ func (s *MaterialService) saveMyMaterialById(ctx context.Context, reqDto *dtos.S
 	}, nil
 }
 
-func (s *MaterialService) SaveMyTextbookMaterialById(ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception) {
+func (s *MaterialService) SaveMyTextbookMaterialById(
+	ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto,
+) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception) {
 	return s.saveMyMaterialById(ctx, reqDto, enums.MaterialType_Textbook)
 }
 
@@ -490,21 +516,21 @@ func (s *MaterialService) SaveMyNotebookMaterialById(
 }
 
 func (s *MaterialService) MoveMyMaterialById(
-	reqDto *dtos.MoveMyMaterialByIdReqDto,
+	ctx context.Context, reqDto *dtos.MoveMyMaterialByIdReqDto,
 ) (*dtos.MoveMyMaterialByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	subShelfRepository := repositories.NewSubShelfRepository(s.db)
-	materialRepository := repositories.NewMaterialRepository(s.db)
+	db := s.db.WithContext(ctx)
 
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Write,
 		enums.AccessControlPermission_Admin,
 	}
 
-	if hasPermission := subShelfRepository.HasPermission(
+	if hasPermission := s.subShelfRepository.HasPermission(
+		db,
 		reqDto.Body.DestinationParentSubShelfId,
 		reqDto.ContextFields.UserId,
 		nil,
@@ -512,7 +538,8 @@ func (s *MaterialService) MoveMyMaterialById(
 	); !hasPermission {
 		return nil, exceptions.Shelf.NoPermission()
 	}
-	material, exception := materialRepository.CheckPermissionAndGetOneById(
+	material, exception := s.materialRepository.CheckPermissionAndGetOneById(
+		db,
 		reqDto.Body.MaterialId,
 		reqDto.ContextFields.UserId,
 		nil,
@@ -523,7 +550,7 @@ func (s *MaterialService) MoveMyMaterialById(
 		return nil, exception
 	}
 
-	result := s.db.Exec(`
+	result := db.Exec(`
 		UPDATE "MaterialTable"
 		SET "parent_sub_shelf_id" = ?, "updated_at" = NOW()
 		WHERE id = ? AND deleted_at IS NULL`,
@@ -539,20 +566,21 @@ func (s *MaterialService) MoveMyMaterialById(
 }
 
 func (s *MaterialService) MoveMyMaterialsByIds(
-	reqDto *dtos.MoveMyMaterialsByIdsReqDto,
+	ctx context.Context, reqDto *dtos.MoveMyMaterialsByIdsReqDto,
 ) (*dtos.MoveMyMaterialsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	materialRepository := repositories.NewMaterialRepository(s.db)
+	db := s.db.WithContext(ctx)
 
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Write,
 		enums.AccessControlPermission_Admin,
 	}
 
-	materials, exception := materialRepository.CheckPermissionsAndGetManyByIds(
+	materials, exception := s.materialRepository.CheckPermissionsAndGetManyByIds(
+		db,
 		reqDto.Body.MaterialIds,
 		reqDto.ContextFields.UserId,
 		nil,
@@ -567,7 +595,7 @@ func (s *MaterialService) MoveMyMaterialsByIds(
 		materialIds = append(materialIds, material.Id)
 	}
 
-	result := s.db.Exec(`
+	result := db.Exec(`
 		UPDATE "MaterialTable"
 		SET "parent_sub_shelf_id" = ?, "updated_at" = NOW()
 		WHERE id IN ? AND deleted_at IS NULL`,
@@ -583,15 +611,16 @@ func (s *MaterialService) MoveMyMaterialsByIds(
 }
 
 func (s *MaterialService) RestoreMyMaterialById(
-	reqDto *dtos.RestoreMyMaterialByIdReqDto,
+	ctx context.Context, reqDto *dtos.RestoreMyMaterialByIdReqDto,
 ) (*dtos.RestoreMyMaterialByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	materialRepository := repositories.NewMaterialRepository(s.db)
+	db := s.db.WithContext(ctx)
 
-	exception := materialRepository.RestoreSoftDeletedOneById(
+	exception := s.materialRepository.RestoreSoftDeletedOneById(
+		db,
 		reqDto.Body.MaterialId,
 		reqDto.ContextFields.UserId,
 	)
@@ -605,15 +634,16 @@ func (s *MaterialService) RestoreMyMaterialById(
 }
 
 func (s *MaterialService) RestoreMyMaterialsByIds(
-	reqDto *dtos.RestoreMyMaterialsByIdsReqDto,
+	ctx context.Context, reqDto *dtos.RestoreMyMaterialsByIdsReqDto,
 ) (*dtos.RestoreMyMaterialsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	materialRepository := repositories.NewMaterialRepository(s.db)
+	db := s.db.WithContext(ctx)
 
-	exception := materialRepository.RestoreSoftDeletedManyByIds(
+	exception := s.materialRepository.RestoreSoftDeletedManyByIds(
+		db,
 		reqDto.Body.MaterialIds,
 		reqDto.ContextFields.UserId,
 	)
@@ -627,15 +657,16 @@ func (s *MaterialService) RestoreMyMaterialsByIds(
 }
 
 func (s *MaterialService) DeleteMyMaterialById(
-	reqDto *dtos.DeleteMyMaterialByIdReqDto,
+	ctx context.Context, reqDto *dtos.DeleteMyMaterialByIdReqDto,
 ) (*dtos.DeleteMyMaterialByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	materialRepository := repositories.NewMaterialRepository(s.db)
+	db := s.db.WithContext(ctx)
 
-	exception := materialRepository.SoftDeleteOneById(
+	exception := s.materialRepository.SoftDeleteOneById(
+		db,
 		reqDto.Body.MaterialId,
 		reqDto.ContextFields.UserId,
 	)
@@ -649,15 +680,16 @@ func (s *MaterialService) DeleteMyMaterialById(
 }
 
 func (s *MaterialService) DeleteMyMaterialsByIds(
-	reqDto *dtos.DeleteMyMaterialsByIdsReqDto,
+	ctx context.Context, reqDto *dtos.DeleteMyMaterialsByIdsReqDto,
 ) (*dtos.DeleteMyMaterialsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	materialRepository := repositories.NewMaterialRepository(s.db)
+	db := s.db.WithContext(ctx)
 
-	exception := materialRepository.SoftDeleteManyByIds(
+	exception := s.materialRepository.SoftDeleteManyByIds(
+		db,
 		reqDto.Body.MaterialIds,
 		reqDto.ContextFields.UserId,
 	)

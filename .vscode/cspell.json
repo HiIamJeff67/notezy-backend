@@ -10,7 +10,7 @@
     "/gin/",
     "/gin-[a-zA-Z]*/",
     "/endless/",
-    "/is[a-z]+/", // we ignore this spell error for customized validation properties
+    "/is[a-z]+/", 
     "/English/",
     "/Enterprise/",
     "/go-randomdata/"

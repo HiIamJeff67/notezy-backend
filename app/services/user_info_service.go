@@ -5,7 +5,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"notezy-backend/app/caches"
+	caches "notezy-backend/app/caches"
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	gqlmodels "notezy-backend/app/graphql/models"
@@ -19,8 +19,8 @@ import (
 /* ============================== Interface & Instance ============================== */
 
 type UserInfoServiceInterface interface {
-	GetMyInfo(reqDto *dtos.GetMyInfoReqDto) (*dtos.GetMyInfoResDto, *exceptions.Exception)
-	UpdateMyInfo(reqDto *dtos.UpdateMyInfoReqDto) (*dtos.UpdateMyInfoResDto, *exceptions.Exception)
+	GetMyInfo(ctx context.Context, reqDto *dtos.GetMyInfoReqDto) (*dtos.GetMyInfoResDto, *exceptions.Exception)
+	UpdateMyInfo(ctx context.Context, reqDto *dtos.UpdateMyInfoReqDto) (*dtos.UpdateMyInfoResDto, *exceptions.Exception)
 
 	// services for public userInfos
 	GetPublicUserInfoByUserPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicUserInfo, *exceptions.Exception)
@@ -28,26 +28,38 @@ type UserInfoServiceInterface interface {
 }
 
 type UserInfoService struct {
-	db *gorm.DB
+	db                 *gorm.DB
+	userInfoRepository repositories.UserInfoRepositoryInterface
 }
 
-func NewUserInfoService(db *gorm.DB) UserInfoServiceInterface {
+func NewUserInfoService(
+	db *gorm.DB,
+	userInfoRepository repositories.UserInfoRepositoryInterface,
+) UserInfoServiceInterface {
 	if db == nil {
 		db = models.NotezyDB
 	}
-	return &UserInfoService{db: db}
+	return &UserInfoService{
+		db:                 db,
+		userInfoRepository: userInfoRepository,
+	}
 }
 
 /* ============================== Service Methods for UserInfo ============================== */
 
-func (s *UserInfoService) GetMyInfo(reqDto *dtos.GetMyInfoReqDto) (*dtos.GetMyInfoResDto, *exceptions.Exception) {
+func (s *UserInfoService) GetMyInfo(
+	ctx context.Context, reqDto *dtos.GetMyInfoReqDto,
+) (*dtos.GetMyInfoResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	userInfoRepository := repositories.NewUserInfoRepository(s.db)
+	db := s.db.WithContext(ctx)
 
-	userInfo, exception := userInfoRepository.GetOneByUserId(reqDto.ContextFields.UserId)
+	userInfo, exception := s.userInfoRepository.GetOneByUserId(
+		db,
+		reqDto.ContextFields.UserId,
+	)
 	if exception != nil {
 		return nil, exception
 	}
@@ -64,25 +76,30 @@ func (s *UserInfoService) GetMyInfo(reqDto *dtos.GetMyInfoReqDto) (*dtos.GetMyIn
 	}, nil
 }
 
-func (s *UserInfoService) UpdateMyInfo(reqDto *dtos.UpdateMyInfoReqDto) (*dtos.UpdateMyInfoResDto, *exceptions.Exception) {
+func (s *UserInfoService) UpdateMyInfo(
+	ctx context.Context, reqDto *dtos.UpdateMyInfoReqDto,
+) (*dtos.UpdateMyInfoResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	userInfoRepository := repositories.NewUserInfoRepository(s.db)
+	db := s.db.WithContext(ctx)
 
-	updatedUserInfo, exception := userInfoRepository.UpdateOneByUserId(reqDto.ContextFields.UserId, inputs.PartialUpdateUserInfoInput{
-		Values: inputs.UpdateUserInfoInput{
-			CoverBackgroundURL: reqDto.Body.Values.CoverBackgroundURL,
-			AvatarURL:          reqDto.Body.Values.AvatarURL,
-			Header:             reqDto.Body.Values.Header,
-			Introduction:       reqDto.Body.Values.Introduction,
-			Gender:             reqDto.Body.Values.Gender,
-			Country:            reqDto.Body.Values.Country,
-			BirthDate:          reqDto.Body.Values.BirthDate,
-		},
-		SetNull: reqDto.Body.SetNull,
-	})
+	updatedUserInfo, exception := s.userInfoRepository.UpdateOneByUserId(
+		db,
+		reqDto.ContextFields.UserId,
+		inputs.PartialUpdateUserInfoInput{
+			Values: inputs.UpdateUserInfoInput{
+				CoverBackgroundURL: reqDto.Body.Values.CoverBackgroundURL,
+				AvatarURL:          reqDto.Body.Values.AvatarURL,
+				Header:             reqDto.Body.Values.Header,
+				Introduction:       reqDto.Body.Values.Introduction,
+				Gender:             reqDto.Body.Values.Gender,
+				Country:            reqDto.Body.Values.Country,
+				BirthDate:          reqDto.Body.Values.BirthDate,
+			},
+			SetNull: reqDto.Body.SetNull,
+		})
 	if exception != nil {
 		return nil, exception
 	}
@@ -102,9 +119,14 @@ func (s *UserInfoService) UpdateMyInfo(reqDto *dtos.UpdateMyInfoReqDto) (*dtos.U
 /* ============================== Service Methods for Public UserInfo (Only available in GraphQL) ============================== */
 
 // use the searchable user cursor (we only give the search functionality on users)
-func (s *UserInfoService) GetPublicUserInfoByUserPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicUserInfo, *exceptions.Exception) {
+func (s *UserInfoService) GetPublicUserInfoByUserPublicId(
+	ctx context.Context,
+	publicId string,
+) (*gqlmodels.PublicUserInfo, *exceptions.Exception) {
+	db := s.db.WithContext(ctx)
+
 	userInfo := schemas.UserInfo{}
-	result := s.db.Table(schemas.UserInfo{}.TableName()).
+	result := db.Table(schemas.UserInfo{}.TableName()).
 		Joins("LEFT JOIN \"UserTable\" u ON u.id = user_id").
 		Where("u.public_id = ?", publicId).
 		First(&userInfo)
@@ -115,10 +137,14 @@ func (s *UserInfoService) GetPublicUserInfoByUserPublicId(ctx context.Context, p
 	return userInfo.ToPublicUserInfo(), nil
 }
 
-func (s *UserInfoService) GetPublicUserInfosByUserPublicIds(ctx context.Context, publicIds []string) ([]*gqlmodels.PublicUserInfo, *exceptions.Exception) {
+func (s *UserInfoService) GetPublicUserInfosByUserPublicIds(
+	ctx context.Context, publicIds []string,
+) ([]*gqlmodels.PublicUserInfo, *exceptions.Exception) {
 	if len(publicIds) == 0 {
 		return []*gqlmodels.PublicUserInfo{}, nil
 	}
+
+	db := s.db.WithContext(ctx)
 
 	uniquePublicIds := make([]string, 0)
 	seen := make(map[string]bool)
@@ -136,7 +162,7 @@ func (s *UserInfoService) GetPublicUserInfosByUserPublicIds(ctx context.Context,
 		schemas.UserInfo
 		UserPublicId string `gorm:"column:user_public_id"`
 	}
-	result := s.db.Table(schemas.UserInfo{}.TableName()+" ui").
+	result := db.Table(schemas.UserInfo{}.TableName()+" ui").
 		Select("ui.*, u.public_id as user_public_id").
 		Joins("LEFT JOIN \"UserTable\" u ON u.id = ui.user_id").
 		Where("u.public_id IN ?", uniquePublicIds).

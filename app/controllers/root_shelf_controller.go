@@ -36,7 +36,7 @@ func NewRootShelfController(service services.RootShelfServiceInterface) RootShel
 
 // with AuthMiddleware
 func (c *RootShelfController) GetMyRootShelfById(ctx *gin.Context, reqDto *dtos.GetMyRootShelfByIdReqDto) {
-	resDto, exception := c.rootShelfService.GetMyRootShelfById(reqDto)
+	resDto, exception := c.rootShelfService.GetMyRootShelfById(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -51,7 +51,7 @@ func (c *RootShelfController) GetMyRootShelfById(ctx *gin.Context, reqDto *dtos.
 
 // with AuthMiddleware
 func (c *RootShelfController) SearchRecentRootShelves(ctx *gin.Context, reqDto *dtos.SearchRecentRootShelvesReqDto) {
-	resDto, exception := c.rootShelfService.SearchRecentRootShelves(reqDto)
+	resDto, exception := c.rootShelfService.SearchRecentRootShelves(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -66,7 +66,7 @@ func (c *RootShelfController) SearchRecentRootShelves(ctx *gin.Context, reqDto *
 
 // with AuthMiddleware
 func (c *RootShelfController) CreateRootShelf(ctx *gin.Context, reqDto *dtos.CreateRootShelfReqDto) {
-	resDto, exception := c.rootShelfService.CreateRootShelf(reqDto)
+	resDto, exception := c.rootShelfService.CreateRootShelf(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -81,7 +81,7 @@ func (c *RootShelfController) CreateRootShelf(ctx *gin.Context, reqDto *dtos.Cre
 
 // with AuthMiddleware
 func (c *RootShelfController) UpdateMyRootShelfById(ctx *gin.Context, reqDto *dtos.UpdateMyRootShelfByIdReqDto) {
-	resDto, exception := c.rootShelfService.UpdateMyRootShelfById(reqDto)
+	resDto, exception := c.rootShelfService.UpdateMyRootShelfById(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -96,7 +96,7 @@ func (c *RootShelfController) UpdateMyRootShelfById(ctx *gin.Context, reqDto *dt
 
 // with AuthMiddleware
 func (c *RootShelfController) RestoreMyRootShelfById(ctx *gin.Context, reqDto *dtos.RestoreMyRootShelfByIdReqDto) {
-	resDto, exception := c.rootShelfService.RestoreMyRootShelfById(reqDto)
+	resDto, exception := c.rootShelfService.RestoreMyRootShelfById(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -111,7 +111,7 @@ func (c *RootShelfController) RestoreMyRootShelfById(ctx *gin.Context, reqDto *d
 
 // with AuthMiddleware
 func (c *RootShelfController) RestoreMyRootShelvesByIds(ctx *gin.Context, reqDto *dtos.RestoreMyRootShelvesByIdsReqDto) {
-	resDto, exception := c.rootShelfService.RestoreMyRootShelvesByIds(reqDto)
+	resDto, exception := c.rootShelfService.RestoreMyRootShelvesByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -126,7 +126,7 @@ func (c *RootShelfController) RestoreMyRootShelvesByIds(ctx *gin.Context, reqDto
 
 // with AuthMiddleware
 func (c *RootShelfController) DeleteMyRootShelfById(ctx *gin.Context, reqDto *dtos.DeleteMyRootShelfByIdReqDto) {
-	resDto, exception := c.rootShelfService.DeleteMyRootShelfById(reqDto)
+	resDto, exception := c.rootShelfService.DeleteMyRootShelfById(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -141,7 +141,7 @@ func (c *RootShelfController) DeleteMyRootShelfById(ctx *gin.Context, reqDto *dt
 
 // with AuthMiddleware
 func (c *RootShelfController) DeleteMyRootShelvesByIds(ctx *gin.Context, reqDto *dtos.DeleteMyRootShelvesByIdsReqDto) {
-	resDto, exception := c.rootShelfService.DeleteMyRootShelvesByIds(reqDto)
+	resDto, exception := c.rootShelfService.DeleteMyRootShelvesByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return

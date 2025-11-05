@@ -16,27 +16,30 @@ import (
 /* ============================== Definitions ============================== */
 
 type UserSettingRepositoryInterface interface {
-	GetOneByUserId(userId uuid.UUID) (*schemas.UserSetting, *exceptions.Exception)
-	CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserSettingInput) (*uuid.UUID, *exceptions.Exception)
-	UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserSettingInput) (*schemas.UserSetting, *exceptions.Exception)
+	GetOneByUserId(db *gorm.DB, userId uuid.UUID) (*schemas.UserSetting, *exceptions.Exception)
+	CreateOneByUserId(db *gorm.DB, userId uuid.UUID, input inputs.CreateUserSettingInput) (*uuid.UUID, *exceptions.Exception)
+	UpdateOneByUserId(db *gorm.DB, userId uuid.UUID, input inputs.PartialUpdateUserSettingInput) (*schemas.UserSetting, *exceptions.Exception)
 }
 
-type UserSettingRepository struct {
-	db *gorm.DB
-}
+type UserSettingRepository struct{}
 
-func NewUserSettingRepository(db *gorm.DB) UserSettingRepositoryInterface {
-	if db == nil {
-		db = models.NotezyDB
-	}
-	return &UserSettingRepository{db: db}
+func NewUserSettingRepository() UserSettingRepositoryInterface {
+	return &UserSettingRepository{}
 }
 
 /* ============================== CRUD operations ============================== */
 
-func (r *UserSettingRepository) GetOneByUserId(userId uuid.UUID) (*schemas.UserSetting, *exceptions.Exception) {
+func (r *UserSettingRepository) GetOneByUserId(
+	db *gorm.DB,
+	userId uuid.UUID,
+) (*schemas.UserSetting, *exceptions.Exception) {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
 	userSetting := schemas.UserSetting{}
-	result := r.db.Table(schemas.UserSetting{}.TableName()).
+
+	result := db.Table(schemas.UserSetting{}.TableName()).
 		Where("user_id = ?", userId).
 		First(&userSetting)
 	if err := result.Error; err != nil {
@@ -46,14 +49,23 @@ func (r *UserSettingRepository) GetOneByUserId(userId uuid.UUID) (*schemas.UserS
 	return &userSetting, nil
 }
 
-func (r *UserSettingRepository) CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserSettingInput) (*uuid.UUID, *exceptions.Exception) {
+func (r *UserSettingRepository) CreateOneByUserId(
+	db *gorm.DB,
+	userId uuid.UUID,
+	input inputs.CreateUserSettingInput,
+) (*uuid.UUID, *exceptions.Exception) {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
 	var newUserSetting schemas.UserSetting
+
 	newUserSetting.UserId = userId
 	if err := copier.Copy(&newUserSetting, &input); err != nil {
 		return nil, exceptions.UserSetting.FailedToCreate().WithError(err)
 	}
 
-	result := r.db.Model(&schemas.UserSetting{}).
+	result := db.Model(&schemas.UserSetting{}).
 		Create(&newUserSetting)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserSetting.FailedToCreate().WithError(err)
@@ -62,8 +74,16 @@ func (r *UserSettingRepository) CreateOneByUserId(userId uuid.UUID, input inputs
 	return &newUserSetting.Id, nil
 }
 
-func (r *UserSettingRepository) UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserSettingInput) (*schemas.UserSetting, *exceptions.Exception) {
-	existingUserSetting, exception := r.GetOneByUserId(userId)
+func (r *UserSettingRepository) UpdateOneByUserId(
+	db *gorm.DB,
+	userId uuid.UUID,
+	input inputs.PartialUpdateUserSettingInput,
+) (*schemas.UserSetting, *exceptions.Exception) {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
+	existingUserSetting, exception := r.GetOneByUserId(db, userId)
 	if exception != nil || existingUserSetting == nil {
 		return nil, exception
 	}
@@ -73,7 +93,7 @@ func (r *UserSettingRepository) UpdateOneByUserId(userId uuid.UUID, input inputs
 		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(input.Values, input.SetNull, *existingUserSetting)
 	}
 
-	result := r.db.Model(&schemas.UserSetting{}).
+	result := db.Model(&schemas.UserSetting{}).
 		Where("user_id = ?").
 		Select("*").
 		Updates(&updates)

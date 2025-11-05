@@ -12,6 +12,7 @@ import (
 	generated "notezy-backend/app/graphql/generated"
 	resolvers "notezy-backend/app/graphql/resolvers"
 	models "notezy-backend/app/models"
+	repositories "notezy-backend/app/models/repositories"
 	services "notezy-backend/app/services"
 	constants "notezy-backend/shared/constants"
 )
@@ -21,12 +22,14 @@ func GraphQLHandler() gin.HandlerFunc {
 		dataloaders.NewDataloaders(models.NotezyDB),
 		services.NewUserService(
 			models.NotezyDB,
+			repositories.NewUserRepository(),
 		),
 		services.NewThemeService(
 			models.NotezyDB,
 		),
 		services.NewRootShelfService(
 			models.NotezyDB,
+			repositories.NewRootShelfRepository(),
 		),
 	)
 

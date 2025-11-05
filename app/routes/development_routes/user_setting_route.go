@@ -1,20 +1,12 @@
 package developmentroutes
 
 import (
-	binders "notezy-backend/app/binders"
-	controllers "notezy-backend/app/controllers"
 	middlewares "notezy-backend/app/middlewares"
-	models "notezy-backend/app/models"
-	services "notezy-backend/app/services"
+	modules "notezy-backend/app/modules"
 )
 
 func configureUserSettingRoutes() {
-	userSettingBinder := binders.NewUserSettingBinder()
-	userSettingController := controllers.NewUserSettingController(
-		services.NewUserSettingService(
-			models.NotezyDB,
-		),
-	)
+	userSettingModule := modules.NewUserSettingModule()
 
 	userSettingRoutes := DevelopmentRouterGroup.Group("/userSetting")
 	userSettingRoutes.Use(
@@ -24,8 +16,8 @@ func configureUserSettingRoutes() {
 	{
 		userSettingRoutes.GET(
 			"/getMySetting",
-			userSettingBinder.BindGetMySetting(
-				userSettingController.GetMySetting,
+			userSettingModule.Binder.BindGetMySetting(
+				userSettingModule.Controller.GetMySetting,
 			),
 		)
 	}

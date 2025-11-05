@@ -23,9 +23,9 @@ import (
 /* ============================== Interface & Instance ============================== */
 
 type UserServiceInterface interface {
-	GetUserData(reqDto *dtos.GetUserDataReqDto) (*dtos.GetUserDataResDto, *exceptions.Exception)
-	GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception)
-	UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Exception)
+	GetUserData(ctx context.Context, reqDto *dtos.GetUserDataReqDto) (*dtos.GetUserDataResDto, *exceptions.Exception)
+	GetMe(ctx context.Context, reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception)
+	UpdateMe(ctx context.Context, reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Exception)
 
 	// services for public users
 	GetPublicUserByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicUser, *exceptions.Exception)
@@ -34,19 +34,28 @@ type UserServiceInterface interface {
 }
 
 type UserService struct {
-	db *gorm.DB
+	db             *gorm.DB
+	userRepository repositories.UserRepositoryInterface
 }
 
-func NewUserService(db *gorm.DB) UserServiceInterface {
+func NewUserService(
+	db *gorm.DB,
+	userRepository repositories.UserRepositoryInterface,
+) UserServiceInterface {
 	if db == nil {
 		db = models.NotezyDB
 	}
-	return &UserService{db: db}
+	return &UserService{
+		db:             db,
+		userRepository: userRepository,
+	}
 }
 
 /* ============================== Service Methods for Users ============================== */
 
-func (s *UserService) GetUserData(reqDto *dtos.GetUserDataReqDto) (*dtos.GetUserDataResDto, *exceptions.Exception) {
+func (s *UserService) GetUserData(
+	ctx context.Context, reqDto *dtos.GetUserDataReqDto,
+) (*dtos.GetUserDataResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
@@ -59,14 +68,20 @@ func (s *UserService) GetUserData(reqDto *dtos.GetUserDataReqDto) (*dtos.GetUser
 	return userDataCache, nil
 }
 
-func (s *UserService) GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception) {
+func (s *UserService) GetMe(
+	ctx context.Context, reqDto *dtos.GetMeReqDto,
+) (*dtos.GetMeResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	userRepository := repositories.NewUserRepository(s.db)
+	db := s.db.WithContext(ctx)
 
-	user, exception := userRepository.GetOneById(reqDto.ContextFields.UserId, nil)
+	user, exception := s.userRepository.GetOneById(
+		db,
+		reqDto.ContextFields.UserId,
+		nil,
+	)
 	if exception != nil {
 		return nil, exception
 	}
@@ -83,20 +98,25 @@ func (s *UserService) GetMe(reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *excep
 	}, nil
 }
 
-func (s *UserService) UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Exception) {
+func (s *UserService) UpdateMe(
+	ctx context.Context, reqDto *dtos.UpdateMeReqDto,
+) (*dtos.UpdateMeResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	userRepository := repositories.NewUserRepository(s.db)
+	db := s.db.WithContext(ctx)
 
-	updatedUser, exception := userRepository.UpdateOneById(reqDto.ContextFields.UserId, inputs.PartialUpdateUserInput{
-		Values: inputs.UpdateUserInput{
-			DisplayName: reqDto.Body.Values.DisplayName,
-			Status:      reqDto.Body.Values.Status,
-		},
-		SetNull: reqDto.Body.SetNull,
-	})
+	updatedUser, exception := s.userRepository.UpdateOneById(
+		db,
+		reqDto.ContextFields.UserId,
+		inputs.PartialUpdateUserInput{
+			Values: inputs.UpdateUserInput{
+				DisplayName: reqDto.Body.Values.DisplayName,
+				Status:      reqDto.Body.Values.Status,
+			},
+			SetNull: reqDto.Body.SetNull,
+		})
 	if exception != nil {
 		return nil, exception
 	}
@@ -128,9 +148,13 @@ func (s *UserService) UpdateMe(reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDt
 
 /* ============================== Service Methods for Public User (Only available in GraphQL) ============================== */
 
-func (s *UserService) GetPublicUserByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicUser, *exceptions.Exception) {
+func (s *UserService) GetPublicUserByPublicId(
+	ctx context.Context, publicId string,
+) (*gqlmodels.PublicUser, *exceptions.Exception) {
+	db := s.db.WithContext(ctx)
+
 	user := schemas.User{}
-	result := s.db.Table(schemas.User{}.TableName()).
+	result := db.Table(schemas.User{}.TableName()).
 		Where("public_id = ?", publicId).
 		First(&user)
 	if err := result.Error; err != nil {
@@ -140,10 +164,14 @@ func (s *UserService) GetPublicUserByPublicId(ctx context.Context, publicId stri
 	return user.ToPublicUser(), nil
 }
 
-func (s *UserService) GetPublicAuthorByThemePublicIds(ctx context.Context, publicIds []string) ([]*gqlmodels.PublicUser, *exceptions.Exception) {
+func (s *UserService) GetPublicAuthorByThemePublicIds(
+	ctx context.Context, publicIds []string,
+) ([]*gqlmodels.PublicUser, *exceptions.Exception) {
 	if len(publicIds) == 0 {
 		return []*gqlmodels.PublicUser{}, nil
 	}
+
+	db := s.db.WithContext(ctx)
 
 	uniquePublicIds := make([]string, 0)
 	seen := make(map[string]bool)
@@ -161,7 +189,7 @@ func (s *UserService) GetPublicAuthorByThemePublicIds(ctx context.Context, publi
 		schemas.User
 		ThemePublicId string `gorm:"theme_public_id"`
 	}
-	result := s.db.Table(schemas.User{}.TableName()+" u").
+	result := db.Table(schemas.User{}.TableName()+" u").
 		Select("u.*, t.public_id as theme_public_id").
 		Joins("LEFT JOIN \"ThemeTable\" t ON t.author_id = u.id").
 		Where("t.public_id IN ?", uniquePublicIds).
@@ -185,10 +213,14 @@ func (s *UserService) GetPublicAuthorByThemePublicIds(ctx context.Context, publi
 	return publicUsers, nil
 }
 
-func (s *UserService) SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.SearchUserInput) (*gqlmodels.SearchUserConnection, *exceptions.Exception) {
+func (s *UserService) SearchPublicUsers(
+	ctx context.Context, gqlInput gqlmodels.SearchUserInput,
+) (*gqlmodels.SearchUserConnection, *exceptions.Exception) {
 	startTime := time.Now()
 
-	query := s.db.WithContext(ctx).Model(&schemas.User{})
+	db := s.db.WithContext(ctx)
+
+	query := db.Model(&schemas.User{})
 
 	if len(strings.ReplaceAll(gqlInput.Query, " ", "")) > 0 {
 		query = query.Where(

@@ -79,7 +79,7 @@ func AuthorizedRateLimitMiddleware(config ...AuthorizedRateLimitConfig) gin.Hand
 		if !allowed {
 			setRateLimitHeaders(ctx, remaining, authorizedRateLimiter)
 
-			logs.FInfo("Rate limit exceeded for user: %s, fingerprint: %s", userId.String(), fingerprint)
+			logs.FDebug("Rate limit exceeded for user: %s, fingerprint: %s", userId.String(), fingerprint)
 			ctx.JSON(http.StatusTooManyRequests, exceptions.Auth.PermissionDeniedDueToTooManyRequests().GetGinH())
 			ctx.Abort()
 			return

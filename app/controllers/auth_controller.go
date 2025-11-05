@@ -39,7 +39,7 @@ func (c *AuthController) Register(ctx *gin.Context, reqDto *dtos.RegisterReqDto)
 	cookies.AccessToken.DeleteCookie(ctx)
 	cookies.RefreshToken.DeleteCookie(ctx)
 
-	resDto, exception := c.authService.Register(reqDto)
+	resDto, exception := c.authService.Register(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -62,7 +62,7 @@ func (c *AuthController) Login(ctx *gin.Context, reqDto *dtos.LoginReqDto) {
 	cookies.AccessToken.DeleteCookie(ctx)
 	cookies.RefreshToken.DeleteCookie(ctx)
 
-	resDto, exception := c.authService.Login(reqDto)
+	resDto, exception := c.authService.Login(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -83,7 +83,7 @@ func (c *AuthController) Login(ctx *gin.Context, reqDto *dtos.LoginReqDto) {
 
 // with AuthMiddleware
 func (c *AuthController) Logout(ctx *gin.Context, reqDto *dtos.LogoutReqDto) {
-	resDto, exception := c.authService.Logout(reqDto)
+	resDto, exception := c.authService.Logout(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -100,7 +100,7 @@ func (c *AuthController) Logout(ctx *gin.Context, reqDto *dtos.LogoutReqDto) {
 }
 
 func (c *AuthController) SendAuthCode(ctx *gin.Context, reqDto *dtos.SendAuthCodeReqDto) {
-	resDto, exception := c.authService.SendAuthCode(reqDto)
+	resDto, exception := c.authService.SendAuthCode(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -115,7 +115,7 @@ func (c *AuthController) SendAuthCode(ctx *gin.Context, reqDto *dtos.SendAuthCod
 
 // with AuthMiddleware
 func (c *AuthController) ValidateEmail(ctx *gin.Context, reqDto *dtos.ValidateEmailReqDto) {
-	resDto, exception := c.authService.ValidateEmail(reqDto)
+	resDto, exception := c.authService.ValidateEmail(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -130,7 +130,7 @@ func (c *AuthController) ValidateEmail(ctx *gin.Context, reqDto *dtos.ValidateEm
 
 // with AuthMiddleware
 func (c *AuthController) ResetEmail(ctx *gin.Context, reqDto *dtos.ResetEmailReqDto) {
-	resDto, exception := c.authService.ResetEmail(reqDto)
+	resDto, exception := c.authService.ResetEmail(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -145,7 +145,7 @@ func (c *AuthController) ResetEmail(ctx *gin.Context, reqDto *dtos.ResetEmailReq
 
 // ! this should not use any middleware, bcs we want the user to set it by providing the account
 func (c *AuthController) ForgetPassword(ctx *gin.Context, reqDto *dtos.ForgetPasswordReqDto) {
-	resDto, exception := c.authService.ForgetPassword(reqDto)
+	resDto, exception := c.authService.ForgetPassword(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return
@@ -160,7 +160,7 @@ func (c *AuthController) ForgetPassword(ctx *gin.Context, reqDto *dtos.ForgetPas
 
 // with AuthMiddleware
 func (c *AuthController) DeleteMe(ctx *gin.Context, reqDto *dtos.DeleteMeReqDto) {
-	resDto, exception := c.authService.DeleteMe(reqDto)
+	resDto, exception := c.authService.DeleteMe(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return

@@ -1,21 +1,13 @@
 package developmentroutes
 
 import (
-	binders "notezy-backend/app/binders"
-	controllers "notezy-backend/app/controllers"
 	interceptors "notezy-backend/app/interceptors"
 	middlewares "notezy-backend/app/middlewares"
-	models "notezy-backend/app/models"
-	services "notezy-backend/app/services"
+	modules "notezy-backend/app/modules"
 )
 
 func configureDevelopmentSubShelfRoutes() {
-	subShelfBinder := binders.NewSubShelfBinder()
-	subShelfController := controllers.NewSubShelfController(
-		services.NewSubShelfService(
-			models.NotezyDB,
-		),
-	)
+	subShelfModule := modules.NewSubShelfModule()
 
 	subShelfRoutes := DevelopmentRouterGroup.Group("/subShelf")
 	subShelfRoutes.Use(
@@ -27,68 +19,68 @@ func configureDevelopmentSubShelfRoutes() {
 	{
 		subShelfRoutes.GET(
 			"/getMySubShelfById",
-			subShelfBinder.BindGetMySubShelfById(
-				subShelfController.GetMySubShelfById,
+			subShelfModule.Binder.BindGetMySubShelfById(
+				subShelfModule.Controller.GetMySubShelfById,
 			),
 		)
 		subShelfRoutes.GET(
 			"/getMySubShelvesByPrevSubShelfId",
-			subShelfBinder.BindGetMySubShelvesByPrevSubShelfId(
-				subShelfController.GetMySubShelvesByPrevSubShelfId,
+			subShelfModule.Binder.BindGetMySubShelvesByPrevSubShelfId(
+				subShelfModule.Controller.GetMySubShelvesByPrevSubShelfId,
 			),
 		)
 		subShelfRoutes.GET(
 			"/getAllMySubShelvesByRootShelfId",
-			subShelfBinder.BindGetAllMySubShelvesByRootShelfId(
-				subShelfController.GetAllMySubShelvesByRootShelfId,
+			subShelfModule.Binder.BindGetAllMySubShelvesByRootShelfId(
+				subShelfModule.Controller.GetAllMySubShelvesByRootShelfId,
 			),
 		)
 		subShelfRoutes.POST(
 			"/createSubShelfByRootShelfId",
-			subShelfBinder.BindCreateSubShelfByRootShelfId(
-				subShelfController.CreateSubShelfByRootShelfId,
+			subShelfModule.Binder.BindCreateSubShelfByRootShelfId(
+				subShelfModule.Controller.CreateSubShelfByRootShelfId,
 			),
 		)
 		subShelfRoutes.PUT(
 			"/updateMySubShelfById",
-			subShelfBinder.BindUpdateMySubShelfById(
-				subShelfController.UpdateMySubShelfById,
+			subShelfModule.Binder.BindUpdateMySubShelfById(
+				subShelfModule.Controller.UpdateMySubShelfById,
 			),
 		)
 		subShelfRoutes.PUT(
 			"/moveMySubShelf",
-			subShelfBinder.BindMoveMySubShelf(
-				subShelfController.MoveMySubShelf,
+			subShelfModule.Binder.BindMoveMySubShelf(
+				subShelfModule.Controller.MoveMySubShelf,
 			),
 		)
 		subShelfRoutes.PUT(
 			"/moveMySubShelves",
-			subShelfBinder.BindMoveMySubShelves(
-				subShelfController.MoveMySubShelves,
+			subShelfModule.Binder.BindMoveMySubShelves(
+				subShelfModule.Controller.MoveMySubShelves,
 			),
 		)
 		subShelfRoutes.PATCH(
 			"/restoreMySubShelfById",
-			subShelfBinder.BindRestoreMySubShelfById(
-				subShelfController.RestoreMySubShelfById,
+			subShelfModule.Binder.BindRestoreMySubShelfById(
+				subShelfModule.Controller.RestoreMySubShelfById,
 			),
 		)
 		subShelfRoutes.PATCH(
 			"/restoreMySubShelvesByIds",
-			subShelfBinder.BindRestoreMySubShelvesByIds(
-				subShelfController.RestoreMySubShelvesByIds,
+			subShelfModule.Binder.BindRestoreMySubShelvesByIds(
+				subShelfModule.Controller.RestoreMySubShelvesByIds,
 			),
 		)
 		subShelfRoutes.DELETE(
 			"/deleteMySubShelfById",
-			subShelfBinder.BindDeleteMySubShelfById(
-				subShelfController.DeleteMySubShelfById,
+			subShelfModule.Binder.BindDeleteMySubShelfById(
+				subShelfModule.Controller.DeleteMySubShelfById,
 			),
 		)
 		subShelfRoutes.DELETE(
 			"/deleteMySubShelvesByIds",
-			subShelfBinder.BindDeleteMySubShelvesByIds(
-				subShelfController.DeleteMySubShelvesByIds,
+			subShelfModule.Binder.BindDeleteMySubShelvesByIds(
+				subShelfModule.Controller.DeleteMySubShelvesByIds,
 			),
 		)
 	}

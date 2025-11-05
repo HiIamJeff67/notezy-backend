@@ -1,6 +1,8 @@
 package services
 
 import (
+	"context"
+
 	"gorm.io/gorm"
 
 	dtos "notezy-backend/app/dtos"
@@ -14,31 +16,43 @@ import (
 /* ============================== Interface & Instance ============================== */
 
 type UserSettingServiceInterface interface {
-	GetMySetting(reqDto *dtos.GetMySettingReqDto) (*dtos.GetMySettingResDto, *exceptions.Exception)
-	UpdateMySetting(reqDto *dtos.UpdateMySettingReqDto) (*dtos.UpdateMySettingResDto, *exceptions.Exception)
+	GetMySetting(ctx context.Context, reqDto *dtos.GetMySettingReqDto) (*dtos.GetMySettingResDto, *exceptions.Exception)
+	UpdateMySetting(ctx context.Context, reqDto *dtos.UpdateMySettingReqDto) (*dtos.UpdateMySettingResDto, *exceptions.Exception)
 }
 
 type UserSettingService struct {
-	db *gorm.DB
+	db                    *gorm.DB
+	userSettingRepository repositories.UserSettingRepositoryInterface
 }
 
-func NewUserSettingService(db *gorm.DB) UserSettingServiceInterface {
+func NewUserSettingService(
+	db *gorm.DB,
+	userSettingRepository repositories.UserSettingRepositoryInterface,
+) UserSettingServiceInterface {
 	if db == nil {
 		db = models.NotezyDB
 	}
-	return &UserSettingService{db: db}
+	return &UserSettingService{
+		db:                    db,
+		userSettingRepository: userSettingRepository,
+	}
 }
 
 /* ============================== Service Methods for UserSetting ============================== */
 
-func (s *UserSettingService) GetMySetting(reqDto *dtos.GetMySettingReqDto) (*dtos.GetMySettingResDto, *exceptions.Exception) {
+func (s *UserSettingService) GetMySetting(
+	ctx context.Context, reqDto *dtos.GetMySettingReqDto,
+) (*dtos.GetMySettingResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	userSettingRepository := repositories.NewUserSettingRepository(nil)
+	db := s.db.WithContext(ctx)
 
-	userSetting, exception := userSettingRepository.GetOneByUserId(reqDto.ContextFields.UserId)
+	userSetting, exception := s.userSettingRepository.GetOneByUserId(
+		db,
+		reqDto.ContextFields.UserId,
+	)
 	if exception != nil {
 		return nil, exception
 	}
@@ -50,21 +64,26 @@ func (s *UserSettingService) GetMySetting(reqDto *dtos.GetMySettingReqDto) (*dto
 	}, nil
 }
 
-func (s *UserSettingService) UpdateMySetting(reqDto *dtos.UpdateMySettingReqDto) (*dtos.UpdateMySettingResDto, *exceptions.Exception) {
+func (s *UserSettingService) UpdateMySetting(
+	ctx context.Context, reqDto *dtos.UpdateMySettingReqDto,
+) (*dtos.UpdateMySettingResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	userSettingRepository := repositories.NewUserSettingRepository(nil)
+	db := s.db.WithContext(ctx)
 
-	updatedUserSetting, exception := userSettingRepository.UpdateOneByUserId(reqDto.ContextFields.UserId, inputs.PartialUpdateUserSettingInput{
-		Values: inputs.UpdateUserSettingInput{
-			Language:           &reqDto.Body.Values.Language,
-			GeneralSettingCode: &reqDto.Body.Values.GeneralSettingCode,
-			PrivacySettingCode: &reqDto.Body.Values.PrivacySettingCode,
-		},
-		SetNull: reqDto.Body.SetNull,
-	})
+	updatedUserSetting, exception := s.userSettingRepository.UpdateOneByUserId(
+		db,
+		reqDto.ContextFields.UserId,
+		inputs.PartialUpdateUserSettingInput{
+			Values: inputs.UpdateUserSettingInput{
+				Language:           &reqDto.Body.Values.Language,
+				GeneralSettingCode: &reqDto.Body.Values.GeneralSettingCode,
+				PrivacySettingCode: &reqDto.Body.Values.PrivacySettingCode,
+			},
+			SetNull: reqDto.Body.SetNull,
+		})
 	if exception != nil {
 		return nil, exception
 	}

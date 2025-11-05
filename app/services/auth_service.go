@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -27,25 +28,41 @@ import (
 /* ============================== Interface & Instance ============================== */
 
 type AuthServiceInterface interface {
-	Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Exception)
-	Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception)
-	Logout(reqDto *dtos.LogoutReqDto) (*dtos.LogoutResDto, *exceptions.Exception)
-	SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendAuthCodeResDto, *exceptions.Exception)
-	ValidateEmail(reqDto *dtos.ValidateEmailReqDto) (*dtos.ValidateEmailResDto, *exceptions.Exception)
-	ResetEmail(reqDto *dtos.ResetEmailReqDto) (*dtos.ResetEmailResDto, *exceptions.Exception)
-	ForgetPassword(reqDto *dtos.ForgetPasswordReqDto) (*dtos.ForgetPasswordResDto, *exceptions.Exception)
-	DeleteMe(reqDto *dtos.DeleteMeReqDto) (*dtos.DeleteMeResDto, *exceptions.Exception)
+	Register(ctx context.Context, reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Exception)
+	Login(ctx context.Context, reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception)
+	Logout(ctx context.Context, reqDto *dtos.LogoutReqDto) (*dtos.LogoutResDto, *exceptions.Exception)
+	SendAuthCode(ctx context.Context, reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendAuthCodeResDto, *exceptions.Exception)
+	ValidateEmail(ctx context.Context, reqDto *dtos.ValidateEmailReqDto) (*dtos.ValidateEmailResDto, *exceptions.Exception)
+	ResetEmail(ctx context.Context, reqDto *dtos.ResetEmailReqDto) (*dtos.ResetEmailResDto, *exceptions.Exception)
+	ForgetPassword(ctx context.Context, reqDto *dtos.ForgetPasswordReqDto) (*dtos.ForgetPasswordResDto, *exceptions.Exception)
+	DeleteMe(ctx context.Context, reqDto *dtos.DeleteMeReqDto) (*dtos.DeleteMeResDto, *exceptions.Exception)
 }
 
 type AuthService struct {
-	db *gorm.DB
+	db                    *gorm.DB
+	userRepository        repositories.UserRepositoryInterface
+	userInfoRepository    repositories.UserInfoRepositoryInterface
+	userAccountRepository repositories.UserAccountRepositoryInterface
+	userSettingRepository repositories.UserSettingRepositoryInterface
 }
 
-func NewAuthService(db *gorm.DB) AuthServiceInterface {
+func NewAuthService(
+	db *gorm.DB,
+	userRepository repositories.UserRepositoryInterface,
+	userInfoRepository repositories.UserInfoRepositoryInterface,
+	userAccountRepository repositories.UserAccountRepositoryInterface,
+	userSettingRepository repositories.UserSettingRepositoryInterface,
+) AuthServiceInterface {
 	if db == nil {
 		db = models.NotezyDB
 	}
-	return &AuthService{db: db}
+	return &AuthService{
+		db:                    db,
+		userRepository:        userRepository,
+		userInfoRepository:    userInfoRepository,
+		userAccountRepository: userAccountRepository,
+		userSettingRepository: userSettingRepository,
+	}
 }
 
 /* ============================== Auxiliary Functions ============================== */
@@ -66,17 +83,15 @@ func (s *AuthService) checkPasswordHash(hashedPassword string, password string) 
 
 /* ============================== Service Methods for Authentication ============================== */
 
-func (s *AuthService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Exception) {
+func (s *AuthService) Register(
+	ctx context.Context, reqDto *dtos.RegisterReqDto,
+) (*dtos.RegisterResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Auth.InvalidDto().WithError(err)
 	}
 
 	// Start transaction
-	tx := s.db.Begin()
-	userRepository := repositories.NewUserRepository(tx)
-	userInfoRepository := repositories.NewUserInfoRepository(tx)
-	userAccountRepository := repositories.NewUserAccountRepository(tx)
-	userSettingRepository := repositories.NewUserSettingRepository(tx)
+	tx := s.db.WithContext(ctx).Begin()
 
 	hashedPassword, exception := s.hashPassword(reqDto.Body.Password)
 	if exception != nil {
@@ -91,7 +106,7 @@ func (s *AuthService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDt
 		Password:    hashedPassword,
 		UserAgent:   reqDto.Header.UserAgent,
 	}
-	newUserId, exception := userRepository.CreateOne(createUserInputData)
+	newUserId, exception := s.userRepository.CreateOne(tx, createUserInputData)
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -131,7 +146,7 @@ func (s *AuthService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDt
 	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
 
 	// Update user refresh token
-	newUser, exception := userRepository.UpdateOneById(*newUserId, inputs.PartialUpdateUserInput{
+	newUser, exception := s.userRepository.UpdateOneById(tx, *newUserId, inputs.PartialUpdateUserInput{
 		Values: inputs.UpdateUserInput{
 			RefreshToken: refreshToken,
 		},
@@ -143,14 +158,15 @@ func (s *AuthService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDt
 	}
 
 	// Create user info
-	_, exception = userInfoRepository.CreateOneByUserId(*newUserId, inputs.CreateUserInfoInput{})
+	_, exception = s.userInfoRepository.CreateOneByUserId(tx, *newUserId, inputs.CreateUserInfoInput{})
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
 
 	// Create user account
-	_, exception = userAccountRepository.CreateOneByUserId(
+	_, exception = s.userAccountRepository.CreateOneByUserId(
+		tx,
 		*newUserId,
 		inputs.CreateUserAccountInput{
 			AuthCode:          authCode,
@@ -163,7 +179,7 @@ func (s *AuthService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDt
 	}
 
 	// Create user setting
-	_, exception = userSettingRepository.CreateOneByUserId(*newUserId, inputs.CreateUserSettingInput{})
+	_, exception = s.userSettingRepository.CreateOneByUserId(tx, *newUserId, inputs.CreateUserSettingInput{})
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -218,22 +234,24 @@ func (s *AuthService) Register(reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDt
 	}, nil
 }
 
-func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *exceptions.Exception) {
+func (s *AuthService) Login(
+	ctx context.Context, reqDto *dtos.LoginReqDto,
+) (*dtos.LoginResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	userRepository := repositories.NewUserRepository(s.db)
+	db := s.db.WithContext(ctx)
 
 	// otherwise, the user should provide their account and password
 	var user *schemas.User = nil
 	var exception *exceptions.Exception = nil
 	if util.IsAlphaAndNumberString(reqDto.Body.Account) { // if the account field contains user name
-		if user, exception = userRepository.GetOneByName(reqDto.Body.Account, nil); exception != nil {
+		if user, exception = s.userRepository.GetOneByName(db, reqDto.Body.Account, nil); exception != nil {
 			return nil, exception
 		}
 	} else if util.IsEmailString(reqDto.Body.Account) { // if the account field contains email
-		if user, exception = userRepository.GetOneByEmail(reqDto.Body.Account, nil); exception != nil {
+		if user, exception = s.userRepository.GetOneByEmail(db, reqDto.Body.Account, nil); exception != nil {
 			return nil, exception
 		}
 	}
@@ -257,7 +275,7 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 		}
 		updateInvalidUserInput.BlockLoginUtil = blockLoginUntil // we don't care if blockLoginUntil is nil or not, since we always set the SetNull to nil
 
-		_, exception = userRepository.UpdateOneById(user.Id, inputs.PartialUpdateUserInput{
+		_, exception = s.userRepository.UpdateOneById(db, user.Id, inputs.PartialUpdateUserInput{
 			Values:  updateInvalidUserInput,
 			SetNull: nil,
 		})
@@ -330,7 +348,7 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 			CreatedAt          time.Time        `gorm:"created_at"`
 			UpdatedAt          time.Time        `gorm:"updated_at"`
 		}{}
-		result := s.db.Raw(usersql.GetUserDataCacheByIdSQL, user.Id).Scan(&output)
+		result := db.Raw(usersql.GetUserDataCacheByIdSQL, user.Id).Scan(&output)
 		if err := result.Error; err != nil || result.RowsAffected == 0 {
 			exception := exceptions.User.NotFound().WithError(err).Log()
 			if err != nil {
@@ -371,7 +389,8 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 
 	// update the refresh token and the status of the user
 	var zeroLoginCount int32 = 0 // reset the login count if the login procedure is valid
-	updatedUser, exception := userRepository.UpdateOneById(
+	updatedUser, exception := s.userRepository.UpdateOneById(
+		db,
 		user.Id,
 		inputs.PartialUpdateUserInput{
 			Values: inputs.UpdateUserInput{
@@ -394,16 +413,19 @@ func (s *AuthService) Login(reqDto *dtos.LoginReqDto) (*dtos.LoginResDto, *excep
 	}, nil
 }
 
-func (s *AuthService) Logout(reqDto *dtos.LogoutReqDto) (*dtos.LogoutResDto, *exceptions.Exception) {
+func (s *AuthService) Logout(
+	ctx context.Context, reqDto *dtos.LogoutReqDto,
+) (*dtos.LogoutResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Auth.InvalidDto().WithError(err)
 	}
 
-	userRepository := repositories.NewUserRepository(s.db)
+	db := s.db.WithContext(ctx)
 
 	offlineStatus := enums.UserStatus_Offline
 	emptyString := ""
-	updatedUser, exception := userRepository.UpdateOneById(
+	updatedUser, exception := s.userRepository.UpdateOneById(
+		db,
 		reqDto.ContextFields.UserId,
 		inputs.PartialUpdateUserInput{
 			Values: inputs.UpdateUserInput{
@@ -426,10 +448,14 @@ func (s *AuthService) Logout(reqDto *dtos.LogoutReqDto) (*dtos.LogoutResDto, *ex
 	}, nil
 }
 
-func (s *AuthService) SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendAuthCodeResDto, *exceptions.Exception) {
+func (s *AuthService) SendAuthCode(
+	ctx context.Context, reqDto *dtos.SendAuthCodeReqDto,
+) (*dtos.SendAuthCodeResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
+
+	db := s.db.WithContext(ctx)
 
 	authCode := util.GenerateAuthCode()
 	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
@@ -440,7 +466,7 @@ func (s *AuthService) SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendA
 		BlockAuthCodeUntil time.Time `json:"blockAuthCodeUntil"`
 		Now                time.Time `json:"now"`
 	}{}
-	result := s.db.Raw(authsql.UpdateAuthCodeSQL, authCode, authCodeExpiredAt, blockAuthCodeUntil, reqDto.Body.Email).Scan(&output)
+	result := db.Raw(authsql.UpdateAuthCodeSQL, authCode, authCodeExpiredAt, blockAuthCodeUntil, reqDto.Body.Email).Scan(&output)
 	if err := result.Error; err != nil || result.RowsAffected == 0 {
 		exception := exceptions.Auth.AuthCodeBlockedDueToTryingTooManyTimes(output.BlockAuthCodeUntil)
 		if err != nil {
@@ -466,15 +492,19 @@ func (s *AuthService) SendAuthCode(reqDto *dtos.SendAuthCodeReqDto) (*dtos.SendA
 	}, nil
 }
 
-func (s *AuthService) ValidateEmail(reqDto *dtos.ValidateEmailReqDto) (*dtos.ValidateEmailResDto, *exceptions.Exception) {
+func (s *AuthService) ValidateEmail(
+	ctx context.Context, reqDto *dtos.ValidateEmailReqDto,
+) (*dtos.ValidateEmailResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
+	db := s.db.WithContext(ctx)
+
 	output := struct {
 		UpdatedAt time.Time `json:"updatedAt"`
 	}{}
-	result := s.db.Raw(authsql.ValidateEmailSQL, reqDto.ContextFields.UserId, reqDto.Body.AuthCode).Scan(&output)
+	result := db.Raw(authsql.ValidateEmailSQL, reqDto.ContextFields.UserId, reqDto.Body.AuthCode).Scan(&output)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.FailedToUpdate().WithError(err)
 	}
@@ -487,17 +517,19 @@ func (s *AuthService) ValidateEmail(reqDto *dtos.ValidateEmailReqDto) (*dtos.Val
 	}, nil
 }
 
-func (s *AuthService) ResetEmail(reqDto *dtos.ResetEmailReqDto) (*dtos.ResetEmailResDto, *exceptions.Exception) {
+func (s *AuthService) ResetEmail(
+	ctx context.Context, reqDto *dtos.ResetEmailReqDto,
+) (*dtos.ResetEmailResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	userAccountRepository := repositories.NewUserAccountRepository(nil)
+	db := s.db.WithContext(ctx)
 
 	output := struct {
 		UpdatedAt time.Time `json:"updatedAt"`
 	}{}
-	result := s.db.Raw(authsql.ResetEmailSQL, reqDto.Body.NewEmail, reqDto.Body.AuthCode, reqDto.ContextFields.UserId).Scan(&output)
+	result := db.Raw(authsql.ResetEmailSQL, reqDto.Body.NewEmail, reqDto.Body.AuthCode, reqDto.ContextFields.UserId).Scan(&output)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.FailedToUpdate().WithError(err)
 	}
@@ -508,7 +540,8 @@ func (s *AuthService) ResetEmail(reqDto *dtos.ResetEmailReqDto) (*dtos.ResetEmai
 
 	authCode := util.GenerateAuthCode()
 	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
-	_, exception := userAccountRepository.UpdateOneByUserId(
+	_, exception := s.userAccountRepository.UpdateOneByUserId(
+		db,
 		reqDto.ContextFields.UserId,
 		inputs.PartialUpdateUserAccountInput{
 			Values: inputs.UpdateUserAccountInput{
@@ -527,22 +560,24 @@ func (s *AuthService) ResetEmail(reqDto *dtos.ResetEmailReqDto) (*dtos.ResetEmai
 	}, nil
 }
 
-func (s *AuthService) ForgetPassword(reqDto *dtos.ForgetPasswordReqDto) (*dtos.ForgetPasswordResDto, *exceptions.Exception) {
+func (s *AuthService) ForgetPassword(
+	ctx context.Context, reqDto *dtos.ForgetPasswordReqDto,
+) (*dtos.ForgetPasswordResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
-	userRepository := repositories.NewUserRepository(s.db)
+	db := s.db.WithContext(ctx)
 
 	var user *schemas.User = nil
 	var exception *exceptions.Exception = nil
 	var preloads = []schemas.UserRelation{schemas.UserRelation_UserAccount, schemas.UserRelation_UserInfo, schemas.UserRelation_UserSetting}
 	if util.IsEmailString(reqDto.Body.Account) { // if the account field contains email
-		if user, exception = userRepository.GetOneByEmail(reqDto.Body.Account, preloads); exception != nil {
+		if user, exception = s.userRepository.GetOneByEmail(db, reqDto.Body.Account, preloads); exception != nil {
 			return nil, exception
 		}
 	} else if util.IsAlphaAndNumberString(reqDto.Body.Account) { // if the account field contains user name
-		if user, exception = userRepository.GetOneByName(reqDto.Body.Account, preloads); exception != nil {
+		if user, exception = s.userRepository.GetOneByName(db, reqDto.Body.Account, preloads); exception != nil {
 			return nil, exception
 		}
 	} else {
@@ -600,7 +635,8 @@ func (s *AuthService) ForgetPassword(reqDto *dtos.ForgetPasswordReqDto) (*dtos.F
 
 	// update the refresh token and the status of the user
 	var zeroLoginCount int32 = 0 // reset the login count if the login procedure is valid
-	updatedUser, exception := userRepository.UpdateOneById(
+	updatedUser, exception := s.userRepository.UpdateOneById(
+		db,
 		user.Id,
 		inputs.PartialUpdateUserInput{
 			Values: inputs.UpdateUserInput{
@@ -620,15 +656,19 @@ func (s *AuthService) ForgetPassword(reqDto *dtos.ForgetPasswordReqDto) (*dtos.F
 	}, nil
 }
 
-func (s *AuthService) DeleteMe(reqDto *dtos.DeleteMeReqDto) (*dtos.DeleteMeResDto, *exceptions.Exception) {
+func (s *AuthService) DeleteMe(
+	ctx context.Context, reqDto *dtos.DeleteMeReqDto,
+) (*dtos.DeleteMeResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidInput().WithError(err)
 	}
 
+	db := s.db.WithContext(ctx)
+
 	output := struct {
 		DeletedAt time.Time `json:"deletedAt" gorm:"deleted_at"`
 	}{}
-	result := s.db.Raw(authsql.DeleteMeSQL, reqDto.ContextFields.UserId, reqDto.Body.AuthCode).Scan(&output)
+	result := db.Raw(authsql.DeleteMeSQL, reqDto.ContextFields.UserId, reqDto.Body.AuthCode).Scan(&output)
 	if err := result.Error; err != nil {
 		return nil, exceptions.User.FailedToUpdate().WithError(err)
 	}

@@ -8,6 +8,7 @@ import (
 
 	exceptions "notezy-backend/app/exceptions"
 	gqlmodels "notezy-backend/app/graphql/models"
+	"notezy-backend/app/models/repositories"
 	services "notezy-backend/app/services"
 	constants "notezy-backend/shared/constants"
 )
@@ -44,7 +45,10 @@ type UserDataloader struct {
 
 func NewUserDataloader(db *gorm.DB) UserDataloaderInterface {
 	dataloader := &UserDataloader{
-		userService: services.NewUserService(db),
+		userService: services.NewUserService(
+			db,
+			repositories.NewUserRepository(),
+		),
 	}
 	dataloader.loader = gophersdataloader.NewBatchedLoader(
 		dataloader.batchFunction(),

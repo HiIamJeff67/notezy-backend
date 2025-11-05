@@ -19,44 +19,44 @@ import (
 /* ============================== Definitions ============================== */
 
 type MaterialRepositoryInterface interface {
-	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) bool
-	HasPermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) bool
-	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.MaterialRelation, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) (*schemas.Material, *exceptions.Exception)
-	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.MaterialRelation, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) ([]schemas.Material, *exceptions.Exception)
-	GetOneById(id uuid.UUID, userId uuid.UUID) (*schemas.Material, *exceptions.Exception)
-	CreateOne(subShelfId uuid.UUID, userId uuid.UUID, input inputs.CreateMaterialInput) (*uuid.UUID, *exceptions.Exception)
-	UpdateOneById(id uuid.UUID, userId uuid.UUID, matchedMaterialType *enums.MaterialType, input inputs.PartialUpdateMaterialInput) (*schemas.Material, *exceptions.Exception)
+	HasPermission(db *gorm.DB, id uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) bool
+	HasPermissions(db *gorm.DB, ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) bool
+	CheckPermissionAndGetOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID, preloads []schemas.MaterialRelation, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) (*schemas.Material, *exceptions.Exception)
+	CheckPermissionsAndGetManyByIds(db *gorm.DB, ids []uuid.UUID, userId uuid.UUID, preloads []schemas.MaterialRelation, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) ([]schemas.Material, *exceptions.Exception)
+	GetOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID) (*schemas.Material, *exceptions.Exception)
+	CreateOne(db *gorm.DB, subShelfId uuid.UUID, userId uuid.UUID, input inputs.CreateMaterialInput) (*uuid.UUID, *exceptions.Exception)
+	UpdateOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID, matchedMaterialType *enums.MaterialType, input inputs.PartialUpdateMaterialInput) (*schemas.Material, *exceptions.Exception)
 
-	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID) *exceptions.Exception
-	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID) *exceptions.Exception
-	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID) *exceptions.Exception
-	SoftDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID) *exceptions.Exception
-	HardDeleteOneById(id uuid.UUID, userId uuid.UUID) *exceptions.Exception
-	HardDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID) *exceptions.Exception
+	RestoreSoftDeletedOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID) *exceptions.Exception
+	RestoreSoftDeletedManyByIds(db *gorm.DB, ids []uuid.UUID, userId uuid.UUID) *exceptions.Exception
+	SoftDeleteOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID) *exceptions.Exception
+	SoftDeleteManyByIds(db *gorm.DB, ids []uuid.UUID, userId uuid.UUID) *exceptions.Exception
+	HardDeleteOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID) *exceptions.Exception
+	HardDeleteManyByIds(db *gorm.DB, ids []uuid.UUID, userId uuid.UUID) *exceptions.Exception
 }
 
-type MaterialRepository struct {
-	db *gorm.DB
-}
+type MaterialRepository struct{}
 
-func NewMaterialRepository(db *gorm.DB) MaterialRepositoryInterface {
-	if db == nil {
-		db = models.NotezyDB
-	}
-	return &MaterialRepository{db: db}
+func NewMaterialRepository() MaterialRepositoryInterface {
+	return &MaterialRepository{}
 }
 
 /* ============================== CRUD operations ============================== */
 
 func (r *MaterialRepository) HasPermission(
+	db *gorm.DB,
 	id uuid.UUID,
 	userId uuid.UUID,
 	allowedPermissions []enums.AccessControlPermission,
 	onlyDeleted types.Ternary,
 ) bool {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
 	var count int64 = 0
 
-	db := r.db.Model(&schemas.Material{}).
+	query := db.Model(&schemas.Material{}).
 		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"MaterialTable\".parent_sub_shelf_id = ss.id").
 		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
 		Where("\"MaterialTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?",
@@ -65,12 +65,12 @@ func (r *MaterialRepository) HasPermission(
 
 	switch onlyDeleted {
 	case types.Ternary_Positive:
-		db = db.Where("\"MaterialTable\".deleted_at IS NOT NULL")
+		query = query.Where("\"MaterialTable\".deleted_at IS NOT NULL")
 	case types.Ternary_Negative:
-		db = db.Where("\"MaterialTable\".deleted_at IS NULL")
+		query = query.Where("\"MaterialTable\".deleted_at IS NULL")
 	}
 
-	result := db.Count(&count)
+	result := query.Count(&count)
 	if err := result.Error; err != nil || count == 0 {
 		return false
 	}
@@ -79,14 +79,19 @@ func (r *MaterialRepository) HasPermission(
 }
 
 func (r *MaterialRepository) HasPermissions(
+	db *gorm.DB,
 	ids []uuid.UUID,
 	userId uuid.UUID,
 	allowedPermissions []enums.AccessControlPermission,
 	onlyDeleted types.Ternary,
 ) bool {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
 	var count int64 = 0
 
-	db := r.db.Model(&schemas.Material{}).
+	query := db.Model(&schemas.Material{}).
 		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"MaterialTable\".parent_sub_shelf_id = ss.id").
 		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
 		Where("\"MaterialTable\".id IN ? AND uts.user_id = ? AND uts.permission IN ?",
@@ -95,12 +100,12 @@ func (r *MaterialRepository) HasPermissions(
 
 	switch onlyDeleted {
 	case types.Ternary_Positive:
-		db = db.Where("\"MaterialTable\".deleted_at IS NOT NULL")
+		query = query.Where("\"MaterialTable\".deleted_at IS NOT NULL")
 	case types.Ternary_Negative:
-		db = db.Where("\"MaterialTable\".deleted_at IS NULL")
+		query = query.Where("\"MaterialTable\".deleted_at IS NULL")
 	}
 
-	result := db.Count(&count)
+	result := query.Count(&count)
 	if err := result.Error; err != nil || count == 0 {
 		return false
 	}
@@ -109,15 +114,20 @@ func (r *MaterialRepository) HasPermissions(
 }
 
 func (r *MaterialRepository) CheckPermissionAndGetOneById(
+	db *gorm.DB,
 	id uuid.UUID,
 	userId uuid.UUID,
 	preloads []schemas.MaterialRelation,
 	allowedPermissions []enums.AccessControlPermission,
 	onlyDeleted types.Ternary,
 ) (*schemas.Material, *exceptions.Exception) {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
 	material := schemas.Material{}
 
-	db := r.db.Model(&schemas.Material{}).
+	query := db.Model(&schemas.Material{}).
 		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"MaterialTable\".parent_sub_shelf_id = ss.id").
 		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
 		Where("\"MaterialTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?",
@@ -126,20 +136,20 @@ func (r *MaterialRepository) CheckPermissionAndGetOneById(
 
 	switch onlyDeleted {
 	case types.Ternary_Positive:
-		db = db.Where("\"MaterialTable\".deleted_at IS NOT NULL")
+		query = query.Where("\"MaterialTable\".deleted_at IS NOT NULL")
 	case types.Ternary_Neutral:
 		break
 	case types.Ternary_Negative:
-		db = db.Where("\"MaterialTable\".deleted_at IS NULL")
+		query = query.Where("\"MaterialTable\".deleted_at IS NULL")
 	}
 
 	if len(preloads) > 0 {
 		for _, preload := range preloads {
-			db = db.Preload(string(preload))
+			query = query.Preload(string(preload))
 		}
 	}
 
-	result := db.First(&material)
+	result := query.First(&material)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Material.NotFound().WithError(err)
 	}
@@ -148,15 +158,20 @@ func (r *MaterialRepository) CheckPermissionAndGetOneById(
 }
 
 func (r *MaterialRepository) CheckPermissionsAndGetManyByIds(
+	db *gorm.DB,
 	ids []uuid.UUID,
 	userId uuid.UUID,
 	preloads []schemas.MaterialRelation,
 	allowedPermissions []enums.AccessControlPermission,
 	onlyDeleted types.Ternary,
 ) ([]schemas.Material, *exceptions.Exception) {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
 	materials := []schemas.Material{}
 
-	db := r.db.Model(&schemas.Material{}).
+	query := db.Model(&schemas.Material{}).
 		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"MaterialTable\".parent_sub_shelf_id = ss.id").
 		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
 		Where("\"MaterialTable\".id IN ? AND uts.user_id = ? AND uts.permission IN ?",
@@ -165,20 +180,20 @@ func (r *MaterialRepository) CheckPermissionsAndGetManyByIds(
 
 	switch onlyDeleted {
 	case types.Ternary_Positive:
-		db = db.Where("\"MaterialTable\".deleted_at IS NOT NULL")
+		query = query.Where("\"MaterialTable\".deleted_at IS NOT NULL")
 	case types.Ternary_Neutral:
 		break
 	case types.Ternary_Negative:
-		db = db.Where("\"MaterialTable\".deleted_at IS NULL")
+		query = query.Where("\"MaterialTable\".deleted_at IS NULL")
 	}
 
 	if len(preloads) > 0 {
 		for _, preload := range preloads {
-			db = db.Preload(string(preload))
+			query = query.Preload(string(preload))
 		}
 	}
 
-	result := db.Find(&materials)
+	result := query.Find(&materials)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Material.NotFound().WithError(err)
 	}
@@ -190,31 +205,49 @@ func (r *MaterialRepository) CheckPermissionsAndGetManyByIds(
 }
 
 func (r *MaterialRepository) GetOneById(
+	db *gorm.DB,
 	id uuid.UUID,
 	userId uuid.UUID,
 ) (*schemas.Material, *exceptions.Exception) {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Read,
 		enums.AccessControlPermission_Write,
 		enums.AccessControlPermission_Admin,
 	}
 
-	return r.CheckPermissionAndGetOneById(id, userId, nil, allowedPermissions, types.Ternary_Negative)
+	return r.CheckPermissionAndGetOneById(
+		db,
+		id,
+		userId,
+		nil,
+		allowedPermissions,
+		types.Ternary_Negative,
+	)
 }
 
 func (r *MaterialRepository) CreateOne(
+	db *gorm.DB,
 	subShelfId uuid.UUID,
 	userId uuid.UUID,
 	input inputs.CreateMaterialInput,
 ) (*uuid.UUID, *exceptions.Exception) {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Write,
 		enums.AccessControlPermission_Admin,
 	}
 
-	subShelfRepository := NewSubShelfRepository(r.db)
+	subShelfRepository := NewSubShelfRepository()
 
 	if hasPermission := subShelfRepository.HasPermission(
+		db,
 		subShelfId,
 		userId,
 		allowedPermissions,
@@ -228,7 +261,7 @@ func (r *MaterialRepository) CreateOne(
 		return nil, exceptions.Theme.FailedToCreate().WithError(err)
 	}
 
-	result := r.db.Model(&schemas.Material{}).
+	result := db.Model(&schemas.Material{}).
 		Create(&newMaterial)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Material.FailedToCreate().WithError(err)
@@ -238,11 +271,16 @@ func (r *MaterialRepository) CreateOne(
 }
 
 func (r *MaterialRepository) UpdateOneById(
+	db *gorm.DB,
 	id uuid.UUID,
 	userId uuid.UUID,
 	matchedMaterialType *enums.MaterialType,
 	input inputs.PartialUpdateMaterialInput,
 ) (*schemas.Material, *exceptions.Exception) {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Write,
 		enums.AccessControlPermission_Admin,
@@ -250,6 +288,7 @@ func (r *MaterialRepository) UpdateOneById(
 
 	// get and check the permission of the current user to the source shelf
 	existingMaterial, exception := r.CheckPermissionAndGetOneById(
+		db,
 		id,
 		userId,
 		nil,
@@ -271,9 +310,10 @@ func (r *MaterialRepository) UpdateOneById(
 
 	// if the root shelf id is required to be updated in the database
 	if input.Values.ParentSubShelfId != nil && (input.SetNull == nil || !(*input.SetNull)["ParentSubShelfId"]) {
-		subShelfRepository := NewSubShelfRepository(r.db)
+		subShelfRepository := NewSubShelfRepository()
 		// check if the user has the enough permission to the destination shelf
 		if hasPermissionOfNewSubShelf := subShelfRepository.HasPermission(
+			db,
 			*input.Values.ParentSubShelfId,
 			userId,
 			allowedPermissions,
@@ -292,7 +332,7 @@ func (r *MaterialRepository) UpdateOneById(
 		)
 	}
 
-	result := r.db.Model(&schemas.Material{}).
+	result := db.Model(&schemas.Material{}).
 		Where("id = ? AND deleted_at IS NULL", id). // no need to check the permission here, since we have done that part on the above
 		Select("*").
 		Updates(&updates)
@@ -307,14 +347,20 @@ func (r *MaterialRepository) UpdateOneById(
 }
 
 func (r *MaterialRepository) RestoreSoftDeletedOneById(
+	db *gorm.DB,
 	id uuid.UUID,
 	userId uuid.UUID,
 ) *exceptions.Exception {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Admin,
 	}
 
 	if hasPermission := r.HasPermission(
+		db,
 		id,
 		userId,
 		allowedPermissions,
@@ -323,7 +369,7 @@ func (r *MaterialRepository) RestoreSoftDeletedOneById(
 		return exceptions.Material.NoPermission("restore")
 	}
 
-	result := r.db.Model(&schemas.Material{}).
+	result := db.Model(&schemas.Material{}).
 		Where("id = ? AND deleted_at IS NOT NULL", id).
 		Select("deleted_at").
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
@@ -338,14 +384,20 @@ func (r *MaterialRepository) RestoreSoftDeletedOneById(
 }
 
 func (r *MaterialRepository) RestoreSoftDeletedManyByIds(
+	db *gorm.DB,
 	ids []uuid.UUID,
 	userId uuid.UUID,
 ) *exceptions.Exception {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Admin,
 	}
 
 	if hasPermission := r.HasPermissions(
+		db,
 		ids,
 		userId,
 		allowedPermissions,
@@ -354,7 +406,7 @@ func (r *MaterialRepository) RestoreSoftDeletedManyByIds(
 		return exceptions.Material.NoPermission("restore")
 	}
 
-	result := r.db.Model(&schemas.Material{}).
+	result := db.Model(&schemas.Material{}).
 		Where("id IN ? AND deleted_at IS NOT NULL", ids).
 		Select("deleted_at").
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
@@ -369,14 +421,20 @@ func (r *MaterialRepository) RestoreSoftDeletedManyByIds(
 }
 
 func (r *MaterialRepository) SoftDeleteOneById(
+	db *gorm.DB,
 	id uuid.UUID,
 	userId uuid.UUID,
 ) *exceptions.Exception {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Admin,
 	}
 
 	if hasPermission := r.HasPermission(
+		db,
 		id,
 		userId,
 		allowedPermissions,
@@ -385,7 +443,7 @@ func (r *MaterialRepository) SoftDeleteOneById(
 		return exceptions.Material.NoPermission("soft delete")
 	}
 
-	result := r.db.Model(&schemas.Material{}).
+	result := db.Model(&schemas.Material{}).
 		Where("id = ? AND deleted_at IS NULL", id).
 		Update("deleted_at", time.Now())
 	if err := result.Error; err != nil {
@@ -399,14 +457,20 @@ func (r *MaterialRepository) SoftDeleteOneById(
 }
 
 func (r *MaterialRepository) SoftDeleteManyByIds(
+	db *gorm.DB,
 	ids []uuid.UUID,
 	userId uuid.UUID,
 ) *exceptions.Exception {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Admin,
 	}
 
 	if hasPermission := r.HasPermissions(
+		db,
 		ids,
 		userId,
 		allowedPermissions,
@@ -415,7 +479,7 @@ func (r *MaterialRepository) SoftDeleteManyByIds(
 		return exceptions.Material.NoPermission("soft delete")
 	}
 
-	result := r.db.Model(&schemas.Material{}).
+	result := db.Model(&schemas.Material{}).
 		Where("id IN ? AND deleted_at IS NULL", ids).
 		Update("deleted_at", time.Now())
 	if err := result.Error; err != nil {
@@ -429,14 +493,20 @@ func (r *MaterialRepository) SoftDeleteManyByIds(
 }
 
 func (r *MaterialRepository) HardDeleteOneById(
+	db *gorm.DB,
 	id uuid.UUID,
 	userId uuid.UUID,
 ) *exceptions.Exception {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Admin,
 	}
 
 	if hasPermission := r.HasPermission(
+		db,
 		id,
 		userId,
 		allowedPermissions,
@@ -445,7 +515,7 @@ func (r *MaterialRepository) HardDeleteOneById(
 		return exceptions.Material.NoPermission("hard delete")
 	}
 
-	result := r.db.Model(&schemas.Material{}).
+	result := db.Model(&schemas.Material{}).
 		Where("id = ? AND deleted_at IS NOT NULL", id).
 		Delete(&schemas.Material{})
 	if err := result.Error; err != nil {
@@ -459,14 +529,20 @@ func (r *MaterialRepository) HardDeleteOneById(
 }
 
 func (r *MaterialRepository) HardDeleteManyByIds(
+	db *gorm.DB,
 	ids []uuid.UUID,
 	userId uuid.UUID,
 ) *exceptions.Exception {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Admin,
 	}
 
 	if hasPermission := r.HasPermissions(
+		db,
 		ids,
 		userId,
 		allowedPermissions,
@@ -475,7 +551,7 @@ func (r *MaterialRepository) HardDeleteManyByIds(
 		return exceptions.Material.NoPermission("hard delete")
 	}
 
-	result := r.db.Model(&schemas.Material{}).
+	result := db.Model(&schemas.Material{}).
 		Where("id IN ? AND deleted_at IS NOT NULL", ids).
 		Delete(&schemas.Material{})
 	if err := result.Error; err != nil {
