@@ -4,6 +4,7 @@ import (
 	interceptors "notezy-backend/app/interceptors"
 	middlewares "notezy-backend/app/middlewares"
 	modules "notezy-backend/app/modules"
+	"time"
 )
 
 func configureDevelopmentUserInfoRoutes() {
@@ -11,6 +12,7 @@ func configureDevelopmentUserInfoRoutes() {
 
 	userInfoRoutes := DevelopmentRouterGroup.Group("/userInfo")
 	userInfoRoutes.Use(
+		middlewares.TimeoutMiddleware(1*time.Second),
 		middlewares.AuthMiddleware(),
 		middlewares.AuthorizedRateLimitMiddleware(),
 		interceptors.RefreshAccessTokenInterceptor(),

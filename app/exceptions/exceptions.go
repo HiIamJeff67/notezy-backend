@@ -2,6 +2,7 @@ package exceptions
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"path/filepath"
@@ -152,6 +153,18 @@ func (e *Exception) GetGinH() *gin.H {
 	}
 }
 
+func (e *Exception) GetGinHBytes() ([]byte, error) {
+	return json.Marshal(e.GetGinH())
+}
+
+func (e *Exception) GetResponseJSONBytes() ([]byte, error) {
+	return json.Marshal(gin.H{
+		"success":   false,
+		"data":      nil,
+		"exception": e.GetGinH(),
+	})
+}
+
 func (e *Exception) ResponseWithJSON(ctx *gin.Context) {
 	ctx.JSON(e.HTTPStatusCode, gin.H{
 		"success":   false,
@@ -162,9 +175,20 @@ func (e *Exception) ResponseWithJSON(ctx *gin.Context) {
 
 func (e *Exception) SafelyResponseWithJSON(ctx *gin.Context) {
 	if e.IsInternal {
-		e = e.InternalServerWentWrong(e)
+		e = InternalServerWentWrong(e)
 	}
 	ctx.JSON(e.HTTPStatusCode, gin.H{
+		"success":   false,
+		"data":      nil,
+		"exception": e.GetGinH(),
+	})
+}
+
+func (e *Exception) SafelyAbortAndResponseWithJSON(ctx *gin.Context) {
+	if e.IsInternal {
+		e = InternalServerWentWrong(e)
+	}
+	ctx.AbortWithStatusJSON(e.HTTPStatusCode, gin.H{
 		"success":   false,
 		"data":      nil,
 		"exception": e.GetGinH(),
@@ -344,7 +368,7 @@ func NotImplemented(optionalMessage ...string) *Exception {
 	}
 }
 
-func (e *Exception) InternalServerWentWrong(originalException *Exception, optionalMessage ...string) *Exception {
+func InternalServerWentWrong(originalException *Exception, optionalMessage ...string) *Exception {
 	message := "Something went wrong"
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
@@ -354,7 +378,7 @@ func (e *Exception) InternalServerWentWrong(originalException *Exception, option
 		Code:           99900003,
 		Prefix:         "General",
 		Reason:         "InternalServerWentWrong",
-		IsInternal:     true,
+		IsInternal:     originalException != nil && originalException.IsInternal,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
@@ -371,6 +395,23 @@ func (e *Exception) InternalServerWentWrong(originalException *Exception, option
 	}
 
 	return exception
+}
+
+func Timeout(time time.Duration, optionalMessage ...string) *Exception {
+	message := fmt.Sprintf("Timeout in %v", time)
+	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
+		message = optionalMessage[0]
+	}
+
+	return &Exception{
+		Code:           99900004,
+		Prefix:         "General",
+		Reason:         "Timeout",
+		IsInternal:     false,
+		Message:        message,
+		HTTPStatusCode: http.StatusRequestTimeout,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
 }
 
 /* ============================== Database Exception Domain Definition ============================== */
@@ -482,23 +523,6 @@ func (d *DatabaseExceptionDomain) FailedToCommitTransaction(optionalMessage ...s
 type APIExceptionDomain struct {
 	_BaseCode ExceptionCode
 	_Prefix   ExceptionPrefix
-}
-
-func (d *APIExceptionDomain) Timeout(time time.Duration, optionalMessage ...string) *Exception {
-	message := fmt.Sprintf("Timeout in %s with %v", string(d._Prefix), time)
-	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
-		message = optionalMessage[0]
-	}
-
-	return &Exception{
-		Code:           d._BaseCode + 11,
-		Prefix:         d._Prefix,
-		Reason:         "Timeout",
-		IsInternal:     false,
-		Message:        message,
-		HTTPStatusCode: http.StatusRequestTimeout,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
-	}
 }
 
 /* ============================== GraphQL Exception Domain Definition ============================== */

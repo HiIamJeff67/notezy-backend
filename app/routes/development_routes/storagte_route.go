@@ -2,15 +2,20 @@ package developmentroutes
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
 	logs "notezy-backend/app/logs"
+	middlewares "notezy-backend/app/middlewares"
 	storages "notezy-backend/app/storages"
 )
 
 func configureStorageRoutes() {
 	storageRoute := DevelopmentRouterGroup.Group("/storage")
+	storageRoute.Use(
+		middlewares.TimeoutMiddleware(5 * time.Second),
+	)
 	{
 		// only on test environment
 		storageRoute.GET(

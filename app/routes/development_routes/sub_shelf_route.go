@@ -1,6 +1,8 @@
 package developmentroutes
 
 import (
+	"time"
+
 	interceptors "notezy-backend/app/interceptors"
 	middlewares "notezy-backend/app/middlewares"
 	modules "notezy-backend/app/modules"
@@ -11,6 +13,7 @@ func configureDevelopmentSubShelfRoutes() {
 
 	subShelfRoutes := DevelopmentRouterGroup.Group("/subShelf")
 	subShelfRoutes.Use(
+		middlewares.TimeoutMiddleware(1*time.Second),
 		middlewares.AuthMiddleware(),
 		// middlewares.UserRoleMiddleware(enums.UserRole_Normal),
 		middlewares.AuthorizedRateLimitMiddleware(),

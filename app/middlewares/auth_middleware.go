@@ -139,7 +139,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		// if we can't check the userAgent in accessToken, then we check it in our database
 		if currentUserAgent := ctx.GetHeader("User-Agent"); currentUserAgent != _user.UserAgent {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exceptions.Auth.WrongUserAgent().Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 

@@ -1,6 +1,8 @@
 package developmentroutes
 
 import (
+	"time"
+
 	interceptors "notezy-backend/app/interceptors"
 	middlewares "notezy-backend/app/middlewares"
 	enums "notezy-backend/app/models/schemas/enums"
@@ -11,6 +13,9 @@ func configureDevelopmentAuthRoutes() {
 	authModule := modules.NewAuthModule()
 
 	authRoutes := DevelopmentRouterGroup.Group("/auth")
+	authRoutes.Use(
+		middlewares.TimeoutMiddleware(3 * time.Second),
+	)
 	{
 		authRoutes.POST(
 			"/register",

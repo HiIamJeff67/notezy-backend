@@ -1,6 +1,8 @@
 package developmentroutes
 
 import (
+	"time"
+
 	adapters "notezy-backend/app/adapters"
 	interceptors "notezy-backend/app/interceptors"
 	middlewares "notezy-backend/app/middlewares"
@@ -12,6 +14,7 @@ func configureDevelopmentMaterialRoutes() {
 
 	materialRoutes := DevelopmentRouterGroup.Group("/material")
 	materialRoutes.Use(
+		middlewares.TimeoutMiddleware(3*time.Second),
 		middlewares.AuthMiddleware(),
 		// middlewares.UserRoleMiddleware(enums.UserRole_Normal),
 		middlewares.AuthorizedRateLimitMiddleware(),
