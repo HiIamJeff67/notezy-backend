@@ -15,15 +15,20 @@ const (
 )
 
 type CacheExceptionSubDomain struct {
-	BaseCode           ExceptionCode
-	Prefix             ExceptionPrefix
-	APIExceptionDomain APIExceptionDomain
+	BaseCode            ExceptionCode
+	Prefix              ExceptionPrefix
+	APIExceptionDomain  APIExceptionDomain
+	FileExceptionDomain FileExceptionDomain
 }
 
 var Cache = &CacheExceptionSubDomain{
 	BaseCode: ExceptionBaseCode_Cache,
 	Prefix:   ExceptionPrefix_Cache,
 	APIExceptionDomain: APIExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_Cache,
+		_Prefix:   ExceptionPrefix_Cache,
+	},
+	FileExceptionDomain: FileExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_Cache,
 		_Prefix:   ExceptionPrefix_Cache,
 	},
