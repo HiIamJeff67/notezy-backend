@@ -7,9 +7,9 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/go-redis/redis"
 	uuid "github.com/google/uuid"
 
+	redisfunctionlibraries "notezy-backend/app/caches/libraries"
 	exceptions "notezy-backend/app/exceptions"
 	logs "notezy-backend/app/logs"
 	types "notezy-backend/shared/types"
@@ -28,8 +28,10 @@ type SynchronizeRateLimitRecordCacheDto struct {
 }
 
 const (
-	_defaultRateLimitWindow = 1 * time.Minute
-	_jitterMaxOffset        = 5 * time.Second
+	_jitterMaxOffset = 5 * time.Second
+
+	batchSynchronizeFunctionArgvPerKey = 2
+	batchDeleteFunctionArgvPerKey      = 0
 )
 
 var (
@@ -60,7 +62,7 @@ func calculateExpirationTime(fingerprint string, windowStart time.Time, windowDu
 
 	baseExpirationTime := nextResetTime.Sub(now)
 	if baseExpirationTime < 0 {
-		return baseExpirationTime
+		return 1
 	}
 
 	h := fnv.New32a()
@@ -76,7 +78,10 @@ func calculateExpirationTime(fingerprint string, windowStart time.Time, windowDu
 
 /* ============================== CRUD Operations By Client IP ============================== */
 
-func GetRateLimitRecordCacheByFingerprint(fingerprint string, backendServerName types.BackendServerName) (*RateLimitRecordCache, *exceptions.Exception) {
+func GetRateLimitRecordCacheByFingerprint(
+	fingerprint string,
+	backendServerName types.BackendServerName,
+) (*RateLimitRecordCache, *exceptions.Exception) {
 	serverNumber, exist := BackendServerNameToRateLimitRedisIndex[backendServerName]
 	if !exist {
 		return nil, exceptions.Cache.BackendServerNameNotReferenced(types.ValidCachePurpose_RateLimite.String())
@@ -102,7 +107,11 @@ func GetRateLimitRecordCacheByFingerprint(fingerprint string, backendServerName 
 	return &rateLimitRecordCache, nil
 }
 
-func SetRateLimitRecordCacheByFingerprint(fingerprint string, backendServerName types.BackendServerName, rateLimitRecordCache RateLimitRecordCache) *exceptions.Exception {
+func SetRateLimitRecordCacheByFingerprint(
+	fingerprint string,
+	backendServerName types.BackendServerName,
+	rateLimitRecordCache RateLimitRecordCache,
+) *exceptions.Exception {
 	serverNumber, exist := BackendServerNameToRateLimitRedisIndex[backendServerName]
 	if !exist {
 		return exceptions.Cache.BackendServerNameNotReferenced(types.ValidCachePurpose_RateLimite.String())
@@ -133,7 +142,11 @@ func SetRateLimitRecordCacheByFingerprint(fingerprint string, backendServerName 
 	return nil
 }
 
-func UpdateSyncrhronizeRateLimitRecordCacheByFingerprint(fingerprint string, backendServerName types.BackendServerName, dto SynchronizeRateLimitRecordCacheDto) *exceptions.Exception {
+func UpdateSyncrhronizeRateLimitRecordCacheByFingerprint(
+	fingerprint string,
+	backendServerName types.BackendServerName,
+	dto SynchronizeRateLimitRecordCacheDto,
+) *exceptions.Exception {
 	// TODO: since we use get and set which means more than or equal to two operations in this single operation,
 	// 		 so we may need to use transaction to ensure the atomic
 
@@ -182,7 +195,10 @@ func UpdateSyncrhronizeRateLimitRecordCacheByFingerprint(fingerprint string, bac
 	return nil
 }
 
-func DeleteRateLimitRecordCacheByFingerprint(fingerprint string, backendServerName types.BackendServerName) *exceptions.Exception {
+func DeleteRateLimitRecordCacheByFingerprint(
+	fingerprint string,
+	backendServerName types.BackendServerName,
+) *exceptions.Exception {
 	serverNumber, exist := BackendServerNameToRateLimitRedisIndex[backendServerName]
 	if !exist {
 		return exceptions.Cache.BackendServerNameNotReferenced(types.ValidCachePurpose_RateLimite.String())
@@ -223,91 +239,23 @@ func BatchSynchronizeRateLimitRecordCachesByFingerprints(
 		return exceptions.Cache.RedisServerNumberNotFound()
 	}
 
-	updateMap := make(map[string]struct {
-		Fingerprint    string
-		SynchronizeDto SynchronizeRateLimitRecordCacheDto
-	})
-	watchKeys := make([]string, 0)
+	keys := make([]interface{}, 0, len(dtos))
+	argv := make([]interface{}, 0, len(dtos)*batchSynchronizeFunctionArgvPerKey)
 	for _, dto := range dtos {
-		formattedKey := formatRateLimitKeyByFingerprint(dto.Fingerprint)
-		if _, exists := updateMap[formattedKey]; exists {
-			existing := updateMap[formattedKey]
-			existing.SynchronizeDto.NumOfChangingTokens += dto.SynchronizeDto.NumOfChangingTokens
-			updateMap[formattedKey] = existing
-		}
-		updateMap[formattedKey] = struct {
-			Fingerprint    string
-			SynchronizeDto SynchronizeRateLimitRecordCacheDto
-		}{
-			Fingerprint:    dto.Fingerprint,
-			SynchronizeDto: dto.SynchronizeDto,
-		}
-		watchKeys = append(watchKeys, formattedKey)
+		keys = append(keys, formatRateLimitKeyByFingerprint(dto.Fingerprint))
+		argv = append(argv,
+			dto.SynchronizeDto.NumOfChangingTokens,
+			dto.SynchronizeDto.IsAccumulated,
+		)
 	}
 
-	txf := func(tx *redis.Tx) error {
-		// first batch fetching the caches
-		pipe := tx.TxPipeline()
-
-		getCmds := make(map[string]*redis.StringCmd)
-		for formattedKey := range updateMap {
-			getCmds[formattedKey] = pipe.Get(formattedKey)
-		}
-
-		if _, err := pipe.Exec(); err != nil {
-			return err
-		}
-
-		// then using the caches fetched on the top and batch updating the caches
-		mutatePipe := tx.TxPipeline()
-
-		for formattedKey, val := range updateMap {
-			getCmd := getCmds[formattedKey]
-			cacheString, err := getCmd.Result()
-			if err != nil {
-				continue
-			}
-
-			var rateLimitRecordCache RateLimitRecordCache
-			if err := json.Unmarshal([]byte(cacheString), &rateLimitRecordCache); err != nil {
-				continue
-			}
-
-			if (!val.SynchronizeDto.IsAccumulated && rateLimitRecordCache.NumOfTokens < val.SynchronizeDto.NumOfChangingTokens) || rateLimitRecordCache.NumOfTokens < 0 {
-				continue
-			}
-
-			if val.SynchronizeDto.IsAccumulated {
-				rateLimitRecordCache.NumOfTokens += val.SynchronizeDto.NumOfChangingTokens
-			} else {
-				rateLimitRecordCache.NumOfTokens -= val.SynchronizeDto.NumOfChangingTokens
-			}
-
-			rateLimitRecordCache.UpdatedAt = time.Now()
-
-			rateLimitJson, err := json.Marshal(rateLimitRecordCache)
-			if err != nil {
-				continue
-			}
-
-			newExpirationTime := calculateExpirationTime(
-				val.Fingerprint,
-				rateLimitRecordCache.WindowStartTime,
-				rateLimitRecordCache.WindowDuration,
-			)
-
-			mutatePipe.Set(formattedKey, string(rateLimitJson), newExpirationTime)
-		}
-
-		if _, err := mutatePipe.Exec(); err != nil {
-			return err
-		}
-
-		return nil
-	}
-
-	err := redisClient.Watch(txf, watchKeys...)
-	if err != nil {
+	arguments := make([]interface{}, 0)
+	arguments = append(arguments, "FCALL")
+	arguments = append(arguments, redisfunctionlibraries.BatchSynchronizeRateLimitRecordByFormattedKeysFunction)
+	arguments = append(arguments, len(dtos))
+	arguments = append(arguments, keys...)
+	arguments = append(arguments, argv...)
+	if _, err := redisClient.Do(arguments...).Result(); err != nil {
 		return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_RateLimite.String()).WithError(err)
 	}
 
@@ -315,8 +263,8 @@ func BatchSynchronizeRateLimitRecordCachesByFingerprints(
 	return nil
 }
 
-func BatchDeleteRateLimiteCachesByFingerprints(Fingerprints []string, backendServerName types.BackendServerName) *exceptions.Exception {
-	if len(Fingerprints) == 0 {
+func BatchDeleteRateLimiteCachesByFingerprints(fingerprints []string, backendServerName types.BackendServerName) *exceptions.Exception {
+	if len(fingerprints) == 0 {
 		return nil
 	}
 
@@ -330,29 +278,17 @@ func BatchDeleteRateLimiteCachesByFingerprints(Fingerprints []string, backendSer
 		return exceptions.Cache.RedisServerNumberNotFound()
 	}
 
-	txf := func(tx *redis.Tx) error {
-		formattedKeys := make([]string, len(Fingerprints))
-		seen := make(map[string]bool)
-		for _, fingerprint := range Fingerprints {
-			if seen[fingerprint] {
-				continue
-			}
-			seen[fingerprint] = true
-			formattedKey := formatRateLimitKeyByFingerprint(fingerprint)
-			formattedKeys = append(formattedKeys, formattedKey)
-		}
-
-		pipe := tx.TxPipeline()
-		pipe.Del(formattedKeys...).Result()
-		if _, err := pipe.Exec(); err != nil {
-			return err
-		}
-
-		return nil
+	keys := make([]interface{}, 0, len(fingerprints))
+	for _, fingerprint := range fingerprints {
+		keys = append(keys, formatRateLimitKeyByFingerprint(fingerprint))
 	}
 
-	err := redisClient.Watch(txf)
-	if err != nil {
+	arguments := make([]interface{}, 0)
+	arguments = append(arguments, "FCALL")
+	arguments = append(arguments, redisfunctionlibraries.BatchDeleteRateLimitRecordByFormattedKeysFunction)
+	arguments = append(arguments, len(fingerprints))
+	arguments = append(arguments, keys...)
+	if _, err := redisClient.Do(arguments...).Result(); err != nil {
 		return exceptions.Cache.FailedToDelete(types.ValidCachePurpose_RateLimite.String()).WithError(err)
 	}
 
@@ -509,110 +445,24 @@ func BatchSynchronizeRateLimitRecordCachesByUserIds(
 		return exceptions.Cache.RedisServerNumberNotFound()
 	}
 
-	updateMap := make(map[string]struct {
-		UserId         uuid.UUID
-		SynchronizeDto SynchronizeRateLimitRecordCacheDto
-	})
-	watchKeys := make([]string, 0)
+	keys := make([]interface{}, 0, len(dtos))
+	argv := make([]interface{}, 0, len(dtos)*batchSynchronizeFunctionArgvPerKey)
+
 	for _, dto := range dtos {
-		formattedKey := formateRateLimitKeyByUserId(dto.UserId)
-		updateMap[formattedKey] = struct {
-			UserId         uuid.UUID
-			SynchronizeDto SynchronizeRateLimitRecordCacheDto
-		}{
-			UserId:         dto.UserId,
-			SynchronizeDto: dto.SynchronizeDto,
-		}
-		watchKeys = append(watchKeys, formattedKey)
+		keys = append(keys, formateRateLimitKeyByUserId(dto.UserId))
+		argv = append(argv,
+			dto.SynchronizeDto.NumOfChangingTokens,
+			dto.SynchronizeDto.IsAccumulated,
+		)
 	}
 
-	txf := func(tx *redis.Tx) error {
-		// first batch fetching the caches
-		pipe := tx.TxPipeline()
-
-		getCmds := make(map[string]*redis.StringCmd)
-		for formattedKey := range updateMap {
-			getCmds[formattedKey] = pipe.Get(formattedKey)
-		}
-
-		pipe.Exec() // ignore if there's any error of getting the caches of the request
-
-		// then using the caches fetched on the top and batch updating the caches
-		mutatePipe := tx.TxPipeline()
-
-		for formattedKey, val := range updateMap {
-			getCmd := getCmds[formattedKey]
-			cacheString, err := getCmd.Result()
-			if err != nil {
-				if err == redis.Nil { // if the key does not exist
-					logs.FDebug("Key not found, creating new record for user: %s", val.UserId.String())
-					newCache := RateLimitRecordCache{
-						NumOfTokens:     val.SynchronizeDto.NumOfChangingTokens,
-						WindowStartTime: time.Now(),
-						WindowDuration:  _defaultRateLimitWindow,
-						UpdatedAt:       time.Now(),
-					}
-
-					rateLimitJson, marshalErr := json.Marshal(newCache)
-					if marshalErr != nil {
-						logs.FError("Failed to marshal new cache: %v", marshalErr)
-						continue
-					}
-
-					newExpirationTime := calculateExpirationTime(
-						val.UserId.String(),
-						newCache.WindowStartTime,
-						newCache.WindowDuration,
-					)
-
-					mutatePipe.Set(formattedKey, string(rateLimitJson), newExpirationTime)
-					continue
-				} else {
-					logs.FError("Failed to get cache for key %s: %v", formattedKey, err)
-					continue
-				}
-			}
-
-			var rateLimitRecordCache RateLimitRecordCache
-			if err := json.Unmarshal([]byte(cacheString), &rateLimitRecordCache); err != nil {
-				continue
-			}
-
-			if (!val.SynchronizeDto.IsAccumulated && rateLimitRecordCache.NumOfTokens < val.SynchronizeDto.NumOfChangingTokens) || rateLimitRecordCache.NumOfTokens < 0 {
-				continue
-			}
-
-			if val.SynchronizeDto.IsAccumulated {
-				rateLimitRecordCache.NumOfTokens += val.SynchronizeDto.NumOfChangingTokens
-			} else {
-				rateLimitRecordCache.NumOfTokens -= val.SynchronizeDto.NumOfChangingTokens
-			}
-
-			rateLimitRecordCache.UpdatedAt = time.Now()
-
-			rateLimitJson, err := json.Marshal(rateLimitRecordCache)
-			if err != nil {
-				continue
-			}
-
-			newExpirationTime := calculateExpirationTime(
-				val.UserId.String(),
-				rateLimitRecordCache.WindowStartTime,
-				rateLimitRecordCache.WindowDuration,
-			)
-
-			mutatePipe.Set(formattedKey, string(rateLimitJson), newExpirationTime)
-		}
-
-		if _, err := mutatePipe.Exec(); err != nil {
-			return err
-		}
-
-		return nil
-	}
-
-	err := redisClient.Watch(txf, watchKeys...)
-	if err != nil {
+	arguments := make([]interface{}, 0)
+	arguments = append(arguments, "FCALL")
+	arguments = append(arguments, redisfunctionlibraries.BatchSynchronizeRateLimitRecordByFormattedKeysFunction)
+	arguments = append(arguments, len(keys))
+	arguments = append(arguments, keys...)
+	arguments = append(arguments, argv...)
+	if _, err := redisClient.Do(arguments...).Result(); err != nil {
 		return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_RateLimite.String()).WithError(err)
 	}
 
@@ -637,29 +487,17 @@ func BatchDeleteRateLimiteCachesByUserIds(userIds []uuid.UUID, backendServerName
 		return nil
 	}
 
-	txf := func(tx *redis.Tx) error {
-		formattedKeys := make([]string, len(userIds))
-		seen := make(map[uuid.UUID]bool)
-		for _, id := range userIds {
-			if seen[id] {
-				continue
-			}
-			seen[id] = true
-			formattedKey := formateRateLimitKeyByUserId(id)
-			formattedKeys = append(formattedKeys, formattedKey)
-		}
-
-		pipe := tx.TxPipeline()
-		pipe.Del(formattedKeys...).Result()
-		if _, err := pipe.Exec(); err != nil {
-			return err
-		}
-
-		return nil
+	keys := make([]interface{}, 0, len(userIds))
+	for _, userId := range userIds {
+		keys = append(keys, formateRateLimitKeyByUserId(userId))
 	}
 
-	err := redisClient.Watch(txf)
-	if err != nil {
+	arguments := make([]interface{}, 0)
+	arguments = append(arguments, "FCALL")
+	arguments = append(arguments, redisfunctionlibraries.BatchDeleteRateLimitRecordByFormattedKeysFunction)
+	arguments = append(arguments, len(userIds))
+	arguments = append(arguments, keys...)
+	if _, err := redisClient.Do(arguments...).Result(); err != nil {
 		return exceptions.Cache.FailedToDelete(types.ValidCachePurpose_RateLimite.String()).WithError(err)
 	}
 

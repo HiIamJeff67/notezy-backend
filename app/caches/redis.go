@@ -49,7 +49,7 @@ func ConnectToRedis(config CacheManagerConfig) *redis.Client {
 	})
 
 	if _, err := redisClient.Ping().Result(); err != nil {
-		exceptions.Cache.FailedToConnectToServer(config.DB).WithError(err).Log().Panic()
+		exceptions.Cache.FailedToConnectToServer(&config.DB).WithError(err).Log().Panic()
 	}
 
 	redisMapMutex.Lock()
@@ -76,7 +76,7 @@ func DisconnectToRedis(redisClient *redis.Client) bool {
 	}
 
 	if err := redisClient.Close(); err != nil {
-		exceptions.Cache.FailedToDisconnectToServer(config.DB).WithError(err).Log()
+		exceptions.Cache.FailedToDisconnectToServer(&config.DB).WithError(err).Log()
 		return false // since the server is just going to stop anyway, we don't need to panic here
 	}
 

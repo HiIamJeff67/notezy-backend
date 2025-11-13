@@ -19,18 +19,25 @@ var rootCommand = &cobra.Command{
 	},
 }
 
+func AddCommands(rootCommand *cobra.Command, addedCommands []*cobra.Command) {
+	for _, command := range addedCommands {
+		rootCommand.AddCommand(command)
+	}
+}
+
 // the Execute() function is the start point of cobra
 func Execute() {
-	/* register the view all available databases command */
-	rootCommand.AddCommand(viewAllAvailableDatabasesCommand)
-
-	/* register the migrate database command */
-	rootCommand.AddCommand(migrateDatabaseCommand)
-
-	/* register the truncate database table command and its flags */
-	truncateDatabaseCommand.Flags().String("database", "", "The name of the database to truncate the table inside it")
-	truncateDatabaseCommand.Flags().String("table", "", "The name of the table to truncate")
-	rootCommand.AddCommand(truncateDatabaseCommand)
+	// prepare the flags of database commands
+	PrepareDatabaseCommandsFlags()
+	// add the commands of database
+	AddCommands(
+		rootCommand,
+		[]*cobra.Command{
+			viewAllAvailableDatabasesCommand,
+			migrateDatabaseCommand,
+			truncateDatabaseCommand,
+		},
+	)
 
 	if err := rootCommand.Execute(); err != nil {
 		logs.FError("Failed to init the CLI: %s", err)

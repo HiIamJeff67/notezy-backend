@@ -3,7 +3,6 @@ package commands
 import (
 	"github.com/spf13/cobra"
 
-	app "notezy-backend/app"
 	logs "notezy-backend/app/logs"
 	models "notezy-backend/app/models"
 	types "notezy-backend/shared/types"
@@ -28,7 +27,15 @@ var migrateDatabaseCommand = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		db := models.ConnectToDatabase(models.PostgresDatabaseConfig)
 		logs.FInfo("Start the process of migrating database schema to %v.", models.PostgresDatabaseConfig.DBName)
-		app.MigrateDatabaseSchemas(db)
+		if !models.MigrateEnumsToDatabase(db) {
+			return
+		}
+		if !models.MigrateTablesToDatabase(db) {
+			return
+		}
+		if !models.MigrateTriggersToDatabase(db) {
+			return
+		}
 		models.DisconnectToDatabase(db)
 	},
 }
@@ -63,6 +70,16 @@ var truncateDatabaseCommand = &cobra.Command{
 		}
 
 		logs.FInfo("Start the process of truncating database table: %s.", tableNameStr)
-		app.TrancateDatabaseTable(validTableName, db)
+		models.NotezyDB = models.ConnectToDatabase(models.DatabaseInstanceToConfig[db])
+		models.TruncateTablesInDatabase(validTableName, db)
+		models.DisconnectToDatabase(models.NotezyDB)
 	},
+}
+
+/* ============================== Parepare Flags Helper Function ============================== */
+
+func PrepareDatabaseCommandsFlags() {
+	/* register the flags of truncating database table command */
+	truncateDatabaseCommand.Flags().String("database", "", "The name of the database to truncate the table inside it")
+	truncateDatabaseCommand.Flags().String("table", "", "The name of the table to truncate")
 }

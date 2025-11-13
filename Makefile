@@ -19,7 +19,6 @@ clear-go-cache:
 test-auth-e2e:
 	docker-compose run --rm notezy-api go test ./test/e2e/auth
 
-
 # ============================== GraphQL Shortcut Commands ============================== #
 gql-generate: # update before generate
 	go get github.com/99designs/gqlgen@v0.17.76

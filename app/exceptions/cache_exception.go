@@ -122,25 +122,33 @@ func (d *CacheExceptionSubDomain) BackendServerNameNotReferenced(cachePurpose st
 	}
 }
 
-func (d *CacheExceptionSubDomain) FailedToConnectToServer(serverNumber int) *Exception {
+func (d *CacheExceptionSubDomain) FailedToConnectToServer(serverNumber *int) *Exception {
+	errorMessage := "Error on connecting to all the redis client server"
+	if serverNumber != nil {
+		errorMessage = fmt.Sprintf("Error on connecting to the redis client server of %d", *serverNumber)
+	}
 	return &Exception{
 		Code:           d.BaseCode + 13,
 		Prefix:         d.Prefix,
 		Reason:         "FailedToConnectToServer",
 		IsInternal:     true,
-		Message:        fmt.Sprintf("Error on connecting to the redis client server of %v", serverNumber),
-		HTTPStatusCode: http.StatusBadGateway,
+		Message:        errorMessage,
+		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
-func (d *CacheExceptionSubDomain) FailedToDisconnectToServer(serverNumber int) *Exception {
+func (d *CacheExceptionSubDomain) FailedToDisconnectToServer(serverNumber *int) *Exception {
+	errorMessage := "Error on disconnecting to all the redis client server"
+	if serverNumber != nil {
+		errorMessage = fmt.Sprintf("Error on disconnecting to the redis client server of %d", *serverNumber)
+	}
 	return &Exception{
 		Code:           d.BaseCode + 14,
 		Reason:         "FailedToDisconnectToServer",
 		Prefix:         d.Prefix,
-		Message:        fmt.Sprintf("Error on disconnecting to the redis client server of %v", serverNumber),
-		HTTPStatusCode: http.StatusBadGateway,
+		Message:        errorMessage,
+		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
@@ -152,7 +160,7 @@ func (d *CacheExceptionSubDomain) ClientInstanceDoesNotExist() *Exception {
 		Reason:         "ClientInstanceDoesNotExist",
 		IsInternal:     true,
 		Message:        "The client instance does not exist, maybe the authentication is expired",
-		HTTPStatusCode: http.StatusBadGateway,
+		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
@@ -164,7 +172,19 @@ func (d *CacheExceptionSubDomain) ClientConfigDoesNotExist() *Exception {
 		Reason:         "ClientConfigDoesNotExist",
 		IsInternal:     true,
 		Message:        "The config of the client instance does not exist",
-		HTTPStatusCode: http.StatusBadGateway,
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *CacheExceptionSubDomain) FailedToLoadRedisFunctions() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 17,
+		Prefix:         d.Prefix,
+		Reason:         "FailedToLoadRedisFunctions",
+		IsInternal:     true,
+		Message:        "Error on loading and initializing the redis functions",
+		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
@@ -190,7 +210,7 @@ func (d *CacheExceptionSubDomain) FailedToConvertStructToJson() *Exception {
 		Reason:         "FailedToConvertStructToJson",
 		IsInternal:     true,
 		Message:        "Failed to convert struct to json",
-		HTTPStatusCode: http.StatusForbidden,
+		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
@@ -202,7 +222,7 @@ func (d *CacheExceptionSubDomain) FailedToConvertJsonToStruct() *Exception {
 		Reason:         "FailedToConvertJsonToStruct",
 		IsInternal:     true,
 		Message:        "Failed to convert json to struct",
-		HTTPStatusCode: http.StatusForbidden,
+		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }

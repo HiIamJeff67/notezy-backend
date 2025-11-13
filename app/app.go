@@ -5,18 +5,17 @@ import (
 
 	"github.com/fvbock/endless"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 
 	caches "notezy-backend/app/caches"
 	models "notezy-backend/app/models"
 	developmentroutes "notezy-backend/app/routes/development_routes"
 	util "notezy-backend/app/util"
-	types "notezy-backend/shared/types"
 )
 
 func StartApplication() {
 	models.NotezyDB = models.ConnectToDatabase(models.PostgresDatabaseConfig)
 	caches.ConnectToAllRedis()
+	ReLoadRedisFunctions()
 
 	developmentroutes.DevelopmentRouter = gin.Default()
 	developmentroutes.ConfigureDevelopmentRoutes()
@@ -32,22 +31,11 @@ func StartApplication() {
 	caches.DisconnectToAllRedis()
 }
 
-func MigrateDatabaseSchemas(db *gorm.DB) {
-	// execute the below migrations in sequence
-
-	if !models.MigrateEnumsToDatabase(db) {
-		return
+func ReLoadRedisFunctions() {
+	if exception := caches.FlushRedisFunctionsLibraries(); exception != nil {
+		exception.Log()
 	}
-	if !models.MigrateTablesToDatabase(db) {
-		return
+	if exception := caches.ReloadRateLimitRecordRedisFunctionsLibraries(); exception != nil {
+		exception.Log()
 	}
-	if !models.MigrateTriggersToDatabase(db) {
-		return
-	}
-}
-
-func TrancateDatabaseTable(tableName types.ValidTableName, db *gorm.DB) {
-	models.NotezyDB = models.ConnectToDatabase(models.DatabaseInstanceToConfig[db])
-	models.TruncateTablesInDatabase(tableName, db)
-	models.DisconnectToDatabase(models.NotezyDB)
 }
