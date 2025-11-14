@@ -9,7 +9,7 @@ import (
 
 	uuid "github.com/google/uuid"
 
-	redisfunctionlibraries "notezy-backend/app/caches/libraries"
+	redislibraries "notezy-backend/app/caches/libraries"
 	exceptions "notezy-backend/app/exceptions"
 	logs "notezy-backend/app/logs"
 	types "notezy-backend/shared/types"
@@ -251,7 +251,7 @@ func BatchSynchronizeRateLimitRecordCachesByFingerprints(
 
 	arguments := make([]interface{}, 0)
 	arguments = append(arguments, "FCALL")
-	arguments = append(arguments, redisfunctionlibraries.BatchSynchronizeRateLimitRecordByFormattedKeysFunction)
+	arguments = append(arguments, redislibraries.BatchSynchronizeRateLimitRecordByFormattedKeysFunction)
 	arguments = append(arguments, len(dtos))
 	arguments = append(arguments, keys...)
 	arguments = append(arguments, argv...)
@@ -285,7 +285,7 @@ func BatchDeleteRateLimiteCachesByFingerprints(fingerprints []string, backendSer
 
 	arguments := make([]interface{}, 0)
 	arguments = append(arguments, "FCALL")
-	arguments = append(arguments, redisfunctionlibraries.BatchDeleteRateLimitRecordByFormattedKeysFunction)
+	arguments = append(arguments, redislibraries.BatchDeleteRateLimitRecordByFormattedKeysFunction)
 	arguments = append(arguments, len(fingerprints))
 	arguments = append(arguments, keys...)
 	if _, err := redisClient.Do(arguments...).Result(); err != nil {
@@ -458,7 +458,7 @@ func BatchSynchronizeRateLimitRecordCachesByUserIds(
 
 	arguments := make([]interface{}, 0)
 	arguments = append(arguments, "FCALL")
-	arguments = append(arguments, redisfunctionlibraries.BatchSynchronizeRateLimitRecordByFormattedKeysFunction)
+	arguments = append(arguments, redislibraries.BatchSynchronizeRateLimitRecordByFormattedKeysFunction)
 	arguments = append(arguments, len(keys))
 	arguments = append(arguments, keys...)
 	arguments = append(arguments, argv...)
@@ -494,7 +494,7 @@ func BatchDeleteRateLimiteCachesByUserIds(userIds []uuid.UUID, backendServerName
 
 	arguments := make([]interface{}, 0)
 	arguments = append(arguments, "FCALL")
-	arguments = append(arguments, redisfunctionlibraries.BatchDeleteRateLimitRecordByFormattedKeysFunction)
+	arguments = append(arguments, redislibraries.BatchDeleteRateLimitRecordByFormattedKeysFunction)
 	arguments = append(arguments, len(userIds))
 	arguments = append(arguments, keys...)
 	if _, err := redisClient.Do(arguments...).Result(); err != nil {

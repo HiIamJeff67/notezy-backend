@@ -15,7 +15,7 @@ import (
 func StartApplication() {
 	models.NotezyDB = models.ConnectToDatabase(models.PostgresDatabaseConfig)
 	caches.ConnectToAllRedis()
-	ReLoadRedisFunctions()
+	ReloadRedisLibraries()
 
 	developmentroutes.DevelopmentRouter = gin.Default()
 	developmentroutes.ConfigureDevelopmentRoutes()
@@ -31,11 +31,12 @@ func StartApplication() {
 	caches.DisconnectToAllRedis()
 }
 
-func ReLoadRedisFunctions() {
-	if exception := caches.FlushRedisFunctionsLibraries(); exception != nil {
+func ReloadRedisLibraries() {
+	if exception := caches.FlushCacheLibraries(); exception != nil {
 		exception.Log()
 	}
-	if exception := caches.ReloadRateLimitRecordRedisFunctionsLibraries(); exception != nil {
+	if exception := caches.LoadRateLimitRecordCacheLibraries(); exception != nil {
 		exception.Log()
 	}
+	// reload other more redis libraries here...
 }

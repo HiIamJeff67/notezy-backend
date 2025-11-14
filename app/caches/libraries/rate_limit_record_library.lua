@@ -1,4 +1,4 @@
-#!lua name=rate_limit_record_functions_library
+#!lua name=rate_limit_record_library
 
 -- batch_synchronize_rate_limit_record_by_formatted_keys:
 -- Redis functions to batch synchronize the rate limit record by the given formatted keys
@@ -65,8 +65,9 @@ end
 
 -- batch_delete_rate_limit_record_by_formatted_keys:
 -- Redis functions to batch delete the rate limit record by the given formatted keys
--- keys: array of formatted keys
--- _: placeholder for argv, but we don't use it here
+-- Arguments format :
+--   - keys: array of formatted keys
+--   - _: placeholder for argv, but we don't use it here
 local BATCH_DELETE_NUM_OF_ARGV_PER_KEY = 0
 local function batch_delete_rate_limit_record_by_formatted_keys(keys, _)
     if #keys == 0 then

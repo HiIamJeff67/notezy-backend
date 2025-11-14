@@ -59,7 +59,7 @@ func NewHybridRateLimiter(
 		IsAuthorizedLimiter: isAuthorizedLimiter,
 	}
 
-	// initially calling syncLoop()
+	// initially calling syncLoop() to start syncing periodically
 	go hrl.syncLoop()
 
 	return hrl
@@ -147,7 +147,7 @@ func (hrl *HybridRateLimiter) batchSync() {
 			logs.FError("Failed to batch sync user rate limits to Redis: %v", err)
 			hrl.reappendTasks(fetchedPendingTasks)
 		} else if len(userDtos) > 0 {
-			logs.FInfo("Batch synced %d user rate limits to Redis", len(userDtos))
+			logs.FDebug("Batch synced %d user rate limits to Redis", len(userDtos))
 		}
 	} else {
 		clientDtos := make([]struct {
@@ -172,7 +172,7 @@ func (hrl *HybridRateLimiter) batchSync() {
 			logs.FError("Failed to batch sync client IP rate limits to Redis: %v", err)
 			hrl.reappendTasks(fetchedPendingTasks)
 		} else if len(clientDtos) > 0 {
-			logs.FInfo("Batch synced %d client IP rate limits to Redis", len(clientDtos))
+			logs.FDebug("Batch synced %d client IP rate limits to Redis", len(clientDtos))
 		}
 	}
 }
@@ -221,14 +221,14 @@ func (hrl *HybridRateLimiter) AllowNByFingerprint(fingerprint string, now time.T
 
 	// 1. Use the Limiter from the rate utility for fast checking
 	if !hrl.Limiter.AllowN(now, n) {
-		logs.FInfo("Request blocked by local rate limiter for client IP: %s, requested: %d", fingerprint, n)
+		logs.FDebug("Request blocked by local rate limiter for client IP: %s, requested: %d", fingerprint, n)
 		return false, 0
 	}
 
 	// 2. Use the rate limit record in redis cache to check if the request from the same source has exceeded some certain count
 	remaining := hrl.checkBucketLimitByFingerprint(fingerprint, int32(n))
 	if remaining < 0 {
-		logs.FInfo("Request blocked by global rate limiter for client IP: %s, requested: %d", fingerprint, n)
+		logs.FDebug("Request blocked by global rate limiter for client IP: %s, requested: %d", fingerprint, n)
 		return false, 0
 	}
 
@@ -272,14 +272,14 @@ func (hrl *HybridRateLimiter) AllowNByUserId(userId uuid.UUID, fingerprint strin
 
 	// 1. Use the Limiter from the rate utility for fast checking
 	if !hrl.Limiter.AllowN(now, n) {
-		logs.FInfo("Request blocked by local rate limiter for user ID: %s, requested: %d", userId.String(), n)
+		logs.FDebug("Request blocked by local rate limiter for user ID: %s, requested: %d", userId.String(), n)
 		return false, 0
 	}
 
 	// 2. Use the rate limit record in redis cache to check if the request from the same source has exceeded some certain count
 	remaining := hrl.checkBucketLimitByUserId(userId, fingerprint, int32(n))
 	if remaining < 0 {
-		logs.FInfo("Request blocked by global rate limiter for user ID: %s, requested: %d", userId.String(), n)
+		logs.FDebug("Request blocked by global rate limiter for user ID: %s, requested: %d", userId.String(), n)
 		return false, 0
 	}
 

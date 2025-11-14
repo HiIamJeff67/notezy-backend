@@ -69,10 +69,10 @@ func (ewm *EmailWorkerManager) processTask(task *EmailTask, workerId int) {
 				ewm.enqueueTask(task)
 			}()
 		} else {
-			logs.FInfo("Worker %d gave up on task %s after %d of retries", workerId, task.ID, task.MaxRetries)
+			logs.FDebug("Worker %d gave up on task %s after %d of retries", workerId, task.ID, task.MaxRetries)
 		}
 	} else {
-		logs.FInfo("Worker %d successfully sent email task Id is %s", workerId, task.ID)
+		logs.FDebug("Worker %d successfully sent email task Id is %s", workerId, task.ID)
 	}
 }
 
@@ -85,10 +85,10 @@ func (ewm *EmailWorkerManager) createWorker(task *EmailTask) {
 		defer func() {
 			atomic.AddInt32(&ewm.activeWorkers, -1)
 			ewm.workerPool.Done()
-			logs.FInfo("Worker %d completed and stopped", workerId)
+			logs.FDebug("Worker %d completed and stopped", workerId)
 		}()
 
-		logs.FInfo("Worker %d started for task: %s", workerId, task.ID)
+		logs.FDebug("Worker %d started for task: %s", workerId, task.ID)
 		ewm.processTask(task, workerId)
 	}()
 }
@@ -137,10 +137,10 @@ func (ewm *EmailWorkerManager) tryStartMonitoring() {
 	go func() {
 		defer func() {
 			atomic.StoreInt32(&ewm.isMonitoring, 0)
-			logs.FInfo("Stopped queue monitoring")
+			logs.FDebug("Stopped queue monitoring")
 		}()
 
-		logs.FInfo("Started queue monitoring")
+		logs.FDebug("Started queue monitoring")
 
 		for {
 			select {
@@ -167,7 +167,7 @@ func (ewm *EmailWorkerManager) enqueueTask(task *EmailTask) error {
 	bufferSize := ewm.buffer.Len()
 	ewm.bufferMutex.Unlock()
 
-	logs.FInfo("Enqueued email task: ID=%s, Type=%s, Priority=%d, Queue size: %d",
+	logs.FDebug("Enqueued email task: ID=%s, Type=%s, Priority=%d, Queue size: %d",
 		task.ID, task.Type, task.Priority, bufferSize)
 
 	ewm.tryStartMonitoring()
@@ -182,7 +182,7 @@ func (ewm *EmailWorkerManager) GetActiveWorkerCount() int {
 }
 
 func (ewm *EmailWorkerManager) Shutdown() {
-	logs.FInfo("Shutting down email worker manager...")
+	logs.FDebug("Shutting down email worker manager...")
 
 	ewm.cancel()
 	if ewm.monitorTicker != nil {
@@ -190,7 +190,7 @@ func (ewm *EmailWorkerManager) Shutdown() {
 	}
 	ewm.workerPool.Wait()
 
-	logs.FInfo("Email worker manager stopped")
+	logs.FDebug("Email worker manager stopped")
 }
 
 func (ewm *EmailWorkerManager) GetStatus() map[string]interface{} {

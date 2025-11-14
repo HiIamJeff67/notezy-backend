@@ -2,11 +2,13 @@ package caches
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"sync"
 
 	"github.com/go-redis/redis"
 
+	redislibraries "notezy-backend/app/caches/libraries"
 	exceptions "notezy-backend/app/exceptions"
 	logs "notezy-backend/app/logs"
 	util "notezy-backend/app/util"
@@ -157,4 +159,41 @@ func DisconnectToAllRedis() bool {
 		}
 	}
 	return successCount == totCount
+}
+
+func FlushCacheLibraries() *exceptions.Exception {
+	for serverName, serverNumber := range BackendServerNameToRateLimitRedisIndex {
+		redisClient, exist := RedisClientMap[serverNumber]
+		if !exist {
+			continue
+		}
+
+		redisClient.Do("FUNCTION", "FLUSH")
+		logs.FDebug("Flushed all the functions across all libraries in server %s of %d", serverName, serverNumber)
+	}
+
+	return nil
+}
+
+func LoadRateLimitRecordCacheLibraries() *exceptions.Exception {
+	for serverName, serverNumber := range BackendServerNameToRateLimitRedisIndex {
+		redisClient, exist := RedisClientMap[serverNumber]
+		if !exist {
+			continue
+		}
+
+		if err := redisClient.Do("FUNCTION", "LOAD", "REPLACE", redislibraries.RateLimitRecordLibraryContent).Err(); err != nil {
+			return exceptions.Cache.FailedToLoadRedisFunctions().
+				WithDetails(fmt.Sprintf("Failed to load functions from lua scripts in server %s of %d", serverName, serverNumber)).
+				WithError(err)
+		}
+
+		logs.FInfo("Reloaded all the functions in library of %s from lua scripts in server %s of %d",
+			redislibraries.RateLimitRecordLibrary,
+			serverName,
+			serverNumber,
+		)
+	}
+
+	return nil
 }
