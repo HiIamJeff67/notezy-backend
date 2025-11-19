@@ -13,8 +13,8 @@ import (
 type UserInfo struct {
 	Id                 uuid.UUID        `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid();"`
 	UserId             uuid.UUID        `json:"userId" gorm:"column:user_id; type:uuid; not null; unique;"`
-	CoverBackgroundURL *string          `json:"coverBackgroundURL" gorm:"column:cover_background_url;"`                           // validate:"omitnil,isimageurl"
-	AvatarURL          *string          `json:"avatarURL" gorm:"column:avatar_url;"`                                              // validate:"omitnil,isimageurl"
+	CoverBackgroundURL *string          `json:"coverBackgroundURL" gorm:"column:cover_background_url; default:null;"`             // validate:"omitnil,isimageurl"
+	AvatarURL          *string          `json:"avatarURL" gorm:"column:avatar_url; default:null;"`                                // validate:"omitnil,isimageurl"
 	Header             *string          `json:"header" gorm:"column:header; size:64;"`                                            // validate:"omitnil,min=0,max=64"
 	Introduction       *string          `json:"introduction" gorm:"column:introduction; size:256;"`                               // validate:"omitnil,min=0,max=256"
 	Gender             enums.UserGender `json:"gender" gorm:"column:gender; type:UserGender; not null; default:'PreferNotToSay'"` // validate:"omitnil,isgender"

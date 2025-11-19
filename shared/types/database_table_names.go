@@ -10,10 +10,15 @@ const (
 	ValidTableName_BadgeTable          ValidTableName = "BadgeTable"
 	ValidTableName_UsersToBadgesTable  ValidTableName = "UsersToBadgesTable"
 	ValidTableName_ThemeTable          ValidTableName = "ThemeTable"
-	ValidTableName_RootShelfTable      ValidTableName = "RootShelfTable"
 	ValidTableName_UsersToShelvesTable ValidTableName = "UsersToShelvesTable"
-	ValidTableName_MaterialTable       ValidTableName = "MaterialTable"
+	ValidTableName_RootShelfTable      ValidTableName = "RootShelfTable"
 	ValidTableName_SubShelfTable       ValidTableName = "SubShelfTable"
+	ValidTableName_MaterialTable       ValidTableName = "MaterialTable"
+	ValidTableName_BlockPackTable      ValidTableName = "BlockPackTable"
+	ValidTableName_BlockGroupTable     ValidTableName = "BlockGroupTable"
+	ValidTableName_BlockTable          ValidTableName = "BlockTable"
+	ValidTableName_SyncBlockGroupTable ValidTableName = "SyncBlockGroupTable"
+	ValidTableName_SyncBlockTableName  ValidTableName = "SyncBlockTable"
 )
 
 var _validTableNames = map[string]ValidTableName{
@@ -24,10 +29,15 @@ var _validTableNames = map[string]ValidTableName{
 	"BadgeTable":          ValidTableName_BadgeTable,
 	"UsersToBadgesTable":  ValidTableName_UsersToBadgesTable,
 	"ThemeTable":          ValidTableName_ThemeTable,
-	"RootShelfTable":      ValidTableName_RootShelfTable,
 	"UsersToShelvesTable": ValidTableName_UsersToShelvesTable,
-	"MaterialTable":       ValidTableName_MaterialTable,
+	"RootShelfTable":      ValidTableName_RootShelfTable,
 	"SubShelfTable":       ValidTableName_SubShelfTable,
+	"MaterialTable":       ValidTableName_MaterialTable,
+	"BlockPackTable":      ValidTableName_BlockPackTable,
+	"BlockGroupTable":     ValidTableName_BlockGroupTable,
+	"BlockTable":          ValidTableName_BlockTable,
+	"SyncBlockGroupTable": ValidTableName_SyncBlockGroupTable,
+	"SyncBlockTable":      ValidTableName_SyncBlockTableName,
 }
 
 func (tn ValidTableName) String() string {

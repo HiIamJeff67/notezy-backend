@@ -20,9 +20,10 @@ type SubShelf struct {
 	CreatedAt      time.Time       `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 
 	// relations
-	RootShelf      RootShelf  `json:"rootShelf" gorm:"foreignKey:RootShelfId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	NextSubShelves []SubShelf `json:"subShelves" gorm:"foreignKey:PrevSubShelfId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	Materials      []Material `json:"materials" gorm:"foreignKey:ParentSubShelfId; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	RootShelf      RootShelf   `json:"rootShelf" gorm:"foreignKey:RootShelfId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	NextSubShelves []SubShelf  `json:"subShelves" gorm:"foreignKey:PrevSubShelfId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	Materials      []Material  `json:"materials" gorm:"foreignKey:ParentSubShelfId; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	BlockPacks     []BlockPack `json:"blockSets" gorm:"foreignKey:ParentSubShelfId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
 
 // Contraints:
@@ -42,6 +43,7 @@ const (
 	SubShelfRelation_RootShelf      SubShelfRelation = "RootShelf"
 	SubShelfRelation_NextSubShelves SubShelfRelation = "NextSubShelves"
 	SubShelfRelation_Materials      SubShelfRelation = "Materials"
+	SubShelfRelation_BlockPacks     SubShelfRelation = "BlockPacks"
 )
 
 /* ============================== Relative Type Conversion ============================== */
