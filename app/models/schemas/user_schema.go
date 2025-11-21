@@ -30,29 +30,33 @@ type User struct {
 	CreatedAt       time.Time        `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 
 	// relations
-	UserInfo       UserInfo         `json:"userInfo" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	UserAccount    UserAccount      `json:"userAccount" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	UserSetting    UserSetting      `json:"userSetting" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	Themes         []Theme          `json:"themes" gorm:"foreignKey:AuthorId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	UsersToBadges  []UsersToBadges  `json:"usersToBadges" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	UsersToShelves []UsersToShelves `json:"usersToShelves" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	UserInfo        UserInfo         `json:"userInfo" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	UserAccount     UserAccount      `json:"userAccount" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	UserSetting     UserSetting      `json:"userSetting" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	Themes          []Theme          `json:"themes" gorm:"foreignKey:AuthorId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	UsersToBadges   []UsersToBadges  `json:"usersToBadges" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	UsersToShelves  []UsersToShelves `json:"usersToShelves" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	BlockGroups     []BlockGroup     `json:"blockGroups" gorm:"foreignKey:OwnerId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	SyncBlockGroups []SyncBlockGroup `json:"syncBlockGroups" gorm:"foreignKey:OwnerId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
 
 // User Table Name
 func (User) TableName() string {
-	return types.ValidTableName_UserTable.String()
+	return types.TableName_UserTable.String()
 }
 
 // User Table Relations
-type UserRelation types.ValidTableName
+type UserRelation types.RelationName
 
 const (
-	UserRelation_UserInfo       UserRelation = "UserInfo"
-	UserRelation_UserAccount    UserRelation = "UserAccount"
-	UserRelation_UserSetting    UserRelation = "UserSetting"
-	UserRelation_Themes         UserRelation = "Themes"
-	UserRelation_UsersToBadges  UserRelation = "UsersToBadges"
-	UserRelation_UsersToShelves UserRelation = "UsersToShelves"
+	UserRelation_UserInfo        UserRelation = "UserInfo"
+	UserRelation_UserAccount     UserRelation = "UserAccount"
+	UserRelation_UserSetting     UserRelation = "UserSetting"
+	UserRelation_Themes          UserRelation = "Themes"
+	UserRelation_UsersToBadges   UserRelation = "UsersToBadges"
+	UserRelation_UsersToShelves  UserRelation = "UsersToShelves"
+	UserRelation_BlockGroups     UserRelation = "BlockGroups"
+	UserRelation_SyncBlockGroups UserRelation = "SyncBlockGroups"
 )
 
 /* ============================== Relative Type Conversions ============================== */

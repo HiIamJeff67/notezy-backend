@@ -21,7 +21,7 @@ func NewBadgeRepository() BadgeRepositoryInterface {
 	return &BadgeRepository{}
 }
 
-/* ============================== CRUD operations ============================== */
+/* ============================== Implementations ============================== */
 
 func (r *BadgeRepository) GetOneById(
 	db *gorm.DB,

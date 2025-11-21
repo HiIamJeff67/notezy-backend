@@ -25,7 +25,7 @@ type UserInfo struct {
 
 // User Info Table Name
 func (UserInfo) TableName() string {
-	return types.ValidTableName_UserInfoTable.String()
+	return types.TableName_UserInfoTable.String()
 }
 
 /* ============================== Relative Type Conversions ============================== */

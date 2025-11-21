@@ -27,7 +27,7 @@ func NewUserAccountRepository() UserAccountRepositoryInterface {
 	return &UserAccountRepository{}
 }
 
-/* ============================== CRUD operations ============================== */
+/* ============================== Implementations ============================== */
 
 func (r *UserAccountRepository) GetOneByUserId(
 	db *gorm.DB,

@@ -27,7 +27,7 @@ func NewUserInfoRepository() UserInfoRepositoryInterface {
 	return &UserInfoRepository{}
 }
 
-/* ============================== CRUD operations ============================== */
+/* ============================== Implementations ============================== */
 
 func (r *UserInfoRepository) GetOneByUserId(
 	db *gorm.DB,

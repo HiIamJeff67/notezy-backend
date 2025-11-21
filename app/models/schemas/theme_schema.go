@@ -29,11 +29,11 @@ type Theme struct {
 
 // Theme Table Name
 func (Theme) TableName() string {
-	return types.ValidTableName_ThemeTable.String()
+	return types.TableName_ThemeTable.String()
 }
 
 // Theme Table Relations
-type ThemeRelation string
+type ThemeRelation types.RelationName
 
 const (
 	ThemeRelation_Author ThemeRelation = "Themes"

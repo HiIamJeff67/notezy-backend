@@ -15,6 +15,7 @@ const (
 	AccessControlPermission_Read  AccessControlPermission = "Read"
 	AccessControlPermission_Write AccessControlPermission = "Write"
 	AccessControlPermission_Admin AccessControlPermission = "Admin"
+	AccessControlPermission_Owner AccessControlPermission = "Owner"
 )
 
 /* ============================== All Instances ============================== */
@@ -23,12 +24,14 @@ var AllAccessControlPermissions = []AccessControlPermission{
 	AccessControlPermission_Read,
 	AccessControlPermission_Write,
 	AccessControlPermission_Admin,
+	AccessControlPermission_Owner,
 }
 
 var AllAccessControlPermissionStrings = []string{
 	string(AccessControlPermission_Read),
 	string(AccessControlPermission_Write),
 	string(AccessControlPermission_Admin),
+	string(AccessControlPermission_Owner),
 }
 
 /* ============================== Methods ============================== */

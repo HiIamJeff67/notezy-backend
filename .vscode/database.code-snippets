@@ -15,7 +15,7 @@
       "}",
       "",
       "func (${1:_TableName_}) TableName() string {",
-      "\treturn shared.ValidTableName_${1:_TableName_}Table.String()",
+      "\treturn shared.TableName_${1:_TableName_}Table.String()",
       "}"
     ],
     "description": "Create an advanced GORM model with UUID, enum, timestamps, and table name."

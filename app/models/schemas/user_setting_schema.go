@@ -20,7 +20,7 @@ type UserSetting struct {
 
 // User Setting Table Name
 func (UserSetting) TableName() string {
-	return types.ValidTableName_UserSettingTable.String()
+	return types.TableName_UserSettingTable.String()
 }
 
 /* ============================== Relative Type Conversion ============================== */

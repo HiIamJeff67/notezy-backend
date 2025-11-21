@@ -27,11 +27,11 @@ type RootShelf struct {
 
 // Shelf Table Name
 func (RootShelf) TableName() string {
-	return types.ValidTableName_RootShelfTable.String()
+	return types.TableName_RootShelfTable.String()
 }
 
 // Shelf Table Relations
-type RootShelfRelation types.ValidTableName
+type RootShelfRelation types.RelationName
 
 const (
 	RootShelfRelation_SubShelves     RootShelfRelation = "SubShelves"

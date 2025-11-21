@@ -19,6 +19,7 @@ type ShelfExceptionDomain struct {
 	APIExceptionDomain
 	DatabaseExceptionDomain
 	TypeExceptionDomain
+	FileExceptionDomain
 }
 
 var Shelf = &ShelfExceptionDomain{
@@ -36,18 +37,10 @@ var Shelf = &ShelfExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_Shelf,
 		_Prefix:   ExceptionPrefix_Shelf,
 	},
-}
-
-func (d *ShelfExceptionDomain) NoPermission() *Exception {
-	return &Exception{
-		Code:           d.BaseCode + 1,
-		Prefix:         d.Prefix,
-		Reason:         "NoPermission",
-		IsInternal:     false,
-		Message:        "You have no permission to do this",
-		HTTPStatusCode: http.StatusBadRequest,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
-	}
+	FileExceptionDomain: FileExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_Shelf,
+		_Prefix:   ExceptionPrefix_Shelf,
+	},
 }
 
 /* ============================== Handling Structure Error of ShelfNode ============================== */

@@ -11,7 +11,7 @@ import (
 
 type UsersToShelves struct {
 	UserId      uuid.UUID                     `json:"userId" gorm:"column:user_id; type:uuid; primaryKey;"`
-	RootShelfId uuid.UUID                     `json:"rootShelfId" gorm:"column:root_shelf_id; type:uuid; primaryKey;"`
+	RootShelfId uuid.UUID                     `json:"rootShelfId" gorm:"column:root_shelf_id; type:uuid; primaryKey; uniqueIndex:idx_root_shelf_owner,where:permission = 'Owner';"`
 	Permission  enums.AccessControlPermission `json:"permission" gorm:"column:permission; type:AccessControlPermission; not null; default:'Read';"`
 	UpdatedAt   time.Time                     `json:"updatedAt" gorm:"column:updated_at; tpye:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt   time.Time                     `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
@@ -23,11 +23,11 @@ type UsersToShelves struct {
 
 // Users To Shelves Table Name
 func (UsersToShelves) TableName() string {
-	return types.ValidTableName_UsersToShelvesTable.String()
+	return types.TableName_UsersToShelvesTable.String()
 }
 
 // Users To Shelves Table Relations
-type UsersToShelvesRelation types.ValidTableName
+type UsersToShelvesRelation types.RelationName
 
 const (
 	UsersToShelvesRelation_User      UsersToShelvesRelation = "User"

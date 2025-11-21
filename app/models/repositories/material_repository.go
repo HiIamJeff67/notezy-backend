@@ -24,9 +24,8 @@ type MaterialRepositoryInterface interface {
 	CheckPermissionAndGetOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID, preloads []schemas.MaterialRelation, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) (*schemas.Material, *exceptions.Exception)
 	CheckPermissionsAndGetManyByIds(db *gorm.DB, ids []uuid.UUID, userId uuid.UUID, preloads []schemas.MaterialRelation, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) ([]schemas.Material, *exceptions.Exception)
 	GetOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID) (*schemas.Material, *exceptions.Exception)
-	CreateOne(db *gorm.DB, subShelfId uuid.UUID, userId uuid.UUID, input inputs.CreateMaterialInput) (*uuid.UUID, *exceptions.Exception)
+	CreateOneBySubShelfId(db *gorm.DB, subShelfId uuid.UUID, userId uuid.UUID, input inputs.CreateMaterialInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID, matchedMaterialType *enums.MaterialType, input inputs.PartialUpdateMaterialInput) (*schemas.Material, *exceptions.Exception)
-
 	RestoreSoftDeletedOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID) *exceptions.Exception
 	RestoreSoftDeletedManyByIds(db *gorm.DB, ids []uuid.UUID, userId uuid.UUID) *exceptions.Exception
 	SoftDeleteOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID) *exceptions.Exception
@@ -41,7 +40,7 @@ func NewMaterialRepository() MaterialRepositoryInterface {
 	return &MaterialRepository{}
 }
 
-/* ============================== CRUD operations ============================== */
+/* ============================== Implementations ============================== */
 
 func (r *MaterialRepository) HasPermission(
 	db *gorm.DB,
@@ -54,24 +53,28 @@ func (r *MaterialRepository) HasPermission(
 		db = models.NotezyDB
 	}
 
-	var count int64 = 0
-
+	subQuery := db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".id").
+		Where("user_id = ? AND permission IN ?",
+			userId, allowedPermissions,
+		)
 	query := db.Model(&schemas.Material{}).
-		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"MaterialTable\".parent_sub_shelf_id = ss.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
-		Where("\"MaterialTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?",
-			id, userId, allowedPermissions,
+		Joins("LEFT JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
+		Where("id = ? AND EXISTS (?)",
+			id, subQuery,
 		)
 
 	switch onlyDeleted {
 	case types.Ternary_Positive:
-		query = query.Where("\"MaterialTable\".deleted_at IS NOT NULL")
+		query = query.Where("deleted_at IS NOT NULL")
 	case types.Ternary_Negative:
-		query = query.Where("\"MaterialTable\".deleted_at IS NULL")
+		query = query.Where("deleted_at IS NULL")
 	}
 
+	var count int64 = 0
 	result := query.Count(&count)
-	if err := result.Error; err != nil || count == 0 {
+	if err := result.Error; err != nil {
 		return false
 	}
 
@@ -89,24 +92,28 @@ func (r *MaterialRepository) HasPermissions(
 		db = models.NotezyDB
 	}
 
-	var count int64 = 0
-
+	subQuery := db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id").
+		Where("user_id = ? AND permission IN ?",
+			userId, allowedPermissions,
+		)
 	query := db.Model(&schemas.Material{}).
-		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"MaterialTable\".parent_sub_shelf_id = ss.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
-		Where("\"MaterialTable\".id IN ? AND uts.user_id = ? AND uts.permission IN ?",
-			ids, userId, allowedPermissions,
+		Joins("LEFT JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
+		Where("id IN ? EXISTS (?)",
+			ids, subQuery,
 		)
 
 	switch onlyDeleted {
 	case types.Ternary_Positive:
-		query = query.Where("\"MaterialTable\".deleted_at IS NOT NULL")
+		query = query.Where("deleted_at IS NOT NULL")
 	case types.Ternary_Negative:
-		query = query.Where("\"MaterialTable\".deleted_at IS NULL")
+		query = query.Where("deleted_at IS NULL")
 	}
 
+	var count int64 = 0
 	result := query.Count(&count)
-	if err := result.Error; err != nil || count == 0 {
+	if err := result.Error; err != nil {
 		return false
 	}
 
@@ -125,22 +132,23 @@ func (r *MaterialRepository) CheckPermissionAndGetOneById(
 		db = models.NotezyDB
 	}
 
-	material := schemas.Material{}
-
+	subQuery := db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".id").
+		Where("user_id = ? AND permission IN ?",
+			userId, allowedPermissions,
+		)
 	query := db.Model(&schemas.Material{}).
-		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"MaterialTable\".parent_sub_shelf_id = ss.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
-		Where("\"MaterialTable\".id = ? AND uts.user_id = ? AND uts.permission IN ?",
-			id, userId, allowedPermissions,
+		Joins("LEFT JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
+		Where("id = ? AND EXISTS (?)",
+			id, subQuery,
 		)
 
 	switch onlyDeleted {
 	case types.Ternary_Positive:
-		query = query.Where("\"MaterialTable\".deleted_at IS NOT NULL")
-	case types.Ternary_Neutral:
-		break
+		query = query.Where("deleted_at IS NOT NULL")
 	case types.Ternary_Negative:
-		query = query.Where("\"MaterialTable\".deleted_at IS NULL")
+		query = query.Where("deleted_at IS NULL")
 	}
 
 	if len(preloads) > 0 {
@@ -149,6 +157,7 @@ func (r *MaterialRepository) CheckPermissionAndGetOneById(
 		}
 	}
 
+	var material schemas.Material
 	result := query.First(&material)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Material.NotFound().WithError(err)
@@ -169,22 +178,25 @@ func (r *MaterialRepository) CheckPermissionsAndGetManyByIds(
 		db = models.NotezyDB
 	}
 
-	materials := []schemas.Material{}
-
+	subQuery := db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id").
+		Where("user_id = ? AND permission IN ?",
+			userId, allowedPermissions,
+		)
 	query := db.Model(&schemas.Material{}).
-		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"MaterialTable\".parent_sub_shelf_id = ss.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
-		Where("\"MaterialTable\".id IN ? AND uts.user_id = ? AND uts.permission IN ?",
-			ids, userId, allowedPermissions,
+		Joins("LEFT JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
+		Where("id IN ? EXISTS (?)",
+			ids, subQuery,
 		)
 
 	switch onlyDeleted {
 	case types.Ternary_Positive:
-		query = query.Where("\"MaterialTable\".deleted_at IS NOT NULL")
+		query = query.Where("deleted_at IS NOT NULL")
 	case types.Ternary_Neutral:
 		break
 	case types.Ternary_Negative:
-		query = query.Where("\"MaterialTable\".deleted_at IS NULL")
+		query = query.Where("deleted_at IS NULL")
 	}
 
 	if len(preloads) > 0 {
@@ -193,6 +205,7 @@ func (r *MaterialRepository) CheckPermissionsAndGetManyByIds(
 		}
 	}
 
+	var materials []schemas.Material
 	result := query.Find(&materials)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Material.NotFound().WithError(err)
@@ -214,9 +227,10 @@ func (r *MaterialRepository) GetOneById(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Read,
-		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
 	}
 
 	return r.CheckPermissionAndGetOneById(
@@ -229,7 +243,7 @@ func (r *MaterialRepository) GetOneById(
 	)
 }
 
-func (r *MaterialRepository) CreateOne(
+func (r *MaterialRepository) CreateOneBySubShelfId(
 	db *gorm.DB,
 	subShelfId uuid.UUID,
 	userId uuid.UUID,
@@ -240,26 +254,28 @@ func (r *MaterialRepository) CreateOne(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
 	}
 
 	subShelfRepository := NewSubShelfRepository()
 
-	if hasPermission := subShelfRepository.HasPermission(
+	if !subShelfRepository.HasPermission(
 		db,
 		subShelfId,
 		userId,
 		allowedPermissions,
 		types.Ternary_Negative,
-	); !hasPermission {
-		return nil, exceptions.Material.NoPermission("create")
+	) {
+		return nil, exceptions.Shelf.NoPermission("create a material under this shelf")
 	}
 
 	var newMaterial schemas.Material
 	if err := copier.Copy(&newMaterial, &input); err != nil {
-		return nil, exceptions.Theme.FailedToCreate().WithError(err)
+		return nil, exceptions.Material.FailedToCreate().WithError(err)
 	}
+	newMaterial.ParentSubShelfId = subShelfId
 
 	result := db.Model(&schemas.Material{}).
 		Create(&newMaterial)
@@ -282,8 +298,9 @@ func (r *MaterialRepository) UpdateOneById(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
 	}
 
 	// get and check the permission of the current user to the source shelf
@@ -295,8 +312,11 @@ func (r *MaterialRepository) UpdateOneById(
 		allowedPermissions,
 		types.Ternary_Negative,
 	)
-	if exception != nil || existingMaterial == nil {
+	if exception != nil {
 		return nil, exception
+	}
+	if existingMaterial == nil {
+		return nil, exceptions.Material.NotFound()
 	}
 
 	// check if the material type is matched
@@ -312,14 +332,14 @@ func (r *MaterialRepository) UpdateOneById(
 	if input.Values.ParentSubShelfId != nil && (input.SetNull == nil || !(*input.SetNull)["ParentSubShelfId"]) {
 		subShelfRepository := NewSubShelfRepository()
 		// check if the user has the enough permission to the destination shelf
-		if hasPermissionOfNewSubShelf := subShelfRepository.HasPermission(
+		if !subShelfRepository.HasPermission(
 			db,
 			*input.Values.ParentSubShelfId,
 			userId,
 			allowedPermissions,
 			types.Ternary_Negative,
-		); !hasPermissionOfNewSubShelf {
-			return nil, exceptions.Shelf.NoPermission()
+		) {
+			return nil, exceptions.Shelf.NoPermission("move a material to this shelf")
 		}
 	}
 
@@ -329,7 +349,7 @@ func (r *MaterialRepository) UpdateOneById(
 			input.Values,
 			input.SetNull,
 			*existingMaterial,
-		)
+		).WithError(err)
 	}
 
 	result := db.Model(&schemas.Material{}).
@@ -356,17 +376,18 @@ func (r *MaterialRepository) RestoreSoftDeletedOneById(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 	}
 
-	if hasPermission := r.HasPermission(
+	if !r.HasPermission(
 		db,
 		id,
 		userId,
 		allowedPermissions,
 		types.Ternary_Positive,
-	); !hasPermission {
-		return exceptions.Material.NoPermission("restore")
+	) {
+		return exceptions.Material.NoPermission("restore a deleted material")
 	}
 
 	result := db.Model(&schemas.Material{}).
@@ -393,17 +414,18 @@ func (r *MaterialRepository) RestoreSoftDeletedManyByIds(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 	}
 
-	if hasPermission := r.HasPermissions(
+	if !r.HasPermissions(
 		db,
 		ids,
 		userId,
 		allowedPermissions,
 		types.Ternary_Positive,
-	); !hasPermission {
-		return exceptions.Material.NoPermission("restore")
+	) {
+		return exceptions.Material.NoPermission("restore deleted materials")
 	}
 
 	result := db.Model(&schemas.Material{}).
@@ -414,7 +436,7 @@ func (r *MaterialRepository) RestoreSoftDeletedManyByIds(
 		return exceptions.Material.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.Material.NotFound()
+		return exceptions.Material.NoChanges()
 	}
 
 	return nil
@@ -430,17 +452,18 @@ func (r *MaterialRepository) SoftDeleteOneById(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 	}
 
-	if hasPermission := r.HasPermission(
+	if !r.HasPermission(
 		db,
 		id,
 		userId,
 		allowedPermissions,
 		types.Ternary_Negative,
-	); !hasPermission {
-		return exceptions.Material.NoPermission("soft delete")
+	) {
+		return exceptions.Material.NoPermission("soft delete a material")
 	}
 
 	result := db.Model(&schemas.Material{}).
@@ -450,7 +473,7 @@ func (r *MaterialRepository) SoftDeleteOneById(
 		return exceptions.Material.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.Material.NotFound()
+		return exceptions.Material.NoChanges()
 	}
 
 	return nil
@@ -466,16 +489,17 @@ func (r *MaterialRepository) SoftDeleteManyByIds(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 	}
 
-	if hasPermission := r.HasPermissions(
+	if !r.HasPermissions(
 		db,
 		ids,
 		userId,
 		allowedPermissions,
 		types.Ternary_Negative,
-	); !hasPermission {
+	) {
 		return exceptions.Material.NoPermission("soft delete")
 	}
 
@@ -502,17 +526,18 @@ func (r *MaterialRepository) HardDeleteOneById(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 	}
 
-	if hasPermission := r.HasPermission(
+	if !r.HasPermission(
 		db,
 		id,
 		userId,
 		allowedPermissions,
 		types.Ternary_Positive,
-	); !hasPermission {
-		return exceptions.Material.NoPermission("hard delete")
+	) {
+		return exceptions.Material.NoPermission("hard delete a material")
 	}
 
 	result := db.Model(&schemas.Material{}).
@@ -522,7 +547,7 @@ func (r *MaterialRepository) HardDeleteOneById(
 		return exceptions.Material.FailedToDelete().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.Material.NotFound()
+		return exceptions.Material.NoChanges()
 	}
 
 	return nil
@@ -538,16 +563,17 @@ func (r *MaterialRepository) HardDeleteManyByIds(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 	}
 
-	if hasPermission := r.HasPermissions(
+	if !r.HasPermissions(
 		db,
 		ids,
 		userId,
 		allowedPermissions,
 		types.Ternary_Positive,
-	); !hasPermission {
+	) {
 		return exceptions.Material.NoPermission("hard delete")
 	}
 

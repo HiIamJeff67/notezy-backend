@@ -96,7 +96,7 @@ func DisconnectToDatabase(db *gorm.DB) bool {
 	return true
 }
 
-func TruncateTablesInDatabase(tableName types.ValidTableName, db *gorm.DB) bool {
+func TruncateTablesInDatabase(tableName types.TableName, db *gorm.DB) bool {
 	result := db.Exec("TRUNCATE TABLE \"%s\" RESTART IDENTITY CASCADE;")
 	if err := result.Error; err != nil {
 		logs.FError("Failed to truncate %s database %s table", DatabaseInstanceToConfig[db].DBName, tableName)

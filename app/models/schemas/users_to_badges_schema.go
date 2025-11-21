@@ -20,13 +20,13 @@ type UsersToBadges struct {
 
 // Users To Badges Table Name
 func (UsersToBadges) TableName() string {
-	return types.ValidTableName_UsersToBadgesTable.String()
+	return types.TableName_UsersToBadgesTable.String()
 }
 
 // Users To Badges Table Relations
-type UsersToBadgesRelation string
+type UsersToBadgesRelation types.RelationName
 
 const (
-	UsersToBadgesRelation_User                        = "User"
+	UsersToBadgesRelation_User  UsersToBadgesRelation = "User"
 	UsersToBadgesRelation_Badge UsersToBadgesRelation = "Badge"
 )

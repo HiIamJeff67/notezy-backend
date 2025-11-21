@@ -36,7 +36,7 @@ const (
 
 var (
 	// if the rate limit range(the number of redis server is not enough, we may use another docker serivce for the rate limit redis cache)
-	RateLimitRange                         = types.Range{Start: 4, Size: 4} // server number: 4 - 7 (included)
+	RateLimitRange                         = types.Range[int, int]{Start: 4, Size: 4} // server number: 4 - 7 (included)
 	MaxRateLimitServerNumber               = RateLimitRange.Size - 1
 	BackendServerNameToRateLimitRedisIndex = map[types.BackendServerName]int{
 		types.BackendServerName_EastAsia:    4,

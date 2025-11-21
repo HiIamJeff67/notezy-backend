@@ -57,8 +57,8 @@ var truncateDatabaseCommand = &cobra.Command{
 			return
 		}
 
-		validTableName, isValidTableName := types.ConvertToValidTableName(tableNameStr)
-		if !isValidTableName {
+		tableName, isTableName := types.ConvertToTableName(tableNameStr)
+		if !isTableName {
 			logs.FError("The table name of %s is not in the database %s", tableNameStr, databaseNameStr)
 			return
 		}
@@ -71,7 +71,7 @@ var truncateDatabaseCommand = &cobra.Command{
 
 		logs.FInfo("Start the process of truncating database table: %s.", tableNameStr)
 		models.NotezyDB = models.ConnectToDatabase(models.DatabaseInstanceToConfig[db])
-		models.TruncateTablesInDatabase(validTableName, db)
+		models.TruncateTablesInDatabase(tableName, db)
 		models.DisconnectToDatabase(models.NotezyDB)
 	},
 }

@@ -1,6 +1,6 @@
 package types
 
-type Range struct {
-	Start int
-	Size  int
+type Range[StartType Number, SizeType Number] struct {
+	Start StartType
+	Size  SizeType
 }

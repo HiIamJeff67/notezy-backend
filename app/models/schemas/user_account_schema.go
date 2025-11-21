@@ -26,7 +26,7 @@ type UserAccount struct {
 
 // User Account Table Name
 func (UserAccount) TableName() string {
-	return types.ValidTableName_UserAccountTable.String()
+	return types.TableName_UserAccountTable.String()
 }
 
 /* ============================== Relative Type Conversions ============================== */

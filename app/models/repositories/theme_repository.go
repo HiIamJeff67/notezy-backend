@@ -29,7 +29,7 @@ func NewThemeRepository() ThemeRepositoryInterface {
 	return &ThemeRepository{}
 }
 
-/* ============================== CRUD operations ============================== */
+/* ============================== Implementations ============================== */
 
 func (r *ThemeRepository) GetOneById(
 	db *gorm.DB,

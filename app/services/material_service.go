@@ -290,17 +290,16 @@ func (s *MaterialService) CreateTextbookMaterial(
 		newMaterialId.String(),
 	)
 	zeroSize := int64(0)
-	_, exception := s.materialRepository.CreateOne(
+	_, exception := s.materialRepository.CreateOneBySubShelfId(
 		tx,
 		reqDto.Body.ParentSubShelfId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateMaterialInput{
-			Id:               newMaterialId,
-			ParentSubShelfId: reqDto.Body.ParentSubShelfId,
-			Name:             reqDto.Body.Name,
-			Size:             zeroSize,
-			Type:             enums.MaterialType_Textbook,
-			ContentKey:       newContentKey,
+			Id:         newMaterialId,
+			Name:       reqDto.Body.Name,
+			Size:       zeroSize,
+			Type:       enums.MaterialType_Textbook,
+			ContentKey: newContentKey,
 		},
 	)
 	if exception != nil {
@@ -354,17 +353,16 @@ func (s *MaterialService) CreateNotebookMaterial(
 		newMaterialId.String(),
 	)
 	zeroSize := int64(0)
-	_, exception := s.materialRepository.CreateOne(
+	_, exception := s.materialRepository.CreateOneBySubShelfId(
 		tx,
 		reqDto.Body.ParentSubShelfId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateMaterialInput{
-			Id:               newMaterialId,
-			ParentSubShelfId: reqDto.Body.ParentSubShelfId,
-			Name:             reqDto.Body.Name,
-			Size:             zeroSize,
-			Type:             enums.MaterialType_Notebook,
-			ContentKey:       newContentKey,
+			Id:         newMaterialId,
+			Name:       reqDto.Body.Name,
+			Size:       zeroSize,
+			Type:       enums.MaterialType_Notebook,
+			ContentKey: newContentKey,
 		},
 	)
 	if exception != nil {
@@ -536,7 +534,7 @@ func (s *MaterialService) MoveMyMaterialById(
 		nil,
 		types.Ternary_Negative,
 	); !hasPermission {
-		return nil, exceptions.Shelf.NoPermission()
+		return nil, exceptions.Shelf.NoPermission("move a material to this shelf")
 	}
 	material, exception := s.materialRepository.CheckPermissionAndGetOneById(
 		db,

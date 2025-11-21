@@ -31,7 +31,7 @@ func NewUserRepository() UserRepositoryInterface {
 	return &UserRepository{}
 }
 
-/* ============================== CRUD operations ============================== */
+/* ============================== Implementations ============================== */
 
 func (r *UserRepository) GetOneById(
 	db *gorm.DB,

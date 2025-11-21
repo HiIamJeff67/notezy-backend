@@ -38,7 +38,7 @@ func NewRootShelfRepository() RootShelfRepositoryInterface {
 	return &RootShelfRepository{}
 }
 
-/* ============================== CRUD operations ============================== */
+/* ============================== Implementations ============================== */
 
 func (r *RootShelfRepository) HasPermission(
 	db *gorm.DB,
@@ -92,15 +92,15 @@ func (r *RootShelfRepository) CheckPermissionAndGetOneById(
 		Select("1").
 		Where("root_shelf_id = \"RootShelfTable\".id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
 	query := db.Model(&schemas.RootShelf{}).
-		Where("\"RootShelfTable\".id = ? AND EXISTS (?)", id, subQuery)
+		Where("id = ? AND EXISTS (?)", id, subQuery)
 
 	switch onlyDeleted {
 	case types.Ternary_Positive:
-		query = query.Where("\"RootShelfTable\".deleted_at IS NOT NULL")
+		query = query.Where("deleted_at IS NOT NULL")
 	case types.Ternary_Neutral:
 		break
 	case types.Ternary_Negative:
-		query = query.Where("\"RootShelfTable\".deleted_at IS NULL")
+		query = query.Where("deleted_at IS NULL")
 	}
 
 	if len(preloads) > 0 {
@@ -128,9 +128,10 @@ func (r *RootShelfRepository) GetOneById(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Read,
-		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
 	}
 
 	return r.CheckPermissionAndGetOneById(
@@ -173,7 +174,7 @@ func (r *RootShelfRepository) CreateOneByOwnerId(
 	newUsersToShelves := schemas.UsersToShelves{
 		UserId:      ownerId,
 		RootShelfId: newRootShelf.Id,
-		Permission:  enums.AccessControlPermission_Admin,
+		Permission:  enums.AccessControlPermission_Owner,
 	}
 	result = db.Model(&schemas.UsersToShelves{}).
 		Create(&newUsersToShelves)
@@ -195,8 +196,9 @@ func (r *RootShelfRepository) UpdateOneById(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
 	}
 
 	existingRootShelf, exception := r.CheckPermissionAndGetOneById(
@@ -242,6 +244,7 @@ func (r *RootShelfRepository) RestoreSoftDeletedOneById(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 	}
 
@@ -272,6 +275,7 @@ func (r *RootShelfRepository) RestoreSoftDeletedManyByIds(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 	}
 
@@ -302,6 +306,7 @@ func (r *RootShelfRepository) SoftDeleteOneById(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 	}
 
@@ -331,6 +336,7 @@ func (r *RootShelfRepository) SoftDeleteManyByIds(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 	}
 
@@ -360,6 +366,7 @@ func (r *RootShelfRepository) HardDeleteOneById(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 	}
 
@@ -389,6 +396,7 @@ func (r *RootShelfRepository) HardDeleteManyByIds(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 	}
 

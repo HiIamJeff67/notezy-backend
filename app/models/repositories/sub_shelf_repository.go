@@ -25,7 +25,7 @@ type SubShelfRepositoryInterface interface {
 	CheckPermissionsAndGetManyByIds(db *gorm.DB, ids []uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) ([]schemas.SubShelf, *exceptions.Exception)
 	GetOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation) (*schemas.SubShelf, *exceptions.Exception)
 	GetAllByRootShelfId(db *gorm.DB, rootShelfId uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation) ([]schemas.SubShelf, *exceptions.Exception)
-	CreateOneByUserId(db *gorm.DB, userId uuid.UUID, input inputs.CreateSubShelfInput) (*uuid.UUID, *exceptions.Exception)
+	CreateOneByRootShelfId(db *gorm.DB, rootShelfId uuid.UUID, userId uuid.UUID, input inputs.CreateSubShelfInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateSubShelfInput) (*schemas.SubShelf, *exceptions.Exception)
 	RestoreSoftDeletedOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID) *exceptions.Exception
 	RestoreSoftDeletedManyByIds(db *gorm.DB, ids []uuid.UUID, userId uuid.UUID) *exceptions.Exception
@@ -41,7 +41,7 @@ func NewSubShelfRepository() SubShelfRepositoryInterface {
 	return &SubShelfRepository{}
 }
 
-/* ============================== CRUD operations ============================== */
+/* ============================== Implementations ============================== */
 
 func (r *SubShelfRepository) HasPermission(
 	db *gorm.DB,
@@ -53,8 +53,6 @@ func (r *SubShelfRepository) HasPermission(
 	if db == nil {
 		db = models.NotezyDB
 	}
-
-	var count int64 = 0
 
 	subQuery := db.Model(&schemas.UsersToShelves{}).
 		Select("1").
@@ -71,6 +69,7 @@ func (r *SubShelfRepository) HasPermission(
 		query = query.Where("deleted_at IS NULL")
 	}
 
+	var count int64 = 0
 	result := query.Count(&count)
 	if err := result.Error; err != nil || count == 0 {
 		return false
@@ -90,8 +89,6 @@ func (r *SubShelfRepository) HasPermissions(
 		db = models.NotezyDB
 	}
 
-	var count int64 = 0
-
 	subQuery := db.Model(&schemas.UsersToShelves{}).
 		Select("1").
 		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
@@ -105,6 +102,7 @@ func (r *SubShelfRepository) HasPermissions(
 		query = query.Where("deleted_at IS NULL")
 	}
 
+	var count int64 = 0
 	result := query.Count(&count)
 	if err := result.Error; err != nil || count == 0 {
 		return false
@@ -217,9 +215,10 @@ func (r *SubShelfRepository) GetOneById(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Read,
-		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
 	}
 
 	return r.CheckPermissionAndGetOneById(
@@ -243,6 +242,7 @@ func (r *SubShelfRepository) GetAllByRootShelfId(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Read,
 		enums.AccessControlPermission_Write,
 		enums.AccessControlPermission_Admin,
@@ -271,8 +271,9 @@ func (r *SubShelfRepository) GetAllByRootShelfId(
 	return subShelves, nil
 }
 
-func (r *SubShelfRepository) CreateOneByUserId(
+func (r *SubShelfRepository) CreateOneByRootShelfId(
 	db *gorm.DB,
+	rootShelfId uuid.UUID,
 	userId uuid.UUID,
 	input inputs.CreateSubShelfInput,
 ) (*uuid.UUID, *exceptions.Exception) {
@@ -281,8 +282,9 @@ func (r *SubShelfRepository) CreateOneByUserId(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
 	}
 
 	var newSubShelf schemas.SubShelf
@@ -305,6 +307,7 @@ func (r *SubShelfRepository) CreateOneByUserId(
 	if err := copier.Copy(&newSubShelf, &input); err != nil {
 		return nil, exceptions.Shelf.InvalidInput().WithError(err)
 	}
+	newSubShelf.RootShelfId = rootShelfId
 
 	result := db.Model(&schemas.SubShelf{}).
 		Create(&newSubShelf)
@@ -326,8 +329,9 @@ func (r *SubShelfRepository) UpdateOneById(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
 	}
 
 	existingSubShelf, exception := r.CheckPermissionAndGetOneById(
@@ -371,6 +375,7 @@ func (r *SubShelfRepository) RestoreSoftDeletedOneById(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 	}
 
@@ -401,6 +406,7 @@ func (r *SubShelfRepository) RestoreSoftDeletedManyByIds(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 	}
 
@@ -431,6 +437,7 @@ func (r *SubShelfRepository) SoftDeleteOneById(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 	}
 
@@ -460,6 +467,7 @@ func (r *SubShelfRepository) SoftDeleteManyByIds(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 	}
 
@@ -489,6 +497,7 @@ func (r *SubShelfRepository) HardDeleteOneById(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 	}
 
@@ -518,6 +527,7 @@ func (r *SubShelfRepository) HardDeleteManyByIds(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 	}
 

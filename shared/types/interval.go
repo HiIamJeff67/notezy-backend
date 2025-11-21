@@ -1,6 +1,6 @@
 package types
 
-type Interval struct {
-	Start int
-	End   int
+type Interval[StartType Number, EndType Number] struct {
+	Start StartType
+	End   EndType
 }

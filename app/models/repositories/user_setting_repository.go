@@ -27,7 +27,7 @@ func NewUserSettingRepository() UserSettingRepositoryInterface {
 	return &UserSettingRepository{}
 }
 
-/* ============================== CRUD operations ============================== */
+/* ============================== Implementations ============================== */
 
 func (r *UserSettingRepository) GetOneByUserId(
 	db *gorm.DB,

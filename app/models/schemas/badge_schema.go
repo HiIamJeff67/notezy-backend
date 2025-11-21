@@ -26,11 +26,11 @@ type Badge struct {
 
 // Badge Table Name
 func (Badge) TableName() string {
-	return types.ValidTableName_BadgeTable.String()
+	return types.TableName_BadgeTable.String()
 }
 
 // Badge Table Relations
-type BadgeRelation string
+type BadgeRelation types.RelationName
 
 const (
 	BadgeRelation_UsersToBadges BadgeRelation = "UsersToBadges"

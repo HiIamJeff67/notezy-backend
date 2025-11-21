@@ -30,11 +30,11 @@ type Material struct {
 
 // Material Table Name
 func (Material) TableName() string {
-	return types.ValidTableName_MaterialTable.String()
+	return types.TableName_MaterialTable.String()
 }
 
 // Material Table Relations
-type MaterialRelation types.ValidTableName
+type MaterialRelation types.RelationName
 
 const (
 	MaterialRelation_ParentSubShelf MaterialRelation = "ParentSubShelf"

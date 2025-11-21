@@ -13,4 +13,6 @@ var MigratingEnums = map[string][]string{
 	new(AccessControlPermission).Name(): AllAccessControlPermissionStrings,
 	new(MaterialType).Name():            AllMaterialTypeStrings,
 	new(MaterialContentType).Name():     AllMaterialContentTypeStrings,
+	new(SupportedBlockPackIcon).Name():  AllSupportedBlockPackIconStrings,
+	new(BlockType).Name():               AllBlockTypeStrings,
 }

@@ -163,12 +163,12 @@ func (s *SubShelfService) CreateSubShelfByRootShelfId(
 
 	db := s.db.WithContext(ctx)
 
-	subShelfId, exception := s.subShelfRepository.CreateOneByUserId(
+	subShelfId, exception := s.subShelfRepository.CreateOneByRootShelfId(
 		db,
+		reqDto.Body.RootShelfId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateSubShelfInput{
 			Name:           reqDto.Body.Name,
-			RootShelfId:    reqDto.Body.RootShelfId,
 			PrevSubShelfId: reqDto.Body.PrevSubShelfId,
 		},
 	)

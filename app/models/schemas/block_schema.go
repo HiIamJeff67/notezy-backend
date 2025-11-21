@@ -22,19 +22,21 @@ type Block struct {
 	CreatedAt     time.Time       `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 
 	// relations
-	Children   []Block    `json:"children" gorm:"foreignKey:ParentBlockId; reference:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	BlockGroup BlockGroup `json:"blockGroup" gorm:"foreignKey:BlockGroupId; reference:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	Parent     *Block     `json:"parent" gorm:"foreignKey:ParentBlockId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	Children   []Block    `json:"children" gorm:"foreignKey:ParentBlockId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	BlockGroup BlockGroup `json:"blockGroup" gorm:"foreignKey:BlockGroupId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
 
 // Root Block Table Name
 func (Block) TableName() string {
-	return types.ValidTableName_BlockTable.String()
+	return types.TableName_BlockTable.String()
 }
 
 // Root Block Table Relations
-type BlockRelation types.ValidTableName
+type BlockRelation types.RelationName
 
 const (
+	BlockRelation_Parent     BlockRelation = "Parent"
 	BlockRelation_Children   BlockRelation = "Children"
 	BlockRelation_BlockGroup BlockRelation = "BlockGroup"
 )

@@ -3,6 +3,7 @@ package exceptions
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"path/filepath"
@@ -16,6 +17,7 @@ import (
 	"github.com/vektah/gqlparser/v2/gqlerror"
 
 	logs "notezy-backend/app/logs"
+	types "notezy-backend/shared/types"
 )
 
 /* ============================== Exception Field Type Definition ============================== */
@@ -59,6 +61,8 @@ const (
 // ExceptionPrefix_Parser ExceptionPrefix = "Parser"				     39
 // ExceptionPrefix_Shelf ExceptionPrefix = "Shelf"   					 40
 // ExceptionPrefix_Material ExceptionPrefix = "Material"				 41
+// ExceptionPrefix_BlockPack ExceptionPrefix = "BlockPack" 				 42
+// ExceptionPrefix_BlockGroup ExceptionPrefix = "BlockGroup"			 43
 )
 
 func IsExceptionCode(exceptionCode int) bool {
@@ -202,6 +206,20 @@ func (e *Exception) WithDetails(details any) *Exception {
 
 func (e *Exception) WithError(err error) *Exception {
 	e.Error = err
+	return e
+}
+
+func (e *Exception) WithNullableError(err error, fallBackConditionToErrorMessage []types.Pair[bool, string]) *Exception {
+	if err != nil {
+		e.Error = err
+	} else {
+		for hasOccurred, errorMessage := range types.PairsIterator(fallBackConditionToErrorMessage) {
+			if hasOccurred {
+				e.Error = errors.New(errorMessage)
+				break
+			}
+		}
+	}
 	return e
 }
 
@@ -615,7 +633,7 @@ func (d *FileExceptionDomain) NoPermission(action string) *Exception {
 		Prefix:         d._Prefix,
 		Reason:         "NoPermission",
 		IsInternal:     false,
-		Message:        fmt.Sprintf("You don't have any permission to %s this file", action),
+		Message:        fmt.Sprintf("You don't have any permission to %s", action),
 		HTTPStatusCode: http.StatusBadRequest,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}

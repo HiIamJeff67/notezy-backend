@@ -33,11 +33,11 @@ type SubShelf struct {
 // 3. The maximum length of SubShelf.Path should be less than or equal to 100
 
 func (SubShelf) TableName() string {
-	return types.ValidTableName_SubShelfTable.String()
+	return types.TableName_SubShelfTable.String()
 }
 
 // SubShelf Table Relations
-type SubShelfRelation types.ValidTableName
+type SubShelfRelation types.RelationName
 
 const (
 	SubShelfRelation_RootShelf      SubShelfRelation = "RootShelf"
