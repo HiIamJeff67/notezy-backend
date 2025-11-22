@@ -1,6 +1,6 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.0.3 Chrome/140.0.7339.249 Electron/38.7.0 Safari/537.36" version="29.0.3">
   <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
-    <mxGraphModel dx="3904" dy="2132" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="2914" dy="1999" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="0" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-0" />
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-1" parent="WIyWlLk6GJQsqaUBKTNV-0" />
@@ -394,7 +394,7 @@
         <mxCell id="IezZrLLgMk3StNayVbB_-8" value="PrevBlockGroupId(nullable)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="E7FpWdcmnDc-8uEJI8TZ-15" vertex="1">
           <mxGeometry y="150" width="160" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="KzR7jeWNxcRXHWoNUtQ4-1" value="Size" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="E7FpWdcmnDc-8uEJI8TZ-15">
+        <mxCell id="KzR7jeWNxcRXHWoNUtQ4-1" value="Size" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="E7FpWdcmnDc-8uEJI8TZ-15" vertex="1">
           <mxGeometry y="180" width="160" height="30" as="geometry" />
         </mxCell>
         <mxCell id="E7FpWdcmnDc-8uEJI8TZ-22" value="DeletedAt" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="E7FpWdcmnDc-8uEJI8TZ-15" vertex="1">
@@ -410,7 +410,7 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="r2vU8_KfBtWOf2NhG-WP-9" value="We reserve the `OwnerId` field so that we can get all the root shelves for the given user fast, and use the unique index constraints on the `OwnerId` + &#39;Name` fields to make sure each user should have all diferenent root shelf names" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
-          <mxGeometry x="30" y="770" width="230" height="90" as="geometry" />
+          <mxGeometry x="20" y="715" width="140" height="160" as="geometry" />
         </mxCell>
         <mxCell id="r2vU8_KfBtWOf2NhG-WP-20" value="Block" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="-260.08" y="1270" width="160" height="300" as="geometry" />
@@ -543,7 +543,7 @@
           <mxGeometry x="-92.08" y="1425" width="67" height="20" as="geometry" />
         </mxCell>
         <mxCell id="IezZrLLgMk3StNayVbB_-17" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;Sync Block&lt;/h1&gt;&lt;div&gt;如果一個 BlockGroup 的 SyncBlockGroupId 不為 null，則為 Sync Block Group，SyncBlockGroup 之資料不會存在 BlockGroup 中，而是保存在 BlockSyncGroup 中，且原本的 BlockGroup 內的資料欄位(包含 : OwnerId, Permission, Type, Props, Content, Size)都會清空，且以 SyncBlockGroup 內的 Sync Data 為準。&lt;/div&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
-          <mxGeometry x="140" y="1125" width="190" height="210" as="geometry" />
+          <mxGeometry x="155" y="1125" width="190" height="210" as="geometry" />
         </mxCell>
         <mxCell id="IezZrLLgMk3StNayVbB_-26" value="" style="endArrow=classic;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="E7FpWdcmnDc-8uEJI8TZ-16" target="jCshwM62erGihe9g8otD-1" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
@@ -564,7 +564,7 @@
         <mxCell id="IezZrLLgMk3StNayVbB_-29" value="Id" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="IezZrLLgMk3StNayVbB_-28" vertex="1">
           <mxGeometry y="30" width="140" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="KzR7jeWNxcRXHWoNUtQ4-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="IezZrLLgMk3StNayVbB_-28" source="IezZrLLgMk3StNayVbB_-30" target="IezZrLLgMk3StNayVbB_-29">
+        <mxCell id="KzR7jeWNxcRXHWoNUtQ4-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="IezZrLLgMk3StNayVbB_-28" source="IezZrLLgMk3StNayVbB_-30" target="IezZrLLgMk3StNayVbB_-29" edge="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="165" y="75" />
@@ -593,7 +593,7 @@
         <mxCell id="IezZrLLgMk3StNayVbB_-36" value="CreatedAt" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" parent="IezZrLLgMk3StNayVbB_-28" vertex="1">
           <mxGeometry y="240" width="140" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="KzR7jeWNxcRXHWoNUtQ4-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="E7FpWdcmnDc-8uEJI8TZ-39" target="gXKykK57GpOXSGGJXRrm-1">
+        <mxCell id="KzR7jeWNxcRXHWoNUtQ4-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="E7FpWdcmnDc-8uEJI8TZ-39" target="gXKykK57GpOXSGGJXRrm-1" edge="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="370" y="1015" />
@@ -601,10 +601,10 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="KzR7jeWNxcRXHWoNUtQ4-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="IezZrLLgMk3StNayVbB_-11" target="gXKykK57GpOXSGGJXRrm-1">
+        <mxCell id="KzR7jeWNxcRXHWoNUtQ4-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="IezZrLLgMk3StNayVbB_-11" target="gXKykK57GpOXSGGJXRrm-1" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="KzR7jeWNxcRXHWoNUtQ4-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="IezZrLLgMk3StNayVbB_-31" target="IezZrLLgMk3StNayVbB_-10">
+        <mxCell id="KzR7jeWNxcRXHWoNUtQ4-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="IezZrLLgMk3StNayVbB_-31" target="IezZrLLgMk3StNayVbB_-10" edge="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="-60.08" y="1375" />
@@ -612,11 +612,29 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="KzR7jeWNxcRXHWoNUtQ4-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="IezZrLLgMk3StNayVbB_-2" target="IezZrLLgMk3StNayVbB_-10">
+        <mxCell id="KzR7jeWNxcRXHWoNUtQ4-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="IezZrLLgMk3StNayVbB_-2" target="IezZrLLgMk3StNayVbB_-10" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="KzR7jeWNxcRXHWoNUtQ4-7" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;Permission Issues&lt;/h1&gt;&lt;div&gt;假設現在有個 UserA 給予 UserB 權限可以在某個 RootShelf 底下操作，而 UserB 開始建立一個 BlockPack，然後再其底下建立多個 BlockGroup...，我們如果讓這個 BlockGroup 的權限可以獨立於原本的 UserA，也就是計算這個 BlockGroup 為 UserB 負責的(UserB 為此 BlockGroup 的 Owner)，那麼將來 UserA 再度操作或是變更 UserB 的權限時，會發生問題，因此我們需要改成當 UserB 在此 BlockPack 底下建立其他 BlockGroup 時，這個 BlockGroup 的 Owner 會是 UserA，也就是說，等同於 UserA 給予 UserB 權限去幫他自己(UserA) 建立 BlockPack, BlockGroup, Blocks, SyncBlockGroup, SyncBlocks 等等...，因此 UserA 必須管理並且謹慎小心他給予權限的其他使用者，就好比如果 UserB 幫他建立 100 個 Blocks 在每個 BlockPacks 使得觸及 UserA 的 Blocks 數上限。&lt;/div&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
-          <mxGeometry x="-580" y="1130" width="270" height="300" as="geometry" />
+        <mxCell id="KzR7jeWNxcRXHWoNUtQ4-7" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;Permission Issues&lt;/h1&gt;&lt;div&gt;假設現在有個 UserA 給予 UserB 權限可以在某個 RootShelf 底下操作，而 UserB 開始建立一個 BlockPack，然後再其底下建立多個 BlockGroup...，我們如果讓這個 BlockGroup 的權限可以獨立於原本的 UserA，也就是計算這個 BlockGroup 為 UserB 負責的(UserB 為此 BlockGroup 的 Owner)，那麼將來 UserA 再度操作或是變更 UserB 的權限時，會發生問題，因此我們需要改成當 UserB 在此 BlockPack 底下建立其他 BlockGroup 時，這個 BlockGroup 的 Owner 會是 UserA，也就是說，等同於 UserA 給予 UserB 權限去幫他自己(UserA) 建立 BlockPack, BlockGroup, Blocks, SyncBlockGroup, SyncBlocks 等等...，因此 UserA 必須管理並且謹慎小心他給予權限的其他使用者，就好比如果 UserB 幫他建立 100 個 Blocks 在每個 BlockPacks 使得觸及 UserA 的 Blocks 數上限。&lt;/div&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+          <mxGeometry x="390" y="890" width="270" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="led_3v0s8lJHGERffTST-0" value="UsersToShelves" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="210" y="800" width="140" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="led_3v0s8lJHGERffTST-1" value="UserId" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="led_3v0s8lJHGERffTST-0">
+          <mxGeometry y="30" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="led_3v0s8lJHGERffTST-2" value="RootShelfId" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="led_3v0s8lJHGERffTST-0">
+          <mxGeometry y="60" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="led_3v0s8lJHGERffTST-3" value="Permission" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="led_3v0s8lJHGERffTST-0">
+          <mxGeometry y="90" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="led_3v0s8lJHGERffTST-4" value="UpdatedAt" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="led_3v0s8lJHGERffTST-0">
+          <mxGeometry y="120" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="led_3v0s8lJHGERffTST-5" value="CreatedAt" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="led_3v0s8lJHGERffTST-0">
+          <mxGeometry y="150" width="140" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

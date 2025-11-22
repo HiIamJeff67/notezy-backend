@@ -566,7 +566,7 @@ func (r *BlockPackRepository) SoftDeleteOneById(
 		allowedPermissions,
 		types.Ternary_Negative,
 	) {
-		return exceptions.BlockPack.NoPermission("delete a block pack")
+		return exceptions.BlockPack.NoPermission("soft delete a block pack")
 	}
 
 	result := db.Model(&schemas.BlockPack{}).
@@ -603,7 +603,7 @@ func (r *BlockPackRepository) SoftDeleteManyByIds(
 		allowedPermissions,
 		types.Ternary_Negative,
 	) {
-		return exceptions.BlockPack.NoPermission("delete block packs")
+		return exceptions.BlockPack.NoPermission("soft delete block packs")
 	}
 
 	result := db.Model(&schemas.BlockPack{}).

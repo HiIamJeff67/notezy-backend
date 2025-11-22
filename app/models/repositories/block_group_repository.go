@@ -1,23 +1,24 @@
 package repositories
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
 
 	exceptions "notezy-backend/app/exceptions"
 	models "notezy-backend/app/models"
-	"notezy-backend/app/models/inputs"
+	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
-	"notezy-backend/app/models/schemas/enums"
-	"notezy-backend/app/util"
+	enums "notezy-backend/app/models/schemas/enums"
+	util "notezy-backend/app/util"
 	types "notezy-backend/shared/types"
 )
 
 /* ============================== Definitions ============================== */
 
-type BlockGroupRepositoryInterface interface {
-}
+type BlockGroupRepositoryInterface interface{}
 
 type BlockGroupRepository struct{}
 
@@ -27,20 +28,109 @@ func NewBlockGroupRepository() BlockGroupRepositoryInterface {
 
 /* ============================== Implementations ============================== */
 
-func (r *BlockGroupRepository) GetOneById(
+func (r *BlockGroupRepository) HasPermission(
+	db *gorm.DB,
+	id uuid.UUID,
+	userId uuid.UUID,
+	allowedPermissions []enums.AccessControlPermission,
+	onlyDeleted types.Ternary,
+) bool {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
+	subQuery := db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id").
+		Where("user_id = ? AND permission IN ?",
+			userId, allowedPermissions,
+		)
+	query := db.Model(&schemas.BlockGroup{}).
+		Joins("LEFT JOIN \"BlockPackTable\" bp ON block_pack_id = bp.id").
+		Joins("LEFT JOIN \"SubShelfTable\" ss ON bp.parent_sub_shelf_id = ss.id").
+		Where("id = ? AND EXISTS (?)",
+			id, subQuery,
+		)
+
+	switch onlyDeleted {
+	case types.Ternary_Positive:
+		query = query.Where("deleted_at IS NOT NULL")
+	case types.Ternary_Negative:
+		query = query.Where("deleted_at IS NULL")
+	}
+
+	var count int64 = 0
+	result := query.Count(&count)
+	if err := result.Error; err != nil {
+		return false
+	}
+
+	return count > 0
+}
+
+func (r *BlockGroupRepository) HasPermissions(
+	db *gorm.DB,
+	ids []uuid.UUID,
+	userId uuid.UUID,
+	allowedPermissions []enums.AccessControlPermission,
+	onlyDeleted types.Ternary,
+) bool {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
+	subQuery := db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id").
+		Where("user_id = ? AND permission IN ?",
+			userId, allowedPermissions,
+		)
+	query := db.Model(&schemas.BlockGroup{}).
+		Joins("LEFT JOIN \"BlockPackTable\" bp ON block_pack_id = bp.id").
+		Joins("LEFT JOIN \"SubShelfTable\" ss ON bp.parent_sub_shelf_id = ss.id").
+		Where("id IN ? AND EXISTS (?)",
+			ids, subQuery,
+		)
+
+	switch onlyDeleted {
+	case types.Ternary_Positive:
+		query = query.Where("deleted_at IS NOT NULL")
+	case types.Ternary_Negative:
+		query = query.Where("deleted_at IS NULL")
+	}
+
+	var count int64 = 0
+	result := query.Count(&count)
+	if err := result.Error; err != nil {
+		return false
+	}
+
+	return count > 0
+}
+
+func (r *BlockGroupRepository) CheckPermissionAndGetOneById(
 	db *gorm.DB,
 	id uuid.UUID,
 	userId uuid.UUID,
 	preloads []schemas.BlockGroupRelation,
+	allowedPermissions []enums.AccessControlPermission,
 	onlyDeleted types.Ternary,
 ) (*schemas.BlockGroup, *exceptions.Exception) {
 	if db == nil {
 		db = models.NotezyDB
 	}
 
+	subQuery := db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id").
+		Where("user_id = ? AND permission IN ?",
+			userId, allowedPermissions,
+		)
 	query := db.Model(&schemas.BlockGroup{}).
-		Where("id = ? AND owner_id = ?",
-			id, userId,
+		Joins("LEFT JOIN \"BlockPackTable\" bp ON block_pack_id = bp.id").
+		Joins("LEFT JOIN \"SubShelfTable\" ss ON bp.parent_sub_shelf_id = ss.id").
+		Where("id = ? AND EXISTS (?)",
+			id, subQuery,
 		)
 
 	switch onlyDeleted {
@@ -65,6 +155,84 @@ func (r *BlockGroupRepository) GetOneById(
 	return &blockGroup, nil
 }
 
+func (r *BlockGroupRepository) CheckPermissionsAndGetManyByIds(
+	db *gorm.DB,
+	ids []uuid.UUID,
+	userId uuid.UUID,
+	preloads []schemas.BlockGroupRelation,
+	allowedPermissions []enums.AccessControlPermission,
+	onlyDeleted types.Ternary,
+) ([]schemas.BlockGroup, *exceptions.Exception) {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
+	subQuery := db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id").
+		Where("user_id = ? AND permission IN ?",
+			userId, allowedPermissions,
+		)
+	query := db.Model(&schemas.BlockGroup{}).
+		Joins("LEFT JOIN \"BlockPackTable\" bp ON block_pack_id = bp.id").
+		Joins("LEFT JOIN \"SubShelfTable\" ss ON bp.parent_sub_shelf_id = ss.id").
+		Where("id IN ? AND EXISTS (?)",
+			ids, subQuery,
+		)
+
+	switch onlyDeleted {
+	case types.Ternary_Positive:
+		query = query.Where("deleted_at IS NOT NULL")
+	case types.Ternary_Negative:
+		query = query.Where("deleted_at IS NULL")
+	}
+
+	if len(preloads) > 0 {
+		for _, preload := range preloads {
+			query = query.Preload(string(preload))
+		}
+	}
+
+	var blockGroups []schemas.BlockGroup
+	result := query.Find(&blockGroups)
+	if err := result.Error; err != nil {
+		return nil, exceptions.BlockGroup.NotFound().WithError(err)
+	}
+	if len(blockGroups) == 0 {
+		return nil, exceptions.BlockGroup.NotFound()
+	}
+
+	return blockGroups, nil
+}
+
+func (r *BlockGroupRepository) GetOneById(
+	db *gorm.DB,
+	id uuid.UUID,
+	userId uuid.UUID,
+	preloads []schemas.BlockGroupRelation,
+	onlyDeleted types.Ternary,
+) (*schemas.BlockGroup, *exceptions.Exception) {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+
+	return r.CheckPermissionAndGetOneById(
+		db,
+		id,
+		userId,
+		nil,
+		allowedPermissions,
+		types.Ternary_Negative,
+	)
+}
+
 func (r *BlockGroupRepository) CreateOneByBlockPackId(
 	db *gorm.DB,
 	blockPackId uuid.UUID,
@@ -76,6 +244,7 @@ func (r *BlockGroupRepository) CreateOneByBlockPackId(
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 		enums.AccessControlPermission_Write,
 	}
@@ -123,11 +292,18 @@ func (r *BlockGroupRepository) UpdateOneById(
 		db = models.NotezyDB
 	}
 
-	existingBlockGroup, exception := r.GetOneById(
+	allowedPermission := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	existingBlockGroup, exception := r.CheckPermissionAndGetOneById(
 		db,
 		id,
 		userId,
 		nil,
+		allowedPermission,
 		types.Ternary_Negative,
 	)
 	if exception != nil {
@@ -155,4 +331,234 @@ func (r *BlockGroupRepository) UpdateOneById(
 	}
 
 	return &updates, nil
+}
+
+func (r *BlockGroupRepository) RestoreSoftDeletedOneById(
+	db *gorm.DB,
+	id uuid.UUID,
+	userId uuid.UUID,
+) *exceptions.Exception {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	if !r.HasPermission(
+		db,
+		id,
+		userId,
+		allowedPermissions,
+		types.Ternary_Negative,
+	) {
+		return exceptions.BlockGroup.NoPermission("restore a deleted block group")
+	}
+
+	result := db.Model(&schemas.BlockGroup{}).
+		Where("id = ? AND deleted_at IS NOT NULL", id).
+		Select("deleted_at").
+		Updates(map[string]interface{}{"deleted_at": nil})
+	if err := result.Error; err != nil {
+		return exceptions.BlockGroup.FailedToUpdate().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return exceptions.BlockGroup.NoChanges()
+	}
+
+	return nil
+}
+
+func (r *BlockGroupRepository) RestoreSoftDeletedManyByIds(
+	db *gorm.DB,
+	ids []uuid.UUID,
+	userId uuid.UUID,
+) *exceptions.Exception {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	if !r.HasPermissions(
+		db,
+		ids,
+		userId,
+		allowedPermissions,
+		types.Ternary_Negative,
+	) {
+		return exceptions.BlockGroup.NoPermission("restore deleted block groups")
+	}
+
+	result := db.Model(&schemas.BlockGroup{}).
+		Where("id IN ? AND deleted_at IS NOT NULL", ids).
+		Select("deleted_at").
+		Updates(map[string]interface{}{"deleted_at": nil})
+	if err := result.Error; err != nil {
+		return exceptions.BlockGroup.FailedToUpdate().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return exceptions.BlockGroup.NoChanges()
+	}
+
+	return nil
+}
+
+func (r *BlockGroupRepository) SoftDeleteOneById(
+	db *gorm.DB,
+	id uuid.UUID,
+	userId uuid.UUID,
+) *exceptions.Exception {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	if !r.HasPermission(
+		db,
+		id,
+		userId,
+		allowedPermissions,
+		types.Ternary_Negative,
+	) {
+		return exceptions.BlockGroup.NoPermission("soft delete a block group")
+	}
+
+	result := db.Model(&schemas.BlockGroup{}).
+		Where("id = ? AND deleted_at IS NULL", id).
+		Update("deleted_at", time.Now())
+	if err := result.Error; err != nil {
+		return exceptions.BlockGroup.FailedToDelete().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return exceptions.BlockGroup.NoChanges()
+	}
+
+	return nil
+}
+
+func (r *BlockGroupRepository) SoftDeleteManyByIds(
+	db *gorm.DB,
+	ids []uuid.UUID,
+	userId uuid.UUID,
+) *exceptions.Exception {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	if !r.HasPermissions(
+		db,
+		ids,
+		userId,
+		allowedPermissions,
+		types.Ternary_Negative,
+	) {
+		return exceptions.BlockGroup.NoPermission("soft delete block groups")
+	}
+
+	result := db.Model(&schemas.BlockGroup{}).
+		Where("id IN ? AND deleted_at IS NULL", ids).
+		Update("deleted_at", time.Now())
+	if err := result.Error; err != nil {
+		return exceptions.BlockGroup.FailedToDelete().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return exceptions.BlockGroup.NoChanges()
+	}
+
+	return nil
+}
+
+func (r *BlockGroupRepository) HardDeleteOneById(
+	db *gorm.DB,
+	id uuid.UUID,
+	userId uuid.UUID,
+) *exceptions.Exception {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	if !r.HasPermission(
+		db,
+		id,
+		userId,
+		allowedPermissions,
+		types.Ternary_Negative,
+	) {
+		return exceptions.BlockGroup.NoPermission("hard delete a block group")
+	}
+
+	result := db.Model(&schemas.BlockGroup{}).
+		Where("id = ? AND deleted_at IS NOT NULL", id).
+		Delete(&schemas.BlockGroup{})
+	if err := result.Error; err != nil {
+		return exceptions.BlockGroup.FailedToDelete().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return exceptions.BlockGroup.NoChanges()
+	}
+
+	return nil
+}
+
+func (r *BlockGroupRepository) HardDeleteManyByIds(
+	db *gorm.DB,
+	ids []uuid.UUID,
+	userId uuid.UUID,
+) *exceptions.Exception {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	if !r.HasPermissions(
+		db,
+		ids,
+		userId,
+		allowedPermissions,
+		types.Ternary_Negative,
+	) {
+		return exceptions.BlockGroup.NoPermission("hard delete block groups")
+	}
+
+	result := db.Model(&schemas.BlockGroup{}).
+		Where("id IN ? AND deleted_at IS NOT NULL", ids).
+		Delete(&schemas.BlockGroup{})
+	if err := result.Error; err != nil {
+		return exceptions.BlockGroup.FailedToDelete().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return exceptions.BlockGroup.NoChanges()
+	}
+
+	return nil
 }
