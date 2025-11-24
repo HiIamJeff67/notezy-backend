@@ -62,7 +62,7 @@ func (r *BlockPackRepository) HasPermission(
 			userId, allowedPermissions,
 		)
 	query := db.Model(&schemas.BlockPack{}).
-		Joins("LEFT JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
+		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
 		Where("id = ? AND EXISTS (?)",
 			id, subQuery,
 		)
@@ -101,7 +101,7 @@ func (r *BlockPackRepository) HasPermissions(
 			userId, allowedPermissions,
 		)
 	query := db.Model(&schemas.BlockPack{}).
-		Joins("LEFT JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id == ss.id").
+		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id == ss.id").
 		Where("id IN ? AND EXISTS (?)",
 			ids, subQuery,
 		)
@@ -141,7 +141,7 @@ func (r *BlockPackRepository) CheckPermissionAndGetOneById(
 			userId, allowedPermissions,
 		)
 	query := db.Model(&schemas.BlockPack{}).
-		Joins("LEFT JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
+		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
 		Where("id = ? AND EXISTS (?)",
 			id, subQuery,
 		)
@@ -187,7 +187,7 @@ func (r *BlockPackRepository) CheckPermissionsAndGetManyByIds(
 			userId, allowedPermissions,
 		)
 	query := db.Model(&schemas.BlockPack{}).
-		Joins("LEFT JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
+		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
 		Where("id IN ? AND EXISTS (?)",
 			ids, subQuery,
 		)
@@ -239,8 +239,8 @@ func (r *BlockPackRepository) CheckPermissionAndGetOneWithOwnerIdById(
 		)
 	query := db.Model(&schemas.BlockPack{}).
 		Select("\"BlockPackTable\".*, \"UsersToShelvesTable\".user_id AS owner_id").
-		Joins("LEFT JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" owner_uts ON ss.root_shelf_id = owner_uts.root_shelf_id AND owner_uts.permission = 'Owner'").
+		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
+		Joins("INNER JOIN \"UsersToShelvesTable\" owner_uts ON ss.root_shelf_id = owner_uts.root_shelf_id AND owner_uts.permission = 'Owner'").
 		Where("id = ? AND EXISTS (?)",
 			id, subQuery,
 		)
@@ -292,8 +292,8 @@ func (r *BlockPackRepository) CheckPermissionsAndGetManyWithOwnerIdsByIds(
 		)
 	query := db.Model(&schemas.BlockPack{}).
 		Select("\"BlockPackTable\".*, \"UsersToShelvesTable\".user_id AS owner_id").
-		Joins("LEFT JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" owner_uts ON ss.root_shelf_id = owner_uts.root_shelf_id AND owner_uts.permission = 'Owner'").
+		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
+		Joins("INNER JOIN \"UsersToShelvesTable\" owner_uts ON ss.root_shelf_id = owner_uts.root_shelf_id AND owner_uts.permission = 'Owner'").
 		Where("id IN ? AND EXISTS (?)",
 			ids, subQuery,
 		)

@@ -48,4 +48,12 @@ func RegisterEnumsValidation(validate *validator.Validate) {
 		val := fl.Field().String()
 		return util.IsStringIn(val, enums.AllMaterialContentTypeStrings)
 	})
+	validate.RegisterValidation("issupportedblockpackicon", func(fl validator.FieldLevel) bool {
+		val := fl.Field().String()
+		return util.IsStringIn(val, enums.AllSupportedBlockPackIconStrings)
+	})
+	validate.RegisterValidation("isblocktype", func(fl validator.FieldLevel) bool {
+		val := fl.Field().String()
+		return util.IsStringIn(val, enums.AllBlockTypeStrings)
+	})
 }

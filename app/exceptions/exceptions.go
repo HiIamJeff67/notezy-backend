@@ -63,6 +63,7 @@ const (
 // ExceptionPrefix_Material ExceptionPrefix = "Material"				 41
 // ExceptionPrefix_BlockPack ExceptionPrefix = "BlockPack" 				 42
 // ExceptionPrefix_BlockGroup ExceptionPrefix = "BlockGroup"			 43
+// ExceptionPrefix_Block ExceptionPrefix = "Block"						 44
 )
 
 func IsExceptionCode(exceptionCode int) bool {

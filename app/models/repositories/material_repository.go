@@ -60,7 +60,7 @@ func (r *MaterialRepository) HasPermission(
 			userId, allowedPermissions,
 		)
 	query := db.Model(&schemas.Material{}).
-		Joins("LEFT JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
+		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
 		Where("id = ? AND EXISTS (?)",
 			id, subQuery,
 		)
@@ -99,7 +99,7 @@ func (r *MaterialRepository) HasPermissions(
 			userId, allowedPermissions,
 		)
 	query := db.Model(&schemas.Material{}).
-		Joins("LEFT JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
+		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
 		Where("id IN ? EXISTS (?)",
 			ids, subQuery,
 		)
@@ -139,7 +139,7 @@ func (r *MaterialRepository) CheckPermissionAndGetOneById(
 			userId, allowedPermissions,
 		)
 	query := db.Model(&schemas.Material{}).
-		Joins("LEFT JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
+		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
 		Where("id = ? AND EXISTS (?)",
 			id, subQuery,
 		)
@@ -185,7 +185,7 @@ func (r *MaterialRepository) CheckPermissionsAndGetManyByIds(
 			userId, allowedPermissions,
 		)
 	query := db.Model(&schemas.Material{}).
-		Joins("LEFT JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
+		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
 		Where("id IN ? EXISTS (?)",
 			ids, subQuery,
 		)
