@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	exceptions "notezy-backend/app/exceptions"
 	models "notezy-backend/app/models"
@@ -394,6 +395,7 @@ func (r *BlockPackRepository) CreateOneBySubShelfId(
 	newBlockPack.ParentSubShelfId = subShelfId
 
 	result := db.Model(&schemas.BlockPack{}).
+		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newBlockPack)
 	if err := result.Error; err != nil {
 		return nil, exceptions.BlockPack.FailedToCreate().WithError(err)

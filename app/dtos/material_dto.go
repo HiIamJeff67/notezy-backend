@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	enums "notezy-backend/app/models/schemas/enums"
-	"notezy-backend/shared/types"
+	types "notezy-backend/shared/types"
 )
 
 /* ============================== Request DTO ============================== */
@@ -169,7 +169,7 @@ type MoveMyMaterialsByIdsReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			MaterialIds                 []uuid.UUID `json:"materialIds" validate:"required,min=1,max=128"`
+			MaterialIds                 []uuid.UUID `json:"materialIds" validate:"required,min=1,max=100"`
 			DestinationParentSubShelfId uuid.UUID   `json:"destinationParentSubShelfId" validate:"required"`
 		},
 		any,
@@ -261,8 +261,8 @@ type GetMyMaterialAndItsParentByIdResDto struct {
 	CreatedAt                    time.Time          `json:"createdAt"`
 	RootShelfId                  uuid.UUID          `json:"rootShelfId"`
 	ParentSubShelfId             uuid.UUID          `json:"parentSubShelfId"`
-	ParentSubShelfName           string             `json:"parentSubShelfName"`
 	ParentSubShelfPrevSubShelfId *uuid.UUID         `json:"parentSubShelfPrevSubShelfId"`
+	ParentSubShelfName           string             `json:"parentSubShelfName"`
 	ParentSubShelfPath           types.UUIDArray    `json:"parentSubShelfPath"`
 	ParentSubShelfDeletedAt      time.Time          `json:"parentSubShelfDeletedAt"`
 	ParentSubShelfUpdatedAt      time.Time          `json:"parentSubShelfUpdatedAt"`

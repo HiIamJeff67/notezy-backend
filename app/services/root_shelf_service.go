@@ -61,7 +61,7 @@ func (s *RootShelfService) GetMyRootShelfById(
 	ctx context.Context, reqDto *dtos.GetMyRootShelfByIdReqDto,
 ) (*dtos.GetMyRootShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -92,7 +92,7 @@ func (s *RootShelfService) SearchRecentRootShelves(
 	ctx context.Context, reqDto *dtos.SearchRecentRootShelvesReqDto,
 ) (*dtos.SearchRecentRootShelvesResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -122,7 +122,7 @@ func (s *RootShelfService) CreateRootShelf(
 	ctx context.Context, reqDto *dtos.CreateRootShelfReqDto,
 ) (*dtos.CreateRootShelfResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -150,7 +150,7 @@ func (s *RootShelfService) UpdateMyRootShelfById(
 	ctx context.Context, reqDto *dtos.UpdateMyRootShelfByIdReqDto,
 ) (*dtos.UpdateMyRootShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -178,7 +178,7 @@ func (s *RootShelfService) RestoreMyRootShelfById(
 	ctx context.Context, reqDto *dtos.RestoreMyRootShelfByIdReqDto,
 ) (*dtos.RestoreMyRootShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -201,7 +201,7 @@ func (s *RootShelfService) RestoreMyRootShelvesByIds(
 	ctx context.Context, reqDto *dtos.RestoreMyRootShelvesByIdsReqDto,
 ) (*dtos.RestoreMyRootShelvesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -224,7 +224,7 @@ func (s *RootShelfService) DeleteMyRootShelfById(
 	ctx context.Context, reqDto *dtos.DeleteMyRootShelfByIdReqDto,
 ) (*dtos.DeleteMyRootShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -247,7 +247,7 @@ func (s *RootShelfService) DeleteMyRootShelvesByIds(
 	ctx context.Context, reqDto *dtos.DeleteMyRootShelvesByIdsReqDto,
 ) (*dtos.DeleteMyRootShelvesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)

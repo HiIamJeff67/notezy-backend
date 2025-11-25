@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
@@ -66,6 +67,7 @@ func (r *UserAccountRepository) CreateOneByUserId(
 	}
 
 	result := db.Model(&schemas.UserAccount{}).
+		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newUserAccount)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserAccount.FailedToCreate().WithError(err)

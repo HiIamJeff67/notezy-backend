@@ -60,7 +60,7 @@ func (s *SubShelfService) GetMySubShelfById(
 	ctx context.Context, reqDto *dtos.GetMySubShelfByIdReqDto,
 ) (*dtos.GetMySubShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidInput().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -91,7 +91,7 @@ func (s *SubShelfService) GetMySubShelvesByPrevSubShelfId(
 	ctx context.Context, reqDto *dtos.GetMySubShelvesByPrevSubShelfIdReqDto,
 ) (*dtos.GetMySubShelvesByPrevSubShelfIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidInput().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -124,7 +124,7 @@ func (s *SubShelfService) GetAllMySubShelvesByRootShelfId(
 	ctx context.Context, reqDto *dtos.GetAllMySubShelvesByRootShelfIdReqDto,
 ) (*dtos.GetAllMySubShelvesByRootShelfIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidInput().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -158,7 +158,7 @@ func (s *SubShelfService) CreateSubShelfByRootShelfId(
 	ctx context.Context, reqDto *dtos.CreateSubShelfByRootShelfIdReqDto,
 ) (*dtos.CreateSubShelfByRootShelfIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidInput().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -186,7 +186,7 @@ func (s *SubShelfService) UpdateMySubShelfById(
 	ctx context.Context, reqDto *dtos.UpdateMySubShelfByIdReqDto,
 ) (*dtos.UpdateMySubShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidInput().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -215,7 +215,7 @@ func (s *SubShelfService) MoveMySubShelf(
 	ctx context.Context, reqDto *dtos.MoveMySubShelfReqDto,
 ) (*dtos.MoveMySubShelfResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidInput().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithError(err)
 	}
 
 	if reqDto.Body.DestinationSubShelfId != nil &&
@@ -310,7 +310,7 @@ func (s *SubShelfService) MoveMySubShelves(
 	ctx context.Context, reqDto *dtos.MoveMySubShelvesReqDto,
 ) (*dtos.MoveMySubShelvesResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidInput().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -425,7 +425,7 @@ func (s *SubShelfService) RestoreMySubShelfById(
 	ctx context.Context, reqDto *dtos.RestoreMySubShelfByIdReqDto,
 ) (*dtos.RestoreMySubShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidInput().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -448,7 +448,7 @@ func (s *SubShelfService) RestoreMySubShelvesByIds(
 	ctx context.Context, reqDto *dtos.RestoreMySubShelvesByIdsReqDto,
 ) (*dtos.RestoreMySubShelvesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidInput().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -471,7 +471,7 @@ func (s *SubShelfService) DeleteMySubShelfById(
 	ctx context.Context, reqDto *dtos.DeleteMySubShelfByIdReqDto,
 ) (*dtos.DeleteMySubShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidInput().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -494,7 +494,7 @@ func (s *SubShelfService) DeleteMySubShelvesByIds(
 	ctx context.Context, reqDto *dtos.DeleteMySubShelvesByIdsReqDto,
 ) (*dtos.DeleteMySubShelvesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidInput().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)

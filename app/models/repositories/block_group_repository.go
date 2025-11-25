@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	exceptions "notezy-backend/app/exceptions"
 	models "notezy-backend/app/models"
@@ -288,6 +289,7 @@ func (r *BlockGroupRepository) CreateOneByBlockPackId(
 	newBlockGroup.BlockPackId = blockPackId
 
 	result := db.Model(&schemas.BlockGroup{}).
+		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newBlockGroup)
 	if err := result.Error; err != nil {
 		return nil, exceptions.BlockGroup.FailedToCreate().WithError(err)

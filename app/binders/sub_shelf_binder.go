@@ -50,7 +50,6 @@ func (b *SubShelfBinder) BindGetMySubShelfById(controllerFunc types.ControllerFu
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		// for the uuid in the parameter, we MUST extract it and parse it manually
 		subShelfIdString := ctx.Query("subShelfId")
 		if subShelfIdString == "" {
 			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("subShelfId is required")).Log().ResponseWithJSON(ctx)
@@ -80,7 +79,6 @@ func (b *SubShelfBinder) BindGetMySubShelvesByPrevSubShelfId(controllerFunc type
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		// for the uuid in the parameter, we MUST extract it and parse it manually
 		prevSubShelfIdString := ctx.Query("prevSubShelfId")
 		if prevSubShelfIdString == "" {
 			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("prevSubShelfId is required")).ResponseWithJSON(ctx)
@@ -110,7 +108,6 @@ func (b *SubShelfBinder) BindGetAllMySubShelvesByRootShelfId(controllerFunc type
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		// for the uuid in the parameter, we MUST extract it and parse it manually
 		rootShelfIdString := ctx.Query("rootShelfId")
 		if rootShelfIdString == "" {
 			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("rootShelfId is required")).ResponseWithJSON(ctx)

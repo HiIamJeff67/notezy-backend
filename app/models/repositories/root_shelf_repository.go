@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	exceptions "notezy-backend/app/exceptions"
 	models "notezy-backend/app/models"
@@ -160,6 +161,7 @@ func (r *RootShelfRepository) CreateOneByOwnerId(
 	}
 
 	result := db.Model(&schemas.RootShelf{}).
+		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newRootShelf)
 	if err := result.Error; err != nil {
 		switch err.Error() {

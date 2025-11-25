@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
@@ -93,6 +94,7 @@ func (r *ThemeRepository) CreateOneByAuthorId(
 	}
 
 	result := db.Model(&schemas.Theme{}).
+		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newTheme)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Theme.FailedToCreate().WithError(err)

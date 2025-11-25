@@ -51,7 +51,7 @@ func (s *UserInfoService) GetMyInfo(
 	ctx context.Context, reqDto *dtos.GetMyInfoReqDto,
 ) (*dtos.GetMyInfoResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.UserInfo.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -80,7 +80,7 @@ func (s *UserInfoService) UpdateMyInfo(
 	ctx context.Context, reqDto *dtos.UpdateMyInfoReqDto,
 ) (*dtos.UpdateMyInfoResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.UserInfo.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)

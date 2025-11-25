@@ -47,7 +47,6 @@ func (b *RootShelfBinder) BindGetMyRootShelfById(controllerFunc types.Controller
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		// for the uuid in the parameter, we MUST extract it and parse it manually
 		rootShelfIdString := ctx.Query("rootShelfId")
 		if rootShelfIdString == "" {
 			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("rootShelfId is required")).ResponseWithJSON(ctx)

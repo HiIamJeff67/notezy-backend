@@ -21,11 +21,16 @@ const (
 
 const (
 	// limitation of a root shelf
-	MaxSubShelvesOfRootShelf int32 = 1e+5 // max number of the sub folders
-	MaxMaterialsOfRootShelf  int32 = 1e+5 // max number of files
+	MaxSubShelvesOfRootShelf int32 = 1e+2 // max number of the sub folders
+	MaxContentOfRootShelf    int32 = 1e+2 // max number of all types of content under a root shelf
+	MaxMaterialsOfRootShelf  int32 = 1e+2 // max number of materials(files)
+	MaxBlockPackOfRootShelf  int32 = 1e+2 // max number of block packs
+
 	// limitation of a sub shelf
-	MaxSubShelvesOfSubShelf int32 = 1e+3
-	MaxMaterialsOfSubShelf  int32 = 1e+3
+	MaxSubShelvesOfSubShelf int32 = 1e+2 // max number of sub folders
+	MaxContentOfSubShelf    int32 = 1e+2 // max number of all types of content under a sub shelf
+	MaxMaterialsOfSubShelf  int32 = 1e+2 // max number of materials(files)
+	MaxBlockPackOfSubShelf  int32 = 1e+2 // max number of block packs
 
 	PeekFileSize            int64 = 256 * Byte
 	MaxTextbookFileSize     int64 = 5 * MB

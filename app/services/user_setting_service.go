@@ -44,7 +44,7 @@ func (s *UserSettingService) GetMySetting(
 	ctx context.Context, reqDto *dtos.GetMySettingReqDto,
 ) (*dtos.GetMySettingResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.UserSetting.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -68,7 +68,7 @@ func (s *UserSettingService) UpdateMySetting(
 	ctx context.Context, reqDto *dtos.UpdateMySettingReqDto,
 ) (*dtos.UpdateMySettingResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.UserSetting.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)

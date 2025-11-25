@@ -81,7 +81,6 @@ func (c *AuthController) Login(ctx *gin.Context, reqDto *dtos.LoginReqDto) {
 	})
 }
 
-// with AuthMiddleware
 func (c *AuthController) Logout(ctx *gin.Context, reqDto *dtos.LogoutReqDto) {
 	resDto, exception := c.authService.Logout(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -113,7 +112,6 @@ func (c *AuthController) SendAuthCode(ctx *gin.Context, reqDto *dtos.SendAuthCod
 	})
 }
 
-// with AuthMiddleware
 func (c *AuthController) ValidateEmail(ctx *gin.Context, reqDto *dtos.ValidateEmailReqDto) {
 	resDto, exception := c.authService.ValidateEmail(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -128,7 +126,6 @@ func (c *AuthController) ValidateEmail(ctx *gin.Context, reqDto *dtos.ValidateEm
 	})
 }
 
-// with AuthMiddleware
 func (c *AuthController) ResetEmail(ctx *gin.Context, reqDto *dtos.ResetEmailReqDto) {
 	resDto, exception := c.authService.ResetEmail(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -158,7 +155,6 @@ func (c *AuthController) ForgetPassword(ctx *gin.Context, reqDto *dtos.ForgetPas
 	})
 }
 
-// with AuthMiddleware
 func (c *AuthController) DeleteMe(ctx *gin.Context, reqDto *dtos.DeleteMeReqDto) {
 	resDto, exception := c.authService.DeleteMe(ctx.Request.Context(), reqDto)
 	if exception != nil {

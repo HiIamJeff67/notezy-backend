@@ -44,7 +44,7 @@ func (s *UserAccountService) GetMyAccount(
 	ctx context.Context, reqDto *dtos.GetMyAccountReqDto,
 ) (*dtos.GetMyAccountResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.UserAccount.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -69,7 +69,7 @@ func (s *UserAccountService) UpdateMyAccount(
 	ctx context.Context, reqDto *dtos.UpdateMyAccountReqDto,
 ) (*dtos.UpdateMyAccountResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.UserAccount.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)

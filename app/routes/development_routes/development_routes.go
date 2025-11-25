@@ -33,6 +33,7 @@ func ConfigureDevelopmentRoutes() {
 	configureDevelopmentRootShelfRoutes()
 	configureDevelopmentSubShelfRoutes()
 	configureDevelopmentMaterialRoutes()
+	configureDevelopmentBlockPackRoutes()
 
 	// test
 	configureStorageRoutes()

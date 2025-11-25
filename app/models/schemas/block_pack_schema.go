@@ -10,7 +10,7 @@ import (
 )
 
 type BlockPack struct {
-	Id                  uuid.UUID                     `json:"id" gorm:"column:id; type:uuid; primaryKey; not null;"`
+	Id                  uuid.UUID                     `json:"id" gorm:"column:id; type:uuid; primaryKey; not null; default:gen_random_uuid();"`
 	ParentSubShelfId    uuid.UUID                     `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id; type:uuid; not null; uniqueIndex:block_pack_idx_parent_sub_shelf_id_name_deleted_at;"`
 	Name                string                        `json:"name" gorm:"column:name; size:128; not null; default:'undefined'; uniqueIndex:block_pack_idx_parent_sub_shelf_id_name_deleted_at;"`
 	Icon                *enums.SupportedBlockPackIcon `json:"icon" gorm:"column:icon; type:SupportedBlockPackIcon; default:null;"`

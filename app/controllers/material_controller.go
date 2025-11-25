@@ -40,7 +40,6 @@ func NewMaterialController(service services.MaterialServiceInterface) MaterialCo
 
 /* ============================== Controller ============================== */
 
-// with AuthMiddleware
 func (c *MaterialController) GetMyMaterialById(ctx *gin.Context, reqDto *dtos.GetMyMaterialByIdReqDto) {
 	resDto, exception := c.materialService.GetMyMaterialById(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -55,7 +54,6 @@ func (c *MaterialController) GetMyMaterialById(ctx *gin.Context, reqDto *dtos.Ge
 	})
 }
 
-// with AuthMiddleware
 func (c *MaterialController) GetMyMaterialAndItsParentById(ctx *gin.Context, reqDto *dtos.GetMyMaterialAndItsParentByIdReqDto) {
 	resDto, exception := c.materialService.GetMyMaterialAndItsParentById(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -70,7 +68,6 @@ func (c *MaterialController) GetMyMaterialAndItsParentById(ctx *gin.Context, req
 	})
 }
 
-// with AuthMiddleware
 func (c *MaterialController) GetAllMyMaterialsByParentSubShelfId(ctx *gin.Context, reqDto *dtos.GetAllMyMaterialsByParentSubShelfIdReqDto) {
 	resDto, exception := c.materialService.GetAllMyMaterialsByParentSubShelfId(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -85,7 +82,6 @@ func (c *MaterialController) GetAllMyMaterialsByParentSubShelfId(ctx *gin.Contex
 	})
 }
 
-// with AuthMiddleware
 func (c *MaterialController) GetAllMyMaterialsByRootShelfId(ctx *gin.Context, reqDto *dtos.GetAllMyMaterialsByRootShelfIdReqDto) {
 	resDto, exception := c.materialService.GetAllMyMaterialsByRootShelfId(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -100,7 +96,6 @@ func (c *MaterialController) GetAllMyMaterialsByRootShelfId(ctx *gin.Context, re
 	})
 }
 
-// with AuthMiddleware
 func (c *MaterialController) CreateTextbookMaterial(ctx *gin.Context, reqDto *dtos.CreateTextbookMaterialReqDto) {
 	resDto, exception := c.materialService.CreateTextbookMaterial(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -115,7 +110,6 @@ func (c *MaterialController) CreateTextbookMaterial(ctx *gin.Context, reqDto *dt
 	})
 }
 
-// with AuthMiddleware
 func (c *MaterialController) CreateNotebookMaterial(ctx *gin.Context, reqDto *dtos.CreateNotebookMaterialReqDto) {
 	resDto, exception := c.materialService.CreateNotebookMaterial(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -130,7 +124,6 @@ func (c *MaterialController) CreateNotebookMaterial(ctx *gin.Context, reqDto *dt
 	})
 }
 
-// with AuthMiddleware
 func (c *MaterialController) UpdateMyMaterialById(ctx *gin.Context, reqDto *dtos.UpdateMyMaterialByIdReqDto) {
 	resDto, exception := c.materialService.UpdateMyMaterialById(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -145,7 +138,6 @@ func (c *MaterialController) UpdateMyMaterialById(ctx *gin.Context, reqDto *dtos
 	})
 }
 
-// with AuthMiddleware, MultipartAdapter
 func (c *MaterialController) SaveMyTextbookMaterialById(ctx *gin.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) {
 	resDto, exception := c.materialService.SaveMyTextbookMaterialById(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -160,7 +152,6 @@ func (c *MaterialController) SaveMyTextbookMaterialById(ctx *gin.Context, reqDto
 	})
 }
 
-// with AuthMiddleware, MultipartAdapter
 func (c *MaterialController) SaveMyNotebookMaterialById(ctx *gin.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) {
 	resDto, exception := c.materialService.SaveMyNotebookMaterialById(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -175,7 +166,6 @@ func (c *MaterialController) SaveMyNotebookMaterialById(ctx *gin.Context, reqDto
 	})
 }
 
-// with AuthMiddleware, MultipartAdapter
 func (c *MaterialController) MoveMyMaterialById(ctx *gin.Context, reqDto *dtos.MoveMyMaterialByIdReqDto) {
 	resDto, exception := c.materialService.MoveMyMaterialById(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -190,7 +180,6 @@ func (c *MaterialController) MoveMyMaterialById(ctx *gin.Context, reqDto *dtos.M
 	})
 }
 
-// with AuthMiddleware
 func (c *MaterialController) MoveMyMaterialsByIds(ctx *gin.Context, reqDto *dtos.MoveMyMaterialsByIdsReqDto) {
 	resDto, exception := c.materialService.MoveMyMaterialsByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -205,7 +194,6 @@ func (c *MaterialController) MoveMyMaterialsByIds(ctx *gin.Context, reqDto *dtos
 	})
 }
 
-// with AuthMiddleware
 func (c *MaterialController) RestoreMyMaterialById(ctx *gin.Context, reqDto *dtos.RestoreMyMaterialByIdReqDto) {
 	resDto, exception := c.materialService.RestoreMyMaterialById(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -220,7 +208,6 @@ func (c *MaterialController) RestoreMyMaterialById(ctx *gin.Context, reqDto *dto
 	})
 }
 
-// with AuthMiddleware
 func (c *MaterialController) RestoreMyMaterialsByIds(ctx *gin.Context, reqDto *dtos.RestoreMyMaterialsByIdsReqDto) {
 	resDto, exception := c.materialService.RestoreMyMaterialsByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -235,7 +222,6 @@ func (c *MaterialController) RestoreMyMaterialsByIds(ctx *gin.Context, reqDto *d
 	})
 }
 
-// with AuthMiddleware
 func (c *MaterialController) DeleteMyMaterialById(ctx *gin.Context, reqDto *dtos.DeleteMyMaterialByIdReqDto) {
 	resDto, exception := c.materialService.DeleteMyMaterialById(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -250,7 +236,6 @@ func (c *MaterialController) DeleteMyMaterialById(ctx *gin.Context, reqDto *dtos
 	})
 }
 
-// with AuthMiddleware
 func (c *MaterialController) DeleteMyMaterialsByIds(ctx *gin.Context, reqDto *dtos.DeleteMyMaterialsByIdsReqDto) {
 	resDto, exception := c.materialService.DeleteMyMaterialsByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {

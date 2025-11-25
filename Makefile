@@ -12,6 +12,14 @@ clear-build-db:
 clear-hotreload-db: # the same as the build version of db
 	docker exec -i notezy-db psql -U jeff -d notezy-db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 
+remigrate-build-db:
+	make clear-build-db
+	make migrate-build-db
+
+remigrate-hotreload-db:
+	make clear-hotreload-db
+	make migrate-hotreload-db
+
 clear-go-cache:
 	go clean -modcache
 	go mod download

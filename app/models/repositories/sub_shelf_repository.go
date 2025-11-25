@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	exceptions "notezy-backend/app/exceptions"
 	models "notezy-backend/app/models"
@@ -310,6 +311,7 @@ func (r *SubShelfRepository) CreateOneByRootShelfId(
 	newSubShelf.RootShelfId = rootShelfId
 
 	result := db.Model(&schemas.SubShelf{}).
+		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newSubShelf)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Shelf.FailedToCreate().WithError(err)

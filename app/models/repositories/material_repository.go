@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	exceptions "notezy-backend/app/exceptions"
 	models "notezy-backend/app/models"
@@ -278,6 +279,7 @@ func (r *MaterialRepository) CreateOneBySubShelfId(
 	newMaterial.ParentSubShelfId = subShelfId
 
 	result := db.Model(&schemas.Material{}).
+		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newMaterial)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Material.FailedToCreate().WithError(err)

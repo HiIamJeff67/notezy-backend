@@ -28,7 +28,6 @@ func NewUserAccountController(service services.UserAccountServiceInterface) User
 
 /* ============================== Controllers ============================== */
 
-// with AuthMiddleware
 func (c *UserAccountController) GetMyAccount(ctx *gin.Context, reqDto *dtos.GetMyAccountReqDto) {
 	resDto, exception := c.userAccountService.GetMyAccount(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -43,7 +42,6 @@ func (c *UserAccountController) GetMyAccount(ctx *gin.Context, reqDto *dtos.GetM
 	})
 }
 
-// with AuthMiddleware
 func (c *UserAccountController) UpdateMyAccount(ctx *gin.Context, reqDto *dtos.UpdateMyAccountReqDto) {
 	resDto, exception := c.userAccountService.UpdateMyAccount(ctx.Request.Context(), reqDto)
 	if exception != nil {

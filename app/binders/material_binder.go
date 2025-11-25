@@ -58,7 +58,6 @@ func (b *MaterialBinder) BindGetMyMaterialById(controllerFunc types.ControllerFu
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		// for the uuid in the parameter, we MUST extract it and parse it manually
 		materialIdString := ctx.Query("materialId")
 		if materialIdString == "" {
 			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("materialId is required")).Log().ResponseWithJSON(ctx)
@@ -88,7 +87,6 @@ func (b *MaterialBinder) BindGetMyMaterialAndItsParentById(controllerFunc types.
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		// for the uuid in the parameter, we MUST extract it and parse it manually
 		materialIdString := ctx.Query("materialId")
 		if materialIdString == "" {
 			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("materialId is required")).Log().ResponseWithJSON(ctx)
@@ -118,7 +116,6 @@ func (b *MaterialBinder) BindGetAllMyMaterialsByParentSubShelfId(controllerFunc 
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		// for the uuid in the parameter, we MUST extract it and parse it manually
 		parentSubShelfIdString := ctx.Query("parentSubShelfId")
 		if parentSubShelfIdString == "" {
 			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("parentSubShelfId is required")).Log().ResponseWithJSON(ctx)
@@ -153,7 +150,6 @@ func (b *MaterialBinder) BindGetAllMyMaterialsByRootShelfId(controllerFunc types
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		// for the uuid in the parameter, we MUST extract it and parse it manually
 		rootShelfIdString := ctx.Query("rootShelfId")
 		if rootShelfIdString == "" {
 			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("rootShelfId is required")).Log().ResponseWithJSON(ctx)

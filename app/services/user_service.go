@@ -57,7 +57,7 @@ func (s *UserService) GetUserData(
 	ctx context.Context, reqDto *dtos.GetUserDataReqDto,
 ) (*dtos.GetUserDataResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithError(err)
 	}
 
 	userDataCache, exception := caches.GetUserDataCache(reqDto.ContextFields.UserId)
@@ -72,7 +72,7 @@ func (s *UserService) GetMe(
 	ctx context.Context, reqDto *dtos.GetMeReqDto,
 ) (*dtos.GetMeResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -102,7 +102,7 @@ func (s *UserService) UpdateMe(
 	ctx context.Context, reqDto *dtos.UpdateMeReqDto,
 ) (*dtos.UpdateMeResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)

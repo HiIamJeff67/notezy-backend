@@ -15,8 +15,8 @@ type Block struct {
 	ParentBlockId *uuid.UUID      `json:"parentBlockId" gorm:"column:parent_block_id; type:uuid; check:check_parent_block_id_is_not_itself,parent_block_id != id;"`
 	BlockGroupId  uuid.UUID       `json:"blockGroupId" gorm:"column:block_group_id; type:uuid; not null;"`
 	Type          enums.BlockType `json:"type" gorm:"column:type; type:BlockType; not null; default:'paragraph';"`
-	Props         datatypes.JSON  `json:"props" gorm:"column:props; type:jsonb; not null; default:'{}';"`
-	Content       datatypes.JSON  `json:"content" gorm:"column:content; type:jsonb; default:'[]';"`
+	Props         datatypes.JSON  `json:"props" gorm:"column:props; type:jsonb; not null; default:'{}'; check:check_props_size,octet_length(props::text) <= 10240;"`
+	Content       datatypes.JSON  `json:"content" gorm:"column:content; type:jsonb; default:'[]'; check:check_content_size,octet_length(content::text) <= 10240;"`
 	DeletedAt     *time.Time      `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz; default:null;"`
 	UpdatedAt     time.Time       `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt     time.Time       `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
