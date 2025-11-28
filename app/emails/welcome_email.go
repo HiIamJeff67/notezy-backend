@@ -14,7 +14,7 @@ var _welcomeEmailRenderer = &HTMLEmailRenderer{
 	DataMap:      map[string]any{},
 }
 
-func SyncSendWelcomeEmail(
+func AsyncSendWelcomeEmail(
 	to string,
 	userName string,
 	status string,

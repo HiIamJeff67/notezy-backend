@@ -2,39 +2,48 @@ package blocknote
 
 import "encoding/json"
 
-/* ==================== InlineContent  Definitions ==================== */
-
 type InlineContentType string
 
 const InlineContentType_StyledText InlineContentType = "text"
 const InlineContentType_Link InlineContentType = "link"
 
-// place your custom inline content type above with the type of InlineContentType
+// place your custom inline content type above with the type of InlineContentType and implement some methods for it below
+
+type Styles struct {
+	Bold            bool   `json:"bold,omitempty"`
+	Italic          bool   `json:"italic,omitempty"`
+	Underline       bool   `json:"underline,omitempty"`
+	Strike          bool   `json:"strike,omitempty"`
+	Code            bool   `json:"code,omitempty"`
+	TextColor       string `json:"textColor,omitempty"`
+	BackgroundColor string `json:"backgroundColor,omitempty"`
+}
 
 type StyledText struct {
 	Type   InlineContentType `json:"type" validate:"required,eq=text"`
 	Text   string            `json:"text" validate:"required"`
-	Styles []string          `json:"styles" validate:"omitempty"`
+	Styles Styles            `json:"styles" validate:"omitempty"`
 }
 
 type Link struct {
 	Type    InlineContentType `json:"type" validate:"required,eq=link"`
-	Content []StyledText      `json:"content" validate:"omitempty"`
 	Href    string            `json:"href" validate:"required"`
+	Content []StyledText      `json:"content" validate:"omitempty"`
 }
 
-type CustomInlineContent struct {
-	Type    InlineContentType      `json:"type" validate:"required"`
-	Content []StyledText           `json:"content" validate:"omitempty"`
-	Props   map[string]interface{} `json:"props" validate:"omitempty"`
-}
+// type CustomInlineContent struct {
+// 	Type    InlineContentType      `json:"type" validate:"required"`
+// 	Props   map[string]interface{} `json:"props" validate:"omitempty"`
+// 	Content []StyledText           `json:"content" validate:"omitempty"`
+// }
 
-// InlineContent = StyledText | Link | CustomInlineContent
+// InlineContent = Styles | StyledText | Link | CustomInlineContent
 type InlineContentUnion interface{ isInlineContent() bool }
 
-func (*StyledText) isInlineContent() bool          { return true }
-func (*Link) isInlineContent() bool                { return true }
-func (*CustomInlineContent) isInlineContent() bool { return true }
+func (*StyledText) isInlineContent() bool { return true }
+func (*Link) isInlineContent() bool       { return true }
+
+// func (*CustomInlineContent) isInlineContent() bool { return true }
 
 type InlineContent struct {
 	InlineContentUnion
@@ -61,12 +70,12 @@ func (ic *InlineContent) UnmarshalJSON(b []byte) error {
 			return err
 		}
 		ic.InlineContentUnion = &v
-	default:
-		var v CustomInlineContent
-		if err := json.Unmarshal(b, &v); err != nil {
-			return err
-		}
-		ic.InlineContentUnion = &v
+		// case InlineContentType_CustomInlineContent:
+		// 	var v CustomInlineContent
+		// 	if err := json.Unmarshal(b, &v); err != nil {
+		// 		return err
+		// 	}
+		// 	ic.InlineContentUnion = &v
 	}
 	return nil
 }
@@ -77,14 +86,14 @@ func (ic *InlineContent) MarshalJSON() ([]byte, error) {
 		return json.Marshal(v)
 	case *Link:
 		return json.Marshal(v)
-	case *CustomInlineContent:
-		return json.Marshal(v)
+	// case *CustomInlineContent:
+	// 	return json.Marshal(v)
 	default:
 		return json.Marshal(nil)
 	}
 }
 
-func NewStyledText(text string, styles []string) *StyledText {
+func NewStyledText(text string, styles Styles) *StyledText {
 	return &StyledText{
 		Type:   InlineContentType_StyledText,
 		Text:   text,
@@ -100,13 +109,13 @@ func NewLink(href string, content []StyledText) *Link {
 	}
 }
 
-func NewCustomInlineContent(customType InlineContentType, content []StyledText, props map[string]interface{}) *CustomInlineContent {
-	if props == nil {
-		props = map[string]interface{}{}
-	}
-	return &CustomInlineContent{
-		Type:    customType,
-		Content: content,
-		Props:   props,
-	}
-}
+// func NewCustomInlineContent(customType InlineContentType, content []StyledText, props map[string]interface{}) *CustomInlineContent {
+// 	if props == nil {
+// 		props = map[string]interface{}{}
+// 	}
+// 	return &CustomInlineContent{
+// 		Type:    customType,
+// 		Content: content,
+// 		Props:   props,
+// 	}
+// }

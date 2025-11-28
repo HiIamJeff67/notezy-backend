@@ -19,7 +19,7 @@ type Theme struct {
 	Version       string    `json:"version" gorm:"column:version; not null;"`
 	IsDefault     bool      `json:"isDefault" gorm:"column:is_default; type:boolean; not null;"`
 	DownloadURL   *string   `json:"downloadURL" gorm:"column:download_url;"`
-	DownloadCount int64     `json:"downloadCount" gorm:"column:download_count; type:bigint; not null default:'0';"`
+	DownloadCount int64     `json:"downloadCount" gorm:"column:download_count; type:bigint; not null default:0;"`
 	CreatedAt     time.Time `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 	UpdatedAt     time.Time `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 

@@ -197,3 +197,25 @@ func LoadRateLimitRecordCacheLibraries() *exceptions.Exception {
 
 	return nil
 }
+
+func LoadUserQuotaCacheLibraries() *exceptions.Exception {
+	for serverNumber := UserDataRange.Start; serverNumber < UserDataRange.Start+UserDataRange.Size; serverNumber++ {
+		redisClient, exist := RedisClientMap[serverNumber]
+		if !exist {
+			continue
+		}
+
+		if err := redisClient.Do("FUNCTION", "LOAD", "REPLACE", redislibraries.UserQuotaLibraryContent).Err(); err != nil {
+			return exceptions.Cache.FailedToLoadRedisFunctions().
+				WithDetails(fmt.Sprintf("Failed to load functions from lua scripts in server number of %d", serverNumber)).
+				WithError(err)
+		}
+
+		logs.FInfo("Reloaded all the functions in library of %s from lua scripts in server number of %d",
+			redislibraries.UserQuotaLibrary,
+			serverNumber,
+		)
+	}
+
+	return nil
+}

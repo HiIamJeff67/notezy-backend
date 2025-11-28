@@ -249,10 +249,11 @@ func BatchSynchronizeRateLimitRecordCachesByFingerprints(
 		)
 	}
 
-	arguments := make([]interface{}, 0)
-	arguments = append(arguments, "FCALL")
-	arguments = append(arguments, redislibraries.BatchSynchronizeRateLimitRecordByFormattedKeysFunction)
-	arguments = append(arguments, len(dtos))
+	arguments := []interface{}{
+		"FCALL",
+		redislibraries.BatchSynchronizeRateLimitRecordByFormattedKeysFunction,
+		len(dtos),
+	}
 	arguments = append(arguments, keys...)
 	arguments = append(arguments, argv...)
 	if _, err := redisClient.Do(arguments...).Result(); err != nil {
@@ -263,7 +264,10 @@ func BatchSynchronizeRateLimitRecordCachesByFingerprints(
 	return nil
 }
 
-func BatchDeleteRateLimiteCachesByFingerprints(fingerprints []string, backendServerName types.BackendServerName) *exceptions.Exception {
+func BatchDeleteRateLimiteCachesByFingerprints(
+	fingerprints []string,
+	backendServerName types.BackendServerName,
+) *exceptions.Exception {
 	if len(fingerprints) == 0 {
 		return nil
 	}
@@ -283,10 +287,11 @@ func BatchDeleteRateLimiteCachesByFingerprints(fingerprints []string, backendSer
 		keys = append(keys, formatRateLimitKeyByFingerprint(fingerprint))
 	}
 
-	arguments := make([]interface{}, 0)
-	arguments = append(arguments, "FCALL")
-	arguments = append(arguments, redislibraries.BatchDeleteRateLimitRecordByFormattedKeysFunction)
-	arguments = append(arguments, len(fingerprints))
+	arguments := []interface{}{
+		"FCALL",
+		redislibraries.BatchDeleteRateLimitRecordByFormattedKeysFunction,
+		len(fingerprints),
+	}
 	arguments = append(arguments, keys...)
 	if _, err := redisClient.Do(arguments...).Result(); err != nil {
 		return exceptions.Cache.FailedToDelete(types.ValidCachePurpose_RateLimite.String()).WithError(err)
@@ -456,10 +461,11 @@ func BatchSynchronizeRateLimitRecordCachesByUserIds(
 		)
 	}
 
-	arguments := make([]interface{}, 0)
-	arguments = append(arguments, "FCALL")
-	arguments = append(arguments, redislibraries.BatchSynchronizeRateLimitRecordByFormattedKeysFunction)
-	arguments = append(arguments, len(keys))
+	arguments := []interface{}{
+		"FCALL",
+		redislibraries.BatchSynchronizeRateLimitRecordByFormattedKeysFunction,
+		len(keys),
+	}
 	arguments = append(arguments, keys...)
 	arguments = append(arguments, argv...)
 	if _, err := redisClient.Do(arguments...).Result(); err != nil {
@@ -492,10 +498,12 @@ func BatchDeleteRateLimiteCachesByUserIds(userIds []uuid.UUID, backendServerName
 		keys = append(keys, formateRateLimitKeyByUserId(userId))
 	}
 
-	arguments := make([]interface{}, 0)
-	arguments = append(arguments, "FCALL")
+	arguments := []interface{}{
+		"FCALL",
+		redislibraries.BatchDeleteRateLimitRecordByFormattedKeysFunction,
+		len(userIds),
+	}
 	arguments = append(arguments, redislibraries.BatchDeleteRateLimitRecordByFormattedKeysFunction)
-	arguments = append(arguments, len(userIds))
 	arguments = append(arguments, keys...)
 	if _, err := redisClient.Do(arguments...).Result(); err != nil {
 		return exceptions.Cache.FailedToDelete(types.ValidCachePurpose_RateLimite.String()).WithError(err)

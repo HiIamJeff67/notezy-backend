@@ -14,7 +14,7 @@ type RootShelf struct {
 	OwnerId         uuid.UUID  `json:"ownerId" gorm:"column:owner_id; type:uuid; not null; index:shelf_idx_owner_id_name,unique"`
 	Name            string     `json:"name" gorm:"column:name; size:128; not null; default:'undefined'; index:shelf_idx_owner_id_name,unique"`
 	TotalShelfNodes int32      `json:"totalShelfNodes" gorm:"column:total_shelf_nodes; type:integer; not null; default:1;"`
-	TotalMaterials  int32      `json:"totalMaterials" gorm:"column:total_materials; type:integer; not null; default:0;"`
+	TotalItems      int32      `json:"totalItems" gorm:"column:total_items; type:integer; not null; default:0;"`
 	LastAnalyzedAt  time.Time  `json:"lastAnalyzedAt" gorm:"column:last_analyzed_at; type:timestamptz; not null; default:NOW();"`
 	DeletedAt       *time.Time `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz; default:null;"`
 	UpdatedAt       time.Time  `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
@@ -45,7 +45,7 @@ func (rs *RootShelf) ToPrivateRootShelf() *gqlmodels.PrivateRootShelf {
 		ID:              rs.Id,
 		Name:            rs.Name,
 		TotalShelfNodes: rs.TotalShelfNodes,
-		TotalMaterials:  rs.TotalMaterials,
+		TotalItems:      rs.TotalItems,
 		LastAnalyzedAt:  rs.LastAnalyzedAt,
 		DeletedAt:       rs.DeletedAt,
 		UpdatedAt:       rs.UpdatedAt,

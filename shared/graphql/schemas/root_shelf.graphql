@@ -2,7 +2,7 @@ type PrivateRootShelf {
   id: UUID!
   name: String!
   totalShelfNodes: Int32!
-  totalMaterials: Int32!
+  totalItems: Int32!
   lastAnalyzedAt: Time!
   deletedAt: Time
   updatedAt: Time!

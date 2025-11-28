@@ -14,6 +14,7 @@ type BlockType string
 const (
 	BlockType_Paragraph BlockType = "paragraph"
 	BlockType_Heading   BlockType = "heading"
+	BlockType_Quote     BlockType = "quote"
 
 	BlockType_BulletListItem   BlockType = "bulletListItem"
 	BlockType_NumberedListItem BlockType = "numberedListItem"

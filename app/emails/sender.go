@@ -28,7 +28,7 @@ var NotezyEmailSender = &EmailSender{
 
 /* ============================== Methods ============================== */
 
-func (s *EmailSender) SyncSend(to string, subject string, body string, contentType types.EmailContentType) *exceptions.Exception {
+func (s *EmailSender) AsyncSend(to string, subject string, body string, contentType types.EmailContentType) *exceptions.Exception {
 	if !contentType.IsValidEnum() {
 		return exceptions.Email.InvalidEmailContentType(string(contentType))
 	}

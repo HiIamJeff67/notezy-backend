@@ -80,7 +80,7 @@ func (s *RootShelfService) GetMyRootShelfById(
 		Id:              shelf.Id,
 		Name:            shelf.Name,
 		TotalShelfNodes: shelf.TotalShelfNodes,
-		TotalMaterials:  shelf.TotalMaterials,
+		TotalItems:      shelf.TotalItems,
 		LastAnalyzedAt:  shelf.LastAnalyzedAt,
 		DeletedAt:       shelf.DeletedAt,
 		UpdatedAt:       shelf.UpdatedAt,

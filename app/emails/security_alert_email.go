@@ -15,7 +15,7 @@ var _securityAlertEmailRenderer = &HTMLEmailRenderer{
 	DataMap:      map[string]any{},
 }
 
-func SyncSendSecurityAlertEmail(
+func AsyncSendSecurityAlertEmail(
 	to string,
 	userName string,
 	status string,

@@ -218,7 +218,7 @@ func (s *AuthService) Register(
 
 	// send the welcome email to the registered user
 
-	if exception = emails.SyncSendWelcomeEmail(
+	if exception = emails.AsyncSendWelcomeEmail(
 		newUser.Email,
 		newUser.Name,
 		newUser.Status.String(),
@@ -292,7 +292,7 @@ func (s *AuthService) Login(
 
 	if user.UserAgent != reqDto.Header.UserAgent {
 		// send a security email to warn the user
-		if exception := emails.SyncSendSecurityAlertEmail(
+		if exception := emails.AsyncSendSecurityAlertEmail(
 			user.Email,
 			user.Name,
 			user.Status.String(),
@@ -475,7 +475,7 @@ func (s *AuthService) SendAuthCode(
 		return nil, exception
 	}
 
-	if exception := emails.SyncSendValidationEmail(
+	if exception := emails.AsyncSendValidationEmail(
 		reqDto.Body.Email,
 		output.Name,
 		authCode,

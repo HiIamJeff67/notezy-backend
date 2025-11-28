@@ -422,8 +422,8 @@ func (ec *executionContext) fieldContext_PrivateSubShelf_rootShelf(_ context.Con
 				return ec.fieldContext_PrivateRootShelf_name(ctx, field)
 			case "totalShelfNodes":
 				return ec.fieldContext_PrivateRootShelf_totalShelfNodes(ctx, field)
-			case "totalMaterials":
-				return ec.fieldContext_PrivateRootShelf_totalMaterials(ctx, field)
+			case "totalItems":
+				return ec.fieldContext_PrivateRootShelf_totalItems(ctx, field)
 			case "lastAnalyzedAt":
 				return ec.fieldContext_PrivateRootShelf_lastAnalyzedAt(ctx, field)
 			case "deletedAt":

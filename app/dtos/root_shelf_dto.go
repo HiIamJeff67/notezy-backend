@@ -137,7 +137,7 @@ type GetMyRootShelfByIdResDto struct {
 	Id              uuid.UUID  `json:"id"`
 	Name            string     `json:"name"`
 	TotalShelfNodes int32      `json:"totalShelfNodes"`
-	TotalMaterials  int32      `json:"totalMaterials"`
+	TotalItems      int32      `json:"totalItems"`
 	LastAnalyzedAt  time.Time  `json:"lastAnalyzedAt"`
 	DeletedAt       *time.Time `json:"deletedAt"`
 	UpdatedAt       time.Time  `json:"updatedAt"`

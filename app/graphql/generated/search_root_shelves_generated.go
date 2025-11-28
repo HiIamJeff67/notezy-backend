@@ -310,8 +310,8 @@ func (ec *executionContext) fieldContext_SearchRootShelfEdge_node(_ context.Cont
 				return ec.fieldContext_PrivateRootShelf_name(ctx, field)
 			case "totalShelfNodes":
 				return ec.fieldContext_PrivateRootShelf_totalShelfNodes(ctx, field)
-			case "totalMaterials":
-				return ec.fieldContext_PrivateRootShelf_totalMaterials(ctx, field)
+			case "totalItems":
+				return ec.fieldContext_PrivateRootShelf_totalItems(ctx, field)
 			case "lastAnalyzedAt":
 				return ec.fieldContext_PrivateRootShelf_lastAnalyzedAt(ctx, field)
 			case "deletedAt":

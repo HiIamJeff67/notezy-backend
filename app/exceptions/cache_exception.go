@@ -96,6 +96,18 @@ func (d *CacheExceptionSubDomain) FailedToDelete(cachePurpose string) *Exception
 	}
 }
 
+func (d *CacheExceptionSubDomain) FailedToExtendTTL(cachePurpose string) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 5,
+		Prefix:         d.Prefix,
+		Reason:         "FailedToExtendTTL",
+		IsInternal:     true,
+		Message:        fmt.Sprintf("Failed to extend the ttl of %s in the cache server", convertCamelCaseToSentenceCase(cachePurpose)),
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
 /* ============================== Handling Connection of the Servers ============================== */
 
 func (d *CacheExceptionSubDomain) RedisServerNumberNotFound() *Exception {

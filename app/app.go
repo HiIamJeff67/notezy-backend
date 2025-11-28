@@ -38,5 +38,8 @@ func ReloadRedisLibraries() {
 	if exception := caches.LoadRateLimitRecordCacheLibraries(); exception != nil {
 		exception.Log()
 	}
+	if exception := caches.LoadUserQuotaCacheLibraries(); exception != nil {
+		exception.Log()
+	}
 	// reload other more redis libraries here...
 }

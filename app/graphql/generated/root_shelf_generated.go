@@ -162,8 +162,8 @@ func (ec *executionContext) fieldContext_PrivateRootShelf_totalShelfNodes(_ cont
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateRootShelf_totalMaterials(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRootShelf) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateRootShelf_totalMaterials(ctx, field)
+func (ec *executionContext) _PrivateRootShelf_totalItems(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRootShelf) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateRootShelf_totalItems(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -176,7 +176,7 @@ func (ec *executionContext) _PrivateRootShelf_totalMaterials(ctx context.Context
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.TotalMaterials, nil
+		return obj.TotalItems, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -193,7 +193,7 @@ func (ec *executionContext) _PrivateRootShelf_totalMaterials(ctx context.Context
 	return ec.marshalNInt322int32(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PrivateRootShelf_totalMaterials(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PrivateRootShelf_totalItems(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PrivateRootShelf",
 		Field:      field,
@@ -483,8 +483,8 @@ func (ec *executionContext) _PrivateRootShelf(ctx context.Context, sel ast.Selec
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "totalMaterials":
-			out.Values[i] = ec._PrivateRootShelf_totalMaterials(ctx, field, obj)
+		case "totalItems":
+			out.Values[i] = ec._PrivateRootShelf_totalItems(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

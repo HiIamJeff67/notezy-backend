@@ -62,7 +62,7 @@ type ComplexityRoot struct {
 		LastAnalyzedAt  func(childComplexity int) int
 		Name            func(childComplexity int) int
 		Owner           func(childComplexity int) int
-		TotalMaterials  func(childComplexity int) int
+		TotalItems      func(childComplexity int) int
 		TotalShelfNodes func(childComplexity int) int
 		UpdatedAt       func(childComplexity int) int
 	}
@@ -334,12 +334,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateRootShelf.Owner(childComplexity), true
 
-	case "PrivateRootShelf.totalMaterials":
-		if e.complexity.PrivateRootShelf.TotalMaterials == nil {
+	case "PrivateRootShelf.totalItems":
+		if e.complexity.PrivateRootShelf.TotalItems == nil {
 			break
 		}
 
-		return e.complexity.PrivateRootShelf.TotalMaterials(childComplexity), true
+		return e.complexity.PrivateRootShelf.TotalItems(childComplexity), true
 
 	case "PrivateRootShelf.totalShelfNodes":
 		if e.complexity.PrivateRootShelf.TotalShelfNodes == nil {
@@ -1187,7 +1187,7 @@ interface SearchConnection {
   id: UUID!
   name: String!
   totalShelfNodes: Int32!
-  totalMaterials: Int32!
+  totalItems: Int32!
   lastAnalyzedAt: Time!
   deletedAt: Time
   updatedAt: Time!

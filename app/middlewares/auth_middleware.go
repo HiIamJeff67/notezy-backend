@@ -77,6 +77,7 @@ func _validateRefreshToken(refreshToken string) (*schemas.User, *exceptions.Exce
 		[]schemas.UserRelation{
 			schemas.UserRelation_UserInfo,
 			schemas.UserRelation_UserSetting,
+			schemas.UserRelation_UserAccount,
 		})
 	if exception != nil { // if there's not such user with the parsed id
 		return nil, exception
@@ -116,6 +117,15 @@ func AuthMiddleware() gin.HandlerFunc {
 					ctx.Set(constants.ContextFieldName_AccessToken.String(), accessToken)
 					ctx.Set(constants.ContextFieldName_User_Role.String(), userDataCache.Role)
 					ctx.Set(constants.ContextFieldName_User_Plan.String(), userDataCache.Plan)
+					// also extend the ttl of the user data cache
+					userId, err := uuid.Parse(claims.Id)
+					if err != nil {
+						exceptions.Token.FailedToParseAccessToken().Log().SafelyResponseWithJSON(ctx)
+						return
+					}
+					if exception := caches.ExtendUserDataCacheTTL(userId); exception != nil {
+						exception.Log()
+					}
 					ctx.Next()
 					return
 				}
@@ -158,32 +168,48 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		// at this stage, make sure we update the cache of the user data
-		exception = caches.UpdateUserDataCache(_user.Id, caches.UpdateUserDataCacheDto{AccessToken: newAccessToken})
+		exception = caches.UpdateUserDataCache(
+			_user.Id,
+			caches.UpdateUserDataCacheDto{
+				AccessToken: newAccessToken,
+				CSRFToken:   newCSRFToken,
+			},
+		)
 		if exception != nil {
 			exception.WithDetails("trying to set the new user data instead").Log()
 			newUserDataCache := caches.UserDataCache{
-				PublicId:           _user.PublicId,
-				Name:               _user.Name,
-				DisplayName:        _user.DisplayName,
-				Email:              _user.Email,
-				AccessToken:        *newAccessToken,
-				CSRFToken:          *newCSRFToken,
-				Role:               _user.Role,
-				Plan:               _user.Plan,
-				Status:             _user.Status,
-				Language:           _user.UserSetting.Language,
-				GeneralSettingCode: _user.UserSetting.GeneralSettingCode,
-				PrivacySettingCode: _user.UserSetting.PrivacySettingCode,
-				CreatedAt:          _user.CreatedAt,
-				UpdatedAt:          _user.UpdatedAt,
+				PublicId:            _user.PublicId,
+				Name:                _user.Name,
+				DisplayName:         _user.DisplayName,
+				Email:               _user.Email,
+				AccessToken:         *newAccessToken,
+				CSRFToken:           *newCSRFToken,
+				Role:                _user.Role,
+				Plan:                _user.Plan,
+				Status:              _user.Status,
+				Language:            _user.UserSetting.Language,
+				GeneralSettingCode:  _user.UserSetting.GeneralSettingCode,
+				PrivacySettingCode:  _user.UserSetting.PrivacySettingCode,
+				RootShelfCount:      _user.UserAccount.RootShelfCount,
+				BlockPackCount:      _user.UserAccount.BlockPackCount,
+				BlockCount:          _user.UserAccount.BlockCount,
+				MaterialCount:       _user.UserAccount.MaterialCount,
+				WorkflowCount:       _user.UserAccount.WorkflowCount,
+				AdditionalItemCount: _user.UserAccount.AdditionalItemCount,
+				CreatedAt:           _user.CreatedAt,
+				UpdatedAt:           _user.UpdatedAt,
 			}
 			if _user.UserInfo.AvatarURL != nil {
 				newUserDataCache.AvatarURL = *_user.UserInfo.AvatarURL
 			}
-			exception = caches.SetUserDataCache(_user.Id, newUserDataCache)
-			if exception != nil {
+
+			if exception = caches.SetUserDataCache(_user.Id, newUserDataCache); exception != nil {
 				exception.Log().SafelyResponseWithJSON(ctx)
 				return
+			}
+		} else {
+			if exception := caches.ExtendUserDataCacheTTL(_user.Id); exception != nil {
+				exception.Log()
 			}
 		}
 

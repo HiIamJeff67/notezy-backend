@@ -16,7 +16,7 @@ var _validationEmailRenderer = &HTMLEmailRenderer{
 	DataMap:      map[string]any{},
 }
 
-func SyncSendValidationEmail(
+func AsyncSendValidationEmail(
 	to string,
 	userName string,
 	authCode string,
