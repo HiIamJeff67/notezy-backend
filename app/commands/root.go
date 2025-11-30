@@ -34,8 +34,9 @@ func Execute() {
 		rootCommand,
 		[]*cobra.Command{
 			viewAllAvailableDatabasesCommand,
-			migrateDatabaseCommand,
 			truncateDatabaseCommand,
+			migrateDatabaseCommand,
+			seedDatabaseCommand,
 		},
 	)
 

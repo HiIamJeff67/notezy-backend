@@ -46,25 +46,25 @@ type ComplexityRoot struct {
 		CreatedAt        func(childComplexity int) int
 		DeletedAt        func(childComplexity int) int
 		ID               func(childComplexity int) int
+		MegaByteSize     func(childComplexity int) int
 		Name             func(childComplexity int) int
 		ParentSubShelf   func(childComplexity int) int
 		ParentSubShelfID func(childComplexity int) int
 		ParseMediaType   func(childComplexity int) int
-		Size             func(childComplexity int) int
 		Type             func(childComplexity int) int
 		UpdatedAt        func(childComplexity int) int
 	}
 
 	PrivateRootShelf struct {
-		CreatedAt       func(childComplexity int) int
-		DeletedAt       func(childComplexity int) int
-		ID              func(childComplexity int) int
-		LastAnalyzedAt  func(childComplexity int) int
-		Name            func(childComplexity int) int
-		Owner           func(childComplexity int) int
-		TotalItems      func(childComplexity int) int
-		TotalShelfNodes func(childComplexity int) int
-		UpdatedAt       func(childComplexity int) int
+		CreatedAt      func(childComplexity int) int
+		DeletedAt      func(childComplexity int) int
+		ID             func(childComplexity int) int
+		ItemCount      func(childComplexity int) int
+		LastAnalyzedAt func(childComplexity int) int
+		Name           func(childComplexity int) int
+		Owner          func(childComplexity int) int
+		SubShelfCount  func(childComplexity int) int
+		UpdatedAt      func(childComplexity int) int
 	}
 
 	PrivateSubShelf struct {
@@ -243,6 +243,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateMaterial.ID(childComplexity), true
 
+	case "PrivateMaterial.megaByteSize":
+		if e.complexity.PrivateMaterial.MegaByteSize == nil {
+			break
+		}
+
+		return e.complexity.PrivateMaterial.MegaByteSize(childComplexity), true
+
 	case "PrivateMaterial.name":
 		if e.complexity.PrivateMaterial.Name == nil {
 			break
@@ -270,13 +277,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateMaterial.ParseMediaType(childComplexity), true
-
-	case "PrivateMaterial.size":
-		if e.complexity.PrivateMaterial.Size == nil {
-			break
-		}
-
-		return e.complexity.PrivateMaterial.Size(childComplexity), true
 
 	case "PrivateMaterial.type":
 		if e.complexity.PrivateMaterial.Type == nil {
@@ -313,6 +313,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateRootShelf.ID(childComplexity), true
 
+	case "PrivateRootShelf.itemCount":
+		if e.complexity.PrivateRootShelf.ItemCount == nil {
+			break
+		}
+
+		return e.complexity.PrivateRootShelf.ItemCount(childComplexity), true
+
 	case "PrivateRootShelf.lastAnalyzedAt":
 		if e.complexity.PrivateRootShelf.LastAnalyzedAt == nil {
 			break
@@ -334,19 +341,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateRootShelf.Owner(childComplexity), true
 
-	case "PrivateRootShelf.totalItems":
-		if e.complexity.PrivateRootShelf.TotalItems == nil {
+	case "PrivateRootShelf.subShelfCount":
+		if e.complexity.PrivateRootShelf.SubShelfCount == nil {
 			break
 		}
 
-		return e.complexity.PrivateRootShelf.TotalItems(childComplexity), true
-
-	case "PrivateRootShelf.totalShelfNodes":
-		if e.complexity.PrivateRootShelf.TotalShelfNodes == nil {
-			break
-		}
-
-		return e.complexity.PrivateRootShelf.TotalShelfNodes(childComplexity), true
+		return e.complexity.PrivateRootShelf.SubShelfCount(childComplexity), true
 
 	case "PrivateRootShelf.updatedAt":
 		if e.complexity.PrivateRootShelf.UpdatedAt == nil {
@@ -1161,7 +1161,7 @@ interface SearchConnection {
   parentSubShelfId: UUID!
   name: String!
   type: MaterialType!
-  size: Int64!
+  megaByteSize: Float!
   contentKey: String!
   contentType: MaterialContentType!
   parseMediaType: String!
@@ -1186,8 +1186,8 @@ interface SearchConnection {
 	{Name: "../../../shared/graphql/schemas/root_shelf.graphql", Input: `type PrivateRootShelf {
   id: UUID!
   name: String!
-  totalShelfNodes: Int32!
-  totalItems: Int32!
+  subShelfCount: Int32!
+  itemCount: Int32!
   lastAnalyzedAt: Time!
   deletedAt: Time
   updatedAt: Time!

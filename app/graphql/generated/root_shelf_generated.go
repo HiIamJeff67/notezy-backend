@@ -118,8 +118,8 @@ func (ec *executionContext) fieldContext_PrivateRootShelf_name(_ context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateRootShelf_totalShelfNodes(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRootShelf) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateRootShelf_totalShelfNodes(ctx, field)
+func (ec *executionContext) _PrivateRootShelf_subShelfCount(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRootShelf) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateRootShelf_subShelfCount(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -132,7 +132,7 @@ func (ec *executionContext) _PrivateRootShelf_totalShelfNodes(ctx context.Contex
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.TotalShelfNodes, nil
+		return obj.SubShelfCount, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -149,7 +149,7 @@ func (ec *executionContext) _PrivateRootShelf_totalShelfNodes(ctx context.Contex
 	return ec.marshalNInt322int32(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PrivateRootShelf_totalShelfNodes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PrivateRootShelf_subShelfCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PrivateRootShelf",
 		Field:      field,
@@ -162,8 +162,8 @@ func (ec *executionContext) fieldContext_PrivateRootShelf_totalShelfNodes(_ cont
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateRootShelf_totalItems(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRootShelf) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateRootShelf_totalItems(ctx, field)
+func (ec *executionContext) _PrivateRootShelf_itemCount(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRootShelf) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateRootShelf_itemCount(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -176,7 +176,7 @@ func (ec *executionContext) _PrivateRootShelf_totalItems(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.TotalItems, nil
+		return obj.ItemCount, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -193,7 +193,7 @@ func (ec *executionContext) _PrivateRootShelf_totalItems(ctx context.Context, fi
 	return ec.marshalNInt322int32(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PrivateRootShelf_totalItems(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PrivateRootShelf_itemCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PrivateRootShelf",
 		Field:      field,
@@ -478,13 +478,13 @@ func (ec *executionContext) _PrivateRootShelf(ctx context.Context, sel ast.Selec
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "totalShelfNodes":
-			out.Values[i] = ec._PrivateRootShelf_totalShelfNodes(ctx, field, obj)
+		case "subShelfCount":
+			out.Values[i] = ec._PrivateRootShelf_subShelfCount(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "totalItems":
-			out.Values[i] = ec._PrivateRootShelf_totalItems(ctx, field, obj)
+		case "itemCount":
+			out.Values[i] = ec._PrivateRootShelf_itemCount(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

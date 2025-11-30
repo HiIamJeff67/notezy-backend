@@ -10,9 +10,10 @@ import (
 	logs "notezy-backend/app/logs"
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
-	"notezy-backend/app/models/schemas/triggers"
+	triggers "notezy-backend/app/models/schemas/triggers"
+	"notezy-backend/app/models/seeds"
 	util "notezy-backend/app/util"
-	"notezy-backend/shared/constants"
+	constants "notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
 )
 
@@ -220,6 +221,28 @@ func MigrateTriggersToDatabase(db *gorm.DB) bool {
 	}
 
 	logs.Info("Migration of triggers is done")
+
+	return true
+}
+
+func SeedDefaultDataToDatabase(db *gorm.DB) bool {
+	logs.Info("Seeding default data found in models/seeds/seed.go")
+
+	for _, sql := range seeds.SeedingDefaultDataSQLs {
+		statements := strings.Split(sql, constants.SQLSeperator)
+		for _, stmt := range statements {
+			stmt = strings.TrimSpace(stmt)
+			if stmt == "" {
+				continue
+			}
+			if err := db.Exec(stmt).Error; err != nil {
+				logs.FError("Failed to execute seeding default data SQL statement: %v", err)
+				return false
+			}
+		}
+	}
+
+	logs.Info("Seeding default data procedure is done")
 
 	return true
 }

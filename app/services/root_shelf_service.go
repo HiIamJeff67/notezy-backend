@@ -77,14 +77,14 @@ func (s *RootShelfService) GetMyRootShelfById(
 	}
 
 	return &dtos.GetMyRootShelfByIdResDto{
-		Id:              shelf.Id,
-		Name:            shelf.Name,
-		TotalShelfNodes: shelf.TotalShelfNodes,
-		TotalItems:      shelf.TotalItems,
-		LastAnalyzedAt:  shelf.LastAnalyzedAt,
-		DeletedAt:       shelf.DeletedAt,
-		UpdatedAt:       shelf.UpdatedAt,
-		CreatedAt:       shelf.CreatedAt,
+		Id:             shelf.Id,
+		Name:           shelf.Name,
+		SubShelfCount:  shelf.SubShelfCount,
+		ItemCount:      shelf.ItemCount,
+		LastAnalyzedAt: shelf.LastAnalyzedAt,
+		DeletedAt:      shelf.DeletedAt,
+		UpdatedAt:      shelf.UpdatedAt,
+		CreatedAt:      shelf.CreatedAt,
 	}, nil
 }
 

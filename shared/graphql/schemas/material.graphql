@@ -3,7 +3,7 @@ type PrivateMaterial {
   parentSubShelfId: UUID!
   name: String!
   type: MaterialType!
-  size: Int64!
+  megaByteSize: Float!
   contentKey: String!
   contentType: MaterialContentType!
   parseMediaType: String!

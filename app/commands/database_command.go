@@ -14,29 +14,10 @@ var viewAllAvailableDatabasesCommand = &cobra.Command{
 	Long:  "Use some map to storing and printing the available databases in the project.",
 	Run: func(cmd *cobra.Command, args []string) {
 		logs.Info("All available databases:")
+
 		for key, value := range models.DatabaseNameToInstance {
 			logs.FInfo("database name: %v, instance: %v", key, value)
 		}
-	},
-}
-
-var migrateDatabaseCommand = &cobra.Command{
-	Use:   "migrateDB",
-	Short: "Create or update database schema.",
-	Long:  "Use models package to create or update database table schema.",
-	Run: func(cmd *cobra.Command, args []string) {
-		db := models.ConnectToDatabase(models.PostgresDatabaseConfig)
-		logs.FInfo("Start the process of migrating database schema to %v.", models.PostgresDatabaseConfig.DBName)
-		if !models.MigrateEnumsToDatabase(db) {
-			return
-		}
-		if !models.MigrateTablesToDatabase(db) {
-			return
-		}
-		if !models.MigrateTriggersToDatabase(db) {
-			return
-		}
-		models.DisconnectToDatabase(db)
 	},
 }
 
@@ -69,10 +50,51 @@ var truncateDatabaseCommand = &cobra.Command{
 			return
 		}
 
-		logs.FInfo("Start the process of truncating database table: %s.", tableNameStr)
+		logs.FInfo("Start the process of truncating database table: %s", tableNameStr)
 		models.NotezyDB = models.ConnectToDatabase(models.DatabaseInstanceToConfig[db])
 		models.TruncateTablesInDatabase(tableName, db)
+
 		models.DisconnectToDatabase(models.NotezyDB)
+	},
+}
+
+var migrateDatabaseCommand = &cobra.Command{
+	Use:   "migrateDB",
+	Short: "Migrate enums, tables, and some triggers to the database.",
+	Long:  "Use some migration SQLs to migrate required enums, tables, and some triggers to the database.",
+	Run: func(cmd *cobra.Command, args []string) {
+		db := models.ConnectToDatabase(models.PostgresDatabaseConfig)
+
+		logs.FInfo("Start the process of migrating database schema to %v", models.PostgresDatabaseConfig.DBName)
+
+		if !models.MigrateEnumsToDatabase(db) {
+			return
+		}
+		if !models.MigrateTablesToDatabase(db) {
+			return
+		}
+		if !models.MigrateTriggersToDatabase(db) {
+			return
+		}
+
+		models.DisconnectToDatabase(db)
+	},
+}
+
+var seedDatabaseCommand = &cobra.Command{
+	Use:   "seedDB",
+	Short: "Seed some default data for management or main business logic.",
+	Long:  "Use some seeding default data SQLs to seed data for management or main business logic.",
+	Run: func(cmd *cobra.Command, args []string) {
+		db := models.ConnectToDatabase(models.PostgresDatabaseConfig)
+
+		logs.FInfo("Start the process of seeding database default data to %v", models.PostgresDatabaseConfig.DBName)
+
+		if !models.SeedDefaultDataToDatabase(db) {
+			return
+		}
+
+		models.DisconnectToDatabase(db)
 	},
 }
 

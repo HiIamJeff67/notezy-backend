@@ -208,8 +208,8 @@ func (ec *executionContext) fieldContext_PrivateMaterial_type(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateMaterial_size(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateMaterial) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateMaterial_size(ctx, field)
+func (ec *executionContext) _PrivateMaterial_megaByteSize(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateMaterial) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateMaterial_megaByteSize(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -222,7 +222,7 @@ func (ec *executionContext) _PrivateMaterial_size(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Size, nil
+		return obj.MegaByteSize, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -234,19 +234,19 @@ func (ec *executionContext) _PrivateMaterial_size(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int64)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNInt642int64(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PrivateMaterial_size(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PrivateMaterial_megaByteSize(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PrivateMaterial",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int64 does not have child fields")
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -624,8 +624,8 @@ func (ec *executionContext) _PrivateMaterial(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "size":
-			out.Values[i] = ec._PrivateMaterial_size(ctx, field, obj)
+		case "megaByteSize":
+			out.Values[i] = ec._PrivateMaterial_megaByteSize(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

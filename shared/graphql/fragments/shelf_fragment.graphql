@@ -3,7 +3,7 @@ fragment FragmentedBasicPrivateShelf on PrivateShelf {
   name
   encodedStructure
   encodedStructureByteSize
-  totalShelfNodes
+  subShelfCount
   totalMaterials
   maxWidth
   maxDepth

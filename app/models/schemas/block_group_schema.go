@@ -14,7 +14,7 @@ type BlockGroup struct {
 	BlockPackId      uuid.UUID  `json:"blockPackId" gorm:"column:block_pack_id; type:uuid; not null;"`
 	PrevBlockGroupId *uuid.UUID `json:"prevBlockGroupId" gorm:"column:prev_block_group_id; type:uuid; default:null;"`
 	SyncBlockGroupId *uuid.UUID `json:"syncBlockGroupId" gorm:"sync_block_group_id; type:uuid; default:null;"`
-	Size             int64      `json:"size" gorm:"column:size; type:bigint; not null; default:0;"`
+	MegaByteSize     float64    `json:"megaByteSize" gorm:"column:mega_byte_size; type:double precision; not null; default:0;"`
 	DeletedAt        *time.Time `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz; default:null;"`
 	UpdatedAt        time.Time  `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt        time.Time  `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`

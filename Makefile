@@ -2,6 +2,7 @@
 view-dbs:
 	docker-compose run --rm notezy-api go run main.go viewDatabases
 
+# =============== Migration Commands =============== #
 migrate-build-db:
 	docker-compose run --rm notezy-api ./notezy-backend migrateDB
 migrate-hotreload-db:
@@ -19,6 +20,12 @@ remigrate-build-db:
 remigrate-hotreload-db:
 	make clear-hotreload-db
 	make migrate-hotreload-db
+
+# =============== Seeding Commands =============== #
+seed-build-db:
+	docker-compose run --rm notezy-api ./notezy-backend seedDB
+seed-hotreload-db:
+	docker-compose run --rm notezy-api go run main.go seedDB
 
 clear-go-cache:
 	go clean -modcache

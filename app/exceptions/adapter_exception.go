@@ -1,7 +1,6 @@
 package exceptions
 
 import (
-	"fmt"
 	"net/http"
 )
 
@@ -16,11 +15,16 @@ const (
 type AdapterExceptionDomain struct {
 	BaseCode ExceptionCode
 	Prefix   ExceptionPrefix
+	FileExceptionDomain
 }
 
 var Adapter = &AdapterExceptionDomain{
 	BaseCode: ExceptionBaseCode_Adapter,
 	Prefix:   ExceptionPrefix_Adapter,
+	FileExceptionDomain: FileExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_Adapter,
+		_Prefix:   ExceptionPrefix_Adapter,
+	},
 }
 
 /* ============================== Handling Multipart Adapter Errors ============================== */
@@ -33,18 +37,6 @@ func (d *AdapterExceptionDomain) InvalidMultipartForm() *Exception {
 		IsInternal:     false,
 		Message:        "The multipart form in the context is missing or invalid",
 		HTTPStatusCode: http.StatusForbidden,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
-	}
-}
-
-func (d *AdapterExceptionDomain) FileTooLarge(size int64, maxSize int64) *Exception {
-	return &Exception{
-		Code:           d.BaseCode + 1,
-		Prefix:         d.Prefix,
-		Reason:         "FileTooLarge",
-		IsInternal:     false,
-		Message:        fmt.Sprintf("The size of the file in multipart form data is %d which is larger than the limit of %d", size, maxSize),
-		HTTPStatusCode: http.StatusRequestEntityTooLarge,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }

@@ -27,7 +27,7 @@ type SyncBlock struct {
 
 // Sync Block Table Name
 func (SyncBlock) TableName() string {
-	return types.TableName_SyncBlockTableName.String()
+	return types.TableName_SyncBlockTable.String()
 }
 
 // Sync Block Relations

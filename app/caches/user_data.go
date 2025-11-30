@@ -18,27 +18,21 @@ import (
 )
 
 type UserDataCache struct {
-	PublicId            string           `json:"publicId"`            // user
-	Name                string           `json:"name"`                // user
-	DisplayName         string           `json:"displayName"`         // user
-	Email               string           `json:"email"`               // user
-	AccessToken         string           `json:"accessToken"`         // !only here: note that it may be expired, but it is the newest one
-	CSRFToken           string           `json:"csrfToken"`           // !only here: note that it may be expired, but it is the newest one
-	Role                enums.UserRole   `json:"role"`                // user
-	Plan                enums.UserPlan   `json:"plan"`                // user
-	Status              enums.UserStatus `json:"status"`              // user
-	AvatarURL           string           `json:"avatarURL"`           // user info
-	Language            enums.Language   `json:"language"`            // user setting
-	GeneralSettingCode  int64            `json:"generalSettingCode"`  // user setting
-	PrivacySettingCode  int64            `json:"privacySettingCode"`  // user setting
-	RootShelfCount      int32            `json:"rootShelfCount"`      // user account, no dto, only increment or decrement allowed
-	BlockPackCount      int32            `json:"blockPackCount"`      // user account, no dto, only increment or decrement allowed
-	BlockCount          int32            `json:"blockCount"`          // user account, no dto, only increment or decrement allowed
-	MaterialCount       int32            `json:"materialCount"`       // user account, no dto, only increment or decrement allowed
-	WorkflowCount       int32            `json:"workflowCount"`       // user account, no dto, only increment or decrement allowed
-	AdditionalItemCount int32            `json:"additionalItemCount"` // user account, no dto, only increment or decrement allowed
-	CreatedAt           time.Time        `json:"createdAt"`           // user
-	UpdatedAt           time.Time        `json:"updatedAt"`           // user
+	PublicId           string           `json:"publicId"`           // user
+	Name               string           `json:"name"`               // user
+	DisplayName        string           `json:"displayName"`        // user
+	Email              string           `json:"email"`              // user
+	AccessToken        string           `json:"accessToken"`        // !only here: note that it may be expired, but it is the newest one
+	CSRFToken          string           `json:"csrfToken"`          // !only here: note that it may be expired, but it is the newest one
+	Role               enums.UserRole   `json:"role"`               // user
+	Plan               enums.UserPlan   `json:"plan"`               // user
+	Status             enums.UserStatus `json:"status"`             // user
+	AvatarURL          string           `json:"avatarURL"`          // user info
+	Language           enums.Language   `json:"language"`           // user setting
+	GeneralSettingCode int64            `json:"generalSettingCode"` // user setting
+	PrivacySettingCode int64            `json:"privacySettingCode"` // user setting
+	CreatedAt          time.Time        `json:"createdAt"`          // user
+	UpdatedAt          time.Time        `json:"updatedAt"`          // user
 }
 
 type UpdateUserDataCacheDto struct {

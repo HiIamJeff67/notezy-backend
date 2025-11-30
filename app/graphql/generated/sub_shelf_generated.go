@@ -420,10 +420,10 @@ func (ec *executionContext) fieldContext_PrivateSubShelf_rootShelf(_ context.Con
 				return ec.fieldContext_PrivateRootShelf_id(ctx, field)
 			case "name":
 				return ec.fieldContext_PrivateRootShelf_name(ctx, field)
-			case "totalShelfNodes":
-				return ec.fieldContext_PrivateRootShelf_totalShelfNodes(ctx, field)
-			case "totalItems":
-				return ec.fieldContext_PrivateRootShelf_totalItems(ctx, field)
+			case "subShelfCount":
+				return ec.fieldContext_PrivateRootShelf_subShelfCount(ctx, field)
+			case "itemCount":
+				return ec.fieldContext_PrivateRootShelf_itemCount(ctx, field)
 			case "lastAnalyzedAt":
 				return ec.fieldContext_PrivateRootShelf_lastAnalyzedAt(ctx, field)
 			case "deletedAt":
@@ -556,8 +556,8 @@ func (ec *executionContext) fieldContext_PrivateSubShelf_materials(_ context.Con
 				return ec.fieldContext_PrivateMaterial_name(ctx, field)
 			case "type":
 				return ec.fieldContext_PrivateMaterial_type(ctx, field)
-			case "size":
-				return ec.fieldContext_PrivateMaterial_size(ctx, field)
+			case "megaByteSize":
+				return ec.fieldContext_PrivateMaterial_megaByteSize(ctx, field)
 			case "contentKey":
 				return ec.fieldContext_PrivateMaterial_contentKey(ctx, field)
 			case "contentType":

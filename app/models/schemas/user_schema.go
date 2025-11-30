@@ -38,6 +38,7 @@ type User struct {
 	UsersToShelves  []UsersToShelves `json:"usersToShelves" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	BlockGroups     []BlockGroup     `json:"blockGroups" gorm:"foreignKey:OwnerId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	SyncBlockGroups []SyncBlockGroup `json:"syncBlockGroups" gorm:"foreignKey:OwnerId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	PlanLimitation  PlanLimitation   `json:"planLimitation" gorm:"foreignKey:Plan; references:Key; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
 
 // User Table Name

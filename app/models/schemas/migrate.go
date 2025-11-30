@@ -2,6 +2,7 @@ package schemas
 
 // place the tables here to migrate
 var MigratingTables = []any{
+	// public tables
 	&User{},
 	&UserInfo{},
 	&UserAccount{},
@@ -19,4 +20,7 @@ var MigratingTables = []any{
 	&Block{},
 	&SyncBlockGroup{},
 	&SyncBlock{},
+
+	// private tables
+	&PlanLimitation{},
 }

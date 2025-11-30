@@ -3,6 +3,7 @@ package types
 type TableName string
 
 const (
+	// public tables(accessable and mutatable by the client user and admin)
 	TableName_UserTable           TableName = "UserTable"
 	TableName_UserAccountTable    TableName = "UserAccountTable"
 	TableName_UserInfoTable       TableName = "UserInfoTable"
@@ -18,10 +19,14 @@ const (
 	TableName_BlockGroupTable     TableName = "BlockGroupTable"
 	TableName_BlockTable          TableName = "BlockTable"
 	TableName_SyncBlockGroupTable TableName = "SyncBlockGroupTable"
-	TableName_SyncBlockTableName  TableName = "SyncBlockTable"
+	TableName_SyncBlockTable      TableName = "SyncBlockTable"
+
+	// private tables(accessable by the client user and admin, but only mutatable by the admin)
+	TableName_PlanLimitationTable TableName = "PlanLimitationTable"
 )
 
 var _validTableNames = map[string]TableName{
+	// public tables
 	"UserTable":           TableName_UserTable,
 	"UserAccountTable":    TableName_UserAccountTable,
 	"UserInfoTable":       TableName_UserInfoTable,
@@ -37,7 +42,10 @@ var _validTableNames = map[string]TableName{
 	"BlockGroupTable":     TableName_BlockGroupTable,
 	"BlockTable":          TableName_BlockTable,
 	"SyncBlockGroupTable": TableName_SyncBlockGroupTable,
-	"SyncBlockTable":      TableName_SyncBlockTableName,
+	"SyncBlockTable":      TableName_SyncBlockTable,
+
+	// private tables
+	"PlanLimitationTable": TableName_PlanLimitationTable,
 }
 
 func (tn TableName) String() string {
