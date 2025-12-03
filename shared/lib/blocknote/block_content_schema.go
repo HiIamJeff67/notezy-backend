@@ -8,8 +8,8 @@ import (
 
 // BlockContent = []InlineContent | TableContent | undefined
 type BlockContent struct {
-	InlineContent []InlineContent
-	TableContent  *TableContent
+	InlineContent []InlineContent `json:"inlineContent" validate:"omitempty"`
+	TableContent  *TableContent   `json:"tableContent" validate:"omitempty"`
 }
 
 func (bc *BlockContent) UnmarshalJSON(b []byte) error {

@@ -1,23 +1,6 @@
 package constants
 
-import "time"
-
-const (
-	ExtraCapacity = 2
-)
-
-const (
-	MinIntervalTimeOfLastRequest = time.Microsecond
-)
-
-const (
-	MaxDatabaseUpdateParameters = 65535
-)
-
-const (
-	DefaultSearchLimit = 10
-	MaxSearchLimit     = 100
-)
+/* ============================== Limitation of Shelf and Items ============================== */
 
 const (
 	// limitation of a root shelf
@@ -32,6 +15,9 @@ const (
 	MaxMaterialsOfSubShelf  int32 = 1e+2 // max number of materials(files)
 	MaxBlockPackOfSubShelf  int32 = 1e+2 // max number of block packs
 
+	MaxShelfNameLength int = 128
+	MaxItemNameLength  int = 128
+
 	PeekFileSize            int64 = 256 * Byte
 	MaxTextbookFileSize     int64 = 5 * MB
 	MaxNotebookFileSize     int64 = 5 * MB
@@ -39,8 +25,10 @@ const (
 	MaxWorkFlowFileSize     int64 = 10 * MB
 )
 
+/* ============================== Limitation of BlockContent or Props JSON ============================== */
+
 const (
-	MaxNonVideoFileSize        int64 = 10 * MB
-	MaxInMemoryStorageFileSize int64 = 10 * MB
-	MaxS3StorageFileSize       int64 = 10 * MB
+	MaxFileBlockCaptionLength = 512
+	MaxFileBlockNameLength    = 256
+	MaxHeadingLevel           = 6
 )

@@ -31,7 +31,7 @@ type LoginReqDto struct {
 		},
 		any,
 		struct {
-			Account  string `json:"account" validate:"required,account"`
+			Account  string `json:"account" validate:"required,isaccount"`
 			Password string `json:"password" validate:"required"` // don't validate other additions while login
 		},
 		any,
@@ -102,7 +102,7 @@ type ForgetPasswordReqDto struct {
 		},
 		any,
 		struct {
-			Account     string `json:"account" validate:"required,account"`
+			Account     string `json:"account" validate:"required,isaccount"`
 			NewPassword string `json:"newPassword" validation:"required,min=8,max=1024,isstrongpassword"`
 			AuthCode    string `json:"authCode" validate:"required,isnumberstring,len=6"`
 		},

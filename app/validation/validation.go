@@ -11,4 +11,5 @@ func init() {
 	RegisterStringsValidation(Validator)
 	RegisterEnumsValidation(Validator)
 	RegisterTimesValidation(Validator)
+	RegisterShelfBlockValidation(Validator)
 }

@@ -47,7 +47,7 @@ type CreateRootShelfReqDto struct {
 			OwnerId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			Name string `json:"name" validate:"required,min=1,max=128"`
+			Name string `json:"name" validate:"required,min=1,max=128,isshelfname"`
 		},
 		any,
 	]
@@ -64,7 +64,7 @@ type UpdateMyRootShelfByIdReqDto struct {
 		struct {
 			RootShelfId uuid.UUID `json:"rootShelfId" validate:"required"`
 			PartialUpdateDto[struct {
-				Name *string `json:"name" validate:"omitnil,min=1,max=128"`
+				Name *string `json:"name" validate:"omitnil,min=1,max=128,isshelfname"`
 			}]
 		},
 		any,

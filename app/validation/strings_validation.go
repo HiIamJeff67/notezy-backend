@@ -2,15 +2,17 @@ package validation
 
 import (
 	"net/url"
-	"notezy-backend/app/util"
 	"regexp"
 	"strings"
 
 	"github.com/go-playground/validator/v10" // make sure we use the version 10
+
+	util "notezy-backend/app/util"
+	constants "notezy-backend/shared/constants"
 )
 
 func RegisterStringsValidation(validate *validator.Validate) {
-	validate.RegisterValidation("account", func(fl validator.FieldLevel) bool {
+	validate.RegisterValidation("isaccount", func(fl validator.FieldLevel) bool {
 		val := fl.Field().String()
 
 		// try email validation
@@ -29,8 +31,8 @@ func RegisterStringsValidation(validate *validator.Validate) {
 		return util.IsAlphaAndNumberString(val)
 	})
 	validate.RegisterValidation("isstrongpassword", func(fl validator.FieldLevel) bool {
-		password := fl.Field().String()
-		if len(password) < 8 {
+		password := strings.TrimSpace(fl.Field().String())
+		if len(password) < constants.MinPasswordLength || len(password) > constants.MaxPasswordLength {
 			return false
 		}
 		hasUpperCaseLetter := regexp.MustCompile(`[A-Z]`).MatchString(password)
@@ -40,16 +42,15 @@ func RegisterStringsValidation(validate *validator.Validate) {
 		return hasUpperCaseLetter && hasLowerCaseLetter && hasDigit && hasSpecialCharacter
 	})
 	validate.RegisterValidation("isuseragent", func(fl validator.FieldLevel) bool {
-		userAgent := strings.TrimSpace(fl.Field().String())
-
-		if len(userAgent) < 3 || len(userAgent) > 2000 {
+		userAgentStr := strings.TrimSpace(fl.Field().String())
+		if len(userAgentStr) < 3 || len(userAgentStr) > constants.MaxUserAgentLength {
 			return false
 		}
 
 		// check if the userAgent contain some malicious content
-		if strings.Contains(userAgent, "<script>") ||
-			strings.Contains(userAgent, "javascript:") ||
-			strings.Contains(userAgent, "data:") {
+		if strings.Contains(userAgentStr, "<script>") ||
+			strings.Contains(userAgentStr, "javascript:") ||
+			strings.Contains(userAgentStr, "data:") {
 			return false
 		}
 
@@ -61,38 +62,67 @@ func RegisterStringsValidation(validate *validator.Validate) {
 	})
 	validate.RegisterValidation("isurl", func(fl validator.FieldLevel) bool {
 		urlStr := strings.TrimSpace(fl.Field().String())
-		if urlStr == "" {
+		if len(urlStr) > constants.MaxURLLength {
 			return false
 		}
-
 		parsedURL, err := url.Parse(urlStr)
 		if err != nil {
 			return false
+		}
+
+		scheme := strings.ToLower(parsedURL.Scheme)
+		for _, validScheme := range constants.URLWhiteList {
+			if scheme == validScheme {
+				return true
+			}
+		}
+		for _, invalidScheme := range constants.URLBlackList {
+			if scheme == invalidScheme {
+				return false
+			}
 		}
 
 		return parsedURL.Scheme != "" && parsedURL.Host != ""
 	})
 	validate.RegisterValidation("isimageurl", func(fl validator.FieldLevel) bool {
 		urlStr := strings.TrimSpace(fl.Field().String())
-
-		parsedURL, err := url.Parse(urlStr)
-		if err != nil || parsedURL.Scheme == "" || parsedURL.Host == "" {
+		if len(urlStr) > constants.MaxURLLength {
 			return false
 		}
+		parsedURL, err := url.Parse(urlStr)
+		if err != nil {
+			return false
+		}
+		scheme := strings.ToLower(parsedURL.Scheme)
+		if scheme == "http" || scheme == "https" {
+			return true
+		}
 
-		imageExtensions := []string{".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"}
-		path := strings.ToLower(parsedURL.Path)
-
-		for _, ext := range imageExtensions {
-			if strings.HasSuffix(path, ext) {
+		return scheme != "" && parsedURL.Host != ""
+	})
+	validate.RegisterValidation("isprogramminglanguage", func(fl validator.FieldLevel) bool {
+		programmingLanguageStr := fl.Field().String()
+		if len(programmingLanguageStr) > constants.MaxProgrammingLanguageLength {
+			return false
+		}
+		for _, l := range constants.SupportedProgrammingLanguages {
+			if programmingLanguageStr == l {
 				return true
 			}
 		}
-
 		return false
 	})
-	validate.RegisterValidation("isshelfname", func(fl validator.FieldLevel) bool {
-		shelfName := fl.Field().String()
-		return !regexp.MustCompile(`[\/\\:\*\?"<>\|]`).MatchString(shelfName)
+	validate.RegisterValidation("ishexcode", func(fl validator.FieldLevel) bool {
+		hexCode := fl.Field().String()
+		if !strings.HasPrefix(hexCode, "#") {
+			return false
+		}
+		cleanHexCode := hexCode[1:]
+		length := len(cleanHexCode)
+		if length != 3 && length != 4 && length != 6 && length != 8 {
+			return false
+		}
+
+		return regexp.MustCompile(`^[0-9a-fA-F]+$`).MatchString(cleanHexCode)
 	})
 }

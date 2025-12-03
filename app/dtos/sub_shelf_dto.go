@@ -65,7 +65,7 @@ type CreateSubShelfByRootShelfIdReqDto struct {
 		},
 		struct {
 			RootShelfId    uuid.UUID  `json:"rootShelfId" validate:"required"`
-			Name           string     `json:"name" validate:"required,min=1,max=128"`
+			Name           string     `json:"name" validate:"required,min=1,max=128,isshelfname"`
 			PrevSubShelfId *uuid.UUID `json:"prevSubShelfId" validate:"omitnil"`
 		},
 		any,
@@ -83,7 +83,7 @@ type UpdateMySubShelfByIdReqDto struct {
 		struct {
 			SubShelfId uuid.UUID `json:"subShelfId" validate:"required"`
 			PartialUpdateDto[struct {
-				Name *string `json:"name" validate:"omitnil,min=1,max=128"`
+				Name *string `json:"name" validate:"omitnil,min=1,max=128,isshelfname"`
 			}]
 		},
 		any,
