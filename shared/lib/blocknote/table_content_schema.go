@@ -11,7 +11,7 @@ type TableContentType string
 
 const TableContentType_TableContent = "tableContent"
 
-type TableCell []InlineContent
+type TableCell InlineContentList
 
 type TableRow struct {
 	Cells []TableCell `json:"cells" validate:"required,min=1,max=100"`
@@ -21,6 +21,8 @@ type TableContent struct {
 	Type TableContentType `json:"type" validate:"required,eq=tableContent"`
 	Rows []TableRow       `json:"rows" validate:"required,min=1,max=200"`
 }
+
+func (tc *TableContent) IsBlockContent() bool { return true }
 
 func (tc *TableContent) Validate() error {
 	if err := validation.Validator.Struct(tc); err != nil {

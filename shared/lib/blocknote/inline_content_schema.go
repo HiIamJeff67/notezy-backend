@@ -65,6 +65,20 @@ func (l *Link) Validate() error { return validation.Validator.Struct(l) }
 
 /* ============================== InlineContent ============================== */
 
+type InlineContentList []InlineContent
+
+func (icl InlineContentList) IsBlockContent() bool { return true }
+
+func (icl InlineContentList) Validate() error {
+	for _, ic := range icl {
+		if err := ic.Validate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 type InlineContent struct {
 	InlineContentUnion
 }
