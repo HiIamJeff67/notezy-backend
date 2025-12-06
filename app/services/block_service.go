@@ -32,3 +32,7 @@ func NewBlockService(
 }
 
 /* ============================== Implementations ============================== */
+
+func (s *BlockService) CreateBlocksByBlockGroupId() {}
+
+func (s *BlockService) CreateBlocks() {}

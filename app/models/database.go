@@ -12,6 +12,7 @@ import (
 	enums "notezy-backend/app/models/schemas/enums"
 	triggers "notezy-backend/app/models/schemas/triggers"
 	"notezy-backend/app/models/seeds"
+	managementsql "notezy-backend/app/models/sql/management"
 	util "notezy-backend/app/util"
 	constants "notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
@@ -97,6 +98,30 @@ func DisconnectToDatabase(db *gorm.DB) bool {
 	return true
 }
 
+func ViewAllDatabaseEnums(db *gorm.DB) bool {
+	type EnumInfo struct {
+		Name   string `gorm:"column:enum_name;"`
+		Values string `gorm:"column:enum_values;"`
+	}
+	var enumInfos []EnumInfo
+	result := db.Raw(managementsql.GetAllEnumsSQL).Scan(&enumInfos)
+	if err := result.Error; err != nil {
+		logs.FError("Failed to display %s database enums", DatabaseInstanceToConfig[db].DBName)
+		return false
+	}
+
+	logs.FInfo("=============== Database Enum List ===============")
+	if len(enumInfos) == 0 {
+		logs.Info("No enums found")
+	} else {
+		for index, enumInfo := range enumInfos {
+			logs.FInfo("%d. Type: %-30s | Values: %s", index+1, enumInfo.Name, enumInfo.Values)
+		}
+	}
+	logs.FInfo("=============== Database Enum List ===============")
+	return true
+}
+
 func TruncateTablesInDatabase(tableName types.TableName, db *gorm.DB) bool {
 	result := db.Exec("TRUNCATE TABLE \"%s\" RESTART IDENTITY CASCADE;")
 	if err := result.Error; err != nil {
@@ -112,8 +137,6 @@ func MigrateEnumsToDatabase(db *gorm.DB) bool {
 	logs.Info("Migrating enums found in models/schemas/enums/migrate.go ...")
 
 	for name, values := range enums.MigratingEnums {
-		name = strings.ToLower(name)
-
 		// get current enum value
 		var exists bool
 		checkEnumSQL := fmt.Sprintf("SELECT EXISTS (SELECT 1 FROM pg_type WHERE typname = '%s');", name)
@@ -124,7 +147,7 @@ func MigrateEnumsToDatabase(db *gorm.DB) bool {
 
 		if !exists {
 			// if the enum does not exist, create it
-			enumSQL := fmt.Sprintf("CREATE TYPE %s AS ENUM ('%s');", name, util.JoinValues(values))
+			enumSQL := fmt.Sprintf("CREATE TYPE \"%s\" AS ENUM ('%s');", name, util.JoinValues(values))
 			if err := db.Exec(enumSQL).Error; err != nil {
 				logs.FError("Failed to create enum %s: %v", name, err)
 				return false
@@ -152,7 +175,7 @@ func MigrateEnumsToDatabase(db *gorm.DB) bool {
 					}
 				}
 				if !found {
-					addValueSQL := fmt.Sprintf("ALTER TYPE %s ADD VALUE '%s';", name, v)
+					addValueSQL := fmt.Sprintf("ALTER TYPE \"%s\" ADD VALUE '%s';", name, v)
 					if err := db.Exec(addValueSQL).Error; err != nil {
 						logs.FError("Failed to add value '%s' to enum %s: %v", v, name, err)
 						return false

@@ -143,7 +143,7 @@ func (r *BlockRepository) CheckPermissionAndGetOneById(
 		Where("user_id = ? AND permission IN ?",
 			userId, allowedPermissions,
 		)
-	query := db.Model(&schemas.BlockGroup{}).
+	query := db.Model(&schemas.Block{}).
 		Joins("INNER JOIN \"BlockGroupTable\" bg ON block_group_id = bg.id").
 		Joins("INNER JOIN \"BlockPackTable\" bp ON bg.block_pack_id = bp.id").
 		Joins("INNER JOIN \"SubShelfTable\" ss ON bp.parent_sub_shelf_id = ss.id").
@@ -191,7 +191,7 @@ func (r *BlockRepository) CheckPermissionsAndGetManyByIds(
 		Where("user_id = ? AND permission IN ?",
 			userId, allowedPermissions,
 		)
-	query := db.Model(&schemas.BlockGroup{}).
+	query := db.Model(&schemas.Block{}).
 		Joins("INNER JOIN \"BlockGroupTable\" bg ON block_group_id = bg.id").
 		Joins("INNER JOIN \"BlockPackTable\" bp ON bg.block_pack_id = bp.id").
 		Joins("INNER JOIN \"SubShelfTable\" ss ON bp.parent_sub_shelf_id = ss.id").

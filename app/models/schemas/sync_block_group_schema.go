@@ -12,7 +12,7 @@ import (
 type SyncBlockGroup struct {
 	Id         uuid.UUID                     `json:"id" gorm:"column:id; type:uuid; primaryKey; not null; default:gen_random_uuid();"`
 	OwnerId    uuid.UUID                     `json:"ownerId" gorm:"column:owner_id; type:uuid; not null;"`
-	Permission enums.AccessControlPermission `json:"permission" gorm:"column:permission; type:AccessControlPermission; not null; default:'Read';"`
+	Permission enums.AccessControlPermission `json:"permission" gorm:"column:permission; type:\"AccessControlPermission\"; not null; default:'Read';"`
 	Size       int64                         `json:"size" gorm:"column:size; type:bigint; not null; default:0;"`
 	UpdatedAt  time.Time                     `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt  time.Time                     `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`

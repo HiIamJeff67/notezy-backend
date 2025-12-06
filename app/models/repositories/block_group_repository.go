@@ -24,7 +24,7 @@ type BlockGroupRepositoryInterface interface {
 	HasPermissions(db *gorm.DB, ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) bool
 	CheckPermissionAndGetOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) (*schemas.BlockGroup, *exceptions.Exception)
 	CheckPermissionsAndGetManyByIds(db *gorm.DB, ids []uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) ([]schemas.BlockGroup, *exceptions.Exception)
-	GetOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, onlyDeleted types.Ternary) (*schemas.BlockGroup, *exceptions.Exception)
+	GetOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation) (*schemas.BlockGroup, *exceptions.Exception)
 	CreateOneByBlockPackId(db *gorm.DB, blockPackId uuid.UUID, userId uuid.UUID, input inputs.CreateBlockGroupInput) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateBlockGroupInput) (*schemas.BlockGroup, *exceptions.Exception)
 	RestoreSoftDeletedOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID) *exceptions.Exception
@@ -225,7 +225,6 @@ func (r *BlockGroupRepository) GetOneById(
 	id uuid.UUID,
 	userId uuid.UUID,
 	preloads []schemas.BlockGroupRelation,
-	onlyDeleted types.Ternary,
 ) (*schemas.BlockGroup, *exceptions.Exception) {
 	if db == nil {
 		db = models.NotezyDB

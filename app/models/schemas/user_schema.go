@@ -21,11 +21,11 @@ type User struct {
 	RefreshToken    string           `json:"refreshToken" gorm:"column:refresh_token; not null;"`        // validate:"omitnil"
 	LoginCount      int32            `json:"loginCount" gorm:"column:login_count; type:integer; not null; default:0;"`
 	BlockLoginUntil time.Time        `json:"blockLoginUntil" gorm:"column:block_login_until; type:timestamptz; not null;"`
-	UserAgent       string           `json:"userAgent" gorm:"column:user_agent; not null;"`                      // validate:"required,isuseragent"
-	Role            enums.UserRole   `json:"role" gorm:"column:role; type:UserRole; not null; default:'Guest';"` // validate:"omitnil,isrole"
-	Plan            enums.UserPlan   `json:"plan" gorm:"column:plan; type:UserPlan; not null; default:'Free';"`  // validate:"omitnil,isplan"
-	PrevStatus      enums.UserStatus `json:"prevStatus" gorm:"column:prev_status; type:UserStatus; not null; default:'Online';"`
-	Status          enums.UserStatus `json:"status" gorm:"column:status; type:UserStatus; not null; default:'Online';"` // validate:"omitnil,isstatus"
+	UserAgent       string           `json:"userAgent" gorm:"column:user_agent; not null;"`                          // validate:"required,isuseragent"
+	Role            enums.UserRole   `json:"role" gorm:"column:role; type:\"UserRole\"; not null; default:'Guest';"` // validate:"omitnil,isrole"
+	Plan            enums.UserPlan   `json:"plan" gorm:"column:plan; type:\"UserPlan\"; not null; default:'Free';"`  // validate:"omitnil,isplan"
+	PrevStatus      enums.UserStatus `json:"prevStatus" gorm:"column:prev_status; type:\"UserStatus\"; not null; default:'Online';"`
+	Status          enums.UserStatus `json:"status" gorm:"column:status; type:\"UserStatus\"; not null; default:'Online';"` // validate:"omitnil,isstatus"
 	UpdatedAt       time.Time        `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt       time.Time        `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 

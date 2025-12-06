@@ -13,7 +13,7 @@ type Material struct {
 	Id               uuid.UUID          `json:"id" gorm:"column:id; type:uuid; primaryKey; not null;"`
 	ParentSubShelfId uuid.UUID          `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id; type:uuid; not null; uniqueIndex:material_idx_parent_sub_shelf_id_name_deleted_at;"`
 	Name             string             `json:"name" gorm:"column:name; size:128; not null; default:'undefined'; uniqueIndex:material_idx_parent_sub_shelf_id_name_deleted_at;"`
-	Type             enums.MaterialType `json:"type" gorm:"column:type; type:MaterialType; not null; default:'Notebook';"`
+	Type             enums.MaterialType `json:"type" gorm:"column:type; type:\"MaterialType\"; not null; default:'Notebook';"`
 	MegaByteSize     float64            `json:"megaByteSize" gorm:"column:mega_byte_size; type:double precision; not null; default:0;"`
 	ContentKey       string             `json:"contentKey" gorm:"column:content_key; unique; not null;"`
 	DeletedAt        *time.Time         `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz; default:null; uniqueIndex:material_idx_parent_sub_shelf_id_name_deleted_at;"`

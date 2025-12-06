@@ -10,7 +10,7 @@ import (
 // This table is only mutatable by the admin, and accessable by both client user and admin.
 // To declare the value or data of this table, you MUST use the seeding method under notezy-backend/app/models/seeds/
 type PlanLimitation struct {
-	Key                          enums.UserPlan `json:"key" gorm:"column:key; type:UserPlan; primaryKey;"`
+	Key                          enums.UserPlan `json:"key" gorm:"column:key; type:\"UserPlan\"; primaryKey;"`
 	MaxRootShelfCount            int32          `json:"maxRootShelfCount" gorm:"column:max_root_shelf_count; type:integer; not null;"`
 	MaxBlockPackCount            int32          `json:"maxBlockPackCount" gorm:"column:max_block_pack_count; type:integer; not null;"`
 	MaxBlockCount                int32          `json:"maxBlockCount" gorm:"column:max_block_count; type:integer; not null;"`

@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	pg "github.com/lib/pq"
 	"gorm.io/gorm"
 
 	dtos "notezy-backend/app/dtos"
@@ -105,7 +106,7 @@ func (s *BlockPackService) GetMyBlockPackAndItsParentById(
 	resDto := dtos.GetMyBlockPackAndItsParentByIdResDto{}
 
 	result := db.Raw(blockpacksql.GetMyBlockPackAndItsParentByIdSQL,
-		reqDto.Param.BlockPackId, reqDto.ContextFields.UserId, allowedPermissions, onlyDeleted, onlyDeleted,
+		reqDto.Param.BlockPackId, reqDto.ContextFields.UserId, pg.Array(allowedPermissions), onlyDeleted,
 	).Scan(&resDto)
 	if err := result.Error; err != nil {
 		return nil, exceptions.BlockPack.NotFound().WithError(err)
@@ -266,10 +267,10 @@ func (s *BlockPackService) MoveMyBlockPackById(
 		reqDto.Body.DestinationParentSubShelfId,
 		reqDto.Body.BlockPackId,
 		reqDto.ContextFields.UserId,
-		allowedPermissions,
+		pg.Array(allowedPermissions),
 		reqDto.Body.DestinationParentSubShelfId,
 		reqDto.ContextFields.UserId,
-		allowedPermissions,
+		pg.Array(allowedPermissions),
 	)
 
 	if err := result.Error; err != nil {
@@ -303,10 +304,10 @@ func (s *BlockPackService) MoveMyBlockPacksByIds(
 		reqDto.Body.DestinationParentSubShelfId,
 		reqDto.Body.BlockPackIds,
 		reqDto.ContextFields.UserId,
-		allowedPermissions,
+		pg.Array(allowedPermissions),
 		reqDto.Body.DestinationParentSubShelfId,
 		reqDto.ContextFields.UserId,
-		allowedPermissions,
+		pg.Array(allowedPermissions),
 	)
 
 	if err := result.Error; err != nil {

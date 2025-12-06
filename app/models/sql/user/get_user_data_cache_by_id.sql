@@ -16,4 +16,4 @@ SELECT
 FROM "UserTable" u
 LEFT JOIN "UserInfoTable" ui ON u.id = ui.user_id
 LEFT JOIN "UserSettingTable" us ON u.id = us.user_id
-WHERE u.id = ?
+WHERE u.id = $1

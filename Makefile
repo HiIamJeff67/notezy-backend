@@ -1,6 +1,9 @@
 # ============================== Database Shortcut Commands ============================== #
-view-dbs:
+view-hotreload-dbs:
 	docker-compose run --rm notezy-api go run main.go viewDatabases
+
+view-hotreload-enums:
+	docker-compose run --rm notezy-api go run main.go viewAllEnums
 
 # =============== Migration Commands =============== #
 migrate-build-db:

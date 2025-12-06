@@ -16,7 +16,7 @@ type Badge struct {
 	PublicId    string          `json:"publicId" gorm:"column:public_id; unique; not null; default:'';"`
 	Title       string          `json:"title" gorm:"column:title; not null; size:64;"`
 	Description string          `json:"description" gorm:"column:description; not null; size:256;"`
-	Type        enums.BadgeType `json:"type" gorm:"column:type; type:BadgeType; not null; default:'Bronze';"`
+	Type        enums.BadgeType `json:"type" gorm:"column:type; type:\"BadgeType\"; not null; default:'Bronze';"`
 	ImageURL    *string         `json:"imageURL" gorm:"column:image_url;"`
 	CreatedAt   time.Time       `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 

@@ -19,11 +19,11 @@ SELECT
 FROM "MaterialTable" m
 LEFT JOIN "SubShelfTable" ss ON m.parent_sub_shelf_id = ss.id
 LEFT JOIN "UsersToShelvesTable" uts ON ss.root_shelf_id = uts.root_shelf_id
-WHERE m.id = ? AND uts.user_id = ? AND uts.permission IN ?
+WHERE m.id = $1 AND uts.user_id = $2 AND uts.permission IN ($3::"AccessControlPermission"[])
     AND (
         CASE
-            WHEN ? = 0 THEN m.deleted_at IS NOT NULL
-            WHEN ? = 2 THEN m.deleted_at IS NULL
+            WHEN $4 = 0 THEN m.deleted_at IS NOT NULL
+            WHEN $4 = 2 THEN m.deleted_at IS NULL
             ELSE true
         END
     )

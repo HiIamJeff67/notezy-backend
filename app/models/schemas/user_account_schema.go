@@ -17,10 +17,10 @@ type UserAccount struct {
 	AuthCode            string             `json:"authCode" gorm:"column:auth_code; not null;"`                     // validate:"required,isnumberstring,len=6"
 	AuthCodeExpiredAt   time.Time          `json:"authCodeExpiredAt" gorm:"column:auth_code_expired_at; not null;"` // the exact time when authCode expires
 	BlockAuthCodeUntil  time.Time          `json:"blockAuthCodeUntil" gorm:"column:block_auth_code_until; type:timestamptz; not null;"`
-	CountryCode         *enums.CountryCode `json:"countryCode" gorm:"column:country_code; type:CountryCode;"`   // validate:"omitnil,iscountrycode"
-	PhoneNumber         *string            `json:"phoneNumber" gorm:"column:phone_number; unique;"`             // validate:"omitnil,max=0,max=15,isnumberstring"
-	GoogleCredential    *string            `json:"googleCredential" gorm:"column:google_credential; unique;"`   // validate:"omitnil"
-	DiscordCredential   *string            `json:"discordCredential" gorm:"column:discord_credential; unique;"` // validate:"omitnil"
+	CountryCode         *enums.CountryCode `json:"countryCode" gorm:"column:country_code; type:\"CountryCode\";"` // validate:"omitnil,iscountrycode"
+	PhoneNumber         *string            `json:"phoneNumber" gorm:"column:phone_number; unique;"`               // validate:"omitnil,max=0,max=15,isnumberstring"
+	GoogleCredential    *string            `json:"googleCredential" gorm:"column:google_credential; unique;"`     // validate:"omitnil"
+	DiscordCredential   *string            `json:"discordCredential" gorm:"column:discord_credential; unique;"`   // validate:"omitnil"
 	RootShelfCount      int32              `json:"rootShelfCount" gorm:"column:root_shelf_count; type:integer; not null; default:0;"`
 	BlockPackCount      int32              `json:"blockPackCount" gorm:"column:block_pack_count; type:integer; not null; default:0;"`
 	BlockCount          int32              `json:"blockCount" gorm:"column:block_count; type:integer; not null; default:0;"`

@@ -1,4 +1,4 @@
-package accountingtriggers
+package accountingtriggersql
 
 import (
 	_ "embed"

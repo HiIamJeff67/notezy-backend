@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	pg "github.com/lib/pq"
 	"gorm.io/gorm"
 
 	dtos "notezy-backend/app/dtos"
@@ -136,7 +137,7 @@ func (s *MaterialService) GetMyMaterialAndItsParentById(
 	}{}
 
 	result := db.Raw(materialsql.GetMyMaterialAndItsParentByIdSQL,
-		reqDto.Param.MaterialId, reqDto.ContextFields.UserId, allowedPermissions, onlyDeleted, onlyDeleted,
+		reqDto.Param.MaterialId, reqDto.ContextFields.UserId, pg.Array(allowedPermissions), onlyDeleted,
 	).Scan(&output)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Material.NotFound().WithError(err)
@@ -533,10 +534,10 @@ func (s *MaterialService) MoveMyMaterialById(
 		reqDto.Body.DestinationParentSubShelfId,
 		reqDto.Body.MaterialId,
 		reqDto.ContextFields.UserId,
-		allowedPermissions,
+		pg.Array(allowedPermissions),
 		reqDto.Body.DestinationParentSubShelfId,
 		reqDto.ContextFields.UserId,
-		allowedPermissions,
+		pg.Array(allowedPermissions),
 	)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Material.FailedToUpdate().WithError(err)
@@ -569,10 +570,10 @@ func (s *MaterialService) MoveMyMaterialsByIds(
 		reqDto.Body.DestinationParentSubShelfId,
 		reqDto.Body.MaterialIds,
 		reqDto.ContextFields.UserId,
-		allowedPermissions,
+		pg.Array(allowedPermissions),
 		reqDto.Body.DestinationParentSubShelfId,
 		reqDto.ContextFields.UserId,
-		allowedPermissions,
+		pg.Array(allowedPermissions),
 	)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Material.FailedToUpdate().WithError(err)

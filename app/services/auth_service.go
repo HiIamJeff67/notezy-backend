@@ -466,7 +466,9 @@ func (s *AuthService) SendAuthCode(
 		BlockAuthCodeUntil time.Time `json:"blockAuthCodeUntil"`
 		Now                time.Time `json:"now"`
 	}{}
-	result := db.Raw(authsql.UpdateAuthCodeSQL, authCode, authCodeExpiredAt, blockAuthCodeUntil, reqDto.Body.Email).Scan(&output)
+	result := db.Raw(authsql.UpdateAuthCodeSQL,
+		authCode, authCodeExpiredAt, blockAuthCodeUntil, reqDto.Body.Email,
+	).Scan(&output)
 	if err := result.Error; err != nil || result.RowsAffected == 0 {
 		exception := exceptions.Auth.AuthCodeBlockedDueToTryingTooManyTimes(output.BlockAuthCodeUntil)
 		if err != nil {

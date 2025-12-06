@@ -13,27 +13,27 @@ import (
 
 /* ============================== Auxiliary Data Form ============================== */
 
-// BlockData is a type for frontend convience, it allowed the frontend to directly put the block output from the block note editor
+// EditableBlockContent is a type for frontend convience, it allowed the frontend to directly put the block output from the block note editor
 // to this data struct, at the backend we can also simply unmarshal and validate the data struct
 //
-// To use it, you have to create a dto, and instead of embedding the BlockData to the dto, we need to put the BlockData as a type of a field in the dto
+// To use it, you have to create a dto, and instead of embedding the EditableBlockContent to the dto, we need to put the EditableBlockContent as a type of a field in the dto
 //
 //	ex.
 //	type CreateBlockReqDto {
-//		BlockData BlockData `json:"blockData"`
+//		EditableBlockContent EditableBlockContent `json:"editableBlockContent"`
 //	    BlockGroupId uuid.UUID `json:"blockGroupId"`
 //		ParentBlockId *uuid.UUID `json:"parentBlockId"`
 //	}
-type BlockData struct {
+type EditableBlockContent struct {
 	Id       uuid.UUID              `json:"id" validate:"required"`
 	Type     enums.BlockType        `json:"type" validate:"required"`
 	Props    blocknote.BlockProps   `json:"-"`
 	Content  blocknote.BlockContent `json:"-"`
-	Children []BlockData            `json:"children" validate:"omitempty"`
+	Children []EditableBlockContent `json:"children" validate:"omitempty"`
 }
 
-func (bd *BlockData) UnmarshalJSON(data []byte) error {
-	type AliasBlockDto BlockData
+func (bd *EditableBlockContent) UnmarshalJSON(data []byte) error {
+	type AliasBlockDto EditableBlockContent
 	aux := &struct {
 		Props   json.RawMessage `json:"props"`   // unmarshal to json raw message later temporarily
 		Content json.RawMessage `json:"content"` // unmarshal to json raw message later temporarily
@@ -80,8 +80,8 @@ func (bd *BlockData) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (bd BlockData) MarshalJSON() ([]byte, error) {
-	type Alias BlockData
+func (bd EditableBlockContent) MarshalJSON() ([]byte, error) {
+	type Alias EditableBlockContent
 	return json.Marshal(&struct {
 		Props   blocknote.BlockProps   `json:"props"`
 		Content blocknote.BlockContent `json:"content"`

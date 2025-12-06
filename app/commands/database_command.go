@@ -21,6 +21,20 @@ var viewAllAvailableDatabasesCommand = &cobra.Command{
 	},
 }
 
+var viewAllDatabaseEnumsCommand = &cobra.Command{
+	Use:   "viewAllEnums",
+	Short: "View all the nums of the database.",
+	Long:  "Use a simple select sql command to get all the enums of the database",
+	Run: func(cmd *cobra.Command, args []string) {
+		db := models.ConnectToDatabase(models.PostgresDatabaseConfig)
+		defer models.DisconnectToDatabase(db)
+
+		if !models.ViewAllDatabaseEnums(db) {
+			return
+		}
+	},
+}
+
 var truncateDatabaseCommand = &cobra.Command{
 	Use:   "truncate",
 	Short: "Truncate an existing table",
@@ -51,10 +65,10 @@ var truncateDatabaseCommand = &cobra.Command{
 		}
 
 		logs.FInfo("Start the process of truncating database table: %s", tableNameStr)
-		models.NotezyDB = models.ConnectToDatabase(models.DatabaseInstanceToConfig[db])
-		models.TruncateTablesInDatabase(tableName, db)
+		db = models.ConnectToDatabase(models.DatabaseInstanceToConfig[db])
+		defer models.DisconnectToDatabase(db)
 
-		models.DisconnectToDatabase(models.NotezyDB)
+		models.TruncateTablesInDatabase(tableName, db)
 	},
 }
 
@@ -64,6 +78,7 @@ var migrateDatabaseCommand = &cobra.Command{
 	Long:  "Use some migration SQLs to migrate required enums, tables, and some triggers to the database.",
 	Run: func(cmd *cobra.Command, args []string) {
 		db := models.ConnectToDatabase(models.PostgresDatabaseConfig)
+		defer models.DisconnectToDatabase(db)
 
 		logs.FInfo("Start the process of migrating database schema to %v", models.PostgresDatabaseConfig.DBName)
 
@@ -76,8 +91,6 @@ var migrateDatabaseCommand = &cobra.Command{
 		if !models.MigrateTriggersToDatabase(db) {
 			return
 		}
-
-		models.DisconnectToDatabase(db)
 	},
 }
 
@@ -87,14 +100,13 @@ var seedDatabaseCommand = &cobra.Command{
 	Long:  "Use some seeding default data SQLs to seed data for management or main business logic.",
 	Run: func(cmd *cobra.Command, args []string) {
 		db := models.ConnectToDatabase(models.PostgresDatabaseConfig)
+		defer models.DisconnectToDatabase(db)
 
 		logs.FInfo("Start the process of seeding database default data to %v", models.PostgresDatabaseConfig.DBName)
 
 		if !models.SeedDefaultDataToDatabase(db) {
 			return
 		}
-
-		models.DisconnectToDatabase(db)
 	},
 }
 
