@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"gorm.io/datatypes"
 
 	enums "notezy-backend/app/models/schemas/enums"
 	blocknote "notezy-backend/shared/lib/blocknote"
@@ -91,6 +92,19 @@ func (bd EditableBlockContent) MarshalJSON() ([]byte, error) {
 		Content: bd.Content,
 		Alias:   (*Alias)(&bd),
 	})
+}
+
+// EditableRawBlockContent is a type that used ONLY as a sub dto of the response dto,
+// because we have make sure all the data of block props or content is type safe
+// and valid before storing to the database, so we should trust the data coming
+// from the database without any reason, and then just focus on the type safe
+// and data validation while creating or updating the block props or content
+type EditableRawBlockContent struct {
+	Id       uuid.UUID                 `json:"id"`
+	Type     enums.BlockType           `json:"type"`
+	Props    datatypes.JSON            `json:"props"`
+	Content  datatypes.JSON            `json:"content"`
+	Children []EditableRawBlockContent `json:"children"`
 }
 
 /* ============================== Request DTO ============================== */

@@ -17,6 +17,7 @@ import (
 	"notezy-backend/app/models/schemas/enums"
 	blockgroupsql "notezy-backend/app/models/sql/block_group"
 	validation "notezy-backend/app/validation"
+	"notezy-backend/shared/lib/queue"
 	"notezy-backend/shared/types"
 )
 
@@ -91,32 +92,100 @@ func (s *BlockGroupService) GetMyBlockGroupAndItsBlocksById(
 
 	onlyDeleted := types.Ternary_Negative
 
-	output := []struct {
-		BlockGroupId        uuid.UUID       `gorm:"column:block_group_id;"`
-		BlockPackId         uuid.UUID       `gorm:"column:block_pack_id;"`
-		PrevBlockGroupId    *uuid.UUID      `gorm:"column:prev_block_group_id;"`
-		SyncBlockGroupId    *uuid.UUID      `gorm:"column:sync_block_group_id;"`
-		MegaByteSize        uuid.UUID       `gorm:"column:mega_byte_size;"`
-		BlockGroupDeletedAt *time.Time      `gorm:"column:block_group_deleted_at;"`
-		BlockGroupUpdatedAt time.Time       `gorm:"column:block_group_updated_at;"`
-		BlockGroupCreatedAt time.Time       `gorm:"column:block_group_created_at;"`
-		BlockId             uuid.UUID       `gorm:"column:block_id;"`
-		ParentBlockId       uuid.UUID       `gorm:"column:parent_block_id;"`
-		BlockType           enums.BlockType `gorm:"column:block_type;"`
-		BlockProps          datatypes.JSON  `gorm:"column:block_props;"`
-		BlockContent        datatypes.JSON  `gorm:"column:block_content;"`
-		BlockDeletedAt      *time.Time      `gorm:"column:block_deleted_at;"`
-		BlockUpdatedAt      *time.Time      `gorm:"column:block_updated_at;"`
-		BlockCreatedAt      *time.Time      `gorm:"column:block_created_at;"`
-	}{}
+	type outputType struct {
+		// block group data
+		BlockGroupId        uuid.UUID  `gorm:"column:block_group_id;"`
+		BlockPackId         uuid.UUID  `gorm:"column:block_pack_id;"`
+		PrevBlockGroupId    *uuid.UUID `gorm:"column:prev_block_group_id;"`
+		SyncBlockGroupId    *uuid.UUID `gorm:"column:sync_block_group_id;"`
+		MegaByteSize        float64    `gorm:"column:mega_byte_size;"`
+		BlockGroupDeletedAt *time.Time `gorm:"column:block_group_deleted_at;"`
+		BlockGroupUpdatedAt time.Time  `gorm:"column:block_group_updated_at;"`
+		BlockGroupCreatedAt time.Time  `gorm:"column:block_group_created_at;"`
+		// block data
+		BlockId        uuid.UUID       `gorm:"column:block_id;"`
+		ParentBlockId  *uuid.UUID      `gorm:"column:parent_block_id;"`
+		BlockType      enums.BlockType `gorm:"column:block_type;"`
+		BlockProps     datatypes.JSON  `gorm:"column:block_props;"`
+		BlockContent   datatypes.JSON  `gorm:"column:block_content;"`
+		BlockDeletedAt *time.Time      `gorm:"column:block_deleted_at;"`
+		BlockUpdatedAt time.Time       `gorm:"column:block_updated_at;"`
+		BlockCreatedAt time.Time       `gorm:"column:block_created_at;"`
+	}
+	var output []outputType
 	result := db.Raw(blockgroupsql.GetMyBlockGroupAndItsBlocksByIdSQL,
 		reqDto.Param.BlockGroupId, reqDto.ContextFields.UserId, pg.Array(allowedPermissions), onlyDeleted,
 	).Scan(&output)
 	if err := result.Error; err != nil {
 		return nil, exceptions.BlockGroup.NotFound().WithError(err)
 	}
+	if len(output) == 0 {
+		return nil, exceptions.BlockGroup.NotFound()
+	}
 
-	return nil, nil
+	var root *dtos.EditableRawBlockContent = nil
+	parentToChildrenMap := make(map[uuid.UUID][]outputType, len(output))
+	for _, row := range output {
+		if row.BlockGroupId != output[0].BlockGroupId {
+			return nil, exceptions.BlockGroup.MoreThanOneBlockGroupDetected(output[0].BlockGroupId, row.BlockGroupId)
+		}
+
+		if row.ParentBlockId == nil {
+			if root != nil {
+				// duplicate root block detected
+				return nil, exceptions.BlockGroup.RepeatedRootBlockInBlockGroupDetected(output[0].BlockGroupId, row.BlockId)
+			}
+			root = &dtos.EditableRawBlockContent{
+				Id:       row.BlockId,
+				Type:     row.BlockType,
+				Props:    row.BlockProps,
+				Content:  row.BlockContent,
+				Children: []dtos.EditableRawBlockContent{},
+			}
+		} else {
+			parentToChildrenMap[*row.ParentBlockId] = append(parentToChildrenMap[*row.ParentBlockId], row)
+		}
+	}
+
+	if root == nil {
+		return nil, exceptions.BlockGroup.NoRootBlockInBlockGroup(output[0].BlockGroupId)
+	}
+
+	q := queue.NewQueue[*dtos.EditableRawBlockContent](int64(len(output)))
+	q.Enqueue(root)
+	for !q.IsEmpty() {
+		current, err := q.Dequeue()
+		if err != nil {
+			return nil, exceptions.DataStructureLib.FailedToManipulateQueue().WithError(err)
+		}
+		// at this point, current cannot be nil, because the root is not nil, and the below new element enqueued to the queue is alos not nil
+
+		children := parentToChildrenMap[current.Id]
+		current.Children = make([]dtos.EditableRawBlockContent, 0, len(children))
+		for _, child := range children {
+			editableChild := dtos.EditableRawBlockContent{
+				Id:       child.BlockId,
+				Type:     child.BlockType,
+				Props:    child.BlockProps,
+				Content:  child.BlockContent,
+				Children: []dtos.EditableRawBlockContent{}, // the children of the child should be initialize here
+			}
+			current.Children = append(current.Children, editableChild)
+			currentChildPointer := &current.Children[len(current.Children)-1] // get the pointer to the child in current.Children
+			q.Enqueue(currentChildPointer)                                    // make sure we passing the pointer of the editable child to the queue, so that we can modify its children field later
+		}
+	}
+
+	return &dtos.GetMyBlockGroupAndItsBlocksByIdResDto{
+		Id:                   output[0].BlockGroupId,
+		BlockPackId:          output[0].BlockPackId,
+		PrevBlockGroupId:     output[0].PrevBlockGroupId,
+		SyncBlockGroupId:     output[0].SyncBlockGroupId,
+		DeletedAt:            output[0].BlockGroupDeletedAt,
+		UpdatedAt:            output[0].BlockGroupUpdatedAt,
+		CreatedAt:            output[0].BlockGroupCreatedAt,
+		EditableBlockContent: *root,
+	}, nil
 }
 
 func (s *BlockGroupService) GetMyBlockGroupsByPrevBlockGroupId(

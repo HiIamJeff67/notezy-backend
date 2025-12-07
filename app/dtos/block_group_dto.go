@@ -113,15 +113,15 @@ type GetMyBlockGroupByIdResDto struct {
 }
 
 type GetMyBlockGroupAndItsBlocksByIdResDto struct {
-	Id                   uuid.UUID            `json:"id"`
-	BlockPackId          uuid.UUID            `json:"blockPackId"`
-	PrevBlockGroupId     *uuid.UUID           `json:"prevBlockGroupId"`
-	SyncBlockGroupId     *uuid.UUID           `json:"syncBlockGroupId"`
-	MegaByteSize         float64              `json:"megaByteSize"`
-	DeletedAt            *time.Time           `json:"deletedAt"`
-	UpdatedAt            time.Time            `json:"updatedAt"`
-	CreatedAt            time.Time            `json:"createdAt"`
-	EditableBlockContent EditableBlockContent `json:"editableBlockContent"`
+	Id                   uuid.UUID               `json:"id"`
+	BlockPackId          uuid.UUID               `json:"blockPackId"`
+	PrevBlockGroupId     *uuid.UUID              `json:"prevBlockGroupId"`
+	SyncBlockGroupId     *uuid.UUID              `json:"syncBlockGroupId"`
+	MegaByteSize         float64                 `json:"megaByteSize"`
+	DeletedAt            *time.Time              `json:"deletedAt"`
+	UpdatedAt            time.Time               `json:"updatedAt"`
+	CreatedAt            time.Time               `json:"createdAt"`
+	EditableBlockContent EditableRawBlockContent `json:"editableBlockContent"`
 }
 
 type GetMyBlockGroupsByPrevBlockGroupIdResDto = []GetMyBlockGroupByIdResDto
