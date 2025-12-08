@@ -99,6 +99,23 @@ type CreateBlockGroupByBlockPackIdReqDto struct {
 	]
 }
 
+type CreateBlockGroupAndItsBlocksByBlockPackIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			BlockPackId          uuid.UUID            `json:"blockPackId" validate:"required"`
+			PrevBlockGroupId     *uuid.UUID           `json:"prevBlockGroupId" validate:"required"`
+			EditableBlockContent EditableBlockContent `json:"editableBlockContent" validate:"required"`
+		},
+		any,
+	]
+}
+
 /* ============================== Response DTO ============================== */
 
 type GetMyBlockGroupByIdResDto struct {
@@ -133,4 +150,8 @@ type GetMyBlockGroupsAndTheirBlocksByBlockPackIdResDto = []GetMyBlockGroupAndIts
 type CreateBlockGroupByBlockPackIdResDto struct {
 	Id        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
+}
+
+type CreateBlockGroupAndItsBlocksByBlockPackIdResDto struct {
+	CreatedAt time.Time
 }

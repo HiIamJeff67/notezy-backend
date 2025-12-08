@@ -26,6 +26,7 @@ type BlockRepositoryInterface interface {
 	CheckPermissionsAndGetManyByIds(db *gorm.DB, ids []uuid.UUID, userId uuid.UUID, preloads []schemas.BlockRelation, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) ([]schemas.Block, *exceptions.Exception)
 	GetOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockRelation, onlyDeleted types.Ternary) (*schemas.Block, *exceptions.Exception)
 	CreateOneByBlockGroupId(db *gorm.DB, blockGroupId uuid.UUID, userId uuid.UUID, input inputs.CreateBlockInput) (*uuid.UUID, *exceptions.Exception)
+	CreateManyByBlockGroupId(db *gorm.DB, blockGroupId uuid.UUID, userId uuid.UUID, batchSize int, input []inputs.CreateBlockInput) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateBlockInput) (*schemas.Block, *exceptions.Exception)
 	RestoreSoftDeletedOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID) *exceptions.Exception
 	RestoreSoftDeletedManyByIds(db *gorm.DB, ids []uuid.UUID, userId uuid.UUID) *exceptions.Exception
@@ -279,7 +280,7 @@ func (r *BlockRepository) CreateOneByBlockGroupId(
 
 	var newBlock schemas.Block
 	if err := copier.Copy(&newBlock, &input); err != nil {
-		return nil, exceptions.Block.FailedToCreate().WithError(err)
+		return nil, exceptions.Block.InvalidInput().WithError(err)
 	}
 	newBlock.BlockGroupId = blockGroupId
 
@@ -291,6 +292,60 @@ func (r *BlockRepository) CreateOneByBlockGroupId(
 	}
 
 	return &newBlock.Id, nil
+}
+
+func (r *BlockRepository) CreateManyByBlockGroupId(
+	db *gorm.DB,
+	blockGroupId uuid.UUID,
+	userId uuid.UUID,
+	batchSize int,
+	input []inputs.CreateBlockInput,
+) ([]uuid.UUID, *exceptions.Exception) {
+	if db == nil {
+		db = models.NotezyDB
+	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	blockGroupRepository := NewBlockGroupRepository()
+
+	if !blockGroupRepository.HasPermission(
+		db,
+		blockGroupId,
+		userId,
+		allowedPermissions,
+		types.Ternary_Negative,
+	) {
+		return nil, exceptions.Block.NoPermission("get owner's block group")
+	}
+
+	newBlocks := make([]schemas.Block, len(input))
+	for index, in := range input {
+		var newBlock schemas.Block
+		if err := copier.Copy(&newBlock, &in); err != nil {
+			return nil, exceptions.Block.InvalidInput().WithError(err)
+		}
+		newBlock.BlockGroupId = blockGroupId
+		newBlocks[index] = newBlock
+	}
+
+	result := db.Model(&schemas.Block{}).
+		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
+		CreateInBatches(&newBlocks, batchSize)
+	if err := result.Error; err != nil {
+		return nil, exceptions.Block.FailedToCreate().WithError(err)
+	}
+
+	newIds := make([]uuid.UUID, len(newBlocks))
+	for index, newBlock := range newBlocks {
+		newIds[index] = newBlock.Id
+	}
+
+	return newIds, nil
 }
 
 func (r *BlockRepository) UpdateOneById(

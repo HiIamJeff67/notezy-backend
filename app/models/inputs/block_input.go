@@ -8,6 +8,7 @@ import (
 )
 
 type CreateBlockInput struct {
+	Id          uuid.UUID       `json:"id" gorm:"column:id;"`
 	PrevBlockId *uuid.UUID      `json:"prevBlockId" gorm:"column:prev_block_id;"`
 	Type        enums.BlockType `json:"type" gorm:"column:type;"`
 	Props       datatypes.JSON  `json:"props" gorm:"column:props;"`

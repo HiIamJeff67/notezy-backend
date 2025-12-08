@@ -13,6 +13,7 @@ type BlockExceptionDomain struct {
 	Prefix   ExceptionPrefix
 	DatabaseExceptionDomain
 	FileExceptionDomain
+	TypeExceptionDomain
 }
 
 var Block = &BlockExceptionDomain{
@@ -23,6 +24,10 @@ var Block = &BlockExceptionDomain{
 		_Prefix:   ExceptionPrefix_Block,
 	},
 	FileExceptionDomain: FileExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_Block,
+		_Prefix:   ExceptionPrefix_Block,
+	},
+	TypeExceptionDomain: TypeExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_Block,
 		_Prefix:   ExceptionPrefix_Block,
 	},

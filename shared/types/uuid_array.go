@@ -26,12 +26,12 @@ func (u *UUIDArray) Scan(value interface{}) error {
 	}
 	parts := strings.Split(str, ",")
 	uuids := make(UUIDArray, len(parts))
-	for i, part := range parts {
+	for index, part := range parts {
 		id, err := uuid.Parse(strings.TrimSpace(part))
 		if err != nil {
 			return fmt.Errorf("invalid UUID in array: %s", part)
 		}
-		uuids[i] = id
+		uuids[index] = id
 	}
 	*u = uuids
 	return nil
@@ -42,8 +42,8 @@ func (u UUIDArray) Value() (driver.Value, error) {
 		return "{}", nil
 	}
 	strs := make([]string, len(u))
-	for i, id := range u {
-		strs[i] = id.String()
+	for index, id := range u {
+		strs[index] = id.String()
 	}
 	return "{" + strings.Join(strs, ",") + "}", nil
 }

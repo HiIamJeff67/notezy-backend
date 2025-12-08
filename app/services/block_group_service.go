@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
@@ -17,6 +18,7 @@ import (
 	"notezy-backend/app/models/schemas/enums"
 	blockgroupsql "notezy-backend/app/models/sql/block_group"
 	validation "notezy-backend/app/validation"
+	"notezy-backend/shared/constants"
 	"notezy-backend/shared/lib/queue"
 	"notezy-backend/shared/types"
 )
@@ -29,15 +31,18 @@ type BlockGroupServiceInterface interface {
 type BlockGroupService struct {
 	db                        *gorm.DB
 	blockGroupGroupRepository repositories.BlockGroupRepositoryInterface
+	blockRepository           repositories.BlockRepositoryInterface
 }
 
 func NewBlockGroupService(
 	db *gorm.DB,
 	blockGroupGroupRepository repositories.BlockGroupRepositoryInterface,
+	blockRepository repositories.BlockRepositoryInterface,
 ) BlockGroupServiceInterface {
 	return &BlockGroupService{
 		db:                        db,
 		blockGroupGroupRepository: blockGroupGroupRepository,
+		blockRepository:           blockRepository,
 	}
 }
 
@@ -151,8 +156,10 @@ func (s *BlockGroupService) GetMyBlockGroupAndItsBlocksById(
 		return nil, exceptions.BlockGroup.NoRootBlockInBlockGroup(output[0].BlockGroupId)
 	}
 
-	q := queue.NewQueue[*dtos.EditableRawBlockContent](int64(len(output)))
+	q := queue.NewQueue[*dtos.EditableRawBlockContent](len(output))
 	q.Enqueue(root)
+	visited := make(map[uuid.UUID]bool, len(output))
+	visited[root.Id] = true
 	for !q.IsEmpty() {
 		current, err := q.Dequeue()
 		if err != nil {
@@ -160,19 +167,27 @@ func (s *BlockGroupService) GetMyBlockGroupAndItsBlocksById(
 		}
 		// at this point, current cannot be nil, because the root is not nil, and the below new element enqueued to the queue is alos not nil
 
-		children := parentToChildrenMap[current.Id]
+		if visited[current.Id] {
+			continue
+		}
+		visited[current.Id] = true
+
+		children, exist := parentToChildrenMap[current.Id]
+		if !exist {
+			// no children under the current
+			continue
+		}
 		current.Children = make([]dtos.EditableRawBlockContent, 0, len(children))
 		for _, child := range children {
-			editableChild := dtos.EditableRawBlockContent{
+			current.Children = append(current.Children, dtos.EditableRawBlockContent{
 				Id:       child.BlockId,
 				Type:     child.BlockType,
 				Props:    child.BlockProps,
 				Content:  child.BlockContent,
 				Children: []dtos.EditableRawBlockContent{}, // the children of the child should be initialize here
-			}
-			current.Children = append(current.Children, editableChild)
-			currentChildPointer := &current.Children[len(current.Children)-1] // get the pointer to the child in current.Children
-			q.Enqueue(currentChildPointer)                                    // make sure we passing the pointer of the editable child to the queue, so that we can modify its children field later
+			})
+			currentChildPtr := &current.Children[len(current.Children)-1] // get the pointer to the child in current.Children
+			q.Enqueue(currentChildPtr)                                    // make sure we passing the pointer of the editable child to the queue, so that we can modify its children field later
 		}
 	}
 
@@ -293,6 +308,113 @@ func (s *BlockGroupService) CreateBlockGroupByBlockPackId(
 		CreatedAt: time.Now(),
 	}, nil
 }
+
+func (s *BlockGroupService) CreateBlockGroupAndItsBlocksByBlockPackId(
+	ctx context.Context, reqDto *dtos.CreateBlockGroupAndItsBlocksByBlockPackIdReqDto,
+) (*dtos.CreateBlockGroupAndItsBlocksByBlockPackIdResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Material.InvalidDto().WithError(err)
+	}
+
+	tx := s.db.WithContext(ctx).Begin()
+
+	newBlockGroupId, exception := s.blockGroupGroupRepository.CreateOneByBlockPackId(
+		tx,
+		reqDto.Body.BlockPackId,
+		reqDto.ContextFields.UserId,
+		inputs.CreateBlockGroupInput{
+			PrevBlockGroupId: reqDto.Body.PrevBlockGroupId,
+		},
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+	if newBlockGroupId == nil {
+		tx.Rollback()
+		return nil, exceptions.BlockGroup.FailedToCreate().WithDetails("got nil block group id")
+	}
+
+	input := []inputs.CreateBlockInput{}
+	rootProps, err := json.Marshal(reqDto.Body.EditableBlockContent.Props)
+	if err != nil {
+		tx.Rollback()
+		return nil, exceptions.Block.InvalidDto().WithError(err)
+	}
+	rootContent, err := json.Marshal(reqDto.Body.EditableBlockContent.Content)
+	if err != nil {
+		tx.Rollback()
+		return nil, exceptions.Block.InvalidDto().WithError(err)
+	}
+	input = append(input, inputs.CreateBlockInput{
+		PrevBlockId: nil,
+		Type:        reqDto.Body.EditableBlockContent.Type,
+		Props:       datatypes.JSON(rootProps),
+		Content:     datatypes.JSON(rootContent),
+	})
+	// the capacity is just a pointer, so it is no performance issue to intialize a queue with capacity of max integer
+	q := queue.NewQueue[*dtos.EditableBlockContent](constants.MAX_INT)
+	q.Enqueue(&reqDto.Body.EditableBlockContent) // enqueue the root block which is just under the reqDto.Body along with the block group data
+	visited := make(map[uuid.UUID]bool)
+	for !q.IsEmpty() {
+		current, err := q.Dequeue()
+		if err != nil {
+			tx.Rollback()
+			return nil, exceptions.DataStructureLib.FailedToManipulateQueue().WithError(err)
+		}
+
+		if visited[current.Id] {
+			continue
+		}
+		visited[current.Id] = true
+
+		for _, child := range current.Children {
+			props, err := json.Marshal(child.Props)
+			if err != nil {
+				tx.Rollback()
+				return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+			}
+			content, err := json.Marshal(child.Content)
+			if err != nil {
+				tx.Rollback()
+				return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+			}
+
+			input = append(input, inputs.CreateBlockInput{
+				Id:          child.Id,
+				PrevBlockId: &current.Id,
+				Type:        child.Type,
+				Props:       props,
+				Content:     content,
+			})
+
+			q.Enqueue(&child)
+		}
+	}
+
+	_, exception = s.blockRepository.CreateManyByBlockGroupId(
+		tx,
+		*newBlockGroupId,
+		reqDto.ContextFields.UserId,
+		constants.MaxBatchCreateBlockSize,
+		input,
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithError(err)
+	}
+
+	return &dtos.CreateBlockGroupAndItsBlocksByBlockPackIdResDto{
+		CreatedAt: time.Now(),
+	}, nil
+}
+
+func (s *BlockGroupService) CreateBlockGroupsAndTheirBlocksByBlockPackId() {}
 
 func (s *BlockGroupService) MoveMyBlockGroupById() {}
 

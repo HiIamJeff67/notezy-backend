@@ -8,18 +8,18 @@ type node[T any] struct {
 }
 
 type Queue[T any] struct {
-	head    *node[T]
-	tail    *node[T]
-	size    int64
-	maxSize int64
+	head     *node[T]
+	tail     *node[T]
+	size     int
+	capacity int
 }
 
-func NewQueue[T any](maxSize int64) Queue[T] {
+func NewQueue[T any](capacity int) Queue[T] {
 	return Queue[T]{
-		head:    nil,
-		tail:    nil,
-		size:    0,
-		maxSize: maxSize,
+		head:     nil,
+		tail:     nil,
+		size:     0,
+		capacity: capacity,
 	}
 }
 
@@ -78,25 +78,25 @@ func (q *Queue[T]) Top() (T, error) {
 	return q.head.element, nil
 }
 
-func (q *Queue[T]) Size() int64 {
+func (q *Queue[T]) Size() int {
 	return q.size
 }
 
-func (q *Queue[T]) Capacity() int64 {
-	return q.maxSize
+func (q *Queue[T]) Capacity() int {
+	return q.capacity
 }
 
-func (q *Queue[T]) SetCapacity(capacity int64) error {
+func (q *Queue[T]) SetCapacity(capacity int) error {
 	if capacity < q.size {
 		return errors.New("the new capacity is less than the current size of the queue, may cause data loss")
 	}
 
-	q.maxSize = capacity
+	q.capacity = capacity
 	return nil
 }
 
 func (q *Queue[T]) IsFull() bool {
-	return q.size == q.maxSize
+	return q.size == q.capacity
 }
 
 func (q *Queue[T]) IsEmpty() bool {

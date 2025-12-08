@@ -33,3 +33,9 @@ const (
 	MaxHexCodeLength             int = 20
 	MaxProgrammingLanguageLength int = 50
 )
+
+const (
+	// the max batch size of the PostgreSQL and Gorm is limited by
+	// the formula: Max Batch Size = 65535 / number of columns in the target table
+	MaxBatchCreateBlockSize int = 3000
+)
