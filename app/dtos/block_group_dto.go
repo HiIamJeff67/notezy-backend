@@ -108,9 +108,9 @@ type CreateBlockGroupAndItsBlocksByBlockPackIdReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			BlockPackId          uuid.UUID            `json:"blockPackId" validate:"required"`
-			PrevBlockGroupId     *uuid.UUID           `json:"prevBlockGroupId" validate:"required"`
-			EditableBlockContent EditableBlockContent `json:"editableBlockContent" validate:"required"`
+			BlockPackId            uuid.UUID              `json:"blockPackId" validate:"required"`
+			PrevBlockGroupId       *uuid.UUID             `json:"prevBlockGroupId" validate:"required"`
+			ArborizedEditableBlock ArborizedEditableBlock `json:"arborizedEditableBlock" validate:"required"`
 		},
 		any,
 	]
@@ -130,15 +130,15 @@ type GetMyBlockGroupByIdResDto struct {
 }
 
 type GetMyBlockGroupAndItsBlocksByIdResDto struct {
-	Id                   uuid.UUID               `json:"id"`
-	BlockPackId          uuid.UUID               `json:"blockPackId"`
-	PrevBlockGroupId     *uuid.UUID              `json:"prevBlockGroupId"`
-	SyncBlockGroupId     *uuid.UUID              `json:"syncBlockGroupId"`
-	MegaByteSize         float64                 `json:"megaByteSize"`
-	DeletedAt            *time.Time              `json:"deletedAt"`
-	UpdatedAt            time.Time               `json:"updatedAt"`
-	CreatedAt            time.Time               `json:"createdAt"`
-	EditableBlockContent EditableRawBlockContent `json:"editableBlockContent"`
+	Id                        uuid.UUID                 `json:"id"`
+	BlockPackId               uuid.UUID                 `json:"blockPackId"`
+	PrevBlockGroupId          *uuid.UUID                `json:"prevBlockGroupId"`
+	SyncBlockGroupId          *uuid.UUID                `json:"syncBlockGroupId"`
+	MegaByteSize              float64                   `json:"megaByteSize"`
+	DeletedAt                 *time.Time                `json:"deletedAt"`
+	UpdatedAt                 time.Time                 `json:"updatedAt"`
+	CreatedAt                 time.Time                 `json:"createdAt"`
+	RawArborizedEditableBlock RawArborizedEditableBlock `json:"rawArborizedEditableBlock"`
 }
 
 type GetMyBlockGroupsByPrevBlockGroupIdResDto = []GetMyBlockGroupByIdResDto

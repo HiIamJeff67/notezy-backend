@@ -8,11 +8,11 @@ import (
 )
 
 type CreateBlockInput struct {
-	Id          uuid.UUID       `json:"id" gorm:"column:id;"`
-	PrevBlockId *uuid.UUID      `json:"prevBlockId" gorm:"column:prev_block_id;"`
-	Type        enums.BlockType `json:"type" gorm:"column:type;"`
-	Props       datatypes.JSON  `json:"props" gorm:"column:props;"`
-	Content     datatypes.JSON  `json:"content" gorm:"column:content;"`
+	Id            uuid.UUID       `json:"id" gorm:"column:id;"`
+	ParentBlockId *uuid.UUID      `json:"parentBlockId" gorm:"column:parent_block_id;"`
+	Type          enums.BlockType `json:"type" gorm:"column:type;"`
+	Props         datatypes.JSON  `json:"props" gorm:"column:props;"`
+	Content       datatypes.JSON  `json:"content" gorm:"column:content;"`
 }
 
 type UpdateBlockInput struct {
