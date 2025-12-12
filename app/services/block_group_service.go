@@ -113,6 +113,7 @@ func (s *BlockGroupService) GetMyBlockGroupAndItsBlocksById(
 		Where("block_group_id = ?", blockGroup.Id).
 		Find(&blocks)
 	if err := result.Error; err != nil || len(blocks) == 0 {
+		// return the current node with empty editable block if we cannot find them
 		return &dtos.GetMyBlockGroupAndItsBlocksByIdResDto{
 			Id:                        blockGroup.Id,
 			BlockPackId:               blockGroup.BlockPackId,
@@ -306,7 +307,7 @@ func (s *BlockGroupService) CreateBlockGroupAndItsBlocksByBlockPackId(
 		return nil, exception
 	}
 
-	input := make([]inputs.CreateBlockInput, 0, len(rawFlattenedBlocks))
+	input := make([]inputs.CreateBlockInput, len(rawFlattenedBlocks))
 	for index, rawFlattenedBlock := range rawFlattenedBlocks {
 		input[index] = inputs.CreateBlockInput{
 			Id:            rawFlattenedBlock.Id,
@@ -340,7 +341,9 @@ func (s *BlockGroupService) CreateBlockGroupAndItsBlocksByBlockPackId(
 }
 
 // TODO: use concurrency to run seperate create operation using FlattenRaw
-func (s *BlockGroupService) CreateBlockGroupsAndTheirBlocksByBlockPackId() {}
+func (s *BlockGroupService) CreateBlockGroupsAndTheirBlocksByBlockPackId() {
+
+}
 
 func (s *BlockGroupService) MoveMyBlockGroupById() {}
 

@@ -33,6 +33,8 @@ type InlineContentType string
 const InlineContentType_StyledText InlineContentType = "text"
 const InlineContentType_Link InlineContentType = "link"
 
+/* ============================== StyledText ============================== */
+
 type StyledText struct {
 	Type   InlineContentType `json:"type" validate:"required,eq=text"`
 	Text   string            `json:"text" validate:"required,max=4096"`
@@ -42,6 +44,16 @@ type StyledText struct {
 func (*StyledText) isInlineContent() bool { return true }
 
 func (st *StyledText) Validate() error { return validation.Validator.Struct(st) }
+
+func NewStyledText(text string, styles Styles) *StyledText {
+	return &StyledText{
+		Type:   InlineContentType_StyledText,
+		Text:   text,
+		Styles: styles,
+	}
+}
+
+/* ============================== Link ============================== */
 
 type Link struct {
 	Type    InlineContentType `json:"type" validate:"required,eq=link"`
@@ -53,6 +65,16 @@ func (*Link) isInlineContent() bool { return true }
 
 func (l *Link) Validate() error { return validation.Validator.Struct(l) }
 
+func NewLink(href string, content []StyledText) *Link {
+	return &Link{
+		Type:    InlineContentType_Link,
+		Href:    href,
+		Content: content,
+	}
+}
+
+/* ============================== Example of building custom inline content ============================== */
+
 // type CustomInlineContent struct {
 // 	Type    InlineContentType      `json:"type" validate:"required"`
 // 	Props   map[string]interface{} `json:"props" validate:"omitempty"`
@@ -63,7 +85,18 @@ func (l *Link) Validate() error { return validation.Validator.Struct(l) }
 
 // func (cic *CustomInlineContent) Validate() error { // calling the validator to validate the struct of cic }
 
-/* ============================== InlineContent ============================== */
+// func NewCustomInlineContent(customType InlineContentType, content []StyledText, props map[string]interface{}) *CustomInlineContent {
+// 	if props == nil {
+// 		props = map[string]interface{}{}
+// 	}
+// 	return &CustomInlineContent{
+// 		Type:    customType,
+// 		Content: content,
+// 		Props:   props,
+// 	}
+// }
+
+/* ============================== InlineContentList(InlineContent[]) ============================== */
 
 type InlineContentList []InlineContent
 
@@ -78,6 +111,8 @@ func (icl InlineContentList) Validate() error {
 
 	return nil
 }
+
+/* ============================== InlineContent ============================== */
 
 type InlineContent struct {
 	InlineContentUnion
@@ -139,30 +174,3 @@ func (ic *InlineContent) MarshalJSON() ([]byte, error) {
 		return json.Marshal(nil)
 	}
 }
-
-func NewStyledText(text string, styles Styles) *StyledText {
-	return &StyledText{
-		Type:   InlineContentType_StyledText,
-		Text:   text,
-		Styles: styles,
-	}
-}
-
-func NewLink(href string, content []StyledText) *Link {
-	return &Link{
-		Type:    InlineContentType_Link,
-		Href:    href,
-		Content: content,
-	}
-}
-
-// func NewCustomInlineContent(customType InlineContentType, content []StyledText, props map[string]interface{}) *CustomInlineContent {
-// 	if props == nil {
-// 		props = map[string]interface{}{}
-// 	}
-// 	return &CustomInlineContent{
-// 		Type:    customType,
-// 		Content: content,
-// 		Props:   props,
-// 	}
-// }

@@ -1,6 +1,10 @@
 package constants
 
-import "time"
+import (
+	"time"
+
+	types "notezy-backend/shared/types"
+)
 
 const (
 	ExtraCapacity = 2
@@ -20,9 +24,9 @@ const (
 )
 
 const (
-	MaxNonVideoFileSize        int64 = 10 * MB
-	MaxInMemoryStorageFileSize int64 = 10 * MB
-	MaxS3StorageFileSize       int64 = 10 * MB
+	MaxNonVideoFileSize        types.ByteType = 10 * types.MB
+	MaxInMemoryStorageFileSize types.ByteType = 10 * types.MB
+	MaxS3StorageFileSize       types.ByteType = 10 * types.MB
 )
 
 const (

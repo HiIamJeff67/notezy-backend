@@ -1,7 +1,6 @@
 package exceptions
 
 import (
-	"fmt"
 	"net/http"
 )
 
@@ -33,25 +32,25 @@ var Search = &SearchExceptionDomain{
 	},
 }
 
-func (d *SearchExceptionDomain) InvalidNilDataToEncodeSearchCursor() *Exception {
+func (d *SearchExceptionDomain) FailedToDecode() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
 		Prefix:         d.Prefix,
-		Reason:         "InvalidNilDataToEncodeSearchCursor",
+		Reason:         "FailedToDecode",
 		IsInternal:     true,
-		Message:        "Invalid nil data to encode search cursor, data must be not nil",
+		Message:        "Failed to decode into search cursor",
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
 
-func (d *SearchExceptionDomain) InvalidNonMapToEncodeSearchCursor() *Exception {
+func (d *SearchExceptionDomain) FailedToEncode() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 2,
 		Prefix:         d.Prefix,
-		Reason:         "InvalidNonMapToEncodeSearchCursor",
+		Reason:         "FailedToEncode",
 		IsInternal:     true,
-		Message:        "Invalid non map data to encode search cursor, data must be map[string]interface{}",
+		Message:        "Failed to encode into encoded search cursor",
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
@@ -76,42 +75,6 @@ func (d *SearchExceptionDomain) FailedToUnmarshalSearchCursor() *Exception {
 		Reason:         "FailedToUnmarshalSearchCursor",
 		IsInternal:     true,
 		Message:        "Failed to unmarshal the search cursor",
-		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
-	}
-}
-
-func (d *SearchExceptionDomain) EmptyEncodedStringToDecodeSearchCursor() *Exception {
-	return &Exception{
-		Code:           d.BaseCode + 5,
-		Prefix:         d.Prefix,
-		Reason:         "EmptyEncodedStringToDecodeSearchCursor",
-		IsInternal:     true,
-		Message:        "Encoded string cannot be empty",
-		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
-	}
-}
-
-func (d *SearchExceptionDomain) FailedToDecodeBase64String() *Exception {
-	return &Exception{
-		Code:           d.BaseCode + 6,
-		Prefix:         d.Prefix,
-		Reason:         "FailedToDecodeBase64String",
-		IsInternal:     true,
-		Message:        "Failed to decode base64 string",
-		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
-	}
-}
-
-func (d *SearchExceptionDomain) CannotFindFieldInEncodedSearchCursor(searchCursor string, fieldName string) *Exception {
-	return &Exception{
-		Code:           d.BaseCode + 7,
-		Prefix:         d.Prefix,
-		Reason:         "CannotFindFieldInEncodedSearchCursor",
-		IsInternal:     true,
-		Message:        fmt.Sprintf("Cannot find the field of %s in the search cursor: %s", fieldName, searchCursor),
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}

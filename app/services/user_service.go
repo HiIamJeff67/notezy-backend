@@ -229,9 +229,9 @@ func (s *UserService) SearchPublicUsers(
 		)
 	}
 	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
-		searchCursor, exception := searchcursor.Decode[gqlmodels.SearchUserCursorFields](*gqlInput.After)
-		if exception != nil {
-			return nil, exception
+		searchCursor, err := searchcursor.Decode[gqlmodels.SearchUserCursorFields](*gqlInput.After)
+		if err != nil {
+			return nil, exceptions.Search.FailedToDecode().WithError(err)
 		}
 
 		query.Where("public_id > ?", searchCursor.Fields.PublicID)
@@ -284,9 +284,9 @@ func (s *UserService) SearchPublicUsers(
 				PublicID: user.PublicId,
 			},
 		}
-		encodedSearchCursor, exception := searchCursor.Encode()
-		if exception != nil {
-			return nil, exception
+		encodedSearchCursor, err := searchCursor.Encode()
+		if err != nil {
+			return nil, exceptions.Search.FailedToEncode().WithError(err)
 		}
 		if encodedSearchCursor == nil {
 			return nil, exceptions.Search.FailedToUnmarshalSearchCursor()

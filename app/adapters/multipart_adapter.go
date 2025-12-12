@@ -42,9 +42,9 @@ func MultipartAdapter() gin.HandlerFunc {
 
 		for _, fileHeadersSlice := range form.File {
 			for _, fileHeader := range fileHeadersSlice {
-				if fileHeader.Size > constants.MaxNonVideoFileSize {
+				if fileHeader.Size > constants.MaxNonVideoFileSize.ToInt64() {
 					exceptions.Adapter.
-						FileTooLarge(fileHeader.Size, constants.MaxNonVideoFileSize).
+						FileTooLarge(fileHeader.Size, constants.MaxNonVideoFileSize.ToInt64()).
 						Log().SafelyResponseWithJSON(ctx)
 					ctx.Abort()
 					return

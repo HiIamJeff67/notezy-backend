@@ -61,19 +61,19 @@ func (s *inMemoryStorage) GenerateETag(data []byte) string {
 }
 
 func (s *inMemoryStorage) NewObject(key string, reader io.Reader, size int64) (*Object, *exceptions.Exception) {
-	if size > constants.MaxInMemoryStorageFileSize {
-		return nil, exceptions.Storage.ObjectTooLarge(size, constants.MaxInMemoryStorageFileSize)
+	if size > constants.MaxInMemoryStorageFileSize.ToInt64() {
+		return nil, exceptions.Storage.ObjectTooLarge(size, constants.MaxInMemoryStorageFileSize.ToInt64())
 	}
 
-	limitReader := io.LimitReader(reader, constants.MaxInMemoryStorageFileSize+1)
+	limitReader := io.LimitReader(reader, constants.MaxInMemoryStorageFileSize.ToInt64()+1)
 	b, err := io.ReadAll(limitReader)
 	if err != nil {
 		return nil, exceptions.Storage.FailedToReadObjectBytes()
 	}
 
 	actualSize := int64(len(b))
-	if actualSize > constants.MaxInMemoryStorageFileSize {
-		return nil, exceptions.Storage.ObjectTooLarge(actualSize, constants.MaxInMemoryStorageFileSize)
+	if actualSize > constants.MaxInMemoryStorageFileSize.ToInt64() {
+		return nil, exceptions.Storage.ObjectTooLarge(actualSize, constants.MaxInMemoryStorageFileSize.ToInt64())
 	}
 
 	contentTypes := strings.Split(http.DetectContentType(b), "; ")

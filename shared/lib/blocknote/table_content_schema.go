@@ -7,15 +7,19 @@ import (
 	validation "notezy-backend/app/validation"
 )
 
-type TableContentType string
-
-const TableContentType_TableContent = "tableContent"
+/* ============================== TableCell & TableRow ============================== */
 
 type TableCell InlineContentList
 
 type TableRow struct {
 	Cells []TableCell `json:"cells" validate:"required,min=1,max=100"`
 }
+
+/* ============================== TableContent ============================== */
+
+type TableContentType string
+
+const TableContentType_TableContent = "tableContent"
 
 type TableContent struct {
 	Type TableContentType `json:"type" validate:"required,eq=tableContent"`

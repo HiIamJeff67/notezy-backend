@@ -286,8 +286,9 @@ func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.Con
 			fileHeader := fileHeaders[0]
 
 			// check the file size
-			if fileHeader.Size > constants.MaxNotebookFileSize {
-				exceptions.Material.FileTooLarge(fileHeader.Size, constants.MaxNotebookFileSize).Log().SafelyResponseWithJSON(ctx)
+			if fileHeader.Size > constants.MaxNotebookFileSize.ToInt64() {
+				exceptions.Material.FileTooLarge(fileHeader.Size, constants.MaxNotebookFileSize.ToInt64()).
+					Log().SafelyResponseWithJSON(ctx)
 				return
 			}
 
@@ -392,8 +393,9 @@ func (b *MaterialBinder) BindSaveMyNotebookMaterialById(controllerFunc types.Con
 			fileHeader := fileHeaders[0]
 
 			// check the file size
-			if fileHeader.Size > constants.MaxNotebookFileSize {
-				exceptions.Material.FileTooLarge(fileHeader.Size, constants.MaxNotebookFileSize).Log().SafelyResponseWithJSON(ctx)
+			if fileHeader.Size > constants.MaxNotebookFileSize.ToInt64() {
+				exceptions.Material.FileTooLarge(fileHeader.Size, constants.MaxNotebookFileSize.ToInt64()).
+					Log().SafelyResponseWithJSON(ctx)
 				return
 			}
 

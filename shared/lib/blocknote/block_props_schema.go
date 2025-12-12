@@ -11,6 +11,8 @@ type BlockProps interface {
 	Validate() error
 }
 
+/* ============================== BaseProps ============================== */
+
 type BaseProps struct {
 	TextColor       string `json:"textColor,omitempty" validate:"omitempty,ishexcode"`
 	BackgroundColor string `json:"backgroundColor,omitempty" validate:"omitempty,ishexcode"`
@@ -20,6 +22,8 @@ type BaseProps struct {
 func (bp *BaseProps) IsBlockProps() bool { return true }
 
 func (bp *BaseProps) Validate() error { return validation.Validator.Struct(bp) }
+
+/* ============================== HeadingProps ============================== */
 
 type HeadingProps struct {
 	BaseProps
@@ -31,6 +35,8 @@ func (hp *HeadingProps) IsBlockProps() bool { return true }
 
 func (hp *HeadingProps) Validate() error { return validation.Validator.Struct(hp) }
 
+/* ============================== CheckListItemProps ============================== */
+
 type CheckListItemProps struct {
 	BaseProps
 	Checked bool `json:"checked,omitempty"`
@@ -39,6 +45,8 @@ type CheckListItemProps struct {
 func (clip *CheckListItemProps) IsBlockProps() bool { return true }
 
 func (clip *CheckListItemProps) Validate() error { return validation.Validator.Struct(clip) }
+
+/* ============================== FileBlockProps ============================== */
 
 type FileBlockProps struct {
 	BaseProps
@@ -53,6 +61,8 @@ func (fbp *FileBlockProps) IsBlockProps() bool { return true }
 
 func (fbp *FileBlockProps) Validate() error { return validation.Validator.Struct(fbp) }
 
+/* ============================== CodeBlockProps ============================== */
+
 type CodeBlockProps struct {
 	BaseProps
 	Language string `json:"language,omitempty" validate:"omitempty,isprogramminglanguage"`
@@ -61,6 +71,8 @@ type CodeBlockProps struct {
 func (cbp *CodeBlockProps) IsBlockProps() bool { return true }
 
 func (cbp *CodeBlockProps) Validate() error { return validation.Validator.Struct(cbp) }
+
+/* ============================== TableProps ============================== */
 
 type TableProps struct {
 	BaseProps

@@ -3,9 +3,8 @@ package searchcursor
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"strings"
-
-	exceptions "notezy-backend/app/exceptions"
 )
 
 // we may name other search cursors based on their functionality.
@@ -23,35 +22,35 @@ func New[SearchCursorFieldType any](fields SearchCursorFieldType) *SearchCursor[
 	}
 }
 
-func (sc *SearchCursor[SearchCursorFieldType]) Encode() (*string, *exceptions.Exception) {
+func (sc *SearchCursor[SearchCursorFieldType]) Encode() (*string, error) {
 	jsonData, err := json.Marshal(sc.Fields)
 	if err != nil {
-		return nil, exceptions.Search.FailedToMarshalSearchCursor().WithError(err)
+		return nil, err
 	}
 
 	encoded := base64.StdEncoding.EncodeToString(jsonData)
 	return &encoded, nil
 }
 
-func Decode[SearchCursorFieldType any](encoded string) (*SearchCursor[SearchCursorFieldType], *exceptions.Exception) {
+func Decode[SearchCursorFieldType any](encoded string) (*SearchCursor[SearchCursorFieldType], error) {
 	if len(strings.ReplaceAll(encoded, " ", "")) == 0 {
-		return nil, exceptions.Search.EmptyEncodedStringToDecodeSearchCursor()
+		return nil, errors.New("encoded string cannot be empty")
 	}
 
 	jsonData, err := base64.StdEncoding.DecodeString(encoded)
 	if err != nil {
-		return nil, exceptions.Search.FailedToDecodeBase64String().WithError(err)
+		return nil, err
 	}
 
 	var fields SearchCursorFieldType
 	if err := json.Unmarshal(jsonData, &fields); err != nil {
-		return nil, exceptions.Search.FailedToUnmarshalSearchCursor().WithError(err)
+		return nil, err
 	}
 
 	return &SearchCursor[SearchCursorFieldType]{Fields: fields}, nil
 }
 
-func EncodeFromData[SearchCursorType any](data SearchCursorType) (*string, *exceptions.Exception) {
+func EncodeFromData[SearchCursorType any](data SearchCursorType) (*string, error) {
 	cursor := New(data)
 	return cursor.Encode()
 }

@@ -1,5 +1,7 @@
 package constants
 
+import types "notezy-backend/shared/types"
+
 /* ============================== Limitation of Shelf and Items ============================== */
 
 const (
@@ -18,11 +20,11 @@ const (
 	MaxShelfNameLength int = 128
 	MaxItemNameLength  int = 128
 
-	PeekFileSize            int64 = 256 * Byte
-	MaxTextbookFileSize     int64 = 5 * MB
-	MaxNotebookFileSize     int64 = 5 * MB
-	MaxLearningCardFileSize int64 = 1 * MB
-	MaxWorkFlowFileSize     int64 = 10 * MB
+	PeekFileSize            types.ByteType = 256 * types.Byte
+	MaxTextbookFileSize     types.ByteType = 5 * types.MB
+	MaxNotebookFileSize     types.ByteType = 5 * types.MB
+	MaxLearningCardFileSize types.ByteType = 1 * types.MB
+	MaxWorkFlowFileSize     types.ByteType = 10 * types.MB
 )
 
 /* ============================== Limitation of BlockContent or Props JSON ============================== */

@@ -87,3 +87,15 @@ func (d *ContextExceptionDomain) FailedToConvertGinContextToContext() *Exception
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }
+
+func (d *ContextExceptionDomain) MaxContextBodySizeExceeded(sizeKiloBytes int64, maxSizeKiloByte int64) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 6,
+		Prefix:         d.Prefix,
+		Reason:         "MaxContextBodySizeExceeded",
+		IsInternal:     true,
+		Message:        fmt.Sprintf("The context body size of %d KB is larger than the maximum of %d KB", sizeKiloBytes, maxSizeKiloByte),
+		HTTPStatusCode: http.StatusRequestEntityTooLarge,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}

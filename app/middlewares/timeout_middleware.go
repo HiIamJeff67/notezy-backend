@@ -11,7 +11,7 @@ import (
 
 	exceptions "notezy-backend/app/exceptions"
 	lib "notezy-backend/app/lib"
-	"notezy-backend/app/logs"
+	logs "notezy-backend/app/logs"
 	types "notezy-backend/shared/types"
 )
 

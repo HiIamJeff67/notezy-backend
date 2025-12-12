@@ -292,9 +292,9 @@ func (s *RootShelfService) SearchPrivateShelves(
 		)
 	}
 	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
-		searchCursor, exception := searchcursor.Decode[gqlmodels.SearchRootShelfCursorFields](*gqlInput.After)
-		if exception != nil {
-			return nil, exception
+		searchCursor, err := searchcursor.Decode[gqlmodels.SearchRootShelfCursorFields](*gqlInput.After)
+		if err != nil {
+			return nil, exceptions.Search.FailedToDecode().WithError(err)
 		}
 
 		query.Where("id > ?", searchCursor.Fields.ID)
@@ -347,9 +347,9 @@ func (s *RootShelfService) SearchPrivateShelves(
 				ID: shelf.Id,
 			},
 		}
-		encodedSearchCursor, exception := searchCursor.Encode()
-		if exception != nil {
-			return nil, exception
+		encodedSearchCursor, err := searchCursor.Encode()
+		if err != nil {
+			return nil, exceptions.Search.FailedToEncode().WithError(err)
 		}
 		if encodedSearchCursor == nil {
 			return nil, exceptions.Search.FailedToUnmarshalSearchCursor()
