@@ -33,7 +33,7 @@ func NewAuthController(service services.AuthServiceInterface) AuthControllerInte
 	}
 }
 
-/* ============================== Controller ============================== */
+/* ============================== Implementations ============================== */
 
 func (c *AuthController) Register(ctx *gin.Context, reqDto *dtos.RegisterReqDto) {
 	cookies.AccessToken.DeleteCookie(ctx)

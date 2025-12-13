@@ -203,6 +203,7 @@ func (s *BlockPackService) CreateBlockPack(
 			Icon:                reqDto.Body.Icon,
 			HeaderBackgroundURL: reqDto.Body.HeaderBackgroundURL,
 		},
+		false,
 	)
 	if exception != nil {
 		return nil, exception
@@ -335,6 +336,7 @@ func (s *BlockPackService) RestoreMyBlockPackById(
 		db,
 		reqDto.Body.BlockPackId,
 		reqDto.ContextFields.UserId,
+		false,
 	); exception != nil {
 		return nil, exception
 	}
@@ -357,6 +359,7 @@ func (s *BlockPackService) RestoreMyBlockPacksByIds(
 		db,
 		reqDto.Body.BlockPackIds,
 		reqDto.ContextFields.UserId,
+		false,
 	); exception != nil {
 		return nil, exception
 	}
@@ -379,6 +382,7 @@ func (s *BlockPackService) DeleteMyBlockPackById(
 		db,
 		reqDto.Body.BlockPackId,
 		reqDto.ContextFields.UserId,
+		false,
 	); exception != nil {
 		return nil, exception
 	}
@@ -401,6 +405,7 @@ func (s *BlockPackService) DeleteMyBlockPacksByIds(
 		db,
 		reqDto.Body.BlockPackIds,
 		reqDto.ContextFields.UserId,
+		false,
 	); exception != nil {
 		return nil, exception
 	}

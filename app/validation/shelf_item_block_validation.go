@@ -36,7 +36,7 @@ func RegisterShelfBlockValidation(validate *validator.Validate) {
 		return textAlignmentStr == "left" || textAlignmentStr == "right" || textAlignmentStr == "center" || textAlignmentStr == "justify"
 	})
 	validate.RegisterValidation("isheadinglevel", func(fl validator.FieldLevel) bool {
-		headingLevel := fl.Field().NumField()
-		return headingLevel > 0 && headingLevel <= constants.MaxHeadingLevel
+		headingLevel := fl.Field().Int()
+		return headingLevel > 0 && headingLevel <= int64(constants.MaxHeadingLevel)
 	})
 }

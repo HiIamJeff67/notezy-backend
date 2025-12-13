@@ -34,6 +34,7 @@ func ConfigureDevelopmentRoutes() {
 	configureDevelopmentSubShelfRoutes()
 	configureDevelopmentMaterialRoutes()
 	configureDevelopmentBlockPackRoutes()
+	configureDevelopmentBlockGroupRoutes()
 
 	// test
 	configureStorageRoutes()

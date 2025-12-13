@@ -32,7 +32,7 @@ func NewRootShelfBinder() RootShelfBinderInterface {
 	return &RootShelfBinder{}
 }
 
-/* ============================== Binder ============================== */
+/* ============================== Implementations ============================== */
 
 func (b *RootShelfBinder) BindGetMyRootShelfById(controllerFunc types.ControllerFunc[*dtos.GetMyRootShelfByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {

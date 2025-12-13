@@ -23,7 +23,7 @@ func NewUserAccountBinder() UserAccountBinderInterface {
 	return &UserAccountBinder{}
 }
 
-/* ============================== Binder ============================== */
+/* ============================== Implementations ============================== */
 
 func (b *UserAccountBinder) BindGetMyAccount(controllerFunc types.ControllerFunc[*dtos.GetMyAccountReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {

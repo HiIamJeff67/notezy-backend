@@ -112,12 +112,25 @@ func RegisterStringsValidation(validate *validator.Validate) {
 		}
 		return false
 	})
-	validate.RegisterValidation("ishexcode", func(fl validator.FieldLevel) bool {
-		hexCode := fl.Field().String()
-		if !strings.HasPrefix(hexCode, "#") {
+	validate.RegisterValidation("iscolororhexcode", func(fl validator.FieldLevel) bool {
+		val := fl.Field().String()
+
+		if val == "default" {
+			return true
+		}
+		validColors := []string{
+			"gray", "brown", "orange", "yellow", "green", "blue", "purple", "pink", "red",
+		}
+		for _, color := range validColors {
+			if val == color {
+				return true
+			}
+		}
+
+		if !strings.HasPrefix(val, "#") {
 			return false
 		}
-		cleanHexCode := hexCode[1:]
+		cleanHexCode := val[1:]
 		length := len(cleanHexCode)
 		if length != 3 && length != 4 && length != 6 && length != 8 {
 			return false

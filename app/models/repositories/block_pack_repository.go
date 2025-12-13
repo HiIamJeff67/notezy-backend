@@ -27,14 +27,14 @@ type BlockPackRepositoryInterface interface {
 	CheckPermissionAndGetOneWithOwnerIdById(db *gorm.DB, id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockPackRelation, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) (*uuid.UUID, *schemas.BlockPack, *exceptions.Exception)
 	CheckPermissionsAndGetManyWithOwnerIdsByIds(db *gorm.DB, ids []uuid.UUID, userId uuid.UUID, preloads []schemas.BlockPackRelation, allowedPermissions []enums.AccessControlPermission, onlyDeleted types.Ternary) ([]uuid.UUID, []schemas.BlockPack, *exceptions.Exception)
 	GetOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID) (*schemas.BlockPack, *exceptions.Exception)
-	CreateOneBySubShelfId(db *gorm.DB, subShelfId uuid.UUID, userId uuid.UUID, input inputs.CreateBlockPackInput) (*uuid.UUID, *exceptions.Exception)
+	CreateOneBySubShelfId(db *gorm.DB, subShelfId uuid.UUID, userId uuid.UUID, input inputs.CreateBlockPackInput, skipPermissionCheck bool) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateBlockPackInput) (*schemas.BlockPack, *exceptions.Exception)
-	RestoreSoftDeletedOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID) *exceptions.Exception
-	RestoreSoftDeletedManyByIds(db *gorm.DB, ids []uuid.UUID, userId uuid.UUID) *exceptions.Exception
-	SoftDeleteOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID) *exceptions.Exception
-	SoftDeleteManyByIds(db *gorm.DB, ids []uuid.UUID, userId uuid.UUID) *exceptions.Exception
-	HardDeleteOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID) *exceptions.Exception
-	HardDeleteManyByIds(db *gorm.DB, ids []uuid.UUID, userId uuid.UUID) *exceptions.Exception
+	RestoreSoftDeletedOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID, skipPermissionCheck bool) *exceptions.Exception
+	RestoreSoftDeletedManyByIds(db *gorm.DB, ids []uuid.UUID, userId uuid.UUID, skipPermissionCheck bool) *exceptions.Exception
+	SoftDeleteOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID, skipPermissionCheck bool) *exceptions.Exception
+	SoftDeleteManyByIds(db *gorm.DB, ids []uuid.UUID, userId uuid.UUID, skipPermissionCheck bool) *exceptions.Exception
+	HardDeleteOneById(db *gorm.DB, id uuid.UUID, userId uuid.UUID, skipPermissionCheck bool) *exceptions.Exception
+	HardDeleteManyByIds(db *gorm.DB, ids []uuid.UUID, userId uuid.UUID, skipPermissionCheck bool) *exceptions.Exception
 }
 
 type BlockPackRepository struct{}
@@ -58,21 +58,21 @@ func (r *BlockPackRepository) HasPermission(
 
 	subQuery := db.Model(&schemas.UsersToShelves{}).
 		Select("1").
-		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id").
+		Where("root_shelf_id = ss.root_shelf_id").
 		Where("user_id = ? AND permission IN ?",
 			userId, allowedPermissions,
 		)
 	query := db.Model(&schemas.BlockPack{}).
 		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
-		Where("id = ? AND EXISTS (?)",
+		Where("\"BlockPackTable\".id = ? AND EXISTS (?)",
 			id, subQuery,
 		)
 
 	switch onlyDeleted {
 	case types.Ternary_Positive:
-		query = query.Where("deleted_at IS NOT NULL")
+		query = query.Where("\"BlockPackTable\".deleted_at IS NOT NULL")
 	case types.Ternary_Negative:
-		query = query.Where("deleted_at IS NULL")
+		query = query.Where("\"BlockPackTable\".deleted_at IS NULL")
 	}
 
 	var count int64 = 0
@@ -97,21 +97,21 @@ func (r *BlockPackRepository) HasPermissions(
 
 	subQuery := db.Model(&schemas.UsersToShelves{}).
 		Select("1").
-		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id").
+		Where("root_shelf_id = ss.root_shelf_id").
 		Where("user_id = ? AND permission IN ?",
 			userId, allowedPermissions,
 		)
 	query := db.Model(&schemas.BlockPack{}).
 		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id == ss.id").
-		Where("id IN ? AND EXISTS (?)",
+		Where("\"BlockPackTable\".id IN ? AND EXISTS (?)",
 			ids, subQuery,
 		)
 
 	switch onlyDeleted {
 	case types.Ternary_Positive:
-		query = query.Where("deleted_at IS NOT NULL")
+		query = query.Where("\"BlockPackTable\".deleted_at IS NOT NULL")
 	case types.Ternary_Negative:
-		query = query.Where("deleted_at IS NULL")
+		query = query.Where("\"BlockPackTable\".deleted_at IS NULL")
 	}
 
 	var count int64 = 0
@@ -137,7 +137,7 @@ func (r *BlockPackRepository) CheckPermissionAndGetOneById(
 
 	subQuery := db.Model(&schemas.UsersToShelves{}).
 		Select("1").
-		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id").
+		Where("root_shelf_id = ss.root_shelf_id").
 		Where("user_id = ? AND permission IN ?",
 			userId, allowedPermissions,
 		)
@@ -149,9 +149,9 @@ func (r *BlockPackRepository) CheckPermissionAndGetOneById(
 
 	switch onlyDeleted {
 	case types.Ternary_Positive:
-		query = query.Where("deleted_at IS NOT NULL")
+		query = query.Where("\"BlockPackTable\".deleted_at IS NOT NULL")
 	case types.Ternary_Negative:
-		query = query.Where("deleted_at IS NULL")
+		query = query.Where("\"BlockPackTable\".deleted_at IS NULL")
 	}
 
 	if len(preloads) > 0 {
@@ -183,7 +183,7 @@ func (r *BlockPackRepository) CheckPermissionsAndGetManyByIds(
 
 	subQuery := db.Model(&schemas.UsersToShelves{}).
 		Select("1").
-		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id").
+		Where("root_shelf_id = ss.root_shelf_id").
 		Where("user_id = ? AND permission IN ?",
 			userId, allowedPermissions,
 		)
@@ -234,23 +234,23 @@ func (r *BlockPackRepository) CheckPermissionAndGetOneWithOwnerIdById(
 	// 			 and the query is querying the data and the owner id(which may be different from the current user)
 	subQuery := db.Model(&schemas.UsersToShelves{}).
 		Select("1").
-		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id").
+		Where("root_shelf_id = ss.root_shelf_id").
 		Where("user_id = ? AND permission IN ?",
 			userId, allowedPermissions,
 		)
 	query := db.Model(&schemas.BlockPack{}).
-		Select("\"BlockPackTable\".*, \"UsersToShelvesTable\".user_id AS owner_id").
+		Select("\"BlockPackTable\".*, owner_uts.user_id AS owner_id").
 		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
 		Joins("INNER JOIN \"UsersToShelvesTable\" owner_uts ON ss.root_shelf_id = owner_uts.root_shelf_id AND owner_uts.permission = 'Owner'").
-		Where("id = ? AND EXISTS (?)",
+		Where("\"BlockPackTable\".id = ? AND EXISTS (?)",
 			id, subQuery,
 		)
 
 	switch onlyDeleted {
 	case types.Ternary_Positive:
-		query = query.Where("deleted_at IS NOT NULL")
+		query = query.Where("\"BlockPackTable\".deleted_at IS NOT NULL")
 	case types.Ternary_Negative:
-		query = query.Where("deleted_at IS NULL")
+		query = query.Where("\"BlockPackTable\".deleted_at IS NULL")
 	}
 
 	if len(preloads) > 0 {
@@ -261,14 +261,14 @@ func (r *BlockPackRepository) CheckPermissionAndGetOneWithOwnerIdById(
 
 	var blockPackWithOwnerId struct {
 		schemas.BlockPack
-		ownerId uuid.UUID `gorm:"column:owner_id;"`
+		OwnerId uuid.UUID `gorm:"column:owner_id;"`
 	}
 	result := query.First(&blockPackWithOwnerId)
 	if err := result.Error; err != nil {
 		return nil, nil, exceptions.BlockPack.NotFound().WithError(err)
 	}
 
-	return &blockPackWithOwnerId.ownerId, &blockPackWithOwnerId.BlockPack, nil
+	return &blockPackWithOwnerId.OwnerId, &blockPackWithOwnerId.BlockPack, nil
 }
 
 func (r *BlockPackRepository) CheckPermissionsAndGetManyWithOwnerIdsByIds(
@@ -287,23 +287,23 @@ func (r *BlockPackRepository) CheckPermissionsAndGetManyWithOwnerIdsByIds(
 	// 			 and the query is querying the data and the owner id(which may be different from the current user)
 	subQuery := db.Model(&schemas.UsersToShelves{}).
 		Select("1").
-		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id").
+		Where("root_shelf_id = ss.root_shelf_id").
 		Where("user_id = ? AND permission IN ?",
 			userId, allowedPermissions,
 		)
 	query := db.Model(&schemas.BlockPack{}).
-		Select("\"BlockPackTable\".*, \"UsersToShelvesTable\".user_id AS owner_id").
+		Select("\"BlockPackTable\".*, owner_uts.user_id AS owner_id").
 		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
 		Joins("INNER JOIN \"UsersToShelvesTable\" owner_uts ON ss.root_shelf_id = owner_uts.root_shelf_id AND owner_uts.permission = 'Owner'").
-		Where("id IN ? AND EXISTS (?)",
+		Where("\"BlockPackTable\".id IN ? AND EXISTS (?)",
 			ids, subQuery,
 		)
 
 	switch onlyDeleted {
 	case types.Ternary_Positive:
-		query = query.Where("deleted_at IS NOT NULL")
+		query = query.Where("\"BlockPackTable\".deleted_at IS NOT NULL")
 	case types.Ternary_Negative:
-		query = query.Where("deleted_at IS NULL")
+		query = query.Where("\"BlockPackTable\".deleted_at IS NULL")
 	}
 
 	if len(preloads) > 0 {
@@ -365,27 +365,30 @@ func (r *BlockPackRepository) CreateOneBySubShelfId(
 	subShelfId uuid.UUID,
 	userId uuid.UUID,
 	input inputs.CreateBlockPackInput,
+	skipPermissionCheck bool,
 ) (*uuid.UUID, *exceptions.Exception) {
 	if db == nil {
 		db = models.NotezyDB
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
+	if !skipPermissionCheck {
+		allowedPermissions := []enums.AccessControlPermission{
+			enums.AccessControlPermission_Owner,
+			enums.AccessControlPermission_Admin,
+			enums.AccessControlPermission_Write,
+		}
 
-	subShelfRepository := NewSubShelfRepository()
+		subShelfRepository := NewSubShelfRepository()
 
-	if !subShelfRepository.HasPermission(
-		db,
-		subShelfId,
-		userId,
-		allowedPermissions,
-		types.Ternary_Negative,
-	) {
-		return nil, exceptions.Shelf.NoPermission("create a block pack under this shelf")
+		if !subShelfRepository.HasPermission(
+			db,
+			subShelfId,
+			userId,
+			allowedPermissions,
+			types.Ternary_Negative,
+		) {
+			return nil, exceptions.Shelf.NoPermission("create a block pack under this shelf")
+		}
 	}
 
 	var newBlockPack schemas.BlockPack
@@ -475,24 +478,27 @@ func (r *BlockPackRepository) RestoreSoftDeletedOneById(
 	db *gorm.DB,
 	id uuid.UUID,
 	userId uuid.UUID,
+	skipPermissionCheck bool,
 ) *exceptions.Exception {
 	if db == nil {
 		db = models.NotezyDB
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
+	if !skipPermissionCheck {
+		allowedPermissions := []enums.AccessControlPermission{
+			enums.AccessControlPermission_Owner,
+			enums.AccessControlPermission_Admin,
+		}
 
-	if !r.HasPermission(
-		db,
-		id,
-		userId,
-		allowedPermissions,
-		types.Ternary_Negative,
-	) {
-		return exceptions.BlockPack.NoPermission("restore a deleted block pack")
+		if !r.HasPermission(
+			db,
+			id,
+			userId,
+			allowedPermissions,
+			types.Ternary_Negative,
+		) {
+			return exceptions.BlockPack.NoPermission("restore a deleted block pack")
+		}
 	}
 
 	result := db.Model(&schemas.BlockPack{}).
@@ -513,24 +519,27 @@ func (r *BlockPackRepository) RestoreSoftDeletedManyByIds(
 	db *gorm.DB,
 	ids []uuid.UUID,
 	userId uuid.UUID,
+	skipPermissionCheck bool,
 ) *exceptions.Exception {
 	if db == nil {
 		db = models.NotezyDB
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
+	if !skipPermissionCheck {
+		allowedPermissions := []enums.AccessControlPermission{
+			enums.AccessControlPermission_Owner,
+			enums.AccessControlPermission_Admin,
+		}
 
-	if !r.HasPermissions(
-		db,
-		ids,
-		userId,
-		allowedPermissions,
-		types.Ternary_Negative,
-	) {
-		return exceptions.BlockPack.NoPermission("restore deleted block packs")
+		if !r.HasPermissions(
+			db,
+			ids,
+			userId,
+			allowedPermissions,
+			types.Ternary_Negative,
+		) {
+			return exceptions.BlockPack.NoPermission("restore deleted block packs")
+		}
 	}
 
 	result := db.Model(&schemas.BlockPack{}).
@@ -551,24 +560,27 @@ func (r *BlockPackRepository) SoftDeleteOneById(
 	db *gorm.DB,
 	id uuid.UUID,
 	userId uuid.UUID,
+	skipPermissionCheck bool,
 ) *exceptions.Exception {
 	if db == nil {
 		db = models.NotezyDB
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
+	if !skipPermissionCheck {
+		allowedPermissions := []enums.AccessControlPermission{
+			enums.AccessControlPermission_Owner,
+			enums.AccessControlPermission_Admin,
+		}
 
-	if !r.HasPermission(
-		db,
-		id,
-		userId,
-		allowedPermissions,
-		types.Ternary_Negative,
-	) {
-		return exceptions.BlockPack.NoPermission("soft delete a block pack")
+		if !r.HasPermission(
+			db,
+			id,
+			userId,
+			allowedPermissions,
+			types.Ternary_Negative,
+		) {
+			return exceptions.BlockPack.NoPermission("soft delete a block pack")
+		}
 	}
 
 	result := db.Model(&schemas.BlockPack{}).
@@ -588,24 +600,27 @@ func (r *BlockPackRepository) SoftDeleteManyByIds(
 	db *gorm.DB,
 	ids []uuid.UUID,
 	userId uuid.UUID,
+	skipPermissionCheck bool,
 ) *exceptions.Exception {
 	if db == nil {
 		db = models.NotezyDB
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
+	if !skipPermissionCheck {
+		allowedPermissions := []enums.AccessControlPermission{
+			enums.AccessControlPermission_Owner,
+			enums.AccessControlPermission_Admin,
+		}
 
-	if !r.HasPermissions(
-		db,
-		ids,
-		userId,
-		allowedPermissions,
-		types.Ternary_Negative,
-	) {
-		return exceptions.BlockPack.NoPermission("soft delete block packs")
+		if !r.HasPermissions(
+			db,
+			ids,
+			userId,
+			allowedPermissions,
+			types.Ternary_Negative,
+		) {
+			return exceptions.BlockPack.NoPermission("soft delete block packs")
+		}
 	}
 
 	result := db.Model(&schemas.BlockPack{}).
@@ -625,24 +640,27 @@ func (r *BlockPackRepository) HardDeleteOneById(
 	db *gorm.DB,
 	id uuid.UUID,
 	userId uuid.UUID,
+	skipPermissionCheck bool,
 ) *exceptions.Exception {
 	if db == nil {
 		db = models.NotezyDB
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
+	if !skipPermissionCheck {
+		allowedPermissions := []enums.AccessControlPermission{
+			enums.AccessControlPermission_Owner,
+			enums.AccessControlPermission_Admin,
+		}
 
-	if !r.HasPermission(
-		db,
-		id,
-		userId,
-		allowedPermissions,
-		types.Ternary_Negative,
-	) {
-		return exceptions.BlockPack.NoPermission("hard delete a block pack")
+		if !r.HasPermission(
+			db,
+			id,
+			userId,
+			allowedPermissions,
+			types.Ternary_Negative,
+		) {
+			return exceptions.BlockPack.NoPermission("hard delete a block pack")
+		}
 	}
 
 	result := db.Model(&schemas.BlockPack{}).
@@ -662,24 +680,27 @@ func (r *BlockPackRepository) HardDeleteManyByIds(
 	db *gorm.DB,
 	ids []uuid.UUID,
 	userId uuid.UUID,
+	skipPermissionCheck bool,
 ) *exceptions.Exception {
 	if db == nil {
 		db = models.NotezyDB
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
+	if !skipPermissionCheck {
+		allowedPermissions := []enums.AccessControlPermission{
+			enums.AccessControlPermission_Owner,
+			enums.AccessControlPermission_Admin,
+		}
 
-	if !r.HasPermissions(
-		db,
-		ids,
-		userId,
-		allowedPermissions,
-		types.Ternary_Negative,
-	) {
-		return exceptions.BlockPack.NoPermission("hard delete block packs")
+		if !r.HasPermissions(
+			db,
+			ids,
+			userId,
+			allowedPermissions,
+			types.Ternary_Negative,
+		) {
+			return exceptions.BlockPack.NoPermission("hard delete block packs")
+		}
 	}
 
 	result := db.Model(&schemas.BlockPack{}).

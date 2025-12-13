@@ -23,37 +23,24 @@ func NewQueue[T any](capacity int) Queue[T] {
 	}
 }
 
-func (q *Queue[T]) maintain() {
-	if q.tail == nil {
-		return
-	}
-
-	for q.tail.next != nil {
-		q.tail = q.tail.next
-	}
-}
-
 func (q *Queue[T]) Enqueue(element T) error {
 	if q.IsFull() {
 		return errors.New("queue is full")
 	}
 
-	if q.tail == nil {
-		q.tail = &node[T]{
-			element: element,
-			next:    nil,
-		}
-		q.head = q.tail
-		q.size = 1
-		return nil
-	}
-
-	q.maintain()
-	q.tail.next = &node[T]{
+	newNode := &node[T]{
 		element: element,
 		next:    nil,
 	}
-	q.tail = q.tail.next
+
+	if q.tail == nil {
+		q.head = newNode
+		q.tail = newNode
+	} else {
+		q.tail.next = newNode
+		q.tail = q.tail.next
+	}
+
 	q.size++
 	return nil
 }
@@ -67,6 +54,11 @@ func (q *Queue[T]) Dequeue() (T, error) {
 	result := q.head.element
 	q.head = q.head.next
 	q.size--
+
+	if q.head == nil {
+		q.tail = nil
+	}
+
 	return result, nil
 }
 

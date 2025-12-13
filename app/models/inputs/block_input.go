@@ -15,6 +15,11 @@ type CreateBlockInput struct {
 	Content       datatypes.JSON  `json:"content" gorm:"column:content;"`
 }
 
+type CreateBlockGroupContentInput struct {
+	BlockGroupId uuid.UUID `json:"blockGroupId"`
+	Blocks       []CreateBlockInput
+}
+
 type UpdateBlockInput struct {
 	Type    *enums.BlockType `json:"type" gorm:"column:type;"`
 	Props   *datatypes.JSON  `json:"props" gorm:"column:props;"`

@@ -29,7 +29,7 @@ func NewAuthBinder() AuthBinderInterface {
 	return &AuthBinder{}
 }
 
-/* ============================== Binder ============================== */
+/* ============================== Implementations ============================== */
 
 func (b *AuthBinder) BindRegister(controllerFunc types.ControllerFunc[*dtos.RegisterReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {

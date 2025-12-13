@@ -35,7 +35,7 @@ func NewSubShelfBinder() SubShelfBinderInterface {
 	return &SubShelfBinder{}
 }
 
-/* ============================== Binder ============================== */
+/* ============================== Implementations ============================== */
 
 func (b *SubShelfBinder) BindGetMySubShelfById(controllerFunc types.ControllerFunc[*dtos.GetMySubShelfByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {

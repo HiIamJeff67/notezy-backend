@@ -16,8 +16,8 @@ type Styles struct {
 	Underline       bool   `json:"underline,omitempty" validate:"omitempty"`
 	Strike          bool   `json:"strike,omitempty" validate:"omitempty"`
 	Code            bool   `json:"code,omitempty" validate:"omitempty"`
-	TextColor       string `json:"textColor,omitempty" validate:"omitempty,ishexcode"`
-	BackgroundColor string `json:"backgroundColor,omitempty" validate:"omitempty,ishexcode"`
+	TextColor       string `json:"textColor,omitempty" validate:"omitempty,iscolororhexcode"`
+	BackgroundColor string `json:"backgroundColor,omitempty" validate:"omitempty,iscolororhexcode"`
 }
 
 /* ============================== InlineContentUnion ============================== */

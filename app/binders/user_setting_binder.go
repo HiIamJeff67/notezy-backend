@@ -21,7 +21,7 @@ func NewUserSettingBinder() UserSettingBinderInterface {
 	return &UserSettingBinder{}
 }
 
-/* ============================== Binder ============================== */
+/* ============================== Implementations ============================== */
 
 func (b *UserSettingBinder) BindGetMySetting(controllerFunc types.ControllerFunc[*dtos.GetMySettingReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {

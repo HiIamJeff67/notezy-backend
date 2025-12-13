@@ -26,7 +26,7 @@ func NewUserInfoController(service services.UserInfoServiceInterface) UserInfoCo
 	}
 }
 
-/* ============================== Controller ============================== */
+/* ============================== Implementations ============================== */
 
 func (c *UserInfoController) GetMyInfo(ctx *gin.Context, reqDto *dtos.GetMyInfoReqDto) {
 	resDto, exception := c.userInfoService.GetMyInfo(ctx.Request.Context(), reqDto)

@@ -43,7 +43,7 @@ func NewMaterialBinder() MaterialBinderInterface {
 	return &MaterialBinder{}
 }
 
-/* ============================== Binder ============================== */
+/* ============================== Implementations ============================== */
 
 func (b *MaterialBinder) BindGetMyMaterialById(controllerFunc types.ControllerFunc[*dtos.GetMyMaterialByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {

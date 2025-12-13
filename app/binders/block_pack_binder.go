@@ -36,7 +36,7 @@ func NewBlockPackBinder() BlockPackBinderInterface {
 	return &BlockPackBinder{}
 }
 
-/* ============================== Binder ============================== */
+/* ============================== Implementations ============================== */
 
 func (b *BlockPackBinder) BindGetMyBlockPackById(controllerFunc types.ControllerFunc[*dtos.GetMyBlockPackByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {

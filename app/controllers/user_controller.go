@@ -27,7 +27,7 @@ func NewUserController(service services.UserServiceInterface) UserControllerInte
 	}
 }
 
-/* ============================== Controllers ============================== */
+/* ============================== Implementationss ============================== */
 
 func (c *UserController) GetUserData(ctx *gin.Context, reqDto *dtos.GetUserDataReqDto) {
 	resDto, exception := c.userService.GetUserData(ctx.Request.Context(), reqDto)

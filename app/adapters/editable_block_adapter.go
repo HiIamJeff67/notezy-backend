@@ -122,9 +122,9 @@ func (ebca *EditableBlockAdapter) FlattenToRaw(
 			}
 
 			resultBlocks = append(resultBlocks, dtos.RawFlattenedEditableBlock{
-				Id:            root.Id,
-				ParentBlockId: nil,
-				Type:          root.Type,
+				Id:            child.Id,
+				ParentBlockId: &current.Id,
+				Type:          child.Type,
 				Props:         datatypes.JSON(props),
 				Content:       datatypes.JSON(content),
 			})

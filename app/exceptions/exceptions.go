@@ -117,16 +117,16 @@ func GetStackTrace(skip int, maxTraceDepth int) []StackFrame {
 /* ============================== General Exception Structure Definition ============================== */
 
 type Exception struct {
-	Code           ExceptionCode   // custom exception code
-	Prefix         ExceptionPrefix // custom exception prefix
-	Reason         string          // exception reason(for the convenience of frontend to error handling)
-	IsInternal     bool            // to indicate whether this exception can passing to the frontend or not
-	Message        string          // custom exception message
-	HTTPStatusCode int             // http status code
-	Details        any             // additional error details (optional)
-	Error          error           // original error (optional)
-	LastStackFrame *StackFrame     // the last location where the exception happened
-	StackTrace     []StackFrame    // the entire path to where the exception actually take place
+	Code           ExceptionCode   `json:"code"`           // custom exception code
+	Prefix         ExceptionPrefix `json:"prefix"`         // custom exception prefix
+	Reason         string          `json:"reason"`         // exception reason(for the convenience of frontend to error handling)
+	IsInternal     bool            `json:"isInternal"`     // to indicate whether this exception can passing to the frontend or not
+	Message        string          `json:"message"`        // custom exception message
+	HTTPStatusCode int             `json:"httpStatusCode"` // http status code
+	Details        any             `json:"details"`        // additional error details (optional)
+	Error          error           `json:"error"`          // original error (optional)
+	LastStackFrame *StackFrame     `json:"lastStackFrame"` // the last location where the exception happened
+	StackTrace     []StackFrame    `json:"stackTrace"`     // the entire path to where the exception actually take place
 }
 
 type ExceptionCompareOption struct {
@@ -155,7 +155,7 @@ func (e *Exception) GetGinH() *gin.H {
 		"message": e.Message,
 		"status":  e.HTTPStatusCode,
 		"details": e.Details,
-		"error":   e.Error,
+		"error":   e.Error.Error(),
 	}
 }
 
@@ -253,6 +253,13 @@ func (e *Exception) PanicVerbose() {
 
 func (e *Exception) Trace(skip int, maxTraceDepth int) {
 	e.StackTrace = GetStackTrace(skip, maxTraceDepth)
+}
+
+func (e *Exception) ToError() error {
+	if e.Error != nil {
+		return e.Error
+	}
+	return errors.New(strings.ToLower(e.Message))
 }
 
 func (e *Exception) ToGraphQLError(ctx context.Context) *gqlerror.Error {

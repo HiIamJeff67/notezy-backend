@@ -8,8 +8,11 @@ var (
 	//go:embed accounting_mutated_block_pack_trigger.sql
 	AccountingMutatedBlockPackTriggerSQL string
 
-	//go:embed accounting_mutated_block_trigger.sql
-	AccountingMutatedBlockTriggerSQL string
+	//go:embed accounting_inserted_block_trigger.sql
+	AccountingInsertedBlockTriggerSQL string
+
+	//go:embed accounting_deleted_block_trigger.sql
+	AccountingDeletedBlockTriggerSQL string
 
 	//go:embed accounting_mutated_root_shelf_trigger.sql
 	AccountingMutatedRootShelfTriggerSQL string

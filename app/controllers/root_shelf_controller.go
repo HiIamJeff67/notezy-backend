@@ -32,7 +32,7 @@ func NewRootShelfController(service services.RootShelfServiceInterface) RootShel
 	}
 }
 
-/* ============================== Controller ============================== */
+/* ============================== Implementations ============================== */
 
 func (c *RootShelfController) GetMyRootShelfById(ctx *gin.Context, reqDto *dtos.GetMyRootShelfByIdReqDto) {
 	resDto, exception := c.rootShelfService.GetMyRootShelfById(ctx.Request.Context(), reqDto)

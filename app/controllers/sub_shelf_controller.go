@@ -35,7 +35,7 @@ func NewSubShelfController(service services.SubShelfServiceInterface) SubShelfCo
 	}
 }
 
-/* ============================== Controller ============================== */
+/* ============================== Implementations ============================== */
 
 func (c *SubShelfController) GetMySubShelfById(ctx *gin.Context, reqDto *dtos.GetMySubShelfByIdReqDto) {
 	resDto, exception := c.subShelfService.GetMySubShelfById(ctx.Request.Context(), reqDto)

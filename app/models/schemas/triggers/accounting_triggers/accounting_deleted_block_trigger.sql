@@ -1,4 +1,4 @@
-CREATE TRIGGER trigger_function_accounting_deleted_block();
+CREATE OR REPLACE FUNCTION trigger_function_accounting_deleted_block()
 RETURNS TRIGGER AS $$
 DECLARE
     r RECORD;

@@ -23,7 +23,7 @@ func NewUserInfoBinder() UserInfoBinderInterface {
 	return &UserInfoBinder{}
 }
 
-/* ============================== Binder ============================== */
+/* ============================== Implementations ============================== */
 
 func (b *UserInfoBinder) BindGetMyInfo(controllerFunc types.ControllerFunc[*dtos.GetMyInfoReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {

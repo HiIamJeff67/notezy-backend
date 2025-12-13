@@ -36,7 +36,7 @@ func NewBlockPackController(service services.BlockPackServiceInterface) BlockPac
 	}
 }
 
-/* ============================== Controller ============================== */
+/* ============================== Implementations ============================== */
 
 func (c *BlockPackController) GetMyBlockPackById(ctx *gin.Context, reqDto *dtos.GetMyBlockPackByIdReqDto) {
 	resDto, exception := c.blockPackService.GetMyBlockPackById(ctx.Request.Context(), reqDto)

@@ -26,7 +26,7 @@ func NewUserAccountController(service services.UserAccountServiceInterface) User
 	}
 }
 
-/* ============================== Controllers ============================== */
+/* ============================== Implementationss ============================== */
 
 func (c *UserAccountController) GetMyAccount(ctx *gin.Context, reqDto *dtos.GetMyAccountReqDto) {
 	resDto, exception := c.userAccountService.GetMyAccount(ctx.Request.Context(), reqDto)

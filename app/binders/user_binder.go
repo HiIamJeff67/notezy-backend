@@ -24,7 +24,7 @@ func NewUserBinder() UserBinderInterface {
 	return &UserBinder{}
 }
 
-/* ============================== Binder ============================== */
+/* ============================== Implementations ============================== */
 
 func (b *UserBinder) BindGetUserData(controllerFunc types.ControllerFunc[*dtos.GetUserDataReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {

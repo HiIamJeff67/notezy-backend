@@ -38,7 +38,7 @@ func NewMaterialController(service services.MaterialServiceInterface) MaterialCo
 	}
 }
 
-/* ============================== Controller ============================== */
+/* ============================== Implementations ============================== */
 
 func (c *MaterialController) GetMyMaterialById(ctx *gin.Context, reqDto *dtos.GetMyMaterialByIdReqDto) {
 	resDto, exception := c.materialService.GetMyMaterialById(ctx.Request.Context(), reqDto)

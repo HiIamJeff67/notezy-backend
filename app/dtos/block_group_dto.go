@@ -93,7 +93,7 @@ type CreateBlockGroupByBlockPackIdReqDto struct {
 		},
 		struct {
 			BlockPackId      uuid.UUID  `json:"blockPackId" validate:"required"`
-			PrevBlockGroupId *uuid.UUID `json:"prevBlockGroupId" validate:"required"`
+			PrevBlockGroupId *uuid.UUID `json:"prevBlockGroupId" validate:"omitempty"`
 		},
 		any,
 	]
@@ -109,8 +109,27 @@ type CreateBlockGroupAndItsBlocksByBlockPackIdReqDto struct {
 		},
 		struct {
 			BlockPackId            uuid.UUID              `json:"blockPackId" validate:"required"`
-			PrevBlockGroupId       *uuid.UUID             `json:"prevBlockGroupId" validate:"required"`
+			PrevBlockGroupId       *uuid.UUID             `json:"prevBlockGroupId" validate:"omitempty"`
 			ArborizedEditableBlock ArborizedEditableBlock `json:"arborizedEditableBlock" validate:"required"`
+		},
+		any,
+	]
+}
+
+type CreateBlockGroupsAndTheirBlocksByBlockPackIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			BlockPackId        uuid.UUID `json:"blockPackId" validate:"required"`
+			BlockGroupContents []struct {
+				PrevBlockGroupId       *uuid.UUID             `json:"prevBlockGroupId" validate:"omitempty"`
+				ArborizedEditableBlock ArborizedEditableBlock `json:"arborizedEditableBlock" validate:"required"`
+			} `json:"blockGroupContents" validate:"required"`
 		},
 		any,
 	]
@@ -153,5 +172,17 @@ type CreateBlockGroupByBlockPackIdResDto struct {
 }
 
 type CreateBlockGroupAndItsBlocksByBlockPackIdResDto struct {
-	CreatedAt time.Time
+	Id        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+type CreateBlockGroupsAndTheirBlocksByBlockPackIdResDto struct {
+	IsAllSuccess                 bool  `json:"isAllSuccess"`
+	FailedIndexes                []int `json:"failedIndexes"`
+	SuccessIndexes               []int `json:"successIndexes"`
+	SuccessBlockGroupAndBlockIds []struct {
+		BlockGroupId uuid.UUID
+		BlockIds     []uuid.UUID
+	} `json:"successBlockGroupAndBlockIds"`
+	CreatedAt time.Time `json:"createdAt"`
 }

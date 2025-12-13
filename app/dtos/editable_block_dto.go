@@ -47,7 +47,7 @@ func (aeb *ArborizedEditableBlock) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	props, err := blocknote.ParseProps(string(aeb.Type), []byte("{}"))
+	props, err := blocknote.ParseProps(string(aeb.Type), aux.Props)
 	if err != nil {
 		return err
 	}
