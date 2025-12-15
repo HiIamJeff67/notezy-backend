@@ -15,6 +15,7 @@ import (
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
+	options "notezy-backend/app/options"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
@@ -66,10 +67,11 @@ func (s *SubShelfService) GetMySubShelfById(
 	db := s.db.WithContext(ctx)
 
 	subShelf, exception := s.subShelfRepository.GetOneById(
-		db,
 		reqDto.Param.SubShelfId,
 		reqDto.ContextFields.UserId,
 		nil,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
 		return nil, exception
@@ -164,13 +166,13 @@ func (s *SubShelfService) CreateSubShelfByRootShelfId(
 	db := s.db.WithContext(ctx)
 
 	subShelfId, exception := s.subShelfRepository.CreateOneByRootShelfId(
-		db,
 		reqDto.Body.RootShelfId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateSubShelfInput{
 			Name:           reqDto.Body.Name,
 			PrevSubShelfId: reqDto.Body.PrevSubShelfId,
 		},
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception
@@ -192,7 +194,6 @@ func (s *SubShelfService) UpdateMySubShelfById(
 	db := s.db.WithContext(ctx)
 
 	subShelf, exception := s.subShelfRepository.UpdateOneById(
-		db,
 		reqDto.Body.SubShelfId,
 		reqDto.ContextFields.UserId,
 		inputs.PartialUpdateSubShelfInput{
@@ -201,6 +202,7 @@ func (s *SubShelfService) UpdateMySubShelfById(
 			},
 			SetNull: reqDto.Body.SetNull,
 		},
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception
@@ -231,12 +233,12 @@ func (s *SubShelfService) MoveMySubShelf(
 	}
 
 	from, exception := s.subShelfRepository.CheckPermissionAndGetOneById(
-		db,
 		reqDto.Body.SourceSubShelfId,
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		types.Ternary_Negative,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
 		return nil, exception
@@ -247,12 +249,12 @@ func (s *SubShelfService) MoveMySubShelf(
 
 	if reqDto.Body.DestinationSubShelfId != nil {
 		to, exception := s.subShelfRepository.CheckPermissionAndGetOneById(
-			db,
 			*reqDto.Body.DestinationSubShelfId,
 			reqDto.ContextFields.UserId,
 			nil,
 			allowedPermissions,
-			types.Ternary_Negative,
+			options.WithDB(db),
+			options.WithOnlyDeleted(types.Ternary_Negative),
 		)
 		if exception != nil {
 			return nil, exception
@@ -321,12 +323,12 @@ func (s *SubShelfService) MoveMySubShelves(
 	}
 
 	froms, exception := s.subShelfRepository.CheckPermissionsAndGetManyByIds(
-		db,
 		reqDto.Body.SourceSubShelfIds,
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		types.Ternary_Negative,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
 		return nil, exception
@@ -339,12 +341,12 @@ func (s *SubShelfService) MoveMySubShelves(
 
 	if reqDto.Body.DestinationSubShelfId != nil {
 		to, exception := s.subShelfRepository.CheckPermissionAndGetOneById(
-			db,
 			*reqDto.Body.DestinationSubShelfId,
 			reqDto.ContextFields.UserId,
 			nil,
 			allowedPermissions,
-			types.Ternary_Negative,
+			options.WithDB(db),
+			options.WithOnlyDeleted(types.Ternary_Negative),
 		)
 		if exception != nil {
 			return nil, exception
@@ -431,9 +433,9 @@ func (s *SubShelfService) RestoreMySubShelfById(
 	db := s.db.WithContext(ctx)
 
 	exception := s.subShelfRepository.RestoreSoftDeletedOneById(
-		db,
 		reqDto.Body.SubShelfId,
 		reqDto.ContextFields.UserId,
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception
@@ -454,9 +456,9 @@ func (s *SubShelfService) RestoreMySubShelvesByIds(
 	db := s.db.WithContext(ctx)
 
 	exception := s.subShelfRepository.RestoreSoftDeletedManyByIds(
-		db,
 		reqDto.Body.SubShelfIds,
 		reqDto.ContextFields.UserId,
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception
@@ -477,9 +479,9 @@ func (s *SubShelfService) DeleteMySubShelfById(
 	db := s.db.WithContext(ctx)
 
 	exception := s.subShelfRepository.SoftDeleteOneById(
-		db,
 		reqDto.Body.SubShelfId,
 		reqDto.ContextFields.UserId,
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception
@@ -500,9 +502,9 @@ func (s *SubShelfService) DeleteMySubShelvesByIds(
 	db := s.db.WithContext(ctx)
 
 	exception := s.subShelfRepository.SoftDeleteManyByIds(
-		db,
 		reqDto.Body.SubShelfIds,
 		reqDto.ContextFields.UserId,
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception

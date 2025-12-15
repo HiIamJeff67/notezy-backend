@@ -7,48 +7,49 @@ import (
 	types "notezy-backend/shared/types"
 )
 
-type RepositoryOptions struct {
+type RepositoryOptionFields struct {
 	DB                  *gorm.DB
 	OnlyDeleted         types.Ternary
 	SkipPermissionCheck bool
 	BatchSize           int
 }
 
-type RepositoryOption func(*RepositoryOptions)
+type RepositoryOptions func(*RepositoryOptionFields)
 
-func WithDB(db *gorm.DB) RepositoryOption {
-	return func(ros *RepositoryOptions) {
+func WithDB(db *gorm.DB) RepositoryOptions {
+	return func(ros *RepositoryOptionFields) {
 		ros.DB = db
 	}
 }
 
-func WithOnlyDeleted(onlyDeleted types.Ternary) RepositoryOption {
-	return func(ros *RepositoryOptions) {
+func WithOnlyDeleted(onlyDeleted types.Ternary) RepositoryOptions {
+	return func(ros *RepositoryOptionFields) {
 		ros.OnlyDeleted = onlyDeleted
 	}
 }
 
-func WithSkipPermissionCheck() RepositoryOption {
-	return func(ros *RepositoryOptions) {
+func WithSkipPermissionCheck() RepositoryOptions {
+	return func(ros *RepositoryOptionFields) {
 		ros.SkipPermissionCheck = true
 	}
 }
 
-func WithBatchSize(batchSize int) RepositoryOption {
-	return func(ros *RepositoryOptions) {
+func WithBatchSize(batchSize int) RepositoryOptions {
+	return func(ros *RepositoryOptionFields) {
 		ros.BatchSize = batchSize
 	}
 }
 
-func GetDefaultOptions() RepositoryOptions {
-	return RepositoryOptions{
+func GetDefaultOptions() RepositoryOptionFields {
+	return RepositoryOptionFields{
 		DB:                  models.NotezyDB,
 		OnlyDeleted:         types.Ternary_Neutral,
 		SkipPermissionCheck: false,
+		BatchSize:           1000,
 	}
 }
 
-func ParseRepositoryOptions(opts ...RepositoryOption) RepositoryOptions {
+func ParseRepositoryOptions(opts ...RepositoryOptions) RepositoryOptionFields {
 	ros := GetDefaultOptions()
 	for _, opt := range opts {
 		opt(&ros)

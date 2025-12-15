@@ -10,6 +10,7 @@ import (
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
+	"notezy-backend/app/options"
 	validation "notezy-backend/app/validation"
 )
 
@@ -50,8 +51,8 @@ func (s *UserAccountService) GetMyAccount(
 	db := s.db.WithContext(ctx)
 
 	userAccount, exception := s.userAccountRepository.GetOneByUserId(
-		db,
 		reqDto.ContextFields.UserId,
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception
@@ -75,7 +76,6 @@ func (s *UserAccountService) UpdateMyAccount(
 	db := s.db.WithContext(ctx)
 
 	updatedUserAccount, exception := s.userAccountRepository.UpdateOneByUserId(
-		db,
 		reqDto.ContextFields.UserId,
 		inputs.PartialUpdateUserAccountInput{
 			Values: inputs.UpdateUserAccountInput{
@@ -85,7 +85,9 @@ func (s *UserAccountService) UpdateMyAccount(
 				DiscordCredential: reqDto.Body.Values.DiscordCredential,
 			},
 			SetNull: reqDto.Body.SetNull,
-		})
+		},
+		options.WithDB(db),
+	)
 	if exception != nil {
 		return nil, exception
 	}

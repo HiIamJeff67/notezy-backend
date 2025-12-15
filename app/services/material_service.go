@@ -17,6 +17,7 @@ import (
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
 	materialsql "notezy-backend/app/models/sql/material"
+	options "notezy-backend/app/options"
 	storages "notezy-backend/app/storages"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
@@ -76,9 +77,10 @@ func (s *MaterialService) GetMyMaterialById(
 	db := s.db.WithContext(ctx)
 
 	material, exception := s.materialRepository.GetOneById(
-		db,
 		reqDto.Param.MaterialId,
 		reqDto.ContextFields.UserId,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
 		return nil, exception
@@ -293,7 +295,6 @@ func (s *MaterialService) CreateTextbookMaterial(
 	)
 	zeroSize := int64(0)
 	_, exception := s.materialRepository.CreateOneBySubShelfId(
-		tx,
 		reqDto.Body.ParentSubShelfId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateMaterialInput{
@@ -303,6 +304,7 @@ func (s *MaterialService) CreateTextbookMaterial(
 			Type:       enums.MaterialType_Textbook,
 			ContentKey: newContentKey,
 		},
+		options.WithDB(tx),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -356,7 +358,6 @@ func (s *MaterialService) CreateNotebookMaterial(
 	)
 	zeroSize := int64(0)
 	_, exception := s.materialRepository.CreateOneBySubShelfId(
-		tx,
 		reqDto.Body.ParentSubShelfId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateMaterialInput{
@@ -366,6 +367,7 @@ func (s *MaterialService) CreateNotebookMaterial(
 			Type:       enums.MaterialType_Notebook,
 			ContentKey: newContentKey,
 		},
+		options.WithDB(tx),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -413,7 +415,6 @@ func (s *MaterialService) UpdateMyMaterialById(
 	db := s.db.WithContext(ctx)
 
 	material, exception := s.materialRepository.UpdateOneById(
-		db,
 		reqDto.Body.MaterialId,
 		reqDto.ContextFields.UserId,
 		&reqDto.Body.MaterialType,
@@ -423,6 +424,7 @@ func (s *MaterialService) UpdateMyMaterialById(
 			},
 			SetNull: reqDto.Body.SetNull,
 		},
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception
@@ -475,11 +477,11 @@ func (s *MaterialService) saveMyMaterialById(
 	partialUpdate.Values.Size = &object.Size
 
 	material, exception := s.materialRepository.UpdateOneById(
-		tx,
 		reqDto.Body.MaterialId,
 		reqDto.ContextFields.UserId,
 		&materialType,
 		partialUpdate,
+		options.WithDB(tx),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -597,9 +599,9 @@ func (s *MaterialService) RestoreMyMaterialById(
 	db := s.db.WithContext(ctx)
 
 	exception := s.materialRepository.RestoreSoftDeletedOneById(
-		db,
 		reqDto.Body.MaterialId,
 		reqDto.ContextFields.UserId,
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception
@@ -620,9 +622,9 @@ func (s *MaterialService) RestoreMyMaterialsByIds(
 	db := s.db.WithContext(ctx)
 
 	exception := s.materialRepository.RestoreSoftDeletedManyByIds(
-		db,
 		reqDto.Body.MaterialIds,
 		reqDto.ContextFields.UserId,
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception
@@ -643,9 +645,9 @@ func (s *MaterialService) DeleteMyMaterialById(
 	db := s.db.WithContext(ctx)
 
 	exception := s.materialRepository.SoftDeleteOneById(
-		db,
 		reqDto.Body.MaterialId,
 		reqDto.ContextFields.UserId,
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception
@@ -666,9 +668,9 @@ func (s *MaterialService) DeleteMyMaterialsByIds(
 	db := s.db.WithContext(ctx)
 
 	exception := s.materialRepository.SoftDeleteManyByIds(
-		db,
 		reqDto.Body.MaterialIds,
 		reqDto.ContextFields.UserId,
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception

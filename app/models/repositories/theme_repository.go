@@ -1,27 +1,26 @@
 package repositories
 
 import (
-	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 
 	exceptions "notezy-backend/app/exceptions"
-	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
+	options "notezy-backend/app/options"
 	util "notezy-backend/app/util"
 )
 
 /* ============================== Definitions ============================== */
 
 type ThemeRepositoryInterface interface {
-	GetOneById(db *gorm.DB, id uuid.UUID, preloads []schemas.ThemeRelation) (*schemas.Theme, *exceptions.Exception)
-	GetAll(db *gorm.DB) ([]schemas.Theme, *exceptions.Exception)
-	CreateOneByAuthorId(db *gorm.DB, authorId uuid.UUID, input inputs.CreateThemeInput) (*uuid.UUID, *exceptions.Exception)
-	UpdateOneById(db *gorm.DB, id uuid.UUID, authorId uuid.UUID, input inputs.PartialUpdateThemeInput) (*schemas.Theme, *exceptions.Exception)
-	DeleteOneById(db *gorm.DB, id uuid.UUID, authorId uuid.UUID) *exceptions.Exception
+	GetOneById(id uuid.UUID, preloads []schemas.ThemeRelation, opts ...options.RepositoryOptions) (*schemas.Theme, *exceptions.Exception)
+	GetAll(opts ...options.RepositoryOptions) ([]schemas.Theme, *exceptions.Exception)
+	CreateOneByAuthorId(authorId uuid.UUID, input inputs.CreateThemeInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
+	UpdateOneById(id uuid.UUID, authorId uuid.UUID, input inputs.PartialUpdateThemeInput, opts ...options.RepositoryOptions) (*schemas.Theme, *exceptions.Exception)
+	DeleteOneById(id uuid.UUID, authorId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 }
 
 type ThemeRepository struct{}
@@ -33,17 +32,15 @@ func NewThemeRepository() ThemeRepositoryInterface {
 /* ============================== Implementations ============================== */
 
 func (r *ThemeRepository) GetOneById(
-	db *gorm.DB,
 	id uuid.UUID,
 	preloads []schemas.ThemeRelation,
+	opts ...options.RepositoryOptions,
 ) (*schemas.Theme, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	theme := schemas.Theme{}
+	var theme schemas.Theme
 
-	query := db.Table(schemas.Theme{}.TableName())
+	query := parsedOptions.DB.Table(schemas.Theme{}.TableName())
 	if len(preloads) > 0 {
 		for _, preload := range preloads {
 			query = query.Preload(string(preload))
@@ -60,15 +57,12 @@ func (r *ThemeRepository) GetOneById(
 }
 
 func (r *ThemeRepository) GetAll(
-	db *gorm.DB,
+	opts ...options.RepositoryOptions,
 ) ([]schemas.Theme, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	themes := []schemas.Theme{}
-
-	result := db.Table(schemas.Theme{}.TableName()).
+	var themes []schemas.Theme
+	result := parsedOptions.DB.Table(schemas.Theme{}.TableName()).
 		Find(&themes)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Theme.NotFound().WithError(err)
@@ -78,13 +72,11 @@ func (r *ThemeRepository) GetAll(
 }
 
 func (r *ThemeRepository) CreateOneByAuthorId(
-	db *gorm.DB,
 	authorId uuid.UUID,
 	input inputs.CreateThemeInput,
+	opts ...options.RepositoryOptions,
 ) (*uuid.UUID, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	var newTheme schemas.Theme
 	newTheme.AuthorId = authorId
@@ -93,7 +85,7 @@ func (r *ThemeRepository) CreateOneByAuthorId(
 		return nil, exceptions.Theme.FailedToCreate().WithError(err)
 	}
 
-	result := db.Model(&schemas.Theme{}).
+	result := parsedOptions.DB.Model(&schemas.Theme{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newTheme)
 	if err := result.Error; err != nil {
@@ -104,16 +96,18 @@ func (r *ThemeRepository) CreateOneByAuthorId(
 }
 
 func (r *ThemeRepository) UpdateOneById(
-	db *gorm.DB,
 	id uuid.UUID,
 	authorId uuid.UUID,
 	input inputs.PartialUpdateThemeInput,
+	opts ...options.RepositoryOptions,
 ) (*schemas.Theme, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	existingTheme, exception := r.GetOneById(db, id, nil)
+	existingTheme, exception := r.GetOneById(
+		id,
+		nil,
+		opts...,
+	)
 	if exception != nil || existingTheme == nil {
 		return nil, exception
 	}
@@ -123,7 +117,7 @@ func (r *ThemeRepository) UpdateOneById(
 		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(input.Values, input.SetNull, *existingTheme)
 	}
 
-	result := db.Model(&schemas.Theme{}).
+	result := parsedOptions.DB.Model(&schemas.Theme{}).
 		Where("id = ? AND author_id = ?", id, authorId).
 		Select("*").
 		Updates(&updates)
@@ -138,13 +132,11 @@ func (r *ThemeRepository) UpdateOneById(
 }
 
 func (r *ThemeRepository) DeleteOneById(
-	db *gorm.DB,
 	id uuid.UUID,
 	authorId uuid.UUID,
+	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	// * If you need to use the funcionality of RETURNING from PostgreSQL
 	// var deletedTheme schemas.Theme
@@ -154,7 +146,7 @@ func (r *ThemeRepository) DeleteOneById(
 	// 	Clauses(clause.Returning{}).
 	// 	Delete(&deletedTheme)
 
-	result := db.Model(&schemas.Theme{}).
+	result := parsedOptions.DB.Model(&schemas.Theme{}).
 		Where("id = ? AND author_id = ?", id, authorId).
 		Delete(&schemas.Theme{})
 	if err := result.Error; err != nil {

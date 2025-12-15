@@ -16,9 +16,11 @@ import (
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
+	options "notezy-backend/app/options"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
 	searchcursor "notezy-backend/shared/lib/searchcursor"
+	"notezy-backend/shared/types"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -67,10 +69,11 @@ func (s *RootShelfService) GetMyRootShelfById(
 	db := s.db.WithContext(ctx)
 
 	shelf, exception := s.rootShelfRepository.GetOneById(
-		db,
 		reqDto.Param.RootShelfId,
 		reqDto.ContextFields.UserId,
 		nil,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
 		return nil, exception
@@ -129,12 +132,13 @@ func (s *RootShelfService) CreateRootShelf(
 
 	now := time.Now()
 	shelfId, exception := s.rootShelfRepository.CreateOneByOwnerId(
-		db,
 		reqDto.ContextFields.OwnerId,
 		inputs.CreateRootShelfInput{
 			Name:           reqDto.Body.Name,
 			LastAnalyzedAt: &now,
-		})
+		},
+		options.WithDB(db),
+	)
 	if exception != nil {
 		return nil, exception
 	}
@@ -156,7 +160,6 @@ func (s *RootShelfService) UpdateMyRootShelfById(
 	db := s.db.WithContext(ctx)
 
 	rootShelf, exception := s.rootShelfRepository.UpdateOneById(
-		db,
 		reqDto.Body.RootShelfId,
 		reqDto.ContextFields.UserId,
 		inputs.PartialUpdateRootShelfInput{
@@ -164,7 +167,9 @@ func (s *RootShelfService) UpdateMyRootShelfById(
 				Name: reqDto.Body.Values.Name,
 			},
 			SetNull: reqDto.Body.SetNull,
-		})
+		},
+		options.WithDB(db),
+	)
 	if exception != nil {
 		return nil, exception
 	}
@@ -184,9 +189,9 @@ func (s *RootShelfService) RestoreMyRootShelfById(
 	db := s.db.WithContext(ctx)
 
 	exception := s.rootShelfRepository.RestoreSoftDeletedOneById(
-		db,
 		reqDto.Body.RootShelfId,
 		reqDto.ContextFields.OwnerId,
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception
@@ -207,9 +212,9 @@ func (s *RootShelfService) RestoreMyRootShelvesByIds(
 	db := s.db.WithContext(ctx)
 
 	exception := s.rootShelfRepository.RestoreSoftDeletedManyByIds(
-		db,
 		reqDto.Body.RootShelfIds,
 		reqDto.ContextFields.OwnerId,
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception
@@ -230,9 +235,9 @@ func (s *RootShelfService) DeleteMyRootShelfById(
 	db := s.db.WithContext(ctx)
 
 	exception := s.rootShelfRepository.SoftDeleteOneById(
-		db,
 		reqDto.Body.RootShelfId,
 		reqDto.ContextFields.OwnerId,
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception
@@ -253,9 +258,9 @@ func (s *RootShelfService) DeleteMyRootShelvesByIds(
 	db := s.db.WithContext(ctx)
 
 	exception := s.rootShelfRepository.SoftDeleteManyByIds(
-		db,
 		reqDto.Body.RootShelfIds,
 		reqDto.ContextFields.OwnerId,
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception

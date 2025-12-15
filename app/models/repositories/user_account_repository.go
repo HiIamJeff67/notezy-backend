@@ -1,25 +1,24 @@
 package repositories
 
 import (
-	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 
 	exceptions "notezy-backend/app/exceptions"
-	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
+	options "notezy-backend/app/options"
 	util "notezy-backend/app/util"
 )
 
 /* ============================== Definitions ============================== */
 
 type UserAccountRepositoryInterface interface {
-	GetOneByUserId(db *gorm.DB, userId uuid.UUID) (*schemas.UserAccount, *exceptions.Exception)
-	CreateOneByUserId(db *gorm.DB, userId uuid.UUID, input inputs.CreateUserAccountInput) (*uuid.UUID, *exceptions.Exception)
-	UpdateOneByUserId(db *gorm.DB, userId uuid.UUID, input inputs.PartialUpdateUserAccountInput) (*schemas.UserAccount, *exceptions.Exception)
+	GetOneByUserId(userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.UserAccount, *exceptions.Exception)
+	CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserAccountInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
+	UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserAccountInput, opts ...options.RepositoryOptions) (*schemas.UserAccount, *exceptions.Exception)
 }
 
 type UserAccountRepository struct{}
@@ -31,16 +30,13 @@ func NewUserAccountRepository() UserAccountRepositoryInterface {
 /* ============================== Implementations ============================== */
 
 func (r *UserAccountRepository) GetOneByUserId(
-	db *gorm.DB,
 	userId uuid.UUID,
+	opts ...options.RepositoryOptions,
 ) (*schemas.UserAccount, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	userAccount := schemas.UserAccount{}
-
-	result := db.Table(schemas.UserAccount{}.TableName()).
+	var userAccount schemas.UserAccount
+	result := parsedOptions.DB.Table(schemas.UserAccount{}.TableName()).
 		Where("user_id = ?", userId).
 		First(&userAccount)
 	if err := result.Error; err != nil {
@@ -51,13 +47,11 @@ func (r *UserAccountRepository) GetOneByUserId(
 }
 
 func (r *UserAccountRepository) CreateOneByUserId(
-	db *gorm.DB,
 	userId uuid.UUID,
 	input inputs.CreateUserAccountInput,
+	opts ...options.RepositoryOptions,
 ) (*uuid.UUID, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	var newUserAccount schemas.UserAccount
 	newUserAccount.UserId = userId
@@ -66,7 +60,7 @@ func (r *UserAccountRepository) CreateOneByUserId(
 		return nil, exceptions.UserAccount.FailedToCreate().WithError(err)
 	}
 
-	result := db.Model(&schemas.UserAccount{}).
+	result := parsedOptions.DB.Model(&schemas.UserAccount{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newUserAccount)
 	if err := result.Error; err != nil {
@@ -76,15 +70,16 @@ func (r *UserAccountRepository) CreateOneByUserId(
 }
 
 func (r *UserAccountRepository) UpdateOneByUserId(
-	db *gorm.DB,
 	userId uuid.UUID,
 	input inputs.PartialUpdateUserAccountInput,
+	opts ...options.RepositoryOptions,
 ) (*schemas.UserAccount, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	existingUserAccount, exception := r.GetOneByUserId(db, userId)
+	existingUserAccount, exception := r.GetOneByUserId(
+		userId,
+		opts...,
+	)
 	if exception != nil || existingUserAccount == nil {
 		return nil, exception
 	}
@@ -94,7 +89,7 @@ func (r *UserAccountRepository) UpdateOneByUserId(
 		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(input.Values, input.SetNull, *existingUserAccount)
 	}
 
-	result := db.Model(&schemas.UserAccount{}).
+	result := parsedOptions.DB.Model(&schemas.UserAccount{}).
 		Where("user_id = ?", userId).
 		Select("*").
 		Updates(&updates)

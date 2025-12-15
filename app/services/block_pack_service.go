@@ -14,6 +14,7 @@ import (
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
 	blockpacksql "notezy-backend/app/models/sql/block_pack"
+	"notezy-backend/app/options"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
@@ -66,9 +67,10 @@ func (s *BlockPackService) GetMyBlockPackById(
 	db := s.db.WithContext(ctx)
 
 	blockPack, exception := s.blockPackRepository.GetOneById(
-		db,
 		reqDto.Param.BlockPackId,
 		reqDto.ContextFields.UserId,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
 		return nil, exception
@@ -195,7 +197,6 @@ func (s *BlockPackService) CreateBlockPack(
 	db := s.db.WithContext(ctx)
 
 	newBlockPackId, exception := s.blockPackRepository.CreateOneBySubShelfId(
-		db,
 		reqDto.Body.ParentSubShelfId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateBlockPackInput{
@@ -203,7 +204,7 @@ func (s *BlockPackService) CreateBlockPack(
 			Icon:                reqDto.Body.Icon,
 			HeaderBackgroundURL: reqDto.Body.HeaderBackgroundURL,
 		},
-		false,
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception
@@ -228,7 +229,6 @@ func (s *BlockPackService) UpdateMyBlockPackById(
 	db := s.db.WithContext(ctx)
 
 	blockPack, exception := s.blockPackRepository.UpdateOneById(
-		db,
 		reqDto.Body.BlockPackId,
 		reqDto.ContextFields.UserId,
 		inputs.PartialUpdateBlockPackInput{
@@ -239,6 +239,7 @@ func (s *BlockPackService) UpdateMyBlockPackById(
 			},
 			SetNull: reqDto.Body.SetNull,
 		},
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception
@@ -333,10 +334,9 @@ func (s *BlockPackService) RestoreMyBlockPackById(
 	db := s.db.WithContext(ctx)
 
 	if exception := s.blockPackRepository.RestoreSoftDeletedOneById(
-		db,
 		reqDto.Body.BlockPackId,
 		reqDto.ContextFields.UserId,
-		false,
+		options.WithDB(db),
 	); exception != nil {
 		return nil, exception
 	}
@@ -356,10 +356,9 @@ func (s *BlockPackService) RestoreMyBlockPacksByIds(
 	db := s.db.WithContext(ctx)
 
 	if exception := s.blockPackRepository.RestoreSoftDeletedManyByIds(
-		db,
 		reqDto.Body.BlockPackIds,
 		reqDto.ContextFields.UserId,
-		false,
+		options.WithDB(db),
 	); exception != nil {
 		return nil, exception
 	}
@@ -379,10 +378,9 @@ func (s *BlockPackService) DeleteMyBlockPackById(
 	db := s.db.WithContext(ctx)
 
 	if exception := s.blockPackRepository.SoftDeleteOneById(
-		db,
 		reqDto.Body.BlockPackId,
 		reqDto.ContextFields.UserId,
-		false,
+		options.WithDB(db),
 	); exception != nil {
 		return nil, exception
 	}
@@ -402,10 +400,9 @@ func (s *BlockPackService) DeleteMyBlockPacksByIds(
 	db := s.db.WithContext(ctx)
 
 	if exception := s.blockPackRepository.SoftDeleteManyByIds(
-		db,
 		reqDto.Body.BlockPackIds,
 		reqDto.ContextFields.UserId,
-		false,
+		options.WithDB(db),
 	); exception != nil {
 		return nil, exception
 	}

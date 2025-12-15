@@ -10,6 +10,7 @@ import (
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
+	"notezy-backend/app/options"
 	validation "notezy-backend/app/validation"
 )
 
@@ -50,8 +51,8 @@ func (s *UserSettingService) GetMySetting(
 	db := s.db.WithContext(ctx)
 
 	userSetting, exception := s.userSettingRepository.GetOneByUserId(
-		db,
 		reqDto.ContextFields.UserId,
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception
@@ -74,7 +75,6 @@ func (s *UserSettingService) UpdateMySetting(
 	db := s.db.WithContext(ctx)
 
 	updatedUserSetting, exception := s.userSettingRepository.UpdateOneByUserId(
-		db,
 		reqDto.ContextFields.UserId,
 		inputs.PartialUpdateUserSettingInput{
 			Values: inputs.UpdateUserSettingInput{
@@ -83,7 +83,9 @@ func (s *UserSettingService) UpdateMySetting(
 				PrivacySettingCode: &reqDto.Body.Values.PrivacySettingCode,
 			},
 			SetNull: reqDto.Body.SetNull,
-		})
+		},
+		options.WithDB(db),
+	)
 	if exception != nil {
 		return nil, exception
 	}

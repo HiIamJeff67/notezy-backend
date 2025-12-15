@@ -2,17 +2,16 @@ package repositories
 
 import (
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 
 	exceptions "notezy-backend/app/exceptions"
-	models "notezy-backend/app/models"
 	schemas "notezy-backend/app/models/schemas"
+	options "notezy-backend/app/options"
 )
 
 /* ============================== Definitions ============================== */
 
 type BadgeRepositoryInterface interface {
-	GetOneById(db *gorm.DB, id uuid.UUID, preloads []schemas.BadgeRelation) (*schemas.Badge, *exceptions.Exception)
+	GetOneById(id uuid.UUID, preloads []schemas.BadgeRelation, opts ...options.RepositoryOptions) (*schemas.Badge, *exceptions.Exception)
 }
 
 type BadgeRepository struct{}
@@ -24,20 +23,18 @@ func NewBadgeRepository() BadgeRepositoryInterface {
 /* ============================== Implementations ============================== */
 
 func (r *BadgeRepository) GetOneById(
-	db *gorm.DB,
 	id uuid.UUID,
 	preloads []schemas.BadgeRelation,
+	opts ...options.RepositoryOptions,
 ) (*schemas.Badge, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	badge := schemas.Badge{}
 
-	query := db.Table(schemas.Badge{}.TableName())
+	query := parsedOptions.DB.Table(schemas.Badge{}.TableName())
 	if len(preloads) > 0 {
 		for _, preload := range preloads {
-			db = db.Preload(string(preload))
+			query = query.Preload(string(preload))
 		}
 	}
 

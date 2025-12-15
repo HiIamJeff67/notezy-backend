@@ -1,29 +1,28 @@
 package repositories
 
 import (
-	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 
 	exceptions "notezy-backend/app/exceptions"
-	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
+	options "notezy-backend/app/options"
 	util "notezy-backend/app/util"
 )
 
 /* ============================== Definitions ============================== */
 
 type UserRepositoryInterface interface {
-	GetOneById(db *gorm.DB, id uuid.UUID, preloads []schemas.UserRelation) (*schemas.User, *exceptions.Exception)
-	GetOneByName(db *gorm.DB, name string, preloads []schemas.UserRelation) (*schemas.User, *exceptions.Exception)
-	GetOneByEmail(db *gorm.DB, email string, preloads []schemas.UserRelation) (*schemas.User, *exceptions.Exception)
-	GetAll(db *gorm.DB) ([]schemas.User, *exceptions.Exception)
-	CreateOne(db *gorm.DB, input inputs.CreateUserInput) (*uuid.UUID, *exceptions.Exception)
-	UpdateOneById(db *gorm.DB, id uuid.UUID, input inputs.PartialUpdateUserInput) (*schemas.User, *exceptions.Exception)
-	DeleteOneById(db *gorm.DB, id uuid.UUID, input inputs.DeleteUserInput) *exceptions.Exception
+	GetOneById(id uuid.UUID, preloads []schemas.UserRelation, opts ...options.RepositoryOptions) (*schemas.User, *exceptions.Exception)
+	GetOneByName(name string, preloads []schemas.UserRelation, opts ...options.RepositoryOptions) (*schemas.User, *exceptions.Exception)
+	GetOneByEmail(email string, preloads []schemas.UserRelation, opts ...options.RepositoryOptions) (*schemas.User, *exceptions.Exception)
+	GetAll(opts ...options.RepositoryOptions) ([]schemas.User, *exceptions.Exception)
+	CreateOne(input inputs.CreateUserInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
+	UpdateOneById(id uuid.UUID, input inputs.PartialUpdateUserInput, opts ...options.RepositoryOptions) (*schemas.User, *exceptions.Exception)
+	DeleteOneById(id uuid.UUID, input inputs.DeleteUserInput, opts ...options.RepositoryOptions) *exceptions.Exception
 }
 
 type UserRepository struct{}
@@ -35,17 +34,15 @@ func NewUserRepository() UserRepositoryInterface {
 /* ============================== Implementations ============================== */
 
 func (r *UserRepository) GetOneById(
-	db *gorm.DB,
 	id uuid.UUID,
 	preloads []schemas.UserRelation,
+	opts ...options.RepositoryOptions,
 ) (*schemas.User, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	user := schemas.User{}
 
-	db = db.Table(schemas.User{}.TableName())
+	db := parsedOptions.DB.Table(schemas.User{}.TableName())
 	if len(preloads) > 0 {
 		for _, preload := range preloads {
 			db = db.Preload(string(preload))
@@ -62,17 +59,15 @@ func (r *UserRepository) GetOneById(
 }
 
 func (r *UserRepository) GetOneByName(
-	db *gorm.DB,
 	name string,
 	preloads []schemas.UserRelation,
+	opts ...options.RepositoryOptions,
 ) (*schemas.User, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	user := schemas.User{}
 
-	db = db.Table(schemas.User{}.TableName())
+	db := parsedOptions.DB.Table(schemas.User{}.TableName())
 	if len(preloads) > 0 {
 		for _, preload := range preloads {
 			db = db.Preload(string(preload))
@@ -89,17 +84,15 @@ func (r *UserRepository) GetOneByName(
 }
 
 func (r *UserRepository) GetOneByEmail(
-	db *gorm.DB,
 	email string,
 	preloads []schemas.UserRelation,
+	opts ...options.RepositoryOptions,
 ) (*schemas.User, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	user := schemas.User{}
 
-	query := db.Table(schemas.User{}.TableName())
+	query := parsedOptions.DB.Table(schemas.User{}.TableName())
 	if len(preloads) > 0 {
 		for _, preload := range preloads {
 			query = query.Preload(string(preload))
@@ -116,15 +109,13 @@ func (r *UserRepository) GetOneByEmail(
 }
 
 func (r *UserRepository) GetAll(
-	db *gorm.DB,
+	opts ...options.RepositoryOptions,
 ) ([]schemas.User, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	users := []schemas.User{}
 
-	result := db.Preload("UserInfo").
+	result := parsedOptions.DB.Preload("UserInfo").
 		Preload("UserAccount").
 		Preload("UserSetting").
 		Preload("Badges").
@@ -139,12 +130,10 @@ func (r *UserRepository) GetAll(
 }
 
 func (r *UserRepository) CreateOne(
-	db *gorm.DB,
 	input inputs.CreateUserInput,
+	opts ...options.RepositoryOptions,
 ) (*uuid.UUID, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	// note that the create operation in gorm will NOT return anything
 	// but the default value we set in gorm field in the above struct will be returned if we specified it in the "returning"
@@ -153,7 +142,7 @@ func (r *UserRepository) CreateOne(
 		return nil, exceptions.User.FailedToCreate().WithError(err)
 	}
 
-	result := db.Model(&schemas.User{}).
+	result := parsedOptions.DB.Model(&schemas.User{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newUser)
 	if err := result.Error; err != nil {
@@ -171,15 +160,17 @@ func (r *UserRepository) CreateOne(
 }
 
 func (r *UserRepository) UpdateOneById(
-	db *gorm.DB,
 	id uuid.UUID,
 	input inputs.PartialUpdateUserInput,
+	opts ...options.RepositoryOptions,
 ) (*schemas.User, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	existingUser, exception := r.GetOneById(db, id, nil)
+	existingUser, exception := r.GetOneById(
+		id,
+		nil,
+		opts...,
+	)
 	if exception != nil || existingUser == nil {
 		return nil, exception
 	}
@@ -189,7 +180,7 @@ func (r *UserRepository) UpdateOneById(
 		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(input.Values, input.SetNull, *existingUser)
 	}
 
-	result := db.Model(&schemas.User{}).
+	result := parsedOptions.DB.Model(&schemas.User{}).
 		Where("id = ?", id).
 		Select("*").
 		Updates(&updates)
@@ -204,15 +195,13 @@ func (r *UserRepository) UpdateOneById(
 }
 
 func (r *UserRepository) DeleteOneById(
-	db *gorm.DB,
 	id uuid.UUID,
 	input inputs.DeleteUserInput,
+	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	result := db.Model(&schemas.User{}).
+	result := parsedOptions.DB.Model(&schemas.User{}).
 		Where("id = ? AND name = ? AND password", id, input.Name, input.Password).
 		Delete(&schemas.User{})
 	if err := result.Error; err != nil {

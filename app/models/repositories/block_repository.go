@@ -20,21 +20,21 @@ import (
 /* ============================== Definitions ============================== */
 
 type BlockRepositoryInterface interface {
-	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOption) bool
-	HasPermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOption) bool
-	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOption) (*schemas.Block, *exceptions.Exception)
-	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.BlockRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOption) ([]schemas.Block, *exceptions.Exception)
-	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockRelation, opts ...options.RepositoryOption) (*schemas.Block, *exceptions.Exception)
-	CreateOneByBlockGroupId(blockGroupId uuid.UUID, userId uuid.UUID, input inputs.CreateBlockInput, opts ...options.RepositoryOption) (*uuid.UUID, *exceptions.Exception)
-	CreateManyByBlockGroupId(blockGroupId uuid.UUID, userId uuid.UUID, input []inputs.CreateBlockInput, opts ...options.RepositoryOption) ([]schemas.Block, *exceptions.Exception)
-	CreateManyByBlockGroupIds(userId uuid.UUID, input []inputs.CreateBlockGroupContentInput, opts ...options.RepositoryOption) ([]schemas.Block, *exceptions.Exception)
-	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateBlockInput, opts ...options.RepositoryOption) (*schemas.Block, *exceptions.Exception)
-	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOption) *exceptions.Exception
-	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOption) *exceptions.Exception
-	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOption) *exceptions.Exception
-	SoftDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOption) *exceptions.Exception
-	HardDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOption) *exceptions.Exception
-	HardDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOption) *exceptions.Exception
+	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
+	HasPermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
+	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) (*schemas.Block, *exceptions.Exception)
+	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.BlockRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.Block, *exceptions.Exception)
+	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockRelation, opts ...options.RepositoryOptions) (*schemas.Block, *exceptions.Exception)
+	CreateOneByBlockGroupId(blockGroupId uuid.UUID, userId uuid.UUID, input inputs.CreateBlockInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
+	CreateManyByBlockGroupId(blockGroupId uuid.UUID, userId uuid.UUID, input []inputs.CreateBlockInput, opts ...options.RepositoryOptions) ([]schemas.Block, *exceptions.Exception)
+	CreateManyByBlockGroupIds(userId uuid.UUID, input []inputs.CreateBlockGroupContentInput, opts ...options.RepositoryOptions) ([]schemas.Block, *exceptions.Exception)
+	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateBlockInput, opts ...options.RepositoryOptions) (*schemas.Block, *exceptions.Exception)
+	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
+	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
+	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
+	SoftDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
+	HardDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
+	HardDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 }
 
 type BlockRepository struct{}
@@ -49,20 +49,20 @@ func (r *BlockRepository) HasPermission(
 	id uuid.UUID,
 	userId uuid.UUID,
 	allowedPermissions []enums.AccessControlPermission,
-	opts ...options.RepositoryOption,
+	opts ...options.RepositoryOptions,
 ) bool {
-	options := options.ParseRepositoryOptions(opts...)
-	if options.DB == nil {
-		options.DB = models.NotezyDB
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+	if parsedOptions.DB == nil {
+		parsedOptions.DB = models.NotezyDB
 	}
 
-	subQuery := options.DB.Model(&schemas.UsersToShelves{}).
+	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
 		Select("1").
 		Where("root_shelf_id = ss.root_shelf_id").
 		Where("user_id = ? AND permission IN ?",
 			userId, allowedPermissions,
 		)
-	query := options.DB.Model(&schemas.Block{}).
+	query := parsedOptions.DB.Model(&schemas.Block{}).
 		Joins("INNER JOIN \"BlockGroupTable\" bg ON block_group_id = bg.id").
 		Joins("INNER JOIN \"BlockPackTable\" bp ON bg.block_pack_id = bp.id").
 		Joins("INNER JOIN \"SubShelfTable\" ss ON bp.parent_sub_shelf_id = ss.id").
@@ -70,7 +70,7 @@ func (r *BlockRepository) HasPermission(
 			id, subQuery,
 		)
 
-	switch options.OnlyDeleted {
+	switch parsedOptions.OnlyDeleted {
 	case types.Ternary_Positive:
 		query = query.Where("\"BlockTable\".deleted_at IS NOT NULL")
 	case types.Ternary_Negative:
@@ -90,17 +90,17 @@ func (r *BlockRepository) HasPermissions(
 	ids []uuid.UUID,
 	userId uuid.UUID,
 	allowedPermissions []enums.AccessControlPermission,
-	opts ...options.RepositoryOption,
+	opts ...options.RepositoryOptions,
 ) bool {
-	options := options.ParseRepositoryOptions(opts...)
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	subQuery := options.DB.Model(&schemas.UsersToShelves{}).
+	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
 		Select("1").
 		Where("root_shelf_id = ss.root_shelf_id").
 		Where("user_id = ? AND permission IN ?",
 			userId, allowedPermissions,
 		)
-	query := options.DB.Model(&schemas.Block{}).
+	query := parsedOptions.DB.Model(&schemas.Block{}).
 		Joins("INNER JOIN \"BlockGroupTable\" bg ON block_group_id = bg.id").
 		Joins("INNER JOIN \"BlockPackTable\" bp ON bg.block_pack_id = bp.id").
 		Joins("INNER JOIN \"SubShelfTable\" ss ON bp.parent_sub_shelf_id = ss.id").
@@ -108,7 +108,7 @@ func (r *BlockRepository) HasPermissions(
 			ids, subQuery,
 		)
 
-	switch options.OnlyDeleted {
+	switch parsedOptions.OnlyDeleted {
 	case types.Ternary_Positive:
 		query = query.Where("\"BlockTable\".deleted_at IS NOT NULL")
 	case types.Ternary_Negative:
@@ -129,17 +129,17 @@ func (r *BlockRepository) CheckPermissionAndGetOneById(
 	userId uuid.UUID,
 	preloads []schemas.BlockRelation,
 	allowedPermissions []enums.AccessControlPermission,
-	opts ...options.RepositoryOption,
+	opts ...options.RepositoryOptions,
 ) (*schemas.Block, *exceptions.Exception) {
-	options := options.ParseRepositoryOptions(opts...)
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	subQuery := options.DB.Model(&schemas.UsersToShelves{}).
+	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
 		Select("1").
 		Where("root_shelf_id = ss.root_shelf_id").
 		Where("user_id = ? AND permission IN ?",
 			userId, allowedPermissions,
 		)
-	query := options.DB.Model(&schemas.Block{}).
+	query := parsedOptions.DB.Model(&schemas.Block{}).
 		Joins("INNER JOIN \"BlockGroupTable\" bg ON block_group_id = bg.id").
 		Joins("INNER JOIN \"BlockPackTable\" bp ON bg.block_pack_id = bp.id").
 		Joins("INNER JOIN \"SubShelfTable\" ss ON bp.parent_sub_shelf_id = ss.id").
@@ -147,7 +147,7 @@ func (r *BlockRepository) CheckPermissionAndGetOneById(
 			id, subQuery,
 		)
 
-	switch options.OnlyDeleted {
+	switch parsedOptions.OnlyDeleted {
 	case types.Ternary_Positive:
 		query = query.Where("\"BlockTable\".deleted_at IS NOT NULL")
 	case types.Ternary_Negative:
@@ -174,17 +174,17 @@ func (r *BlockRepository) CheckPermissionsAndGetManyByIds(
 	userId uuid.UUID,
 	preloads []schemas.BlockRelation,
 	allowedPermissions []enums.AccessControlPermission,
-	opts ...options.RepositoryOption,
+	opts ...options.RepositoryOptions,
 ) ([]schemas.Block, *exceptions.Exception) {
-	options := options.ParseRepositoryOptions(opts...)
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	subQuery := options.DB.Model(&schemas.UsersToShelves{}).
+	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
 		Select("1").
 		Where("root_shelf_id = ss.root_shelf_id").
 		Where("user_id = ? AND permission IN ?",
 			userId, allowedPermissions,
 		)
-	query := options.DB.Model(&schemas.Block{}).
+	query := parsedOptions.DB.Model(&schemas.Block{}).
 		Joins("INNER JOIN \"BlockGroupTable\" bg ON block_group_id = bg.id").
 		Joins("INNER JOIN \"BlockPackTable\" bp ON bg.block_pack_id = bp.id").
 		Joins("INNER JOIN \"SubShelfTable\" ss ON bp.parent_sub_shelf_id = ss.id").
@@ -192,7 +192,7 @@ func (r *BlockRepository) CheckPermissionsAndGetManyByIds(
 			ids, subQuery,
 		)
 
-	switch options.OnlyDeleted {
+	switch parsedOptions.OnlyDeleted {
 	case types.Ternary_Positive:
 		query = query.Where("\"BlockTable\".deleted_at IS NOT NULL")
 	case types.Ternary_Negative:
@@ -218,7 +218,7 @@ func (r *BlockRepository) GetOneById(
 	id uuid.UUID,
 	userId uuid.UUID,
 	preloads []schemas.BlockRelation,
-	opts ...options.RepositoryOption,
+	opts ...options.RepositoryOptions,
 ) (*schemas.Block, *exceptions.Exception) {
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
@@ -240,11 +240,12 @@ func (r *BlockRepository) CreateOneByBlockGroupId(
 	blockGroupId uuid.UUID,
 	userId uuid.UUID,
 	input inputs.CreateBlockInput,
-	opts ...options.RepositoryOption,
+	opts ...options.RepositoryOptions,
 ) (*uuid.UUID, *exceptions.Exception) {
-	options := options.ParseRepositoryOptions(opts...)
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	if !options.SkipPermissionCheck {
+	if !parsedOptions.SkipPermissionCheck {
 		allowedPermissions := []enums.AccessControlPermission{
 			enums.AccessControlPermission_Owner,
 			enums.AccessControlPermission_Admin,
@@ -254,11 +255,10 @@ func (r *BlockRepository) CreateOneByBlockGroupId(
 		blockGroupRepository := NewBlockGroupRepository()
 
 		if !blockGroupRepository.HasPermission(
-			options.DB,
 			blockGroupId,
 			userId,
 			allowedPermissions,
-			options.OnlyDeleted,
+			opts...,
 		) {
 			return nil, exceptions.Block.NoPermission("get owner's block group")
 		}
@@ -270,7 +270,7 @@ func (r *BlockRepository) CreateOneByBlockGroupId(
 	}
 	newBlock.BlockGroupId = blockGroupId
 
-	result := options.DB.Model(&schemas.Block{}).
+	result := parsedOptions.DB.Model(&schemas.Block{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newBlock)
 	if err := result.Error; err != nil {
@@ -284,11 +284,12 @@ func (r *BlockRepository) CreateManyByBlockGroupId(
 	blockGroupId uuid.UUID,
 	userId uuid.UUID,
 	input []inputs.CreateBlockInput,
-	opts ...options.RepositoryOption,
+	opts ...options.RepositoryOptions,
 ) ([]schemas.Block, *exceptions.Exception) {
-	options := options.ParseRepositoryOptions(opts...)
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	if !options.SkipPermissionCheck {
+	if !parsedOptions.SkipPermissionCheck {
 		allowedPermissions := []enums.AccessControlPermission{
 			enums.AccessControlPermission_Owner,
 			enums.AccessControlPermission_Admin,
@@ -298,11 +299,10 @@ func (r *BlockRepository) CreateManyByBlockGroupId(
 		blockGroupRepository := NewBlockGroupRepository()
 
 		if !blockGroupRepository.HasPermission(
-			options.DB,
 			blockGroupId,
 			userId,
 			allowedPermissions,
-			options.OnlyDeleted,
+			opts...,
 		) {
 			return nil, exceptions.Block.NoPermission("get owner's block group")
 		}
@@ -318,9 +318,9 @@ func (r *BlockRepository) CreateManyByBlockGroupId(
 		newBlocks[index] = newBlock
 	}
 
-	result := options.DB.Model(&schemas.Block{}).
+	result := parsedOptions.DB.Model(&schemas.Block{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
-		CreateInBatches(&newBlocks, options.BatchSize)
+		CreateInBatches(&newBlocks, parsedOptions.BatchSize)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Block.FailedToCreate().WithError(err)
 	}
@@ -331,11 +331,12 @@ func (r *BlockRepository) CreateManyByBlockGroupId(
 func (r *BlockRepository) CreateManyByBlockGroupIds(
 	userId uuid.UUID,
 	input []inputs.CreateBlockGroupContentInput,
-	opts ...options.RepositoryOption,
+	opts ...options.RepositoryOptions,
 ) ([]schemas.Block, *exceptions.Exception) {
-	options := options.ParseRepositoryOptions(opts...)
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	if !options.SkipPermissionCheck {
+	if !parsedOptions.SkipPermissionCheck {
 		allowedPermissions := []enums.AccessControlPermission{
 			enums.AccessControlPermission_Owner,
 			enums.AccessControlPermission_Admin,
@@ -350,11 +351,10 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 		}
 
 		validIds, exception := blockGroupRepository.CheckPermissionAndGetValidIds(
-			options.DB,
 			blockGroupIds,
 			userId,
 			allowedPermissions,
-			options.OnlyDeleted,
+			opts...,
 		)
 		if exception != nil {
 			return nil, exception
@@ -379,9 +379,9 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 			}
 		}
 
-		result := options.DB.Model(&schemas.Block{}).
+		result := parsedOptions.DB.Model(&schemas.Block{}).
 			Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
-			CreateInBatches(&newBlocks, options.BatchSize)
+			CreateInBatches(&newBlocks, parsedOptions.BatchSize)
 		if err := result.Error; err != nil {
 			return nil, exceptions.Block.FailedToCreate().WithError(err)
 		}
@@ -401,9 +401,9 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 		}
 	}
 
-	result := options.DB.Model(&schemas.Block{}).
+	result := parsedOptions.DB.Model(&schemas.Block{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
-		CreateInBatches(&newBlocks, options.BatchSize)
+		CreateInBatches(&newBlocks, parsedOptions.BatchSize)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Block.FailedToCreate().WithError(err)
 	}
@@ -415,9 +415,10 @@ func (r *BlockRepository) UpdateOneById(
 	id uuid.UUID,
 	userId uuid.UUID,
 	input inputs.PartialUpdateBlockInput,
-	opts ...options.RepositoryOption,
+	opts ...options.RepositoryOptions,
 ) (*schemas.Block, *exceptions.Exception) {
-	options := options.ParseRepositoryOptions(opts...)
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
@@ -448,7 +449,7 @@ func (r *BlockRepository) UpdateOneById(
 		).WithError(err)
 	}
 
-	result := options.DB.Model(&schemas.Block{}).
+	result := parsedOptions.DB.Model(&schemas.Block{}).
 		Where("id = ? AND deleted_at IS NULL", id).
 		Select("*").
 		Updates(&updates)
@@ -465,11 +466,12 @@ func (r *BlockRepository) UpdateOneById(
 func (r *BlockRepository) RestoreSoftDeletedOneById(
 	id uuid.UUID,
 	userId uuid.UUID,
-	opts ...options.RepositoryOption,
+	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
-	options := options.ParseRepositoryOptions(opts...)
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	if !options.SkipPermissionCheck {
+	if !parsedOptions.SkipPermissionCheck {
 		allowedPermissions := []enums.AccessControlPermission{
 			enums.AccessControlPermission_Owner,
 			enums.AccessControlPermission_Admin,
@@ -486,7 +488,7 @@ func (r *BlockRepository) RestoreSoftDeletedOneById(
 		}
 	}
 
-	result := options.DB.Model(&schemas.Block{}).
+	result := parsedOptions.DB.Model(&schemas.Block{}).
 		Where("id = ? AND deleted_at IS NOT NULL", id).
 		Select("deleted_at").
 		Updates(map[string]interface{}{"deleted_at": nil})
@@ -503,11 +505,12 @@ func (r *BlockRepository) RestoreSoftDeletedOneById(
 func (r *BlockRepository) RestoreSoftDeletedManyByIds(
 	ids []uuid.UUID,
 	userId uuid.UUID,
-	opts ...options.RepositoryOption,
+	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
-	options := options.ParseRepositoryOptions(opts...)
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	if !options.SkipPermissionCheck {
+	if !parsedOptions.SkipPermissionCheck {
 		allowedPermissions := []enums.AccessControlPermission{
 			enums.AccessControlPermission_Owner,
 			enums.AccessControlPermission_Admin,
@@ -524,7 +527,7 @@ func (r *BlockRepository) RestoreSoftDeletedManyByIds(
 		}
 	}
 
-	result := options.DB.Model(&schemas.Block{}).
+	result := parsedOptions.DB.Model(&schemas.Block{}).
 		Where("id IN ? AND deleted_at IS NOT NULL", ids).
 		Select("deleted_at").
 		Updates(map[string]interface{}{"deleted_at": nil})
@@ -541,11 +544,12 @@ func (r *BlockRepository) RestoreSoftDeletedManyByIds(
 func (r *BlockRepository) SoftDeleteOneById(
 	id uuid.UUID,
 	userId uuid.UUID,
-	opts ...options.RepositoryOption,
+	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
-	options := options.ParseRepositoryOptions(opts...)
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	if !options.SkipPermissionCheck {
+	if !parsedOptions.SkipPermissionCheck {
 		allowedPermissions := []enums.AccessControlPermission{
 			enums.AccessControlPermission_Owner,
 			enums.AccessControlPermission_Admin,
@@ -562,7 +566,7 @@ func (r *BlockRepository) SoftDeleteOneById(
 		}
 	}
 
-	result := options.DB.Model(&schemas.Block{}).
+	result := parsedOptions.DB.Model(&schemas.Block{}).
 		Where("id = ? AND deleted_at IS NULL", id).
 		Update("deleted_at", time.Now())
 	if err := result.Error; err != nil {
@@ -578,11 +582,12 @@ func (r *BlockRepository) SoftDeleteOneById(
 func (r *BlockRepository) SoftDeleteManyByIds(
 	ids []uuid.UUID,
 	userId uuid.UUID,
-	opts ...options.RepositoryOption,
+	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
-	options := options.ParseRepositoryOptions(opts...)
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	if !options.SkipPermissionCheck {
+	if !parsedOptions.SkipPermissionCheck {
 		allowedPermissions := []enums.AccessControlPermission{
 			enums.AccessControlPermission_Owner,
 			enums.AccessControlPermission_Admin,
@@ -599,7 +604,7 @@ func (r *BlockRepository) SoftDeleteManyByIds(
 		}
 	}
 
-	result := options.DB.Model(&schemas.Block{}).
+	result := parsedOptions.DB.Model(&schemas.Block{}).
 		Where("id IN ? AND deleted_at IS NULL", ids).
 		Update("deleted_at", time.Now())
 	if err := result.Error; err != nil {
@@ -615,11 +620,12 @@ func (r *BlockRepository) SoftDeleteManyByIds(
 func (r *BlockRepository) HardDeleteOneById(
 	id uuid.UUID,
 	userId uuid.UUID,
-	opts ...options.RepositoryOption,
+	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
-	options := options.ParseRepositoryOptions(opts...)
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	if !options.SkipPermissionCheck {
+	if !parsedOptions.SkipPermissionCheck {
 		allowedPermissions := []enums.AccessControlPermission{
 			enums.AccessControlPermission_Owner,
 			enums.AccessControlPermission_Admin,
@@ -636,7 +642,7 @@ func (r *BlockRepository) HardDeleteOneById(
 		}
 	}
 
-	result := options.DB.Model(&schemas.Block{}).
+	result := parsedOptions.DB.Model(&schemas.Block{}).
 		Where("id = ? AND deleted_at IS NOT NULL", id).
 		Delete(&schemas.Block{})
 	if err := result.Error; err != nil {
@@ -652,11 +658,12 @@ func (r *BlockRepository) HardDeleteOneById(
 func (r *BlockRepository) HardDeleteManyByIds(
 	ids []uuid.UUID,
 	userId uuid.UUID,
-	opts ...options.RepositoryOption,
+	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
-	options := options.ParseRepositoryOptions(opts...)
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	if !options.SkipPermissionCheck {
+	if !parsedOptions.SkipPermissionCheck {
 		allowedPermissions := []enums.AccessControlPermission{
 			enums.AccessControlPermission_Owner,
 			enums.AccessControlPermission_Admin,
@@ -673,7 +680,7 @@ func (r *BlockRepository) HardDeleteManyByIds(
 		}
 	}
 
-	result := options.DB.Model(&schemas.Block{}).
+	result := parsedOptions.DB.Model(&schemas.Block{}).
 		Where("id IN ? AND deleted_at IS NOT NULL", ids).
 		Delete(&schemas.Block{})
 	if err := result.Error; err != nil {

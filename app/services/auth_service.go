@@ -16,6 +16,7 @@ import (
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
+	"notezy-backend/app/options"
 	tokens "notezy-backend/app/tokens"
 	util "notezy-backend/app/util"
 	validation "notezy-backend/app/validation"
@@ -106,7 +107,10 @@ func (s *AuthService) Register(
 		Password:    hashedPassword,
 		UserAgent:   reqDto.Header.UserAgent,
 	}
-	newUserId, exception := s.userRepository.CreateOne(tx, createUserInputData)
+	newUserId, exception := s.userRepository.CreateOne(
+		createUserInputData,
+		options.WithDB(tx),
+	)
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -146,19 +150,27 @@ func (s *AuthService) Register(
 	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
 
 	// Update user refresh token
-	newUser, exception := s.userRepository.UpdateOneById(tx, *newUserId, inputs.PartialUpdateUserInput{
-		Values: inputs.UpdateUserInput{
-			RefreshToken: refreshToken,
+	newUser, exception := s.userRepository.UpdateOneById(
+		*newUserId,
+		inputs.PartialUpdateUserInput{
+			Values: inputs.UpdateUserInput{
+				RefreshToken: refreshToken,
+			},
+			SetNull: nil,
 		},
-		SetNull: nil,
-	})
+		options.WithDB(tx),
+	)
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
 
 	// Create user info
-	_, exception = s.userInfoRepository.CreateOneByUserId(tx, *newUserId, inputs.CreateUserInfoInput{})
+	_, exception = s.userInfoRepository.CreateOneByUserId(
+		*newUserId,
+		inputs.CreateUserInfoInput{},
+		options.WithDB(tx),
+	)
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -166,12 +178,12 @@ func (s *AuthService) Register(
 
 	// Create user account
 	_, exception = s.userAccountRepository.CreateOneByUserId(
-		tx,
 		*newUserId,
 		inputs.CreateUserAccountInput{
 			AuthCode:          authCode,
 			AuthCodeExpiredAt: authCodeExpiredAt,
 		},
+		options.WithDB(tx),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -179,7 +191,11 @@ func (s *AuthService) Register(
 	}
 
 	// Create user setting
-	_, exception = s.userSettingRepository.CreateOneByUserId(tx, *newUserId, inputs.CreateUserSettingInput{})
+	_, exception = s.userSettingRepository.CreateOneByUserId(
+		*newUserId,
+		inputs.CreateUserSettingInput{},
+		options.WithDB(tx),
+	)
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -247,11 +263,19 @@ func (s *AuthService) Login(
 	var user *schemas.User = nil
 	var exception *exceptions.Exception = nil
 	if util.IsAlphaAndNumberString(reqDto.Body.Account) { // if the account field contains user name
-		if user, exception = s.userRepository.GetOneByName(db, reqDto.Body.Account, nil); exception != nil {
+		if user, exception = s.userRepository.GetOneByName(
+			reqDto.Body.Account,
+			nil,
+			options.WithDB(db),
+		); exception != nil {
 			return nil, exception
 		}
 	} else if util.IsEmailString(reqDto.Body.Account) { // if the account field contains email
-		if user, exception = s.userRepository.GetOneByEmail(db, reqDto.Body.Account, nil); exception != nil {
+		if user, exception = s.userRepository.GetOneByEmail(
+			reqDto.Body.Account,
+			nil,
+			options.WithDB(db),
+		); exception != nil {
 			return nil, exception
 		}
 	}
@@ -275,10 +299,14 @@ func (s *AuthService) Login(
 		}
 		updateInvalidUserInput.BlockLoginUtil = blockLoginUntil // we don't care if blockLoginUntil is nil or not, since we always set the SetNull to nil
 
-		_, exception = s.userRepository.UpdateOneById(db, user.Id, inputs.PartialUpdateUserInput{
-			Values:  updateInvalidUserInput,
-			SetNull: nil,
-		})
+		_, exception = s.userRepository.UpdateOneById(
+			user.Id,
+			inputs.PartialUpdateUserInput{
+				Values:  updateInvalidUserInput,
+				SetNull: nil,
+			},
+			options.WithDB(db),
+		)
 		if exception != nil {
 			return nil, exception
 		}
@@ -390,7 +418,6 @@ func (s *AuthService) Login(
 	// update the refresh token and the status of the user
 	var zeroLoginCount int32 = 0 // reset the login count if the login procedure is valid
 	updatedUser, exception := s.userRepository.UpdateOneById(
-		db,
 		user.Id,
 		inputs.PartialUpdateUserInput{
 			Values: inputs.UpdateUserInput{
@@ -400,7 +427,9 @@ func (s *AuthService) Login(
 				LoginCount:   &zeroLoginCount,
 			},
 			SetNull: nil,
-		})
+		},
+		options.WithDB(db),
+	)
 	if exception != nil {
 		return nil, exception
 	}
@@ -425,7 +454,6 @@ func (s *AuthService) Logout(
 	offlineStatus := enums.UserStatus_Offline
 	emptyString := ""
 	updatedUser, exception := s.userRepository.UpdateOneById(
-		db,
 		reqDto.ContextFields.UserId,
 		inputs.PartialUpdateUserInput{
 			Values: inputs.UpdateUserInput{
@@ -433,7 +461,9 @@ func (s *AuthService) Logout(
 				RefreshToken: &emptyString,
 			},
 			SetNull: nil,
-		})
+		},
+		options.WithDB(db),
+	)
 	if exception != nil {
 		return nil, exception
 	}
@@ -543,7 +573,6 @@ func (s *AuthService) ResetEmail(
 	authCode := util.GenerateAuthCode()
 	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
 	_, exception := s.userAccountRepository.UpdateOneByUserId(
-		db,
 		reqDto.ContextFields.UserId,
 		inputs.PartialUpdateUserAccountInput{
 			Values: inputs.UpdateUserAccountInput{
@@ -552,6 +581,7 @@ func (s *AuthService) ResetEmail(
 			},
 			SetNull: nil,
 		},
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception
@@ -575,11 +605,19 @@ func (s *AuthService) ForgetPassword(
 	var exception *exceptions.Exception = nil
 	var preloads = []schemas.UserRelation{schemas.UserRelation_UserAccount, schemas.UserRelation_UserInfo, schemas.UserRelation_UserSetting}
 	if util.IsEmailString(reqDto.Body.Account) { // if the account field contains email
-		if user, exception = s.userRepository.GetOneByEmail(db, reqDto.Body.Account, preloads); exception != nil {
+		if user, exception = s.userRepository.GetOneByEmail(
+			reqDto.Body.Account,
+			preloads,
+			options.WithDB(db),
+		); exception != nil {
 			return nil, exception
 		}
 	} else if util.IsAlphaAndNumberString(reqDto.Body.Account) { // if the account field contains user name
-		if user, exception = s.userRepository.GetOneByName(db, reqDto.Body.Account, preloads); exception != nil {
+		if user, exception = s.userRepository.GetOneByName(
+			reqDto.Body.Account,
+			preloads,
+			options.WithDB(db),
+		); exception != nil {
 			return nil, exception
 		}
 	} else {
@@ -638,7 +676,6 @@ func (s *AuthService) ForgetPassword(
 	// update the refresh token and the status of the user
 	var zeroLoginCount int32 = 0 // reset the login count if the login procedure is valid
 	updatedUser, exception := s.userRepository.UpdateOneById(
-		db,
 		user.Id,
 		inputs.PartialUpdateUserInput{
 			Values: inputs.UpdateUserInput{
@@ -648,7 +685,9 @@ func (s *AuthService) ForgetPassword(
 				LoginCount:   &zeroLoginCount,
 			},
 			SetNull: nil,
-		})
+		},
+		options.WithDB(db),
+	)
 	if exception != nil {
 		return nil, exception
 	}

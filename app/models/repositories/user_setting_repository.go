@@ -1,25 +1,24 @@
 package repositories
 
 import (
-	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 
 	exceptions "notezy-backend/app/exceptions"
-	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
+	options "notezy-backend/app/options"
 	util "notezy-backend/app/util"
 )
 
 /* ============================== Definitions ============================== */
 
 type UserSettingRepositoryInterface interface {
-	GetOneByUserId(db *gorm.DB, userId uuid.UUID) (*schemas.UserSetting, *exceptions.Exception)
-	CreateOneByUserId(db *gorm.DB, userId uuid.UUID, input inputs.CreateUserSettingInput) (*uuid.UUID, *exceptions.Exception)
-	UpdateOneByUserId(db *gorm.DB, userId uuid.UUID, input inputs.PartialUpdateUserSettingInput) (*schemas.UserSetting, *exceptions.Exception)
+	GetOneByUserId(userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.UserSetting, *exceptions.Exception)
+	CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserSettingInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
+	UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserSettingInput, opts ...options.RepositoryOptions) (*schemas.UserSetting, *exceptions.Exception)
 }
 
 type UserSettingRepository struct{}
@@ -31,16 +30,13 @@ func NewUserSettingRepository() UserSettingRepositoryInterface {
 /* ============================== Implementations ============================== */
 
 func (r *UserSettingRepository) GetOneByUserId(
-	db *gorm.DB,
 	userId uuid.UUID,
+	opts ...options.RepositoryOptions,
 ) (*schemas.UserSetting, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	userSetting := schemas.UserSetting{}
-
-	result := db.Table(schemas.UserSetting{}.TableName()).
+	var userSetting schemas.UserSetting
+	result := parsedOptions.DB.Table(schemas.UserSetting{}.TableName()).
 		Where("user_id = ?", userId).
 		First(&userSetting)
 	if err := result.Error; err != nil {
@@ -51,22 +47,19 @@ func (r *UserSettingRepository) GetOneByUserId(
 }
 
 func (r *UserSettingRepository) CreateOneByUserId(
-	db *gorm.DB,
 	userId uuid.UUID,
 	input inputs.CreateUserSettingInput,
+	opts ...options.RepositoryOptions,
 ) (*uuid.UUID, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	var newUserSetting schemas.UserSetting
-
 	newUserSetting.UserId = userId
 	if err := copier.Copy(&newUserSetting, &input); err != nil {
 		return nil, exceptions.UserSetting.FailedToCreate().WithError(err)
 	}
 
-	result := db.Model(&schemas.UserSetting{}).
+	result := parsedOptions.DB.Model(&schemas.UserSetting{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newUserSetting)
 	if err := result.Error; err != nil {
@@ -77,15 +70,16 @@ func (r *UserSettingRepository) CreateOneByUserId(
 }
 
 func (r *UserSettingRepository) UpdateOneByUserId(
-	db *gorm.DB,
 	userId uuid.UUID,
 	input inputs.PartialUpdateUserSettingInput,
+	opts ...options.RepositoryOptions,
 ) (*schemas.UserSetting, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	existingUserSetting, exception := r.GetOneByUserId(db, userId)
+	existingUserSetting, exception := r.GetOneByUserId(
+		userId,
+		opts...,
+	)
 	if exception != nil || existingUserSetting == nil {
 		return nil, exception
 	}
@@ -95,7 +89,7 @@ func (r *UserSettingRepository) UpdateOneByUserId(
 		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(input.Values, input.SetNull, *existingUserSetting)
 	}
 
-	result := db.Model(&schemas.UserSetting{}).
+	result := parsedOptions.DB.Model(&schemas.UserSetting{}).
 		Where("user_id = ?").
 		Select("*").
 		Updates(&updates)

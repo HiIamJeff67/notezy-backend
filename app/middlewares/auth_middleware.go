@@ -72,7 +72,6 @@ func _validateRefreshToken(refreshToken string) (*schemas.User, *exceptions.Exce
 
 	userRepository := repositories.NewUserRepository()
 	user, exception := userRepository.GetOneById(
-		nil,
 		userId,
 		[]schemas.UserRelation{
 			schemas.UserRelation_UserInfo,

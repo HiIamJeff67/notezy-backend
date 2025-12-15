@@ -1,25 +1,24 @@
 package repositories
 
 import (
-	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 
 	exceptions "notezy-backend/app/exceptions"
-	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
+	options "notezy-backend/app/options"
 	util "notezy-backend/app/util"
 )
 
 /* ============================== Definitions ============================== */
 
 type UserInfoRepositoryInterface interface {
-	GetOneByUserId(db *gorm.DB, userId uuid.UUID) (*schemas.UserInfo, *exceptions.Exception)
-	CreateOneByUserId(db *gorm.DB, userId uuid.UUID, input inputs.CreateUserInfoInput) (*uuid.UUID, *exceptions.Exception)
-	UpdateOneByUserId(db *gorm.DB, userId uuid.UUID, input inputs.PartialUpdateUserInfoInput) (*schemas.UserInfo, *exceptions.Exception)
+	GetOneByUserId(userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.UserInfo, *exceptions.Exception)
+	CreateOneByUserId(userId uuid.UUID, input inputs.CreateUserInfoInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
+	UpdateOneByUserId(userId uuid.UUID, input inputs.PartialUpdateUserInfoInput, opts ...options.RepositoryOptions) (*schemas.UserInfo, *exceptions.Exception)
 }
 
 type UserInfoRepository struct{}
@@ -31,15 +30,13 @@ func NewUserInfoRepository() UserInfoRepositoryInterface {
 /* ============================== Implementations ============================== */
 
 func (r *UserInfoRepository) GetOneByUserId(
-	db *gorm.DB,
 	userId uuid.UUID,
+	opts ...options.RepositoryOptions,
 ) (*schemas.UserInfo, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	userInfo := schemas.UserInfo{}
-	result := db.Table(schemas.UserInfo{}.TableName()).
+	result := parsedOptions.DB.Table(schemas.UserInfo{}.TableName()).
 		Where("user_id = ?", userId).
 		First(&userInfo)
 	if err := result.Error; err != nil {
@@ -50,13 +47,11 @@ func (r *UserInfoRepository) GetOneByUserId(
 }
 
 func (r *UserInfoRepository) CreateOneByUserId(
-	db *gorm.DB,
 	userId uuid.UUID,
 	input inputs.CreateUserInfoInput,
+	opts ...options.RepositoryOptions,
 ) (*uuid.UUID, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	var newUserInfo schemas.UserInfo
 	newUserInfo.UserId = userId
@@ -64,7 +59,7 @@ func (r *UserInfoRepository) CreateOneByUserId(
 		return nil, exceptions.UserInfo.FailedToCreate().WithError(err)
 	}
 
-	result := db.Model(&schemas.UserInfo{}).
+	result := parsedOptions.DB.Model(&schemas.UserInfo{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newUserInfo)
 	if err := result.Error; err != nil {
@@ -75,15 +70,16 @@ func (r *UserInfoRepository) CreateOneByUserId(
 }
 
 func (r *UserInfoRepository) UpdateOneByUserId(
-	db *gorm.DB,
 	userId uuid.UUID,
 	input inputs.PartialUpdateUserInfoInput,
+	opts ...options.RepositoryOptions,
 ) (*schemas.UserInfo, *exceptions.Exception) {
-	if db == nil {
-		db = models.NotezyDB
-	}
+	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	existingUserInfo, exception := r.GetOneByUserId(db, userId)
+	existingUserInfo, exception := r.GetOneByUserId(
+		userId,
+		opts...,
+	)
 	if exception != nil || existingUserInfo == nil {
 		return nil, exception
 	}
@@ -93,7 +89,7 @@ func (r *UserInfoRepository) UpdateOneByUserId(
 		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(input.Values, input.SetNull, *existingUserInfo)
 	}
 
-	result := db.Model(&schemas.UserInfo{}).
+	result := parsedOptions.DB.Model(&schemas.UserInfo{}).
 		Where("user_id = ?", userId).
 		Select("*").
 		Updates(&updates)

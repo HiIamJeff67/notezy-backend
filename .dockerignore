@@ -2,3 +2,4 @@ docs/**
 *.temp
 temp/
 backup-codes-thenotezy.*
+LICENSES/**

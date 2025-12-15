@@ -65,10 +65,11 @@ func (s *BlockGroupService) GetMyBlockGroupById(
 	db := s.db.WithContext(ctx)
 
 	blockGroup, exception := s.blockGroupRepository.GetOneById(
-		db,
 		reqDto.Param.BlockGroupId,
 		reqDto.ContextFields.UserId,
 		nil,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
 		return nil, exception
@@ -102,15 +103,13 @@ func (s *BlockGroupService) GetMyBlockGroupAndItsBlocksById(
 		enums.AccessControlPermission_Read,
 	}
 
-	onlyDeleted := types.Ternary_Negative
-
 	blockGroup, exception := s.blockGroupRepository.CheckPermissionAndGetOneById(
-		db,
 		reqDto.Param.BlockGroupId,
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		onlyDeleted,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
 		return nil, exception
@@ -264,12 +263,12 @@ func (s *BlockGroupService) CreateBlockGroupByBlockPackId(
 	db := s.db.WithContext(ctx)
 
 	newBlockGroupId, exception := s.blockGroupRepository.CreateOneByBlockPackId(
-		db,
 		reqDto.Body.BlockPackId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateBlockGroupInput{
 			PrevBlockGroupId: reqDto.Body.PrevBlockGroupId,
 		},
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception
@@ -294,12 +293,12 @@ func (s *BlockGroupService) CreateBlockGroupAndItsBlocksByBlockPackId(
 	tx := s.db.WithContext(ctx).Begin()
 
 	newBlockGroupId, exception := s.blockGroupRepository.CreateOneByBlockPackId(
-		tx,
 		reqDto.Body.BlockPackId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateBlockGroupInput{
 			PrevBlockGroupId: reqDto.Body.PrevBlockGroupId,
 		},
+		options.WithDB(tx),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -333,6 +332,7 @@ func (s *BlockGroupService) CreateBlockGroupAndItsBlocksByBlockPackId(
 		options.WithDB(tx),
 		options.WithBatchSize(constants.MaxBatchCreateBlockSize),
 		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithSkipPermissionCheck(),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -373,10 +373,10 @@ func (s *BlockGroupService) CreateBlockGroupsAndTheirBlocksByBlockPackId(
 
 	// note that the order of the output newBlockGroupIds is the same as the order of reqDto.Body.BlockGroupContents
 	newBlockGroupIds, exception := s.blockGroupRepository.CreateManyByBlockPackId(
-		tx,
 		reqDto.Body.BlockPackId,
 		reqDto.ContextFields.UserId,
 		createBlockGroupsInput,
+		options.WithDB(tx),
 	)
 	if exception != nil {
 		tx.Rollback()

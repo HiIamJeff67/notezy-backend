@@ -15,6 +15,7 @@ import (
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
+	"notezy-backend/app/options"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
 	searchcursor "notezy-backend/shared/lib/searchcursor"
@@ -78,9 +79,9 @@ func (s *UserService) GetMe(
 	db := s.db.WithContext(ctx)
 
 	user, exception := s.userRepository.GetOneById(
-		db,
 		reqDto.ContextFields.UserId,
 		nil,
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception
@@ -108,7 +109,6 @@ func (s *UserService) UpdateMe(
 	db := s.db.WithContext(ctx)
 
 	updatedUser, exception := s.userRepository.UpdateOneById(
-		db,
 		reqDto.ContextFields.UserId,
 		inputs.PartialUpdateUserInput{
 			Values: inputs.UpdateUserInput{
@@ -116,7 +116,9 @@ func (s *UserService) UpdateMe(
 				Status:      reqDto.Body.Values.Status,
 			},
 			SetNull: reqDto.Body.SetNull,
-		})
+		},
+		options.WithDB(db),
+	)
 	if exception != nil {
 		return nil, exception
 	}
