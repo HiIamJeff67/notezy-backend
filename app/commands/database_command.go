@@ -91,6 +91,9 @@ var migrateDatabaseCommand = &cobra.Command{
 		if !models.MigrateTriggersToDatabase(db) {
 			return
 		}
+		if !models.MigrateConstraintsToDatabase(db) {
+			return
+		}
 	},
 }
 

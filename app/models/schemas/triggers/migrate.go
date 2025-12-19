@@ -2,6 +2,7 @@ package triggers
 
 import (
 	accountingtriggersql "notezy-backend/app/models/schemas/triggers/accounting_triggers"
+	maintainingblocktriggers "notezy-backend/app/models/schemas/triggers/maintaining_block_triggers"
 	shelfmaterialcascadingtriggersql "notezy-backend/app/models/schemas/triggers/shelf_material_cascading_triggers"
 )
 
@@ -17,4 +18,7 @@ var MigratingTriggerSQLs = []string{
 	accountingtriggersql.AccountingMutatedRootShelfTriggerSQL,
 	accountingtriggersql.AccountingMutatedSubShelfTriggerSQL,
 	accountingtriggersql.AccountingMutatedMaterialTriggerSQL,
+	maintainingblocktriggers.MaintainingFinalBlockGroupOnInsertTriggerSQL,
+	maintainingblocktriggers.MaintainingFinalBlockGroupOnUpdateTriggerSQL,
+	maintainingblocktriggers.MaintainingFinalBlockGroupOnDeleteTriggerSQL,
 }

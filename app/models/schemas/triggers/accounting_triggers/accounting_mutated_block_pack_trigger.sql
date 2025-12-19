@@ -98,7 +98,12 @@ $$ LANGUAGE plpgsql;
 
 -- ============================== SQL Seperator ==============================
 
+DROP TRIGGER IF EXISTS trigger_accounting_mutated_block_pack ON "BlockPackTable"
+
+-- ============================== SQL Seperator ==============================
+
 CREATE TRIGGER trigger_accounting_mutated_block_pack
-    BEFORE INSERT OR DELETE ON "BlockPackTable"
+    BEFORE INSERT OR DELETE 
+    ON "BlockPackTable"
     FOR EACH ROW
     EXECUTE FUNCTION trigger_function_accounting_mutated_block_pack();

@@ -13,7 +13,7 @@ import (
 
 type BlockGroupControllerInterface interface {
 	GetMyBlockGroupAndItsBlocksById(ctx *gin.Context, reqDto *dtos.GetMyBlockGroupAndItsBlocksByIdReqDto)
-	CreateBlockGroupAndItsBlocksByBlockPackId(ctx *gin.Context, reqDto *dtos.CreateBlockGroupAndItsBlocksByBlockPackIdReqDto)
+	InsertBlockGroupAndItsBlocksByBlockPackId(ctx *gin.Context, reqDto *dtos.CreateBlockGroupAndItsBlocksByBlockPackIdReqDto)
 }
 
 type BlockGroupController struct {
@@ -42,8 +42,8 @@ func (c *BlockGroupController) GetMyBlockGroupAndItsBlocksById(ctx *gin.Context,
 	})
 }
 
-func (c *BlockGroupController) CreateBlockGroupAndItsBlocksByBlockPackId(ctx *gin.Context, reqDto *dtos.CreateBlockGroupAndItsBlocksByBlockPackIdReqDto) {
-	resDto, exception := c.blockGroupService.CreateBlockGroupAndItsBlocksByBlockPackId(ctx.Request.Context(), reqDto)
+func (c *BlockGroupController) InsertBlockGroupAndItsBlocksByBlockPackId(ctx *gin.Context, reqDto *dtos.CreateBlockGroupAndItsBlocksByBlockPackIdReqDto) {
+	resDto, exception := c.blockGroupService.InsertBlockGroupAndItsBlocksByBlockPackId(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return

@@ -57,7 +57,12 @@ $$ LANGUAGE plpgsql;
 
 -- ============================== SQL Seperator ==============================
 
+DROP TRIGGER IF EXISTS trigger_accounting_mutated_root_shelf ON "RootShelfTable"
+
+-- ============================== SQL Seperator ==============================
+
 CREATE TRIGGER trigger_accounting_mutated_root_shelf
-    BEFORE INSERT OR DELETE ON "RootShelfTable"
+    BEFORE INSERT OR DELETE 
+    ON "RootShelfTable"
     FOR EACH ROW
     EXECUTE FUNCTION trigger_function_accounting_mutated_root_shelf();

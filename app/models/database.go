@@ -9,9 +9,10 @@ import (
 
 	logs "notezy-backend/app/logs"
 	schemas "notezy-backend/app/models/schemas"
+	"notezy-backend/app/models/schemas/constraints"
 	enums "notezy-backend/app/models/schemas/enums"
 	triggers "notezy-backend/app/models/schemas/triggers"
-	"notezy-backend/app/models/seeds"
+	seeds "notezy-backend/app/models/seeds"
 	managementsql "notezy-backend/app/models/sql/management"
 	util "notezy-backend/app/util"
 	constants "notezy-backend/shared/constants"
@@ -244,6 +245,29 @@ func MigrateTriggersToDatabase(db *gorm.DB) bool {
 	}
 
 	logs.Info("Migration of triggers is done")
+
+	return true
+}
+
+func MigrateConstraintsToDatabase(db *gorm.DB) bool {
+	logs.Info("Migrating constraints found in models/schemas/constraints/migrate.go")
+
+	for _, sql := range constraints.MigratingConstraintSQLs {
+		// split the sql statements(treated as string) in every embed files by the sql seperator
+		statements := strings.Split(sql, constants.SQLSeperator)
+		for _, stmt := range statements {
+			stmt = strings.TrimSpace(stmt)
+			if stmt == "" { // skip empty string
+				continue
+			}
+			if err := db.Exec(stmt).Error; err != nil {
+				logs.FError("Failed to execute trigger SQL statement: %v", err)
+				return false
+			}
+		}
+	}
+
+	logs.Info("Migration of constraints is done")
 
 	return true
 }

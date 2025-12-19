@@ -11,8 +11,8 @@ import (
 type BlockGroup struct {
 	Id               uuid.UUID  `json:"id" gorm:"column:id; type:uuid; primaryKey; not null; default:gen_random_uuid();"`
 	OwnerId          uuid.UUID  `json:"ownerId" gorm:"column:owner_id; type:uuid; not null;"`
-	BlockPackId      uuid.UUID  `json:"blockPackId" gorm:"column:block_pack_id; type:uuid; not null; uniqueIndex:block_group_idx_name_block_pack_id_prev_block_group_id;"`
-	PrevBlockGroupId *uuid.UUID `json:"prevBlockGroupId" gorm:"column:prev_block_group_id; type:uuid; default:null; uniqueIndex:block_group_idx_name_block_pack_id_prev_block_group_id;"`
+	BlockPackId      uuid.UUID  `json:"blockPackId" gorm:"column:block_pack_id; type:uuid; not null; index:block_group_idx_name_block_pack_id_prev_block_group_id;"`
+	PrevBlockGroupId *uuid.UUID `json:"prevBlockGroupId" gorm:"column:prev_block_group_id; type:uuid; default:null; index:block_group_idx_name_block_pack_id_prev_block_group_id;"`
 	SyncBlockGroupId *uuid.UUID `json:"syncBlockGroupId" gorm:"sync_block_group_id; type:uuid; default:null;"`
 	MegaByteSize     float64    `json:"megaByteSize" gorm:"column:mega_byte_size; type:double precision; not null; default:0;"`
 	DeletedAt        *time.Time `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz; default:null;"`

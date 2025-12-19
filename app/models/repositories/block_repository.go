@@ -286,6 +286,10 @@ func (r *BlockRepository) CreateManyByBlockGroupId(
 	input []inputs.CreateBlockInput,
 	opts ...options.RepositoryOptions,
 ) ([]schemas.Block, *exceptions.Exception) {
+	if len(input) == 0 {
+		return nil, exceptions.BlockGroup.NoChanges()
+	}
+
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
@@ -333,6 +337,10 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 	input []inputs.CreateBlockGroupContentInput,
 	opts ...options.RepositoryOptions,
 ) ([]schemas.Block, *exceptions.Exception) {
+	if len(input) == 0 {
+		return nil, exceptions.BlockGroup.NoChanges()
+	}
+
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
@@ -507,6 +515,10 @@ func (r *BlockRepository) RestoreSoftDeletedManyByIds(
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
+	if len(ids) == 0 {
+		return exceptions.BlockGroup.NoChanges()
+	}
+
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
@@ -584,6 +596,10 @@ func (r *BlockRepository) SoftDeleteManyByIds(
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
+	if len(ids) == 0 {
+		return exceptions.BlockGroup.NoChanges()
+	}
+
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
@@ -660,6 +676,10 @@ func (r *BlockRepository) HardDeleteManyByIds(
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
+	if len(ids) == 0 {
+		return exceptions.BlockGroup.NoChanges()
+	}
+
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 

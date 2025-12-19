@@ -14,7 +14,12 @@ $$ LANGUAGE plpgsql;
 
 -- ============================== SQL Seperator ==============================
 
+DROP TRIGGER IF EXISTS trigger_cascading_restore_soft_deleted_sub_shelf ON "SubShelfTable"
+
+-- ============================== SQL Seperator ==============================
+
 CREATE TRIGGER trigger_cascading_restore_soft_deleted_sub_shelf
-    AFTER UPDATE ON "SubShelfTable"
+    AFTER UPDATE 
+    ON "SubShelfTable"
     FOR EACH ROW
     EXECUTE FUNCTION trigger_function_cascading_restore_soft_deleted_sub_shelf();

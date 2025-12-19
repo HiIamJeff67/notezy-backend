@@ -22,7 +22,12 @@ $$ LANGUAGE plpgsql;
 
 -- ============================== SQL Seperator ==============================
 
+DROP TRIGGER IF EXISTS trigger_cascading_soft_delete_root_shelf ON "RootShelfTable"
+
+-- ============================== SQL Seperator ==============================
+
 CREATE TRIGGER trigger_cascading_soft_delete_root_shelf
-    AFTER UPDATE ON "RootShelfTable"
+    AFTER UPDATE 
+    ON "RootShelfTable"
     FOR EACH ROW
     EXECUTE FUNCTION trigger_function_cascading_soft_delete_root_shelf();

@@ -92,8 +92,13 @@ $$ LANGUAGE plpgsql;
 
 -- ============================== SQL Seperator ==============================
 
+DROP TRIGGER IF EXISTS trigger_accounting_inserted_block ON "BlockTable"
+
+-- ============================== SQL Seperator ==============================
+
 CREATE TRIGGER trigger_accounting_inserted_block
-    AFTER INSERT ON "BlockTable"
+    AFTER INSERT 
+    ON "BlockTable"
     REFERENCING NEW TABLE AS new_table
     FOR EACH STATEMENT
     EXECUTE FUNCTION trigger_function_accounting_inserted_block();

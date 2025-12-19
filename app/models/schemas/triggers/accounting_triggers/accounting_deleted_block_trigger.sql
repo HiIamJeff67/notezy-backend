@@ -58,8 +58,13 @@ $$ LANGUAGE plpgsql;
 
 -- ============================== SQL Seperator ==============================
 
+DROP TRIGGER IF EXISTS trigger_accounting_deleted_block ON "BlockTable"
+
+-- ============================== SQL Seperator ==============================
+
 CREATE TRIGGER trigger_accounting_deleted_block
-    AFTER DELETE ON "BlockTable"
+    AFTER DELETE 
+    ON "BlockTable"
     REFERENCING OLD TABLE AS old_table
     FOR EACH STATEMENT
     EXECUTE FUNCTION trigger_function_accounting_deleted_block();

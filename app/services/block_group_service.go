@@ -26,10 +26,17 @@ import (
 type BlockGroupServiceInterface interface {
 	GetMyBlockGroupById(ctx context.Context, reqDto *dtos.GetMyBlockGroupByIdReqDto) (*dtos.GetMyBlockGroupByIdResDto, *exceptions.Exception)
 	GetMyBlockGroupAndItsBlocksById(ctx context.Context, reqDto *dtos.GetMyBlockGroupAndItsBlocksByIdReqDto) (*dtos.GetMyBlockGroupAndItsBlocksByIdResDto, *exceptions.Exception)
+	GetMyBlockGroupsAndTheirBlocksByBlockPackId(ctx context.Context, reqDto *dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdReqDto) (*dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdResDto, *exceptions.Exception)
 	GetMyBlockGroupsByPrevBlockGroupId(ctx context.Context, reqDto *dtos.GetMyBlockGroupsByPrevBlockGroupIdReqDto) (*dtos.GetMyBlockGroupsByPrevBlockGroupIdResDto, *exceptions.Exception)
-	CreateBlockGroupByBlockPackId(ctx context.Context, reqDto *dtos.CreateBlockGroupByBlockPackIdReqDto) (*dtos.CreateBlockGroupByBlockPackIdResDto, *exceptions.Exception)
-	CreateBlockGroupAndItsBlocksByBlockPackId(ctx context.Context, reqDto *dtos.CreateBlockGroupAndItsBlocksByBlockPackIdReqDto) (*dtos.CreateBlockGroupAndItsBlocksByBlockPackIdResDto, *exceptions.Exception)
-	CreateBlockGroupsAndTheirBlocksByBlockPackId(ctx context.Context, reqDto *dtos.CreateBlockGroupsAndTheirBlocksByBlockPackIdReqDto) (*dtos.CreateBlockGroupsAndTheirBlocksByBlockPackIdResDto, *exceptions.Exception)
+	GetAllMyBlockGroupsByBlockPackId(ctx context.Context, reqDto *dtos.GetAllMyBlockGroupsByBlockPackIdReqDto) (*dtos.GetAllMyBlockGroupsByBlockPackIdResDto, *exceptions.Exception)
+	InsertBlockGroupByBlockPackId(ctx context.Context, reqDto *dtos.CreateBlockGroupByBlockPackIdReqDto) (*dtos.CreateBlockGroupByBlockPackIdResDto, *exceptions.Exception)
+	InsertBlockGroupAndItsBlocksByBlockPackId(ctx context.Context, reqDto *dtos.CreateBlockGroupAndItsBlocksByBlockPackIdReqDto) (*dtos.CreateBlockGroupAndItsBlocksByBlockPackIdResDto, *exceptions.Exception)
+	InsertBlockGroupsAndTheirBlocksByBlockPackId(ctx context.Context, reqDto *dtos.CreateBlockGroupsAndTheirBlocksByBlockPackIdReqDto) (*dtos.CreateBlockGroupsAndTheirBlocksByBlockPackIdResDto, *exceptions.Exception)
+	MoveMyBlockGroupsByIds(ctx context.Context, reqDto *dtos.MoveMyBlockGroupsByIdsReqDto) (*dtos.MoveMyBlockGroupsByIdsResDto, *exceptions.Exception)
+	RestoreMyBlockGroupById(ctx context.Context, reqDto *dtos.RestoreMyBlockGroupByIdReqDto) (*dtos.RestoreMyBlockGroupByIdResDto, *exceptions.Exception)
+	RestoreMyBlockGroupsByIds(ctx context.Context, reqDto *dtos.RestoreMyBlockGroupsByIdsReqDto) (*dtos.RestoreMyBlockGroupsByIdsResDto, *exceptions.Exception)
+	DeleteMyBlockGroupById(ctx context.Context, reqDto *dtos.DeleteMyBlockGroupByIdReqDto) (*dtos.DeleteMyBlockGroupByIdResDto, *exceptions.Exception)
+	DeleteMyBlockGroupsByIds(ctx context.Context, reqDto *dtos.DeleteMyBlockGroupsByIdsReqDto) (*dtos.DeleteMyBlockGroupsByIdsResDto, *exceptions.Exception)
 }
 
 type BlockGroupService struct {
@@ -177,6 +184,112 @@ func (s *BlockGroupService) GetMyBlockGroupAndItsBlocksById(
 	}, nil
 }
 
+func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
+	ctx context.Context, reqDto *dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdReqDto,
+) (*dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+
+	blockGroups, exception := s.blockGroupRepository.CheckPermissionsAndGetManyByBlockPackId(
+		reqDto.Param.BlockPackId,
+		reqDto.ContextFields.UserId,
+		nil,
+		allowedPermissions,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	var resDto dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdResDto
+
+	blockGroupIds := make([]uuid.UUID, len(blockGroups))
+	for index, blockGroup := range blockGroups {
+		blockGroupIds[index] = blockGroup.Id
+		resDto = append(resDto, dtos.GetMyBlockGroupAndItsBlocksByIdResDto{
+			Id:                        blockGroup.Id,
+			BlockPackId:               blockGroup.BlockPackId,
+			PrevBlockGroupId:          blockGroup.PrevBlockGroupId,
+			SyncBlockGroupId:          blockGroup.SyncBlockGroupId,
+			DeletedAt:                 blockGroup.DeletedAt,
+			UpdatedAt:                 blockGroup.UpdatedAt,
+			CreatedAt:                 blockGroup.CreatedAt,
+			RawArborizedEditableBlock: dtos.RawArborizedEditableBlock{},
+		})
+	}
+
+	var flattenedBlocks []schemas.Block
+	result := s.db.Model(&schemas.Block{}).
+		Where("block_group_id IN ?", blockGroupIds).
+		Find(&flattenedBlocks)
+	if err := result.Error; err != nil || len(flattenedBlocks) == 0 {
+		// return the current node with empty editable block if we cannot find them
+		return &resDto, nil
+	}
+
+	blockGroupToBlocksMap := make(map[uuid.UUID][]schemas.Block)
+	for _, flattenedBlock := range flattenedBlocks {
+		blockGroupToBlocksMap[flattenedBlock.BlockGroupId] = append(blockGroupToBlocksMap[flattenedBlock.BlockGroupId], flattenedBlock)
+	}
+
+	for index, dto := range resDto {
+		blocks, exist := blockGroupToBlocksMap[dto.Id]
+		if !exist {
+			// skip the block groups with no children blocks
+			continue
+		}
+
+		var root *dtos.RawFlattenedEditableBlock = nil
+		childrenMap := make(map[uuid.UUID][]dtos.RawFlattenedEditableBlock, len(blocks))
+		for _, block := range blocks {
+			if block.ParentBlockId == nil {
+				if root != nil {
+					// duplicate root block detected
+					return nil, exceptions.BlockGroup.RepeatedRootBlockInBlockGroupDetected(blocks[0].BlockGroupId, block.Id)
+				}
+
+				root = &dtos.RawFlattenedEditableBlock{
+					Id:            block.Id,
+					ParentBlockId: nil,
+					Type:          block.Type,
+					Props:         block.Props,
+					Content:       block.Content,
+				}
+			} else {
+				childrenMap[*block.ParentBlockId] = append(childrenMap[*block.ParentBlockId], dtos.RawFlattenedEditableBlock{
+					Id:            block.Id,
+					ParentBlockId: block.ParentBlockId,
+					Type:          block.Type,
+					Props:         block.Props,
+					Content:       block.Content,
+				})
+			}
+		}
+
+		rawArborizedBlock, exception := s.editableBlockAdapter.ArborizeRawToRaw(root, childrenMap)
+		if exception != nil {
+			return nil, exception
+		}
+
+		if rawArborizedBlock != nil {
+			resDto[index].RawArborizedEditableBlock = *rawArborizedBlock
+		}
+	}
+
+	return &resDto, nil
+}
+
 func (s *BlockGroupService) GetMyBlockGroupsByPrevBlockGroupId(
 	ctx context.Context, reqDto *dtos.GetMyBlockGroupsByPrevBlockGroupIdReqDto,
 ) (*dtos.GetMyBlockGroupsByPrevBlockGroupIdResDto, *exceptions.Exception) {
@@ -251,24 +364,22 @@ func (s *BlockGroupService) GetAllMyBlockGroupsByBlockPackId(
 	return &resDto, nil
 }
 
-func (s *BlockGroupService) GetMyBlocksGroupsAndTheirBlocksByBlockPackId() {}
-
-func (s *BlockGroupService) CreateBlockGroupByBlockPackId(
+func (s *BlockGroupService) InsertBlockGroupByBlockPackId(
 	ctx context.Context, reqDto *dtos.CreateBlockGroupByBlockPackIdReqDto,
 ) (*dtos.CreateBlockGroupByBlockPackIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx)
 
-	newBlockGroupId, exception := s.blockGroupRepository.CreateOneByBlockPackId(
+	newBlockGroupId, exception := s.blockGroupRepository.InsertOneByBlockPackId(
 		reqDto.Body.BlockPackId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateBlockGroupInput{
 			PrevBlockGroupId: reqDto.Body.PrevBlockGroupId,
 		},
-		options.WithDB(db),
+		options.WithDB(tx),
 	)
 	if exception != nil {
 		return nil, exception
@@ -283,7 +394,7 @@ func (s *BlockGroupService) CreateBlockGroupByBlockPackId(
 	}, nil
 }
 
-func (s *BlockGroupService) CreateBlockGroupAndItsBlocksByBlockPackId(
+func (s *BlockGroupService) InsertBlockGroupAndItsBlocksByBlockPackId(
 	ctx context.Context, reqDto *dtos.CreateBlockGroupAndItsBlocksByBlockPackIdReqDto,
 ) (*dtos.CreateBlockGroupAndItsBlocksByBlockPackIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
@@ -292,7 +403,7 @@ func (s *BlockGroupService) CreateBlockGroupAndItsBlocksByBlockPackId(
 
 	tx := s.db.WithContext(ctx).Begin()
 
-	newBlockGroupId, exception := s.blockGroupRepository.CreateOneByBlockPackId(
+	newBlockGroupId, exception := s.blockGroupRepository.InsertOneByBlockPackId(
 		reqDto.Body.BlockPackId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateBlockGroupInput{
@@ -351,7 +462,7 @@ func (s *BlockGroupService) CreateBlockGroupAndItsBlocksByBlockPackId(
 }
 
 // TODO: use concurrency to run seperate create operation using FlattenRaw
-func (s *BlockGroupService) CreateBlockGroupsAndTheirBlocksByBlockPackId(
+func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 	ctx context.Context, reqDto *dtos.CreateBlockGroupsAndTheirBlocksByBlockPackIdReqDto,
 ) (*dtos.CreateBlockGroupsAndTheirBlocksByBlockPackIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
@@ -372,7 +483,7 @@ func (s *BlockGroupService) CreateBlockGroupsAndTheirBlocksByBlockPackId(
 	}
 
 	// note that the order of the output newBlockGroupIds is the same as the order of reqDto.Body.BlockGroupContents
-	newBlockGroupIds, exception := s.blockGroupRepository.CreateManyByBlockPackId(
+	newBlockGroupIds, exception := s.blockGroupRepository.InsertManyByBlockPackId(
 		reqDto.Body.BlockPackId,
 		reqDto.ContextFields.UserId,
 		createBlockGroupsInput,
@@ -471,6 +582,12 @@ func (s *BlockGroupService) CreateBlockGroupsAndTheirBlocksByBlockPackId(
 	return &resDto, nil
 }
 
+func (s *BlockGroupService) MoveMyBlockGroupsToTheEndByIds(
+	ctx context.Context,
+) {
+
+}
+
 func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 	ctx context.Context, reqDto *dtos.MoveMyBlockGroupsByIdsReqDto,
 ) (*dtos.MoveMyBlockGroupsByIdsResDto, *exceptions.Exception) {
@@ -509,6 +626,7 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 	}
 
 	if numOfMovableBlockGroups != len(movableBlockGroups) {
+		tx.Rollback()
 		return nil, exceptions.BlockGroup.InvalidDto("Invalid block groups detected")
 	}
 
@@ -522,6 +640,7 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 	for index, movableBlockGroupId := range reqDto.Body.MovableBlockGroupIds {
 		// 1. check repeated PrevBlockGroupId for cycular block groups
 		if visited[reqDto.Body.MovablePrevBlockGroupIds[index]] {
+			tx.Rollback()
 			return nil, exceptions.BlockGroup.InvalidDto("Detect cycle in the given block groups")
 		}
 		visited[reqDto.Body.MovablePrevBlockGroupIds[index]] = true
@@ -529,11 +648,13 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 		// 2. check the given block group is also exist in the database
 		blockGroup, exist := movableBlockGroupsMap[movableBlockGroupId]
 		if !exist {
+			tx.Rollback()
 			return nil, exceptions.BlockGroup.NotFound("Cannot find the block group with id of %s", movableBlockGroupId.String())
 		}
 
 		// 3. check if the data is consistent on BlockGroupId and PrevBlockGroupId
 		if blockGroup.PrevBlockGroupId != reqDto.Body.MovablePrevBlockGroupIds[index] {
+			tx.Rollback()
 			prevBlockGroupIdString := blockGroup.PrevBlockGroupId.String()
 			if blockGroup.PrevBlockGroupId == nil {
 				prevBlockGroupIdString = "null"
@@ -551,6 +672,7 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 
 		// 4. check if all the BlockPackIds in the database are the same and equal to the given BlockPackId
 		if blockGroup.BlockPackId != reqDto.Body.BlockPackId {
+			tx.Rollback()
 			return nil, exceptions.BlockGroup.InvalidDto("The given block groups are not all under the given block pack")
 		}
 
@@ -558,6 +680,7 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 		if reqDto.Body.DestinationBlockGroupId != nil &&
 			movableBlockGroupId == *reqDto.Body.DestinationBlockGroupId &&
 			index != numOfMovableBlockGroups-1 { // it is allowed to move the movable block groups to the next of the final movable block group
+			tx.Rollback()
 			return nil, exceptions.BlockGroup.InvalidDto("Cannot move the block groups to a position inside of themselves")
 		}
 	}
@@ -565,19 +688,88 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 	// note that we have gaurantee that the below block groups MUST exist on the above procedure
 	startBlockGroup := movableBlockGroupsMap[reqDto.Body.MovableBlockGroupIds[0]]
 	endBlockGroup := movableBlockGroupsMap[reqDto.Body.MovableBlockGroupIds[numOfMovableBlockGroups-1]]
-	collapsedBlockGroup, exception := s.blockGroupRepository.GetOneByPrevBlockGroupId(
+	// ignore the exception which indicate the collapsed block group is not exist
+	collapsedBlockGroup, _ := s.blockGroupRepository.GetOneByPrevBlockGroupId(
 		reqDto.Body.BlockPackId,
-		&reqDto.Body.MovableBlockGroupIds[numOfMovableBlockGroups-1],
+		&endBlockGroup.Id,
 		reqDto.ContextFields.UserId,
 		nil,
 		options.WithDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
-	if exception != nil {
+	// ignore the exception which indicate the destination next block group is not exist
+	destinationNextBlockGroup, _ := s.blockGroupRepository.GetOneByPrevBlockGroupId(
+		reqDto.Body.BlockPackId,
+		reqDto.Body.DestinationBlockGroupId,
+		reqDto.ContextFields.UserId,
+		nil,
+		options.WithDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+
+	// Sstep 1: connect the start block group to the destination block group
+	if _, exception = s.blockGroupRepository.UpdateOneById(
+		startBlockGroup.Id,
+		reqDto.ContextFields.UserId,
+		inputs.PartialUpdateBlockGroupInput{
+			Values: inputs.UpdateBlockGroupInput{
+				PrevBlockGroupId: reqDto.Body.DestinationBlockGroupId,
+			},
+			SetNull: nil,
+		},
+		options.WithDB(tx),
+	); exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
-	return nil, nil
+	// step 2: connect the destination next block group to the end block group
+	if destinationNextBlockGroup != nil {
+		// check if the destination next block group is the start block group which means we don't need to maintain here
+		if destinationNextBlockGroup.Id != startBlockGroup.Id {
+			if _, exception = s.blockGroupRepository.UpdateOneById(
+				destinationNextBlockGroup.Id,
+				reqDto.ContextFields.UserId,
+				inputs.PartialUpdateBlockGroupInput{
+					Values: inputs.UpdateBlockGroupInput{
+						PrevBlockGroupId: &endBlockGroup.Id,
+					},
+					SetNull: nil,
+				},
+				options.WithDB(tx),
+			); exception != nil {
+				tx.Rollback()
+				return nil, exception
+			}
+		}
+	}
+
+	// step 3: relink the collapsed block group to the old prev block group of the start block group
+	if collapsedBlockGroup != nil {
+		if _, exception = s.blockGroupRepository.UpdateOneById(
+			collapsedBlockGroup.Id,
+			reqDto.ContextFields.UserId,
+			inputs.PartialUpdateBlockGroupInput{
+				Values: inputs.UpdateBlockGroupInput{
+					PrevBlockGroupId: startBlockGroup.PrevBlockGroupId,
+				},
+				SetNull: nil,
+			},
+			options.WithDB(tx),
+		); exception != nil {
+			tx.Rollback()
+			return nil, exception
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithError(err)
+	}
+
+	return &dtos.MoveMyBlockGroupsByIdsResDto{
+		UpdatedAt: time.Now(),
+	}, nil
 }
 
 func (s *BlockGroupService) RestoreMyBlockGroupById(

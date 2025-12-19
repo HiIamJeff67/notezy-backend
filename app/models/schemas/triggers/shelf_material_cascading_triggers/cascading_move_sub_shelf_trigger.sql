@@ -60,6 +60,10 @@ $$ LANGUAGE plpgsql;
 
 -- ============================== SQL Seperator ==============================
 
+DROP TRIGGER IF EXISTS trigger_cascading_move_sub_shelf ON "SubShelfTable"
+
+-- ============================== SQL Seperator ==============================
+
 CREATE TRIGGER trigger_cascading_move_sub_shelf
     AFTER UPDATE OF prev_sub_shelf_id
     ON "SubShelfTable"

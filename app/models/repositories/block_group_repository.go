@@ -23,11 +23,14 @@ type BlockGroupRepositoryInterface interface {
 	HasPermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
 	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) (*schemas.BlockGroup, *exceptions.Exception)
 	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.BlockGroup, *exceptions.Exception)
+	CheckPermissionsAndGetManyByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.BlockGroup, *exceptions.Exception)
 	CheckPermissionAndGetValidIds(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, opts ...options.RepositoryOptions) (*schemas.BlockGroup, *exceptions.Exception)
 	GetOneByPrevBlockGroupId(blockPackId uuid.UUID, prevBlockGroupId *uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, opts ...options.RepositoryOptions) (*schemas.BlockGroup, *exceptions.Exception)
-	CreateOneByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, input inputs.CreateBlockGroupInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
-	CreateManyByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, inputs []inputs.CreateBlockGroupInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
+	InsertOneByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, input inputs.CreateBlockGroupInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
+	InsertManyByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, inputs []inputs.CreateBlockGroupInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
+	AppendOneByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
+	AppendManyByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, input []inputs.CreateBlockGroupInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateBlockGroupInput, opts ...options.RepositoryOptions) (*schemas.BlockGroup, *exceptions.Exception)
 	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
@@ -210,6 +213,53 @@ func (r *BlockGroupRepository) CheckPermissionsAndGetManyByIds(
 	return blockGroups, nil
 }
 
+func (r *BlockGroupRepository) CheckPermissionsAndGetManyByBlockPackId(
+	blockPackId uuid.UUID,
+	userId uuid.UUID,
+	preloads []schemas.BlockGroupRelation,
+	allowedPermissions []enums.AccessControlPermission,
+	opts ...options.RepositoryOptions,
+) ([]schemas.BlockGroup, *exceptions.Exception) {
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = ss.root_shelf_id").
+		Where("user_id = ? AND permission IN ?",
+			userId, allowedPermissions,
+		)
+	query := parsedOptions.DB.Model(&schemas.BlockGroup{}).
+		Joins("INNER JOIN \"BlockPackTable\" bp ON block_pack_id = bp.id").
+		Joins("INNER JOIN \"SubShelfTable\" ss ON bp.parent_sub_shelf_id = ss.id").
+		Where("bp.id = ? AND EXISTS (?)",
+			blockPackId, subQuery,
+		)
+
+	switch parsedOptions.OnlyDeleted {
+	case types.Ternary_Positive:
+		query = query.Where("\"BlockGroupTable\".deleted_at IS NOT NULL")
+	case types.Ternary_Negative:
+		query = query.Where("\"BlockGroupTable\".deleted_at IS NULL")
+	}
+
+	if len(preloads) > 0 {
+		for _, preload := range preloads {
+			query = query.Preload(string(preload))
+		}
+	}
+
+	var blockGroups []schemas.BlockGroup
+	result := query.Find(&blockGroups)
+	if err := result.Error; err != nil {
+		return nil, exceptions.BlockGroup.NotFound().WithError(err)
+	}
+	if len(blockGroups) == 0 {
+		return nil, exceptions.BlockGroup.NotFound()
+	}
+
+	return blockGroups, nil
+}
+
 // Similar to the `HasPermissions`, but with best effort strategy,
 // if some of the ids is not valid or exist, they'll be not returned at the end.
 //
@@ -321,7 +371,7 @@ func (r *BlockGroupRepository) GetOneByPrevBlockGroupId(
 	return &blockGroup, nil
 }
 
-func (r *BlockGroupRepository) CreateOneByBlockPackId(
+func (r *BlockGroupRepository) InsertOneByBlockPackId(
 	blockPackId uuid.UUID,
 	userId uuid.UUID,
 	input inputs.CreateBlockGroupInput,
@@ -353,11 +403,189 @@ func (r *BlockGroupRepository) CreateOneByBlockPackId(
 	}
 
 	var newBlockGroup schemas.BlockGroup
-	if err := copier.Copy(&newBlockGroup, &input); err != nil {
-		return nil, exceptions.BlockGroup.FailedToCreate().WithError(err)
-	}
 	newBlockGroup.OwnerId = *ownerId // get the owner id from the CheckPermissionAndGetOneById
 	newBlockGroup.BlockPackId = blockPackId
+	newBlockGroup.PrevBlockGroupId = blockPack.FinalBlockGroupId
+
+	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
+		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
+		Create(&newBlockGroup)
+	if err := result.Error; err != nil {
+		return nil, exceptions.BlockGroup.FailedToCreate().WithError(err)
+	}
+
+	collapsedBlockGroup, exception := r.GetOneByPrevBlockGroupId(
+		blockPackId,
+		input.PrevBlockGroupId,
+		userId,
+		nil,
+		opts...,
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	if collapsedBlockGroup != nil {
+		if _, exception = r.UpdateOneById(
+			collapsedBlockGroup.Id,
+			userId,
+			inputs.PartialUpdateBlockGroupInput{
+				Values: inputs.UpdateBlockGroupInput{
+					PrevBlockGroupId: &newBlockGroup.Id,
+				},
+				SetNull: nil,
+			},
+			opts...,
+		); exception != nil {
+			return nil, exception
+		}
+		if _, exception = r.UpdateOneById(
+			newBlockGroup.Id,
+			userId,
+			inputs.PartialUpdateBlockGroupInput{
+				Values: inputs.UpdateBlockGroupInput{
+					PrevBlockGroupId: input.PrevBlockGroupId,
+				},
+				SetNull: nil,
+			},
+			opts...,
+		); exception != nil {
+			return nil, exception
+		}
+	}
+
+	return &newBlockGroup.Id, nil
+}
+
+func (r *BlockGroupRepository) InsertManyByBlockPackId(
+	blockPackId uuid.UUID,
+	userId uuid.UUID,
+	input []inputs.CreateBlockGroupInput,
+	opts ...options.RepositoryOptions,
+) ([]uuid.UUID, *exceptions.Exception) {
+	if len(input) == 0 {
+		return nil, exceptions.BlockGroup.NoChanges()
+	}
+
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	blockPackRepository := NewBlockPackRepository()
+
+	ownerId, blockPack, exception := blockPackRepository.CheckPermissionAndGetOneWithOwnerIdById(
+		blockPackId,
+		userId,
+		nil,
+		allowedPermissions,
+		opts...,
+	)
+	if exception != nil {
+		return nil, exception
+	}
+	if ownerId == nil || blockPack == nil {
+		return nil, exceptions.BlockPack.NoPermission("get owner's block pack")
+	}
+
+	var newBlockGroups []schemas.BlockGroup
+	ids := make([]uuid.UUID, len(input))
+	for index := range newBlockGroups { // use index to modify the elements of slice, since the value from the `range` is only a copy
+		newBlockGroups[index].Id = uuid.New()    // generate the id here, so that we can return the ids in the same order of the input
+		newBlockGroups[index].OwnerId = *ownerId // get the owner id from the CheckPermissionAndGetOneById
+		newBlockGroups[index].BlockPackId = blockPackId
+		ids[index] = newBlockGroups[index].Id
+	}
+	newBlockGroups[0].PrevBlockGroupId = blockPack.FinalBlockGroupId
+
+	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
+		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
+		Create(&newBlockGroups)
+	if err := result.Error; err != nil {
+		return nil, exceptions.BlockGroup.FailedToCreate().WithError(err)
+	}
+
+	collapsedBlockGroup, exception := r.GetOneByPrevBlockGroupId(
+		blockPackId,
+		input[0].PrevBlockGroupId,
+		userId,
+		nil,
+		opts...,
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	if collapsedBlockGroup != nil {
+		if _, exception = r.UpdateOneById(
+			collapsedBlockGroup.Id,
+			userId,
+			inputs.PartialUpdateBlockGroupInput{
+				Values: inputs.UpdateBlockGroupInput{
+					PrevBlockGroupId: &ids[len(ids)-1],
+				},
+				SetNull: nil,
+			},
+			opts...,
+		); exception != nil {
+			return nil, exception
+		}
+		if _, exception = r.UpdateOneById(
+			newBlockGroups[0].Id,
+			userId,
+			inputs.PartialUpdateBlockGroupInput{
+				Values: inputs.UpdateBlockGroupInput{
+					PrevBlockGroupId: input[0].PrevBlockGroupId,
+				},
+				SetNull: nil,
+			},
+			opts...,
+		); exception != nil {
+			return nil, exception
+		}
+	}
+
+	return ids, nil
+}
+
+func (r *BlockGroupRepository) AppendOneByBlockPackId(
+	blockPackId uuid.UUID,
+	userId uuid.UUID,
+	opts ...options.RepositoryOptions,
+) (*uuid.UUID, *exceptions.Exception) {
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	blockPackRepository := NewBlockPackRepository()
+
+	ownerId, blockPack, exception := blockPackRepository.CheckPermissionAndGetOneWithOwnerIdById(
+		blockPackId,
+		userId,
+		nil,
+		allowedPermissions,
+		opts...,
+	)
+	if exception != nil {
+		return nil, exception
+	}
+	if ownerId == nil || blockPack == nil {
+		return nil, exceptions.BlockPack.NoPermission("get owner's block pack")
+	}
+
+	var newBlockGroup schemas.BlockGroup
+	newBlockGroup.OwnerId = *ownerId // get the owner id from the CheckPermissionAndGetOneById
+	newBlockGroup.BlockPackId = blockPackId
+	newBlockGroup.PrevBlockGroupId = blockPack.FinalBlockGroupId
 
 	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
@@ -369,12 +597,16 @@ func (r *BlockGroupRepository) CreateOneByBlockPackId(
 	return &newBlockGroup.Id, nil
 }
 
-func (r *BlockGroupRepository) CreateManyByBlockPackId(
+func (r *BlockGroupRepository) AppendManyByBlockPackId(
 	blockPackId uuid.UUID,
 	userId uuid.UUID,
-	input []inputs.CreateBlockGroupInput,
+	input []inputs.CreateBlockGroupInput, // input[0] should be nil in this case
 	opts ...options.RepositoryOptions,
 ) ([]uuid.UUID, *exceptions.Exception) {
+	if len(input) == 0 {
+		return nil, exceptions.BlockGroup.NoChanges()
+	}
+
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
@@ -411,6 +643,7 @@ func (r *BlockGroupRepository) CreateManyByBlockPackId(
 		newBlockGroups[index].BlockPackId = blockPackId
 		ids[index] = newBlockGroups[index].Id
 	}
+	newBlockGroups[0].PrevBlockGroupId = blockPack.FinalBlockGroupId
 
 	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
@@ -515,6 +748,10 @@ func (r *BlockGroupRepository) RestoreSoftDeletedManyByIds(
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
+	if len(ids) == 0 {
+		return exceptions.BlockGroup.NoChanges()
+	}
+
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
@@ -592,6 +829,10 @@ func (r *BlockGroupRepository) SoftDeleteManyByIds(
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
+	if len(ids) == 0 {
+		return exceptions.BlockGroup.NoChanges()
+	}
+
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
@@ -668,6 +909,10 @@ func (r *BlockGroupRepository) HardDeleteManyByIds(
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
+	if len(ids) == 0 {
+		return exceptions.BlockGroup.NoChanges()
+	}
+
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 

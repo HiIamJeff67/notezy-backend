@@ -17,7 +17,7 @@ import (
 
 type BlockGroupBinderInterface interface {
 	BindGetMyBlockGroupAndItsBlocksById(controllerFunc types.ControllerFunc[*dtos.GetMyBlockGroupAndItsBlocksByIdReqDto]) gin.HandlerFunc
-	BindCreateBlockGroupAndItsBlocksByBlockPackId(controllerFunc types.ControllerFunc[*dtos.CreateBlockGroupAndItsBlocksByBlockPackIdReqDto]) gin.HandlerFunc
+	BindInsertBlockGroupAndItsBlocksByBlockPackId(controllerFunc types.ControllerFunc[*dtos.CreateBlockGroupAndItsBlocksByBlockPackIdReqDto]) gin.HandlerFunc
 }
 
 type BlockGroupBinder struct{}
@@ -57,7 +57,7 @@ func (b *BlockGroupBinder) BindGetMyBlockGroupAndItsBlocksById(controllerFunc ty
 	}
 }
 
-func (b *BlockGroupBinder) BindCreateBlockGroupAndItsBlocksByBlockPackId(controllerFunc types.ControllerFunc[*dtos.CreateBlockGroupAndItsBlocksByBlockPackIdReqDto]) gin.HandlerFunc {
+func (b *BlockGroupBinder) BindInsertBlockGroupAndItsBlocksByBlockPackId(controllerFunc types.ControllerFunc[*dtos.CreateBlockGroupAndItsBlocksByBlockPackIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.CreateBlockGroupAndItsBlocksByBlockPackIdReqDto
 

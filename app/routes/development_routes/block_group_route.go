@@ -27,8 +27,8 @@ func configureDevelopmentBlockGroupRoutes() {
 		)
 		blockGroupRoutes.POST(
 			"/createBlockGroupAndItsBlocksByBlockPackId",
-			blockGroupModule.Binder.BindCreateBlockGroupAndItsBlocksByBlockPackId(
-				blockGroupModule.Controller.CreateBlockGroupAndItsBlocksByBlockPackId,
+			blockGroupModule.Binder.BindInsertBlockGroupAndItsBlocksByBlockPackId(
+				blockGroupModule.Controller.InsertBlockGroupAndItsBlocksByBlockPackId,
 			),
 		)
 	}

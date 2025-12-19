@@ -487,6 +487,10 @@ func (r *BlockPackRepository) RestoreSoftDeletedManyByIds(
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
+	if len(ids) == 0 {
+		return exceptions.BlockGroup.NoChanges()
+	}
+
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
@@ -562,6 +566,10 @@ func (r *BlockPackRepository) SoftDeleteManyByIds(
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
+	if len(ids) == 0 {
+		return exceptions.BlockGroup.NoChanges()
+	}
+
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
@@ -636,6 +644,10 @@ func (r *BlockPackRepository) HardDeleteManyByIds(
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
+	if len(ids) == 0 {
+		return exceptions.BlockGroup.NoChanges()
+	}
+
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
