@@ -2,7 +2,7 @@ package concurrency
 
 import "sync"
 
-func SingleBatchExecute[T any, R any](
+func BatchExecute[T any, R any](
 	inputs []T,
 	workerCount int,
 	processorFunc ProcessorFunc[T, R],
@@ -12,7 +12,7 @@ func SingleBatchExecute[T any, R any](
 	}
 
 	inputCount := len(inputs)
-	workerCount = min(workerCount, inputCount)
+	workerCount = min(workerCount, inputCount, MaxNumOfWorker)
 	jobs := make(chan Job[T], inputCount)
 	results := make(chan Result[R], inputCount)
 	var wg sync.WaitGroup

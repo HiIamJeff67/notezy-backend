@@ -25,6 +25,7 @@ type BlockGroupRepositoryInterface interface {
 	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.BlockGroup, *exceptions.Exception)
 	CheckPermissionAndGetValidIds(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, opts ...options.RepositoryOptions) (*schemas.BlockGroup, *exceptions.Exception)
+	GetOneByPrevBlockGroupId(blockPackId uuid.UUID, prevBlockGroupId *uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, opts ...options.RepositoryOptions) (*schemas.BlockGroup, *exceptions.Exception)
 	CreateOneByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, input inputs.CreateBlockGroupInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
 	CreateManyByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, inputs []inputs.CreateBlockGroupInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateBlockGroupInput, opts ...options.RepositoryOptions) (*schemas.BlockGroup, *exceptions.Exception)
@@ -269,6 +270,55 @@ func (r *BlockGroupRepository) GetOneById(
 		allowedPermissions,
 		opts...,
 	)
+}
+
+func (r *BlockGroupRepository) GetOneByPrevBlockGroupId(
+	blockPackId uuid.UUID,
+	prevBlockGroupId *uuid.UUID,
+	userId uuid.UUID,
+	preloads []schemas.BlockGroupRelation,
+	opts ...options.RepositoryOptions,
+) (*schemas.BlockGroup, *exceptions.Exception) {
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+
+	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = ss.root_shelf_id").
+		Where("user_id = ? AND permission IN ?",
+			userId, allowedPermissions,
+		)
+	query := parsedOptions.DB.Model(&schemas.BlockGroup{}).
+		Joins("INNER JOIN \"BlockPackTable\" bp ON block_pack_id = bp.id").
+		Joins("INNER JOIN \"SubShelfTable\" ss ON bp.parent_sub_shelf_id = ss.id").
+		Where("bp.id = ? AND \"BlockGroupTable\".prev_block_group_id = ? AND EXISTS (?)",
+			blockPackId, prevBlockGroupId, subQuery,
+		)
+
+	switch parsedOptions.OnlyDeleted {
+	case types.Ternary_Positive:
+		query = query.Where("\"BlockGroupTable\".deleted_at IS NOT NULL")
+	case types.Ternary_Negative:
+		query = query.Where("\"BlockGroupTable\".deleted_at IS NULL")
+	}
+
+	if len(preloads) > 0 {
+		for _, preload := range preloads {
+			query = query.Preload(string(preload))
+		}
+	}
+
+	var blockGroup schemas.BlockGroup
+	if err := query.First(&blockGroup).Error; err != nil {
+		return nil, exceptions.BlockGroup.NotFound().WithError(err)
+	}
+
+	return &blockGroup, nil
 }
 
 func (r *BlockGroupRepository) CreateOneByBlockPackId(

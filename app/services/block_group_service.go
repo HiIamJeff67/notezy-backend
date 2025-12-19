@@ -392,7 +392,7 @@ func (s *BlockGroupService) CreateBlockGroupsAndTheirBlocksByBlockPackId(
 		return data, exception.ToError()
 	}
 
-	validateBlockResults := concurrency.SingleBatchExecute(
+	validateBlockResults := concurrency.BatchExecute(
 		validateBlockDto,
 		10,
 		validateBlockFunc,
@@ -471,14 +471,199 @@ func (s *BlockGroupService) CreateBlockGroupsAndTheirBlocksByBlockPackId(
 	return &resDto, nil
 }
 
-func (s *BlockGroupService) MoveMyBlockGroupById() {}
+func (s *BlockGroupService) MoveMyBlockGroupsByIds(
+	ctx context.Context, reqDto *dtos.MoveMyBlockGroupsByIdsReqDto,
+) (*dtos.MoveMyBlockGroupsByIdsResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+	}
+	if len(reqDto.Body.MovableBlockGroupIds) != len(reqDto.Body.MovablePrevBlockGroupIds) {
+		return nil, exceptions.BlockGroup.InvalidDto("The length of movable block group ids is not equal to the length of movable previous block group id")
+	}
+	if len(reqDto.Body.MovablePrevBlockGroupIds) == 0 ||
+		reqDto.Body.DestinationBlockGroupId == reqDto.Body.MovablePrevBlockGroupIds[0] {
+		return nil, exceptions.BlockGroup.NoChanges()
+	}
 
-func (s *BlockGroupService) MoveMyBlockGroupsByIds() {}
+	numOfMovableBlockGroups := len(reqDto.Body.MovableBlockGroupIds)
 
-func (s *BlockGroupService) RestoreMyBlockGroupById() {}
+	tx := s.db.WithContext(ctx).Begin()
 
-func (s *BlockGroupService) RestoreMyBlockGroupsByIds() {}
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
 
-func (s *BlockGroupService) DeleteMyBlockGroupById() {}
+	movableBlockGroups, exception := s.blockGroupRepository.CheckPermissionsAndGetManyByIds(
+		reqDto.Body.MovableBlockGroupIds,
+		reqDto.ContextFields.UserId,
+		nil,
+		allowedPermissions,
+		options.WithDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
 
-func (s *BlockGroupService) DeleteMyBlockGroupsByIds() {}
+	if numOfMovableBlockGroups != len(movableBlockGroups) {
+		return nil, exceptions.BlockGroup.InvalidDto("Invalid block groups detected")
+	}
+
+	movableBlockGroupsMap := make(map[uuid.UUID]schemas.BlockGroup, len(movableBlockGroups))
+	for _, movableBlockGroup := range movableBlockGroups {
+		movableBlockGroupsMap[movableBlockGroup.Id] = movableBlockGroup
+	}
+
+	// check the validation of the given block groups by:
+	visited := make(map[*uuid.UUID]bool, len(movableBlockGroups)) // it is also gaurantee that there's only one block group with the its PrevBlockGroupId equals to nil
+	for index, movableBlockGroupId := range reqDto.Body.MovableBlockGroupIds {
+		// 1. check repeated PrevBlockGroupId for cycular block groups
+		if visited[reqDto.Body.MovablePrevBlockGroupIds[index]] {
+			return nil, exceptions.BlockGroup.InvalidDto("Detect cycle in the given block groups")
+		}
+		visited[reqDto.Body.MovablePrevBlockGroupIds[index]] = true
+
+		// 2. check the given block group is also exist in the database
+		blockGroup, exist := movableBlockGroupsMap[movableBlockGroupId]
+		if !exist {
+			return nil, exceptions.BlockGroup.NotFound("Cannot find the block group with id of %s", movableBlockGroupId.String())
+		}
+
+		// 3. check if the data is consistent on BlockGroupId and PrevBlockGroupId
+		if blockGroup.PrevBlockGroupId != reqDto.Body.MovablePrevBlockGroupIds[index] {
+			prevBlockGroupIdString := blockGroup.PrevBlockGroupId.String()
+			if blockGroup.PrevBlockGroupId == nil {
+				prevBlockGroupIdString = "null"
+			}
+			movablePrevBlockGroupIdString := reqDto.Body.MovablePrevBlockGroupIds[index].String()
+			if reqDto.Body.MovablePrevBlockGroupIds[index] == nil {
+				movablePrevBlockGroupIdString = "null"
+			}
+			return nil, exceptions.BlockGroup.InvalidDto(
+				"The given block group has different previous block group id from the actual block group, expected %s, got %s",
+				prevBlockGroupIdString,
+				movablePrevBlockGroupIdString,
+			)
+		}
+
+		// 4. check if all the BlockPackIds in the database are the same and equal to the given BlockPackId
+		if blockGroup.BlockPackId != reqDto.Body.BlockPackId {
+			return nil, exceptions.BlockGroup.InvalidDto("The given block groups are not all under the given block pack")
+		}
+
+		// 5. check to make sure the destination is not inside the movable block groups
+		if reqDto.Body.DestinationBlockGroupId != nil &&
+			movableBlockGroupId == *reqDto.Body.DestinationBlockGroupId &&
+			index != numOfMovableBlockGroups-1 { // it is allowed to move the movable block groups to the next of the final movable block group
+			return nil, exceptions.BlockGroup.InvalidDto("Cannot move the block groups to a position inside of themselves")
+		}
+	}
+
+	// note that we have gaurantee that the below block groups MUST exist on the above procedure
+	startBlockGroup := movableBlockGroupsMap[reqDto.Body.MovableBlockGroupIds[0]]
+	endBlockGroup := movableBlockGroupsMap[reqDto.Body.MovableBlockGroupIds[numOfMovableBlockGroups-1]]
+	collapsedBlockGroup, exception := s.blockGroupRepository.GetOneByPrevBlockGroupId(
+		reqDto.Body.BlockPackId,
+		&reqDto.Body.MovableBlockGroupIds[numOfMovableBlockGroups-1],
+		reqDto.ContextFields.UserId,
+		nil,
+		options.WithDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return nil, nil
+}
+
+func (s *BlockGroupService) RestoreMyBlockGroupById(
+	ctx context.Context, reqDto *dtos.RestoreMyBlockGroupByIdReqDto,
+) (*dtos.RestoreMyBlockGroupByIdResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	if exception := s.blockGroupRepository.RestoreSoftDeletedOneById(
+		reqDto.Body.BlockGroupId,
+		reqDto.ContextFields.UserId,
+		options.WithDB(db),
+	); exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.RestoreMyBlockGroupByIdResDto{
+		UpdatedAt: time.Now(),
+	}, nil
+}
+
+func (s *BlockGroupService) RestoreMyBlockGroupsByIds(
+	ctx context.Context, reqDto *dtos.RestoreMyBlockGroupsByIdsReqDto,
+) (*dtos.RestoreMyBlockGroupsByIdsResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	if exception := s.blockGroupRepository.RestoreSoftDeletedManyByIds(
+		reqDto.Body.BlockGroupIds,
+		reqDto.ContextFields.UserId,
+		options.WithDB(db),
+	); exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.RestoreMyBlockGroupsByIdsResDto{
+		UpdatedAt: time.Now(),
+	}, nil
+}
+
+func (s *BlockGroupService) DeleteMyBlockGroupById(
+	ctx context.Context, reqDto *dtos.DeleteMyBlockGroupByIdReqDto,
+) (*dtos.DeleteMyBlockGroupByIdResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	if exception := s.blockGroupRepository.SoftDeleteOneById(
+		reqDto.Body.BlockGroupId,
+		reqDto.ContextFields.UserId,
+		options.WithDB(db),
+	); exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.DeleteMyBlockGroupByIdResDto{
+		DeletedAt: time.Now(),
+	}, nil
+}
+
+func (s *BlockGroupService) DeleteMyBlockGroupsByIds(
+	ctx context.Context, reqDto *dtos.DeleteMyBlockGroupsByIdsReqDto,
+) (*dtos.DeleteMyBlockGroupsByIdsResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	if exception := s.blockGroupRepository.SoftDeleteManyByIds(
+		reqDto.Body.BlockGroupIds,
+		reqDto.ContextFields.UserId,
+		options.WithDB(db),
+	); exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.DeleteMyBlockGroupsByIdsResDto{
+		DeletedAt: time.Now(),
+	}, nil
+}

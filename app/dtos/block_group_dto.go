@@ -135,6 +135,84 @@ type CreateBlockGroupsAndTheirBlocksByBlockPackIdReqDto struct {
 	]
 }
 
+type MoveMyBlockGroupsByIdsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			BlockPackId              uuid.UUID    `json:"blockPackId" validate:"required"`
+			MovableBlockGroupIds     []uuid.UUID  `json:"movableBlockGroupIds" validate:"required"`
+			MovablePrevBlockGroupIds []*uuid.UUID `json:"movablePrevBlockGroupIds" validate:"required"`
+			DestinationBlockGroupId  *uuid.UUID   `json:"destinationBlockGroupId" validate:"omitnil"` // expect result to place next to the destination block group
+		},
+		any,
+	]
+}
+
+type RestoreMyBlockGroupByIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			BlockGroupId uuid.UUID `json:"blockGroupId" validate:"required"`
+		},
+		any,
+	]
+}
+
+type RestoreMyBlockGroupsByIdsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			BlockGroupIds []uuid.UUID `json:"blockGroupIds" validate:"required"`
+		},
+		any,
+	]
+}
+
+type DeleteMyBlockGroupByIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			BlockGroupId uuid.UUID `json:"blockGroupId" validate:"required"`
+		},
+		any,
+	]
+}
+
+type DeleteMyBlockGroupsByIdsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			BlockGroupIds []uuid.UUID `json:"blockGroupIds" validate:"required"`
+		},
+		any,
+	]
+}
+
 /* ============================== Response DTO ============================== */
 
 type GetMyBlockGroupByIdResDto struct {
@@ -185,4 +263,24 @@ type CreateBlockGroupsAndTheirBlocksByBlockPackIdResDto struct {
 		BlockIds     []uuid.UUID
 	} `json:"successBlockGroupAndBlockIds"`
 	CreatedAt time.Time `json:"createdAt"`
+}
+
+type MoveMyBlockGroupsByIdsResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type RestoreMyBlockGroupByIdResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type RestoreMyBlockGroupsByIdsResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type DeleteMyBlockGroupByIdResDto struct {
+	DeletedAt time.Time `json:"deletedAt"`
+}
+
+type DeleteMyBlockGroupsByIdsResDto struct {
+	DeletedAt time.Time `json:"deletedAt"`
 }
