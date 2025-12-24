@@ -9,7 +9,7 @@ import (
 
 	logs "notezy-backend/app/logs"
 	schemas "notezy-backend/app/models/schemas"
-	"notezy-backend/app/models/schemas/constraints"
+	constraints "notezy-backend/app/models/schemas/constraints"
 	enums "notezy-backend/app/models/schemas/enums"
 	triggers "notezy-backend/app/models/schemas/triggers"
 	seeds "notezy-backend/app/models/seeds"
@@ -56,7 +56,9 @@ func ConnectToDatabase(config DatabaseConfig) *gorm.DB {
 		config.Password,
 	)
 
-	dbConn, err := gorm.Open(postgres.Open(dbArgs), &gorm.Config{})
+	dbConn, err := gorm.Open(postgres.Open(dbArgs), &gorm.Config{
+		DisableForeignKeyConstraintWhenMigrating: true, // to temporarily disable the constraint of the foreignKeys
+	})
 	if err != nil {
 		logs.FError("Error connecting to the %s database\n", config.DBName)
 		panic("Connecting to database error : " + err.Error())

@@ -83,7 +83,7 @@ type GetAllMyBlockGroupsByBlockPackIdReqDto struct {
 	]
 }
 
-type CreateBlockGroupByBlockPackIdReqDto struct {
+type InsertBlockGroupByBlockPackIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -99,7 +99,7 @@ type CreateBlockGroupByBlockPackIdReqDto struct {
 	]
 }
 
-type CreateBlockGroupAndItsBlocksByBlockPackIdReqDto struct {
+type InsertBlockGroupAndItsBlocksByBlockPackIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -116,7 +116,7 @@ type CreateBlockGroupAndItsBlocksByBlockPackIdReqDto struct {
 	]
 }
 
-type CreateBlockGroupsAndTheirBlocksByBlockPackIdReqDto struct {
+type InsertBlockGroupsAndTheirBlocksByBlockPackIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -130,6 +130,23 @@ type CreateBlockGroupsAndTheirBlocksByBlockPackIdReqDto struct {
 				PrevBlockGroupId       *uuid.UUID             `json:"prevBlockGroupId" validate:"omitempty"`
 				ArborizedEditableBlock ArborizedEditableBlock `json:"arborizedEditableBlock" validate:"required"`
 			} `json:"blockGroupContents" validate:"required"`
+		},
+		any,
+	]
+}
+
+type InsertSequentialBlockGroupsAndTheirBlocksByBlockPackIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			BlockPackId             uuid.UUID                `json:"blockPackId" validate:"required"`
+			PrevBlockGroupId        *uuid.UUID               `json:"prevBlockGroupId" validate:"omitempty"`
+			ArborizedEditableBlocks []ArborizedEditableBlock `json:"arborizedEditableBlocks" validate:"required"`
 		},
 		any,
 	]
@@ -244,17 +261,28 @@ type GetMyBlockGroupsByPrevBlockGroupIdResDto = []GetMyBlockGroupByIdResDto
 
 type GetAllMyBlockGroupsByBlockPackIdResDto = []GetMyBlockGroupByIdResDto
 
-type CreateBlockGroupByBlockPackIdResDto struct {
+type InsertBlockGroupByBlockPackIdResDto struct {
 	Id        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-type CreateBlockGroupAndItsBlocksByBlockPackIdResDto struct {
+type InsertBlockGroupAndItsBlocksByBlockPackIdResDto struct {
 	Id        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-type CreateBlockGroupsAndTheirBlocksByBlockPackIdResDto struct {
+type InsertBlockGroupsAndTheirBlocksByBlockPackIdResDto struct {
+	IsAllSuccess                 bool  `json:"isAllSuccess"`
+	FailedIndexes                []int `json:"failedIndexes"`
+	SuccessIndexes               []int `json:"successIndexes"`
+	SuccessBlockGroupAndBlockIds []struct {
+		BlockGroupId uuid.UUID
+		BlockIds     []uuid.UUID
+	} `json:"successBlockGroupAndBlockIds"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+type InsertSequentialBlockGroupsAndTheirBlocksByBlockPackIdResDto struct {
 	IsAllSuccess                 bool  `json:"isAllSuccess"`
 	FailedIndexes                []int `json:"failedIndexes"`
 	SuccessIndexes               []int `json:"successIndexes"`

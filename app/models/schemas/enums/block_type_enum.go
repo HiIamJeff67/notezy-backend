@@ -7,7 +7,7 @@ import (
 	"slices"
 )
 
-/* ============================== Block Type ============================== */
+/* ============================== Definition ============================== */
 
 type BlockType string
 
@@ -19,6 +19,7 @@ const (
 	BlockType_BulletListItem   BlockType = "bulletListItem"
 	BlockType_NumberedListItem BlockType = "numberedListItem"
 	BlockType_CheckListItem    BlockType = "checkListItem"
+	BlockType_ToggleListItem   BlockType = "toggleListItem"
 
 	BlockType_Image BlockType = "image"
 	BlockType_Video BlockType = "video"
@@ -29,12 +30,16 @@ const (
 	BlockType_CodeBlock BlockType = "codeBlock"
 )
 
+/* ============================== All Instacnces ============================== */
+
 var AllBlockTypes = []BlockType{
 	BlockType_Paragraph,
 	BlockType_Heading,
+	BlockType_Quote,
 	BlockType_BulletListItem,
 	BlockType_NumberedListItem,
 	BlockType_CheckListItem,
+	BlockType_ToggleListItem,
 	BlockType_Image,
 	BlockType_Video,
 	BlockType_Audio,
@@ -45,10 +50,12 @@ var AllBlockTypes = []BlockType{
 
 var AllBlockTypeStrings = []string{
 	string(BlockType_Paragraph),
+	string(BlockType_Quote),
 	string(BlockType_Heading),
 	string(BlockType_BulletListItem),
 	string(BlockType_NumberedListItem),
 	string(BlockType_CheckListItem),
+	string(BlockType_ToggleListItem),
 	string(BlockType_Image),
 	string(BlockType_Video),
 	string(BlockType_Audio),
@@ -56,6 +63,8 @@ var AllBlockTypeStrings = []string{
 	string(BlockType_Table),
 	string(BlockType_CodeBlock),
 }
+
+/* ============================== Methods ============================== */
 
 func (bt BlockType) Name() string {
 	return reflect.TypeOf(bt).Name()

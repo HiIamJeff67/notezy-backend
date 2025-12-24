@@ -8,7 +8,9 @@ import (
 
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
+	"notezy-backend/app/models/schemas/enums"
 	constants "notezy-backend/shared/constants"
+	"notezy-backend/shared/lib/blocknote"
 	queue "notezy-backend/shared/lib/queue"
 )
 
@@ -191,11 +193,20 @@ func (ebca *EditableBlockAdapter) Arborize(
 		return nil, nil
 	}
 
+	rootContent := root.Content
+	if root.Type == enums.BlockType_Table {
+		if bytes, err := json.Marshal(root.Content); err == nil {
+			var tableContent blocknote.TableContent
+			if err := json.Unmarshal(bytes, &tableContent); err == nil {
+				rootContent = &tableContent
+			}
+		}
+	}
 	resultRoot := dtos.ArborizedEditableBlock{
 		Id:       root.Id,
 		Type:     root.Type,
 		Props:    root.Props,
-		Content:  root.Content,
+		Content:  rootContent,
 		Children: []dtos.ArborizedEditableBlock{},
 	}
 	q := queue.NewQueue[*dtos.ArborizedEditableBlock](len(childrenMap))
@@ -218,13 +229,24 @@ func (ebca *EditableBlockAdapter) Arborize(
 		}
 		current.Children = make([]dtos.ArborizedEditableBlock, 0, len(children))
 		for _, child := range children {
-			current.Children = append(current.Children, dtos.ArborizedEditableBlock{
+			arborizedEditableBlock := dtos.ArborizedEditableBlock{
 				Id:       child.Id,
 				Type:     child.Type,
 				Props:    child.Props,
-				Content:  child.Content,
 				Children: []dtos.ArborizedEditableBlock{}, // the children of the child should be initialize here
-			})
+			}
+
+			arborizedEditableBlock.Content = child.Content
+			if child.Type == enums.BlockType_Table {
+				if bytes, err := json.Marshal(child.Content); err == nil {
+					var tableContent blocknote.TableContent
+					if err := json.Unmarshal(bytes, &tableContent); err == nil {
+						arborizedEditableBlock.Content = &tableContent
+					}
+				}
+			}
+
+			current.Children = append(current.Children, arborizedEditableBlock)
 			currentChildPtr := &current.Children[len(current.Children)-1] // get the pointer to the child in current.Children
 			q.Enqueue(currentChildPtr)
 		}
@@ -242,11 +264,20 @@ func (ebca *EditableBlockAdapter) ArborizeRawToRaw(
 		return nil, nil
 	}
 
+	var rootContent datatypes.JSON = root.Content
+	if root.Type == enums.BlockType_Table {
+		var tableContent blocknote.TableContent
+		if err := json.Unmarshal(root.Content, &tableContent); err == nil {
+			if bytes, err := json.Marshal(tableContent); err == nil {
+				rootContent = datatypes.JSON(bytes)
+			}
+		}
+	}
 	resultRoot := dtos.RawArborizedEditableBlock{
 		Id:       root.Id,
 		Type:     root.Type,
 		Props:    root.Props,
-		Content:  root.Content,
+		Content:  rootContent,
 		Children: []dtos.RawArborizedEditableBlock{},
 	}
 	q := queue.NewQueue[*dtos.RawArborizedEditableBlock](len(childrenMap))
@@ -271,13 +302,24 @@ func (ebca *EditableBlockAdapter) ArborizeRawToRaw(
 		}
 		current.Children = make([]dtos.RawArborizedEditableBlock, 0, len(children))
 		for _, child := range children {
-			current.Children = append(current.Children, dtos.RawArborizedEditableBlock{
+			arborizedEditableBlock := dtos.RawArborizedEditableBlock{
 				Id:       child.Id,
 				Type:     child.Type,
 				Props:    child.Props,
-				Content:  child.Content,
 				Children: []dtos.RawArborizedEditableBlock{}, // the children of the child should be initialize here
-			})
+			}
+
+			arborizedEditableBlock.Content = child.Content
+			if child.Type == enums.BlockType_Table {
+				var tableContent blocknote.TableContent
+				if err := json.Unmarshal(child.Content, &tableContent); err == nil {
+					if bytes, err := json.Marshal(tableContent); err == nil {
+						arborizedEditableBlock.Content = datatypes.JSON(bytes)
+					}
+				}
+			}
+
+			current.Children = append(current.Children, arborizedEditableBlock)
 			currentChildPtr := &current.Children[len(current.Children)-1] // get the pointer to the child in current.Children
 			q.Enqueue(currentChildPtr)                                    // make sure we passing the pointer of the editable child to the queue, so that we can modify its children field later
 		}

@@ -403,6 +403,9 @@ func (r *BlockGroupRepository) InsertOneByBlockPackId(
 	}
 
 	var newBlockGroup schemas.BlockGroup
+	if input.BlockGroupId != nil {
+		newBlockGroup.Id = *input.BlockGroupId
+	}
 	newBlockGroup.OwnerId = *ownerId // get the owner id from the CheckPermissionAndGetOneById
 	newBlockGroup.BlockPackId = blockPackId
 	newBlockGroup.PrevBlockGroupId = blockPack.FinalBlockGroupId
@@ -414,18 +417,18 @@ func (r *BlockGroupRepository) InsertOneByBlockPackId(
 		return nil, exceptions.BlockGroup.FailedToCreate().WithError(err)
 	}
 
-	collapsedBlockGroup, exception := r.GetOneByPrevBlockGroupId(
-		blockPackId,
-		input.PrevBlockGroupId,
-		userId,
-		nil,
-		opts...,
-	)
-	if exception != nil {
-		return nil, exception
-	}
+	if input.PrevBlockGroupId != nil {
+		collapsedBlockGroup, exception := r.GetOneByPrevBlockGroupId(
+			blockPackId,
+			input.PrevBlockGroupId,
+			userId,
+			nil,
+			opts...,
+		)
+		if exception != nil {
+			return nil, exception
+		}
 
-	if collapsedBlockGroup != nil {
 		if _, exception = r.UpdateOneById(
 			collapsedBlockGroup.Id,
 			userId,
@@ -492,10 +495,14 @@ func (r *BlockGroupRepository) InsertManyByBlockPackId(
 		return nil, exceptions.BlockPack.NoPermission("get owner's block pack")
 	}
 
-	var newBlockGroups []schemas.BlockGroup
+	newBlockGroups := make([]schemas.BlockGroup, len(input))
 	ids := make([]uuid.UUID, len(input))
-	for index := range newBlockGroups { // use index to modify the elements of slice, since the value from the `range` is only a copy
-		newBlockGroups[index].Id = uuid.New()    // generate the id here, so that we can return the ids in the same order of the input
+	for index, in := range input { // use index to modify the elements of slice, since the value from the `range` is only a copy
+		if in.BlockGroupId != nil {
+			newBlockGroups[index].Id = *in.BlockGroupId
+		} else {
+			newBlockGroups[index].Id = uuid.New() // generate the id here, so that we can return the ids in the same order of the input
+		}
 		newBlockGroups[index].OwnerId = *ownerId // get the owner id from the CheckPermissionAndGetOneById
 		newBlockGroups[index].BlockPackId = blockPackId
 		ids[index] = newBlockGroups[index].Id
@@ -509,18 +516,18 @@ func (r *BlockGroupRepository) InsertManyByBlockPackId(
 		return nil, exceptions.BlockGroup.FailedToCreate().WithError(err)
 	}
 
-	collapsedBlockGroup, exception := r.GetOneByPrevBlockGroupId(
-		blockPackId,
-		input[0].PrevBlockGroupId,
-		userId,
-		nil,
-		opts...,
-	)
-	if exception != nil {
-		return nil, exception
-	}
+	if input[0].PrevBlockGroupId != nil {
+		collapsedBlockGroup, exception := r.GetOneByPrevBlockGroupId(
+			blockPackId,
+			input[0].PrevBlockGroupId,
+			userId,
+			nil,
+			opts...,
+		)
+		if exception != nil {
+			return nil, exception
+		}
 
-	if collapsedBlockGroup != nil {
 		if _, exception = r.UpdateOneById(
 			collapsedBlockGroup.Id,
 			userId,

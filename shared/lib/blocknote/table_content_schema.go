@@ -7,12 +7,22 @@ import (
 	validation "notezy-backend/app/validation"
 )
 
-/* ============================== TableCell & TableRow ============================== */
+/* ============================== TableCell ============================== */
 
-type TableCell InlineContentList
+type TableCellType string
+
+const TableCellType_TableCell TableCellType = "tableCell"
+
+type TableCell struct {
+	Type    TableCellType     `json:"type" validate:"required,eq=tableCell"`
+	Content InlineContentList `json:"content" validate:"omitempty,dive"`
+	Props   TableCellProps    `json:"props" validate:"omitempty"`
+}
+
+/* ============================== TableRow ============================== */
 
 type TableRow struct {
-	Cells []TableCell `json:"cells" validate:"required,min=1,max=100"`
+	Cells []TableCell `json:"cells" validate:"required,min=1,max=100,dive"`
 }
 
 /* ============================== TableContent ============================== */
@@ -22,8 +32,9 @@ type TableContentType string
 const TableContentType_TableContent = "tableContent"
 
 type TableContent struct {
-	Type TableContentType `json:"type" validate:"required,eq=tableContent"`
-	Rows []TableRow       `json:"rows" validate:"required,min=1,max=200"`
+	Type         TableContentType `json:"type" validate:"required,eq=tableContent"`
+	ColumnWidths []*string        `json:"columnWidths" validate:"omitempty"`
+	Rows         []TableRow       `json:"rows" validate:"required,min=1,max=200,dive"`
 }
 
 func (tc *TableContent) IsBlockContent() bool { return true }

@@ -11,11 +11,11 @@ import (
 
 type SubShelf struct {
 	Id             uuid.UUID       `json:"id" gorm:"column:id; type:uuid; primary; default:gen_random_uuid();"`
-	Name           string          `json:"name" gorm:"column:name; size:128; not null; default:'undefined'; uniqueIndex:sub_shelf_idx_name_root_shelf_id_path_deleted_at;"`
-	RootShelfId    uuid.UUID       `json:"rootShelfId" gorm:"column:root_shelf_id; type:uuid; not null; uniqueIndex:sub_shelf_idx_name_root_shelf_id_path_deleted_at;"`
+	Name           string          `json:"name" gorm:"column:name; size:128; not null; default:'undefined'; uniqueIndex:sub_shelf_idx_name_root_shelf_id_path_deleted_at,,option:NULLS NOT DISTINCT;"`
+	RootShelfId    uuid.UUID       `json:"rootShelfId" gorm:"column:root_shelf_id; type:uuid; not null; uniqueIndex:sub_shelf_idx_name_root_shelf_id_path_deleted_at,,option:NULLS NOT DISTINCT;"`
 	PrevSubShelfId *uuid.UUID      `json:"prevSubShelfId" gorm:"column:prev_sub_shelf_id; type:uuid; check:prev_sub_shelf_id_check,prev_sub_shelf_id != id;"`
-	Path           types.UUIDArray `json:"path" gorm:"column:path; type:uuid[]; not null; default:'{}'; check:path_length_check,cardinality(path) >= 0 AND cardinality(path) <= 100; uniqueIndex:sub_shelf_idx_name_root_shelf_id_path_deleted_at;"`
-	DeletedAt      *time.Time      `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz; default:null; uniqueIndex:sub_shelf_idx_name_root_shelf_id_path_deleted_at;"`
+	Path           types.UUIDArray `json:"path" gorm:"column:path; type:uuid[]; not null; default:'{}'; check:path_length_check,cardinality(path) >= 0 AND cardinality(path) <= 100; uniqueIndex:sub_shelf_idx_name_root_shelf_id_path_deleted_at,,option:NULLS NOT DISTINCT;"`
+	DeletedAt      *time.Time      `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz; default:null; uniqueIndex:sub_shelf_idx_name_root_shelf_id_path_deleted_at,,option:NULLS NOT DISTINCT;"`
 	UpdatedAt      time.Time       `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt      time.Time       `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 

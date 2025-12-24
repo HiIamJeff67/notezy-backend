@@ -50,7 +50,7 @@ func (clip *CheckListItemProps) Validate() error { return validation.Validator.S
 
 type FileBlockProps struct {
 	BaseProps
-	Url          string `json:"url" validate:"required,isurl"`
+	Url          string `json:"url" validate:"omitempty,isurl"`
 	Caption      string `json:"caption,omitempty" validate:"omitempty,isfileblockcaption"`
 	Name         string `json:"name,omitempty" validate:"omitempty,isfileblockname"`
 	Size         int64  `json:"size,omitempty" validate:"omitempty,min=0"`
@@ -71,6 +71,18 @@ type CodeBlockProps struct {
 func (cbp *CodeBlockProps) IsBlockProps() bool { return true }
 
 func (cbp *CodeBlockProps) Validate() error { return validation.Validator.Struct(cbp) }
+
+/* ============================== TableCellProps ============================== */
+
+type TableCellProps struct {
+	BaseProps
+	RowSpan int `json:"rowspan" validate:"omitempty"`
+	ColSpan int `json:"colspan" validate:"omitempty"`
+}
+
+func (tcp *TableCellProps) IsBlockProps() bool { return true }
+
+func (tcp *TableCellProps) Validate() error { return validation.Validator.Struct(tcp) }
 
 /* ============================== TableProps ============================== */
 
@@ -100,6 +112,8 @@ func ParseProps(blockType string, rawJSON []byte) (BlockProps, error) {
 		props = &CodeBlockProps{}
 	case "table":
 		props = &TableProps{}
+	case "tableCell":
+		props = &TableCellProps{}
 	case "paragraph", "bulletListItem", "numberedListItem":
 		props = &BaseProps{}
 	default:

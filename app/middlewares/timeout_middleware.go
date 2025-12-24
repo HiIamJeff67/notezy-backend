@@ -11,7 +11,6 @@ import (
 
 	exceptions "notezy-backend/app/exceptions"
 	lib "notezy-backend/app/lib"
-	logs "notezy-backend/app/logs"
 	types "notezy-backend/shared/types"
 )
 
@@ -100,7 +99,7 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 
 			return
 		case <-timeoutCtx.Done():
-			logs.Info("Timeout (timeoutCtx.Done())")
+			// logs.Alert("Timeout (timeoutCtx.Done())")
 			writer.Mutex.Lock()
 			writer.IsTimeout = true
 			writer.FreeBuffer() // clear the buffer, this will destroy the context field stored by other middlewares
@@ -121,7 +120,7 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 
 			return
 		case <-time.After(timeout):
-			logs.Info("Timeout (time.After)")
+			// logs.Alert("Timeout (time.After)")
 			writer.Mutex.Lock()
 			writer.IsTimeout = true
 			writer.FreeBuffer() // clear the buffer, this will destroy the context field stored by other middlewares

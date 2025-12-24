@@ -40,6 +40,7 @@ func BatchExecute[T any, R any](
 			Data:  input,
 		}
 	}
+	close(jobs) // remember to close the jobs channel while it is not used anymore here
 
 	wg.Wait()
 	close(results)
