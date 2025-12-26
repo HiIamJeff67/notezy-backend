@@ -61,6 +61,36 @@ func (fbp *FileBlockProps) IsBlockProps() bool { return true }
 
 func (fbp *FileBlockProps) Validate() error { return validation.Validator.Struct(fbp) }
 
+/* ============================== ImageBlock ============================== */
+
+type ImageBlockProps struct {
+	FileBlockProps
+}
+
+func (ibp *ImageBlockProps) IsBlockProps() bool { return true }
+
+func (ibp *ImageBlockProps) Validate() error { return validation.Validator.Struct(ibp) }
+
+/* ============================== VideoBlock ============================== */
+
+type VideoBlockProps struct {
+	FileBlockProps
+}
+
+func (vbp *VideoBlockProps) IsBlockProps() bool { return true }
+
+func (vbp *VideoBlockProps) Validate() error { return validation.Validator.Struct(vbp) }
+
+/* ============================== AudioBlock ============================== */
+
+type AudioBlockProps struct {
+	FileBlockProps
+}
+
+func (abp *AudioBlockProps) IsBlockProps() bool { return true }
+
+func (abp *AudioBlockProps) Validate() error { return validation.Validator.Struct(abp) }
+
 /* ============================== CodeBlockProps ============================== */
 
 type CodeBlockProps struct {
@@ -106,8 +136,14 @@ func ParseProps(blockType string, rawJSON []byte) (BlockProps, error) {
 		props = &HeadingProps{}
 	case "checkListItem":
 		props = &CheckListItemProps{}
-	case "image", "video", "file", "audio":
+	case "file":
 		props = &FileBlockProps{}
+	case "image":
+		props = &ImageBlockProps{}
+	case "video":
+		props = &VideoBlockProps{}
+	case "audio":
+		props = &AudioBlockProps{}
 	case "codeBlock":
 		props = &CodeBlockProps{}
 	case "table":

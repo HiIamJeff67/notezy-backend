@@ -36,8 +36,8 @@ type ArborizedEditableBlock struct {
 func (aeb *ArborizedEditableBlock) UnmarshalJSON(data []byte) error {
 	type AliasBlockDto ArborizedEditableBlock
 	aux := &struct {
-		Props   json.RawMessage `json:"props"`   // unmarshal to json raw message later temporarily
-		Content json.RawMessage `json:"content"` // unmarshal to json raw message later temporarily
+		Props   json.RawMessage `json:"props"`   // unmarshal to json raw message temporarily
+		Content json.RawMessage `json:"content"` // unmarshal to json raw message temporarily
 		*AliasBlockDto
 	}{
 		AliasBlockDto: (*AliasBlockDto)(aeb),

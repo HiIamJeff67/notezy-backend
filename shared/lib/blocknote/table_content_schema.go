@@ -86,6 +86,6 @@ func (tc *TableContent) UnmarshalJSON(b []byte) error {
 
 func (tc *TableContent) MarshalJSON() ([]byte, error) {
 	type AliaxTableContent TableContent
-	var aux AliaxTableContent
+	aux := AliaxTableContent(*tc)
 	return json.Marshal(aux)
 }
