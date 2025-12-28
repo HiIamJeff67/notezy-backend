@@ -1,4 +1,4 @@
-package lib
+package ratelimiter
 
 import (
 	"sync"
@@ -257,7 +257,7 @@ func (hrl *HybridRateLimiter) checkBucketLimitByUserId(userId uuid.UUID, fingerp
 		totalTokensUsed += rateLimitRecordCache.NumOfTokens
 	}
 
-	logs.Info("The current tokens used by the user: ", totalTokensUsed)
+	// logs.Info("The current tokens used by the user: ", totalTokensUsed)
 
 	return hrl.UserLimit - totalTokensUsed - n
 }

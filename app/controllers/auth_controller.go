@@ -36,8 +36,8 @@ func NewAuthController(service services.AuthServiceInterface) AuthControllerInte
 /* ============================== Implementations ============================== */
 
 func (c *AuthController) Register(ctx *gin.Context, reqDto *dtos.RegisterReqDto) {
-	cookies.AccessToken.DeleteCookie(ctx)
-	cookies.RefreshToken.DeleteCookie(ctx)
+	cookies.AccessTokenCookieHandler.Delete(ctx)
+	cookies.RefreshTokenCookieHandler.Delete(ctx)
 
 	resDto, exception := c.authService.Register(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -45,8 +45,8 @@ func (c *AuthController) Register(ctx *gin.Context, reqDto *dtos.RegisterReqDto)
 		return
 	}
 
-	cookies.AccessToken.SetCookie(ctx, resDto.AccessToken)
-	cookies.RefreshToken.SetCookie(ctx, resDto.RefreshToken)
+	cookies.AccessTokenCookieHandler.Set(ctx, resDto.AccessToken)
+	cookies.RefreshTokenCookieHandler.Set(ctx, resDto.RefreshToken)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"success": true,
@@ -59,8 +59,8 @@ func (c *AuthController) Register(ctx *gin.Context, reqDto *dtos.RegisterReqDto)
 }
 
 func (c *AuthController) Login(ctx *gin.Context, reqDto *dtos.LoginReqDto) {
-	cookies.AccessToken.DeleteCookie(ctx)
-	cookies.RefreshToken.DeleteCookie(ctx)
+	cookies.AccessTokenCookieHandler.Delete(ctx)
+	cookies.RefreshTokenCookieHandler.Delete(ctx)
 
 	resDto, exception := c.authService.Login(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -68,8 +68,8 @@ func (c *AuthController) Login(ctx *gin.Context, reqDto *dtos.LoginReqDto) {
 		return
 	}
 
-	cookies.AccessToken.SetCookie(ctx, resDto.AccessToken)
-	cookies.RefreshToken.SetCookie(ctx, resDto.RefreshToken)
+	cookies.AccessTokenCookieHandler.Set(ctx, resDto.AccessToken)
+	cookies.RefreshTokenCookieHandler.Set(ctx, resDto.RefreshToken)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"success": true,
@@ -88,8 +88,8 @@ func (c *AuthController) Logout(ctx *gin.Context, reqDto *dtos.LogoutReqDto) {
 		return
 	}
 
-	cookies.AccessToken.DeleteCookie(ctx)
-	cookies.RefreshToken.DeleteCookie(ctx)
+	cookies.AccessTokenCookieHandler.Delete(ctx)
+	cookies.RefreshTokenCookieHandler.Delete(ctx)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"success":   true,

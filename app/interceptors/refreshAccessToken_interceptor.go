@@ -7,12 +7,12 @@ import (
 
 	contexts "notezy-backend/app/contexts"
 	cookies "notezy-backend/app/cookies"
-	lib "notezy-backend/app/lib"
+	ratelimiter "notezy-backend/app/lib/ratelimiter"
 	constants "notezy-backend/shared/constants"
 )
 
 // use the reusable buffer pool for refreshing the access token
-var refreshAccessTokenReusableBufferPool *lib.ReusableBufferPool = lib.NewReusableBufferPool()
+var refreshAccessTokenReusableBufferPool *ratelimiter.ReusableBufferPool = ratelimiter.NewReusableBufferPool()
 
 // To rewrite the response with adding additional field of `newAccessToken`,
 // Note : It should be placed below the `AuthMiddleware`,
@@ -25,7 +25,7 @@ func RefreshAccessTokenInterceptor() gin.HandlerFunc {
 			refreshAccessTokenReusableBufferPool.Put(currentBufferPool)
 		}()
 
-		writer := lib.NewResponseWriter(ctx.Writer, currentBufferPool)
+		writer := ratelimiter.NewResponseWriter(ctx.Writer, currentBufferPool)
 		ctx.Writer = writer // replace the response writer with the declared writer here
 		// so that we can re-write the response after the controller sent the response !!
 		// we can successfully do this since the interceptor inheritent the gin.ResponseWriter interface,
@@ -73,7 +73,7 @@ func RefreshAccessTokenInterceptor() gin.HandlerFunc {
 			return
 		}
 
-		cookies.AccessToken.SetCookie(ctx, accessTokenStr)
+		cookies.AccessTokenCookieHandler.Set(ctx, accessTokenStr)
 		originalResponse["newAccessToken"] = accessTokenStr
 		modifiedResponse, err := json.Marshal(originalResponse)
 		if err != nil {

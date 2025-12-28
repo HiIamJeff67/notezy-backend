@@ -1,4 +1,4 @@
-package lib
+package ratelimiter
 
 import (
 	constants "notezy-backend/shared/constants"

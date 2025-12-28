@@ -7,7 +7,7 @@ import (
 	types "notezy-backend/shared/types"
 )
 
-var AccessToken = NewCookieHandler(
+var AccessTokenCookieHandler = NewCookieHandler(
 	types.ValidCookieName_AccessToken,     // name
 	"/",                                   // path
 	constants.ExpirationTimeOfAccessToken, // duration

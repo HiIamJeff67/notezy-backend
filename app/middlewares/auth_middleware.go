@@ -17,7 +17,7 @@ import (
 )
 
 func _extractAccessToken(ctx *gin.Context) (string, *exceptions.Exception) {
-	accessToken, exception := cookies.AccessToken.GetCookie(ctx)
+	accessToken, exception := cookies.AccessTokenCookieHandler.Get(ctx)
 	if exception != nil || len(strings.ReplaceAll(accessToken, " ", "")) == 0 {
 		authHeader := ctx.GetHeader("Authorization")
 		if !strings.HasPrefix(authHeader, "Bearer ") {
@@ -29,7 +29,7 @@ func _extractAccessToken(ctx *gin.Context) (string, *exceptions.Exception) {
 }
 
 func _extractRefreshToken(ctx *gin.Context) (string, *exceptions.Exception) {
-	refreshToken, exception := cookies.RefreshToken.GetCookie(ctx)
+	refreshToken, exception := cookies.RefreshTokenCookieHandler.Get(ctx)
 	if exception != nil || strings.ReplaceAll(refreshToken, " ", "") == "" {
 		return "", exceptions.Token.FailedToExtractOrValidateRefreshToken()
 	}

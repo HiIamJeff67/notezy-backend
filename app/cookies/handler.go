@@ -11,8 +11,9 @@ import (
 )
 
 type CookieHandlerInterface interface {
-	GetCookie(ctx *gin.Context) (string, *exceptions.Exception)
-	SetCookie(ctx *gin.Context, value string)
+	Get(ctx *gin.Context) (string, *exceptions.Exception)
+	Set(ctx *gin.Context, value string)
+	Delete(ctx *gin.Context)
 }
 
 type CookieHandler struct {
@@ -36,7 +37,7 @@ func NewCookieHandler(name types.ValidCookieName, path string, duration time.Dur
 	}
 }
 
-func (h *CookieHandler) GetCookie(ctx *gin.Context) (string, *exceptions.Exception) {
+func (h *CookieHandler) Get(ctx *gin.Context) (string, *exceptions.Exception) {
 	value, err := ctx.Cookie(h.name.String())
 	if err != nil {
 		return "", exceptions.Cookie.NotFound(string(h.name)).WithError(err)
@@ -44,7 +45,7 @@ func (h *CookieHandler) GetCookie(ctx *gin.Context) (string, *exceptions.Excepti
 	return value, nil
 }
 
-func (h *CookieHandler) SetCookie(ctx *gin.Context, value string) {
+func (h *CookieHandler) Set(ctx *gin.Context, value string) {
 	http.SetCookie(ctx.Writer, &http.Cookie{
 		Name:     h.name.String(),
 		Path:     h.path,
@@ -57,7 +58,7 @@ func (h *CookieHandler) SetCookie(ctx *gin.Context, value string) {
 	})
 }
 
-func (h *CookieHandler) DeleteCookie(ctx *gin.Context) {
+func (h *CookieHandler) Delete(ctx *gin.Context) {
 	http.SetCookie(ctx.Writer, &http.Cookie{
 		Name:     h.name.String(),
 		Path:     h.path,

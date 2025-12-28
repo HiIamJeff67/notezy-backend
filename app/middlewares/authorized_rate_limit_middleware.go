@@ -10,7 +10,7 @@ import (
 
 	contexts "notezy-backend/app/contexts"
 	exceptions "notezy-backend/app/exceptions"
-	lib "notezy-backend/app/lib"
+	ratelimiter "notezy-backend/app/lib/ratelimiter"
 	logs "notezy-backend/app/logs"
 	constants "notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
@@ -25,7 +25,7 @@ type AuthorizedRateLimitConfig struct {
 }
 
 var (
-	authorizedRateLimiter            *lib.HybridRateLimiter // use the bybrid one which including token bucket and cross server request management by redis
+	authorizedRateLimiter            *ratelimiter.HybridRateLimiter // use the bybrid one which including token bucket and cross server request management by redis
 	DefaultAuthorizedRateLimitConfig = AuthorizedRateLimitConfig{
 		RateLimit:         rate.Limit(100),                  // 100 requests/second
 		Burst:             20,                               // allowed 20 additional requests/second for burst
@@ -40,7 +40,7 @@ func InitAuthorizedRateLimiter(config AuthorizedRateLimitConfig) {
 		authorizedRateLimiter.Stop()
 	}
 
-	authorizedRateLimiter = lib.NewHybridRateLimiter(
+	authorizedRateLimiter = ratelimiter.NewHybridRateLimiter(
 		config.RateLimit,
 		config.Burst,
 		config.UserLimit,
@@ -96,7 +96,7 @@ func getClientFingerprint(c *gin.Context) string {
 	return c.ClientIP()
 }
 
-func setRateLimitHeaders(ctx *gin.Context, remaining int32, limiter *lib.HybridRateLimiter) {
+func setRateLimitHeaders(ctx *gin.Context, remaining int32, limiter *ratelimiter.HybridRateLimiter) {
 	// standard informations
 	ctx.Header("X-RateLimit-Limit", strconv.Itoa(int(limiter.UserLimit)))
 	ctx.Header("X-RateLimit-Remaining", strconv.Itoa(int(remaining)))

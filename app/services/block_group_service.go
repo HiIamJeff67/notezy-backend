@@ -10,6 +10,7 @@ import (
 	adapters "notezy-backend/app/adapters"
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
+	concurrency "notezy-backend/app/lib/concurrency"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
@@ -17,7 +18,6 @@ import (
 	options "notezy-backend/app/options"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
-	concurrency "notezy-backend/shared/lib/concurrency"
 	types "notezy-backend/shared/types"
 )
 
