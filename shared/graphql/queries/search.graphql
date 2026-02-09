@@ -36,11 +36,11 @@ query SearchThemes($input: SearchThemeInput!) {
   }
 }
 
-query SearchShelves($input: SearchShelfInput!) {
-  searchShelves(input: $input) {
+query SearchRootShelves($input: SearchRootShelfInput!) {
+  searchRootShelves(input: $input) {
     searchEdges {
       node {
-        ...FragmentedPrivateShelf
+        ...FragmentedPrivateRootShelf
       }
       encodedSearchCursor
     }

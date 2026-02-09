@@ -148,6 +148,10 @@ func (e *Exception) GetString() string {
 }
 
 func (e *Exception) GetGinH() *gin.H {
+	var errorMessage interface{} = nil
+	if e.Error != nil {
+		errorMessage = e.Error.Error()
+	}
 	return &gin.H{
 		"code":    e.Code,
 		"reason":  e.Reason,
@@ -155,7 +159,7 @@ func (e *Exception) GetGinH() *gin.H {
 		"message": e.Message,
 		"status":  e.HTTPStatusCode,
 		"details": e.Details,
-		"error":   e.Error.Error(),
+		"error":   errorMessage,
 	}
 }
 

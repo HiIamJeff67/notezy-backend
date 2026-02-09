@@ -133,7 +133,7 @@ type SaveMyMaterialByIdReqDto struct {
 		struct {
 			UserId       uuid.UUID // extracted from the access token of AuthMiddleware()
 			UserPublicId uuid.UUID // extracted from the AuthMiddleware()
-			Size         *int64    // extracted from the opened contentFile
+			MegaByteSize *int64    // extracted from the opened contentFile
 		},
 		struct {
 			MaterialId  uuid.UUID `json:"materialId" validate:"required"`
@@ -243,7 +243,7 @@ type GetMyMaterialByIdResDto struct {
 	ParentSubShelfId uuid.UUID          `json:"parentSubShelfId"`
 	Name             string             `json:"name"`
 	Type             enums.MaterialType `json:"type"`
-	Size             int64              `json:"size"`
+	MegaByteSize     int64              `json:"megaByteSize"`
 	DownloadURL      string             `json:"downloadURL"`
 	DeletedAt        *time.Time         `json:"deletedAt"`
 	UpdatedAt        time.Time          `json:"updatedAt"`
@@ -254,7 +254,7 @@ type GetMyMaterialAndItsParentByIdResDto struct {
 	Id                           uuid.UUID          `json:"id"`
 	Name                         string             `json:"name"`
 	Type                         enums.MaterialType `json:"type"`
-	Size                         int64              `json:"size"`
+	MegaByteSize                 int64              `json:"megaByteSize"`
 	DownloadURL                  string             `json:"downloadURL"`
 	DeletedAt                    *time.Time         `json:"deletedAt"`
 	UpdatedAt                    time.Time          `json:"updatedAt"`

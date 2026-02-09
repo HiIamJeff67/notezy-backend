@@ -140,6 +140,7 @@ func (r *RootShelfRepository) CreateOneByOwnerId(
 ) (*uuid.UUID, *exceptions.Exception) {
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
+	tx := parsedOptions.DB.Begin()
 
 	var newRootShelf schemas.RootShelf
 	newRootShelf.OwnerId = ownerId
@@ -147,10 +148,11 @@ func (r *RootShelfRepository) CreateOneByOwnerId(
 		return nil, exceptions.Shelf.FailedToCreate().WithError(err)
 	}
 
-	result := parsedOptions.DB.Model(&schemas.RootShelf{}).
+	result := tx.Model(&schemas.RootShelf{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newRootShelf)
 	if err := result.Error; err != nil {
+		tx.Rollback()
 		switch err.Error() {
 		case "ERROR: duplicate key value violates unique constraint \"shelf_idx_owner_id_name\" (SQLSTATE 23505)":
 			return nil, exceptions.Shelf.DuplicateName(input.Name)
@@ -165,10 +167,15 @@ func (r *RootShelfRepository) CreateOneByOwnerId(
 		RootShelfId: newRootShelf.Id,
 		Permission:  enums.AccessControlPermission_Owner,
 	}
-	result = parsedOptions.DB.Model(&schemas.UsersToShelves{}).
+	result = tx.Model(&schemas.UsersToShelves{}).
 		Create(&newUsersToShelves)
 	if err := result.Error; err != nil {
+		tx.Rollback()
 		return nil, exceptions.Shelf.FailedToCreate().WithError(err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, exceptions.Shelf.FailedToCommitTransaction().WithError(err)
 	}
 
 	return &newRootShelf.Id, nil

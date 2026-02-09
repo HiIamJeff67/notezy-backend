@@ -29,13 +29,13 @@ func ConfigureDevelopmentRoutes() {
 	configureDevelopmentUserInfoRoutes()
 	configureUserSettingRoutes()
 	configureDevelopmentUserAccountRoutes()
-	configureDevelopmentGraphQLRoutes()
 	configureDevelopmentRootShelfRoutes()
 	configureDevelopmentSubShelfRoutes()
 	configureDevelopmentMaterialRoutes()
 	configureDevelopmentBlockPackRoutes()
 	configureDevelopmentBlockGroupRoutes()
 	configureDevelopmentBlockRoutes()
+	configureDevelopmentGraphQLRoutes()
 
 	// test
 	configureStorageRoutes()

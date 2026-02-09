@@ -336,7 +336,7 @@ func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.Con
 			}
 
 			reqDto.Body.ContentFile = fileInterface // bind the file interface here
-			reqDto.ContextFields.Size = &fileHeaders[0].Size
+			reqDto.ContextFields.MegaByteSize = &fileHeaders[0].Size
 
 			// make sure the file is closed at the end
 			defer func(f io.Reader) {
@@ -443,7 +443,7 @@ func (b *MaterialBinder) BindSaveMyNotebookMaterialById(controllerFunc types.Con
 			}
 
 			reqDto.Body.ContentFile = fileInterface // bind the file interface here
-			reqDto.ContextFields.Size = &fileHeaders[0].Size
+			reqDto.ContextFields.MegaByteSize = &fileHeaders[0].Size
 
 			// make sure the file is closed at the end
 			defer func(f io.Reader) {

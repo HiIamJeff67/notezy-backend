@@ -10,7 +10,7 @@ type CreateMaterialInput struct {
 	Id             uuid.UUID          `json:"id" gorm:"column:id;"` // we allowed the API to generate its id, since it's faster
 	Name           string             `json:"name" gorm:"column:name;"`
 	Type           enums.MaterialType `json:"type" gorm:"column:type;"`
-	Size           int64              `json:"size" gorm:"column:size;"`
+	MegaByteSize   int64              `json:"megaByteSize" gorm:"column:mega_byte_size;"`
 	ContentKey     string             `json:"contentKey" gorm:"column:content_key;"`
 	ParseMediaType string             `json:"parseMediaType" gorm:"column:parse_media_type;"`
 }
@@ -19,7 +19,7 @@ type UpdateMaterialInput struct {
 	ParentSubShelfId *uuid.UUID          `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id;"`
 	Name             *string             `json:"name" gorm:"column:name;"`
 	Type             *enums.MaterialType `json:"type" gorm:"column:type;"`
-	Size             *int64              `json:"size" gorm:"column:size;"`
+	MegaByteSize     *int64              `json:"megaByteSize" gorm:"column:mega_byte_size;"`
 	ContentKey       *string             `json:"contentKey" gorm:"column:content_key;"`
 	ParseMediaType   string              `json:"parseMediaType" gorm:"column:parse_media_type;"`
 }

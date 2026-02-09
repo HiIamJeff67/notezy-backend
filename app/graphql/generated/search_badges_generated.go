@@ -396,11 +396,11 @@ func (ec *executionContext) unmarshalInputSearchBadgeInput(ctx context.Context, 
 	if _, present := asMap["sortBy"]; !present {
 		asMap["sortBy"] = "RELEVANCE"
 	}
-	if _, present := asMap["sortOrderr"]; !present {
-		asMap["sortOrderr"] = "DESC"
+	if _, present := asMap["sortOrder"]; !present {
+		asMap["sortOrder"] = "DESC"
 	}
 
-	fieldsInOrder := [...]string{"query", "after", "first", "filters", "sortBy", "sortOrderr"}
+	fieldsInOrder := [...]string{"query", "after", "first", "filters", "sortBy", "sortOrder"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -442,13 +442,13 @@ func (ec *executionContext) unmarshalInputSearchBadgeInput(ctx context.Context, 
 				return it, err
 			}
 			it.SortBy = data
-		case "sortOrderr":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortOrderr"))
+		case "sortOrder":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortOrder"))
 			data, err := ec.unmarshalOSearchSortOrder2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchSortOrder(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.SortOrderr = data
+			it.SortOrder = data
 		}
 	}
 

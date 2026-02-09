@@ -123,7 +123,7 @@ func (s *MaterialService) GetMyMaterialAndItsParentById(
 		Id                           uuid.UUID          `gorm:"column:id;"`
 		Name                         string             `gorm:"column:name;"`
 		Type                         enums.MaterialType `gorm:"column:type;"`
-		Size                         int64              `gorm:"column:size;"`
+		MegaByteSize                 int64              `gorm:"column:mega_byte_size;"`
 		ContentKey                   string             `gorm:"column:content_key;"`
 		DeletedAt                    *time.Time         `gorm:"column:deleted_at;"`
 		UpdatedAt                    time.Time          `gorm:"column:updated_at;"`
@@ -157,7 +157,7 @@ func (s *MaterialService) GetMyMaterialAndItsParentById(
 		Id:                           output.Id,
 		Name:                         output.Name,
 		Type:                         output.Type,
-		Size:                         output.Size,
+		MegaByteSize:                 output.MegaByteSize,
 		DownloadURL:                  downloadURL,
 		DeletedAt:                    output.DeletedAt,
 		UpdatedAt:                    output.UpdatedAt,
@@ -298,11 +298,11 @@ func (s *MaterialService) CreateTextbookMaterial(
 		reqDto.Body.ParentSubShelfId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateMaterialInput{
-			Id:         newMaterialId,
-			Name:       reqDto.Body.Name,
-			Size:       zeroSize,
-			Type:       enums.MaterialType_Textbook,
-			ContentKey: newContentKey,
+			Id:           newMaterialId,
+			Name:         reqDto.Body.Name,
+			MegaByteSize: zeroSize,
+			Type:         enums.MaterialType_Textbook,
+			ContentKey:   newContentKey,
 		},
 		options.WithDB(tx),
 	)
@@ -361,11 +361,11 @@ func (s *MaterialService) CreateNotebookMaterial(
 		reqDto.Body.ParentSubShelfId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateMaterialInput{
-			Id:         newMaterialId,
-			Name:       reqDto.Body.Name,
-			Size:       zeroSize,
-			Type:       enums.MaterialType_Notebook,
-			ContentKey: newContentKey,
+			Id:           newMaterialId,
+			Name:         reqDto.Body.Name,
+			MegaByteSize: zeroSize,
+			Type:         enums.MaterialType_Notebook,
+			ContentKey:   newContentKey,
 		},
 		options.WithDB(tx),
 	)
@@ -458,8 +458,8 @@ func (s *MaterialService) saveMyMaterialById(
 	var contentKey = s.storage.GetKey(reqDto.ContextFields.UserPublicId.String(), reqDto.Body.MaterialId.String())
 
 	var fileHeaderSize int64 = 0
-	if reqDto.ContextFields.Size != nil {
-		fileHeaderSize = *reqDto.ContextFields.Size
+	if reqDto.ContextFields.MegaByteSize != nil {
+		fileHeaderSize = *reqDto.ContextFields.MegaByteSize
 	}
 
 	// extract the data in it and get its content type, parse media type, and actual size, etc.
@@ -473,8 +473,9 @@ func (s *MaterialService) saveMyMaterialById(
 		return nil, exceptions.Material.CannotGetFileObjects()
 	}
 
+	megaByteSize := object.Size / types.MB.ToInt64()
 	partialUpdate.Values.ParseMediaType = object.ParseMediaType
-	partialUpdate.Values.Size = &object.Size
+	partialUpdate.Values.MegaByteSize = &megaByteSize
 
 	material, exception := s.materialRepository.UpdateOneById(
 		reqDto.Body.MaterialId,

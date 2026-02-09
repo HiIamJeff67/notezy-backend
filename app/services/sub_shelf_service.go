@@ -99,9 +99,10 @@ func (s *SubShelfService) GetMySubShelvesByPrevSubShelfId(
 	db := s.db.WithContext(ctx)
 
 	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Read,
-		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
 	}
 
 	resDto := dtos.GetMySubShelvesByPrevSubShelfIdResDto{}
@@ -132,9 +133,10 @@ func (s *SubShelfService) GetAllMySubShelvesByRootShelfId(
 	db := s.db.WithContext(ctx)
 
 	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Read,
-		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
 	}
 
 	resDto := dtos.GetAllMySubShelvesByRootShelfIdResDto{}
@@ -228,8 +230,9 @@ func (s *SubShelfService) MoveMySubShelf(
 	db := s.db.WithContext(ctx)
 
 	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
 	}
 
 	from, exception := s.subShelfRepository.CheckPermissionAndGetOneById(
@@ -318,8 +321,9 @@ func (s *SubShelfService) MoveMySubShelves(
 	db := s.db.WithContext(ctx)
 
 	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
 	}
 
 	froms, exception := s.subShelfRepository.CheckPermissionsAndGetManyByIds(

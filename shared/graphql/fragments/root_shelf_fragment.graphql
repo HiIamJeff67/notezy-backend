@@ -1,0 +1,17 @@
+fragment FragmentedBasicPrivateRootShelf on PrivateRootShelf {
+  id
+  name
+  subShelfCount
+  itemCount
+  lastAnalyzedAt
+  deletedAt
+  updatedAt
+  createdAt
+}
+
+fragment FragmentedPrivateRootShelf on PrivateRootShelf {
+  ...FragmentedBasicPrivateRootShelf
+  owner {
+    ...FragmentedBasicPublicUser
+  }
+}

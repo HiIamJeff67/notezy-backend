@@ -52,21 +52,21 @@ func (r *MaterialRepository) HasPermission(
 
 	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
 		Select("1").
-		Where("root_shelf_id = \"SubShelfTable\".id").
+		Where("root_shelf_id = ss.root_shelf_id").
 		Where("user_id = ? AND permission IN ?",
 			userId, allowedPermissions,
 		)
 	query := parsedOptions.DB.Model(&schemas.Material{}).
 		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
-		Where("id = ? AND EXISTS (?)",
+		Where("\"MaterialTable\".id = ? AND EXISTS (?)",
 			id, subQuery,
 		)
 
 	switch parsedOptions.OnlyDeleted {
 	case types.Ternary_Positive:
-		query = query.Where("deleted_at IS NOT NULL")
+		query = query.Where("\"MaterialTable\".deleted_at IS NOT NULL")
 	case types.Ternary_Negative:
-		query = query.Where("deleted_at IS NULL")
+		query = query.Where("\"MaterialTable\".deleted_at IS NULL")
 	}
 
 	var count int64 = 0
@@ -88,21 +88,21 @@ func (r *MaterialRepository) HasPermissions(
 
 	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
 		Select("1").
-		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id").
+		Where("root_shelf_id = ss.root_shelf_id").
 		Where("user_id = ? AND permission IN ?",
 			userId, allowedPermissions,
 		)
 	query := parsedOptions.DB.Model(&schemas.Material{}).
 		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
-		Where("id IN ? EXISTS (?)",
+		Where("\"MaterialTable\".id IN ? EXISTS (?)",
 			ids, subQuery,
 		)
 
 	switch parsedOptions.OnlyDeleted {
 	case types.Ternary_Positive:
-		query = query.Where("deleted_at IS NOT NULL")
+		query = query.Where("\"MaterialTable\".deleted_at IS NOT NULL")
 	case types.Ternary_Negative:
-		query = query.Where("deleted_at IS NULL")
+		query = query.Where("\"MaterialTable\".deleted_at IS NULL")
 	}
 
 	var count int64 = 0
@@ -125,21 +125,21 @@ func (r *MaterialRepository) CheckPermissionAndGetOneById(
 
 	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
 		Select("1").
-		Where("root_shelf_id = \"SubShelfTable\".id").
+		Where("root_shelf_id = ss.root_shelf_id").
 		Where("user_id = ? AND permission IN ?",
 			userId, allowedPermissions,
 		)
 	query := parsedOptions.DB.Model(&schemas.Material{}).
 		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
-		Where("id = ? AND EXISTS (?)",
+		Where("\"MaterialTable\".id = ? AND EXISTS (?)",
 			id, subQuery,
 		)
 
 	switch parsedOptions.OnlyDeleted {
 	case types.Ternary_Positive:
-		query = query.Where("deleted_at IS NOT NULL")
+		query = query.Where("\"MaterialTable\".deleted_at IS NOT NULL")
 	case types.Ternary_Negative:
-		query = query.Where("deleted_at IS NULL")
+		query = query.Where("\"MaterialTable\".deleted_at IS NULL")
 	}
 
 	if len(preloads) > 0 {
@@ -168,23 +168,23 @@ func (r *MaterialRepository) CheckPermissionsAndGetManyByIds(
 
 	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
 		Select("1").
-		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id").
+		Where("root_shelf_id = ss.root_shelf_id").
 		Where("user_id = ? AND permission IN ?",
 			userId, allowedPermissions,
 		)
 	query := parsedOptions.DB.Model(&schemas.Material{}).
 		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
-		Where("id IN ? EXISTS (?)",
+		Where("\"MaterialTable\".id IN ? EXISTS (?)",
 			ids, subQuery,
 		)
 
 	switch parsedOptions.OnlyDeleted {
 	case types.Ternary_Positive:
-		query = query.Where("deleted_at IS NOT NULL")
+		query = query.Where("\"MaterialTable\".deleted_at IS NOT NULL")
 	case types.Ternary_Neutral:
 		break
 	case types.Ternary_Negative:
-		query = query.Where("deleted_at IS NULL")
+		query = query.Where("\"MaterialTable\".deleted_at IS NULL")
 	}
 
 	if len(preloads) > 0 {

@@ -10,7 +10,7 @@ WHERE
     AND m.deleted_at IS NULL
     AND m.parent_sub_shelf_id = ss.id
     AND uts.user_id = $3
-    AND uts.permission IN ($4:"AccessControlPermission"[])
+    AND uts.permission = ANY($4:"AccessControlPermission"[])
     AND EXISTS (
         SELECT 1
         FROM "SubShelfTable" dest_ss
@@ -18,5 +18,5 @@ WHERE
         WHERE
             dest_ss.id = $5
             AND dest_uts.user_id = $6
-            AND dest_uts.permission IN ($7::"AccessControlPermission"[])
+            AND dest_uts.permission = ANY($7::"AccessControlPermission"[])
     )

@@ -1,0 +1,19 @@
+fragment FragmentedBasicPrivateMaterial on PrivateMaterial {
+  id
+  parentSubShelfId
+  name
+  type
+  megaByteSize
+  contentKey
+  parseMediaType
+  deletedAt
+  updatedAt
+  createdAt
+}
+
+fragment FragmentedPrivateMaterial on PrivateMaterial {
+  ...FragmentedBasicPrivateMaterial
+  parentSubShelf {
+    ...FragmentedBasicPrivateSubShelf
+  }
+}

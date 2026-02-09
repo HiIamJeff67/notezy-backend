@@ -1221,7 +1221,7 @@ input SearchBadgeInput {
   first: Int = 10
   filters: SearchBadgeFilters
   sortBy: SearchBadgeSortBy = RELEVANCE
-  sortOrderr: SearchSortOrder = DESC
+  sortOrder: SearchSortOrder = DESC
 }
 
 # =============== Search Cursor Fields =============== #

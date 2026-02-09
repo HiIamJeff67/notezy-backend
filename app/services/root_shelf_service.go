@@ -36,7 +36,7 @@ type RootShelfServiceInterface interface {
 	DeleteMyRootShelvesByIds(ctx context.Context, reqDto *dtos.DeleteMyRootShelvesByIdsReqDto) (*dtos.DeleteMyRootShelvesByIdsResDto, *exceptions.Exception)
 
 	// services for private shelves
-	SearchPrivateShelves(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRootShelfInput) (*gqlmodels.SearchRootShelfConnection, *exceptions.Exception)
+	SearchPrivateRootShelves(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRootShelfInput) (*gqlmodels.SearchRootShelfConnection, *exceptions.Exception)
 }
 
 type RootShelfService struct {
@@ -273,19 +273,20 @@ func (s *RootShelfService) DeleteMyRootShelvesByIds(
 
 /* ============================== Service Methods for  ============================== */
 
-func (s *RootShelfService) SearchPrivateShelves(
+func (s *RootShelfService) SearchPrivateRootShelves(
 	ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRootShelfInput,
 ) (*gqlmodels.SearchRootShelfConnection, *exceptions.Exception) {
 	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Read,
-		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
 	}
 	startTime := time.Now()
 
 	db := s.db.WithContext(ctx)
 
-	query := db.WithContext(ctx).Model(&schemas.RootShelf{}).
+	query := db.Model(&schemas.RootShelf{}).
 		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON \"RootShelfTable\".id = uts.root_shelf_id").
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
 		Where("\"RootShelfTable\".deleted_at IS NULL")

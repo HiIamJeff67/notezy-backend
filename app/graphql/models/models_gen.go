@@ -144,12 +144,12 @@ type SearchBadgeFilters struct {
 }
 
 type SearchBadgeInput struct {
-	Query      string              `json:"query"`
-	After      *string             `json:"after,omitempty"`
-	First      *int32              `json:"first,omitempty"`
-	Filters    *SearchBadgeFilters `json:"filters,omitempty"`
-	SortBy     *SearchBadgeSortBy  `json:"sortBy,omitempty"`
-	SortOrderr *SearchSortOrder    `json:"sortOrderr,omitempty"`
+	Query     string              `json:"query"`
+	After     *string             `json:"after,omitempty"`
+	First     *int32              `json:"first,omitempty"`
+	Filters   *SearchBadgeFilters `json:"filters,omitempty"`
+	SortBy    *SearchBadgeSortBy  `json:"sortBy,omitempty"`
+	SortOrder *SearchSortOrder    `json:"sortOrder,omitempty"`
 }
 
 type SearchPageInfo struct {

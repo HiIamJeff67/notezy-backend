@@ -44,7 +44,7 @@ func (r *queryResolver) SearchRootShelves(ctx context.Context, input gqlmodels.S
 		exception.Log().SafelyResponseWithJSON(ginContext)
 		return nil, exception.Log().ToGraphQLError(ctx)
 	}
-	result, exception := r.rootShelfService.SearchPrivateShelves(ctx, *userId, input)
+	result, exception := r.rootShelfService.SearchPrivateRootShelves(ctx, *userId, input)
 	if exception != nil {
 		return nil, exception.Log().ToGraphQLError(ctx)
 	}

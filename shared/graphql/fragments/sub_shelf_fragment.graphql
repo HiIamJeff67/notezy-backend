@@ -1,0 +1,23 @@
+fragment FragmentedBasicPrivateSubShelf on PrivateSubShelf {
+  id
+  name
+  rootShelfId
+  prevSubShelfId
+  path
+  deletedAt
+  updatedAt
+  createdAt
+}
+
+fragment FragmentedPrivateSubShelf on PrivateSubShelf {
+  ...FragmentedBasicPrivateSubShelf
+  rootShelf {
+    ...FragmentedBasicPrivateRootShelf
+  }
+  nextSubShelves {
+    ...FragmentedBasicPrivateSubShelf
+  }
+  materials {
+    ...FragmentedBasicPrivateMaterial
+  }
+}
