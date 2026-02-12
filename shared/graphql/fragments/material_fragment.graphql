@@ -3,7 +3,7 @@ fragment FragmentedBasicPrivateMaterial on PrivateMaterial {
   parentSubShelfId
   name
   type
-  megaByteSize
+  size
   contentKey
   parseMediaType
   deletedAt

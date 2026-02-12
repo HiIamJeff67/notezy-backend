@@ -29,7 +29,7 @@ import (
 type MaterialServiceInterface interface {
 	GetMyMaterialById(ctx context.Context, reqDto *dtos.GetMyMaterialByIdReqDto) (*dtos.GetMyMaterialByIdResDto, *exceptions.Exception)
 	GetMyMaterialAndItsParentById(ctx context.Context, reqDto *dtos.GetMyMaterialAndItsParentByIdReqDto) (*dtos.GetMyMaterialAndItsParentByIdResDto, *exceptions.Exception)
-	GetAllMyMaterialsByParentSubShelfId(ctx context.Context, reqDto *dtos.GetAllMyMaterialsByParentSubShelfIdReqDto) (*dtos.GetAllMyMaterialsByParentSubShelfIdResDto, *exceptions.Exception)
+	GetMyMaterialsByParentSubShelfId(ctx context.Context, reqDto *dtos.GetMyMaterialsByParentSubShelfIdReqDto) (*dtos.GetMyMaterialsByParentSubShelfIdResDto, *exceptions.Exception)
 	GetAllMyMaterialsByRootShelfId(ctx context.Context, reqDto *dtos.GetAllMyMaterialsByRootShelfIdReqDto) (*dtos.GetAllMyMaterialsByRootShelfIdResDto, *exceptions.Exception)
 	CreateTextbookMaterial(ctx context.Context, reqDto *dtos.CreateTextbookMaterialReqDto) (*dtos.CreateTextbookMaterialResDto, *exceptions.Exception)
 	CreateNotebookMaterial(ctx context.Context, reqDto *dtos.CreateNotebookMaterialReqDto) (*dtos.CreateNotebookMaterialResDto, *exceptions.Exception)
@@ -123,7 +123,7 @@ func (s *MaterialService) GetMyMaterialAndItsParentById(
 		Id                           uuid.UUID          `gorm:"column:id;"`
 		Name                         string             `gorm:"column:name;"`
 		Type                         enums.MaterialType `gorm:"column:type;"`
-		MegaByteSize                 int64              `gorm:"column:mega_byte_size;"`
+		Size                         int64              `gorm:"column:size;"`
 		ContentKey                   string             `gorm:"column:content_key;"`
 		DeletedAt                    *time.Time         `gorm:"column:deleted_at;"`
 		UpdatedAt                    time.Time          `gorm:"column:updated_at;"`
@@ -157,7 +157,7 @@ func (s *MaterialService) GetMyMaterialAndItsParentById(
 		Id:                           output.Id,
 		Name:                         output.Name,
 		Type:                         output.Type,
-		MegaByteSize:                 output.MegaByteSize,
+		Size:                         output.Size,
 		DownloadURL:                  downloadURL,
 		DeletedAt:                    output.DeletedAt,
 		UpdatedAt:                    output.UpdatedAt,
@@ -173,9 +173,9 @@ func (s *MaterialService) GetMyMaterialAndItsParentById(
 	}, nil
 }
 
-func (s *MaterialService) GetAllMyMaterialsByParentSubShelfId(
-	ctx context.Context, reqDto *dtos.GetAllMyMaterialsByParentSubShelfIdReqDto,
-) (*dtos.GetAllMyMaterialsByParentSubShelfIdResDto, *exceptions.Exception) {
+func (s *MaterialService) GetMyMaterialsByParentSubShelfId(
+	ctx context.Context, reqDto *dtos.GetMyMaterialsByParentSubShelfIdReqDto,
+) (*dtos.GetMyMaterialsByParentSubShelfIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Material.InvalidDto().WithError(err)
 	}
@@ -206,7 +206,7 @@ func (s *MaterialService) GetAllMyMaterialsByParentSubShelfId(
 		return nil, exceptions.Material.NotFound().WithError(err)
 	}
 
-	resDto := dtos.GetAllMyMaterialsByParentSubShelfIdResDto{}
+	resDto := dtos.GetMyMaterialsByParentSubShelfIdResDto{}
 	for _, material := range materials {
 		downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, material.ContentKey, nil)
 		if exception != nil {
@@ -298,11 +298,11 @@ func (s *MaterialService) CreateTextbookMaterial(
 		reqDto.Body.ParentSubShelfId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateMaterialInput{
-			Id:           newMaterialId,
-			Name:         reqDto.Body.Name,
-			MegaByteSize: zeroSize,
-			Type:         enums.MaterialType_Textbook,
-			ContentKey:   newContentKey,
+			Id:         newMaterialId,
+			Name:       reqDto.Body.Name,
+			Size:       zeroSize,
+			Type:       enums.MaterialType_Textbook,
+			ContentKey: newContentKey,
 		},
 		options.WithDB(tx),
 	)
@@ -361,11 +361,11 @@ func (s *MaterialService) CreateNotebookMaterial(
 		reqDto.Body.ParentSubShelfId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateMaterialInput{
-			Id:           newMaterialId,
-			Name:         reqDto.Body.Name,
-			MegaByteSize: zeroSize,
-			Type:         enums.MaterialType_Notebook,
-			ContentKey:   newContentKey,
+			Id:         newMaterialId,
+			Name:       reqDto.Body.Name,
+			Size:       zeroSize,
+			Type:       enums.MaterialType_Notebook,
+			ContentKey: newContentKey,
 		},
 		options.WithDB(tx),
 	)
@@ -458,8 +458,8 @@ func (s *MaterialService) saveMyMaterialById(
 	var contentKey = s.storage.GetKey(reqDto.ContextFields.UserPublicId.String(), reqDto.Body.MaterialId.String())
 
 	var fileHeaderSize int64 = 0
-	if reqDto.ContextFields.MegaByteSize != nil {
-		fileHeaderSize = *reqDto.ContextFields.MegaByteSize
+	if reqDto.ContextFields.Size != nil {
+		fileHeaderSize = *reqDto.ContextFields.Size
 	}
 
 	// extract the data in it and get its content type, parse media type, and actual size, etc.
@@ -473,9 +473,9 @@ func (s *MaterialService) saveMyMaterialById(
 		return nil, exceptions.Material.CannotGetFileObjects()
 	}
 
-	megaByteSize := object.Size / types.MB.ToInt64()
+	size := object.Size
 	partialUpdate.Values.ParseMediaType = object.ParseMediaType
-	partialUpdate.Values.MegaByteSize = &megaByteSize
+	partialUpdate.Values.Size = &size
 
 	material, exception := s.materialRepository.UpdateOneById(
 		reqDto.Body.MaterialId,

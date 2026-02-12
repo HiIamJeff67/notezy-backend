@@ -26,9 +26,9 @@ func configureDevelopmentBlockPackRoutes() {
 			),
 		)
 		blockPackRoutes.GET(
-			"/getAllMyBlockPacksByParentSubShelfId",
+			"/getMyBlockPacksByParentSubShelfId",
 			blockPackModule.Binder.BindGetAllMyBlockPacksByParentSubShelfId(
-				blockPackModule.Controller.GetAllMyBlockPacksByParentSubShelfId,
+				blockPackModule.Controller.GetMyBlockPacksByParentSubShelfId,
 			),
 		)
 		blockPackRoutes.GET(

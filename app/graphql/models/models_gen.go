@@ -30,7 +30,7 @@ type PrivateMaterial struct {
 	ParentSubShelfID uuid.UUID                 `json:"parentSubShelfId"`
 	Name             string                    `json:"name"`
 	Type             enums.MaterialType        `json:"type"`
-	MegaByteSize     float64                   `json:"megaByteSize"`
+	Size             float64                   `json:"size"`
 	ContentKey       string                    `json:"contentKey"`
 	ContentType      enums.MaterialContentType `json:"contentType"`
 	ParseMediaType   string                    `json:"parseMediaType"`

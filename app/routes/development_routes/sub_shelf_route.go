@@ -38,6 +38,12 @@ func configureDevelopmentSubShelfRoutes() {
 				subShelfModule.Controller.GetAllMySubShelvesByRootShelfId,
 			),
 		)
+		subShelfRoutes.GET(
+			"/getMySubShelvesAndItemsByPrevSubShelfId",
+			subShelfModule.Binder.BindGetMySubShelvesAndItemsByPrevSubShelfId(
+				subShelfModule.Controller.GetMySubShelvesAndItemsByPrevSubShelfId,
+			),
+		)
 		subShelfRoutes.POST(
 			"/createSubShelfByRootShelfId",
 			subShelfModule.Binder.BindCreateSubShelfByRootShelfId(

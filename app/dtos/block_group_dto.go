@@ -237,7 +237,7 @@ type GetMyBlockGroupByIdResDto struct {
 	BlockPackId      uuid.UUID  `json:"blockPackId"`
 	PrevBlockGroupId *uuid.UUID `json:"prevBlockGroupId"`
 	SyncBlockGroupId *uuid.UUID `json:"syncBlockGroupId"`
-	MegaByteSize     float64    `json:"megaByteSize"`
+	Size             float64    `json:"size"`
 	DeletedAt        *time.Time `json:"deletedAt"`
 	UpdatedAt        time.Time  `json:"updatedAt"`
 	CreatedAt        time.Time  `json:"createdAt"`
@@ -248,7 +248,7 @@ type GetMyBlockGroupAndItsBlocksByIdResDto struct {
 	BlockPackId               uuid.UUID                 `json:"blockPackId"`
 	PrevBlockGroupId          *uuid.UUID                `json:"prevBlockGroupId"`
 	SyncBlockGroupId          *uuid.UUID                `json:"syncBlockGroupId"`
-	MegaByteSize              float64                   `json:"megaByteSize"`
+	Size                      float64                   `json:"size"`
 	DeletedAt                 *time.Time                `json:"deletedAt"`
 	UpdatedAt                 time.Time                 `json:"updatedAt"`
 	CreatedAt                 time.Time                 `json:"createdAt"`

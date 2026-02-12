@@ -46,11 +46,11 @@ type ComplexityRoot struct {
 		CreatedAt        func(childComplexity int) int
 		DeletedAt        func(childComplexity int) int
 		ID               func(childComplexity int) int
-		MegaByteSize     func(childComplexity int) int
 		Name             func(childComplexity int) int
 		ParentSubShelf   func(childComplexity int) int
 		ParentSubShelfID func(childComplexity int) int
 		ParseMediaType   func(childComplexity int) int
+		Size             func(childComplexity int) int
 		Type             func(childComplexity int) int
 		UpdatedAt        func(childComplexity int) int
 	}
@@ -243,13 +243,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateMaterial.ID(childComplexity), true
 
-	case "PrivateMaterial.megaByteSize":
-		if e.complexity.PrivateMaterial.MegaByteSize == nil {
-			break
-		}
-
-		return e.complexity.PrivateMaterial.MegaByteSize(childComplexity), true
-
 	case "PrivateMaterial.name":
 		if e.complexity.PrivateMaterial.Name == nil {
 			break
@@ -277,6 +270,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateMaterial.ParseMediaType(childComplexity), true
+
+	case "PrivateMaterial.size":
+		if e.complexity.PrivateMaterial.Size == nil {
+			break
+		}
+
+		return e.complexity.PrivateMaterial.Size(childComplexity), true
 
 	case "PrivateMaterial.type":
 		if e.complexity.PrivateMaterial.Type == nil {
@@ -1161,7 +1161,7 @@ interface SearchConnection {
   parentSubShelfId: UUID!
   name: String!
   type: MaterialType!
-  megaByteSize: Float!
+  size: Float!
   contentKey: String!
   contentType: MaterialContentType!
   parseMediaType: String!

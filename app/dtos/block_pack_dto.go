@@ -1,11 +1,12 @@
 package dtos
 
 import (
-	enums "notezy-backend/app/models/schemas/enums"
-	types "notezy-backend/shared/types"
 	"time"
 
 	"github.com/google/uuid"
+
+	enums "notezy-backend/app/models/schemas/enums"
+	types "notezy-backend/shared/types"
 )
 
 /* ============================== Request DTO ============================== */

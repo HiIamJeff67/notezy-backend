@@ -556,8 +556,8 @@ func (ec *executionContext) fieldContext_PrivateSubShelf_materials(_ context.Con
 				return ec.fieldContext_PrivateMaterial_name(ctx, field)
 			case "type":
 				return ec.fieldContext_PrivateMaterial_type(ctx, field)
-			case "megaByteSize":
-				return ec.fieldContext_PrivateMaterial_megaByteSize(ctx, field)
+			case "size":
+				return ec.fieldContext_PrivateMaterial_size(ctx, field)
 			case "contentKey":
 				return ec.fieldContext_PrivateMaterial_contentKey(ctx, field)
 			case "contentType":

@@ -88,7 +88,7 @@ func (s *BlockGroupService) GetMyBlockGroupById(
 		BlockPackId:      blockGroup.BlockPackId,
 		PrevBlockGroupId: blockGroup.PrevBlockGroupId,
 		SyncBlockGroupId: blockGroup.SyncBlockGroupId,
-		MegaByteSize:     blockGroup.MegaByteSize,
+		Size:             blockGroup.Size,
 		DeletedAt:        blockGroup.DeletedAt,
 		UpdatedAt:        blockGroup.UpdatedAt,
 		CreatedAt:        blockGroup.CreatedAt,

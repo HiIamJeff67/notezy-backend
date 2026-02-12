@@ -14,7 +14,7 @@ import (
 type MaterialControllerInterface interface {
 	GetMyMaterialById(ctx *gin.Context, reqDto *dtos.GetMyMaterialByIdReqDto)
 	GetMyMaterialAndItsParentById(ctx *gin.Context, reqDto *dtos.GetMyMaterialAndItsParentByIdReqDto)
-	GetAllMyMaterialsByParentSubShelfId(ctx *gin.Context, reqDto *dtos.GetAllMyMaterialsByParentSubShelfIdReqDto)
+	GetMyMaterialsByParentSubShelfId(ctx *gin.Context, reqDto *dtos.GetMyMaterialsByParentSubShelfIdReqDto)
 	GetAllMyMaterialsByRootShelfId(ctx *gin.Context, reqDto *dtos.GetAllMyMaterialsByRootShelfIdReqDto)
 	CreateTextbookMaterial(ctx *gin.Context, reqDto *dtos.CreateTextbookMaterialReqDto)
 	CreateNotebookMaterial(ctx *gin.Context, reqDto *dtos.CreateNotebookMaterialReqDto)
@@ -68,8 +68,8 @@ func (c *MaterialController) GetMyMaterialAndItsParentById(ctx *gin.Context, req
 	})
 }
 
-func (c *MaterialController) GetAllMyMaterialsByParentSubShelfId(ctx *gin.Context, reqDto *dtos.GetAllMyMaterialsByParentSubShelfIdReqDto) {
-	resDto, exception := c.materialService.GetAllMyMaterialsByParentSubShelfId(ctx.Request.Context(), reqDto)
+func (c *MaterialController) GetMyMaterialsByParentSubShelfId(ctx *gin.Context, reqDto *dtos.GetMyMaterialsByParentSubShelfIdReqDto) {
+	resDto, exception := c.materialService.GetMyMaterialsByParentSubShelfId(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
 		return

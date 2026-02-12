@@ -16,6 +16,7 @@ import (
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
 	options "notezy-backend/app/options"
+	"notezy-backend/app/storages"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
@@ -27,6 +28,7 @@ type SubShelfServiceInterface interface {
 	GetMySubShelfById(ctx context.Context, reqDto *dtos.GetMySubShelfByIdReqDto) (*dtos.GetMySubShelfByIdResDto, *exceptions.Exception)
 	GetMySubShelvesByPrevSubShelfId(ctx context.Context, reqDto *dtos.GetMySubShelvesByPrevSubShelfIdReqDto) (*dtos.GetMySubShelvesByPrevSubShelfIdResDto, *exceptions.Exception)
 	GetAllMySubShelvesByRootShelfId(ctx context.Context, reqDto *dtos.GetAllMySubShelvesByRootShelfIdReqDto) (*dtos.GetAllMySubShelvesByRootShelfIdResDto, *exceptions.Exception)
+	GetMySubShelvesAndItemsByPrevSubShelfId(ctx context.Context, reqDto *dtos.GetMySubShelvesAndItemsByPrevSubShelfIdReqDto) (*dtos.GetMySubShelvesAndItemsByPrevSubShelfIdResDto, *exceptions.Exception)
 	CreateSubShelfByRootShelfId(ctx context.Context, reqDto *dtos.CreateSubShelfByRootShelfIdReqDto) (*dtos.CreateSubShelfByRootShelfIdResDto, *exceptions.Exception)
 	UpdateMySubShelfById(ctx context.Context, reqDto *dtos.UpdateMySubShelfByIdReqDto) (*dtos.UpdateMySubShelfByIdResDto, *exceptions.Exception)
 	MoveMySubShelf(ctx context.Context, reqDto *dtos.MoveMySubShelfReqDto) (*dtos.MoveMySubShelfResDto, *exceptions.Exception)
@@ -38,20 +40,29 @@ type SubShelfServiceInterface interface {
 }
 
 type SubShelfService struct {
-	db                 *gorm.DB
-	subShelfRepository repositories.SubShelfRepositoryInterface
+	db                  *gorm.DB
+	storage             storages.StorageInterface
+	subShelfRepository  repositories.SubShelfRepositoryInterface
+	materialRepository  repositories.MaterialRepositoryInterface
+	blockPackRepository repositories.BlockPackRepositoryInterface
 }
 
 func NewSubShelfService(
 	db *gorm.DB,
+	storage storages.StorageInterface,
 	subShelfRepository repositories.SubShelfRepositoryInterface,
+	materialRepository repositories.MaterialRepositoryInterface,
+	blockPackRepository repositories.BlockPackRepositoryInterface,
 ) SubShelfServiceInterface {
 	if db == nil {
 		db = models.NotezyDB
 	}
 	return &SubShelfService{
-		db:                 db,
-		subShelfRepository: subShelfRepository,
+		db:                  db,
+		storage:             storage,
+		subShelfRepository:  subShelfRepository,
+		materialRepository:  materialRepository,
+		blockPackRepository: blockPackRepository,
 	}
 }
 
@@ -113,9 +124,12 @@ func (s *SubShelfService) GetMySubShelvesByPrevSubShelfId(
 			reqDto.ContextFields.UserId, allowedPermissions,
 		)
 	result := s.db.Model(&schemas.SubShelf{}).
-		Where("prev_sub_shelf_id = ? AND EXISTS (?) AND \"SubShelfTable\".deleted_at IS NULL",
+		Where("prev_sub_shelf_id = ? AND EXISTS (?)",
 			reqDto.Param.PrevSubShelfId, subQuery,
-		).Find(&resDto)
+		).Where("\"SubShelfTable\".deleted_at IS NULL").
+		Order("\"SubShelfTable\".name ASC").
+		Limit(int(constants.MaxSubShelvesOfSubShelf)).
+		Find(&resDto)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Shelf.NotFound().WithError(err)
 	}
@@ -147,12 +161,99 @@ func (s *SubShelfService) GetAllMySubShelvesByRootShelfId(
 			reqDto.ContextFields.UserId, allowedPermissions,
 		)
 	result := s.db.Model(&schemas.SubShelf{}).
-		Where("root_shelf_id = ? AND EXISTS (?) AND \"SubShelfTable\".deleted_at IS NULL",
+		Where("root_shelf_id = ? AND EXISTS (?)",
 			reqDto.Param.RootShelfId, subQuery,
-		).
+		).Where("\"SubShelfTable\".deleted_at IS NULL").
+		Order("\"SubShelfTable\".name ASC").
+		Limit(int(constants.MaxSubShelvesOfSubShelf)).
 		Find(&resDto)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Shelf.NotFound().WithError(err)
+	}
+
+	return &resDto, nil
+}
+
+func (s *SubShelfService) GetMySubShelvesAndItemsByPrevSubShelfId(
+	ctx context.Context, reqDto *dtos.GetMySubShelvesAndItemsByPrevSubShelfIdReqDto,
+) (*dtos.GetMySubShelvesAndItemsByPrevSubShelfIdResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Shelf.InvalidDto().WithError(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+
+	resDto := dtos.GetMySubShelvesAndItemsByPrevSubShelfIdResDto{}
+
+	subQuery := db.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?",
+			reqDto.ContextFields.UserId, allowedPermissions,
+		)
+	resultOfGettingSubShelves := db.Model(&schemas.SubShelf{}).
+		Where("prev_sub_shelf_id = ? AND EXISTS (?)",
+			reqDto.Param.PrevSubShelfId, subQuery,
+		).Where("\"SubShelfTable\".deleted_at IS NULL").
+		Order("\"SubShelfTable\".name ASC").
+		Limit(int(constants.MaxSubShelvesOfSubShelf)).
+		Find(&resDto.SubShelves)
+	if err := resultOfGettingSubShelves.Error; err != nil {
+		return nil, exceptions.Shelf.NotFound().WithError(err)
+	}
+
+	materials := []schemas.Material{}
+	resultOfGettingMaterials := db.Model(&schemas.Material{}).
+		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"MaterialTable\".parent_sub_shelf_id = ss.id").
+		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
+		Where("ss.id = ? AND uts.user_id = ? AND uts.permission IN ?",
+			reqDto.Param.PrevSubShelfId,
+			reqDto.ContextFields.UserId,
+			allowedPermissions,
+		).Where("\"MaterialTable\".deleted_at IS NULL").
+		Order("\"MaterialTable\".name ASC").
+		Limit(int(constants.MaxMaterialsOfSubShelf)).
+		Find(&materials)
+	if err := resultOfGettingMaterials.Error; err != nil {
+		return nil, exceptions.Material.NotFound().WithError(err)
+	}
+
+	for _, material := range materials {
+		downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, material.ContentKey, nil)
+		if exception != nil {
+			return nil, exception
+		}
+		resDto.Materials = append(resDto.Materials, dtos.GetMyMaterialByIdResDto{
+			Id:               material.Id,
+			ParentSubShelfId: material.ParentSubShelfId,
+			Name:             material.Name,
+			Type:             material.Type,
+			DownloadURL:      downloadURL,
+			DeletedAt:        material.DeletedAt,
+			UpdatedAt:        material.UpdatedAt,
+			CreatedAt:        material.CreatedAt,
+		})
+	}
+
+	resultOfGettingBlockPacks := db.Model(&schemas.BlockPack{}).
+		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"BlockPackTable\".parent_sub_shelf_id = ss.id").
+		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
+		Where("ss.id = ? AND uts.user_id = ? AND uts.permission IN ?",
+			reqDto.Param.PrevSubShelfId,
+			reqDto.ContextFields.UserId,
+			allowedPermissions,
+		).Where("\"BlockPackTable\".deleted_at IS NULL").
+		Order("\"BlockPackTable\".name ASC").
+		Limit(int(constants.MaxBlockPackOfSubShelf)).
+		Scan(&resDto.BlockPacks)
+	if err := resultOfGettingBlockPacks.Error; err != nil {
+		return nil, exceptions.BlockPack.NotFound().WithError(err)
 	}
 
 	return &resDto, nil

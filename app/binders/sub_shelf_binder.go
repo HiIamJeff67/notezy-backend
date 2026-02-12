@@ -19,6 +19,7 @@ type SubShelfBinderInterface interface {
 	BindGetMySubShelfById(controllerFunc types.ControllerFunc[*dtos.GetMySubShelfByIdReqDto]) gin.HandlerFunc
 	BindGetMySubShelvesByPrevSubShelfId(controllerFunc types.ControllerFunc[*dtos.GetMySubShelvesByPrevSubShelfIdReqDto]) gin.HandlerFunc
 	BindGetAllMySubShelvesByRootShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllMySubShelvesByRootShelfIdReqDto]) gin.HandlerFunc
+	BindGetMySubShelvesAndItemsByPrevSubShelfId(controllerFunc types.ControllerFunc[*dtos.GetMySubShelvesAndItemsByPrevSubShelfIdReqDto]) gin.HandlerFunc
 	BindCreateSubShelfByRootShelfId(controllerFunc types.ControllerFunc[*dtos.CreateSubShelfByRootShelfIdReqDto]) gin.HandlerFunc
 	BindUpdateMySubShelfById(controllerFunc types.ControllerFunc[*dtos.UpdateMySubShelfByIdReqDto]) gin.HandlerFunc
 	BindMoveMySubShelf(controllerFunc types.ControllerFunc[*dtos.MoveMySubShelfReqDto]) gin.HandlerFunc
@@ -119,6 +120,35 @@ func (b *SubShelfBinder) BindGetAllMySubShelvesByRootShelfId(controllerFunc type
 			return
 		}
 		reqDto.Param.RootShelfId = rootShelfId
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *SubShelfBinder) BindGetMySubShelvesAndItemsByPrevSubShelfId(controllerFunc types.ControllerFunc[*dtos.GetMySubShelvesAndItemsByPrevSubShelfIdReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.GetMySubShelvesAndItemsByPrevSubShelfIdReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		prevSubShelfIdString := ctx.Query("prevSubShelfId")
+		if prevSubShelfIdString == "" {
+			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("prevSubShelfId is required")).ResponseWithJSON(ctx)
+			return
+		}
+		prevSubShelfId, err := uuid.Parse(prevSubShelfIdString)
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithError(err).ResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.PrevSubShelfId = prevSubShelfId
 
 		controllerFunc(ctx, &reqDto)
 	}

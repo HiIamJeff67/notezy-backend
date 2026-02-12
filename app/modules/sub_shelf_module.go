@@ -6,6 +6,7 @@ import (
 	models "notezy-backend/app/models"
 	repositories "notezy-backend/app/models/repositories"
 	services "notezy-backend/app/services"
+	storages "notezy-backend/app/storages"
 )
 
 type SubShelfModule struct {
@@ -15,10 +16,15 @@ type SubShelfModule struct {
 
 func NewSubShelfModule() *SubShelfModule {
 	subShelfRepository := repositories.NewSubShelfRepository()
+	materialRepository := repositories.NewMaterialRepository()
+	blockPackRepository := repositories.NewBlockPackRepository()
 
 	subShelfService := services.NewSubShelfService(
 		models.NotezyDB,
+		storages.InMemoryStorage,
 		subShelfRepository,
+		materialRepository,
+		blockPackRepository,
 	)
 
 	subShelfBinder := binders.NewSubShelfBinder()

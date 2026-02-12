@@ -55,6 +55,21 @@ type GetAllMySubShelvesByRootShelfIdReqDto struct {
 	]
 }
 
+type GetMySubShelvesAndItemsByPrevSubShelfIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		any,
+		struct {
+			PrevSubShelfId uuid.UUID `json:"prevSubShelfId" validate:"required"`
+		},
+	]
+}
+
 type CreateSubShelfByRootShelfIdReqDto struct {
 	NotezyRequest[
 		struct {
@@ -202,6 +217,12 @@ type GetMySubShelfByIdResDto struct {
 type GetMySubShelvesByPrevSubShelfIdResDto = []GetMySubShelfByIdResDto
 
 type GetAllMySubShelvesByRootShelfIdResDto = []GetMySubShelfByIdResDto
+
+type GetMySubShelvesAndItemsByPrevSubShelfIdResDto struct {
+	SubShelves []GetMySubShelfByIdResDto  `json:"subShelves"`
+	Materials  []GetMyMaterialByIdResDto  `json:"materials"`
+	BlockPacks []GetMyBlockPackByIdResDto `json:"blockPacks"`
+}
 
 type CreateSubShelfByRootShelfIdResDto struct {
 	Id        uuid.UUID `json:"id"`

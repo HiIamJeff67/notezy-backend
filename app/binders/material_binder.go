@@ -23,7 +23,7 @@ import (
 type MaterialBinderInterface interface {
 	BindGetMyMaterialById(controllerFunc types.ControllerFunc[*dtos.GetMyMaterialByIdReqDto]) gin.HandlerFunc
 	BindGetMyMaterialAndItsParentById(controllerFunc types.ControllerFunc[*dtos.GetMyMaterialAndItsParentByIdReqDto]) gin.HandlerFunc
-	BindGetAllMyMaterialsByParentSubShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllMyMaterialsByParentSubShelfIdReqDto]) gin.HandlerFunc
+	BindGetMyMaterialsByParentSubShelfId(controllerFunc types.ControllerFunc[*dtos.GetMyMaterialsByParentSubShelfIdReqDto]) gin.HandlerFunc
 	BindGetAllMyMaterialsByRootShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllMyMaterialsByRootShelfIdReqDto]) gin.HandlerFunc
 	BindCreateTextbookMaterial(controllerFunc types.ControllerFunc[*dtos.CreateTextbookMaterialReqDto]) gin.HandlerFunc
 	BindCreateNotebookMaterial(controllerFunc types.ControllerFunc[*dtos.CreateNotebookMaterialReqDto]) gin.HandlerFunc
@@ -103,9 +103,9 @@ func (b *MaterialBinder) BindGetMyMaterialAndItsParentById(controllerFunc types.
 	}
 }
 
-func (b *MaterialBinder) BindGetAllMyMaterialsByParentSubShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllMyMaterialsByParentSubShelfIdReqDto]) gin.HandlerFunc {
+func (b *MaterialBinder) BindGetMyMaterialsByParentSubShelfId(controllerFunc types.ControllerFunc[*dtos.GetMyMaterialsByParentSubShelfIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.GetAllMyMaterialsByParentSubShelfIdReqDto
+		var reqDto dtos.GetMyMaterialsByParentSubShelfIdReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -336,7 +336,7 @@ func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.Con
 			}
 
 			reqDto.Body.ContentFile = fileInterface // bind the file interface here
-			reqDto.ContextFields.MegaByteSize = &fileHeaders[0].Size
+			reqDto.ContextFields.Size = &fileHeaders[0].Size
 
 			// make sure the file is closed at the end
 			defer func(f io.Reader) {
@@ -443,7 +443,7 @@ func (b *MaterialBinder) BindSaveMyNotebookMaterialById(controllerFunc types.Con
 			}
 
 			reqDto.Body.ContentFile = fileInterface // bind the file interface here
-			reqDto.ContextFields.MegaByteSize = &fileHeaders[0].Size
+			reqDto.ContextFields.Size = &fileHeaders[0].Size
 
 			// make sure the file is closed at the end
 			defer func(f io.Reader) {

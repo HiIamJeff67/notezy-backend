@@ -14,7 +14,7 @@ import (
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
 	blockpacksql "notezy-backend/app/models/sql/block_pack"
-	"notezy-backend/app/options"
+	options "notezy-backend/app/options"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
@@ -25,7 +25,7 @@ import (
 type BlockPackServiceInterface interface {
 	GetMyBlockPackById(ctx context.Context, reqDto *dtos.GetMyBlockPackByIdReqDto) (*dtos.GetMyBlockPackByIdResDto, *exceptions.Exception)
 	GetMyBlockPackAndItsParentById(ctx context.Context, reqDto *dtos.GetMyBlockPackAndItsParentByIdReqDto) (*dtos.GetMyBlockPackAndItsParentByIdResDto, *exceptions.Exception)
-	GetAllMyBlockPacksByParentSubShelfId(ctx context.Context, reqDto *dtos.GetAllMyBlockPacksByParentSubShelfIdReqDto) (*dtos.GetAllMyBlockPacksByParentSubShelfIdResDto, *exceptions.Exception)
+	GetMyBlockPacksByParentSubShelfId(ctx context.Context, reqDto *dtos.GetAllMyBlockPacksByParentSubShelfIdReqDto) (*dtos.GetAllMyBlockPacksByParentSubShelfIdResDto, *exceptions.Exception)
 	GetAllMyBlockPacksByRootShelfId(ctx context.Context, reqDto *dtos.GetAllMyBlockPacksByRootShelfIdReqDto) (*dtos.GetAllMyBlockPacksByRootShelfIdResDto, *exceptions.Exception)
 	CreateBlockPack(ctx context.Context, reqDto *dtos.CreateBlockPackReqDto) (*dtos.CreateBlockPackResDto, *exceptions.Exception)
 	UpdateMyBlockPackById(ctx context.Context, reqDto *dtos.UpdateMyBlockPackByIdReqDto) (*dtos.UpdateMyBlockPackByIdResDto, *exceptions.Exception)
@@ -117,7 +117,7 @@ func (s *BlockPackService) GetMyBlockPackAndItsParentById(
 	return &resDto, nil
 }
 
-func (s *BlockPackService) GetAllMyBlockPacksByParentSubShelfId(
+func (s *BlockPackService) GetMyBlockPacksByParentSubShelfId(
 	ctx context.Context, reqDto *dtos.GetAllMyBlockPacksByParentSubShelfIdReqDto,
 ) (*dtos.GetAllMyBlockPacksByParentSubShelfIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
