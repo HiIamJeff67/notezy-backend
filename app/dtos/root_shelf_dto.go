@@ -157,12 +157,17 @@ type UpdateMyRootShelfByIdResDto struct {
 }
 
 type RestoreMyRootShelfByIdResDto struct {
-	UpdatedAt time.Time `json:"updatedAt"`
+	Id             uuid.UUID  `json:"id"`
+	Name           string     `json:"name"`
+	SubShelfCount  int32      `json:"subShelfCount"`
+	ItemCount      int32      `json:"itemCount"`
+	LastAnalyzedAt time.Time  `json:"lastAnalyzedAt"`
+	DeletedAt      *time.Time `json:"deletedAt"`
+	UpdatedAt      time.Time  `json:"updatedAt"`
+	CreatedAt      time.Time  `json:"createdAt"`
 }
 
-type RestoreMyRootShelvesByIdsResDto struct {
-	UpdatedAt time.Time `json:"updatedAt"`
-}
+type RestoreMyRootShelvesByIdsResDto = []RestoreMyRootShelfByIdResDto
 
 type DeleteMyRootShelfByIdResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`

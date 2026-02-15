@@ -229,7 +229,7 @@ type GetMyBlockPackAndItsParentByIdResDto struct {
 	ParentSubShelfPrevSubShelfId *uuid.UUID                    `json:"parentSubShelfPrevSubShelfId" gorm:"column:parent_sub_shelf_prev_sub_shelf_id;"`
 	ParentSubShelfName           string                        `json:"parentSubShelfName" gorm:"column:parent_sub_shelf_name;"`
 	ParentSubShelfPath           types.UUIDArray               `json:"parentSubShelfPath" gorm:"column:parent_sub_shelf_path;"`
-	ParentSubShelfDeletedAt      time.Time                     `json:"parentSubShelfDeletedAt" gorm:"column:parent_sub_shelf_deleted_at;"`
+	ParentSubShelfDeletedAt      *time.Time                    `json:"parentSubShelfDeletedAt" gorm:"column:parent_sub_shelf_deleted_at;"`
 	ParentSubShelfUpdatedAt      time.Time                     `json:"parentSubShelfUpdatedAt" gorm:"column:parent_sub_shelf_updated_at;"`
 	ParentSubShelfCreatedAt      time.Time                     `json:"parentSubShelfCreatedAt" gorm:"column:parent_sub_shelf_created_at;"`
 }
@@ -256,12 +256,18 @@ type MoveMyBlockPacksByIdsResDto struct {
 }
 
 type RestoreMyBlockPackByIdResDto struct {
-	UpdatedAt time.Time `json:"updatedAt"`
+	Id                  uuid.UUID                     `json:"id" gorm:"column:id;"`
+	ParentSubShelfId    uuid.UUID                     `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id;"`
+	Name                string                        `json:"name" gorm:"column:name;"`
+	Icon                *enums.SupportedBlockPackIcon `json:"icon" gorm:"column:icon;"`
+	HeaderBackgroundURL *string                       `json:"headerBackgroundURL" gorm:"column:header_background_url;"`
+	BlockCount          int32                         `json:"blockCount" gorm:"column:block_count;"`
+	DeletedAt           *time.Time                    `json:"deletedAt"`
+	UpdatedAt           time.Time                     `json:"updatedAt"`
+	CreatedAt           time.Time                     `json:"createdAt"`
 }
 
-type RestoreMyBlockPacksByIdsResDto struct {
-	UpdatedAt time.Time `json:"updatedAt"`
-}
+type RestoreMyBlockPacksByIdsResDto = []RestoreMyBlockPackByIdResDto
 
 type DeleteMyBlockPackByIdResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`

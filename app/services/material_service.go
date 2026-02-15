@@ -599,7 +599,7 @@ func (s *MaterialService) RestoreMyMaterialById(
 
 	db := s.db.WithContext(ctx)
 
-	exception := s.materialRepository.RestoreSoftDeletedOneById(
+	restoredMaterial, exception := s.materialRepository.RestoreSoftDeletedOneById(
 		reqDto.Body.MaterialId,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
@@ -608,8 +608,21 @@ func (s *MaterialService) RestoreMyMaterialById(
 		return nil, exception
 	}
 
+	downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, restoredMaterial.ContentKey, nil)
+	if exception != nil {
+		return nil, exception
+	}
+
 	return &dtos.RestoreMyMaterialByIdResDto{
-		UpdatedAt: time.Now(),
+		Id:               restoredMaterial.Id,
+		ParentSubShelfId: restoredMaterial.ParentSubShelfId,
+		Name:             restoredMaterial.Name,
+		Type:             restoredMaterial.Type,
+		Size:             restoredMaterial.Size,
+		DownloadURL:      downloadURL,
+		DeletedAt:        restoredMaterial.DeletedAt,
+		UpdatedAt:        restoredMaterial.UpdatedAt,
+		CreatedAt:        restoredMaterial.CreatedAt,
 	}, nil
 }
 
@@ -622,7 +635,7 @@ func (s *MaterialService) RestoreMyMaterialsByIds(
 
 	db := s.db.WithContext(ctx)
 
-	exception := s.materialRepository.RestoreSoftDeletedManyByIds(
+	restoredMaterials, exception := s.materialRepository.RestoreSoftDeletedManyByIds(
 		reqDto.Body.MaterialIds,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
@@ -631,9 +644,25 @@ func (s *MaterialService) RestoreMyMaterialsByIds(
 		return nil, exception
 	}
 
-	return &dtos.RestoreMyMaterialsByIdsResDto{
-		UpdatedAt: time.Now(),
-	}, nil
+	resDto := dtos.RestoreMyMaterialsByIdsResDto{}
+	for _, restoredMaterial := range restoredMaterials {
+		downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, restoredMaterial.ContentKey, nil)
+		if exception != nil {
+			return nil, exception
+		}
+		resDto = append(resDto, dtos.RestoreMyMaterialByIdResDto{
+			Id:               restoredMaterial.Id,
+			ParentSubShelfId: restoredMaterial.ParentSubShelfId,
+			Name:             restoredMaterial.Name,
+			Type:             restoredMaterial.Type,
+			Size:             restoredMaterial.Size,
+			DownloadURL:      downloadURL,
+			DeletedAt:        restoredMaterial.DeletedAt,
+			UpdatedAt:        restoredMaterial.UpdatedAt,
+			CreatedAt:        restoredMaterial.CreatedAt,
+		})
+	}
+	return &resDto, nil
 }
 
 func (s *MaterialService) DeleteMyMaterialById(

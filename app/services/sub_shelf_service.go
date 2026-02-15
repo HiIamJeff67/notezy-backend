@@ -16,7 +16,7 @@ import (
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
 	options "notezy-backend/app/options"
-	"notezy-backend/app/storages"
+	storages "notezy-backend/app/storages"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
@@ -537,7 +537,7 @@ func (s *SubShelfService) RestoreMySubShelfById(
 
 	db := s.db.WithContext(ctx)
 
-	exception := s.subShelfRepository.RestoreSoftDeletedOneById(
+	restoredSubShelf, exception := s.subShelfRepository.RestoreSoftDeletedOneById(
 		reqDto.Body.SubShelfId,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
@@ -547,7 +547,14 @@ func (s *SubShelfService) RestoreMySubShelfById(
 	}
 
 	return &dtos.RestoreMySubShelfByIdResDto{
-		UpdatedAt: time.Now(),
+		Id:             restoredSubShelf.Id,
+		Name:           restoredSubShelf.Name,
+		RootShelfId:    restoredSubShelf.RootShelfId,
+		PrevSubShelfId: restoredSubShelf.PrevSubShelfId,
+		Path:           restoredSubShelf.Path,
+		DeletedAt:      restoredSubShelf.DeletedAt,
+		UpdatedAt:      restoredSubShelf.UpdatedAt,
+		CreatedAt:      restoredSubShelf.CreatedAt,
 	}, nil
 }
 
@@ -560,7 +567,7 @@ func (s *SubShelfService) RestoreMySubShelvesByIds(
 
 	db := s.db.WithContext(ctx)
 
-	exception := s.subShelfRepository.RestoreSoftDeletedManyByIds(
+	restoredSubShelves, exception := s.subShelfRepository.RestoreSoftDeletedManyByIds(
 		reqDto.Body.SubShelfIds,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
@@ -569,9 +576,20 @@ func (s *SubShelfService) RestoreMySubShelvesByIds(
 		return nil, exception
 	}
 
-	return &dtos.RestoreMySubShelvesByIdsResDto{
-		UpdatedAt: time.Now(),
-	}, nil
+	resDto := dtos.RestoreMySubShelvesByIdsResDto{}
+	for _, restoredSubShelf := range restoredSubShelves {
+		resDto = append(resDto, dtos.RestoreMySubShelfByIdResDto{
+			Id:             restoredSubShelf.Id,
+			Name:           restoredSubShelf.Name,
+			RootShelfId:    restoredSubShelf.RootShelfId,
+			PrevSubShelfId: restoredSubShelf.PrevSubShelfId,
+			Path:           restoredSubShelf.Path,
+			DeletedAt:      restoredSubShelf.DeletedAt,
+			UpdatedAt:      restoredSubShelf.UpdatedAt,
+			CreatedAt:      restoredSubShelf.CreatedAt,
+		})
+	}
+	return &resDto, nil
 }
 
 func (s *SubShelfService) DeleteMySubShelfById(

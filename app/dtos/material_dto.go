@@ -302,12 +302,18 @@ type MoveMyMaterialsByIdsResDto struct {
 }
 
 type RestoreMyMaterialByIdResDto struct {
-	UpdatedAt time.Time `json:"updatedAt"`
+	Id               uuid.UUID          `json:"id"`
+	ParentSubShelfId uuid.UUID          `json:"parentSubShelfId"`
+	Name             string             `json:"name"`
+	Type             enums.MaterialType `json:"type"`
+	Size             int64              `json:"size"`
+	DownloadURL      string             `json:"downloadURL"`
+	DeletedAt        *time.Time         `json:"deletedAt"`
+	UpdatedAt        time.Time          `json:"updatedAt"`
+	CreatedAt        time.Time          `json:"createdAt"`
 }
 
-type RestoreMyMaterialsByIdsResDto struct {
-	UpdatedAt time.Time `json:"updatedAt"`
-}
+type RestoreMyMaterialsByIdsResDto = []RestoreMyMaterialByIdResDto
 
 type DeleteMyMaterialByIdResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`

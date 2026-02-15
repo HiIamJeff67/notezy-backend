@@ -903,16 +903,24 @@ func (s *BlockGroupService) RestoreMyBlockGroupById(
 
 	db := s.db.WithContext(ctx)
 
-	if exception := s.blockGroupRepository.RestoreSoftDeletedOneById(
+	restoredBlockGroup, exception := s.blockGroupRepository.RestoreSoftDeletedOneById(
 		reqDto.Body.BlockGroupId,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
-	); exception != nil {
+	)
+	if exception != nil {
 		return nil, exception
 	}
 
 	return &dtos.RestoreMyBlockGroupByIdResDto{
-		UpdatedAt: time.Now(),
+		Id:               restoredBlockGroup.Id,
+		BlockPackId:      restoredBlockGroup.BlockPackId,
+		PrevBlockGroupId: restoredBlockGroup.PrevBlockGroupId,
+		SyncBlockGroupId: restoredBlockGroup.SyncBlockGroupId,
+		Size:             restoredBlockGroup.Size,
+		DeletedAt:        restoredBlockGroup.DeletedAt,
+		UpdatedAt:        restoredBlockGroup.UpdatedAt,
+		CreatedAt:        restoredBlockGroup.CreatedAt,
 	}, nil
 }
 
@@ -925,17 +933,29 @@ func (s *BlockGroupService) RestoreMyBlockGroupsByIds(
 
 	db := s.db.WithContext(ctx)
 
-	if exception := s.blockGroupRepository.RestoreSoftDeletedManyByIds(
+	restoredBlockGroups, exception := s.blockGroupRepository.RestoreSoftDeletedManyByIds(
 		reqDto.Body.BlockGroupIds,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
-	); exception != nil {
+	)
+	if exception != nil {
 		return nil, exception
 	}
 
-	return &dtos.RestoreMyBlockGroupsByIdsResDto{
-		UpdatedAt: time.Now(),
-	}, nil
+	resDto := dtos.RestoreMyBlockGroupsByIdsResDto{}
+	for _, restoredBlockGroup := range restoredBlockGroups {
+		resDto = append(resDto, dtos.RestoreMyBlockGroupByIdResDto{
+			Id:               restoredBlockGroup.Id,
+			BlockPackId:      restoredBlockGroup.BlockPackId,
+			PrevBlockGroupId: restoredBlockGroup.PrevBlockGroupId,
+			SyncBlockGroupId: restoredBlockGroup.SyncBlockGroupId,
+			Size:             restoredBlockGroup.Size,
+			DeletedAt:        restoredBlockGroup.DeletedAt,
+			UpdatedAt:        restoredBlockGroup.UpdatedAt,
+			CreatedAt:        restoredBlockGroup.CreatedAt,
+		})
+	}
+	return &resDto, nil
 }
 
 func (s *BlockGroupService) DeleteMyBlockGroupById(

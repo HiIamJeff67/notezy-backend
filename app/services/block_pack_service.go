@@ -333,16 +333,25 @@ func (s *BlockPackService) RestoreMyBlockPackById(
 
 	db := s.db.WithContext(ctx)
 
-	if exception := s.blockPackRepository.RestoreSoftDeletedOneById(
+	restoredBlockPack, exception := s.blockPackRepository.RestoreSoftDeletedOneById(
 		reqDto.Body.BlockPackId,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
-	); exception != nil {
+	)
+	if exception != nil {
 		return nil, exception
 	}
 
 	return &dtos.RestoreMyBlockPackByIdResDto{
-		UpdatedAt: time.Now(),
+		Id:                  restoredBlockPack.Id,
+		ParentSubShelfId:    restoredBlockPack.ParentSubShelfId,
+		Name:                restoredBlockPack.Name,
+		Icon:                restoredBlockPack.Icon,
+		HeaderBackgroundURL: restoredBlockPack.HeaderBackgroundURL,
+		BlockCount:          restoredBlockPack.BlockCount,
+		DeletedAt:           restoredBlockPack.DeletedAt,
+		UpdatedAt:           restoredBlockPack.UpdatedAt,
+		CreatedAt:           restoredBlockPack.CreatedAt,
 	}, nil
 }
 
@@ -355,17 +364,31 @@ func (s *BlockPackService) RestoreMyBlockPacksByIds(
 
 	db := s.db.WithContext(ctx)
 
-	if exception := s.blockPackRepository.RestoreSoftDeletedManyByIds(
+	restoredBlockPacks, exception := s.blockPackRepository.RestoreSoftDeletedManyByIds(
 		reqDto.Body.BlockPackIds,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
-	); exception != nil {
+	)
+	if exception != nil {
 		return nil, exception
 	}
 
-	return &dtos.RestoreMyBlockPacksByIdsResDto{
-		UpdatedAt: time.Now(),
-	}, nil
+	resDto := dtos.RestoreMyBlockPacksByIdsResDto{}
+	for _, restoredBlockPack := range restoredBlockPacks {
+		resDto = append(resDto, dtos.RestoreMyBlockPackByIdResDto{
+			Id:                  restoredBlockPack.Id,
+			ParentSubShelfId:    restoredBlockPack.ParentSubShelfId,
+			Name:                restoredBlockPack.Name,
+			Icon:                restoredBlockPack.Icon,
+			HeaderBackgroundURL: restoredBlockPack.HeaderBackgroundURL,
+			BlockCount:          restoredBlockPack.BlockCount,
+			DeletedAt:           restoredBlockPack.DeletedAt,
+			UpdatedAt:           restoredBlockPack.UpdatedAt,
+			CreatedAt:           restoredBlockPack.CreatedAt,
+		})
+	}
+
+	return &resDto, nil
 }
 
 func (s *BlockPackService) DeleteMyBlockPackById(

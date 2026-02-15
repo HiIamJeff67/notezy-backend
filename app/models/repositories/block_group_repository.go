@@ -32,8 +32,8 @@ type BlockGroupRepositoryInterface interface {
 	AppendOneByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
 	AppendManyByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, input []inputs.CreateBlockGroupInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateBlockGroupInput, opts ...options.RepositoryOptions) (*schemas.BlockGroup, *exceptions.Exception)
-	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
-	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
+	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.BlockGroup, *exceptions.Exception)
+	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.BlockGroup, *exceptions.Exception)
 	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	SoftDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
@@ -715,7 +715,7 @@ func (r *BlockGroupRepository) RestoreSoftDeletedOneById(
 	id uuid.UUID,
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
-) *exceptions.Exception {
+) (*schemas.BlockGroup, *exceptions.Exception) {
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
@@ -732,31 +732,32 @@ func (r *BlockGroupRepository) RestoreSoftDeletedOneById(
 			allowedPermissions,
 			opts...,
 		) {
-			return exceptions.BlockGroup.NoPermission("restore a deleted block group")
+			return nil, exceptions.BlockGroup.NoPermission("restore a deleted block group")
 		}
 	}
 
-	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
+	var restoredBlockGroup schemas.BlockGroup
+	result := parsedOptions.DB.Model(&restoredBlockGroup).
+		Clauses(clause.Returning{}).
 		Where("id = ? AND deleted_at IS NOT NULL", id).
-		Select("deleted_at").
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if err := result.Error; err != nil {
-		return exceptions.BlockGroup.FailedToUpdate().WithError(err)
+		return nil, exceptions.BlockGroup.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.BlockGroup.NoChanges()
+		return nil, exceptions.BlockGroup.NoChanges()
 	}
 
-	return nil
+	return &restoredBlockGroup, nil
 }
 
 func (r *BlockGroupRepository) RestoreSoftDeletedManyByIds(
 	ids []uuid.UUID,
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
-) *exceptions.Exception {
+) ([]schemas.BlockGroup, *exceptions.Exception) {
 	if len(ids) == 0 {
-		return exceptions.BlockGroup.NoChanges()
+		return nil, exceptions.BlockGroup.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
@@ -775,22 +776,23 @@ func (r *BlockGroupRepository) RestoreSoftDeletedManyByIds(
 			allowedPermissions,
 			opts...,
 		) {
-			return exceptions.BlockGroup.NoPermission("restore deleted block groups")
+			return nil, exceptions.BlockGroup.NoPermission("restore deleted block groups")
 		}
 	}
 
-	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
+	var restoredBlockGroups []schemas.BlockGroup
+	result := parsedOptions.DB.Model(restoredBlockGroups).
+		Clauses(clause.Returning{}).
 		Where("id IN ? AND deleted_at IS NOT NULL", ids).
-		Select("deleted_at").
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if err := result.Error; err != nil {
-		return exceptions.BlockGroup.FailedToUpdate().WithError(err)
+		return nil, exceptions.BlockGroup.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.BlockGroup.NoChanges()
+		return nil, exceptions.BlockGroup.NoChanges()
 	}
 
-	return nil
+	return restoredBlockGroups, nil
 }
 
 func (r *BlockGroupRepository) SoftDeleteOneById(

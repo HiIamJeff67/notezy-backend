@@ -14,7 +14,7 @@ type Material struct {
 	ParentSubShelfId uuid.UUID          `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id; type:uuid; not null; uniqueIndex:material_idx_parent_sub_shelf_id_name_deleted_at,option:NULLS NOT DISTINCT;"`
 	Name             string             `json:"name" gorm:"column:name; size:128; not null; default:'undefined'; uniqueIndex:material_idx_parent_sub_shelf_id_name_deleted_at,option:NULLS NOT DISTINCT;"`
 	Type             enums.MaterialType `json:"type" gorm:"column:type; type:\"MaterialType\"; not null; default:'Notebook';"`
-	Size             float64            `json:"size" gorm:"column:size; type:double precision; not null; default:0;"`
+	Size             int64              `json:"size" gorm:"column:size; type:bigint; not null; default:0;"`
 	ContentKey       string             `json:"contentKey" gorm:"column:content_key; unique; not null;"`
 	DeletedAt        *time.Time         `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz; default:null; uniqueIndex:material_idx_parent_sub_shelf_id_name_deleted_at,option:NULLS NOT DISTINCT;"`
 	UpdatedAt        time.Time          `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`

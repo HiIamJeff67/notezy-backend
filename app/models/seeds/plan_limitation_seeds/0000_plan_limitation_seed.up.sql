@@ -11,7 +11,7 @@ INSERT INTO "PlanLimitationTable" (
     max_sub_shelf_count_per_root_shelf,
     max_item_count_per_root_shelf,
     max_block_count_per_block_pack,
-    max_material_mega_byte_size,
+    max_material_size,
     updated_at,
     created_at
 ) VALUES
@@ -30,5 +30,5 @@ ON CONFLICT (key) DO UPDATE SET
     max_sub_shelf_count_per_root_shelf = EXCLUDED.max_sub_shelf_count_per_root_shelf,
     max_item_count_per_root_shelf = EXCLUDED.max_item_count_per_root_shelf,
     max_block_count_per_block_pack = EXCLUDED.max_block_count_per_block_pack,
-    max_material_mega_byte_size = EXCLUDED.max_material_mega_byte_size,
+    max_material_size = EXCLUDED.max_material_size,
     updated_at = NOW();

@@ -8,7 +8,7 @@ SELECT
     bp.deleted_at,
     bp.updated_at,
     bp.created_at,
-    ss.root_shelf_id AS root_shelf_id
+    ss.root_shelf_id AS root_shelf_id,
     ss.id AS parent_sub_shelf_id, 
     ss.name AS parent_sub_shelf_name,
     ss.prev_sub_shelf_id AS parent_sub_shelf_prev_sub_shelf_id,

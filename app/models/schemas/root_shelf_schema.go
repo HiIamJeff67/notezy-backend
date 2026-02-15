@@ -11,12 +11,12 @@ import (
 
 type RootShelf struct {
 	Id             uuid.UUID  `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid();"`
-	OwnerId        uuid.UUID  `json:"ownerId" gorm:"column:owner_id; type:uuid; not null; uniqueIndex:shelf_idx_owner_id_name;"`
-	Name           string     `json:"name" gorm:"column:name; size:128; not null; default:'undefined'; uniqueIndex:shelf_idx_owner_id_name,,option:NULLS NOT DISTINCT;"`
-	SubShelfCount  int32      `json:"subShelfCount" gorm:"column:sub_shelf_count; type:integer; not null; default:1;"`
+	OwnerId        uuid.UUID  `json:"ownerId" gorm:"column:owner_id; type:uuid; not null; uniqueIndex:shelf_idx_name_owner_id_deleted_at,,option:NULLS NOT DISTINCT;"`
+	Name           string     `json:"name" gorm:"column:name; size:128; not null; default:'undefined'; uniqueIndex:shelf_idx_name_owner_id_deleted_at,,option:NULLS NOT DISTINCT;"`
+	SubShelfCount  int32      `json:"subShelfCount" gorm:"column:sub_shelf_count; type:integer; not null; default:0;"`
 	ItemCount      int32      `json:"itemCount" gorm:"column:item_count; type:integer; not null; default:0;"`
 	LastAnalyzedAt time.Time  `json:"lastAnalyzedAt" gorm:"column:last_analyzed_at; type:timestamptz; not null; default:NOW();"`
-	DeletedAt      *time.Time `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz; default:null;"`
+	DeletedAt      *time.Time `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz; default:null; uniqueIndex:shelf_idx_name_owner_id_deleted_at,,option:NULLS NOT DISTINCT;"`
 	UpdatedAt      time.Time  `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt      time.Time  `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 

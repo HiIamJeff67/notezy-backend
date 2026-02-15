@@ -27,8 +27,8 @@ type SubShelfRepositoryInterface interface {
 	GetAllByRootShelfId(rootShelfId uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation, opts ...options.RepositoryOptions) ([]schemas.SubShelf, *exceptions.Exception)
 	CreateOneByRootShelfId(rootShelfId uuid.UUID, userId uuid.UUID, input inputs.CreateSubShelfInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateSubShelfInput, opts ...options.RepositoryOptions) (*schemas.SubShelf, *exceptions.Exception)
-	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
-	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
+	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.SubShelf, *exceptions.Exception)
+	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.SubShelf, *exceptions.Exception)
 	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	SoftDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
@@ -348,7 +348,7 @@ func (r *SubShelfRepository) RestoreSoftDeletedOneById(
 	id uuid.UUID,
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
-) *exceptions.Exception {
+) (*schemas.SubShelf, *exceptions.Exception) {
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
@@ -357,30 +357,31 @@ func (r *SubShelfRepository) RestoreSoftDeletedOneById(
 		enums.AccessControlPermission_Admin,
 	}
 
+	var restoredSubShelf schemas.SubShelf
 	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
 		Select("1").
 		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
-	result := parsedOptions.DB.Model(&schemas.SubShelf{}).
+	result := parsedOptions.DB.Model(&restoredSubShelf).
+		Clauses(clause.Returning{}).
 		Where("id = ? AND EXISTS (?) AND deleted_at IS NOT NULL", id, subQuery).
-		Select("deleted_at").
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
 	if err := result.Error; err != nil {
-		return exceptions.Shelf.FailedToUpdate().WithError(err)
+		return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.Shelf.NotFound()
+		return nil, exceptions.Shelf.NotFound()
 	}
 
-	return nil
+	return &restoredSubShelf, nil
 }
 
 func (r *SubShelfRepository) RestoreSoftDeletedManyByIds(
 	ids []uuid.UUID,
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
-) *exceptions.Exception {
+) ([]schemas.SubShelf, *exceptions.Exception) {
 	if len(ids) == 0 {
-		return exceptions.BlockGroup.NoChanges()
+		return nil, exceptions.BlockGroup.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
@@ -391,21 +392,22 @@ func (r *SubShelfRepository) RestoreSoftDeletedManyByIds(
 		enums.AccessControlPermission_Admin,
 	}
 
+	var restoredSubShelves []schemas.SubShelf
 	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
 		Select("1").
 		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
-	result := parsedOptions.DB.Model(&schemas.SubShelf{}).
+	result := parsedOptions.DB.Model(restoredSubShelves).
+		Clauses(clause.Returning{}).
 		Where("id IN ? AND EXISTS (?) AND deleted_at IS NOT NULL", ids, subQuery).
-		Select("deleted_at").
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
 	if err := result.Error; err != nil {
-		return exceptions.Shelf.FailedToUpdate().WithError(err)
+		return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.Shelf.NotFound()
+		return nil, exceptions.Shelf.NotFound()
 	}
 
-	return nil
+	return restoredSubShelves, nil
 }
 
 func (r *SubShelfRepository) SoftDeleteOneById(

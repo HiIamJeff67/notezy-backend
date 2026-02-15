@@ -20,7 +20,7 @@ import (
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
 	searchcursor "notezy-backend/shared/lib/searchcursor"
-	"notezy-backend/shared/types"
+	types "notezy-backend/shared/types"
 )
 
 /* ============================== Interface & Instance ============================== */
@@ -188,7 +188,7 @@ func (s *RootShelfService) RestoreMyRootShelfById(
 
 	db := s.db.WithContext(ctx)
 
-	exception := s.rootShelfRepository.RestoreSoftDeletedOneById(
+	restoredRootShelf, exception := s.rootShelfRepository.RestoreSoftDeletedOneById(
 		reqDto.Body.RootShelfId,
 		reqDto.ContextFields.OwnerId,
 		options.WithDB(db),
@@ -198,7 +198,14 @@ func (s *RootShelfService) RestoreMyRootShelfById(
 	}
 
 	return &dtos.RestoreMyRootShelfByIdResDto{
-		UpdatedAt: time.Now(),
+		Id:             restoredRootShelf.Id,
+		Name:           restoredRootShelf.Name,
+		SubShelfCount:  restoredRootShelf.SubShelfCount,
+		ItemCount:      restoredRootShelf.ItemCount,
+		LastAnalyzedAt: restoredRootShelf.LastAnalyzedAt,
+		DeletedAt:      restoredRootShelf.DeletedAt,
+		UpdatedAt:      restoredRootShelf.UpdatedAt,
+		CreatedAt:      restoredRootShelf.CreatedAt,
 	}, nil
 }
 
@@ -211,7 +218,7 @@ func (s *RootShelfService) RestoreMyRootShelvesByIds(
 
 	db := s.db.WithContext(ctx)
 
-	exception := s.rootShelfRepository.RestoreSoftDeletedManyByIds(
+	restoredRootShelves, exception := s.rootShelfRepository.RestoreSoftDeletedManyByIds(
 		reqDto.Body.RootShelfIds,
 		reqDto.ContextFields.OwnerId,
 		options.WithDB(db),
@@ -220,9 +227,21 @@ func (s *RootShelfService) RestoreMyRootShelvesByIds(
 		return nil, exception
 	}
 
-	return &dtos.RestoreMyRootShelvesByIdsResDto{
-		UpdatedAt: time.Now(),
-	}, nil
+	resDto := dtos.RestoreMyRootShelvesByIdsResDto{}
+	for _, restoredRootShelf := range restoredRootShelves {
+		resDto = append(resDto, dtos.RestoreMyRootShelfByIdResDto{
+			Id:             restoredRootShelf.Id,
+			Name:           restoredRootShelf.Name,
+			SubShelfCount:  restoredRootShelf.SubShelfCount,
+			ItemCount:      restoredRootShelf.ItemCount,
+			LastAnalyzedAt: restoredRootShelf.LastAnalyzedAt,
+			DeletedAt:      restoredRootShelf.DeletedAt,
+			UpdatedAt:      restoredRootShelf.UpdatedAt,
+			CreatedAt:      restoredRootShelf.CreatedAt,
+		})
+	}
+
+	return &resDto, nil
 }
 
 func (s *RootShelfService) DeleteMyRootShelfById(

@@ -28,8 +28,8 @@ type BlockPackRepositoryInterface interface {
 	GetOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.BlockPack, *exceptions.Exception)
 	CreateOneBySubShelfId(subShelfId uuid.UUID, userId uuid.UUID, input inputs.CreateBlockPackInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateBlockPackInput, opts ...options.RepositoryOptions) (*schemas.BlockPack, *exceptions.Exception)
-	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
-	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
+	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.BlockPack, *exceptions.Exception)
+	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.BlockPack, *exceptions.Exception)
 	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	SoftDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
@@ -448,7 +448,7 @@ func (r *BlockPackRepository) RestoreSoftDeletedOneById(
 	id uuid.UUID,
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
-) *exceptions.Exception {
+) (*schemas.BlockPack, *exceptions.Exception) {
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
@@ -464,31 +464,32 @@ func (r *BlockPackRepository) RestoreSoftDeletedOneById(
 			allowedPermissions,
 			opts...,
 		) {
-			return exceptions.BlockPack.NoPermission("restore a deleted block pack")
+			return nil, exceptions.BlockPack.NoPermission("restore a deleted block pack")
 		}
 	}
 
-	result := parsedOptions.DB.Model(&schemas.BlockPack{}).
+	var restoredBlockPack schemas.BlockPack
+	result := parsedOptions.DB.Model(&restoredBlockPack).
+		Clauses(clause.Returning{}).
 		Where("id = ? AND deleted_at IS NOT NULL", id).
-		Select("deleted_at").
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if err := result.Error; err != nil {
-		return exceptions.BlockPack.FailedToUpdate().WithError(err)
+		return nil, exceptions.BlockPack.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.BlockPack.NoChanges()
+		return nil, exceptions.BlockPack.NoChanges()
 	}
 
-	return nil
+	return &restoredBlockPack, nil
 }
 
 func (r *BlockPackRepository) RestoreSoftDeletedManyByIds(
 	ids []uuid.UUID,
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
-) *exceptions.Exception {
+) ([]schemas.BlockPack, *exceptions.Exception) {
 	if len(ids) == 0 {
-		return exceptions.BlockGroup.NoChanges()
+		return nil, exceptions.BlockGroup.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
@@ -506,22 +507,23 @@ func (r *BlockPackRepository) RestoreSoftDeletedManyByIds(
 			allowedPermissions,
 			opts...,
 		) {
-			return exceptions.BlockPack.NoPermission("restore deleted block packs")
+			return nil, exceptions.BlockPack.NoPermission("restore deleted block packs")
 		}
 	}
 
-	result := parsedOptions.DB.Model(&schemas.BlockPack{}).
+	var restoredBlockPacks []schemas.BlockPack
+	result := parsedOptions.DB.Model(restoredBlockPacks).
+		Clauses(&clause.Returning{}).
 		Where("id IN ? AND deleted_at IS NOT NULL", ids).
-		Select("deleted_at").
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if err := result.Error; err != nil {
-		return exceptions.BlockPack.FailedToUpdate().WithError(err)
+		return nil, exceptions.BlockPack.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.BlockPack.NoChanges()
+		return nil, exceptions.BlockPack.NoChanges()
 	}
 
-	return nil
+	return restoredBlockPacks, nil
 }
 
 func (r *BlockPackRepository) SoftDeleteOneById(

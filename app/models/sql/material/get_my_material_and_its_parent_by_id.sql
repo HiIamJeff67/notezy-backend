@@ -3,7 +3,7 @@ SELECT
     m.id,
     m.name,
     m.type,
-    m.mega_byte_size,
+    m.size,
     m.content_key,
     m.deleted_at,
     m.updated_at,

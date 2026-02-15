@@ -242,12 +242,17 @@ type MoveMySubShelvesResDto struct {
 }
 
 type RestoreMySubShelfByIdResDto struct {
-	UpdatedAt time.Time `json:"updatedAt"`
+	Id             uuid.UUID       `json:"id"`
+	Name           string          `json:"name"`
+	RootShelfId    uuid.UUID       `json:"rootShelfId"`
+	PrevSubShelfId *uuid.UUID      `json:"prevSubShelfId"`
+	Path           types.UUIDArray `json:"path"`
+	DeletedAt      *time.Time      `json:"deletedAt"`
+	UpdatedAt      time.Time       `json:"updatedAt"`
+	CreatedAt      time.Time       `json:"createdAt"`
 }
 
-type RestoreMySubShelvesByIdsResDto struct {
-	UpdatedAt time.Time `json:"updatedAt"`
-}
+type RestoreMySubShelvesByIdsResDto = []RestoreMySubShelfByIdResDto
 
 type DeleteMySubShelfByIdResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`

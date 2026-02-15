@@ -10,7 +10,7 @@ import (
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
-	"notezy-backend/app/options"
+	options "notezy-backend/app/options"
 	validation "notezy-backend/app/validation"
 )
 

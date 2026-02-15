@@ -15,7 +15,7 @@ import (
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
-	"notezy-backend/app/options"
+	options "notezy-backend/app/options"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
 	searchcursor "notezy-backend/shared/lib/searchcursor"

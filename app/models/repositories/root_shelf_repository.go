@@ -24,8 +24,8 @@ type RootShelfRepositoryInterface interface {
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RootShelfRelation, opts ...options.RepositoryOptions) (*schemas.RootShelf, *exceptions.Exception)
 	CreateOneByOwnerId(ownerId uuid.UUID, input inputs.CreateRootShelfInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateRootShelfInput, opts ...options.RepositoryOptions) (*schemas.RootShelf, *exceptions.Exception)
-	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
-	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
+	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.RootShelf, *exceptions.Exception)
+	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.RootShelf, *exceptions.Exception)
 	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	SoftDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
@@ -232,7 +232,7 @@ func (r *RootShelfRepository) RestoreSoftDeletedOneById(
 	id uuid.UUID,
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
-) *exceptions.Exception {
+) (*schemas.RootShelf, *exceptions.Exception) {
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
@@ -241,30 +241,31 @@ func (r *RootShelfRepository) RestoreSoftDeletedOneById(
 		enums.AccessControlPermission_Admin,
 	}
 
+	var restoredRootShelf schemas.RootShelf
 	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
 		Select("1").
 		Where("root_shelf_id = \"RootShelfTable\".id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
-	result := parsedOptions.DB.Model(&schemas.RootShelf{}).
+	result := parsedOptions.DB.Model(&restoredRootShelf).
+		Clauses(clause.Returning{}).
 		Where("id = ? AND EXISTS (?)", id, subQuery).
-		Select("deleted_at").
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
 	if err := result.Error; err != nil {
-		return exceptions.Shelf.FailedToUpdate().WithError(err)
+		return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.Shelf.NotFound()
+		return nil, exceptions.Shelf.NotFound()
 	}
 
-	return nil
+	return &restoredRootShelf, nil
 }
 
 func (r *RootShelfRepository) RestoreSoftDeletedManyByIds(
 	ids []uuid.UUID,
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
-) *exceptions.Exception {
+) ([]schemas.RootShelf, *exceptions.Exception) {
 	if len(ids) == 0 {
-		return exceptions.BlockGroup.NoChanges()
+		return nil, exceptions.BlockGroup.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
@@ -275,21 +276,22 @@ func (r *RootShelfRepository) RestoreSoftDeletedManyByIds(
 		enums.AccessControlPermission_Admin,
 	}
 
+	var restoredRootShelves []schemas.RootShelf
 	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
 		Select("1").
 		Where("root_shelf_id = \"RootShelfTable\".id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
-	result := parsedOptions.DB.Model(&schemas.RootShelf{}).
+	result := parsedOptions.DB.Model(restoredRootShelves).
+		Clauses(clause.Returning{}).
 		Where("id IN ? AND EXISTS (?)", ids, subQuery).
-		Select("deleted_at").
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
 	if err := result.Error; err != nil {
-		return exceptions.Shelf.FailedToUpdate().WithError(err)
+		return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.Shelf.NotFound()
+		return nil, exceptions.Shelf.NotFound()
 	}
 
-	return nil
+	return restoredRootShelves, nil
 }
 
 func (r *RootShelfRepository) SoftDeleteOneById(

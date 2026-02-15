@@ -4,7 +4,7 @@ SELECT
     bg.block_pack_id,
     bg.prev_block_group_id,
     bg.sync_block_group_id,
-    bg.mega_byte_size,
+    bg.size,
     bg.deleted_at AS block_group_deleted_at,
     bg.updated_at AS block_group_updated_at,
     bg.created_at AS block_group_created_at,

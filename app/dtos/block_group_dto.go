@@ -237,7 +237,7 @@ type GetMyBlockGroupByIdResDto struct {
 	BlockPackId      uuid.UUID  `json:"blockPackId"`
 	PrevBlockGroupId *uuid.UUID `json:"prevBlockGroupId"`
 	SyncBlockGroupId *uuid.UUID `json:"syncBlockGroupId"`
-	Size             float64    `json:"size"`
+	Size             int64      `json:"size"`
 	DeletedAt        *time.Time `json:"deletedAt"`
 	UpdatedAt        time.Time  `json:"updatedAt"`
 	CreatedAt        time.Time  `json:"createdAt"`
@@ -248,7 +248,7 @@ type GetMyBlockGroupAndItsBlocksByIdResDto struct {
 	BlockPackId               uuid.UUID                 `json:"blockPackId"`
 	PrevBlockGroupId          *uuid.UUID                `json:"prevBlockGroupId"`
 	SyncBlockGroupId          *uuid.UUID                `json:"syncBlockGroupId"`
-	Size                      float64                   `json:"size"`
+	Size                      int64                     `json:"size"`
 	DeletedAt                 *time.Time                `json:"deletedAt"`
 	UpdatedAt                 time.Time                 `json:"updatedAt"`
 	CreatedAt                 time.Time                 `json:"createdAt"`
@@ -298,12 +298,17 @@ type MoveMyBlockGroupsByIdsResDto struct {
 }
 
 type RestoreMyBlockGroupByIdResDto struct {
-	UpdatedAt time.Time `json:"updatedAt"`
+	Id               uuid.UUID  `json:"id"`
+	BlockPackId      uuid.UUID  `json:"blockPackId"`
+	PrevBlockGroupId *uuid.UUID `json:"prevBlockGroupId"`
+	SyncBlockGroupId *uuid.UUID `json:"syncBlockGroupId"`
+	Size             int64      `json:"size"`
+	DeletedAt        *time.Time `json:"deletedAt"`
+	UpdatedAt        time.Time  `json:"updatedAt"`
+	CreatedAt        time.Time  `json:"createdAt"`
 }
 
-type RestoreMyBlockGroupsByIdsResDto struct {
-	UpdatedAt time.Time `json:"updatedAt"`
-}
+type RestoreMyBlockGroupsByIdsResDto = []RestoreMyBlockGroupByIdResDto
 
 type DeleteMyBlockGroupByIdResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`

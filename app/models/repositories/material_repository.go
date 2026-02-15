@@ -26,8 +26,8 @@ type MaterialRepositoryInterface interface {
 	GetOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.Material, *exceptions.Exception)
 	CreateOneBySubShelfId(subShelfId uuid.UUID, userId uuid.UUID, input inputs.CreateMaterialInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, matchedMaterialType *enums.MaterialType, input inputs.PartialUpdateMaterialInput, opts ...options.RepositoryOptions) (*schemas.Material, *exceptions.Exception)
-	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
-	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
+	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.Material, *exceptions.Exception)
+	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.Material, *exceptions.Exception)
 	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	SoftDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
@@ -349,76 +349,82 @@ func (r *MaterialRepository) RestoreSoftDeletedOneById(
 	id uuid.UUID,
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
-) *exceptions.Exception {
+) (*schemas.Material, *exceptions.Exception) {
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
+	if !parsedOptions.SkipPermissionCheck {
+		allowedPermissions := []enums.AccessControlPermission{
+			enums.AccessControlPermission_Owner,
+			enums.AccessControlPermission_Admin,
+		}
+
+		if !r.HasPermission(
+			id,
+			userId,
+			allowedPermissions,
+			opts...,
+		) {
+			return nil, exceptions.Material.NoPermission("restore a deleted material")
+		}
 	}
 
-	if !r.HasPermission(
-		id,
-		userId,
-		allowedPermissions,
-		opts...,
-	) {
-		return exceptions.Material.NoPermission("restore a deleted material")
-	}
-
-	result := parsedOptions.DB.Model(&schemas.Material{}).
+	var restoredMaterial schemas.Material
+	result := parsedOptions.DB.Model(&restoredMaterial).
+		Clauses(clause.Returning{}).
 		Where("id = ? AND deleted_at IS NOT NULL", id).
-		Select("deleted_at").
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
 	if err := result.Error; err != nil {
-		return exceptions.Material.FailedToUpdate().WithError(err)
+		return nil, exceptions.Material.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.Material.NoChanges()
+		return nil, exceptions.Material.NoChanges()
 	}
 
-	return nil
+	return &restoredMaterial, nil
 }
 
 func (r *MaterialRepository) RestoreSoftDeletedManyByIds(
 	ids []uuid.UUID,
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
-) *exceptions.Exception {
+) ([]schemas.Material, *exceptions.Exception) {
 	if len(ids) == 0 {
-		return exceptions.BlockGroup.NoChanges()
+		return nil, exceptions.BlockGroup.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
+	if !parsedOptions.SkipPermissionCheck {
+		allowedPermissions := []enums.AccessControlPermission{
+			enums.AccessControlPermission_Owner,
+			enums.AccessControlPermission_Admin,
+		}
+
+		if !r.HasPermissions(
+			ids,
+			userId,
+			allowedPermissions,
+			opts...,
+		) {
+			return nil, exceptions.Material.NoPermission("restore deleted materials")
+		}
 	}
 
-	if !r.HasPermissions(
-		ids,
-		userId,
-		allowedPermissions,
-		opts...,
-	) {
-		return exceptions.Material.NoPermission("restore deleted materials")
-	}
-
-	result := parsedOptions.DB.Model(&schemas.Material{}).
+	var restoredMaterials []schemas.Material
+	result := parsedOptions.DB.Model(restoredMaterials).
+		Clauses(clause.Returning{}).
 		Where("id IN ? AND deleted_at IS NOT NULL", ids).
-		Select("deleted_at").
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
 	if err := result.Error; err != nil {
-		return exceptions.Material.FailedToUpdate().WithError(err)
+		return nil, exceptions.Material.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.Material.NoChanges()
+		return nil, exceptions.Material.NoChanges()
 	}
 
-	return nil
+	return restoredMaterials, nil
 }
 
 func (r *MaterialRepository) SoftDeleteOneById(
