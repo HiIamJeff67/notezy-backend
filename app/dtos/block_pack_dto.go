@@ -41,7 +41,22 @@ type GetMyBlockPackAndItsParentByIdReqDto struct {
 	]
 }
 
-type GetAllMyBlockPacksByParentSubShelfIdReqDto struct {
+type GetMyBlockPackAndItsBlockGroupsAndTheirBlocksByIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		any,
+		struct {
+			BlockPackId uuid.UUID `json:"blockPackId" validate:"required"`
+		},
+	]
+}
+
+type GetMyBlockPacksByParentSubShelfIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -234,7 +249,20 @@ type GetMyBlockPackAndItsParentByIdResDto struct {
 	ParentSubShelfCreatedAt      time.Time                     `json:"parentSubShelfCreatedAt" gorm:"column:parent_sub_shelf_created_at;"`
 }
 
-type GetAllMyBlockPacksByParentSubShelfIdResDto = []GetMyBlockPackByIdResDto
+type GetMyBlockPackAndItsBlockGroupsAndTheirBlocksByIdResDto struct {
+	Id                  uuid.UUID                               `json:"id"`
+	ParentSubShelfId    uuid.UUID                               `json:"parentSubShelfId"`
+	Name                string                                  `json:"name"`
+	Icon                *enums.SupportedBlockPackIcon           `json:"icon"`
+	HeaderBackgroundURL *string                                 `json:"headerBackgroundURL"`
+	BlockCount          int32                                   `json:"blockCount"`
+	DeletedAt           *time.Time                              `json:"deletedAt"`
+	UpdatedAt           time.Time                               `json:"updatedAt"`
+	CreatedAt           time.Time                               `json:"createdAt"`
+	BlockGroups         []GetMyBlockGroupAndItsBlocksByIdResDto `json:"blockGroups"`
+}
+
+type GetMyBlockPacksByParentSubShelfIdResDto = []GetMyBlockPackByIdResDto
 
 type GetAllMyBlockPacksByRootShelfIdResDto = []GetMyBlockPackByIdResDto
 

@@ -26,8 +26,20 @@ func configureDevelopmentBlockPackRoutes() {
 			),
 		)
 		blockPackRoutes.GET(
+			"/getMyBlockPackAndItsParentById",
+			blockPackModule.Binder.BindGetMyBlockPackAndItsParentById(
+				blockPackModule.Controller.GetMyBlockPackAndItsParentById,
+			),
+		)
+		blockPackRoutes.GET(
+			"/getMyBlockPackAndItsBlockGroupsAndTheirBlocksById",
+			blockPackModule.Binder.BindGetMyBlockPackAndItsBlockGroupsAndTheirBlocksById(
+				blockPackModule.Controller.GetMyBlockPackAndItsBlockGroupsAndTheirBlocksById,
+			),
+		)
+		blockPackRoutes.GET(
 			"/getMyBlockPacksByParentSubShelfId",
-			blockPackModule.Binder.BindGetAllMyBlockPacksByParentSubShelfId(
+			blockPackModule.Binder.BindGetMyBlockPacksByParentSubShelfId(
 				blockPackModule.Controller.GetMyBlockPacksByParentSubShelfId,
 			),
 		)

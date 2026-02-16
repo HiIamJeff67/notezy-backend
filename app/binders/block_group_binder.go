@@ -18,6 +18,7 @@ import (
 type BlockGroupBinderInterface interface {
 	BindGetMyBlockGroupById(controllerFunc types.ControllerFunc[*dtos.GetMyBlockGroupByIdReqDto]) gin.HandlerFunc
 	BindGetMyBlockGroupAndItsBlocksById(controllerFunc types.ControllerFunc[*dtos.GetMyBlockGroupAndItsBlocksByIdReqDto]) gin.HandlerFunc
+	BindGetMyBlockGroupsAndTheirBlocksByIds(controllerFunc types.ControllerFunc[*dtos.GetMyBlockGroupsAndTheirBlocksByIdsReqDto]) gin.HandlerFunc
 	BindGetMyBlockGroupsAndTheirBlocksByBlockPackId(controllerFunc types.ControllerFunc[*dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdReqDto]) gin.HandlerFunc
 	BindGetMyBlockGroupsByPrevBlockGroupId(controllerFunc types.ControllerFunc[*dtos.GetMyBlockGroupsByPrevBlockGroupIdReqDto]) gin.HandlerFunc
 	BindGetAllMyBlockGroupsByBlockPackId(controllerFunc types.ControllerFunc[*dtos.GetAllMyBlockGroupsByBlockPackIdReqDto]) gin.HandlerFunc
@@ -93,6 +94,33 @@ func (b *BlockGroupBinder) BindGetMyBlockGroupAndItsBlocksById(controllerFunc ty
 			return
 		}
 		reqDto.Param.BlockGroupId = blockGroupId
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *BlockGroupBinder) BindGetMyBlockGroupsAndTheirBlocksByIds(controllerFunc types.ControllerFunc[*dtos.GetMyBlockGroupsAndTheirBlocksByIdsReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.GetMyBlockGroupsAndTheirBlocksByIdsReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
+			exceptions.Shelf.InvalidInput().WithError(err).Log().ResponseWithJSON(ctx)
+			return
+		}
+
+		if len(reqDto.Param.BlockGroupIds) == 0 {
+			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("blockGroupIds is required")).Log().ResponseWithJSON(ctx)
+			return
+		}
 
 		controllerFunc(ctx, &reqDto)
 	}

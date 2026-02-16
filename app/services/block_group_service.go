@@ -26,6 +26,7 @@ import (
 type BlockGroupServiceInterface interface {
 	GetMyBlockGroupById(ctx context.Context, reqDto *dtos.GetMyBlockGroupByIdReqDto) (*dtos.GetMyBlockGroupByIdResDto, *exceptions.Exception)
 	GetMyBlockGroupAndItsBlocksById(ctx context.Context, reqDto *dtos.GetMyBlockGroupAndItsBlocksByIdReqDto) (*dtos.GetMyBlockGroupAndItsBlocksByIdResDto, *exceptions.Exception)
+	GetMyBlockGroupsAndTheirBlocksByIds(ctx context.Context, reqDto *dtos.GetMyBlockGroupsAndTheirBlocksByIdsReqDto) (*dtos.GetMyBlockGroupsAndTheirBlocksByIdsResDto, *exceptions.Exception)
 	GetMyBlockGroupsAndTheirBlocksByBlockPackId(ctx context.Context, reqDto *dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdReqDto) (*dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdResDto, *exceptions.Exception)
 	GetMyBlockGroupsByPrevBlockGroupId(ctx context.Context, reqDto *dtos.GetMyBlockGroupsByPrevBlockGroupIdReqDto) (*dtos.GetMyBlockGroupsByPrevBlockGroupIdResDto, *exceptions.Exception)
 	GetAllMyBlockGroupsByBlockPackId(ctx context.Context, reqDto *dtos.GetAllMyBlockGroupsByBlockPackIdReqDto) (*dtos.GetAllMyBlockGroupsByBlockPackIdResDto, *exceptions.Exception)
@@ -183,6 +184,112 @@ func (s *BlockGroupService) GetMyBlockGroupAndItsBlocksById(
 		CreatedAt:                 blockGroup.CreatedAt,
 		RawArborizedEditableBlock: *rawArborizedBlock,
 	}, nil
+}
+
+func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByIds(
+	ctx context.Context, reqDto *dtos.GetMyBlockGroupsAndTheirBlocksByIdsReqDto,
+) (*dtos.GetMyBlockGroupsAndTheirBlocksByIdsResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+
+	blockGroups, exception := s.blockGroupRepository.CheckPermissionsAndGetManyByIds(
+		reqDto.Param.BlockGroupIds,
+		reqDto.ContextFields.UserId,
+		nil,
+		allowedPermissions,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	var resDto dtos.GetMyBlockGroupsAndTheirBlocksByIdsResDto
+
+	blockGroupIds := make([]uuid.UUID, len(blockGroups))
+	for index, blockGroup := range blockGroups {
+		blockGroupIds[index] = blockGroup.Id
+		resDto = append(resDto, dtos.GetMyBlockGroupAndItsBlocksByIdResDto{
+			Id:                        blockGroup.Id,
+			BlockPackId:               blockGroup.BlockPackId,
+			PrevBlockGroupId:          blockGroup.PrevBlockGroupId,
+			SyncBlockGroupId:          blockGroup.SyncBlockGroupId,
+			DeletedAt:                 blockGroup.DeletedAt,
+			UpdatedAt:                 blockGroup.UpdatedAt,
+			CreatedAt:                 blockGroup.CreatedAt,
+			RawArborizedEditableBlock: dtos.RawArborizedEditableBlock{},
+		})
+	}
+
+	var flattenedBlocks []schemas.Block
+	result := s.db.Model(&schemas.Block{}).
+		Where("block_group_id IN ?", blockGroupIds).
+		Find(&flattenedBlocks)
+	if err := result.Error; err != nil || len(flattenedBlocks) == 0 {
+		// return the current node with empty editable block if we cannot find them
+		return &resDto, nil
+	}
+
+	blockGroupToBlocksMap := make(map[uuid.UUID][]schemas.Block)
+	for _, flattenedBlock := range flattenedBlocks {
+		blockGroupToBlocksMap[flattenedBlock.BlockGroupId] = append(blockGroupToBlocksMap[flattenedBlock.BlockGroupId], flattenedBlock)
+	}
+
+	for index, dto := range resDto {
+		blocks, exist := blockGroupToBlocksMap[dto.Id]
+		if !exist {
+			// skip the block groups with no children blocks
+			continue
+		}
+
+		var root *dtos.RawFlattenedEditableBlock = nil
+		childrenMap := make(map[uuid.UUID][]dtos.RawFlattenedEditableBlock, len(blocks))
+		for _, block := range blocks {
+			if block.ParentBlockId == nil {
+				if root != nil {
+					// duplicate root block detected
+					return nil, exceptions.BlockGroup.RepeatedRootBlockInBlockGroupDetected(blocks[0].BlockGroupId, block.Id)
+				}
+
+				root = &dtos.RawFlattenedEditableBlock{
+					Id:            block.Id,
+					ParentBlockId: nil,
+					Type:          block.Type,
+					Props:         block.Props,
+					Content:       block.Content,
+				}
+			} else {
+				childrenMap[*block.ParentBlockId] = append(childrenMap[*block.ParentBlockId], dtos.RawFlattenedEditableBlock{
+					Id:            block.Id,
+					ParentBlockId: block.ParentBlockId,
+					Type:          block.Type,
+					Props:         block.Props,
+					Content:       block.Content,
+				})
+			}
+		}
+
+		rawArborizedBlock, exception := s.editableBlockAdapter.ArborizeRawToRaw(root, childrenMap)
+		if exception != nil {
+			return nil, exception
+		}
+
+		if rawArborizedBlock != nil {
+			resDto[index].RawArborizedEditableBlock = *rawArborizedBlock
+		}
+	}
+
+	return &resDto, nil
 }
 
 func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(

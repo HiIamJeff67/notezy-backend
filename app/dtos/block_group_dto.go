@@ -38,6 +38,21 @@ type GetMyBlockGroupAndItsBlocksByIdReqDto struct {
 	]
 }
 
+type GetMyBlockGroupsAndTheirBlocksByIdsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		any,
+		struct {
+			BlockGroupIds []uuid.UUID `json:"blockPackIds" form:"blockGroupIds" validate:"required"`
+		},
+	]
+}
+
 type GetMyBlockGroupsAndTheirBlocksByBlockPackIdReqDto struct {
 	NotezyRequest[
 		struct {
@@ -254,6 +269,8 @@ type GetMyBlockGroupAndItsBlocksByIdResDto struct {
 	CreatedAt                 time.Time                 `json:"createdAt"`
 	RawArborizedEditableBlock RawArborizedEditableBlock `json:"rawArborizedEditableBlock"`
 }
+
+type GetMyBlockGroupsAndTheirBlocksByIdsResDto = []GetMyBlockGroupAndItsBlocksByIdResDto
 
 type GetMyBlockGroupsAndTheirBlocksByBlockPackIdResDto = []GetMyBlockGroupAndItsBlocksByIdResDto
 

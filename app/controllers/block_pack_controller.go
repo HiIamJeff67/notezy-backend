@@ -14,7 +14,8 @@ import (
 type BlockPackControllerInterface interface {
 	GetMyBlockPackById(ctx *gin.Context, reqDto *dtos.GetMyBlockPackByIdReqDto)
 	GetMyBlockPackAndItsParentById(ctx *gin.Context, reqDto *dtos.GetMyBlockPackAndItsParentByIdReqDto)
-	GetMyBlockPacksByParentSubShelfId(ctx *gin.Context, reqDto *dtos.GetAllMyBlockPacksByParentSubShelfIdReqDto)
+	GetMyBlockPackAndItsBlockGroupsAndTheirBlocksById(ctx *gin.Context, reqDto *dtos.GetMyBlockPackAndItsBlockGroupsAndTheirBlocksByIdReqDto)
+	GetMyBlockPacksByParentSubShelfId(ctx *gin.Context, reqDto *dtos.GetMyBlockPacksByParentSubShelfIdReqDto)
 	GetAllMyBlockPacksByRootShelfId(ctx *gin.Context, reqDto *dtos.GetAllMyBlockPacksByRootShelfIdReqDto)
 	CreateBlockPack(ctx *gin.Context, reqDto *dtos.CreateBlockPackReqDto)
 	UpdateMyBlockPackById(ctx *gin.Context, reqDto *dtos.UpdateMyBlockPackByIdReqDto)
@@ -66,7 +67,21 @@ func (c *BlockPackController) GetMyBlockPackAndItsParentById(ctx *gin.Context, r
 	})
 }
 
-func (c *BlockPackController) GetMyBlockPacksByParentSubShelfId(ctx *gin.Context, reqDto *dtos.GetAllMyBlockPacksByParentSubShelfIdReqDto) {
+func (c *BlockPackController) GetMyBlockPackAndItsBlockGroupsAndTheirBlocksById(ctx *gin.Context, reqDto *dtos.GetMyBlockPackAndItsBlockGroupsAndTheirBlocksByIdReqDto) {
+	resDto, exception := c.blockPackService.GetMyBlockPackAndItsBlockGroupsAndTheirBlocksById(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *BlockPackController) GetMyBlockPacksByParentSubShelfId(ctx *gin.Context, reqDto *dtos.GetMyBlockPacksByParentSubShelfIdReqDto) {
 	resDto, exception := c.blockPackService.GetMyBlockPacksByParentSubShelfId(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyResponseWithJSON(ctx)
