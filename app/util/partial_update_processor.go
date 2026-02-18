@@ -23,7 +23,7 @@ func PartialUpdatePreprocess[T any, S any](values T, setNull *map[string]bool, e
 		valuesType = valuesType.Elem()
 	}
 
-	// 第一步：處理 setNull 標記，將對應欄位設為 nil
+	// Step 1：handle setNull mark, set the corresponded fields to null
 	if setNull != nil {
 		for fieldName, shouldSetNull := range *setNull {
 			if shouldSetNull {
@@ -37,35 +37,34 @@ func PartialUpdatePreprocess[T any, S any](values T, setNull *map[string]bool, e
 		}
 	}
 
-	// 第二步：處理 values 中的非零值，替換到 existingValues
+	// Step 2：handle non zero fields in values, replace them to existingValues
 	for i := 0; i < valuesReflect.NumField(); i++ {
 		valuesField := valuesReflect.Field(i)
 		valuesFieldType := valuesType.Field(i)
 		fieldName := valuesFieldType.Name
 
-		// 跳過零值欄位
+		// skip zero fields
 		if isZeroValue(valuesField) {
 			continue
 		}
 
-		// 在 existingValues 中找到對應欄位
+		// find corresponded fields in the existingValues
 		existingField, found := findFieldByName(existingReflect, existingType, fieldName)
 		if !found || !existingField.CanSet() {
 			continue
 		}
 
-		// 根據類型進行適當的設置
 		if valuesField.Kind() == reflect.Ptr && !valuesField.IsNil() {
-			// values 欄位是非 nil 的 pointer
+			// if values is non nil pointer
 			if existingField.Kind() == reflect.Ptr {
 				existingField.Set(valuesField)
 			} else {
 				existingField.Set(valuesField.Elem())
 			}
 		} else if valuesField.Kind() != reflect.Ptr {
-			// values 欄位不是 pointer，直接設置
+			// if values is not a pointer
 			if existingField.Kind() == reflect.Ptr {
-				// 創建新的 pointer
+				// construct new pointer
 				newValue := reflect.New(existingField.Type().Elem())
 				newValue.Elem().Set(valuesField)
 				existingField.Set(newValue)

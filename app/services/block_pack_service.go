@@ -4,11 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
 	pg "github.com/lib/pq"
 	"gorm.io/gorm"
 
-	adapters "notezy-backend/app/adapters"
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	inputs "notezy-backend/app/models/inputs"
@@ -27,7 +25,6 @@ import (
 type BlockPackServiceInterface interface {
 	GetMyBlockPackById(ctx context.Context, reqDto *dtos.GetMyBlockPackByIdReqDto) (*dtos.GetMyBlockPackByIdResDto, *exceptions.Exception)
 	GetMyBlockPackAndItsParentById(ctx context.Context, reqDto *dtos.GetMyBlockPackAndItsParentByIdReqDto) (*dtos.GetMyBlockPackAndItsParentByIdResDto, *exceptions.Exception)
-	GetMyBlockPackAndItsBlockGroupsAndTheirBlocksById(ctx context.Context, reqDto *dtos.GetMyBlockPackAndItsBlockGroupsAndTheirBlocksByIdReqDto) (*dtos.GetMyBlockPackAndItsBlockGroupsAndTheirBlocksByIdResDto, *exceptions.Exception)
 	GetMyBlockPacksByParentSubShelfId(ctx context.Context, reqDto *dtos.GetMyBlockPacksByParentSubShelfIdReqDto) (*dtos.GetMyBlockPacksByParentSubShelfIdResDto, *exceptions.Exception)
 	GetAllMyBlockPacksByRootShelfId(ctx context.Context, reqDto *dtos.GetAllMyBlockPacksByRootShelfIdReqDto) (*dtos.GetAllMyBlockPacksByRootShelfIdResDto, *exceptions.Exception)
 	CreateBlockPack(ctx context.Context, reqDto *dtos.CreateBlockPackReqDto) (*dtos.CreateBlockPackResDto, *exceptions.Exception)
@@ -41,28 +38,20 @@ type BlockPackServiceInterface interface {
 }
 
 type BlockPackService struct {
-	db                   *gorm.DB
-	subShelfRepository   repositories.SubShelfRepositoryInterface
-	blockPackRepository  repositories.BlockPackRepositoryInterface
-	blockGroupRepository repositories.BlockGroupRepositoryInterface
-	blockRepository      repositories.BlockRepositoryInterface
-	editableBlockAdapter adapters.EditableBlockAdapterInterface
+	db                  *gorm.DB
+	subShelfRepository  repositories.SubShelfRepositoryInterface
+	blockPackRepository repositories.BlockPackRepositoryInterface
 }
 
 func NewBlockPackService(
 	db *gorm.DB,
 	subShelfRepository repositories.SubShelfRepositoryInterface,
 	blockPackRepository repositories.BlockPackRepositoryInterface,
-	blockGroupRepository repositories.BlockGroupRepositoryInterface,
-	blockRepository repositories.BlockRepositoryInterface,
-	editableBlockAdapter adapters.EditableBlockAdapterInterface,
 ) BlockPackServiceInterface {
 	return &BlockPackService{
-		db:                   db,
-		subShelfRepository:   subShelfRepository,
-		blockPackRepository:  blockPackRepository,
-		blockGroupRepository: blockGroupRepository,
-		blockRepository:      blockRepository,
+		db:                  db,
+		subShelfRepository:  subShelfRepository,
+		blockPackRepository: blockPackRepository,
 	}
 }
 
@@ -123,135 +112,6 @@ func (s *BlockPackService) GetMyBlockPackAndItsParentById(
 	).Scan(&resDto)
 	if err := result.Error; err != nil {
 		return nil, exceptions.BlockPack.NotFound().WithError(err)
-	}
-
-	return &resDto, nil
-}
-
-func (s *BlockPackService) GetMyBlockPackAndItsBlockGroupsAndTheirBlocksById(
-	ctx context.Context, reqDto *dtos.GetMyBlockPackAndItsBlockGroupsAndTheirBlocksByIdReqDto,
-) (*dtos.GetMyBlockPackAndItsBlockGroupsAndTheirBlocksByIdResDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockPack.InvalidDto().WithError(err)
-	}
-
-	db := s.db.WithContext(ctx)
-
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
-	}
-
-	blockPack, exception := s.blockPackRepository.CheckPermissionAndGetOneById(
-		reqDto.Param.BlockPackId,
-		reqDto.ContextFields.UserId,
-		nil,
-		allowedPermissions,
-		options.WithDB(db),
-		options.WithOnlyDeleted(types.Ternary_Negative),
-	)
-	if exception != nil {
-		return nil, exception
-	}
-
-	resDto := dtos.GetMyBlockPackAndItsBlockGroupsAndTheirBlocksByIdResDto{
-		Id:                  blockPack.Id,
-		ParentSubShelfId:    blockPack.ParentSubShelfId,
-		Name:                blockPack.Name,
-		Icon:                blockPack.Icon,
-		HeaderBackgroundURL: blockPack.HeaderBackgroundURL,
-		BlockCount:          blockPack.BlockCount,
-		DeletedAt:           blockPack.DeletedAt,
-		UpdatedAt:           blockPack.UpdatedAt,
-		CreatedAt:           blockPack.CreatedAt,
-		BlockGroups:         []dtos.GetMyBlockGroupAndItsBlocksByIdResDto{},
-	}
-
-	blockGroups, exception := s.blockGroupRepository.CheckPermissionsAndGetManyByBlockPackId(
-		reqDto.Param.BlockPackId,
-		reqDto.ContextFields.UserId,
-		nil,
-		allowedPermissions,
-		options.WithDB(db),
-		options.WithOnlyDeleted(types.Ternary_Negative),
-	)
-	if exception != nil {
-		return nil, exception
-	}
-
-	blockGroupIds := make([]uuid.UUID, len(blockGroups))
-	for index, blockGroup := range blockGroups {
-		blockGroupIds[index] = blockGroup.Id
-		resDto.BlockGroups = append(resDto.BlockGroups, dtos.GetMyBlockGroupAndItsBlocksByIdResDto{
-			Id:                        blockGroup.Id,
-			BlockPackId:               blockGroup.BlockPackId,
-			PrevBlockGroupId:          blockGroup.PrevBlockGroupId,
-			SyncBlockGroupId:          blockGroup.SyncBlockGroupId,
-			DeletedAt:                 blockGroup.DeletedAt,
-			UpdatedAt:                 blockGroup.UpdatedAt,
-			CreatedAt:                 blockGroup.CreatedAt,
-			RawArborizedEditableBlock: dtos.RawArborizedEditableBlock{},
-		})
-	}
-
-	var flattenedBlocks []schemas.Block
-	result := s.db.Model(&schemas.Block{}).
-		Where("block_group_id IN ?", blockGroupIds).
-		Find(&flattenedBlocks)
-	if err := result.Error; err != nil || len(flattenedBlocks) == 0 {
-		// return the current node with empty editable block if we cannot find them
-		return &resDto, nil
-	}
-
-	blockGroupToBlocksMap := make(map[uuid.UUID][]schemas.Block)
-	for _, flattenedBlock := range flattenedBlocks {
-		blockGroupToBlocksMap[flattenedBlock.BlockGroupId] = append(blockGroupToBlocksMap[flattenedBlock.BlockGroupId], flattenedBlock)
-	}
-
-	for index, dto := range resDto.BlockGroups {
-		blocks, exist := blockGroupToBlocksMap[dto.Id]
-		if !exist {
-			// skip the block groups with no children blocks
-			continue
-		}
-
-		var root *dtos.RawFlattenedEditableBlock = nil
-		childrenMap := make(map[uuid.UUID][]dtos.RawFlattenedEditableBlock, len(blocks))
-		for _, block := range blocks {
-			if block.ParentBlockId == nil {
-				if root != nil {
-					// duplicate root block detected
-					return nil, exceptions.BlockGroup.RepeatedRootBlockInBlockGroupDetected(blocks[0].BlockGroupId, block.Id)
-				}
-
-				root = &dtos.RawFlattenedEditableBlock{
-					Id:            block.Id,
-					ParentBlockId: nil,
-					Type:          block.Type,
-					Props:         block.Props,
-					Content:       block.Content,
-				}
-			} else {
-				childrenMap[*block.ParentBlockId] = append(childrenMap[*block.ParentBlockId], dtos.RawFlattenedEditableBlock{
-					Id:            block.Id,
-					ParentBlockId: block.ParentBlockId,
-					Type:          block.Type,
-					Props:         block.Props,
-					Content:       block.Content,
-				})
-			}
-		}
-
-		rawArborizedBlock, exception := s.editableBlockAdapter.ArborizeRawToRaw(root, childrenMap)
-		if exception != nil {
-			return nil, exception
-		}
-
-		if rawArborizedBlock != nil {
-			resDto.BlockGroups[index].RawArborizedEditableBlock = *rawArborizedBlock
-		}
 	}
 
 	return &resDto, nil

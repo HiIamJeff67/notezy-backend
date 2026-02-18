@@ -1,16 +1,28 @@
 package services
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"errors"
+	"time"
 
+	"github.com/google/uuid"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
+	adapters "notezy-backend/app/adapters"
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
+	concurrency "notezy-backend/app/lib/concurrency"
+	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
+	enums "notezy-backend/app/models/schemas/enums"
 	options "notezy-backend/app/options"
 	validation "notezy-backend/app/validation"
+	constants "notezy-backend/shared/constants"
+	blocknote "notezy-backend/shared/lib/blocknote"
 	types "notezy-backend/shared/types"
 )
 
@@ -18,24 +30,42 @@ import (
 
 type BlockServiceInterface interface {
 	GetMyBlockById(ctx context.Context, reqDto *dtos.GetMyBlockByIdReqDto) (*dtos.GetMyBlockByIdResDto, *exceptions.Exception)
+	GetMyBlocksByIds(ctx context.Context, reqDto *dtos.GetMyBlocksByIdsReqDto) (*dtos.GetMyBlocksByIdsResDto, *exceptions.Exception)
+	GetMyBlocksByBlockGroupId(ctx context.Context, reqDto *dtos.GetMyBlocksByBlockGroupIdReqDto) (*dtos.GetMyBlocksByBlockGroupIdResDto, *exceptions.Exception)
+	GetMyBlocksByBlockGroupIds(ctx context.Context, reqDto *dtos.GetMyBlocksByBlockGroupIdsReqDto) (*dtos.GetMyBlocksByBlockGroupIdsResDto, *exceptions.Exception)
+	GetMyBlocksByBlockPackId(ctx context.Context, reqDto *dtos.GetMyBlocksByBlockPackIdReqDto) (*dtos.GetMyBlocksByBlockPackIdResDto, *exceptions.Exception)
 	GetAllMyBlocks(ctx context.Context, reqDto *dtos.GetAllMyBlocksReqDto) (*dtos.GetAllMyBlocksResDto, *exceptions.Exception)
+	InsertBlock(ctx context.Context, reqDto *dtos.InsertBlockReqDto) (*dtos.InsertBlockResDto, *exceptions.Exception)
+	InsertBlocks(ctx context.Context, reqDto *dtos.InsertBlocksReqDto) (*dtos.InsertBlocksResDto, *exceptions.Exception)
+	UpdateMyBlockById(ctx context.Context, reqDto *dtos.UpdateMyBlockByIdReqDto) (*dtos.UpdateMyBlockByIdResDto, *exceptions.Exception)
+	UpdateMyBlocksByIds(ctx context.Context, reqDto *dtos.UpdateMyBlocksByIdsReqDto) (*dtos.UpdateMyBlocksByIdsResDto, *exceptions.Exception)
+	RestoreMyBlockById(ctx context.Context, reqDto *dtos.RestoreMyBlockByIdReqDto) (*dtos.RestoreMyBlockByIdResDto, *exceptions.Exception)
+	RestoreMyBlocksByIds(ctx context.Context, reqDto *dtos.RestoreMyBlocksByIdsReqDto) (*dtos.RestoreMyBlocksByIdsResDto, *exceptions.Exception)
+	DeleteMyBlockById(ctx context.Context, reqDto *dtos.DeleteMyBlockByIdReqDto) (*dtos.DeleteMyBlockByIdResDto, *exceptions.Exception)
+	DeleteMyBlocksByIds(ctx context.Context, reqDto *dtos.DeleteMyBlocksByIdsReqDto) (*dtos.DeleteMyBlockPacksByIdsResDto, *exceptions.Exception)
 }
 
 type BlockService struct {
 	db                   *gorm.DB
+	blockPackRepository  repositories.BlockPackRepositoryInterface
 	blockGroupRepository repositories.BlockGroupRepositoryInterface
 	blockRepository      repositories.BlockRepositoryInterface
+	editableBlockAdapter adapters.EditableBlockAdapterInterface
 }
 
 func NewBlockService(
 	db *gorm.DB,
+	blockPackRepository repositories.BlockPackRepositoryInterface,
 	blockGroupRepository repositories.BlockGroupRepositoryInterface,
 	blockRepository repositories.BlockRepositoryInterface,
+	editableBlockAdapter adapters.EditableBlockAdapterInterface,
 ) BlockServiceInterface {
 	return &BlockService{
 		db:                   db,
+		blockPackRepository:  blockPackRepository,
 		blockGroupRepository: blockGroupRepository,
 		blockRepository:      blockRepository,
+		editableBlockAdapter: editableBlockAdapter,
 	}
 }
 
@@ -74,6 +104,266 @@ func (s *BlockService) GetMyBlockById(
 	}, nil
 }
 
+func (s *BlockService) GetMyBlocksByIds(
+	ctx context.Context, reqDto *dtos.GetMyBlocksByIdsReqDto,
+) (*dtos.GetMyBlocksByIdsResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Block.InvalidDto().WithError(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+
+	blocks, exception := s.blockRepository.CheckPermissionsAndGetManyByIds(
+		reqDto.Param.BlockIds,
+		reqDto.ContextFields.UserId,
+		nil,
+		allowedPermissions,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	var resDto dtos.GetMyBlocksByIdsResDto
+	for _, block := range blocks {
+		resDto = append(resDto, dtos.GetMyBlockByIdResDto{
+			Id:            block.Id,
+			ParentBlockId: block.ParentBlockId,
+			BlockGroupId:  block.BlockGroupId,
+			Type:          block.Type,
+			Props:         block.Props,
+			Content:       block.Content,
+			DeletedAt:     block.DeletedAt,
+			UpdatedAt:     block.UpdatedAt,
+			CreatedAt:     block.CreatedAt,
+		})
+	}
+
+	return &resDto, nil
+}
+
+func (s *BlockService) GetMyBlocksByBlockGroupId(
+	ctx context.Context, reqDto *dtos.GetMyBlocksByBlockGroupIdReqDto,
+) (*dtos.GetMyBlocksByBlockGroupIdResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Block.InvalidDto().WithError(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+
+	if !s.blockGroupRepository.HasPermission(
+		reqDto.Param.BlockGroupId,
+		reqDto.ContextFields.UserId,
+		allowedPermissions,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	) {
+		return nil, exceptions.Block.NoPermission("get the block group of blocks")
+	}
+
+	var blocks []schemas.Block
+	result := db.Model(&schemas.Block{}).
+		Where("block_group_id = ?", reqDto.Param.BlockGroupId).
+		Find(&blocks)
+	if err := result.Error; err != nil || len(blocks) == 0 {
+		return &dtos.GetMyBlocksByBlockGroupIdResDto{
+			RawArborizedEditableBlock: dtos.RawArborizedEditableBlock{},
+		}, nil
+	}
+
+	var root *dtos.RawFlattenedEditableBlock = nil
+	childrenMap := make(map[uuid.UUID][]dtos.RawFlattenedEditableBlock, len(blocks))
+	for _, block := range blocks {
+		if block.ParentBlockId == nil {
+			if root != nil {
+				// duplicate root block detected
+				return nil, exceptions.BlockGroup.RepeatedRootBlockInBlockGroupDetected(blocks[0].BlockGroupId, block.Id)
+			}
+
+			root = &dtos.RawFlattenedEditableBlock{
+				Id:            block.Id,
+				ParentBlockId: nil,
+				Type:          block.Type,
+				Props:         block.Props,
+				Content:       block.Content,
+			}
+		} else {
+			childrenMap[*block.ParentBlockId] = append(childrenMap[*block.ParentBlockId], dtos.RawFlattenedEditableBlock{
+				Id:            block.Id,
+				ParentBlockId: block.ParentBlockId,
+				Type:          block.Type,
+				Props:         block.Props,
+				Content:       block.Content,
+			})
+		}
+	}
+
+	rawArborizedBlock, exception := s.editableBlockAdapter.ArborizeRawToRaw(root, childrenMap)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.GetMyBlocksByBlockGroupIdResDto{
+		RawArborizedEditableBlock: *rawArborizedBlock,
+	}, nil
+}
+
+func (s *BlockService) GetMyBlocksByBlockGroupIds(
+	ctx context.Context, reqDto *dtos.GetMyBlocksByBlockGroupIdsReqDto,
+) (*dtos.GetMyBlocksByBlockGroupIdsResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+
+	if s.blockGroupRepository.HasPermissions(
+		reqDto.Param.BlockGroupIds,
+		reqDto.ContextFields.UserId,
+		allowedPermissions,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	) {
+		return nil, exceptions.Block.NoPermission("get the block groups of blocks")
+	}
+
+	var resDto dtos.GetMyBlocksByBlockGroupIdsResDto
+
+	var flattenedBlocks []schemas.Block
+	result := db.Model(&schemas.Block{}).
+		Where("block_group_id IN ?", reqDto.Param.BlockGroupIds).
+		Find(&flattenedBlocks)
+	if err := result.Error; err != nil || len(flattenedBlocks) == 0 {
+		return &resDto, nil
+	}
+
+	blockGroupToBlocksMap := make(map[uuid.UUID][]schemas.Block)
+	for _, flattenedBlock := range flattenedBlocks {
+		blockGroupToBlocksMap[flattenedBlock.BlockGroupId] = append(blockGroupToBlocksMap[flattenedBlock.BlockGroupId], flattenedBlock)
+	}
+
+	for index, blockGroupId := range reqDto.Param.BlockGroupIds {
+		blocks, exist := blockGroupToBlocksMap[blockGroupId]
+		if !exist {
+			// skip the block groups with no children blocks
+			continue
+		}
+
+		var root *dtos.RawFlattenedEditableBlock = nil
+		childrenMap := make(map[uuid.UUID][]dtos.RawFlattenedEditableBlock, len(blocks))
+		for _, block := range blocks {
+			if block.ParentBlockId == nil {
+				if root != nil {
+					// duplicate root block detected
+					return nil, exceptions.BlockGroup.RepeatedRootBlockInBlockGroupDetected(blocks[0].BlockGroupId, block.Id)
+				}
+
+				root = &dtos.RawFlattenedEditableBlock{
+					Id:            block.Id,
+					ParentBlockId: nil,
+					Type:          block.Type,
+					Props:         block.Props,
+					Content:       block.Content,
+				}
+			} else {
+				childrenMap[*block.ParentBlockId] = append(childrenMap[*block.ParentBlockId], dtos.RawFlattenedEditableBlock{
+					Id:            block.Id,
+					ParentBlockId: block.ParentBlockId,
+					Type:          block.Type,
+					Props:         block.Props,
+					Content:       block.Content,
+				})
+			}
+		}
+
+		rawArborizedBlock, exception := s.editableBlockAdapter.ArborizeRawToRaw(root, childrenMap)
+		if exception != nil {
+			return nil, exception
+		}
+
+		if rawArborizedBlock != nil {
+			resDto[index].RawArborizedEditableBlock = *rawArborizedBlock
+		}
+	}
+
+	return &resDto, nil
+}
+
+func (s *BlockService) GetMyBlocksByBlockPackId(
+	ctx context.Context, reqDto *dtos.GetMyBlocksByBlockPackIdReqDto,
+) (*dtos.GetMyBlocksByBlockPackIdResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Block.InvalidDto().WithError(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+
+	if !s.blockPackRepository.HasPermission(
+		reqDto.Param.BlockPackId,
+		reqDto.ContextFields.UserId,
+		allowedPermissions,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	) {
+		return nil, exceptions.Block.NoPermission("get the block pack of blocks")
+	}
+
+	var blocks []schemas.Block
+	result := db.Model(&schemas.Block{}).
+		Joins("INNER JOIN \"BlockGroupTable\" bg ON \"BlockTable\".block_group_id = bg.id").
+		Where("bg.block_pack_id = ?", reqDto.Param.BlockPackId).
+		Find(&blocks)
+	if err := result.Error; err != nil {
+		return nil, exceptions.Block.NotFound().WithError(err)
+	}
+
+	var resDto dtos.GetMyBlocksByBlockPackIdResDto
+	for _, block := range blocks {
+		resDto = append(resDto, dtos.GetMyBlockByIdResDto{
+			Id:            block.Id,
+			ParentBlockId: block.ParentBlockId,
+			BlockGroupId:  block.BlockGroupId,
+			Type:          block.Type,
+			Props:         block.Props,
+			Content:       block.Content,
+			DeletedAt:     block.DeletedAt,
+			UpdatedAt:     block.UpdatedAt,
+			CreatedAt:     block.CreatedAt,
+		})
+	}
+
+	return &resDto, nil
+}
+
 func (s *BlockService) GetAllMyBlocks(
 	ctx context.Context, reqDto *dtos.GetAllMyBlocksReqDto,
 ) (*dtos.GetAllMyBlocksResDto, *exceptions.Exception) {
@@ -96,18 +386,533 @@ func (s *BlockService) GetAllMyBlocks(
 	return &resDto, nil
 }
 
-func (s *BlockService) CreateBlock() {}
+func (s *BlockService) InsertBlock(
+	ctx context.Context, reqDto *dtos.InsertBlockReqDto,
+) (*dtos.InsertBlockResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Block.InvalidDto().WithError(err)
+	}
 
-func (s *BlockService) CreateBlocks() {}
+	db := s.db.WithContext(ctx)
 
-func (s *BlockService) UpdateMyBlockById() {}
+	rawFlattenedBlocks, exception := s.editableBlockAdapter.FlattenToRaw(&reqDto.Body.ArborizedEditableBlock)
+	if exception != nil {
+		return nil, exception
+	}
 
-func (s *BlockService) UpdateMyBlocksByIds() {}
+	input := make([]inputs.CreateBlockInput, len(rawFlattenedBlocks))
+	for index, rawFlarawFlattenedBlock := range rawFlattenedBlocks {
+		input[index] = inputs.CreateBlockInput{
+			Id:            rawFlarawFlattenedBlock.Id,
+			ParentBlockId: rawFlarawFlattenedBlock.ParentBlockId,
+			Type:          rawFlarawFlattenedBlock.Type,
+			Props:         rawFlarawFlattenedBlock.Props,
+			Content:       rawFlarawFlattenedBlock.Content,
+		}
+	}
 
-func (s *BlockService) RestoreMyBlockById() {}
+	_, exception = s.blockRepository.CreateManyByBlockGroupId(
+		reqDto.Body.BlockGroupId,
+		reqDto.ContextFields.UserId,
+		input,
+		options.WithDB(db),
+		options.WithBatchSize(constants.MaxBatchCreateBlockSize),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return nil, exception
+	}
 
-func (s *BlockService) RestoreMyBlocksByIds() {}
+	return &dtos.InsertBlockResDto{
+		CreatedAt: time.Now(),
+	}, nil
+}
 
-func (s *BlockService) DeleteMyBlockById() {}
+func (s *BlockService) InsertBlocks(
+	ctx context.Context, reqDto *dtos.InsertBlocksReqDto,
+) (*dtos.InsertBlocksResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Block.InvalidDto().WithError(err)
+	}
 
-func (s *BlockService) DeleteMyBlocksByIds() {}
+	db := s.db.WithContext(ctx)
+
+	type ValidateBlockDto struct {
+		ParentBlockId          *uuid.UUID
+		ArborizedEditableBlock dtos.ArborizedEditableBlock
+	}
+	validateBlockDto := make([]ValidateBlockDto, len(reqDto.Body.InsertedBlocks))
+	for index, insertedBlock := range reqDto.Body.InsertedBlocks {
+		validateBlockDto[index] = ValidateBlockDto{
+			ParentBlockId:          insertedBlock.ParentBlockId,
+			ArborizedEditableBlock: insertedBlock.ArborizedEditableBlock,
+		}
+	}
+
+	validateBlockFunc := func(validateBlockDto ValidateBlockDto) ([]dtos.RawFlattenedEditableBlock, error) {
+		rawFlattenedBlocks, exception := s.editableBlockAdapter.FlattenToRaw(&validateBlockDto.ArborizedEditableBlock)
+		if exception != nil {
+			return rawFlattenedBlocks, exception.ToError()
+		}
+
+		if len(rawFlattenedBlocks) > 0 {
+			rawFlattenedBlocks[0].ParentBlockId = validateBlockDto.ParentBlockId
+		}
+		return rawFlattenedBlocks, nil
+	}
+
+	validateBlockResults := concurrency.BatchExecute(
+		validateBlockDto,
+		20,
+		validateBlockFunc,
+	)
+
+	resDto := dtos.InsertBlocksResDto{
+		IsAllSuccess:   true,
+		FailedIndexes:  []int{},
+		SuccessIndexes: []int{},
+		SuccessBlockGroupAndBlockIds: []struct {
+			BlockGroupId uuid.UUID   `json:"blockGroupId"`
+			BlockIds     []uuid.UUID `json:"blockIds"`
+		}{},
+		CreatedAt: time.Now(),
+	}
+	var createBlockGroupContentInput []inputs.CreateBlockGroupContentInput
+	for _, validateResult := range validateBlockResults {
+		if validateResult.Err != nil {
+			resDto.SuccessIndexes = append(resDto.SuccessIndexes, validateResult.Index)
+			blockIds := make([]uuid.UUID, len(validateResult.Data))
+			createBlockInputs := make([]inputs.CreateBlockInput, len(validateResult.Data))
+			for index, rawFlattenedBlock := range validateResult.Data {
+				blockIds[index] = rawFlattenedBlock.Id
+				createBlockInputs[index] = inputs.CreateBlockInput{
+					Id:            rawFlattenedBlock.Id,
+					ParentBlockId: rawFlattenedBlock.ParentBlockId,
+					Type:          rawFlattenedBlock.Type,
+					Props:         rawFlattenedBlock.Props,
+					Content:       rawFlattenedBlock.Content,
+				}
+			}
+			resDto.SuccessBlockGroupAndBlockIds = append(resDto.SuccessBlockGroupAndBlockIds, struct {
+				BlockGroupId uuid.UUID   `json:"blockGroupId"`
+				BlockIds     []uuid.UUID `json:"blockIds"`
+			}{
+				BlockGroupId: reqDto.Body.InsertedBlocks[validateResult.Index].BlockGroupId,
+				BlockIds:     blockIds,
+			})
+			createBlockGroupContentInput = append(createBlockGroupContentInput, inputs.CreateBlockGroupContentInput{
+				BlockGroupId: reqDto.Body.InsertedBlocks[validateResult.Index].BlockGroupId,
+				Blocks:       createBlockInputs,
+			})
+		} else {
+			resDto.FailedIndexes = append(resDto.FailedIndexes, validateResult.Index)
+			resDto.IsAllSuccess = false
+		}
+	}
+
+	if len(createBlockGroupContentInput) == 0 {
+		return nil, exceptions.BlockGroup.FailedToCreate().WithDetails("no valid block tree structure in any of the given block groups")
+	}
+
+	_, exception := s.blockRepository.CreateManyByBlockGroupIds(
+		reqDto.ContextFields.UserId,
+		createBlockGroupContentInput,
+		options.WithDB(db),
+		options.WithBatchSize(constants.MaxBatchCreateBlockSize),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithSkipPermissionCheck(),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	resDto.CreatedAt = time.Now()
+	return &resDto, nil
+}
+
+func (s *BlockService) UpdateMyBlockById(
+	ctx context.Context, reqDto *dtos.UpdateMyBlockByIdReqDto,
+) (*dtos.UpdateMyBlockByIdResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Block.InvalidDto().WithError(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	block, exception := s.blockRepository.CheckPermissionAndGetOneById(
+		reqDto.Body.BlockId,
+		reqDto.ContextFields.UserId,
+		nil,
+		allowedPermissions,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	updateInput := inputs.PartialUpdateBlockInput{
+		Values:  inputs.UpdateBlockInput{},
+		SetNull: reqDto.Body.SetNull,
+	}
+
+	if reqDto.Body.PartialUpdateDto.Values.Props != nil {
+		rawProps, err := json.Marshal(reqDto.Body.PartialUpdateDto.Values.Props)
+		if err != nil {
+			return nil, exceptions.Block.InvalidDto().WithError(err)
+		}
+
+		propsString := string(bytes.TrimSpace(rawProps))
+		if propsString == "{}" || propsString == "" {
+			emptyPropsJson := datatypes.JSON("{}")
+			updateInput.Values.Props = &emptyPropsJson
+		} else {
+			_, err = blocknote.ParseProps(block.Type.String(), rawProps)
+			if err != nil {
+				return nil, exceptions.Block.InvalidDto().WithError(err)
+			}
+			rawPropsJson := datatypes.JSON(rawProps)
+			updateInput.Values.Props = &rawPropsJson
+		}
+	}
+
+	if reqDto.Body.PartialUpdateDto.Values.Content != nil {
+		rawContent, err := json.Marshal(reqDto.Body.PartialUpdateDto.Values.Content)
+		if err != nil {
+			return nil, exceptions.Block.InvalidDto().WithError(err)
+		}
+
+		trimContent := bytes.TrimSpace(rawContent)
+		trimContentString := string(trimContent)
+		if trimContentString == "null" || trimContentString == "[]" || trimContentString == "" {
+			emptyContentsJson := datatypes.JSON("[]")
+			updateInput.Values.Content = &emptyContentsJson
+		} else {
+			switch trimContent[0] {
+			case '[':
+				var list blocknote.InlineContentList
+				if err := json.Unmarshal(trimContent, &list); err != nil {
+					return nil, exceptions.Block.InvalidDto().WithError(err)
+				}
+				rawContentJson := datatypes.JSON(rawContent)
+				updateInput.Values.Content = &rawContentJson
+			case '{':
+				var table blocknote.TableContent
+				if err := json.Unmarshal(trimContent, &table); err != nil {
+					return nil, exceptions.Block.InvalidDto().WithError(err)
+				}
+				rawContentJson := datatypes.JSON(rawContent)
+				updateInput.Values.Content = &rawContentJson
+			default:
+				return nil, exceptions.Block.InvalidDto().WithError(errors.New("invalid content format: must be array or object"))
+			}
+		}
+	}
+
+	updatedBlock, exception := s.blockRepository.UpdateOneById(
+		reqDto.Body.BlockId,
+		reqDto.ContextFields.UserId,
+		updateInput,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithSkipPermissionCheck(),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.UpdateMyBlockByIdResDto{
+		UpdatedAt: updatedBlock.UpdatedAt,
+	}, nil
+}
+
+func (s *BlockService) UpdateMyBlocksByIds(
+	ctx context.Context, reqDto *dtos.UpdateMyBlocksByIdsReqDto,
+) (*dtos.UpdateMyBlocksByIdsResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Block.InvalidDto().WithError(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	allowedPemissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	blockIds := make([]uuid.UUID, len(reqDto.Body.UpdatedBlocks))
+	blockIdToUpdateDto := make(map[uuid.UUID]struct {
+		Props   *blocknote.BlockProps   `json:"-"`
+		Content *blocknote.BlockContent `json:"-"`
+	}, len(reqDto.Body.UpdatedBlocks))
+	for index, updatedBlock := range reqDto.Body.UpdatedBlocks {
+		blockIds[index] = updatedBlock.BlockId
+		blockIdToUpdateDto[updatedBlock.BlockId] = struct {
+			Props   *blocknote.BlockProps   `json:"-"`
+			Content *blocknote.BlockContent `json:"-"`
+		}{
+			Props:   updatedBlock.Props,
+			Content: updatedBlock.Content,
+		}
+	}
+	blocks, exception := s.blockRepository.CheckPermissionsAndGetManyByIds(
+		blockIds,
+		reqDto.ContextFields.UserId,
+		nil,
+		allowedPemissions,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	type ValidateBlockPropsAndContentDto struct {
+		Id      uuid.UUID               `json:"id"`
+		Type    enums.BlockType         `json:"type"`
+		Props   *blocknote.BlockProps   `json:"-"`
+		Content *blocknote.BlockContent `json:"-"`
+	}
+	validateBlockPropsAndContentDto := make([]ValidateBlockPropsAndContentDto, len(blocks))
+	for index, block := range blocks {
+		validateBlockPropsAndContentDto[index] = ValidateBlockPropsAndContentDto{
+			Id:      block.Id,
+			Type:    block.Type,
+			Props:   blockIdToUpdateDto[block.Id].Props,
+			Content: blockIdToUpdateDto[block.Id].Content,
+		}
+	}
+	validateBlockPropsAndContentFunc := func(validateBlockPropsAndContentDto ValidateBlockPropsAndContentDto) (inputs.BulkUpdateBlocksInput, error) {
+		result := inputs.BulkUpdateBlocksInput{
+			Id:      validateBlockPropsAndContentDto.Id,
+			Props:   nil,
+			Content: nil,
+		}
+
+		if validateBlockPropsAndContentDto.Props != nil {
+			rawProps, err := json.Marshal(validateBlockPropsAndContentDto.Props)
+			if err != nil {
+				return result, err
+			}
+
+			propsString := string(bytes.TrimSpace(rawProps))
+			if propsString == "{}" || propsString == "" {
+				emptyPropsJson := datatypes.JSON("{}")
+				result.Props = &emptyPropsJson
+			} else {
+				_, err = blocknote.ParseProps(validateBlockPropsAndContentDto.Type.String(), rawProps)
+				if err != nil {
+					return result, err
+				}
+				rawPropsJson := datatypes.JSON(rawProps)
+				result.Props = &rawPropsJson
+			}
+		}
+
+		if validateBlockPropsAndContentDto.Content != nil {
+			rawContent, err := json.Marshal(validateBlockPropsAndContentDto.Content)
+			if err != nil {
+				return result, err
+			}
+
+			trimContent := bytes.TrimSpace(rawContent)
+			trimContentString := string(trimContent)
+			if trimContentString == "null" || trimContentString == "[]" || trimContentString == "" {
+				emptyContentsJson := datatypes.JSON("[]")
+				result.Content = &emptyContentsJson
+			} else {
+				switch trimContent[0] {
+				case '[':
+					var list blocknote.InlineContentList
+					if err := json.Unmarshal(trimContent, &list); err != nil {
+						return result, err
+					}
+					rawContentJson := datatypes.JSON(rawContent)
+					result.Content = &rawContentJson
+				case '{':
+					var table blocknote.TableContent
+					if err := json.Unmarshal(trimContent, &table); err != nil {
+						return result, err
+					}
+					rawContentJson := datatypes.JSON(rawContent)
+					result.Content = &rawContentJson
+				default:
+					return result, errors.New("invalid content format: must be array or object")
+				}
+			}
+		}
+
+		return result, nil
+	}
+
+	validateBlocksPropsAndContentResult := concurrency.BatchExecute(
+		validateBlockPropsAndContentDto,
+		min(10, len(validateBlockPropsAndContentDto)/10),
+		validateBlockPropsAndContentFunc,
+	)
+
+	var bulkUpdateBlocksInputs inputs.BulkUpdateBlocksInputs
+	resDto := dtos.UpdateMyBlocksByIdsResDto{
+		IsAllSuccess:    true,
+		FailedIndexes:   []int{},
+		SuccessIndexes:  []int{},
+		SuccessBlockIds: []uuid.UUID{},
+		UpdatedAt:       time.Now(),
+	}
+	for _, validateResult := range validateBlocksPropsAndContentResult {
+		if validateResult.Err == nil {
+			resDto.SuccessIndexes = append(resDto.SuccessIndexes, validateResult.Index)
+			resDto.SuccessBlockIds = append(resDto.SuccessBlockIds, validateResult.Data.Id)
+			bulkUpdateBlocksInputs = append(bulkUpdateBlocksInputs, struct {
+				Id      uuid.UUID       `json:"id" gorm:"column:id;"`
+				Props   *datatypes.JSON `json:"props" gorm:"column:props;"`
+				Content *datatypes.JSON `json:"content" gorm:"column:content;"`
+			}{
+				Id:      validateResult.Data.Id,
+				Props:   validateResult.Data.Props,
+				Content: validateResult.Data.Content,
+			})
+		} else {
+			resDto.FailedIndexes = append(resDto.FailedIndexes, validateResult.Index)
+			resDto.IsAllSuccess = false
+		}
+	}
+
+	exception = s.blockRepository.BulkUpdateManyByIds(
+		reqDto.ContextFields.UserId,
+		bulkUpdateBlocksInputs,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithSkipPermissionCheck(),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	resDto.UpdatedAt = time.Now()
+	return &resDto, nil
+}
+
+func (s *BlockService) RestoreMyBlockById(
+	ctx context.Context, reqDto *dtos.RestoreMyBlockByIdReqDto,
+) (*dtos.RestoreMyBlockByIdResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	restoredBlock, exception := s.blockRepository.RestoreSoftDeletedOneById(
+		reqDto.Body.BlockId,
+		reqDto.ContextFields.UserId,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.RestoreMyBlockByIdResDto{
+		Id:            restoredBlock.Id,
+		ParentBlockId: restoredBlock.ParentBlockId,
+		BlockGroupId:  restoredBlock.BlockGroupId,
+		Type:          restoredBlock.Type,
+		Props:         restoredBlock.Props,
+		Content:       restoredBlock.Content,
+		DeletedAt:     restoredBlock.DeletedAt,
+		UpdatedAt:     restoredBlock.UpdatedAt,
+		CreatedAt:     restoredBlock.CreatedAt,
+	}, nil
+}
+
+func (s *BlockService) RestoreMyBlocksByIds(
+	ctx context.Context, reqDto *dtos.RestoreMyBlocksByIdsReqDto,
+) (*dtos.RestoreMyBlocksByIdsResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	restoredBlocks, exception := s.blockRepository.RestoreSoftDeletedManyByIds(
+		reqDto.Body.BlockIds,
+		reqDto.ContextFields.UserId,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	resDto := make(dtos.RestoreMyBlocksByIdsResDto, len(restoredBlocks))
+	for index, restoredBlock := range restoredBlocks {
+		resDto[index] = dtos.RestoreMyBlockByIdResDto{
+			Id:            restoredBlock.Id,
+			ParentBlockId: restoredBlock.ParentBlockId,
+			BlockGroupId:  restoredBlock.BlockGroupId,
+			Type:          restoredBlock.Type,
+			Props:         restoredBlock.Props,
+			Content:       restoredBlock.Content,
+			DeletedAt:     restoredBlock.DeletedAt,
+			UpdatedAt:     restoredBlock.UpdatedAt,
+			CreatedAt:     restoredBlock.CreatedAt,
+		}
+	}
+
+	return &resDto, nil
+}
+
+func (s *BlockService) DeleteMyBlockById(
+	ctx context.Context, reqDto *dtos.DeleteMyBlockByIdReqDto,
+) (*dtos.DeleteMyBlockByIdResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	exception := s.blockRepository.SoftDeleteOneById(
+		reqDto.Body.BlockId,
+		reqDto.ContextFields.UserId,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.DeleteMyBlockByIdResDto{
+		DeletedAt: time.Now(),
+	}, nil
+}
+
+func (s *BlockService) DeleteMyBlocksByIds(
+	ctx context.Context, reqDto *dtos.DeleteMyBlocksByIdsReqDto,
+) (*dtos.DeleteMyBlockPacksByIdsResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	exception := s.blockRepository.SoftDeleteManyByIds(
+		reqDto.Body.BlockIds,
+		reqDto.ContextFields.UserId,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.DeleteMyBlockPacksByIdsResDto{
+		DeletedAt: time.Now(),
+	}, nil
+}

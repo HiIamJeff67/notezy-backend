@@ -293,8 +293,8 @@ type InsertBlockGroupsAndTheirBlocksByBlockPackIdResDto struct {
 	FailedIndexes                []int `json:"failedIndexes"`
 	SuccessIndexes               []int `json:"successIndexes"`
 	SuccessBlockGroupAndBlockIds []struct {
-		BlockGroupId uuid.UUID
-		BlockIds     []uuid.UUID
+		BlockGroupId uuid.UUID   `json:"blockGroupId"`
+		BlockIds     []uuid.UUID `json:"blockIds"`
 	} `json:"successBlockGroupAndBlockIds"`
 	CreatedAt time.Time `json:"createdAt"`
 }
@@ -304,8 +304,8 @@ type InsertSequentialBlockGroupsAndTheirBlocksByBlockPackIdResDto struct {
 	FailedIndexes                []int `json:"failedIndexes"`
 	SuccessIndexes               []int `json:"successIndexes"`
 	SuccessBlockGroupAndBlockIds []struct {
-		BlockGroupId uuid.UUID
-		BlockIds     []uuid.UUID
+		BlockGroupId uuid.UUID   `json:"blockGroupId"`
+		BlockIds     []uuid.UUID `json:"blockIds"`
 	} `json:"successBlockGroupAndBlockIds"`
 	CreatedAt time.Time `json:"createdAt"`
 }

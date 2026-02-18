@@ -125,7 +125,7 @@ func (s *BlockGroupService) GetMyBlockGroupAndItsBlocksById(
 	}
 
 	var blocks []schemas.Block
-	result := s.db.Model(&schemas.Block{}).
+	result := db.Model(&schemas.Block{}).
 		Where("block_group_id = ?", blockGroup.Id).
 		Find(&blocks)
 	if err := result.Error; err != nil || len(blocks) == 0 {
@@ -232,7 +232,7 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByIds(
 	}
 
 	var flattenedBlocks []schemas.Block
-	result := s.db.Model(&schemas.Block{}).
+	result := db.Model(&schemas.Block{}).
 		Where("block_group_id IN ?", blockGroupIds).
 		Find(&flattenedBlocks)
 	if err := result.Error; err != nil || len(flattenedBlocks) == 0 {
@@ -338,7 +338,7 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 	}
 
 	var flattenedBlocks []schemas.Block
-	result := s.db.Model(&schemas.Block{}).
+	result := db.Model(&schemas.Block{}).
 		Where("block_group_id IN ?", blockGroupIds).
 		Find(&flattenedBlocks)
 	if err := result.Error; err != nil || len(flattenedBlocks) == 0 {
@@ -606,16 +606,16 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 	}
 
 	validateBlockFunc := func(validateDto dtos.ArborizedEditableBlock) ([]dtos.RawFlattenedEditableBlock, error) {
-		data, exception := s.editableBlockAdapter.FlattenToRaw(&validateDto)
+		rawFlattenedBlocks, exception := s.editableBlockAdapter.FlattenToRaw(&validateDto)
 		if exception != nil {
-			return data, exception.ToError()
+			return rawFlattenedBlocks, exception.ToError()
 		}
-		return data, nil
+		return rawFlattenedBlocks, nil
 	}
 
 	validateBlockResults := concurrency.BatchExecute(
 		validateBlockDto,
-		20,
+		min(10, len(validateBlockDto)/10),
 		validateBlockFunc,
 	)
 
@@ -624,23 +624,23 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 		FailedIndexes:  []int{},
 		SuccessIndexes: []int{},
 		SuccessBlockGroupAndBlockIds: []struct {
-			BlockGroupId uuid.UUID
-			BlockIds     []uuid.UUID
+			BlockGroupId uuid.UUID   `json:"blockGroupId"`
+			BlockIds     []uuid.UUID `json:"blockIds"`
 		}{},
 		CreatedAt: time.Now(),
 	}
-	var createBlocksInput []inputs.CreateBlockGroupContentInput
+	var createBlockGroupContentInput []inputs.CreateBlockGroupContentInput
 	for _, validateResult := range validateBlockResults {
-		if validateResult.Err != nil {
+		if validateResult.Err == nil {
 			resDto.SuccessIndexes = append(resDto.SuccessIndexes, validateResult.Index)
 			// note that since the order of newBlockGroupIds is the same as the reqDto
 			// and here the concurrency job worker will output a result with index in Result.Index
 			// which provide us enough ability to reorder and align the result with the block group ids here
 			blockIds := make([]uuid.UUID, len(validateResult.Data))
-			createBlocksByBlockGroupInput := make([]inputs.CreateBlockInput, len(validateResult.Data))
+			createBlockInputs := make([]inputs.CreateBlockInput, len(validateResult.Data))
 			for index, rawFlattenedBlock := range validateResult.Data {
 				blockIds[index] = rawFlattenedBlock.Id
-				createBlocksByBlockGroupInput[index] = inputs.CreateBlockInput{
+				createBlockInputs[index] = inputs.CreateBlockInput{
 					Id:            rawFlattenedBlock.Id,
 					ParentBlockId: rawFlattenedBlock.ParentBlockId,
 					Type:          rawFlattenedBlock.Type,
@@ -649,15 +649,15 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 				}
 			}
 			resDto.SuccessBlockGroupAndBlockIds = append(resDto.SuccessBlockGroupAndBlockIds, struct {
-				BlockGroupId uuid.UUID
-				BlockIds     []uuid.UUID
+				BlockGroupId uuid.UUID   `json:"blockGroupId"`
+				BlockIds     []uuid.UUID `json:"blockIds"`
 			}{
 				BlockGroupId: newBlockGroupIds[validateResult.Index],
 				BlockIds:     blockIds,
 			})
-			createBlocksInput = append(createBlocksInput, inputs.CreateBlockGroupContentInput{
+			createBlockGroupContentInput = append(createBlockGroupContentInput, inputs.CreateBlockGroupContentInput{
 				BlockGroupId: newBlockGroupIds[validateResult.Index],
-				Blocks:       createBlocksByBlockGroupInput,
+				Blocks:       createBlockInputs,
 			})
 		} else {
 			resDto.FailedIndexes = append(resDto.FailedIndexes, validateResult.Index)
@@ -665,14 +665,14 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 		}
 	}
 
-	if len(createBlocksInput) == 0 {
+	if len(createBlockGroupContentInput) == 0 {
 		tx.Rollback()
 		return nil, exceptions.BlockGroup.FailedToCreate().WithDetails("no valid block tree structure in any of the given block groups")
 	}
 
 	_, exception = s.blockRepository.CreateManyByBlockGroupIds(
 		reqDto.ContextFields.UserId,
-		createBlocksInput,
+		createBlockGroupContentInput,
 		options.WithDB(tx),
 		options.WithBatchSize(constants.MaxBatchCreateBlockSize),
 		options.WithOnlyDeleted(types.Ternary_Negative),
@@ -739,7 +739,7 @@ func (s *BlockGroupService) InsertSequentialBlockGroupsAndTheirBlocksByBlockPack
 
 	validateBlockResults := concurrency.BatchExecute(
 		reqDto.Body.ArborizedEditableBlocks,
-		20,
+		min(10, len(reqDto.Body.ArborizedEditableBlocks)/10),
 		validateBlockFunc,
 	)
 
@@ -748,13 +748,13 @@ func (s *BlockGroupService) InsertSequentialBlockGroupsAndTheirBlocksByBlockPack
 		FailedIndexes:  []int{},
 		SuccessIndexes: []int{},
 		SuccessBlockGroupAndBlockIds: []struct {
-			BlockGroupId uuid.UUID
-			BlockIds     []uuid.UUID
+			BlockGroupId uuid.UUID   `json:"blockGroupId"`
+			BlockIds     []uuid.UUID `json:"blockIds"`
 		}{},
 		CreatedAt: time.Now(),
 	}
 
-	var createBlocksInput []inputs.CreateBlockGroupContentInput
+	var createBlocksInputs []inputs.CreateBlockGroupContentInput
 	for _, validateResult := range validateBlockResults {
 		if validateResult.Err == nil {
 			resDto.SuccessIndexes = append(resDto.SuccessIndexes, validateResult.Index)
@@ -774,13 +774,13 @@ func (s *BlockGroupService) InsertSequentialBlockGroupsAndTheirBlocksByBlockPack
 				}
 			}
 			resDto.SuccessBlockGroupAndBlockIds = append(resDto.SuccessBlockGroupAndBlockIds, struct {
-				BlockGroupId uuid.UUID
-				BlockIds     []uuid.UUID
+				BlockGroupId uuid.UUID   `json:"blockGroupId"`
+				BlockIds     []uuid.UUID `json:"blockIds"`
 			}{
 				BlockGroupId: newBlockGroupIds[validateResult.Index],
 				BlockIds:     blockIds,
 			})
-			createBlocksInput = append(createBlocksInput, inputs.CreateBlockGroupContentInput{
+			createBlocksInputs = append(createBlocksInputs, inputs.CreateBlockGroupContentInput{
 				BlockGroupId: newBlockGroupIds[validateResult.Index],
 				Blocks:       createBlocksByBlockGroupInput,
 			})
@@ -790,14 +790,14 @@ func (s *BlockGroupService) InsertSequentialBlockGroupsAndTheirBlocksByBlockPack
 		}
 	}
 
-	if len(createBlocksInput) == 0 {
+	if len(createBlocksInputs) == 0 {
 		tx.Rollback()
 		return nil, exceptions.BlockGroup.FailedToCreate().WithDetails("no valid block tree structure in any of the given block groups")
 	}
 
 	_, exception = s.blockRepository.CreateManyByBlockGroupIds(
 		reqDto.ContextFields.UserId,
-		createBlocksInput,
+		createBlocksInputs,
 		options.WithDB(tx),
 		options.WithBatchSize(constants.MaxBatchCreateBlockSize),
 		options.WithOnlyDeleted(types.Ternary_Negative),
@@ -1049,9 +1049,9 @@ func (s *BlockGroupService) RestoreMyBlockGroupsByIds(
 		return nil, exception
 	}
 
-	resDto := dtos.RestoreMyBlockGroupsByIdsResDto{}
-	for _, restoredBlockGroup := range restoredBlockGroups {
-		resDto = append(resDto, dtos.RestoreMyBlockGroupByIdResDto{
+	resDto := make(dtos.RestoreMyBlockGroupsByIdsResDto, len(restoredBlockGroups))
+	for index, restoredBlockGroup := range restoredBlockGroups {
+		resDto[index] = dtos.RestoreMyBlockGroupByIdResDto{
 			Id:               restoredBlockGroup.Id,
 			BlockPackId:      restoredBlockGroup.BlockPackId,
 			PrevBlockGroupId: restoredBlockGroup.PrevBlockGroupId,
@@ -1060,8 +1060,9 @@ func (s *BlockGroupService) RestoreMyBlockGroupsByIds(
 			DeletedAt:        restoredBlockGroup.DeletedAt,
 			UpdatedAt:        restoredBlockGroup.UpdatedAt,
 			CreatedAt:        restoredBlockGroup.CreatedAt,
-		})
+		}
 	}
+
 	return &resDto, nil
 }
 

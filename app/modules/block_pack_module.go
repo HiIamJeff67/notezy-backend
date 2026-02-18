@@ -1,7 +1,6 @@
 package modules
 
 import (
-	"notezy-backend/app/adapters"
 	binders "notezy-backend/app/binders"
 	controllers "notezy-backend/app/controllers"
 	models "notezy-backend/app/models"
@@ -17,17 +16,11 @@ type BlockPackModule struct {
 func NewBlockPackModule() *BlockPackModule {
 	subShelfRepository := repositories.NewSubShelfRepository()
 	blockPackRepository := repositories.NewBlockPackRepository()
-	blockGroupRepository := repositories.NewBlockGroupRepository()
-	blockRepository := repositories.NewBlockRepository()
-	editableBlockAdapter := adapters.NewEditableBlockAdapter()
 
 	blockPackService := services.NewBlockPackService(
 		models.NotezyDB,
 		subShelfRepository,
 		blockPackRepository,
-		blockGroupRepository,
-		blockRepository,
-		editableBlockAdapter,
 	)
 
 	blockPackBinder := binders.NewBlockPackBinder()

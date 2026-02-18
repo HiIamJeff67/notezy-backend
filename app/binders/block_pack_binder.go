@@ -18,7 +18,6 @@ import (
 type BlockPackBinderInterface interface {
 	BindGetMyBlockPackById(controllerFunc types.ControllerFunc[*dtos.GetMyBlockPackByIdReqDto]) gin.HandlerFunc
 	BindGetMyBlockPackAndItsParentById(controllerFunc types.ControllerFunc[*dtos.GetMyBlockPackAndItsParentByIdReqDto]) gin.HandlerFunc
-	BindGetMyBlockPackAndItsBlockGroupsAndTheirBlocksById(controllerFunc types.ControllerFunc[*dtos.GetMyBlockPackAndItsBlockGroupsAndTheirBlocksByIdReqDto]) gin.HandlerFunc
 	BindGetMyBlockPacksByParentSubShelfId(controllerFunc types.ControllerFunc[*dtos.GetMyBlockPacksByParentSubShelfIdReqDto]) gin.HandlerFunc
 	BindGetAllMyBlockPacksByRootShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllMyBlockPacksByRootShelfIdReqDto]) gin.HandlerFunc
 	BindCreateBlockPack(controllerFunc types.ControllerFunc[*dtos.CreateBlockPackReqDto]) gin.HandlerFunc
@@ -71,35 +70,6 @@ func (b *BlockPackBinder) BindGetMyBlockPackById(controllerFunc types.Controller
 func (b *BlockPackBinder) BindGetMyBlockPackAndItsParentById(controllerFunc types.ControllerFunc[*dtos.GetMyBlockPackAndItsParentByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.GetMyBlockPackAndItsParentByIdReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserId = *userId
-
-		blockPackIdString := ctx.Query("blockPackId")
-		if blockPackIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("blockPackId is required")).Log().ResponseWithJSON(ctx)
-			return
-		}
-		blockPackId, err := uuid.Parse(blockPackIdString)
-		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).Log().ResponseWithJSON(ctx)
-			return
-		}
-		reqDto.Param.BlockPackId = blockPackId
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
-func (b *BlockPackBinder) BindGetMyBlockPackAndItsBlockGroupsAndTheirBlocksById(controllerFunc types.ControllerFunc[*dtos.GetMyBlockPackAndItsBlockGroupsAndTheirBlocksByIdReqDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.GetMyBlockPackAndItsBlockGroupsAndTheirBlocksByIdReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 

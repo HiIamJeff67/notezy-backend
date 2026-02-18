@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -29,8 +31,9 @@ type BlockRepositoryInterface interface {
 	CreateManyByBlockGroupId(blockGroupId uuid.UUID, userId uuid.UUID, input []inputs.CreateBlockInput, opts ...options.RepositoryOptions) ([]schemas.Block, *exceptions.Exception)
 	CreateManyByBlockGroupIds(userId uuid.UUID, input []inputs.CreateBlockGroupContentInput, opts ...options.RepositoryOptions) ([]schemas.Block, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateBlockInput, opts ...options.RepositoryOptions) (*schemas.Block, *exceptions.Exception)
-	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
-	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
+	BulkUpdateManyByIds(userId uuid.UUID, inputs inputs.BulkUpdateBlocksInputs, opts ...options.RepositoryOptions) *exceptions.Exception
+	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.Block, *exceptions.Exception)
+	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.Block, *exceptions.Exception)
 	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	SoftDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
@@ -471,11 +474,64 @@ func (r *BlockRepository) UpdateOneById(
 	return &updates, nil
 }
 
+func (r *BlockRepository) BulkUpdateManyByIds(
+	userId uuid.UUID,
+	inputs inputs.BulkUpdateBlocksInputs,
+	opts ...options.RepositoryOptions,
+) *exceptions.Exception {
+	// since there're no nullable fields may update in this repository function,
+	// so we don't have to use partial update process here actually,
+	// we can simply use COALESCE to maintain the original value in each fields for each null fields in the passing input
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	if !parsedOptions.SkipPermissionCheck {
+		allowedPermissions := []enums.AccessControlPermission{
+			enums.AccessControlPermission_Owner,
+			enums.AccessControlPermission_Admin,
+			enums.AccessControlPermission_Write,
+		}
+		ids := make([]uuid.UUID, len(inputs))
+		for index, input := range inputs {
+			ids[index] = input.Id
+		}
+		if !r.HasPermissions(ids, userId, allowedPermissions, opts...) {
+			return exceptions.Block.NoPermission("update these blocks")
+		}
+	}
+
+	var valuePlaceholders []string
+	var valueArgs []interface{}
+	for _, input := range inputs {
+		valuePlaceholders = append(valuePlaceholders, "(?, ?, ?)")
+		valueArgs = append(valueArgs, input.Id, input.Props, input.Content)
+	}
+
+	sql := fmt.Sprintf(`
+		UPDATE "BlockTable" AS b
+		SET
+			props = COALESCE(v.props::jsonb, b.props),
+			content = COALESCE(v.content::jsonb, b.content),
+			updated_at = NOW()
+		FROM (VALUES %s) AS v(id, props, content)
+		WHERE b.id = v.id::uuid AND b.deleted_at IS NULL
+	`, strings.Join(valuePlaceholders, ","))
+	result := parsedOptions.DB.Exec(sql, valueArgs...)
+	if err := result.Error; err != nil {
+		return exceptions.Block.FailedToUpdate().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return exceptions.Block.NoChanges()
+	}
+
+	return nil
+}
+
 func (r *BlockRepository) RestoreSoftDeletedOneById(
 	id uuid.UUID,
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
-) *exceptions.Exception {
+) (*schemas.Block, *exceptions.Exception) {
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
@@ -492,31 +548,32 @@ func (r *BlockRepository) RestoreSoftDeletedOneById(
 			allowedPermissions,
 			opts...,
 		) {
-			return exceptions.Block.NoPermission("restore a deleted block")
+			return nil, exceptions.Block.NoPermission("restore a deleted block")
 		}
 	}
 
-	result := parsedOptions.DB.Model(&schemas.Block{}).
+	var restoredBlock schemas.Block
+	result := parsedOptions.DB.Model(&restoredBlock).
+		Clauses(clause.Returning{}).
 		Where("id = ? AND deleted_at IS NOT NULL", id).
-		Select("deleted_at").
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if err := result.Error; err != nil {
-		return exceptions.Block.FailedToUpdate().WithError(err)
+		return nil, exceptions.Block.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.Block.NoChanges()
+		return nil, exceptions.Block.NoChanges()
 	}
 
-	return nil
+	return &restoredBlock, nil
 }
 
 func (r *BlockRepository) RestoreSoftDeletedManyByIds(
 	ids []uuid.UUID,
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
-) *exceptions.Exception {
+) ([]schemas.Block, *exceptions.Exception) {
 	if len(ids) == 0 {
-		return exceptions.BlockGroup.NoChanges()
+		return []schemas.Block{}, exceptions.BlockGroup.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
@@ -535,22 +592,23 @@ func (r *BlockRepository) RestoreSoftDeletedManyByIds(
 			allowedPermissions,
 			opts...,
 		) {
-			return exceptions.Block.NoPermission("restore deleted blocks")
+			return nil, exceptions.Block.NoPermission("restore deleted blocks")
 		}
 	}
 
-	result := parsedOptions.DB.Model(&schemas.Block{}).
+	var restoredBlocks []schemas.Block
+	result := parsedOptions.DB.Model(restoredBlocks).
+		Clauses(clause.Returning{}).
 		Where("id IN ? AND deleted_at IS NOT NULL", ids).
-		Select("deleted_at").
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if err := result.Error; err != nil {
-		return exceptions.Block.FailedToUpdate().WithError(err)
+		return nil, exceptions.Block.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.Block.NoChanges()
+		return nil, exceptions.Block.NoChanges()
 	}
 
-	return nil
+	return restoredBlocks, nil
 }
 
 func (r *BlockRepository) SoftDeleteOneById(
