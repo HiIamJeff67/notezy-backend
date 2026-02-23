@@ -21,16 +21,17 @@ type CreateBlockGroupContentInput struct {
 }
 
 type UpdateBlockInput struct {
-	Props   *datatypes.JSON `json:"props" gorm:"column:props;"`
-	Content *datatypes.JSON `json:"content" gorm:"column:content;"`
+	ParentBlockId *uuid.UUID      `json:"parentBlockId" gorm:"column:parent_block_id;"`
+	BlockGroupId  *uuid.UUID      `json:"blockGroupId" gorm:"column:block_group_id;"`
+	Props         *datatypes.JSON `json:"props" gorm:"column:props;"`
+	Content       *datatypes.JSON `json:"content" gorm:"column:content;"`
 }
 
 type PartialUpdateBlockInput = PartialUpdateInput[UpdateBlockInput]
 
-type BulkUpdateBlocksInput = struct {
-	Id      uuid.UUID       `json:"id" gorm:"column:id;"`
-	Props   *datatypes.JSON `json:"props" gorm:"column:props;"`
-	Content *datatypes.JSON `json:"content" gorm:"column:content;"`
+type BulkUpdateBlocksInput struct {
+	Id                 uuid.UUID                            `json:"id" gorm:"column:id;"`
+	PartialUpdateInput PartialUpdateInput[UpdateBlockInput] `json:"partialUpdateInput" gorm:"column:partial_update_input;"`
 }
 
 type BulkUpdateBlocksInputs = []BulkUpdateBlocksInput

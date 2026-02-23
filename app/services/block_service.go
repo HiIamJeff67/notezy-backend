@@ -19,6 +19,7 @@ import (
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
+	blockgroupsql "notezy-backend/app/models/sql/block_group"
 	options "notezy-backend/app/options"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
@@ -227,7 +228,7 @@ func (s *BlockService) GetMyBlocksByBlockGroupIds(
 	ctx context.Context, reqDto *dtos.GetMyBlocksByBlockGroupIdsReqDto,
 ) (*dtos.GetMyBlocksByBlockGroupIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+		return nil, exceptions.Block.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -558,12 +559,17 @@ func (s *BlockService) UpdateMyBlockById(
 	}
 
 	updateInput := inputs.PartialUpdateBlockInput{
-		Values:  inputs.UpdateBlockInput{},
+		Values: inputs.UpdateBlockInput{
+			ParentBlockId: reqDto.Body.Values.ParentBlockId,
+			BlockGroupId:  reqDto.Body.Values.BlockGroupId,
+			Props:         nil,
+			Content:       nil,
+		},
 		SetNull: reqDto.Body.SetNull,
 	}
 
-	if reqDto.Body.PartialUpdateDto.Values.Props != nil {
-		rawProps, err := json.Marshal(reqDto.Body.PartialUpdateDto.Values.Props)
+	if reqDto.Body.Values.Props != nil {
+		rawProps, err := json.Marshal(reqDto.Body.Values.Props)
 		if err != nil {
 			return nil, exceptions.Block.InvalidDto().WithError(err)
 		}
@@ -582,8 +588,8 @@ func (s *BlockService) UpdateMyBlockById(
 		}
 	}
 
-	if reqDto.Body.PartialUpdateDto.Values.Content != nil {
-		rawContent, err := json.Marshal(reqDto.Body.PartialUpdateDto.Values.Content)
+	if reqDto.Body.Values.Content != nil {
+		rawContent, err := json.Marshal(reqDto.Body.Values.Content)
 		if err != nil {
 			return nil, exceptions.Block.InvalidDto().WithError(err)
 		}
@@ -648,18 +654,22 @@ func (s *BlockService) UpdateMyBlocksByIds(
 	}
 
 	blockIds := make([]uuid.UUID, len(reqDto.Body.UpdatedBlocks))
-	blockIdToUpdateDto := make(map[uuid.UUID]struct {
-		Props   *blocknote.BlockProps   `json:"-"`
-		Content *blocknote.BlockContent `json:"-"`
-	}, len(reqDto.Body.UpdatedBlocks))
+	blockIdToUpdateDto := make(map[uuid.UUID]dtos.PartialUpdateDto[struct {
+		ParentBlockId *uuid.UUID              `json:"parentBlockId" validate:"omitnil"`
+		BlockGroupId  *uuid.UUID              `json:"blockGroupId" validate:"omitnil"`
+		Props         *blocknote.BlockProps   `json:"-"`
+		Content       *blocknote.BlockContent `json:"-"`
+	}], len(reqDto.Body.UpdatedBlocks))
 	for index, updatedBlock := range reqDto.Body.UpdatedBlocks {
 		blockIds[index] = updatedBlock.BlockId
-		blockIdToUpdateDto[updatedBlock.BlockId] = struct {
-			Props   *blocknote.BlockProps   `json:"-"`
-			Content *blocknote.BlockContent `json:"-"`
-		}{
-			Props:   updatedBlock.Props,
-			Content: updatedBlock.Content,
+		blockIdToUpdateDto[updatedBlock.BlockId] = dtos.PartialUpdateDto[struct {
+			ParentBlockId *uuid.UUID              `json:"parentBlockId" validate:"omitnil"`
+			BlockGroupId  *uuid.UUID              `json:"blockGroupId" validate:"omitnil"`
+			Props         *blocknote.BlockProps   `json:"-"`
+			Content       *blocknote.BlockContent `json:"-"`
+		}]{
+			Values:  updatedBlock.Values,
+			SetNull: updatedBlock.SetNull,
 		}
 	}
 	blocks, exception := s.blockRepository.CheckPermissionsAndGetManyByIds(
@@ -675,25 +685,28 @@ func (s *BlockService) UpdateMyBlocksByIds(
 	}
 
 	type ValidateBlockPropsAndContentDto struct {
-		Id      uuid.UUID               `json:"id"`
-		Type    enums.BlockType         `json:"type"`
-		Props   *blocknote.BlockProps   `json:"-"`
-		Content *blocknote.BlockContent `json:"-"`
+		Id           uuid.UUID               `json:"id"`
+		BlockGroupId uuid.UUID               `json:"blockGroupId"`
+		Type         enums.BlockType         `json:"type"`
+		Props        *blocknote.BlockProps   `json:"-"`
+		Content      *blocknote.BlockContent `json:"-"`
 	}
 	validateBlockPropsAndContentDto := make([]ValidateBlockPropsAndContentDto, len(blocks))
 	for index, block := range blocks {
 		validateBlockPropsAndContentDto[index] = ValidateBlockPropsAndContentDto{
-			Id:      block.Id,
-			Type:    block.Type,
-			Props:   blockIdToUpdateDto[block.Id].Props,
-			Content: blockIdToUpdateDto[block.Id].Content,
+			Id:           block.Id,
+			BlockGroupId: block.BlockGroupId,
+			Type:         block.Type,
+			Props:        blockIdToUpdateDto[block.Id].Values.Props,
+			Content:      blockIdToUpdateDto[block.Id].Values.Content,
 		}
 	}
 	validateBlockPropsAndContentFunc := func(validateBlockPropsAndContentDto ValidateBlockPropsAndContentDto) (inputs.BulkUpdateBlocksInput, error) {
 		result := inputs.BulkUpdateBlocksInput{
-			Id:      validateBlockPropsAndContentDto.Id,
-			Props:   nil,
-			Content: nil,
+			Id: validateBlockPropsAndContentDto.Id,
+			PartialUpdateInput: inputs.PartialUpdateInput[inputs.UpdateBlockInput]{
+				Values: inputs.UpdateBlockInput{},
+			},
 		}
 
 		if validateBlockPropsAndContentDto.Props != nil {
@@ -705,14 +718,14 @@ func (s *BlockService) UpdateMyBlocksByIds(
 			propsString := string(bytes.TrimSpace(rawProps))
 			if propsString == "{}" || propsString == "" {
 				emptyPropsJson := datatypes.JSON("{}")
-				result.Props = &emptyPropsJson
+				result.PartialUpdateInput.Values.Props = &emptyPropsJson
 			} else {
 				_, err = blocknote.ParseProps(validateBlockPropsAndContentDto.Type.String(), rawProps)
 				if err != nil {
 					return result, err
 				}
 				rawPropsJson := datatypes.JSON(rawProps)
-				result.Props = &rawPropsJson
+				result.PartialUpdateInput.Values.Props = &rawPropsJson
 			}
 		}
 
@@ -726,7 +739,7 @@ func (s *BlockService) UpdateMyBlocksByIds(
 			trimContentString := string(trimContent)
 			if trimContentString == "null" || trimContentString == "[]" || trimContentString == "" {
 				emptyContentsJson := datatypes.JSON("[]")
-				result.Content = &emptyContentsJson
+				result.PartialUpdateInput.Values.Content = &emptyContentsJson
 			} else {
 				switch trimContent[0] {
 				case '[':
@@ -735,14 +748,14 @@ func (s *BlockService) UpdateMyBlocksByIds(
 						return result, err
 					}
 					rawContentJson := datatypes.JSON(rawContent)
-					result.Content = &rawContentJson
+					result.PartialUpdateInput.Values.Content = &rawContentJson
 				case '{':
 					var table blocknote.TableContent
 					if err := json.Unmarshal(trimContent, &table); err != nil {
 						return result, err
 					}
 					rawContentJson := datatypes.JSON(rawContent)
-					result.Content = &rawContentJson
+					result.PartialUpdateInput.Values.Content = &rawContentJson
 				default:
 					return result, errors.New("invalid content format: must be array or object")
 				}
@@ -760,29 +773,46 @@ func (s *BlockService) UpdateMyBlocksByIds(
 
 	var bulkUpdateBlocksInputs inputs.BulkUpdateBlocksInputs
 	resDto := dtos.UpdateMyBlocksByIdsResDto{
-		IsAllSuccess:    true,
-		FailedIndexes:   []int{},
-		SuccessIndexes:  []int{},
-		SuccessBlockIds: []uuid.UUID{},
-		UpdatedAt:       time.Now(),
+		IsAllSuccess:   true,
+		FailedIndexes:  []int{},
+		SuccessIndexes: []int{},
+		SuccessBlockGroupAndBlockIds: []struct {
+			BlockGroupId uuid.UUID   `json:"blockGroupId"`
+			BlockIds     []uuid.UUID `json:"blockIds"`
+		}{},
+		UpdatedAt: time.Now(),
 	}
+	successBlockGroupMap := make(map[uuid.UUID][]uuid.UUID)
 	for _, validateResult := range validateBlocksPropsAndContentResult {
 		if validateResult.Err == nil {
 			resDto.SuccessIndexes = append(resDto.SuccessIndexes, validateResult.Index)
-			resDto.SuccessBlockIds = append(resDto.SuccessBlockIds, validateResult.Data.Id)
-			bulkUpdateBlocksInputs = append(bulkUpdateBlocksInputs, struct {
-				Id      uuid.UUID       `json:"id" gorm:"column:id;"`
-				Props   *datatypes.JSON `json:"props" gorm:"column:props;"`
-				Content *datatypes.JSON `json:"content" gorm:"column:content;"`
-			}{
-				Id:      validateResult.Data.Id,
-				Props:   validateResult.Data.Props,
-				Content: validateResult.Data.Content,
+			successBlockGroupMap[validateBlockPropsAndContentDto[validateResult.Index].BlockGroupId] = append(successBlockGroupMap[validateBlockPropsAndContentDto[validateResult.Index].BlockGroupId], validateResult.Data.Id)
+			bulkUpdateBlocksInputs = append(bulkUpdateBlocksInputs, inputs.BulkUpdateBlocksInput{
+				Id: validateResult.Data.Id,
+				PartialUpdateInput: inputs.PartialUpdateInput[inputs.UpdateBlockInput]{
+					Values: inputs.UpdateBlockInput{
+						ParentBlockId: blockIdToUpdateDto[validateResult.Data.Id].Values.ParentBlockId,
+						BlockGroupId:  blockIdToUpdateDto[validateResult.Data.Id].Values.BlockGroupId,
+						Props:         validateResult.Data.PartialUpdateInput.Values.Props,
+						Content:       validateResult.Data.PartialUpdateInput.Values.Content,
+					},
+					SetNull: blockIdToUpdateDto[validateResult.Data.Id].SetNull,
+				},
 			})
 		} else {
 			resDto.FailedIndexes = append(resDto.FailedIndexes, validateResult.Index)
 			resDto.IsAllSuccess = false
 		}
+	}
+
+	for blockGroupId, blockIds := range successBlockGroupMap {
+		resDto.SuccessBlockGroupAndBlockIds = append(resDto.SuccessBlockGroupAndBlockIds, struct {
+			BlockGroupId uuid.UUID   `json:"blockGroupId"`
+			BlockIds     []uuid.UUID `json:"blockIds"`
+		}{
+			BlockGroupId: blockGroupId,
+			BlockIds:     blockIds,
+		})
 	}
 
 	exception = s.blockRepository.BulkUpdateManyByIds(
@@ -804,7 +834,7 @@ func (s *BlockService) RestoreMyBlockById(
 	ctx context.Context, reqDto *dtos.RestoreMyBlockByIdReqDto,
 ) (*dtos.RestoreMyBlockByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+		return nil, exceptions.Block.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -836,7 +866,7 @@ func (s *BlockService) RestoreMyBlocksByIds(
 	ctx context.Context, reqDto *dtos.RestoreMyBlocksByIdsReqDto,
 ) (*dtos.RestoreMyBlocksByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+		return nil, exceptions.Block.InvalidDto().WithError(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -873,19 +903,45 @@ func (s *BlockService) DeleteMyBlockById(
 	ctx context.Context, reqDto *dtos.DeleteMyBlockByIdReqDto,
 ) (*dtos.DeleteMyBlockByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+		return nil, exceptions.Block.InvalidDto().WithError(err)
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
 
-	exception := s.blockRepository.SoftDeleteOneById(
+	deletedBlock, exception := s.blockRepository.SoftDeleteOneById(
 		reqDto.Body.BlockId,
 		reqDto.ContextFields.UserId,
-		options.WithDB(db),
+		options.WithDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
 		return nil, exception
+	}
+
+	// the garbage collection of the block group of deleted block
+	var remainingBlockCount int64 = 0
+	result := tx.Model(&schemas.Block{}).
+		Where("block_group_id IN ?", deletedBlock.BlockGroupId).
+		Count(&remainingBlockCount)
+	if err := result.Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.Block.NotFound().WithError(err)
+	}
+	if remainingBlockCount == 0 {
+		if exception := s.blockGroupRepository.SoftDeleteOneById(
+			deletedBlock.BlockGroupId,
+			reqDto.ContextFields.UserId,
+			options.WithDB(tx),
+			options.WithOnlyDeleted(types.Ternary_Negative),
+			options.WithSkipPermissionCheck(),
+		); exception != nil {
+			tx.Rollback()
+			return nil, exception
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, exceptions.Block.FailedToCommitTransaction().WithError(err)
 	}
 
 	return &dtos.DeleteMyBlockByIdResDto{
@@ -897,19 +953,40 @@ func (s *BlockService) DeleteMyBlocksByIds(
 	ctx context.Context, reqDto *dtos.DeleteMyBlocksByIdsReqDto,
 ) (*dtos.DeleteMyBlockPacksByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+		return nil, exceptions.Block.InvalidDto().WithError(err)
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
 
-	exception := s.blockRepository.SoftDeleteManyByIds(
+	deletedBlocks, exception := s.blockRepository.SoftDeleteManyByIds(
 		reqDto.Body.BlockIds,
 		reqDto.ContextFields.UserId,
-		options.WithDB(db),
+		options.WithDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
 		return nil, exception
+	}
+
+	// the garbage collection of the block group of deleted block
+	affectedGroupIdsMap := make(map[uuid.UUID]bool)
+	var affectedGroupIds []uuid.UUID
+	for _, block := range deletedBlocks {
+		if !affectedGroupIdsMap[block.BlockGroupId] {
+			affectedGroupIdsMap[block.BlockGroupId] = true
+			affectedGroupIds = append(affectedGroupIds, block.BlockGroupId)
+		}
+	}
+	if len(affectedGroupIds) > 0 {
+		result := tx.Raw(blockgroupsql.CollectGarbageBlockGroupByIdsSQL, affectedGroupIds)
+		if err := result.Error; err != nil {
+			tx.Rollback()
+			return nil, exceptions.BlockGroup.FailedToDelete().WithError(err)
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, exceptions.Block.FailedToCommitTransaction().WithError(err)
 	}
 
 	return &dtos.DeleteMyBlockPacksByIdsResDto{

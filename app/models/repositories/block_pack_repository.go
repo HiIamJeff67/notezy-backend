@@ -127,13 +127,13 @@ func (r *BlockPackRepository) CheckPermissionAndGetOneById(
 
 	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
 		Select("1").
-		Where("root_shelf_id = ss.root_shelf_id").
-		Where("user_id = ? AND permission IN ?",
+		Where("\"UsersToShelvesTable\".root_shelf_id = ss.root_shelf_id").
+		Where("\"UsersToShelvesTable\".user_id = ? AND \"UsersToShelvesTable\".permission IN ?",
 			userId, allowedPermissions,
 		)
 	query := parsedOptions.DB.Model(&schemas.BlockPack{}).
 		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
-		Where("id = ? AND EXISTS (?)",
+		Where("\"BlockPackTable\".id = ? AND EXISTS (?)",
 			id, subQuery,
 		)
 
@@ -170,21 +170,21 @@ func (r *BlockPackRepository) CheckPermissionsAndGetManyByIds(
 
 	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
 		Select("1").
-		Where("root_shelf_id = ss.root_shelf_id").
-		Where("user_id = ? AND permission IN ?",
+		Where("\"UsersToShelvesTable\".root_shelf_id = ss.root_shelf_id").
+		Where("\"UsersToShelvesTable\".user_id = ? AND \"UsersToShelvesTable\".permission IN ?",
 			userId, allowedPermissions,
 		)
 	query := parsedOptions.DB.Model(&schemas.BlockPack{}).
 		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
-		Where("id IN ? AND EXISTS (?)",
+		Where("\"BlockPackTable\".id IN ? AND EXISTS (?)",
 			ids, subQuery,
 		)
 
 	switch parsedOptions.OnlyDeleted {
 	case types.Ternary_Positive:
-		query = query.Where("deleted_at IS NOT NULL")
+		query = query.Where("\"BlockPackTable\".deleted_at IS NOT NULL")
 	case types.Ternary_Negative:
-		query = query.Where("deleted_at IS NULL")
+		query = query.Where("\"BlockPackTable\".deleted_at IS NULL")
 	}
 
 	if len(preloads) > 0 {
@@ -268,8 +268,8 @@ func (r *BlockPackRepository) CheckPermissionsAndGetManyWithOwnerIdsByIds(
 	// 			 and the query is querying the data and the owner id(which may be different from the current user)
 	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
 		Select("1").
-		Where("root_shelf_id = ss.root_shelf_id").
-		Where("user_id = ? AND permission IN ?",
+		Where("\"UsersToShelvesTable\".root_shelf_id = ss.root_shelf_id").
+		Where("\"UsersToShelvesTable\".user_id = ? AND \"UsersToShelvesTable\".permission IN ?",
 			userId, allowedPermissions,
 		)
 	query := parsedOptions.DB.Model(&schemas.BlockPack{}).

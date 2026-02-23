@@ -22,8 +22,8 @@ JOIN "UsersToShelvesTable" uts ON ss.root_shelf_id = uts.root_shelf_id
 WHERE bp.id = $1 AND uts.user_id = $2 AND uts.permission = ANY($3::"AccessControlPermission"[])
     AND (
         CASE
-            WHEN $4 = 0 THEN m.deleted_at IS NOT NULL
-            WHEN $4 = 2 THEN m.deleted_at IS NULL
+            WHEN $4 = 0 THEN bp.deleted_at IS NOT NULL
+            WHEN $4 = 2 THEN bp.deleted_at IS NULL
             ELSE true
         END
     )

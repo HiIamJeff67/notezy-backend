@@ -34,8 +34,8 @@ type BlockRepositoryInterface interface {
 	BulkUpdateManyByIds(userId uuid.UUID, inputs inputs.BulkUpdateBlocksInputs, opts ...options.RepositoryOptions) *exceptions.Exception
 	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.Block, *exceptions.Exception)
 	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.Block, *exceptions.Exception)
-	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
-	SoftDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
+	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.Block, *exceptions.Exception)
+	SoftDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.Block, *exceptions.Exception)
 	HardDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 }
@@ -503,8 +503,24 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 	var valuePlaceholders []string
 	var valueArgs []interface{}
 	for _, input := range inputs {
-		valuePlaceholders = append(valuePlaceholders, "(?, ?, ?)")
-		valueArgs = append(valueArgs, input.Id, input.Props, input.Content)
+		setParentBlockIdNull := false
+		setNulls := input.PartialUpdateInput.SetNull
+		if setNulls != nil {
+			for field, setNull := range *setNulls {
+				if strings.ToLower(field) == "parentblockid" && setNull {
+					setParentBlockIdNull = true
+				}
+			}
+		}
+		valuePlaceholders = append(valuePlaceholders, "(?, ?, ?, ?, ?, ?)")
+		valueArgs = append(valueArgs,
+			input.Id,
+			input.PartialUpdateInput.Values.Props,
+			input.PartialUpdateInput.Values.Content,
+			input.PartialUpdateInput.Values.BlockGroupId,
+			input.PartialUpdateInput.Values.ParentBlockId,
+			setParentBlockIdNull,
+		)
 	}
 
 	sql := fmt.Sprintf(`
@@ -512,8 +528,10 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 		SET
 			props = COALESCE(v.props::jsonb, b.props),
 			content = COALESCE(v.content::jsonb, b.content),
+			block_group_id = COALESCE(v.block_group_id::uuid, b.block_group_id),
+			parent_block_id = CASE WHEN v.set_parent_block_id_null::boolean THEN NULL ELSE COALESCE(v.parent_block_id::uuid, b.parent_block_id)
 			updated_at = NOW()
-		FROM (VALUES %s) AS v(id, props, content)
+		FROM (VALUES %s) AS v(id, props, content, block_group_id, parent_block_id, set_parent_block_id_null)
 		WHERE b.id = v.id::uuid AND b.deleted_at IS NULL
 	`, strings.Join(valuePlaceholders, ","))
 	result := parsedOptions.DB.Exec(sql, valueArgs...)
@@ -615,7 +633,7 @@ func (r *BlockRepository) SoftDeleteOneById(
 	id uuid.UUID,
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
-) *exceptions.Exception {
+) (*schemas.Block, *exceptions.Exception) {
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
@@ -632,30 +650,32 @@ func (r *BlockRepository) SoftDeleteOneById(
 			allowedPermissions,
 			opts...,
 		) {
-			return exceptions.Block.NoPermission("soft delete a block")
+			return nil, exceptions.Block.NoPermission("soft delete a block")
 		}
 	}
 
-	result := parsedOptions.DB.Model(&schemas.Block{}).
+	var deletedBlock schemas.Block
+	result := parsedOptions.DB.Model(&deletedBlock).
+		Clauses(clause.Returning{}).
 		Where("id = ? AND deleted_at IS NULL", id).
 		Update("deleted_at", time.Now())
 	if err := result.Error; err != nil {
-		return exceptions.Block.FailedToDelete().WithError(err)
+		return nil, exceptions.Block.FailedToDelete().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.Block.NoChanges()
+		return nil, exceptions.Block.NoChanges()
 	}
 
-	return nil
+	return &deletedBlock, nil
 }
 
 func (r *BlockRepository) SoftDeleteManyByIds(
 	ids []uuid.UUID,
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
-) *exceptions.Exception {
+) ([]schemas.Block, *exceptions.Exception) {
 	if len(ids) == 0 {
-		return exceptions.BlockGroup.NoChanges()
+		return nil, exceptions.BlockGroup.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
@@ -674,21 +694,23 @@ func (r *BlockRepository) SoftDeleteManyByIds(
 			allowedPermissions,
 			opts...,
 		) {
-			return exceptions.Block.NoPermission("soft delete blocks")
+			return nil, exceptions.Block.NoPermission("soft delete blocks")
 		}
 	}
 
-	result := parsedOptions.DB.Model(&schemas.Block{}).
+	var deletedBlocks []schemas.Block
+	result := parsedOptions.DB.Model(deletedBlocks).
+		Clauses(clause.Returning{}).
 		Where("id IN ? AND deleted_at IS NULL", ids).
 		Update("deleted_at", time.Now())
 	if err := result.Error; err != nil {
-		return exceptions.Block.FailedToDelete().WithError(err)
+		return nil, exceptions.Block.FailedToDelete().WithError(err)
 	}
 	if result.RowsAffected == 0 {
-		return exceptions.Block.NoChanges()
+		return nil, exceptions.Block.NoChanges()
 	}
 
-	return nil
+	return deletedBlocks, nil
 }
 
 func (r *BlockRepository) HardDeleteOneById(

@@ -147,8 +147,10 @@ type UpdateMyBlockByIdReqDto struct {
 		struct {
 			BlockId uuid.UUID `json:"blockId" validate:"required"`
 			PartialUpdateDto[struct {
-				Props   blocknote.BlockProps   `json:"-"`
-				Content blocknote.BlockContent `json:"-"`
+				ParentBlockId *uuid.UUID              `json:"parentBlockId" validate:"omitnil"`
+				BlockGroupId  *uuid.UUID              `json:"blockGroupId" validate:"omitnil"`
+				Props         *blocknote.BlockProps   `json:"-"`
+				Content       *blocknote.BlockContent `json:"-"`
 			}]
 		},
 		any,
@@ -165,10 +167,31 @@ type UpdateMyBlocksByIdsReqDto struct {
 		},
 		struct {
 			UpdatedBlocks []struct {
-				BlockId uuid.UUID               `json:"blockId" validate:"required"`
-				Props   *blocknote.BlockProps   `json:"-"`
-				Content *blocknote.BlockContent `json:"-"`
+				BlockId uuid.UUID `json:"blockId" validate:"required"`
+				PartialUpdateDto[struct {
+					ParentBlockId *uuid.UUID              `json:"parentBlockId" validate:"omitnil"`
+					BlockGroupId  *uuid.UUID              `json:"blockGroupId" validate:"omitnil"`
+					Props         *blocknote.BlockProps   `json:"-"`
+					Content       *blocknote.BlockContent `json:"-"`
+				}]
 			} `json:"updatedBlocks" validated:"required"`
+		},
+		any,
+	]
+}
+
+type MoveMyBlockByIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			Id            uuid.UUID  `json:"id" validate:"required"`
+			BlockGroupId  uuid.UUID  `json:"blockGroupId" validate:"required"`
+			ParentBlockId *uuid.UUID `json:"parentBlockId" validate:"omitnil"`
 		},
 		any,
 	]
@@ -280,11 +303,18 @@ type UpdateMyBlockByIdResDto struct {
 }
 
 type UpdateMyBlocksByIdsResDto struct {
-	IsAllSuccess    bool        `json:"isAllSuccess"`
-	FailedIndexes   []int       `json:"failedIndexes"`
-	SuccessIndexes  []int       `json:"successIndexes"`
-	SuccessBlockIds []uuid.UUID `json:"blockIds"`
-	UpdatedAt       time.Time   `json:"updatedAt"`
+	IsAllSuccess                 bool  `json:"isAllSuccess"`
+	FailedIndexes                []int `json:"failedIndexes"`
+	SuccessIndexes               []int `json:"successIndexes"`
+	SuccessBlockGroupAndBlockIds []struct {
+		BlockGroupId uuid.UUID   `json:"blockGroupId"`
+		BlockIds     []uuid.UUID `json:"blockIds"`
+	} `json:"successBlockGroupAndBlockIds"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type MoveMyBlockByIdResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 type RestoreMyBlockByIdResDto struct {

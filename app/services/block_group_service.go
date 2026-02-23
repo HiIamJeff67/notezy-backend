@@ -299,6 +299,10 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
 	}
 
+	if len(reqDto.Param.BlockPackId) == 0 {
+		return &dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdResDto{}, nil
+	}
+
 	db := s.db.WithContext(ctx)
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -316,7 +320,9 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 		options.WithDB(db),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
-	if exception != nil {
+	if exceptions.CompareCommonExceptions(exceptions.BlockGroup.NotFound(), exception, false) {
+		return &dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdResDto{}, nil
+	} else if exception != nil {
 		return nil, exception
 	}
 
