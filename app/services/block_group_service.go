@@ -11,6 +11,7 @@ import (
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	concurrency "notezy-backend/app/lib/concurrency"
+	"notezy-backend/app/logs"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
@@ -174,6 +175,19 @@ func (s *BlockGroupService) GetMyBlockGroupAndItsBlocksById(
 		return nil, exception
 	}
 
+	if rawArborizedBlock == nil {
+		return &dtos.GetMyBlockGroupAndItsBlocksByIdResDto{
+			Id:                        blockGroup.Id,
+			BlockPackId:               blockGroup.BlockPackId,
+			PrevBlockGroupId:          blockGroup.PrevBlockGroupId,
+			SyncBlockGroupId:          blockGroup.SyncBlockGroupId,
+			DeletedAt:                 blockGroup.DeletedAt,
+			UpdatedAt:                 blockGroup.UpdatedAt,
+			CreatedAt:                 blockGroup.CreatedAt,
+			RawArborizedEditableBlock: dtos.RawArborizedEditableBlock{},
+		}, nil
+	}
+
 	return &dtos.GetMyBlockGroupAndItsBlocksByIdResDto{
 		Id:                        blockGroup.Id,
 		BlockPackId:               blockGroup.BlockPackId,
@@ -286,6 +300,8 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByIds(
 
 		if rawArborizedBlock != nil {
 			resDto[index].RawArborizedEditableBlock = *rawArborizedBlock
+		} else {
+			resDto[index].RawArborizedEditableBlock = dtos.RawArborizedEditableBlock{}
 		}
 	}
 
@@ -320,27 +336,59 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 		options.WithDB(db),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
-	if exceptions.CompareCommonExceptions(exceptions.BlockGroup.NotFound(), exception, false) {
-		return &dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdResDto{}, nil
-	} else if exception != nil {
+	if exception != nil {
+		if exceptions.CompareCommonExceptions(exceptions.BlockGroup.NotFound(), exception, false) {
+			return &dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdResDto{}, nil
+		}
 		return nil, exception
 	}
 
-	var resDto dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdResDto
-
 	blockGroupIds := make([]uuid.UUID, len(blockGroups))
-	for index, blockGroup := range blockGroups {
+	nextBlockGroupMap := make(map[uuid.UUID]schemas.BlockGroup, len(blockGroups))
+	var firstBlockGroup *schemas.BlockGroup = nil
+	for index := range blockGroups {
+		blockGroup := &blockGroups[index]
 		blockGroupIds[index] = blockGroup.Id
+		logs.FInfo("id: %s, prev id: %s", blockGroup.Id, blockGroup.PrevBlockGroupId)
+
+		if blockGroup.PrevBlockGroupId == nil {
+			logs.FInfo("id: %s wants become root block group", blockGroup.Id)
+			if firstBlockGroup != nil {
+				return nil, exceptions.BlockGroup.DuplicateBlockGroupsWithSamePrevBlockGroupId(reqDto.Param.BlockPackId)
+			}
+			firstBlockGroup = blockGroup
+		} else {
+			nextBlockGroupMap[*blockGroup.PrevBlockGroupId] = *blockGroup
+		}
+	}
+
+	if firstBlockGroup == nil && len(blockGroups) > 0 {
+		return nil, exceptions.BlockPack.NoRootBlockGroupInBlockPack(reqDto.Param.BlockPackId)
+	}
+
+	var resDto dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdResDto
+	currentBlockGroup := firstBlockGroup
+	for currentBlockGroup != nil {
 		resDto = append(resDto, dtos.GetMyBlockGroupAndItsBlocksByIdResDto{
-			Id:                        blockGroup.Id,
-			BlockPackId:               blockGroup.BlockPackId,
-			PrevBlockGroupId:          blockGroup.PrevBlockGroupId,
-			SyncBlockGroupId:          blockGroup.SyncBlockGroupId,
-			DeletedAt:                 blockGroup.DeletedAt,
-			UpdatedAt:                 blockGroup.UpdatedAt,
-			CreatedAt:                 blockGroup.CreatedAt,
+			Id:                        currentBlockGroup.Id,
+			BlockPackId:               currentBlockGroup.BlockPackId,
+			PrevBlockGroupId:          currentBlockGroup.PrevBlockGroupId,
+			SyncBlockGroupId:          currentBlockGroup.SyncBlockGroupId,
+			DeletedAt:                 currentBlockGroup.DeletedAt,
+			UpdatedAt:                 currentBlockGroup.UpdatedAt,
+			CreatedAt:                 currentBlockGroup.CreatedAt,
 			RawArborizedEditableBlock: dtos.RawArborizedEditableBlock{},
 		})
+		nextBlockGroup, exist := nextBlockGroupMap[currentBlockGroup.Id]
+		if exist {
+			currentBlockGroup = &nextBlockGroup
+		} else {
+			currentBlockGroup = nil
+		}
+	}
+
+	if len(resDto) != len(blockGroups) {
+		return nil, exceptions.BlockGroup.BrokenBlockGroupsLinkedListDetected(reqDto.Param.BlockPackId, blockGroupIds)
 	}
 
 	var flattenedBlocks []schemas.Block
@@ -398,6 +446,8 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 
 		if rawArborizedBlock != nil {
 			resDto[index].RawArborizedEditableBlock = *rawArborizedBlock
+		} else {
+			resDto[index].RawArborizedEditableBlock = dtos.RawArborizedEditableBlock{}
 		}
 	}
 
@@ -588,19 +638,24 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 
 	createBlockGroupsInput := make([]inputs.CreateBlockGroupInput, len(reqDto.Body.BlockGroupContents))
 	validateBlockDto := make([]dtos.ArborizedEditableBlock, len(reqDto.Body.BlockGroupContents))
+	logs.Info("==============================")
 	for index, blockGroupContent := range reqDto.Body.BlockGroupContents {
 		createBlockGroupsInput[index] = inputs.CreateBlockGroupInput{
+			BlockGroupId:     &blockGroupContent.BlockGroupId,
 			PrevBlockGroupId: blockGroupContent.PrevBlockGroupId,
 		}
 		validateBlockDto[index] = blockGroupContent.ArborizedEditableBlock
+		logs.FInfo("id: %s, prev id: %v", blockGroupContent.BlockGroupId, blockGroupContent.PrevBlockGroupId)
 	}
+
+	logs.Info("==============================")
 
 	// note that the order of the output newBlockGroupIds is the same as the order of reqDto.Body.BlockGroupContents
 	newBlockGroupIds, exception := s.blockGroupRepository.InsertManyByBlockPackId(
 		reqDto.Body.BlockPackId,
 		reqDto.ContextFields.UserId,
 		createBlockGroupsInput,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -609,6 +664,10 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 	if len(newBlockGroupIds) == 0 {
 		tx.Rollback()
 		return nil, exceptions.BlockGroup.FailedToCreate().WithDetails("got nil block group id")
+	}
+
+	for _, newBlockGroupId := range newBlockGroupIds {
+		logs.Info("id: ", newBlockGroupId)
 	}
 
 	validateBlockFunc := func(validateDto dtos.ArborizedEditableBlock) ([]dtos.RawFlattenedEditableBlock, error) {
@@ -621,7 +680,7 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 
 	validateBlockResults := concurrency.BatchExecute(
 		validateBlockDto,
-		min(10, len(validateBlockDto)/10),
+		min(10, max(len(validateBlockDto)/10, len(validateBlockDto)%10)),
 		validateBlockFunc,
 	)
 
@@ -679,7 +738,7 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 	_, exception = s.blockRepository.CreateManyByBlockGroupIds(
 		reqDto.ContextFields.UserId,
 		createBlockGroupContentInput,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 		options.WithBatchSize(constants.MaxBatchCreateBlockSize),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithSkipPermissionCheck(),
@@ -745,7 +804,7 @@ func (s *BlockGroupService) InsertSequentialBlockGroupsAndTheirBlocksByBlockPack
 
 	validateBlockResults := concurrency.BatchExecute(
 		reqDto.Body.ArborizedEditableBlocks,
-		min(10, len(reqDto.Body.ArborizedEditableBlocks)/10),
+		min(10, max(len(reqDto.Body.ArborizedEditableBlocks)/10, len(reqDto.Body.ArborizedEditableBlocks)%10)),
 		validateBlockFunc,
 	)
 

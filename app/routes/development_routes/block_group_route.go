@@ -13,7 +13,7 @@ func configureDevelopmentBlockGroupRoutes() {
 
 	blockGroupRoutes := DevelopmentRouterGroup.Group("/blockGroup")
 	blockGroupRoutes.Use(
-		middlewares.TimeoutMiddleware(3*time.Second),
+		middlewares.TimeoutMiddleware(10*time.Second),
 		middlewares.AuthMiddleware(),
 		middlewares.AuthorizedRateLimitMiddleware(),
 		interceptors.RefreshAccessTokenInterceptor(),

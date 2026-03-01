@@ -228,7 +228,7 @@ func (b *BlockGroupBinder) BindInsertBlockGroupByBlockPackId(controllerFunc type
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.BlockGroup.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 
@@ -251,7 +251,7 @@ func (b *BlockGroupBinder) BindInsertBlockGroupAndItsBlocksByBlockPackId(control
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.BlockGroup.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 
@@ -274,7 +274,7 @@ func (b *BlockGroupBinder) BindInsertBlockGroupsAndTheirBlocksByBlockPackId(cont
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.BlockGroup.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 
@@ -297,7 +297,7 @@ func (b *BlockGroupBinder) BindInsertSequentialBlockGroupsAndTheirBlocksByBlockP
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.BlockGroup.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 
@@ -320,7 +320,7 @@ func (b *BlockGroupBinder) BindMoveMyBlockGroupsByIds(controllerFunc types.Contr
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.BlockGroup.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 
@@ -343,7 +343,7 @@ func (b *BlockGroupBinder) BindRestoreMyBlockGroupById(controllerFunc types.Cont
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.BlockGroup.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 
@@ -366,7 +366,7 @@ func (b *BlockGroupBinder) BindRestoreMyBlockGroupsByIds(controllerFunc types.Co
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.BlockGroup.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 
@@ -389,7 +389,7 @@ func (b *BlockGroupBinder) BindDeleteMyBlockGroupById(controllerFunc types.Contr
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.BlockGroup.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 
@@ -412,7 +412,7 @@ func (b *BlockGroupBinder) BindDeleteMyBlockGroupsByIds(controllerFunc types.Con
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.BlockGroup.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 

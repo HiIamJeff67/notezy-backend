@@ -60,7 +60,7 @@ func (d *BlockGroupExceptionDomain) NoRootBlockInBlockGroup(blockGroupId uuid.UU
 		Prefix:         d.Prefix,
 		Reason:         "NoRootBlockInBlockGroup",
 		IsInternal:     true,
-		Message:        fmt.Sprintf("No root block in the block group of %s", blockGroupId),
+		Message:        fmt.Sprintf("No root blocks in the block group of %s", blockGroupId),
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
@@ -68,11 +68,35 @@ func (d *BlockGroupExceptionDomain) NoRootBlockInBlockGroup(blockGroupId uuid.UU
 
 func (d *BlockGroupExceptionDomain) RepeatedRootBlockInBlockGroupDetected(blockGroupId uuid.UUID, blockId uuid.UUID) *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 2,
+		Code:           d.BaseCode + 3,
 		Prefix:         d.Prefix,
 		Reason:         "RepeatedRootBlockInBlockGroupDetected",
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Block group of %s has multiple blocks as the root block, one of the id of the repeated block is %s", blockGroupId, blockId),
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *BlockGroupExceptionDomain) BrokenBlockGroupsLinkedListDetected(blockPackId uuid.UUID, blockGroupIds []uuid.UUID) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 4,
+		Prefix:         d.Prefix,
+		Reason:         "BrokenBlockGroupsLinkedListDetected",
+		IsInternal:     true,
+		Message:        fmt.Sprintf("Block groups of ids within %v in block pack of %s is broken and not in a valid linked list structure", blockGroupIds, blockPackId),
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *BlockGroupExceptionDomain) DuplicateBlockGroupsWithSamePrevBlockGroupId(blockPackId uuid.UUID) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 5,
+		Prefix:         d.Prefix,
+		Reason:         "DuplicateBlockGroupsWithSamePrevBlockGroupId",
+		IsInternal:     true,
+		Message:        fmt.Sprintf("There're more than 2 block groups in block pack of %s have the same prev block group id", blockPackId),
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}

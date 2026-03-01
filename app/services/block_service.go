@@ -480,7 +480,7 @@ func (s *BlockService) InsertBlocks(
 	}
 	var createBlockGroupContentInput []inputs.CreateBlockGroupContentInput
 	for _, validateResult := range validateBlockResults {
-		if validateResult.Err != nil {
+		if validateResult.Err == nil {
 			resDto.SuccessIndexes = append(resDto.SuccessIndexes, validateResult.Index)
 			blockIds := make([]uuid.UUID, len(validateResult.Data))
 			createBlockInputs := make([]inputs.CreateBlockInput, len(validateResult.Data))
@@ -569,32 +569,22 @@ func (s *BlockService) UpdateMyBlockById(
 	}
 
 	if reqDto.Body.Values.Props != nil {
-		rawProps, err := json.Marshal(reqDto.Body.Values.Props)
-		if err != nil {
-			return nil, exceptions.Block.InvalidDto().WithError(err)
-		}
-
-		propsString := string(bytes.TrimSpace(rawProps))
+		propsString := string(bytes.TrimSpace(*reqDto.Body.Values.Props))
 		if propsString == "{}" || propsString == "" {
 			emptyPropsJson := datatypes.JSON("{}")
 			updateInput.Values.Props = &emptyPropsJson
 		} else {
-			_, err = blocknote.ParseProps(block.Type.String(), rawProps)
+			_, err := blocknote.ParseProps(block.Type.String(), *reqDto.Body.Values.Props)
 			if err != nil {
 				return nil, exceptions.Block.InvalidDto().WithError(err)
 			}
-			rawPropsJson := datatypes.JSON(rawProps)
+			rawPropsJson := datatypes.JSON(*reqDto.Body.Values.Props)
 			updateInput.Values.Props = &rawPropsJson
 		}
 	}
 
 	if reqDto.Body.Values.Content != nil {
-		rawContent, err := json.Marshal(reqDto.Body.Values.Content)
-		if err != nil {
-			return nil, exceptions.Block.InvalidDto().WithError(err)
-		}
-
-		trimContent := bytes.TrimSpace(rawContent)
+		trimContent := bytes.TrimSpace(*reqDto.Body.Values.Content)
 		trimContentString := string(trimContent)
 		if trimContentString == "null" || trimContentString == "[]" || trimContentString == "" {
 			emptyContentsJson := datatypes.JSON("[]")
@@ -606,14 +596,14 @@ func (s *BlockService) UpdateMyBlockById(
 				if err := json.Unmarshal(trimContent, &list); err != nil {
 					return nil, exceptions.Block.InvalidDto().WithError(err)
 				}
-				rawContentJson := datatypes.JSON(rawContent)
+				rawContentJson := datatypes.JSON(*reqDto.Body.Values.Content)
 				updateInput.Values.Content = &rawContentJson
 			case '{':
 				var table blocknote.TableContent
 				if err := json.Unmarshal(trimContent, &table); err != nil {
 					return nil, exceptions.Block.InvalidDto().WithError(err)
 				}
-				rawContentJson := datatypes.JSON(rawContent)
+				rawContentJson := datatypes.JSON(*reqDto.Body.Values.Content)
 				updateInput.Values.Content = &rawContentJson
 			default:
 				return nil, exceptions.Block.InvalidDto().WithError(errors.New("invalid content format: must be array or object"))
@@ -655,18 +645,18 @@ func (s *BlockService) UpdateMyBlocksByIds(
 
 	blockIds := make([]uuid.UUID, len(reqDto.Body.UpdatedBlocks))
 	blockIdToUpdateDto := make(map[uuid.UUID]dtos.PartialUpdateDto[struct {
-		ParentBlockId *uuid.UUID              `json:"parentBlockId" validate:"omitnil"`
-		BlockGroupId  *uuid.UUID              `json:"blockGroupId" validate:"omitnil"`
-		Props         *blocknote.BlockProps   `json:"-"`
-		Content       *blocknote.BlockContent `json:"-"`
+		ParentBlockId *uuid.UUID       `json:"parentBlockId" validate:"omitnil"`
+		BlockGroupId  *uuid.UUID       `json:"blockGroupId" validate:"omitnil"`
+		Props         *json.RawMessage `json:"props"`
+		Content       *json.RawMessage `json:"content"`
 	}], len(reqDto.Body.UpdatedBlocks))
 	for index, updatedBlock := range reqDto.Body.UpdatedBlocks {
 		blockIds[index] = updatedBlock.BlockId
 		blockIdToUpdateDto[updatedBlock.BlockId] = dtos.PartialUpdateDto[struct {
-			ParentBlockId *uuid.UUID              `json:"parentBlockId" validate:"omitnil"`
-			BlockGroupId  *uuid.UUID              `json:"blockGroupId" validate:"omitnil"`
-			Props         *blocknote.BlockProps   `json:"-"`
-			Content       *blocknote.BlockContent `json:"-"`
+			ParentBlockId *uuid.UUID       `json:"parentBlockId" validate:"omitnil"`
+			BlockGroupId  *uuid.UUID       `json:"blockGroupId" validate:"omitnil"`
+			Props         *json.RawMessage `json:"props"`
+			Content       *json.RawMessage `json:"content"`
 		}]{
 			Values:  updatedBlock.Values,
 			SetNull: updatedBlock.SetNull,
@@ -685,11 +675,11 @@ func (s *BlockService) UpdateMyBlocksByIds(
 	}
 
 	type ValidateBlockPropsAndContentDto struct {
-		Id           uuid.UUID               `json:"id"`
-		BlockGroupId uuid.UUID               `json:"blockGroupId"`
-		Type         enums.BlockType         `json:"type"`
-		Props        *blocknote.BlockProps   `json:"-"`
-		Content      *blocknote.BlockContent `json:"-"`
+		Id           uuid.UUID        `json:"id"`
+		BlockGroupId uuid.UUID        `json:"blockGroupId"`
+		Type         enums.BlockType  `json:"type"`
+		Props        *json.RawMessage `json:"props"`
+		Content      *json.RawMessage `json:"content"`
 	}
 	validateBlockPropsAndContentDto := make([]ValidateBlockPropsAndContentDto, len(blocks))
 	for index, block := range blocks {
@@ -710,32 +700,22 @@ func (s *BlockService) UpdateMyBlocksByIds(
 		}
 
 		if validateBlockPropsAndContentDto.Props != nil {
-			rawProps, err := json.Marshal(validateBlockPropsAndContentDto.Props)
-			if err != nil {
-				return result, err
-			}
-
-			propsString := string(bytes.TrimSpace(rawProps))
+			propsString := string(bytes.TrimSpace(*validateBlockPropsAndContentDto.Props))
 			if propsString == "{}" || propsString == "" {
 				emptyPropsJson := datatypes.JSON("{}")
 				result.PartialUpdateInput.Values.Props = &emptyPropsJson
 			} else {
-				_, err = blocknote.ParseProps(validateBlockPropsAndContentDto.Type.String(), rawProps)
+				_, err := blocknote.ParseProps(validateBlockPropsAndContentDto.Type.String(), *validateBlockPropsAndContentDto.Props)
 				if err != nil {
 					return result, err
 				}
-				rawPropsJson := datatypes.JSON(rawProps)
+				rawPropsJson := datatypes.JSON(*validateBlockPropsAndContentDto.Props)
 				result.PartialUpdateInput.Values.Props = &rawPropsJson
 			}
 		}
 
 		if validateBlockPropsAndContentDto.Content != nil {
-			rawContent, err := json.Marshal(validateBlockPropsAndContentDto.Content)
-			if err != nil {
-				return result, err
-			}
-
-			trimContent := bytes.TrimSpace(rawContent)
+			trimContent := bytes.TrimSpace(*validateBlockPropsAndContentDto.Content)
 			trimContentString := string(trimContent)
 			if trimContentString == "null" || trimContentString == "[]" || trimContentString == "" {
 				emptyContentsJson := datatypes.JSON("[]")
@@ -747,14 +727,14 @@ func (s *BlockService) UpdateMyBlocksByIds(
 					if err := json.Unmarshal(trimContent, &list); err != nil {
 						return result, err
 					}
-					rawContentJson := datatypes.JSON(rawContent)
+					rawContentJson := datatypes.JSON(*validateBlockPropsAndContentDto.Content)
 					result.PartialUpdateInput.Values.Content = &rawContentJson
 				case '{':
 					var table blocknote.TableContent
 					if err := json.Unmarshal(trimContent, &table); err != nil {
 						return result, err
 					}
-					rawContentJson := datatypes.JSON(rawContent)
+					rawContentJson := datatypes.JSON(*validateBlockPropsAndContentDto.Content)
 					result.PartialUpdateInput.Values.Content = &rawContentJson
 				default:
 					return result, errors.New("invalid content format: must be array or object")
@@ -767,7 +747,7 @@ func (s *BlockService) UpdateMyBlocksByIds(
 
 	validateBlocksPropsAndContentResult := concurrency.BatchExecute(
 		validateBlockPropsAndContentDto,
-		min(10, len(validateBlockPropsAndContentDto)/10),
+		min(10, max(len(validateBlockPropsAndContentDto)/10, len(validateBlockPropsAndContentDto)%10)),
 		validateBlockPropsAndContentFunc,
 	)
 
@@ -978,7 +958,7 @@ func (s *BlockService) DeleteMyBlocksByIds(
 		}
 	}
 	if len(affectedGroupIds) > 0 {
-		result := tx.Raw(blockgroupsql.CollectGarbageBlockGroupByIdsSQL, affectedGroupIds)
+		result := tx.Exec(blockgroupsql.CollectGarbageBlockGroupByIdsSQL, affectedGroupIds)
 		if err := result.Error; err != nil {
 			tx.Rollback()
 			return nil, exceptions.BlockGroup.FailedToDelete().WithError(err)

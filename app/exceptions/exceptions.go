@@ -445,6 +445,23 @@ func Timeout(time time.Duration, optionalMessage ...string) *Exception {
 	}
 }
 
+func FatelPanic(optionalMessage ...string) *Exception {
+	message := "Panic happened"
+	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
+		message = optionalMessage[0]
+	}
+
+	return &Exception{
+		Code:           99900005,
+		Prefix:         "General",
+		Reason:         "FatelPanic",
+		IsInternal:     false,
+		Message:        message,
+		HTTPStatusCode: http.StatusRequestTimeout,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
 /* ============================== Database Exception Domain Definition ============================== */
 
 type DatabaseExceptionDomain struct {

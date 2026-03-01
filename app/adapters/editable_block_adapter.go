@@ -33,7 +33,7 @@ func (ebca *EditableBlockAdapter) Flatten(
 	root *dtos.ArborizedEditableBlock,
 ) ([]dtos.FlattenedEditableBlock, *exceptions.Exception) {
 	if root == nil {
-		return nil, nil
+		return []dtos.FlattenedEditableBlock{}, nil
 	}
 
 	resultBlocks := []dtos.FlattenedEditableBlock{}
@@ -79,7 +79,7 @@ func (ebca *EditableBlockAdapter) FlattenToRaw(
 	root *dtos.ArborizedEditableBlock,
 ) ([]dtos.RawFlattenedEditableBlock, *exceptions.Exception) {
 	if root == nil {
-		return nil, nil
+		return []dtos.RawFlattenedEditableBlock{}, nil
 	}
 
 	rootProps, err := json.Marshal(root.Props)
@@ -143,7 +143,7 @@ func (ebca *EditableBlockAdapter) FlattenRawToRaw(
 	root *dtos.RawArborizedEditableBlock,
 ) ([]dtos.RawFlattenedEditableBlock, *exceptions.Exception) {
 	if root == nil {
-		return nil, nil
+		return []dtos.RawFlattenedEditableBlock{}, nil
 	}
 
 	resultBlocks := []dtos.RawFlattenedEditableBlock{}
@@ -190,7 +190,7 @@ func (ebca *EditableBlockAdapter) Arborize(
 	childrenMap map[uuid.UUID][]dtos.FlattenedEditableBlock,
 ) (*dtos.ArborizedEditableBlock, *exceptions.Exception) {
 	if root == nil {
-		return nil, nil
+		return &dtos.ArborizedEditableBlock{}, nil
 	}
 
 	rootContent := root.Content
@@ -261,7 +261,7 @@ func (ebca *EditableBlockAdapter) ArborizeRawToRaw(
 	childrenMap map[uuid.UUID][]dtos.RawFlattenedEditableBlock,
 ) (*dtos.RawArborizedEditableBlock, *exceptions.Exception) {
 	if root == nil {
-		return nil, nil
+		return &dtos.RawArborizedEditableBlock{}, nil
 	}
 
 	var rootContent datatypes.JSON = root.Content

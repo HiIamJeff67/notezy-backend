@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	exceptions "notezy-backend/app/exceptions"
+	"notezy-backend/app/logs"
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
@@ -209,7 +210,7 @@ func (r *BlockRepository) CheckPermissionsAndGetManyByIds(
 	}
 
 	var blocks []schemas.Block
-	result := query.First(&blocks)
+	result := query.Find(&blocks)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Block.NotFound().WithError(err)
 	}
@@ -273,14 +274,15 @@ func (r *BlockRepository) CreateOneByBlockGroupId(
 	}
 	newBlock.BlockGroupId = blockGroupId
 
-	result := parsedOptions.DB.Model(&schemas.Block{}).
+	var createdBlock schemas.Block
+	result := parsedOptions.DB.Model(&createdBlock).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newBlock)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Block.FailedToCreate().WithError(err)
 	}
 
-	return &newBlock.Id, nil
+	return &createdBlock.Id, nil
 }
 
 func (r *BlockRepository) CreateManyByBlockGroupId(
@@ -325,14 +327,15 @@ func (r *BlockRepository) CreateManyByBlockGroupId(
 		newBlocks[index] = newBlock
 	}
 
-	result := parsedOptions.DB.Model(&schemas.Block{}).
+	var createdBlocks []schemas.Block
+	result := parsedOptions.DB.Model(&createdBlocks).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		CreateInBatches(&newBlocks, parsedOptions.BatchSize)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Block.FailedToCreate().WithError(err)
 	}
 
-	return newBlocks, nil
+	return createdBlocks, nil
 }
 
 func (r *BlockRepository) CreateManyByBlockGroupIds(
@@ -358,6 +361,7 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 
 		blockGroupIds := make([]uuid.UUID, len(input))
 		for index, in := range input {
+			logs.Info(in)
 			blockGroupIds[index] = in.BlockGroupId
 		}
 
@@ -412,14 +416,15 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 		}
 	}
 
-	result := parsedOptions.DB.Model(&schemas.Block{}).
+	var createdBlocks []schemas.Block
+	result := parsedOptions.DB.Model(&createdBlocks).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		CreateInBatches(&newBlocks, parsedOptions.BatchSize)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Block.FailedToCreate().WithError(err)
 	}
 
-	return newBlocks, nil
+	return createdBlocks, nil
 }
 
 func (r *BlockRepository) UpdateOneById(
@@ -512,7 +517,7 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 				}
 			}
 		}
-		valuePlaceholders = append(valuePlaceholders, "(?, ?, ?, ?, ?, ?)")
+		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::jsonb, ?::jsonb, ?::uuid, ?::uuid, ?::boolean)")
 		valueArgs = append(valueArgs,
 			input.Id,
 			input.PartialUpdateInput.Values.Props,
@@ -521,6 +526,8 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 			input.PartialUpdateInput.Values.ParentBlockId,
 			setParentBlockIdNull,
 		)
+
+		logs.Info(input.PartialUpdateInput.Values.Content)
 	}
 
 	sql := fmt.Sprintf(`
@@ -529,7 +536,10 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 			props = COALESCE(v.props::jsonb, b.props),
 			content = COALESCE(v.content::jsonb, b.content),
 			block_group_id = COALESCE(v.block_group_id::uuid, b.block_group_id),
-			parent_block_id = CASE WHEN v.set_parent_block_id_null::boolean THEN NULL ELSE COALESCE(v.parent_block_id::uuid, b.parent_block_id)
+			parent_block_id = CASE 
+				WHEN v.set_parent_block_id_null::boolean THEN NULL 
+				ELSE COALESCE(v.parent_block_id::uuid, b.parent_block_id)
+			END,
 			updated_at = NOW()
 		FROM (VALUES %s) AS v(id, props, content, block_group_id, parent_block_id, set_parent_block_id_null)
 		WHERE b.id = v.id::uuid AND b.deleted_at IS NULL
@@ -681,6 +691,8 @@ func (r *BlockRepository) SoftDeleteManyByIds(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
+	logs.Info("test1")
+
 	if !parsedOptions.SkipPermissionCheck {
 		allowedPermissions := []enums.AccessControlPermission{
 			enums.AccessControlPermission_Owner,
@@ -698,8 +710,10 @@ func (r *BlockRepository) SoftDeleteManyByIds(
 		}
 	}
 
+	logs.Info("test2")
+
 	var deletedBlocks []schemas.Block
-	result := parsedOptions.DB.Model(deletedBlocks).
+	result := parsedOptions.DB.Model(&deletedBlocks).
 		Clauses(clause.Returning{}).
 		Where("id IN ? AND deleted_at IS NULL", ids).
 		Update("deleted_at", time.Now())
@@ -709,6 +723,8 @@ func (r *BlockRepository) SoftDeleteManyByIds(
 	if result.RowsAffected == 0 {
 		return nil, exceptions.Block.NoChanges()
 	}
+
+	logs.Info("test3")
 
 	return deletedBlocks, nil
 }

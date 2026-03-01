@@ -1,13 +1,13 @@
 package dtos
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 
 	enums "notezy-backend/app/models/schemas/enums"
-	blocknote "notezy-backend/shared/lib/blocknote"
 )
 
 /* ============================== Request DTO ============================== */
@@ -147,10 +147,10 @@ type UpdateMyBlockByIdReqDto struct {
 		struct {
 			BlockId uuid.UUID `json:"blockId" validate:"required"`
 			PartialUpdateDto[struct {
-				ParentBlockId *uuid.UUID              `json:"parentBlockId" validate:"omitnil"`
-				BlockGroupId  *uuid.UUID              `json:"blockGroupId" validate:"omitnil"`
-				Props         *blocknote.BlockProps   `json:"-"`
-				Content       *blocknote.BlockContent `json:"-"`
+				ParentBlockId *uuid.UUID       `json:"parentBlockId" validate:"omitnil"`
+				BlockGroupId  *uuid.UUID       `json:"blockGroupId" validate:"omitnil"`
+				Props         *json.RawMessage `json:"props"`
+				Content       *json.RawMessage `json:"content"`
 			}]
 		},
 		any,
@@ -169,10 +169,10 @@ type UpdateMyBlocksByIdsReqDto struct {
 			UpdatedBlocks []struct {
 				BlockId uuid.UUID `json:"blockId" validate:"required"`
 				PartialUpdateDto[struct {
-					ParentBlockId *uuid.UUID              `json:"parentBlockId" validate:"omitnil"`
-					BlockGroupId  *uuid.UUID              `json:"blockGroupId" validate:"omitnil"`
-					Props         *blocknote.BlockProps   `json:"-"`
-					Content       *blocknote.BlockContent `json:"-"`
+					ParentBlockId *uuid.UUID       `json:"parentBlockId" validate:"omitnil"`
+					BlockGroupId  *uuid.UUID       `json:"blockGroupId" validate:"omitnil"`
+					Props         *json.RawMessage `json:"props"`
+					Content       *json.RawMessage `json:"content"`
 				}]
 			} `json:"updatedBlocks" validated:"required"`
 		},

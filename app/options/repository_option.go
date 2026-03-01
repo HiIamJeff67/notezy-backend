@@ -8,10 +8,11 @@ import (
 )
 
 type RepositoryOptionFields struct {
-	DB                  *gorm.DB
-	OnlyDeleted         types.Ternary
-	SkipPermissionCheck bool
-	BatchSize           int
+	DB                   *gorm.DB
+	IsTransactionStarted bool
+	OnlyDeleted          types.Ternary
+	SkipPermissionCheck  bool
+	BatchSize            int
 }
 
 type RepositoryOptions func(*RepositoryOptionFields)
@@ -19,6 +20,19 @@ type RepositoryOptions func(*RepositoryOptionFields)
 func WithDB(db *gorm.DB) RepositoryOptions {
 	return func(ros *RepositoryOptionFields) {
 		ros.DB = db
+	}
+}
+
+func WithIsTransactionStarted(isTransactionStarted bool) RepositoryOptions {
+	return func(ros *RepositoryOptionFields) {
+		ros.IsTransactionStarted = isTransactionStarted
+	}
+}
+
+func WithTransactionDB(db *gorm.DB) RepositoryOptions {
+	return func(ros *RepositoryOptionFields) {
+		ros.DB = db
+		ros.IsTransactionStarted = true
 	}
 }
 

@@ -1,5 +1,12 @@
 package exceptions
 
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/google/uuid"
+)
+
 const (
 	_ExceptionBaseCode_BlockPack ExceptionCode = BlockPackExceptionSubDomainCode * ExceptionSubDomainCodeShiftAmount
 
@@ -31,4 +38,16 @@ var BlockPack = &BlockPackExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_BlockPack,
 		_Prefix:   ExceptionPrefix_BlockPack,
 	},
+}
+
+func (d *BlockPackExceptionDomain) NoRootBlockGroupInBlockPack(blockPackId uuid.UUID) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 1,
+		Prefix:         d.Prefix,
+		Reason:         "NoRootBlockGroupInBlockPack",
+		IsInternal:     true,
+		Message:        fmt.Sprintf("No root block groups in the block pack of %s", blockPackId),
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
 }

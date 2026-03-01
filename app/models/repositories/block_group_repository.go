@@ -1,6 +1,9 @@
 package repositories
 
 import (
+	"fmt"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -472,6 +475,12 @@ func (r *BlockGroupRepository) InsertManyByBlockPackId(
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
+	shouldCommit := false
+	if !parsedOptions.IsTransactionStarted {
+		parsedOptions.DB = parsedOptions.DB.Begin()
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		shouldCommit = true
+	}
 
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
@@ -489,10 +498,12 @@ func (r *BlockGroupRepository) InsertManyByBlockPackId(
 		opts...,
 	)
 	if exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 	if ownerId == nil || blockPack == nil {
-		return nil, exceptions.BlockPack.NoPermission("get owner's block pack")
+		parsedOptions.DB.Rollback()
+		return nil, exceptions.BlockPack.NoPermission("write owner's block pack")
 	}
 
 	newBlockGroups := make([]schemas.BlockGroup, len(input))
@@ -505,54 +516,37 @@ func (r *BlockGroupRepository) InsertManyByBlockPackId(
 		}
 		newBlockGroups[index].OwnerId = *ownerId // get the owner id from the CheckPermissionAndGetOneById
 		newBlockGroups[index].BlockPackId = blockPackId
+		newBlockGroups[index].PrevBlockGroupId = in.PrevBlockGroupId
+
+		fakeDeletedAt := time.Now()
+		newBlockGroups[index].DeletedAt = &fakeDeletedAt
+
 		ids[index] = newBlockGroups[index].Id
 	}
-	newBlockGroups[0].PrevBlockGroupId = blockPack.FinalBlockGroupId
 
+	// Create deleted block groups on their desired positions first,
+	// so that we can avoid the block pack id and prev block group id unique index constraint
 	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
-		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
-		Create(&newBlockGroups)
+		Create(newBlockGroups)
 	if err := result.Error; err != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exceptions.BlockGroup.FailedToCreate().WithError(err)
 	}
 
-	if input[0].PrevBlockGroupId != nil {
-		collapsedBlockGroup, exception := r.GetOneByPrevBlockGroupId(
-			blockPackId,
-			input[0].PrevBlockGroupId,
-			userId,
-			nil,
-			opts...,
-		)
-		if exception != nil {
-			return nil, exception
-		}
+	// Then restore the deleted block groups
+	_, exception = r.RestoreSoftDeletedManyByIds(
+		ids,
+		userId,
+		opts...,
+	)
+	if exception != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exception
+	}
 
-		if _, exception = r.UpdateOneById(
-			collapsedBlockGroup.Id,
-			userId,
-			inputs.PartialUpdateBlockGroupInput{
-				Values: inputs.UpdateBlockGroupInput{
-					PrevBlockGroupId: &ids[len(ids)-1],
-				},
-				SetNull: nil,
-			},
-			opts...,
-		); exception != nil {
-			return nil, exception
-		}
-		if _, exception = r.UpdateOneById(
-			newBlockGroups[0].Id,
-			userId,
-			inputs.PartialUpdateBlockGroupInput{
-				Values: inputs.UpdateBlockGroupInput{
-					PrevBlockGroupId: input[0].PrevBlockGroupId,
-				},
-				SetNull: nil,
-			},
-			opts...,
-		); exception != nil {
-			return nil, exception
+	if shouldCommit {
+		if err := parsedOptions.DB.Commit().Error; err != nil {
+			return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithError(err)
 		}
 	}
 
@@ -719,36 +713,59 @@ func (r *BlockGroupRepository) RestoreSoftDeletedOneById(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	if !parsedOptions.SkipPermissionCheck {
-		allowedPermissions := []enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-			enums.AccessControlPermission_Write,
-		}
-
-		if !r.HasPermission(
-			id,
-			userId,
-			allowedPermissions,
-			opts...,
-		) {
-			return nil, exceptions.BlockGroup.NoPermission("restore a deleted block group")
-		}
+	shouldCommit := false
+	if !parsedOptions.IsTransactionStarted {
+		parsedOptions.DB = parsedOptions.DB.Begin()
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		shouldCommit = true
 	}
 
-	var restoredBlockGroup schemas.BlockGroup
-	result := parsedOptions.DB.Model(&restoredBlockGroup).
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	restoredBlockGroup, exception := r.CheckPermissionAndGetOneById(
+		id,
+		userId,
+		nil,
+		allowedPermissions,
+		opts...,
+	)
+	if exception != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exceptions.BlockGroup.NoPermission("restore a deleted block group")
+	}
+
+	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
+		Where("block_pack_id = ? AND prev_block_group_id = ? AND deleted_at IS NULL",
+			restoredBlockGroup.BlockPackId, restoredBlockGroup.PrevBlockGroupId,
+		).Update("prev_block_group_id", restoredBlockGroup.Id)
+	if err := result.Error; err != nil {
+		// skip the error handling if there's no next block group to maintain its prev block group id
+	}
+
+	result = parsedOptions.DB.Model(&restoredBlockGroup).
 		Clauses(clause.Returning{}).
 		Where("id = ? AND deleted_at IS NOT NULL", id).
-		Updates(map[string]interface{}{"deleted_at": nil})
+		Update("deleted_at", nil)
 	if err := result.Error; err != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exceptions.BlockGroup.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
+		parsedOptions.DB.Rollback()
 		return nil, exceptions.BlockGroup.NoChanges()
 	}
 
-	return &restoredBlockGroup, nil
+	if shouldCommit {
+		if err := parsedOptions.DB.Commit().Error; err != nil {
+			return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithError(err)
+		}
+	}
+
+	return restoredBlockGroup, nil
 }
 
 func (r *BlockGroupRepository) RestoreSoftDeletedManyByIds(
@@ -762,34 +779,182 @@ func (r *BlockGroupRepository) RestoreSoftDeletedManyByIds(
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
+	shouldCommit := false
+	if !parsedOptions.IsTransactionStarted {
+		parsedOptions.DB = parsedOptions.DB.Begin()
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		shouldCommit = true
+	}
 
-	if !parsedOptions.SkipPermissionCheck {
-		allowedPermissions := []enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-			enums.AccessControlPermission_Write,
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	blockGroups, exception := r.CheckPermissionsAndGetManyByIds(
+		ids,
+		userId,
+		nil,
+		allowedPermissions,
+		opts...,
+	)
+	if exception != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exception
+	}
+
+	prevBlockGroupIdMap := make(map[uuid.UUID][]schemas.BlockGroup)
+	for _, blockGroup := range blockGroups {
+		key := uuid.Nil
+		if blockGroup.PrevBlockGroupId != nil {
+			key = *blockGroup.PrevBlockGroupId
+		}
+		prevBlockGroupIdMap[key] = append(prevBlockGroupIdMap[key], blockGroup)
+	}
+
+	var updatePlaceholders []string
+	var updateArgs []interface{}
+
+	var anchorIdsToCheck []uuid.UUID
+	var packIdsToCheckHead []uuid.UUID
+
+	restoredChainTails := make(map[uuid.UUID]uuid.UUID)
+	restoredHeadChainTails := make(map[uuid.UUID]uuid.UUID)
+
+	for prevBlockGroupId, groupedBlockGroups := range prevBlockGroupIdMap {
+		sort.Slice(groupedBlockGroups, func(i, j int) bool {
+			if groupedBlockGroups[i].DeletedAt == nil {
+				return false
+			}
+			if groupedBlockGroups[j].DeletedAt == nil {
+				return true
+			}
+			return groupedBlockGroups[i].DeletedAt.Before(*groupedBlockGroups[j].DeletedAt)
+		})
+
+		for i := 1; i < len(groupedBlockGroups); i++ {
+			updatePlaceholders = append(updatePlaceholders, "(?::uuid, ?::uuid, ?::boolean)")
+			updateArgs = append(updateArgs, groupedBlockGroups[i].Id, groupedBlockGroups[i-1].Id, false)
 		}
 
-		if !r.HasPermissions(
-			ids,
-			userId,
-			allowedPermissions,
-			opts...,
-		) {
-			return nil, exceptions.BlockGroup.NoPermission("restore deleted block groups")
+		tailBlockGroup := groupedBlockGroups[len(groupedBlockGroups)-1]
+
+		if prevBlockGroupId != uuid.Nil {
+			anchorIdsToCheck = append(anchorIdsToCheck, prevBlockGroupId)
+			restoredChainTails[prevBlockGroupId] = tailBlockGroup.Id
+		} else {
+			headsByPack := make(map[uuid.UUID][]schemas.BlockGroup)
+			for _, h := range groupedBlockGroups {
+				headsByPack[h.BlockPackId] = append(headsByPack[h.BlockPackId], h)
+			}
+
+			for packId, heads := range headsByPack {
+				sort.Slice(heads, func(i, j int) bool {
+					if heads[i].DeletedAt == nil {
+						return false
+					}
+					if heads[j].DeletedAt == nil {
+						return true
+					}
+					return heads[i].DeletedAt.Before(*heads[j].DeletedAt)
+				})
+
+				for i := 1; i < len(heads); i++ {
+					updatePlaceholders = append(updatePlaceholders, "(?::uuid, ?::uuid, ?::boolean)")
+					updateArgs = append(updateArgs, heads[i].Id, heads[i-1].Id, false)
+				}
+
+				packIdsToCheckHead = append(packIdsToCheckHead, packId)
+				restoredHeadChainTails[packId] = heads[len(heads)-1].Id
+			}
+		}
+	}
+
+	var collidingBlockGroups []schemas.BlockGroup
+	collisionQuery := parsedOptions.DB.Model(&schemas.BlockGroup{}).Where("deleted_at IS NULL")
+
+	conditions := []string{}
+	var conditionArgs []interface{}
+
+	if len(anchorIdsToCheck) > 0 {
+		conditions = append(conditions, "prev_block_group_id IN (?)")
+		conditionArgs = append(conditionArgs, anchorIdsToCheck)
+	}
+	if len(packIdsToCheckHead) > 0 {
+		conditions = append(conditions, "(prev_block_group_id IS NULL AND block_pack_id IN (?))")
+		conditionArgs = append(conditionArgs, packIdsToCheckHead)
+	}
+
+	if len(conditions) > 0 {
+		collisionQuery = collisionQuery.Where(strings.Join(conditions, " OR "), conditionArgs...)
+		result := collisionQuery.Find(&collidingBlockGroups)
+		if err := result.Error; err != nil {
+			parsedOptions.DB.Rollback()
+			return nil, exceptions.BlockGroup.NotFound().WithError(err)
+		}
+	}
+
+	for _, collider := range collidingBlockGroups {
+		var tailId uuid.UUID
+		found := false
+
+		if collider.PrevBlockGroupId != nil {
+			if tid, ok := restoredChainTails[*collider.PrevBlockGroupId]; ok {
+				tailId = tid
+				found = true
+			}
+		} else {
+			if tid, ok := restoredHeadChainTails[collider.BlockPackId]; ok {
+				tailId = tid
+				found = true
+			}
+		}
+
+		if found {
+			updatePlaceholders = append(updatePlaceholders, "(?::uuid, ?::uuid, ?::boolean)")
+			updateArgs = append(updateArgs, collider.Id, tailId, false)
+		}
+	}
+
+	if len(updatePlaceholders) > 0 {
+		sql := fmt.Sprintf(`
+            UPDATE "BlockGroupTable" AS bg
+            SET
+                prev_block_group_id = CASE 
+                    WHEN v.is_prev_block_group_null::boolean THEN NULL 
+                    ELSE v.new_prev_block_group_id::uuid 
+                END, 
+                updated_at = NOW()
+            FROM (VALUES %s) AS v(target_block_group_id, new_prev_block_group_id, is_prev_block_group_null)
+            WHERE bg.id = v.target_block_group_id::uuid
+        `, strings.Join(updatePlaceholders, ","))
+
+		if err := parsedOptions.DB.Exec(sql, updateArgs...).Error; err != nil {
+			parsedOptions.DB.Rollback()
+			return nil, exceptions.BlockGroup.FailedToUpdate().WithError(err)
 		}
 	}
 
 	var restoredBlockGroups []schemas.BlockGroup
-	result := parsedOptions.DB.Model(restoredBlockGroups).
+	result := parsedOptions.DB.Model(&restoredBlockGroups).
 		Clauses(clause.Returning{}).
 		Where("id IN ? AND deleted_at IS NOT NULL", ids).
 		Updates(map[string]interface{}{"deleted_at": nil})
+
 	if err := result.Error; err != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exceptions.BlockGroup.FailedToUpdate().WithError(err)
 	}
 	if result.RowsAffected == 0 {
+		parsedOptions.DB.Rollback()
 		return nil, exceptions.BlockGroup.NoChanges()
+	}
+
+	if shouldCommit {
+		if err := parsedOptions.DB.Commit().Error; err != nil {
+			return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithError(err)
+		}
 	}
 
 	return restoredBlockGroups, nil
@@ -800,37 +965,7 @@ func (r *BlockGroupRepository) SoftDeleteOneById(
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
-	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
-	parsedOptions := options.ParseRepositoryOptions(opts...)
-
-	if !parsedOptions.SkipPermissionCheck {
-		allowedPermissions := []enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-			enums.AccessControlPermission_Write,
-		}
-
-		if !r.HasPermission(
-			id,
-			userId,
-			allowedPermissions,
-			opts...,
-		) {
-			return exceptions.BlockGroup.NoPermission("soft delete a block group")
-		}
-	}
-
-	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
-		Where("id = ? AND deleted_at IS NULL", id).
-		Update("deleted_at", time.Now())
-	if err := result.Error; err != nil {
-		return exceptions.BlockGroup.FailedToDelete().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return exceptions.BlockGroup.NoChanges()
-	}
-
-	return nil
+	return r.SoftDeleteManyByIds([]uuid.UUID{id}, userId, opts...)
 }
 
 func (r *BlockGroupRepository) SoftDeleteManyByIds(
@@ -845,31 +980,124 @@ func (r *BlockGroupRepository) SoftDeleteManyByIds(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
+	shouldCommit := false
+	if !parsedOptions.IsTransactionStarted {
+		parsedOptions.DB = parsedOptions.DB.Begin()
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		shouldCommit = true
+	}
+
 	if !parsedOptions.SkipPermissionCheck {
 		allowedPermissions := []enums.AccessControlPermission{
 			enums.AccessControlPermission_Owner,
 			enums.AccessControlPermission_Admin,
 			enums.AccessControlPermission_Write,
 		}
-
-		if !r.HasPermissions(
-			ids,
-			userId,
-			allowedPermissions,
-			opts...,
-		) {
+		if !r.HasPermissions(ids, userId, allowedPermissions, opts...) {
+			parsedOptions.DB.Rollback()
 			return exceptions.BlockGroup.NoPermission("soft delete block groups")
 		}
 	}
 
-	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
+	var targets []struct {
+		Id               uuid.UUID
+		PrevBlockGroupId *uuid.UUID
+		BlockPackId      uuid.UUID
+	}
+	if err := parsedOptions.DB.Model(&schemas.BlockGroup{}).
 		Where("id IN ? AND deleted_at IS NULL", ids).
+		Scan(&targets).Error; err != nil {
+		parsedOptions.DB.Rollback()
+		return exceptions.BlockGroup.NotFound().WithError(err)
+	}
+
+	if len(targets) == 0 {
+		parsedOptions.DB.Rollback()
+		return exceptions.BlockGroup.NotFound()
+	}
+
+	deletionSet := make(map[uuid.UUID]bool)   // ID -> IsDeleting
+	prevMap := make(map[uuid.UUID]*uuid.UUID) // ID -> PrevID (Adjacency List)
+
+	for _, target := range targets {
+		deletionSet[target.Id] = true
+		prevMap[target.Id] = target.PrevBlockGroupId
+	}
+
+	memoEffectivePrev := make(map[uuid.UUID]*uuid.UUID)
+
+	var getEffectivePrev func(nodeId uuid.UUID) *uuid.UUID
+	getEffectivePrev = func(nodeId uuid.UUID) *uuid.UUID {
+		if res, ok := memoEffectivePrev[nodeId]; ok {
+			return res
+		}
+
+		originalPrev := prevMap[nodeId]
+
+		if originalPrev == nil {
+			memoEffectivePrev[nodeId] = nil
+			return nil
+		}
+
+		if !deletionSet[*originalPrev] {
+			memoEffectivePrev[nodeId] = originalPrev
+			return originalPrev
+		}
+
+		ancestorPrev := getEffectivePrev(*originalPrev)
+		memoEffectivePrev[nodeId] = ancestorPrev
+		return ancestorPrev
+	}
+
+	var valuePlaceholders []string
+	var valueArgs []interface{}
+
+	for _, target := range targets {
+		effectivePrev := getEffectivePrev(target.Id)
+
+		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid, ?::boolean)")
+		isNewPrevNull := effectivePrev == nil
+		var newPrevVal interface{}
+		if effectivePrev != nil {
+			newPrevVal = *effectivePrev
+		} else {
+			newPrevVal = nil
+		}
+
+		valueArgs = append(valueArgs, target.Id, newPrevVal, isNewPrevNull)
+	}
+
+	if len(valuePlaceholders) > 0 {
+		sql := fmt.Sprintf(`
+            UPDATE "BlockGroupTable" AS bg
+            SET
+                prev_block_group_id = CASE 
+                    WHEN v.is_prev_block_group_id_null::boolean THEN NULL 
+                    ELSE v.new_prev_block_group_id::uuid 
+                END, 
+                updated_at = NOW()
+            FROM (VALUES %s) AS v(old_prev_block_group_id, new_prev_block_group_id, is_prev_block_group_id_null)
+            WHERE bg.prev_block_group_id = v.old_prev_block_group_id::uuid AND bg.deleted_at IS NULL
+        `, strings.Join(valuePlaceholders, ","))
+		result := parsedOptions.DB.Exec(sql, valueArgs...)
+		if result.Error != nil {
+			parsedOptions.DB.Rollback()
+			return exceptions.BlockGroup.FailedToUpdate().WithError(result.Error)
+		}
+	}
+
+	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
+		Where("id IN ?", ids).
 		Update("deleted_at", time.Now())
 	if err := result.Error; err != nil {
+		parsedOptions.DB.Rollback()
 		return exceptions.BlockGroup.FailedToDelete().WithError(err)
 	}
-	if result.RowsAffected == 0 {
-		return exceptions.BlockGroup.NoChanges()
+
+	if shouldCommit {
+		if err := parsedOptions.DB.Commit().Error; err != nil {
+			return exceptions.BlockGroup.FailedToCommitTransaction().WithError(err)
+		}
 	}
 
 	return nil

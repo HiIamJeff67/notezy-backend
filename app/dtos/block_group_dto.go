@@ -108,7 +108,7 @@ type InsertBlockGroupByBlockPackIdReqDto struct {
 		},
 		struct {
 			BlockPackId      uuid.UUID  `json:"blockPackId" validate:"required"`
-			PrevBlockGroupId *uuid.UUID `json:"prevBlockGroupId" validate:"omitempty"`
+			PrevBlockGroupId *uuid.UUID `json:"prevBlockGroupId" validate:"omitnil"`
 		},
 		any,
 	]
@@ -124,7 +124,7 @@ type InsertBlockGroupAndItsBlocksByBlockPackIdReqDto struct {
 		},
 		struct {
 			BlockPackId            uuid.UUID              `json:"blockPackId" validate:"required"`
-			PrevBlockGroupId       *uuid.UUID             `json:"prevBlockGroupId" validate:"omitempty"`
+			PrevBlockGroupId       *uuid.UUID             `json:"prevBlockGroupId" validate:"omitnil"`
 			ArborizedEditableBlock ArborizedEditableBlock `json:"arborizedEditableBlock" validate:"required"`
 		},
 		any,
@@ -142,7 +142,8 @@ type InsertBlockGroupsAndTheirBlocksByBlockPackIdReqDto struct {
 		struct {
 			BlockPackId        uuid.UUID `json:"blockPackId" validate:"required"`
 			BlockGroupContents []struct {
-				PrevBlockGroupId       *uuid.UUID             `json:"prevBlockGroupId" validate:"omitempty"`
+				BlockGroupId           uuid.UUID              `json:"blockGroupId" validate:"required"`
+				PrevBlockGroupId       *uuid.UUID             `json:"prevBlockGroupId" validate:"omitnil"`
 				ArborizedEditableBlock ArborizedEditableBlock `json:"arborizedEditableBlock" validate:"required"`
 			} `json:"blockGroupContents" validate:"required"`
 		},
@@ -160,7 +161,7 @@ type InsertSequentialBlockGroupsAndTheirBlocksByBlockPackIdReqDto struct {
 		},
 		struct {
 			BlockPackId             uuid.UUID                `json:"blockPackId" validate:"required"`
-			PrevBlockGroupId        *uuid.UUID               `json:"prevBlockGroupId" validate:"omitempty"`
+			PrevBlockGroupId        *uuid.UUID               `json:"prevBlockGroupId" validate:"omitnil"`
 			ArborizedEditableBlocks []ArborizedEditableBlock `json:"arborizedEditableBlocks" validate:"required"`
 		},
 		any,
