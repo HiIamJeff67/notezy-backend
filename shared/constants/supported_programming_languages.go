@@ -48,6 +48,8 @@ var SupportedProgrammingLanguages = []string{
 	"perl",
 	"php",
 	"plaintext",
+	"text",
+	"txt",
 	"powershell",
 	"prolog",
 	"protobuf",

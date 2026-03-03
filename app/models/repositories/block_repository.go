@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm/clause"
 
 	exceptions "notezy-backend/app/exceptions"
-	"notezy-backend/app/logs"
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
@@ -361,7 +360,6 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 
 		blockGroupIds := make([]uuid.UUID, len(input))
 		for index, in := range input {
-			logs.Info(in)
 			blockGroupIds[index] = in.BlockGroupId
 		}
 
@@ -526,8 +524,6 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 			input.PartialUpdateInput.Values.ParentBlockId,
 			setParentBlockIdNull,
 		)
-
-		logs.Info(input.PartialUpdateInput.Values.Content)
 	}
 
 	sql := fmt.Sprintf(`
@@ -691,8 +687,6 @@ func (r *BlockRepository) SoftDeleteManyByIds(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	logs.Info("test1")
-
 	if !parsedOptions.SkipPermissionCheck {
 		allowedPermissions := []enums.AccessControlPermission{
 			enums.AccessControlPermission_Owner,
@@ -710,8 +704,6 @@ func (r *BlockRepository) SoftDeleteManyByIds(
 		}
 	}
 
-	logs.Info("test2")
-
 	var deletedBlocks []schemas.Block
 	result := parsedOptions.DB.Model(&deletedBlocks).
 		Clauses(clause.Returning{}).
@@ -723,8 +715,6 @@ func (r *BlockRepository) SoftDeleteManyByIds(
 	if result.RowsAffected == 0 {
 		return nil, exceptions.Block.NoChanges()
 	}
-
-	logs.Info("test3")
 
 	return deletedBlocks, nil
 }

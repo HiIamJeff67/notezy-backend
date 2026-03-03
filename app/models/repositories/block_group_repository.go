@@ -506,13 +506,15 @@ func (r *BlockGroupRepository) InsertManyByBlockPackId(
 		return nil, exceptions.BlockPack.NoPermission("write owner's block pack")
 	}
 
+	nextBlockGroups := make(map[uuid.UUID]uuid.UUID)
 	newBlockGroups := make([]schemas.BlockGroup, len(input))
-	ids := make([]uuid.UUID, len(input))
+	newBlockGroupIds := make([]uuid.UUID, len(input))
+	isNewBlockGroupId := make(map[uuid.UUID]bool, len(input))
 	for index, in := range input { // use index to modify the elements of slice, since the value from the `range` is only a copy
 		if in.BlockGroupId != nil {
 			newBlockGroups[index].Id = *in.BlockGroupId
 		} else {
-			newBlockGroups[index].Id = uuid.New() // generate the id here, so that we can return the ids in the same order of the input
+			newBlockGroups[index].Id = uuid.New() // generate the id here, so that we can return the newBlockGroupIds in the same order of the input
 		}
 		newBlockGroups[index].OwnerId = *ownerId // get the owner id from the CheckPermissionAndGetOneById
 		newBlockGroups[index].BlockPackId = blockPackId
@@ -521,7 +523,48 @@ func (r *BlockGroupRepository) InsertManyByBlockPackId(
 		fakeDeletedAt := time.Now()
 		newBlockGroups[index].DeletedAt = &fakeDeletedAt
 
-		ids[index] = newBlockGroups[index].Id
+		newBlockGroupIds[index] = newBlockGroups[index].Id
+		isNewBlockGroupId[newBlockGroups[index].Id] = true
+		if in.PrevBlockGroupId == nil {
+			nextBlockGroups[uuid.Nil] = newBlockGroups[index].Id
+		} else {
+			nextBlockGroups[*newBlockGroups[index].PrevBlockGroupId] = newBlockGroups[index].Id
+		}
+	}
+
+	var find func(id uuid.UUID) uuid.UUID
+	find = func(id uuid.UUID) uuid.UUID {
+		next, exist := nextBlockGroups[id]
+		if !exist {
+			return id
+		}
+		tail := find(next)
+		nextBlockGroups[id] = tail
+		return tail
+	}
+	var updatePlaceholders []string
+	var updateArgs []interface{}
+	var collisionPrevIds []uuid.UUID
+	var isCollisionIncludingHead bool
+	for _, in := range input {
+		prevBlockGroupId := uuid.Nil
+		if in.PrevBlockGroupId != nil {
+			prevBlockGroupId = *in.PrevBlockGroupId
+		}
+
+		if isNewBlockGroupId[prevBlockGroupId] {
+			continue
+		}
+
+		tail := find(prevBlockGroupId)
+		if prevBlockGroupId == uuid.Nil {
+			isCollisionIncludingHead = true
+		} else {
+			collisionPrevIds = append(collisionPrevIds, prevBlockGroupId)
+		}
+
+		updatePlaceholders = append(updatePlaceholders, "(?::uuid, ?::uuid, ?::boolean)")
+		updateArgs = append(updateArgs, prevBlockGroupId, tail, prevBlockGroupId == uuid.Nil)
 	}
 
 	// Create deleted block groups on their desired positions first,
@@ -533,15 +576,77 @@ func (r *BlockGroupRepository) InsertManyByBlockPackId(
 		return nil, exceptions.BlockGroup.FailedToCreate().WithError(err)
 	}
 
-	// Then restore the deleted block groups
-	_, exception = r.RestoreSoftDeletedManyByIds(
-		ids,
-		userId,
-		opts...,
-	)
-	if exception != nil {
+	if len(updatePlaceholders) > 0 {
+		conditions := []string{}
+		var conditionArgs []interface{}
+
+		if len(collisionPrevIds) > 0 {
+			conditions = append(conditions, "prev_block_group_id IN (?)")
+			conditionArgs = append(conditionArgs, collisionPrevIds)
+		}
+		if isCollisionIncludingHead {
+			conditions = append(conditions, "(prev_block_group_id IS NULL AND block_pack_id = ?)")
+			conditionArgs = append(conditionArgs, blockPackId)
+		}
+
+		if len(conditions) > 0 {
+			var collidingBlockGroups []schemas.BlockGroup
+			collisionQuery := parsedOptions.DB.Model(&schemas.BlockGroup{}).
+				Where("deleted_at IS NULL").
+				Where(strings.Join(conditions, " OR "), conditionArgs...)
+
+			if err := collisionQuery.Find(&collidingBlockGroups).Error; err != nil {
+				parsedOptions.DB.Rollback()
+				return nil, exceptions.BlockGroup.NotFound().WithError(err)
+			}
+
+			var colliderPlaceholders []string
+			var colliderArgs []interface{}
+
+			for _, collider := range collidingBlockGroups {
+				colliderPrevKey := uuid.Nil
+				if collider.PrevBlockGroupId != nil {
+					colliderPrevKey = *collider.PrevBlockGroupId
+				}
+
+				tail := find(colliderPrevKey)
+
+				colliderPlaceholders = append(colliderPlaceholders, "(?::uuid, ?::uuid, ?::boolean)")
+				colliderArgs = append(colliderArgs, collider.Id, tail, false)
+			}
+
+			if len(colliderPlaceholders) > 0 {
+				sql := fmt.Sprintf(`
+                    UPDATE "BlockGroupTable" AS bg
+                    SET
+                        prev_block_group_id = CASE
+                            WHEN v.is_prev_block_group_null::boolean THEN NULL
+                            ELSE v.new_prev_block_group_id::uuid
+                        END,
+                        updated_at = NOW()
+                    FROM (VALUES %s) AS v(target_block_group_id, new_prev_block_group_id, is_prev_block_group_null)
+                    WHERE bg.id = v.target_block_group_id::uuid
+                `, strings.Join(colliderPlaceholders, ","))
+				if err := parsedOptions.DB.Exec(sql, colliderArgs...).Error; err != nil {
+					parsedOptions.DB.Rollback()
+					return nil, exceptions.BlockGroup.FailedToUpdate().WithError(err)
+				}
+			}
+		}
+	}
+
+	var restoredBlockGroups []schemas.BlockGroup
+	restoreResult := parsedOptions.DB.Model(&restoredBlockGroups).
+		Clauses(clause.Returning{}).
+		Where("id IN ? AND deleted_at IS NOT NULL", newBlockGroupIds).
+		Updates(map[string]interface{}{"deleted_at": nil})
+	if err := restoreResult.Error; err != nil {
 		parsedOptions.DB.Rollback()
-		return nil, exception
+		return nil, exceptions.BlockGroup.FailedToUpdate().WithError(err)
+	}
+	if restoreResult.RowsAffected == 0 {
+		parsedOptions.DB.Rollback()
+		return nil, exceptions.BlockGroup.NoChanges()
 	}
 
 	if shouldCommit {
@@ -550,7 +655,7 @@ func (r *BlockGroupRepository) InsertManyByBlockPackId(
 		}
 	}
 
-	return ids, nil
+	return newBlockGroupIds, nil
 }
 
 func (r *BlockGroupRepository) AppendOneByBlockPackId(
@@ -816,13 +921,19 @@ func (r *BlockGroupRepository) RestoreSoftDeletedManyByIds(
 	var updatePlaceholders []string
 	var updateArgs []interface{}
 
-	var anchorIdsToCheck []uuid.UUID
-	var packIdsToCheckHead []uuid.UUID
+	var collidingPrevBlockGroupIds []uuid.UUID // for those block groups with prev block group id not equal to nil
+	var collidingBlockPackIds []uuid.UUID      // for those block groups with prev block group id of nil,
+	// this should have at most one element, but we extends this for restoring soft deleted block groups across any given block packs in the future
 
 	restoredChainTails := make(map[uuid.UUID]uuid.UUID)
 	restoredHeadChainTails := make(map[uuid.UUID]uuid.UUID)
+	nodeToChainTail := make(map[uuid.UUID]uuid.UUID)
 
 	for prevBlockGroupId, groupedBlockGroups := range prevBlockGroupIdMap {
+		if len(groupedBlockGroups) == 0 {
+			continue
+		}
+
 		sort.Slice(groupedBlockGroups, func(i, j int) bool {
 			if groupedBlockGroups[i].DeletedAt == nil {
 				return false
@@ -840,34 +951,17 @@ func (r *BlockGroupRepository) RestoreSoftDeletedManyByIds(
 
 		tailBlockGroup := groupedBlockGroups[len(groupedBlockGroups)-1]
 
+		for _, bg := range groupedBlockGroups {
+			nodeToChainTail[bg.Id] = tailBlockGroup.Id
+		}
+
 		if prevBlockGroupId != uuid.Nil {
-			anchorIdsToCheck = append(anchorIdsToCheck, prevBlockGroupId)
+			collidingPrevBlockGroupIds = append(collidingPrevBlockGroupIds, prevBlockGroupId)
 			restoredChainTails[prevBlockGroupId] = tailBlockGroup.Id
 		} else {
-			headsByPack := make(map[uuid.UUID][]schemas.BlockGroup)
-			for _, h := range groupedBlockGroups {
-				headsByPack[h.BlockPackId] = append(headsByPack[h.BlockPackId], h)
-			}
-
-			for packId, heads := range headsByPack {
-				sort.Slice(heads, func(i, j int) bool {
-					if heads[i].DeletedAt == nil {
-						return false
-					}
-					if heads[j].DeletedAt == nil {
-						return true
-					}
-					return heads[i].DeletedAt.Before(*heads[j].DeletedAt)
-				})
-
-				for i := 1; i < len(heads); i++ {
-					updatePlaceholders = append(updatePlaceholders, "(?::uuid, ?::uuid, ?::boolean)")
-					updateArgs = append(updateArgs, heads[i].Id, heads[i-1].Id, false)
-				}
-
-				packIdsToCheckHead = append(packIdsToCheckHead, packId)
-				restoredHeadChainTails[packId] = heads[len(heads)-1].Id
-			}
+			blockPackId := tailBlockGroup.BlockPackId
+			collidingBlockPackIds = append(collidingBlockPackIds, blockPackId)
+			restoredHeadChainTails[uuid.Nil] = tailBlockGroup.Id
 		}
 	}
 
@@ -877,13 +971,17 @@ func (r *BlockGroupRepository) RestoreSoftDeletedManyByIds(
 	conditions := []string{}
 	var conditionArgs []interface{}
 
-	if len(anchorIdsToCheck) > 0 {
+	if len(collidingPrevBlockGroupIds) > 0 {
 		conditions = append(conditions, "prev_block_group_id IN (?)")
-		conditionArgs = append(conditionArgs, anchorIdsToCheck)
+		conditionArgs = append(conditionArgs, collidingPrevBlockGroupIds)
 	}
-	if len(packIdsToCheckHead) > 0 {
+	if len(collidingBlockPackIds) > 0 {
 		conditions = append(conditions, "(prev_block_group_id IS NULL AND block_pack_id IN (?))")
-		conditionArgs = append(conditionArgs, packIdsToCheckHead)
+		conditionArgs = append(conditionArgs, collidingBlockPackIds)
+	}
+	if len(ids) > 0 {
+		conditions = append(conditions, "prev_block_group_id IN (?)")
+		conditionArgs = append(conditionArgs, ids)
 	}
 
 	if len(conditions) > 0 {
@@ -904,8 +1002,14 @@ func (r *BlockGroupRepository) RestoreSoftDeletedManyByIds(
 				tailId = tid
 				found = true
 			}
+			if !found {
+				if tid, ok := nodeToChainTail[*collider.PrevBlockGroupId]; ok {
+					tailId = tid
+					found = true
+				}
+			}
 		} else {
-			if tid, ok := restoredHeadChainTails[collider.BlockPackId]; ok {
+			if tid, ok := restoredHeadChainTails[uuid.Nil]; ok {
 				tailId = tid
 				found = true
 			}
@@ -929,7 +1033,6 @@ func (r *BlockGroupRepository) RestoreSoftDeletedManyByIds(
             FROM (VALUES %s) AS v(target_block_group_id, new_prev_block_group_id, is_prev_block_group_null)
             WHERE bg.id = v.target_block_group_id::uuid
         `, strings.Join(updatePlaceholders, ","))
-
 		if err := parsedOptions.DB.Exec(sql, updateArgs...).Error; err != nil {
 			parsedOptions.DB.Rollback()
 			return nil, exceptions.BlockGroup.FailedToUpdate().WithError(err)
@@ -941,7 +1044,6 @@ func (r *BlockGroupRepository) RestoreSoftDeletedManyByIds(
 		Clauses(clause.Returning{}).
 		Where("id IN ? AND deleted_at IS NOT NULL", ids).
 		Updates(map[string]interface{}{"deleted_at": nil})
-
 	if err := result.Error; err != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exceptions.BlockGroup.FailedToUpdate().WithError(err)

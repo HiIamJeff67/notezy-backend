@@ -11,7 +11,6 @@ import (
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
 	concurrency "notezy-backend/app/lib/concurrency"
-	"notezy-backend/app/logs"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
@@ -349,10 +348,8 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 	for index := range blockGroups {
 		blockGroup := &blockGroups[index]
 		blockGroupIds[index] = blockGroup.Id
-		logs.FInfo("id: %s, prev id: %s", blockGroup.Id, blockGroup.PrevBlockGroupId)
 
 		if blockGroup.PrevBlockGroupId == nil {
-			logs.FInfo("id: %s wants become root block group", blockGroup.Id)
 			if firstBlockGroup != nil {
 				return nil, exceptions.BlockGroup.DuplicateBlockGroupsWithSamePrevBlockGroupId(reqDto.Param.BlockPackId)
 			}
@@ -638,17 +635,13 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 
 	createBlockGroupsInput := make([]inputs.CreateBlockGroupInput, len(reqDto.Body.BlockGroupContents))
 	validateBlockDto := make([]dtos.ArborizedEditableBlock, len(reqDto.Body.BlockGroupContents))
-	logs.Info("==============================")
 	for index, blockGroupContent := range reqDto.Body.BlockGroupContents {
 		createBlockGroupsInput[index] = inputs.CreateBlockGroupInput{
 			BlockGroupId:     &blockGroupContent.BlockGroupId,
 			PrevBlockGroupId: blockGroupContent.PrevBlockGroupId,
 		}
 		validateBlockDto[index] = blockGroupContent.ArborizedEditableBlock
-		logs.FInfo("id: %s, prev id: %v", blockGroupContent.BlockGroupId, blockGroupContent.PrevBlockGroupId)
 	}
-
-	logs.Info("==============================")
 
 	// note that the order of the output newBlockGroupIds is the same as the order of reqDto.Body.BlockGroupContents
 	newBlockGroupIds, exception := s.blockGroupRepository.InsertManyByBlockPackId(
@@ -664,10 +657,6 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 	if len(newBlockGroupIds) == 0 {
 		tx.Rollback()
 		return nil, exceptions.BlockGroup.FailedToCreate().WithDetails("got nil block group id")
-	}
-
-	for _, newBlockGroupId := range newBlockGroupIds {
-		logs.Info("id: ", newBlockGroupId)
 	}
 
 	validateBlockFunc := func(validateDto dtos.ArborizedEditableBlock) ([]dtos.RawFlattenedEditableBlock, error) {
