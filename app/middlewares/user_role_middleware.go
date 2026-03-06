@@ -1,8 +1,6 @@
 package middlewares
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
 	exceptions "notezy-backend/app/exceptions"
@@ -16,17 +14,15 @@ func UserRoleMiddleware(atLeastUserRole enums.UserRole) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		currentUserRoleValue, exists := ctx.Get(constants.ContextFieldName_User_Role.String())
 		if !exists {
-			exception := exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
+			exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
 				"Cannot find the userRole, " +
 					"please make sure the AuthMiddleware() is placing before the UserRoleMiddleware()",
-			)
-			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
+			).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		currentUserRole, ok := currentUserRoleValue.(enums.UserRole)
 		if !ok {
-			exception := exceptions.User.InvalidType("the userRole is not in the correct enum type")
-			ctx.AbortWithStatusJSON(exception.HTTPStatusCode, exception.GetGinH())
+			exceptions.User.InvalidType("the userRole is not in the correct enum type").Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -46,23 +42,16 @@ func UserRoleMiddleware(atLeastUserRole enums.UserRole) gin.HandlerFunc {
 				ctx.Next()
 				return
 			} else if enum == atLeastUserRole {
-				ctx.AbortWithStatusJSON(
-					http.StatusUnauthorized,
-					exceptions.Auth.PermissionDeniedDueToUserRole(currentUserRole).GetGinH(),
-				)
+				exceptions.Auth.PermissionDeniedDueToUserRole(currentUserRole).Log().SafelyAbortAndResponseWithJSON(ctx)
 				return
 			}
 		}
 
 		// if some how we can't find the userDataCache.Role or atLeastUserRole
 		// then we raise an undefined error at the end
-		exception := exceptions.UndefinedError(
+		exceptions.UndefinedError(
 			"Cannot find atLeastUserRole or userDataCache.Role in UserRoleMiddleware",
-		)
-		ctx.AbortWithStatusJSON(
-			exception.HTTPStatusCode,
-			exception.GetGinH(),
-		)
+		).Log().SafelyAbortAndResponseWithJSON(ctx)
 	}
 }
 

@@ -16,7 +16,7 @@ func configureDevelopmentUserAccountRoutes() {
 		middlewares.TimeoutMiddleware(1*time.Second),
 		middlewares.AuthMiddleware(),
 		middlewares.AuthorizedRateLimitMiddleware(),
-		interceptors.RefreshAccessTokenInterceptor(),
+		interceptors.RefreshTokenInterceptor(),
 	)
 	{
 		userAccountRoutes.GET(

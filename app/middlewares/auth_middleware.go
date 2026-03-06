@@ -96,7 +96,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		ctx.Set(constants.ContextFieldName_User_Name.String(), nil)
 		ctx.Set(constants.ContextFieldName_User_DisplayName.String(), nil)
 		ctx.Set(constants.ContextFieldName_User_Email.String(), nil)
-		ctx.Set(constants.ContextFieldName_IsNewAccessToken.String(), nil)
+		ctx.Set(constants.ContextFieldName_IsNewTokens.String(), nil)
 		ctx.Set(constants.ContextFieldName_AccessToken.String(), nil)
 		ctx.Set(constants.ContextFieldName_User_Role.String(), nil)
 		ctx.Set(constants.ContextFieldName_User_Plan.String(), nil)
@@ -111,14 +111,14 @@ func AuthMiddleware() gin.HandlerFunc {
 					ctx.Set(constants.ContextFieldName_User_Name.String(), userDataCache.Name)
 					ctx.Set(constants.ContextFieldName_User_DisplayName.String(), userDataCache.DisplayName)
 					ctx.Set(constants.ContextFieldName_User_Email.String(), userDataCache.Email)
-					ctx.Set(constants.ContextFieldName_IsNewAccessToken.String(), false)
+					ctx.Set(constants.ContextFieldName_IsNewTokens.String(), false)
 					ctx.Set(constants.ContextFieldName_AccessToken.String(), accessToken)
 					ctx.Set(constants.ContextFieldName_User_Role.String(), userDataCache.Role)
 					ctx.Set(constants.ContextFieldName_User_Plan.String(), userDataCache.Plan)
 					// also extend the ttl of the user data cache
 					userId, err := uuid.Parse(claims.Id)
 					if err != nil {
-						exceptions.Token.FailedToParseAccessToken().Log().SafelyResponseWithJSON(ctx)
+						exceptions.Token.FailedToParseAccessToken().Log().SafelyAbortAndResponseWithJSON(ctx)
 						return
 					}
 					if exception := caches.ExtendUserDataCacheTTL(userId); exception != nil {
@@ -135,19 +135,19 @@ func AuthMiddleware() gin.HandlerFunc {
 		// this means the old accessToken can no longer get any data of the user
 		refreshToken, exception := _extractRefreshToken(ctx)
 		if exception != nil { // if failed to extract the refreshToken
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
 		_user, exception := _validateRefreshToken(refreshToken)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
 		// if we can't check the userAgent in accessToken, then we check it in our database
 		if currentUserAgent := ctx.GetHeader("User-Agent"); currentUserAgent != _user.UserAgent {
-			exceptions.Auth.WrongUserAgent().Log().SafelyResponseWithJSON(ctx)
+			exceptions.Auth.WrongUserAgent().Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -155,13 +155,13 @@ func AuthMiddleware() gin.HandlerFunc {
 		// then we need to generate the new accessToken, and storing it in the cache, and regarding the entire validation as successful
 		newAccessToken, exception := tokens.GenerateAccessToken(_user.Id.String(), _user.Name, _user.Email, _user.UserAgent)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		// also generate a new CSRF token, and storing it in the cache
 		newCSRFToken, exception := tokens.GenerateCSRFToken()
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -196,7 +196,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			}
 
 			if exception = caches.SetUserDataCache(_user.Id, newUserDataCache); exception != nil {
-				exception.Log().SafelyResponseWithJSON(ctx)
+				exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 				return
 			}
 		} else {
@@ -210,8 +210,9 @@ func AuthMiddleware() gin.HandlerFunc {
 		ctx.Set(constants.ContextFieldName_User_Name.String(), _user.Name)
 		ctx.Set(constants.ContextFieldName_User_DisplayName.String(), _user.DisplayName)
 		ctx.Set(constants.ContextFieldName_User_Email.String(), _user.Email)
-		ctx.Set(constants.ContextFieldName_IsNewAccessToken.String(), true)
+		ctx.Set(constants.ContextFieldName_IsNewTokens.String(), true)
 		ctx.Set(constants.ContextFieldName_AccessToken.String(), *newAccessToken)
+		ctx.Set(constants.ContextFieldName_CSRFToken.String(), *newCSRFToken)
 		ctx.Set(constants.ContextFieldName_User_Role.String(), _user.Role)
 		ctx.Set(constants.ContextFieldName_User_Plan.String(), _user.Plan)
 		ctx.Next()

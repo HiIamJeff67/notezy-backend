@@ -8,6 +8,7 @@ import (
 	caches "notezy-backend/app/caches"
 	contexts "notezy-backend/app/contexts"
 	exceptions "notezy-backend/app/exceptions"
+	logs "notezy-backend/app/logs"
 	tokens "notezy-backend/app/tokens"
 	constants "notezy-backend/shared/constants"
 )
@@ -22,27 +23,29 @@ func CSRFMiddleware() gin.HandlerFunc {
 			exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
 				"Cannot find the userPlan, " +
 					"please make sure the AuthMiddleware() is placing before the CSRFMiddleware()",
-			).Log().SafelyResponseWithJSON(ctx)
+			).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
 		csrfToken := ctx.GetHeader("X-CSRF-Token")
 		if len(strings.TrimSpace(csrfToken)) <= 0 {
-			exceptions.Token.FailedToExtractOrValidateCSRFToken().Log().SafelyResponseWithJSON(ctx)
+			exceptions.Token.FailedToExtractOrValidateCSRFToken().Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
 		userDataCache, exception := caches.GetUserDataCache(*userId)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
 		claims, exception := tokens.ValidateCSRFToken(csrfToken, userDataCache.CSRFToken)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
+
+		logs.Info("continue?!")
 
 		if tokens.IsCSRFTokenExpiringSoon(claims) {
 			newToken, exception := tokens.GenerateCSRFToken()

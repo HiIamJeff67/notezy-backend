@@ -17,14 +17,14 @@ func UserPlanMiddleware(atLeastUserPlan enums.UserPlan) gin.HandlerFunc {
 			exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
 				"Cannot find the userPlan, " +
 					"please make sure the AuthMiddleware() is placing before the UserPlanMiddleware()",
-			).Log().SafelyResponseWithJSON(ctx)
+			).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		currentUserPlan, ok := currentUserPlanValue.(enums.UserPlan)
 		if !ok {
 			exceptions.User.InvalidType("the userPlan is not in the correct enum type").
 				Log().
-				SafelyResponseWithJSON(ctx)
+				SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -46,7 +46,7 @@ func UserPlanMiddleware(atLeastUserPlan enums.UserPlan) gin.HandlerFunc {
 			} else if enum == atLeastUserPlan {
 				exceptions.Auth.PermissionDeniedDueToUserPlan(currentUserPlan).
 					Log().
-					SafelyResponseWithJSON(ctx)
+					SafelyAbortAndResponseWithJSON(ctx)
 				return
 			}
 		}
@@ -55,7 +55,7 @@ func UserPlanMiddleware(atLeastUserPlan enums.UserPlan) gin.HandlerFunc {
 		// then we raise an undefined error at the end
 		exceptions.UndefinedError(
 			"Cannot find atLeastUserPlan or currentUserPlan in UserRoleMiddleware",
-		).Log().SafelyResponseWithJSON(ctx)
+		).Log().SafelyAbortAndResponseWithJSON(ctx)
 	}
 }
 
@@ -74,12 +74,12 @@ func AllowedUserPlanMiddleware(allowedPlan []enums.UserPlan) gin.HandlerFunc {
 			exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
 				"Cannot find the userPlan, " +
 					"please make sure the AuthMiddleware() is placing before the AllowedUserPlanMiddleware()",
-			).Log().SafelyResponseWithJSON(ctx)
+			).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		currentUserPlan, ok := currentUserPlanValue.(enums.UserPlan)
 		if !ok {
-			exceptions.User.InvalidType("the userPlan is not in the correct enum type").Log().SafelyResponseWithJSON(ctx)
+			exceptions.User.InvalidType("the userPlan is not in the correct enum type").Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -94,6 +94,6 @@ func AllowedUserPlanMiddleware(allowedPlan []enums.UserPlan) gin.HandlerFunc {
 			}
 		}
 
-		exceptions.Auth.PermissionDeniedDueToUserRole(currentUserPlan).Log().SafelyResponseWithJSON(ctx)
+		exceptions.Auth.PermissionDeniedDueToUserRole(currentUserPlan).Log().SafelyAbortAndResponseWithJSON(ctx)
 	}
 }

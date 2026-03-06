@@ -69,7 +69,7 @@ func AuthorizedRateLimitMiddleware(config ...AuthorizedRateLimitConfig) gin.Hand
 			exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
 				"Cannot find the userId, " +
 					"please make sure the AuthMiddleware() is placing before the AuthorizedRateLimitMiddleware()",
-			).Log().SafelyResponseWithJSON(ctx)
+			).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 

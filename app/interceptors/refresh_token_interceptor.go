@@ -8,16 +8,17 @@ import (
 	contexts "notezy-backend/app/contexts"
 	cookies "notezy-backend/app/cookies"
 	ratelimiter "notezy-backend/app/lib/ratelimiter"
+	"notezy-backend/app/logs"
 	constants "notezy-backend/shared/constants"
 )
 
 // use the reusable buffer pool for refreshing the access token
 var refreshAccessTokenReusableBufferPool *ratelimiter.ReusableBufferPool = ratelimiter.NewReusableBufferPool()
 
-// To rewrite the response with adding additional field of `newAccessToken`,
+// To rewrite the response with adding additional field of `newAccessToken` and `newCSRFToken`,
 // Note : It should be placed below the `AuthMiddleware`,
-// so that it can access the `AccessToken` in the context field
-func RefreshAccessTokenInterceptor() gin.HandlerFunc {
+// so that it can access the `AccessToken` and `CSRFToken` in the context field
+func RefreshTokenInterceptor() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		currentBufferPool := refreshAccessTokenReusableBufferPool.Get()
 		defer func() {
@@ -49,8 +50,8 @@ func RefreshAccessTokenInterceptor() gin.HandlerFunc {
 			return
 		}
 
-		isNew, exception := contexts.GetAndConvertContextFieldToBoolean(ctx, constants.ContextFieldName_IsNewAccessToken)
-		if exception != nil || isNew == nil || !*isNew {
+		IsNewTokens, exception := contexts.GetAndConvertContextFieldToBoolean(ctx, constants.ContextFieldName_IsNewTokens)
+		if exception != nil || IsNewTokens == nil || !*IsNewTokens {
 			writer.FlushToOriginalWriter()
 			return
 		}
@@ -66,8 +67,17 @@ func RefreshAccessTokenInterceptor() gin.HandlerFunc {
 			writer.FlushToOriginalWriter()
 			return
 		}
-
 		accessTokenStr, ok := accessToken.(string)
+		if !ok {
+			writer.FlushToOriginalWriter()
+			return
+		}
+		csrfToken, exist := ctx.Get(constants.ContextFieldName_CSRFToken.String())
+		if !exist {
+			writer.FlushToOriginalWriter()
+			return
+		}
+		csrfTokenStr, ok := csrfToken.(string)
 		if !ok {
 			writer.FlushToOriginalWriter()
 			return
@@ -75,6 +85,8 @@ func RefreshAccessTokenInterceptor() gin.HandlerFunc {
 
 		cookies.AccessTokenCookieHandler.Set(ctx, accessTokenStr)
 		originalResponse["newAccessToken"] = accessTokenStr
+		originalResponse["newCSRFToken"] = csrfTokenStr
+		logs.Info("new CSRF token: ", csrfTokenStr)
 		modifiedResponse, err := json.Marshal(originalResponse)
 		if err != nil {
 			writer.FlushToOriginalWriter()

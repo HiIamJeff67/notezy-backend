@@ -11,8 +11,9 @@ const (
 	ContextFieldName_User_Name        ContextFieldName = "User-Name"        // string
 	ContextFieldName_User_DisplayName ContextFieldName = "User-DisplayName" // string
 	ContextFieldName_User_Email       ContextFieldName = "User-Email"       // string
-	ContextFieldName_IsNewAccessToken ContextFieldName = "IsNewAccessToken" // bool
+	ContextFieldName_IsNewTokens      ContextFieldName = "IsNewTokens"      // bool
 	ContextFieldName_AccessToken      ContextFieldName = "AccessToken"      // string
+	ContextFieldName_CSRFToken        ContextFieldName = "CSRFToken"        // string
 	ContextFieldName_User_Role        ContextFieldName = "User-Role"        // enums.UserRole
 	ContextFieldName_User_Plan        ContextFieldName = "User-Plan"        // enums.UserPlan
 

@@ -6,7 +6,7 @@ WHERE u.id = $1
     AND (
         u.role = 'Guest'
         OR (
-            AND ua.auth_code = $2
+            ua.auth_code = $2
             AND ua.auth_code_expired_at > NOW()
             AND u.role <> 'Guest'
         )

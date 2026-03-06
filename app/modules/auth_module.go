@@ -18,6 +18,7 @@ func NewAuthModule() *AuthModule {
 	userInfoRepository := repositories.NewUserInfoRepository()
 	userAccountRepository := repositories.NewUserAccountRepository()
 	userSettingRepository := repositories.NewUserSettingRepository()
+	rootShelfRepository := repositories.NewRootShelfRepository()
 
 	authService := services.NewAuthService(
 		models.NotezyDB,
@@ -25,6 +26,7 @@ func NewAuthModule() *AuthModule {
 		userInfoRepository,
 		userAccountRepository,
 		userSettingRepository,
+		rootShelfRepository,
 	)
 
 	authBinder := binders.NewAuthBinder()

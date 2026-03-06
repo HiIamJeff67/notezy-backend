@@ -39,7 +39,6 @@ func configureDevelopmentAuthRoutes() {
 		)
 		authRoutes.POST(
 			"/sendAuthCode",
-
 			authModule.Binder.BindSendAuthCode(
 				authModule.Controller.SendAuthCode,
 			),
@@ -49,7 +48,7 @@ func configureDevelopmentAuthRoutes() {
 			middlewares.AuthMiddleware(),
 			middlewares.AuthorizedRateLimitMiddleware(),
 			middlewares.CSRFMiddleware(),
-			interceptors.RefreshAccessTokenInterceptor(),
+			interceptors.RefreshTokenInterceptor(),
 			authModule.Binder.BindValidateEmail(
 				authModule.Controller.ValidateEmail,
 			),
@@ -60,7 +59,7 @@ func configureDevelopmentAuthRoutes() {
 			middlewares.AuthorizedRateLimitMiddleware(),
 			middlewares.UserRoleMiddleware(enums.UserRole_Normal),
 			middlewares.CSRFMiddleware(),
-			interceptors.RefreshAccessTokenInterceptor(),
+			interceptors.RefreshTokenInterceptor(),
 			authModule.Binder.BindResetEmail(
 				authModule.Controller.ResetEmail,
 			),
@@ -69,6 +68,16 @@ func configureDevelopmentAuthRoutes() {
 			"/forgetPassword",
 			authModule.Binder.BindForgetPassword(
 				authModule.Controller.ForgetPassword,
+			),
+		)
+		authRoutes.PUT(
+			"/resetMe",
+			middlewares.AuthMiddleware(),
+			middlewares.AuthorizedRateLimitMiddleware(),
+			middlewares.CSRFMiddleware(),
+			interceptors.RefreshTokenInterceptor(),
+			authModule.Binder.BindResetMe(
+				authModule.Controller.ResetMe,
 			),
 		)
 		authRoutes.DELETE(

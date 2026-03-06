@@ -32,11 +32,11 @@ type UpdateMyAccountReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
+			AuthCode string `json:"authCode" validate:"required,isnumberstring,len=6"`
 			PartialUpdateDto[struct {
-				CountryCode       *enums.CountryCode `json:"countryCode" validate:"omitnil,iscountrycode"`
-				PhoneNumber       *string            `json:"phoneNumber" validate:"omitnil,max=0,max=15,isnumberstring"`
-				GoogleCredential  *string            `json:"googleCrendential" validate:"omitnil"`
-				DiscordCredential *string            `json:"discordCrendential" validate:"omitnil"`
+				CountryCode *enums.CountryCode `json:"countryCode" validate:"omitnil,iscountrycode"`
+				BackupEmail *string            `json:"backupEmail" validate:"omitnil,email"`
+				PhoneNumber *string            `json:"phoneNumber" validate:"omitnil,max=0,max=15,isnumberstring"`
 			}]
 		},
 		any,

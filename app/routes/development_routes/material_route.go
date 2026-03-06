@@ -18,7 +18,7 @@ func configureDevelopmentMaterialRoutes() {
 		middlewares.AuthMiddleware(),
 		// middlewares.UserRoleMiddleware(enums.UserRole_Normal),
 		middlewares.AuthorizedRateLimitMiddleware(),
-		interceptors.RefreshAccessTokenInterceptor(),
+		interceptors.RefreshTokenInterceptor(),
 	)
 	{
 		materialRoutes.GET(

@@ -18,6 +18,7 @@ type UserAccount struct {
 	AuthCodeExpiredAt   time.Time          `json:"authCodeExpiredAt" gorm:"column:auth_code_expired_at; not null;"` // the exact time when authCode expires
 	BlockAuthCodeUntil  time.Time          `json:"blockAuthCodeUntil" gorm:"column:block_auth_code_until; type:timestamptz; not null;"`
 	CountryCode         *enums.CountryCode `json:"countryCode" gorm:"column:country_code; type:\"CountryCode\";"` // validate:"omitnil,iscountrycode"
+	BackupEmail         *string            `json:"backupEmail" gorm:"column:backup_email; unique;"`               // validate:"omitnil,email"
 	PhoneNumber         *string            `json:"phoneNumber" gorm:"column:phone_number; unique;"`               // validate:"omitnil,max=0,max=15,isnumberstring"
 	GoogleCredential    *string            `json:"googleCredential" gorm:"column:google_credential; unique;"`     // validate:"omitnil"
 	DiscordCredential   *string            `json:"discordCredential" gorm:"column:discord_credential; unique;"`   // validate:"omitnil"

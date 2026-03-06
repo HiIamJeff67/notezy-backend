@@ -16,13 +16,14 @@ import (
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
-	"notezy-backend/app/options"
+	options "notezy-backend/app/options"
 	tokens "notezy-backend/app/tokens"
 	util "notezy-backend/app/util"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
 
 	authsql "notezy-backend/app/models/sql/auth"
+	badgesql "notezy-backend/app/models/sql/badge"
 	usersql "notezy-backend/app/models/sql/user"
 )
 
@@ -36,6 +37,7 @@ type AuthServiceInterface interface {
 	ValidateEmail(ctx context.Context, reqDto *dtos.ValidateEmailReqDto) (*dtos.ValidateEmailResDto, *exceptions.Exception)
 	ResetEmail(ctx context.Context, reqDto *dtos.ResetEmailReqDto) (*dtos.ResetEmailResDto, *exceptions.Exception)
 	ForgetPassword(ctx context.Context, reqDto *dtos.ForgetPasswordReqDto) (*dtos.ForgetPasswordResDto, *exceptions.Exception)
+	ResetMe(ctx context.Context, reqDto *dtos.ResetMeReqDto) (*dtos.ResetMeResDto, *exceptions.Exception)
 	DeleteMe(ctx context.Context, reqDto *dtos.DeleteMeReqDto) (*dtos.DeleteMeResDto, *exceptions.Exception)
 }
 
@@ -45,6 +47,7 @@ type AuthService struct {
 	userInfoRepository    repositories.UserInfoRepositoryInterface
 	userAccountRepository repositories.UserAccountRepositoryInterface
 	userSettingRepository repositories.UserSettingRepositoryInterface
+	rootShelfRepository   repositories.RootShelfRepositoryInterface
 }
 
 func NewAuthService(
@@ -53,6 +56,7 @@ func NewAuthService(
 	userInfoRepository repositories.UserInfoRepositoryInterface,
 	userAccountRepository repositories.UserAccountRepositoryInterface,
 	userSettingRepository repositories.UserSettingRepositoryInterface,
+	rootShelfRepository repositories.RootShelfRepositoryInterface,
 ) AuthServiceInterface {
 	if db == nil {
 		db = models.NotezyDB
@@ -63,6 +67,7 @@ func NewAuthService(
 		userInfoRepository:    userInfoRepository,
 		userAccountRepository: userAccountRepository,
 		userSettingRepository: userSettingRepository,
+		rootShelfRepository:   rootShelfRepository,
 	}
 }
 
@@ -376,14 +381,25 @@ func (s *AuthService) Login(
 			CreatedAt          time.Time        `gorm:"created_at"`
 			UpdatedAt          time.Time        `gorm:"updated_at"`
 		}{}
-		result := db.Raw(usersql.GetUserDataCacheByIdSQL, user.Id).Scan(&output)
-		if err := result.Error; err != nil || result.RowsAffected == 0 {
-			exception := exceptions.User.NotFound().WithError(err).Log()
-			if err != nil {
-				exception.WithError(err)
-			}
-			// should be exists in database
-			return nil, exception
+		err := db.Raw(usersql.GetUserDataCacheByIdSQL, user.Id).
+			Row().
+			Scan(
+				&output.PublicId,
+				&output.Name,
+				&output.DisplayName,
+				&output.Email,
+				&output.Role,
+				&output.Plan,
+				&output.Status,
+				&output.AvatarURL,
+				&output.Language,
+				&output.GeneralSettingCode,
+				&output.PrivacySettingCode,
+				&output.CreatedAt,
+				&output.UpdatedAt,
+			)
+		if err != nil {
+			return nil, exceptions.User.NotFound().WithError(err)
 		}
 
 		newUserDataCache := caches.UserDataCache{
@@ -491,20 +507,17 @@ func (s *AuthService) SendAuthCode(
 	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
 	blockAuthCodeUntil := util.GetAuthCodeBlockUntil()
 	output := struct {
-		Name               string    `json:"name"`
-		UserAgent          string    `json:"userAgent"`
-		BlockAuthCodeUntil time.Time `json:"blockAuthCodeUntil"`
-		Now                time.Time `json:"now"`
+		Name               string    `json:"name" gorm:"column:name;"`
+		UserAgent          string    `json:"userAgent" gorm:"column:user_agent;"`
+		BlockAuthCodeUntil time.Time `json:"blockAuthCodeUntil" gorm:"column:block_auth_code_until;"`
+		Now                time.Time `json:"now" gorm:"column:now;"`
 	}{}
-	result := db.Raw(authsql.UpdateAuthCodeSQL,
+	err := db.Raw(authsql.UpdateAuthCodeSQL,
 		authCode, authCodeExpiredAt, blockAuthCodeUntil, reqDto.Body.Email,
-	).Scan(&output)
-	if err := result.Error; err != nil || result.RowsAffected == 0 {
-		exception := exceptions.Auth.AuthCodeBlockedDueToTryingTooManyTimes(output.BlockAuthCodeUntil)
-		if err != nil {
-			exception.WithError(err)
-		}
-		return nil, exception
+	).Row().
+		Scan(&output.Name, &output.UserAgent, &output.BlockAuthCodeUntil, &output.Now)
+	if err != nil {
+		return nil, exceptions.Auth.AuthCodeBlockedDueToTryingTooManyTimes(output.BlockAuthCodeUntil).WithError(err)
 	}
 
 	if exception := emails.AsyncSendValidationEmail(
@@ -533,19 +546,16 @@ func (s *AuthService) ValidateEmail(
 
 	db := s.db.WithContext(ctx)
 
-	output := struct {
-		UpdatedAt time.Time `json:"updatedAt"`
-	}{}
-	result := db.Raw(authsql.ValidateEmailSQL, reqDto.ContextFields.UserId, reqDto.Body.AuthCode).Scan(&output)
-	if err := result.Error; err != nil {
+	var updatedAt time.Time
+	err := db.Raw(authsql.ValidateEmailSQL, reqDto.ContextFields.UserId, reqDto.Body.AuthCode).
+		Row().
+		Scan(&updatedAt)
+	if err != nil {
 		return nil, exceptions.User.FailedToUpdate().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return nil, exceptions.User.NotFound()
 	}
 
 	return &dtos.ValidateEmailResDto{
-		UpdatedAt: output.UpdatedAt,
+		UpdatedAt: updatedAt,
 	}, nil
 }
 
@@ -558,16 +568,12 @@ func (s *AuthService) ResetEmail(
 
 	db := s.db.WithContext(ctx)
 
-	output := struct {
-		UpdatedAt time.Time `json:"updatedAt"`
-	}{}
-	result := db.Raw(authsql.ResetEmailSQL, reqDto.Body.NewEmail, reqDto.Body.AuthCode, reqDto.ContextFields.UserId).Scan(&output)
-	if err := result.Error; err != nil {
+	var updatedAt time.Time
+	err := db.Raw(authsql.ResetEmailSQL, reqDto.Body.NewEmail, reqDto.Body.AuthCode, reqDto.ContextFields.UserId).
+		Row().
+		Scan(&updatedAt)
+	if err != nil {
 		return nil, exceptions.User.FailedToUpdate().WithError(err)
-	}
-
-	if result.RowsAffected == 0 {
-		return nil, exceptions.User.NotFound()
 	}
 
 	authCode := util.GenerateAuthCode()
@@ -588,7 +594,7 @@ func (s *AuthService) ResetEmail(
 	}
 
 	return &dtos.ResetEmailResDto{
-		UpdatedAt: output.UpdatedAt,
+		UpdatedAt: updatedAt,
 	}, nil
 }
 
@@ -697,6 +703,85 @@ func (s *AuthService) ForgetPassword(
 	}, nil
 }
 
+func (s *AuthService) ResetMe(
+	ctx context.Context, reqDto *dtos.ResetMeReqDto,
+) (*dtos.ResetMeResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidInput().WithError(err)
+	}
+
+	tx := s.db.WithContext(ctx).Begin()
+
+	// try to retrive the target user to reset and validate his/her auth code first
+	var resetedUserAccount schemas.UserAccount
+	result := tx.Model(&resetedUserAccount).
+		Where("user_id = ? AND auth_code = ?", reqDto.ContextFields.UserId, reqDto.Body.AuthCode).
+		First(&resetedUserAccount)
+	if err := result.Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.UserAccount.NotFound().WithError(err)
+	}
+
+	// delete the user info
+	if err := tx.Where("user_id = ?", reqDto.ContextFields.UserId).Delete(&schemas.UserInfo{}).Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.UserInfo.FailedToDelete().WithError(err)
+	}
+	// and then re-create a new user info
+	if _, exception := s.userInfoRepository.CreateOneByUserId(
+		resetedUserAccount.UserId,
+		inputs.CreateUserInfoInput{},
+		options.WithTransactionDB(tx),
+	); exception != nil {
+		return nil, exception
+	}
+
+	// delete the user setting
+	if err := tx.Where("user_id = ?", reqDto.ContextFields.UserId).Delete(&schemas.UserSetting{}).Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.UserSetting.FailedToDelete().WithError(err)
+	}
+	// and then re-create a new user setting
+	if _, exception := s.userSettingRepository.CreateOneByUserId(
+		resetedUserAccount.UserId,
+		inputs.CreateUserSettingInput{},
+		options.WithTransactionDB(tx),
+	); exception != nil {
+		return nil, exception
+	}
+
+	// delete all the badges of the user
+	if err := tx.Exec(badgesql.DeleteAllMyBadgesSQL, reqDto.ContextFields.UserId).Error; err != nil {
+		// skip if there's no users to badges to delete
+	}
+
+	// soft delete all the root shelves of the user
+	if exception := s.rootShelfRepository.SoftDeleteManyByUserId(
+		reqDto.ContextFields.UserId,
+		options.WithTransactionDB(tx),
+	); exception != nil {
+		// skip if there's no root shelves to soft delete
+	} else {
+		// then hard delete all the root shelves of the user
+		if exception := s.rootShelfRepository.HardDeleteManyByUserId(
+			reqDto.ContextFields.UserId,
+			options.WithTransactionDB(tx),
+		); exception != nil {
+			// skip if there's no root shelves to hard delete
+		}
+	}
+
+	// delete other stuff in the future
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, exceptions.User.FailedToCommitTransaction().WithDetails(err)
+	}
+
+	return &dtos.ResetMeResDto{
+		UpdatedAt: time.Now(),
+	}, nil
+}
+
 func (s *AuthService) DeleteMe(
 	ctx context.Context, reqDto *dtos.DeleteMeReqDto,
 ) (*dtos.DeleteMeResDto, *exceptions.Exception) {
@@ -706,18 +791,46 @@ func (s *AuthService) DeleteMe(
 
 	db := s.db.WithContext(ctx)
 
-	output := struct {
-		DeletedAt time.Time `json:"deletedAt" gorm:"deleted_at"`
-	}{}
-	result := db.Raw(authsql.DeleteMeSQL, reqDto.ContextFields.UserId, reqDto.Body.AuthCode).Scan(&output)
-	if err := result.Error; err != nil {
-		return nil, exceptions.User.FailedToUpdate().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return nil, exceptions.User.NotFound()
+	if err := db.Exec(authsql.DeleteMeSQL, reqDto.ContextFields.UserId, reqDto.Body.AuthCode).Error; err != nil {
+		return nil, exceptions.User.FailedToDelete().WithError(err)
 	}
 
 	return &dtos.DeleteMeResDto{
-		DeletedAt: output.DeletedAt,
+		DeletedAt: time.Now(),
 	}, nil
 }
+
+/* ============================== OAuth Relative Authentication ============================== */
+
+// func (s *AuthService) RegisterViaGoogle(
+// 	ctx context.Context, reqDto *dtos.RegisterViaGoogleReqDto,
+// ) (*dtos.RegisterViaGoogleResDto, *exceptions.Exception) {
+// 	if err := validation.Validator.Struct(reqDto); err != nil {
+// 		return nil, exceptions.User.InvalidInput().WithError(err)
+// 	}
+
+// 	db := s.db.WithContext(ctx)
+
+// }
+
+func (s *AuthService) RegisterViaMeta() {}
+
+func (s *AuthService) RegisterViaDiscord() {}
+
+func (s *AuthService) RegisterViaGithub() {}
+
+func (s *AuthService) LoginViaGoogle() {}
+
+func (s *AuthService) LoginViaMeta() {}
+
+func (s *AuthService) LoginViaDiscord() {}
+
+func (s *AuthService) LoginViaGithub() {}
+
+func (s *AuthService) BindGoogleAccount() {}
+
+func (s *AuthService) BindMetaAccount() {}
+
+func (s *AuthService) BindDiscordAccount() {}
+
+func (s *AuthService) BindGithubAccount() {}

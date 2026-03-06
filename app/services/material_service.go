@@ -119,58 +119,43 @@ func (s *MaterialService) GetMyMaterialAndItsParentById(
 		enums.AccessControlPermission_Read,
 	}
 	onlyDeleted := types.Ternary_Negative
-	output := struct {
-		Id                           uuid.UUID          `gorm:"column:id;"`
-		Name                         string             `gorm:"column:name;"`
-		Type                         enums.MaterialType `gorm:"column:type;"`
-		Size                         int64              `gorm:"column:size;"`
-		ContentKey                   string             `gorm:"column:content_key;"`
-		DeletedAt                    *time.Time         `gorm:"column:deleted_at;"`
-		UpdatedAt                    time.Time          `gorm:"column:updated_at;"`
-		CreatedAt                    time.Time          `gorm:"column:created_at;"`
-		RootShelfId                  uuid.UUID          `gorm:"column:root_shelf_id;"`
-		ParentSubShelfId             uuid.UUID          `gorm:"column:parent_sub_shelf_id;"`
-		ParentSubShelfName           string             `gorm:"column:parent_sub_shelf_name;"`
-		ParentSubShelfPrevSubShelfId *uuid.UUID         `gorm:"column:parent_sub_shelf_prev_sub_shelf_id;"`
-		ParentSubShelfPath           types.UUIDArray    `gorm:"column:parent_sub_shelf_path;"`
-		ParentSubShelfDeletedAt      time.Time          `gorm:"column:parent_sub_shelf_deleted_at;"`
-		ParentSubShelfUpdatedAt      time.Time          `gorm:"column:parent_sub_shelf_updated_at;"`
-		ParentSubShelfCreatedAt      time.Time          `gorm:"column:parent_sub_shelf_created_at;"`
-	}{}
+	resDto := dtos.GetMyMaterialAndItsParentByIdResDto{}
+	var contentKey string
 
-	result := db.Raw(materialsql.GetMyMaterialAndItsParentByIdSQL,
+	err := db.Raw(materialsql.GetMyMaterialAndItsParentByIdSQL,
 		reqDto.Param.MaterialId, reqDto.ContextFields.UserId, pg.Array(allowedPermissions), onlyDeleted,
-	).Scan(&output)
-	if err := result.Error; err != nil {
+	).Row().
+		Scan(&resDto.Id,
+			&resDto.Name,
+			&resDto.Type,
+			&resDto.Size,
+			&contentKey,
+			&resDto.DeletedAt,
+			&resDto.UpdatedAt,
+			&resDto.CreatedAt,
+			&resDto.RootShelfId,
+			&resDto.ParentSubShelfId,
+			&resDto.ParentSubShelfName,
+			&resDto.ParentSubShelfPrevSubShelfId,
+			&resDto.ParentSubShelfPath,
+			&resDto.ParentSubShelfDeletedAt,
+			&resDto.ParentSubShelfUpdatedAt,
+			&resDto.ParentSubShelfCreatedAt,
+		)
+	if err != nil {
 		return nil, exceptions.Material.NotFound().WithError(err)
 	}
-	if len(strings.TrimSpace(output.ContentKey)) == 0 {
+	if len(strings.TrimSpace(contentKey)) == 0 {
 		return nil, exceptions.Material.NotFound()
 	}
 
-	downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, output.ContentKey, nil)
+	downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, contentKey, nil)
 	if exception != nil {
 		return nil, exception
 	}
+	resDto.DownloadURL = downloadURL
 
-	return &dtos.GetMyMaterialAndItsParentByIdResDto{
-		Id:                           output.Id,
-		Name:                         output.Name,
-		Type:                         output.Type,
-		Size:                         output.Size,
-		DownloadURL:                  downloadURL,
-		DeletedAt:                    output.DeletedAt,
-		UpdatedAt:                    output.UpdatedAt,
-		CreatedAt:                    output.CreatedAt,
-		RootShelfId:                  output.RootShelfId,
-		ParentSubShelfId:             output.ParentSubShelfId,
-		ParentSubShelfName:           output.ParentSubShelfName,
-		ParentSubShelfPrevSubShelfId: output.ParentSubShelfPrevSubShelfId,
-		ParentSubShelfPath:           output.ParentSubShelfPath,
-		ParentSubShelfDeletedAt:      output.ParentSubShelfDeletedAt,
-		ParentSubShelfUpdatedAt:      output.ParentSubShelfUpdatedAt,
-		ParentSubShelfCreatedAt:      output.ParentSubShelfCreatedAt,
-	}, nil
+	return &resDto, nil
 }
 
 func (s *MaterialService) GetMyMaterialsByParentSubShelfId(

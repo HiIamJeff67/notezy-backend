@@ -16,7 +16,7 @@ func configureDevelopmentBlockRoutes() {
 		middlewares.TimeoutMiddleware(3*time.Second),
 		middlewares.AuthMiddleware(),
 		middlewares.AuthorizedRateLimitMiddleware(),
-		interceptors.RefreshAccessTokenInterceptor(),
+		interceptors.RefreshTokenInterceptor(),
 	)
 	{
 		blockRoutes.GET(

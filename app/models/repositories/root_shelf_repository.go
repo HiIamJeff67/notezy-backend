@@ -28,8 +28,10 @@ type RootShelfRepositoryInterface interface {
 	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.RootShelf, *exceptions.Exception)
 	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	SoftDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
+	SoftDeleteManyByUserId(userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteManyByIds(sids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
+	HardDeleteManyByUserId(userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 }
 
 type RootShelfRepository struct{}
@@ -364,6 +366,25 @@ func (r *RootShelfRepository) SoftDeleteManyByIds(
 	return nil
 }
 
+func (r *RootShelfRepository) SoftDeleteManyByUserId(
+	userId uuid.UUID,
+	opts ...options.RepositoryOptions,
+) *exceptions.Exception {
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	result := parsedOptions.DB.Model(&schemas.RootShelf{}).
+		Where("owner_id = ? AND deleted_at IS NULL", userId).
+		Delete(&schemas.RootShelf{})
+	if err := result.Error; err != nil {
+		return exceptions.Shelf.FailedToDelete().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return exceptions.Shelf.NotFound()
+	}
+
+	return nil
+}
+
 func (r *RootShelfRepository) HardDeleteOneById(
 	id uuid.UUID,
 	userId uuid.UUID,
@@ -402,7 +423,6 @@ func (r *RootShelfRepository) HardDeleteManyByIds(
 		return exceptions.BlockGroup.NoChanges()
 	}
 
-	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -414,7 +434,26 @@ func (r *RootShelfRepository) HardDeleteManyByIds(
 		Select("1").
 		Where("root_shelf_id = \"RootShelfTable\".id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
 	result := parsedOptions.DB.Model(&schemas.RootShelf{}).
-		Where("id IN ? AND EXISTS (?)", ids, subQuery).
+		Where("id IN ? AND EXISTS (?) AND deleted_at IS NOT NULL", ids, subQuery).
+		Delete(&schemas.RootShelf{})
+	if err := result.Error; err != nil {
+		return exceptions.Shelf.FailedToDelete().WithError(err)
+	}
+	if result.RowsAffected == 0 {
+		return exceptions.Shelf.NotFound()
+	}
+
+	return nil
+}
+
+func (r *RootShelfRepository) HardDeleteManyByUserId(
+	userId uuid.UUID,
+	opts ...options.RepositoryOptions,
+) *exceptions.Exception {
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	result := parsedOptions.DB.Model(&schemas.RootShelf{}).
+		Where("owner_id = ? AND deleted_at IS NOT NULL", userId).
 		Delete(&schemas.RootShelf{})
 	if err := result.Error; err != nil {
 		return exceptions.Shelf.FailedToDelete().WithError(err)

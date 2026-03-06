@@ -20,6 +20,7 @@ type AuthBinderInterface interface {
 	BindValidateEmail(controllerFunc types.ControllerFunc[*dtos.ValidateEmailReqDto]) gin.HandlerFunc
 	BindResetEmail(controllerFunc types.ControllerFunc[*dtos.ResetEmailReqDto]) gin.HandlerFunc
 	BindForgetPassword(controllerFunc types.ControllerFunc[*dtos.ForgetPasswordReqDto]) gin.HandlerFunc
+	BindResetMe(controllerFunc types.ControllerFunc[*dtos.ResetMeReqDto]) gin.HandlerFunc
 	BindDeleteMe(controllerFunc types.ControllerFunc[*dtos.DeleteMeReqDto]) gin.HandlerFunc
 }
 
@@ -38,8 +39,7 @@ func (b *AuthBinder) BindRegister(controllerFunc types.ControllerFunc[*dtos.Regi
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Auth.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exceptions.Auth.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
 			return
 		}
 
@@ -54,8 +54,7 @@ func (b *AuthBinder) BindLogin(controllerFunc types.ControllerFunc[*dtos.LoginRe
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Auth.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exceptions.Auth.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
 			return
 		}
 
@@ -87,8 +86,7 @@ func (b *AuthBinder) BindSendAuthCode(controllerFunc types.ControllerFunc[*dtos.
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Auth.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exceptions.Auth.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
 			return
 		}
 
@@ -110,8 +108,7 @@ func (b *AuthBinder) BindValidateEmail(controllerFunc types.ControllerFunc[*dtos
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Auth.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exceptions.Auth.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
 			return
 		}
 
@@ -133,8 +130,7 @@ func (b *AuthBinder) BindResetEmail(controllerFunc types.ControllerFunc[*dtos.Re
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Auth.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exceptions.Auth.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
 			return
 		}
 
@@ -149,8 +145,29 @@ func (b *AuthBinder) BindForgetPassword(controllerFunc types.ControllerFunc[*dto
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Auth.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exceptions.Auth.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *AuthBinder) BindResetMe(controllerFunc types.ControllerFunc[*dtos.ResetMeReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.ResetMeReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exceptions.Auth.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
 			return
 		}
 
@@ -172,8 +189,7 @@ func (b *AuthBinder) BindDeleteMe(controllerFunc types.ControllerFunc[*dtos.Dele
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Auth.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exceptions.Auth.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
 			return
 		}
 

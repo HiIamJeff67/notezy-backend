@@ -22,7 +22,6 @@ type UserRepositoryInterface interface {
 	GetAll(opts ...options.RepositoryOptions) ([]schemas.User, *exceptions.Exception)
 	CreateOne(input inputs.CreateUserInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, input inputs.PartialUpdateUserInput, opts ...options.RepositoryOptions) (*schemas.User, *exceptions.Exception)
-	DeleteOneById(id uuid.UUID, input inputs.DeleteUserInput, opts ...options.RepositoryOptions) *exceptions.Exception
 }
 
 type UserRepository struct{}
@@ -192,24 +191,4 @@ func (r *UserRepository) UpdateOneById(
 	}
 
 	return &updates, nil
-}
-
-func (r *UserRepository) DeleteOneById(
-	id uuid.UUID,
-	input inputs.DeleteUserInput,
-	opts ...options.RepositoryOptions,
-) *exceptions.Exception {
-	parsedOptions := options.ParseRepositoryOptions(opts...)
-
-	result := parsedOptions.DB.Model(&schemas.User{}).
-		Where("id = ? AND name = ? AND password", id, input.Name, input.Password).
-		Delete(&schemas.User{})
-	if err := result.Error; err != nil {
-		return exceptions.User.FailedToDelete().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return exceptions.User.NoChanges()
-	}
-
-	return nil
 }

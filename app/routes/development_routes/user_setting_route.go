@@ -16,7 +16,7 @@ func configureUserSettingRoutes() {
 		middlewares.TimeoutMiddleware(1*time.Second),
 		middlewares.AuthMiddleware(),
 		middlewares.AuthorizedRateLimitMiddleware(),
-		interceptors.RefreshAccessTokenInterceptor(),
+		interceptors.RefreshTokenInterceptor(),
 	)
 	{
 		userSettingRoutes.GET(

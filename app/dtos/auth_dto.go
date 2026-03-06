@@ -110,6 +110,21 @@ type ForgetPasswordReqDto struct {
 	]
 }
 
+type ResetMeReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			AuthCode string `json:"authCode" validate:"required,isnumberstring,len=6"`
+		},
+		any,
+	]
+}
+
 type DeleteMeReqDto struct {
 	NotezyRequest[
 		struct {
@@ -119,7 +134,48 @@ type DeleteMeReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			AuthCode time.Time `json:"authCode" validate:"required,isnumberstring,len=6"`
+			AuthCode string `json:"authCode" validate:"omitempty,isnumberstring,len=6"`
+		},
+		any,
+	]
+}
+
+type RegisterViaGoogleReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		any,
+		struct {
+			AuthorizationCode string `json:"authorizationCode" validate:"required"`
+		},
+		any,
+	]
+}
+
+type LoginViaGoogleReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		any,
+		struct {
+			AuthorizationCode string `json:"authorizationCode" validate:"required"`
+		},
+		any,
+	]
+}
+
+type BindGoogleAccountReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			AuthorizationCode string `json:"authorizationCode" validate:"required"`
 		},
 		any,
 	]
@@ -162,6 +218,26 @@ type ForgetPasswordResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
+type ResetMeResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
 type DeleteMeResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`
+}
+
+type RegisterViaGoogleResDto struct {
+	AccessToken string    `json:"accessToken"`
+	CSRFToken   string    `json:"csrfToken"`
+	CreatedAt   time.Time `json:"createdAt"`
+}
+
+type LoginViaGoogleResDto struct {
+	AccessToken string    `json:"accessToken"`
+	CSRFToken   string    `json:"csrfToken"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
+type BindGoogleAccountResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
 }

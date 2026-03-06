@@ -30,8 +30,3 @@ type UpdateUserInput struct {
 }
 
 type PartialUpdateUserInput = PartialUpdateInput[UpdateUserInput]
-
-type DeleteUserInput struct {
-	Name     string `json:"name" gorm:"column:name;"`
-	Password string `json:"password" gorm:"column:password;"`
-}

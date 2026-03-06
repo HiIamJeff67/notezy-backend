@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -10,6 +11,7 @@ import (
 	models "notezy-backend/app/models"
 	inputs "notezy-backend/app/models/inputs"
 	repositories "notezy-backend/app/models/repositories"
+	schemas "notezy-backend/app/models/schemas"
 	options "notezy-backend/app/options"
 	validation "notezy-backend/app/validation"
 )
@@ -75,14 +77,20 @@ func (s *UserAccountService) UpdateMyAccount(
 
 	db := s.db.WithContext(ctx)
 
-	updatedUserAccount, exception := s.userAccountRepository.UpdateOneByUserId(
+	result := db.Model(&schemas.UserAccount{}).
+		Where("user_id = ? AND auth_code = ?", reqDto.ContextFields.UserId, reqDto.Body.AuthCode).
+		First(&schemas.UserAccount{})
+	if err := result.Error; err != nil {
+		return nil, exceptions.UserAccount.NotFound().WithError(err)
+	}
+
+	_, exception := s.userAccountRepository.UpdateOneByUserId(
 		reqDto.ContextFields.UserId,
 		inputs.PartialUpdateUserAccountInput{
 			Values: inputs.UpdateUserAccountInput{
-				CountryCode:       reqDto.Body.Values.CountryCode,
-				PhoneNumber:       reqDto.Body.Values.PhoneNumber,
-				GoogleCredential:  reqDto.Body.Values.GoogleCredential,
-				DiscordCredential: reqDto.Body.Values.DiscordCredential,
+				BackupEmail: reqDto.Body.Values.BackupEmail,
+				CountryCode: reqDto.Body.Values.CountryCode,
+				PhoneNumber: reqDto.Body.Values.PhoneNumber,
 			},
 			SetNull: reqDto.Body.SetNull,
 		},
@@ -93,6 +101,6 @@ func (s *UserAccountService) UpdateMyAccount(
 	}
 
 	return &dtos.UpdateMyAccountResDto{
-		UpdatedAt: updatedUserAccount.UpdatedAt,
+		UpdatedAt: time.Now(),
 	}, nil
 }

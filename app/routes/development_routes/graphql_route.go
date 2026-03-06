@@ -17,7 +17,7 @@ func configureDevelopmentGraphQLRoutes() {
 		middlewares.TimeoutMiddleware(3*time.Second),
 		middlewares.AuthMiddleware(),
 		middlewares.AuthorizedRateLimitMiddleware(),
-		interceptors.RefreshAccessTokenInterceptor(),
+		interceptors.RefreshTokenInterceptor(),
 	)
 	{
 		graphqlRoutes.POST("/", graphql.GraphQLHandler())

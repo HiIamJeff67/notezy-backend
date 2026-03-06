@@ -20,6 +20,7 @@ type AuthControllerInterface interface {
 	ValidateEmail(ctx *gin.Context, reqDto *dtos.ValidateEmailReqDto)
 	ResetEmail(ctx *gin.Context, reqDto *dtos.ResetEmailReqDto)
 	ForgetPassword(ctx *gin.Context, reqDto *dtos.ForgetPasswordReqDto)
+	ResetMe(ctx *gin.Context, reqDto *dtos.ResetMeReqDto)
 	DeleteMe(ctx *gin.Context, reqDto *dtos.DeleteMeReqDto)
 }
 
@@ -41,7 +42,7 @@ func (c *AuthController) Register(ctx *gin.Context, reqDto *dtos.RegisterReqDto)
 
 	resDto, exception := c.authService.Register(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -50,8 +51,9 @@ func (c *AuthController) Register(ctx *gin.Context, reqDto *dtos.RegisterReqDto)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"data": gin.H{ // make sure we don't response with the refresh token
+		"data": gin.H{
 			"accessToken": resDto.AccessToken,
+			"csrfToken":   resDto.CSRFToken,
 			"createdAt":   resDto.CreatedAt,
 		},
 		"exception": nil,
@@ -64,7 +66,7 @@ func (c *AuthController) Login(ctx *gin.Context, reqDto *dtos.LoginReqDto) {
 
 	resDto, exception := c.authService.Login(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -73,8 +75,9 @@ func (c *AuthController) Login(ctx *gin.Context, reqDto *dtos.LoginReqDto) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"data": gin.H{ // make sure we don't response with the refresh token
+		"data": gin.H{
 			"accessToken": resDto.AccessToken,
+			"csrfToken":   resDto.CSRFToken,
 			"updatedAt":   resDto.UpdatedAt,
 		},
 		"exception": nil,
@@ -84,7 +87,7 @@ func (c *AuthController) Login(ctx *gin.Context, reqDto *dtos.LoginReqDto) {
 func (c *AuthController) Logout(ctx *gin.Context, reqDto *dtos.LogoutReqDto) {
 	resDto, exception := c.authService.Logout(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -101,7 +104,7 @@ func (c *AuthController) Logout(ctx *gin.Context, reqDto *dtos.LogoutReqDto) {
 func (c *AuthController) SendAuthCode(ctx *gin.Context, reqDto *dtos.SendAuthCodeReqDto) {
 	resDto, exception := c.authService.SendAuthCode(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -115,7 +118,7 @@ func (c *AuthController) SendAuthCode(ctx *gin.Context, reqDto *dtos.SendAuthCod
 func (c *AuthController) ValidateEmail(ctx *gin.Context, reqDto *dtos.ValidateEmailReqDto) {
 	resDto, exception := c.authService.ValidateEmail(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -129,7 +132,7 @@ func (c *AuthController) ValidateEmail(ctx *gin.Context, reqDto *dtos.ValidateEm
 func (c *AuthController) ResetEmail(ctx *gin.Context, reqDto *dtos.ResetEmailReqDto) {
 	resDto, exception := c.authService.ResetEmail(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -144,7 +147,21 @@ func (c *AuthController) ResetEmail(ctx *gin.Context, reqDto *dtos.ResetEmailReq
 func (c *AuthController) ForgetPassword(ctx *gin.Context, reqDto *dtos.ForgetPasswordReqDto) {
 	resDto, exception := c.authService.ForgetPassword(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *AuthController) ResetMe(ctx *gin.Context, reqDto *dtos.ResetMeReqDto) {
+	resDto, exception := c.authService.ResetMe(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -158,7 +175,7 @@ func (c *AuthController) ForgetPassword(ctx *gin.Context, reqDto *dtos.ForgetPas
 func (c *AuthController) DeleteMe(ctx *gin.Context, reqDto *dtos.DeleteMeReqDto) {
 	resDto, exception := c.authService.DeleteMe(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
