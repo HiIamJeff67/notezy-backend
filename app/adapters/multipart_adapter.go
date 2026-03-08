@@ -11,6 +11,7 @@ import (
 
 	exceptions "notezy-backend/app/exceptions"
 	constants "notezy-backend/shared/constants"
+	"notezy-backend/shared/types"
 )
 
 func MultipartAdapter() gin.HandlerFunc {
@@ -59,7 +60,7 @@ func MultipartAdapter() gin.HandlerFunc {
 		}
 
 		if len(fileHeaders) > 0 {
-			ctx.Set(constants.ContextFieldName_FormDataFileHeaders.String(), fileHeaders)
+			ctx.Set(types.ContextFieldName_FormDataFileHeaders.String(), fileHeaders)
 		}
 
 		ctx.Next()

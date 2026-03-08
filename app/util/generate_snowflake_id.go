@@ -19,7 +19,6 @@ var (
 // Generate a repeatable snow flake id.
 func GenerateRepeatableSnowflakeID() string {
 	timestamp := time.Now().UnixMilli()
-	machineID := 1
 	sequence := rand.Intn(constants.MaxSnowflakeSequence)
 
 	return fmt.Sprintf("%d%03d%04d", timestamp, machineID, sequence)

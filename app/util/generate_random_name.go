@@ -6,7 +6,7 @@ import (
 	"github.com/brianvoe/gofakeit/v6"
 )
 
-func GenerateRandomFakeName() string {
+func GenerateRandomFakeDisplayName() string {
 	gofakeit.Seed(0)
 	animal := gofakeit.LastName()
 	adjective := gofakeit.AdjectiveDescriptive()

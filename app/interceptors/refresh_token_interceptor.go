@@ -9,7 +9,7 @@ import (
 	cookies "notezy-backend/app/cookies"
 	ratelimiter "notezy-backend/app/lib/ratelimiter"
 	"notezy-backend/app/logs"
-	constants "notezy-backend/shared/constants"
+	"notezy-backend/shared/types"
 )
 
 // use the reusable buffer pool for refreshing the access token
@@ -50,7 +50,7 @@ func RefreshTokenInterceptor() gin.HandlerFunc {
 			return
 		}
 
-		IsNewTokens, exception := contexts.GetAndConvertContextFieldToBoolean(ctx, constants.ContextFieldName_IsNewTokens)
+		IsNewTokens, exception := contexts.GetAndConvertContextFieldToBoolean(ctx, types.ContextFieldName_IsNewTokens)
 		if exception != nil || IsNewTokens == nil || !*IsNewTokens {
 			writer.FlushToOriginalWriter()
 			return
@@ -62,7 +62,7 @@ func RefreshTokenInterceptor() gin.HandlerFunc {
 			return
 		}
 
-		accessToken, exists := ctx.Get(constants.ContextFieldName_AccessToken.String())
+		accessToken, exists := ctx.Get(types.ContextFieldName_AccessToken.String())
 		if !exists {
 			writer.FlushToOriginalWriter()
 			return
@@ -72,7 +72,7 @@ func RefreshTokenInterceptor() gin.HandlerFunc {
 			writer.FlushToOriginalWriter()
 			return
 		}
-		csrfToken, exist := ctx.Get(constants.ContextFieldName_CSRFToken.String())
+		csrfToken, exist := ctx.Get(types.ContextFieldName_CSRFToken.String())
 		if !exist {
 			writer.FlushToOriginalWriter()
 			return

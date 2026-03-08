@@ -5,7 +5,6 @@ import (
 
 	contexts "notezy-backend/app/contexts"
 	dtos "notezy-backend/app/dtos"
-	constants "notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
 )
 
@@ -29,7 +28,7 @@ func (b *UserSettingBinder) BindGetMySetting(controllerFunc types.ControllerFunc
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return

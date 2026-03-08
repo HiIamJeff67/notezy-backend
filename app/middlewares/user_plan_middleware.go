@@ -5,14 +5,14 @@ import (
 
 	exceptions "notezy-backend/app/exceptions"
 	enums "notezy-backend/app/models/schemas/enums"
-	constants "notezy-backend/shared/constants"
+	types "notezy-backend/shared/types"
 )
 
 // This UserPlanMiddleware() MUST be processed AFTER the AuthMiddleware()
 // so that it can parse the existing accessToken
 func UserPlanMiddleware(atLeastUserPlan enums.UserPlan) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		currentUserPlanValue, exists := ctx.Get(constants.ContextFieldName_User_Plan.String())
+		currentUserPlanValue, exists := ctx.Get(types.ContextFieldName_User_Plan.String())
 		if !exists {
 			exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
 				"Cannot find the userPlan, " +
@@ -69,7 +69,7 @@ Note: If the allowedPlans is empty, all types of the UserPlan will pass
 */
 func AllowedUserPlanMiddleware(allowedPlan []enums.UserPlan) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		currentUserPlanValue, exists := ctx.Get(constants.ContextFieldName_User_Plan.String())
+		currentUserPlanValue, exists := ctx.Get(types.ContextFieldName_User_Plan.String())
 		if !exists {
 			exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
 				"Cannot find the userPlan, " +

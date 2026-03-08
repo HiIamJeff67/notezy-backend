@@ -6,7 +6,6 @@ import (
 	contexts "notezy-backend/app/contexts"
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
-	constants "notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
 )
 
@@ -32,7 +31,7 @@ func (b *UserBinder) BindGetUserData(controllerFunc types.ControllerFunc[*dtos.G
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -49,7 +48,7 @@ func (b *UserBinder) BindGetMe(controllerFunc types.ControllerFunc[*dtos.GetMeRe
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -66,7 +65,7 @@ func (b *UserBinder) BindUpdateMe(controllerFunc types.ControllerFunc[*dtos.Upda
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return

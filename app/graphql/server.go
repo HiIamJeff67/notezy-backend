@@ -14,7 +14,7 @@ import (
 	models "notezy-backend/app/models"
 	repositories "notezy-backend/app/models/repositories"
 	services "notezy-backend/app/services"
-	constants "notezy-backend/shared/constants"
+	"notezy-backend/shared/types"
 )
 
 func GraphQLHandler() gin.HandlerFunc {
@@ -44,7 +44,7 @@ func GraphQLHandler() gin.HandlerFunc {
 		// since we need the fields extracted by the middlewares
 		// which are stored in the gin.Context fields,
 		// and gin.Context.Request.Context() will not include this part
-		ctx := context.WithValue(c.Request.Context(), constants.ContextFieldName_GinContext, c)
+		ctx := context.WithValue(c.Request.Context(), types.ContextFieldName_GinContext, c)
 		server.ServeHTTP(c.Writer, c.Request.WithContext(ctx))
 	}
 }

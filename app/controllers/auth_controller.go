@@ -14,7 +14,9 @@ import (
 
 type AuthControllerInterface interface {
 	Register(ctx *gin.Context, reqDto *dtos.RegisterReqDto)
+	RegisterViaGoogle(ctx *gin.Context, reqDto *dtos.RegisterViaGoogleReqDto)
 	Login(ctx *gin.Context, reqDto *dtos.LoginReqDto)
+	LoginViaGoogle(ctx *gin.Context, reqDto *dtos.LoginViaGoogleReqDto)
 	Logout(ctx *gin.Context, reqDto *dtos.LogoutReqDto)
 	SendAuthCode(ctx *gin.Context, reqDto *dtos.SendAuthCodeReqDto)
 	ValidateEmail(ctx *gin.Context, reqDto *dtos.ValidateEmailReqDto)
@@ -60,11 +62,59 @@ func (c *AuthController) Register(ctx *gin.Context, reqDto *dtos.RegisterReqDto)
 	})
 }
 
+func (c *AuthController) RegisterViaGoogle(ctx *gin.Context, reqDto *dtos.RegisterViaGoogleReqDto) {
+	cookies.AccessTokenCookieHandler.Delete(ctx)
+	cookies.RefreshTokenCookieHandler.Delete(ctx)
+
+	resDto, exception := c.authService.RegisterViaGoogle(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	cookies.AccessTokenCookieHandler.Set(ctx, resDto.AccessToken)
+	cookies.RefreshTokenCookieHandler.Set(ctx, resDto.RefreshToken)
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data": gin.H{
+			"accessToken": resDto.AccessToken,
+			"csrfToken":   resDto.CSRFToken,
+			"createdAt":   resDto.CreatedAt,
+		},
+		"exception": nil,
+	})
+}
+
 func (c *AuthController) Login(ctx *gin.Context, reqDto *dtos.LoginReqDto) {
 	cookies.AccessTokenCookieHandler.Delete(ctx)
 	cookies.RefreshTokenCookieHandler.Delete(ctx)
 
 	resDto, exception := c.authService.Login(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	cookies.AccessTokenCookieHandler.Set(ctx, resDto.AccessToken)
+	cookies.RefreshTokenCookieHandler.Set(ctx, resDto.RefreshToken)
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data": gin.H{
+			"accessToken": resDto.AccessToken,
+			"csrfToken":   resDto.CSRFToken,
+			"updatedAt":   resDto.UpdatedAt,
+		},
+		"exception": nil,
+	})
+}
+
+func (c *AuthController) LoginViaGoogle(ctx *gin.Context, reqDto *dtos.LoginViaGoogleReqDto) {
+	cookies.AccessTokenCookieHandler.Delete(ctx)
+	cookies.RefreshTokenCookieHandler.Delete(ctx)
+
+	resDto, exception := c.authService.LoginViaGoogle(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return

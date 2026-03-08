@@ -12,7 +12,6 @@ import (
 	exceptions "notezy-backend/app/exceptions"
 	ratelimiter "notezy-backend/app/lib/ratelimiter"
 	logs "notezy-backend/app/logs"
-	constants "notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
 )
 
@@ -64,7 +63,7 @@ func AuthorizedRateLimitMiddleware(config ...AuthorizedRateLimitConfig) gin.Hand
 	}
 
 	return func(ctx *gin.Context) {
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil || userId == nil {
 			exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
 				"Cannot find the userId, " +

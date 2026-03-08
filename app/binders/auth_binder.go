@@ -6,7 +6,6 @@ import (
 	contexts "notezy-backend/app/contexts"
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
-	constants "notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
 )
 
@@ -14,7 +13,9 @@ import (
 
 type AuthBinderInterface interface {
 	BindRegister(controllerFunc types.ControllerFunc[*dtos.RegisterReqDto]) gin.HandlerFunc
+	BindRegisterViaGoogle(controllerFunc types.ControllerFunc[*dtos.RegisterViaGoogleReqDto]) gin.HandlerFunc
 	BindLogin(controllerFunc types.ControllerFunc[*dtos.LoginReqDto]) gin.HandlerFunc
+	BindLoginViaGoogle(controllerFunc types.ControllerFunc[*dtos.LoginViaGoogleReqDto]) gin.HandlerFunc
 	BindLogout(controllerFunc types.ControllerFunc[*dtos.LogoutReqDto]) gin.HandlerFunc
 	BindSendAuthCode(controllerFunc types.ControllerFunc[*dtos.SendAuthCodeReqDto]) gin.HandlerFunc
 	BindValidateEmail(controllerFunc types.ControllerFunc[*dtos.ValidateEmailReqDto]) gin.HandlerFunc
@@ -47,9 +48,39 @@ func (b *AuthBinder) BindRegister(controllerFunc types.ControllerFunc[*dtos.Regi
 	}
 }
 
+func (b *AuthBinder) BindRegisterViaGoogle(controllerFunc types.ControllerFunc[*dtos.RegisterViaGoogleReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.RegisterViaGoogleReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exceptions.Auth.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
 func (b *AuthBinder) BindLogin(controllerFunc types.ControllerFunc[*dtos.LoginReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.LoginReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exceptions.Auth.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *AuthBinder) BindLoginViaGoogle(controllerFunc types.ControllerFunc[*dtos.LoginViaGoogleReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.LoginViaGoogleReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -68,7 +99,7 @@ func (b *AuthBinder) BindLogout(controllerFunc types.ControllerFunc[*dtos.Logout
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -100,7 +131,7 @@ func (b *AuthBinder) BindValidateEmail(controllerFunc types.ControllerFunc[*dtos
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -122,7 +153,7 @@ func (b *AuthBinder) BindResetEmail(controllerFunc types.ControllerFunc[*dtos.Re
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -159,7 +190,7 @@ func (b *AuthBinder) BindResetMe(controllerFunc types.ControllerFunc[*dtos.Reset
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -181,7 +212,7 @@ func (b *AuthBinder) BindDeleteMe(controllerFunc types.ControllerFunc[*dtos.Dele
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return

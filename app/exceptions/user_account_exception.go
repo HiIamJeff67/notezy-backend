@@ -1,5 +1,7 @@
 package exceptions
 
+import "net/http"
+
 const (
 	_ExceptionBaseCode_UserAccount ExceptionCode = UserAccountExceptionSubDomainCode * ExceptionSubDomainCodeShiftAmount
 
@@ -31,4 +33,18 @@ var UserAccount = &UserAccountExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_UserAccount,
 		_Prefix:   ExceptionPrefix_UserAccount,
 	},
+}
+
+/* ============================== Handling Conflict Account Settings Error ============================== */
+
+func (d *UserAccountExceptionDomain) GoogleCredentialHasAlreadyBeenBinded() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 1,
+		Prefix:         d.Prefix,
+		Reason:         "GoogleCredentialIsAlreadyBinded",
+		IsInternal:     false,
+		Message:        "The current account has already been binded with google",
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
 }

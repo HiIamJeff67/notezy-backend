@@ -8,6 +8,9 @@ import (
 	"github.com/google/uuid"
 )
 
+// The UUIDArray type is used specifically for the integration of gorm,
+// since if we use []uuid.UUID which is not implemented with the Scan() and Value() function,
+// this will cause gorm not be able to work properly.
 type UUIDArray []uuid.UUID
 
 func (u *UUIDArray) Scan(value interface{}) error {

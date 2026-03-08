@@ -14,7 +14,7 @@ import (
 type User struct {
 	Id              uuid.UUID        `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid();"`
 	PublicId        string           `json:"publicId" gorm:"column:public_id; unique; not null; default:'';"`
-	Name            string           `json:"name" gorm:"column:name; unique; not null; size:16;"`        // validate:"required,min=6,max=16,alphaandnum"
+	Name            string           `json:"name" gorm:"column:name; unique; not null; size:32;"`        // validate:"required,min=6,max=16,alphaandnum"
 	DisplayName     string           `json:"displayName" gorm:"column:display_name; not null; size:32;"` // validate:"required,min=6,max=32,alphaandnum"
 	Email           string           `json:"email" gorm:"column:email; unique; not null;"`               // validate:"required,email"
 	Password        string           `json:"password" gorm:"column:password; not null; size:1024;"`      // validate:"required,min=8,max=1024"      // since we store the hashed password which is quite long

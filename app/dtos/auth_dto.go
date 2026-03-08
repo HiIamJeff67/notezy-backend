@@ -16,9 +16,22 @@ type RegisterReqDto struct {
 		},
 		any,
 		struct {
-			Name     string `json:"name" validate:"required,min=6,max=16,alphaandnum"`
+			Name     string `json:"name" validate:"required,min=6,max=32,alphaandnum"`
 			Email    string `json:"email" validate:"required,email"`
 			Password string `json:"password" validate:"required,min=8,max=1024,isstrongpassword"`
+		},
+		any,
+	]
+}
+
+type RegisterViaGoogleReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		any,
+		struct {
+			AuthorizationCode string `json:"authorizationCode" validate:"required"`
 		},
 		any,
 	]
@@ -33,6 +46,19 @@ type LoginReqDto struct {
 		struct {
 			Account  string `json:"account" validate:"required,isaccount"`
 			Password string `json:"password" validate:"required"` // don't validate other additions while login
+		},
+		any,
+	]
+}
+
+type LoginViaGoogleReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		any,
+		struct {
+			AuthorizationCode string `json:"authorizationCode" validate:"required"`
 		},
 		any,
 	]
@@ -140,47 +166,6 @@ type DeleteMeReqDto struct {
 	]
 }
 
-type RegisterViaGoogleReqDto struct {
-	NotezyRequest[
-		struct {
-			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
-		},
-		any,
-		struct {
-			AuthorizationCode string `json:"authorizationCode" validate:"required"`
-		},
-		any,
-	]
-}
-
-type LoginViaGoogleReqDto struct {
-	NotezyRequest[
-		struct {
-			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
-		},
-		any,
-		struct {
-			AuthorizationCode string `json:"authorizationCode" validate:"required"`
-		},
-		any,
-	]
-}
-
-type BindGoogleAccountReqDto struct {
-	NotezyRequest[
-		struct {
-			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
-		},
-		struct {
-			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
-		},
-		struct {
-			AuthorizationCode string `json:"authorizationCode" validate:"required"`
-		},
-		any,
-	]
-}
-
 /* ============================== Response DTO ============================== */
 type RegisterResDto struct {
 	AccessToken  string    `json:"accessToken"`
@@ -189,7 +174,21 @@ type RegisterResDto struct {
 	CreatedAt    time.Time `json:"createdAt"`
 }
 
+type RegisterViaGoogleResDto struct {
+	AccessToken  string    `json:"accessToken"`
+	RefreshToken string    `json:"refreshToken"`
+	CSRFToken    string    `json:"csrfToken"`
+	CreatedAt    time.Time `json:"createdAt"`
+}
+
 type LoginResDto struct {
+	AccessToken  string    `json:"accessToken"`
+	RefreshToken string    `json:"refreshToken"`
+	CSRFToken    string    `json:"csrfToken"`
+	UpdatedAt    time.Time `json:"updatedAt"`
+}
+
+type LoginViaGoogleResDto struct {
 	AccessToken  string    `json:"accessToken"`
 	RefreshToken string    `json:"refreshToken"`
 	CSRFToken    string    `json:"csrfToken"`
@@ -224,20 +223,4 @@ type ResetMeResDto struct {
 
 type DeleteMeResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`
-}
-
-type RegisterViaGoogleResDto struct {
-	AccessToken string    `json:"accessToken"`
-	CSRFToken   string    `json:"csrfToken"`
-	CreatedAt   time.Time `json:"createdAt"`
-}
-
-type LoginViaGoogleResDto struct {
-	AccessToken string    `json:"accessToken"`
-	CSRFToken   string    `json:"csrfToken"`
-	UpdatedAt   time.Time `json:"updatedAt"`
-}
-
-type BindGoogleAccountResDto struct {
-	UpdatedAt time.Time `json:"updatedAt"`
 }

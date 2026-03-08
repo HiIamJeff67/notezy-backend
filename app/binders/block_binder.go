@@ -9,7 +9,6 @@ import (
 	contexts "notezy-backend/app/contexts"
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
-	constants "notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
 )
 
@@ -46,7 +45,7 @@ func (b *BlockBinder) BindGetMyBlockById(controllerFunc types.ControllerFunc[*dt
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -75,7 +74,7 @@ func (b *BlockBinder) BindGetMyBlocksByIds(controllerFunc types.ControllerFunc[*
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -97,7 +96,7 @@ func (b *BlockBinder) BindGetMyBlocksByBlockGroupId(controllerFunc types.Control
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -126,7 +125,7 @@ func (b *BlockBinder) BindGetMyBlocksByBlockGroupIds(controllerFunc types.Contro
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -148,7 +147,7 @@ func (b *BlockBinder) BindGetMyBlocksByBlockPackId(controllerFunc types.Controll
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -177,7 +176,7 @@ func (b *BlockBinder) BindGetAllMyBlocks(controllerFunc types.ControllerFunc[*dt
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -194,7 +193,7 @@ func (b *BlockBinder) BindInsertBlock(controllerFunc types.ControllerFunc[*dtos.
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -216,7 +215,7 @@ func (b *BlockBinder) BindInsertBlocks(controllerFunc types.ControllerFunc[*dtos
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -238,7 +237,7 @@ func (b *BlockBinder) BindUpdateMyBlockById(controllerFunc types.ControllerFunc[
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -260,7 +259,7 @@ func (b *BlockBinder) BindUpdateMyBlocksByIds(controllerFunc types.ControllerFun
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -282,7 +281,7 @@ func (b *BlockBinder) BindRestoreMyBlockById(controllerFunc types.ControllerFunc
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -304,7 +303,7 @@ func (b *BlockBinder) BindRestoreMyBlocksByIds(controllerFunc types.ControllerFu
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -326,7 +325,7 @@ func (b *BlockBinder) BindDeleteMyBlockById(controllerFunc types.ControllerFunc[
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -348,7 +347,7 @@ func (b *BlockBinder) BindDeleteMyBlocksByIds(controllerFunc types.ControllerFun
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return

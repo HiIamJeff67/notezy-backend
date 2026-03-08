@@ -10,7 +10,7 @@ import (
 	exceptions "notezy-backend/app/exceptions"
 	logs "notezy-backend/app/logs"
 	tokens "notezy-backend/app/tokens"
-	constants "notezy-backend/shared/constants"
+	types "notezy-backend/shared/types"
 )
 
 /*
@@ -18,7 +18,7 @@ A Middleware to provider CSRF token validation which should be placed after Auth
 */
 func CSRFMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
 				"Cannot find the userPlan, " +

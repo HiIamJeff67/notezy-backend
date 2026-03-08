@@ -9,7 +9,6 @@ import (
 	contexts "notezy-backend/app/contexts"
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
-	constants "notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
 )
 
@@ -40,7 +39,7 @@ func (b *RootShelfBinder) BindGetMyRootShelfById(controllerFunc types.Controller
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -69,7 +68,7 @@ func (b *RootShelfBinder) BindSearchRecentRootShelves(controllerFunc types.Contr
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -91,7 +90,7 @@ func (b *RootShelfBinder) BindCreateRootShelf(controllerFunc types.ControllerFun
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -114,7 +113,7 @@ func (b *RootShelfBinder) BindUpdateMyRootShelfById(controllerFunc types.Control
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -137,7 +136,7 @@ func (b *RootShelfBinder) BindRestoreMyRootShelfById(controllerFunc types.Contro
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -159,7 +158,7 @@ func (b *RootShelfBinder) BindRestoreMyRootShelvesByIds(controllerFunc types.Con
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -182,7 +181,7 @@ func (b *RootShelfBinder) BindDeleteMyRootShelfById(controllerFunc types.Control
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -205,7 +204,7 @@ func (b *RootShelfBinder) BindDeleteMyRootShelvesByIds(controllerFunc types.Cont
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return

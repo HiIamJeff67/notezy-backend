@@ -13,7 +13,7 @@ func configureDevelopmentUserAccountRoutes() {
 
 	userAccountRoutes := DevelopmentRouterGroup.Group("/userAccount")
 	userAccountRoutes.Use(
-		middlewares.TimeoutMiddleware(1*time.Second),
+		middlewares.TimeoutMiddleware(3*time.Second),
 		middlewares.AuthMiddleware(),
 		middlewares.AuthorizedRateLimitMiddleware(),
 		interceptors.RefreshTokenInterceptor(),
@@ -29,6 +29,18 @@ func configureDevelopmentUserAccountRoutes() {
 			"/updateMyAccount",
 			userAccountModule.Binder.BindUpdateMyAccount(
 				userAccountModule.Controller.UpdateMyAccount,
+			),
+		)
+		userAccountRoutes.PUT(
+			"/bindGoogleAccount",
+			userAccountModule.Binder.BindBindGoogleAccount(
+				userAccountModule.Controller.BindGoogleAccount,
+			),
+		)
+		userAccountRoutes.PUT(
+			"/unbindGoogleAccount",
+			userAccountModule.Binder.BindUnbindGoogleAccount(
+				userAccountModule.Controller.UnbindGoogleAccount,
 			),
 		)
 	}

@@ -20,7 +20,7 @@ func NewWeakRateLimiter(requestsPerSecond int) *WeakRateLimiter {
 	minInterval := time.Second / time.Duration(requestsPerSecond)
 	return &WeakRateLimiter{
 		requestArrivalTimes: make([]time.Time, 0),
-		capacity:            requestsPerSecond + constants.ExtraCapacity,
+		capacity:            requestsPerSecond + constants.RequestFrequencyExtraCapacity,
 		minInterval:         minInterval,
 	}
 }

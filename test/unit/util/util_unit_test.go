@@ -18,9 +18,9 @@ func TestFeatureInParallel(t *testing.T) {
 			})
 		})
 		t.Run(fmt.Sprintf("Test-Generate-Random-Name-(%s):", testTargetPath+"generate_random_name.go"), func(t *testing.T) { // spec level
-			t.Run("Test-GenerateRandomFakeName()", func(t *testing.T) { // subspec level
+			t.Run("Test-GenerateRandomFakeDisplayName()", func(t *testing.T) { // subspec level
 				t.Parallel()
-				TestGenerateRandomFakeName(t)
+				TestGenerateRandomFakeDisplayName(t)
 			})
 		})
 		t.Run(fmt.Sprintf("Test-Get-Blocked-Time-(%s):", testTargetPath+"get_blocked_time.go"), func(t *testing.T) { // spec level

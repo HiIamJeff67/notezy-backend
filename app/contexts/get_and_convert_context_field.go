@@ -8,10 +8,10 @@ import (
 	"github.com/google/uuid"
 
 	exceptions "notezy-backend/app/exceptions"
-	constants "notezy-backend/shared/constants"
+	"notezy-backend/shared/types"
 )
 
-func GetAndConvertContextFieldToBoolean(ctx *gin.Context, name constants.ContextFieldName) (*bool, *exceptions.Exception) {
+func GetAndConvertContextFieldToBoolean(ctx *gin.Context, name types.ContextFieldName) (*bool, *exceptions.Exception) {
 	value, exist := ctx.Get(name.String())
 	if !exist {
 		return nil, exceptions.Context.FailedToGetContextFieldOfSpecificName(name.String())
@@ -25,7 +25,7 @@ func GetAndConvertContextFieldToBoolean(ctx *gin.Context, name constants.Context
 	return &valueBoolean, nil
 }
 
-func GetAndConvertContextFieldToUUID(ctx *gin.Context, name constants.ContextFieldName) (*uuid.UUID, *exceptions.Exception) {
+func GetAndConvertContextFieldToUUID(ctx *gin.Context, name types.ContextFieldName) (*uuid.UUID, *exceptions.Exception) {
 	value, exist := ctx.Get(name.String())
 	if !exist {
 		return nil, exceptions.Context.FailedToGetContextFieldOfSpecificName(name.String())
@@ -45,7 +45,7 @@ func GetAndConvertContextFieldToUUID(ctx *gin.Context, name constants.ContextFie
 }
 
 func GetAndConvertContextToGinContext(ctx context.Context) (*gin.Context, *exceptions.Exception) {
-	ginCtx, ok := ctx.Value(constants.ContextFieldName_GinContext).(*gin.Context)
+	ginCtx, ok := ctx.Value(types.ContextFieldName_GinContext).(*gin.Context)
 	if !ok {
 		return nil, exceptions.Context.FailedToConvertContextToGinContext()
 	}
@@ -53,7 +53,7 @@ func GetAndConvertContextToGinContext(ctx context.Context) (*gin.Context, *excep
 }
 
 func GetAndConvertContextToMultipartFileHeaders(ctx *gin.Context) ([]*multipart.FileHeader, *exceptions.Exception) {
-	fileHeadersInterface, exist := ctx.Get(constants.ContextFieldName_FormDataFileHeaders.String())
+	fileHeadersInterface, exist := ctx.Get(types.ContextFieldName_FormDataFileHeaders.String())
 	if exist {
 		return fileHeadersInterface.([]*multipart.FileHeader), nil
 	}

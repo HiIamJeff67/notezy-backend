@@ -9,6 +9,7 @@ import (
 
 	util "notezy-backend/app/util"
 	constants "notezy-backend/shared/constants"
+	types "notezy-backend/shared/types"
 )
 
 func RegisterStringsValidation(validate *validator.Validate) {
@@ -105,7 +106,7 @@ func RegisterStringsValidation(validate *validator.Validate) {
 		if len(programmingLanguageStr) > constants.MaxProgrammingLanguageLength {
 			return false
 		}
-		for _, l := range constants.SupportedProgrammingLanguages {
+		for _, l := range types.AllSupportedProgrammingLanguageStrings {
 			if programmingLanguageStr == l {
 				return true
 			}

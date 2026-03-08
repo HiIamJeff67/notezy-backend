@@ -65,6 +65,7 @@ const (
 // ExceptionPrefix_BlockPack ExceptionPrefix = "BlockPack" 				 42
 // ExceptionPrefix_BlockGroup ExceptionPrefix = "BlockGroup"			 43
 // ExceptionPrefix_Block ExceptionPrefix = "Block"						 44
+// ExceptionPrefix_OAuth ExceptionPrefix = "OAuth"						 45
 )
 
 func IsExceptionCode(exceptionCode int) bool {
@@ -645,6 +646,18 @@ func (d *TypeExceptionDomain) InvalidType(value any) *Exception {
 			"actualType": fmt.Sprintf("%T", value),
 			"value":      value,
 		},
+		LastStackFrame: &GetStackTrace(2, 1)[0],
+	}
+}
+
+func (d *TypeExceptionDomain) FailedToCompileRegularExpression() *Exception {
+	return &Exception{
+		Code:           d._BaseCode + 34,
+		Prefix:         d._Prefix,
+		Reason:         "FailedToCompileRegularExpression",
+		IsInternal:     true,
+		Message:        "Failed to compile regular expression",
+		HTTPStatusCode: http.StatusInternalServerError,
 		LastStackFrame: &GetStackTrace(2, 1)[0],
 	}
 }

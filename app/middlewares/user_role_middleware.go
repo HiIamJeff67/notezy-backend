@@ -5,14 +5,14 @@ import (
 
 	exceptions "notezy-backend/app/exceptions"
 	enums "notezy-backend/app/models/schemas/enums"
-	constants "notezy-backend/shared/constants"
+	types "notezy-backend/shared/types"
 )
 
 // This UserRoleMiddleware() MUST be processed AFTER the AuthMiddleware()
 // so that it can parse the existing accessToken
 func UserRoleMiddleware(atLeastUserRole enums.UserRole) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		currentUserRoleValue, exists := ctx.Get(constants.ContextFieldName_User_Role.String())
+		currentUserRoleValue, exists := ctx.Get(types.ContextFieldName_User_Role.String())
 		if !exists {
 			exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
 				"Cannot find the userRole, " +
@@ -65,7 +65,7 @@ Note: If the allowedRoles is empty, all types of the UserRole will pass
 */
 func AllowedUserRolesMiddleware(allowedRoles []enums.UserRole) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		currentUserRoleValue, exists := ctx.Get(constants.ContextFieldName_User_Role.String())
+		currentUserRoleValue, exists := ctx.Get(types.ContextFieldName_User_Role.String())
 		if !exists {
 			exception := exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
 				"Cannot find the userRole, " +

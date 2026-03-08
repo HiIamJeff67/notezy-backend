@@ -43,15 +43,53 @@ type UpdateMyAccountReqDto struct {
 	]
 }
 
+type BindGoogleAccountReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			AuthorizationCode string `json:"authorizationCode" validate:"required"`
+		},
+		any,
+	]
+}
+
+type UnbindGoogleAccountReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			AuthCode string `json:"authCode" validate:"required"`
+		},
+		any,
+	]
+}
+
 /* ============================== Response DTO ============================== */
 
 type GetMyAccountResDto struct {
-	CountryCode       enums.CountryCode `json:"countryCode"`
-	PhoneNumber       *string           `json:"phoneNumber"`
-	GoogleCredential  *string           `json:"googleCrendential"`
-	DiscordCredential *string           `json:"discordCrendential"`
+	CountryCode       *enums.CountryCode `json:"countryCode"`
+	PhoneNumber       *string            `json:"phoneNumber"`
+	GoogleCredential  *string            `json:"googleCrendential"`
+	DiscordCredential *string            `json:"discordCrendential"`
 }
 
 type UpdateMyAccountResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type BindGoogleAccountResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type UnbindGoogleAccountResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }

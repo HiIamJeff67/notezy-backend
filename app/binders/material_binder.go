@@ -51,7 +51,7 @@ func (b *MaterialBinder) BindGetMyMaterialById(controllerFunc types.ControllerFu
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -80,7 +80,7 @@ func (b *MaterialBinder) BindGetMyMaterialAndItsParentById(controllerFunc types.
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -109,7 +109,7 @@ func (b *MaterialBinder) BindGetMyMaterialsByParentSubShelfId(controllerFunc typ
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -143,7 +143,7 @@ func (b *MaterialBinder) BindGetAllMyMaterialsByRootShelfId(controllerFunc types
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -172,14 +172,14 @@ func (b *MaterialBinder) BindCreateTextbookMaterial(controllerFunc types.Control
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		userPublicId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_PublicId)
+		userPublicId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_PublicId)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -202,14 +202,14 @@ func (b *MaterialBinder) BindCreateNotebookMaterial(controllerFunc types.Control
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		userPublicId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_PublicId)
+		userPublicId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_PublicId)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -232,7 +232,7 @@ func (b *MaterialBinder) BindUpdateMyMaterialById(controllerFunc types.Controlle
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -255,14 +255,14 @@ func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.Con
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		userPublicId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_PublicId)
+		userPublicId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_PublicId)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -362,14 +362,14 @@ func (b *MaterialBinder) BindSaveMyNotebookMaterialById(controllerFunc types.Con
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		userPublicId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_PublicId)
+		userPublicId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_PublicId)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -469,7 +469,7 @@ func (b *MaterialBinder) BindMoveMyMaterialById(controllerFunc types.ControllerF
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -492,7 +492,7 @@ func (b *MaterialBinder) BindMoveMyMaterialsByIds(controllerFunc types.Controlle
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -515,7 +515,7 @@ func (b *MaterialBinder) BindRestoreMyMaterialById(controllerFunc types.Controll
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -538,7 +538,7 @@ func (b *MaterialBinder) BindRestoreMyMaterialsByIds(controllerFunc types.Contro
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -561,7 +561,7 @@ func (b *MaterialBinder) BindDeleteMyMaterialById(controllerFunc types.Controlle
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return
@@ -584,7 +584,7 @@ func (b *MaterialBinder) BindDeleteMyMaterialsByIds(controllerFunc types.Control
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, constants.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
 			exception.Log().SafelyResponseWithJSON(ctx)
 			return

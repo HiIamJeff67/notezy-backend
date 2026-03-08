@@ -24,9 +24,21 @@ func configureDevelopmentAuthRoutes() {
 			),
 		)
 		authRoutes.POST(
+			"/registerViaGoogle",
+			authModule.Binder.BindRegisterViaGoogle(
+				authModule.Controller.RegisterViaGoogle,
+			),
+		)
+		authRoutes.POST(
 			"/login",
 			authModule.Binder.BindLogin(
 				authModule.Controller.Login,
+			),
+		)
+		authRoutes.POST(
+			"/loginViaGoogle",
+			authModule.Binder.BindLoginViaGoogle(
+				authModule.Controller.LoginViaGoogle,
 			),
 		)
 		authRoutes.POST(

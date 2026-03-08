@@ -27,10 +27,10 @@ func PartialUpdatePreprocess[T any, S any](values T, setNull *map[string]bool, e
 	if setNull != nil {
 		for fieldName, shouldSetNull := range *setNull {
 			if shouldSetNull {
-				// 在 existingValues 中找到對應欄位
+				// find corresponded fields in existingValues
 				existingField, found := findFieldByName(existingReflect, existingType, fieldName)
 				if found && existingField.CanSet() {
-					// 設置為零值（對於 pointer 就是 nil）
+					// if the pointer is nil, set it as to a zero value
 					existingField.Set(reflect.Zero(existingField.Type()))
 				}
 			}
