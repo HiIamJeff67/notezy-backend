@@ -8,7 +8,6 @@ import (
 	caches "notezy-backend/app/caches"
 	contexts "notezy-backend/app/contexts"
 	exceptions "notezy-backend/app/exceptions"
-	logs "notezy-backend/app/logs"
 	tokens "notezy-backend/app/tokens"
 	types "notezy-backend/shared/types"
 )
@@ -44,8 +43,6 @@ func CSRFMiddleware() gin.HandlerFunc {
 			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
-
-		logs.Info("continue?!")
 
 		if tokens.IsCSRFTokenExpiringSoon(claims) {
 			newToken, exception := tokens.GenerateCSRFToken()

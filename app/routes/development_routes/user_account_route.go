@@ -27,6 +27,7 @@ func configureDevelopmentUserAccountRoutes() {
 		)
 		userAccountRoutes.PUT(
 			"/updateMyAccount",
+			middlewares.CSRFMiddleware(),
 			userAccountModule.Binder.BindUpdateMyAccount(
 				userAccountModule.Controller.UpdateMyAccount,
 			),

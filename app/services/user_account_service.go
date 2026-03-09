@@ -69,10 +69,17 @@ func (s *UserAccountService) GetMyAccount(
 	}
 
 	return &dtos.GetMyAccountResDto{
-		CountryCode:       userAccount.CountryCode,
-		PhoneNumber:       userAccount.PhoneNumber,
-		GoogleCredential:  userAccount.GoogleCredential,
-		DiscordCredential: userAccount.DiscordCredential,
+		CountryCode:         userAccount.CountryCode,
+		PhoneNumber:         userAccount.PhoneNumber,
+		GoogleCredential:    userAccount.GoogleCredential,
+		DiscordCredential:   userAccount.DiscordCredential,
+		RootShelfCount:      userAccount.RootShelfCount,
+		BlockPackCount:      userAccount.BlockPackCount,
+		BlockCount:          userAccount.BlockCount,
+		MaterialCount:       userAccount.MaterialCount,
+		WorkflowCount:       userAccount.WorkflowCount,
+		AdditionalItemCount: userAccount.AdditionalItemCount,
+		UpdatedAt:           userAccount.UpdatedAt,
 	}, nil
 }
 

@@ -36,7 +36,7 @@ type UpdateMyAccountReqDto struct {
 			PartialUpdateDto[struct {
 				CountryCode *enums.CountryCode `json:"countryCode" validate:"omitnil,iscountrycode"`
 				BackupEmail *string            `json:"backupEmail" validate:"omitnil,email"`
-				PhoneNumber *string            `json:"phoneNumber" validate:"omitnil,max=0,max=15,isnumberstring"`
+				PhoneNumber *string            `json:"phoneNumber" validate:"omitnil,min=1,max=15,isnumberstring"`
 			}]
 		},
 		any,
@@ -76,10 +76,17 @@ type UnbindGoogleAccountReqDto struct {
 /* ============================== Response DTO ============================== */
 
 type GetMyAccountResDto struct {
-	CountryCode       *enums.CountryCode `json:"countryCode"`
-	PhoneNumber       *string            `json:"phoneNumber"`
-	GoogleCredential  *string            `json:"googleCrendential"`
-	DiscordCredential *string            `json:"discordCrendential"`
+	CountryCode         *enums.CountryCode `json:"countryCode"`
+	PhoneNumber         *string            `json:"phoneNumber"`
+	GoogleCredential    *string            `json:"googleCrendential"`
+	DiscordCredential   *string            `json:"discordCrendential"`
+	RootShelfCount      int32              `json:"rootShelfCount"`
+	BlockPackCount      int32              `json:"blockPackCount"`
+	BlockCount          int32              `json:"blockCount"`
+	MaterialCount       int32              `json:"materialCount"`
+	WorkflowCount       int32              `json:"workflowCount"`
+	AdditionalItemCount int32              `json:"additionalItemCount"`
+	UpdatedAt           time.Time          `json:"updatedAt"`
 }
 
 type UpdateMyAccountResDto struct {
