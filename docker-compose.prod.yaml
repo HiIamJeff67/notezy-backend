@@ -1,0 +1,63 @@
+services:
+  notezy-redis:
+    container_name: ${DOCKER_REDIS_SERVICE_NAME}
+    # restart: always
+    image: redis:7.2.3-alpine
+    volumes:
+      - redis-data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+  notezy-db:
+    # should be the same as DB_HOST(hosting service)
+    container_name: ${DOCKER_DB_SERVICE_NAME}
+    # restart: always
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  notezy-api:
+    container_name: ${DOCKER_API_SERVICE_NAME}
+    image: ${DOCKER_API_SERVICE_NAME}:latest
+    # restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    # entrypoint: ["${ENTRYPOINT_CMD}"]
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: ${DOCKER_DB_PORT}
+      GIN_DOMAIN: ${GIN_DOMAIN}
+      GIN_PORT: ${GIN_PORT}
+      JWT_ACCESS_TOKEN_SECRET_KEY: ${JWT_ACCESS_TOKEN_SECRET_KEY}
+      JWT_REFRESH_TOKEN_SECRET_KEY: ${JWT_REFRESH_TOKEN_SECRET_KEY}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      NOTEZY_OFFICIAL_NAME: ${NOTEZY_OFFICIAL_NAME}
+      NOTEZY_OFFICIAL_GMAIL: ${NOTEZY_OFFICIAL_GMAIL}
+      NOTEZY_OFFICIAL_GOOGLE_PASSWORD: ${NOTEZY_OFFICIAL_GOOGLE_PASSWORD}
+      NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD: ${NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD}
+      ALLOWED_DOMAINS: ${ALLOWED_DOMAINS}
+      OAUTH_GOOGLE_CLIENT_ID: ${OAUTH_GOOGLE_CLIENT_ID}
+      OAUTH_GOOGLE_CLIENT_SECRET: ${OAUTH_GOOGLE_CLIENT_SECRET}
+      OAUTH_GOOGLE_REDIRECT_URL: ${OAUTH_GOOGLE_REDIRECT_URL}
+    ports:
+      - "${GIN_PORT}:${DOCKER_GIN_PORT}"
+    depends_on:
+      notezy-db:
+        condition: service_healthy
+
+volumes:
+  redis-data:
+    name: notezy-backend-redis-data
+  postgres-data:
+    name: notezy-backend-postgres-data
