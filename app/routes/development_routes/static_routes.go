@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	logs "notezy-backend/app/logs"
+	traces "notezy-backend/app/traces"
 )
 
 func configureStaticRoutes() {
@@ -22,7 +23,7 @@ func configureStaticRoutes() {
 				if _, err := os.Stat(filePath); os.IsNotExist(err) {
 					filePath = "./global/images/avatars/userAvatar1.png"
 				}
-				logs.FInfo("download file")
+				logs.FInfo(traces.GetTrace(0).FileLineString(), "download file")
 
 				ctx.File(filePath)
 			})

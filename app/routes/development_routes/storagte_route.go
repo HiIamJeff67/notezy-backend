@@ -9,6 +9,7 @@ import (
 	logs "notezy-backend/app/logs"
 	middlewares "notezy-backend/app/middlewares"
 	storages "notezy-backend/app/storages"
+	"notezy-backend/app/traces"
 )
 
 func configureStorageRoutes() {
@@ -30,8 +31,8 @@ func configureStorageRoutes() {
 					return
 				}
 				defer rc.Close()
-				logs.Info("Successfully get the files!")
-				logs.Info("Details: ", object)
+				logs.Info(traces.GetTrace(0).FileLineString(), "Successfully get the files!")
+				logs.Info(traces.GetTrace(0).FileLineString(), "Details: ", object)
 				ctx.Data(http.StatusOK, object.ContentType, object.Data)
 			},
 		)

@@ -3,6 +3,7 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
+	traces "notezy-backend/app/traces"
 
 	"github.com/google/uuid"
 )
@@ -50,7 +51,7 @@ func (d *BlockGroupExceptionDomain) MoreThanOneBlockGroupDetected(expectedBlockG
 		IsInternal:     true,
 		Message:        fmt.Sprintf("More than 1 block group detected which is invalid in this operation, got %s and %s", expectedBlockGroupId, anotherBlockGroupId),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -62,7 +63,7 @@ func (d *BlockGroupExceptionDomain) NoRootBlockInBlockGroup(blockGroupId uuid.UU
 		IsInternal:     true,
 		Message:        fmt.Sprintf("No root blocks in the block group of %s", blockGroupId),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -74,7 +75,7 @@ func (d *BlockGroupExceptionDomain) RepeatedRootBlockInBlockGroupDetected(blockG
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Block group of %s has multiple blocks as the root block, one of the id of the repeated block is %s", blockGroupId, blockId),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -86,7 +87,7 @@ func (d *BlockGroupExceptionDomain) BrokenBlockGroupsLinkedListDetected(blockPac
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Block groups of ids within %v in block pack of %s is broken and not in a valid linked list structure", blockGroupIds, blockPackId),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -98,6 +99,6 @@ func (d *BlockGroupExceptionDomain) DuplicateBlockGroupsWithSamePrevBlockGroupId
 		IsInternal:     true,
 		Message:        fmt.Sprintf("There're more than 2 block groups in block pack of %s have the same prev block group id", blockPackId),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }

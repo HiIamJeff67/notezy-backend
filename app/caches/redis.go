@@ -11,6 +11,7 @@ import (
 	redislibraries "notezy-backend/app/caches/libraries"
 	exceptions "notezy-backend/app/exceptions"
 	logs "notezy-backend/app/logs"
+	traces "notezy-backend/app/traces"
 	util "notezy-backend/app/util"
 	types "notezy-backend/shared/types"
 )
@@ -57,15 +58,15 @@ func ConnectToRedis(config CacheManagerConfig) *redis.Client {
 	redisMapMutex.Lock()
 	defer redisMapMutex.Unlock()
 	if _, ok := RedisClientToConfig[redisClient]; !ok {
-		logs.FInfo("Storing redis client server of %s into the RedisClientToConfig...", strconv.Itoa(config.DB))
+		logs.FInfo(traces.GetTrace(0).FileLineString(), "Storing redis client server of %s into the RedisClientToConfig...", strconv.Itoa(config.DB))
 		RedisClientToConfig[redisClient] = config
 	}
 	if _, ok := RedisClientMap[config.DB]; !ok {
-		logs.FInfo("Storing redis client server of %s into the RedisClientMap...", strconv.Itoa(config.DB))
+		logs.FInfo(traces.GetTrace(0).FileLineString(), "Storing redis client server of %s into the RedisClientMap...", strconv.Itoa(config.DB))
 		RedisClientMap[config.DB] = redisClient
 	}
 
-	logs.FInfo("Redis client server of %s connected\n", strconv.Itoa(config.DB))
+	logs.FInfo(traces.GetTrace(0).FileLineString(), "Redis client server of %s connected\n", strconv.Itoa(config.DB))
 
 	return redisClient
 }
@@ -84,12 +85,12 @@ func DisconnectToRedis(redisClient *redis.Client) bool {
 
 	redisMapMutex.Lock()
 	defer redisMapMutex.Unlock()
-	logs.FInfo("Deleting redis client server of %s into the RedisClientToConfig...", strconv.Itoa(config.DB))
+	logs.FInfo(traces.GetTrace(0).FileLineString(), "Deleting redis client server of %s into the RedisClientToConfig...", strconv.Itoa(config.DB))
 	delete(RedisClientToConfig, redisClient)
-	logs.FInfo("Deleting redis client server of %s into the RedisClientMap...", strconv.Itoa(config.DB))
+	logs.FInfo(traces.GetTrace(0).FileLineString(), "Deleting redis client server of %s into the RedisClientMap...", strconv.Itoa(config.DB))
 	delete(RedisClientMap, config.DB)
 
-	logs.FInfo("Redis client server of %s connected\n", strconv.Itoa(config.DB))
+	logs.FInfo(traces.GetTrace(0).FileLineString(), "Redis client server of %s connected\n", strconv.Itoa(config.DB))
 
 	return true
 }
@@ -169,7 +170,7 @@ func FlushCacheLibraries() *exceptions.Exception {
 		}
 
 		redisClient.Do("FUNCTION", "FLUSH")
-		logs.FDebug("Flushed all the functions across all libraries in server %s of %d", serverName, serverNumber)
+		logs.FDebug(traces.GetTrace(0).FileLineString(), "Flushed all the functions across all libraries in server %s of %d", serverName, serverNumber)
 	}
 
 	return nil
@@ -188,7 +189,7 @@ func LoadRateLimitRecordCacheLibraries() *exceptions.Exception {
 				WithError(err)
 		}
 
-		logs.FInfo("Reloaded all the functions in library of %s from lua scripts in server %s of %d",
+		logs.FInfo(traces.GetTrace(0).FileLineString(), "Reloaded all the functions in library of %s from lua scripts in server %s of %d",
 			redislibraries.RateLimitRecordLibrary,
 			serverName,
 			serverNumber,
@@ -211,7 +212,7 @@ func LoadUserQuotaCacheLibraries() *exceptions.Exception {
 				WithError(err)
 		}
 
-		logs.FInfo("Reloaded all the functions in library of %s from lua scripts in server number of %d",
+		logs.FInfo(traces.GetTrace(0).FileLineString(), "Reloaded all the functions in library of %s from lua scripts in server number of %d",
 			redislibraries.UserQuotaLibrary,
 			serverNumber,
 		)

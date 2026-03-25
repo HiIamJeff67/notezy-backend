@@ -9,6 +9,7 @@ import (
 
 	caches "notezy-backend/app/caches"
 	logs "notezy-backend/app/logs"
+	traces "notezy-backend/app/traces"
 	constants "notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
 )
@@ -99,7 +100,7 @@ func (hrl *HybridRateLimiter) reappendTasks(failedTasks map[string]HybridRateLim
 				MaxRetries:          task.MaxRetries,
 			}
 		} else {
-			logs.FWarn("Dropping task for key %s after %d retries", key, task.MaxRetries)
+			logs.FWarn(traces.GetTrace(0).FileLineString(), "Dropping task for key %s after %d retries", key, task.MaxRetries)
 		}
 	}
 }
@@ -127,7 +128,7 @@ func (hrl *HybridRateLimiter) batchSync() {
 		for userIdStr, task := range fetchedPendingTasks {
 			userId, err := uuid.Parse(userIdStr)
 			if err != nil {
-				logs.FError("Failed to parse user ID %s: %v", userIdStr, err)
+				logs.FError(traces.GetTrace(0).FileLineString(), "Failed to parse user ID %s: %v", userIdStr, err)
 				continue
 			}
 
@@ -144,10 +145,10 @@ func (hrl *HybridRateLimiter) batchSync() {
 		}
 
 		if err := caches.BatchSynchronizeRateLimitRecordCachesByUserIds(userDtos, hrl.BackendServerName); err != nil {
-			logs.FError("Failed to batch sync user rate limits to Redis: %v", err)
+			logs.FError(traces.GetTrace(0).FileLineString(), "Failed to batch sync user rate limits to Redis: %v", err)
 			hrl.reappendTasks(fetchedPendingTasks)
 		} else if len(userDtos) > 0 {
-			logs.FDebug("Batch synced %d user rate limits to Redis", len(userDtos))
+			logs.FDebug(traces.GetTrace(0).FileLineString(), "Batch synced %d user rate limits to Redis", len(userDtos))
 		}
 	} else {
 		clientDtos := make([]struct {
@@ -169,10 +170,10 @@ func (hrl *HybridRateLimiter) batchSync() {
 		}
 
 		if err := caches.BatchSynchronizeRateLimitRecordCachesByFingerprints(clientDtos, hrl.BackendServerName); err != nil {
-			logs.FError("Failed to batch sync client IP rate limits to Redis: %v", err)
+			logs.FError(traces.GetTrace(0).FileLineString(), "Failed to batch sync client IP rate limits to Redis: %v", err)
 			hrl.reappendTasks(fetchedPendingTasks)
 		} else if len(clientDtos) > 0 {
-			logs.FDebug("Batch synced %d client IP rate limits to Redis", len(clientDtos))
+			logs.FDebug(traces.GetTrace(0).FileLineString(), "Batch synced %d client IP rate limits to Redis", len(clientDtos))
 		}
 	}
 }
@@ -221,14 +222,14 @@ func (hrl *HybridRateLimiter) AllowNByFingerprint(fingerprint string, now time.T
 
 	// 1. Use the Limiter from the rate utility for fast checking
 	if !hrl.Limiter.AllowN(now, n) {
-		logs.FDebug("Request blocked by local rate limiter for client IP: %s, requested: %d", fingerprint, n)
+		logs.FDebug(traces.GetTrace(0).FileLineString(), "Request blocked by local rate limiter for client IP: %s, requested: %d", fingerprint, n)
 		return false, 0
 	}
 
 	// 2. Use the rate limit record in redis cache to check if the request from the same source has exceeded some certain count
 	remaining := hrl.checkBucketLimitByFingerprint(fingerprint, int32(n))
 	if remaining < 0 {
-		logs.FDebug("Request blocked by global rate limiter for client IP: %s, requested: %d", fingerprint, n)
+		logs.FDebug(traces.GetTrace(0).FileLineString(), "Request blocked by global rate limiter for client IP: %s, requested: %d", fingerprint, n)
 		return false, 0
 	}
 
@@ -257,7 +258,7 @@ func (hrl *HybridRateLimiter) checkBucketLimitByUserId(userId uuid.UUID, fingerp
 		totalTokensUsed += rateLimitRecordCache.NumOfTokens
 	}
 
-	// logs.Info("The current tokens used by the user: ", totalTokensUsed)
+	// logs.Info(traces.GetTrace(0).FileLineString(),"The current tokens used by the user: ", totalTokensUsed)
 
 	return hrl.UserLimit - totalTokensUsed - n
 }
@@ -272,14 +273,14 @@ func (hrl *HybridRateLimiter) AllowNByUserId(userId uuid.UUID, fingerprint strin
 
 	// 1. Use the Limiter from the rate utility for fast checking
 	if !hrl.Limiter.AllowN(now, n) {
-		logs.FDebug("Request blocked by local rate limiter for user ID: %s, requested: %d", userId.String(), n)
+		logs.FDebug(traces.GetTrace(0).FileLineString(), "Request blocked by local rate limiter for user ID: %s, requested: %d", userId.String(), n)
 		return false, 0
 	}
 
 	// 2. Use the rate limit record in redis cache to check if the request from the same source has exceeded some certain count
 	remaining := hrl.checkBucketLimitByUserId(userId, fingerprint, int32(n))
 	if remaining < 0 {
-		logs.FDebug("Request blocked by global rate limiter for user ID: %s, requested: %d", userId.String(), n)
+		logs.FDebug(traces.GetTrace(0).FileLineString(), "Request blocked by global rate limiter for user ID: %s, requested: %d", userId.String(), n)
 		return false, 0
 	}
 
@@ -295,7 +296,7 @@ func (hrl *HybridRateLimiter) Allow(key string) (bool, int32) {
 	if hrl.IsAuthorizedLimiter {
 		userId, err := uuid.Parse(key)
 		if err != nil {
-			logs.FError("Invalid user ID format: %s", key)
+			logs.FError(traces.GetTrace(0).FileLineString(), "Invalid user ID format: %s", key)
 			return false, 0
 		}
 		return hrl.AllowByUserId(userId, "")
@@ -308,7 +309,7 @@ func (hrl *HybridRateLimiter) AllowN(key string, now time.Time, n int) (bool, in
 	if hrl.IsAuthorizedLimiter {
 		userId, err := uuid.Parse(key)
 		if err != nil {
-			logs.FError("Invalid user ID format: %s", key)
+			logs.FError(traces.GetTrace(0).FileLineString(), "Invalid user ID format: %s", key)
 			return false, 0
 		}
 		return hrl.AllowNByUserId(userId, "", now, n)

@@ -3,6 +3,7 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
+	traces "notezy-backend/app/traces"
 )
 
 const (
@@ -36,7 +37,7 @@ func (d *ContextExceptionDomain) FailedToGetContextFieldOfSpecificName(name stri
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to find and fetch the context field with name of %s since it is not exist in the current context", name),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -48,7 +49,7 @@ func (d *ContextExceptionDomain) FailedToConvertContextFieldToSpecificType(typeN
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to convert context field from type of any to type of %s", typeName),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -60,7 +61,7 @@ func (d *ContextExceptionDomain) FailedToGetCorrectContextValue(v interface{}) *
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to get correct context value, got %v instead", v),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -72,7 +73,7 @@ func (d *ContextExceptionDomain) FailedToConvertContextToGinContext() *Exception
 		IsInternal:     true,
 		Message:        "Failed to convert from context.Context to gin.Context",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -84,7 +85,7 @@ func (d *ContextExceptionDomain) FailedToConvertGinContextToContext() *Exception
 		IsInternal:     true,
 		Message:        "Failed to convert from gin.Context to context.Context",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -96,6 +97,6 @@ func (d *ContextExceptionDomain) MaxContextBodySizeExceeded(sizeKiloBytes int64,
 		IsInternal:     true,
 		Message:        fmt.Sprintf("The context body size of %d KB is larger than the maximum of %d KB", sizeKiloBytes, maxSizeKiloByte),
 		HTTPStatusCode: http.StatusRequestEntityTooLarge,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }

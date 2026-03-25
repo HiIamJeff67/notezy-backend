@@ -2,6 +2,7 @@ package exceptions
 
 import (
 	"net/http"
+	traces "notezy-backend/app/traces"
 )
 
 const (
@@ -37,6 +38,6 @@ func (d *DataStructureLibExceptionDomain) FailedToManipulateQueue() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to manipulate with the queue due to some reason or data structure error",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }

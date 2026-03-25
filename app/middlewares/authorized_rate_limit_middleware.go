@@ -12,6 +12,7 @@ import (
 	exceptions "notezy-backend/app/exceptions"
 	ratelimiter "notezy-backend/app/lib/ratelimiter"
 	logs "notezy-backend/app/logs"
+	traces "notezy-backend/app/traces"
 	types "notezy-backend/shared/types"
 )
 
@@ -48,7 +49,8 @@ func InitAuthorizedRateLimiter(config AuthorizedRateLimitConfig) {
 		true,
 	)
 
-	logs.FInfo("Authorized rate limiter initialized with rate: %v, burst: %d, user limit: %d, window: %v",
+	logs.FInfo(traces.GetTrace(0).FileLineString(),
+		"Authorized rate limiter initialized with rate: %v, burst: %d, user limit: %d, window: %v",
 		config.RateLimit, config.Burst, config.UserLimit, config.WindowDuration)
 }
 
@@ -78,7 +80,7 @@ func AuthorizedRateLimitMiddleware(config ...AuthorizedRateLimitConfig) gin.Hand
 		if !allowed {
 			setRateLimitHeaders(ctx, remaining, authorizedRateLimiter)
 
-			logs.FDebug("Rate limit exceeded for user: %s, fingerprint: %s", userId.String(), fingerprint)
+			logs.FDebug(traces.GetTrace(0).FileLineString(), "Rate limit exceeded for user: %s, fingerprint: %s", userId.String(), fingerprint)
 			ctx.JSON(http.StatusTooManyRequests, exceptions.Auth.PermissionDeniedDueToTooManyRequests().GetGinH())
 			ctx.Abort()
 			return
@@ -110,6 +112,6 @@ func StopAuthorizedRateLimiter() {
 	if authorizedRateLimiter != nil {
 		authorizedRateLimiter.Stop()
 		authorizedRateLimiter = nil
-		logs.FInfo("Authorized rate limiter stopped")
+		logs.FInfo(traces.GetTrace(0).FileLineString(), "Authorized rate limiter stopped")
 	}
 }

@@ -3,6 +3,7 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
+	traces "notezy-backend/app/traces"
 
 	"github.com/google/uuid"
 )
@@ -48,6 +49,6 @@ func (d *BlockPackExceptionDomain) NoRootBlockGroupInBlockPack(blockPackId uuid.
 		IsInternal:     true,
 		Message:        fmt.Sprintf("No root block groups in the block pack of %s", blockPackId),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }

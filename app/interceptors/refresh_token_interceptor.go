@@ -9,6 +9,7 @@ import (
 	cookies "notezy-backend/app/cookies"
 	ratelimiter "notezy-backend/app/lib/ratelimiter"
 	"notezy-backend/app/logs"
+	"notezy-backend/app/traces"
 	"notezy-backend/shared/types"
 )
 
@@ -86,7 +87,7 @@ func RefreshTokenInterceptor() gin.HandlerFunc {
 		cookies.AccessTokenCookieHandler.Set(ctx, accessTokenStr)
 		originalResponse["newAccessToken"] = accessTokenStr
 		originalResponse["newCSRFToken"] = csrfTokenStr
-		logs.Info("new CSRF token: ", csrfTokenStr)
+		logs.Info(traces.GetTrace(0).FileLineString(), "new CSRF token: ", csrfTokenStr)
 		modifiedResponse, err := json.Marshal(originalResponse)
 		if err != nil {
 			writer.FlushToOriginalWriter()

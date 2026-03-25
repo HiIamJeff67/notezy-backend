@@ -6,8 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"path/filepath"
-	"runtime"
 	"strings"
 	"time"
 
@@ -17,6 +15,7 @@ import (
 	"github.com/vektah/gqlparser/v2/gqlerror"
 
 	logs "notezy-backend/app/logs"
+	traces "notezy-backend/app/traces"
 	types "notezy-backend/shared/types"
 )
 
@@ -72,49 +71,6 @@ func IsExceptionCode(exceptionCode int) bool {
 	return exceptionCode >= MinExceptionCode && exceptionCode <= MaxExceptionCode
 }
 
-/* ============================== Location & StackTrace for Exceptions ============================== */
-
-type StackFrame struct {
-	File     string `json:"file"`
-	Line     int    `json:"line"`
-	Function string `json:"function"`
-	Package  string `json:"package"`
-}
-
-func GetStackTrace(skip int, maxTraceDepth int) []StackFrame {
-	var frames []StackFrame
-
-	for i := skip; i < skip+maxTraceDepth; i++ {
-		pc, file, line, ok := runtime.Caller(i)
-		if !ok {
-			break // the end of the trace stack
-		}
-
-		funcName := "unknown"
-		packageName := "unknown"
-
-		if fn := runtime.FuncForPC(pc); fn != nil {
-			fullFuncName := fn.Name()
-			parts := strings.Split(fullFuncName, ".")
-			if len(parts) >= 2 {
-				packageName = strings.Join(parts[:len(parts)-1], ".")
-				funcName = parts[len(parts)-1]
-			} else {
-				funcName = fullFuncName
-			}
-		}
-
-		frames = append(frames, StackFrame{
-			File:     filepath.Base(file),
-			Line:     line,
-			Function: funcName,
-			Package:  packageName,
-		})
-	}
-
-	return frames
-}
-
 /* ============================== General Exception Structure Definition ============================== */
 
 type Exception struct {
@@ -126,8 +82,8 @@ type Exception struct {
 	HTTPStatusCode int             `json:"httpStatusCode"` // http status code
 	Details        any             `json:"details"`        // additional error details (optional)
 	Error          error           `json:"error"`          // original error (optional)
-	LastStackFrame *StackFrame     `json:"lastStackFrame"` // the last location where the exception happened
-	StackTrace     []StackFrame    `json:"stackTrace"`     // the entire path to where the exception actually take place
+	LastTrace      traces.Trace    `json:"lastTrace"`      // the last location where the exception happened
+	TraceStack     []traces.Trace  `json:"tracesStack"`    // the entire path to where the exception actually take place
 }
 
 type ExceptionCompareOption struct {
@@ -141,11 +97,11 @@ type ExceptionCompareOption struct {
 	WithError          bool
 }
 
-func (e *Exception) GetString() string {
+func (e *Exception) String() string {
 	if e.Error != nil {
-		return fmt.Sprintf("[%v]%s: %v", e.Code, e.Reason, e.Error)
+		return fmt.Sprintf("[%v]%s:%s(%v)", e.Code, e.Reason, e.Message, e.Error.Error())
 	}
-	return fmt.Sprintf("[%v]%s: %s", e.Code, e.Reason, e.Message)
+	return fmt.Sprintf("[%v]%s:%s", e.Code, e.Reason, e.Message)
 }
 
 func (e *Exception) GetGinH() *gin.H {
@@ -231,33 +187,37 @@ func (e *Exception) WithNullableError(err error, fallBackConditionToErrorMessage
 }
 
 func (e *Exception) Log() *Exception {
-	if e.Error != nil {
-		logs.Alert(e)
-		logs.FError("[%d]%s: %s(%v)", e.Code, e.Reason, e.Message, e.Error.Error())
-	} else {
-		logs.FError("[%d]%s %s", e.Code, e.Reason, e.Message)
+	logs.Error(traces.GetTrace(1).FileLineString(), e.String())
+	return e
+}
+
+func (e *Exception) LogTraceStack(maxTraceDepth int) *Exception {
+	if len(e.TraceStack) == 0 {
+		e.TraceStack = traces.GetTraces(1, maxTraceDepth)
 	}
+	logs.Trace(traces.GetTrace(1).FileLineString(), e.TraceStack)
 	return e
 }
 
 func (e *Exception) Panic() {
 	if e.Error != nil {
-		panic(fmt.Sprintf("[%d]%s: %s(%v)", e.Code, e.Reason, e.Message, e.Error.Error()))
+		panic(fmt.Sprintf("[%d]%s:%s(%v)", e.Code, e.Reason, e.Message, e.Error.Error()))
 	} else {
-		panic(fmt.Sprintf("[%d]%s (%v)", e.Code, e.Reason, e.Message))
+		panic(fmt.Sprintf("[%d]%s:(%v)", e.Code, e.Reason, e.Message))
 	}
 }
 
 func (e *Exception) PanicVerbose() {
 	if e.Error != nil {
-		panic(fmt.Sprintf("[%d]%s: %v", e.Code, e.Reason, e.Error.Error()))
+		panic(fmt.Sprintf("[%d]%s:%v", e.Code, e.Reason, e.Error.Error()))
 	} else {
 		panic(fmt.Sprintf("[%d]%s", e.Code, e.Reason))
 	}
 }
 
 func (e *Exception) Trace(skip int, maxTraceDepth int) {
-	e.StackTrace = GetStackTrace(skip, maxTraceDepth)
+	// trace from the caller who call this method
+	e.TraceStack = traces.GetTraces(skip+1, maxTraceDepth) // add 1 to avoid including this method
 }
 
 func (e *Exception) ToError() error {
@@ -366,7 +326,7 @@ func CompareCommonExceptions(e1 *Exception, e2 *Exception, withMessage bool) boo
 
 /* ============================== General Exception Define in the Top Layer ============================== */
 
-func UndefinedError(optionalMessage ...string) *Exception {
+func UndefinedError(optionalMessage ...string) *Exception { // 0th caller
 	message := "Undefined error happened"
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
@@ -379,12 +339,12 @@ func UndefinedError(optionalMessage ...string) *Exception {
 		IsInternal:     true,
 		Message:        message,
 		HTTPStatusCode: http.StatusNotImplemented,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
 func NotImplemented(optionalMessage ...string) *Exception {
-	message := "Not yet implemented the methods"
+	message := "Not yet implemented"
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
 	}
@@ -396,7 +356,7 @@ func NotImplemented(optionalMessage ...string) *Exception {
 		IsInternal:     true,
 		Message:        message,
 		HTTPStatusCode: http.StatusNotImplemented,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -413,7 +373,7 @@ func InternalServerWentWrong(originalException *Exception, optionalMessage ...st
 		IsInternal:     originalException != nil && originalException.IsInternal,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 	if originalException == nil {
 		return exception
@@ -442,7 +402,7 @@ func Timeout(time time.Duration, optionalMessage ...string) *Exception {
 		IsInternal:     false,
 		Message:        message,
 		HTTPStatusCode: http.StatusRequestTimeout,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -459,7 +419,7 @@ func FatelPanic(optionalMessage ...string) *Exception {
 		IsInternal:     false,
 		Message:        message,
 		HTTPStatusCode: http.StatusRequestTimeout,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -483,7 +443,7 @@ func (d *DatabaseExceptionDomain) NotFound(optionalMessage ...string) *Exception
 		IsInternal:     false,
 		Message:        message,
 		HTTPStatusCode: http.StatusNotFound,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -500,7 +460,7 @@ func (d *DatabaseExceptionDomain) FailedToCreate(optionalMessage ...string) *Exc
 		IsInternal:     false,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -517,7 +477,7 @@ func (d *DatabaseExceptionDomain) FailedToUpdate(optionalMessage ...string) *Exc
 		IsInternal:     false,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -534,7 +494,7 @@ func (d *DatabaseExceptionDomain) FailedToDelete(optionalMessage ...string) *Exc
 		IsInternal:     false,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -546,7 +506,7 @@ func (d *DatabaseExceptionDomain) NoChanges() *Exception {
 		IsInternal:     false,
 		Message:        fmt.Sprintf("No Changes on %s", string(d._Prefix)),
 		HTTPStatusCode: http.StatusNotModified,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -563,7 +523,7 @@ func (d *DatabaseExceptionDomain) FailedToCommitTransaction(optionalMessage ...s
 		IsInternal:     true,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -589,7 +549,7 @@ func (d *GraphQLExceptionDomain) InvalidSourceInBatchFunction() *Exception {
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Invalid source field detected while working on jobs in the batch function of %s", d._Prefix),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -613,7 +573,7 @@ func (d *TypeExceptionDomain) InvalidInput(optionalMessage ...string) *Exception
 		IsInternal:     true,
 		Message:        message,
 		HTTPStatusCode: http.StatusBadRequest,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -630,7 +590,7 @@ func (d *TypeExceptionDomain) InvalidDto(optionalMessage ...string) *Exception {
 		IsInternal:     false,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -646,7 +606,7 @@ func (d *TypeExceptionDomain) InvalidType(value any) *Exception {
 			"actualType": fmt.Sprintf("%T", value),
 			"value":      value,
 		},
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace: traces.GetTrace(1),
 	}
 }
 
@@ -658,7 +618,7 @@ func (d *TypeExceptionDomain) FailedToCompileRegularExpression() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to compile regular expression",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -678,7 +638,7 @@ func (d *FileExceptionDomain) NoPermission(action string) *Exception {
 		IsInternal:     false,
 		Message:        fmt.Sprintf("You don't have any permission to %s", action),
 		HTTPStatusCode: http.StatusBadRequest,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -690,7 +650,7 @@ func (d *FileExceptionDomain) FileTooLarge(fileSize int64, maxFileSize int64) *E
 		IsInternal:     false,
 		Message:        fmt.Sprintf("File size of %d bytes is too large which excceed the max size of %d bytes", fileSize, maxFileSize),
 		HTTPStatusCode: http.StatusTooManyRequests,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -702,7 +662,7 @@ func (d *FileExceptionDomain) TooManyFiles(numberOfFiles int64) *Exception {
 		IsInternal:     false,
 		Message:        fmt.Sprintf("Passing %d of files is not allowed in this operation", numberOfFiles),
 		HTTPStatusCode: http.StatusTooManyRequests,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -714,7 +674,7 @@ func (d *FileExceptionDomain) CannotGetFileObjects() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to get file objects",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -726,7 +686,7 @@ func (d *FileExceptionDomain) CannotOpenFiles() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to open the files",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -738,7 +698,7 @@ func (d *FileExceptionDomain) CannotPeekFiles() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to peek the files",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -750,7 +710,7 @@ func (d *FileExceptionDomain) CannotCloseFiles() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to close the files",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -762,7 +722,7 @@ func (d *FileExceptionDomain) CannotReadFileBytes() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to read the file into bytes",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -774,7 +734,7 @@ func (d *FileExceptionDomain) FailedToDetectContentType() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to detect content type, the given file may be invalid",
 		HTTPStatusCode: http.StatusUnsupportedMediaType,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -795,7 +755,7 @@ func (d *TestExceptionDomain) FailedToMarshalTestdata(testdataPath string) *Exce
 		IsInternal:     true,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -809,7 +769,7 @@ func (d *TestExceptionDomain) FailedToUnmarshalTestdata(testdataPath string) *Ex
 		IsInternal:     true,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -823,6 +783,6 @@ func (d *TestExceptionDomain) InvalidTestdataJSONForm(testdataPath string) *Exce
 		IsInternal:     true,
 		Message:        message,
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }

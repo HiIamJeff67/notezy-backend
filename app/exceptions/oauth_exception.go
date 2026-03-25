@@ -3,6 +3,7 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
+	traces "notezy-backend/app/traces"
 )
 
 const (
@@ -43,7 +44,7 @@ func (d *OAuthExceptionDomain) InvalidAuthenticationCode(authenticationCode stri
 		IsInternal:     false,
 		Message:        fmt.Sprintf("Invalid or non-existent authentication code of %s", authenticationCode),
 		HTTPStatusCode: http.StatusBadRequest,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -55,7 +56,7 @@ func (d *OAuthExceptionDomain) FailedToExchangeToken(authenticationCode string) 
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to exchange token to google with authentication code of %s", authenticationCode),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -67,6 +68,6 @@ func (d *OAuthExceptionDomain) FailedToParseResposneFromOAuthThirdParty(thirdPar
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to parse response from oauth third party of %s", thirdPartyName),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }

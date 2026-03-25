@@ -5,6 +5,7 @@ import (
 
 	logs "notezy-backend/app/logs"
 	models "notezy-backend/app/models"
+	traces "notezy-backend/app/traces"
 	types "notezy-backend/shared/types"
 )
 
@@ -13,10 +14,10 @@ var viewAllAvailableDatabasesCommand = &cobra.Command{
 	Short: "View all the available databases.",
 	Long:  "Use some map to storing and printing the available databases in the project.",
 	Run: func(cmd *cobra.Command, args []string) {
-		logs.Info("All available databases:")
+		logs.Info(traces.GetTrace(0).FileLineString(), "All available databases:")
 
 		for key, value := range models.DatabaseNameToInstance {
-			logs.FInfo("database name: %v, instance: %v", key, value)
+			logs.FInfo(traces.GetTrace(0).FileLineString(), "database name: %v, instance: %v", key, value)
 		}
 	},
 }
@@ -42,29 +43,29 @@ var truncateDatabaseCommand = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		databaseNameStr, errorOfDatabaseFlag := cmd.Flags().GetString("database")
 		if errorOfDatabaseFlag != nil {
-			logs.FError("The --database flag must be specified")
+			logs.FError(traces.GetTrace(0).FileLineString(), "The --database flag must be specified")
 			return
 		}
 
 		tableNameStr, errorOfTableFlag := cmd.Flags().GetString("table")
 		if errorOfTableFlag != nil {
-			logs.FError("The --table flag must be specified")
+			logs.FError(traces.GetTrace(0).FileLineString(), "The --table flag must be specified")
 			return
 		}
 
 		tableName, isTableName := types.ConvertToTableName(tableNameStr)
 		if !isTableName {
-			logs.FError("The table name of %s is not in the database %s", tableNameStr, databaseNameStr)
+			logs.FError(traces.GetTrace(0).FileLineString(), "The table name of %s is not in the database %s", tableNameStr, databaseNameStr)
 			return
 		}
 
 		db, ok := models.DatabaseNameToInstance[tableNameStr]
 		if !ok {
-			logs.FError("The database instance is not exist")
+			logs.FError(traces.GetTrace(0).FileLineString(), "The database instance is not exist")
 			return
 		}
 
-		logs.FInfo("Start the process of truncating database table: %s", tableNameStr)
+		logs.FInfo(traces.GetTrace(0).FileLineString(), "Start the process of truncating database table: %s", tableNameStr)
 		db = models.ConnectToDatabase(models.DatabaseInstanceToConfig[db])
 		defer models.DisconnectToDatabase(db)
 
@@ -80,7 +81,7 @@ var migrateDatabaseCommand = &cobra.Command{
 		db := models.ConnectToDatabase(models.PostgresDatabaseConfig)
 		defer models.DisconnectToDatabase(db)
 
-		logs.FInfo("Start the process of migrating database schema to %v", models.PostgresDatabaseConfig.DBName)
+		logs.FInfo(traces.GetTrace(0).FileLineString(), "Start the process of migrating database schema to %v", models.PostgresDatabaseConfig.DBName)
 
 		if !models.MigrateEnumsToDatabase(db) {
 			return
@@ -105,7 +106,7 @@ var seedDatabaseCommand = &cobra.Command{
 		db := models.ConnectToDatabase(models.PostgresDatabaseConfig)
 		defer models.DisconnectToDatabase(db)
 
-		logs.FInfo("Start the process of seeding database default data to %v", models.PostgresDatabaseConfig.DBName)
+		logs.FInfo(traces.GetTrace(0).FileLineString(), "Start the process of seeding database default data to %v", models.PostgresDatabaseConfig.DBName)
 
 		if !models.SeedDefaultDataToDatabase(db) {
 			return

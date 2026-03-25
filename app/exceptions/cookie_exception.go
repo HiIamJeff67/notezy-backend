@@ -3,6 +3,7 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
+	traces "notezy-backend/app/traces"
 )
 
 const (
@@ -36,7 +37,7 @@ func (d *CookieExceptionDomain) NotFound(cookieName string) *Exception {
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Cannot find the %s in the cookie", convertCamelCaseToSentenceCase(cookieName)),
 		HTTPStatusCode: http.StatusNotFound,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -48,6 +49,6 @@ func (d *CookieExceptionDomain) FailedToCreate(cookieName string) *Exception {
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to set the %s to the cache", convertCamelCaseToSentenceCase(cookieName)),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }

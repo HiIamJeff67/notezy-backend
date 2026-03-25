@@ -3,6 +3,7 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
+	traces "notezy-backend/app/traces"
 )
 
 const (
@@ -62,7 +63,7 @@ func (d *UserExceptionDomain) DuplicateName(name string) *Exception {
 		IsInternal:     false,
 		Message:        fmt.Sprintf("The name of %s is already be used", name),
 		HTTPStatusCode: http.StatusConflict,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -74,6 +75,6 @@ func (d *UserExceptionDomain) DuplicateEmail(email string) *Exception {
 		IsInternal:     false,
 		Message:        fmt.Sprintf("The email of %s is already be used", email),
 		HTTPStatusCode: http.StatusConflict,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }

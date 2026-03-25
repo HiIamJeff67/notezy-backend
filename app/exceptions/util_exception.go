@@ -3,6 +3,7 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
+	traces "notezy-backend/app/traces"
 )
 
 const (
@@ -33,7 +34,7 @@ func (d *UtilExceptionDomain) FailedToGenerateHashValue() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to generate the hash value",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -47,7 +48,7 @@ func (d *UtilExceptionDomain) FailedToReadFile() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to read the file",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -59,7 +60,7 @@ func (d *UtilExceptionDomain) FailedToPreprocessPartialUpdate(values interface{}
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to preprocess partial update with value: %v, setNull: %v, and existingValues: %v", values, setNull, existingValues),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -73,7 +74,7 @@ func (d *UtilExceptionDomain) InvalidLoginCount(loginCount int32) *Exception {
 		IsInternal:     true,
 		Message:        fmt.Sprintf("The given loginCount is invalid: %d", loginCount),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -85,7 +86,7 @@ func (d *UtilExceptionDomain) InvalidAuthCodeRequestTimes(authCodeRequestTimes i
 		IsInternal:     true,
 		Message:        fmt.Sprintf("The given loginCount is invalid: %d", authCodeRequestTimes),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -97,7 +98,7 @@ func (d *UtilExceptionDomain) NotRequiredToBlockLogin(loginCount int32) *Excepti
 		IsInternal:     true,
 		Message:        fmt.Sprintf("The loginCount of %d is no need to block", loginCount),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -109,6 +110,6 @@ func (d *UtilExceptionDomain) NotRequiredToBlockAuthCode(authCodeRequestTime int
 		IsInternal:     true,
 		Message:        fmt.Sprintf("The authCodeRequestTime of %d is no need to block", authCodeRequestTime),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }

@@ -3,6 +3,7 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
+	traces "notezy-backend/app/traces"
 )
 
 const (
@@ -48,7 +49,7 @@ func (d *StorageExceptionDomain) FailedToReadObjectBytes() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to read object into bytes",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -60,7 +61,7 @@ func (d *StorageExceptionDomain) FailedToWriteObjectBytes() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to write object bytes",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -72,7 +73,7 @@ func (d *StorageExceptionDomain) ObjectTooLarge(size int64, maxSize int64) *Exce
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Object with size of %d is larger than the max size of %d", size, maxSize),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -86,7 +87,7 @@ func (d *StorageExceptionDomain) FailedToPutObject(object any) *Exception {
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to put object of %v", object),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -98,7 +99,7 @@ func (d *StorageExceptionDomain) FailedToGetObject(key string) *Exception {
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to get object with key of %s", key),
 		HTTPStatusCode: http.StatusNotFound,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -110,7 +111,7 @@ func (d *StorageExceptionDomain) FailedToDeleteObject(key string) *Exception {
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to delete object with key of %s", key),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -122,7 +123,7 @@ func (d *StorageExceptionDomain) FailedToPresignPutObject(object any) *Exception
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to presigned put object of %v", object),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -134,6 +135,6 @@ func (d *StorageExceptionDomain) FailedToPresignedGetObject(object any) *Excepti
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to presigned get object of %v", object),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }

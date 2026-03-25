@@ -7,6 +7,7 @@ import (
 
 	app "notezy-backend/app"
 	logs "notezy-backend/app/logs"
+	traces "notezy-backend/app/traces"
 )
 
 var rootCommand = &cobra.Command{
@@ -14,7 +15,7 @@ var rootCommand = &cobra.Command{
 	Short: "This is the root command.",
 	Long:  "This is a longer description of the root command.",
 	Run: func(cmd *cobra.Command, args []string) {
-		logs.Info("Welcome to the CLI.")
+		logs.Info(traces.GetTrace(0).FileLineString(), "Welcome to the CLI.")
 		app.StartApplication()
 	},
 }
@@ -42,7 +43,7 @@ func Execute() {
 	)
 
 	if err := rootCommand.Execute(); err != nil {
-		logs.FError("Failed to init the CLI: %s", err)
+		logs.FError(traces.GetTrace(0).FileLineString(), "Failed to init the CLI: %s", err)
 		os.Exit(1)
 	}
 }

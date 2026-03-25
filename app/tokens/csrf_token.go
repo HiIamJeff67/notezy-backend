@@ -9,7 +9,6 @@ import (
 	"time"
 
 	exceptions "notezy-backend/app/exceptions"
-	"notezy-backend/app/logs"
 	types "notezy-backend/shared/types"
 )
 
@@ -74,8 +73,6 @@ func parseCSRFToken(tokenString string) (*types.CSRFClaims, *exceptions.Exceptio
 
 func ValidateCSRFToken(tokenString string, expectedTokenString string) (*types.CSRFClaims, *exceptions.Exception) {
 	if tokenString != expectedTokenString {
-		logs.Alert(tokenString)
-		logs.Info(expectedTokenString)
 		return nil, exceptions.Token.FailedToParseCSRFToken()
 	}
 

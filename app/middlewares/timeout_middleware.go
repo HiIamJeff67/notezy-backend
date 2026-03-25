@@ -103,7 +103,7 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 
 			return
 		case <-timeoutCtx.Done():
-			// logs.Alert("Timeout (timeoutCtx.Done())")
+			// logs.Alert(traces.GetTrace(0).FileLineString(), "Timeout (timeoutCtx.Done())")
 			writer.Mutex.Lock()
 			writer.IsTimeout = true
 			writer.FreeBuffer() // clear the buffer, this will destroy the context field stored by other middlewares
@@ -124,7 +124,7 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 
 			return
 		case <-time.After(timeout):
-			// logs.Alert("Timeout (time.After)")
+			// logs.Alert(traces.GetTrace(0).FileLineString(), "Timeout (time.After)")
 			writer.Mutex.Lock()
 			writer.IsTimeout = true
 			writer.FreeBuffer() // clear the buffer, this will destroy the context field stored by other middlewares

@@ -3,6 +3,7 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
+	traces "notezy-backend/app/traces"
 )
 
 const (
@@ -36,7 +37,7 @@ func (d *EmailExceptionDomain) FailedToSendEmailWithSubject(subject string) *Exc
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to send the email with subject of %s", subject),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -48,7 +49,7 @@ func (d *EmailExceptionDomain) InvalidEmailContentType(contentType string) *Exce
 		IsInternal:     true,
 		Message:        fmt.Sprintf("The given content type of %v is not a valid content type", contentType),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -60,7 +61,7 @@ func (d *EmailExceptionDomain) FailedToReadTemplateFileWithPath(templateFilePath
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to read the email template file from %s", templateFilePath),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -72,7 +73,7 @@ func (d *EmailExceptionDomain) FailedToParseTemplateWithDataMap(dataMap map[stri
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to parse the email template with %v", dataMap),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -84,7 +85,7 @@ func (d *EmailExceptionDomain) FailedToRenderTemplate() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to render the template",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -96,7 +97,7 @@ func (d *EmailExceptionDomain) TemplateFileTypeAndEmailContentTypeNotMatch(templ
 		IsInternal:     true,
 		Message:        fmt.Sprintf("The type of the template file of %s is not match with the content type of %v", templateFileType, contentType),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -110,7 +111,7 @@ func (d *EmailExceptionDomain) FailedToSendEmailByWorkers(workerId int, numOfRet
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Worker %d failed to send email (attempt %d/%d)", workerId, numOfRetries, maxRetries),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -122,6 +123,6 @@ func (d *EmailExceptionDomain) FailedToEnqueueTaskToEmailWorkerManager() *Except
 		IsInternal:     true,
 		Message:        "Failed to enqueue the given task to email worker manager",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }

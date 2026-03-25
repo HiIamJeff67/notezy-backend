@@ -1,6 +1,9 @@
 package exceptions
 
-import "net/http"
+import (
+	"net/http"
+	traces "notezy-backend/app/traces"
+)
 
 const (
 	_ExceptionBaseCode_UserAccount ExceptionCode = UserAccountExceptionSubDomainCode * ExceptionSubDomainCodeShiftAmount
@@ -45,6 +48,6 @@ func (d *UserAccountExceptionDomain) GoogleCredentialHasAlreadyBeenBinded() *Exc
 		IsInternal:     false,
 		Message:        "The current account has already been binded with google",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }

@@ -2,6 +2,7 @@ package exceptions
 
 import (
 	"net/http"
+	traces "notezy-backend/app/traces"
 )
 
 const (
@@ -37,7 +38,7 @@ func (d *TokenExceptionDomain) AccessTokenSecretKeyNotFound() *Exception {
 		IsInternal:     true,
 		Message:        "The environment variables of access token secret key is not found",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -49,7 +50,7 @@ func (d *TokenExceptionDomain) RefreshTokenSecretKeyNotFound() *Exception {
 		IsInternal:     true,
 		Message:        "The environment variables of refresh token secret key is not found",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -61,7 +62,7 @@ func (d *TokenExceptionDomain) CSRFTokenSecretKeyNotFound() *Exception {
 		IsInternal:     true,
 		Message:        "The environment variables of csrf token secret key is not found",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -75,7 +76,7 @@ func (d *TokenExceptionDomain) FailedToGenerateAccessToken() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to generate the access token",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -87,7 +88,7 @@ func (d *TokenExceptionDomain) FailedToGenerateRefreshToken() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to generate the refresh token",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -99,7 +100,7 @@ func (d *TokenExceptionDomain) FailedToGenerateCSRFToken() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to generate the csrf token",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -113,7 +114,7 @@ func (d *TokenExceptionDomain) FailedToParseAccessToken() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to parse the access token",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -125,7 +126,7 @@ func (d *TokenExceptionDomain) FailedToParseRefreshToken() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to parse the refresh token",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -137,7 +138,7 @@ func (d *TokenExceptionDomain) FailedToParseCSRFToken() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to parse the csrf token",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -151,7 +152,7 @@ func (d *TokenExceptionDomain) AccessTokenExpired() *Exception {
 		IsInternal:     true,
 		Message:        "The given access token is expired",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -163,7 +164,7 @@ func (d *TokenExceptionDomain) RefreshTokenExpired() *Exception {
 		IsInternal:     true,
 		Message:        "The given refresh token is expired",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -175,7 +176,7 @@ func (d *TokenExceptionDomain) CSRFTokenExpired() *Exception {
 		IsInternal:     true,
 		Message:        "The given CSRF token is expired",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -189,7 +190,7 @@ func (d *TokenExceptionDomain) InvalidCSRFTokenSignature() *Exception {
 		IsInternal:     true,
 		Message:        "The signature of CSRF token is invalid",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 
 }
@@ -204,7 +205,7 @@ func (d *TokenExceptionDomain) FailedToExtractOrValidateAccessToken() *Exception
 		IsInternal:     true,
 		Message:        "Failed to get or validate the access token",
 		HTTPStatusCode: http.StatusUnauthorized,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -216,7 +217,7 @@ func (d *TokenExceptionDomain) FailedToExtractOrValidateRefreshToken() *Exceptio
 		IsInternal:     true,
 		Message:        "Failed to get or validate the refresh token",
 		HTTPStatusCode: http.StatusUnauthorized,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -228,6 +229,6 @@ func (d *TokenExceptionDomain) FailedToExtractOrValidateCSRFToken() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to get or validate the CSRF token",
 		HTTPStatusCode: http.StatusUnauthorized,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }

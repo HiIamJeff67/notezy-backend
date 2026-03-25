@@ -3,6 +3,7 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
+	traces "notezy-backend/app/traces"
 )
 
 const (
@@ -53,7 +54,7 @@ func (d *ShelfExceptionDomain) DuplicateName(name string) *Exception {
 		IsInternal:     false,
 		Message:        fmt.Sprintf("The name of %s is already be used", name),
 		HTTPStatusCode: http.StatusConflict,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -65,7 +66,7 @@ func (d *ShelfExceptionDomain) MaximumWidthExceeded(currentWidth int32, maxWidth
 		IsInternal:     false,
 		Message:        fmt.Sprintf("The current width of %d is exceeded the limitation of %d", currentWidth, maxWidth),
 		HTTPStatusCode: http.StatusBadRequest,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -77,7 +78,7 @@ func (d *ShelfExceptionDomain) MaximumDepthExceeded(currentDepth int32, maxDepth
 		IsInternal:     false,
 		Message:        fmt.Sprintf("The current depth of %d is exceeded the limitation of %d", currentDepth, maxDepth),
 		HTTPStatusCode: http.StatusBadRequest,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -89,7 +90,7 @@ func (d *ShelfExceptionDomain) MaximumTraverseCountExceeded(currentTraverseCount
 		IsInternal:     false,
 		Message:        fmt.Sprintf("The current traverse count of %d is exceeded the limitation of %d", currentTraverseCount, maxTraverseCount),
 		HTTPStatusCode: http.StatusBadRequest,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -101,7 +102,7 @@ func (d *ShelfExceptionDomain) CallingMethodsWithNilValue() *Exception {
 		IsInternal:     true,
 		Message:        "Nil value cannot call the methods of ShelfNode",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -113,7 +114,7 @@ func (d *ShelfExceptionDomain) FailedToEncode(node any) *Exception {
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to encode %v", node),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -125,7 +126,7 @@ func (d *ShelfExceptionDomain) FailedToDecode(data []byte) *Exception {
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to decode encoded string of %v", data),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -140,7 +141,7 @@ func (d *ShelfExceptionDomain) InsertParentIntoItsChildren(destination any, targ
 			target, destination, destination, target,
 		),
 		HTTPStatusCode: http.StatusBadRequest,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -152,7 +153,7 @@ func (d *ShelfExceptionDomain) FailedToConstructNewShelfNode(field string) *Exce
 		IsInternal:     false,
 		Message:        fmt.Sprintf("The field of %s in ShelfNode is not pass by the validator", field),
 		HTTPStatusCode: http.StatusBadRequest,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -164,7 +165,7 @@ func (d *ShelfExceptionDomain) CannotEncodeNonRootShelfNode(node any) *Exception
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Cannot encoded the ShelfNode of %v which is not the root node", node),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -176,7 +177,7 @@ func (d *ShelfExceptionDomain) CircularChildrenDetectedInShelfNode() *Exception 
 		IsInternal:     false,
 		Message:        "Circular children detected in the given ShelfNode which is an invalid structure",
 		HTTPStatusCode: http.StatusBadRequest,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -188,7 +189,7 @@ func (d *ShelfExceptionDomain) RepeatedShelfNodesDetected() *Exception {
 		IsInternal:     false,
 		Message:        "Invalid ShelfNode structure with repeated shelf nodes detected in the same tree which is violating the uniqueness",
 		HTTPStatusCode: http.StatusBadRequest,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -200,7 +201,7 @@ func (d *ShelfExceptionDomain) RepeatedMaterialIdsDetected() *Exception {
 		IsInternal:     false,
 		Message:        "Invalid ShelfNode structure with repeated material ids detected in the same tree which is violating the uniqueness",
 		HTTPStatusCode: http.StatusBadRequest,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -212,7 +213,7 @@ func (d *ShelfExceptionDomain) RepeatedMaterialNamesDetectedInAShelf() *Exceptio
 		IsInternal:     false,
 		Message:        "Invalid ShelfNode structure with repeated material names detected in the same shelf which is violating the uniqueness",
 		HTTPStatusCode: http.StatusBadRequest,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -224,7 +225,7 @@ func (d *ShelfExceptionDomain) InvalidPath() *Exception {
 		IsInternal:     false,
 		Message:        "The given path is invalid, the relative operations are skipped",
 		HTTPStatusCode: http.StatusBadRequest,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -238,7 +239,7 @@ func (d *ShelfExceptionDomain) CannotSynchronizeTooManyShelves() *Exception {
 		IsInternal:     false,
 		Message:        "Cannot synchronize too many shelves",
 		HTTPStatusCode: http.StatusTooManyRequests,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -250,6 +251,6 @@ func (d *ShelfExceptionDomain) NumberOfShelfIdsAndShelvesNotMatch() *Exception {
 		IsInternal:     false,
 		Message:        "The number of shelf ids and shelves are not matched",
 		HTTPStatusCode: http.StatusBadRequest,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }

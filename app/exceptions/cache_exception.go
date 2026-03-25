@@ -3,6 +3,7 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
+	traces "notezy-backend/app/traces"
 	"unicode"
 )
 
@@ -56,7 +57,7 @@ func (d *CacheExceptionSubDomain) NotFound(cachePurpose string) *Exception {
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Cannot find the %s in the cache server", convertCamelCaseToSentenceCase(cachePurpose)),
 		HTTPStatusCode: http.StatusNotFound,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -68,7 +69,7 @@ func (d *CacheExceptionSubDomain) FailedToCreate(cachePurpose string) *Exception
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to set the %s to the cache server", convertCamelCaseToSentenceCase(cachePurpose)),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -80,7 +81,7 @@ func (d *CacheExceptionSubDomain) FailedToUpdate(cachePurpose string) *Exception
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to update the %s in the cache server", convertCamelCaseToSentenceCase(cachePurpose)),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -92,7 +93,7 @@ func (d *CacheExceptionSubDomain) FailedToDelete(cachePurpose string) *Exception
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to delete the %s in the cache server", convertCamelCaseToSentenceCase(cachePurpose)),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -104,7 +105,7 @@ func (d *CacheExceptionSubDomain) FailedToExtendTTL(cachePurpose string) *Except
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to extend the ttl of %s in the cache server", convertCamelCaseToSentenceCase(cachePurpose)),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -118,7 +119,7 @@ func (d *CacheExceptionSubDomain) RedisServerNumberNotFound() *Exception {
 		IsInternal:     true,
 		Message:        "Redis server number not found or out of range",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -130,7 +131,7 @@ func (d *CacheExceptionSubDomain) BackendServerNameNotReferenced(cachePurpose st
 		IsInternal:     true,
 		Message:        fmt.Sprintf("The backend server name is not referenced to %s", cachePurpose),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -146,7 +147,7 @@ func (d *CacheExceptionSubDomain) FailedToConnectToServer(serverNumber *int) *Ex
 		IsInternal:     true,
 		Message:        errorMessage,
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -161,7 +162,7 @@ func (d *CacheExceptionSubDomain) FailedToDisconnectToServer(serverNumber *int) 
 		Prefix:         d.Prefix,
 		Message:        errorMessage,
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -173,7 +174,7 @@ func (d *CacheExceptionSubDomain) ClientInstanceDoesNotExist() *Exception {
 		IsInternal:     true,
 		Message:        "The client instance does not exist, maybe the authentication is expired",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -185,7 +186,7 @@ func (d *CacheExceptionSubDomain) ClientConfigDoesNotExist() *Exception {
 		IsInternal:     true,
 		Message:        "The config of the client instance does not exist",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -197,7 +198,7 @@ func (d *CacheExceptionSubDomain) FailedToLoadRedisFunctions() *Exception {
 		IsInternal:     true,
 		Message:        "Error on loading and initializing the redis functions",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -211,7 +212,7 @@ func (d *CacheExceptionSubDomain) InvalidCacheDataStruct(cachedDataStruct any) *
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Invalid cached data struct detected %v", cachedDataStruct),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -223,7 +224,7 @@ func (d *CacheExceptionSubDomain) FailedToConvertStructToJson() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to convert struct to json",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -235,7 +236,7 @@ func (d *CacheExceptionSubDomain) FailedToConvertJsonToStruct() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to convert json to struct",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -247,6 +248,6 @@ func (d *CacheExceptionSubDomain) InvalidFormattedKey() *Exception {
 		IsInternal:     true,
 		Message:        "Invalid formattedkey",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }

@@ -2,6 +2,7 @@ package exceptions
 
 import (
 	"net/http"
+	traces "notezy-backend/app/traces"
 )
 
 const (
@@ -40,7 +41,7 @@ func (d *SearchExceptionDomain) FailedToDecode() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to decode into search cursor",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -52,7 +53,7 @@ func (d *SearchExceptionDomain) FailedToEncode() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to encode into encoded search cursor",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -64,7 +65,7 @@ func (d *SearchExceptionDomain) FailedToMarshalSearchCursor() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to marshal the search cursor",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -76,6 +77,6 @@ func (d *SearchExceptionDomain) FailedToUnmarshalSearchCursor() *Exception {
 		IsInternal:     true,
 		Message:        "Failed to unmarshal the search cursor",
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }

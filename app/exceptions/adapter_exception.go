@@ -2,6 +2,7 @@ package exceptions
 
 import (
 	"net/http"
+	traces "notezy-backend/app/traces"
 )
 
 const (
@@ -37,6 +38,6 @@ func (d *AdapterExceptionDomain) InvalidMultipartForm() *Exception {
 		IsInternal:     false,
 		Message:        "The multipart form in the context is missing or invalid",
 		HTTPStatusCode: http.StatusForbidden,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }

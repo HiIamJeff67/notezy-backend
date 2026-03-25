@@ -13,6 +13,7 @@ import (
 
 	exceptions "notezy-backend/app/exceptions"
 	logs "notezy-backend/app/logs"
+	traces "notezy-backend/app/traces"
 	util "notezy-backend/app/util"
 	constants "notezy-backend/shared/constants"
 )
@@ -44,7 +45,7 @@ var InMemoryStorage = newInMemoryStorage()
 /* ============================== Helper Functions ============================== */
 
 func (s *inMemoryStorage) ListAllInTerminal() {
-	logs.Info(s.data)
+	logs.Info(traces.GetTrace(0).FileLineString(), s.data)
 }
 
 /* ============================== Implementations ============================== */

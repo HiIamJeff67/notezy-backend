@@ -3,6 +3,7 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
+	traces "notezy-backend/app/traces"
 )
 
 const (
@@ -41,6 +42,6 @@ func (d *ParserExceptionDomain) FailedToParseFromStringToTime(timeString string)
 		IsInternal:     false,
 		Message:        fmt.Sprintf("Invalid time format: %s", timeString),
 		HTTPStatusCode: http.StatusUnauthorized,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }

@@ -3,6 +3,7 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
+	traces "notezy-backend/app/traces"
 )
 
 const (
@@ -57,7 +58,7 @@ func (d *MaterialExceptionDomain) MaterialTypeNotMatch(
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Try to manipulate a material with id of %s which type required to %v, but got type of %v", id, expectedType, currentType),
 		HTTPStatusCode: http.StatusInternalServerError,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
 
@@ -76,6 +77,6 @@ func (d *MaterialExceptionDomain) MaterialContentTypeNotAllowedInMaterialType(
 			id, materialType, expectedContentTypes, currentContentType,
 		),
 		HTTPStatusCode: http.StatusUnsupportedMediaType,
-		LastStackFrame: &GetStackTrace(2, 1)[0],
+		LastTrace:      traces.GetTrace(1),
 	}
 }
