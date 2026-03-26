@@ -25,9 +25,9 @@ import (
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
 
-	authsql "notezy-backend/app/models/sql/auth"
-	badgesql "notezy-backend/app/models/sql/badge"
-	usersql "notezy-backend/app/models/sql/user"
+	authsql "notezy-backend/app/models/sqls/auth"
+	badgesql "notezy-backend/app/models/sqls/badge"
+	usersql "notezy-backend/app/models/sqls/user"
 )
 
 /* ============================== Interface & Instance ============================== */

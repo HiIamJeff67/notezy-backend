@@ -9,6 +9,7 @@ import (
 	"github.com/go-redis/redis"
 
 	redislibraries "notezy-backend/app/caches/libraries"
+	configs "notezy-backend/app/configs"
 	exceptions "notezy-backend/app/exceptions"
 	logs "notezy-backend/app/logs"
 	traces "notezy-backend/app/traces"
@@ -16,15 +17,8 @@ import (
 	types "notezy-backend/shared/types"
 )
 
-type CacheManagerConfig struct {
-	Host     string
-	Port     string
-	Password string
-	DB       int
-}
-
 var (
-	RedisCacheManagerConfigTemplate = CacheManagerConfig{
+	RedisCacheManagerConfigTemplate = configs.CacheManagerConfig{
 		Host:     util.GetEnv("REDIS_HOST", "notezy-redis"),
 		Port:     util.GetEnv("REDIS_PORT", "6379"),
 		Password: util.GetEnv("REDIS_PASSWORD", ""),
@@ -33,9 +27,9 @@ var (
 )
 
 var (
-	RedisClientMap             map[int]*redis.Client                = make(map[int]*redis.Client)
-	RedisClientToConfig        map[*redis.Client]CacheManagerConfig = make(map[*redis.Client]CacheManagerConfig)
-	PurposeToServerNumberRange                                      = map[types.ValidCachePurpose]types.Range[int, int]{
+	RedisClientMap             map[int]*redis.Client                        = make(map[int]*redis.Client)
+	RedisClientToConfig        map[*redis.Client]configs.CacheManagerConfig = make(map[*redis.Client]configs.CacheManagerConfig)
+	PurposeToServerNumberRange                                              = map[types.ValidCachePurpose]types.Range[int, int]{
 		types.ValidCachePurpose_UserData:   UserDataRange,  // server number: 0 - 3 (included)
 		types.ValidCachePurpose_RateLimite: RateLimitRange, // server number: 4 - 7 (included)
 	}
@@ -44,7 +38,7 @@ var (
 	redisMapMutex sync.Mutex // since the map in go is not thread-safe, we need this mutex lock
 )
 
-func ConnectToRedis(config CacheManagerConfig) *redis.Client {
+func ConnectToRedis(config configs.CacheManagerConfig) *redis.Client {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     config.Host + ":" + config.Port,
 		Password: config.Password,

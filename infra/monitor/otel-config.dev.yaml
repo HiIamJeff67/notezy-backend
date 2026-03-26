@@ -1,0 +1,67 @@
+file_format: "0.1"
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    # Batch all signals before exporting for better throughput
+    send_batch_size: 1024
+    timeout: 5s
+
+  memory_limiter:
+    # Protect the Collector from running out of memory
+    check_interval: 5s
+    limit_mib: 512
+    spike_limit_mib: 128
+
+  resource:
+    attributes:
+      # Tag all telemetry with the cluster name
+      - key: cluster
+        value: lgtm-local
+        action: upsert
+
+  # Add resource attributes to metric labels for PromQL filtering
+  transform/metrics:
+    metric_statements:
+      - context: datapoint
+        statements:
+          - set(attributes["cluster"], resource.attributes["cluster"])
+
+exporters:
+  otlphttp/tempo:
+    # Send traces to Tempo via OTLP HTTP
+    endpoint: http://tempo:4318
+
+  otlphttp/loki:
+    # Send logs to Loki via its OTLP endpoint
+    endpoint: http://loki:3100/otlp
+
+  prometheusremotewrite:
+    # Send metrics to Mimir via Prometheus remote write
+    endpoint: http://mimir:9009/api/v1/push
+    resource_to_telemetry_conversion:
+      enabled: true
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [otlphttp/tempo]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, transform/metrics, batch]
+      exporters: [prometheusremotewrite]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [otlphttp/loki]

@@ -7,13 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 
 	caches "notezy-backend/app/caches"
+	configs "notezy-backend/app/configs"
 	models "notezy-backend/app/models"
 	developmentroutes "notezy-backend/app/routes/development_routes"
 	util "notezy-backend/app/util"
 )
 
 func StartApplication() {
-	models.NotezyDB = models.ConnectToDatabase(models.PostgresDatabaseConfig)
+	models.NotezyDB = models.ConnectToDatabase(configs.PostgresDatabaseConfig)
 	caches.ConnectToAllRedis()
 	ReloadRedisLibraries()
 

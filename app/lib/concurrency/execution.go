@@ -2,7 +2,7 @@ package concurrency
 
 import "sync"
 
-func BatchExecute[T any, R any](
+func Execute[T any, R any](
 	inputs []T,
 	workerCount int,
 	processorFunc ProcessorFunc[T, R],
@@ -45,15 +45,15 @@ func BatchExecute[T any, R any](
 	wg.Wait()
 	close(results)
 
-	batchResults := make([]Result[R], inputCount)
+	orderedResults := make([]Result[R], inputCount)
 	for result := range results {
-		batchResults[result.Index] = result
+		orderedResults[result.Index] = result
 	}
 
-	return batchResults
+	return orderedResults
 }
 
 // TODO: execute in sequential, it can have multiple stages,
 // and once a job is done in stage_i, it can be passed to the next stage of stage_i+1
 // for each job, it can only be execute in stage_i if all the stage_j where 0 < j < i are already finished
-func SequentialBatchExecute() {}
+func SequentialExecute() {}

@@ -3,7 +3,7 @@ package util
 import (
 	"time"
 
-	"notezy-backend/app/exceptions"
+	exceptions "notezy-backend/app/exceptions"
 	constants "notezy-backend/shared/constants"
 )
 

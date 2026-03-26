@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	rate "golang.org/x/time/rate"
 
+	configs "notezy-backend/app/configs"
 	contexts "notezy-backend/app/contexts"
 	exceptions "notezy-backend/app/exceptions"
 	ratelimiter "notezy-backend/app/lib/ratelimiter"
@@ -16,17 +17,9 @@ import (
 	types "notezy-backend/shared/types"
 )
 
-type AuthorizedRateLimitConfig struct {
-	RateLimit         rate.Limit
-	Burst             int
-	UserLimit         int32
-	WindowDuration    time.Duration
-	BackendServerName types.BackendServerName
-}
-
 var (
 	authorizedRateLimiter            *ratelimiter.HybridRateLimiter // use the bybrid one which including token bucket and cross server request management by redis
-	DefaultAuthorizedRateLimitConfig = AuthorizedRateLimitConfig{
+	DefaultAuthorizedRateLimitConfig = configs.AuthorizedRateLimitConfig{
 		RateLimit:         rate.Limit(100),                  // 100 requests/second
 		Burst:             20,                               // allowed 20 additional requests/second for burst
 		UserLimit:         300,                              // 300 requests/each life time of the bucket (= 300 requests/`WindowDuration`) for each users
@@ -35,7 +28,7 @@ var (
 	}
 )
 
-func InitAuthorizedRateLimiter(config AuthorizedRateLimitConfig) {
+func InitAuthorizedRateLimiter(config configs.AuthorizedRateLimitConfig) {
 	if authorizedRateLimiter != nil {
 		authorizedRateLimiter.Stop()
 	}
@@ -54,7 +47,7 @@ func InitAuthorizedRateLimiter(config AuthorizedRateLimitConfig) {
 		config.RateLimit, config.Burst, config.UserLimit, config.WindowDuration)
 }
 
-func AuthorizedRateLimitMiddleware(config ...AuthorizedRateLimitConfig) gin.HandlerFunc {
+func AuthorizedRateLimitMiddleware(config ...configs.AuthorizedRateLimitConfig) gin.HandlerFunc {
 	cfg := DefaultAuthorizedRateLimitConfig
 	if len(config) > 0 {
 		cfg = config[0]

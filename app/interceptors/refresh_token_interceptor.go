@@ -8,9 +8,9 @@ import (
 	contexts "notezy-backend/app/contexts"
 	cookies "notezy-backend/app/cookies"
 	ratelimiter "notezy-backend/app/lib/ratelimiter"
-	"notezy-backend/app/logs"
-	"notezy-backend/app/traces"
-	"notezy-backend/shared/types"
+	logs "notezy-backend/app/logs"
+	traces "notezy-backend/app/traces"
+	types "notezy-backend/shared/types"
 )
 
 // use the reusable buffer pool for refreshing the access token
@@ -85,8 +85,8 @@ func RefreshTokenInterceptor() gin.HandlerFunc {
 		}
 
 		cookies.AccessTokenCookieHandler.Set(ctx, accessTokenStr)
-		originalResponse["newAccessToken"] = accessTokenStr
-		originalResponse["newCSRFToken"] = csrfTokenStr
+		originalResponse[types.RefreshableResponseFieldName_NewAccessToken.String()] = accessTokenStr
+		originalResponse[types.RefreshableResponseFieldName_NewCSRFToken.String()] = csrfTokenStr
 		logs.Info(traces.GetTrace(0).FileLineString(), "new CSRF token: ", csrfTokenStr)
 		modifiedResponse, err := json.Marshal(originalResponse)
 		if err != nil {

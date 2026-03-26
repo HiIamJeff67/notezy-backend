@@ -667,7 +667,7 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 		return rawFlattenedBlocks, nil
 	}
 
-	validateBlockResults := concurrency.BatchExecute(
+	validateBlockResults := concurrency.Execute(
 		validateBlockDto,
 		min(10, max(len(validateBlockDto)/10, len(validateBlockDto)%10)),
 		validateBlockFunc,
@@ -791,7 +791,7 @@ func (s *BlockGroupService) InsertSequentialBlockGroupsAndTheirBlocksByBlockPack
 		return data, nil
 	}
 
-	validateBlockResults := concurrency.BatchExecute(
+	validateBlockResults := concurrency.Execute(
 		reqDto.Body.ArborizedEditableBlocks,
 		min(10, max(len(reqDto.Body.ArborizedEditableBlocks)/10, len(reqDto.Body.ArborizedEditableBlocks)%10)),
 		validateBlockFunc,

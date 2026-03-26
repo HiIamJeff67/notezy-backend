@@ -3,6 +3,7 @@ package commands
 import (
 	"github.com/spf13/cobra"
 
+	configs "notezy-backend/app/configs"
 	logs "notezy-backend/app/logs"
 	models "notezy-backend/app/models"
 	traces "notezy-backend/app/traces"
@@ -27,7 +28,7 @@ var viewAllDatabaseEnumsCommand = &cobra.Command{
 	Short: "View all the nums of the database.",
 	Long:  "Use a simple select sql command to get all the enums of the database",
 	Run: func(cmd *cobra.Command, args []string) {
-		db := models.ConnectToDatabase(models.PostgresDatabaseConfig)
+		db := models.ConnectToDatabase(configs.PostgresDatabaseConfig)
 		defer models.DisconnectToDatabase(db)
 
 		if !models.ViewAllDatabaseEnums(db) {
@@ -78,10 +79,10 @@ var migrateDatabaseCommand = &cobra.Command{
 	Short: "Migrate enums, tables, and some triggers to the database.",
 	Long:  "Use some migration SQLs to migrate required enums, tables, and some triggers to the database.",
 	Run: func(cmd *cobra.Command, args []string) {
-		db := models.ConnectToDatabase(models.PostgresDatabaseConfig)
+		db := models.ConnectToDatabase(configs.PostgresDatabaseConfig)
 		defer models.DisconnectToDatabase(db)
 
-		logs.FInfo(traces.GetTrace(0).FileLineString(), "Start the process of migrating database schema to %v", models.PostgresDatabaseConfig.DBName)
+		logs.FInfo(traces.GetTrace(0).FileLineString(), "Start the process of migrating database schema to %v", configs.PostgresDatabaseConfig.DBName)
 
 		if !models.MigrateEnumsToDatabase(db) {
 			return
@@ -103,10 +104,10 @@ var seedDatabaseCommand = &cobra.Command{
 	Short: "Seed some default data for management or main business logic.",
 	Long:  "Use some seeding default data SQLs to seed data for management or main business logic.",
 	Run: func(cmd *cobra.Command, args []string) {
-		db := models.ConnectToDatabase(models.PostgresDatabaseConfig)
+		db := models.ConnectToDatabase(configs.PostgresDatabaseConfig)
 		defer models.DisconnectToDatabase(db)
 
-		logs.FInfo(traces.GetTrace(0).FileLineString(), "Start the process of seeding database default data to %v", models.PostgresDatabaseConfig.DBName)
+		logs.FInfo(traces.GetTrace(0).FileLineString(), "Start the process of seeding database default data to %v", configs.PostgresDatabaseConfig.DBName)
 
 		if !models.SeedDefaultDataToDatabase(db) {
 			return

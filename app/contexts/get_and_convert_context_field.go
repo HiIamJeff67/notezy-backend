@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 
 	exceptions "notezy-backend/app/exceptions"
-	"notezy-backend/shared/types"
+	types "notezy-backend/shared/types"
 )
 
 func GetAndConvertContextFieldToBoolean(ctx *gin.Context, name types.ContextFieldName) (*bool, *exceptions.Exception) {

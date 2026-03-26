@@ -11,44 +11,30 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
+	configs "notezy-backend/app/configs"
 	logs "notezy-backend/app/logs"
 	schemas "notezy-backend/app/models/schemas"
 	constraints "notezy-backend/app/models/schemas/constraints"
 	enums "notezy-backend/app/models/schemas/enums"
 	triggers "notezy-backend/app/models/schemas/triggers"
 	seeds "notezy-backend/app/models/seeds"
-	managementsql "notezy-backend/app/models/sql/management"
+	managementsql "notezy-backend/app/models/sqls/management"
 	traces "notezy-backend/app/traces"
 	util "notezy-backend/app/util"
 	constants "notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
 )
 
-type DatabaseConfig struct {
-	Host     string
-	User     string
-	Password string
-	DBName   string
-	Port     string // the port inside the container, so please leave this as 5432 for PostgreSQL
-}
-
 var (
 	// the main database instance of the application (we use a different one for e2e testing, etc.)
 	NotezyDB *gorm.DB
 
 	// maintain the static information about the database instance and its config
-	DatabaseInstanceToConfig = map[*gorm.DB]DatabaseConfig{}
+	DatabaseInstanceToConfig = map[*gorm.DB]configs.DatabaseConfig{}
 	DatabaseNameToInstance   = map[string]*gorm.DB{}
 )
 
 var (
-	PostgresDatabaseConfig = DatabaseConfig{
-		Host:     util.GetEnv("DB_HOST", "notezy-db"),
-		User:     util.GetEnv("DB_USER", "master"),
-		Password: util.GetEnv("DB_PASSWORD", ""),
-		DBName:   util.GetEnv("DB_NAME", "notezy-db"),
-		Port:     util.GetEnv("DOCKER_DB_PORT", "5432"),
-	}
 	GormLogger = logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags),
 		logger.Config{
@@ -58,7 +44,7 @@ var (
 	)
 )
 
-func ConnectToDatabase(config DatabaseConfig) *gorm.DB {
+func ConnectToDatabase(config configs.DatabaseConfig) *gorm.DB {
 	var dbArgs string = fmt.Sprintf(
 		"host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
 		config.Host,

@@ -40,7 +40,7 @@ test-auth-e2e:
 # ============================== GraphQL Shortcut Commands ============================== #
 gql-generate: # update before generate
 	go get github.com/99designs/gqlgen@v0.17.76
-	go run github.com/99designs/gqlgen generate
+	go run github.com/99designs/gqlgen generate --config infra/graphql/gqlgen.yaml
 
 gql-clean:
 ifeq ($(OS),Windows_NT)
@@ -54,6 +54,3 @@ endif
 gql-regenerate:
 	make gql-clean
 	make gql-generate
-
-gql-check:
-	go run github.com/99designs/gqlgen generate --verbose

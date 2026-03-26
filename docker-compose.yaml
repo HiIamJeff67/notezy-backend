@@ -32,7 +32,7 @@ services:
     # restart: always
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: infra/docker/Dockerfile.dev
     volumes:
       - .:/notezy-backend
       - /notezy-backend/tmp

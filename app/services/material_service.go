@@ -16,7 +16,7 @@ import (
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
-	materialsql "notezy-backend/app/models/sql/material"
+	materialsql "notezy-backend/app/models/sqls/material"
 	options "notezy-backend/app/options"
 	storages "notezy-backend/app/storages"
 	validation "notezy-backend/app/validation"

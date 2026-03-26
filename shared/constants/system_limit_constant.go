@@ -1,8 +1,9 @@
 package constants
 
 import (
-	types "notezy-backend/shared/types"
 	"time"
+
+	types "notezy-backend/shared/types"
 )
 
 /* ============================== Email Worker limitations ============================== */

@@ -19,7 +19,7 @@ import (
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
-	blockgroupsql "notezy-backend/app/models/sql/block_group"
+	blockgroupsql "notezy-backend/app/models/sqls/block_group"
 	options "notezy-backend/app/options"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
@@ -462,7 +462,7 @@ func (s *BlockService) InsertBlocks(
 		return rawFlattenedBlocks, nil
 	}
 
-	validateBlockResults := concurrency.BatchExecute(
+	validateBlockResults := concurrency.Execute(
 		validateBlockDto,
 		20,
 		validateBlockFunc,
@@ -745,7 +745,7 @@ func (s *BlockService) UpdateMyBlocksByIds(
 		return result, nil
 	}
 
-	validateBlocksPropsAndContentResult := concurrency.BatchExecute(
+	validateBlocksPropsAndContentResult := concurrency.Execute(
 		validateBlockPropsAndContentDto,
 		min(10, max(len(validateBlockPropsAndContentDto)/10, len(validateBlockPropsAndContentDto)%10)),
 		validateBlockPropsAndContentFunc,

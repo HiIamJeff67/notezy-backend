@@ -1,0 +1,41 @@
+multitenancy_enabled: false
+
+blocks_storage:
+  backend: filesystem
+  filesystem:
+    dir: /data/mimir/blocks
+  tsdb:
+    dir: /data/mimir/tsdb
+  bucket_store:
+    sync_dir: /data/mimir/sync
+
+compactor:
+  data_dir: /data/mimir/compactor
+  sharding_ring:
+    kvstore:
+      store: memberlist
+
+distributor:
+  ring:
+    kvstore:
+      store: memberlist
+
+ingester:
+  ring:
+    kvstore:
+      store: memberlist
+    replication_factor: 1
+
+server:
+  http_listen_port: 9009
+
+store_gateway:
+  sharding_ring:
+    kvstore:
+      store: memberlist
+
+limits:
+  max_label_names_per_series: 30
+  max_global_series_per_user: 1500000
+  # Accept exemplars so we can link metrics to traces
+  max_global_exemplars_per_user: 100000

@@ -1,9 +1,10 @@
 package ratelimiter
 
 import (
-	constants "notezy-backend/shared/constants"
 	"sync"
 	"time"
+
+	constants "notezy-backend/shared/constants"
 )
 
 // The weak rate limiter is an implementation of Leaky Bucket algorithm

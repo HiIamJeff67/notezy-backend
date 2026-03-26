@@ -28,7 +28,7 @@ services:
     # restart: always
     build:
       context: .
-      dockerfile: Dockerfile.prod
+      dockerfile: infra/docker/Dockerfile.prod
     # entrypoint: ["${ENTRYPOINT_CMD}"]
     environment:
       DB_HOST: ${DB_HOST}

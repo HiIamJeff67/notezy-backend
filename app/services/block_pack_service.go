@@ -13,7 +13,7 @@ import (
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
-	blockpacksql "notezy-backend/app/models/sql/block_pack"
+	blockpacksql "notezy-backend/app/models/sqls/block_pack"
 	options "notezy-backend/app/options"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
