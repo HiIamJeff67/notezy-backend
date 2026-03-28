@@ -1,3 +1,6 @@
+server:
+  http_listen_port: ${DOCKER_MIMIR_PORT}
+
 multitenancy_enabled: false
 
 blocks_storage:
@@ -25,9 +28,6 @@ ingester:
     kvstore:
       store: memberlist
     replication_factor: 1
-
-server:
-  http_listen_port: 9009
 
 store_gateway:
   sharding_ring:

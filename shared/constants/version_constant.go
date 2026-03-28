@@ -6,17 +6,8 @@ const (
 	TestVersion        = "v1"
 )
 
-var URLWhiteList = []string{
-	"http",
-	"https",
-	"mailto",
-	"tel",
-	"ws",
-}
-
-var URLBlackList = []string{
-	"javascript",
-	"vbscript",
-	"file",
-	"data",
-}
+const (
+	DevelopmentCompleteVersion = "1.0.0"
+	ProductionCompleteVersion  = "1.0.0"
+	TestCompleteVersion        = "1.0.0"
+)

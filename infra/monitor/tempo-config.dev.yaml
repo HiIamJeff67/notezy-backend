@@ -1,21 +1,14 @@
 server:
-  http_listen_port: 3200
+  http_listen_port: ${DOCKER_TEMPO_PORT}
 
 distributor:
   receivers:
     otlp:
       protocols:
         grpc:
-          endpoint: 0.0.0.0:4317
+          endpoint: 0.0.0.0:${DOCKER_OTEL_COLLECTOR_GRPC_PORT}
         http:
-          endpoint: 0.0.0.0:4318
-
-ingester:
-  max_block_duration: 5m
-
-compactor:
-  compaction:
-    block_retention: 72h
+          endpoint: 0.0.0.0:${DOCKER_OTEL_COLLECTOR_HTTP_PORT}
 
 storage:
   trace:
@@ -25,7 +18,6 @@ storage:
     wal:
       path: /var/tempo/wal
 
-# Generate RED metrics from traces and push them to Mimir
 metrics_generator:
   registry:
     external_labels:
@@ -34,11 +26,10 @@ metrics_generator:
   storage:
     path: /var/tempo/generator/wal
     remote_write:
-      - url: http://mimir:9009/api/v1/push
+      - url: http://${DOCKER_MIMIR_SERVICE_NAME}:9009/api/v1/push
         send_exemplars: true
 
 overrides:
   defaults:
     metrics_generator:
-      # Generate both service graphs and per-span metrics
       processors: [service-graphs, span-metrics]

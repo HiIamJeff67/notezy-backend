@@ -8,6 +8,7 @@ services:
     volumes:
       - redis-data:/data
     command: ["redis-server", "--appendonly", "yes"]
+
   notezy-db:
     # should be the same as DB_HOST(hosting service)
     container_name: ${DOCKER_DB_SERVICE_NAME}
@@ -25,7 +26,8 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 6
+
   notezy-api:
     container_name: ${DOCKER_API_SERVICE_NAME}
     image: ${DOCKER_API_SERVICE_NAME}:latest
@@ -63,6 +65,112 @@ services:
       notezy-db:
         condition: service_healthy
 
+  notezy-loki:
+    container_name: ${DOCKER_LOKI_SERVICE_NAME}
+    image: grafana/loki:latest
+    command: ["-config.file=/etc/loki.yaml", "-config.expand-env=true"]
+    volumes:
+      - ./infra/monitor/loki-config.dev.yaml:/etc/loki.yaml
+      - loki-data:/loki
+    environment:
+      DOCKER_LOKI_PORT: ${DOCKER_LOKI_PORT}
+    ports:
+      - "${LOKI_PORT}:${DOCKER_LOKI_PORT}"
+    # healthcheck:
+    #   test:
+    #     [
+    #       "CMD-SHELL",
+    #       "wget --no-verbose --tries=1 --spider http://localhost:${DOCKER_LOKI_PORT}/ready || exit 1",
+    #     ]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 12
+
+  notezy-tempo:
+    container_name: ${DOCKER_TEMPO_SERVICE_NAME}
+    image: grafana/tempo:2.9.1
+    command: ["-config.file=/etc/tempo.yaml", "-config.expand-env=true"]
+    volumes:
+      - ./infra/monitor/tempo-config.dev.yaml:/etc/tempo.yaml
+      - tempo-data:/var/tempo
+    environment:
+      DOCKER_TEMPO_PORT: ${DOCKER_TEMPO_PORT}
+      DOCKER_OTEL_COLLECTOR_GRPC_PORT: ${DOCKER_OTEL_COLLECTOR_GRPC_PORT}
+      DOCKER_OTEL_COLLECTOR_HTTP_PORT: ${DOCKER_OTEL_COLLECTOR_HTTP_PORT}
+      DOCKER_MIMIR_SERVICE_NAME: ${DOCKER_MIMIR_SERVICE_NAME}
+      DOCKER_MIMIR_PORT: ${DOCKER_MIMIR_PORT}
+    ports:
+      - "${TEMPO_PORT}:${DOCKER_TEMPO_PORT}"
+    depends_on:
+      notezy-mimir:
+        condition: service_started
+
+  notezy-mimir:
+    container_name: ${DOCKER_MIMIR_SERVICE_NAME}
+    image: grafana/mimir:latest
+    command:
+      ["-config.file=/etc/mimir.yaml", "-target=all", "-config.expand-env=true"]
+    volumes:
+      - ./infra/monitor/mimir-config.dev.yaml:/etc/mimir.yaml
+      - mimir-data:/data/mimir
+    environment:
+      DOCKER_MIMIR_PORT: ${DOCKER_MIMIR_PORT}
+    ports:
+      - "${MIMIR_PORT}:${DOCKER_MIMIR_PORT}"
+    # healthcheck:
+    #   test:
+    #     [
+    #       "CMD-SHELL",
+    #       "wget --no-verbose --tries=1 --spider http://localhost:${DOCKER_MIMIR_PORT}/ready || exit 1",
+    #     ]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 6
+    #   start_period: 30s
+
+  notezy-otel-collector:
+    container_name: ${DOCKER_OTEL_COLLECTOR_SERVICE_NAME}
+    image: otel/opentelemetry-collector-contrib:latest
+    volumes:
+      - ./infra/monitor/otel-collector-config.dev.yaml:/etc/otelcol-contrib/config.yaml
+    environment:
+      DOCKER_LOKI_SERVICE_NAME: ${DOCKER_LOKI_SERVICE_NAME}
+      DOCKER_TEMPO_SERVICE_NAME: ${DOCKER_TEMPO_SERVICE_NAME}
+      DOCKER_MIMIR_SERVICE_NAME: ${DOCKER_MIMIR_SERVICE_NAME}
+      DOCKER_OTEL_COLLECTOR_GRPC_PORT: ${DOCKER_OTEL_COLLECTOR_GRPC_PORT}
+      DOCKER_OTEL_COLLECTOR_HTTP_PORT: ${DOCKER_OTEL_COLLECTOR_HTTP_PORT}
+    ports:
+      - "${OTEL_COLLECTOR_GRPC_PORT}:${DOCKER_OTEL_COLLECTOR_GRPC_PORT}" # OTLP gRPC
+      - "${OTEL_COLLECTOR_HTTP_PORT}:${DOCKER_OTEL_COLLECTOR_HTTP_PORT}" # OTLP HTTP
+    depends_on:
+      notezy-loki:
+        condition: service_started
+      notezy-mimir:
+        condition: service_started
+      notezy-tempo:
+        condition: service_started
+
+  notezy-grafana:
+    container_name: ${DOCKER_GRAFANA_SERVICE_NAME}
+    image: grafana/grafana:latest
+    volumes:
+      - ./infra/monitor/grafana/datasources.dev.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
+      GF_FEATURE_TOGGLE_ENABLE: ${GF_FEATURE_TOGGLE_ENABLE}
+      DOCKER_MIMIR_SERVICE_NAME: ${DOCKER_MIMIR_SERVICE_NAME}
+      DOCKER_MIMIR_PORT: ${DOCKER_MIMIR_PORT}
+      DOCKER_TEMPO_SERVICE_NAME: ${DOCKER_TEMPO_SERVICE_NAME}
+      DOCKER_TEMPO_PORT: ${DOCKER_TEMPO_PORT}
+      DOCKER_LOKI_SERVICE_NAME: ${DOCKER_LOKI_SERVICE_NAME}
+      DOCKER_LOKI_PORT: ${DOCKER_LOKI_PORT}
+    ports:
+      - "${GRAFANA_PORT}:${DOCKER_GRAFANA_PORT}"
+    depends_on:
+      - notezy-loki
+      - notezy-tempo
+      - notezy-mimir
+
 volumes:
   redis-data:
     name: notezy-backend-redis-data
@@ -72,3 +180,9 @@ volumes:
     name: notezy-backend-postgres-data
   postgres-test-data:
     name: notezy-backend-postgres-test-data
+  loki-data:
+    name: notezy-backend-loki-data
+  tempo-data:
+    name: notezy-backend-tempo-data
+  mimir-data:
+    name: notezy-backend-mimir-data

@@ -1,0 +1,64 @@
+apiVersion: 1
+
+datasources:
+  - name: Mimir
+    type: prometheus
+    uid: mimir
+    access: proxy
+    url: http://${DOCKER_MIMIR_SERVICE_NAME}:${DOCKER_MIMIR_PORT}/prometheus
+    isDefault: true
+    jsonData:
+      httpMethod: POST
+      # Link metric exemplars to traces in Tempo
+      exemplarTraceIdDestinations:
+        - name: traceID
+          datasourceUid: tempo
+
+  - name: Tempo
+    type: tempo
+    uid: tempo
+    access: proxy
+    url: http://${DOCKER_TEMPO_SERVICE_NAME}:${DOCKER_TEMPO_PORT}
+    jsonData:
+      # Link traces to logs in Loki
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: "-1h"
+        spanEndTimeShift: "1h"
+        tags:
+          - key: service.name
+            value: service_name
+        filterByTraceID: true
+        filterBySpanID: false
+      # Link traces to metrics in Mimir
+      tracesToMetrics:
+        datasourceUid: mimir
+        spanStartTimeShift: "-1h"
+        spanEndTimeShift: "1h"
+        tags:
+          - key: service.name
+            value: service_name
+        queries:
+          - name: Request Rate
+            query: "sum(rate(traces_spanmetrics_calls_total{$$__tags}[5m]))"
+          - name: Error Rate
+            query: 'sum(rate(traces_spanmetrics_calls_total{$$__tags, status_code="STATUS_CODE_ERROR"}[5m]))'
+      # Enable the service graph powered by Tempo's metrics generator
+      serviceMap:
+        datasourceUid: mimir
+      nodeGraph:
+        enabled: true
+
+  - name: Loki
+    type: loki
+    uid: loki
+    access: proxy
+    url: http://${DOCKER_LOKI_SERVICE_NAME}:${DOCKER_LOKI_PORT}
+    jsonData:
+      # Link logs to traces in Tempo via trace ID extraction
+      derivedFields:
+        - datasourceUid: tempo
+          matcherRegex: "[Tt]race[_.]?[Ii][Dd][\":]?\\s*[\"']?(\\w+)"
+          name: TraceID
+          url: "$${__value.raw}"
+          matcherType: regex

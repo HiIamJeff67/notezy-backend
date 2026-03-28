@@ -1,6 +1,12 @@
 {
-    "editor.formatOnSave": true,
-    "[go]": {
-        "editor.defaultFormatter": "golang.go"
-    },
+  "editor.formatOnSave": true,
+  "[go]": {
+    "editor.defaultFormatter": "golang.go"
+  },
+  "yaml.schemas": {
+    "https://raw.githubusercontent.com/srikanthccv/otelcol-jsonschema/main/schema.json": [
+      "otel-collector-config.dev.yaml",
+      "otel-collector-config.yaml"
+    ]
+  }
 }

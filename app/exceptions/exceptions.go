@@ -49,6 +49,7 @@ const (
 // ExceptionPrefix_Adapter ExceptionPrefix = "Adapter"					 9
 // ExceptionPrefix_Token ExceptionPrefix = "Token"					     10
 // ExceptionPrefix_DataStructureLib ExceptionPrefix = "DataStructureLib" 11
+// ExceptionPrefix_Monitor ExceptionPrefix = "Monitor"					 12
 
 // ExceptionPrefix_Auth ExceptionPrefix = "Auth" 			 		     31
 // ExceptionPrefix_User ExceptionPrefix = "User"                         32

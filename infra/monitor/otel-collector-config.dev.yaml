@@ -1,12 +1,10 @@
-file_format: "0.1"
-
 receivers:
   otlp:
     protocols:
       grpc:
-        endpoint: 0.0.0.0:4317
+        endpoint: 0.0.0.0:${DOCKER_OTEL_COLLECTOR_GRPC_PORT}
       http:
-        endpoint: 0.0.0.0:4318
+        endpoint: 0.0.0.0:${DOCKER_OTEL_COLLECTOR_HTTP_PORT}
 
 processors:
   batch:
@@ -37,15 +35,15 @@ processors:
 exporters:
   otlphttp/tempo:
     # Send traces to Tempo via OTLP HTTP
-    endpoint: http://tempo:4318
+    endpoint: http://${DOCKER_TEMPO_SERVICE_NAME}:4318
 
   otlphttp/loki:
     # Send logs to Loki via its OTLP endpoint
-    endpoint: http://loki:3100/otlp
+    endpoint: http://${DOCKER_LOKI_SERVICE_NAME}:3100/otlp
 
   prometheusremotewrite:
     # Send metrics to Mimir via Prometheus remote write
-    endpoint: http://mimir:9009/api/v1/push
+    endpoint: http://${DOCKER_MIMIR_SERVICE_NAME}:9009/api/v1/push
     resource_to_telemetry_conversion:
       enabled: true
     tls:

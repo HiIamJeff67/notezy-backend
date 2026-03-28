@@ -7,6 +7,9 @@ import (
 	middlewares "notezy-backend/app/middlewares"
 	enums "notezy-backend/app/models/schemas/enums"
 	modules "notezy-backend/app/modules"
+	"notezy-backend/shared/constants"
+
+	"go.opentelemetry.io/otel"
 )
 
 func configureDevelopmentAuthRoutes() {
@@ -19,6 +22,8 @@ func configureDevelopmentAuthRoutes() {
 	{
 		authRoutes.POST(
 			"/register",
+			middlewares.WithTracerMiddleware(otel.Tracer(constants.ServiceName), "register"),
+			middlewares.WithMeterMiddleware(otel.Meter(constants.ServiceName)),
 			authModule.Binder.BindRegister(
 				authModule.Controller.Register,
 			),
