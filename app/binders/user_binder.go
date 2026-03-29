@@ -33,7 +33,7 @@ func (b *UserBinder) BindGetUserData(controllerFunc types.ControllerFunc[*dtos.G
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
@@ -50,7 +50,7 @@ func (b *UserBinder) BindGetMe(controllerFunc types.ControllerFunc[*dtos.GetMeRe
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
@@ -67,14 +67,14 @@ func (b *UserBinder) BindUpdateMe(controllerFunc types.ControllerFunc[*dtos.Upda
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.User.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 

@@ -8,8 +8,8 @@ import (
 	contexts "notezy-backend/app/contexts"
 	cookies "notezy-backend/app/cookies"
 	ratelimiter "notezy-backend/app/lib/ratelimiter"
-	logs "notezy-backend/app/logs"
-	traces "notezy-backend/app/traces"
+	logs "notezy-backend/app/monitor/logs"
+	traces "notezy-backend/app/monitor/traces"
 	types "notezy-backend/shared/types"
 )
 

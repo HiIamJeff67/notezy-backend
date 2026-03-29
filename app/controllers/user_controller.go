@@ -32,7 +32,7 @@ func NewUserController(service services.UserServiceInterface) UserControllerInte
 func (c *UserController) GetUserData(ctx *gin.Context, reqDto *dtos.GetUserDataReqDto) {
 	resDto, exception := c.userService.GetUserData(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -46,7 +46,7 @@ func (c *UserController) GetUserData(ctx *gin.Context, reqDto *dtos.GetUserDataR
 func (c *UserController) GetMe(ctx *gin.Context, reqDto *dtos.GetMeReqDto) {
 	resDto, exception := c.userService.GetMe(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -60,7 +60,7 @@ func (c *UserController) GetMe(ctx *gin.Context, reqDto *dtos.GetMeReqDto) {
 func (c *UserController) UpdateMe(ctx *gin.Context, reqDto *dtos.UpdateMeReqDto) {
 	resDto, exception := c.userService.UpdateMe(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 

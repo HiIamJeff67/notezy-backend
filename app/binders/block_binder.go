@@ -47,19 +47,19 @@ func (b *BlockBinder) BindGetMyBlockById(controllerFunc types.ControllerFunc[*dt
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		blockIdString := ctx.Query("blockId")
 		if blockIdString == "" {
-			exceptions.Shelf.InvalidDto().WithError(fmt.Errorf("blockId is required")).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidDto().WithError(fmt.Errorf("blockId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		blockId, err := uuid.Parse(blockIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.BlockId = blockId
@@ -76,13 +76,13 @@ func (b *BlockBinder) BindGetMyBlocksByIds(controllerFunc types.ControllerFunc[*
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
-			exceptions.Shelf.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -98,19 +98,19 @@ func (b *BlockBinder) BindGetMyBlocksByBlockGroupId(controllerFunc types.Control
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		blockGroupIdString := ctx.Query("blockGroupId")
 		if blockGroupIdString == "" {
-			exceptions.Shelf.InvalidDto().WithError(fmt.Errorf("blockGroupId is required")).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidDto().WithError(fmt.Errorf("blockGroupId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		blockGroupId, err := uuid.Parse(blockGroupIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.BlockGroupId = blockGroupId
@@ -127,13 +127,13 @@ func (b *BlockBinder) BindGetMyBlocksByBlockGroupIds(controllerFunc types.Contro
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
-			exceptions.Shelf.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -149,19 +149,19 @@ func (b *BlockBinder) BindGetMyBlocksByBlockPackId(controllerFunc types.Controll
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		blockPackIdString := ctx.Query("blockPackId")
 		if blockPackIdString == "" {
-			exceptions.Shelf.InvalidDto().WithError(fmt.Errorf("blockPackId is required")).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidDto().WithError(fmt.Errorf("blockPackId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		blockPackId, err := uuid.Parse(blockPackIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.BlockPackId = blockPackId
@@ -178,7 +178,7 @@ func (b *BlockBinder) BindGetAllMyBlocks(controllerFunc types.ControllerFunc[*dt
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
@@ -195,13 +195,13 @@ func (b *BlockBinder) BindInsertBlock(controllerFunc types.ControllerFunc[*dtos.
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Shelf.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -217,13 +217,13 @@ func (b *BlockBinder) BindInsertBlocks(controllerFunc types.ControllerFunc[*dtos
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Shelf.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -239,13 +239,13 @@ func (b *BlockBinder) BindUpdateMyBlockById(controllerFunc types.ControllerFunc[
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Shelf.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -261,13 +261,13 @@ func (b *BlockBinder) BindUpdateMyBlocksByIds(controllerFunc types.ControllerFun
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Shelf.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -283,13 +283,13 @@ func (b *BlockBinder) BindRestoreMyBlockById(controllerFunc types.ControllerFunc
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Shelf.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -305,13 +305,13 @@ func (b *BlockBinder) BindRestoreMyBlocksByIds(controllerFunc types.ControllerFu
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Shelf.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -327,13 +327,13 @@ func (b *BlockBinder) BindDeleteMyBlockById(controllerFunc types.ControllerFunc[
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Shelf.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -349,13 +349,13 @@ func (b *BlockBinder) BindDeleteMyBlocksByIds(controllerFunc types.ControllerFun
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Shelf.InvalidDto().WithError(err).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 

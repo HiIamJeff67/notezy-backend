@@ -30,7 +30,7 @@ func NewUserSettingController(service services.UserSettingServiceInterface) User
 func (c *UserSettingController) GetMySetting(ctx *gin.Context, reqDto *dtos.GetMySettingReqDto) {
 	resDto, exception := c.userSettingService.GetMySetting(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 

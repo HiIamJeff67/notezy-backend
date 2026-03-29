@@ -37,7 +37,7 @@ func NewRootShelfController(service services.RootShelfServiceInterface) RootShel
 func (c *RootShelfController) GetMyRootShelfById(ctx *gin.Context, reqDto *dtos.GetMyRootShelfByIdReqDto) {
 	resDto, exception := c.rootShelfService.GetMyRootShelfById(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -51,7 +51,7 @@ func (c *RootShelfController) GetMyRootShelfById(ctx *gin.Context, reqDto *dtos.
 func (c *RootShelfController) SearchRecentRootShelves(ctx *gin.Context, reqDto *dtos.SearchRecentRootShelvesReqDto) {
 	resDto, exception := c.rootShelfService.SearchRecentRootShelves(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -65,7 +65,7 @@ func (c *RootShelfController) SearchRecentRootShelves(ctx *gin.Context, reqDto *
 func (c *RootShelfController) CreateRootShelf(ctx *gin.Context, reqDto *dtos.CreateRootShelfReqDto) {
 	resDto, exception := c.rootShelfService.CreateRootShelf(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -79,7 +79,7 @@ func (c *RootShelfController) CreateRootShelf(ctx *gin.Context, reqDto *dtos.Cre
 func (c *RootShelfController) UpdateMyRootShelfById(ctx *gin.Context, reqDto *dtos.UpdateMyRootShelfByIdReqDto) {
 	resDto, exception := c.rootShelfService.UpdateMyRootShelfById(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -93,7 +93,7 @@ func (c *RootShelfController) UpdateMyRootShelfById(ctx *gin.Context, reqDto *dt
 func (c *RootShelfController) RestoreMyRootShelfById(ctx *gin.Context, reqDto *dtos.RestoreMyRootShelfByIdReqDto) {
 	resDto, exception := c.rootShelfService.RestoreMyRootShelfById(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -107,7 +107,7 @@ func (c *RootShelfController) RestoreMyRootShelfById(ctx *gin.Context, reqDto *d
 func (c *RootShelfController) RestoreMyRootShelvesByIds(ctx *gin.Context, reqDto *dtos.RestoreMyRootShelvesByIdsReqDto) {
 	resDto, exception := c.rootShelfService.RestoreMyRootShelvesByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -121,7 +121,7 @@ func (c *RootShelfController) RestoreMyRootShelvesByIds(ctx *gin.Context, reqDto
 func (c *RootShelfController) DeleteMyRootShelfById(ctx *gin.Context, reqDto *dtos.DeleteMyRootShelfByIdReqDto) {
 	resDto, exception := c.rootShelfService.DeleteMyRootShelfById(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -135,7 +135,7 @@ func (c *RootShelfController) DeleteMyRootShelfById(ctx *gin.Context, reqDto *dt
 func (c *RootShelfController) DeleteMyRootShelvesByIds(ctx *gin.Context, reqDto *dtos.DeleteMyRootShelvesByIdsReqDto) {
 	resDto, exception := c.rootShelfService.DeleteMyRootShelvesByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 

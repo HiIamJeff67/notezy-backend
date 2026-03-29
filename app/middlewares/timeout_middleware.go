@@ -11,6 +11,7 @@ import (
 
 	exceptions "notezy-backend/app/exceptions"
 	ratelimiter "notezy-backend/app/lib/ratelimiter"
+	"notezy-backend/app/monitor/metrics"
 	types "notezy-backend/shared/types"
 )
 
@@ -118,7 +119,9 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 					exceptions.FatelPanic().WithError(err).SafelyAbortAndResponseWithJSON(ctx)
 				}
 				if _, err := writer.ResponseWriter.Write(timeoutResponseBody); err != nil {
-					exceptions.FatelPanic().WithError(err).SafelyAbortAndResponseWithJSON(ctx)
+					exceptions.FatelPanic().WithError(err).SafelyAbortAndResponseWithJSON(
+						ctx, metrics.MetricNames.Server.Responses.Failed.Timeout,
+					)
 				}
 			}
 
@@ -139,7 +142,9 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 					exceptions.FatelPanic().WithError(err).SafelyAbortAndResponseWithJSON(ctx)
 				}
 				if _, err := writer.ResponseWriter.Write(timeoutResponseBody); err != nil {
-					exceptions.FatelPanic().WithError(err).SafelyAbortAndResponseWithJSON(ctx)
+					exceptions.FatelPanic().WithError(err).SafelyAbortAndResponseWithJSON(
+						ctx, metrics.MetricNames.Server.Responses.Failed.Timeout,
+					)
 				}
 			}
 

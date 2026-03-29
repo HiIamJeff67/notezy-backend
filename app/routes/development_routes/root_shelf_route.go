@@ -3,70 +3,154 @@ package developmentroutes
 import (
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel"
+
 	interceptors "notezy-backend/app/interceptors"
 	middlewares "notezy-backend/app/middlewares"
 	modules "notezy-backend/app/modules"
+	metrics "notezy-backend/app/monitor/metrics"
+	constants "notezy-backend/shared/constants"
 )
 
 func configureDevelopmentRootShelfRoutes() {
 	rootShelfModule := modules.NewRootShelfModule()
 
 	rootShelfRoutes := DevelopmentRouterGroup.Group("/rootShelf")
-	rootShelfRoutes.Use(
-		middlewares.TimeoutMiddleware(1*time.Second),
+	defaultMiddlewares := []gin.HandlerFunc{
+		middlewares.TimeoutMiddleware(1 * time.Second),
 		middlewares.AuthMiddleware(),
-		// middlewares.UserRoleMiddleware(enums.UserRole_Normal),
 		middlewares.AuthorizedRateLimitMiddleware(),
 		interceptors.RefreshTokenInterceptor(),
-	)
+	}
 	{
 		rootShelfRoutes.GET(
 			"/getMyRootShelfById",
-			rootShelfModule.Binder.BindGetMyRootShelfById(
-				rootShelfModule.Controller.GetMyRootShelfById,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyRootShelfById"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RootShelf.GetMyRootShelfById,
+					),
+				},
+				defaultMiddlewares,
+				rootShelfModule.Binder.BindGetMyRootShelfById(
+					rootShelfModule.Controller.GetMyRootShelfById,
+				),
+			)...,
 		)
 		rootShelfRoutes.GET(
 			"/searchRecentRootShelves",
-			rootShelfModule.Binder.BindSearchRecentRootShelves(
-				rootShelfModule.Controller.SearchRecentRootShelves,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "searchRecentRootShelves"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RootShelf.SearchRecentRootShelves,
+					),
+				},
+				defaultMiddlewares,
+				rootShelfModule.Binder.BindSearchRecentRootShelves(
+					rootShelfModule.Controller.SearchRecentRootShelves,
+				),
+			)...,
 		)
 		rootShelfRoutes.POST(
 			"/createRootShelf",
-			rootShelfModule.Binder.BindCreateRootShelf(
-				rootShelfModule.Controller.CreateRootShelf,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createRootShelf"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RootShelf.CreateRootShelf,
+					),
+				},
+				defaultMiddlewares,
+				rootShelfModule.Binder.BindCreateRootShelf(
+					rootShelfModule.Controller.CreateRootShelf,
+				),
+			)...,
 		)
 		rootShelfRoutes.PUT(
 			"/updateMyRootShelfById",
-			rootShelfModule.Binder.BindUpdateMyRootShelfById(
-				rootShelfModule.Controller.UpdateMyRootShelfById,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "updateMyRootShelfById"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RootShelf.UpdateMyRootShelfById,
+					),
+				},
+				defaultMiddlewares,
+				rootShelfModule.Binder.BindUpdateMyRootShelfById(
+					rootShelfModule.Controller.UpdateMyRootShelfById,
+				),
+			)...,
 		)
 		rootShelfRoutes.PATCH(
 			"/restoreMyRootShelfById",
-			rootShelfModule.Binder.BindRestoreMyRootShelfById(
-				rootShelfModule.Controller.RestoreMyRootShelfById,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "restoreMyRootShelfById"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RootShelf.RestoreMyRootShelfById,
+					),
+				},
+				defaultMiddlewares,
+				rootShelfModule.Binder.BindRestoreMyRootShelfById(
+					rootShelfModule.Controller.RestoreMyRootShelfById,
+				),
+			)...,
 		)
 		rootShelfRoutes.PATCH(
 			"/restoreMyRootShelvesByIds",
-			rootShelfModule.Binder.BindRestoreMyRootShelvesByIds(
-				rootShelfModule.Controller.RestoreMyRootShelvesByIds,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "restoreMyRootShelvesByIds"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RootShelf.RestoreMyRootShelvesByIds,
+					),
+				},
+				defaultMiddlewares,
+				rootShelfModule.Binder.BindRestoreMyRootShelvesByIds(
+					rootShelfModule.Controller.RestoreMyRootShelvesByIds,
+				),
+			)...,
 		)
 		rootShelfRoutes.DELETE(
 			"/deleteMyRootShelfById",
-			rootShelfModule.Binder.BindDeleteMyRootShelfById(
-				rootShelfModule.Controller.DeleteMyRootShelfById,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "deleteMyRootShelfById"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RootShelf.DeleteMyRootShelfById,
+					),
+				},
+				defaultMiddlewares,
+				rootShelfModule.Binder.BindDeleteMyRootShelfById(
+					rootShelfModule.Controller.DeleteMyRootShelfById,
+				),
+			)...,
 		)
 		rootShelfRoutes.DELETE(
 			"/deleteMyRootShelvesByIds",
-			rootShelfModule.Binder.BindDeleteMyRootShelvesByIds(
-				rootShelfModule.Controller.DeleteMyRootShelvesByIds,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "deleteMyRootShelvesByIds"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RootShelf.DeleteMyRootShelvesByIds,
+					),
+				},
+				defaultMiddlewares,
+				rootShelfModule.Binder.BindDeleteMyRootShelvesByIds(
+					rootShelfModule.Controller.DeleteMyRootShelvesByIds,
+				),
+			)...,
 		)
 	}
 }

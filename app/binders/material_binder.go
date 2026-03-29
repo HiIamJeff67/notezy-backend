@@ -53,19 +53,19 @@ func (b *MaterialBinder) BindGetMyMaterialById(controllerFunc types.ControllerFu
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		materialIdString := ctx.Query("materialId")
 		if materialIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("materialId is required")).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("materialId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		materialId, err := uuid.Parse(materialIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.MaterialId = materialId
@@ -82,19 +82,19 @@ func (b *MaterialBinder) BindGetMyMaterialAndItsParentById(controllerFunc types.
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		materialIdString := ctx.Query("materialId")
 		if materialIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("materialId is required")).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("materialId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		materialId, err := uuid.Parse(materialIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.MaterialId = materialId
@@ -111,25 +111,25 @@ func (b *MaterialBinder) BindGetMyMaterialsByParentSubShelfId(controllerFunc typ
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		parentSubShelfIdString := ctx.Query("parentSubShelfId")
 		if parentSubShelfIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("parentSubShelfId is required")).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("parentSubShelfId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		parentSubShelfId, err := uuid.Parse(parentSubShelfIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.ParentSubShelfId = parentSubShelfId
 
 		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
-			exceptions.Material.InvalidInput().WithError(err).Log().ResponseWithJSON(ctx)
+			exceptions.Material.InvalidInput().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -145,19 +145,19 @@ func (b *MaterialBinder) BindGetAllMyMaterialsByRootShelfId(controllerFunc types
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		rootShelfIdString := ctx.Query("rootShelfId")
 		if rootShelfIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("rootShelfId is required")).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("rootShelfId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		rootShelfId, err := uuid.Parse(rootShelfIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.RootShelfId = rootShelfId
@@ -174,21 +174,21 @@ func (b *MaterialBinder) BindCreateTextbookMaterial(controllerFunc types.Control
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		userPublicId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_PublicId)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserPublicId = *userPublicId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Material.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -204,21 +204,21 @@ func (b *MaterialBinder) BindCreateNotebookMaterial(controllerFunc types.Control
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		userPublicId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_PublicId)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserPublicId = *userPublicId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Material.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -234,14 +234,14 @@ func (b *MaterialBinder) BindUpdateMyMaterialById(controllerFunc types.Controlle
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Material.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -257,14 +257,14 @@ func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.Con
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		userPublicId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_PublicId)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserPublicId = *userPublicId
@@ -272,14 +272,14 @@ func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.Con
 		// extract the fileHeader from the context field, and make sure it's only one fileHeader
 		fileHeaders, exception := contexts.GetAndConvertContextToMultipartFileHeaders(ctx)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		var numberOfFiles = int64(len(fileHeaders))
 
 		if numberOfFiles > 0 {
 			if numberOfFiles > 1 {
-				exceptions.Material.TooManyFiles(numberOfFiles).Log().SafelyResponseWithJSON(ctx)
+				exceptions.Material.TooManyFiles(numberOfFiles).Log().SafelyAbortAndResponseWithJSON(ctx)
 				return
 			}
 
@@ -288,14 +288,14 @@ func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.Con
 			// check the file size
 			if fileHeader.Size > constants.MaxNotebookFileSize.ToInt64() {
 				exceptions.Material.FileTooLarge(fileHeader.Size, constants.MaxNotebookFileSize.ToInt64()).
-					Log().SafelyResponseWithJSON(ctx)
+					Log().SafelyAbortAndResponseWithJSON(ctx)
 				return
 			}
 
 			// try to open the file
 			fileInterface, err := fileHeader.Open()
 			if err != nil {
-				exceptions.Material.CannotOpenFiles().WithError(err).Log().SafelyResponseWithJSON(ctx)
+				exceptions.Material.CannotOpenFiles().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 				return
 			}
 
@@ -304,7 +304,7 @@ func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.Con
 			peekedBytes, err := bufferedReader.Peek(int(constants.PeekFileSize))
 			if err != nil && err != io.EOF {
 				fileInterface.Close()
-				exceptions.Material.CannotPeekFiles().WithError(err).Log().SafelyResponseWithJSON(ctx)
+				exceptions.Material.CannotPeekFiles().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 				return
 			}
 
@@ -314,7 +314,7 @@ func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.Con
 			if !strings.HasPrefix(detectedContentType, enums.MaterialContentType_PlainText.String()) &&
 				!strings.HasPrefix(detectedContentType, enums.MaterialContentType_JSON.String()) {
 				fileInterface.Close()
-				exceptions.Material.InvalidType(detectedContentType).Log().SafelyResponseWithJSON(ctx)
+				exceptions.Material.InvalidType(detectedContentType).Log().SafelyAbortAndResponseWithJSON(ctx)
 				return
 			}
 
@@ -323,14 +323,14 @@ func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.Con
 				_, err := seeker.Seek(0, io.SeekStart)
 				if err != nil {
 					fileInterface.Close()
-					exceptions.Material.CannotOpenFiles().WithError(err).Log().SafelyResponseWithJSON(ctx)
+					exceptions.Material.CannotOpenFiles().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 					return
 				}
 			} else { // if it cannot be seeked, then re-open the file
 				fileInterface.Close()
 				fileInterface, err = fileHeader.Open()
 				if err != nil {
-					exceptions.Material.CannotOpenFiles().WithError(err).Log().SafelyResponseWithJSON(ctx)
+					exceptions.Material.CannotOpenFiles().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 					return
 				}
 			}
@@ -348,7 +348,7 @@ func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.Con
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Material.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -364,14 +364,14 @@ func (b *MaterialBinder) BindSaveMyNotebookMaterialById(controllerFunc types.Con
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		userPublicId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_PublicId)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserPublicId = *userPublicId
@@ -379,14 +379,14 @@ func (b *MaterialBinder) BindSaveMyNotebookMaterialById(controllerFunc types.Con
 		// extract the fileHeader from the context field, and make sure it's only one fileHeader
 		fileHeaders, exception := contexts.GetAndConvertContextToMultipartFileHeaders(ctx)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		var numberOfFiles = int64(len(fileHeaders))
 
 		if numberOfFiles > 0 {
 			if numberOfFiles > 1 {
-				exceptions.Material.TooManyFiles(numberOfFiles).Log().SafelyResponseWithJSON(ctx)
+				exceptions.Material.TooManyFiles(numberOfFiles).Log().SafelyAbortAndResponseWithJSON(ctx)
 				return
 			}
 
@@ -395,14 +395,14 @@ func (b *MaterialBinder) BindSaveMyNotebookMaterialById(controllerFunc types.Con
 			// check the file size
 			if fileHeader.Size > constants.MaxNotebookFileSize.ToInt64() {
 				exceptions.Material.FileTooLarge(fileHeader.Size, constants.MaxNotebookFileSize.ToInt64()).
-					Log().SafelyResponseWithJSON(ctx)
+					Log().SafelyAbortAndResponseWithJSON(ctx)
 				return
 			}
 
 			// try to open the file
 			fileInterface, err := fileHeader.Open()
 			if err != nil {
-				exceptions.Material.CannotOpenFiles().WithError(err).Log().SafelyResponseWithJSON(ctx)
+				exceptions.Material.CannotOpenFiles().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 				return
 			}
 
@@ -411,7 +411,7 @@ func (b *MaterialBinder) BindSaveMyNotebookMaterialById(controllerFunc types.Con
 			peekedBytes, err := bufferedReader.Peek(int(constants.PeekFileSize))
 			if err != nil && err != io.EOF {
 				fileInterface.Close()
-				exceptions.Material.CannotPeekFiles().WithError(err).Log().SafelyResponseWithJSON(ctx)
+				exceptions.Material.CannotPeekFiles().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 				return
 			}
 
@@ -421,7 +421,7 @@ func (b *MaterialBinder) BindSaveMyNotebookMaterialById(controllerFunc types.Con
 			if !strings.HasPrefix(detectedContentType, enums.MaterialContentType_PlainText.String()) &&
 				!strings.HasPrefix(detectedContentType, enums.MaterialContentType_JSON.String()) {
 				fileInterface.Close()
-				exceptions.Material.InvalidType(detectedContentType).Log().SafelyResponseWithJSON(ctx)
+				exceptions.Material.InvalidType(detectedContentType).Log().SafelyAbortAndResponseWithJSON(ctx)
 				return
 			}
 
@@ -430,14 +430,14 @@ func (b *MaterialBinder) BindSaveMyNotebookMaterialById(controllerFunc types.Con
 				_, err := seeker.Seek(0, io.SeekStart)
 				if err != nil {
 					fileInterface.Close()
-					exceptions.Material.CannotOpenFiles().WithError(err).Log().SafelyResponseWithJSON(ctx)
+					exceptions.Material.CannotOpenFiles().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 					return
 				}
 			} else { // if it cannot be seeked, then re-open the file
 				fileInterface.Close()
 				fileInterface, err = fileHeader.Open()
 				if err != nil {
-					exceptions.Material.CannotOpenFiles().WithError(err).Log().SafelyResponseWithJSON(ctx)
+					exceptions.Material.CannotOpenFiles().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 					return
 				}
 			}
@@ -455,7 +455,7 @@ func (b *MaterialBinder) BindSaveMyNotebookMaterialById(controllerFunc types.Con
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Material.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -471,14 +471,14 @@ func (b *MaterialBinder) BindMoveMyMaterialById(controllerFunc types.ControllerF
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Material.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -494,14 +494,14 @@ func (b *MaterialBinder) BindMoveMyMaterialsByIds(controllerFunc types.Controlle
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Material.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -517,14 +517,14 @@ func (b *MaterialBinder) BindRestoreMyMaterialById(controllerFunc types.Controll
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Material.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -540,14 +540,14 @@ func (b *MaterialBinder) BindRestoreMyMaterialsByIds(controllerFunc types.Contro
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Material.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -563,14 +563,14 @@ func (b *MaterialBinder) BindDeleteMyMaterialById(controllerFunc types.Controlle
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Material.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -586,14 +586,14 @@ func (b *MaterialBinder) BindDeleteMyMaterialsByIds(controllerFunc types.Control
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Material.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 

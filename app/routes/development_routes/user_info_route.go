@@ -1,34 +1,60 @@
 package developmentroutes
 
 import (
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel"
+
 	interceptors "notezy-backend/app/interceptors"
 	middlewares "notezy-backend/app/middlewares"
 	modules "notezy-backend/app/modules"
-	"time"
+	metrics "notezy-backend/app/monitor/metrics"
+	constants "notezy-backend/shared/constants"
 )
 
 func configureDevelopmentUserInfoRoutes() {
 	userInfoModule := modules.NewUserInfoModule()
 
 	userInfoRoutes := DevelopmentRouterGroup.Group("/userInfo")
-	userInfoRoutes.Use(
-		middlewares.TimeoutMiddleware(1*time.Second),
+	defaultsMiddlewares := []gin.HandlerFunc{
+		middlewares.TimeoutMiddleware(1 * time.Second),
 		middlewares.AuthMiddleware(),
 		middlewares.AuthorizedRateLimitMiddleware(),
 		interceptors.RefreshTokenInterceptor(),
-	)
+	}
 	{
 		userInfoRoutes.GET(
 			"/getMyInfo",
-			userInfoModule.Binder.BindGetMyInfo(
-				userInfoModule.Controller.GetMyInfo,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyInfo"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.UserInfo.GetMyInfo,
+					),
+				},
+				defaultsMiddlewares,
+				userInfoModule.Binder.BindGetMyInfo(
+					userInfoModule.Controller.GetMyInfo,
+				),
+			)...,
 		)
 		userInfoRoutes.PUT(
 			"/updateMyInfo",
-			userInfoModule.Binder.BindUpdateMyInfo(
-				userInfoModule.Controller.UpdateMyInfo,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "updateMyInfo"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.UserInfo.UpdateMyInfo,
+					),
+				},
+				defaultsMiddlewares,
+				userInfoModule.Binder.BindUpdateMyInfo(
+					userInfoModule.Controller.UpdateMyInfo,
+				),
+			)...,
 		)
 	}
 }

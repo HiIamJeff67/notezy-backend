@@ -41,7 +41,7 @@ func (r *queryResolver) SearchRootShelves(ctx context.Context, input gqlmodels.S
 
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ginContext, types.ContextFieldName_User_Id)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ginContext)
+		exception.Log().SafelyAbortAndResponseWithJSON(ginContext)
 		return nil, exception.Log().ToGraphQLError(ctx)
 	}
 	result, exception := r.rootShelfService.SearchPrivateRootShelves(ctx, *userId, input)

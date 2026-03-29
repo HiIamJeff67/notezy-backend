@@ -3,93 +3,218 @@ package developmentroutes
 import (
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel"
+
 	interceptors "notezy-backend/app/interceptors"
 	middlewares "notezy-backend/app/middlewares"
 	modules "notezy-backend/app/modules"
+	metrics "notezy-backend/app/monitor/metrics"
+	constants "notezy-backend/shared/constants"
 )
 
 func configureDevelopmentBlockPackRoutes() {
 	blockPackModule := modules.NewBlockPackModule()
 
 	blockPackRoutes := DevelopmentRouterGroup.Group("/blockPack")
-	blockPackRoutes.Use(
-		middlewares.TimeoutMiddleware(3*time.Second),
+	defaultMiddlewares := []gin.HandlerFunc{
+		middlewares.TimeoutMiddleware(3 * time.Second),
 		middlewares.AuthMiddleware(),
 		middlewares.AuthorizedRateLimitMiddleware(),
 		interceptors.RefreshTokenInterceptor(),
-	)
+	}
 	{
 		blockPackRoutes.GET(
 			"/getMyBlockPackById",
-			blockPackModule.Binder.BindGetMyBlockPackById(
-				blockPackModule.Controller.GetMyBlockPackById,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyBlockPackById"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.BlockPack.GetMyBlockPackById,
+					),
+				},
+				defaultMiddlewares,
+				blockPackModule.Binder.BindGetMyBlockPackById(
+					blockPackModule.Controller.GetMyBlockPackById,
+				),
+			)...,
 		)
 		blockPackRoutes.GET(
 			"/getMyBlockPackAndItsParentById",
-			blockPackModule.Binder.BindGetMyBlockPackAndItsParentById(
-				blockPackModule.Controller.GetMyBlockPackAndItsParentById,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyBlockPackAndItsParentById"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.BlockPack.GetMyBlockPackAndItsParentById,
+					),
+				},
+				defaultMiddlewares,
+				blockPackModule.Binder.BindGetMyBlockPackAndItsParentById(
+					blockPackModule.Controller.GetMyBlockPackAndItsParentById,
+				),
+			)...,
 		)
 		blockPackRoutes.GET(
 			"/getMyBlockPacksByParentSubShelfId",
-			blockPackModule.Binder.BindGetMyBlockPacksByParentSubShelfId(
-				blockPackModule.Controller.GetMyBlockPacksByParentSubShelfId,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyBlockPacksByParentSubShelfId"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.BlockPack.GetMyBlockPacksByParentSubShelfId,
+					),
+				},
+				defaultMiddlewares,
+				blockPackModule.Binder.BindGetMyBlockPacksByParentSubShelfId(
+					blockPackModule.Controller.GetMyBlockPacksByParentSubShelfId,
+				),
+			)...,
 		)
 		blockPackRoutes.GET(
 			"/getAllMyBlockPacksByRootShelfId",
-			blockPackModule.Binder.BindGetAllMyBlockPacksByRootShelfId(
-				blockPackModule.Controller.GetAllMyBlockPacksByRootShelfId,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getAllMyBlockPacksByRootShelfId"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.BlockPack.GetAllMyBlockPacksByRootShelfId,
+					),
+				},
+				defaultMiddlewares,
+				blockPackModule.Binder.BindGetAllMyBlockPacksByRootShelfId(
+					blockPackModule.Controller.GetAllMyBlockPacksByRootShelfId,
+				),
+			)...,
 		)
 		blockPackRoutes.POST(
 			"/createBlockPack",
-			blockPackModule.Binder.BindCreateBlockPack(
-				blockPackModule.Controller.CreateBlockPack,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createBlockPack"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.BlockPack.CreateBlockPack,
+					),
+				},
+				defaultMiddlewares,
+				blockPackModule.Binder.BindCreateBlockPack(
+					blockPackModule.Controller.CreateBlockPack,
+				),
+			)...,
 		)
 		blockPackRoutes.PUT(
 			"/updateMyBlockPackById",
-			blockPackModule.Binder.BindUpdateMyBlockPackById(
-				blockPackModule.Controller.UpdateMyBlockPackById,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "updateMyBlockPackById"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.BlockPack.UpdateMyBlockPackById,
+					),
+				},
+				defaultMiddlewares,
+				blockPackModule.Binder.BindUpdateMyBlockPackById(
+					blockPackModule.Controller.UpdateMyBlockPackById,
+				),
+			)...,
 		)
 		blockPackRoutes.PUT(
 			"/moveMyBlockPackById",
-			blockPackModule.Binder.BindMoveMyBlockPackById(
-				blockPackModule.Controller.MoveMyBlockPackById,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "moveMyBlockPackById"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.BlockPack.MoveMyBlockPackById,
+					),
+				},
+				defaultMiddlewares,
+				blockPackModule.Binder.BindMoveMyBlockPackById(
+					blockPackModule.Controller.MoveMyBlockPackById,
+				),
+			)...,
 		)
 		blockPackRoutes.PUT(
 			"/moveMyBlockPacksByIds",
-			blockPackModule.Binder.BindMoveMyBlockPacksByIds(
-				blockPackModule.Controller.MoveMyBlockPacksByIds,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "moveMyBlockPacksByIds"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.BlockPack.MoveMyBlockPacksByIds,
+					),
+				},
+				defaultMiddlewares,
+				blockPackModule.Binder.BindMoveMyBlockPacksByIds(
+					blockPackModule.Controller.MoveMyBlockPacksByIds,
+				),
+			)...,
 		)
 		blockPackRoutes.PATCH(
 			"/restoreMyBlockPackById",
-			blockPackModule.Binder.BindRestoreMyBlockPackById(
-				blockPackModule.Controller.RestoreMyBlockPackById,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "restoreMyBlockPackById"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.BlockPack.RestoreMyBlockPackById,
+					),
+				},
+				defaultMiddlewares,
+				blockPackModule.Binder.BindRestoreMyBlockPackById(
+					blockPackModule.Controller.RestoreMyBlockPackById,
+				),
+			)...,
 		)
 		blockPackRoutes.PATCH(
 			"/restoreMyBlockPacksByIds",
-			blockPackModule.Binder.BindRestoreMyBlockPacksByIds(
-				blockPackModule.Controller.RestoreMyBlockPacksByIds,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "restoreMyBlockPacksByIds"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.BlockPack.RestoreMyBlockPacksByIds,
+					),
+				},
+				defaultMiddlewares,
+				blockPackModule.Binder.BindRestoreMyBlockPacksByIds(
+					blockPackModule.Controller.RestoreMyBlockPacksByIds,
+				),
+			)...,
 		)
 		blockPackRoutes.DELETE(
 			"/deleteMyBlockPackById",
-			blockPackModule.Binder.BindDeleteMyBlockPackById(
-				blockPackModule.Controller.DeleteMyBlockPackById,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "deleteMyBlockPackById"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.BlockPack.DeleteMyBlockPackById,
+					),
+				},
+				defaultMiddlewares,
+				blockPackModule.Binder.BindDeleteMyBlockPackById(
+					blockPackModule.Controller.DeleteMyBlockPackById,
+				),
+			)...,
 		)
 		blockPackRoutes.DELETE(
 			"/deleteMyBlockPacksByIds",
-			blockPackModule.Binder.BindDeleteMyBlockPacksByIds(
-				blockPackModule.Controller.DeleteMyBlockPacksByIds,
-			),
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "deleteMyBlockPacksByIds"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.BlockPack.DeleteMyBlockPacksByIds,
+					),
+				},
+				defaultMiddlewares,
+				blockPackModule.Binder.BindDeleteMyBlockPacksByIds(
+					blockPackModule.Controller.DeleteMyBlockPacksByIds,
+				),
+			)...,
 		)
 	}
 }

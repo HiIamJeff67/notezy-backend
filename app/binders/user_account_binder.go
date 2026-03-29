@@ -34,7 +34,7 @@ func (b *UserAccountBinder) BindGetMyAccount(controllerFunc types.ControllerFunc
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
@@ -51,14 +51,14 @@ func (b *UserAccountBinder) BindUpdateMyAccount(controllerFunc types.ControllerF
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.UserAccount.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -74,14 +74,14 @@ func (b *UserAccountBinder) BindBindGoogleAccount(controllerFunc types.Controlle
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.UserAccount.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -96,14 +96,14 @@ func (b *UserAccountBinder) BindUnbindGoogleAccount(controllerFunc types.Control
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.UserAccount.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 

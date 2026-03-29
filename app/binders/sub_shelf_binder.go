@@ -45,19 +45,19 @@ func (b *SubShelfBinder) BindGetMySubShelfById(controllerFunc types.ControllerFu
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		subShelfIdString := ctx.Query("subShelfId")
 		if subShelfIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("subShelfId is required")).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("subShelfId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		subShelfId, err := uuid.Parse(subShelfIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).Log().ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.SubShelfId = subShelfId
@@ -74,19 +74,19 @@ func (b *SubShelfBinder) BindGetMySubShelvesByPrevSubShelfId(controllerFunc type
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		prevSubShelfIdString := ctx.Query("prevSubShelfId")
 		if prevSubShelfIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("prevSubShelfId is required")).ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("prevSubShelfId is required")).SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		prevSubShelfId, err := uuid.Parse(prevSubShelfIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithError(err).SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.PrevSubShelfId = prevSubShelfId
@@ -103,19 +103,19 @@ func (b *SubShelfBinder) BindGetAllMySubShelvesByRootShelfId(controllerFunc type
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		rootShelfIdString := ctx.Query("rootShelfId")
 		if rootShelfIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("rootShelfId is required")).ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("rootShelfId is required")).SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		rootShelfId, err := uuid.Parse(rootShelfIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithError(err).SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.RootShelfId = rootShelfId
@@ -132,19 +132,19 @@ func (b *SubShelfBinder) BindGetMySubShelvesAndItemsByPrevSubShelfId(controllerF
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		prevSubShelfIdString := ctx.Query("prevSubShelfId")
 		if prevSubShelfIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("prevSubShelfId is required")).ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("prevSubShelfId is required")).SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		prevSubShelfId, err := uuid.Parse(prevSubShelfIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).ResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithError(err).SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.PrevSubShelfId = prevSubShelfId
@@ -161,14 +161,14 @@ func (b *SubShelfBinder) BindCreateSubShelfByRootShelfId(controllerFunc types.Co
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Shelf.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -184,14 +184,14 @@ func (b *SubShelfBinder) BindUpdateMySubShelfById(controllerFunc types.Controlle
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Shelf.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -207,14 +207,14 @@ func (b *SubShelfBinder) BindMoveMySubShelf(controllerFunc types.ControllerFunc[
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Shelf.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -230,14 +230,14 @@ func (b *SubShelfBinder) BindMoveMySubShelves(controllerFunc types.ControllerFun
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Shelf.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -253,14 +253,14 @@ func (b *SubShelfBinder) BindRestoreMySubShelfById(controllerFunc types.Controll
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Shelf.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -275,14 +275,14 @@ func (b *SubShelfBinder) BindRestoreMySubShelvesByIds(controllerFunc types.Contr
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Shelf.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -298,14 +298,14 @@ func (b *SubShelfBinder) BindDeleteMySubShelfById(controllerFunc types.Controlle
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Shelf.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -321,14 +321,14 @@ func (b *SubShelfBinder) BindDeleteMySubShelvesByIds(controllerFunc types.Contro
 
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil {
-			exception.Log().SafelyResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Shelf.InvalidDto().WithError(err)
-			exception.ResponseWithJSON(ctx)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 

@@ -8,8 +8,8 @@ import (
 	rate "golang.org/x/time/rate"
 
 	caches "notezy-backend/app/caches"
-	logs "notezy-backend/app/logs"
-	traces "notezy-backend/app/traces"
+	logs "notezy-backend/app/monitor/logs"
+	traces "notezy-backend/app/monitor/traces"
 	constants "notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
 )

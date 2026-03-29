@@ -10,6 +10,13 @@ distributor:
         http:
           endpoint: 0.0.0.0:${DOCKER_OTEL_COLLECTOR_HTTP_PORT}
 
+ingester:
+  max_block_duration: 5m
+
+compactor:
+  compaction:
+    block_retention: 72h
+
 storage:
   trace:
     backend: local

@@ -72,7 +72,11 @@ func initOTel(ctx context.Context) (func(), error) {
 
 	traceExporter, _ := otlptracegrpc.New(
 		ctx,
-		otlptracegrpc.WithEndpoint(constants.Host+":"+util.GetEnv("DOCKER_OTEL_COLLECTOR_GRPC_PORT", "4317")),
+		otlptracegrpc.WithEndpoint(
+			util.GetEnv("DOCKER_OTEL_COLLECTOR_SERVICE_NAME", "notezy-otel-collector")+
+				":"+
+				util.GetEnv("DOCKER_OTEL_COLLECTOR_GRPC_PORT", "4317"),
+		),
 		otlptracegrpc.WithInsecure(),
 	)
 	traceProvider := sdktrace.NewTracerProvider(
@@ -83,7 +87,11 @@ func initOTel(ctx context.Context) (func(), error) {
 
 	metricExporter, _ := otlpmetricgrpc.New(
 		ctx,
-		otlpmetricgrpc.WithEndpoint(constants.Host+":"+util.GetEnv("DOCKER_OTEL_COLLECTOR_GRPC_PORT", "4317")),
+		otlpmetricgrpc.WithEndpoint(
+			util.GetEnv("DOCKER_OTEL_COLLECTOR_SERVICE_NAME", "notezy-otel-collector")+
+				":"+
+				util.GetEnv("DOCKER_OTEL_COLLECTOR_GRPC_PORT", "4317"),
+		),
 		otlpmetricgrpc.WithInsecure(),
 	)
 	meterProvider := sdkmetric.NewMeterProvider(
@@ -99,7 +107,11 @@ func initOTel(ctx context.Context) (func(), error) {
 
 	logExporter, _ := otlploggrpc.New(
 		ctx,
-		otlploggrpc.WithEndpoint(constants.Host+":"+util.GetEnv("DOCKER_OTEL_COLLECTOR_GRPC_PORT", "4317")),
+		otlploggrpc.WithEndpoint(
+			util.GetEnv("DOCKER_OTEL_COLLECTOR_SERVICE_NAME", "notezy-otel-collector")+
+				":"+
+				util.GetEnv("DOCKER_OTEL_COLLECTOR_GRPC_PORT", "4317"),
+		),
 		otlploggrpc.WithInsecure(),
 	)
 	logProvider := sdklog.NewLoggerProvider(

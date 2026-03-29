@@ -11,6 +11,7 @@ import (
 	exceptions "notezy-backend/app/exceptions"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
+	metrics "notezy-backend/app/monitor/metrics"
 	tokens "notezy-backend/app/tokens"
 	types "notezy-backend/shared/types"
 )
@@ -117,7 +118,7 @@ func AuthMiddleware() gin.HandlerFunc {
 					// also extend the ttl of the user data cache
 					userId, err := uuid.Parse(claims.Id)
 					if err != nil {
-						exceptions.Token.FailedToParseAccessToken().Log().SafelyAbortAndResponseWithJSON(ctx)
+						exceptions.Token.FailedToParseAccessToken().Log().SafelyAbortAndResponseWithJSON(ctx, metrics.MetricNames.Server.Responses.Failed.Unauthorized)
 						return
 					}
 					if exception := caches.ExtendUserDataCacheTTL(userId); exception != nil {
@@ -134,19 +135,19 @@ func AuthMiddleware() gin.HandlerFunc {
 		// this means the old accessToken can no longer get any data of the user
 		refreshToken, exception := _extractRefreshToken(ctx)
 		if exception != nil { // if failed to extract the refreshToken
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx, metrics.MetricNames.Server.Responses.Failed.Unauthorized)
 			return
 		}
 
 		_user, exception := _validateRefreshToken(refreshToken)
 		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx, metrics.MetricNames.Server.Responses.Failed.Unauthorized)
 			return
 		}
 
 		// if we can't check the userAgent in accessToken, then we check it in our database
 		if currentUserAgent := ctx.GetHeader("User-Agent"); currentUserAgent != _user.UserAgent {
-			exceptions.Auth.WrongUserAgent().Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Auth.WrongUserAgent().Log().SafelyAbortAndResponseWithJSON(ctx, metrics.MetricNames.Server.Responses.Failed.Unauthorized)
 			return
 		}
 
@@ -154,13 +155,13 @@ func AuthMiddleware() gin.HandlerFunc {
 		// then we need to generate the new accessToken, and storing it in the cache, and regarding the entire validation as successful
 		newAccessToken, exception := tokens.GenerateAccessToken(_user.Id.String(), _user.Name, _user.Email, _user.UserAgent)
 		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx, metrics.MetricNames.Server.Responses.Failed.Unauthorized)
 			return
 		}
 		// also generate a new CSRF token, and storing it in the cache
 		newCSRFToken, exception := tokens.GenerateCSRFToken()
 		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx, metrics.MetricNames.Server.Responses.Failed.Unauthorized)
 			return
 		}
 
@@ -195,7 +196,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			}
 
 			if exception = caches.SetUserDataCache(_user.Id, newUserDataCache); exception != nil {
-				exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+				exception.Log().SafelyAbortAndResponseWithJSON(ctx, metrics.MetricNames.Server.Responses.Failed.Unauthorized)
 				return
 			}
 		} else {

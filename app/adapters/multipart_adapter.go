@@ -11,7 +11,7 @@ import (
 
 	exceptions "notezy-backend/app/exceptions"
 	constants "notezy-backend/shared/constants"
-	"notezy-backend/shared/types"
+	types "notezy-backend/shared/types"
 )
 
 func MultipartAdapter() gin.HandlerFunc {
@@ -20,7 +20,7 @@ func MultipartAdapter() gin.HandlerFunc {
 		if err != nil {
 			exceptions.Adapter.
 				InvalidMultipartForm().WithError(err).
-				Log().SafelyResponseWithJSON(ctx)
+				Log().SafelyAbortAndResponseWithJSON(ctx)
 			ctx.Abort()
 			return
 		}
@@ -46,7 +46,7 @@ func MultipartAdapter() gin.HandlerFunc {
 				if fileHeader.Size > constants.MaxNonVideoFileSize.ToInt64() {
 					exceptions.Adapter.
 						FileTooLarge(fileHeader.Size, constants.MaxNonVideoFileSize.ToInt64()).
-						Log().SafelyResponseWithJSON(ctx)
+						Log().SafelyAbortAndResponseWithJSON(ctx)
 					ctx.Abort()
 					return
 				}

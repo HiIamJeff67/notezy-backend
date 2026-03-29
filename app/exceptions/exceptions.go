@@ -13,9 +13,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/gqlerror"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric"
 
-	logs "notezy-backend/app/logs"
-	traces "notezy-backend/app/traces"
+	logs "notezy-backend/app/monitor/logs"
+	metrics "notezy-backend/app/monitor/metrics"
+	traces "notezy-backend/app/monitor/traces"
+	constants "notezy-backend/shared/constants"
 	types "notezy-backend/shared/types"
 )
 
@@ -98,6 +102,29 @@ type ExceptionCompareOption struct {
 	WithError          bool
 }
 
+func (e *Exception) IncreamentMeter(ctx *gin.Context, meter metric.Meter, names ...string) {
+	isTotalCounted := false
+	for _, name := range names {
+		if name == metrics.MetricNames.Server.Responses.Failed.Total {
+			isTotalCounted = true
+		}
+		requestCounter, err := meter.Int64Counter(name)
+		if err != nil {
+			Monitor.FailedToInitializeRequestCounter().Log()
+		} else {
+			requestCounter.Add(ctx, 1)
+		}
+	}
+	if !isTotalCounted {
+		requestCounter, err := meter.Int64Counter(metrics.MetricNames.Server.Responses.Failed.Total)
+		if err != nil {
+			Monitor.FailedToInitializeRequestCounter().Log()
+		} else {
+			requestCounter.Add(ctx, 1)
+		}
+	}
+}
+
 func (e *Exception) String() string {
 	if e.Error != nil {
 		return fmt.Sprintf("[%v]%s:%s(%v)", e.Code, e.Reason, e.Message, e.Error.Error())
@@ -133,7 +160,9 @@ func (e *Exception) GetResponseJSONBytes() ([]byte, error) {
 	})
 }
 
-func (e *Exception) ResponseWithJSON(ctx *gin.Context) {
+func (e *Exception) ResponseWithJSON(ctx *gin.Context, names ...string) {
+	e.IncreamentMeter(ctx, otel.Meter(constants.ServiceName), names...)
+
 	ctx.JSON(e.HTTPStatusCode, gin.H{
 		"success":   false,
 		"data":      nil,
@@ -141,7 +170,9 @@ func (e *Exception) ResponseWithJSON(ctx *gin.Context) {
 	})
 }
 
-func (e *Exception) SafelyResponseWithJSON(ctx *gin.Context) {
+func (e *Exception) SafelyResponseWithJSON(ctx *gin.Context, names ...string) {
+	e.IncreamentMeter(ctx, otel.Meter(constants.ServiceName), names...)
+
 	if e.IsInternal {
 		e = InternalServerWentWrong(e)
 	}
@@ -152,7 +183,9 @@ func (e *Exception) SafelyResponseWithJSON(ctx *gin.Context) {
 	})
 }
 
-func (e *Exception) SafelyAbortAndResponseWithJSON(ctx *gin.Context) {
+func (e *Exception) SafelyAbortAndResponseWithJSON(ctx *gin.Context, names ...string) {
+	e.IncreamentMeter(ctx, otel.Meter(constants.ServiceName), names...)
+
 	if e.IsInternal {
 		e = InternalServerWentWrong(e)
 	}

@@ -2,7 +2,7 @@ package exceptions
 
 import (
 	"net/http"
-	traces "notezy-backend/app/traces"
+	traces "notezy-backend/app/monitor/traces"
 )
 
 const (

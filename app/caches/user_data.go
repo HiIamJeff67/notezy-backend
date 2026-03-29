@@ -12,9 +12,9 @@ import (
 
 	redislibraries "notezy-backend/app/caches/libraries"
 	exceptions "notezy-backend/app/exceptions"
-	logs "notezy-backend/app/logs"
 	enums "notezy-backend/app/models/schemas/enums"
-	traces "notezy-backend/app/traces"
+	logs "notezy-backend/app/monitor/logs"
+	traces "notezy-backend/app/monitor/traces"
 	types "notezy-backend/shared/types"
 )
 

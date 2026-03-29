@@ -7,8 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	exceptions "notezy-backend/app/exceptions"
-	logs "notezy-backend/app/logs"
-	traces "notezy-backend/app/traces"
+	logs "notezy-backend/app/monitor/logs"
+	traces "notezy-backend/app/monitor/traces"
 	util "notezy-backend/app/util"
 )
 

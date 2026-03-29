@@ -33,7 +33,7 @@ func NewUserAccountController(service services.UserAccountServiceInterface) User
 func (c *UserAccountController) GetMyAccount(ctx *gin.Context, reqDto *dtos.GetMyAccountReqDto) {
 	resDto, exception := c.userAccountService.GetMyAccount(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -47,7 +47,7 @@ func (c *UserAccountController) GetMyAccount(ctx *gin.Context, reqDto *dtos.GetM
 func (c *UserAccountController) UpdateMyAccount(ctx *gin.Context, reqDto *dtos.UpdateMyAccountReqDto) {
 	resDto, exception := c.userAccountService.UpdateMyAccount(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -61,7 +61,7 @@ func (c *UserAccountController) UpdateMyAccount(ctx *gin.Context, reqDto *dtos.U
 func (c *UserAccountController) BindGoogleAccount(ctx *gin.Context, reqDto *dtos.BindGoogleAccountReqDto) {
 	resDto, exception := c.userAccountService.BindGoogleAccount(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -75,7 +75,7 @@ func (c *UserAccountController) BindGoogleAccount(ctx *gin.Context, reqDto *dtos
 func (c *UserAccountController) UnbindGoogleAccount(ctx *gin.Context, reqDto *dtos.UnbindGoogleAccountReqDto) {
 	resDto, exception := c.userAccountService.UnbindGoogleAccount(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 

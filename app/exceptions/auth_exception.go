@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	traces "notezy-backend/app/traces"
+	traces "notezy-backend/app/monitor/traces"
 )
 
 const (

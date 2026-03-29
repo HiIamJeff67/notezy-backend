@@ -3,7 +3,7 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
-	traces "notezy-backend/app/traces"
+	traces "notezy-backend/app/monitor/traces"
 	"unicode"
 )
 

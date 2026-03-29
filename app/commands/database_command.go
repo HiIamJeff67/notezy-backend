@@ -4,9 +4,9 @@ import (
 	"github.com/spf13/cobra"
 
 	configs "notezy-backend/app/configs"
-	logs "notezy-backend/app/logs"
 	models "notezy-backend/app/models"
-	traces "notezy-backend/app/traces"
+	logs "notezy-backend/app/monitor/logs"
+	traces "notezy-backend/app/monitor/traces"
 	types "notezy-backend/shared/types"
 )
 

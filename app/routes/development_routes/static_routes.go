@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	logs "notezy-backend/app/logs"
-	traces "notezy-backend/app/traces"
+	logs "notezy-backend/app/monitor/logs"
+	traces "notezy-backend/app/monitor/traces"
 )
 
 func configureStaticRoutes() {

@@ -1,0 +1,24 @@
+// metric name map
+{
+	server: {
+		requests: {
+			total: "server.requests.total", 
+			auth: {
+				register: "server.requests.auth.register",
+				login: "server.requests.auth.login",
+				...
+			}, 
+		},
+		responses: {
+			email: {
+				welcome: "server.requests.email.welcome",
+				authCode: "server.requests.email.authCode",
+			},
+			total: {
+				success: "server.responses.total.success", 
+				failed: "server.responses.total.failed",
+				timeout: "server.response.total.timeout",
+			},
+		}
+	}
+}

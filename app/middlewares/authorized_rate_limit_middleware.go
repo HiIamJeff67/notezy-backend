@@ -12,8 +12,8 @@ import (
 	contexts "notezy-backend/app/contexts"
 	exceptions "notezy-backend/app/exceptions"
 	ratelimiter "notezy-backend/app/lib/ratelimiter"
-	logs "notezy-backend/app/logs"
-	traces "notezy-backend/app/traces"
+	logs "notezy-backend/app/monitor/logs"
+	traces "notezy-backend/app/monitor/traces"
 	types "notezy-backend/shared/types"
 )
 

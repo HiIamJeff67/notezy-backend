@@ -43,7 +43,7 @@ func NewMaterialController(service services.MaterialServiceInterface) MaterialCo
 func (c *MaterialController) GetMyMaterialById(ctx *gin.Context, reqDto *dtos.GetMyMaterialByIdReqDto) {
 	resDto, exception := c.materialService.GetMyMaterialById(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -57,7 +57,7 @@ func (c *MaterialController) GetMyMaterialById(ctx *gin.Context, reqDto *dtos.Ge
 func (c *MaterialController) GetMyMaterialAndItsParentById(ctx *gin.Context, reqDto *dtos.GetMyMaterialAndItsParentByIdReqDto) {
 	resDto, exception := c.materialService.GetMyMaterialAndItsParentById(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -71,7 +71,7 @@ func (c *MaterialController) GetMyMaterialAndItsParentById(ctx *gin.Context, req
 func (c *MaterialController) GetMyMaterialsByParentSubShelfId(ctx *gin.Context, reqDto *dtos.GetMyMaterialsByParentSubShelfIdReqDto) {
 	resDto, exception := c.materialService.GetMyMaterialsByParentSubShelfId(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -85,7 +85,7 @@ func (c *MaterialController) GetMyMaterialsByParentSubShelfId(ctx *gin.Context, 
 func (c *MaterialController) GetAllMyMaterialsByRootShelfId(ctx *gin.Context, reqDto *dtos.GetAllMyMaterialsByRootShelfIdReqDto) {
 	resDto, exception := c.materialService.GetAllMyMaterialsByRootShelfId(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -99,7 +99,7 @@ func (c *MaterialController) GetAllMyMaterialsByRootShelfId(ctx *gin.Context, re
 func (c *MaterialController) CreateTextbookMaterial(ctx *gin.Context, reqDto *dtos.CreateTextbookMaterialReqDto) {
 	resDto, exception := c.materialService.CreateTextbookMaterial(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -113,7 +113,7 @@ func (c *MaterialController) CreateTextbookMaterial(ctx *gin.Context, reqDto *dt
 func (c *MaterialController) CreateNotebookMaterial(ctx *gin.Context, reqDto *dtos.CreateNotebookMaterialReqDto) {
 	resDto, exception := c.materialService.CreateNotebookMaterial(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -127,7 +127,7 @@ func (c *MaterialController) CreateNotebookMaterial(ctx *gin.Context, reqDto *dt
 func (c *MaterialController) UpdateMyMaterialById(ctx *gin.Context, reqDto *dtos.UpdateMyMaterialByIdReqDto) {
 	resDto, exception := c.materialService.UpdateMyMaterialById(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -141,7 +141,7 @@ func (c *MaterialController) UpdateMyMaterialById(ctx *gin.Context, reqDto *dtos
 func (c *MaterialController) SaveMyTextbookMaterialById(ctx *gin.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) {
 	resDto, exception := c.materialService.SaveMyTextbookMaterialById(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -155,7 +155,7 @@ func (c *MaterialController) SaveMyTextbookMaterialById(ctx *gin.Context, reqDto
 func (c *MaterialController) SaveMyNotebookMaterialById(ctx *gin.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) {
 	resDto, exception := c.materialService.SaveMyNotebookMaterialById(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -169,7 +169,7 @@ func (c *MaterialController) SaveMyNotebookMaterialById(ctx *gin.Context, reqDto
 func (c *MaterialController) MoveMyMaterialById(ctx *gin.Context, reqDto *dtos.MoveMyMaterialByIdReqDto) {
 	resDto, exception := c.materialService.MoveMyMaterialById(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -183,7 +183,7 @@ func (c *MaterialController) MoveMyMaterialById(ctx *gin.Context, reqDto *dtos.M
 func (c *MaterialController) MoveMyMaterialsByIds(ctx *gin.Context, reqDto *dtos.MoveMyMaterialsByIdsReqDto) {
 	resDto, exception := c.materialService.MoveMyMaterialsByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -197,7 +197,7 @@ func (c *MaterialController) MoveMyMaterialsByIds(ctx *gin.Context, reqDto *dtos
 func (c *MaterialController) RestoreMyMaterialById(ctx *gin.Context, reqDto *dtos.RestoreMyMaterialByIdReqDto) {
 	resDto, exception := c.materialService.RestoreMyMaterialById(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -211,7 +211,7 @@ func (c *MaterialController) RestoreMyMaterialById(ctx *gin.Context, reqDto *dto
 func (c *MaterialController) RestoreMyMaterialsByIds(ctx *gin.Context, reqDto *dtos.RestoreMyMaterialsByIdsReqDto) {
 	resDto, exception := c.materialService.RestoreMyMaterialsByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -225,7 +225,7 @@ func (c *MaterialController) RestoreMyMaterialsByIds(ctx *gin.Context, reqDto *d
 func (c *MaterialController) DeleteMyMaterialById(ctx *gin.Context, reqDto *dtos.DeleteMyMaterialByIdReqDto) {
 	resDto, exception := c.materialService.DeleteMyMaterialById(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
@@ -239,7 +239,7 @@ func (c *MaterialController) DeleteMyMaterialById(ctx *gin.Context, reqDto *dtos
 func (c *MaterialController) DeleteMyMaterialsByIds(ctx *gin.Context, reqDto *dtos.DeleteMyMaterialsByIdsReqDto) {
 	resDto, exception := c.materialService.DeleteMyMaterialsByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
-		exception.Log().SafelyResponseWithJSON(ctx)
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}
 
