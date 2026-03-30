@@ -87,7 +87,7 @@ func (hrl *HybridRateLimiter) appendPendingTask(key string, tokens int32) {
 	}
 }
 
-func (hrl *HybridRateLimiter) reappendTasks(failedTasks map[string]HybridRateLimitTask) {
+func (hrl *HybridRateLimiter) reappendPendingTasks(failedTasks map[string]HybridRateLimitTask) {
 	hrl.pendingTasksMutex.Lock()
 	defer hrl.pendingTasksMutex.Unlock()
 
@@ -146,7 +146,7 @@ func (hrl *HybridRateLimiter) batchSync() {
 
 		if err := caches.BatchSynchronizeRateLimitRecordCachesByUserIds(userDtos, hrl.BackendServerName); err != nil {
 			logs.FError(traces.GetTrace(0).FileLineString(), "Failed to batch sync user rate limits to Redis: %v", err)
-			hrl.reappendTasks(fetchedPendingTasks)
+			hrl.reappendPendingTasks(fetchedPendingTasks)
 		} else if len(userDtos) > 0 {
 			logs.FDebug(traces.GetTrace(0).FileLineString(), "Batch synced %d user rate limits to Redis", len(userDtos))
 		}
@@ -171,7 +171,7 @@ func (hrl *HybridRateLimiter) batchSync() {
 
 		if err := caches.BatchSynchronizeRateLimitRecordCachesByFingerprints(clientDtos, hrl.BackendServerName); err != nil {
 			logs.FError(traces.GetTrace(0).FileLineString(), "Failed to batch sync client IP rate limits to Redis: %v", err)
-			hrl.reappendTasks(fetchedPendingTasks)
+			hrl.reappendPendingTasks(fetchedPendingTasks)
 		} else if len(clientDtos) > 0 {
 			logs.FDebug(traces.GetTrace(0).FileLineString(), "Batch synced %d client IP rate limits to Redis", len(clientDtos))
 		}
@@ -241,11 +241,11 @@ func (hrl *HybridRateLimiter) AllowNByFingerprint(fingerprint string, now time.T
 
 /* ============================== Operations for Authorized Middleware (User ID based) ============================== */
 
-func (hrl *HybridRateLimiter) checkBucketLimitByUserId(userId uuid.UUID, fingerprint string, n int32) int32 {
+func (hrl *HybridRateLimiter) checkBucketLimitByUserId(userId uuid.UUID, n int32) int32 {
 	var totalTokensUsed int32 = 0
 
 	for _, backendServerName := range types.AllBackendServerNames {
-		rateLimitRecordCache, exception := caches.GetRateLimitRecordCacheByUserId(userId, fingerprint, backendServerName)
+		rateLimitRecordCache, exception := caches.GetRateLimitRecordCacheByUserId(userId, backendServerName)
 		if exception != nil {
 			continue
 		}
@@ -258,16 +258,14 @@ func (hrl *HybridRateLimiter) checkBucketLimitByUserId(userId uuid.UUID, fingerp
 		totalTokensUsed += rateLimitRecordCache.NumOfTokens
 	}
 
-	// logs.Info(traces.GetTrace(0).FileLineString(),"The current tokens used by the user: ", totalTokensUsed)
-
 	return hrl.UserLimit - totalTokensUsed - n
 }
 
-func (hrl *HybridRateLimiter) AllowByUserId(userId uuid.UUID, fingerprint string) (bool, int32) {
-	return hrl.AllowNByUserId(userId, fingerprint, time.Now(), 1)
+func (hrl *HybridRateLimiter) AllowByUserId(userId uuid.UUID) (bool, int32) {
+	return hrl.AllowNByUserId(userId, time.Now(), 1)
 }
 
-func (hrl *HybridRateLimiter) AllowNByUserId(userId uuid.UUID, fingerprint string, now time.Time, n int) (bool, int32) {
+func (hrl *HybridRateLimiter) AllowNByUserId(userId uuid.UUID, now time.Time, n int) (bool, int32) {
 	hrl.LimiterMutex.RLock()
 	defer hrl.LimiterMutex.RUnlock()
 
@@ -278,7 +276,7 @@ func (hrl *HybridRateLimiter) AllowNByUserId(userId uuid.UUID, fingerprint strin
 	}
 
 	// 2. Use the rate limit record in redis cache to check if the request from the same source has exceeded some certain count
-	remaining := hrl.checkBucketLimitByUserId(userId, fingerprint, int32(n))
+	remaining := hrl.checkBucketLimitByUserId(userId, int32(n))
 	if remaining < 0 {
 		logs.FDebug(traces.GetTrace(0).FileLineString(), "Request blocked by global rate limiter for user ID: %s, requested: %d", userId.String(), n)
 		return false, 0
@@ -299,7 +297,7 @@ func (hrl *HybridRateLimiter) Allow(key string) (bool, int32) {
 			logs.FError(traces.GetTrace(0).FileLineString(), "Invalid user ID format: %s", key)
 			return false, 0
 		}
-		return hrl.AllowByUserId(userId, "")
+		return hrl.AllowByUserId(userId)
 	} else {
 		return hrl.AllowByFingerprint(key)
 	}
@@ -312,7 +310,7 @@ func (hrl *HybridRateLimiter) AllowN(key string, now time.Time, n int) (bool, in
 			logs.FError(traces.GetTrace(0).FileLineString(), "Invalid user ID format: %s", key)
 			return false, 0
 		}
-		return hrl.AllowNByUserId(userId, "", now, n)
+		return hrl.AllowNByUserId(userId, now, n)
 	} else {
 		return hrl.AllowNByFingerprint(key, now, n)
 	}

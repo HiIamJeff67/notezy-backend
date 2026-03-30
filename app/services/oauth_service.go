@@ -9,8 +9,6 @@ import (
 
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
-	logs "notezy-backend/app/monitor/logs"
-	traces "notezy-backend/app/monitor/traces"
 )
 
 type OAuthServiceInterface interface {
@@ -32,9 +30,6 @@ func NewOAuthService(oauthGoogleConfig *oauth2.Config) OAuthServiceInterface {
 func (s *OAuthService) GetGoogleUserInfo(
 	ctx context.Context, authenticationCode string,
 ) (*dtos.GoogleUserInfoDto, *exceptions.Exception) {
-	logs.Info(traces.GetTrace(0).FileLineString(), "Client Id: ", s.oauthGoogleConfig.ClientID)
-	logs.Info(traces.GetTrace(0).FileLineString(), "Client Secret: ", s.oauthGoogleConfig.ClientSecret)
-	logs.Info(traces.GetTrace(0).FileLineString(), "Redirect URL: ", s.oauthGoogleConfig.RedirectURL)
 	token, err := s.oauthGoogleConfig.Exchange(ctx, authenticationCode)
 	if err != nil {
 		return nil, exceptions.OAuth.FailedToExchangeToken(authenticationCode).WithError(err)

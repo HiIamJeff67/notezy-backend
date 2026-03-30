@@ -57,7 +57,7 @@ func formateRateLimitKeyByUserId(id uuid.UUID) string {
 	return fmt.Sprintf("%s:%s", types.ValidCachePurpose_RateLimite.String(), id.String())
 }
 
-func calculateExpirationTime(fingerprint string, windowStart time.Time, windowDuration time.Duration) time.Duration {
+func calculateExpirationTimeByFinerprint(fingerprint string, windowStart time.Time, windowDuration time.Duration) time.Duration {
 	nextResetTime := windowStart.Add(windowDuration)
 	now := time.Now()
 
@@ -70,6 +70,25 @@ func calculateExpirationTime(fingerprint string, windowStart time.Time, windowDu
 	h.Write([]byte(fingerprint))
 	seed := int64(h.Sum32())
 
+	rng := rand.New(rand.NewSource(seed))
+	jitterOffset := time.Duration(rng.Int63n(int64(_jitterMaxOffset)))
+	expirationTime := baseExpirationTime + jitterOffset
+
+	return expirationTime
+}
+
+func calculateExpirationTimeByUserId(id uuid.UUID, windowStart time.Time, windowDuration time.Duration) time.Duration {
+	nextResetTime := windowStart.Add(windowDuration)
+	now := time.Now()
+
+	baseExpirationTime := nextResetTime.Sub(now)
+	if baseExpirationTime < 0 {
+		return 1
+	}
+
+	h := fnv.New32a()
+	h.Write([]byte(id.String()))
+	seed := int64(h.Sum32())
 	rng := rand.New(rand.NewSource(seed))
 	jitterOffset := time.Duration(rng.Int63n(int64(_jitterMaxOffset)))
 	expirationTime := baseExpirationTime + jitterOffset
@@ -128,7 +147,7 @@ func SetRateLimitRecordCacheByFingerprint(
 		return exceptions.Cache.FailedToConvertJsonToStruct().WithError(err)
 	}
 
-	expirationTime := calculateExpirationTime(
+	expirationTime := calculateExpirationTimeByFinerprint(
 		fingerprint,
 		rateLimitRecordCache.WindowStartTime,
 		rateLimitRecordCache.WindowDuration,
@@ -181,7 +200,7 @@ func UpdateSyncrhronizeRateLimitRecordCacheByFingerprint(
 		return exceptions.Cache.FailedToConvertStructToJson().WithError(err)
 	}
 
-	newExpirationTime := calculateExpirationTime(
+	newExpirationTime := calculateExpirationTimeByFinerprint(
 		fingerprint,
 		rateLimitRecordCache.WindowStartTime,
 		rateLimitRecordCache.WindowDuration,
@@ -304,7 +323,7 @@ func BatchDeleteRateLimiteCachesByFingerprints(
 
 /* ============================== CRUD Operations By UserId ============================== */
 
-func GetRateLimitRecordCacheByUserId(userId uuid.UUID, fingerprint string, backendServerName types.BackendServerName) (*RateLimitRecordCache, *exceptions.Exception) {
+func GetRateLimitRecordCacheByUserId(userId uuid.UUID, backendServerName types.BackendServerName) (*RateLimitRecordCache, *exceptions.Exception) {
 	serverNumber, exist := BackendServerNameToRateLimitRedisIndex[backendServerName]
 	if !exist {
 		return nil, exceptions.Cache.BackendServerNameNotReferenced(types.ValidCachePurpose_RateLimite.String())
@@ -330,7 +349,7 @@ func GetRateLimitRecordCacheByUserId(userId uuid.UUID, fingerprint string, backe
 	return &rateLimitRecordCache, nil
 }
 
-func SetRateLimitRecordCacheByUserId(userId uuid.UUID, fingerprint string, backendServerName types.BackendServerName, rateLimitRecordCache RateLimitRecordCache) *exceptions.Exception {
+func SetRateLimitRecordCacheByUserId(userId uuid.UUID, backendServerName types.BackendServerName, rateLimitRecordCache RateLimitRecordCache) *exceptions.Exception {
 	serverNumber, exist := BackendServerNameToRateLimitRedisIndex[backendServerName]
 	if !exist {
 		return exceptions.Cache.BackendServerNameNotReferenced(types.ValidCachePurpose_RateLimite.String())
@@ -346,8 +365,8 @@ func SetRateLimitRecordCacheByUserId(userId uuid.UUID, fingerprint string, backe
 		return exceptions.Cache.FailedToConvertJsonToStruct().WithError(err)
 	}
 
-	expirationTime := calculateExpirationTime(
-		fingerprint,
+	expirationTime := calculateExpirationTimeByUserId(
+		userId,
 		rateLimitRecordCache.WindowStartTime,
 		rateLimitRecordCache.WindowDuration,
 	)
@@ -361,7 +380,7 @@ func SetRateLimitRecordCacheByUserId(userId uuid.UUID, fingerprint string, backe
 	return nil
 }
 
-func UpdateRateLimitRecordCacheByUserId(userId uuid.UUID, fingerprint string, backendServerName types.BackendServerName, dto SynchronizeRateLimitRecordCacheDto) *exceptions.Exception {
+func UpdateRateLimitRecordCacheByUserId(userId uuid.UUID, backendServerName types.BackendServerName, dto SynchronizeRateLimitRecordCacheDto) *exceptions.Exception {
 	// TODO: since we use get and set which means more than or equal to two operations in this single operation,
 	// 		 so we may need to use transaction to ensure the atomic
 
@@ -375,7 +394,7 @@ func UpdateRateLimitRecordCacheByUserId(userId uuid.UUID, fingerprint string, ba
 		return exceptions.Cache.RedisServerNumberNotFound()
 	}
 
-	rateLimitRecordCache, exception := GetRateLimitRecordCacheByUserId(userId, fingerprint, backendServerName)
+	rateLimitRecordCache, exception := GetRateLimitRecordCacheByUserId(userId, backendServerName)
 	if exception != nil {
 		return exception
 	}
@@ -395,8 +414,8 @@ func UpdateRateLimitRecordCacheByUserId(userId uuid.UUID, fingerprint string, ba
 		return exceptions.Cache.FailedToConvertStructToJson().WithError(err)
 	}
 
-	newExpirationTime := calculateExpirationTime(
-		fingerprint,
+	newExpirationTime := calculateExpirationTimeByUserId(
+		userId,
 		rateLimitRecordCache.WindowStartTime,
 		rateLimitRecordCache.WindowDuration,
 	)
@@ -410,7 +429,7 @@ func UpdateRateLimitRecordCacheByUserId(userId uuid.UUID, fingerprint string, ba
 	return nil
 }
 
-func DeleteRateLimitRecordCacheByUserId(userId uuid.UUID, fingerprint string, backendServerName types.BackendServerName) *exceptions.Exception {
+func DeleteRateLimitRecordCacheByUserId(userId uuid.UUID, backendServerName types.BackendServerName) *exceptions.Exception {
 	serverNumber, exist := BackendServerNameToRateLimitRedisIndex[backendServerName]
 	if !exist {
 		return exceptions.Cache.BackendServerNameNotReferenced(types.ValidCachePurpose_RateLimite.String())

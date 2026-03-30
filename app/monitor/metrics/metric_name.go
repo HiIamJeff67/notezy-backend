@@ -156,6 +156,7 @@ type MetricNameResponse struct {
 		Total        string
 		Timeout      string
 		Unauthorized string
+		RateLimit    string
 	}
 	Email struct {
 		Welcome  string
@@ -302,10 +303,12 @@ var MetricNames = struct {
 				Total        string
 				Timeout      string
 				Unauthorized string
+				RateLimit    string
 			}{
 				Total:        "server.responses.failed.total",
 				Timeout:      "server.responses.failed.timeout",
 				Unauthorized: "server.responses.failed.unauthorized",
+				RateLimit:    "server.responses.failed.rateLimit",
 			},
 			Email: struct {
 				Welcome  string

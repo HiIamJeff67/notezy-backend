@@ -1,34 +1,24 @@
 package middlewares
 
 import (
-	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	rate "golang.org/x/time/rate"
 
 	configs "notezy-backend/app/configs"
 	contexts "notezy-backend/app/contexts"
 	exceptions "notezy-backend/app/exceptions"
 	ratelimiter "notezy-backend/app/lib/ratelimiter"
 	logs "notezy-backend/app/monitor/logs"
+	metrics "notezy-backend/app/monitor/metrics"
 	traces "notezy-backend/app/monitor/traces"
 	types "notezy-backend/shared/types"
 )
 
-var (
-	authorizedRateLimiter            *ratelimiter.HybridRateLimiter // use the bybrid one which including token bucket and cross server request management by redis
-	DefaultAuthorizedRateLimitConfig = configs.AuthorizedRateLimitConfig{
-		RateLimit:         rate.Limit(100),                  // 100 requests/second
-		Burst:             20,                               // allowed 20 additional requests/second for burst
-		UserLimit:         300,                              // 300 requests/each life time of the bucket (= 300 requests/`WindowDuration`) for each users
-		WindowDuration:    time.Minute,                      // 1 minutes to reset the bucket
-		BackendServerName: types.BackendServerName_EastAsia, // the current server
-	}
-)
+var authorizedRateLimiter *ratelimiter.HybridRateLimiter // use the bybrid one which including token bucket and cross server request management by redis
 
-func InitAuthorizedRateLimiter(config configs.AuthorizedRateLimitConfig) {
+func InitAuthorizedRateLimiter(config configs.RateLimitConfig) {
 	if authorizedRateLimiter != nil {
 		authorizedRateLimiter.Stop()
 	}
@@ -47,8 +37,8 @@ func InitAuthorizedRateLimiter(config configs.AuthorizedRateLimitConfig) {
 		config.RateLimit, config.Burst, config.UserLimit, config.WindowDuration)
 }
 
-func AuthorizedRateLimitMiddleware(config ...configs.AuthorizedRateLimitConfig) gin.HandlerFunc {
-	cfg := DefaultAuthorizedRateLimitConfig
+func AuthorizedRateLimitMiddleware(config ...configs.RateLimitConfig) gin.HandlerFunc {
+	cfg := configs.DefaultAuthorizedRateLimitConfig
 	if len(config) > 0 {
 		cfg = config[0]
 	}
@@ -67,15 +57,11 @@ func AuthorizedRateLimitMiddleware(config ...configs.AuthorizedRateLimitConfig) 
 			return
 		}
 
-		fingerprint := getClientFingerprint(ctx)
-
-		allowed, remaining := authorizedRateLimiter.AllowByUserId(*userId, fingerprint)
+		allowed, remaining := authorizedRateLimiter.AllowByUserId(*userId)
 		if !allowed {
 			setRateLimitHeaders(ctx, remaining, authorizedRateLimiter)
-
-			logs.FDebug(traces.GetTrace(0).FileLineString(), "Rate limit exceeded for user: %s, fingerprint: %s", userId.String(), fingerprint)
-			ctx.JSON(http.StatusTooManyRequests, exceptions.Auth.PermissionDeniedDueToTooManyRequests().GetGinH())
-			ctx.Abort()
+			logs.FDebug(traces.GetTrace(0).FileLineString(), "Rate limit exceeded for user: %s", userId.String())
+			exceptions.Auth.PermissionDeniedDueToTooManyRequests().Log().SafelyAbortAndResponseWithJSON(ctx, metrics.MetricNames.Server.Responses.Failed.RateLimit)
 			return
 		}
 
@@ -83,11 +69,6 @@ func AuthorizedRateLimitMiddleware(config ...configs.AuthorizedRateLimitConfig) 
 
 		ctx.Next()
 	}
-}
-
-func getClientFingerprint(c *gin.Context) string {
-	// TODO: use other complex stuff or algorithm or even the machine learning model to generate or get the fingerprint of each clients
-	return c.ClientIP()
 }
 
 func setRateLimitHeaders(ctx *gin.Context, remaining int32, limiter *ratelimiter.HybridRateLimiter) {
