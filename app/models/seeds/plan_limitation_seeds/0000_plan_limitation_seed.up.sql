@@ -15,10 +15,11 @@ INSERT INTO "PlanLimitationTable" (
     updated_at,
     created_at
 ) VALUES
-('Free',        10,     50,     1000,   10,     10,     2,      5,      100,    100,    100,    5,      NOW(), NOW()),
-('Pro',         50,     100,    5000,   50,     50,     10,     50,     100,    100,    100,    50,     NOW(), NOW()),
-('Ultimate',    100,    200,    10000,  100,    100,    20,     100,    1000,   1000,   1000,   200,    NOW(), NOW()),
-('Enterprise',  1000,   2000,   100000, 1000,   1000,   100,    1000,   1000,   1000,   1000,   500,    NOW(), NOW())
+('Free',        10,     20,     1000,   10,     10,     2,      5,      20,     20,     100,    5242880,      NOW(), NOW()),
+('Pro',         50,     100,    5000,   50,     50,     10,     50,     100,    100,    200,    20971520,     NOW(), NOW()),
+('Premium',     150,    300,    15000,  150,    150,    30,     150,    200,    200,    500,    52428800,     NOW(), NOW()),
+('Ultimate',    300,    200,    30000,  300,    300,    60,     300,    500,    500,    1000,   209715200,    NOW(), NOW()),
+('Enterprise',  1000,   2000,   100000, 1000,   1000,   100,    1000,   1000,   1000,   1000,   524288000,    NOW(), NOW())
 ON CONFLICT (key) DO UPDATE SET
     max_root_shelf_count = EXCLUDED.max_root_shelf_count, 
     max_block_pack_count = EXCLUDED.max_block_pack_count, 

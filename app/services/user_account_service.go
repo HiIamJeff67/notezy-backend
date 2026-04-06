@@ -120,6 +120,8 @@ func (s *UserAccountService) UpdateMyAccount(
 	}, nil
 }
 
+/* ============================== Service Methods for Binding Accounts ============================== */
+
 func (s *UserAccountService) BindGoogleAccount(
 	ctx context.Context, reqDto *dtos.BindGoogleAccountReqDto,
 ) (*dtos.BindGoogleAccountResDto, *exceptions.Exception) {
@@ -204,3 +206,5 @@ func (s *UserAccountService) UnbindGoogleAccount(
 		UpdatedAt: time.Now(),
 	}, nil
 }
+
+/* ============================== Service Methods for Upgrade User Plan ============================== */

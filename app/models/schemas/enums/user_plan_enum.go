@@ -14,6 +14,7 @@ type UserPlan string
 const (
 	UserPlan_Enterprise UserPlan = "Enterprise"
 	UserPlan_Ultimate   UserPlan = "Ultimate"
+	UserPlan_Premium    UserPlan = "Premium"
 	UserPlan_Pro        UserPlan = "Pro"
 	UserPlan_Free       UserPlan = "Free"
 )
@@ -24,6 +25,7 @@ const (
 var AllUserPlans = []UserPlan{
 	UserPlan_Enterprise,
 	UserPlan_Ultimate,
+	UserPlan_Premium,
 	UserPlan_Pro,
 	UserPlan_Free,
 }
@@ -32,6 +34,7 @@ var AllUserPlans = []UserPlan{
 var AllUserPlanStrings = []string{
 	string(UserPlan_Enterprise),
 	string(UserPlan_Ultimate),
+	string(UserPlan_Premium),
 	string(UserPlan_Pro),
 	string(UserPlan_Free),
 }

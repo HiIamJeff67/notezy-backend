@@ -70,6 +70,9 @@ const (
 // ExceptionPrefix_BlockGroup ExceptionPrefix = "BlockGroup"			 43
 // ExceptionPrefix_Block ExceptionPrefix = "Block"						 44
 // ExceptionPrefix_OAuth ExceptionPrefix = "OAuth"						 45
+
+// the exception code exceeded 990 are reserved for client exceptions
+// ExceptionPrefix_Client ExceptionPrefix = "ClientCommon" 				 990
 )
 
 func IsExceptionCode(exceptionCode int) bool {
@@ -137,7 +140,7 @@ func (e *Exception) GetGinH() *gin.H {
 	if e.Error != nil {
 		errorMessage = e.Error.Error()
 	}
-	return &gin.H{
+	return &gin.H{ // don't write the trace stack or last trace to the response
 		"code":    e.Code,
 		"reason":  e.Reason,
 		"prefix":  e.Prefix,

@@ -20,7 +20,9 @@ var MigratingTables = []any{
 	&Block{},
 	&SyncBlockGroup{},
 	&SyncBlock{},
+	&UsersToBillingPlans{},
 
 	// private tables
 	&PlanLimitation{},
+	&BillingPlan{},
 }

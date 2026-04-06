@@ -4,48 +4,52 @@ type TableName string
 
 const (
 	// public tables(accessable and mutatable by the client user and admin)
-	TableName_UserTable           TableName = "UserTable"
-	TableName_UserAccountTable    TableName = "UserAccountTable"
-	TableName_UserInfoTable       TableName = "UserInfoTable"
-	TableName_UserSettingTable    TableName = "UserSettingTable"
-	TableName_BadgeTable          TableName = "BadgeTable"
-	TableName_UsersToBadgesTable  TableName = "UsersToBadgesTable"
-	TableName_ThemeTable          TableName = "ThemeTable"
-	TableName_UsersToShelvesTable TableName = "UsersToShelvesTable"
-	TableName_RootShelfTable      TableName = "RootShelfTable"
-	TableName_SubShelfTable       TableName = "SubShelfTable"
-	TableName_MaterialTable       TableName = "MaterialTable"
-	TableName_BlockPackTable      TableName = "BlockPackTable"
-	TableName_BlockGroupTable     TableName = "BlockGroupTable"
-	TableName_BlockTable          TableName = "BlockTable"
-	TableName_SyncBlockGroupTable TableName = "SyncBlockGroupTable"
-	TableName_SyncBlockTable      TableName = "SyncBlockTable"
+	TableName_UserTable                TableName = "UserTable"
+	TableName_UserAccountTable         TableName = "UserAccountTable"
+	TableName_UserInfoTable            TableName = "UserInfoTable"
+	TableName_UserSettingTable         TableName = "UserSettingTable"
+	TableName_BadgeTable               TableName = "BadgeTable"
+	TableName_UsersToBadgesTable       TableName = "UsersToBadgesTable"
+	TableName_ThemeTable               TableName = "ThemeTable"
+	TableName_UsersToShelvesTable      TableName = "UsersToShelvesTable"
+	TableName_RootShelfTable           TableName = "RootShelfTable"
+	TableName_SubShelfTable            TableName = "SubShelfTable"
+	TableName_MaterialTable            TableName = "MaterialTable"
+	TableName_BlockPackTable           TableName = "BlockPackTable"
+	TableName_BlockGroupTable          TableName = "BlockGroupTable"
+	TableName_BlockTable               TableName = "BlockTable"
+	TableName_SyncBlockGroupTable      TableName = "SyncBlockGroupTable"
+	TableName_SyncBlockTable           TableName = "SyncBlockTable"
+	TableName_UsersToBillingPlansTable TableName = "UsersToBillingPlansTable"
 
 	// private tables(accessable by the client user and admin, but only mutatable by the admin)
 	TableName_PlanLimitationTable TableName = "PlanLimitationTable"
+	TableName_BillingPlanTable    TableName = "BillingPlanTable"
 )
 
 var _validTableNames = map[string]TableName{
 	// public tables
-	"UserTable":           TableName_UserTable,
-	"UserAccountTable":    TableName_UserAccountTable,
-	"UserInfoTable":       TableName_UserInfoTable,
-	"UserSettingTable":    TableName_UserSettingTable,
-	"BadgeTable":          TableName_BadgeTable,
-	"UsersToBadgesTable":  TableName_UsersToBadgesTable,
-	"ThemeTable":          TableName_ThemeTable,
-	"UsersToShelvesTable": TableName_UsersToShelvesTable,
-	"RootShelfTable":      TableName_RootShelfTable,
-	"SubShelfTable":       TableName_SubShelfTable,
-	"MaterialTable":       TableName_MaterialTable,
-	"BlockPackTable":      TableName_BlockPackTable,
-	"BlockGroupTable":     TableName_BlockGroupTable,
-	"BlockTable":          TableName_BlockTable,
-	"SyncBlockGroupTable": TableName_SyncBlockGroupTable,
-	"SyncBlockTable":      TableName_SyncBlockTable,
+	"UserTable":                TableName_UserTable,
+	"UserAccountTable":         TableName_UserAccountTable,
+	"UserInfoTable":            TableName_UserInfoTable,
+	"UserSettingTable":         TableName_UserSettingTable,
+	"BadgeTable":               TableName_BadgeTable,
+	"UsersToBadgesTable":       TableName_UsersToBadgesTable,
+	"ThemeTable":               TableName_ThemeTable,
+	"UsersToShelvesTable":      TableName_UsersToShelvesTable,
+	"RootShelfTable":           TableName_RootShelfTable,
+	"SubShelfTable":            TableName_SubShelfTable,
+	"MaterialTable":            TableName_MaterialTable,
+	"BlockPackTable":           TableName_BlockPackTable,
+	"BlockGroupTable":          TableName_BlockGroupTable,
+	"BlockTable":               TableName_BlockTable,
+	"SyncBlockGroupTable":      TableName_SyncBlockGroupTable,
+	"SyncBlockTable":           TableName_SyncBlockTable,
+	"UsersToBillingPlansTable": TableName_UsersToBillingPlansTable,
 
 	// private tables
 	"PlanLimitationTable": TableName_PlanLimitationTable,
+	"BillingPlanTable":    TableName_BillingPlanTable,
 }
 
 func (tn TableName) String() string {

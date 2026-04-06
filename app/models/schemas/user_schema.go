@@ -23,22 +23,23 @@ type User struct {
 	BlockLoginUntil time.Time        `json:"blockLoginUntil" gorm:"column:block_login_until; type:timestamptz; not null;"`
 	UserAgent       string           `json:"userAgent" gorm:"column:user_agent; not null;"`                          // validate:"required,isuseragent"
 	Role            enums.UserRole   `json:"role" gorm:"column:role; type:\"UserRole\"; not null; default:'Guest';"` // validate:"omitnil,isrole"
-	Plan            enums.UserPlan   `json:"plan" gorm:"column:plan; type:\"UserPlan\"; not null; default:'Free';"`  // validate:"omitnil,isplan"
+	Plan            enums.UserPlan   `json:"plan" gorm:"column:plan; type:\"UserPlan\"; not null; default:'Free';"`  // validate:"omitnil,isplan" // only update the field of plan while upgrade logic happended in user account services
 	PrevStatus      enums.UserStatus `json:"prevStatus" gorm:"column:prev_status; type:\"UserStatus\"; not null; default:'Online';"`
 	Status          enums.UserStatus `json:"status" gorm:"column:status; type:\"UserStatus\"; not null; default:'Online';"` // validate:"omitnil,isstatus"
 	UpdatedAt       time.Time        `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt       time.Time        `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 
 	// relations
-	UserInfo        UserInfo         `json:"userInfo" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	UserAccount     UserAccount      `json:"userAccount" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	UserSetting     UserSetting      `json:"userSetting" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	Themes          []Theme          `json:"themes" gorm:"foreignKey:AuthorId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	UsersToBadges   []UsersToBadges  `json:"usersToBadges" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	UsersToShelves  []UsersToShelves `json:"usersToShelves" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	BlockGroups     []BlockGroup     `json:"blockGroups" gorm:"foreignKey:OwnerId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	SyncBlockGroups []SyncBlockGroup `json:"syncBlockGroups" gorm:"foreignKey:OwnerId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	PlanLimitation  PlanLimitation   `json:"planLimitation" gorm:"foreignKey:Plan; references:Key; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	UserInfo            UserInfo              `json:"userInfo" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	UserAccount         UserAccount           `json:"userAccount" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	UserSetting         UserSetting           `json:"userSetting" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	Themes              []Theme               `json:"themes" gorm:"foreignKey:AuthorId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	UsersToBadges       []UsersToBadges       `json:"usersToBadges" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	UsersToShelves      []UsersToShelves      `json:"usersToShelves" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	BlockGroups         []BlockGroup          `json:"blockGroups" gorm:"foreignKey:OwnerId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	SyncBlockGroups     []SyncBlockGroup      `json:"syncBlockGroups" gorm:"foreignKey:OwnerId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	PlanLimitation      PlanLimitation        `json:"planLimitation" gorm:"foreignKey:Plan; references:Key; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	UsersToBillingPlans []UsersToBillingPlans `json:"usersToBillingPlans" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
 
 // User Table Name
@@ -50,14 +51,15 @@ func (User) TableName() string {
 type UserRelation types.RelationName
 
 const (
-	UserRelation_UserInfo        UserRelation = "UserInfo"
-	UserRelation_UserAccount     UserRelation = "UserAccount"
-	UserRelation_UserSetting     UserRelation = "UserSetting"
-	UserRelation_Themes          UserRelation = "Themes"
-	UserRelation_UsersToBadges   UserRelation = "UsersToBadges"
-	UserRelation_UsersToShelves  UserRelation = "UsersToShelves"
-	UserRelation_BlockGroups     UserRelation = "BlockGroups"
-	UserRelation_SyncBlockGroups UserRelation = "SyncBlockGroups"
+	UserRelation_UserInfo            UserRelation = "UserInfo"
+	UserRelation_UserAccount         UserRelation = "UserAccount"
+	UserRelation_UserSetting         UserRelation = "UserSetting"
+	UserRelation_Themes              UserRelation = "Themes"
+	UserRelation_UsersToBadges       UserRelation = "UsersToBadges"
+	UserRelation_UsersToShelves      UserRelation = "UsersToShelves"
+	UserRelation_BlockGroups         UserRelation = "BlockGroups"
+	UserRelation_SyncBlockGroups     UserRelation = "SyncBlockGroups"
+	UserRelation_UsersToBillingPlans UserRelation = "UsersToBillingPlans"
 )
 
 /* ============================== Relative Type Conversions ============================== */

@@ -21,7 +21,7 @@ type PlanLimitation struct {
 	MaxSubShelfCountPerRootShelf int32          `json:"maxSubShelfCountPerRootShelf" gorm:"column:max_sub_shelf_count_per_root_shelf; type:integer; not null;"`
 	MaxItemCountPerRootShelf     int32          `json:"maxItemCountPerRootShelf" gorm:"column:max_item_count_per_root_shelf; type:integer; not null;"`
 	MaxBlockCountPerBlockPack    int32          `json:"maxBlockCountPerBlockPack" gorm:"column:max_block_count_per_block_pack; type:integer; not null;"`
-	MaxMaterialSize              float64        `json:"maxMaterialSize" gorm:"column:max_material_size; type:double precision; not null;"`
+	MaxMaterialSize              int64          `json:"maxMaterialSize" gorm:"column:max_material_size; type:bigint; not null;"`
 	UpdatedAt                    time.Time      `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt                    time.Time      `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 }
