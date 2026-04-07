@@ -22,8 +22,6 @@ import (
 	types "notezy-backend/shared/types"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type SubShelfServiceInterface interface {
 	GetMySubShelfById(ctx context.Context, reqDto *dtos.GetMySubShelfByIdReqDto) (*dtos.GetMySubShelfByIdResDto, *exceptions.Exception)
 	GetMySubShelvesByPrevSubShelfId(ctx context.Context, reqDto *dtos.GetMySubShelvesByPrevSubShelfIdReqDto) (*dtos.GetMySubShelvesByPrevSubShelfIdResDto, *exceptions.Exception)

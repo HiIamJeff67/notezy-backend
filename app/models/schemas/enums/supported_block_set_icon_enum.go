@@ -7,8 +7,6 @@ import (
 	"slices"
 )
 
-/* ============================== Definition ============================== */
-
 type SupportedBlockPackIcon string
 
 const (
@@ -28,8 +26,6 @@ const (
 	SupportedBlockPackIcon_Calendar                   SupportedBlockPackIcon = "📅"
 	SupportedBlockPackIcon_Clock                      SupportedBlockPackIcon = "⏰"
 )
-
-/* ============================== All Instances ============================== */
 
 var AllSupportedBlockPackIcons = []SupportedBlockPackIcon{
 	SupportedBlockPackIcon_GrinningFace,
@@ -66,8 +62,6 @@ var AllSupportedBlockPackIconStrings = []string{
 	string(SupportedBlockPackIcon_Calendar),
 	string(SupportedBlockPackIcon_Clock),
 }
-
-/* ============================== Methods ============================== */
 
 func (bssi SupportedBlockPackIcon) Name() string {
 	return reflect.TypeOf(bssi).Name()

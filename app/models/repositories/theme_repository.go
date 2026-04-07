@@ -13,8 +13,6 @@ import (
 	util "notezy-backend/app/util"
 )
 
-/* ============================== Definitions ============================== */
-
 type ThemeRepositoryInterface interface {
 	GetOneById(id uuid.UUID, preloads []schemas.ThemeRelation, opts ...options.RepositoryOptions) (*schemas.Theme, *exceptions.Exception)
 	GetAll(opts ...options.RepositoryOptions) ([]schemas.Theme, *exceptions.Exception)
@@ -28,8 +26,6 @@ type ThemeRepository struct{}
 func NewThemeRepository() ThemeRepositoryInterface {
 	return &ThemeRepository{}
 }
-
-/* ============================== Implementations ============================== */
 
 func (r *ThemeRepository) GetOneById(
 	id uuid.UUID,
@@ -138,7 +134,7 @@ func (r *ThemeRepository) DeleteOneById(
 ) *exceptions.Exception {
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	// * If you need to use the funcionality of RETURNING from PostgreSQL
+	// * If you need to use the functionality of RETURNING from PostgreSQL
 	// var deletedTheme schemas.Theme
 
 	// result := r.db.Table(schemas.Theme{}.TableName()).

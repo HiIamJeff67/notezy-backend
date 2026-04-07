@@ -6,8 +6,6 @@ import (
 	"reflect"
 )
 
-/* ============================== Definition ============================== */
-
 type BillingPlanName string
 
 const (
@@ -21,8 +19,6 @@ const (
 	BillingPlanName_NotezyMonthlyEnterprisePlan BillingPlanName = "Notezy Monthly Enterprise Plan"
 	BillingPlanName_NotezyYearlyEnterprisePlan  BillingPlanName = "Notezy Yearly Enterprise Plan"
 )
-
-/* ============================== All Instances ============================== */
 
 var AllBillingPlanNames = []BillingPlanName{
 	BillingPlanName_NotezyMonthlyFreePlan,
@@ -47,8 +43,6 @@ var AllBillingPlanNameStrings = []string{
 	string(BillingPlanName_NotezyMonthlyEnterprisePlan),
 	string(BillingPlanName_NotezyYearlyEnterprisePlan),
 }
-
-/* ============================== Methods ============================== */
 
 func (bpn BillingPlanName) Name() string {
 	return reflect.TypeOf(bpn).Name()

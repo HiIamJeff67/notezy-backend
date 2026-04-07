@@ -27,8 +27,6 @@ import (
 	types "notezy-backend/shared/types"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type BlockServiceInterface interface {
 	GetMyBlockById(ctx context.Context, reqDto *dtos.GetMyBlockByIdReqDto) (*dtos.GetMyBlockByIdResDto, *exceptions.Exception)
 	GetMyBlocksByIds(ctx context.Context, reqDto *dtos.GetMyBlocksByIdsReqDto) (*dtos.GetMyBlocksByIdsResDto, *exceptions.Exception)
@@ -69,8 +67,6 @@ func NewBlockService(
 		editableBlockAdapter: editableBlockAdapter,
 	}
 }
-
-/* ============================== Implementations ============================== */
 
 func (s *BlockService) GetMyBlockById(
 	ctx context.Context, reqDto *dtos.GetMyBlockByIdReqDto,
@@ -402,13 +398,13 @@ func (s *BlockService) InsertBlock(
 	}
 
 	input := make([]inputs.CreateBlockInput, len(rawFlattenedBlocks))
-	for index, rawFlarawFlattenedBlock := range rawFlattenedBlocks {
+	for index, rawFlattenedBlock := range rawFlattenedBlocks {
 		input[index] = inputs.CreateBlockInput{
-			Id:            rawFlarawFlattenedBlock.Id,
-			ParentBlockId: rawFlarawFlattenedBlock.ParentBlockId,
-			Type:          rawFlarawFlattenedBlock.Type,
-			Props:         rawFlarawFlattenedBlock.Props,
-			Content:       rawFlarawFlattenedBlock.Content,
+			Id:            rawFlattenedBlock.Id,
+			ParentBlockId: rawFlattenedBlock.ParentBlockId,
+			Type:          rawFlattenedBlock.Type,
+			Props:         rawFlattenedBlock.Props,
+			Content:       rawFlattenedBlock.Content,
 		}
 	}
 

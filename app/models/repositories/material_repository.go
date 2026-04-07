@@ -16,8 +16,6 @@ import (
 	types "notezy-backend/shared/types"
 )
 
-/* ============================== Definitions ============================== */
-
 type MaterialRepositoryInterface interface {
 	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
 	HasPermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
@@ -39,8 +37,6 @@ type MaterialRepository struct{}
 func NewMaterialRepository() MaterialRepositoryInterface {
 	return &MaterialRepository{}
 }
-
-/* ============================== Implementations ============================== */
 
 func (r *MaterialRepository) HasPermission(
 	id uuid.UUID,
@@ -150,8 +146,11 @@ func (r *MaterialRepository) CheckPermissionAndGetOneById(
 
 	var material schemas.Material
 	result := query.First(&material)
-	if err := result.Error; err != nil {
-		return nil, exceptions.Material.NotFound().WithError(err)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Material.NotFound().WithError(result.Error)},
+		{First: material.Id == uuid.Nil, Second: exceptions.BlockPack.NotFound()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return &material, nil
@@ -195,11 +194,11 @@ func (r *MaterialRepository) CheckPermissionsAndGetManyByIds(
 
 	var materials []schemas.Material
 	result := query.Find(&materials)
-	if err := result.Error; err != nil {
-		return nil, exceptions.Material.NotFound().WithError(err)
-	}
-	if len(materials) == 0 {
-		return nil, exceptions.Material.NotFound()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Material.NotFound().WithError(result.Error)},
+		{First: len(materials) == 0, Second: exceptions.BlockPack.NotFound()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return materials, nil
@@ -258,14 +257,19 @@ func (r *MaterialRepository) CreateOneBySubShelfId(
 	}
 	newMaterial.ParentSubShelfId = subShelfId
 
-	result := parsedOptions.DB.Model(&schemas.Material{}).
+	var createdMaterial schemas.Material
+	result := parsedOptions.DB.Model(&createdMaterial).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newMaterial)
-	if err := result.Error; err != nil {
-		return nil, exceptions.Material.FailedToCreate().WithError(err)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Material.FailedToCreate().WithError(result.Error)},
+		{First: createdMaterial.Id == uuid.Nil, Second: exceptions.Material.FailedToCreate()},
+		{First: result.RowsAffected == 0, Second: exceptions.Material.NoChanges()},
+	}); exception != nil {
+		return nil, exception
 	}
 
-	return &newMaterial.Id, nil
+	return &createdMaterial.Id, nil
 }
 
 func (r *MaterialRepository) UpdateOneById(
@@ -335,11 +339,11 @@ func (r *MaterialRepository) UpdateOneById(
 		Where("id = ? AND deleted_at IS NULL", id). // no need to check the permission here, since we have done that part on the above
 		Select("*").
 		Updates(&updates)
-	if err := result.Error; err != nil {
-		return nil, exceptions.Material.FailedToUpdate().WithError(err)
-	}
-	if result.RowsAffected == 0 { // check if we do update it or not
-		return nil, exceptions.Material.NoChanges()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Material.FailedToUpdate().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Material.NoChanges()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return &updates, nil
@@ -371,14 +375,15 @@ func (r *MaterialRepository) RestoreSoftDeletedOneById(
 
 	var restoredMaterial schemas.Material
 	result := parsedOptions.DB.Model(&restoredMaterial).
-		Clauses(clause.Returning{}).
+		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Where("id = ? AND deleted_at IS NOT NULL", id).
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
-	if err := result.Error; err != nil {
-		return nil, exceptions.Material.FailedToUpdate().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return nil, exceptions.Material.NoChanges()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Material.FailedToUpdate().WithError(result.Error)},
+		{First: restoredMaterial.Id == uuid.Nil, Second: exceptions.Material.FailedToUpdate()},
+		{First: result.RowsAffected == 0, Second: exceptions.Material.NoChanges()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return &restoredMaterial, nil
@@ -417,11 +422,12 @@ func (r *MaterialRepository) RestoreSoftDeletedManyByIds(
 		Clauses(clause.Returning{}).
 		Where("id IN ? AND deleted_at IS NOT NULL", ids).
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
-	if err := result.Error; err != nil {
-		return nil, exceptions.Material.FailedToUpdate().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return nil, exceptions.Material.NoChanges()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Material.FailedToUpdate().WithError(result.Error)},
+		{First: len(restoredMaterials) != len(ids), Second: exceptions.Material.FailedToUpdate()},
+		{First: result.RowsAffected == 0, Second: exceptions.Material.NoChanges()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return restoredMaterials, nil
@@ -452,11 +458,11 @@ func (r *MaterialRepository) SoftDeleteOneById(
 	result := parsedOptions.DB.Model(&schemas.Material{}).
 		Where("id = ? AND deleted_at IS NULL", id).
 		Update("deleted_at", time.Now())
-	if err := result.Error; err != nil {
-		return exceptions.Material.FailedToUpdate().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return exceptions.Material.NoChanges()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Material.FailedToUpdate().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Material.NoChanges()},
+	}); exception != nil {
+		return exception
 	}
 
 	return nil
@@ -491,11 +497,11 @@ func (r *MaterialRepository) SoftDeleteManyByIds(
 	result := parsedOptions.DB.Model(&schemas.Material{}).
 		Where("id IN ? AND deleted_at IS NULL", ids).
 		Update("deleted_at", time.Now())
-	if err := result.Error; err != nil {
-		return exceptions.Material.FailedToUpdate().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return exceptions.Material.NotFound()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Material.FailedToUpdate().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Material.NoChanges()},
+	}); exception != nil {
+		return exception
 	}
 
 	return nil
@@ -526,11 +532,11 @@ func (r *MaterialRepository) HardDeleteOneById(
 	result := parsedOptions.DB.Model(&schemas.Material{}).
 		Where("id = ? AND deleted_at IS NOT NULL", id).
 		Delete(&schemas.Material{})
-	if err := result.Error; err != nil {
-		return exceptions.Material.FailedToDelete().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return exceptions.Material.NoChanges()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Material.FailedToDelete().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Material.NoChanges()},
+	}); exception != nil {
+		return exception
 	}
 
 	return nil
@@ -565,11 +571,11 @@ func (r *MaterialRepository) HardDeleteManyByIds(
 	result := parsedOptions.DB.Model(&schemas.Material{}).
 		Where("id IN ? AND deleted_at IS NOT NULL", ids).
 		Delete(&schemas.Material{})
-	if err := result.Error; err != nil {
-		return exceptions.Material.FailedToDelete().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return exceptions.Material.NotFound()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Material.FailedToDelete().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Material.NoChanges()},
+	}); exception != nil {
+		return exception
 	}
 
 	return nil

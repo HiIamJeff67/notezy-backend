@@ -6,8 +6,6 @@ import (
 	"reflect"
 )
 
-/* ============================== Definition ============================== */
-
 type UsersToBillingPlansStatus string
 
 const (
@@ -18,8 +16,6 @@ const (
 	UsersToBillingPlansStatus_Cancelled       = "CANCELLED"
 	UsersToBillingPlansStatus_Expired         = "EXPIRED"
 )
-
-/* ============================== All Instances ============================== */
 
 var AllUsersToBillingPlansStatuses = []UsersToBillingPlansStatus{
 	UsersToBillingPlansStatus_ApprovalPending,
@@ -37,8 +33,6 @@ var AllUsersToBillingPlansStatusStrings = []string{
 	string(UsersToBillingPlansStatus_Cancelled),
 	string(UsersToBillingPlansStatus_Expired),
 }
-
-/* ============================== Methods ============================== */
 
 func (utbps UsersToBillingPlansStatus) Name() string {
 	return reflect.TypeOf(utbps).Name()

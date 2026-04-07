@@ -7,8 +7,6 @@ import (
 	"slices"
 )
 
-/* ============================== Definition ============================== */
-
 type AccessControlPermission string
 
 const (
@@ -17,8 +15,6 @@ const (
 	AccessControlPermission_Admin AccessControlPermission = "Admin"
 	AccessControlPermission_Owner AccessControlPermission = "Owner"
 )
-
-/* ============================== All Instances ============================== */
 
 var AllAccessControlPermissions = []AccessControlPermission{
 	AccessControlPermission_Read,
@@ -33,8 +29,6 @@ var AllAccessControlPermissionStrings = []string{
 	string(AccessControlPermission_Admin),
 	string(AccessControlPermission_Owner),
 }
-
-/* ============================== Methods ============================== */
 
 func (a AccessControlPermission) Name() string {
 	return reflect.TypeOf(a).Name()

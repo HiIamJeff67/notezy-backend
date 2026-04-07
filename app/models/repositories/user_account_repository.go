@@ -11,9 +11,8 @@ import (
 	schemas "notezy-backend/app/models/schemas"
 	options "notezy-backend/app/options"
 	util "notezy-backend/app/util"
+	types "notezy-backend/shared/types"
 )
-
-/* ============================== Definitions ============================== */
 
 type UserAccountRepositoryInterface interface {
 	GetOneByUserId(userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.UserAccount, *exceptions.Exception)
@@ -26,8 +25,6 @@ type UserAccountRepository struct{}
 func NewUserAccountRepository() UserAccountRepositoryInterface {
 	return &UserAccountRepository{}
 }
-
-/* ============================== Implementations ============================== */
 
 func (r *UserAccountRepository) GetOneByUserId(
 	userId uuid.UUID,
@@ -66,6 +63,7 @@ func (r *UserAccountRepository) CreateOneByUserId(
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserAccount.FailedToCreate().WithError(err)
 	}
+
 	return &newUserAccount.Id, nil
 }
 
@@ -80,7 +78,9 @@ func (r *UserAccountRepository) UpdateOneByUserId(
 		userId,
 		opts...,
 	)
-	if exception != nil || existingUserAccount == nil {
+	if exception = exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
+		{First: existingUserAccount == nil, Second: exceptions.UserAccount.NotFound()},
+	}); exception != nil {
 		return nil, exception
 	}
 

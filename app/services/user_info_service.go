@@ -17,8 +17,6 @@ import (
 	validation "notezy-backend/app/validation"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type UserInfoServiceInterface interface {
 	GetMyInfo(ctx context.Context, reqDto *dtos.GetMyInfoReqDto) (*dtos.GetMyInfoResDto, *exceptions.Exception)
 	UpdateMyInfo(ctx context.Context, reqDto *dtos.UpdateMyInfoReqDto) (*dtos.UpdateMyInfoResDto, *exceptions.Exception)

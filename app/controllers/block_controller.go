@@ -9,8 +9,6 @@ import (
 	services "notezy-backend/app/services"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type BlockControllerInterface interface {
 	GetMyBlockById(ctx *gin.Context, reqDto *dtos.GetMyBlockByIdReqDto)
 	GetMyBlocksByIds(ctx *gin.Context, reqDto *dtos.GetMyBlocksByIdsReqDto)
@@ -37,8 +35,6 @@ func NewBlockController(blockService services.BlockServiceInterface) BlockContro
 		blockService: blockService,
 	}
 }
-
-/* ============================== Implementations ============================== */
 
 func (c *BlockController) GetMyBlockById(ctx *gin.Context, reqDto *dtos.GetMyBlockByIdReqDto) {
 	resDto, exception := c.blockService.GetMyBlockById(ctx.Request.Context(), reqDto)

@@ -30,8 +30,6 @@ import (
 	usersql "notezy-backend/app/models/sqls/user"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type AuthServiceInterface interface {
 	Register(ctx context.Context, reqDto *dtos.RegisterReqDto) (*dtos.RegisterResDto, *exceptions.Exception)
 	RegisterViaGoogle(ctx context.Context, reqDto *dtos.RegisterViaGoogleReqDto) (*dtos.RegisterViaGoogleResDto, *exceptions.Exception)

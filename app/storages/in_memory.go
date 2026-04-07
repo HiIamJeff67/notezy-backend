@@ -48,8 +48,6 @@ func (s *inMemoryStorage) ListAllInTerminal() {
 	logs.Info(traces.GetTrace(0).FileLineString(), s.data)
 }
 
-/* ============================== Implementations ============================== */
-
 func (s *inMemoryStorage) GetKey(ownerIndicator string, objectIndicator string) string {
 	salt := util.GetEnv("STORAGE_KEY_SALT", "")
 	origin := "In-Memory-Key<" + ownerIndicator + "|" + objectIndicator + "|" + salt + ">"

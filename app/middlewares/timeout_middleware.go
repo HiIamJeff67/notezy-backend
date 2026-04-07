@@ -78,7 +78,7 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 				"success":   false,
 				"data":      nil,
-				"exception": exceptions.FatelPanic(fmt.Sprintf("[TimeoutMiddleware] Panic recovered: %v\nStack: %s\n", panicInfo.Value, string(panicInfo.Stack))),
+				"exception": exceptions.FatalPanic(fmt.Sprintf("[TimeoutMiddleware] Panic recovered: %v\nStack: %s\n", panicInfo.Value, string(panicInfo.Stack))),
 			})
 		case <-done:
 			writer.Mutex.Lock()
@@ -98,7 +98,7 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 
 			if currentBufferPool.Len() > 0 {
 				if _, err := writer.ResponseWriter.Write(currentBufferPool.Bytes()); err != nil {
-					exceptions.FatelPanic().WithError(err).SafelyAbortAndResponseWithJSON(ctx)
+					exceptions.FatalPanic().WithError(err).SafelyAbortAndResponseWithJSON(ctx)
 				}
 			}
 
@@ -116,10 +116,10 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 				writer.ResponseWriter.WriteHeader(exception.HTTPStatusCode)
 				timeoutResponseBody, err := exception.GetResponseJSONBytes()
 				if err != nil {
-					exceptions.FatelPanic().WithError(err).SafelyAbortAndResponseWithJSON(ctx)
+					exceptions.FatalPanic().WithError(err).SafelyAbortAndResponseWithJSON(ctx)
 				}
 				if _, err := writer.ResponseWriter.Write(timeoutResponseBody); err != nil {
-					exceptions.FatelPanic().WithError(err).SafelyAbortAndResponseWithJSON(
+					exceptions.FatalPanic().WithError(err).SafelyAbortAndResponseWithJSON(
 						ctx, metrics.MetricNames.Server.Responses.Failed.Timeout,
 					)
 				}
@@ -139,10 +139,10 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 				writer.ResponseWriter.WriteHeader(exception.HTTPStatusCode)
 				timeoutResponseBody, err := exception.GetResponseJSONBytes()
 				if err != nil {
-					exceptions.FatelPanic().WithError(err).SafelyAbortAndResponseWithJSON(ctx)
+					exceptions.FatalPanic().WithError(err).SafelyAbortAndResponseWithJSON(ctx)
 				}
 				if _, err := writer.ResponseWriter.Write(timeoutResponseBody); err != nil {
-					exceptions.FatelPanic().WithError(err).SafelyAbortAndResponseWithJSON(
+					exceptions.FatalPanic().WithError(err).SafelyAbortAndResponseWithJSON(
 						ctx, metrics.MetricNames.Server.Responses.Failed.Timeout,
 					)
 				}

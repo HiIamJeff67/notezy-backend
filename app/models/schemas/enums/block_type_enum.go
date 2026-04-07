@@ -7,8 +7,6 @@ import (
 	"slices"
 )
 
-/* ============================== Definition ============================== */
-
 type BlockType string
 
 const (
@@ -29,8 +27,6 @@ const (
 	BlockType_Table     BlockType = "table"
 	BlockType_CodeBlock BlockType = "codeBlock"
 )
-
-/* ============================== All Instacnces ============================== */
 
 var AllBlockTypes = []BlockType{
 	BlockType_Paragraph,
@@ -63,8 +59,6 @@ var AllBlockTypeStrings = []string{
 	string(BlockType_Table),
 	string(BlockType_CodeBlock),
 }
-
-/* ============================== Methods ============================== */
 
 func (bt BlockType) Name() string {
 	return reflect.TypeOf(bt).Name()

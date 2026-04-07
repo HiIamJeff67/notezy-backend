@@ -39,4 +39,5 @@ func ConfigureDevelopmentRoutes() {
 
 	// test
 	configureStorageRoutes()
+	configureDevelopmentTestRoutes()
 }

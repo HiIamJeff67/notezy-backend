@@ -6,8 +6,6 @@ import (
 	"reflect"
 )
 
-/* ============================== Definition ============================== */
-
 type BillingIntervalUnit string
 
 const (
@@ -16,8 +14,6 @@ const (
 	BillingIntervalUnit_Month BillingIntervalUnit = "MONTH"
 	BillingIntervalUnit_Year  BillingIntervalUnit = "YEAR"
 )
-
-/* ============================== All Instances ============================== */
 
 var AllBillingIntervalUnits = []BillingIntervalUnit{
 	BillingIntervalUnit_Day,
@@ -31,8 +27,6 @@ var AllBillingIntervalUnitStrings = []string{
 	string(BillingIntervalUnit_Month),
 	string(BillingIntervalUnit_Year),
 }
-
-/* ============================== Methods ============================== */
 
 func (biu BillingIntervalUnit) Name() string {
 	return reflect.TypeOf(biu).Name()

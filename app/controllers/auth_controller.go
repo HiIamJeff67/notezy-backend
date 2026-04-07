@@ -10,8 +10,6 @@ import (
 	services "notezy-backend/app/services"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type AuthControllerInterface interface {
 	Register(ctx *gin.Context, reqDto *dtos.RegisterReqDto)
 	RegisterViaGoogle(ctx *gin.Context, reqDto *dtos.RegisterViaGoogleReqDto)
@@ -35,8 +33,6 @@ func NewAuthController(service services.AuthServiceInterface) AuthControllerInte
 		authService: service,
 	}
 }
-
-/* ============================== Implementations ============================== */
 
 func (c *AuthController) Register(ctx *gin.Context, reqDto *dtos.RegisterReqDto) {
 	cookies.AccessTokenCookieHandler.Delete(ctx)

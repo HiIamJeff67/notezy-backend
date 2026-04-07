@@ -8,8 +8,6 @@ import (
 	"strings"
 )
 
-/* ============================== Definition ============================== */
-
 type MaterialType string
 
 const (
@@ -18,8 +16,6 @@ const (
 	MaterialType_LearningCards MaterialType = "LearningCards" // BlockNote(HTML)
 	MaterialType_Workflow      MaterialType = "Workflow"      // ReactFlow(Canva)
 )
-
-/* ============================== All Instances ============================== */
 
 var AllMaterialTypes = []MaterialType{
 	MaterialType_Textbook,

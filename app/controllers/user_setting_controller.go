@@ -9,8 +9,6 @@ import (
 	services "notezy-backend/app/services"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type UserSettingControllerInterface interface {
 	GetMySetting(ctx *gin.Context, reqDto *dtos.GetMySettingReqDto)
 }
@@ -24,8 +22,6 @@ func NewUserSettingController(service services.UserSettingServiceInterface) User
 		userSettingService: service,
 	}
 }
-
-/* ============================== Implementations ============================== */
 
 func (c *UserSettingController) GetMySetting(ctx *gin.Context, reqDto *dtos.GetMySettingReqDto) {
 	resDto, exception := c.userSettingService.GetMySetting(ctx.Request.Context(), reqDto)

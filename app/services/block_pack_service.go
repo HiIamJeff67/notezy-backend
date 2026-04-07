@@ -20,8 +20,6 @@ import (
 	types "notezy-backend/shared/types"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type BlockPackServiceInterface interface {
 	GetMyBlockPackById(ctx context.Context, reqDto *dtos.GetMyBlockPackByIdReqDto) (*dtos.GetMyBlockPackByIdResDto, *exceptions.Exception)
 	GetMyBlockPackAndItsParentById(ctx context.Context, reqDto *dtos.GetMyBlockPackAndItsParentByIdReqDto) (*dtos.GetMyBlockPackAndItsParentByIdResDto, *exceptions.Exception)

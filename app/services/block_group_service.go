@@ -21,8 +21,6 @@ import (
 	types "notezy-backend/shared/types"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type BlockGroupServiceInterface interface {
 	GetMyBlockGroupById(ctx context.Context, reqDto *dtos.GetMyBlockGroupByIdReqDto) (*dtos.GetMyBlockGroupByIdResDto, *exceptions.Exception)
 	GetMyBlockGroupAndItsBlocksById(ctx context.Context, reqDto *dtos.GetMyBlockGroupAndItsBlocksByIdReqDto) (*dtos.GetMyBlockGroupAndItsBlocksByIdResDto, *exceptions.Exception)
@@ -61,8 +59,6 @@ func NewBlockGroupService(
 		editableBlockAdapter: editableBlockAdapter,
 	}
 }
-
-/* ============================== Implementations ============================== */
 
 func (s *BlockGroupService) GetMyBlockGroupById(
 	ctx context.Context, reqDto *dtos.GetMyBlockGroupByIdReqDto,
@@ -336,7 +332,7 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
-		if exceptions.CompareCommonExceptions(exceptions.BlockGroup.NotFound(), exception, false) {
+		if exceptions.CommonlyCompare(exceptions.BlockGroup.NotFound(), exception, false) {
 			return &dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdResDto{}, nil
 		}
 		return nil, exception

@@ -1,15 +1,17 @@
 package schemas
 
 import (
-	"notezy-backend/app/models/schemas/enums"
-	"notezy-backend/shared/types"
 	"time"
 
 	"github.com/google/uuid"
+
+	enums "notezy-backend/app/models/schemas/enums"
+	types "notezy-backend/shared/types"
 )
 
+// the structure of subscriptions or checkouts or anything that related to the payment and the user
 type UsersToBillingPlans struct {
-	Id              uuid.UUID                       `json:"id" gorm:"column:id; type:uuid; primaryKey;"`
+	Id              uuid.UUID                       `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid();"`
 	UserId          uuid.UUID                       `json:"userId" gorm:"column:user_id; type:uuid; not null; uniqueIndex:users_to_billing_plans_idx_user_id_billing_plan_id_partial_status;"`
 	BillingPlanId   string                          `json:"billingPlanId" gorm:"column:billing_plan_id; not null; uniqueIndex:users_to_billing_plans_idx_user_id_billing_plan_id_partial_active;"`
 	Status          enums.UsersToBillingPlansStatus `json:"status" gorm:"column:status; type:\"UsersToBillingPlansStatus\"; not null;"`

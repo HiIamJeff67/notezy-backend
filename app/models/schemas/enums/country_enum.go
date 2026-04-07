@@ -6,8 +6,6 @@ import (
 	"reflect"
 )
 
-/* ============================== Definition ============================== */
-
 type Country string
 
 const (
@@ -21,8 +19,6 @@ const (
 	Country_Australia             Country = "Australia"
 	Country_Canada                Country = "Canada"
 )
-
-/* ========================= All Instances ========================= */
 
 var AllCountries = []Country{
 	Country_Taiwan,
@@ -46,8 +42,6 @@ var AllCountryStrings = []string{
 	string(Country_Australia),
 	string(Country_Canada),
 }
-
-/* ============================== Methods ============================== */
 
 func (c Country) Name() string {
 	return reflect.TypeOf(c).Name()

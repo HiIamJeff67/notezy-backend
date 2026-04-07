@@ -7,8 +7,6 @@ import (
 	"slices"
 )
 
-/* ============================== Definition ============================== */
-
 type Language string
 
 const (
@@ -18,8 +16,6 @@ const (
 	Language_Japanese           Language = "Japanese"
 	Language_Korean             Language = "Korean"
 )
-
-/* ========================= All Instances ========================= */
 
 var AllLanguages = []Language{
 	Language_English,
@@ -35,8 +31,6 @@ var AllLanguageStrings = []string{
 	string(Language_Japanese),
 	string(Language_Korean),
 }
-
-/* ============================== Methods ============================== */
 
 func (l Language) Name() string {
 	return reflect.TypeOf(l).Name()

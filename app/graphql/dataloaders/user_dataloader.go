@@ -30,8 +30,6 @@ type UserLoaderType = gophersdataloader.Loader[UserLoaderKey, *gqlmodels.PublicU
 type UserBatchFunctionType = gophersdataloader.BatchFunc[UserLoaderKey, *gqlmodels.PublicUser]
 type UserResultType = gophersdataloader.Result[*gqlmodels.PublicUser]
 
-/* ============================== Interface & Instance ============================== */
-
 type UserDataloaderInterface interface {
 	GetLoader() *UserLoaderType
 	batchFunction() UserBatchFunctionType

@@ -9,8 +9,6 @@ import (
 	services "notezy-backend/app/services"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type UserControllerInterface interface {
 	GetUserData(ctx *gin.Context, reqDto *dtos.GetUserDataReqDto)
 	GetMe(ctx *gin.Context, reqDto *dtos.GetMeReqDto)

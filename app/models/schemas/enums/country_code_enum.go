@@ -6,8 +6,6 @@ import (
 	"reflect"
 )
 
-/* ============================== Definition ============================== */
-
 type CountryCode string
 
 const (
@@ -20,8 +18,6 @@ const (
 	CountryCode_UnitedKingdom CountryCode = "+44"
 	CountryCode_Australia     CountryCode = "+61"
 )
-
-/* ========================= All Instances ========================= */
 
 var AllCountryCodes = []CountryCode{
 	CountryCode_Taiwan,
@@ -43,8 +39,6 @@ var AllCountryCodeStrings = []string{
 	string(CountryCode_UnitedKingdom),
 	string(CountryCode_Australia),
 }
-
-/* ============================== Methods ============================== */
 
 func (cc CountryCode) Name() string {
 	return reflect.TypeOf(cc).Name()

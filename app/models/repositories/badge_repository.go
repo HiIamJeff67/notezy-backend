@@ -6,9 +6,8 @@ import (
 	exceptions "notezy-backend/app/exceptions"
 	schemas "notezy-backend/app/models/schemas"
 	options "notezy-backend/app/options"
+	types "notezy-backend/shared/types"
 )
-
-/* ============================== Definitions ============================== */
 
 type BadgeRepositoryInterface interface {
 	GetOneById(id uuid.UUID, preloads []schemas.BadgeRelation, opts ...options.RepositoryOptions) (*schemas.Badge, *exceptions.Exception)
@@ -19,8 +18,6 @@ type BadgeRepository struct{}
 func NewBadgeRepository() BadgeRepositoryInterface {
 	return &BadgeRepository{}
 }
-
-/* ============================== Implementations ============================== */
 
 func (r *BadgeRepository) GetOneById(
 	id uuid.UUID,
@@ -40,8 +37,11 @@ func (r *BadgeRepository) GetOneById(
 
 	result := query.Where("id = ?", id).
 		First(&badge)
-	if err := result.Error; err != nil {
-		return nil, exceptions.Badge.NotFound().WithError(err)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Badge.NotFound().WithError(result.Error)},
+		{First: badge.Id == uuid.Nil, Second: exceptions.Badge.NotFound()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return &badge, nil

@@ -9,8 +9,6 @@ import (
 	services "notezy-backend/app/services"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type BlockPackControllerInterface interface {
 	GetMyBlockPackById(ctx *gin.Context, reqDto *dtos.GetMyBlockPackByIdReqDto)
 	GetMyBlockPackAndItsParentById(ctx *gin.Context, reqDto *dtos.GetMyBlockPackAndItsParentByIdReqDto)
@@ -35,8 +33,6 @@ func NewBlockPackController(service services.BlockPackServiceInterface) BlockPac
 		blockPackService: service,
 	}
 }
-
-/* ============================== Implementations ============================== */
 
 func (c *BlockPackController) GetMyBlockPackById(ctx *gin.Context, reqDto *dtos.GetMyBlockPackByIdReqDto) {
 	resDto, exception := c.blockPackService.GetMyBlockPackById(ctx.Request.Context(), reqDto)

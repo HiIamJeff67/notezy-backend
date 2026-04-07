@@ -16,8 +16,6 @@ import (
 	validation "notezy-backend/app/validation"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type UserAccountServiceInterface interface {
 	GetMyAccount(ctx context.Context, reqDto *dtos.GetMyAccountReqDto) (*dtos.GetMyAccountResDto, *exceptions.Exception)
 	UpdateMyAccount(ctx context.Context, reqDto *dtos.UpdateMyAccountReqDto) (*dtos.UpdateMyAccountResDto, *exceptions.Exception)
@@ -206,5 +204,3 @@ func (s *UserAccountService) UnbindGoogleAccount(
 		UpdatedAt: time.Now(),
 	}, nil
 }
-
-/* ============================== Service Methods for Upgrade User Plan ============================== */

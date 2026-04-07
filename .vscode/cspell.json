@@ -2,7 +2,7 @@
   "version": "0.2",
   "language": "en,go",
   "dictionaries": ["go", "sql"],
-  "enabled": false,
+  "enabled": true,
   "ignoreRegExpList": [
     "/[nN][oO][tT][eE][zZ][yY][a-zA-Z]*/",
     "/go[a-zA-Z]*/",
@@ -10,7 +10,7 @@
     "/gin/",
     "/gin-[a-zA-Z]*/",
     "/endless/",
-    "/is[a-z]+/", 
+    "/is[a-z]+/",
     "/English/",
     "/Enterprise/",
     "/go-randomdata/"
@@ -36,6 +36,14 @@
     "enumsortorder",
     "serial",
     "Pallinder",
-    "randomdata"
+    "randomdata",
+    "gqlerror",
+    "jinzhu",
+    "searchcursor",
+    "gqlmodels",
+    "gqlgen",
+    "gqlparser",
+    "cending",
+    "vektah"
   ]
 }

@@ -9,8 +9,6 @@ import (
 	services "notezy-backend/app/services"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type UserAccountControllerInterface interface {
 	GetMyAccount(ctx *gin.Context, reqDto *dtos.GetMyAccountReqDto)
 	UpdateMyAccount(ctx *gin.Context, reqDto *dtos.UpdateMyAccountReqDto)

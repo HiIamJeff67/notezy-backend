@@ -7,8 +7,6 @@ import (
 	"slices"
 )
 
-/* ============================== UserPlan Definition ============================== */
-
 type UserPlan string
 
 const (
@@ -18,8 +16,6 @@ const (
 	UserPlan_Pro        UserPlan = "Pro"
 	UserPlan_Free       UserPlan = "Free"
 )
-
-/* ========================= All Instances ========================= */
 
 // All the userPlans placing in the descending order
 var AllUserPlans = []UserPlan{
@@ -38,8 +34,6 @@ var AllUserPlanStrings = []string{
 	string(UserPlan_Pro),
 	string(UserPlan_Free),
 }
-
-/* ============================== Methods ============================== */
 
 func (p UserPlan) Name() string {
 	return reflect.TypeOf(p).Name()

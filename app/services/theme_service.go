@@ -14,8 +14,6 @@ import (
 	searchcursor "notezy-backend/shared/lib/searchcursor"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type ThemeServiceInterface interface {
 	// services for public themes
 	GetPublicThemeByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicTheme, *exceptions.Exception)

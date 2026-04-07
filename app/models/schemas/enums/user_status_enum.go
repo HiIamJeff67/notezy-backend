@@ -7,7 +7,6 @@ import (
 	"slices"
 )
 
-/* ============================== Definition ============================== */
 type UserStatus string
 
 const (
@@ -16,8 +15,6 @@ const (
 	UserStatus_DoNotDisturb UserStatus = "DoNotDisturb"
 	UserStatus_Offline      UserStatus = "Offline"
 )
-
-/* ========================= All Instances ========================= */
 
 var AllUserStatuses = []UserStatus{
 	UserStatus_Online,
@@ -31,8 +28,6 @@ var AllUserStatusStrings = []string{
 	string(UserStatus_DoNotDisturb),
 	string(UserStatus_Offline),
 }
-
-/* ============================== Methods ============================== */
 
 func (s UserStatus) Name() string {
 	return reflect.TypeOf(s).Name()

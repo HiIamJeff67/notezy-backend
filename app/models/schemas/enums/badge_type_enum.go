@@ -6,8 +6,6 @@ import (
 	"reflect"
 )
 
-/* ============================== Definition ============================== */
-
 type BadgeType string
 
 const (
@@ -17,8 +15,6 @@ const (
 	BadgeType_Bronze  BadgeType = "Bronze"
 	BadgeType_Steel   BadgeType = "Steel"
 )
-
-/* ========================= All Instances ========================= */
 
 var AllBadgeTypes = []BadgeType{
 	BadgeType_Diamond,
@@ -34,8 +30,6 @@ var AllBadgeTypeStrings = []string{
 	string(BadgeType_Bronze),
 	string(BadgeType_Steel),
 }
-
-/* ============================== Methods ============================== */
 
 func (bt BadgeType) Name() string {
 	return reflect.TypeOf(bt).Name()

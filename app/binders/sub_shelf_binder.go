@@ -12,8 +12,6 @@ import (
 	types "notezy-backend/shared/types"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type SubShelfBinderInterface interface {
 	BindGetMySubShelfById(controllerFunc types.ControllerFunc[*dtos.GetMySubShelfByIdReqDto]) gin.HandlerFunc
 	BindGetMySubShelvesByPrevSubShelfId(controllerFunc types.ControllerFunc[*dtos.GetMySubShelvesByPrevSubShelfIdReqDto]) gin.HandlerFunc
@@ -34,8 +32,6 @@ type SubShelfBinder struct{}
 func NewSubShelfBinder() SubShelfBinderInterface {
 	return &SubShelfBinder{}
 }
-
-/* ============================== Implementations ============================== */
 
 func (b *SubShelfBinder) BindGetMySubShelfById(controllerFunc types.ControllerFunc[*dtos.GetMySubShelfByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {

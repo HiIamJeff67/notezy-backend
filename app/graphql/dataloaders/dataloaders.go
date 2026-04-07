@@ -4,8 +4,6 @@ import (
 	"gorm.io/gorm"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type Dataloaders struct {
 	UserDataLoader     UserDataloaderInterface
 	UserInfoDataLoader UserInfoDataloaderInterface

@@ -11,9 +11,8 @@ import (
 	schemas "notezy-backend/app/models/schemas"
 	options "notezy-backend/app/options"
 	util "notezy-backend/app/util"
+	types "notezy-backend/shared/types"
 )
-
-/* ============================== Definitions ============================== */
 
 type UserRepositoryInterface interface {
 	GetOneById(id uuid.UUID, preloads []schemas.UserRelation, opts ...options.RepositoryOptions) (*schemas.User, *exceptions.Exception)
@@ -29,8 +28,6 @@ type UserRepository struct{}
 func NewUserRepository() UserRepositoryInterface {
 	return &UserRepository{}
 }
-
-/* ============================== Implementations ============================== */
 
 func (r *UserRepository) GetOneById(
 	id uuid.UUID,
@@ -50,8 +47,11 @@ func (r *UserRepository) GetOneById(
 
 	result := db.Where("id = ?", id).
 		First(&user)
-	if err := result.Error; err != nil {
-		return nil, exceptions.User.NotFound().WithError(err)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.User.NotFound().WithError(result.Error)},
+		{First: user.Id == uuid.Nil, Second: exceptions.User.NotFound()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return &user, nil
@@ -75,8 +75,11 @@ func (r *UserRepository) GetOneByName(
 
 	result := db.Where("name = ?", name).
 		First(&user)
-	if err := result.Error; err != nil {
-		return nil, exceptions.User.NotFound().WithError(err)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.User.NotFound().WithError(result.Error)},
+		{First: user.Id == uuid.Nil, Second: exceptions.User.NotFound()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return &user, nil
@@ -100,8 +103,11 @@ func (r *UserRepository) GetOneByEmail(
 
 	result := query.Where("email = ?", email).
 		First(&user)
-	if err := result.Error; err != nil {
-		return nil, exceptions.User.NotFound().WithError(err)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.User.NotFound().WithError(result.Error)},
+		{First: user.Id == uuid.Nil, Second: exceptions.User.NotFound()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return &user, nil
@@ -120,11 +126,12 @@ func (r *UserRepository) GetAll(
 		Preload("Badges").
 		Preload("Themes").
 		Find(&users)
-
-	if err := result.Error; err != nil {
-		return nil, exceptions.User.NotFound().WithError(result.Error)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.User.NotFound().WithError(result.Error)},
+		{First: len(users) == 0, Second: exceptions.User.NotFound()},
+	}); exception != nil {
+		return nil, exception
 	}
-
 	return users, nil
 }
 
@@ -145,6 +152,8 @@ func (r *UserRepository) CreateOne(
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newUser)
 	if err := result.Error; err != nil {
+		// instead of using exceptions.Cover(), we can just get the error string and switch on it to return the corresponded exceptions
+		// this approach is faster and more straight forward
 		switch err.Error() {
 		case "ERROR: duplicate key value violates unique constraint \"uni_UserTable_name\" (SQLSTATE 23505)":
 			return nil, exceptions.User.DuplicateName(input.Name)
@@ -153,6 +162,12 @@ func (r *UserRepository) CreateOne(
 		default:
 			return nil, exceptions.User.FailedToCreate() // .WithError(err) <- don't show the database error to outside
 		}
+	}
+	if result.RowsAffected == 0 {
+		// check the remaining condition here,
+		// since there's only 1 more condition to check,
+		// there's no need to use exceptions.Cover() to map all the it
+		return nil, exceptions.User.NoChanges()
 	}
 
 	return &newUser.Id, nil
@@ -183,11 +198,11 @@ func (r *UserRepository) UpdateOneById(
 		Where("id = ?", id).
 		Select("*").
 		Updates(&updates)
-	if err := result.Error; err != nil {
-		return nil, exceptions.User.FailedToUpdate().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return nil, exceptions.User.NoChanges()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.User.FailedToUpdate().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.User.NoChanges()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return &updates, nil

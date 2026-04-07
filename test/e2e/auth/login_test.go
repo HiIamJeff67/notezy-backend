@@ -42,8 +42,6 @@ const (
 	loginRoute        = testAuthRouteNamespace + "/login"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type LoginE2ETesterInterface interface {
 	getLoginTestDataAndResponse(
 		t *testing.T,

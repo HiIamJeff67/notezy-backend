@@ -6,8 +6,6 @@ import (
 	gqlmodels "notezy-backend/app/graphql/models"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type UserResolverInterface interface {
 	UserInfo(ctx context.Context, obj *gqlmodels.PublicUser) (*gqlmodels.PublicUserInfo, error)
 	Badge(ctx context.Context, obj *gqlmodels.PublicUser) (*gqlmodels.PublicBadge, error)

@@ -12,8 +12,6 @@ import (
 	types "notezy-backend/shared/types"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type BlockPackBinderInterface interface {
 	BindGetMyBlockPackById(controllerFunc types.ControllerFunc[*dtos.GetMyBlockPackByIdReqDto]) gin.HandlerFunc
 	BindGetMyBlockPackAndItsParentById(controllerFunc types.ControllerFunc[*dtos.GetMyBlockPackAndItsParentByIdReqDto]) gin.HandlerFunc
@@ -34,8 +32,6 @@ type BlockPackBinder struct{}
 func NewBlockPackBinder() BlockPackBinderInterface {
 	return &BlockPackBinder{}
 }
-
-/* ============================== Implementations ============================== */
 
 func (b *BlockPackBinder) BindGetMyBlockPackById(controllerFunc types.ControllerFunc[*dtos.GetMyBlockPackByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {

@@ -9,8 +9,6 @@ import (
 	types "notezy-backend/shared/types"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type UserInfoBinderInterface interface {
 	BindGetMyInfo(controllerFunc types.ControllerFunc[*dtos.GetMyInfoReqDto]) gin.HandlerFunc
 	BindUpdateMyInfo(controllerFunc types.ControllerFunc[*dtos.UpdateMyInfoReqDto]) gin.HandlerFunc
@@ -21,8 +19,6 @@ type UserInfoBinder struct{}
 func NewUserInfoBinder() UserInfoBinderInterface {
 	return &UserInfoBinder{}
 }
-
-/* ============================== Implementations ============================== */
 
 func (b *UserInfoBinder) BindGetMyInfo(controllerFunc types.ControllerFunc[*dtos.GetMyInfoReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {

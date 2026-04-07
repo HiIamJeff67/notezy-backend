@@ -53,7 +53,7 @@ var User = &UserExceptionDomain{
 	},
 }
 
-/* ============================== Unique Constaints ============================== */
+/* ============================== Unique Constraints ============================== */
 
 func (d *UserExceptionDomain) DuplicateName(name string) *Exception {
 	return &Exception{

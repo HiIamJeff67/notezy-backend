@@ -9,8 +9,6 @@ import (
 	services "notezy-backend/app/services"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type MaterialControllerInterface interface {
 	GetMyMaterialById(ctx *gin.Context, reqDto *dtos.GetMyMaterialByIdReqDto)
 	GetMyMaterialAndItsParentById(ctx *gin.Context, reqDto *dtos.GetMyMaterialAndItsParentByIdReqDto)
@@ -37,8 +35,6 @@ func NewMaterialController(service services.MaterialServiceInterface) MaterialCo
 		materialService: service,
 	}
 }
-
-/* ============================== Implementations ============================== */
 
 func (c *MaterialController) GetMyMaterialById(ctx *gin.Context, reqDto *dtos.GetMyMaterialByIdReqDto) {
 	resDto, exception := c.materialService.GetMyMaterialById(ctx.Request.Context(), reqDto)

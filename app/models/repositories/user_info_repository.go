@@ -11,9 +11,8 @@ import (
 	schemas "notezy-backend/app/models/schemas"
 	options "notezy-backend/app/options"
 	util "notezy-backend/app/util"
+	types "notezy-backend/shared/types"
 )
-
-/* ============================== Definitions ============================== */
 
 type UserInfoRepositoryInterface interface {
 	GetOneByUserId(userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.UserInfo, *exceptions.Exception)
@@ -27,8 +26,6 @@ func NewUserInfoRepository() UserInfoRepositoryInterface {
 	return &UserInfoRepository{}
 }
 
-/* ============================== Implementations ============================== */
-
 func (r *UserInfoRepository) GetOneByUserId(
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
@@ -39,8 +36,11 @@ func (r *UserInfoRepository) GetOneByUserId(
 	result := parsedOptions.DB.Table(schemas.UserInfo{}.TableName()).
 		Where("user_id = ?", userId).
 		First(&userInfo)
-	if err := result.Error; err != nil {
-		return nil, exceptions.UserInfo.NotFound().WithError(err)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.UserInfo.NotFound().WithError(result.Error)},
+		{First: userInfo.Id == uuid.Nil, Second: exceptions.UserInfo.NotFound()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return &userInfo, nil
@@ -62,8 +62,11 @@ func (r *UserInfoRepository) CreateOneByUserId(
 	result := parsedOptions.DB.Model(&schemas.UserInfo{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newUserInfo)
-	if err := result.Error; err != nil {
-		return nil, exceptions.UserInfo.FailedToCreate().WithError(err)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.UserInfo.FailedToCreate().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.UserInfo.NoChanges()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return &newUserInfo.Id, nil
@@ -93,11 +96,11 @@ func (r *UserInfoRepository) UpdateOneByUserId(
 		Where("user_id = ?", userId).
 		Select("*").
 		Updates(&updates)
-	if err := result.Error; err != nil {
-		return nil, exceptions.UserInfo.FailedToUpdate().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return nil, exceptions.UserInfo.NoChanges()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.UserInfo.FailedToCreate().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.UserInfo.NoChanges()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return &updates, nil

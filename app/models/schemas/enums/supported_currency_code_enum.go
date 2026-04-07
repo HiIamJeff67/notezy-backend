@@ -6,8 +6,6 @@ import (
 	"reflect"
 )
 
-/* ============================== Definition ============================== */
-
 type SupportedCurrencyCode string
 
 const (
@@ -37,8 +35,6 @@ var AllSupportedCurrencyCodeStrings = []string{
 	string(SupportedCurrencyCode_KRW),
 	string(SupportedCurrencyCode_CNY),
 }
-
-/* ============================== Methods ============================== */
 
 func (scc SupportedCurrencyCode) Name() string {
 	return reflect.TypeOf(scc).Name()

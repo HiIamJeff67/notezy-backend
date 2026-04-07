@@ -14,8 +14,6 @@ import (
 	validation "notezy-backend/app/validation"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type UserSettingServiceInterface interface {
 	GetMySetting(ctx context.Context, reqDto *dtos.GetMySettingReqDto) (*dtos.GetMySettingResDto, *exceptions.Exception)
 	UpdateMySetting(ctx context.Context, reqDto *dtos.UpdateMySettingReqDto) (*dtos.UpdateMySettingResDto, *exceptions.Exception)

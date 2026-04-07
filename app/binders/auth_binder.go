@@ -9,8 +9,6 @@ import (
 	types "notezy-backend/shared/types"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type AuthBinderInterface interface {
 	BindRegister(controllerFunc types.ControllerFunc[*dtos.RegisterReqDto]) gin.HandlerFunc
 	BindRegisterViaGoogle(controllerFunc types.ControllerFunc[*dtos.RegisterViaGoogleReqDto]) gin.HandlerFunc
@@ -30,8 +28,6 @@ type AuthBinder struct{}
 func NewAuthBinder() AuthBinderInterface {
 	return &AuthBinder{}
 }
-
-/* ============================== Implementations ============================== */
 
 func (b *AuthBinder) BindRegister(controllerFunc types.ControllerFunc[*dtos.RegisterReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {

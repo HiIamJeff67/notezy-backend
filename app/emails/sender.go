@@ -26,8 +26,6 @@ var NotezyEmailSender = &EmailSender{
 	From:     util.GetEnv("NOTEZY_OFFICIAL_NAME", "") + "<" + util.GetEnv("NOTEZY_OFFICIAL_GMAIL", "") + ">",
 }
 
-/* ============================== Methods ============================== */
-
 func (s *EmailSender) AsyncSend(to string, subject string, body string, contentType types.EmailContentType) *exceptions.Exception {
 	if !contentType.IsValidEnum() {
 		return exceptions.Email.InvalidEmailContentType(string(contentType))

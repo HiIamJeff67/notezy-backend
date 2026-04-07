@@ -7,8 +7,6 @@ import (
 	"slices"
 )
 
-/* ============================== Definition ============================== */
-
 type UserRole string
 
 const (
@@ -16,8 +14,6 @@ const (
 	UserRole_Normal UserRole = "Normal"
 	UserRole_Guest  UserRole = "Guest"
 )
-
-/* ========================= All Instances ========================= */
 
 // All the userRoles placing in the descending order
 var AllUserRoles = []UserRole{
@@ -32,8 +28,6 @@ var AllUserRoleStrings = []string{
 	string(UserRole_Normal),
 	string(UserRole_Guest),
 }
-
-/* ============================== Methods ============================== */
 
 func (r UserRole) Name() string {
 	return reflect.TypeOf(r).Name()

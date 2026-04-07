@@ -7,8 +7,6 @@ import (
 	"slices"
 )
 
-/* ============================== Definition ============================== */
-
 // the sub type to indicate the content type of material files
 type MaterialContentType string
 
@@ -23,8 +21,6 @@ const (
 	MaterialContentType_GIF       MaterialContentType = "image/gif"
 	MaterialContentType_SVG       MaterialContentType = "image/svg"
 )
-
-/* ============================== All Instances ============================== */
 
 // the sub types array for the content type of material files
 var AllMaterialContentTypes = []MaterialContentType{
@@ -47,8 +43,6 @@ var AllMaterialContentTypeStrings = []string{
 	string(MaterialContentType_GIF),
 	string(MaterialContentType_SVG),
 }
-
-/* ============================== Methods ============================== */
 
 func (mct MaterialContentType) Name() string {
 	return reflect.TypeOf(mct).Name()

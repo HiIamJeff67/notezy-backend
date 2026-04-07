@@ -18,8 +18,6 @@ import (
 	types "notezy-backend/shared/types"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type MaterialBinderInterface interface {
 	BindGetMyMaterialById(controllerFunc types.ControllerFunc[*dtos.GetMyMaterialByIdReqDto]) gin.HandlerFunc
 	BindGetMyMaterialAndItsParentById(controllerFunc types.ControllerFunc[*dtos.GetMyMaterialAndItsParentByIdReqDto]) gin.HandlerFunc
@@ -42,8 +40,6 @@ type MaterialBinder struct{}
 func NewMaterialBinder() MaterialBinderInterface {
 	return &MaterialBinder{}
 }
-
-/* ============================== Implementations ============================== */
 
 func (b *MaterialBinder) BindGetMyMaterialById(controllerFunc types.ControllerFunc[*dtos.GetMyMaterialByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {

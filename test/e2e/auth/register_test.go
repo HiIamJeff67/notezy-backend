@@ -44,8 +44,6 @@ const (
 	registerRoute        = testAuthRouteNamespace + "/register"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type RegisterE2ETesterInterface interface {
 	getRegisterTestdataAndResponse(
 		t *testing.T,

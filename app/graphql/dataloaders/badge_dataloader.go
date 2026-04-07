@@ -29,8 +29,6 @@ type BadgeLoaderType = gophersdataloader.Loader[BadgeLoaderKey, *gqlmodels.Publi
 type BadgeBatchFunctionType = gophersdataloader.BatchFunc[BadgeLoaderKey, *gqlmodels.PublicBadge]
 type BadgeResultType = gophersdataloader.Result[*gqlmodels.PublicBadge]
 
-/* ============================== Interface & Instance ============================== */
-
 type BadgeDataloaderInterface interface {
 	GetLoader() *BadgeLoaderType
 	batchFunction() BadgeBatchFunctionType

@@ -19,8 +19,6 @@ import (
 	types "notezy-backend/shared/types"
 )
 
-/* ============================== Definitions ============================== */
-
 type BlockGroupRepositoryInterface interface {
 	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
 	HasPermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
@@ -48,8 +46,6 @@ type BlockGroupRepository struct{}
 func NewBlockGroupRepository() BlockGroupRepositoryInterface {
 	return &BlockGroupRepository{}
 }
-
-/* ============================== Implementations ============================== */
 
 func (r *BlockGroupRepository) HasPermission(
 	id uuid.UUID,
@@ -206,11 +202,11 @@ func (r *BlockGroupRepository) CheckPermissionsAndGetManyByIds(
 
 	var blockGroups []schemas.BlockGroup
 	result := query.Find(&blockGroups)
-	if err := result.Error; err != nil {
-		return nil, exceptions.BlockGroup.NotFound().WithError(err)
-	}
-	if len(blockGroups) == 0 {
-		return nil, exceptions.BlockGroup.NotFound()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.BlockGroup.NotFound().WithError(result.Error)},
+		{First: len(blockGroups) == 0, Second: exceptions.BlockGroup.NotFound()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return blockGroups, nil
@@ -253,11 +249,11 @@ func (r *BlockGroupRepository) CheckPermissionsAndGetManyByBlockPackId(
 
 	var blockGroups []schemas.BlockGroup
 	result := query.Find(&blockGroups)
-	if err := result.Error; err != nil {
-		return nil, exceptions.BlockGroup.NotFound().WithError(err)
-	}
-	if len(blockGroups) == 0 {
-		return nil, exceptions.BlockGroup.NotFound()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.BlockGroup.NotFound().WithError(result.Error)},
+		{First: len(blockGroups) == 0, Second: exceptions.BlockGroup.NotFound()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return blockGroups, nil
@@ -398,11 +394,10 @@ func (r *BlockGroupRepository) InsertOneByBlockPackId(
 		allowedPermissions,
 		opts...,
 	)
-	if exception != nil {
+	if exception := exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
+		{First: ownerId == nil || blockPack == nil, Second: exceptions.BlockPack.NoPermission("get owner's block pack")},
+	}); exception != nil {
 		return nil, exception
-	}
-	if ownerId == nil || blockPack == nil {
-		return nil, exceptions.BlockPack.NoPermission("get owner's block pack")
 	}
 
 	var newBlockGroup schemas.BlockGroup
@@ -413,11 +408,16 @@ func (r *BlockGroupRepository) InsertOneByBlockPackId(
 	newBlockGroup.BlockPackId = blockPackId
 	newBlockGroup.PrevBlockGroupId = blockPack.FinalBlockGroupId
 
-	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
+	var createdBlockGroup schemas.BlockGroup
+	result := parsedOptions.DB.Model(&createdBlockGroup).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newBlockGroup)
-	if err := result.Error; err != nil {
-		return nil, exceptions.BlockGroup.FailedToCreate().WithError(err)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToCreate().WithError(result.Error)},
+		{First: createdBlockGroup.Id == uuid.Nil, Second: exceptions.BlockGroup.FailedToCreate()},
+		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	if input.PrevBlockGroupId != nil {
@@ -460,7 +460,7 @@ func (r *BlockGroupRepository) InsertOneByBlockPackId(
 		}
 	}
 
-	return &newBlockGroup.Id, nil
+	return &createdBlockGroup.Id, nil
 }
 
 func (r *BlockGroupRepository) InsertManyByBlockPackId(
@@ -497,13 +497,11 @@ func (r *BlockGroupRepository) InsertManyByBlockPackId(
 		allowedPermissions,
 		opts...,
 	)
-	if exception != nil {
+	if exception := exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
+		{First: ownerId == nil || blockPack == nil, Second: exceptions.BlockPack.NoPermission("write owner's block pack")},
+	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
-	}
-	if ownerId == nil || blockPack == nil {
-		parsedOptions.DB.Rollback()
-		return nil, exceptions.BlockPack.NoPermission("write owner's block pack")
 	}
 
 	nextBlockGroups := make(map[uuid.UUID]uuid.UUID)
@@ -594,7 +592,6 @@ func (r *BlockGroupRepository) InsertManyByBlockPackId(
 			collisionQuery := parsedOptions.DB.Model(&schemas.BlockGroup{}).
 				Where("deleted_at IS NULL").
 				Where(strings.Join(conditions, " OR "), conditionArgs...)
-
 			if err := collisionQuery.Find(&collidingBlockGroups).Error; err != nil {
 				parsedOptions.DB.Rollback()
 				return nil, exceptions.BlockGroup.NotFound().WithError(err)
@@ -635,18 +632,16 @@ func (r *BlockGroupRepository) InsertManyByBlockPackId(
 		}
 	}
 
-	var restoredBlockGroups []schemas.BlockGroup
-	restoreResult := parsedOptions.DB.Model(&restoredBlockGroups).
+	restoreResult := parsedOptions.DB.Model(&schemas.BlockGroup{}).
 		Clauses(clause.Returning{}).
 		Where("id IN ? AND deleted_at IS NOT NULL", newBlockGroupIds).
 		Updates(map[string]interface{}{"deleted_at": nil})
-	if err := restoreResult.Error; err != nil {
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: restoreResult.Error != nil, Second: exceptions.BlockGroup.FailedToUpdate().WithError(restoreResult.Error)},
+		{First: restoreResult.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
+	}); exception != nil {
 		parsedOptions.DB.Rollback()
-		return nil, exceptions.BlockGroup.FailedToUpdate().WithError(err)
-	}
-	if restoreResult.RowsAffected == 0 {
-		parsedOptions.DB.Rollback()
-		return nil, exceptions.BlockGroup.NoChanges()
+		return nil, exception
 	}
 
 	if shouldCommit {
@@ -681,11 +676,10 @@ func (r *BlockGroupRepository) AppendOneByBlockPackId(
 		allowedPermissions,
 		opts...,
 	)
-	if exception != nil {
+	if exception := exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
+		{First: ownerId == nil || blockPack == nil, Second: exceptions.BlockPack.NoPermission("get owner's block pack")},
+	}); exception != nil {
 		return nil, exception
-	}
-	if ownerId == nil || blockPack == nil {
-		return nil, exceptions.BlockPack.NoPermission("get owner's block pack")
 	}
 
 	var newBlockGroup schemas.BlockGroup
@@ -693,14 +687,19 @@ func (r *BlockGroupRepository) AppendOneByBlockPackId(
 	newBlockGroup.BlockPackId = blockPackId
 	newBlockGroup.PrevBlockGroupId = blockPack.FinalBlockGroupId
 
-	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
+	var createdBlockGroup schemas.BlockGroup
+	result := parsedOptions.DB.Model(&createdBlockGroup).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newBlockGroup)
-	if err := result.Error; err != nil {
-		return nil, exceptions.BlockGroup.FailedToCreate().WithError(err)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToCreate().WithError(result.Error)},
+		{First: createdBlockGroup.Id == uuid.Nil, Second: exceptions.BlockGroup.FailedToCreate()},
+		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
+	}); exception != nil {
+		return nil, exception
 	}
 
-	return &newBlockGroup.Id, nil
+	return &createdBlockGroup.Id, nil
 }
 
 func (r *BlockGroupRepository) AppendManyByBlockPackId(
@@ -731,11 +730,10 @@ func (r *BlockGroupRepository) AppendManyByBlockPackId(
 		allowedPermissions,
 		opts...,
 	)
-	if exception != nil {
+	if exception := exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
+		{First: ownerId == nil || blockPack == nil, Second: exceptions.BlockPack.NoPermission("get owner's block pack")},
+	}); exception != nil {
 		return nil, exception
-	}
-	if ownerId == nil || blockPack == nil {
-		return nil, exceptions.BlockPack.NoPermission("get owner's block pack")
 	}
 
 	var newBlockGroups []schemas.BlockGroup
@@ -754,8 +752,11 @@ func (r *BlockGroupRepository) AppendManyByBlockPackId(
 	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newBlockGroups)
-	if err := result.Error; err != nil {
-		return nil, exceptions.BlockGroup.FailedToCreate().WithError(err)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToCreate().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return ids, nil
@@ -800,11 +801,11 @@ func (r *BlockGroupRepository) UpdateOneById(
 		Where("id = ? AND deleted_at IS NULL", id).
 		Select("*").
 		Updates(&updates)
-	if err := result.Error; err != nil {
-		return nil, exceptions.BlockGroup.FailedToUpdate().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return nil, exceptions.BlockGroup.NoChanges()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToUpdate().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return &updates, nil
@@ -855,13 +856,12 @@ func (r *BlockGroupRepository) RestoreSoftDeletedOneById(
 		Clauses(clause.Returning{}).
 		Where("id = ? AND deleted_at IS NOT NULL", id).
 		Update("deleted_at", nil)
-	if err := result.Error; err != nil {
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToUpdate().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
+	}); exception != nil {
 		parsedOptions.DB.Rollback()
-		return nil, exceptions.BlockGroup.FailedToUpdate().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		parsedOptions.DB.Rollback()
-		return nil, exceptions.BlockGroup.NoChanges()
+		return nil, exception
 	}
 
 	if shouldCommit {
@@ -986,8 +986,7 @@ func (r *BlockGroupRepository) RestoreSoftDeletedManyByIds(
 
 	if len(conditions) > 0 {
 		collisionQuery = collisionQuery.Where(strings.Join(conditions, " OR "), conditionArgs...)
-		result := collisionQuery.Find(&collidingBlockGroups)
-		if err := result.Error; err != nil {
+		if err := collisionQuery.Find(&collidingBlockGroups).Error; err != nil {
 			parsedOptions.DB.Rollback()
 			return nil, exceptions.BlockGroup.NotFound().WithError(err)
 		}
@@ -1044,13 +1043,12 @@ func (r *BlockGroupRepository) RestoreSoftDeletedManyByIds(
 		Clauses(clause.Returning{}).
 		Where("id IN ? AND deleted_at IS NOT NULL", ids).
 		Updates(map[string]interface{}{"deleted_at": nil})
-	if err := result.Error; err != nil {
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToUpdate().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
+	}); exception != nil {
 		parsedOptions.DB.Rollback()
-		return nil, exceptions.BlockGroup.FailedToUpdate().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		parsedOptions.DB.Rollback()
-		return nil, exceptions.BlockGroup.NoChanges()
+		return nil, exception
 	}
 
 	if shouldCommit {
@@ -1191,9 +1189,12 @@ func (r *BlockGroupRepository) SoftDeleteManyByIds(
 	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
 		Where("id IN ?", ids).
 		Update("deleted_at", time.Now())
-	if err := result.Error; err != nil {
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToUpdate().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
+	}); exception != nil {
 		parsedOptions.DB.Rollback()
-		return exceptions.BlockGroup.FailedToDelete().WithError(err)
+		return exception
 	}
 
 	if shouldCommit {
@@ -1233,11 +1234,11 @@ func (r *BlockGroupRepository) HardDeleteOneById(
 	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
 		Where("id = ? AND deleted_at IS NOT NULL", id).
 		Delete(&schemas.BlockGroup{})
-	if err := result.Error; err != nil {
-		return exceptions.BlockGroup.FailedToDelete().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return exceptions.BlockGroup.NoChanges()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToDelete().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
+	}); exception != nil {
+		return exception
 	}
 
 	return nil
@@ -1275,11 +1276,11 @@ func (r *BlockGroupRepository) HardDeleteManyByIds(
 	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
 		Where("id IN ? AND deleted_at IS NOT NULL", ids).
 		Delete(&schemas.BlockGroup{})
-	if err := result.Error; err != nil {
-		return exceptions.BlockGroup.FailedToDelete().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return exceptions.BlockGroup.NoChanges()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToDelete().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
+	}); exception != nil {
+		return exception
 	}
 
 	return nil

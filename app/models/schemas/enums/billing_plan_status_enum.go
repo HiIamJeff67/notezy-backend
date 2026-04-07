@@ -6,8 +6,6 @@ import (
 	"reflect"
 )
 
-/* ============================== Definition ============================== */
-
 type BillingPlanStatus string
 
 const (
@@ -15,8 +13,6 @@ const (
 	BillingPlanStatus_Active   BillingPlanStatus = "ACTIVE"
 	BillingPlanStatus_Inactive BillingPlanStatus = "INACTIVE"
 )
-
-/* ============================== All Instances ============================== */
 
 var AllBillingPlanStatuses = []BillingPlanStatus{
 	BillingPlanStatus_Created,
@@ -28,8 +24,6 @@ var AllBillingPlanStatusStrings = []string{
 	string(BillingPlanStatus_Active),
 	string(BillingPlanStatus_Inactive),
 }
-
-/* ============================== Methods ============================== */
 
 func (bps BillingPlanStatus) Name() string {
 	return reflect.TypeOf(bps).Name()

@@ -11,8 +11,6 @@ import (
 	schemas "notezy-backend/app/models/schemas"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type BadgeServiceInterface interface {
 	// services for public badges
 	GetPublicBadgeByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicBadge, *exceptions.Exception)

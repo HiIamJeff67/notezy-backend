@@ -11,9 +11,8 @@ import (
 	schemas "notezy-backend/app/models/schemas"
 	options "notezy-backend/app/options"
 	util "notezy-backend/app/util"
+	types "notezy-backend/shared/types"
 )
-
-/* ============================== Definitions ============================== */
 
 type UserSettingRepositoryInterface interface {
 	GetOneByUserId(userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.UserSetting, *exceptions.Exception)
@@ -27,8 +26,6 @@ func NewUserSettingRepository() UserSettingRepositoryInterface {
 	return &UserSettingRepository{}
 }
 
-/* ============================== Implementations ============================== */
-
 func (r *UserSettingRepository) GetOneByUserId(
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
@@ -39,8 +36,11 @@ func (r *UserSettingRepository) GetOneByUserId(
 	result := parsedOptions.DB.Table(schemas.UserSetting{}.TableName()).
 		Where("user_id = ?", userId).
 		First(&userSetting)
-	if err := result.Error; err != nil {
-		return nil, exceptions.UserSetting.NotFound().WithError(err)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.UserSetting.NotFound().WithError(result.Error)},
+		{First: userSetting.Id == uuid.Nil, Second: exceptions.UserSetting.NotFound()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return &userSetting, nil
@@ -62,8 +62,11 @@ func (r *UserSettingRepository) CreateOneByUserId(
 	result := parsedOptions.DB.Model(&schemas.UserSetting{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newUserSetting)
-	if err := result.Error; err != nil {
-		return nil, exceptions.UserSetting.FailedToCreate().WithError(err)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.UserSetting.FailedToCreate().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.UserSetting.NoChanges()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return &newUserSetting.Id, nil
@@ -93,11 +96,11 @@ func (r *UserSettingRepository) UpdateOneByUserId(
 		Where("user_id = ?").
 		Select("*").
 		Updates(&updates)
-	if err := result.Error; err != nil {
-		return nil, exceptions.UserSetting.FailedToUpdate().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return nil, exceptions.UserSetting.NoChanges()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.UserSetting.FailedToUpdate().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.UserSetting.NoChanges()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return &updates, nil

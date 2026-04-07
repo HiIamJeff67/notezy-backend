@@ -42,34 +42,35 @@ const (
 // all the domain prefix shown here, defined in their corresponded files
 // we have 100 codes available to set
 const (
-// ExceptionPrefix_Util ExceptionPrefix = "Util"       					 1
-// ExceptionPrefix_Cookie ExceptionPrefix = "Cookie"					 2
-// ExceptionPrefix_Cache ExceptionPrefix = "Cache"	   					 3
-// ExceptionPrefix_Context ExceptionPrefix = "Context"					 4
-// ExceptionPrefix_Email ExceptionPrefix = "Email"					     5
-// ExceptionPrefix_Test ExceptionPrefix = "Test"						 6
-// ExceptionPrefix_Search ExceptionPrefix = "Search"			         7
-// ExceptionPrefix_Storage ExceptionPrefix = "Storage"				     8
-// ExceptionPrefix_Adapter ExceptionPrefix = "Adapter"					 9
-// ExceptionPrefix_Token ExceptionPrefix = "Token"					     10
-// ExceptionPrefix_DataStructureLib ExceptionPrefix = "DataStructureLib" 11
-// ExceptionPrefix_Monitor ExceptionPrefix = "Monitor"					 12
+// ExceptionPrefix_Util ExceptionPrefix = "Util"       					 			1
+// ExceptionPrefix_Cookie ExceptionPrefix = "Cookie"					 			2
+// ExceptionPrefix_Cache ExceptionPrefix = "Cache"	   					 			3
+// ExceptionPrefix_Context ExceptionPrefix = "Context"					 			4
+// ExceptionPrefix_Email ExceptionPrefix = "Email"					     			5
+// ExceptionPrefix_Test ExceptionPrefix = "Test"						 			6
+// ExceptionPrefix_Search ExceptionPrefix = "Search"			         			7
+// ExceptionPrefix_Storage ExceptionPrefix = "Storage"				     			8
+// ExceptionPrefix_Adapter ExceptionPrefix = "Adapter"					 			9
+// ExceptionPrefix_Token ExceptionPrefix = "Token"					     			10
+// ExceptionPrefix_DataStructureLib ExceptionPrefix = "DataStructureLib" 			11
+// ExceptionPrefix_Monitor ExceptionPrefix = "Monitor"					 			12
 
-// ExceptionPrefix_Auth ExceptionPrefix = "Auth" 			 		     31
-// ExceptionPrefix_User ExceptionPrefix = "User"                         32
-// ExceptionPrefix_UserInfo ExceptionPrefix = "UserInfo"                 33
-// ExceptionPrefix_UserAccount ExceptionPrefix = "UserAccount"           34
-// ExceptionPrefix_UserSetting ExceptionPrefix = "UserSetting"           35
-// ExceptionPrefix_UsersToBadges ExceptionPrefix = "UsersToBadges"       36
-// ExceptionPrefix_Badge ExceptionPrefix = "Badge"                       37
-// ExceptionPrefix_Theme ExceptionPrefix = "Theme"						 38
-// ExceptionPrefix_Parser ExceptionPrefix = "Parser"				     39
-// ExceptionPrefix_Shelf ExceptionPrefix = "Shelf"   					 40
-// ExceptionPrefix_Material ExceptionPrefix = "Material"				 41
-// ExceptionPrefix_BlockPack ExceptionPrefix = "BlockPack" 				 42
-// ExceptionPrefix_BlockGroup ExceptionPrefix = "BlockGroup"			 43
-// ExceptionPrefix_Block ExceptionPrefix = "Block"						 44
-// ExceptionPrefix_OAuth ExceptionPrefix = "OAuth"						 45
+// ExceptionPrefix_Auth ExceptionPrefix = "Auth" 			 		     			31
+// ExceptionPrefix_User ExceptionPrefix = "User"                         			32
+// ExceptionPrefix_UserInfo ExceptionPrefix = "UserInfo"                 			33
+// ExceptionPrefix_UserAccount ExceptionPrefix = "UserAccount"           			34
+// ExceptionPrefix_UserSetting ExceptionPrefix = "UserSetting"           			35
+// ExceptionPrefix_UsersToBadges ExceptionPrefix = "UsersToBadges"       			36
+// ExceptionPrefix_Badge ExceptionPrefix = "Badge"                       			37
+// ExceptionPrefix_Theme ExceptionPrefix = "Theme"						 			38
+// ExceptionPrefix_Parser ExceptionPrefix = "Parser"				     			39
+// ExceptionPrefix_Shelf ExceptionPrefix = "Shelf"   					 			40
+// ExceptionPrefix_Material ExceptionPrefix = "Material"				 			41
+// ExceptionPrefix_BlockPack ExceptionPrefix = "BlockPack" 				 			42
+// ExceptionPrefix_BlockGroup ExceptionPrefix = "BlockGroup"			 			43
+// ExceptionPrefix_Block ExceptionPrefix = "Block"						 			44
+// ExceptionPrefix_OAuth ExceptionPrefix = "OAuth"						 			45
+// ExceptionPrefix_UsersToBillingPlans ExceptionPrefix = "UsersToBillingPlans"		46
 
 // the exception code exceeded 990 are reserved for client exceptions
 // ExceptionPrefix_Client ExceptionPrefix = "ClientCommon" 				 990
@@ -98,14 +99,14 @@ type ExceptionCompareOption struct {
 	WithCode           bool
 	WithPrefix         bool
 	WithReason         bool
-	WithIsInteral      bool
+	WithIsInternal     bool
 	WithMessage        bool
 	WithHTTPStatusCode bool
 	WithDetails        bool
 	WithError          bool
 }
 
-func (e *Exception) IncreamentMeter(ctx *gin.Context, meter metric.Meter, names ...string) {
+func (e *Exception) IncrementMeter(ctx *gin.Context, meter metric.Meter, names ...string) {
 	isTotalCounted := false
 	for _, name := range names {
 		if name == metrics.MetricNames.Server.Responses.Failed.Total {
@@ -164,7 +165,7 @@ func (e *Exception) GetResponseJSONBytes() ([]byte, error) {
 }
 
 func (e *Exception) ResponseWithJSON(ctx *gin.Context, names ...string) {
-	e.IncreamentMeter(ctx, otel.Meter(constants.ServiceName), names...)
+	e.IncrementMeter(ctx, otel.Meter(constants.ServiceName), names...)
 
 	ctx.JSON(e.HTTPStatusCode, gin.H{
 		"success":   false,
@@ -174,7 +175,7 @@ func (e *Exception) ResponseWithJSON(ctx *gin.Context, names ...string) {
 }
 
 func (e *Exception) SafelyResponseWithJSON(ctx *gin.Context, names ...string) {
-	e.IncreamentMeter(ctx, otel.Meter(constants.ServiceName), names...)
+	e.IncrementMeter(ctx, otel.Meter(constants.ServiceName), names...)
 
 	if e.IsInternal {
 		e = InternalServerWentWrong(e)
@@ -187,7 +188,7 @@ func (e *Exception) SafelyResponseWithJSON(ctx *gin.Context, names ...string) {
 }
 
 func (e *Exception) SafelyAbortAndResponseWithJSON(ctx *gin.Context, names ...string) {
-	e.IncreamentMeter(ctx, otel.Meter(constants.ServiceName), names...)
+	e.IncrementMeter(ctx, otel.Meter(constants.ServiceName), names...)
 
 	if e.IsInternal {
 		e = InternalServerWentWrong(e)
@@ -314,7 +315,18 @@ func (e *Exception) ToGraphQLError(ctx context.Context) *gqlerror.Error {
 	return gqlError
 }
 
-func CompareExceptions(e1 *Exception, e2 *Exception, opt ExceptionCompareOption) bool {
+func Cover(e *Exception, fallbackConditionToException []types.Pair[bool, *Exception]) *Exception {
+	if e == nil {
+		for hasOccurred, exception := range types.PairsIterator(fallbackConditionToException) {
+			if hasOccurred {
+				return exception
+			}
+		}
+	}
+	return e
+}
+
+func Compare(e1 *Exception, e2 *Exception, opt ExceptionCompareOption) bool {
 	if opt.WithCode && e1.Code != e2.Code {
 		return false
 	}
@@ -324,7 +336,7 @@ func CompareExceptions(e1 *Exception, e2 *Exception, opt ExceptionCompareOption)
 	if opt.WithReason && e1.Reason != e2.Reason {
 		return false
 	}
-	if opt.WithIsInteral && e1.IsInternal != e2.IsInternal {
+	if opt.WithIsInternal && e1.IsInternal != e2.IsInternal {
 		return false
 	}
 	if opt.WithMessage && e1.Message != e2.Message {
@@ -342,7 +354,7 @@ func CompareExceptions(e1 *Exception, e2 *Exception, opt ExceptionCompareOption)
 	return true
 }
 
-func CompareCommonExceptions(e1 *Exception, e2 *Exception, withMessage bool) bool {
+func CommonlyCompare(e1 *Exception, e2 *Exception, withMessage bool) bool {
 	if e1.Code != e2.Code {
 		return false
 	}
@@ -443,7 +455,7 @@ func Timeout(time time.Duration, optionalMessage ...string) *Exception {
 	}
 }
 
-func FatelPanic(optionalMessage ...string) *Exception {
+func FatalPanic(optionalMessage ...string) *Exception {
 	message := "Panic happened"
 	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
 		message = optionalMessage[0]
@@ -452,7 +464,7 @@ func FatelPanic(optionalMessage ...string) *Exception {
 	return &Exception{
 		Code:           99900005,
 		Prefix:         "General",
-		Reason:         "FatelPanic",
+		Reason:         "FatalPanic",
 		IsInternal:     false,
 		Message:        message,
 		HTTPStatusCode: http.StatusRequestTimeout,
@@ -685,7 +697,7 @@ func (d *FileExceptionDomain) FileTooLarge(fileSize int64, maxFileSize int64) *E
 		Prefix:         d._Prefix,
 		Reason:         "FileTooLarge",
 		IsInternal:     false,
-		Message:        fmt.Sprintf("File size of %d bytes is too large which excceed the max size of %d bytes", fileSize, maxFileSize),
+		Message:        fmt.Sprintf("File size of %d bytes is too large which exceed the max size of %d bytes", fileSize, maxFileSize),
 		HTTPStatusCode: http.StatusTooManyRequests,
 		LastTrace:      traces.GetTrace(1),
 	}

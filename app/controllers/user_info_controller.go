@@ -9,8 +9,6 @@ import (
 	services "notezy-backend/app/services"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type UserInfoControllerInterface interface {
 	GetMyInfo(ctx *gin.Context, reqDto *dtos.GetMyInfoReqDto)
 	UpdateMyInfo(ctx *gin.Context, reqDto *dtos.UpdateMyInfoReqDto)
@@ -25,8 +23,6 @@ func NewUserInfoController(service services.UserInfoServiceInterface) UserInfoCo
 		userInfoService: service,
 	}
 }
-
-/* ============================== Implementations ============================== */
 
 func (c *UserInfoController) GetMyInfo(ctx *gin.Context, reqDto *dtos.GetMyInfoReqDto) {
 	resDto, exception := c.userInfoService.GetMyInfo(ctx.Request.Context(), reqDto)

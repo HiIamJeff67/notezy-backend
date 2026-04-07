@@ -16,8 +16,6 @@ import (
 	types "notezy-backend/shared/types"
 )
 
-/* ============================== Definitions ============================== */
-
 type RootShelfRepositoryInterface interface {
 	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermission []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
 	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RootShelfRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) (*schemas.RootShelf, *exceptions.Exception)
@@ -39,8 +37,6 @@ type RootShelfRepository struct{}
 func NewRootShelfRepository() RootShelfRepositoryInterface {
 	return &RootShelfRepository{}
 }
-
-/* ============================== Implementations ============================== */
 
 func (r *RootShelfRepository) HasPermission(
 	id uuid.UUID,
@@ -66,7 +62,7 @@ func (r *RootShelfRepository) HasPermission(
 	}
 
 	result := query.Count(&count)
-	if err := result.Error; err != nil || count == 0 {
+	if err := result.Error; err != nil {
 		return false
 	}
 
@@ -106,8 +102,11 @@ func (r *RootShelfRepository) CheckPermissionAndGetOneById(
 	}
 
 	result := query.First(&rootShelf)
-	if err := result.Error; err != nil {
-		return nil, exceptions.Shelf.NotFound().WithError(err)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Shelf.NotFound().WithError(result.Error)},
+		{First: rootShelf.Id == uuid.Nil, Second: exceptions.Shelf.NotFound()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return &rootShelf, nil
@@ -175,11 +174,17 @@ func (r *RootShelfRepository) CreateOneByOwnerId(
 		RootShelfId: newRootShelf.Id,
 		Permission:  enums.AccessControlPermission_Owner,
 	}
-	result = parsedOptions.DB.Model(&schemas.UsersToShelves{}).
+	var createdUsersToShelves schemas.UsersToShelves
+	result = parsedOptions.DB.Model(&createdUsersToShelves).
+		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newUsersToShelves)
-	if err := result.Error; err != nil {
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Shelf.FailedToCreate().WithError(result.Error)},
+		{First: createdUsersToShelves.UserId != ownerId || createdUsersToShelves.RootShelfId != newRootShelf.Id, Second: exceptions.Shelf.FailedToCreate()},
+		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+	}); exception != nil {
 		parsedOptions.DB.Rollback()
-		return nil, exceptions.Shelf.FailedToCreate().WithError(err)
+		return nil, exception
 	}
 
 	if shouldCommit {
@@ -228,11 +233,11 @@ func (r *RootShelfRepository) UpdateOneById(
 		Where("id = ? AND deleted_at IS NULL", id).
 		Select("*").
 		Updates(&updates)
-	if err := result.Error; err != nil {
-		return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return nil, exceptions.Shelf.NoChanges()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return &updates, nil
@@ -259,11 +264,12 @@ func (r *RootShelfRepository) RestoreSoftDeletedOneById(
 		Clauses(clause.Returning{}).
 		Where("id = ? AND EXISTS (?)", id, subQuery).
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
-	if err := result.Error; err != nil {
-		return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return nil, exceptions.Shelf.NotFound()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithError(result.Error)},
+		{First: restoredRootShelf.Id == uuid.Nil, Second: exceptions.Shelf.FailedToUpdate()},
+		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return &restoredRootShelf, nil
@@ -294,11 +300,12 @@ func (r *RootShelfRepository) RestoreSoftDeletedManyByIds(
 		Clauses(clause.Returning{}).
 		Where("id IN ? AND EXISTS (?)", ids, subQuery).
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
-	if err := result.Error; err != nil {
-		return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return nil, exceptions.Shelf.NotFound()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithError(result.Error)},
+		{First: len(restoredRootShelves) != len(ids), Second: exceptions.Shelf.FailedToUpdate()},
+		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+	}); exception != nil {
+		return nil, exception
 	}
 
 	return restoredRootShelves, nil
@@ -323,11 +330,11 @@ func (r *RootShelfRepository) SoftDeleteOneById(
 	result := parsedOptions.DB.Model(&schemas.RootShelf{}).
 		Where("id = ? AND EXISTS (?)", id, subQuery).
 		Update("deleted_at", time.Now())
-	if err := result.Error; err != nil {
-		return exceptions.Shelf.FailedToUpdate().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return exceptions.Shelf.NoChanges()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+	}); exception != nil {
+		return exception
 	}
 
 	return nil
@@ -356,11 +363,11 @@ func (r *RootShelfRepository) SoftDeleteManyByIds(
 	result := parsedOptions.DB.Model(&schemas.RootShelf{}).
 		Where("id IN ? AND EXISTS (?)", ids, subQuery).
 		Update("deleted_at", time.Now())
-	if err := result.Error; err != nil {
-		return exceptions.Shelf.FailedToUpdate().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return exceptions.Shelf.NotFound()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+	}); exception != nil {
+		return exception
 	}
 
 	return nil
@@ -404,11 +411,11 @@ func (r *RootShelfRepository) HardDeleteOneById(
 	result := parsedOptions.DB.Model(&schemas.RootShelf{}).
 		Where("id = ? AND EXISTS (?)", id, subQuery).
 		Delete(&schemas.RootShelf{})
-	if err := result.Error; err != nil {
-		return exceptions.Shelf.FailedToDelete().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return exceptions.Shelf.NotFound()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Shelf.FailedToDelete().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+	}); exception != nil {
+		return exception
 	}
 
 	return nil
@@ -436,11 +443,11 @@ func (r *RootShelfRepository) HardDeleteManyByIds(
 	result := parsedOptions.DB.Model(&schemas.RootShelf{}).
 		Where("id IN ? AND EXISTS (?) AND deleted_at IS NOT NULL", ids, subQuery).
 		Delete(&schemas.RootShelf{})
-	if err := result.Error; err != nil {
-		return exceptions.Shelf.FailedToDelete().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return exceptions.Shelf.NotFound()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Shelf.FailedToDelete().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+	}); exception != nil {
+		return exception
 	}
 
 	return nil
@@ -455,11 +462,11 @@ func (r *RootShelfRepository) HardDeleteManyByUserId(
 	result := parsedOptions.DB.Model(&schemas.RootShelf{}).
 		Where("owner_id = ? AND deleted_at IS NOT NULL", userId).
 		Delete(&schemas.RootShelf{})
-	if err := result.Error; err != nil {
-		return exceptions.Shelf.FailedToDelete().WithError(err)
-	}
-	if result.RowsAffected == 0 {
-		return exceptions.Shelf.NotFound()
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Shelf.FailedToDelete().WithError(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+	}); exception != nil {
+		return exception
 	}
 
 	return nil

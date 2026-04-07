@@ -21,8 +21,6 @@ import (
 	searchcursor "notezy-backend/shared/lib/searchcursor"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type UserServiceInterface interface {
 	GetUserData(ctx context.Context, reqDto *dtos.GetUserDataReqDto) (*dtos.GetUserDataResDto, *exceptions.Exception)
 	GetMe(ctx context.Context, reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception)

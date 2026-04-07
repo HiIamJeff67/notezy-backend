@@ -7,8 +7,6 @@ import (
 	services "notezy-backend/app/services"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type ThemeResolverInterface interface{}
 
 type ThemeResolver struct {

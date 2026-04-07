@@ -9,8 +9,6 @@ import (
 	services "notezy-backend/app/services"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type SubShelfControllerInterface interface {
 	GetMySubShelfById(ctx *gin.Context, reqDto *dtos.GetMySubShelfByIdReqDto)
 	GetMySubShelvesByPrevSubShelfId(ctx *gin.Context, reqDto *dtos.GetMySubShelvesByPrevSubShelfIdReqDto)
@@ -35,8 +33,6 @@ func NewSubShelfController(service services.SubShelfServiceInterface) SubShelfCo
 		subShelfService: service,
 	}
 }
-
-/* ============================== Implementations ============================== */
 
 func (c *SubShelfController) GetMySubShelfById(ctx *gin.Context, reqDto *dtos.GetMySubShelfByIdReqDto) {
 	resDto, exception := c.subShelfService.GetMySubShelfById(ctx.Request.Context(), reqDto)

@@ -9,8 +9,6 @@ import (
 	services "notezy-backend/app/services"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type RootShelfControllerInterface interface {
 	GetMyRootShelfById(ctx *gin.Context, reqDto *dtos.GetMyRootShelfByIdReqDto)
 	SearchRecentRootShelves(ctx *gin.Context, reqDto *dtos.SearchRecentRootShelvesReqDto)
@@ -31,8 +29,6 @@ func NewRootShelfController(service services.RootShelfServiceInterface) RootShel
 		rootShelfService: service,
 	}
 }
-
-/* ============================== Implementations ============================== */
 
 func (c *RootShelfController) GetMyRootShelfById(ctx *gin.Context, reqDto *dtos.GetMyRootShelfByIdReqDto) {
 	resDto, exception := c.rootShelfService.GetMyRootShelfById(ctx.Request.Context(), reqDto)

@@ -9,8 +9,6 @@ import (
 	types "notezy-backend/shared/types"
 )
 
-/* ============================== Interface & Instance ============================== */
-
 type UserAccountBinderInterface interface {
 	BindGetMyAccount(controllerFunc types.ControllerFunc[*dtos.GetMyAccountReqDto]) gin.HandlerFunc
 	BindUpdateMyAccount(controllerFunc types.ControllerFunc[*dtos.UpdateMyAccountReqDto]) gin.HandlerFunc
@@ -23,8 +21,6 @@ type UserAccountBinder struct{}
 func NewUserAccountBinder() UserAccountBinderInterface {
 	return &UserAccountBinder{}
 }
-
-/* ============================== Implementations ============================== */
 
 func (b *UserAccountBinder) BindGetMyAccount(controllerFunc types.ControllerFunc[*dtos.GetMyAccountReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
