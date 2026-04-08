@@ -69,7 +69,7 @@ func (s *MaterialService) GetMyMaterialById(
 	ctx context.Context, reqDto *dtos.GetMyMaterialByIdReqDto,
 ) (*dtos.GetMyMaterialByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Material.InvalidDto().WithError(err)
+		return nil, exceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -105,7 +105,7 @@ func (s *MaterialService) GetMyMaterialAndItsParentById(
 	ctx context.Context, reqDto *dtos.GetMyMaterialAndItsParentByIdReqDto,
 ) (*dtos.GetMyMaterialAndItsParentByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Material.InvalidDto().WithError(err)
+		return nil, exceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -141,7 +141,7 @@ func (s *MaterialService) GetMyMaterialAndItsParentById(
 			&resDto.ParentSubShelfCreatedAt,
 		)
 	if err != nil {
-		return nil, exceptions.Material.NotFound().WithError(err)
+		return nil, exceptions.Material.NotFound().WithOrigin(err)
 	}
 	if len(strings.TrimSpace(contentKey)) == 0 {
 		return nil, exceptions.Material.NotFound()
@@ -160,7 +160,7 @@ func (s *MaterialService) GetMyMaterialsByParentSubShelfId(
 	ctx context.Context, reqDto *dtos.GetMyMaterialsByParentSubShelfIdReqDto,
 ) (*dtos.GetMyMaterialsByParentSubShelfIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Material.InvalidDto().WithError(err)
+		return nil, exceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -186,7 +186,7 @@ func (s *MaterialService) GetMyMaterialsByParentSubShelfId(
 		Limit(int(constants.MaxMaterialsOfSubShelf)).
 		Find(&materials)
 	if err := result.Error; err != nil {
-		return nil, exceptions.Material.NotFound().WithError(err)
+		return nil, exceptions.Material.NotFound().WithOrigin(err)
 	}
 
 	resDto := dtos.GetMyMaterialsByParentSubShelfIdResDto{}
@@ -214,7 +214,7 @@ func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
 	ctx context.Context, reqDto *dtos.GetAllMyMaterialsByRootShelfIdReqDto,
 ) (*dtos.GetAllMyMaterialsByRootShelfIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Material.InvalidDto().WithError(err)
+		return nil, exceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -266,7 +266,7 @@ func (s *MaterialService) CreateTextbookMaterial(
 	ctx context.Context, reqDto *dtos.CreateTextbookMaterialReqDto,
 ) (*dtos.CreateTextbookMaterialResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Material.InvalidDto().WithError(err)
+		return nil, exceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
@@ -315,7 +315,7 @@ func (s *MaterialService) CreateTextbookMaterial(
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, exceptions.Material.FailedToCommitTransaction().WithError(err)
+		return nil, exceptions.Material.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.CreateTextbookMaterialResDto{
@@ -329,7 +329,7 @@ func (s *MaterialService) CreateNotebookMaterial(
 	ctx context.Context, reqDto *dtos.CreateNotebookMaterialReqDto,
 ) (*dtos.CreateNotebookMaterialResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Material.InvalidDto().WithError(err)
+		return nil, exceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
@@ -378,7 +378,7 @@ func (s *MaterialService) CreateNotebookMaterial(
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, exceptions.Material.FailedToCommitTransaction().WithError(err)
+		return nil, exceptions.Material.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.CreateNotebookMaterialResDto{
@@ -392,7 +392,7 @@ func (s *MaterialService) UpdateMyMaterialById(
 	ctx context.Context, reqDto *dtos.UpdateMyMaterialByIdReqDto,
 ) (*dtos.UpdateMyMaterialByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Material.InvalidDto().WithError(err)
+		return nil, exceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -423,7 +423,7 @@ func (s *MaterialService) saveMyMaterialById(
 	ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto, materialType enums.MaterialType,
 ) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Material.InvalidDto().WithError(err)
+		return nil, exceptions.Material.InvalidDto().WithOrigin(err)
 	}
 	// check if there does exist a file in the reqDto
 	if reqDto.Body.ContentFile == nil {
@@ -481,7 +481,7 @@ func (s *MaterialService) saveMyMaterialById(
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, exceptions.Material.FailedToCommitTransaction().WithError(err)
+		return nil, exceptions.Material.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.SaveMyMaterialByIdResDto{
@@ -505,7 +505,7 @@ func (s *MaterialService) MoveMyMaterialById(
 	ctx context.Context, reqDto *dtos.MoveMyMaterialByIdReqDto,
 ) (*dtos.MoveMyMaterialByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Material.InvalidDto().WithError(err)
+		return nil, exceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -526,7 +526,7 @@ func (s *MaterialService) MoveMyMaterialById(
 		pg.Array(allowedPermissions),
 	)
 	if err := result.Error; err != nil {
-		return nil, exceptions.Material.FailedToUpdate().WithError(err)
+		return nil, exceptions.Material.FailedToUpdate().WithOrigin(err)
 	}
 	if result.RowsAffected == 0 {
 		return nil, exceptions.Material.NoChanges()
@@ -541,7 +541,7 @@ func (s *MaterialService) MoveMyMaterialsByIds(
 	ctx context.Context, reqDto *dtos.MoveMyMaterialsByIdsReqDto,
 ) (*dtos.MoveMyMaterialsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Material.InvalidDto().WithError(err)
+		return nil, exceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -562,7 +562,7 @@ func (s *MaterialService) MoveMyMaterialsByIds(
 		pg.Array(allowedPermissions),
 	)
 	if err := result.Error; err != nil {
-		return nil, exceptions.Material.FailedToUpdate().WithError(err)
+		return nil, exceptions.Material.FailedToUpdate().WithOrigin(err)
 	}
 	if result.RowsAffected == 0 {
 		return nil, exceptions.Material.NoChanges()
@@ -577,7 +577,7 @@ func (s *MaterialService) RestoreMyMaterialById(
 	ctx context.Context, reqDto *dtos.RestoreMyMaterialByIdReqDto,
 ) (*dtos.RestoreMyMaterialByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Material.InvalidDto().WithError(err)
+		return nil, exceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -613,7 +613,7 @@ func (s *MaterialService) RestoreMyMaterialsByIds(
 	ctx context.Context, reqDto *dtos.RestoreMyMaterialsByIdsReqDto,
 ) (*dtos.RestoreMyMaterialsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Material.InvalidDto().WithError(err)
+		return nil, exceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -652,7 +652,7 @@ func (s *MaterialService) DeleteMyMaterialById(
 	ctx context.Context, reqDto *dtos.DeleteMyMaterialByIdReqDto,
 ) (*dtos.DeleteMyMaterialByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Material.InvalidDto().WithError(err)
+		return nil, exceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -675,7 +675,7 @@ func (s *MaterialService) DeleteMyMaterialsByIds(
 	ctx context.Context, reqDto *dtos.DeleteMyMaterialsByIdsReqDto,
 ) (*dtos.DeleteMyMaterialsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Material.InvalidDto().WithError(err)
+		return nil, exceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)

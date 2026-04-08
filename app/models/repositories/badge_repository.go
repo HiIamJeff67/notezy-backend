@@ -38,7 +38,7 @@ func (r *BadgeRepository) GetOneById(
 	result := query.Where("id = ?", id).
 		First(&badge)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Badge.NotFound().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.Badge.NotFound().WithOrigin(result.Error)},
 		{First: badge.Id == uuid.Nil, Second: exceptions.Badge.NotFound()},
 	}); exception != nil {
 		return nil, exception

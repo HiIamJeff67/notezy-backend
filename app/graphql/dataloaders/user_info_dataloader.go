@@ -95,7 +95,7 @@ func (d *UserInfoDataloader) batchFunction() UserInfoBatchFunctionType {
 					key := UserInfoLoaderKey{PublicId: publicId, Source: source}
 					if _, exists := keyToIndexesMap[key]; exists {
 						for _, index := range keyToIndexesMap[key] {
-							results[index] = &UserInfoResultType{Error: exception.Error}
+							results[index] = &UserInfoResultType{Error: exception.Origin}
 						}
 					}
 				}

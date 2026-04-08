@@ -1,7 +1,7 @@
 {
   "version": "0.2",
   "language": "en,go",
-  "dictionaries": ["go", "sql"],
+  "dictionaries": ["go", "sql", "lua", "gql"],
   "enabled": true,
   "ignoreRegExpList": [
     "/[nN][oO][tT][eE][zZ][yY][a-zA-Z]*/",
@@ -13,7 +13,8 @@
     "/is[a-z]+/",
     "/English/",
     "/Enterprise/",
-    "/go-randomdata/"
+    "/go-randomdata/",
+    "/[a-zA-Z0-9]*sql/"
   ],
   "words": [
     "NotezyDB",
@@ -44,6 +45,15 @@
     "gqlgen",
     "gqlparser",
     "cending",
-    "vektah"
+    "vektah",
+    "cjson",
+    "blocknote",
+    "datatypes",
+    "datatype",
+    "omitnil",
+    "istoggleable",
+    "rowspan",
+    "colspan",
+    "parentblockid"
   ]
 }

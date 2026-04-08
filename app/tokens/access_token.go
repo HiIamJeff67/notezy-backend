@@ -26,7 +26,7 @@ func GenerateAccessToken(id string, name string, email string, userAgent string)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	result, err := token.SignedString(_jwtAccessTokenSecret)
 	if err != nil {
-		return nil, exceptions.Token.FailedToGenerateAccessToken().WithError(err)
+		return nil, exceptions.Token.FailedToGenerateAccessToken().WithOrigin(err)
 	}
 
 	return &result, nil
@@ -41,14 +41,14 @@ func ParseAccessToken(tokenString string) (*types.JWTClaims, *exceptions.Excepti
 		func(token *jwt.Token) (any, error) { return _jwtAccessTokenSecret, nil },
 	)
 	if err != nil {
-		return nil, exceptions.Token.FailedToParseAccessToken().WithError(err)
+		return nil, exceptions.Token.FailedToParseAccessToken().WithOrigin(err)
 	}
 
 	if claims, ok := accessToken.Claims.(*types.JWTClaims); ok && accessToken.Valid {
 		return claims, nil
 	}
 
-	return nil, exceptions.Token.FailedToParseAccessToken().WithError(jwt.ErrTokenInvalidClaims)
+	return nil, exceptions.Token.FailedToParseAccessToken().WithOrigin(jwt.ErrTokenInvalidClaims)
 }
 
 /* ============================== Utility Functions ============================== */

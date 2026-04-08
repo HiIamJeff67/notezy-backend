@@ -23,17 +23,17 @@ func (r *HTMLEmailRenderer) Render() (string, *exceptions.Exception) {
 	}
 	templateBytes, err := os.ReadFile(r.TemplatePath)
 	if err != nil {
-		return "", exceptions.Email.FailedToReadTemplateFileWithPath(r.TemplatePath).WithError(err)
+		return "", exceptions.Email.FailedToReadTemplateFileWithPath(r.TemplatePath).WithOrigin(err)
 	}
 
 	extractedTemplate, err := template.New("email").Parse(string(templateBytes))
 	if err != nil {
-		return "", exceptions.Email.FailedToParseTemplateWithDataMap(r.DataMap).WithError(err)
+		return "", exceptions.Email.FailedToParseTemplateWithDataMap(r.DataMap).WithOrigin(err)
 	}
 
 	var buffer bytes.Buffer
 	if err = extractedTemplate.Execute(&buffer, r.DataMap); err != nil {
-		return "", exceptions.Email.FailedToRenderTemplate().WithError(err)
+		return "", exceptions.Email.FailedToRenderTemplate().WithOrigin(err)
 	}
 
 	return buffer.String(), nil
@@ -51,17 +51,17 @@ func (r *PlainTextEmailRenderer) Render() (string, *exceptions.Exception) {
 	}
 	templateBytes, err := os.ReadFile(r.TemplatePath)
 	if err != nil {
-		return "", exceptions.Email.FailedToReadTemplateFileWithPath(r.TemplatePath).WithError(err)
+		return "", exceptions.Email.FailedToReadTemplateFileWithPath(r.TemplatePath).WithOrigin(err)
 	}
 
 	extractedTemplate, err := template.New("email").Parse(string(templateBytes))
 	if err != nil {
-		return "", exceptions.Email.FailedToParseTemplateWithDataMap(r.DataMap).WithError(err)
+		return "", exceptions.Email.FailedToParseTemplateWithDataMap(r.DataMap).WithOrigin(err)
 	}
 
 	var buffer bytes.Buffer
 	if err = extractedTemplate.Execute(&buffer, r.DataMap); err != nil {
-		return "", exceptions.Email.FailedToRenderTemplate().WithError(err)
+		return "", exceptions.Email.FailedToRenderTemplate().WithOrigin(err)
 	}
 
 	return buffer.String(), nil
@@ -79,17 +79,17 @@ func (r *MarkdownEmailRenderer) Render() (string, *exceptions.Exception) {
 	}
 	templateBytes, err := os.ReadFile(r.TemplatePath)
 	if err != nil {
-		return "", exceptions.Email.FailedToReadTemplateFileWithPath(r.TemplatePath).WithError(err)
+		return "", exceptions.Email.FailedToReadTemplateFileWithPath(r.TemplatePath).WithOrigin(err)
 	}
 
 	extractedTemplate, err := template.New("email").Parse(string(templateBytes))
 	if err != nil {
-		return "", exceptions.Email.FailedToParseTemplateWithDataMap(r.DataMap).WithError(err)
+		return "", exceptions.Email.FailedToParseTemplateWithDataMap(r.DataMap).WithOrigin(err)
 	}
 
 	var buffer bytes.Buffer
 	if err = extractedTemplate.Execute(&buffer, r.DataMap); err != nil {
-		return "", exceptions.Email.FailedToRenderTemplate().WithError(err)
+		return "", exceptions.Email.FailedToRenderTemplate().WithOrigin(err)
 	}
 
 	return buffer.String(), nil

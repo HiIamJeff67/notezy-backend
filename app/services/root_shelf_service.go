@@ -61,7 +61,7 @@ func (s *RootShelfService) GetMyRootShelfById(
 	ctx context.Context, reqDto *dtos.GetMyRootShelfByIdReqDto,
 ) (*dtos.GetMyRootShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -93,7 +93,7 @@ func (s *RootShelfService) SearchRecentRootShelves(
 	ctx context.Context, reqDto *dtos.SearchRecentRootShelvesReqDto,
 ) (*dtos.SearchRecentRootShelvesResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -113,7 +113,7 @@ func (s *RootShelfService) SearchRecentRootShelves(
 		Offset(int(reqDto.Param.Offset)).
 		Find(&resDto)
 	if err := result.Error; err != nil {
-		return nil, exceptions.Shelf.NotFound().WithError(err)
+		return nil, exceptions.Shelf.NotFound().WithOrigin(err)
 	}
 
 	return &resDto, nil
@@ -123,7 +123,7 @@ func (s *RootShelfService) CreateRootShelf(
 	ctx context.Context, reqDto *dtos.CreateRootShelfReqDto,
 ) (*dtos.CreateRootShelfResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -152,7 +152,7 @@ func (s *RootShelfService) UpdateMyRootShelfById(
 	ctx context.Context, reqDto *dtos.UpdateMyRootShelfByIdReqDto,
 ) (*dtos.UpdateMyRootShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -181,7 +181,7 @@ func (s *RootShelfService) RestoreMyRootShelfById(
 	ctx context.Context, reqDto *dtos.RestoreMyRootShelfByIdReqDto,
 ) (*dtos.RestoreMyRootShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -211,7 +211,7 @@ func (s *RootShelfService) RestoreMyRootShelvesByIds(
 	ctx context.Context, reqDto *dtos.RestoreMyRootShelvesByIdsReqDto,
 ) (*dtos.RestoreMyRootShelvesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -246,7 +246,7 @@ func (s *RootShelfService) DeleteMyRootShelfById(
 	ctx context.Context, reqDto *dtos.DeleteMyRootShelfByIdReqDto,
 ) (*dtos.DeleteMyRootShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -269,7 +269,7 @@ func (s *RootShelfService) DeleteMyRootShelvesByIds(
 	ctx context.Context, reqDto *dtos.DeleteMyRootShelvesByIdsReqDto,
 ) (*dtos.DeleteMyRootShelvesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -317,7 +317,7 @@ func (s *RootShelfService) SearchPrivateRootShelves(
 	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
 		searchCursor, err := searchcursor.Decode[gqlmodels.SearchRootShelfCursorFields](*gqlInput.After)
 		if err != nil {
-			return nil, exceptions.Search.FailedToDecode().WithError(err)
+			return nil, exceptions.Search.FailedToDecode().WithOrigin(err)
 		}
 
 		query.Where("id > ?", searchCursor.Fields.ID)
@@ -358,7 +358,7 @@ func (s *RootShelfService) SearchPrivateRootShelves(
 
 	var shelves []schemas.RootShelf
 	if err := query.Find(&shelves).Error; err != nil {
-		return nil, exceptions.Shelf.NotFound().WithError(err)
+		return nil, exceptions.Shelf.NotFound().WithOrigin(err)
 	}
 
 	hasNextPage := len(shelves) > limit
@@ -372,7 +372,7 @@ func (s *RootShelfService) SearchPrivateRootShelves(
 		}
 		encodedSearchCursor, err := searchCursor.Encode()
 		if err != nil {
-			return nil, exceptions.Search.FailedToEncode().WithError(err)
+			return nil, exceptions.Search.FailedToEncode().WithOrigin(err)
 		}
 		if encodedSearchCursor == nil {
 			return nil, exceptions.Search.FailedToUnmarshalSearchCursor()

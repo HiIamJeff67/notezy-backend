@@ -50,7 +50,7 @@ func (s *UserInfoService) GetMyInfo(
 	ctx context.Context, reqDto *dtos.GetMyInfoReqDto,
 ) (*dtos.GetMyInfoResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.UserInfo.InvalidDto().WithError(err)
+		return nil, exceptions.UserInfo.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -79,7 +79,7 @@ func (s *UserInfoService) UpdateMyInfo(
 	ctx context.Context, reqDto *dtos.UpdateMyInfoReqDto,
 ) (*dtos.UpdateMyInfoResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.UserInfo.InvalidDto().WithError(err)
+		return nil, exceptions.UserInfo.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -131,7 +131,7 @@ func (s *UserInfoService) GetPublicUserInfoByUserPublicId(
 		Where("u.public_id = ?", publicId).
 		First(&userInfo)
 	if err := result.Error; err != nil {
-		return nil, exceptions.UserInfo.NotFound().WithError(err)
+		return nil, exceptions.UserInfo.NotFound().WithOrigin(err)
 	}
 
 	return userInfo.ToPublicUserInfo(), nil
@@ -168,7 +168,7 @@ func (s *UserInfoService) GetPublicUserInfosByUserPublicIds(
 		Where("u.public_id IN ?", uniquePublicIds).
 		Find(&userInfosWithPublicUserIds)
 	if err := result.Error; err != nil {
-		return nil, exceptions.UserInfo.NotFound().WithError(err)
+		return nil, exceptions.UserInfo.NotFound().WithOrigin(err)
 	}
 
 	publicIdToIndexesMap := make(map[string][]int)

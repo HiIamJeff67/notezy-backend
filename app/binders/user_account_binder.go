@@ -53,7 +53,7 @@ func (b *UserAccountBinder) BindUpdateMyAccount(controllerFunc types.ControllerF
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.UserAccount.InvalidDto().WithError(err)
+			exception := exceptions.UserAccount.InvalidDto().WithOrigin(err)
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -76,7 +76,7 @@ func (b *UserAccountBinder) BindBindGoogleAccount(controllerFunc types.Controlle
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.UserAccount.InvalidDto().WithError(err)
+			exception := exceptions.UserAccount.InvalidDto().WithOrigin(err)
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -98,7 +98,7 @@ func (b *UserAccountBinder) BindUnbindGoogleAccount(controllerFunc types.Control
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.UserAccount.InvalidDto().WithError(err)
+			exception := exceptions.UserAccount.InvalidDto().WithOrigin(err)
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}

@@ -50,7 +50,7 @@ func (ebca *EditableBlockAdapter) Flatten(
 	for !q.IsEmpty() {
 		current, err := q.Dequeue()
 		if err != nil {
-			return nil, exceptions.DataStructureLib.FailedToManipulateQueue().WithError(err)
+			return nil, exceptions.DataStructureLib.FailedToManipulateQueue().WithOrigin(err)
 		}
 
 		if visited[current.Id] {
@@ -84,11 +84,11 @@ func (ebca *EditableBlockAdapter) FlattenToRaw(
 
 	rootProps, err := json.Marshal(root.Props)
 	if err != nil {
-		return nil, exceptions.Block.InvalidDto().WithError(err)
+		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 	rootContent, err := json.Marshal(root.Content)
 	if err != nil {
-		return nil, exceptions.Block.InvalidDto().WithError(err)
+		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
 	resultBlocks := []dtos.RawFlattenedEditableBlock{}
@@ -105,7 +105,7 @@ func (ebca *EditableBlockAdapter) FlattenToRaw(
 	for !q.IsEmpty() {
 		current, err := q.Dequeue()
 		if err != nil {
-			return nil, exceptions.DataStructureLib.FailedToManipulateQueue().WithError(err)
+			return nil, exceptions.DataStructureLib.FailedToManipulateQueue().WithOrigin(err)
 		}
 
 		if visited[current.Id] {
@@ -116,11 +116,11 @@ func (ebca *EditableBlockAdapter) FlattenToRaw(
 		for _, child := range current.Children {
 			props, err := json.Marshal(child.Props)
 			if err != nil {
-				return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+				return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 			}
 			content, err := json.Marshal(child.Content)
 			if err != nil {
-				return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+				return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 			}
 
 			resultBlocks = append(resultBlocks, dtos.RawFlattenedEditableBlock{
@@ -160,7 +160,7 @@ func (ebca *EditableBlockAdapter) FlattenRawToRaw(
 	for !q.IsEmpty() {
 		current, err := q.Dequeue()
 		if err != nil {
-			return nil, exceptions.DataStructureLib.FailedToManipulateQueue().WithError(err)
+			return nil, exceptions.DataStructureLib.FailedToManipulateQueue().WithOrigin(err)
 		}
 
 		if visited[current.Id] {
@@ -215,7 +215,7 @@ func (ebca *EditableBlockAdapter) Arborize(
 	for !q.IsEmpty() {
 		current, err := q.Dequeue()
 		if err != nil {
-			return nil, exceptions.DataStructureLib.FailedToManipulateQueue().WithError(err)
+			return nil, exceptions.DataStructureLib.FailedToManipulateQueue().WithOrigin(err)
 		}
 
 		if visited[current.Id] {
@@ -286,7 +286,7 @@ func (ebca *EditableBlockAdapter) ArborizeRawToRaw(
 	for !q.IsEmpty() {
 		current, err := q.Dequeue()
 		if err != nil {
-			return nil, exceptions.DataStructureLib.FailedToManipulateQueue().WithError(err)
+			return nil, exceptions.DataStructureLib.FailedToManipulateQueue().WithOrigin(err)
 		}
 		// at this point, current cannot be nil, because the root is not nil, and the below new element enqueued to the queue is alos not nil
 

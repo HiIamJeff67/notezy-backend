@@ -46,7 +46,7 @@ func (r *ThemeRepository) GetOneById(
 	result := query.Where("id = ?", id).
 		First(&theme)
 	if err := result.Error; err != nil {
-		return nil, exceptions.Theme.NotFound().WithError(err)
+		return nil, exceptions.Theme.NotFound().WithOrigin(err)
 	}
 
 	return &theme, nil
@@ -61,7 +61,7 @@ func (r *ThemeRepository) GetAll(
 	result := parsedOptions.DB.Table(schemas.Theme{}.TableName()).
 		Find(&themes)
 	if err := result.Error; err != nil {
-		return nil, exceptions.Theme.NotFound().WithError(err)
+		return nil, exceptions.Theme.NotFound().WithOrigin(err)
 	}
 
 	return themes, nil
@@ -78,14 +78,14 @@ func (r *ThemeRepository) CreateOneByAuthorId(
 	newTheme.AuthorId = authorId
 
 	if err := copier.Copy(&newTheme, &input); err != nil {
-		return nil, exceptions.Theme.FailedToCreate().WithError(err)
+		return nil, exceptions.Theme.FailedToCreate().WithOrigin(err)
 	}
 
 	result := parsedOptions.DB.Model(&schemas.Theme{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newTheme)
 	if err := result.Error; err != nil {
-		return nil, exceptions.Theme.FailedToCreate().WithError(err)
+		return nil, exceptions.Theme.FailedToCreate().WithOrigin(err)
 	}
 
 	return &newTheme.Id, nil
@@ -118,7 +118,7 @@ func (r *ThemeRepository) UpdateOneById(
 		Select("*").
 		Updates(&updates)
 	if err := result.Error; err != nil {
-		return nil, exceptions.Theme.FailedToUpdate().WithError(err)
+		return nil, exceptions.Theme.FailedToUpdate().WithOrigin(err)
 	}
 	if result.RowsAffected == 0 { // check if we do update it or not
 		return nil, exceptions.Theme.NoChanges()
@@ -146,7 +146,7 @@ func (r *ThemeRepository) DeleteOneById(
 		Where("id = ? AND author_id = ?", id, authorId).
 		Delete(&schemas.Theme{})
 	if err := result.Error; err != nil {
-		return exceptions.Theme.FailedToDelete().WithError(err)
+		return exceptions.Theme.FailedToDelete().WithOrigin(err)
 	}
 	if result.RowsAffected == 0 {
 		return exceptions.Theme.NotFound()

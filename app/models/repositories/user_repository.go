@@ -48,7 +48,7 @@ func (r *UserRepository) GetOneById(
 	result := db.Where("id = ?", id).
 		First(&user)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.User.NotFound().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.User.NotFound().WithOrigin(result.Error)},
 		{First: user.Id == uuid.Nil, Second: exceptions.User.NotFound()},
 	}); exception != nil {
 		return nil, exception
@@ -76,7 +76,7 @@ func (r *UserRepository) GetOneByName(
 	result := db.Where("name = ?", name).
 		First(&user)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.User.NotFound().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.User.NotFound().WithOrigin(result.Error)},
 		{First: user.Id == uuid.Nil, Second: exceptions.User.NotFound()},
 	}); exception != nil {
 		return nil, exception
@@ -104,7 +104,7 @@ func (r *UserRepository) GetOneByEmail(
 	result := query.Where("email = ?", email).
 		First(&user)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.User.NotFound().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.User.NotFound().WithOrigin(result.Error)},
 		{First: user.Id == uuid.Nil, Second: exceptions.User.NotFound()},
 	}); exception != nil {
 		return nil, exception
@@ -127,7 +127,7 @@ func (r *UserRepository) GetAll(
 		Preload("Themes").
 		Find(&users)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.User.NotFound().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.User.NotFound().WithOrigin(result.Error)},
 		{First: len(users) == 0, Second: exceptions.User.NotFound()},
 	}); exception != nil {
 		return nil, exception
@@ -145,7 +145,7 @@ func (r *UserRepository) CreateOne(
 	// but the default value we set in gorm field in the above struct will be returned if we specified it in the "returning"
 	var newUser schemas.User
 	if err := copier.Copy(&newUser, &input); err != nil {
-		return nil, exceptions.User.FailedToCreate().WithError(err)
+		return nil, exceptions.User.FailedToCreate().WithOrigin(err)
 	}
 
 	result := parsedOptions.DB.Model(&schemas.User{}).
@@ -160,7 +160,7 @@ func (r *UserRepository) CreateOne(
 		case "ERROR: duplicate key value violates unique constraint \"uni_UserTable_email\" (SQLSTATE 23505)":
 			return nil, exceptions.User.DuplicateEmail(input.Email)
 		default:
-			return nil, exceptions.User.FailedToCreate() // .WithError(err) <- don't show the database error to outside
+			return nil, exceptions.User.FailedToCreate() // .WithOrigin(err) <- don't show the database error to outside
 		}
 	}
 	if result.RowsAffected == 0 {
@@ -199,7 +199,7 @@ func (r *UserRepository) UpdateOneById(
 		Select("*").
 		Updates(&updates)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.User.FailedToUpdate().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.User.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.User.NoChanges()},
 	}); exception != nil {
 		return nil, exception

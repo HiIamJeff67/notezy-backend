@@ -59,7 +59,7 @@ func (s *BlockPackService) GetMyBlockPackById(
 	ctx context.Context, reqDto *dtos.GetMyBlockPackByIdReqDto,
 ) (*dtos.GetMyBlockPackByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockPack.InvalidDto().WithError(err)
+		return nil, exceptions.BlockPack.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -91,7 +91,7 @@ func (s *BlockPackService) GetMyBlockPackAndItsParentById(
 	ctx context.Context, reqDto *dtos.GetMyBlockPackAndItsParentByIdReqDto,
 ) (*dtos.GetMyBlockPackAndItsParentByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockPack.InvalidDto().WithError(err)
+		return nil, exceptions.BlockPack.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -125,7 +125,7 @@ func (s *BlockPackService) GetMyBlockPackAndItsParentById(
 			&resDto.ParentSubShelfUpdatedAt,
 			&resDto.ParentSubShelfCreatedAt)
 	if err != nil {
-		return nil, exceptions.BlockPack.NotFound().WithError(err)
+		return nil, exceptions.BlockPack.NotFound().WithOrigin(err)
 	}
 
 	return &resDto, nil
@@ -135,7 +135,7 @@ func (s *BlockPackService) GetMyBlockPacksByParentSubShelfId(
 	ctx context.Context, reqDto *dtos.GetMyBlockPacksByParentSubShelfIdReqDto,
 ) (*dtos.GetMyBlockPacksByParentSubShelfIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockPack.InvalidDto().WithError(err)
+		return nil, exceptions.BlockPack.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -161,7 +161,7 @@ func (s *BlockPackService) GetMyBlockPacksByParentSubShelfId(
 		Limit(int(constants.MaxBlockPackOfSubShelf)).
 		Scan(&resDto)
 	if err := result.Error; err != nil {
-		return nil, exceptions.BlockPack.NotFound().WithError(err)
+		return nil, exceptions.BlockPack.NotFound().WithOrigin(err)
 	}
 
 	return &resDto, nil
@@ -171,7 +171,7 @@ func (s *BlockPackService) GetAllMyBlockPacksByRootShelfId(
 	ctx context.Context, reqDto *dtos.GetAllMyBlockPacksByRootShelfIdReqDto,
 ) (*dtos.GetAllMyBlockPacksByRootShelfIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockPack.InvalidDto().WithError(err)
+		return nil, exceptions.BlockPack.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -195,7 +195,7 @@ func (s *BlockPackService) GetAllMyBlockPacksByRootShelfId(
 		Order("name ASC").
 		Scan(&resDto)
 	if err := result.Error; err != nil {
-		return nil, exceptions.BlockPack.NotFound().WithError(err)
+		return nil, exceptions.BlockPack.NotFound().WithOrigin(err)
 	}
 
 	return &resDto, nil
@@ -205,7 +205,7 @@ func (s *BlockPackService) CreateBlockPack(
 	ctx context.Context, reqDto *dtos.CreateBlockPackReqDto,
 ) (*dtos.CreateBlockPackResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockPack.InvalidDto().WithError(err)
+		return nil, exceptions.BlockPack.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -237,7 +237,7 @@ func (s *BlockPackService) UpdateMyBlockPackById(
 	ctx context.Context, reqDto *dtos.UpdateMyBlockPackByIdReqDto,
 ) (*dtos.UpdateMyBlockPackByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockPack.InvalidDto().WithError(err)
+		return nil, exceptions.BlockPack.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -268,7 +268,7 @@ func (s *BlockPackService) MoveMyBlockPackById(
 	ctx context.Context, reqDto *dtos.MoveMyBlockPackByIdReqDto,
 ) (*dtos.MoveMyBlockPackByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockPack.InvalidDto().WithError(err)
+		return nil, exceptions.BlockPack.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -290,7 +290,7 @@ func (s *BlockPackService) MoveMyBlockPackById(
 	)
 
 	if err := result.Error; err != nil {
-		return nil, exceptions.BlockPack.FailedToUpdate().WithError(err)
+		return nil, exceptions.BlockPack.FailedToUpdate().WithOrigin(err)
 	}
 	if result.RowsAffected == 0 {
 		return nil, exceptions.BlockPack.NoChanges()
@@ -305,7 +305,7 @@ func (s *BlockPackService) MoveMyBlockPacksByIds(
 	ctx context.Context, reqDto *dtos.MoveMyBlockPacksByIdsReqDto,
 ) (*dtos.MoveMyBlockPacksByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockPack.InvalidDto().WithError(err)
+		return nil, exceptions.BlockPack.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -327,7 +327,7 @@ func (s *BlockPackService) MoveMyBlockPacksByIds(
 	)
 
 	if err := result.Error; err != nil {
-		return nil, exceptions.BlockPack.FailedToUpdate().WithError(err)
+		return nil, exceptions.BlockPack.FailedToUpdate().WithOrigin(err)
 	}
 	if result.RowsAffected == 0 {
 		return nil, exceptions.BlockPack.NoChanges()
@@ -342,7 +342,7 @@ func (s *BlockPackService) RestoreMyBlockPackById(
 	ctx context.Context, reqDto *dtos.RestoreMyBlockPackByIdReqDto,
 ) (*dtos.RestoreMyBlockPackByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockPack.InvalidDto().WithError(err)
+		return nil, exceptions.BlockPack.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -373,7 +373,7 @@ func (s *BlockPackService) RestoreMyBlockPacksByIds(
 	ctx context.Context, reqDto *dtos.RestoreMyBlockPacksByIdsReqDto,
 ) (*dtos.RestoreMyBlockPacksByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockPack.InvalidDto().WithError(err)
+		return nil, exceptions.BlockPack.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -409,7 +409,7 @@ func (s *BlockPackService) DeleteMyBlockPackById(
 	ctx context.Context, reqDto *dtos.DeleteMyBlockPackByIdReqDto,
 ) (*dtos.DeleteMyBlockPackByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockPack.InvalidDto().WithError(err)
+		return nil, exceptions.BlockPack.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -431,7 +431,7 @@ func (s *BlockPackService) DeleteMyBlockPacksByIds(
 	ctx context.Context, reqDto *dtos.DeleteMyBlockPacksByIdsReqDto,
 ) (*dtos.DeleteMyBlockPacksByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockPack.InvalidDto().WithError(err)
+		return nil, exceptions.BlockPack.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)

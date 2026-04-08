@@ -36,7 +36,7 @@ func (b *AuthBinder) BindRegister(controllerFunc types.ControllerFunc[*dtos.Regi
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Auth.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Auth.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -51,7 +51,7 @@ func (b *AuthBinder) BindRegisterViaGoogle(controllerFunc types.ControllerFunc[*
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Auth.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Auth.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -66,7 +66,7 @@ func (b *AuthBinder) BindLogin(controllerFunc types.ControllerFunc[*dtos.LoginRe
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Auth.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Auth.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -81,7 +81,7 @@ func (b *AuthBinder) BindLoginViaGoogle(controllerFunc types.ControllerFunc[*dto
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Auth.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Auth.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -113,7 +113,7 @@ func (b *AuthBinder) BindSendAuthCode(controllerFunc types.ControllerFunc[*dtos.
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Auth.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Auth.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -135,7 +135,7 @@ func (b *AuthBinder) BindValidateEmail(controllerFunc types.ControllerFunc[*dtos
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Auth.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Auth.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -157,7 +157,7 @@ func (b *AuthBinder) BindResetEmail(controllerFunc types.ControllerFunc[*dtos.Re
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Auth.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Auth.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -172,7 +172,7 @@ func (b *AuthBinder) BindForgetPassword(controllerFunc types.ControllerFunc[*dto
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Auth.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Auth.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -194,7 +194,7 @@ func (b *AuthBinder) BindResetMe(controllerFunc types.ControllerFunc[*dtos.Reset
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Auth.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Auth.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -216,7 +216,7 @@ func (b *AuthBinder) BindDeleteMe(controllerFunc types.ControllerFunc[*dtos.Dele
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Auth.InvalidDto().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Auth.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 

@@ -149,6 +149,7 @@ type UpdateMyBlockByIdReqDto struct {
 			PartialUpdateDto[struct {
 				ParentBlockId *uuid.UUID       `json:"parentBlockId" validate:"omitnil"`
 				BlockGroupId  *uuid.UUID       `json:"blockGroupId" validate:"omitnil"`
+				Type          *enums.BlockType `json:"type" validate:"omitnil,isblocktype"`
 				Props         *json.RawMessage `json:"props"`
 				Content       *json.RawMessage `json:"content"`
 			}]
@@ -171,6 +172,7 @@ type UpdateMyBlocksByIdsReqDto struct {
 				PartialUpdateDto[struct {
 					ParentBlockId *uuid.UUID       `json:"parentBlockId" validate:"omitnil"`
 					BlockGroupId  *uuid.UUID       `json:"blockGroupId" validate:"omitnil"`
+					Type          *enums.BlockType `json:"type" validate:"omitnil,isblocktype"`
 					Props         *json.RawMessage `json:"props"`
 					Content       *json.RawMessage `json:"content"`
 				}]

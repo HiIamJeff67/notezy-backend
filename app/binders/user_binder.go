@@ -69,7 +69,7 @@ func (b *UserBinder) BindUpdateMe(controllerFunc types.ControllerFunc[*dtos.Upda
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.User.InvalidDto().WithError(err)
+			exception := exceptions.User.InvalidDto().WithOrigin(err)
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}

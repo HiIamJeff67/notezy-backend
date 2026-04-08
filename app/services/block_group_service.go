@@ -64,7 +64,7 @@ func (s *BlockGroupService) GetMyBlockGroupById(
 	ctx context.Context, reqDto *dtos.GetMyBlockGroupByIdReqDto,
 ) (*dtos.GetMyBlockGroupByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -96,7 +96,7 @@ func (s *BlockGroupService) GetMyBlockGroupAndItsBlocksById(
 	ctx context.Context, reqDto *dtos.GetMyBlockGroupAndItsBlocksByIdReqDto,
 ) (*dtos.GetMyBlockGroupAndItsBlocksByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -199,7 +199,7 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByIds(
 	ctx context.Context, reqDto *dtos.GetMyBlockGroupsAndTheirBlocksByIdsReqDto,
 ) (*dtos.GetMyBlockGroupsAndTheirBlocksByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -307,7 +307,7 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 	ctx context.Context, reqDto *dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdReqDto,
 ) (*dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
 
 	if len(reqDto.Param.BlockPackId) == 0 {
@@ -451,7 +451,7 @@ func (s *BlockGroupService) GetMyBlockGroupsByPrevBlockGroupId(
 	ctx context.Context, reqDto *dtos.GetMyBlockGroupsByPrevBlockGroupIdReqDto,
 ) (*dtos.GetMyBlockGroupsByPrevBlockGroupIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -478,7 +478,7 @@ func (s *BlockGroupService) GetMyBlockGroupsByPrevBlockGroupId(
 			reqDto.Param.PrevBlockGroupId, subQuery,
 		).Find(&resDto)
 	if err := result.Error; err != nil {
-		return nil, exceptions.BlockGroup.NotFound().WithError(err)
+		return nil, exceptions.BlockGroup.NotFound().WithOrigin(err)
 	}
 
 	return &resDto, nil
@@ -488,7 +488,7 @@ func (s *BlockGroupService) GetAllMyBlockGroupsByBlockPackId(
 	ctx context.Context, reqDto *dtos.GetAllMyBlockGroupsByBlockPackIdReqDto,
 ) (*dtos.GetAllMyBlockGroupsByBlockPackIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -515,7 +515,7 @@ func (s *BlockGroupService) GetAllMyBlockGroupsByBlockPackId(
 			reqDto.Param.BlockPackId, subQuery,
 		).Find(&resDto)
 	if err := result.Error; err != nil {
-		return nil, exceptions.BlockGroup.NotFound().WithError(err)
+		return nil, exceptions.BlockGroup.NotFound().WithOrigin(err)
 	}
 
 	return &resDto, nil
@@ -525,7 +525,7 @@ func (s *BlockGroupService) InsertBlockGroupByBlockPackId(
 	ctx context.Context, reqDto *dtos.InsertBlockGroupByBlockPackIdReqDto,
 ) (*dtos.InsertBlockGroupByBlockPackIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
 
 	tx := s.db.WithContext(ctx)
@@ -555,7 +555,7 @@ func (s *BlockGroupService) InsertBlockGroupAndItsBlocksByBlockPackId(
 	ctx context.Context, reqDto *dtos.InsertBlockGroupAndItsBlocksByBlockPackIdReqDto,
 ) (*dtos.InsertBlockGroupAndItsBlocksByBlockPackIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
@@ -609,7 +609,7 @@ func (s *BlockGroupService) InsertBlockGroupAndItsBlocksByBlockPackId(
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithError(err)
+		return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.InsertBlockGroupAndItsBlocksByBlockPackIdResDto{
@@ -622,7 +622,7 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 	ctx context.Context, reqDto *dtos.InsertBlockGroupsAndTheirBlocksByBlockPackIdReqDto,
 ) (*dtos.InsertBlockGroupsAndTheirBlocksByBlockPackIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
 
 	// try transaction here, but not passing the transaction into the concurrency part
@@ -658,7 +658,7 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 	validateBlockFunc := func(validateDto dtos.ArborizedEditableBlock) ([]dtos.RawFlattenedEditableBlock, error) {
 		rawFlattenedBlocks, exception := s.editableBlockAdapter.FlattenToRaw(&validateDto)
 		if exception != nil {
-			return rawFlattenedBlocks, exception.ToError()
+			return rawFlattenedBlocks, exception.GetOrigin()
 		}
 		return rawFlattenedBlocks, nil
 	}
@@ -735,7 +735,7 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithError(err)
+		return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	resDto.CreatedAt = time.Now()
@@ -746,7 +746,7 @@ func (s *BlockGroupService) InsertSequentialBlockGroupsAndTheirBlocksByBlockPack
 	ctx context.Context, reqDto *dtos.InsertSequentialBlockGroupsAndTheirBlocksByBlockPackIdReqDto,
 ) (*dtos.InsertSequentialBlockGroupsAndTheirBlocksByBlockPackIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
 
 	// try transaction here, but not passing the transaction into the concurrency part
@@ -782,7 +782,7 @@ func (s *BlockGroupService) InsertSequentialBlockGroupsAndTheirBlocksByBlockPack
 	validateBlockFunc := func(validateDto dtos.ArborizedEditableBlock) ([]dtos.RawFlattenedEditableBlock, error) {
 		data, exception := s.editableBlockAdapter.FlattenToRaw(&validateDto)
 		if exception != nil {
-			return data, exception.ToError()
+			return data, exception.GetOrigin()
 		}
 		return data, nil
 	}
@@ -860,7 +860,7 @@ func (s *BlockGroupService) InsertSequentialBlockGroupsAndTheirBlocksByBlockPack
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithError(err)
+		return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	resDto.CreatedAt = time.Now()
@@ -871,7 +871,7 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 	ctx context.Context, reqDto *dtos.MoveMyBlockGroupsByIdsReqDto,
 ) (*dtos.MoveMyBlockGroupsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
 	if len(reqDto.Body.MovableBlockGroupIds) != len(reqDto.Body.MovablePrevBlockGroupIds) {
 		return nil, exceptions.BlockGroup.InvalidDto("The length of movable block group ids is not equal to the length of movable previous block group id")
@@ -1043,7 +1043,7 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithError(err)
+		return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.MoveMyBlockGroupsByIdsResDto{
@@ -1055,7 +1055,7 @@ func (s *BlockGroupService) RestoreMyBlockGroupById(
 	ctx context.Context, reqDto *dtos.RestoreMyBlockGroupByIdReqDto,
 ) (*dtos.RestoreMyBlockGroupByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -1085,7 +1085,7 @@ func (s *BlockGroupService) RestoreMyBlockGroupsByIds(
 	ctx context.Context, reqDto *dtos.RestoreMyBlockGroupsByIdsReqDto,
 ) (*dtos.RestoreMyBlockGroupsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -1120,7 +1120,7 @@ func (s *BlockGroupService) DeleteMyBlockGroupById(
 	ctx context.Context, reqDto *dtos.DeleteMyBlockGroupByIdReqDto,
 ) (*dtos.DeleteMyBlockGroupByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -1142,7 +1142,7 @@ func (s *BlockGroupService) DeleteMyBlockGroupsByIds(
 	ctx context.Context, reqDto *dtos.DeleteMyBlockGroupsByIdsReqDto,
 ) (*dtos.DeleteMyBlockGroupsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.BlockGroup.InvalidDto().WithError(err)
+		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)

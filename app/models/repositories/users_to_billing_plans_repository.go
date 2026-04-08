@@ -32,7 +32,7 @@ func (r *UsersToBillingPlansRepository) GetOnyById(
 		Where("id = ? and user_id = ?", id, userId).
 		First(&usersToBillingPlans)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.UsersToBillingPlans.NotFound().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.UsersToBillingPlans.NotFound().WithOrigin(result.Error)},
 		{First: usersToBillingPlans.Id == uuid.Nil, Second: exceptions.UsersToBillingPlans.NotFound()},
 	}); exception != nil {
 		return nil, exception
@@ -51,7 +51,7 @@ func (r *UsersToBillingPlansRepository) GetAllByUserId(
 		Where("user_id = ?", userId).
 		Find(&usersToBillingPlans)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.UsersToBillingPlans.NotFound().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.UsersToBillingPlans.NotFound().WithOrigin(result.Error)},
 		{First: len(usersToBillingPlans) == 0, Second: exceptions.UsersToBillingPlans.NotFound()},
 	}); exception != nil {
 		return nil, exception
@@ -71,7 +71,7 @@ func (r *UsersToBillingPlansRepository) CreateOne(
 	newUsersToBillingPlans.UserId = userId
 
 	if err := copier.Copy(&newUsersToBillingPlans, &input); err != nil {
-		return nil, exceptions.UsersToBillingPlans.FailedToCreate().WithError(err)
+		return nil, exceptions.UsersToBillingPlans.FailedToCreate().WithOrigin(err)
 	}
 
 	var createdUsersToBillingPlans schemas.UsersToBillingPlans
@@ -79,7 +79,7 @@ func (r *UsersToBillingPlansRepository) CreateOne(
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newUsersToBillingPlans)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.UsersToBillingPlans.FailedToCreate().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.UsersToBillingPlans.FailedToCreate().WithOrigin(result.Error)},
 		{First: createdUsersToBillingPlans.Id == uuid.Nil, Second: exceptions.UsersToBillingPlans.FailedToCreate()},
 	}); exception != nil {
 		return nil, exception
@@ -117,7 +117,7 @@ func (r *UsersToBillingPlansRepository) UpdateOneById(
 		Select("*").
 		Updates(&updates)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.UsersToBillingPlans.FailedToUpdate().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.UsersToBillingPlans.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.UsersToBillingPlans.NoChanges()},
 	}); exception != nil {
 		return nil, exception
@@ -137,7 +137,7 @@ func (r *UsersToBillingPlansRepository) DeleteOneById(
 		Where("id = ? and user_id = ?", id, userId).
 		Delete(&schemas.UsersToBillingPlans{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.UsersToBillingPlans.FailedToDelete().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.UsersToBillingPlans.FailedToDelete().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.UsersToBillingPlans.NoChanges()},
 	}); exception != nil {
 		return exception
@@ -161,7 +161,7 @@ func (r *UsersToBillingPlansRepository) DeleteManyByIds(
 		Where("ids IN ? and user_id = ?", ids, userId).
 		Delete(&schemas.UsersToBillingPlans{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.UsersToBillingPlans.FailedToDelete().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.UsersToBillingPlans.FailedToDelete().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.UsersToBillingPlans.NoChanges()},
 	}); exception != nil {
 		return exception

@@ -82,7 +82,7 @@ func NewAuthService(
 func (s *AuthService) hashPassword(password string) (string, *exceptions.Exception) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return "", exceptions.Util.FailedToGenerateHashValue().WithError(err)
+		return "", exceptions.Util.FailedToGenerateHashValue().WithOrigin(err)
 	}
 	return string(bytes), nil
 }
@@ -94,7 +94,7 @@ func (s *AuthService) checkPasswordHash(hashedPassword string, password string) 
 func (s *AuthService) getOAuthFakeName() (string, *exceptions.Exception) {
 	reg, err := regexp.Compile("[^a-z0-9]+")
 	if err != nil {
-		return "", exceptions.Auth.FailedToCompileRegularExpression().WithError(err)
+		return "", exceptions.Auth.FailedToCompileRegularExpression().WithOrigin(err)
 	}
 	fakeName := strings.ToLower(uuid.New().String())
 	fakeName = reg.ReplaceAllString(fakeName, "")
@@ -107,7 +107,7 @@ func (s *AuthService) getOAuthFakeName() (string, *exceptions.Exception) {
 func (s *AuthService) getOAuthFakePassword() (string, *exceptions.Exception) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(uuid.New().String()), bcrypt.DefaultCost)
 	if err != nil {
-		return "", exceptions.Util.FailedToGenerateHashValue().WithError(err)
+		return "", exceptions.Util.FailedToGenerateHashValue().WithOrigin(err)
 	}
 	return string(bytes), nil
 }
@@ -118,7 +118,7 @@ func (s *AuthService) Register(
 	ctx context.Context, reqDto *dtos.RegisterReqDto,
 ) (*dtos.RegisterResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Auth.InvalidDto().WithError(err)
+		return nil, exceptions.Auth.InvalidDto().WithOrigin(err)
 	}
 
 	// Start transaction
@@ -234,7 +234,7 @@ func (s *AuthService) Register(
 	// Commit transaction
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, exceptions.User.FailedToCommitTransaction().WithError(err)
+		return nil, exceptions.User.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	// Create user data cache
@@ -283,7 +283,7 @@ func (s *AuthService) RegisterViaGoogle(
 	ctx context.Context, reqDto *dtos.RegisterViaGoogleReqDto,
 ) (*dtos.RegisterViaGoogleResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Auth.InvalidDto().WithError(err)
+		return nil, exceptions.Auth.InvalidDto().WithOrigin(err)
 	}
 
 	// Start transaction
@@ -429,7 +429,7 @@ func (s *AuthService) RegisterViaGoogle(
 	// Commit transaction
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		return nil, exceptions.User.FailedToCommitTransaction().WithError(err)
+		return nil, exceptions.User.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	// Create user data cache
@@ -478,7 +478,7 @@ func (s *AuthService) Login(
 	ctx context.Context, reqDto *dtos.LoginReqDto,
 ) (*dtos.LoginResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.User.InvalidInput().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -617,7 +617,7 @@ func (s *AuthService) Login(
 				&output.UpdatedAt,
 			)
 		if err != nil {
-			return nil, exceptions.User.NotFound().WithError(err)
+			return nil, exceptions.User.NotFound().WithOrigin(err)
 		}
 
 		newUserDataCache := caches.UserDataCache{
@@ -680,7 +680,7 @@ func (s *AuthService) LoginViaGoogle(
 	ctx context.Context, reqDto *dtos.LoginViaGoogleReqDto,
 ) (*dtos.LoginViaGoogleResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Auth.InvalidDto().WithError(err)
+		return nil, exceptions.Auth.InvalidDto().WithOrigin(err)
 	}
 
 	// Start transaction
@@ -814,7 +814,7 @@ func (s *AuthService) LoginViaGoogle(
 				&output.UpdatedAt,
 			)
 		if err != nil {
-			return nil, exceptions.User.NotFound().WithError(err)
+			return nil, exceptions.User.NotFound().WithOrigin(err)
 		}
 
 		newUserDataCache := caches.UserDataCache{
@@ -877,7 +877,7 @@ func (s *AuthService) Logout(
 	ctx context.Context, reqDto *dtos.LogoutReqDto,
 ) (*dtos.LogoutResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Auth.InvalidDto().WithError(err)
+		return nil, exceptions.Auth.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -913,7 +913,7 @@ func (s *AuthService) SendAuthCode(
 	ctx context.Context, reqDto *dtos.SendAuthCodeReqDto,
 ) (*dtos.SendAuthCodeResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.User.InvalidInput().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -932,7 +932,7 @@ func (s *AuthService) SendAuthCode(
 	).Row().
 		Scan(&output.Name, &output.UserAgent, &output.BlockAuthCodeUntil, &output.Now)
 	if err != nil {
-		return nil, exceptions.Auth.AuthCodeBlockedDueToTryingTooManyTimes(output.BlockAuthCodeUntil).WithError(err)
+		return nil, exceptions.Auth.AuthCodeBlockedDueToTryingTooManyTimes(output.BlockAuthCodeUntil).WithOrigin(err)
 	}
 
 	if exception := emails.AsyncSendValidationEmail(
@@ -956,7 +956,7 @@ func (s *AuthService) ValidateEmail(
 	ctx context.Context, reqDto *dtos.ValidateEmailReqDto,
 ) (*dtos.ValidateEmailResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.User.InvalidInput().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -966,7 +966,7 @@ func (s *AuthService) ValidateEmail(
 		Row().
 		Scan(&updatedAt)
 	if err != nil {
-		return nil, exceptions.User.FailedToUpdate().WithError(err)
+		return nil, exceptions.User.FailedToUpdate().WithOrigin(err)
 	}
 
 	return &dtos.ValidateEmailResDto{
@@ -978,7 +978,7 @@ func (s *AuthService) ResetEmail(
 	ctx context.Context, reqDto *dtos.ResetEmailReqDto,
 ) (*dtos.ResetEmailResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.User.InvalidInput().WithOrigin(err)
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
@@ -989,7 +989,7 @@ func (s *AuthService) ResetEmail(
 		Scan(&updatedAt)
 	if err != nil {
 		tx.Rollback()
-		return nil, exceptions.User.FailedToUpdate().WithError(err)
+		return nil, exceptions.User.FailedToUpdate().WithOrigin(err)
 	}
 
 	authCode := util.GenerateAuthCode()
@@ -1011,7 +1011,7 @@ func (s *AuthService) ResetEmail(
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		return nil, exceptions.User.FailedToCommitTransaction().WithError(err)
+		return nil, exceptions.User.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.ResetEmailResDto{
@@ -1023,7 +1023,7 @@ func (s *AuthService) ForgetPassword(
 	ctx context.Context, reqDto *dtos.ForgetPasswordReqDto,
 ) (*dtos.ForgetPasswordResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.User.InvalidInput().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -1128,7 +1128,7 @@ func (s *AuthService) ResetMe(
 	ctx context.Context, reqDto *dtos.ResetMeReqDto,
 ) (*dtos.ResetMeResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.User.InvalidInput().WithOrigin(err)
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
@@ -1140,13 +1140,13 @@ func (s *AuthService) ResetMe(
 		First(&resetedUserAccount)
 	if err := result.Error; err != nil {
 		tx.Rollback()
-		return nil, exceptions.UserAccount.NotFound().WithError(err)
+		return nil, exceptions.UserAccount.NotFound().WithOrigin(err)
 	}
 
 	// delete the user info
 	if err := tx.Where("user_id = ?", reqDto.ContextFields.UserId).Delete(&schemas.UserInfo{}).Error; err != nil {
 		tx.Rollback()
-		return nil, exceptions.UserInfo.FailedToDelete().WithError(err)
+		return nil, exceptions.UserInfo.FailedToDelete().WithOrigin(err)
 	}
 	// and then re-create a new user info
 	if _, exception := s.userInfoRepository.CreateOneByUserId(
@@ -1160,7 +1160,7 @@ func (s *AuthService) ResetMe(
 	// delete the user setting
 	if err := tx.Where("user_id = ?", reqDto.ContextFields.UserId).Delete(&schemas.UserSetting{}).Error; err != nil {
 		tx.Rollback()
-		return nil, exceptions.UserSetting.FailedToDelete().WithError(err)
+		return nil, exceptions.UserSetting.FailedToDelete().WithOrigin(err)
 	}
 	// and then re-create a new user setting
 	if _, exception := s.userSettingRepository.CreateOneByUserId(
@@ -1207,13 +1207,13 @@ func (s *AuthService) DeleteMe(
 	ctx context.Context, reqDto *dtos.DeleteMeReqDto,
 ) (*dtos.DeleteMeResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidInput().WithError(err)
+		return nil, exceptions.User.InvalidInput().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
 
 	if err := db.Exec(authsql.DeleteMeSQL, reqDto.ContextFields.UserId, reqDto.Body.AuthCode).Error; err != nil {
-		return nil, exceptions.User.FailedToDelete().WithError(err)
+		return nil, exceptions.User.FailedToDelete().WithOrigin(err)
 	}
 
 	return &dtos.DeleteMeResDto{

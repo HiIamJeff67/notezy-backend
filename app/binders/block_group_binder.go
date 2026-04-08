@@ -51,12 +51,12 @@ func (b *BlockGroupBinder) BindGetMyBlockGroupById(controllerFunc types.Controll
 
 		blockGroupIdString := ctx.Query("blockGroupId")
 		if blockGroupIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("blockGroupId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("blockGroupId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		blockGroupId, err := uuid.Parse(blockGroupIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.BlockGroupId = blockGroupId
@@ -80,12 +80,12 @@ func (b *BlockGroupBinder) BindGetMyBlockGroupAndItsBlocksById(controllerFunc ty
 
 		blockGroupIdString := ctx.Query("blockGroupId")
 		if blockGroupIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("blockGroupId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("blockGroupId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		blockGroupId, err := uuid.Parse(blockGroupIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.BlockGroupId = blockGroupId
@@ -108,12 +108,12 @@ func (b *BlockGroupBinder) BindGetMyBlockGroupsAndTheirBlocksByIds(controllerFun
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
 		if len(reqDto.Param.BlockGroupIds) == 0 {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("blockGroupIds is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("blockGroupIds is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -136,12 +136,12 @@ func (b *BlockGroupBinder) BindGetMyBlockGroupsAndTheirBlocksByBlockPackId(contr
 
 		blockPackIdString := ctx.Query("blockPackId")
 		if blockPackIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("blockPackId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("blockPackId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		blockPackId, err := uuid.Parse(blockPackIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.BlockPackId = blockPackId
@@ -165,12 +165,12 @@ func (b *BlockGroupBinder) BindGetMyBlockGroupsByPrevBlockGroupId(controllerFunc
 
 		prevBlockGroupIdString := ctx.Query("prevBlockGroupId")
 		if prevBlockGroupIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("prevBlockGroupId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("prevBlockGroupId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		prevBlockGroupId, err := uuid.Parse(prevBlockGroupIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.PrevBlockGroupId = prevBlockGroupId
@@ -194,12 +194,12 @@ func (b *BlockGroupBinder) BindGetAllMyBlockGroupsByBlockPackId(controllerFunc t
 
 		blockPackIdString := ctx.Query("blockPackId")
 		if blockPackIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("blockPackId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("blockPackId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		blockPackId, err := uuid.Parse(blockPackIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.BlockPackId = blockPackId
@@ -222,7 +222,7 @@ func (b *BlockGroupBinder) BindInsertBlockGroupByBlockPackId(controllerFunc type
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.BlockGroup.InvalidDto().WithError(err)
+			exception := exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -245,7 +245,7 @@ func (b *BlockGroupBinder) BindInsertBlockGroupAndItsBlocksByBlockPackId(control
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.BlockGroup.InvalidDto().WithError(err)
+			exception := exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -268,7 +268,7 @@ func (b *BlockGroupBinder) BindInsertBlockGroupsAndTheirBlocksByBlockPackId(cont
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.BlockGroup.InvalidDto().WithError(err)
+			exception := exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -291,7 +291,7 @@ func (b *BlockGroupBinder) BindInsertSequentialBlockGroupsAndTheirBlocksByBlockP
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.BlockGroup.InvalidDto().WithError(err)
+			exception := exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -314,7 +314,7 @@ func (b *BlockGroupBinder) BindMoveMyBlockGroupsByIds(controllerFunc types.Contr
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.BlockGroup.InvalidDto().WithError(err)
+			exception := exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -337,7 +337,7 @@ func (b *BlockGroupBinder) BindRestoreMyBlockGroupById(controllerFunc types.Cont
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.BlockGroup.InvalidDto().WithError(err)
+			exception := exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -360,7 +360,7 @@ func (b *BlockGroupBinder) BindRestoreMyBlockGroupsByIds(controllerFunc types.Co
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.BlockGroup.InvalidDto().WithError(err)
+			exception := exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -383,7 +383,7 @@ func (b *BlockGroupBinder) BindDeleteMyBlockGroupById(controllerFunc types.Contr
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.BlockGroup.InvalidDto().WithError(err)
+			exception := exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -406,7 +406,7 @@ func (b *BlockGroupBinder) BindDeleteMyBlockGroupsByIds(controllerFunc types.Con
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.BlockGroup.InvalidDto().WithError(err)
+			exception := exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}

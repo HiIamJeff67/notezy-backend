@@ -73,7 +73,7 @@ const (
 // ExceptionPrefix_UsersToBillingPlans ExceptionPrefix = "UsersToBillingPlans"		46
 
 // the exception code exceeded 990 are reserved for client exceptions
-// ExceptionPrefix_Client ExceptionPrefix = "ClientCommon" 				 990
+// ExceptionPrefix_Client ExceptionPrefix = "ClientCommon" 				 			990
 )
 
 func IsExceptionCode(exceptionCode int) bool {
@@ -90,7 +90,7 @@ type Exception struct {
 	Message        string          `json:"message"`        // custom exception message
 	HTTPStatusCode int             `json:"httpStatusCode"` // http status code
 	Details        any             `json:"details"`        // additional error details (optional)
-	Error          error           `json:"error"`          // original error (optional)
+	Origin         error           `json:"origin"`         // original error (optional)
 	LastTrace      traces.Trace    `json:"lastTrace"`      // the last location where the exception happened
 	TraceStack     []traces.Trace  `json:"tracesStack"`    // the entire path to where the exception actually take place
 }
@@ -103,7 +103,7 @@ type ExceptionCompareOption struct {
 	WithMessage        bool
 	WithHTTPStatusCode bool
 	WithDetails        bool
-	WithError          bool
+	WithOrigin         bool
 }
 
 func (e *Exception) IncrementMeter(ctx *gin.Context, meter metric.Meter, names ...string) {
@@ -130,16 +130,16 @@ func (e *Exception) IncrementMeter(ctx *gin.Context, meter metric.Meter, names .
 }
 
 func (e *Exception) String() string {
-	if e.Error != nil {
-		return fmt.Sprintf("[%v]%s:%s(%v)", e.Code, e.Reason, e.Message, e.Error.Error())
+	if e.Origin != nil {
+		return fmt.Sprintf("[%v]%s:%s(%v)", e.Code, e.Reason, e.Message, e.Origin.Error())
 	}
 	return fmt.Sprintf("[%v]%s:%s", e.Code, e.Reason, e.Message)
 }
 
 func (e *Exception) GetGinH() *gin.H {
 	var errorMessage interface{} = nil
-	if e.Error != nil {
-		errorMessage = e.Error.Error()
+	if e.Origin != nil {
+		errorMessage = e.Origin.Error()
 	}
 	return &gin.H{ // don't write the trace stack or last trace to the response
 		"code":    e.Code,
@@ -205,18 +205,18 @@ func (e *Exception) WithDetails(details any) *Exception {
 	return e
 }
 
-func (e *Exception) WithError(err error) *Exception {
-	e.Error = err
+func (e *Exception) WithOrigin(origin error) *Exception {
+	e.Origin = origin
 	return e
 }
 
 func (e *Exception) WithNullableError(err error, fallBackConditionToErrorMessage []types.Pair[bool, string]) *Exception {
 	if err != nil {
-		e.Error = err
+		e.Origin = err
 	} else {
 		for hasOccurred, errorMessage := range types.PairsIterator(fallBackConditionToErrorMessage) {
 			if hasOccurred {
-				e.Error = errors.New(errorMessage)
+				e.Origin = errors.New(errorMessage)
 				break
 			}
 		}
@@ -238,16 +238,16 @@ func (e *Exception) LogTraceStack(maxTraceDepth int) *Exception {
 }
 
 func (e *Exception) Panic() {
-	if e.Error != nil {
-		panic(fmt.Sprintf("[%d]%s:%s(%v)", e.Code, e.Reason, e.Message, e.Error.Error()))
+	if e.Origin != nil {
+		panic(fmt.Sprintf("[%d]%s:%s(%v)", e.Code, e.Reason, e.Message, e.Origin.Error()))
 	} else {
 		panic(fmt.Sprintf("[%d]%s:(%v)", e.Code, e.Reason, e.Message))
 	}
 }
 
 func (e *Exception) PanicVerbose() {
-	if e.Error != nil {
-		panic(fmt.Sprintf("[%d]%s:%v", e.Code, e.Reason, e.Error.Error()))
+	if e.Origin != nil {
+		panic(fmt.Sprintf("[%d]%s:%v", e.Code, e.Reason, e.Origin.Error()))
 	} else {
 		panic(fmt.Sprintf("[%d]%s", e.Code, e.Reason))
 	}
@@ -258,11 +258,18 @@ func (e *Exception) Trace(skip int, maxTraceDepth int) {
 	e.TraceStack = traces.GetTraces(skip+1, maxTraceDepth) // add 1 to avoid including this method
 }
 
-func (e *Exception) ToError() error {
-	if e.Error != nil {
-		return e.Error
+func (e *Exception) GetOrigin() error {
+	if e.Origin != nil {
+		return e.Origin
 	}
 	return errors.New(strings.ToLower(e.Message))
+}
+
+func (e *Exception) Error() string {
+	if e.Origin != nil {
+		return e.Origin.Error()
+	}
+	return e.Message
 }
 
 func (e *Exception) ToGraphQLError(ctx context.Context) *gqlerror.Error {
@@ -308,8 +315,8 @@ func (e *Exception) ToGraphQLError(ctx context.Context) *gqlerror.Error {
 		Extensions: extensions,
 	}
 
-	if e.Error != nil {
-		gqlError.Err = e.Error
+	if e.Origin != nil {
+		gqlError.Err = e.Origin
 	}
 
 	return gqlError
@@ -348,7 +355,7 @@ func Compare(e1 *Exception, e2 *Exception, opt ExceptionCompareOption) bool {
 	if opt.WithDetails && fmt.Sprintf("%v", e1.Details) != fmt.Sprintf("%v", e2.Details) {
 		return false
 	}
-	if opt.WithError && fmt.Sprintf("%v", e1.Error) != fmt.Sprintf("%v", e2.Error) {
+	if opt.WithOrigin && fmt.Sprintf("%v", e1.Origin) != fmt.Sprintf("%v", e2.Origin) {
 		return false
 	}
 	return true
@@ -428,8 +435,8 @@ func InternalServerWentWrong(originalException *Exception, optionalMessage ...st
 		return exception
 	}
 
-	if originalException.Error != nil {
-		exception.Error = originalException.Error
+	if originalException.Origin != nil {
+		exception.Origin = originalException.Origin
 	}
 	if originalException.Details != nil {
 		exception.Message = originalException.Message

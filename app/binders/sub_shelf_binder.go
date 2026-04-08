@@ -48,12 +48,12 @@ func (b *SubShelfBinder) BindGetMySubShelfById(controllerFunc types.ControllerFu
 
 		subShelfIdString := ctx.Query("subShelfId")
 		if subShelfIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("subShelfId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("subShelfId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		subShelfId, err := uuid.Parse(subShelfIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.SubShelfId = subShelfId
@@ -77,12 +77,12 @@ func (b *SubShelfBinder) BindGetMySubShelvesByPrevSubShelfId(controllerFunc type
 
 		prevSubShelfIdString := ctx.Query("prevSubShelfId")
 		if prevSubShelfIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("prevSubShelfId is required")).SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("prevSubShelfId is required")).SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		prevSubShelfId, err := uuid.Parse(prevSubShelfIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.PrevSubShelfId = prevSubShelfId
@@ -106,12 +106,12 @@ func (b *SubShelfBinder) BindGetAllMySubShelvesByRootShelfId(controllerFunc type
 
 		rootShelfIdString := ctx.Query("rootShelfId")
 		if rootShelfIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("rootShelfId is required")).SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("rootShelfId is required")).SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		rootShelfId, err := uuid.Parse(rootShelfIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.RootShelfId = rootShelfId
@@ -135,12 +135,12 @@ func (b *SubShelfBinder) BindGetMySubShelvesAndItemsByPrevSubShelfId(controllerF
 
 		prevSubShelfIdString := ctx.Query("prevSubShelfId")
 		if prevSubShelfIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("prevSubShelfId is required")).SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("prevSubShelfId is required")).SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		prevSubShelfId, err := uuid.Parse(prevSubShelfIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.PrevSubShelfId = prevSubShelfId
@@ -163,7 +163,7 @@ func (b *SubShelfBinder) BindCreateSubShelfByRootShelfId(controllerFunc types.Co
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Shelf.InvalidDto().WithError(err)
+			exception := exceptions.Shelf.InvalidDto().WithOrigin(err)
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -186,7 +186,7 @@ func (b *SubShelfBinder) BindUpdateMySubShelfById(controllerFunc types.Controlle
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Shelf.InvalidDto().WithError(err)
+			exception := exceptions.Shelf.InvalidDto().WithOrigin(err)
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -209,7 +209,7 @@ func (b *SubShelfBinder) BindMoveMySubShelf(controllerFunc types.ControllerFunc[
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Shelf.InvalidDto().WithError(err)
+			exception := exceptions.Shelf.InvalidDto().WithOrigin(err)
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -232,7 +232,7 @@ func (b *SubShelfBinder) BindMoveMySubShelves(controllerFunc types.ControllerFun
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Shelf.InvalidDto().WithError(err)
+			exception := exceptions.Shelf.InvalidDto().WithOrigin(err)
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -255,7 +255,7 @@ func (b *SubShelfBinder) BindRestoreMySubShelfById(controllerFunc types.Controll
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Shelf.InvalidDto().WithError(err)
+			exception := exceptions.Shelf.InvalidDto().WithOrigin(err)
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -277,7 +277,7 @@ func (b *SubShelfBinder) BindRestoreMySubShelvesByIds(controllerFunc types.Contr
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Shelf.InvalidDto().WithError(err)
+			exception := exceptions.Shelf.InvalidDto().WithOrigin(err)
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -300,7 +300,7 @@ func (b *SubShelfBinder) BindDeleteMySubShelfById(controllerFunc types.Controlle
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Shelf.InvalidDto().WithError(err)
+			exception := exceptions.Shelf.InvalidDto().WithOrigin(err)
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -323,7 +323,7 @@ func (b *SubShelfBinder) BindDeleteMySubShelvesByIds(controllerFunc types.Contro
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Shelf.InvalidDto().WithError(err)
+			exception := exceptions.Shelf.InvalidDto().WithOrigin(err)
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}

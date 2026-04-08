@@ -44,7 +44,7 @@ func _validateAccessTokenAndUserAgent(accessToken string) (*types.JWTClaims, *ca
 
 	userId, err := uuid.Parse(claims.Id)
 	if err != nil { // if the id is invalid somehow
-		return nil, nil, exceptions.Token.FailedToParseAccessToken().WithError(err)
+		return nil, nil, exceptions.Token.FailedToParseAccessToken().WithOrigin(err)
 	}
 
 	userDataCache, exception := caches.GetUserDataCache(userId)
@@ -67,7 +67,7 @@ func _validateRefreshToken(refreshToken string) (*schemas.User, *exceptions.Exce
 
 	userId, err := uuid.Parse(claims.Id)
 	if err != nil { // if the id is invalid somehow
-		return nil, exceptions.Token.FailedToParseAccessToken().WithError(err)
+		return nil, exceptions.Token.FailedToParseAccessToken().WithOrigin(err)
 	}
 
 	userRepository := repositories.NewUserRepository()

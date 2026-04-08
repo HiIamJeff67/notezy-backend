@@ -43,7 +43,7 @@ func (s *BadgeService) GetPublicBadgeByPublicId(
 		Where("public_id = ?", publicId).
 		First(&badge)
 	if err := result.Error; err != nil {
-		return nil, exceptions.Badge.NotFound().WithError(err)
+		return nil, exceptions.Badge.NotFound().WithOrigin(err)
 	}
 
 	return badge.ToPublicBadge(), nil
@@ -62,7 +62,7 @@ func (s *BadgeService) GetPublicBadgeByUserPublicId(
 		Where("u.public_id = ?", publicId).
 		First(&badge)
 	if err := result.Error; err != nil {
-		return nil, exceptions.Badge.NotFound().WithError(err)
+		return nil, exceptions.Badge.NotFound().WithOrigin(err)
 	}
 
 	return badge.ToPublicBadge(), nil
@@ -100,7 +100,7 @@ func (s *BadgeService) GetPublicBadgesByUserPublicIds(
 		Where("u.public_id IN ?", uniquePublicIds).
 		Find(&badgesWithPublicUserIds)
 	if err := result.Error; err != nil {
-		return nil, exceptions.Badge.NotFound().WithError(err)
+		return nil, exceptions.Badge.NotFound().WithOrigin(err)
 	}
 
 	publicIdToIndexesMap := make(map[string][]int)

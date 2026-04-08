@@ -26,7 +26,7 @@ func GenerateRefreshToken(id string, name string, email string, userAgent string
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	result, err := token.SignedString(_jwtRefreshTokenSecret)
 	if err != nil {
-		return nil, exceptions.Token.FailedToGenerateRefreshToken().WithError(err)
+		return nil, exceptions.Token.FailedToGenerateRefreshToken().WithOrigin(err)
 	}
 
 	return &result, nil
@@ -41,14 +41,14 @@ func ParseRefreshToken(tokenString string) (*types.JWTClaims, *exceptions.Except
 		func(token *jwt.Token) (any, error) { return _jwtRefreshTokenSecret, nil },
 	)
 	if err != nil {
-		return nil, exceptions.Token.FailedToParseRefreshToken().WithError(err)
+		return nil, exceptions.Token.FailedToParseRefreshToken().WithOrigin(err)
 	}
 
 	if claims, ok := refreshToken.Claims.(*types.JWTClaims); ok && refreshToken.Valid {
 		return claims, nil
 	}
 
-	return nil, exceptions.Token.FailedToParseRefreshToken().WithError(jwt.ErrTokenInvalidClaims)
+	return nil, exceptions.Token.FailedToParseRefreshToken().WithOrigin(jwt.ErrTokenInvalidClaims)
 }
 
 /* ============================== Utility Functions ============================== */

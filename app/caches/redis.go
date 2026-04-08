@@ -46,7 +46,7 @@ func ConnectToRedis(config configs.CacheManagerConfig) *redis.Client {
 	})
 
 	if _, err := redisClient.Ping().Result(); err != nil {
-		exceptions.Cache.FailedToConnectToServer(&config.DB).WithError(err).Log().Panic()
+		exceptions.Cache.FailedToConnectToServer(&config.DB).WithOrigin(err).Log().Panic()
 	}
 
 	redisMapMutex.Lock()
@@ -73,7 +73,7 @@ func DisconnectToRedis(redisClient *redis.Client) bool {
 	}
 
 	if err := redisClient.Close(); err != nil {
-		exceptions.Cache.FailedToDisconnectToServer(&config.DB).WithError(err).Log()
+		exceptions.Cache.FailedToDisconnectToServer(&config.DB).WithOrigin(err).Log()
 		return false // since the server is just going to stop anyway, we don't need to panic here
 	}
 
@@ -180,7 +180,7 @@ func LoadRateLimitRecordCacheLibraries() *exceptions.Exception {
 		if err := redisClient.Do("FUNCTION", "LOAD", "REPLACE", redislibraries.RateLimitRecordLibraryContent).Err(); err != nil {
 			return exceptions.Cache.FailedToLoadRedisFunctions().
 				WithDetails(fmt.Sprintf("Failed to load functions from lua scripts in server %s of %d", serverName, serverNumber)).
-				WithError(err)
+				WithOrigin(err)
 		}
 
 		logs.FInfo(traces.GetTrace(0).FileLineString(), "Reloaded all the functions in library of %s from lua scripts in server %s of %d",
@@ -203,7 +203,7 @@ func LoadUserQuotaCacheLibraries() *exceptions.Exception {
 		if err := redisClient.Do("FUNCTION", "LOAD", "REPLACE", redislibraries.UserQuotaLibraryContent).Err(); err != nil {
 			return exceptions.Cache.FailedToLoadRedisFunctions().
 				WithDetails(fmt.Sprintf("Failed to load functions from lua scripts in server number of %d", serverNumber)).
-				WithError(err)
+				WithOrigin(err)
 		}
 
 		logs.FInfo(traces.GetTrace(0).FileLineString(), "Reloaded all the functions in library of %s from lua scripts in server number of %d",

@@ -149,7 +149,7 @@ func (r *BlockPackRepository) CheckPermissionAndGetOneById(
 	var blockPack schemas.BlockPack
 	result := query.First(&blockPack)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.BlockPack.NotFound().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.BlockPack.NotFound().WithOrigin(result.Error)},
 		{First: blockPack.Id == uuid.Nil, Second: exceptions.BlockPack.NotFound()},
 	}); exception != nil {
 		return nil, exception
@@ -195,7 +195,7 @@ func (r *BlockPackRepository) CheckPermissionsAndGetManyByIds(
 	var blockPacks []schemas.BlockPack
 	result := query.Find(&blockPacks)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.BlockPack.NotFound().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.BlockPack.NotFound().WithOrigin(result.Error)},
 		{First: len(blockPacks) == 0, Second: exceptions.BlockPack.NotFound()},
 	}); exception != nil {
 		return nil, exception
@@ -248,7 +248,7 @@ func (r *BlockPackRepository) CheckPermissionAndGetOneWithOwnerIdById(
 	}
 	result := query.First(&blockPackWithOwnerId)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.BlockPack.NotFound().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.BlockPack.NotFound().WithOrigin(result.Error)},
 		{First: blockPackWithOwnerId.OwnerId == uuid.Nil, Second: exceptions.BlockPack.NotFound()},
 	}); exception != nil {
 		return nil, nil, exception
@@ -301,7 +301,7 @@ func (r *BlockPackRepository) CheckPermissionsAndGetManyWithOwnerIdsByIds(
 	}
 	result := query.Find(&blockPacksWithOwnerIds)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.BlockPack.NotFound().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.BlockPack.NotFound().WithOrigin(result.Error)},
 		{First: len(blockPacksWithOwnerIds) == 0, Second: exceptions.BlockPack.NotFound()},
 	}); exception != nil {
 		return nil, nil, exception
@@ -368,7 +368,7 @@ func (r *BlockPackRepository) CreateOneBySubShelfId(
 
 	var newBlockPack schemas.BlockPack
 	if err := copier.Copy(&newBlockPack, &input); err != nil {
-		return nil, exceptions.BlockPack.FailedToCreate().WithError(err)
+		return nil, exceptions.BlockPack.FailedToCreate().WithOrigin(err)
 	}
 	newBlockPack.ParentSubShelfId = subShelfId
 
@@ -377,7 +377,7 @@ func (r *BlockPackRepository) CreateOneBySubShelfId(
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newBlockPack)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToCreate().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToCreate().WithOrigin(result.Error)},
 		{First: createdBlockPack.Id == uuid.Nil, Second: exceptions.BlockPack.FailedToCreate()},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
@@ -431,7 +431,7 @@ func (r *BlockPackRepository) UpdateOneById(
 			input.Values,
 			input.SetNull,
 			*existingBlockPack,
-		).WithError(err)
+		).WithOrigin(err)
 	}
 
 	result := parsedOptions.DB.Model(&schemas.BlockPack{}).
@@ -439,7 +439,7 @@ func (r *BlockPackRepository) UpdateOneById(
 		Select("*").
 		Updates(&updates)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToUpdate().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
 		return nil, exception
@@ -478,7 +478,7 @@ func (r *BlockPackRepository) RestoreSoftDeletedOneById(
 		Where("id = ? AND deleted_at IS NOT NULL", id).
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToUpdate().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
 		return nil, exception
@@ -521,7 +521,7 @@ func (r *BlockPackRepository) RestoreSoftDeletedManyByIds(
 		Where("id IN ? AND deleted_at IS NOT NULL", ids).
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToUpdate().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
 		return nil, exception
@@ -558,7 +558,7 @@ func (r *BlockPackRepository) SoftDeleteOneById(
 		Where("id = ? AND deleted_at IS NULL", id).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToDelete().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToDelete().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
 		return exception
@@ -599,7 +599,7 @@ func (r *BlockPackRepository) SoftDeleteManyByIds(
 		Where("id IN ? AND deleted_at IS NULL", ids).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToDelete().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToDelete().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
 		return exception
@@ -636,7 +636,7 @@ func (r *BlockPackRepository) HardDeleteOneById(
 		Where("id = ? AND deleted_at IS NOT NULL", id).
 		Delete(&schemas.BlockPack{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToDelete().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToDelete().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
 		return exception
@@ -677,7 +677,7 @@ func (r *BlockPackRepository) HardDeleteManyByIds(
 		Where("id IN ? AND deleted_at IS NOT NULL", ids).
 		Delete(&schemas.BlockPack{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToDelete().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToDelete().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
 		return exception

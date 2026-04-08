@@ -115,12 +115,12 @@ func GetRateLimitRecordCacheByFingerprint(
 	formattedKey := formatRateLimitKeyByFingerprint(fingerprint)
 	cacheString, err := redisClient.Get(formattedKey).Result()
 	if err != nil {
-		return nil, exceptions.Cache.NotFound(string(types.ValidCachePurpose_RateLimite)).WithError(err)
+		return nil, exceptions.Cache.NotFound(string(types.ValidCachePurpose_RateLimite)).WithOrigin(err)
 	}
 
 	var rateLimitRecordCache RateLimitRecordCache
 	if err := json.Unmarshal([]byte(cacheString), &rateLimitRecordCache); err != nil {
-		return nil, exceptions.Cache.FailedToConvertJsonToStruct().WithError(err)
+		return nil, exceptions.Cache.FailedToConvertJsonToStruct().WithOrigin(err)
 	}
 
 	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully get the cached rate limit in the server with server number of %d", serverNumber)
@@ -144,7 +144,7 @@ func SetRateLimitRecordCacheByFingerprint(
 
 	rateLimitJson, err := json.Marshal(rateLimitRecordCache)
 	if err != nil {
-		return exceptions.Cache.FailedToConvertJsonToStruct().WithError(err)
+		return exceptions.Cache.FailedToConvertJsonToStruct().WithOrigin(err)
 	}
 
 	expirationTime := calculateExpirationTimeByFinerprint(
@@ -155,7 +155,7 @@ func SetRateLimitRecordCacheByFingerprint(
 
 	formattedKey := formatRateLimitKeyByFingerprint(fingerprint)
 	if err = redisClient.Set(formattedKey, string(rateLimitJson), expirationTime).Err(); err != nil {
-		return exceptions.Cache.FailedToCreate(types.ValidCachePurpose_RateLimite.String()).WithError(err)
+		return exceptions.Cache.FailedToCreate(types.ValidCachePurpose_RateLimite.String()).WithOrigin(err)
 	}
 
 	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully set the cached rate limit record in the server with server number of %d", serverNumber)
@@ -197,7 +197,7 @@ func UpdateSyncrhronizeRateLimitRecordCacheByFingerprint(
 
 	rateLimitJson, err := json.Marshal(rateLimitRecordCache)
 	if err != nil {
-		return exceptions.Cache.FailedToConvertStructToJson().WithError(err)
+		return exceptions.Cache.FailedToConvertStructToJson().WithOrigin(err)
 	}
 
 	newExpirationTime := calculateExpirationTimeByFinerprint(
@@ -208,7 +208,7 @@ func UpdateSyncrhronizeRateLimitRecordCacheByFingerprint(
 
 	formattedKey := formatRateLimitKeyByFingerprint(fingerprint)
 	if err = redisClient.Set(formattedKey, string(rateLimitJson), newExpirationTime).Err(); err != nil {
-		return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_RateLimite.String()).WithError(err)
+		return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_RateLimite.String()).WithOrigin(err)
 	}
 
 	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully update the cached rate limit record in the server with server number of %d", serverNumber)
@@ -231,7 +231,7 @@ func DeleteRateLimitRecordCacheByFingerprint(
 
 	formattedKey := formatRateLimitKeyByFingerprint(fingerprint)
 	if err := redisClient.Del(formattedKey).Err(); err != nil {
-		return exceptions.Cache.FailedToDelete(types.ValidCachePurpose_RateLimite.String()).WithError(err)
+		return exceptions.Cache.FailedToDelete(types.ValidCachePurpose_RateLimite.String()).WithOrigin(err)
 	}
 
 	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully delete the cached rate limit record in the server with server number of %d", serverNumber)
@@ -277,7 +277,7 @@ func BatchSynchronizeRateLimitRecordCachesByFingerprints(
 	arguments = append(arguments, keys...)
 	arguments = append(arguments, argv...)
 	if _, err := redisClient.Do(arguments...).Result(); err != nil {
-		return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_RateLimite.String()).WithError(err)
+		return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_RateLimite.String()).WithOrigin(err)
 	}
 
 	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully batch update cached rate limit records in the server with server number of %d", serverNumber)
@@ -314,7 +314,7 @@ func BatchDeleteRateLimiteCachesByFingerprints(
 	}
 	arguments = append(arguments, keys...)
 	if _, err := redisClient.Do(arguments...).Result(); err != nil {
-		return exceptions.Cache.FailedToDelete(types.ValidCachePurpose_RateLimite.String()).WithError(err)
+		return exceptions.Cache.FailedToDelete(types.ValidCachePurpose_RateLimite.String()).WithOrigin(err)
 	}
 
 	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully batch delete cached rate limit records in the server with server number of %d", serverNumber)
@@ -337,12 +337,12 @@ func GetRateLimitRecordCacheByUserId(userId uuid.UUID, backendServerName types.B
 	formattedKey := formateRateLimitKeyByUserId(userId)
 	cacheString, err := redisClient.Get(formattedKey).Result()
 	if err != nil {
-		return nil, exceptions.Cache.NotFound(string(types.ValidCachePurpose_RateLimite)).WithError(err)
+		return nil, exceptions.Cache.NotFound(string(types.ValidCachePurpose_RateLimite)).WithOrigin(err)
 	}
 
 	var rateLimitRecordCache RateLimitRecordCache
 	if err := json.Unmarshal([]byte(cacheString), &rateLimitRecordCache); err != nil {
-		return nil, exceptions.Cache.FailedToConvertJsonToStruct().WithError(err)
+		return nil, exceptions.Cache.FailedToConvertJsonToStruct().WithOrigin(err)
 	}
 
 	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully get the cached rate limit in the server with server number of %d", serverNumber)
@@ -362,7 +362,7 @@ func SetRateLimitRecordCacheByUserId(userId uuid.UUID, backendServerName types.B
 
 	rateLimitJson, err := json.Marshal(rateLimitRecordCache)
 	if err != nil {
-		return exceptions.Cache.FailedToConvertJsonToStruct().WithError(err)
+		return exceptions.Cache.FailedToConvertJsonToStruct().WithOrigin(err)
 	}
 
 	expirationTime := calculateExpirationTimeByUserId(
@@ -373,7 +373,7 @@ func SetRateLimitRecordCacheByUserId(userId uuid.UUID, backendServerName types.B
 
 	formattedKey := formateRateLimitKeyByUserId(userId)
 	if err = redisClient.Set(formattedKey, string(rateLimitJson), expirationTime).Err(); err != nil {
-		return exceptions.Cache.FailedToCreate(types.ValidCachePurpose_RateLimite.String()).WithError(err)
+		return exceptions.Cache.FailedToCreate(types.ValidCachePurpose_RateLimite.String()).WithOrigin(err)
 	}
 
 	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully set the cached rate limit record in the server with server number of %d", serverNumber)
@@ -411,7 +411,7 @@ func UpdateRateLimitRecordCacheByUserId(userId uuid.UUID, backendServerName type
 
 	rateLimitJson, err := json.Marshal(rateLimitRecordCache)
 	if err != nil {
-		return exceptions.Cache.FailedToConvertStructToJson().WithError(err)
+		return exceptions.Cache.FailedToConvertStructToJson().WithOrigin(err)
 	}
 
 	newExpirationTime := calculateExpirationTimeByUserId(
@@ -422,7 +422,7 @@ func UpdateRateLimitRecordCacheByUserId(userId uuid.UUID, backendServerName type
 
 	formattedKey := formateRateLimitKeyByUserId(userId)
 	if err = redisClient.Set(formattedKey, string(rateLimitJson), newExpirationTime).Err(); err != nil {
-		return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_RateLimite.String()).WithError(err)
+		return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_RateLimite.String()).WithOrigin(err)
 	}
 
 	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully update the cached rate limit record in the server with server number of %d", serverNumber)
@@ -442,7 +442,7 @@ func DeleteRateLimitRecordCacheByUserId(userId uuid.UUID, backendServerName type
 
 	formattedKey := formateRateLimitKeyByUserId(userId)
 	if err := redisClient.Del(formattedKey).Err(); err != nil {
-		return exceptions.Cache.FailedToDelete(types.ValidCachePurpose_RateLimite.String()).WithError(err)
+		return exceptions.Cache.FailedToDelete(types.ValidCachePurpose_RateLimite.String()).WithOrigin(err)
 	}
 
 	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully delete the cached rate limit record in the server with server number of %d", serverNumber)
@@ -489,7 +489,7 @@ func BatchSynchronizeRateLimitRecordCachesByUserIds(
 	arguments = append(arguments, keys...)
 	arguments = append(arguments, argv...)
 	if _, err := redisClient.Do(arguments...).Result(); err != nil {
-		return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_RateLimite.String()).WithError(err)
+		return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_RateLimite.String()).WithOrigin(err)
 	}
 
 	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully batch update cached rate limit records in the server with server number of %d", serverNumber)
@@ -526,7 +526,7 @@ func BatchDeleteRateLimiteCachesByUserIds(userIds []uuid.UUID, backendServerName
 	arguments = append(arguments, redislibraries.BatchDeleteRateLimitRecordByFormattedKeysFunction)
 	arguments = append(arguments, keys...)
 	if _, err := redisClient.Do(arguments...).Result(); err != nil {
-		return exceptions.Cache.FailedToDelete(types.ValidCachePurpose_RateLimite.String()).WithError(err)
+		return exceptions.Cache.FailedToDelete(types.ValidCachePurpose_RateLimite.String()).WithOrigin(err)
 	}
 
 	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully delete cached rate limit records in the server with server number of %d", serverNumber)

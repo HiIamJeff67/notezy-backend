@@ -53,7 +53,7 @@ func (s *UserAccountService) GetMyAccount(
 	ctx context.Context, reqDto *dtos.GetMyAccountReqDto,
 ) (*dtos.GetMyAccountResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.UserAccount.InvalidDto().WithError(err)
+		return nil, exceptions.UserAccount.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -85,7 +85,7 @@ func (s *UserAccountService) UpdateMyAccount(
 	ctx context.Context, reqDto *dtos.UpdateMyAccountReqDto,
 ) (*dtos.UpdateMyAccountResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.UserAccount.InvalidDto().WithError(err)
+		return nil, exceptions.UserAccount.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -94,7 +94,7 @@ func (s *UserAccountService) UpdateMyAccount(
 		Where("user_id = ? AND auth_code = ?", reqDto.ContextFields.UserId, reqDto.Body.AuthCode).
 		First(&schemas.UserAccount{})
 	if err := result.Error; err != nil {
-		return nil, exceptions.UserAccount.NotFound().WithError(err)
+		return nil, exceptions.UserAccount.NotFound().WithOrigin(err)
 	}
 
 	_, exception := s.userAccountRepository.UpdateOneByUserId(
@@ -124,7 +124,7 @@ func (s *UserAccountService) BindGoogleAccount(
 	ctx context.Context, reqDto *dtos.BindGoogleAccountReqDto,
 ) (*dtos.BindGoogleAccountResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Auth.InvalidDto().WithError(err)
+		return nil, exceptions.Auth.InvalidDto().WithOrigin(err)
 	}
 
 	// Start transaction
@@ -171,7 +171,7 @@ func (s *UserAccountService) UnbindGoogleAccount(
 	ctx context.Context, reqDto *dtos.UnbindGoogleAccountReqDto,
 ) (*dtos.UnbindGoogleAccountResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Auth.InvalidDto().WithError(err)
+		return nil, exceptions.Auth.InvalidDto().WithOrigin(err)
 	}
 
 	// Start transaction
@@ -181,7 +181,7 @@ func (s *UserAccountService) UnbindGoogleAccount(
 		Where("user_id = ? AND auth_code = ?", reqDto.ContextFields.UserId, reqDto.Body.AuthCode).
 		First(&schemas.UserAccount{})
 	if err := result.Error; err != nil {
-		return nil, exceptions.UserAccount.NotFound().WithError(err)
+		return nil, exceptions.UserAccount.NotFound().WithOrigin(err)
 	}
 
 	_, exception := s.userAccountRepository.UpdateOneByUserId(

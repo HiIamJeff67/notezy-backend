@@ -48,12 +48,12 @@ func (b *BlockPackBinder) BindGetMyBlockPackById(controllerFunc types.Controller
 
 		blockPackIdString := ctx.Query("blockPackId")
 		if blockPackIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("blockPackId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("blockPackId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		blockPackId, err := uuid.Parse(blockPackIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.BlockPackId = blockPackId
@@ -77,12 +77,12 @@ func (b *BlockPackBinder) BindGetMyBlockPackAndItsParentById(controllerFunc type
 
 		blockPackIdString := ctx.Query("blockPackId")
 		if blockPackIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("blockPackId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("blockPackId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		blockPackId, err := uuid.Parse(blockPackIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.BlockPackId = blockPackId
@@ -106,12 +106,12 @@ func (b *BlockPackBinder) BindGetMyBlockPacksByParentSubShelfId(controllerFunc t
 
 		parentSubShelfIdString := ctx.Query("parentSubShelfId")
 		if parentSubShelfIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("parentSubShelfId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("parentSubShelfId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		parentSubShelfId, err := uuid.Parse(parentSubShelfIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.ParentSubShelfId = parentSubShelfId
@@ -135,12 +135,12 @@ func (b *BlockPackBinder) BindGetAllMyBlockPacksByRootShelfId(controllerFunc typ
 
 		rootShelfIdString := ctx.Query("rootShelfId")
 		if rootShelfIdString == "" {
-			exceptions.Shelf.InvalidInput().WithError(fmt.Errorf("rootShelfId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("rootShelfId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		rootShelfId, err := uuid.Parse(rootShelfIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidInput().WithError(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.RootShelfId = rootShelfId
@@ -163,7 +163,7 @@ func (b *BlockPackBinder) BindCreateBlockPack(controllerFunc types.ControllerFun
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.BlockPack.InvalidDto().WithError(err)
+			exception := exceptions.BlockPack.InvalidDto().WithOrigin(err)
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -186,7 +186,7 @@ func (b *BlockPackBinder) BindUpdateMyBlockPackById(controllerFunc types.Control
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.BlockPack.InvalidDto().WithError(err)
+			exception := exceptions.BlockPack.InvalidDto().WithOrigin(err)
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -209,7 +209,7 @@ func (b *BlockPackBinder) BindMoveMyBlockPackById(controllerFunc types.Controlle
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.BlockPack.InvalidDto().WithError(err)
+			exception := exceptions.BlockPack.InvalidDto().WithOrigin(err)
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -232,7 +232,7 @@ func (b *BlockPackBinder) BindMoveMyBlockPacksByIds(controllerFunc types.Control
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.BlockPack.InvalidDto().WithError(err)
+			exception := exceptions.BlockPack.InvalidDto().WithOrigin(err)
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -255,7 +255,7 @@ func (b *BlockPackBinder) BindRestoreMyBlockPackById(controllerFunc types.Contro
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.BlockPack.InvalidDto().WithError(err)
+			exception := exceptions.BlockPack.InvalidDto().WithOrigin(err)
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -278,7 +278,7 @@ func (b *BlockPackBinder) BindRestoreMyBlockPacksByIds(controllerFunc types.Cont
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.BlockPack.InvalidDto().WithError(err)
+			exception := exceptions.BlockPack.InvalidDto().WithOrigin(err)
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -301,7 +301,7 @@ func (b *BlockPackBinder) BindDeleteMyBlockPackById(controllerFunc types.Control
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.BlockPack.InvalidDto().WithError(err)
+			exception := exceptions.BlockPack.InvalidDto().WithOrigin(err)
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
@@ -324,7 +324,7 @@ func (b *BlockPackBinder) BindDeleteMyBlockPacksByIds(controllerFunc types.Contr
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.BlockPack.InvalidDto().WithError(err)
+			exception := exceptions.BlockPack.InvalidDto().WithOrigin(err)
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}

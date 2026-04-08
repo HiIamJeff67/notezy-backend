@@ -162,7 +162,7 @@ func (r *BlockRepository) CheckPermissionAndGetOneById(
 	var block schemas.Block
 	result := query.First(&block)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Block.NotFound().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.Block.NotFound().WithOrigin(result.Error)},
 		{First: block.Id == uuid.Nil, Second: exceptions.BlockPack.NotFound()},
 	}); exception != nil {
 		return nil, exception
@@ -210,7 +210,7 @@ func (r *BlockRepository) CheckPermissionsAndGetManyByIds(
 	var blocks []schemas.Block
 	result := query.Find(&blocks)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Block.NotFound().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.Block.NotFound().WithOrigin(result.Error)},
 		{First: len(blocks) == 0, Second: exceptions.BlockPack.NotFound()},
 	}); exception != nil {
 		return nil, exception
@@ -271,7 +271,7 @@ func (r *BlockRepository) CreateOneByBlockGroupId(
 
 	var newBlock schemas.Block
 	if err := copier.Copy(&newBlock, &input); err != nil {
-		return nil, exceptions.Block.InvalidInput().WithError(err)
+		return nil, exceptions.Block.InvalidInput().WithOrigin(err)
 	}
 	newBlock.BlockGroupId = blockGroupId
 
@@ -280,7 +280,7 @@ func (r *BlockRepository) CreateOneByBlockGroupId(
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newBlock)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Block.FailedToCreate().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.Block.FailedToCreate().WithOrigin(result.Error)},
 		{First: createdBlock.Id == uuid.Nil, Second: exceptions.Block.FailedToCreate()},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
@@ -326,7 +326,7 @@ func (r *BlockRepository) CreateManyByBlockGroupId(
 	for index, in := range input {
 		var newBlock schemas.Block
 		if err := copier.Copy(&newBlock, &in); err != nil {
-			return nil, exceptions.Block.InvalidInput().WithError(err)
+			return nil, exceptions.Block.InvalidInput().WithOrigin(err)
 		}
 		newBlock.BlockGroupId = blockGroupId
 		newBlocks[index] = newBlock
@@ -336,7 +336,7 @@ func (r *BlockRepository) CreateManyByBlockGroupId(
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		CreateInBatches(&newBlocks, parsedOptions.BatchSize)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Block.FailedToCreate().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.Block.FailedToCreate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
 		return nil, exception
@@ -392,7 +392,7 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 				for _, inputBlock := range in.Blocks {
 					var newBlock schemas.Block
 					if err := copier.Copy(&newBlock, &inputBlock); err != nil {
-						return nil, exceptions.Block.InvalidInput().WithError(err)
+						return nil, exceptions.Block.InvalidInput().WithOrigin(err)
 					}
 					newBlock.BlockGroupId = in.BlockGroupId
 					newBlocks = append(newBlocks, newBlock)
@@ -404,7 +404,7 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 			Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 			CreateInBatches(&newBlocks, parsedOptions.BatchSize)
 		if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-			{First: result.Error != nil, Second: exceptions.Block.FailedToCreate().WithError(result.Error)},
+			{First: result.Error != nil, Second: exceptions.Block.FailedToCreate().WithOrigin(result.Error)},
 			{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 		}); exception != nil {
 			return nil, exception
@@ -418,7 +418,7 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 		for _, inputBlock := range in.Blocks {
 			var newBlock schemas.Block
 			if err := copier.Copy(&newBlock, &inputBlock); err != nil {
-				return nil, exceptions.Block.InvalidInput().WithError(err)
+				return nil, exceptions.Block.InvalidInput().WithOrigin(err)
 			}
 			newBlock.BlockGroupId = in.BlockGroupId
 			newBlocks = append(newBlocks, newBlock)
@@ -429,7 +429,7 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		CreateInBatches(&newBlocks, parsedOptions.BatchSize)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Block.FailedToCreate().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.Block.FailedToCreate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
 		return nil, exception
@@ -473,7 +473,7 @@ func (r *BlockRepository) UpdateOneById(
 			input.Values,
 			input.SetNull,
 			*existingBlock,
-		).WithError(err)
+		).WithOrigin(err)
 	}
 
 	result := parsedOptions.DB.Model(&schemas.Block{}).
@@ -481,7 +481,7 @@ func (r *BlockRepository) UpdateOneById(
 		Select("*").
 		Updates(&updates)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Block.FailedToUpdate().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.Block.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
 		return nil, exception
@@ -528,9 +528,10 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 				}
 			}
 		}
-		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::jsonb, ?::jsonb, ?::uuid, ?::uuid, ?::boolean)")
+		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::\"BlockType\", ?::jsonb, ?::jsonb, ?::uuid, ?::uuid, ?::boolean)")
 		valueArgs = append(valueArgs,
 			input.Id,
+			input.PartialUpdateInput.Values.Type,
 			input.PartialUpdateInput.Values.Props,
 			input.PartialUpdateInput.Values.Content,
 			input.PartialUpdateInput.Values.BlockGroupId,
@@ -542,6 +543,7 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 	sql := fmt.Sprintf(`
 		UPDATE "BlockTable" AS b
 		SET
+			type = COALESCE(v.type::"BlockType", b.type),
 			props = COALESCE(v.props::jsonb, b.props),
 			content = COALESCE(v.content::jsonb, b.content),
 			block_group_id = COALESCE(v.block_group_id::uuid, b.block_group_id),
@@ -550,12 +552,12 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 				ELSE COALESCE(v.parent_block_id::uuid, b.parent_block_id)
 			END,
 			updated_at = NOW()
-		FROM (VALUES %s) AS v(id, props, content, block_group_id, parent_block_id, set_parent_block_id_null)
+		FROM (VALUES %s) AS v(id, type, props, content, block_group_id, parent_block_id, set_parent_block_id_null)
 		WHERE b.id = v.id::uuid AND b.deleted_at IS NULL
 	`, strings.Join(valuePlaceholders, ","))
 	result := parsedOptions.DB.Exec(sql, valueArgs...)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Block.FailedToUpdate().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.Block.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
 		return exception
@@ -595,7 +597,7 @@ func (r *BlockRepository) RestoreSoftDeletedOneById(
 		Where("id = ? AND deleted_at IS NOT NULL", id).
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Block.FailedToUpdate().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.Block.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
 		return nil, exception
@@ -639,7 +641,7 @@ func (r *BlockRepository) RestoreSoftDeletedManyByIds(
 		Where("id IN ? AND deleted_at IS NOT NULL", ids).
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Block.FailedToUpdate().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.Block.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
 		return nil, exception
@@ -679,7 +681,7 @@ func (r *BlockRepository) SoftDeleteOneById(
 		Where("id = ? AND deleted_at IS NULL", id).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Block.FailedToUpdate().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.Block.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
 		return nil, exception
@@ -723,7 +725,7 @@ func (r *BlockRepository) SoftDeleteManyByIds(
 		Where("id IN ? AND deleted_at IS NULL", ids).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Block.FailedToUpdate().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.Block.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
 		return nil, exception
@@ -761,7 +763,7 @@ func (r *BlockRepository) HardDeleteOneById(
 		Where("id = ? AND deleted_at IS NOT NULL", id).
 		Delete(&schemas.Block{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Block.FailedToDelete().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.Block.FailedToDelete().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
 		return exception
@@ -803,7 +805,7 @@ func (r *BlockRepository) HardDeleteManyByIds(
 		Where("id IN ? AND deleted_at IS NOT NULL", ids).
 		Delete(&schemas.Block{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Block.FailedToDelete().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.Block.FailedToDelete().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
 		return exception

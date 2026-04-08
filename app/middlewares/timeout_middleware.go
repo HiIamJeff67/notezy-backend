@@ -98,7 +98,7 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 
 			if currentBufferPool.Len() > 0 {
 				if _, err := writer.ResponseWriter.Write(currentBufferPool.Bytes()); err != nil {
-					exceptions.FatalPanic().WithError(err).SafelyAbortAndResponseWithJSON(ctx)
+					exceptions.FatalPanic().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
 				}
 			}
 
@@ -116,10 +116,10 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 				writer.ResponseWriter.WriteHeader(exception.HTTPStatusCode)
 				timeoutResponseBody, err := exception.GetResponseJSONBytes()
 				if err != nil {
-					exceptions.FatalPanic().WithError(err).SafelyAbortAndResponseWithJSON(ctx)
+					exceptions.FatalPanic().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
 				}
 				if _, err := writer.ResponseWriter.Write(timeoutResponseBody); err != nil {
-					exceptions.FatalPanic().WithError(err).SafelyAbortAndResponseWithJSON(
+					exceptions.FatalPanic().WithOrigin(err).SafelyAbortAndResponseWithJSON(
 						ctx, metrics.MetricNames.Server.Responses.Failed.Timeout,
 					)
 				}
@@ -139,10 +139,10 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 				writer.ResponseWriter.WriteHeader(exception.HTTPStatusCode)
 				timeoutResponseBody, err := exception.GetResponseJSONBytes()
 				if err != nil {
-					exceptions.FatalPanic().WithError(err).SafelyAbortAndResponseWithJSON(ctx)
+					exceptions.FatalPanic().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
 				}
 				if _, err := writer.ResponseWriter.Write(timeoutResponseBody); err != nil {
-					exceptions.FatalPanic().WithError(err).SafelyAbortAndResponseWithJSON(
+					exceptions.FatalPanic().WithOrigin(err).SafelyAbortAndResponseWithJSON(
 						ctx, metrics.MetricNames.Server.Responses.Failed.Timeout,
 					)
 				}

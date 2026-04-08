@@ -224,7 +224,7 @@ func (ewm *EmailWorkerManager) Enqueue(
 	}
 	err := ewm.enqueueTask(task)
 	if err != nil {
-		return exceptions.Email.FailedToEnqueueTaskToEmailWorkerManager().WithError(err)
+		return exceptions.Email.FailedToEnqueueTaskToEmailWorkerManager().WithOrigin(err)
 	}
 
 	return nil

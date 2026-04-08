@@ -56,7 +56,7 @@ func (s *UserService) GetUserData(
 	ctx context.Context, reqDto *dtos.GetUserDataReqDto,
 ) (*dtos.GetUserDataResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
 	userDataCache, exception := caches.GetUserDataCache(reqDto.ContextFields.UserId)
@@ -71,7 +71,7 @@ func (s *UserService) GetMe(
 	ctx context.Context, reqDto *dtos.GetMeReqDto,
 ) (*dtos.GetMeResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -101,7 +101,7 @@ func (s *UserService) UpdateMe(
 	ctx context.Context, reqDto *dtos.UpdateMeReqDto,
 ) (*dtos.UpdateMeResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithError(err)
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -158,7 +158,7 @@ func (s *UserService) GetPublicUserByPublicId(
 		Where("public_id = ?", publicId).
 		First(&user)
 	if err := result.Error; err != nil {
-		return nil, exceptions.User.NotFound().WithError(err)
+		return nil, exceptions.User.NotFound().WithOrigin(err)
 	}
 
 	return user.ToPublicUser(), nil
@@ -195,7 +195,7 @@ func (s *UserService) GetPublicAuthorByThemePublicIds(
 		Where("t.public_id IN ?", uniquePublicIds).
 		Find(&authorsWithPublicThemeIds)
 	if err := result.Error; err != nil {
-		return nil, exceptions.User.NotFound().WithError(err)
+		return nil, exceptions.User.NotFound().WithOrigin(err)
 	}
 
 	publicIdToIndexesMap := make(map[string][]int)
@@ -231,7 +231,7 @@ func (s *UserService) SearchPublicUsers(
 	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
 		searchCursor, err := searchcursor.Decode[gqlmodels.SearchUserCursorFields](*gqlInput.After)
 		if err != nil {
-			return nil, exceptions.Search.FailedToDecode().WithError(err)
+			return nil, exceptions.Search.FailedToDecode().WithOrigin(err)
 		}
 
 		query.Where("public_id > ?", searchCursor.Fields.PublicID)
@@ -272,7 +272,7 @@ func (s *UserService) SearchPublicUsers(
 
 	var users []schemas.User
 	if err := query.Find(&users).Error; err != nil {
-		return nil, exceptions.User.NotFound().WithError(err)
+		return nil, exceptions.User.NotFound().WithOrigin(err)
 	}
 
 	hasNextPage := len(users) > limit // since we fetch an additional one
@@ -286,7 +286,7 @@ func (s *UserService) SearchPublicUsers(
 		}
 		encodedSearchCursor, err := searchCursor.Encode()
 		if err != nil {
-			return nil, exceptions.Search.FailedToEncode().WithError(err)
+			return nil, exceptions.Search.FailedToEncode().WithOrigin(err)
 		}
 		if encodedSearchCursor == nil {
 			return nil, exceptions.Search.FailedToUnmarshalSearchCursor()

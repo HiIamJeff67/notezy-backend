@@ -70,7 +70,7 @@ func (s *SubShelfService) GetMySubShelfById(
 	ctx context.Context, reqDto *dtos.GetMySubShelfByIdReqDto,
 ) (*dtos.GetMySubShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidDto().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -102,7 +102,7 @@ func (s *SubShelfService) GetMySubShelvesByPrevSubShelfId(
 	ctx context.Context, reqDto *dtos.GetMySubShelvesByPrevSubShelfIdReqDto,
 ) (*dtos.GetMySubShelvesByPrevSubShelfIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidDto().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -129,7 +129,7 @@ func (s *SubShelfService) GetMySubShelvesByPrevSubShelfId(
 		Limit(int(constants.MaxSubShelvesOfSubShelf)).
 		Find(&resDto)
 	if err := result.Error; err != nil {
-		return nil, exceptions.Shelf.NotFound().WithError(err)
+		return nil, exceptions.Shelf.NotFound().WithOrigin(err)
 	}
 
 	return &resDto, nil
@@ -139,7 +139,7 @@ func (s *SubShelfService) GetAllMySubShelvesByRootShelfId(
 	ctx context.Context, reqDto *dtos.GetAllMySubShelvesByRootShelfIdReqDto,
 ) (*dtos.GetAllMySubShelvesByRootShelfIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidDto().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -166,7 +166,7 @@ func (s *SubShelfService) GetAllMySubShelvesByRootShelfId(
 		Limit(int(constants.MaxSubShelvesOfSubShelf)).
 		Find(&resDto)
 	if err := result.Error; err != nil {
-		return nil, exceptions.Shelf.NotFound().WithError(err)
+		return nil, exceptions.Shelf.NotFound().WithOrigin(err)
 	}
 
 	return &resDto, nil
@@ -176,7 +176,7 @@ func (s *SubShelfService) GetMySubShelvesAndItemsByPrevSubShelfId(
 	ctx context.Context, reqDto *dtos.GetMySubShelvesAndItemsByPrevSubShelfIdReqDto,
 ) (*dtos.GetMySubShelvesAndItemsByPrevSubShelfIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidDto().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -203,7 +203,7 @@ func (s *SubShelfService) GetMySubShelvesAndItemsByPrevSubShelfId(
 		Limit(int(constants.MaxSubShelvesOfSubShelf)).
 		Find(&resDto.SubShelves)
 	if err := resultOfGettingSubShelves.Error; err != nil {
-		return nil, exceptions.Shelf.NotFound().WithError(err)
+		return nil, exceptions.Shelf.NotFound().WithOrigin(err)
 	}
 
 	materials := []schemas.Material{}
@@ -219,7 +219,7 @@ func (s *SubShelfService) GetMySubShelvesAndItemsByPrevSubShelfId(
 		Limit(int(constants.MaxMaterialsOfSubShelf)).
 		Find(&materials)
 	if err := resultOfGettingMaterials.Error; err != nil {
-		return nil, exceptions.Material.NotFound().WithError(err)
+		return nil, exceptions.Material.NotFound().WithOrigin(err)
 	}
 
 	for _, material := range materials {
@@ -251,7 +251,7 @@ func (s *SubShelfService) GetMySubShelvesAndItemsByPrevSubShelfId(
 		Limit(int(constants.MaxBlockPackOfSubShelf)).
 		Scan(&resDto.BlockPacks)
 	if err := resultOfGettingBlockPacks.Error; err != nil {
-		return nil, exceptions.BlockPack.NotFound().WithError(err)
+		return nil, exceptions.BlockPack.NotFound().WithOrigin(err)
 	}
 
 	return &resDto, nil
@@ -261,7 +261,7 @@ func (s *SubShelfService) CreateSubShelfByRootShelfId(
 	ctx context.Context, reqDto *dtos.CreateSubShelfByRootShelfIdReqDto,
 ) (*dtos.CreateSubShelfByRootShelfIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidDto().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -289,7 +289,7 @@ func (s *SubShelfService) UpdateMySubShelfById(
 	ctx context.Context, reqDto *dtos.UpdateMySubShelfByIdReqDto,
 ) (*dtos.UpdateMySubShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidDto().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -318,7 +318,7 @@ func (s *SubShelfService) MoveMySubShelf(
 	ctx context.Context, reqDto *dtos.MoveMySubShelfReqDto,
 ) (*dtos.MoveMySubShelfResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidDto().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
 	if reqDto.Body.DestinationSubShelfId != nil &&
@@ -391,7 +391,7 @@ func (s *SubShelfService) MoveMySubShelf(
 			reqDto.Body.SourceSubShelfId,
 		)
 		if err := result.Error; err != nil {
-			return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
+			return nil, exceptions.Shelf.FailedToUpdate().WithOrigin(err)
 		}
 	} else {
 		result := db.Exec(`
@@ -401,7 +401,7 @@ func (s *SubShelfService) MoveMySubShelf(
 			reqDto.Body.DestinationRootShelfId, nil, pg.Array([]uuid.UUID{}), reqDto.Body.SourceSubShelfId,
 		)
 		if err := result.Error; err != nil {
-			return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
+			return nil, exceptions.Shelf.FailedToUpdate().WithOrigin(err)
 		}
 	}
 
@@ -414,7 +414,7 @@ func (s *SubShelfService) MoveMySubShelves(
 	ctx context.Context, reqDto *dtos.MoveMySubShelvesReqDto,
 ) (*dtos.MoveMySubShelvesResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidDto().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -502,7 +502,7 @@ func (s *SubShelfService) MoveMySubShelves(
 			reqDto.Body.DestinationRootShelfId, reqDto.Body.DestinationSubShelfId, pg.Array(to.Path), validSourceSubShelfIds,
 		)
 		if err := result.Error; err != nil {
-			return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
+			return nil, exceptions.Shelf.FailedToUpdate().WithOrigin(err)
 		}
 	} else {
 		validSourceSubShelfIds := []uuid.UUID{}
@@ -517,7 +517,7 @@ func (s *SubShelfService) MoveMySubShelves(
 			reqDto.Body.DestinationRootShelfId, nil, pg.Array([]uuid.UUID{}), validSourceSubShelfIds,
 		)
 		if err := result.Error; err != nil {
-			return nil, exceptions.Shelf.FailedToUpdate().WithError(err)
+			return nil, exceptions.Shelf.FailedToUpdate().WithOrigin(err)
 		}
 	}
 
@@ -530,7 +530,7 @@ func (s *SubShelfService) RestoreMySubShelfById(
 	ctx context.Context, reqDto *dtos.RestoreMySubShelfByIdReqDto,
 ) (*dtos.RestoreMySubShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidDto().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -560,7 +560,7 @@ func (s *SubShelfService) RestoreMySubShelvesByIds(
 	ctx context.Context, reqDto *dtos.RestoreMySubShelvesByIdsReqDto,
 ) (*dtos.RestoreMySubShelvesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidDto().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -594,7 +594,7 @@ func (s *SubShelfService) DeleteMySubShelfById(
 	ctx context.Context, reqDto *dtos.DeleteMySubShelfByIdReqDto,
 ) (*dtos.DeleteMySubShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidDto().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -617,7 +617,7 @@ func (s *SubShelfService) DeleteMySubShelvesByIds(
 	ctx context.Context, reqDto *dtos.DeleteMySubShelvesByIdsReqDto,
 ) (*dtos.DeleteMySubShelvesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidDto().WithError(err)
+		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)

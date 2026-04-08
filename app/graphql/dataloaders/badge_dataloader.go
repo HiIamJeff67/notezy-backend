@@ -88,7 +88,7 @@ func (d *BadgeDataloader) batchFunction() BadgeBatchFunctionType {
 					key := BadgeLoaderKey{PublicId: publicId, Source: source}
 					if _, exists := keyToIndexesMap[key]; exists {
 						for _, index := range keyToIndexesMap[key] {
-							results[index] = &BadgeResultType{Error: exception.Error}
+							results[index] = &BadgeResultType{Error: exception.Origin}
 						}
 					}
 				}

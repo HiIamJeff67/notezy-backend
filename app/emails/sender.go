@@ -41,7 +41,7 @@ func (s *EmailSender) AsyncSend(to string, subject string, body string, contentT
 
 	d := gomail.NewDialer(s.Host, s.Port, s.UserName, s.Password)
 	if err := d.DialAndSend(m); err != nil {
-		return exceptions.Email.FailedToSendEmailWithSubject(subject).WithError(err)
+		return exceptions.Email.FailedToSendEmailWithSubject(subject).WithOrigin(err)
 	}
 	return nil
 }

@@ -37,7 +37,7 @@ func (r *UserAccountRepository) GetOneByUserId(
 		Where("user_id = ?", userId).
 		First(&userAccount)
 	if err := result.Error; err != nil {
-		return nil, exceptions.UserAccount.NotFound().WithError(err)
+		return nil, exceptions.UserAccount.NotFound().WithOrigin(err)
 	}
 
 	return &userAccount, nil
@@ -54,14 +54,14 @@ func (r *UserAccountRepository) CreateOneByUserId(
 	newUserAccount.UserId = userId
 
 	if err := copier.Copy(&newUserAccount, &input); err != nil {
-		return nil, exceptions.UserAccount.FailedToCreate().WithError(err)
+		return nil, exceptions.UserAccount.FailedToCreate().WithOrigin(err)
 	}
 
 	result := parsedOptions.DB.Model(&schemas.UserAccount{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newUserAccount)
 	if err := result.Error; err != nil {
-		return nil, exceptions.UserAccount.FailedToCreate().WithError(err)
+		return nil, exceptions.UserAccount.FailedToCreate().WithOrigin(err)
 	}
 
 	return &newUserAccount.Id, nil
@@ -94,7 +94,7 @@ func (r *UserAccountRepository) UpdateOneByUserId(
 		Select("*").
 		Updates(&updates)
 	if err := result.Error; err != nil {
-		return nil, exceptions.UserAccount.FailedToUpdate().WithError(err)
+		return nil, exceptions.UserAccount.FailedToUpdate().WithOrigin(err)
 	}
 	if result.RowsAffected == 0 {
 		return nil, exceptions.UserAccount.NoChanges()

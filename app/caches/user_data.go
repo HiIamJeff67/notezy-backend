@@ -111,7 +111,7 @@ func ExtendUserDataCacheTTL(id uuid.UUID) *exceptions.Exception {
 
 	updated, err := redisClient.Expire(formattedKey, _userDataCacheExpiresIn).Result()
 	if err != nil {
-		return exceptions.Cache.FailedToUpdate("UserDataTTL").WithError(err)
+		return exceptions.Cache.FailedToUpdate("UserDataTTL").WithOrigin(err)
 	}
 
 	if !updated {
@@ -152,7 +152,7 @@ func CheckAndUpdateUserQuotaByFormattedKey(
 	arguments = append(arguments, keys...)
 	arguments = append(arguments, argv...)
 	if _, err := redisClient.Do(arguments...).Result(); err != nil {
-		return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_UserData.String()).WithError(err)
+		return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_UserData.String()).WithOrigin(err)
 	}
 
 	return nil
@@ -202,7 +202,7 @@ func BestEffortBatchCheckAndUpdateUserQuotasByFormattedKeys(
 		arguments = append(arguments, keys...)
 		arguments = append(arguments, argv...)
 		if _, err := redisClient.Do(arguments...).Result(); err != nil {
-			return exceptions.Cache.FailedToDelete(types.ValidCachePurpose_UserData.String()).WithError(err)
+			return exceptions.Cache.FailedToDelete(types.ValidCachePurpose_UserData.String()).WithOrigin(err)
 		}
 	}
 
@@ -243,7 +243,7 @@ func BestEffortBatchCheckAndUpdateUserQuotasByFormattedKey(
 	arguments = append(arguments, keys...)
 	arguments = append(arguments, argv...)
 	if _, err := redisClient.Do(arguments...).Result(); err != nil {
-		return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_UserData.String()).WithError(err)
+		return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_UserData.String()).WithOrigin(err)
 	}
 
 	return nil
@@ -262,13 +262,13 @@ func GetUserDataCache(id uuid.UUID) (*UserDataCache, *exceptions.Exception) {
 	formattedKey := formatUserDataKey(id)
 	cacheString, err := redisClient.Get(formattedKey).Result()
 	if err != nil {
-		return nil, exceptions.Cache.NotFound(string(types.ValidCachePurpose_UserData)).WithError(err)
+		return nil, exceptions.Cache.NotFound(string(types.ValidCachePurpose_UserData)).WithOrigin(err)
 	}
 
 	var userDataCache UserDataCache
 	if err := json.Unmarshal([]byte(cacheString), &userDataCache); err != nil {
 		// note that the json.Unmarshal() automatically return InvalidUnmarshalError if the userDataCache is nil
-		return nil, exceptions.Cache.FailedToConvertJsonToStruct().WithError(err)
+		return nil, exceptions.Cache.FailedToConvertJsonToStruct().WithOrigin(err)
 	}
 
 	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully get the cached user data in the server with server number of %d", serverNumber)
@@ -289,12 +289,12 @@ func SetUserDataCache(id uuid.UUID, userDataCache UserDataCache) *exceptions.Exc
 
 	userDataJson, err := json.Marshal(userDataCache)
 	if err != nil {
-		return exceptions.Cache.FailedToConvertStructToJson().WithError(err)
+		return exceptions.Cache.FailedToConvertStructToJson().WithOrigin(err)
 	}
 
 	formattedKey := formatUserDataKey(id)
 	if err = redisClient.Set(formattedKey, string(userDataJson), _userDataCacheExpiresIn).Err(); err != nil {
-		return exceptions.Cache.FailedToCreate(types.ValidCachePurpose_UserData.String()).WithError(err)
+		return exceptions.Cache.FailedToCreate(types.ValidCachePurpose_UserData.String()).WithOrigin(err)
 	}
 
 	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully set the cached user data in the server with server number of %d", serverNumber)
@@ -315,16 +315,16 @@ func UpdateUserDataCache(id uuid.UUID, dto UpdateUserDataCacheDto) *exceptions.E
 	}
 	userDataCache.UpdatedAt = time.Now()
 	if err := copier.Copy(&userDataCache, &dto); err != nil {
-		return exceptions.Cache.FailedToConvertStructToJson().WithError(err)
+		return exceptions.Cache.FailedToConvertStructToJson().WithOrigin(err)
 	}
 	userDataJson, err := json.Marshal(userDataCache)
 	if err != nil {
-		return exceptions.Cache.FailedToConvertStructToJson().WithError(err)
+		return exceptions.Cache.FailedToConvertStructToJson().WithOrigin(err)
 	}
 
 	formattedKey := formatUserDataKey(id)
 	if err = redisClient.Set(formattedKey, string(userDataJson), _userDataCacheExpiresIn).Err(); err != nil {
-		return exceptions.Cache.FailedToUpdate(string(types.ValidCachePurpose_UserData)).WithError(err)
+		return exceptions.Cache.FailedToUpdate(string(types.ValidCachePurpose_UserData)).WithOrigin(err)
 	}
 
 	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully update the cached user data in the server with server number of %d", serverNumber)
@@ -342,7 +342,7 @@ func DeleteUserDataCache(id uuid.UUID) *exceptions.Exception {
 	formattedKey := formatUserDataKey(id)
 	err := redisClient.Del(formattedKey).Err()
 	if err != nil {
-		return exceptions.Cache.FailedToDelete(string(types.ValidCachePurpose_UserData)).WithError(err)
+		return exceptions.Cache.FailedToDelete(string(types.ValidCachePurpose_UserData)).WithOrigin(err)
 	}
 
 	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully delete the cached user data in the server with server number of %d", serverNumber)

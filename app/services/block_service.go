@@ -72,7 +72,7 @@ func (s *BlockService) GetMyBlockById(
 	ctx context.Context, reqDto *dtos.GetMyBlockByIdReqDto,
 ) (*dtos.GetMyBlockByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Block.InvalidDto().WithError(err)
+		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -105,7 +105,7 @@ func (s *BlockService) GetMyBlocksByIds(
 	ctx context.Context, reqDto *dtos.GetMyBlocksByIdsReqDto,
 ) (*dtos.GetMyBlocksByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Block.InvalidDto().WithError(err)
+		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -151,7 +151,7 @@ func (s *BlockService) GetMyBlocksByBlockGroupId(
 	ctx context.Context, reqDto *dtos.GetMyBlocksByBlockGroupIdReqDto,
 ) (*dtos.GetMyBlocksByBlockGroupIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Block.InvalidDto().WithError(err)
+		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -224,7 +224,7 @@ func (s *BlockService) GetMyBlocksByBlockGroupIds(
 	ctx context.Context, reqDto *dtos.GetMyBlocksByBlockGroupIdsReqDto,
 ) (*dtos.GetMyBlocksByBlockGroupIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Block.InvalidDto().WithError(err)
+		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -312,7 +312,7 @@ func (s *BlockService) GetMyBlocksByBlockPackId(
 	ctx context.Context, reqDto *dtos.GetMyBlocksByBlockPackIdReqDto,
 ) (*dtos.GetMyBlocksByBlockPackIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Block.InvalidDto().WithError(err)
+		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -340,7 +340,7 @@ func (s *BlockService) GetMyBlocksByBlockPackId(
 		Where("bg.block_pack_id = ?", reqDto.Param.BlockPackId).
 		Find(&blocks)
 	if err := result.Error; err != nil {
-		return nil, exceptions.Block.NotFound().WithError(err)
+		return nil, exceptions.Block.NotFound().WithOrigin(err)
 	}
 
 	var resDto dtos.GetMyBlocksByBlockPackIdResDto
@@ -365,7 +365,7 @@ func (s *BlockService) GetAllMyBlocks(
 	ctx context.Context, reqDto *dtos.GetAllMyBlocksReqDto,
 ) (*dtos.GetAllMyBlocksResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Block.InvalidDto().WithError(err)
+		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -387,7 +387,7 @@ func (s *BlockService) InsertBlock(
 	ctx context.Context, reqDto *dtos.InsertBlockReqDto,
 ) (*dtos.InsertBlockResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Block.InvalidDto().WithError(err)
+		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -429,7 +429,7 @@ func (s *BlockService) InsertBlocks(
 	ctx context.Context, reqDto *dtos.InsertBlocksReqDto,
 ) (*dtos.InsertBlocksResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Block.InvalidDto().WithError(err)
+		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -449,7 +449,7 @@ func (s *BlockService) InsertBlocks(
 	validateBlockFunc := func(validateBlockDto ValidateBlockDto) ([]dtos.RawFlattenedEditableBlock, error) {
 		rawFlattenedBlocks, exception := s.editableBlockAdapter.FlattenToRaw(&validateBlockDto.ArborizedEditableBlock)
 		if exception != nil {
-			return rawFlattenedBlocks, exception.ToError()
+			return rawFlattenedBlocks, exception.GetOrigin()
 		}
 
 		if len(rawFlattenedBlocks) > 0 {
@@ -531,7 +531,7 @@ func (s *BlockService) UpdateMyBlockById(
 	ctx context.Context, reqDto *dtos.UpdateMyBlockByIdReqDto,
 ) (*dtos.UpdateMyBlockByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Block.InvalidDto().WithError(err)
+		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -558,6 +558,7 @@ func (s *BlockService) UpdateMyBlockById(
 		Values: inputs.UpdateBlockInput{
 			ParentBlockId: reqDto.Body.Values.ParentBlockId,
 			BlockGroupId:  reqDto.Body.Values.BlockGroupId,
+			Type:          reqDto.Body.Values.Type,
 			Props:         nil,
 			Content:       nil,
 		},
@@ -572,7 +573,7 @@ func (s *BlockService) UpdateMyBlockById(
 		} else {
 			_, err := blocknote.ParseProps(block.Type.String(), *reqDto.Body.Values.Props)
 			if err != nil {
-				return nil, exceptions.Block.InvalidDto().WithError(err)
+				return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 			}
 			rawPropsJson := datatypes.JSON(*reqDto.Body.Values.Props)
 			updateInput.Values.Props = &rawPropsJson
@@ -590,19 +591,19 @@ func (s *BlockService) UpdateMyBlockById(
 			case '[':
 				var list blocknote.InlineContentList
 				if err := json.Unmarshal(trimContent, &list); err != nil {
-					return nil, exceptions.Block.InvalidDto().WithError(err)
+					return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 				}
 				rawContentJson := datatypes.JSON(*reqDto.Body.Values.Content)
 				updateInput.Values.Content = &rawContentJson
 			case '{':
 				var table blocknote.TableContent
 				if err := json.Unmarshal(trimContent, &table); err != nil {
-					return nil, exceptions.Block.InvalidDto().WithError(err)
+					return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 				}
 				rawContentJson := datatypes.JSON(*reqDto.Body.Values.Content)
 				updateInput.Values.Content = &rawContentJson
 			default:
-				return nil, exceptions.Block.InvalidDto().WithError(errors.New("invalid content format: must be array or object"))
+				return nil, exceptions.Block.InvalidDto().WithOrigin(errors.New("invalid content format: must be array or object"))
 			}
 		}
 	}
@@ -628,7 +629,7 @@ func (s *BlockService) UpdateMyBlocksByIds(
 	ctx context.Context, reqDto *dtos.UpdateMyBlocksByIdsReqDto,
 ) (*dtos.UpdateMyBlocksByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Block.InvalidDto().WithError(err)
+		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -643,6 +644,7 @@ func (s *BlockService) UpdateMyBlocksByIds(
 	blockIdToUpdateDto := make(map[uuid.UUID]dtos.PartialUpdateDto[struct {
 		ParentBlockId *uuid.UUID       `json:"parentBlockId" validate:"omitnil"`
 		BlockGroupId  *uuid.UUID       `json:"blockGroupId" validate:"omitnil"`
+		Type          *enums.BlockType `json:"type" validate:"omitnil,isblocktype"`
 		Props         *json.RawMessage `json:"props"`
 		Content       *json.RawMessage `json:"content"`
 	}], len(reqDto.Body.UpdatedBlocks))
@@ -651,6 +653,7 @@ func (s *BlockService) UpdateMyBlocksByIds(
 		blockIdToUpdateDto[updatedBlock.BlockId] = dtos.PartialUpdateDto[struct {
 			ParentBlockId *uuid.UUID       `json:"parentBlockId" validate:"omitnil"`
 			BlockGroupId  *uuid.UUID       `json:"blockGroupId" validate:"omitnil"`
+			Type          *enums.BlockType `json:"type" validate:"omitnil,isblocktype"`
 			Props         *json.RawMessage `json:"props"`
 			Content       *json.RawMessage `json:"content"`
 		}]{
@@ -679,12 +682,22 @@ func (s *BlockService) UpdateMyBlocksByIds(
 	}
 	validateBlockPropsAndContentDto := make([]ValidateBlockPropsAndContentDto, len(blocks))
 	for index, block := range blocks {
-		validateBlockPropsAndContentDto[index] = ValidateBlockPropsAndContentDto{
-			Id:           block.Id,
-			BlockGroupId: block.BlockGroupId,
-			Type:         block.Type,
-			Props:        blockIdToUpdateDto[block.Id].Values.Props,
-			Content:      blockIdToUpdateDto[block.Id].Values.Content,
+		if blockIdToUpdateDto[block.Id].Values.Type == nil {
+			validateBlockPropsAndContentDto[index] = ValidateBlockPropsAndContentDto{
+				Id:           block.Id,
+				BlockGroupId: block.BlockGroupId,
+				Type:         block.Type,
+				Props:        blockIdToUpdateDto[block.Id].Values.Props,
+				Content:      blockIdToUpdateDto[block.Id].Values.Content,
+			}
+		} else {
+			validateBlockPropsAndContentDto[index] = ValidateBlockPropsAndContentDto{
+				Id:           block.Id,
+				BlockGroupId: block.BlockGroupId,
+				Type:         *blockIdToUpdateDto[block.Id].Values.Type,
+				Props:        blockIdToUpdateDto[block.Id].Values.Props,
+				Content:      blockIdToUpdateDto[block.Id].Values.Content,
+			}
 		}
 	}
 	validateBlockPropsAndContentFunc := func(validateBlockPropsAndContentDto ValidateBlockPropsAndContentDto) (inputs.BulkUpdateBlocksInput, error) {
@@ -769,6 +782,7 @@ func (s *BlockService) UpdateMyBlocksByIds(
 					Values: inputs.UpdateBlockInput{
 						ParentBlockId: blockIdToUpdateDto[validateResult.Data.Id].Values.ParentBlockId,
 						BlockGroupId:  blockIdToUpdateDto[validateResult.Data.Id].Values.BlockGroupId,
+						Type:          blockIdToUpdateDto[validateResult.Data.Id].Values.Type,
 						Props:         validateResult.Data.PartialUpdateInput.Values.Props,
 						Content:       validateResult.Data.PartialUpdateInput.Values.Content,
 					},
@@ -810,7 +824,7 @@ func (s *BlockService) RestoreMyBlockById(
 	ctx context.Context, reqDto *dtos.RestoreMyBlockByIdReqDto,
 ) (*dtos.RestoreMyBlockByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Block.InvalidDto().WithError(err)
+		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -842,7 +856,7 @@ func (s *BlockService) RestoreMyBlocksByIds(
 	ctx context.Context, reqDto *dtos.RestoreMyBlocksByIdsReqDto,
 ) (*dtos.RestoreMyBlocksByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Block.InvalidDto().WithError(err)
+		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -879,7 +893,7 @@ func (s *BlockService) DeleteMyBlockById(
 	ctx context.Context, reqDto *dtos.DeleteMyBlockByIdReqDto,
 ) (*dtos.DeleteMyBlockByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Block.InvalidDto().WithError(err)
+		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
@@ -901,7 +915,7 @@ func (s *BlockService) DeleteMyBlockById(
 		Count(&remainingBlockCount)
 	if err := result.Error; err != nil {
 		tx.Rollback()
-		return nil, exceptions.Block.NotFound().WithError(err)
+		return nil, exceptions.Block.NotFound().WithOrigin(err)
 	}
 	if remainingBlockCount == 0 {
 		if exception := s.blockGroupRepository.SoftDeleteOneById(
@@ -917,7 +931,7 @@ func (s *BlockService) DeleteMyBlockById(
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		return nil, exceptions.Block.FailedToCommitTransaction().WithError(err)
+		return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.DeleteMyBlockByIdResDto{
@@ -929,7 +943,7 @@ func (s *BlockService) DeleteMyBlocksByIds(
 	ctx context.Context, reqDto *dtos.DeleteMyBlocksByIdsReqDto,
 ) (*dtos.DeleteMyBlockPacksByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Block.InvalidDto().WithError(err)
+		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
@@ -957,12 +971,12 @@ func (s *BlockService) DeleteMyBlocksByIds(
 		result := tx.Exec(blockgroupsql.CollectGarbageBlockGroupByIdsSQL, affectedGroupIds)
 		if err := result.Error; err != nil {
 			tx.Rollback()
-			return nil, exceptions.BlockGroup.FailedToDelete().WithError(err)
+			return nil, exceptions.BlockGroup.FailedToDelete().WithOrigin(err)
 		}
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		return nil, exceptions.Block.FailedToCommitTransaction().WithError(err)
+		return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.DeleteMyBlockPacksByIdsResDto{

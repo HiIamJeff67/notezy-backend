@@ -51,7 +51,7 @@ func (b *UserInfoBinder) BindUpdateMyInfo(controllerFunc types.ControllerFunc[*d
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.UserInfo.InvalidDto().WithError(err)
+			exception := exceptions.UserInfo.InvalidDto().WithOrigin(err)
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}

@@ -24,7 +24,7 @@ func generateCSRFSignature(tokenValue string) string {
 func GenerateCSRFToken() (*string, *exceptions.Exception) {
 	randomBytes := make([]byte, _csrfTokenLength)
 	if _, err := rand.Read(randomBytes); err != nil {
-		return nil, exceptions.Token.FailedToGenerateCSRFToken().WithError(err)
+		return nil, exceptions.Token.FailedToGenerateCSRFToken().WithOrigin(err)
 	}
 	tokenValue := base64.StdEncoding.EncodeToString(randomBytes)
 
@@ -41,7 +41,7 @@ func GenerateCSRFToken() (*string, *exceptions.Exception) {
 
 	claimsJSON, err := json.Marshal(claims)
 	if err != nil {
-		return nil, exceptions.Token.FailedToGenerateCSRFToken().WithError(err)
+		return nil, exceptions.Token.FailedToGenerateCSRFToken().WithOrigin(err)
 	}
 
 	token := base64.StdEncoding.EncodeToString(claimsJSON)
@@ -54,12 +54,12 @@ func GenerateCSRFToken() (*string, *exceptions.Exception) {
 func parseCSRFToken(tokenString string) (*types.CSRFClaims, *exceptions.Exception) {
 	claimsJSON, err := base64.StdEncoding.DecodeString(tokenString)
 	if err != nil {
-		return nil, exceptions.Token.FailedToParseCSRFToken().WithError(err)
+		return nil, exceptions.Token.FailedToParseCSRFToken().WithOrigin(err)
 	}
 
 	var claims types.CSRFClaims
 	if err := json.Unmarshal(claimsJSON, &claims); err != nil {
-		return nil, exceptions.Token.FailedToParseCSRFToken().WithError(err)
+		return nil, exceptions.Token.FailedToParseCSRFToken().WithOrigin(err)
 	}
 
 	if time.Now().After(claims.ExpiresAt) {

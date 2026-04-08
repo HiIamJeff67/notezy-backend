@@ -48,7 +48,7 @@ func (s *ThemeService) GetPublicThemeByPublicId(
 		Where("public_id = ?", publicId).
 		First(&theme)
 	if err := result.Error; err != nil {
-		return nil, exceptions.Theme.NotFound().WithError(err)
+		return nil, exceptions.Theme.NotFound().WithOrigin(err)
 	}
 
 	return theme.ToPublicTheme(), nil
@@ -73,7 +73,7 @@ func (s *ThemeService) SearchPublicThemes(
 	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
 		searchCursor, err := searchcursor.Decode[gqlmodels.SearchThemeCursorFields](*gqlInput.After)
 		if err != nil {
-			return nil, exceptions.Search.FailedToDecode().WithError(err)
+			return nil, exceptions.Search.FailedToDecode().WithOrigin(err)
 		}
 
 		query.Where("public_id > ?", searchCursor.Fields.PublicID)
@@ -114,7 +114,7 @@ func (s *ThemeService) SearchPublicThemes(
 
 	var themes []schemas.Theme
 	if err := query.Find(&themes).Error; err != nil {
-		return nil, exceptions.User.NotFound().WithError(err)
+		return nil, exceptions.User.NotFound().WithOrigin(err)
 	}
 
 	hasNextPage := len(themes) > limit
@@ -128,7 +128,7 @@ func (s *ThemeService) SearchPublicThemes(
 		}
 		encodedSearchCursor, err := searchCursor.Encode()
 		if err != nil {
-			return nil, exceptions.Search.FailedToEncode().WithError(err)
+			return nil, exceptions.Search.FailedToEncode().WithOrigin(err)
 		}
 		if encodedSearchCursor == nil {
 			return nil, exceptions.Search.FailedToUnmarshalSearchCursor()

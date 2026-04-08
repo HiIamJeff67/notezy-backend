@@ -37,7 +37,7 @@ func (r *UserInfoRepository) GetOneByUserId(
 		Where("user_id = ?", userId).
 		First(&userInfo)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.UserInfo.NotFound().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.UserInfo.NotFound().WithOrigin(result.Error)},
 		{First: userInfo.Id == uuid.Nil, Second: exceptions.UserInfo.NotFound()},
 	}); exception != nil {
 		return nil, exception
@@ -56,14 +56,14 @@ func (r *UserInfoRepository) CreateOneByUserId(
 	var newUserInfo schemas.UserInfo
 	newUserInfo.UserId = userId
 	if err := copier.Copy(&newUserInfo, &input); err != nil {
-		return nil, exceptions.UserInfo.FailedToCreate().WithError(err)
+		return nil, exceptions.UserInfo.FailedToCreate().WithOrigin(err)
 	}
 
 	result := parsedOptions.DB.Model(&schemas.UserInfo{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newUserInfo)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.UserInfo.FailedToCreate().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.UserInfo.FailedToCreate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.UserInfo.NoChanges()},
 	}); exception != nil {
 		return nil, exception
@@ -97,7 +97,7 @@ func (r *UserInfoRepository) UpdateOneByUserId(
 		Select("*").
 		Updates(&updates)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.UserInfo.FailedToCreate().WithError(result.Error)},
+		{First: result.Error != nil, Second: exceptions.UserInfo.FailedToCreate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.UserInfo.NoChanges()},
 	}); exception != nil {
 		return nil, exception

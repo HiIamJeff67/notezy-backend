@@ -75,14 +75,14 @@ local function check_and_update_user_quota_by_formatted_key(keys, argv)
     end
 end
 
--- best_effor_batch_check_and_update_user_quotas_by_formatted_keys:
--- Atomically batch checks the limit and updates the user quotas among mutiple users with the given formatted keys
+-- best_effort_batch_check_and_update_user_quotas_by_formatted_keys:
+-- Atomically batch checks the limit and updates the user quotas among multiple users with the given formatted keys
 -- (the passing formatted keys may be different to each others)
 --
 -- keys: array of quota hash keys
 -- argv: array of json object containing required data for accounting
 -- Format of argv: [field_1, change_amount_1, max_limit_1, ttl_1, field_2, change_amount_2, max_limit_2, ttl_2, ...]
--- Note: Since the update operation is based on mutiple different formatted keys,
+-- Note: Since the update operation is based on multiple different formatted keys,
 --       so we should use the strategy of "Best Effort" which means if one update operation failed, we just ignore it
 local BATCH_CHECK_AND_UPDATE_USER_QUOTAS_BY_FORMATTED_KEYS_ARGV_PER_KEY = 4
 local function best_effort_batch_check_and_update_user_quotas_by_formatted_keys(keys, argv)
@@ -130,7 +130,7 @@ local function best_effort_batch_check_and_update_user_quotas_by_formatted_keys(
 end
 
 -- all_or_nothing_batch_check_and_update_user_quotas_by_formatted_keys:
--- Atomically batch checks the limit and updates the user quotas among mutiple users with the given formatted keys
+-- Atomically batch checks the limit and updates the user quotas among multiple users with the given formatted keys
 -- (the passing formatted keys may be different to each others)
 --
 -- keys: array of quota hash keys

@@ -32,24 +32,24 @@ func (s *OAuthService) GetGoogleUserInfo(
 ) (*dtos.GoogleUserInfoDto, *exceptions.Exception) {
 	token, err := s.oauthGoogleConfig.Exchange(ctx, authenticationCode)
 	if err != nil {
-		return nil, exceptions.OAuth.FailedToExchangeToken(authenticationCode).WithError(err)
+		return nil, exceptions.OAuth.FailedToExchangeToken(authenticationCode).WithOrigin(err)
 	}
 
 	client := s.oauthGoogleConfig.Client(ctx, token)
 	response, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
 	if err != nil {
-		return nil, exceptions.OAuth.InvalidAuthenticationCode(authenticationCode).WithError(err)
+		return nil, exceptions.OAuth.InvalidAuthenticationCode(authenticationCode).WithOrigin(err)
 	}
 	defer response.Body.Close()
 
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, exceptions.OAuth.FailedToParseResposneFromOAuthThirdParty("google").WithError(err)
+		return nil, exceptions.OAuth.FailedToParseResposneFromOAuthThirdParty("google").WithOrigin(err)
 	}
 
 	var userInfo dtos.GoogleUserInfoDto
 	if err := json.Unmarshal(data, &userInfo); err != nil {
-		return nil, exceptions.OAuth.InvalidDto().WithError(err)
+		return nil, exceptions.OAuth.InvalidDto().WithOrigin(err)
 	}
 
 	return &userInfo, nil

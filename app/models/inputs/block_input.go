@@ -21,10 +21,11 @@ type CreateBlockGroupContentInput struct {
 }
 
 type UpdateBlockInput struct {
-	ParentBlockId *uuid.UUID      `json:"parentBlockId" gorm:"column:parent_block_id;"`
-	BlockGroupId  *uuid.UUID      `json:"blockGroupId" gorm:"column:block_group_id;"`
-	Props         *datatypes.JSON `json:"props" gorm:"column:props;"`
-	Content       *datatypes.JSON `json:"content" gorm:"column:content;"`
+	ParentBlockId *uuid.UUID       `json:"parentBlockId" gorm:"column:parent_block_id;"`
+	BlockGroupId  *uuid.UUID       `json:"blockGroupId" gorm:"column:block_group_id;"`
+	Type          *enums.BlockType `json:"type" gorm:"column:type;"`
+	Props         *datatypes.JSON  `json:"props" gorm:"column:props;"`
+	Content       *datatypes.JSON  `json:"content" gorm:"column:content;"`
 }
 
 type PartialUpdateBlockInput = PartialUpdateInput[UpdateBlockInput]
