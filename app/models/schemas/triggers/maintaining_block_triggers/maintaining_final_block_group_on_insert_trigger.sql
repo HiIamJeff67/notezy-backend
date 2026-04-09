@@ -36,11 +36,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- ============================== SQL Seperator ==============================
+-- ============================== SQL Separator ==============================
 
 DROP TRIGGER IF EXISTS trigger_maintaining_final_block_group_on_insert ON "BlockGroupTable";
 
--- ============================== SQL Seperator ==============================
+-- ============================== SQL Separator ==============================
 
 CREATE TRIGGER trigger_maintaining_final_block_group_on_insert
     AFTER INSERT ON "BlockGroupTable"

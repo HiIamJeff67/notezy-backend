@@ -408,13 +408,12 @@ func (r *BlockGroupRepository) InsertOneByBlockPackId(
 	newBlockGroup.BlockPackId = blockPackId
 	newBlockGroup.PrevBlockGroupId = blockPack.FinalBlockGroupId
 
-	var createdBlockGroup schemas.BlockGroup
-	result := parsedOptions.DB.Model(&createdBlockGroup).
+	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newBlockGroup)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToCreate().WithOrigin(result.Error)},
-		{First: createdBlockGroup.Id == uuid.Nil, Second: exceptions.BlockGroup.FailedToCreate()},
+		{First: newBlockGroup.Id == uuid.Nil, Second: exceptions.BlockGroup.FailedToCreate()},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
 	}); exception != nil {
 		return nil, exception
@@ -460,7 +459,7 @@ func (r *BlockGroupRepository) InsertOneByBlockPackId(
 		}
 	}
 
-	return &createdBlockGroup.Id, nil
+	return &newBlockGroup.Id, nil
 }
 
 func (r *BlockGroupRepository) InsertManyByBlockPackId(
@@ -687,19 +686,18 @@ func (r *BlockGroupRepository) AppendOneByBlockPackId(
 	newBlockGroup.BlockPackId = blockPackId
 	newBlockGroup.PrevBlockGroupId = blockPack.FinalBlockGroupId
 
-	var createdBlockGroup schemas.BlockGroup
-	result := parsedOptions.DB.Model(&createdBlockGroup).
+	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newBlockGroup)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToCreate().WithOrigin(result.Error)},
-		{First: createdBlockGroup.Id == uuid.Nil, Second: exceptions.BlockGroup.FailedToCreate()},
+		{First: newBlockGroup.Id == uuid.Nil, Second: exceptions.BlockGroup.FailedToCreate()},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
 	}); exception != nil {
 		return nil, exception
 	}
 
-	return &createdBlockGroup.Id, nil
+	return &newBlockGroup.Id, nil
 }
 
 func (r *BlockGroupRepository) AppendManyByBlockPackId(

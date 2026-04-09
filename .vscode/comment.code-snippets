@@ -1,102 +1,58 @@
 {
-  "Generate a Pair of Context Seperators with Size of 5": {
-    "prefix": [
-      "sep5",
-      "contextSeperator5"
-    ],
-    "body": [
-      "/* ===== ${1:_Title_} ===== */"
-    ],
-    "description": "Create a basic comment with length of 5 as a context seperator to seperate codes"
+  "Generate a Pair of Context Separators with Size of 5": {
+    "prefix": ["sep5", "contextSeparator5"],
+    "body": ["/* ===== ${1:_Title_} ===== */"],
+    "description": "Create a basic comment with length of 5 as a context separator to seperate codes",
   },
-  "Generate a Pair of Context Seperators with Size of 10": {
-    "prefix": [
-      "sep10",
-      "contextSeperator10"
-    ],
-    "body": [
-      "/* ========== ${1:_Title_} ========== */"
-    ],
-    "description": "Create a basic comment with length of 10 as a context seperator to seperate codes"
+  "Generate a Pair of Context Separators with Size of 10": {
+    "prefix": ["sep10", "contextSeparator10"],
+    "body": ["/* ========== ${1:_Title_} ========== */"],
+    "description": "Create a basic comment with length of 10 as a context separator to seperate codes",
   },
-  "Generate a Pair of Context Seperators with Size of 15": {
-    "prefix": [
-      "sep15",
-      "contextSeperator15"
-    ],
-    "body": [
-      "/* =============== ${1:_Title_} =============== */"
-    ],
-    "description": "Create a basic comment with length of 15 as a context seperator to seperate codes"
+  "Generate a Pair of Context Separators with Size of 15": {
+    "prefix": ["sep15", "contextSeparator15"],
+    "body": ["/* =============== ${1:_Title_} =============== */"],
+    "description": "Create a basic comment with length of 15 as a context separator to seperate codes",
   },
-  "Generate a Pair of Context Seperators with Size of 20": {
-    "prefix": [
-      "sep20",
-      "contextSeperator20"
-    ],
-    "body": [
-      "/* ==================== ${1:_Title_} ==================== */"
-    ],
-    "description": "Create a basic comment with length of 20 as a context seperator to seperate codes"
+  "Generate a Pair of Context Separators with Size of 20": {
+    "prefix": ["sep20", "contextSeparator20"],
+    "body": ["/* ==================== ${1:_Title_} ==================== */"],
+    "description": "Create a basic comment with length of 20 as a context separator to seperate codes",
   },
-  "Generate a Pair of Context Seperators with Size of 25": {
-    "prefix": [
-      "sep25",
-      "contextSeperator25"
-    ],
+  "Generate a Pair of Context Separators with Size of 25": {
+    "prefix": ["sep25", "contextSeparator25"],
     "body": [
-      "/* ========================= ${1:_Title_} ========================= */"
+      "/* ========================= ${1:_Title_} ========================= */",
     ],
-    "description": "Create a basic comment with length of 25 as a context seperator to seperate codes"
+    "description": "Create a basic comment with length of 25 as a context separator to seperate codes",
   },
-  "Generate a Pair of Context Seperators with Size of 30": {
-    "prefix": [
-      "sep30",
-      "contextSeperator30"
-    ],
+  "Generate a Pair of Context Separators with Size of 30": {
+    "prefix": ["sep30", "contextSeparator30"],
     "body": [
-      "/* ============================== ${1:_Title_} ============================== */"
+      "/* ============================== ${1:_Title_} ============================== */",
     ],
-    "description": "Create a basic comment with length of 30 as a context seperator to seperate codes"
+    "description": "Create a basic comment with length of 30 as a context separator to seperate codes",
   },
-  "Generate a Pair of Context Seperators with Size of 10 for Text File": {
-    "prefix": [
-      "tsep10",
-      "textFileContextSeperator10"
-    ],
-    "body": [
-      "# ========== ${1:_Title_} ========== #"
-    ],
-    "description": "Create a basic comment with length of 10 as a context seperator to seperate text in the text file"
+  "Generate a Pair of Context Separators with Size of 10 for Text File": {
+    "prefix": ["tsep10", "textFileContextSeparator10"],
+    "body": ["# ========== ${1:_Title_} ========== #"],
+    "description": "Create a basic comment with length of 10 as a context separator to seperate text in the text file",
   },
-  "Generate a Pair of Context Seperators with Size of 20 for Text File": {
-    "prefix": [
-      "tsep20",
-      "textFileContextSeperator20"
-    ],
-    "body": [
-      "# ==================== ${1:_Title_} ==================== #"
-    ],
-    "description": "Create a basic comment with length of 20 as a context seperator to seperate text in the text file"
+  "Generate a Pair of Context Separators with Size of 20 for Text File": {
+    "prefix": ["tsep20", "textFileContextSeparator20"],
+    "body": ["# ==================== ${1:_Title_} ==================== #"],
+    "description": "Create a basic comment with length of 20 as a context separator to seperate text in the text file",
   },
-  "Generate a Pair of Context Seperators with Size of 15 for Text File": {
-    "prefix": [
-      "tsep15",
-      "textFileContextSeperator15"
-    ],
-    "body": [
-      "# =============== ${1:_Title_} =============== #"
-    ],
-    "description": "Create a basic comment with length of 15 as a context seperator to seperate text in the text file"
+  "Generate a Pair of Context Separators with Size of 15 for Text File": {
+    "prefix": ["tsep15", "textFileContextSeparator15"],
+    "body": ["# =============== ${1:_Title_} =============== #"],
+    "description": "Create a basic comment with length of 15 as a context separator to seperate text in the text file",
   },
-  "Generate a Pair of Context Seperators with Size of 30 for Text File": {
-    "prefix": [
-      "tsep30",
-      "textFileContextSeperator30"
-    ],
+  "Generate a Pair of Context Separators with Size of 30 for Text File": {
+    "prefix": ["tsep30", "textFileContextSeparator30"],
     "body": [
-      "# ============================== ${1:_Title_} ============================== #"
+      "# ============================== ${1:_Title_} ============================== #",
     ],
-    "description": "Create a basic comment with length of 30 as a context seperator to seperate text in the text file"
-  }
+    "description": "Create a basic comment with length of 30 as a context separator to seperate text in the text file",
+  },
 }

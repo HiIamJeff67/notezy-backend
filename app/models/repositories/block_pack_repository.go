@@ -372,19 +372,18 @@ func (r *BlockPackRepository) CreateOneBySubShelfId(
 	}
 	newBlockPack.ParentSubShelfId = subShelfId
 
-	var createdBlockPack schemas.BlockPack
-	result := parsedOptions.DB.Model(&createdBlockPack).
+	result := parsedOptions.DB.Model(&schemas.BlockPack{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newBlockPack)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToCreate().WithOrigin(result.Error)},
-		{First: createdBlockPack.Id == uuid.Nil, Second: exceptions.BlockPack.FailedToCreate()},
+		{First: newBlockPack.Id == uuid.Nil, Second: exceptions.BlockPack.FailedToCreate()},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
 		return nil, exception
 	}
 
-	return &createdBlockPack.Id, nil
+	return &newBlockPack.Id, nil
 }
 
 func (r *BlockPackRepository) UpdateOneById(

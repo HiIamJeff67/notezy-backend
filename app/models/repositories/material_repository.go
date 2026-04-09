@@ -257,19 +257,18 @@ func (r *MaterialRepository) CreateOneBySubShelfId(
 	}
 	newMaterial.ParentSubShelfId = subShelfId
 
-	var createdMaterial schemas.Material
-	result := parsedOptions.DB.Model(&createdMaterial).
+	result := parsedOptions.DB.Model(&schemas.Material{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newMaterial)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Material.FailedToCreate().WithOrigin(result.Error)},
-		{First: createdMaterial.Id == uuid.Nil, Second: exceptions.Material.FailedToCreate()},
+		{First: newMaterial.Id == uuid.Nil, Second: exceptions.Material.FailedToCreate()},
 		{First: result.RowsAffected == 0, Second: exceptions.Material.NoChanges()},
 	}); exception != nil {
 		return nil, exception
 	}
 
-	return &createdMaterial.Id, nil
+	return &newMaterial.Id, nil
 }
 
 func (r *MaterialRepository) UpdateOneById(
@@ -375,7 +374,7 @@ func (r *MaterialRepository) RestoreSoftDeletedOneById(
 
 	var restoredMaterial schemas.Material
 	result := parsedOptions.DB.Model(&restoredMaterial).
-		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
+		Clauses(clause.Returning{}).
 		Where("id = ? AND deleted_at IS NOT NULL", id).
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{

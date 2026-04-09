@@ -15,6 +15,8 @@ import (
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
+	"notezy-backend/app/monitor/logs"
+	"notezy-backend/app/monitor/traces"
 	options "notezy-backend/app/options"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
@@ -336,6 +338,12 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 			return &dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdResDto{}, nil
 		}
 		return nil, exception
+	}
+
+	for _, blockGroup := range blockGroups {
+		logs.Warn(traces.GetTrace(0).FileLineString(), "blockGroup: ", blockGroup.Id)
+		logs.Warn(traces.GetTrace(0).FileLineString(), "blockGroup: ", blockGroup.PrevBlockGroupId)
+		logs.Warn(traces.GetTrace(0).FileLineString(), "==========")
 	}
 
 	blockGroupIds := make([]uuid.UUID, len(blockGroups))
@@ -915,9 +923,9 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 	}
 
 	// check the validation of the given block groups by:
-	visited := make(map[*uuid.UUID]bool, len(movableBlockGroups)) // it is also gaurantee that there's only one block group with the its PrevBlockGroupId equals to nil
+	visited := make(map[*uuid.UUID]bool, len(movableBlockGroups)) // it is also guarantee that there's only one block group with the its PrevBlockGroupId equals to nil
 	for index, movableBlockGroupId := range reqDto.Body.MovableBlockGroupIds {
-		// 1. check repeated PrevBlockGroupId for cycular block groups
+		// 1. check repeated PrevBlockGroupId for circular block groups
 		if visited[reqDto.Body.MovablePrevBlockGroupIds[index]] {
 			tx.Rollback()
 			return nil, exceptions.BlockGroup.InvalidDto("Detect cycle in the given block groups")
@@ -964,7 +972,7 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 		}
 	}
 
-	// note that we have gaurantee that the below block groups MUST exist on the above procedure
+	// note that we have guarantee that the below block groups MUST exist on the above procedure
 	startBlockGroup := movableBlockGroupsMap[reqDto.Body.MovableBlockGroupIds[0]]
 	endBlockGroup := movableBlockGroupsMap[reqDto.Body.MovableBlockGroupIds[numOfMovableBlockGroups-1]]
 	// ignore the exception which indicate the collapsed block group is not exist
@@ -986,7 +994,7 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 
-	// Sstep 1: connect the start block group to the destination block group
+	// Step 1: connect the start block group to the destination block group
 	if _, exception = s.blockGroupRepository.UpdateOneById(
 		startBlockGroup.Id,
 		reqDto.ContextFields.UserId,

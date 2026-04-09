@@ -174,13 +174,10 @@ func (r *RootShelfRepository) CreateOneByOwnerId(
 		RootShelfId: newRootShelf.Id,
 		Permission:  enums.AccessControlPermission_Owner,
 	}
-	var createdUsersToShelves schemas.UsersToShelves
-	result = parsedOptions.DB.Model(&createdUsersToShelves).
-		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
+	result = parsedOptions.DB.Model(&schemas.UsersToShelves{}).
 		Create(&newUsersToShelves)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Shelf.FailedToCreate().WithOrigin(result.Error)},
-		{First: createdUsersToShelves.UserId != ownerId || createdUsersToShelves.RootShelfId != newRootShelf.Id, Second: exceptions.Shelf.FailedToCreate()},
 		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()

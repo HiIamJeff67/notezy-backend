@@ -12,11 +12,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- ============================== SQL Seperator ==============================
+-- ============================== SQL Separator ==============================
 
 DROP TRIGGER IF EXISTS trigger_cascading_restore_soft_deleted_sub_shelf ON "SubShelfTable"
 
--- ============================== SQL Seperator ==============================
+-- ============================== SQL Separator ==============================
 
 CREATE TRIGGER trigger_cascading_restore_soft_deleted_sub_shelf
     AFTER UPDATE 

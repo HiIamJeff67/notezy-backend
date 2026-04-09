@@ -16,9 +16,9 @@
       "",
       "func (${1:_TableName_}) TableName() string {",
       "\treturn shared.TableName_${1:_TableName_}Table.String()",
-      "}"
+      "}",
     ],
-    "description": "Create an advanced GORM model with UUID, enum, timestamps, and table name."
+    "description": "Create an advanced GORM model with UUID, enum, timestamps, and table name.",
   },
   "Generate Go GORM Enum Schema": {
     "prefix": "gnum",
@@ -33,24 +33,24 @@
       "}",
       "var All${1:_EnumName_}Strings = []string{",
       "\tstring(${1:_EnumName_}_),",
-      "}"
+      "}",
     ],
-    "description": "Create an advanced GORM enum with a list of enum and a list of enum string values."
+    "description": "Create an advanced GORM enum with a list of enum and a list of enum string values.",
   },
   "Generate a String for Descibing Json Attributes and GORM Attributes": {
     "prefix": ["jga", "jgattributes", "jsongormattributes"],
     "body": [
-      "`json:\"${1:_JsonName_}\" gorm:\"column:; type:; not null; default:;\"`"
+      "`json:\"${1:_JsonName_}\" gorm:\"column:; type:; not null; default:;\"`",
     ],
-    "description": "Create a string for describing json attributes and gorm attributes as a field in a table."
+    "description": "Create a string for describing json attributes and gorm attributes as a field in a table.",
   },
-  "Generate a String of SQL Seperator as a SQL Comment for Spliting Multiple SQL in a Single File.": {
-    "prefix": ["sqlseperator", "sqlsep"],
-    "body": "-- ============================== SQL Seperator ==============================",
+  "Generate a String of SQL Separator as a SQL Comment for Spliting Multiple SQL in a Single File.": {
+    "prefix": ["sqlseparator", "sqlsep"],
+    "body": "-- ============================== SQL Separator ==============================",
     "description": [
-      "Create a string as sql seperator for spliting multiple sqls in a single file,",
+      "Create a string as sql separator for spliting multiple sqls in a single file,",
       "so that we can use embed to extract multiple sql as a entire string,",
-      "and then use strings.Split() to split it into sqls, finally executing these sqls."
-    ]
-  }
+      "and then use strings.Split() to split it into sqls, finally executing these sqls.",
+    ],
+  },
 }

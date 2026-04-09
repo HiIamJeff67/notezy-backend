@@ -291,19 +291,18 @@ func (r *SubShelfRepository) CreateOneByRootShelfId(
 	}
 	newSubShelf.RootShelfId = rootShelfId
 
-	var createdSubShelf schemas.SubShelf
-	result := parsedOptions.DB.Model(&createdSubShelf).
+	result := parsedOptions.DB.Model(&schemas.SubShelf{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newSubShelf)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Shelf.FailedToCreate().WithOrigin(result.Error)},
-		{First: createdSubShelf.Id == uuid.Nil, Second: exceptions.Shelf.FailedToCreate()},
+		{First: newSubShelf.Id == uuid.Nil, Second: exceptions.Shelf.FailedToCreate()},
 		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
 	}); exception != nil {
 		return nil, exception
 	}
 
-	return &createdSubShelf.Id, nil
+	return &newSubShelf.Id, nil
 }
 
 func (r *SubShelfRepository) UpdateOneById(

@@ -74,13 +74,12 @@ func (r *UsersToBillingPlansRepository) CreateOne(
 		return nil, exceptions.UsersToBillingPlans.FailedToCreate().WithOrigin(err)
 	}
 
-	var createdUsersToBillingPlans schemas.UsersToBillingPlans
-	result := parsedOptions.DB.Model(&createdUsersToBillingPlans).
+	result := parsedOptions.DB.Model(&schemas.UsersToBillingPlans{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newUsersToBillingPlans)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.UsersToBillingPlans.FailedToCreate().WithOrigin(result.Error)},
-		{First: createdUsersToBillingPlans.Id == uuid.Nil, Second: exceptions.UsersToBillingPlans.FailedToCreate()},
+		{First: newUsersToBillingPlans.Id == uuid.Nil, Second: exceptions.UsersToBillingPlans.FailedToCreate()},
 	}); exception != nil {
 		return nil, exception
 	}

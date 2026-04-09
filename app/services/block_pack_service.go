@@ -223,9 +223,6 @@ func (s *BlockPackService) CreateBlockPack(
 	if exception != nil {
 		return nil, exception
 	}
-	if newBlockPackId == nil {
-		return nil, exceptions.BlockPack.FailedToCreate().WithDetails("got nil block pack id")
-	}
 
 	return &dtos.CreateBlockPackResDto{
 		Id:        *newBlockPackId,

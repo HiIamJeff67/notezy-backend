@@ -33,11 +33,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- ============================== SQL Seperator ==============================
+-- ============================== SQL Separator ==============================
 
 DROP TRIGGER IF EXISTS trigger_maintaining_final_block_group_on_update ON "BlockGroupTable";
 
--- ============================== SQL Seperator ==============================
+-- ============================== SQL Separator ==============================
 
 CREATE TRIGGER trigger_maintaining_final_block_group_on_update
     AFTER UPDATE OF prev_block_group_id ON "BlockGroupTable" -- 只監聽 prev_block_group_id 的變更

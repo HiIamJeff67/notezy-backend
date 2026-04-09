@@ -230,8 +230,8 @@ func MigrateTriggersToDatabase(db *gorm.DB) bool {
 	logs.Info(traces.GetTrace(0).FileLineString(), "Migrating triggers found in models/schemas/triggers/migrate.go")
 
 	for _, sql := range triggers.MigratingTriggerSQLs {
-		// split the sql statements(treated as string) in every embed files by the sql seperator
-		statements := strings.Split(sql, constants.SQLSeperator)
+		// split the sql statements(treated as string) in every embed files by the sql separator
+		statements := strings.Split(sql, constants.SQLSeparator)
 		for _, stmt := range statements {
 			stmt = strings.TrimSpace(stmt)
 			if stmt == "" { // skip empty string
@@ -253,8 +253,8 @@ func MigrateConstraintsToDatabase(db *gorm.DB) bool {
 	logs.Info(traces.GetTrace(0).FileLineString(), "Migrating constraints found in models/schemas/constraints/migrate.go")
 
 	for _, sql := range constraints.MigratingConstraintSQLs {
-		// split the sql statements(treated as string) in every embed files by the sql seperator
-		statements := strings.Split(sql, constants.SQLSeperator)
+		// split the sql statements(treated as string) in every embed files by the sql separator
+		statements := strings.Split(sql, constants.SQLSeparator)
 		for _, stmt := range statements {
 			stmt = strings.TrimSpace(stmt)
 			if stmt == "" { // skip empty string
@@ -276,7 +276,7 @@ func SeedDefaultDataToDatabase(db *gorm.DB) bool {
 	logs.Info(traces.GetTrace(0).FileLineString(), "Seeding default data found in models/seeds/seed.go")
 
 	for _, sql := range seeds.SeedingDefaultDataSQLs {
-		statements := strings.Split(sql, constants.SQLSeperator)
+		statements := strings.Split(sql, constants.SQLSeparator)
 		for _, stmt := range statements {
 			stmt = strings.TrimSpace(stmt)
 			if stmt == "" {
