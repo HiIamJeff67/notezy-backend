@@ -236,7 +236,7 @@ func (s *BlockService) GetMyBlocksByBlockGroupIds(
 		enums.AccessControlPermission_Read,
 	}
 
-	if s.blockGroupRepository.HasPermissions(
+	if s.blockGroupRepository.HavePermissions(
 		reqDto.Param.BlockGroupIds,
 		reqDto.ContextFields.UserId,
 		allowedPermissions,
@@ -760,7 +760,7 @@ func (s *BlockService) UpdateMyBlocksByIds(
 		validateBlockPropsAndContentFunc,
 	)
 
-	var bulkUpdateBlocksInputs inputs.BulkUpdateBlocksInputs
+	var bulkUpdateBlocksInputs []inputs.BulkUpdateBlocksInput
 	resDto := dtos.UpdateMyBlocksByIdsResDto{
 		IsAllSuccess:   true,
 		FailedIndexes:  []int{},

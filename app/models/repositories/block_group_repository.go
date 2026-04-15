@@ -21,7 +21,7 @@ import (
 
 type BlockGroupRepositoryInterface interface {
 	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
-	HasPermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
+	HavePermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
 	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) (*schemas.BlockGroup, *exceptions.Exception)
 	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.BlockGroup, *exceptions.Exception)
 	CheckPermissionsAndGetManyByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.BlockGroup, *exceptions.Exception)
@@ -29,7 +29,7 @@ type BlockGroupRepositoryInterface interface {
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, opts ...options.RepositoryOptions) (*schemas.BlockGroup, *exceptions.Exception)
 	GetOneByPrevBlockGroupId(blockPackId uuid.UUID, prevBlockGroupId *uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, opts ...options.RepositoryOptions) (*schemas.BlockGroup, *exceptions.Exception)
 	InsertOneByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, input inputs.CreateBlockGroupInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
-	InsertManyByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, inputs []inputs.CreateBlockGroupInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
+	InsertManyByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, input []inputs.CreateBlockGroupInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	AppendOneByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
 	AppendManyByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, input []inputs.CreateBlockGroupInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateBlockGroupInput, opts ...options.RepositoryOptions) (*schemas.BlockGroup, *exceptions.Exception)
@@ -84,7 +84,7 @@ func (r *BlockGroupRepository) HasPermission(
 	return count > 0
 }
 
-func (r *BlockGroupRepository) HasPermissions(
+func (r *BlockGroupRepository) HavePermissions(
 	ids []uuid.UUID,
 	userId uuid.UUID,
 	allowedPermissions []enums.AccessControlPermission,
@@ -259,7 +259,7 @@ func (r *BlockGroupRepository) CheckPermissionsAndGetManyByBlockPackId(
 	return blockGroups, nil
 }
 
-// Similar to the `HasPermissions`, but with best effort strategy,
+// Similar to the `HavePermissions`, but with best effort strategy,
 // if some of the ids is not valid or exist, they'll be not returned at the end.
 //
 // Note that the `HasPermission` doesn't need this best effort strategy.
@@ -1091,7 +1091,7 @@ func (r *BlockGroupRepository) SoftDeleteManyByIds(
 			enums.AccessControlPermission_Admin,
 			enums.AccessControlPermission_Write,
 		}
-		if !r.HasPermissions(ids, userId, allowedPermissions, opts...) {
+		if !r.HavePermissions(ids, userId, allowedPermissions, opts...) {
 			parsedOptions.DB.Rollback()
 			return exceptions.BlockGroup.NoPermission("soft delete block groups")
 		}
@@ -1261,7 +1261,7 @@ func (r *BlockGroupRepository) HardDeleteManyByIds(
 			enums.AccessControlPermission_Write,
 		}
 
-		if !r.HasPermissions(
+		if !r.HavePermissions(
 			ids,
 			userId,
 			allowedPermissions,

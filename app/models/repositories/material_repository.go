@@ -18,7 +18,7 @@ import (
 
 type MaterialRepositoryInterface interface {
 	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
-	HasPermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
+	HavePermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
 	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.MaterialRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) (*schemas.Material, *exceptions.Exception)
 	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.MaterialRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.Material, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.Material, *exceptions.Exception)
@@ -74,7 +74,7 @@ func (r *MaterialRepository) HasPermission(
 	return count > 0
 }
 
-func (r *MaterialRepository) HasPermissions(
+func (r *MaterialRepository) HavePermissions(
 	ids []uuid.UUID,
 	userId uuid.UUID,
 	allowedPermissions []enums.AccessControlPermission,
@@ -406,7 +406,7 @@ func (r *MaterialRepository) RestoreSoftDeletedManyByIds(
 			enums.AccessControlPermission_Admin,
 		}
 
-		if !r.HasPermissions(
+		if !r.HavePermissions(
 			ids,
 			userId,
 			allowedPermissions,
@@ -484,7 +484,7 @@ func (r *MaterialRepository) SoftDeleteManyByIds(
 		enums.AccessControlPermission_Admin,
 	}
 
-	if !r.HasPermissions(
+	if !r.HavePermissions(
 		ids,
 		userId,
 		allowedPermissions,
@@ -558,7 +558,7 @@ func (r *MaterialRepository) HardDeleteManyByIds(
 		enums.AccessControlPermission_Admin,
 	}
 
-	if !r.HasPermissions(
+	if !r.HavePermissions(
 		ids,
 		userId,
 		allowedPermissions,

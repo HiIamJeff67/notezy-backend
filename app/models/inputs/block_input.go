@@ -32,7 +32,5 @@ type PartialUpdateBlockInput = PartialUpdateInput[UpdateBlockInput]
 
 type BulkUpdateBlocksInput struct {
 	Id                 uuid.UUID                            `json:"id" gorm:"column:id;"`
-	PartialUpdateInput PartialUpdateInput[UpdateBlockInput] `json:"partialUpdateInput" gorm:"column:partial_update_input;"`
+	PartialUpdateInput PartialUpdateInput[UpdateBlockInput] `json:"partialUpdateInput"`
 }
-
-type BulkUpdateBlocksInputs = []BulkUpdateBlocksInput

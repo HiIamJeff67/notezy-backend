@@ -80,8 +80,27 @@ type CreateSubShelfByRootShelfIdReqDto struct {
 		},
 		struct {
 			RootShelfId    uuid.UUID  `json:"rootShelfId" validate:"required"`
-			Name           string     `json:"name" validate:"required,min=1,max=128,isshelfname"`
 			PrevSubShelfId *uuid.UUID `json:"prevSubShelfId" validate:"omitnil"`
+			Name           string     `json:"name" validate:"required,min=1,max=128,isshelfname"`
+		},
+		any,
+	]
+}
+
+type CreateSubShelvesByRootShelfIdsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			CreatedSubShelves []struct {
+				RootShelfId    uuid.UUID  `json:"rootShelfId" validate:"required"`
+				PrevSubShelfId *uuid.UUID `json:"prevSubShelfId" validate:"omitnil"`
+				Name           string     `json:"name" validate:"required,min=1,max=128,isshelfname"`
+			} `json:"createdSubShelves" validate:"required"`
 		},
 		any,
 	]
@@ -100,6 +119,26 @@ type UpdateMySubShelfByIdReqDto struct {
 			PartialUpdateDto[struct {
 				Name *string `json:"name" validate:"omitnil,min=1,max=128,isshelfname"`
 			}]
+		},
+		any,
+	]
+}
+
+type UpdateMySubShelvesByIdsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			UpdatedSubShelves []struct {
+				SubShelfId uuid.UUID `json:"subShelfId" validate:"required"`
+				PartialUpdateDto[struct {
+					Name *string `json:"name" validate:"omitnil,min=1,max=128,isshelfname"`
+				}]
+			} `json:"updatedSubShelves" validate:"required"`
 		},
 		any,
 	]
@@ -136,6 +175,26 @@ type MoveMySubShelvesReqDto struct {
 			SourceSubShelfIds      []uuid.UUID `json:"sourceSubShelfIds" validate:"required"`
 			DestinationRootShelfId uuid.UUID   `json:"destinationRootShelfId" validate:"required"`
 			DestinationSubShelfId  *uuid.UUID  `json:"destinationSubShelfId" validate:"omitnil"`
+		},
+		any,
+	]
+}
+
+type BatchMoveMySubShelvesReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			MovedSubShelves []struct {
+				SourceRootShelfId      uuid.UUID   `json:"sourceRootShelfId" validate:"required"`
+				SourceSubShelfIds      []uuid.UUID `json:"sourceSubShelfIds" validate:"required"`
+				DestinationRootShelfId uuid.UUID   `json:"destinationRootShelfId" validate:"required"`
+				DestinationSubShelfId  *uuid.UUID  `json:"destinationSubShelfId" validate:"omitnil"`
+			} `json:"moveSubShelves" validate:"required"`
 		},
 		any,
 	]
@@ -229,7 +288,16 @@ type CreateSubShelfByRootShelfIdResDto struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
+type CreateSubShelvesByRootShelfIdsResDto struct {
+	Ids       []uuid.UUID `json:"id"`
+	CreatedAt time.Time   `json:"createdAt"`
+}
+
 type UpdateMySubShelfByIdResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type UpdateMySubShelvesByIdsResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
@@ -238,6 +306,10 @@ type MoveMySubShelfResDto struct {
 }
 
 type MoveMySubShelvesResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type BatchMoveMySubShelvesResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 

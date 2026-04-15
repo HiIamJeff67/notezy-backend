@@ -105,26 +105,10 @@ func (s *BlockPackService) GetMyBlockPackAndItsParentById(
 	onlyDeleted := types.Ternary_Negative
 	resDto := dtos.GetMyBlockPackAndItsParentByIdResDto{}
 
-	err := db.Raw(blockpacksql.GetMyBlockPackAndItsParentByIdSQL,
+	result := db.Raw(blockpacksql.GetMyBlockPackAndItsParentByIdSQL,
 		reqDto.Param.BlockPackId, reqDto.ContextFields.UserId, pg.Array(allowedPermissions), onlyDeleted,
-	).Row().
-		Scan(&resDto.Id,
-			&resDto.Name,
-			&resDto.Icon,
-			&resDto.HeaderBackgroundURL,
-			&resDto.BlockCount,
-			&resDto.DeletedAt,
-			&resDto.UpdatedAt,
-			&resDto.CreatedAt,
-			&resDto.RootShelfId,
-			&resDto.ParentSubShelfId,
-			&resDto.ParentSubShelfName,
-			&resDto.ParentSubShelfPrevSubShelfId,
-			&resDto.ParentSubShelfPath,
-			&resDto.ParentSubShelfDeletedAt,
-			&resDto.ParentSubShelfUpdatedAt,
-			&resDto.ParentSubShelfCreatedAt)
-	if err != nil {
+	).Scan(&resDto)
+	if err := result.Error; err != nil {
 		return nil, exceptions.BlockPack.NotFound().WithOrigin(err)
 	}
 

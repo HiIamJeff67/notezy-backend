@@ -15,8 +15,6 @@ import (
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
-	"notezy-backend/app/monitor/logs"
-	"notezy-backend/app/monitor/traces"
 	options "notezy-backend/app/options"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
@@ -338,12 +336,6 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 			return &dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdResDto{}, nil
 		}
 		return nil, exception
-	}
-
-	for _, blockGroup := range blockGroups {
-		logs.Warn(traces.GetTrace(0).FileLineString(), "blockGroup: ", blockGroup.Id)
-		logs.Warn(traces.GetTrace(0).FileLineString(), "blockGroup: ", blockGroup.PrevBlockGroupId)
-		logs.Warn(traces.GetTrace(0).FileLineString(), "==========")
 	}
 
 	blockGroupIds := make([]uuid.UUID, len(blockGroups))

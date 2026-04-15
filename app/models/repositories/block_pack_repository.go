@@ -18,7 +18,7 @@ import (
 
 type BlockPackRepositoryInterface interface {
 	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
-	HasPermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
+	HavePermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
 	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockPackRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) (*schemas.BlockPack, *exceptions.Exception)
 	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.BlockPackRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.BlockPack, *exceptions.Exception)
 	CheckPermissionAndGetOneWithOwnerIdById(id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockPackRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) (*uuid.UUID, *schemas.BlockPack, *exceptions.Exception)
@@ -76,7 +76,7 @@ func (r *BlockPackRepository) HasPermission(
 	return count > 0
 }
 
-func (r *BlockPackRepository) HasPermissions(
+func (r *BlockPackRepository) HavePermissions(
 	ids []uuid.UUID,
 	userId uuid.UUID,
 	allowedPermissions []enums.AccessControlPermission,
@@ -504,7 +504,7 @@ func (r *BlockPackRepository) RestoreSoftDeletedManyByIds(
 			enums.AccessControlPermission_Admin,
 		}
 
-		if !r.HasPermissions(
+		if !r.HavePermissions(
 			ids,
 			userId,
 			allowedPermissions,
@@ -584,7 +584,7 @@ func (r *BlockPackRepository) SoftDeleteManyByIds(
 			enums.AccessControlPermission_Admin,
 		}
 
-		if !r.HasPermissions(
+		if !r.HavePermissions(
 			ids,
 			userId,
 			allowedPermissions,
@@ -662,7 +662,7 @@ func (r *BlockPackRepository) HardDeleteManyByIds(
 			enums.AccessControlPermission_Admin,
 		}
 
-		if !r.HasPermissions(
+		if !r.HavePermissions(
 			ids,
 			userId,
 			allowedPermissions,

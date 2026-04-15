@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,13 +20,15 @@ import (
 
 type SubShelfRepositoryInterface interface {
 	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
-	HasPermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
+	HavePermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
 	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) (*schemas.SubShelf, *exceptions.Exception)
 	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.SubShelf, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation, opts ...options.RepositoryOptions) (*schemas.SubShelf, *exceptions.Exception)
 	GetAllByRootShelfId(rootShelfId uuid.UUID, userId uuid.UUID, preloads []schemas.SubShelfRelation, opts ...options.RepositoryOptions) ([]schemas.SubShelf, *exceptions.Exception)
 	CreateOneByRootShelfId(rootShelfId uuid.UUID, userId uuid.UUID, input inputs.CreateSubShelfInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
+	BulkCreateManyByRootShelfIds(userId uuid.UUID, input []inputs.BulkCreateSubShelfInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateSubShelfInput, opts ...options.RepositoryOptions) (*schemas.SubShelf, *exceptions.Exception)
+	BulkUpdateManyByIds(userId uuid.UUID, input []inputs.BulkUpdateSubShelfInput, opts ...options.RepositoryOptions) *exceptions.Exception
 	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.SubShelf, *exceptions.Exception)
 	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.SubShelf, *exceptions.Exception)
 	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
@@ -71,7 +75,7 @@ func (r *SubShelfRepository) HasPermission(
 	return count > 0
 }
 
-func (r *SubShelfRepository) HasPermissions(
+func (r *SubShelfRepository) HavePermissions(
 	ids []uuid.UUID,
 	userId uuid.UUID,
 	allowedPermissions []enums.AccessControlPermission,
@@ -279,11 +283,23 @@ func (r *SubShelfRepository) CreateOneByRootShelfId(
 			allowedPermissions,
 			opts...,
 		)
-		if exception != nil {
+		if exception = exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
+			{First: prevSubShelf.RootShelfId != rootShelfId, Second: exceptions.Shelf.InvalidDto("the given prev sub shelf is not one of the children of the given root shelf")},
+		}); exception != nil {
 			return nil, exception
 		}
 		prevSubShelf.Path = append(prevSubShelf.Path, prevSubShelf.Id)
 		newSubShelf.Path = prevSubShelf.Path
+	} else {
+		rootShelfRepository := NewRootShelfRepository()
+		if !rootShelfRepository.HasPermission(
+			rootShelfId,
+			userId,
+			allowedPermissions,
+			opts...,
+		) {
+			return nil, exceptions.Shelf.NoPermission("create sub shelf by the given root shelf")
+		}
 	}
 
 	if err := copier.Copy(&newSubShelf, &input); err != nil {
@@ -303,6 +319,102 @@ func (r *SubShelfRepository) CreateOneByRootShelfId(
 	}
 
 	return &newSubShelf.Id, nil
+}
+
+func (r *SubShelfRepository) BulkCreateManyByRootShelfIds(
+	userId uuid.UUID,
+	input []inputs.BulkCreateSubShelfInput,
+	opts ...options.RepositoryOptions,
+) ([]uuid.UUID, *exceptions.Exception) {
+	if len(input) == 0 {
+		return nil, exceptions.Shelf.NoChanges()
+	}
+
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	isPrevSubShelfExist := make(map[uuid.UUID]bool)
+	isRootShelfExist := make(map[uuid.UUID]bool)
+	prevSubShelfIds := make([]uuid.UUID, len(input))
+	rootShelfIds := make([]uuid.UUID, len(input))
+	for index, in := range input {
+		if in.PrevSubShelfId != nil {
+			if isPrevSubShelfExist[*in.PrevSubShelfId] {
+				prevSubShelfIds[index] = *in.PrevSubShelfId
+			}
+			isPrevSubShelfExist[*in.PrevSubShelfId] = true
+		}
+		if isRootShelfExist[in.RootShelfId] {
+			rootShelfIds[index] = in.RootShelfId
+		}
+		isRootShelfExist[in.RootShelfId] = true
+	}
+
+	validPrevSubShelves, exception := r.CheckPermissionsAndGetManyByIds(
+		prevSubShelfIds,
+		userId,
+		nil,
+		allowedPermissions,
+	)
+	if exception != nil {
+		return nil, exception
+	}
+	isPrevSubShelfValid := make(map[uuid.UUID]*uuid.UUID)
+	for _, validPrevSubShelf := range validPrevSubShelves {
+		isPrevSubShelfValid[validPrevSubShelf.Id] = &validPrevSubShelf.RootShelfId
+	}
+
+	rootShelfRepository := NewRootShelfRepository()
+	validRootShelves, exception := rootShelfRepository.CheckPermissionsAndGetManyByIds(
+		rootShelfIds,
+		userId,
+		nil,
+		allowedPermissions,
+	)
+	if exception != nil {
+		return nil, exception
+	}
+	isRootShelfValid := make(map[uuid.UUID]bool)
+	for _, validRootShelf := range validRootShelves {
+		isRootShelfValid[validRootShelf.Id] = true
+	}
+
+	var newSubShelves []schemas.SubShelf
+	for _, in := range input {
+		if !isRootShelfValid[in.RootShelfId] ||
+			(in.PrevSubShelfId != nil && (isPrevSubShelfValid[*in.PrevSubShelfId] != &in.RootShelfId)) {
+			continue
+		}
+		var newSubShelf schemas.SubShelf
+		if err := copier.Copy(&newSubShelf, &input); err != nil {
+			return nil, exceptions.Shelf.InvalidInput().WithOrigin(err)
+		}
+		newSubShelf.RootShelfId = in.RootShelfId
+		newSubShelves = append(newSubShelves, newSubShelf)
+	}
+
+	result := parsedOptions.DB.Model(&schemas.SubShelf{}).
+		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
+		CreateInBatches(&newSubShelves, parsedOptions.BatchSize)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Shelf.FailedToCreate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+	}); exception != nil {
+		return nil, exception
+	}
+
+	newSubShelfIds := make([]uuid.UUID, len(newSubShelves))
+	for index, newSubShelf := range newSubShelves {
+		newSubShelfIds[index] = newSubShelf.Id
+	}
+
+	return newSubShelfIds, nil
 }
 
 func (r *SubShelfRepository) UpdateOneById(
@@ -348,6 +460,74 @@ func (r *SubShelfRepository) UpdateOneById(
 	}
 
 	return &updates, nil
+}
+
+func (r *SubShelfRepository) BulkUpdateManyByIds(
+	userId uuid.UUID,
+	input []inputs.BulkUpdateSubShelfInput,
+	opts ...options.RepositoryOptions,
+) *exceptions.Exception {
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	isSubShelfValid := make(map[uuid.UUID]bool)
+	if !parsedOptions.SkipPermissionCheck {
+		allowedPermissions := []enums.AccessControlPermission{
+			enums.AccessControlPermission_Owner,
+			enums.AccessControlPermission_Admin,
+			enums.AccessControlPermission_Write,
+		}
+		subShelfIds := make([]uuid.UUID, len(input))
+		for index, in := range input {
+			subShelfIds[index] = in.Id
+		}
+
+		validSubShelves, exception := r.CheckPermissionsAndGetManyByIds(
+			subShelfIds,
+			userId,
+			nil,
+			allowedPermissions,
+			opts...,
+		)
+		if exception != nil {
+			return exception
+		}
+
+		for _, validSubShelf := range validSubShelves {
+			isSubShelfValid[validSubShelf.Id] = true
+		}
+	}
+
+	var valuePlaceholders []string
+	var valueArgs []interface{}
+	for _, in := range input {
+		if !parsedOptions.SkipPermissionCheck && !isSubShelfValid[in.Id] {
+			continue
+		}
+
+		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::string)")
+		valueArgs = append(valueArgs,
+			in.Id,
+			in.PartialUpdateInput.Values.Name,
+		)
+	}
+
+	sql := fmt.Sprintf(`
+		UPDATE "SubShelfTable" AS s
+		SET
+			name = COALESCE(v.name::string, s.name)
+		FROM (VALUES %s) AS v(id, name)
+		WHERE s.id = v.id::uuid AND s.deleted_at IS NULL
+	`, strings.Join(valuePlaceholders, ","))
+	result := parsedOptions.DB.Exec(sql, valueArgs...)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+	}); exception != nil {
+		return exception
+	}
+
+	return nil
 }
 
 func (r *SubShelfRepository) RestoreSoftDeletedOneById(

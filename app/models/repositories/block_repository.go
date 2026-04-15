@@ -21,15 +21,15 @@ import (
 
 type BlockRepositoryInterface interface {
 	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
-	HasPermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
+	HavePermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
 	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) (*schemas.Block, *exceptions.Exception)
 	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.BlockRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.Block, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockRelation, opts ...options.RepositoryOptions) (*schemas.Block, *exceptions.Exception)
 	CreateOneByBlockGroupId(blockGroupId uuid.UUID, userId uuid.UUID, input inputs.CreateBlockInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
-	CreateManyByBlockGroupId(blockGroupId uuid.UUID, userId uuid.UUID, input []inputs.CreateBlockInput, opts ...options.RepositoryOptions) ([]schemas.Block, *exceptions.Exception)
-	CreateManyByBlockGroupIds(userId uuid.UUID, input []inputs.CreateBlockGroupContentInput, opts ...options.RepositoryOptions) ([]schemas.Block, *exceptions.Exception)
+	CreateManyByBlockGroupId(blockGroupId uuid.UUID, userId uuid.UUID, input []inputs.CreateBlockInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
+	CreateManyByBlockGroupIds(userId uuid.UUID, input []inputs.CreateBlockGroupContentInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateBlockInput, opts ...options.RepositoryOptions) (*schemas.Block, *exceptions.Exception)
-	BulkUpdateManyByIds(userId uuid.UUID, inputs inputs.BulkUpdateBlocksInputs, opts ...options.RepositoryOptions) *exceptions.Exception
+	BulkUpdateManyByIds(userId uuid.UUID, input []inputs.BulkUpdateBlocksInput, opts ...options.RepositoryOptions) *exceptions.Exception
 	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.Block, *exceptions.Exception)
 	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.Block, *exceptions.Exception)
 	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.Block, *exceptions.Exception)
@@ -85,7 +85,7 @@ func (r *BlockRepository) HasPermission(
 	return count > 0
 }
 
-func (r *BlockRepository) HasPermissions(
+func (r *BlockRepository) HavePermissions(
 	ids []uuid.UUID,
 	userId uuid.UUID,
 	allowedPermissions []enums.AccessControlPermission,
@@ -294,7 +294,7 @@ func (r *BlockRepository) CreateManyByBlockGroupId(
 	userId uuid.UUID,
 	input []inputs.CreateBlockInput,
 	opts ...options.RepositoryOptions,
-) ([]schemas.Block, *exceptions.Exception) {
+) ([]uuid.UUID, *exceptions.Exception) {
 	if len(input) == 0 {
 		return nil, exceptions.BlockGroup.NoChanges()
 	}
@@ -341,14 +341,19 @@ func (r *BlockRepository) CreateManyByBlockGroupId(
 		return nil, exception
 	}
 
-	return newBlocks, nil
+	newBlockIds := make([]uuid.UUID, len(newBlocks))
+	for index, newBlock := range newBlocks {
+		newBlockIds[index] = newBlock.Id
+	}
+
+	return newBlockIds, nil
 }
 
 func (r *BlockRepository) CreateManyByBlockGroupIds(
 	userId uuid.UUID,
 	input []inputs.CreateBlockGroupContentInput,
 	opts ...options.RepositoryOptions,
-) ([]schemas.Block, *exceptions.Exception) {
+) ([]uuid.UUID, *exceptions.Exception) {
 	if len(input) == 0 {
 		return nil, exceptions.BlockGroup.NoChanges()
 	}
@@ -409,7 +414,12 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 			return nil, exception
 		}
 
-		return newBlocks, nil
+		newBlockIds := make([]uuid.UUID, len(newBlocks))
+		for index, newBlock := range newBlocks {
+			newBlockIds[index] = newBlock.Id
+		}
+
+		return newBlockIds, nil
 	}
 
 	var newBlocks []schemas.Block
@@ -434,7 +444,12 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 		return nil, exception
 	}
 
-	return newBlocks, nil
+	newBlockIds := make([]uuid.UUID, len(newBlocks))
+	for index, newBlock := range newBlocks {
+		newBlockIds[index] = newBlock.Id
+	}
+
+	return newBlockIds, nil
 }
 
 func (r *BlockRepository) UpdateOneById(
@@ -491,7 +506,7 @@ func (r *BlockRepository) UpdateOneById(
 
 func (r *BlockRepository) BulkUpdateManyByIds(
 	userId uuid.UUID,
-	inputs inputs.BulkUpdateBlocksInputs,
+	input []inputs.BulkUpdateBlocksInput,
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	// since there're no nullable fields may update in this repository function,
@@ -500,26 +515,37 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
+	isBlockValid := make(map[uuid.UUID]bool)
 	if !parsedOptions.SkipPermissionCheck {
 		allowedPermissions := []enums.AccessControlPermission{
 			enums.AccessControlPermission_Owner,
 			enums.AccessControlPermission_Admin,
 			enums.AccessControlPermission_Write,
 		}
-		ids := make([]uuid.UUID, len(inputs))
-		for index, input := range inputs {
-			ids[index] = input.Id
+		ids := make([]uuid.UUID, len(input))
+		for index, in := range input {
+			ids[index] = in.Id
 		}
-		if !r.HasPermissions(ids, userId, allowedPermissions, opts...) {
+
+		validBlocks, exception := r.CheckPermissionsAndGetManyByIds(ids, userId, nil, allowedPermissions, opts...)
+		if exception != nil {
 			return exceptions.Block.NoPermission("update these blocks")
+		}
+
+		for _, validBlock := range validBlocks {
+			isBlockValid[validBlock.Id] = true
 		}
 	}
 
 	var valuePlaceholders []string
 	var valueArgs []interface{}
-	for _, input := range inputs {
+	for _, in := range input {
+		if !parsedOptions.SkipPermissionCheck && !isBlockValid[in.Id] {
+			continue
+		}
+
 		setParentBlockIdNull := false
-		setNulls := input.PartialUpdateInput.SetNull
+		setNulls := in.PartialUpdateInput.SetNull
 		if setNulls != nil {
 			for field, setNull := range *setNulls {
 				if strings.ToLower(field) == "parentblockid" && setNull {
@@ -529,12 +555,12 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 		}
 		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::\"BlockType\", ?::jsonb, ?::jsonb, ?::uuid, ?::uuid, ?::boolean)")
 		valueArgs = append(valueArgs,
-			input.Id,
-			input.PartialUpdateInput.Values.Type,
-			input.PartialUpdateInput.Values.Props,
-			input.PartialUpdateInput.Values.Content,
-			input.PartialUpdateInput.Values.BlockGroupId,
-			input.PartialUpdateInput.Values.ParentBlockId,
+			in.Id,
+			in.PartialUpdateInput.Values.Type,
+			in.PartialUpdateInput.Values.Props,
+			in.PartialUpdateInput.Values.Content,
+			in.PartialUpdateInput.Values.BlockGroupId,
+			in.PartialUpdateInput.Values.ParentBlockId,
 			setParentBlockIdNull,
 		)
 	}
@@ -624,7 +650,7 @@ func (r *BlockRepository) RestoreSoftDeletedManyByIds(
 			enums.AccessControlPermission_Write,
 		}
 
-		if !r.HasPermissions(
+		if !r.HavePermissions(
 			ids,
 			userId,
 			allowedPermissions,
@@ -708,7 +734,7 @@ func (r *BlockRepository) SoftDeleteManyByIds(
 			enums.AccessControlPermission_Write,
 		}
 
-		if !r.HasPermissions(
+		if !r.HavePermissions(
 			ids,
 			userId,
 			allowedPermissions,
@@ -790,7 +816,7 @@ func (r *BlockRepository) HardDeleteManyByIds(
 			enums.AccessControlPermission_Write,
 		}
 
-		if !r.HasPermissions(
+		if !r.HavePermissions(
 			ids,
 			userId,
 			allowedPermissions,

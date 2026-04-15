@@ -91,7 +91,7 @@ func (b *RootShelfBinder) BindCreateRootShelf(controllerFunc types.ControllerFun
 			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
-		reqDto.ContextFields.OwnerId = *userId
+		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Shelf.InvalidDto().WithOrigin(err)
@@ -137,7 +137,7 @@ func (b *RootShelfBinder) BindRestoreMyRootShelfById(controllerFunc types.Contro
 			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
-		reqDto.ContextFields.OwnerId = *userId
+		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Shelf.InvalidDto().WithOrigin(err)
@@ -159,7 +159,7 @@ func (b *RootShelfBinder) BindRestoreMyRootShelvesByIds(controllerFunc types.Con
 			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
-		reqDto.ContextFields.OwnerId = *userId
+		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Shelf.InvalidDto().WithOrigin(err)
@@ -182,7 +182,7 @@ func (b *RootShelfBinder) BindDeleteMyRootShelfById(controllerFunc types.Control
 			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
-		reqDto.ContextFields.OwnerId = *userId
+		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Shelf.InvalidDto().WithOrigin(err)
@@ -205,7 +205,7 @@ func (b *RootShelfBinder) BindDeleteMyRootShelvesByIds(controllerFunc types.Cont
 			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
-		reqDto.ContextFields.OwnerId = *userId
+		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.Shelf.InvalidDto().WithOrigin(err)

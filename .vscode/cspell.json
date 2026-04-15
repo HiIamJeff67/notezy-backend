@@ -14,7 +14,10 @@
     "/English/",
     "/Enterprise/",
     "/go-randomdata/",
-    "/[a-zA-Z0-9]*sql/"
+    "/[a-zA-Z0-9]*sql/",
+    "/sdk[a-zA-Z0-9]*/",
+    "/[a-zA-Z0-9]*routes/",
+    "/otl[a-zA-Z]*/"
   ],
   "words": [
     "NotezyDB",
@@ -54,6 +57,11 @@
     "istoggleable",
     "rowspan",
     "colspan",
-    "parentblockid"
+    "parentblockid",
+    "semconv",
+    "fvbock",
+    "strs",
+    "presign",
+    "froms"
   ]
 }

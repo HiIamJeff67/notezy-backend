@@ -27,7 +27,9 @@ type RootShelfServiceInterface interface {
 	GetMyRootShelfById(ctx context.Context, reqDto *dtos.GetMyRootShelfByIdReqDto) (*dtos.GetMyRootShelfByIdResDto, *exceptions.Exception)
 	SearchRecentRootShelves(ctx context.Context, reqDto *dtos.SearchRecentRootShelvesReqDto) (*dtos.SearchRecentRootShelvesResDto, *exceptions.Exception)
 	CreateRootShelf(ctx context.Context, reqDto *dtos.CreateRootShelfReqDto) (*dtos.CreateRootShelfResDto, *exceptions.Exception)
+	CreateRootShelves(ctx context.Context, reqDto *dtos.CreateRootShelvesReqDto) (*dtos.CreateRootShelvesResDto, *exceptions.Exception)
 	UpdateMyRootShelfById(ctx context.Context, reqDto *dtos.UpdateMyRootShelfByIdReqDto) (*dtos.UpdateMyRootShelfByIdResDto, *exceptions.Exception)
+	UpdateMyRootShelvesByIds(ctx context.Context, reqDto *dtos.UpdateMyRootShelvesByIdsReqDto) (*dtos.UpdateMyRootShelvesByIdsResDto, *exceptions.Exception)
 	RestoreMyRootShelfById(ctx context.Context, reqDto *dtos.RestoreMyRootShelfByIdReqDto) (*dtos.RestoreMyRootShelfByIdResDto, *exceptions.Exception)
 	RestoreMyRootShelvesByIds(ctx context.Context, reqDto *dtos.RestoreMyRootShelvesByIdsReqDto) (*dtos.RestoreMyRootShelvesByIdsResDto, *exceptions.Exception)
 	DeleteMyRootShelfById(ctx context.Context, reqDto *dtos.DeleteMyRootShelfByIdReqDto) (*dtos.DeleteMyRootShelfByIdResDto, *exceptions.Exception)
@@ -129,8 +131,8 @@ func (s *RootShelfService) CreateRootShelf(
 	db := s.db.WithContext(ctx)
 
 	now := time.Now()
-	shelfId, exception := s.rootShelfRepository.CreateOneByOwnerId(
-		reqDto.ContextFields.OwnerId,
+	newRootShelfId, exception := s.rootShelfRepository.CreateOneByOwnerId(
+		reqDto.ContextFields.UserId,
 		inputs.CreateRootShelfInput{
 			Name:           reqDto.Body.Name,
 			LastAnalyzedAt: &now,
@@ -142,7 +144,40 @@ func (s *RootShelfService) CreateRootShelf(
 	}
 
 	return &dtos.CreateRootShelfResDto{
-		Id:             *shelfId,
+		Id:             *newRootShelfId,
+		LastAnalyzedAt: now,
+		CreatedAt:      time.Now(),
+	}, nil
+}
+
+func (s *RootShelfService) CreateRootShelves(
+	ctx context.Context, reqDto *dtos.CreateRootShelvesReqDto,
+) (*dtos.CreateRootShelvesResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	now := time.Now()
+	input := make([]inputs.CreateRootShelfInput, len(reqDto.Body.CreatedRootShelves))
+	for index, createdRootShelf := range reqDto.Body.CreatedRootShelves {
+		input[index] = inputs.CreateRootShelfInput{
+			Name:           createdRootShelf.Name,
+			LastAnalyzedAt: &now,
+		}
+	}
+	newRootShelfIds, exception := s.rootShelfRepository.CreateManyByOwnerId(
+		reqDto.ContextFields.UserId,
+		input,
+		options.WithDB(db),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.CreateRootShelvesResDto{
+		Ids:            newRootShelfIds,
 		LastAnalyzedAt: now,
 		CreatedAt:      time.Now(),
 	}, nil
@@ -177,6 +212,41 @@ func (s *RootShelfService) UpdateMyRootShelfById(
 	}, nil
 }
 
+func (s *RootShelfService) UpdateMyRootShelvesByIds(
+	ctx context.Context, reqDto *dtos.UpdateMyRootShelvesByIdsReqDto,
+) (*dtos.UpdateMyRootShelvesByIdsResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	input := make([]inputs.BulkUpdateRootShelfInput, len(reqDto.Body.UpdatedRootShelves))
+	for index, updatedRootShelf := range reqDto.Body.UpdatedRootShelves {
+		input[index] = inputs.BulkUpdateRootShelfInput{
+			Id: updatedRootShelf.RootShelfId,
+			PartialUpdateInput: inputs.PartialUpdateInput[inputs.UpdateRootShelfInput]{
+				Values: inputs.UpdateRootShelfInput{
+					Name: updatedRootShelf.Values.Name,
+				},
+				SetNull: updatedRootShelf.SetNull,
+			},
+		}
+	}
+	exception := s.rootShelfRepository.BulkUpdateManyByIds(
+		reqDto.ContextFields.UserId,
+		input,
+		options.WithDB(db),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.UpdateMyRootShelvesByIdsResDto{
+		UpdatedAt: time.Now(),
+	}, nil
+}
+
 func (s *RootShelfService) RestoreMyRootShelfById(
 	ctx context.Context, reqDto *dtos.RestoreMyRootShelfByIdReqDto,
 ) (*dtos.RestoreMyRootShelfByIdResDto, *exceptions.Exception) {
@@ -188,7 +258,7 @@ func (s *RootShelfService) RestoreMyRootShelfById(
 
 	restoredRootShelf, exception := s.rootShelfRepository.RestoreSoftDeletedOneById(
 		reqDto.Body.RootShelfId,
-		reqDto.ContextFields.OwnerId,
+		reqDto.ContextFields.UserId,
 		options.WithDB(db),
 	)
 	if exception != nil {
@@ -218,7 +288,7 @@ func (s *RootShelfService) RestoreMyRootShelvesByIds(
 
 	restoredRootShelves, exception := s.rootShelfRepository.RestoreSoftDeletedManyByIds(
 		reqDto.Body.RootShelfIds,
-		reqDto.ContextFields.OwnerId,
+		reqDto.ContextFields.UserId,
 		options.WithDB(db),
 	)
 	if exception != nil {
@@ -253,7 +323,7 @@ func (s *RootShelfService) DeleteMyRootShelfById(
 
 	exception := s.rootShelfRepository.SoftDeleteOneById(
 		reqDto.Body.RootShelfId,
-		reqDto.ContextFields.OwnerId,
+		reqDto.ContextFields.UserId,
 		options.WithDB(db),
 	)
 	if exception != nil {
@@ -276,7 +346,7 @@ func (s *RootShelfService) DeleteMyRootShelvesByIds(
 
 	exception := s.rootShelfRepository.SoftDeleteManyByIds(
 		reqDto.Body.RootShelfIds,
-		reqDto.ContextFields.OwnerId,
+		reqDto.ContextFields.UserId,
 		options.WithDB(db),
 	)
 	if exception != nil {

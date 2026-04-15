@@ -16,6 +16,7 @@ type SubShelfModule struct {
 
 func NewSubShelfModule() *SubShelfModule {
 	subShelfRepository := repositories.NewSubShelfRepository()
+	rootShelfRepository := repositories.NewRootShelfRepository()
 	materialRepository := repositories.NewMaterialRepository()
 	blockPackRepository := repositories.NewBlockPackRepository()
 
@@ -23,6 +24,7 @@ func NewSubShelfModule() *SubShelfModule {
 		models.NotezyDB,
 		storages.InMemoryStorage,
 		subShelfRepository,
+		rootShelfRepository,
 		materialRepository,
 		blockPackRepository,
 	)

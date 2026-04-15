@@ -44,10 +44,27 @@ type CreateRootShelfReqDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			OwnerId uuid.UUID // extracted from the access token of AuthMiddleware()
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
 			Name string `json:"name" validate:"required,min=1,max=128,isshelfname"`
+		},
+		any,
+	]
+}
+
+type CreateRootShelvesReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			CreatedRootShelves []struct {
+				Name string `json:"name" validate:"required,min=1,max=128,isshelfname"`
+			} `json:"insertedRootShelves" validate:"required"`
 		},
 		any,
 	]
@@ -71,13 +88,33 @@ type UpdateMyRootShelfByIdReqDto struct {
 	]
 }
 
+type UpdateMyRootShelvesByIdsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			UpdatedRootShelves []struct {
+				RootShelfId uuid.UUID `json:"rootShelfId" validate:"required"`
+				PartialUpdateDto[struct {
+					Name *string `json:"name" validate:"omitnil,min=1,max=128,isshelfname"`
+				}]
+			} `json:"updatedRootShelves" validate:"required"`
+		},
+		any,
+	]
+}
+
 type RestoreMyRootShelfByIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			OwnerId uuid.UUID
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
 			RootShelfId uuid.UUID `json:"rootShelfId" validate:"required"`
@@ -92,7 +129,7 @@ type RestoreMyRootShelvesByIdsReqDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			OwnerId uuid.UUID
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
 			RootShelfIds []uuid.UUID `json:"rootShelfIds" validate:"required,min=1,max=128"`
@@ -107,7 +144,7 @@ type DeleteMyRootShelfByIdReqDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			OwnerId uuid.UUID
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
 			RootShelfId uuid.UUID `json:"rootShelfId" validate:"required"`
@@ -122,7 +159,7 @@ type DeleteMyRootShelvesByIdsReqDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			OwnerId uuid.UUID
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
 			RootShelfIds []uuid.UUID `json:"rootShelfIds" validate:"required,min=1,max=128"`
@@ -152,7 +189,17 @@ type CreateRootShelfResDto struct {
 	CreatedAt      time.Time `json:"createdAt"`
 }
 
+type CreateRootShelvesResDto struct {
+	Ids            []uuid.UUID `json:"ids"`
+	LastAnalyzedAt time.Time   `json:"lastAnalyzedAt"`
+	CreatedAt      time.Time   `json:"createdAt"`
+}
+
 type UpdateMyRootShelfByIdResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type UpdateMyRootShelvesByIdsResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
