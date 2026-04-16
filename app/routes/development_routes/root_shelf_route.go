@@ -72,6 +72,22 @@ func configureDevelopmentRootShelfRoutes() {
 				),
 			)...,
 		)
+		rootShelfRoutes.POST(
+			"/createRootShelves",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createRootShelves"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RootShelf.CreateRootShelves,
+					),
+				},
+				defaultMiddlewares,
+				rootShelfModule.Binder.BindCreateRootShelves(
+					rootShelfModule.Controller.CreateRootShelves,
+				),
+			)...,
+		)
 		rootShelfRoutes.PUT(
 			"/updateMyRootShelfById",
 			middlewares.RepositionMiddleware(
@@ -85,6 +101,22 @@ func configureDevelopmentRootShelfRoutes() {
 				defaultMiddlewares,
 				rootShelfModule.Binder.BindUpdateMyRootShelfById(
 					rootShelfModule.Controller.UpdateMyRootShelfById,
+				),
+			)...,
+		)
+		rootShelfRoutes.PUT(
+			"/updateMyRootShelvesByIds",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "updateMyRootShelvesByIds"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RootShelf.UpdateMyRootShelvesByIds,
+					),
+				},
+				defaultMiddlewares,
+				rootShelfModule.Binder.BindUpdateMyRootShelvesByIds(
+					rootShelfModule.Controller.UpdateMyRootShelvesByIds,
 				),
 			)...,
 		)

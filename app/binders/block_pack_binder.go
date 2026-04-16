@@ -18,9 +18,12 @@ type BlockPackBinderInterface interface {
 	BindGetMyBlockPacksByParentSubShelfId(controllerFunc types.ControllerFunc[*dtos.GetMyBlockPacksByParentSubShelfIdReqDto]) gin.HandlerFunc
 	BindGetAllMyBlockPacksByRootShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllMyBlockPacksByRootShelfIdReqDto]) gin.HandlerFunc
 	BindCreateBlockPack(controllerFunc types.ControllerFunc[*dtos.CreateBlockPackReqDto]) gin.HandlerFunc
+	BindCreateBlockPacks(controllerFunc types.ControllerFunc[*dtos.CreateBlockPacksReqDto]) gin.HandlerFunc
 	BindUpdateMyBlockPackById(controllerFunc types.ControllerFunc[*dtos.UpdateMyBlockPackByIdReqDto]) gin.HandlerFunc
+	BindUpdateMyBlockPacksByIds(controllerFunc types.ControllerFunc[*dtos.UpdateMyBlockPacksByIdsReqDto]) gin.HandlerFunc
 	BindMoveMyBlockPackById(controllerFunc types.ControllerFunc[*dtos.MoveMyBlockPackByIdReqDto]) gin.HandlerFunc
 	BindMoveMyBlockPacksByIds(controllerFunc types.ControllerFunc[*dtos.MoveMyBlockPacksByIdsReqDto]) gin.HandlerFunc
+	BindBatchMoveMyBlockPacksByIds(controllerFunc types.ControllerFunc[*dtos.BatchMoveMyBlockPacksByIdsReqDto]) gin.HandlerFunc
 	BindRestoreMyBlockPackById(controllerFunc types.ControllerFunc[*dtos.RestoreMyBlockPackByIdReqDto]) gin.HandlerFunc
 	BindRestoreMyBlockPacksByIds(controllerFunc types.ControllerFunc[*dtos.RestoreMyBlockPacksByIdsReqDto]) gin.HandlerFunc
 	BindDeleteMyBlockPackById(controllerFunc types.ControllerFunc[*dtos.DeleteMyBlockPackByIdReqDto]) gin.HandlerFunc
@@ -172,9 +175,55 @@ func (b *BlockPackBinder) BindCreateBlockPack(controllerFunc types.ControllerFun
 	}
 }
 
+func (b *BlockPackBinder) BindCreateBlockPacks(controllerFunc types.ControllerFunc[*dtos.CreateBlockPacksReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.CreateBlockPacksReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exception := exceptions.BlockPack.InvalidDto().WithOrigin(err)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
 func (b *BlockPackBinder) BindUpdateMyBlockPackById(controllerFunc types.ControllerFunc[*dtos.UpdateMyBlockPackByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.UpdateMyBlockPackByIdReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exception := exceptions.BlockPack.InvalidDto().WithOrigin(err)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *BlockPackBinder) BindUpdateMyBlockPacksByIds(controllerFunc types.ControllerFunc[*dtos.UpdateMyBlockPacksByIdsReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.UpdateMyBlockPacksByIdsReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -221,6 +270,29 @@ func (b *BlockPackBinder) BindMoveMyBlockPackById(controllerFunc types.Controlle
 func (b *BlockPackBinder) BindMoveMyBlockPacksByIds(controllerFunc types.ControllerFunc[*dtos.MoveMyBlockPacksByIdsReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.MoveMyBlockPacksByIdsReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exception := exceptions.BlockPack.InvalidDto().WithOrigin(err)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *BlockPackBinder) BindBatchMoveMyBlockPacksByIds(controllerFunc types.ControllerFunc[*dtos.BatchMoveMyBlockPacksByIdsReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.BatchMoveMyBlockPacksByIdsReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 

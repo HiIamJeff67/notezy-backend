@@ -18,9 +18,12 @@ type SubShelfBinderInterface interface {
 	BindGetAllMySubShelvesByRootShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllMySubShelvesByRootShelfIdReqDto]) gin.HandlerFunc
 	BindGetMySubShelvesAndItemsByPrevSubShelfId(controllerFunc types.ControllerFunc[*dtos.GetMySubShelvesAndItemsByPrevSubShelfIdReqDto]) gin.HandlerFunc
 	BindCreateSubShelfByRootShelfId(controllerFunc types.ControllerFunc[*dtos.CreateSubShelfByRootShelfIdReqDto]) gin.HandlerFunc
+	BindCreateSubShelvesByRootShelfIds(controllerFunc types.ControllerFunc[*dtos.CreateSubShelvesByRootShelfIdsReqDto]) gin.HandlerFunc
 	BindUpdateMySubShelfById(controllerFunc types.ControllerFunc[*dtos.UpdateMySubShelfByIdReqDto]) gin.HandlerFunc
+	BindUpdateMySubShelvesByIds(controllerFunc types.ControllerFunc[*dtos.UpdateMySubShelvesByIdsReqDto]) gin.HandlerFunc
 	BindMoveMySubShelf(controllerFunc types.ControllerFunc[*dtos.MoveMySubShelfReqDto]) gin.HandlerFunc
 	BindMoveMySubShelves(controllerFunc types.ControllerFunc[*dtos.MoveMySubShelvesReqDto]) gin.HandlerFunc
+	BindBatchMoveMySubShelves(controllerFunc types.ControllerFunc[*dtos.BatchMoveMySubShelvesReqDto]) gin.HandlerFunc
 	BindRestoreMySubShelfById(controllerFunc types.ControllerFunc[*dtos.RestoreMySubShelfByIdReqDto]) gin.HandlerFunc
 	BindRestoreMySubShelvesByIds(controllerFunc types.ControllerFunc[*dtos.RestoreMySubShelvesByIdsReqDto]) gin.HandlerFunc
 	BindDeleteMySubShelfById(controllerFunc types.ControllerFunc[*dtos.DeleteMySubShelfByIdReqDto]) gin.HandlerFunc
@@ -172,9 +175,55 @@ func (b *SubShelfBinder) BindCreateSubShelfByRootShelfId(controllerFunc types.Co
 	}
 }
 
+func (b *SubShelfBinder) BindCreateSubShelvesByRootShelfIds(controllerFunc types.ControllerFunc[*dtos.CreateSubShelvesByRootShelfIdsReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.CreateSubShelvesByRootShelfIdsReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exception := exceptions.Shelf.InvalidDto().WithOrigin(err)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
 func (b *SubShelfBinder) BindUpdateMySubShelfById(controllerFunc types.ControllerFunc[*dtos.UpdateMySubShelfByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.UpdateMySubShelfByIdReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exception := exceptions.Shelf.InvalidDto().WithOrigin(err)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *SubShelfBinder) BindUpdateMySubShelvesByIds(controllerFunc types.ControllerFunc[*dtos.UpdateMySubShelvesByIdsReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.UpdateMySubShelvesByIdsReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -221,6 +270,29 @@ func (b *SubShelfBinder) BindMoveMySubShelf(controllerFunc types.ControllerFunc[
 func (b *SubShelfBinder) BindMoveMySubShelves(controllerFunc types.ControllerFunc[*dtos.MoveMySubShelvesReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.MoveMySubShelvesReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exception := exceptions.Shelf.InvalidDto().WithOrigin(err)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *SubShelfBinder) BindBatchMoveMySubShelves(controllerFunc types.ControllerFunc[*dtos.BatchMoveMySubShelvesReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.BatchMoveMySubShelvesReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 

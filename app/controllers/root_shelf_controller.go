@@ -13,7 +13,9 @@ type RootShelfControllerInterface interface {
 	GetMyRootShelfById(ctx *gin.Context, reqDto *dtos.GetMyRootShelfByIdReqDto)
 	SearchRecentRootShelves(ctx *gin.Context, reqDto *dtos.SearchRecentRootShelvesReqDto)
 	CreateRootShelf(ctx *gin.Context, reqDto *dtos.CreateRootShelfReqDto)
+	CreateRootShelves(ctx *gin.Context, reqDto *dtos.CreateRootShelvesReqDto)
 	UpdateMyRootShelfById(ctx *gin.Context, reqDto *dtos.UpdateMyRootShelfByIdReqDto)
+	UpdateMyRootShelvesByIds(ctx *gin.Context, reqDto *dtos.UpdateMyRootShelvesByIdsReqDto)
 	RestoreMyRootShelfById(ctx *gin.Context, reqDto *dtos.RestoreMyRootShelfByIdReqDto)
 	RestoreMyRootShelvesByIds(ctx *gin.Context, reqDto *dtos.RestoreMyRootShelvesByIdsReqDto)
 	DeleteMyRootShelfById(ctx *gin.Context, reqDto *dtos.DeleteMyRootShelfByIdReqDto)
@@ -72,8 +74,36 @@ func (c *RootShelfController) CreateRootShelf(ctx *gin.Context, reqDto *dtos.Cre
 	})
 }
 
+func (c *RootShelfController) CreateRootShelves(ctx *gin.Context, reqDto *dtos.CreateRootShelvesReqDto) {
+	resDto, exception := c.rootShelfService.CreateRootShelves(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
 func (c *RootShelfController) UpdateMyRootShelfById(ctx *gin.Context, reqDto *dtos.UpdateMyRootShelfByIdReqDto) {
 	resDto, exception := c.rootShelfService.UpdateMyRootShelfById(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RootShelfController) UpdateMyRootShelvesByIds(ctx *gin.Context, reqDto *dtos.UpdateMyRootShelvesByIdsReqDto) {
+	resDto, exception := c.rootShelfService.UpdateMyRootShelvesByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return

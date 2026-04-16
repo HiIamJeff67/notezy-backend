@@ -104,6 +104,22 @@ func configureDevelopmentBlockPackRoutes() {
 				),
 			)...,
 		)
+		blockPackRoutes.POST(
+			"/createBlockPacks",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createBlockPacks"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.BlockPack.CreateBlockPacks,
+					),
+				},
+				defaultMiddlewares,
+				blockPackModule.Binder.BindCreateBlockPacks(
+					blockPackModule.Controller.CreateBlockPacks,
+				),
+			)...,
+		)
 		blockPackRoutes.PUT(
 			"/updateMyBlockPackById",
 			middlewares.RepositionMiddleware(
@@ -117,6 +133,22 @@ func configureDevelopmentBlockPackRoutes() {
 				defaultMiddlewares,
 				blockPackModule.Binder.BindUpdateMyBlockPackById(
 					blockPackModule.Controller.UpdateMyBlockPackById,
+				),
+			)...,
+		)
+		blockPackRoutes.PUT(
+			"/updateMyBlockPacksByIds",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "updateMyBlockPacksByIds"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.BlockPack.UpdateMyBlockPacksByIds,
+					),
+				},
+				defaultMiddlewares,
+				blockPackModule.Binder.BindUpdateMyBlockPacksByIds(
+					blockPackModule.Controller.UpdateMyBlockPacksByIds,
 				),
 			)...,
 		)
@@ -149,6 +181,22 @@ func configureDevelopmentBlockPackRoutes() {
 				defaultMiddlewares,
 				blockPackModule.Binder.BindMoveMyBlockPacksByIds(
 					blockPackModule.Controller.MoveMyBlockPacksByIds,
+				),
+			)...,
+		)
+		blockPackRoutes.PUT(
+			"/batchMoveMyBlockPacksByIds",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "batchMoveMyBlockPacksByIds"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.BlockPack.BatchMoveMyBlockPacksByIds,
+					),
+				},
+				defaultMiddlewares,
+				blockPackModule.Binder.BindBatchMoveMyBlockPacksByIds(
+					blockPackModule.Controller.BatchMoveMyBlockPacksByIds,
 				),
 			)...,
 		)

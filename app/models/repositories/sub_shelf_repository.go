@@ -392,7 +392,7 @@ func (r *SubShelfRepository) BulkCreateManyByRootShelfIds(
 			continue
 		}
 		var newSubShelf schemas.SubShelf
-		if err := copier.Copy(&newSubShelf, &input); err != nil {
+		if err := copier.Copy(&newSubShelf, &in); err != nil {
 			return nil, exceptions.Shelf.InvalidInput().WithOrigin(err)
 		}
 		newSubShelf.RootShelfId = in.RootShelfId

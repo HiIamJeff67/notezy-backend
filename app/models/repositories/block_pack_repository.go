@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -25,7 +27,9 @@ type BlockPackRepositoryInterface interface {
 	CheckPermissionsAndGetManyWithOwnerIdsByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.BlockPackRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]uuid.UUID, []schemas.BlockPack, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.BlockPack, *exceptions.Exception)
 	CreateOneBySubShelfId(subShelfId uuid.UUID, userId uuid.UUID, input inputs.CreateBlockPackInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
+	BulkCreateManyBySubShelfIds(userId uuid.UUID, input []inputs.BulkCreateBlockPackInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateBlockPackInput, opts ...options.RepositoryOptions) (*schemas.BlockPack, *exceptions.Exception)
+	BulkUpdateManyByIds(userId uuid.UUID, input []inputs.BulkUpdateBlockPackInput, opts ...options.RepositoryOptions) *exceptions.Exception
 	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.BlockPack, *exceptions.Exception)
 	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.BlockPack, *exceptions.Exception)
 	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
@@ -386,6 +390,78 @@ func (r *BlockPackRepository) CreateOneBySubShelfId(
 	return &newBlockPack.Id, nil
 }
 
+func (r *BlockPackRepository) BulkCreateManyBySubShelfIds(
+	userId uuid.UUID,
+	input []inputs.BulkCreateBlockPackInput,
+	opts ...options.RepositoryOptions,
+) ([]uuid.UUID, *exceptions.Exception) {
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	isParentSubShelfIdValid := make(map[uuid.UUID]bool)
+	if !parsedOptions.SkipPermissionCheck {
+		allowedPermissions := []enums.AccessControlPermission{
+			enums.AccessControlPermission_Owner,
+			enums.AccessControlPermission_Admin,
+			enums.AccessControlPermission_Write,
+		}
+		isParentSubShelfExist := make(map[uuid.UUID]bool)
+		var parentSubShelfIds []uuid.UUID
+		for _, in := range input {
+			if isParentSubShelfExist[in.ParentSubShelfId] {
+				continue
+			}
+			isParentSubShelfExist[in.ParentSubShelfId] = true
+			parentSubShelfIds = append(parentSubShelfIds, in.ParentSubShelfId)
+		}
+
+		subShelfRepository := NewSubShelfRepository()
+		validParentSubShelves, exception := subShelfRepository.CheckPermissionsAndGetManyByIds(
+			parentSubShelfIds,
+			userId,
+			nil,
+			allowedPermissions,
+			opts...,
+		)
+		if exception != nil {
+			return nil, exception
+		}
+
+		for _, validParentSubShelf := range validParentSubShelves {
+			isParentSubShelfIdValid[validParentSubShelf.Id] = true
+		}
+	}
+
+	var newBlockPacks []schemas.BlockPack
+	for _, in := range input {
+		if !parsedOptions.SkipPermissionCheck && !isParentSubShelfIdValid[in.ParentSubShelfId] {
+			continue
+		}
+		var newBlockPack schemas.BlockPack
+		if err := copier.Copy(&newBlockPack, &in); err != nil {
+			return nil, exceptions.BlockPack.InvalidInput().WithOrigin(err)
+		}
+		newBlockPacks = append(newBlockPacks, newBlockPack)
+	}
+
+	result := parsedOptions.DB.Model(&schemas.BlockPack{}).
+		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
+		CreateInBatches(&newBlockPacks, parsedOptions.BatchSize)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Block.FailedToCreate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
+	}); exception != nil {
+		return nil, exception
+	}
+
+	newBlockPackIds := make([]uuid.UUID, len(newBlockPacks))
+	for index, newBlockPack := range newBlockPacks {
+		newBlockPackIds[index] = newBlockPack.Id
+	}
+
+	return newBlockPackIds, nil
+}
+
 func (r *BlockPackRepository) UpdateOneById(
 	id uuid.UUID,
 	userId uuid.UUID,
@@ -445,6 +521,125 @@ func (r *BlockPackRepository) UpdateOneById(
 	}
 
 	return &updates, nil
+}
+
+func (r *BlockPackRepository) BulkUpdateManyByIds(
+	userId uuid.UUID,
+	input []inputs.BulkUpdateBlockPackInput,
+	opts ...options.RepositoryOptions,
+) *exceptions.Exception {
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	isSubShelfValid := make(map[uuid.UUID]bool)
+	if !parsedOptions.SkipPermissionCheck {
+		allowedPermissions := []enums.AccessControlPermission{
+			enums.AccessControlPermission_Owner,
+			enums.AccessControlPermission_Admin,
+			enums.AccessControlPermission_Write,
+		}
+		isParentSubShelfExist := make(map[uuid.UUID]bool)
+		var parentSubShelfIds []uuid.UUID
+		for _, in := range input {
+			if in.PartialUpdateInput.Values.ParentSubShelfId == nil {
+				if isParentSubShelfExist[uuid.Nil] {
+					continue
+				}
+
+				parentSubShelfIds = append(parentSubShelfIds, uuid.Nil)
+				isParentSubShelfExist[uuid.Nil] = true
+			} else {
+				if isParentSubShelfExist[*in.PartialUpdateInput.Values.ParentSubShelfId] {
+					continue
+				}
+
+				parentSubShelfIds = append(parentSubShelfIds, *in.PartialUpdateInput.Values.ParentSubShelfId)
+				isParentSubShelfExist[*in.PartialUpdateInput.Values.ParentSubShelfId] = true
+			}
+		}
+
+		subShelfRepository := NewSubShelfRepository()
+		validSubShelves, exception := subShelfRepository.CheckPermissionsAndGetManyByIds(
+			parentSubShelfIds,
+			userId,
+			nil,
+			allowedPermissions,
+			opts...,
+		)
+		if exception != nil {
+			return exception
+		}
+
+		for _, validSubShelf := range validSubShelves {
+			isSubShelfValid[validSubShelf.Id] = true
+		}
+	}
+
+	var valuePlaceholders []string
+	var valueArgs []interface{}
+	for _, in := range input {
+		if !parsedOptions.SkipPermissionCheck &&
+			in.PartialUpdateInput.Values.ParentSubShelfId != nil &&
+			!isSubShelfValid[*in.PartialUpdateInput.Values.ParentSubShelfId] {
+			continue
+		}
+
+		setIconNull := false
+		setHeaderBackgroundNull := false
+		if in.PartialUpdateInput.SetNull != nil {
+			for field, setNull := range *in.PartialUpdateInput.SetNull {
+				if setNull {
+					switch strings.ToLower(field) {
+					case "icon":
+						setIconNull = true
+					case "headerbackgroundurl":
+						setHeaderBackgroundNull = true
+					}
+				}
+				if setIconNull && setHeaderBackgroundNull {
+					break
+				}
+			}
+		}
+
+		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid, ?::string, ?::\"SupportedBlockPackIcon\", ?::string, ?::boolean, ?::boolean)")
+		valueArgs = append(valueArgs,
+			in.Id,
+			in.PartialUpdateInput.Values.ParentSubShelfId,
+			in.PartialUpdateInput.Values.Name,
+			in.PartialUpdateInput.Values.Icon,
+			in.PartialUpdateInput.Values.HeaderBackgroundURL,
+			setIconNull,
+			setHeaderBackgroundNull,
+		)
+	}
+
+	sql := fmt.Sprintf(`
+		UPDATE "BlockPackTable" bp
+		SET
+			parent_sub_shelf_id = COALESCE(v.parent_sub_shelf_id::uuid, bp.parent_sub_shelf_id),
+			name = COALESCE(v.name::string, bp.name),
+			icon = CASE
+				WHEN v.set_icon_null::boolean THEN NULL
+				ELSE COALESCE(v.icon::"SupportedBlockPackIcon", bp.icon)
+			END,
+			header_background_url = CASE
+				WHEN v.set_header_background_url_null::boolean THEN NULL
+				ELSE COALESCE(v.header_background_url::string, bp.header_background_url)
+			END,
+			updated_at = NOW()
+		FROM (VALUES %s) AS v(id, parent_sub_shelf_id, name, icon, header_background_url, set_icon_null, set_header_background_url_null)
+		WHERE bp.id = v.id::uuid AND bp.deleted_at IS NULL
+	`, strings.Join(valuePlaceholders, ","))
+	result := parsedOptions.DB.Exec(sql, valueArgs...)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToCreate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
+	}); exception != nil {
+		return exception
+	}
+
+	return nil
 }
 
 func (r *BlockPackRepository) RestoreSoftDeletedOneById(

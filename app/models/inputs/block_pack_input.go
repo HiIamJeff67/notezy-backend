@@ -12,6 +12,13 @@ type CreateBlockPackInput struct {
 	HeaderBackgroundURL *string                       `json:"headerBackgroundURL" gorm:"header_background_url;"`
 }
 
+type BulkCreateBlockPackInput struct {
+	ParentSubShelfId    uuid.UUID                     `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id;"`
+	Name                string                        `json:"name" gorm:"column:name;"`
+	Icon                *enums.SupportedBlockPackIcon `json:"icon" gorm:"column:icon;"`
+	HeaderBackgroundURL *string                       `json:"headerBackgroundURL" gorm:"header_background_url;"`
+}
+
 type UpdateBlockPackInput struct {
 	ParentSubShelfId    *uuid.UUID                    `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id;"`
 	Name                *string                       `json:"name" gorm:"column:name;"`
@@ -20,3 +27,8 @@ type UpdateBlockPackInput struct {
 }
 
 type PartialUpdateBlockPackInput = PartialUpdateInput[UpdateBlockPackInput]
+
+type BulkUpdateBlockPackInput struct {
+	Id                 uuid.UUID                                `json:"id" gorm:"column:id;"`
+	PartialUpdateInput PartialUpdateInput[UpdateBlockPackInput] `json:"partialUpdateInput"`
+}

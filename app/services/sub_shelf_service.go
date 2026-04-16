@@ -35,6 +35,7 @@ type SubShelfServiceInterface interface {
 	UpdateMySubShelvesByIds(ctx context.Context, reqDto *dtos.UpdateMySubShelvesByIdsReqDto) (*dtos.UpdateMySubShelvesByIdsResDto, *exceptions.Exception)
 	MoveMySubShelf(ctx context.Context, reqDto *dtos.MoveMySubShelfReqDto) (*dtos.MoveMySubShelfResDto, *exceptions.Exception)
 	MoveMySubShelves(ctx context.Context, reqDto *dtos.MoveMySubShelvesReqDto) (*dtos.MoveMySubShelvesResDto, *exceptions.Exception)
+	BatchMoveMySubShelves(ctx context.Context, reqDto *dtos.BatchMoveMySubShelvesReqDto) (*dtos.BatchMoveMySubShelvesResDto, *exceptions.Exception)
 	RestoreMySubShelfById(ctx context.Context, reqDto *dtos.RestoreMySubShelfByIdReqDto) (*dtos.RestoreMySubShelfByIdResDto, *exceptions.Exception)
 	RestoreMySubShelvesByIds(ctx context.Context, reqDto *dtos.RestoreMySubShelvesByIdsReqDto) (*dtos.RestoreMySubShelvesByIdsResDto, *exceptions.Exception)
 	DeleteMySubShelfById(ctx context.Context, reqDto *dtos.DeleteMySubShelfByIdReqDto) (*dtos.DeleteMySubShelfByIdResDto, *exceptions.Exception)
@@ -752,7 +753,12 @@ func (s *SubShelfService) BatchMoveMySubShelves(
 			path := to.Path
 			path = append(path, to.Id)
 			valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid, ?::uuid, ?::uuid[])")
-			valueArgs = append(valueArgs, from.Id, to.Id, to.RootShelfId, path)
+			valueArgs = append(valueArgs,
+				from.Id,
+				to.Id,
+				to.RootShelfId,
+				path,
+			)
 		}
 	}
 

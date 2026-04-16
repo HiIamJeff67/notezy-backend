@@ -15,9 +15,12 @@ type BlockPackControllerInterface interface {
 	GetMyBlockPacksByParentSubShelfId(ctx *gin.Context, reqDto *dtos.GetMyBlockPacksByParentSubShelfIdReqDto)
 	GetAllMyBlockPacksByRootShelfId(ctx *gin.Context, reqDto *dtos.GetAllMyBlockPacksByRootShelfIdReqDto)
 	CreateBlockPack(ctx *gin.Context, reqDto *dtos.CreateBlockPackReqDto)
+	CreateBlockPacks(ctx *gin.Context, reqDto *dtos.CreateBlockPacksReqDto)
 	UpdateMyBlockPackById(ctx *gin.Context, reqDto *dtos.UpdateMyBlockPackByIdReqDto)
+	UpdateMyBlockPacksByIds(ctx *gin.Context, reqDto *dtos.UpdateMyBlockPacksByIdsReqDto)
 	MoveMyBlockPackById(ctx *gin.Context, reqDto *dtos.MoveMyBlockPackByIdReqDto)
 	MoveMyBlockPacksByIds(ctx *gin.Context, reqDto *dtos.MoveMyBlockPacksByIdsReqDto)
+	BatchMoveMyBlockPacksByIds(ctx *gin.Context, reqDto *dtos.BatchMoveMyBlockPacksByIdsReqDto)
 	RestoreMyBlockPackById(ctx *gin.Context, reqDto *dtos.RestoreMyBlockPackByIdReqDto)
 	RestoreMyBlockPacksByIds(ctx *gin.Context, reqDto *dtos.RestoreMyBlockPacksByIdsReqDto)
 	DeleteMyBlockPackById(ctx *gin.Context, reqDto *dtos.DeleteMyBlockPackByIdReqDto)
@@ -104,8 +107,36 @@ func (c *BlockPackController) CreateBlockPack(ctx *gin.Context, reqDto *dtos.Cre
 	})
 }
 
+func (c *BlockPackController) CreateBlockPacks(ctx *gin.Context, reqDto *dtos.CreateBlockPacksReqDto) {
+	resDto, exception := c.blockPackService.CreateBlockPacks(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
 func (c *BlockPackController) UpdateMyBlockPackById(ctx *gin.Context, reqDto *dtos.UpdateMyBlockPackByIdReqDto) {
 	resDto, exception := c.blockPackService.UpdateMyBlockPackById(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *BlockPackController) UpdateMyBlockPacksByIds(ctx *gin.Context, reqDto *dtos.UpdateMyBlockPacksByIdsReqDto) {
+	resDto, exception := c.blockPackService.UpdateMyBlockPacksByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
@@ -134,6 +165,20 @@ func (c *BlockPackController) MoveMyBlockPackById(ctx *gin.Context, reqDto *dtos
 
 func (c *BlockPackController) MoveMyBlockPacksByIds(ctx *gin.Context, reqDto *dtos.MoveMyBlockPacksByIdsReqDto) {
 	resDto, exception := c.blockPackService.MoveMyBlockPacksByIds(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *BlockPackController) BatchMoveMyBlockPacksByIds(ctx *gin.Context, reqDto *dtos.BatchMoveMyBlockPacksByIdsReqDto) {
+	resDto, exception := c.blockPackService.BatchMoveMyBlockPacksByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return

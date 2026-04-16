@@ -104,6 +104,22 @@ func configureDevelopmentSubShelfRoutes() {
 				),
 			)...,
 		)
+		subShelfRoutes.POST(
+			"/createSubShelvesByRootShelfIds",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createSubShelvesByRootShelfIds"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.SubShelf.CreateSubShelvesByRootShelfIds,
+					),
+				},
+				defaultMiddlewares,
+				subShelfModule.Binder.BindCreateSubShelvesByRootShelfIds(
+					subShelfModule.Controller.CreateSubShelvesByRootShelfIds,
+				),
+			)...,
+		)
 		subShelfRoutes.PUT(
 			"/updateMySubShelfById",
 			middlewares.RepositionMiddleware(
@@ -117,6 +133,22 @@ func configureDevelopmentSubShelfRoutes() {
 				defaultMiddlewares,
 				subShelfModule.Binder.BindUpdateMySubShelfById(
 					subShelfModule.Controller.UpdateMySubShelfById,
+				),
+			)...,
+		)
+		subShelfRoutes.PUT(
+			"/updateMySubShelvesByIds",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "updateMySubShelvesByIds"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.SubShelf.UpdateMySubShelvesByIds,
+					),
+				},
+				defaultMiddlewares,
+				subShelfModule.Binder.BindUpdateMySubShelvesByIds(
+					subShelfModule.Controller.UpdateMySubShelvesByIds,
 				),
 			)...,
 		)
@@ -149,6 +181,22 @@ func configureDevelopmentSubShelfRoutes() {
 				defaultMiddlewares,
 				subShelfModule.Binder.BindMoveMySubShelves(
 					subShelfModule.Controller.MoveMySubShelves,
+				),
+			)...,
+		)
+		subShelfRoutes.PUT(
+			"/batchMoveMySubShelves",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "batchMoveMySubShelves"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.SubShelf.BatchMoveMySubShelves,
+					),
+				},
+				defaultMiddlewares,
+				subShelfModule.Binder.BindBatchMoveMySubShelves(
+					subShelfModule.Controller.BatchMoveMySubShelves,
 				),
 			)...,
 		)

@@ -89,6 +89,26 @@ type CreateBlockPackReqDto struct {
 	]
 }
 
+type CreateBlockPacksReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			CreatedBlockPacks []struct {
+				ParentSubShelfId    uuid.UUID                     `json:"parentSubShelfId" validate:"required"`
+				Name                string                        `json:"name" validate:"required,min=1,max=128"`
+				Icon                *enums.SupportedBlockPackIcon `json:"icon" validate:"omitnil,issupportedblockpackicon"`
+				HeaderBackgroundURL *string                       `json:"headerBackgroundURL" validate:"omitnil"`
+			} `json:"createdBlockPacks" validate:"required"`
+		},
+		any,
+	]
+}
+
 type UpdateMyBlockPackByIdReqDto struct {
 	NotezyRequest[
 		struct {
@@ -104,6 +124,28 @@ type UpdateMyBlockPackByIdReqDto struct {
 				Icon                *enums.SupportedBlockPackIcon `json:"icon" validate:"omitnil,issupportedblockpackicon"`
 				HeaderBackgroundURL *string                       `json:"headerBackgroundURL" validate:"omitnil"`
 			}]
+		},
+		any,
+	]
+}
+
+type UpdateMyBlockPacksByIdsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			UpdatedBlockPacks []struct {
+				BlockPackId uuid.UUID `json:"blockPackId" validate:"required"`
+				PartialUpdateDto[struct {
+					Name                *string                       `json:"name" validate:"omitnil,min=1,max=128"`
+					Icon                *enums.SupportedBlockPackIcon `json:"icon" validate:"omitnil,issupportedblockpackicon"`
+					HeaderBackgroundURL *string                       `json:"headerBackgroundURL" validate:"omitnil"`
+				}]
+			} `json:"updatedBlockPacks" validate:"required"`
 		},
 		any,
 	]
@@ -136,6 +178,24 @@ type MoveMyBlockPacksByIdsReqDto struct {
 		struct {
 			BlockPackIds                []uuid.UUID `json:"blockPackIds" validate:"required,min=1,max=100"`
 			DestinationParentSubShelfId uuid.UUID   `json:"destinationParentSubShelfId" validate:"required"`
+		},
+		any,
+	]
+}
+
+type BatchMoveMyBlockPacksByIdsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			MovedBlockPacks []struct {
+				BlockPackIds                []uuid.UUID `json:"blockPackIds" validate:"required,min=1,max=100"`
+				DestinationParentSubShelfId uuid.UUID   `json:"destinationParentSubShelfId" validate:"required"`
+			} `json:"movedBlockPacks" validate:"required"`
 		},
 		any,
 	]
@@ -243,7 +303,16 @@ type CreateBlockPackResDto struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
+type CreateBlockPacksResDto struct {
+	Ids       []uuid.UUID `json:"ids"`
+	CreatedAt time.Time   `json:"createdAt"`
+}
+
 type UpdateMyBlockPackByIdResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type UpdateMyBlockPacksByIdsResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
@@ -252,6 +321,10 @@ type MoveMyBlockPackByIdResDto struct {
 }
 
 type MoveMyBlockPacksByIdsResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type BatchMoveMyBlockPacksByIdsResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 

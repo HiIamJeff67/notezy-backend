@@ -545,11 +545,11 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 		}
 
 		setParentBlockIdNull := false
-		setNulls := in.PartialUpdateInput.SetNull
-		if setNulls != nil {
-			for field, setNull := range *setNulls {
+		if in.PartialUpdateInput.SetNull != nil {
+			for field, setNull := range *in.PartialUpdateInput.SetNull {
 				if strings.ToLower(field) == "parentblockid" && setNull {
 					setParentBlockIdNull = true
+					break
 				}
 			}
 		}

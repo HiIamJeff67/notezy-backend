@@ -42,7 +42,9 @@ type metricNameRootShelf struct {
 	GetMyRootShelfById        string
 	SearchRecentRootShelves   string
 	CreateRootShelf           string
+	CreateRootShelves         string
 	UpdateMyRootShelfById     string
+	UpdateMyRootShelvesByIds  string
 	RestoreMyRootShelfById    string
 	RestoreMyRootShelvesByIds string
 	DeleteMyRootShelfById     string
@@ -55,9 +57,12 @@ type metricNameSubShelf struct {
 	GetAllMySubShelvesByRootShelfId         string
 	GetMySubShelvesAndItemsByPrevSubShelfId string
 	CreateSubShelfByRootShelfId             string
+	CreateSubShelvesByRootShelfIds          string
 	UpdateMySubShelfById                    string
+	UpdateMySubShelvesByIds                 string
 	MoveMySubShelf                          string
 	MoveMySubShelves                        string
+	BatchMoveMySubShelves                   string
 	RestoreMySubShelfById                   string
 	RestoreMySubShelvesByIds                string
 	DeleteMySubShelfById                    string
@@ -87,9 +92,12 @@ type metricNameBlockPack struct {
 	GetMyBlockPacksByParentSubShelfId string
 	GetAllMyBlockPacksByRootShelfId   string
 	CreateBlockPack                   string
+	CreateBlockPacks                  string
 	UpdateMyBlockPackById             string
+	UpdateMyBlockPacksByIds           string
 	MoveMyBlockPackById               string
 	MoveMyBlockPacksByIds             string
+	BatchMoveMyBlockPacksByIds        string
 	RestoreMyBlockPackById            string
 	RestoreMyBlockPacksByIds          string
 	DeleteMyBlockPackById             string
@@ -211,7 +219,9 @@ var MetricNames = struct {
 				GetMyRootShelfById:        "server.requests.rootShelf.getMyRootShelfById",
 				SearchRecentRootShelves:   "server.requests.rootShelf.searchRecentRootShelves",
 				CreateRootShelf:           "server.requests.rootShelf.createRootShelf",
+				CreateRootShelves:         "server.requests.rootShelf.createRootShelves",
 				UpdateMyRootShelfById:     "server.requests.rootShelf.updateMyRootShelfById",
+				UpdateMyRootShelvesByIds:  "server.requests.rootShelf.updateMyRootShelvesByIds",
 				RestoreMyRootShelfById:    "server.requests.rootShelf.restoreMyRootShelfById",
 				RestoreMyRootShelvesByIds: "server.requests.rootShelf.restoreMyRootShelvesByIds",
 				DeleteMyRootShelfById:     "server.requests.rootShelf.deleteMyRootShelfById",
@@ -223,9 +233,12 @@ var MetricNames = struct {
 				GetAllMySubShelvesByRootShelfId:         "server.requests.subShelf.getAllMySubShelvesByRootShelfId",
 				GetMySubShelvesAndItemsByPrevSubShelfId: "server.requests.subShelf.getMySubShelvesAndItemsByPrevSubShelfId",
 				CreateSubShelfByRootShelfId:             "server.requests.subShelf.createSubShelfByRootShelfId",
+				CreateSubShelvesByRootShelfIds:          "server.requests.subShelf.CreateSubShelvesByRootShelfIds",
 				UpdateMySubShelfById:                    "server.requests.subShelf.updateMySubShelfById",
+				UpdateMySubShelvesByIds:                 "server.requests.subShelf.UpdateMySubShelvesByIds",
 				MoveMySubShelf:                          "server.requests.subShelf.moveMySubShelf",
 				MoveMySubShelves:                        "server.requests.subShelf.moveMySubShelves",
+				BatchMoveMySubShelves:                   "server.requests.subShelf.BatchMoveMySubShelves",
 				RestoreMySubShelfById:                   "server.requests.subShelf.restoreMySubShelfById",
 				RestoreMySubShelvesByIds:                "server.requests.subShelf.restoreMySubShelvesByIds",
 				DeleteMySubShelfById:                    "server.requests.subShelf.deleteMySubShelfById",
@@ -253,9 +266,12 @@ var MetricNames = struct {
 				GetMyBlockPacksByParentSubShelfId: "server.requests.blockPack.getMyBlockPacksByParentSubShelfId",
 				GetAllMyBlockPacksByRootShelfId:   "server.requests.blockPack.getAllMyBlockPacksByRootShelfId",
 				CreateBlockPack:                   "server.requests.blockPack.createBlockPack",
+				CreateBlockPacks:                  "server.requests.blockPack.CreateBlockPacks",
 				UpdateMyBlockPackById:             "server.requests.blockPack.updateMyBlockPackById",
+				UpdateMyBlockPacksByIds:           "server.requests.blockPack.UpdateMyBlockPacksByIds",
 				MoveMyBlockPackById:               "server.requests.blockPack.moveMyBlockPackById",
 				MoveMyBlockPacksByIds:             "server.requests.blockPack.moveMyBlockPacksByIds",
+				BatchMoveMyBlockPacksByIds:        "server.requests.blockPack.BatchMoveMyBlockPacksByIds",
 				RestoreMyBlockPackById:            "server.requests.blockPack.restoreMyBlockPackById",
 				RestoreMyBlockPacksByIds:          "server.requests.blockPack.restoreMyBlockPacksByIds",
 				DeleteMyBlockPackById:             "server.requests.blockPack.deleteMyBlockPackById",

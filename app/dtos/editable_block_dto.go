@@ -14,7 +14,7 @@ import (
 
 /* ============================== Arborized Editable Block ============================== */
 
-// ArborizedEditableBlock is a type for frontend convience, it allowed the frontend to directly put the block output from the block note editor
+// ArborizedEditableBlock is a type for frontend convenience, it allowed the frontend to directly put the block output from the block note editor
 // to this data struct, at the backend we can also simply unmarshal and validate the data struct
 //
 // To use it, you have to create a dto, and instead of embedding the ArborizedEditableBlock to the dto, we need to put the ArborizedEditableBlock as a type of a field in the dto
