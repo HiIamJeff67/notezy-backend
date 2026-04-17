@@ -20,9 +20,11 @@
     "/otl[a-zA-Z]*/"
   ],
   "words": [
-    "NotezyDB",
-    "Trancate",
+    "notezyDB",
+    "trancate",
     "endless",
+    "modcache",
+    "hotreload",
     "gin",
     "GinAddr",
     "dtos",

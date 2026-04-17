@@ -23,7 +23,9 @@ type BlockGroupBinderInterface interface {
 	BindInsertBlockGroupAndItsBlocksByBlockPackId(controllerFunc types.ControllerFunc[*dtos.InsertBlockGroupAndItsBlocksByBlockPackIdReqDto]) gin.HandlerFunc
 	BindInsertBlockGroupsAndTheirBlocksByBlockPackId(controllerFunc types.ControllerFunc[*dtos.InsertBlockGroupsAndTheirBlocksByBlockPackIdReqDto]) gin.HandlerFunc
 	BindInsertSequentialBlockGroupsAndTheirBlocksByBlockPackId(controllerFunc types.ControllerFunc[*dtos.InsertSequentialBlockGroupsAndTheirBlocksByBlockPackIdReqDto]) gin.HandlerFunc
+	BindMoveMyBlockGroupById(controllerFunc types.ControllerFunc[*dtos.MoveMyBlockGroupByIdReqDto]) gin.HandlerFunc
 	BindMoveMyBlockGroupsByIds(controllerFunc types.ControllerFunc[*dtos.MoveMyBlockGroupsByIdsReqDto]) gin.HandlerFunc
+	BindBatchMoveMyBlockGroupsByIds(controllerFunc types.ControllerFunc[*dtos.BatchMoveMyBlockGroupsByIdsReqDto]) gin.HandlerFunc
 	BindRestoreMyBlockGroupById(controllerFunc types.ControllerFunc[*dtos.RestoreMyBlockGroupByIdReqDto]) gin.HandlerFunc
 	BindRestoreMyBlockGroupsByIds(controllerFunc types.ControllerFunc[*dtos.RestoreMyBlockGroupsByIdsReqDto]) gin.HandlerFunc
 	BindDeleteMyBlockGroupById(controllerFunc types.ControllerFunc[*dtos.DeleteMyBlockGroupByIdReqDto]) gin.HandlerFunc
@@ -300,9 +302,55 @@ func (b *BlockGroupBinder) BindInsertSequentialBlockGroupsAndTheirBlocksByBlockP
 	}
 }
 
+func (b *BlockGroupBinder) BindMoveMyBlockGroupById(controllerFunc types.ControllerFunc[*dtos.MoveMyBlockGroupByIdReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.MoveMyBlockGroupByIdReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exception := exceptions.BlockGroup.InvalidDto().WithOrigin(err)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
 func (b *BlockGroupBinder) BindMoveMyBlockGroupsByIds(controllerFunc types.ControllerFunc[*dtos.MoveMyBlockGroupsByIdsReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.MoveMyBlockGroupsByIdsReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exception := exceptions.BlockGroup.InvalidDto().WithOrigin(err)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *BlockGroupBinder) BindBatchMoveMyBlockGroupsByIds(controllerFunc types.ControllerFunc[*dtos.BatchMoveMyBlockGroupsByIdsReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.BatchMoveMyBlockGroupsByIdsReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 

@@ -20,7 +20,9 @@ type BlockGroupControllerInterface interface {
 	InsertBlockGroupAndItsBlocksByBlockPackId(ctx *gin.Context, reqDto *dtos.InsertBlockGroupAndItsBlocksByBlockPackIdReqDto)
 	InsertBlockGroupsAndTheirBlocksByBlockPackId(ctx *gin.Context, reqDto *dtos.InsertBlockGroupsAndTheirBlocksByBlockPackIdReqDto)
 	InsertSequentialBlockGroupsAndTheirBlocksByBlockPackId(ctx *gin.Context, reqDto *dtos.InsertSequentialBlockGroupsAndTheirBlocksByBlockPackIdReqDto)
+	MoveMyBlockGroupById(ctx *gin.Context, reqDto *dtos.MoveMyBlockGroupByIdReqDto)
 	MoveMyBlockGroupsByIds(ctx *gin.Context, reqDto *dtos.MoveMyBlockGroupsByIdsReqDto)
+	BatchMoveMyBlockGroupsByIds(ctx *gin.Context, reqDto *dtos.BatchMoveMyBlockGroupsByIdsReqDto)
 	RestoreMyBlockGroupById(ctx *gin.Context, reqDto *dtos.RestoreMyBlockGroupByIdReqDto)
 	RestoreMyBlockGroupsByIds(ctx *gin.Context, reqDto *dtos.RestoreMyBlockGroupsByIdsReqDto)
 	DeleteMyBlockGroupById(ctx *gin.Context, reqDto *dtos.DeleteMyBlockGroupByIdReqDto)
@@ -177,8 +179,36 @@ func (c *BlockGroupController) InsertSequentialBlockGroupsAndTheirBlocksByBlockP
 	})
 }
 
+func (c *BlockGroupController) MoveMyBlockGroupById(ctx *gin.Context, reqDto *dtos.MoveMyBlockGroupByIdReqDto) {
+	resDto, exception := c.blockGroupService.MoveMyBlockGroupById(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
 func (c *BlockGroupController) MoveMyBlockGroupsByIds(ctx *gin.Context, reqDto *dtos.MoveMyBlockGroupsByIdsReqDto) {
 	resDto, exception := c.blockGroupService.MoveMyBlockGroupsByIds(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *BlockGroupController) BatchMoveMyBlockGroupsByIds(ctx *gin.Context, reqDto *dtos.BatchMoveMyBlockGroupsByIdsReqDto) {
+	resDto, exception := c.blockGroupService.BatchMoveMyBlockGroupsByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return

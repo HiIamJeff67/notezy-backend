@@ -185,6 +185,22 @@ func configureDevelopmentBlockGroupRoutes() {
 			)...,
 		)
 		blockGroupRoutes.PUT(
+			"/moveMyBlockGroupById",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "moveMyBlockGroupById"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.BlockGroup.MoveMyBlockGroupById,
+					),
+				},
+				defaultMiddlewares,
+				blockGroupModule.Binder.BindMoveMyBlockGroupById(
+					blockGroupModule.Controller.MoveMyBlockGroupById,
+				),
+			)...,
+		)
+		blockGroupRoutes.PUT(
 			"/moveMyBlockGroupsByIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
@@ -197,6 +213,22 @@ func configureDevelopmentBlockGroupRoutes() {
 				defaultMiddlewares,
 				blockGroupModule.Binder.BindMoveMyBlockGroupsByIds(
 					blockGroupModule.Controller.MoveMyBlockGroupsByIds,
+				),
+			)...,
+		)
+		blockGroupRoutes.PUT(
+			"/batchMoveMyBlockGroupsByIds",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "batchMoveMyBlockGroupsByIds"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.BlockGroup.BatchMoveMyBlockGroupsByIds,
+					),
+				},
+				defaultMiddlewares,
+				blockGroupModule.Binder.BindBatchMoveMyBlockGroupsByIds(
+					blockGroupModule.Controller.BatchMoveMyBlockGroupsByIds,
 				),
 			)...,
 		)

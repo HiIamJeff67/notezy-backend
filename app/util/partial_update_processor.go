@@ -23,7 +23,7 @@ func PartialUpdatePreprocess[T any, S any](values T, setNull *map[string]bool, e
 		valuesType = valuesType.Elem()
 	}
 
-	// Step 1：handle setNull mark, set the corresponded fields to null
+	// Step 1: handle setNull mark, set the corresponded fields to null
 	if setNull != nil {
 		for fieldName, shouldSetNull := range *setNull {
 			if shouldSetNull {

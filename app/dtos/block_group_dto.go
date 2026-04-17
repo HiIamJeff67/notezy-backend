@@ -168,6 +168,24 @@ type InsertSequentialBlockGroupsAndTheirBlocksByBlockPackIdReqDto struct {
 	]
 }
 
+type MoveMyBlockGroupByIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			BlockPackId             uuid.UUID  `json:"blockPackId" validate:"required"`
+			MovableBlockGroupId     uuid.UUID  `json:"movableBlockGroupId" validate:"required"`
+			MovablePrevBlockGroupId *uuid.UUID `json:"movablePrevBlockGroupId" validate:"required"`
+			DestinationBlockGroupId *uuid.UUID `json:"destinationBlockGroupId" validate:"omitnil"` // expect result to place next to the destination block group
+		},
+		any,
+	]
+}
+
 type MoveMyBlockGroupsByIdsReqDto struct {
 	NotezyRequest[
 		struct {
@@ -181,6 +199,26 @@ type MoveMyBlockGroupsByIdsReqDto struct {
 			MovableBlockGroupIds     []uuid.UUID  `json:"movableBlockGroupIds" validate:"required"`
 			MovablePrevBlockGroupIds []*uuid.UUID `json:"movablePrevBlockGroupIds" validate:"required"`
 			DestinationBlockGroupId  *uuid.UUID   `json:"destinationBlockGroupId" validate:"omitnil"` // expect result to place next to the destination block group
+		},
+		any,
+	]
+}
+
+type BatchMoveMyBlockGroupsByIdsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			MovedBlockGroups []struct { // currently not support cross block pack movement
+				BlockPackId             uuid.UUID  `json:"blockPackId" validate:"required"`
+				MovableBlockGroupId     uuid.UUID  `json:"movableBlockGroupId" validate:"required"`
+				MovablePrevBlockGroupId *uuid.UUID `json:"movablePrevBlockGroupId" validate:"required"`
+				DestinationBlockGroupId *uuid.UUID `json:"destinationBlockGroupId" validate:"omitnil"` // expect result to place next to the destination block group
+			} `json:"movedBlockGroups" validate:"required"`
 		},
 		any,
 	]
@@ -311,7 +349,15 @@ type InsertSequentialBlockGroupsAndTheirBlocksByBlockPackIdResDto struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
+type MoveMyBlockGroupByIdResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
 type MoveMyBlockGroupsByIdsResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type BatchMoveMyBlockGroupsByIdsResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 

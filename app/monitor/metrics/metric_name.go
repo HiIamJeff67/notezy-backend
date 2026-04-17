@@ -115,7 +115,9 @@ type metricNameBlockGroup struct {
 	InsertBlockGroupAndItsBlocksByBlockPackId              string
 	InsertBlockGroupsAndTheirBlocksByBlockPackId           string
 	InsertSequentialBlockGroupsAndTheirBlocksByBlockPackId string
+	MoveMyBlockGroupById                                   string
 	MoveMyBlockGroupsByIds                                 string
+	BatchMoveMyBlockGroupsByIds                            string
 	RestoreMyBlockGroupById                                string
 	RestoreMyBlockGroupsByIds                              string
 	DeleteMyBlockGroupById                                 string
@@ -288,7 +290,9 @@ var MetricNames = struct {
 				InsertBlockGroupAndItsBlocksByBlockPackId:              "server.requests.blockGroup.insertBlockGroupAndItsBlocksByBlockPackId",
 				InsertBlockGroupsAndTheirBlocksByBlockPackId:           "server.requests.blockGroup.insertBlockGroupsAndTheirBlocksByBlockPackId",
 				InsertSequentialBlockGroupsAndTheirBlocksByBlockPackId: "server.requests.blockGroup.insertSequentialBlockGroupsAndTheirBlocksByBlockPackId",
+				MoveMyBlockGroupById:                                   "server.requests.moveMyBlockGroupById",
 				MoveMyBlockGroupsByIds:                                 "server.requests.blockGroup.moveMyBlockGroupsByIds",
+				BatchMoveMyBlockGroupsByIds:                            "server.requests.blockGroup.batchMoveMyBlockGroupsByIds",
 				RestoreMyBlockGroupById:                                "server.requests.blockGroup.restoreMyBlockGroupById",
 				RestoreMyBlockGroupsByIds:                              "server.requests.blockGroup.restoreMyBlockGroupsByIds",
 				DeleteMyBlockGroupById:                                 "server.requests.blockGroup.deleteMyBlockGroupById",

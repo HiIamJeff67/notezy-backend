@@ -5,6 +5,9 @@ view-hotreload-dbs:
 view-hotreload-enums:
 	docker-compose run --rm notezy-api go run main.go viewAllEnums
 
+open-psql-conversation:
+	docker exec -it notezy-db psql -U jeff -d notezy-db
+
 # =============== Migration Commands =============== #
 migrate-build-db:
 	docker-compose run --rm notezy-api ./notezy-backend migrateDB

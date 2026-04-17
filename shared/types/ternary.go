@@ -3,9 +3,9 @@ package types
 type Ternary int
 
 const (
-	Ternary_Negative Ternary = iota
+	Ternary_Positive Ternary = iota
 	Ternary_Neutral
-	Ternary_Positive
+	Ternary_Negative
 )
 
 func (t Ternary) String() string {

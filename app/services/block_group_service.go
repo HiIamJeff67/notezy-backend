@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -32,7 +34,9 @@ type BlockGroupServiceInterface interface {
 	InsertBlockGroupAndItsBlocksByBlockPackId(ctx context.Context, reqDto *dtos.InsertBlockGroupAndItsBlocksByBlockPackIdReqDto) (*dtos.InsertBlockGroupAndItsBlocksByBlockPackIdResDto, *exceptions.Exception)
 	InsertBlockGroupsAndTheirBlocksByBlockPackId(ctx context.Context, reqDto *dtos.InsertBlockGroupsAndTheirBlocksByBlockPackIdReqDto) (*dtos.InsertBlockGroupsAndTheirBlocksByBlockPackIdResDto, *exceptions.Exception)
 	InsertSequentialBlockGroupsAndTheirBlocksByBlockPackId(ctx context.Context, reqDto *dtos.InsertSequentialBlockGroupsAndTheirBlocksByBlockPackIdReqDto) (*dtos.InsertSequentialBlockGroupsAndTheirBlocksByBlockPackIdResDto, *exceptions.Exception)
+	MoveMyBlockGroupById(ctx context.Context, reqDto *dtos.MoveMyBlockGroupByIdReqDto) (*dtos.MoveMyBlockGroupByIdResDto, *exceptions.Exception)
 	MoveMyBlockGroupsByIds(ctx context.Context, reqDto *dtos.MoveMyBlockGroupsByIdsReqDto) (*dtos.MoveMyBlockGroupsByIdsResDto, *exceptions.Exception)
+	BatchMoveMyBlockGroupsByIds(ctx context.Context, reqDto *dtos.BatchMoveMyBlockGroupsByIdsReqDto) (*dtos.BatchMoveMyBlockGroupsByIdsResDto, *exceptions.Exception)
 	RestoreMyBlockGroupById(ctx context.Context, reqDto *dtos.RestoreMyBlockGroupByIdReqDto) (*dtos.RestoreMyBlockGroupByIdResDto, *exceptions.Exception)
 	RestoreMyBlockGroupsByIds(ctx context.Context, reqDto *dtos.RestoreMyBlockGroupsByIdsReqDto) (*dtos.RestoreMyBlockGroupsByIdsResDto, *exceptions.Exception)
 	DeleteMyBlockGroupById(ctx context.Context, reqDto *dtos.DeleteMyBlockGroupByIdReqDto) (*dtos.DeleteMyBlockGroupByIdResDto, *exceptions.Exception)
@@ -867,6 +871,143 @@ func (s *BlockGroupService) InsertSequentialBlockGroupsAndTheirBlocksByBlockPack
 	return &resDto, nil
 }
 
+func (s *BlockGroupService) MoveMyBlockGroupById(
+	ctx context.Context, reqDto *dtos.MoveMyBlockGroupByIdReqDto,
+) (*dtos.MoveMyBlockGroupByIdResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
+	}
+
+	if reqDto.Body.DestinationBlockGroupId == reqDto.Body.MovablePrevBlockGroupId {
+		return nil, exceptions.BlockGroup.NoChanges()
+	}
+
+	if reqDto.Body.DestinationBlockGroupId != nil &&
+		reqDto.Body.MovableBlockGroupId == *reqDto.Body.DestinationBlockGroupId {
+		return nil, exceptions.BlockGroup.InvalidDto("Cannot move the block group to its own next position")
+	}
+
+	tx := s.db.WithContext(ctx).Begin()
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	movableBlockGroup, exception := s.blockGroupRepository.CheckPermissionAndGetOneById(
+		reqDto.Body.MovableBlockGroupId,
+		reqDto.ContextFields.UserId,
+		nil,
+		allowedPermissions,
+		options.WithDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	if movableBlockGroup.PrevBlockGroupId != reqDto.Body.MovablePrevBlockGroupId {
+		tx.Rollback()
+		prevBlockGroupIdString := "null"
+		if movableBlockGroup.PrevBlockGroupId != nil {
+			prevBlockGroupIdString = movableBlockGroup.PrevBlockGroupId.String()
+		}
+		movablePrevBlockGroupIdString := "null"
+		if reqDto.Body.MovablePrevBlockGroupId != nil {
+			movablePrevBlockGroupIdString = reqDto.Body.MovablePrevBlockGroupId.String()
+		}
+		return nil, exceptions.BlockGroup.InvalidDto(
+			"The given block group has different previous block group id from the actual block group, expected %s, got %s",
+			prevBlockGroupIdString,
+			movablePrevBlockGroupIdString,
+		)
+	}
+
+	if movableBlockGroup.BlockPackId != reqDto.Body.BlockPackId {
+		tx.Rollback()
+		return nil, exceptions.BlockGroup.InvalidDto("The given block group is not under the given block pack")
+	}
+
+	collapsedBlockGroup, _ := s.blockGroupRepository.GetOneByPrevBlockGroupId(
+		reqDto.Body.BlockPackId,
+		&movableBlockGroup.Id,
+		reqDto.ContextFields.UserId,
+		nil,
+		options.WithDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	destinationNextBlockGroup, _ := s.blockGroupRepository.GetOneByPrevBlockGroupId(
+		reqDto.Body.BlockPackId,
+		reqDto.Body.DestinationBlockGroupId,
+		reqDto.ContextFields.UserId,
+		nil,
+		options.WithDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+
+	if _, exception = s.blockGroupRepository.UpdateOneById(
+		movableBlockGroup.Id,
+		reqDto.ContextFields.UserId,
+		inputs.PartialUpdateBlockGroupInput{
+			Values: inputs.UpdateBlockGroupInput{
+				PrevBlockGroupId: reqDto.Body.DestinationBlockGroupId,
+			},
+			SetNull: nil,
+		},
+		options.WithDB(tx),
+	); exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	if destinationNextBlockGroup != nil {
+		if destinationNextBlockGroup.Id != movableBlockGroup.Id {
+			if _, exception = s.blockGroupRepository.UpdateOneById(
+				destinationNextBlockGroup.Id,
+				reqDto.ContextFields.UserId,
+				inputs.PartialUpdateBlockGroupInput{
+					Values: inputs.UpdateBlockGroupInput{
+						PrevBlockGroupId: &movableBlockGroup.Id,
+					},
+					SetNull: nil,
+				},
+				options.WithDB(tx),
+			); exception != nil {
+				tx.Rollback()
+				return nil, exception
+			}
+		}
+	}
+
+	if collapsedBlockGroup != nil {
+		if _, exception = s.blockGroupRepository.UpdateOneById(
+			collapsedBlockGroup.Id,
+			reqDto.ContextFields.UserId,
+			inputs.PartialUpdateBlockGroupInput{
+				Values: inputs.UpdateBlockGroupInput{
+					PrevBlockGroupId: movableBlockGroup.PrevBlockGroupId,
+				},
+				SetNull: nil,
+			},
+			options.WithDB(tx),
+		); exception != nil {
+			tx.Rollback()
+			return nil, exception
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
+	}
+
+	return &dtos.MoveMyBlockGroupByIdResDto{
+		UpdatedAt: time.Now(),
+	}, nil
+}
+
 func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 	ctx context.Context, reqDto *dtos.MoveMyBlockGroupsByIdsReqDto,
 ) (*dtos.MoveMyBlockGroupsByIdsResDto, *exceptions.Exception) {
@@ -1047,6 +1188,178 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 	}
 
 	return &dtos.MoveMyBlockGroupsByIdsResDto{
+		UpdatedAt: time.Now(),
+	}, nil
+}
+
+func (s *BlockGroupService) BatchMoveMyBlockGroupsByIds(
+	ctx context.Context, reqDto *dtos.BatchMoveMyBlockGroupsByIdsReqDto,
+) (*dtos.BatchMoveMyBlockGroupsByIdsResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	blockPackIds := make([]uuid.UUID, len(reqDto.Body.MovedBlockGroups))
+	movableBlockGroupIds := make([]uuid.UUID, len(reqDto.Body.MovedBlockGroups))
+	var nonNullDestinationBlockGroupIds []uuid.UUID
+	var nullDestinationBlockGroupBlockPackIds []uuid.UUID
+	for index, movedBlockGroup := range reqDto.Body.MovedBlockGroups {
+		blockPackIds[index] = movedBlockGroup.BlockPackId
+		movableBlockGroupIds[index] = movedBlockGroup.MovableBlockGroupId
+		if movedBlockGroup.DestinationBlockGroupId != nil {
+			nonNullDestinationBlockGroupIds = append(nonNullDestinationBlockGroupIds, *movedBlockGroup.DestinationBlockGroupId)
+		}
+		nullDestinationBlockGroupBlockPackIds = append(nullDestinationBlockGroupBlockPackIds, movedBlockGroup.BlockPackId)
+	}
+
+	validMovableBlockGroupIndexes := make(map[uuid.UUID]int)
+	validMovableBlockGroups, exception := s.blockGroupRepository.CheckPermissionsAndGetManyByIds(
+		movableBlockGroupIds,
+		reqDto.ContextFields.UserId,
+		[]schemas.BlockGroupRelation{
+			schemas.BlockGroupRelation_NextBlockGroup,
+		},
+		allowedPermissions,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+	for index, validMovableBlockGroup := range validMovableBlockGroups {
+		validMovableBlockGroupIndexes[validMovableBlockGroup.Id] = index
+	}
+
+	validNonNullDestinationBlockGroupIndexes := make(map[uuid.UUID]int)
+	validNonNullDestinationBlockGroups, exception := s.blockGroupRepository.CheckPermissionsAndGetManyByIds(
+		nonNullDestinationBlockGroupIds,
+		reqDto.ContextFields.UserId,
+		[]schemas.BlockGroupRelation{
+			schemas.BlockGroupRelation_NextBlockGroup,
+		},
+		allowedPermissions,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+	for index, validDestinationBlockGroup := range validNonNullDestinationBlockGroups {
+		validNonNullDestinationBlockGroupIndexes[validDestinationBlockGroup.Id] = index
+	}
+
+	// get the first block groups of the block pack for the null destinations
+	nullDestinationBlockPackIdToNextBlockGroupId := make(map[uuid.UUID]uuid.UUID)
+	if len(nullDestinationBlockGroupBlockPackIds) != 0 {
+		// the result is not validated by the permissions check yet,
+		// but since we're getting the first block group by its prev block group id,
+		// we can just check if the block pack is owned by the current user
+		nullDestinationNextBlockGroups, exception := s.blockGroupRepository.GetManyByPrevBlockGroupIds(
+			nullDestinationBlockGroupBlockPackIds,
+			make([]*uuid.UUID, len(nullDestinationBlockGroupBlockPackIds)),
+			reqDto.ContextFields.UserId,
+			nil,
+			options.WithDB(db),
+			options.WithOnlyDeleted(types.Ternary_Negative),
+		)
+		if exception != nil {
+			return nil, exception
+		}
+		for _, nullDestinationBlockGroup := range nullDestinationNextBlockGroups {
+			nullDestinationBlockPackIdToNextBlockGroupId[nullDestinationBlockGroup.BlockPackId] = nullDestinationBlockGroup.Id
+		}
+	}
+
+	var nullUUID *uuid.UUID = nil
+	var valuePlaceholders []string
+	var valueArgs []interface{}
+	for _, movedBlockGroups := range reqDto.Body.MovedBlockGroups {
+		movableIndex, exist := validMovableBlockGroupIndexes[movedBlockGroups.MovableBlockGroupId]
+		if !exist {
+			continue
+		}
+
+		var movable schemas.BlockGroup = validMovableBlockGroups[movableIndex]
+		var destination *schemas.BlockGroup = nil
+
+		if movedBlockGroups.DestinationBlockGroupId != nil {
+			destinationIndex, exist := validNonNullDestinationBlockGroupIndexes[*movedBlockGroups.DestinationBlockGroupId]
+			if !exist {
+				continue
+			}
+			destination = &validNonNullDestinationBlockGroups[destinationIndex]
+		} else if _, exist := nullDestinationBlockPackIdToNextBlockGroupId[movedBlockGroups.BlockPackId]; !exist {
+			continue
+		}
+
+		if movable.BlockPackId != movedBlockGroups.BlockPackId ||
+			destination.BlockPackId != movedBlockGroups.BlockPackId {
+			continue
+		}
+
+		// Step 1 (Optional): Restore the block groups linked list on the next block group of the movable block group
+		if movable.NextBlockGroup != nil { // only restore it when the next block group exist
+			valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid)")
+			valueArgs = append(valueArgs,
+				movable.NextBlockGroup.Id,
+				movable.PrevBlockGroupId,
+			)
+		}
+
+		// Step 2: Prepare for the insertion by linking the next block group of the destination block group to pointing to the inserted block group
+		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid)")
+		if destination != nil && destination.NextBlockGroup != nil {
+			valueArgs = append(valueArgs,
+				destination.NextBlockGroup.Id,
+				movable.Id,
+			)
+		} else {
+			valueArgs = append(valueArgs,
+				nullDestinationBlockPackIdToNextBlockGroupId[movedBlockGroups.BlockPackId],
+				movable.Id,
+			)
+		}
+
+		// Step 3: Insert the movable block group to the destination by make it point to the destination block group
+		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid)")
+		if destination != nil {
+			valueArgs = append(valueArgs,
+				movable.Id,
+				destination.Id,
+			)
+		} else {
+			valueArgs = append(valueArgs,
+				movable.Id,
+				nullUUID,
+			)
+		}
+	}
+
+	sql := fmt.Sprintf(`
+		UPDATE "BlockGroupTable" AS bp
+		SET
+			prev_block_group_id = v.prev_block_group_id::uuid, 
+			updated_at = NOW()
+		FROM (VALUES %s) AS v(id, prev_block_group_id)
+		WHERE bp.id = v.id::uuid AND bp.deleted_at IS NULL
+	`, strings.Join(valuePlaceholders, ","))
+	result := db.Exec(sql, valueArgs...)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
+	}); exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.BatchMoveMyBlockGroupsByIdsResDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }

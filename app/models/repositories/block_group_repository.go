@@ -28,6 +28,7 @@ type BlockGroupRepositoryInterface interface {
 	CheckPermissionAndGetValidIds(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, opts ...options.RepositoryOptions) (*schemas.BlockGroup, *exceptions.Exception)
 	GetOneByPrevBlockGroupId(blockPackId uuid.UUID, prevBlockGroupId *uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, opts ...options.RepositoryOptions) (*schemas.BlockGroup, *exceptions.Exception)
+	GetManyByPrevBlockGroupIds(BlockPackIds []uuid.UUID, PrevBlockGroupIds []*uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, opts ...options.RepositoryOptions) ([]schemas.BlockGroup, *exceptions.Exception)
 	InsertOneByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, input inputs.CreateBlockGroupInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
 	InsertManyByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, input []inputs.CreateBlockGroupInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	AppendOneByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
@@ -368,6 +369,87 @@ func (r *BlockGroupRepository) GetOneByPrevBlockGroupId(
 	}
 
 	return &blockGroup, nil
+}
+
+func (r *BlockGroupRepository) GetManyByPrevBlockGroupIds(
+	BlockPackIds []uuid.UUID,
+	PrevBlockGroupIds []*uuid.UUID,
+	userId uuid.UUID,
+	preloads []schemas.BlockGroupRelation,
+	opts ...options.RepositoryOptions,
+) ([]schemas.BlockGroup, *exceptions.Exception) {
+	if len(BlockPackIds) != len(PrevBlockGroupIds) {
+		return []schemas.BlockGroup{}, nil
+	}
+
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+
+	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = ss.root_shelf_id").
+		Where("user_id = ? AND permission IN ?", userId, allowedPermissions)
+
+	query := parsedOptions.DB.Model(&schemas.BlockGroup{}).
+		Joins("INNER JOIN \"BlockPackTable\" bp ON block_pack_id = bp.id").
+		Joins("INNER JOIN \"SubShelfTable\" ss ON bp.parent_sub_shelf_id = ss.id").
+		Where("EXISTS (?)", subQuery)
+
+	var nilPrevBlockPackIds []uuid.UUID
+	var nonNilConditions []string
+	var nonNilArgs []interface{}
+
+	for index, _ := range BlockPackIds {
+		if PrevBlockGroupIds[index] == nil {
+			nilPrevBlockPackIds = append(nilPrevBlockPackIds, BlockPackIds[index])
+		} else {
+			nonNilConditions = append(nonNilConditions, "(\"BlockGroupTable\".block_pack_id = ? AND \"BlockGroupTable\".prev_block_group_id = ?)")
+			nonNilArgs = append(nonNilArgs, BlockPackIds[index], *PrevBlockGroupIds[index])
+		}
+	}
+
+	var combinedConditions []string
+	var combinedArgs []interface{}
+
+	if len(nilPrevBlockPackIds) > 0 {
+		combinedConditions = append(combinedConditions, "(\"BlockGroupTable\".block_pack_id IN ? AND \"BlockGroupTable\".prev_block_group_id IS NULL)")
+		combinedArgs = append(combinedArgs, nilPrevBlockPackIds)
+	}
+
+	if len(nonNilConditions) > 0 {
+		combinedConditions = append(combinedConditions, strings.Join(nonNilConditions, " OR "))
+		combinedArgs = append(combinedArgs, nonNilArgs...)
+	}
+
+	if len(combinedConditions) > 0 {
+		query = query.Where(fmt.Sprintf("(%s)", strings.Join(combinedConditions, " OR ")), combinedArgs...)
+	}
+
+	switch parsedOptions.OnlyDeleted {
+	case types.Ternary_Positive:
+		query = query.Where("\"BlockGroupTable\".deleted_at IS NOT NULL")
+	case types.Ternary_Negative:
+		query = query.Where("\"BlockGroupTable\".deleted_at IS NULL")
+	}
+
+	if len(preloads) > 0 {
+		for _, preload := range preloads {
+			query = query.Preload(string(preload))
+		}
+	}
+
+	var blockGroups []schemas.BlockGroup
+	result := query.Find(&blockGroups)
+	if result.Error != nil {
+		return nil, exceptions.BlockGroup.NotFound().WithOrigin(result.Error)
+	}
+
+	return blockGroups, nil
 }
 
 func (r *BlockGroupRepository) InsertOneByBlockPackId(
