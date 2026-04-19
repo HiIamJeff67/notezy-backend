@@ -590,7 +590,7 @@ func (r *BlockGroupRepository) InsertManyByBlockPackId(
 	newBlockGroupIds := make([]uuid.UUID, len(input))
 	isNewBlockGroupId := make(map[uuid.UUID]bool, len(input))
 	for index, in := range input { // use index to modify the elements of slice, since the value from the `range` is only a copy
-		if in.BlockGroupId != nil {
+		if in.BlockGroupId != nil && *in.BlockGroupId != uuid.Nil {
 			newBlockGroups[index].Id = *in.BlockGroupId
 		} else {
 			newBlockGroups[index].Id = uuid.New() // generate the id here, so that we can return the newBlockGroupIds in the same order of the input

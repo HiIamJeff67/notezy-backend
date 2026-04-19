@@ -17,8 +17,6 @@ import (
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
 	blockpacksql "notezy-backend/app/models/sqls/block_pack"
-	"notezy-backend/app/monitor/logs"
-	"notezy-backend/app/monitor/traces"
 	options "notezy-backend/app/options"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
@@ -135,8 +133,6 @@ func (s *BlockPackService) GetMyBlockPackAndItsParentById(
 	if err != nil {
 		return nil, exceptions.BlockPack.NotFound().WithOrigin(err)
 	}
-
-	logs.Info(traces.GetTrace(0).FileLineString(), resDto)
 
 	return &resDto, nil
 }

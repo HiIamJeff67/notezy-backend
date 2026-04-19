@@ -637,7 +637,7 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 	validateBlockDto := make([]dtos.ArborizedEditableBlock, len(reqDto.Body.BlockGroupContents))
 	for index, blockGroupContent := range reqDto.Body.BlockGroupContents {
 		createBlockGroupsInput[index] = inputs.CreateBlockGroupInput{
-			BlockGroupId:     &blockGroupContent.BlockGroupId,
+			BlockGroupId:     blockGroupContent.BlockGroupId,
 			PrevBlockGroupId: blockGroupContent.PrevBlockGroupId,
 		}
 		validateBlockDto[index] = blockGroupContent.ArborizedEditableBlock
@@ -1199,7 +1199,7 @@ func (s *BlockGroupService) BatchMoveMyBlockGroupsByIds(
 		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
 
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
@@ -1216,8 +1216,9 @@ func (s *BlockGroupService) BatchMoveMyBlockGroupsByIds(
 		movableBlockGroupIds[index] = movedBlockGroup.MovableBlockGroupId
 		if movedBlockGroup.DestinationBlockGroupId != nil {
 			nonNullDestinationBlockGroupIds = append(nonNullDestinationBlockGroupIds, *movedBlockGroup.DestinationBlockGroupId)
+		} else {
+			nullDestinationBlockGroupBlockPackIds = append(nullDestinationBlockGroupBlockPackIds, movedBlockGroup.BlockPackId)
 		}
-		nullDestinationBlockGroupBlockPackIds = append(nullDestinationBlockGroupBlockPackIds, movedBlockGroup.BlockPackId)
 	}
 
 	validMovableBlockGroupIndexes := make(map[uuid.UUID]int)
@@ -1228,10 +1229,11 @@ func (s *BlockGroupService) BatchMoveMyBlockGroupsByIds(
 			schemas.BlockGroupRelation_NextBlockGroup,
 		},
 		allowedPermissions,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 	for index, validMovableBlockGroup := range validMovableBlockGroups {
@@ -1239,26 +1241,30 @@ func (s *BlockGroupService) BatchMoveMyBlockGroupsByIds(
 	}
 
 	validNonNullDestinationBlockGroupIndexes := make(map[uuid.UUID]int)
-	validNonNullDestinationBlockGroups, exception := s.blockGroupRepository.CheckPermissionsAndGetManyByIds(
-		nonNullDestinationBlockGroupIds,
-		reqDto.ContextFields.UserId,
-		[]schemas.BlockGroupRelation{
-			schemas.BlockGroupRelation_NextBlockGroup,
-		},
-		allowedPermissions,
-		options.WithDB(db),
-		options.WithOnlyDeleted(types.Ternary_Negative),
-	)
-	if exception != nil {
-		return nil, exception
-	}
-	for index, validDestinationBlockGroup := range validNonNullDestinationBlockGroups {
-		validNonNullDestinationBlockGroupIndexes[validDestinationBlockGroup.Id] = index
+	var validNonNullDestinationBlockGroups []schemas.BlockGroup
+	if len(nonNullDestinationBlockGroupIds) > 0 {
+		validNonNullDestinationBlockGroups, exception := s.blockGroupRepository.CheckPermissionsAndGetManyByIds(
+			nonNullDestinationBlockGroupIds,
+			reqDto.ContextFields.UserId,
+			[]schemas.BlockGroupRelation{
+				schemas.BlockGroupRelation_NextBlockGroup,
+			},
+			allowedPermissions,
+			options.WithTransactionDB(tx),
+			options.WithOnlyDeleted(types.Ternary_Negative),
+		)
+		if exception != nil {
+			tx.Rollback()
+			return nil, exception
+		}
+		for index, validDestinationBlockGroup := range validNonNullDestinationBlockGroups {
+			validNonNullDestinationBlockGroupIndexes[validDestinationBlockGroup.Id] = index
+		}
 	}
 
 	// get the first block groups of the block pack for the null destinations
 	nullDestinationBlockPackIdToNextBlockGroupId := make(map[uuid.UUID]uuid.UUID)
-	if len(nullDestinationBlockGroupBlockPackIds) != 0 {
+	if len(nullDestinationBlockGroupBlockPackIds) > 0 {
 		// the result is not validated by the permissions check yet,
 		// but since we're getting the first block group by its prev block group id,
 		// we can just check if the block pack is owned by the current user
@@ -1267,10 +1273,11 @@ func (s *BlockGroupService) BatchMoveMyBlockGroupsByIds(
 			make([]*uuid.UUID, len(nullDestinationBlockGroupBlockPackIds)),
 			reqDto.ContextFields.UserId,
 			nil,
-			options.WithDB(db),
+			options.WithTransactionDB(tx),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 		)
 		if exception != nil {
+			tx.Rollback()
 			return nil, exception
 		}
 		for _, nullDestinationBlockGroup := range nullDestinationNextBlockGroups {
@@ -1292,7 +1299,7 @@ func (s *BlockGroupService) BatchMoveMyBlockGroupsByIds(
 
 		if movedBlockGroups.DestinationBlockGroupId != nil {
 			destinationIndex, exist := validNonNullDestinationBlockGroupIndexes[*movedBlockGroups.DestinationBlockGroupId]
-			if !exist {
+			if !exist || destinationIndex >= len(validNonNullDestinationBlockGroups) {
 				continue
 			}
 			destination = &validNonNullDestinationBlockGroups[destinationIndex]
@@ -1301,7 +1308,7 @@ func (s *BlockGroupService) BatchMoveMyBlockGroupsByIds(
 		}
 
 		if movable.BlockPackId != movedBlockGroups.BlockPackId ||
-			destination.BlockPackId != movedBlockGroups.BlockPackId {
+			(destination != nil && destination.BlockPackId != movedBlockGroups.BlockPackId) {
 			continue
 		}
 
@@ -1343,20 +1350,62 @@ func (s *BlockGroupService) BatchMoveMyBlockGroupsByIds(
 		}
 	}
 
-	sql := fmt.Sprintf(`
-		UPDATE "BlockGroupTable" AS bp
+	valuePlaceholdersStr := strings.Join(valuePlaceholders, ",")
+
+	// Pass 1 First set the deleted_at to now
+	fakeDeleteSql := fmt.Sprintf(`
+		UPDATE "BlockGroupTable" AS bg
 		SET
-			prev_block_group_id = v.prev_block_group_id::uuid, 
-			updated_at = NOW()
+			deleted_at = NOW()
 		FROM (VALUES %s) AS v(id, prev_block_group_id)
-		WHERE bp.id = v.id::uuid AND bp.deleted_at IS NULL
-	`, strings.Join(valuePlaceholders, ","))
-	result := db.Exec(sql, valueArgs...)
+		WHERE bg.id = v.id::uuid AND bg.deleted_at IS NULL
+	`, valuePlaceholdersStr)
+	result := tx.Exec(fakeDeleteSql, valueArgs...)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
 	}); exception != nil {
+		tx.Rollback()
 		return nil, exception
+	}
+
+	// Pass 2 Update the prev block group id to the new one
+	sql := fmt.Sprintf(`
+		UPDATE "BlockGroupTable" AS bg
+		SET
+			prev_block_group_id = v.prev_block_group_id::uuid, 
+			updated_at = NOW()
+		FROM (VALUES %s) AS v(id, prev_block_group_id)
+		WHERE bg.id = v.id::uuid AND bg.deleted_at IS NOT NULL
+	`, valuePlaceholdersStr) // update its deleted_at to now temporary to avoid the unique constraints
+	result = tx.Exec(sql, valueArgs...)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
+	}); exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	// Pass 3 Restore the deleted_at back to null
+	restoreSql := fmt.Sprintf(`
+		UPDATE "BlockGroupTable" AS bg
+		SET
+			deleted_at = NULL
+		FROM (VALUES %s) AS v(id, prev_block_group_id)
+		WHERE bg.id = v.id::uuid AND bg.deleted_at IS NOT NULL
+	`, valuePlaceholdersStr)
+	result = tx.Exec(restoreSql, valueArgs...)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
+	}); exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.BatchMoveMyBlockGroupsByIdsResDto{

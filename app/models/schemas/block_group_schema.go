@@ -24,7 +24,7 @@ type BlockGroup struct {
 	Owner          User            `json:"owner" gorm:"foreignKey:OwnerId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	BlockPack      BlockPack       `json:"blockPack" gorm:"foreignKey:BlockPackId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	PrevBlockGroup *BlockGroup     `json:"prevBlockGroup" gorm:"foreignKey:PrevBlockGroupId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	NextBlockGroup *BlockGroup     `json:"nextBlockGroup" gorm:"foreignKey:PrevBlockGroupId; references:Id;"`
+	NextBlockGroup *BlockGroup     `json:"nextBlockGroup" gorm:"foreignKey:Id; references:PrevBlockGroupId;"`
 	SyncBlockGroup *SyncBlockGroup `json:"syncBlockGroup" gorm:"foreignKey:SyncBlockGroupId; references:Id; constraint:OnDelete:SET NULL;"`
 }
 
