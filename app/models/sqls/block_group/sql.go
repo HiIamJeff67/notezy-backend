@@ -11,6 +11,6 @@ var (
 	//go:embed get_my_block_groups_and_their_blocks_by_block_pack_id.sql
 	GetMyBlockGroupsAndTheirBlocksByBlockPackIdSQL string
 
-	//go:embed collect_garbage_block_group_by_ids.sql
-	CollectGarbageBlockGroupByIdsSQL string
+	//go:embed get_garbage_collected_orphaned_block_group_ids.sql
+	GetGarbageCollectedOrphanedBlockGroupIdsSQL string
 )

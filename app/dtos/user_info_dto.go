@@ -29,7 +29,8 @@ type UpdateMyInfoReqDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+			UserId   uuid.UUID // extracted from the access token of AuthMiddleware()
+			UserName string    // extracted from the access token of AuthMiddleware()
 		},
 		struct {
 			PartialUpdateDto[struct {

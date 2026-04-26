@@ -25,10 +25,28 @@ func GetAndConvertContextFieldToBoolean(ctx *gin.Context, name types.ContextFiel
 	return &valueBoolean, nil
 }
 
+func GetAndConvertContextFieldToString(ctx *gin.Context, name types.ContextFieldName) (*string, *exceptions.Exception) {
+	value, exist := ctx.Get(name.String())
+	if !exist {
+		return nil, exceptions.Context.FailedToGetContextFieldOfSpecificName(name.String())
+	}
+
+	valueString, ok := value.(string)
+	if !ok {
+		return nil, exceptions.Context.FailedToConvertContextFieldToSpecificType("string")
+	}
+
+	return &valueString, nil
+}
+
 func GetAndConvertContextFieldToUUID(ctx *gin.Context, name types.ContextFieldName) (*uuid.UUID, *exceptions.Exception) {
 	value, exist := ctx.Get(name.String())
 	if !exist {
 		return nil, exceptions.Context.FailedToGetContextFieldOfSpecificName(name.String())
+	}
+
+	if valueUUID, ok := value.(uuid.UUID); ok {
+		return &valueUUID, nil
 	}
 
 	valueString, ok := value.(string)

@@ -11,7 +11,7 @@ import (
 
 	exceptions "notezy-backend/app/exceptions"
 	ratelimiter "notezy-backend/app/lib/ratelimiter"
-	"notezy-backend/app/monitor/metrics"
+	metrics "notezy-backend/app/monitor/metrics"
 	types "notezy-backend/shared/types"
 )
 

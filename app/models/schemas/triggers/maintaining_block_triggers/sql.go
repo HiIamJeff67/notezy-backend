@@ -13,4 +13,7 @@ var (
 
 	// go:embed maintaining_final_block_group_on_delete_trigger.sql
 	MaintainingFinalBlockGroupOnDeleteTriggerSQL string
+
+	// go:embed maintaining_descendants_block_group_id_on_update.sql
+	MaintainingDescendantsBlockGroupIdOnUpdateTriggerSQL string
 )

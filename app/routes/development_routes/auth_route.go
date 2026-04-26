@@ -103,7 +103,10 @@ func configureDevelopmentAuthRoutes() {
 			middlewares.AuthMiddleware(),
 			middlewares.AuthorizedRateLimitMiddleware(),
 			middlewares.CSRFMiddleware(),
-			interceptors.RefreshTokenInterceptor(),
+			interceptors.ShareableResponseWriterInterceptor(
+				interceptors.RefreshTokenInterceptor,
+				interceptors.EmbeddedInterceptor,
+			),
 			authModule.Binder.BindValidateEmail(
 				authModule.Controller.ValidateEmail,
 			),
@@ -120,7 +123,10 @@ func configureDevelopmentAuthRoutes() {
 			middlewares.AuthorizedRateLimitMiddleware(),
 			middlewares.UserRoleMiddleware(enums.UserRole_Normal),
 			middlewares.CSRFMiddleware(),
-			interceptors.RefreshTokenInterceptor(),
+			interceptors.ShareableResponseWriterInterceptor(
+				interceptors.RefreshTokenInterceptor,
+				interceptors.EmbeddedInterceptor,
+			),
 			authModule.Binder.BindResetEmail(
 				authModule.Controller.ResetEmail,
 			),
@@ -148,7 +154,10 @@ func configureDevelopmentAuthRoutes() {
 			middlewares.AuthMiddleware(),
 			middlewares.AuthorizedRateLimitMiddleware(),
 			middlewares.CSRFMiddleware(),
-			interceptors.RefreshTokenInterceptor(),
+			interceptors.ShareableResponseWriterInterceptor(
+				interceptors.RefreshTokenInterceptor,
+				interceptors.EmbeddedInterceptor,
+			),
 			authModule.Binder.BindResetMe(
 				authModule.Controller.ResetMe,
 			),
@@ -164,6 +173,9 @@ func configureDevelopmentAuthRoutes() {
 			middlewares.AuthMiddleware(),
 			middlewares.AuthorizedRateLimitMiddleware(),
 			middlewares.CSRFMiddleware(),
+			interceptors.ShareableResponseWriterInterceptor(
+				interceptors.EmbeddedInterceptor,
+			),
 			authModule.Binder.BindDeleteMe(
 				authModule.Controller.DeleteMe,
 			),

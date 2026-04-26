@@ -50,6 +50,10 @@ func (c *AuthController) Register(ctx *gin.Context, reqDto *dtos.RegisterReqDto)
 	ctx.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data": gin.H{
+			"publicId":    resDto.PublicId,
+			"name":        resDto.Name,
+			"displayName": resDto.DisplayName,
+			"email":       resDto.Email,
 			"accessToken": resDto.AccessToken,
 			"csrfToken":   resDto.CSRFToken,
 			"createdAt":   resDto.CreatedAt,
@@ -74,6 +78,10 @@ func (c *AuthController) RegisterViaGoogle(ctx *gin.Context, reqDto *dtos.Regist
 	ctx.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data": gin.H{
+			"publicId":    resDto.PublicId,
+			"name":        resDto.Name,
+			"displayName": resDto.DisplayName,
+			"email":       resDto.Email,
 			"accessToken": resDto.AccessToken,
 			"csrfToken":   resDto.CSRFToken,
 			"createdAt":   resDto.CreatedAt,
@@ -98,9 +106,14 @@ func (c *AuthController) Login(ctx *gin.Context, reqDto *dtos.LoginReqDto) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data": gin.H{
+			"publicId":    resDto.PublicId,
+			"name":        resDto.Name,
+			"displayName": resDto.DisplayName,
+			"email":       resDto.Email,
 			"accessToken": resDto.AccessToken,
 			"csrfToken":   resDto.CSRFToken,
 			"updatedAt":   resDto.UpdatedAt,
+			"createdAt":   resDto.CreatedAt,
 		},
 		"exception": nil,
 	})
@@ -122,9 +135,14 @@ func (c *AuthController) LoginViaGoogle(ctx *gin.Context, reqDto *dtos.LoginViaG
 	ctx.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data": gin.H{
+			"publicId":    resDto.PublicId,
+			"name":        resDto.Name,
+			"displayName": resDto.DisplayName,
+			"email":       resDto.Email,
 			"accessToken": resDto.AccessToken,
 			"csrfToken":   resDto.CSRFToken,
 			"updatedAt":   resDto.UpdatedAt,
+			"createdAt":   resDto.CreatedAt,
 		},
 		"exception": nil,
 	})

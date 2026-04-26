@@ -7,7 +7,6 @@ import (
 )
 
 type JWTClaims struct {
-	Id        string `json:"id" validate:"required"`
 	Name      string `json:"name" validate:"required,min=6,max=16,alphaandnum"`
 	Email     string `json:"email" validate:"required,email"`
 	UserAgent string `json:"userAgent" validate:"required"`

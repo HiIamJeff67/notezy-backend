@@ -102,6 +102,12 @@ func (b *AuthBinder) BindLogout(controllerFunc types.ControllerFunc[*dtos.Logout
 		}
 		reqDto.ContextFields.UserId = *userId
 
+		userName, exception := contexts.GetAndConvertContextFieldToString(ctx, types.ContextFieldName_User_Name)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		}
+		reqDto.ContextFields.UserName = *userName
+
 		controllerFunc(ctx, &reqDto)
 	}
 }
@@ -193,6 +199,12 @@ func (b *AuthBinder) BindResetMe(controllerFunc types.ControllerFunc[*dtos.Reset
 		}
 		reqDto.ContextFields.UserId = *userId
 
+		userName, exception := contexts.GetAndConvertContextFieldToString(ctx, types.ContextFieldName_User_Name)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		}
+		reqDto.ContextFields.UserName = *userName
+
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exceptions.Auth.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
@@ -214,6 +226,12 @@ func (b *AuthBinder) BindDeleteMe(controllerFunc types.ControllerFunc[*dtos.Dele
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
+
+		userName, exception := contexts.GetAndConvertContextFieldToString(ctx, types.ContextFieldName_User_Name)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		}
+		reqDto.ContextFields.UserName = *userName
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exceptions.Auth.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)

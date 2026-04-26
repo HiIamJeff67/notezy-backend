@@ -14,6 +14,9 @@ import (
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
+	blockgroupsql "notezy-backend/app/models/sqls/block_group"
+	"notezy-backend/app/monitor/logs"
+	"notezy-backend/app/monitor/traces"
 	options "notezy-backend/app/options"
 	util "notezy-backend/app/util"
 	types "notezy-backend/shared/types"
@@ -26,6 +29,7 @@ type BlockGroupRepositoryInterface interface {
 	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.BlockGroup, *exceptions.Exception)
 	CheckPermissionsAndGetManyByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.BlockGroup, *exceptions.Exception)
 	CheckPermissionAndGetValidIds(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
+	CollectOrphanedBlockGroupsByIds(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) *exceptions.Exception
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, opts ...options.RepositoryOptions) (*schemas.BlockGroup, *exceptions.Exception)
 	GetOneByPrevBlockGroupId(blockPackId uuid.UUID, prevBlockGroupId *uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, opts ...options.RepositoryOptions) (*schemas.BlockGroup, *exceptions.Exception)
 	GetManyByPrevBlockGroupIds(BlockPackIds []uuid.UUID, PrevBlockGroupIds []*uuid.UUID, userId uuid.UUID, preloads []schemas.BlockGroupRelation, opts ...options.RepositoryOptions) ([]schemas.BlockGroup, *exceptions.Exception)
@@ -298,6 +302,45 @@ func (r *BlockGroupRepository) CheckPermissionAndGetValidIds(
 	}
 
 	return validIds, nil
+}
+
+func (r *BlockGroupRepository) CollectOrphanedBlockGroupsByIds(
+	ids []uuid.UUID,
+	userId uuid.UUID,
+	allowedPermissions []enums.AccessControlPermission,
+	opts ...options.RepositoryOptions,
+) *exceptions.Exception {
+	if len(ids) == 0 {
+		return exceptions.BlockGroup.NoChanges()
+	}
+
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	var orphanedBlockGroupIds []uuid.UUID
+	result := parsedOptions.DB.Raw(
+		blockgroupsql.GetGarbageCollectedOrphanedBlockGroupIdsSQL,
+		ids,
+		userId,
+		allowedPermissions,
+	).Scan(&orphanedBlockGroupIds)
+	if result.Error != nil {
+		return exceptions.BlockGroup.NotFound().WithOrigin(result.Error)
+	}
+
+	if len(orphanedBlockGroupIds) == 0 {
+		return exceptions.BlockGroup.NoChanges()
+	}
+
+	if exception := r.SoftDeleteManyByIds(
+		orphanedBlockGroupIds,
+		userId,
+		opts...,
+	); exception != nil {
+		return exception
+	}
+
+	return nil
 }
 
 func (r *BlockGroupRepository) GetOneById(
@@ -1157,6 +1200,8 @@ func (r *BlockGroupRepository) SoftDeleteManyByIds(
 		return exceptions.BlockGroup.NoChanges()
 	}
 
+	logs.Info(traces.GetTrace(0).FileLineString(), ids)
+
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
@@ -1167,105 +1212,142 @@ func (r *BlockGroupRepository) SoftDeleteManyByIds(
 		shouldCommit = true
 	}
 
-	if !parsedOptions.SkipPermissionCheck {
-		allowedPermissions := []enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-			enums.AccessControlPermission_Write,
-		}
-		if !r.HavePermissions(ids, userId, allowedPermissions, opts...) {
-			parsedOptions.DB.Rollback()
-			return exceptions.BlockGroup.NoPermission("soft delete block groups")
-		}
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
 	}
 
-	var targets []struct {
-		Id               uuid.UUID
-		PrevBlockGroupId *uuid.UUID
-		BlockPackId      uuid.UUID
-	}
-	if err := parsedOptions.DB.Model(&schemas.BlockGroup{}).
-		Where("id IN ? AND deleted_at IS NULL", ids).
-		Scan(&targets).Error; err != nil {
+	logs.Info(traces.GetTrace(0).FileLineString(), "test1")
+
+	test, exception := r.CheckPermissionsAndGetManyByIds(
+		ids,
+		userId,
+		[]schemas.BlockGroupRelation{
+			schemas.BlockGroupRelation_NextBlockGroup,
+		},
+		allowedPermissions,
+		options.WithTransactionDB(parsedOptions.DB),
+		options.WithOnlyDeleted(types.Ternary_Neutral),
+	)
+	if exception != nil {
 		parsedOptions.DB.Rollback()
-		return exceptions.BlockGroup.NotFound().WithOrigin(err)
+		return exception
 	}
 
-	if len(targets) == 0 {
+	for _, t := range test {
+		logs.FInfo(traces.GetTrace(0).FileLineString(), "Test: %s %v", t.Id.String(), t.DeletedAt)
+	}
+
+	blockGroups, exception := r.CheckPermissionsAndGetManyByIds(
+		ids,
+		userId,
+		[]schemas.BlockGroupRelation{
+			schemas.BlockGroupRelation_NextBlockGroup,
+		},
+		allowedPermissions,
+		opts...,
+	)
+	if exception != nil {
 		parsedOptions.DB.Rollback()
-		return exceptions.BlockGroup.NotFound()
+		return exception
 	}
 
-	deletionSet := make(map[uuid.UUID]bool)   // ID -> IsDeleting
-	prevMap := make(map[uuid.UUID]*uuid.UUID) // ID -> PrevID (Adjacency List)
+	logs.Info(traces.GetTrace(0).FileLineString(), "test2")
 
-	for _, target := range targets {
-		deletionSet[target.Id] = true
-		prevMap[target.Id] = target.PrevBlockGroupId
+	isBlockGroupDeleted := make(map[uuid.UUID]bool)
+	blockGroupIdToPrevBlockGroupId := make(map[uuid.UUID]*uuid.UUID)
+	blockGroupIdToNextBlockGroupId := make(map[uuid.UUID]*uuid.UUID)
+	for _, blockGroup := range blockGroups {
+		isBlockGroupDeleted[blockGroup.Id] = true
+		blockGroupIdToPrevBlockGroupId[blockGroup.Id] = blockGroup.PrevBlockGroupId
+		if blockGroup.NextBlockGroup == nil {
+			blockGroupIdToNextBlockGroupId[blockGroup.Id] = nil
+		} else {
+			blockGroupIdToNextBlockGroupId[blockGroup.Id] = &blockGroup.NextBlockGroup.Id
+		}
 	}
 
-	memoEffectivePrev := make(map[uuid.UUID]*uuid.UUID)
+	logs.Info(traces.GetTrace(0).FileLineString(), "test3")
 
-	var getEffectivePrev func(nodeId uuid.UUID) *uuid.UUID
-	getEffectivePrev = func(nodeId uuid.UUID) *uuid.UUID {
-		if res, ok := memoEffectivePrev[nodeId]; ok {
-			return res
+	ancestors := make(map[uuid.UUID]*uuid.UUID)
+	var findAncestor func(id uuid.UUID) *uuid.UUID
+	findAncestor = func(id uuid.UUID) *uuid.UUID {
+		if ancestor, exist := ancestors[id]; exist {
+			return ancestor
 		}
 
-		originalPrev := prevMap[nodeId]
-
-		if originalPrev == nil {
-			memoEffectivePrev[nodeId] = nil
+		originalPrevBlockGroupId := blockGroupIdToPrevBlockGroupId[id]
+		if originalPrevBlockGroupId == nil {
+			ancestors[id] = nil
 			return nil
 		}
 
-		if !deletionSet[*originalPrev] {
-			memoEffectivePrev[nodeId] = originalPrev
-			return originalPrev
+		if !isBlockGroupDeleted[*originalPrevBlockGroupId] {
+			ancestors[id] = originalPrevBlockGroupId
+			return originalPrevBlockGroupId
 		}
 
-		ancestorPrev := getEffectivePrev(*originalPrev)
-		memoEffectivePrev[nodeId] = ancestorPrev
-		return ancestorPrev
+		ancestor := findAncestor(*originalPrevBlockGroupId)
+		ancestors[id] = ancestor
+		return ancestor
 	}
 
+	logs.Info(traces.GetTrace(0).FileLineString(), "test4")
+
+	descendants := make(map[uuid.UUID]*uuid.UUID)
+	var findDescendant func(id uuid.UUID) *uuid.UUID
+	findDescendant = func(id uuid.UUID) *uuid.UUID {
+		if descendant, exist := descendants[id]; exist {
+			return descendant
+		}
+
+		originalNextBlockGroupId := blockGroupIdToNextBlockGroupId[id]
+		if originalNextBlockGroupId == nil {
+			descendants[id] = nil
+			return nil
+		}
+
+		if !isBlockGroupDeleted[*originalNextBlockGroupId] {
+			descendants[id] = originalNextBlockGroupId
+			return originalNextBlockGroupId
+		}
+
+		descendant := findDescendant(*originalNextBlockGroupId)
+		descendants[id] = descendant
+		return descendant
+	}
+
+	logs.Info(traces.GetTrace(0).FileLineString(), "test5")
+
+	isPlaced := make(map[string]bool)
 	var valuePlaceholders []string
 	var valueArgs []interface{}
+	for _, blockGroup := range blockGroups {
+		descendant := findDescendant(blockGroup.Id)
+		if descendant == nil {
+			continue
+		}
+		descendantString := descendant.String()
 
-	for _, target := range targets {
-		effectivePrev := getEffectivePrev(target.Id)
+		ancestor := findAncestor(blockGroup.Id)
+		ancestorString := "nil"
+		if ancestor != nil {
+			ancestorString = ancestor.String()
+		}
+
+		if isPlaced[ancestorString+descendantString] {
+			continue
+		}
+		isPlaced[ancestorString+descendantString] = true
 
 		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid, ?::boolean)")
-		isNewPrevNull := effectivePrev == nil
-		var newPrevVal interface{}
-		if effectivePrev != nil {
-			newPrevVal = *effectivePrev
-		} else {
-			newPrevVal = nil
-		}
-
-		valueArgs = append(valueArgs, target.Id, newPrevVal, isNewPrevNull)
+		valueArgs = append(valueArgs, descendant, ancestor, ancestor == nil)
 	}
 
-	if len(valuePlaceholders) > 0 {
-		sql := fmt.Sprintf(`
-            UPDATE "BlockGroupTable" AS bg
-            SET
-                prev_block_group_id = CASE 
-                    WHEN v.is_prev_block_group_id_null::boolean THEN NULL 
-                    ELSE v.new_prev_block_group_id::uuid 
-                END, 
-                updated_at = NOW()
-            FROM (VALUES %s) AS v(old_prev_block_group_id, new_prev_block_group_id, is_prev_block_group_id_null)
-            WHERE bg.prev_block_group_id = v.old_prev_block_group_id::uuid AND bg.deleted_at IS NULL
-        `, strings.Join(valuePlaceholders, ","))
-		result := parsedOptions.DB.Exec(sql, valueArgs...)
-		if result.Error != nil {
-			parsedOptions.DB.Rollback()
-			return exceptions.BlockGroup.FailedToUpdate().WithOrigin(result.Error)
-		}
-	}
+	logs.Info(traces.GetTrace(0).FileLineString(), "test6")
 
+	// delete first so that we can avoid the unique index of block group id and prev block group id while relink the descendants to their ancestors below
 	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
 		Where("id IN ?", ids).
 		Update("deleted_at", time.Now())
@@ -1276,6 +1358,33 @@ func (r *BlockGroupRepository) SoftDeleteManyByIds(
 		parsedOptions.DB.Rollback()
 		return exception
 	}
+
+	logs.Info(traces.GetTrace(0).FileLineString(), "test7: ", valuePlaceholders, valueArgs)
+
+	if len(valuePlaceholders) > 0 {
+		sql := fmt.Sprintf(`
+            UPDATE "BlockGroupTable" AS bg
+            SET
+                prev_block_group_id = CASE 
+                    WHEN v.is_prev_block_group_id_null::boolean THEN NULL 
+                    ELSE v.prev_block_group_id::uuid 
+                END, 
+                updated_at = NOW()
+            FROM (VALUES %s) AS v(id, prev_block_group_id, is_prev_block_group_id_null)
+            WHERE bg.id = v.id::uuid AND bg.deleted_at IS NULL
+        `, strings.Join(valuePlaceholders, ","))
+		result := parsedOptions.DB.Exec(sql, valueArgs...)
+		if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+			{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToUpdate().WithOrigin(result.Error)},
+			{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
+		}); exception != nil {
+			logs.Info(traces.GetTrace(0).FileLineString(), "WTF")
+			parsedOptions.DB.Rollback()
+			return exception
+		}
+	}
+
+	logs.Info(traces.GetTrace(0).FileLineString(), "test8")
 
 	if shouldCommit {
 		if err := parsedOptions.DB.Commit().Error; err != nil {

@@ -59,12 +59,26 @@ func (s *UserService) GetUserData(
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
-	userDataCache, exception := caches.GetUserDataCache(reqDto.ContextFields.UserId)
+	userDataCache, exception := caches.GetUserDataCache(reqDto.ContextFields.UserName)
 	if exception != nil {
 		return nil, exception
 	}
 
-	return userDataCache, nil
+	return &dtos.GetUserDataResDto{
+		PublicId:           userDataCache.PublicId,
+		Name:               userDataCache.Name,
+		DisplayName:        userDataCache.DisplayName,
+		Email:              userDataCache.Email,
+		Role:               userDataCache.Role,
+		Plan:               userDataCache.Plan,
+		Status:             userDataCache.Status,
+		AvatarURL:          userDataCache.AvatarURL,
+		Language:           userDataCache.Language,
+		GeneralSettingCode: userDataCache.GeneralSettingCode,
+		PrivacySettingCode: userDataCache.PrivacySettingCode,
+		CreatedAt:          userDataCache.CreatedAt,
+		UpdatedAt:          userDataCache.UpdatedAt,
+	}, nil
 }
 
 func (s *UserService) GetMe(
@@ -94,6 +108,7 @@ func (s *UserService) GetMe(
 		Plan:        user.Plan,
 		Status:      user.Status,
 		CreatedAt:   user.CreatedAt,
+		UpdatedAt:   user.UpdatedAt,
 	}, nil
 }
 
@@ -122,7 +137,7 @@ func (s *UserService) UpdateMe(
 	}
 
 	if reqDto.Body.Values.DisplayName != nil {
-		exception = caches.UpdateUserDataCache(reqDto.ContextFields.UserId, caches.UpdateUserDataCacheDto{
+		exception = caches.UpdateUserDataCache(reqDto.ContextFields.UserName, caches.UpdateUserDataCacheDto{
 			DisplayName: reqDto.Body.Values.DisplayName,
 		})
 		if exception != nil {
@@ -130,7 +145,7 @@ func (s *UserService) UpdateMe(
 		}
 	}
 	if reqDto.Body.Values.Status != nil {
-		exception = caches.UpdateUserDataCache(reqDto.ContextFields.UserId, caches.UpdateUserDataCacheDto{
+		exception = caches.UpdateUserDataCache(reqDto.ContextFields.UserName, caches.UpdateUserDataCacheDto{
 			Status: reqDto.Body.Values.Status,
 		})
 		if exception != nil {

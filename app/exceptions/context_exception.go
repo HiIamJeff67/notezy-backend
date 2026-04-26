@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	traces "notezy-backend/app/monitor/traces"
+	"strings"
 )
 
 const (
@@ -97,6 +98,41 @@ func (d *ContextExceptionDomain) MaxContextBodySizeExceeded(sizeKiloBytes int64,
 		IsInternal:     true,
 		Message:        fmt.Sprintf("The context body size of %d KB is larger than the maximum of %d KB", sizeKiloBytes, maxSizeKiloByte),
 		HTTPStatusCode: http.StatusRequestEntityTooLarge,
+		LastTrace:      traces.GetTrace(1),
+	}
+}
+
+func (d *ContextExceptionDomain) MissPlacingOrWrongMiddlewareOrder(optionalMessage ...string) *Exception {
+	message := "Miss placing or placing the middleware in the wrong order"
+	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], "", " ")) > 0 {
+		message = optionalMessage[0]
+	}
+
+	return &Exception{
+		Code:           d.BaseCode + 51,
+		Prefix:         d.Prefix,
+		Reason:         "MissPlacingOrWrongMiddlewareOrder",
+		IsInternal:     true,
+		Message:        message,
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastTrace:      traces.GetTrace(1),
+	}
+}
+
+// place MissPlacingOrWrongInterceptorOrder exception here
+func (d *ContextExceptionDomain) MissPlacingOrWrongInterceptorOrder(optionalMessage ...string) *Exception {
+	message := "Miss placing or placing the interceptors in the wrong order"
+	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], "", " ")) > 0 {
+		message = optionalMessage[0]
+	}
+
+	return &Exception{
+		Code:           d.BaseCode + 52,
+		Prefix:         d.Prefix,
+		Reason:         "MissPlacingOrWrongInterceptorOrder",
+		IsInternal:     true,
+		Message:        message,
+		HTTPStatusCode: http.StatusInternalServerError,
 		LastTrace:      traces.GetTrace(1),
 	}
 }

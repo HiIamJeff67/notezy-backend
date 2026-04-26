@@ -17,6 +17,8 @@ import (
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
+	"notezy-backend/app/monitor/logs"
+	"notezy-backend/app/monitor/traces"
 	options "notezy-backend/app/options"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
@@ -343,11 +345,13 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 	}
 
 	blockGroupIds := make([]uuid.UUID, len(blockGroups))
+	hasLinked := make(map[uuid.UUID]bool)
 	nextBlockGroupMap := make(map[uuid.UUID]schemas.BlockGroup, len(blockGroups))
 	var firstBlockGroup *schemas.BlockGroup = nil
 	for index := range blockGroups {
 		blockGroup := &blockGroups[index]
 		blockGroupIds[index] = blockGroup.Id
+		hasLinked[blockGroup.Id] = false
 
 		if blockGroup.PrevBlockGroupId == nil {
 			if firstBlockGroup != nil {
@@ -366,6 +370,7 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 	var resDto dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdResDto
 	currentBlockGroup := firstBlockGroup
 	for currentBlockGroup != nil {
+		hasLinked[currentBlockGroup.Id] = true
 		resDto = append(resDto, dtos.GetMyBlockGroupAndItsBlocksByIdResDto{
 			Id:                        currentBlockGroup.Id,
 			BlockPackId:               currentBlockGroup.BlockPackId,
@@ -385,12 +390,15 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 	}
 
 	if len(resDto) != len(blockGroups) {
+		for id, ok := range hasLinked {
+			logs.FInfo(traces.GetTrace(0).FileLineString(), "Is %s linked ? %b", id.String(), ok)
+		}
 		return nil, exceptions.BlockGroup.BrokenBlockGroupsLinkedListDetected(reqDto.Param.BlockPackId, blockGroupIds)
 	}
 
 	var flattenedBlocks []schemas.Block
 	result := db.Model(&schemas.Block{}).
-		Where("block_group_id IN ?", blockGroupIds).
+		Where("block_group_id IN ? AND deleted_at IS NULL", blockGroupIds).
 		Find(&flattenedBlocks)
 	if err := result.Error; err != nil || len(flattenedBlocks) == 0 {
 		// return the current node with empty editable block if we cannot find them
@@ -532,7 +540,7 @@ func (s *BlockGroupService) InsertBlockGroupByBlockPackId(
 		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
 
-	tx := s.db.WithContext(ctx)
+	db := s.db.WithContext(ctx)
 
 	newBlockGroupId, exception := s.blockGroupRepository.InsertOneByBlockPackId(
 		reqDto.Body.BlockPackId,
@@ -540,7 +548,7 @@ func (s *BlockGroupService) InsertBlockGroupByBlockPackId(
 		inputs.CreateBlockGroupInput{
 			PrevBlockGroupId: reqDto.Body.PrevBlockGroupId,
 		},
-		options.WithDB(tx),
+		options.WithDB(db),
 	)
 	if exception != nil {
 		return nil, exception
@@ -551,6 +559,38 @@ func (s *BlockGroupService) InsertBlockGroupByBlockPackId(
 
 	return &dtos.InsertBlockGroupByBlockPackIdResDto{
 		Id:        *newBlockGroupId,
+		CreatedAt: time.Now(),
+	}, nil
+}
+
+func (s *BlockGroupService) InsertBlockGroupsByBlockPackId(
+	ctx context.Context, reqDto *dtos.InsertBlockGroupsByBlockPackIdReqDto,
+) (*dtos.InsertBlockGroupsByBlockPackIdResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	input := make([]inputs.CreateBlockGroupInput, len(reqDto.Body.PrevBlockGroupIds))
+	for index, prevBlockGroupId := range reqDto.Body.PrevBlockGroupIds {
+		input[index] = inputs.CreateBlockGroupInput{
+			PrevBlockGroupId: prevBlockGroupId,
+		}
+	}
+
+	newBlockGroupIds, exception := s.blockGroupRepository.InsertManyByBlockPackId(
+		reqDto.Body.BlockPackId,
+		reqDto.ContextFields.UserId,
+		input,
+		options.WithDB(db),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.InsertBlockGroupsByBlockPackIdResDto{
+		Ids:       newBlockGroupIds,
 		CreatedAt: time.Now(),
 	}, nil
 }
@@ -1243,7 +1283,7 @@ func (s *BlockGroupService) BatchMoveMyBlockGroupsByIds(
 	validNonNullDestinationBlockGroupIndexes := make(map[uuid.UUID]int)
 	var validNonNullDestinationBlockGroups []schemas.BlockGroup
 	if len(nonNullDestinationBlockGroupIds) > 0 {
-		validNonNullDestinationBlockGroups, exception := s.blockGroupRepository.CheckPermissionsAndGetManyByIds(
+		validNonNullDestinationBlockGroups, exception = s.blockGroupRepository.CheckPermissionsAndGetManyByIds(
 			nonNullDestinationBlockGroupIds,
 			reqDto.ContextFields.UserId,
 			[]schemas.BlockGroupRelation{
@@ -1322,13 +1362,16 @@ func (s *BlockGroupService) BatchMoveMyBlockGroupsByIds(
 		}
 
 		// Step 2: Prepare for the insertion by linking the next block group of the destination block group to pointing to the inserted block group
-		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid)")
 		if destination != nil && destination.NextBlockGroup != nil {
-			valueArgs = append(valueArgs,
-				destination.NextBlockGroup.Id,
-				movable.Id,
-			)
+			if destination.NextBlockGroup.Id != movable.Id {
+				valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid)")
+				valueArgs = append(valueArgs,
+					destination.NextBlockGroup.Id,
+					movable.Id,
+				)
+			}
 		} else {
+			valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid)")
 			valueArgs = append(valueArgs,
 				nullDestinationBlockPackIdToNextBlockGroupId[movedBlockGroups.BlockPackId],
 				movable.Id,
@@ -1351,6 +1394,9 @@ func (s *BlockGroupService) BatchMoveMyBlockGroupsByIds(
 	}
 
 	valuePlaceholdersStr := strings.Join(valuePlaceholders, ",")
+	if valuePlaceholdersStr == "" {
+		return nil, exceptions.BlockGroup.NoChanges()
+	}
 
 	// Pass 1 First set the deleted_at to now
 	fakeDeleteSql := fmt.Sprintf(`

@@ -19,7 +19,6 @@ import (
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
-	blockgroupsql "notezy-backend/app/models/sqls/block_group"
 	options "notezy-backend/app/options"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
@@ -534,7 +533,7 @@ func (s *BlockService) UpdateMyBlockById(
 		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
 
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
@@ -547,10 +546,11 @@ func (s *BlockService) UpdateMyBlockById(
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
@@ -563,6 +563,10 @@ func (s *BlockService) UpdateMyBlockById(
 			Content:       nil,
 		},
 		SetNull: reqDto.Body.SetNull,
+	}
+	var affectedBlockGroupIds []uuid.UUID
+	if reqDto.Body.Values.BlockGroupId != nil && (*reqDto.Body.Values.BlockGroupId) != block.BlockGroupId {
+		affectedBlockGroupIds = append(affectedBlockGroupIds, block.BlockGroupId)
 	}
 
 	if reqDto.Body.Values.Props != nil {
@@ -612,11 +616,24 @@ func (s *BlockService) UpdateMyBlockById(
 		reqDto.Body.BlockId,
 		reqDto.ContextFields.UserId,
 		updateInput,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithSkipPermissionCheck(),
 	)
 	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	exception = s.blockGroupRepository.CollectOrphanedBlockGroupsByIds(
+		affectedBlockGroupIds,
+		reqDto.ContextFields.UserId,
+		allowedPermissions,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil && !exceptions.CommonlyCompare(exception, exceptions.BlockGroup.NoChanges(), false) {
+		tx.Rollback()
 		return nil, exception
 	}
 
@@ -632,7 +649,7 @@ func (s *BlockService) UpdateMyBlocksByIds(
 		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
 
 	allowedPemissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
@@ -666,10 +683,11 @@ func (s *BlockService) UpdateMyBlocksByIds(
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPemissions,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
@@ -681,6 +699,7 @@ func (s *BlockService) UpdateMyBlocksByIds(
 		Content      *json.RawMessage `json:"content"`
 	}
 	validateBlockPropsAndContentDto := make([]ValidateBlockPropsAndContentDto, len(blocks))
+	var affectedBlockGroupIds []uuid.UUID
 	for index, block := range blocks {
 		if blockIdToUpdateDto[block.Id].Values.Type == nil {
 			validateBlockPropsAndContentDto[index] = ValidateBlockPropsAndContentDto{
@@ -698,6 +717,11 @@ func (s *BlockService) UpdateMyBlocksByIds(
 				Props:        blockIdToUpdateDto[block.Id].Values.Props,
 				Content:      blockIdToUpdateDto[block.Id].Values.Content,
 			}
+		}
+
+		if blockIdToUpdateDto[block.Id].Values.BlockGroupId != nil &&
+			(*blockIdToUpdateDto[block.Id].Values.BlockGroupId) != block.BlockGroupId {
+			affectedBlockGroupIds = append(affectedBlockGroupIds, block.BlockGroupId)
 		}
 	}
 	validateBlockPropsAndContentFunc := func(validateBlockPropsAndContentDto ValidateBlockPropsAndContentDto) (inputs.BulkUpdateBlocksInput, error) {
@@ -808,12 +832,30 @@ func (s *BlockService) UpdateMyBlocksByIds(
 	exception = s.blockRepository.BulkUpdateManyByIds(
 		reqDto.ContextFields.UserId,
 		bulkUpdateBlocksInputs,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithSkipPermissionCheck(),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
+	}
+
+	// the garbage collection of the orphaned block group which don't have any blocks
+	exception = s.blockGroupRepository.CollectOrphanedBlockGroupsByIds(
+		affectedBlockGroupIds,
+		reqDto.ContextFields.UserId,
+		allowedPemissions,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil && !exceptions.CommonlyCompare(exception, exceptions.BlockGroup.NoChanges(), false) {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	resDto.UpdatedAt = time.Now()
@@ -951,28 +993,39 @@ func (s *BlockService) DeleteMyBlocksByIds(
 	deletedBlocks, exception := s.blockRepository.SoftDeleteManyByIds(
 		reqDto.Body.BlockIds,
 		reqDto.ContextFields.UserId,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
-	// the garbage collection of the block group of deleted block
-	affectedGroupIdsMap := make(map[uuid.UUID]bool)
-	var affectedGroupIds []uuid.UUID
+	// the garbage collection of the orphaned block group which don't have any blocks
+	affectedBlockGroupIdsMap := make(map[uuid.UUID]bool)
+	var affectedBlockGroupIds []uuid.UUID
 	for _, block := range deletedBlocks {
-		if !affectedGroupIdsMap[block.BlockGroupId] {
-			affectedGroupIdsMap[block.BlockGroupId] = true
-			affectedGroupIds = append(affectedGroupIds, block.BlockGroupId)
+		if !affectedBlockGroupIdsMap[block.BlockGroupId] {
+			affectedBlockGroupIdsMap[block.BlockGroupId] = true
+			affectedBlockGroupIds = append(affectedBlockGroupIds, block.BlockGroupId)
 		}
 	}
-	if len(affectedGroupIds) > 0 {
-		result := tx.Exec(blockgroupsql.CollectGarbageBlockGroupByIdsSQL, affectedGroupIds)
-		if err := result.Error; err != nil {
-			tx.Rollback()
-			return nil, exceptions.BlockGroup.FailedToDelete().WithOrigin(err)
-		}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+	exception = s.blockGroupRepository.CollectOrphanedBlockGroupsByIds(
+		affectedBlockGroupIds,
+		reqDto.ContextFields.UserId,
+		allowedPermissions,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil && !exceptions.CommonlyCompare(exception, exceptions.BlockGroup.NoChanges(), false) {
+		tx.Rollback()
+		return nil, exception
 	}
 
 	if err := tx.Commit().Error; err != nil {

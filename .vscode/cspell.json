@@ -64,6 +64,9 @@
     "fvbock",
     "strs",
     "presign",
-    "froms"
+    "froms",
+    "fcall",
+    "notfuture",
+    "refreshable"
   ]
 }

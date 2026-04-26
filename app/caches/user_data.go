@@ -19,6 +19,7 @@ import (
 )
 
 type UserDataCache struct {
+	Id                 uuid.UUID        `json:"id"`                 // !only here
 	PublicId           string           `json:"publicId"`           // user
 	Name               string           `json:"name"`               // user
 	DisplayName        string           `json:"displayName"`        // user
@@ -37,8 +38,9 @@ type UserDataCache struct {
 }
 
 type UpdateUserDataCacheDto struct {
-	PublicId           *string
-	Name               *string
+	// Id 				  *uuid.UUID
+	// PublicId           *string
+	// Name               *string
 	DisplayName        *string
 	Email              *string
 	AccessToken        *string
@@ -73,14 +75,14 @@ var (
 
 /* ========================= Auxiliary Function ========================= */
 
-func hashUserDataIdentifier(identifier uuid.UUID) int {
+func hashUserDataIdentifier(identifier string) int {
 	h := fnv.New32a()
-	h.Write([]byte(identifier.String()))
+	h.Write([]byte(identifier))
 	return int(h.Sum32()) % UserDataRange.Size
 }
 
-func formatUserDataKey(id uuid.UUID) string {
-	return fmt.Sprintf("%s:%s", types.ValidCachePurpose_UserData.String(), id.String())
+func formatUserDataKey(identifier string) string {
+	return fmt.Sprintf("%s:%s", types.ValidCachePurpose_UserData.String(), identifier)
 }
 
 func isValidUserCacheData(userDataCache *UserDataCache) bool {
@@ -99,15 +101,15 @@ func isValidUserCacheData(userDataCache *UserDataCache) bool {
 
 /* ============================== Extend Cache TTL Operation ============================== */
 
-func ExtendUserDataCacheTTL(id uuid.UUID) *exceptions.Exception {
-	hash := hashUserDataIdentifier(id)
+func ExtendUserDataCacheTTL(identifier string) *exceptions.Exception {
+	hash := hashUserDataIdentifier(identifier)
 	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
 	redisClient, ok := RedisClientMap[serverNumber]
 	if !ok {
 		return exceptions.Cache.ClientInstanceDoesNotExist()
 	}
 
-	formattedKey := formatUserDataKey(id)
+	formattedKey := formatUserDataKey(identifier)
 
 	updated, err := redisClient.Expire(formattedKey, _userDataCacheExpiresIn).Result()
 	if err != nil {
@@ -121,20 +123,20 @@ func ExtendUserDataCacheTTL(id uuid.UUID) *exceptions.Exception {
 	return nil
 }
 
-/* ============================== Automatic Operations for Accouting ============================== */
+/* ============================== Automatic Operations for Accounting ============================== */
 
 func CheckAndUpdateUserQuotaByFormattedKey(
 	id uuid.UUID,
 	dto CheckAndUpdateUserQuotaDto,
 ) *exceptions.Exception {
-	hash := hashUserDataIdentifier(id)
+	hash := hashUserDataIdentifier(id.String())
 	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
 	redisClient, ok := RedisClientMap[serverNumber]
 	if !ok {
 		return exceptions.Cache.ClientInstanceDoesNotExist()
 	}
 
-	formattedKey := formatUserDataKey(id)
+	formattedKey := formatUserDataKey(id.String())
 
 	keys := []interface{}{formattedKey}
 	argv := []interface{}{
@@ -173,7 +175,7 @@ func BestEffortBatchCheckAndUpdateUserQuotasByFormattedKeys(
 	})
 
 	for _, dto := range dtos {
-		hash := hashUserDataIdentifier(dto.Id)
+		hash := hashUserDataIdentifier(dto.Id.String())
 		serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
 		serverNumberToUserIdMap[serverNumber] = append(serverNumberToUserIdMap[serverNumber], dto)
 	}
@@ -217,14 +219,14 @@ func BestEffortBatchCheckAndUpdateUserQuotasByFormattedKey(
 		return nil
 	}
 
-	hash := hashUserDataIdentifier(id)
+	hash := hashUserDataIdentifier(id.String())
 	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
 	redisClient, ok := RedisClientMap[serverNumber]
 	if !ok {
 		return exceptions.Cache.ClientInstanceDoesNotExist()
 	}
 
-	formattedKey := formatUserDataKey(id)
+	formattedKey := formatUserDataKey(id.String())
 
 	keys := []interface{}{formattedKey}
 	argv := make([]interface{}, 0, len(dtos)*batchCheckAndUpdateUserQuotasByFormattedKeyBaseNumOfArgv)
@@ -251,15 +253,15 @@ func BestEffortBatchCheckAndUpdateUserQuotasByFormattedKey(
 
 /* ========================= CRUD Operations ========================= */
 
-func GetUserDataCache(id uuid.UUID) (*UserDataCache, *exceptions.Exception) {
-	hash := hashUserDataIdentifier(id)
+func GetUserDataCache(identifier string) (*UserDataCache, *exceptions.Exception) {
+	hash := hashUserDataIdentifier(identifier)
 	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
 	redisClient, ok := RedisClientMap[serverNumber]
 	if !ok {
 		return nil, exceptions.Cache.ClientInstanceDoesNotExist()
 	}
 
-	formattedKey := formatUserDataKey(id)
+	formattedKey := formatUserDataKey(identifier)
 	cacheString, err := redisClient.Get(formattedKey).Result()
 	if err != nil {
 		return nil, exceptions.Cache.NotFound(string(types.ValidCachePurpose_UserData)).WithOrigin(err)
@@ -275,12 +277,12 @@ func GetUserDataCache(id uuid.UUID) (*UserDataCache, *exceptions.Exception) {
 	return &userDataCache, nil
 }
 
-func SetUserDataCache(id uuid.UUID, userDataCache UserDataCache) *exceptions.Exception {
+func SetUserDataCache(identifier string, userDataCache UserDataCache) *exceptions.Exception {
 	if !isValidUserCacheData(&userDataCache) { // strictly check when setting the cache data
 		return exceptions.Cache.InvalidCacheDataStruct(userDataCache)
 	}
 
-	hash := hashUserDataIdentifier(id)
+	hash := hashUserDataIdentifier(identifier)
 	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
 	redisClient, ok := RedisClientMap[serverNumber]
 	if !ok {
@@ -292,7 +294,7 @@ func SetUserDataCache(id uuid.UUID, userDataCache UserDataCache) *exceptions.Exc
 		return exceptions.Cache.FailedToConvertStructToJson().WithOrigin(err)
 	}
 
-	formattedKey := formatUserDataKey(id)
+	formattedKey := formatUserDataKey(identifier)
 	if err = redisClient.Set(formattedKey, string(userDataJson), _userDataCacheExpiresIn).Err(); err != nil {
 		return exceptions.Cache.FailedToCreate(types.ValidCachePurpose_UserData.String()).WithOrigin(err)
 	}
@@ -301,15 +303,15 @@ func SetUserDataCache(id uuid.UUID, userDataCache UserDataCache) *exceptions.Exc
 	return nil
 }
 
-func UpdateUserDataCache(id uuid.UUID, dto UpdateUserDataCacheDto) *exceptions.Exception {
-	hash := hashUserDataIdentifier(id)
+func UpdateUserDataCache(identifier string, dto UpdateUserDataCacheDto) *exceptions.Exception {
+	hash := hashUserDataIdentifier(identifier)
 	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
 	redisClient, ok := RedisClientMap[serverNumber]
 	if !ok {
 		return exceptions.Cache.ClientInstanceDoesNotExist()
 	}
 
-	userDataCache, exception := GetUserDataCache(id)
+	userDataCache, exception := GetUserDataCache(identifier)
 	if exception != nil {
 		return exception
 	}
@@ -322,7 +324,7 @@ func UpdateUserDataCache(id uuid.UUID, dto UpdateUserDataCacheDto) *exceptions.E
 		return exceptions.Cache.FailedToConvertStructToJson().WithOrigin(err)
 	}
 
-	formattedKey := formatUserDataKey(id)
+	formattedKey := formatUserDataKey(identifier)
 	if err = redisClient.Set(formattedKey, string(userDataJson), _userDataCacheExpiresIn).Err(); err != nil {
 		return exceptions.Cache.FailedToUpdate(string(types.ValidCachePurpose_UserData)).WithOrigin(err)
 	}
@@ -331,15 +333,15 @@ func UpdateUserDataCache(id uuid.UUID, dto UpdateUserDataCacheDto) *exceptions.E
 	return nil
 }
 
-func DeleteUserDataCache(id uuid.UUID) *exceptions.Exception {
-	hash := hashUserDataIdentifier(id)
+func DeleteUserDataCache(identifier string) *exceptions.Exception {
+	hash := hashUserDataIdentifier(identifier)
 	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
 	redisClient, ok := RedisClientMap[serverNumber]
 	if !ok {
 		return exceptions.Cache.ClientInstanceDoesNotExist()
 	}
 
-	formattedKey := formatUserDataKey(id)
+	formattedKey := formatUserDataKey(identifier)
 	err := redisClient.Del(formattedKey).Err()
 	if err != nil {
 		return exceptions.Cache.FailedToDelete(string(types.ValidCachePurpose_UserData)).WithOrigin(err)

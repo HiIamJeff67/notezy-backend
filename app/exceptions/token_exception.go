@@ -1,6 +1,7 @@
 package exceptions
 
 import (
+	"fmt"
 	"net/http"
 	traces "notezy-backend/app/monitor/traces"
 )
@@ -137,6 +138,20 @@ func (d *TokenExceptionDomain) FailedToParseCSRFToken() *Exception {
 		Reason:         "FailedToParseCSRFToken",
 		IsInternal:     true,
 		Message:        "Failed to parse the csrf token",
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastTrace:      traces.GetTrace(1),
+	}
+}
+
+/* ============================== Handling Token Inconsistent ============================== */
+
+func (d *TokenExceptionDomain) InconsistentCSRFToken(received string, expected string) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 233,
+		Prefix:         d.Prefix,
+		Reason:         "InconsistentCSRFToken",
+		IsInternal:     true,
+		Message:        fmt.Sprintf("The csrf token is not consistent compared between the client of %s and the server of %s", received, expected),
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastTrace:      traces.GetTrace(1),
 	}

@@ -147,8 +147,7 @@ func (s *AuthService) Register(
 	}
 
 	// Generate accessToken
-	accessToken, exception := tokens.GenerateAccessToken(
-		(*newUserId).String(),
+	newAccessToken, exception := tokens.GenerateAccessToken(
 		createUserInput.Name,
 		createUserInput.Email,
 		createUserInput.UserAgent,
@@ -158,8 +157,7 @@ func (s *AuthService) Register(
 		return nil, exception
 	}
 	// Generate refreshToken
-	refreshToken, exception := tokens.GenerateRefreshToken(
-		(*newUserId).String(),
+	newRefreshToken, exception := tokens.GenerateRefreshToken(
 		createUserInput.Name,
 		createUserInput.Email,
 		createUserInput.UserAgent,
@@ -169,7 +167,7 @@ func (s *AuthService) Register(
 		return nil, exception
 	}
 	// Generate csrfToken
-	csrfToken, exception := tokens.GenerateCSRFToken()
+	newCSRFToken, exception := tokens.GenerateCSRFToken()
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -184,7 +182,7 @@ func (s *AuthService) Register(
 		*newUserId,
 		inputs.PartialUpdateUserInput{
 			Values: inputs.UpdateUserInput{
-				RefreshToken: refreshToken,
+				RefreshToken: newRefreshToken,
 			},
 			SetNull: nil,
 		},
@@ -239,14 +237,15 @@ func (s *AuthService) Register(
 
 	// Create user data cache
 	exception = caches.SetUserDataCache(
-		*newUserId,
+		newUser.Name,
 		caches.UserDataCache{
+			Id:                 *newUserId,
 			PublicId:           newUser.PublicId,
 			Name:               newUser.Name,
 			DisplayName:        newUser.DisplayName,
 			Email:              newUser.Email,
-			AccessToken:        *accessToken,
-			CSRFToken:          *csrfToken,
+			AccessToken:        *newAccessToken,
+			CSRFToken:          *newCSRFToken,
 			Role:               newUser.Role,
 			Plan:               newUser.Plan,
 			Status:             newUser.Status,
@@ -272,9 +271,13 @@ func (s *AuthService) Register(
 	}
 
 	return &dtos.RegisterResDto{
-		AccessToken:  *accessToken,
-		RefreshToken: *refreshToken,
-		CSRFToken:    *csrfToken,
+		PublicId:     newUser.PublicId,
+		Name:         newUser.Name,
+		DisplayName:  newUser.DisplayName,
+		Email:        newUser.Email,
+		AccessToken:  *newAccessToken,
+		RefreshToken: *newRefreshToken,
+		CSRFToken:    *newCSRFToken,
 		CreatedAt:    newUser.CreatedAt,
 	}, nil
 }
@@ -341,8 +344,7 @@ func (s *AuthService) RegisterViaGoogle(
 	}
 
 	// Generate accessToken
-	accessToken, exception := tokens.GenerateAccessToken(
-		(*newUserId).String(),
+	newAccessToken, exception := tokens.GenerateAccessToken(
 		createUserInput.Name,
 		createUserInput.Email,
 		createUserInput.UserAgent,
@@ -352,8 +354,7 @@ func (s *AuthService) RegisterViaGoogle(
 		return nil, exception
 	}
 	// Generate refreshToken
-	refreshToken, exception := tokens.GenerateRefreshToken(
-		(*newUserId).String(),
+	newRefreshToken, exception := tokens.GenerateRefreshToken(
 		createUserInput.Name,
 		createUserInput.Email,
 		createUserInput.UserAgent,
@@ -363,7 +364,7 @@ func (s *AuthService) RegisterViaGoogle(
 		return nil, exception
 	}
 	// Generate csrfToken
-	csrfToken, exception := tokens.GenerateCSRFToken()
+	newCSRFToken, exception := tokens.GenerateCSRFToken()
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -378,7 +379,7 @@ func (s *AuthService) RegisterViaGoogle(
 		*newUserId,
 		inputs.PartialUpdateUserInput{
 			Values: inputs.UpdateUserInput{
-				RefreshToken: refreshToken,
+				RefreshToken: newRefreshToken,
 			},
 			SetNull: nil,
 		},
@@ -434,14 +435,15 @@ func (s *AuthService) RegisterViaGoogle(
 
 	// Create user data cache
 	exception = caches.SetUserDataCache(
-		*newUserId,
+		newUser.Name,
 		caches.UserDataCache{
+			Id:                 *newUserId,
 			PublicId:           newUser.PublicId,
 			Name:               newUser.Name,
 			DisplayName:        newUser.DisplayName,
 			Email:              newUser.Email,
-			AccessToken:        *accessToken,
-			CSRFToken:          *csrfToken,
+			AccessToken:        *newAccessToken,
+			CSRFToken:          *newCSRFToken,
 			Role:               newUser.Role,
 			Plan:               newUser.Plan,
 			Status:             newUser.Status,
@@ -467,9 +469,13 @@ func (s *AuthService) RegisterViaGoogle(
 	}
 
 	return &dtos.RegisterViaGoogleResDto{
-		AccessToken:  *accessToken,
-		RefreshToken: *refreshToken,
-		CSRFToken:    *csrfToken,
+		PublicId:     newUser.PublicId,
+		Name:         newUser.Name,
+		DisplayName:  newUser.DisplayName,
+		Email:        newUser.Email,
+		AccessToken:  *newAccessToken,
+		RefreshToken: *newRefreshToken,
+		CSRFToken:    *newCSRFToken,
 		CreatedAt:    newUser.CreatedAt,
 	}, nil
 }
@@ -502,6 +508,8 @@ func (s *AuthService) Login(
 		); exception != nil {
 			return nil, exception
 		}
+	} else {
+		return nil, exceptions.Auth.InvalidDto()
 	}
 
 	if user == nil {
@@ -556,35 +564,37 @@ func (s *AuthService) Login(
 		}
 	}
 
-	accessToken, exception := tokens.GenerateAccessToken(user.Id.String(), user.Name, user.Email, user.UserAgent)
+	newAccessToken, exception := tokens.GenerateAccessToken(user.Name, user.Email, user.UserAgent)
 	if exception != nil {
 		return nil, exception
 	}
-	refreshToken, exception := tokens.GenerateRefreshToken(user.Id.String(), user.Name, user.Email, user.UserAgent)
+	newRefreshToken, exception := tokens.GenerateRefreshToken(user.Name, user.Email, user.UserAgent)
 	if exception != nil {
 		return nil, exception
 	}
-	csrfToken, exception := tokens.GenerateCSRFToken()
+	newCSRFToken, exception := tokens.GenerateCSRFToken()
 	if exception != nil {
 		return nil, exception
 	}
 
 	// check if the user data cache exists
-	if _, exception := caches.GetUserDataCache(user.Id); exception == nil {
+	if _, exception := caches.GetUserDataCache(user.Name); exception == nil {
 		// then just update the existing user data cache
 		if exception = caches.UpdateUserDataCache(
-			user.Id,
+			user.Name,
 			caches.UpdateUserDataCacheDto{
-				AccessToken: accessToken,
+				AccessToken: newAccessToken,
+				CSRFToken:   newCSRFToken,
 			},
 		); exception != nil {
 			exception.Log()
 		}
 	} else { // else if it does not exist
-		// then we have to first get the relative data from differenct tables
+		// then we have to first get the relative data from different tables
 		// we done this by one custom sql so it's not that slow...
 		// once we have the required data, we set it as the user data cache
 		output := struct {
+			Id                 uuid.UUID        `gorm:"id"`
 			PublicId           string           `gorm:"public_id"`
 			Name               string           `gorm:"name"`
 			DisplayName        string           `gorm:"display_name"`
@@ -602,6 +612,7 @@ func (s *AuthService) Login(
 		err := db.Raw(usersql.GetUserDataCacheByIdSQL, user.Id).
 			Row().
 			Scan(
+				&output.Id,
 				&output.PublicId,
 				&output.Name,
 				&output.DisplayName,
@@ -621,12 +632,13 @@ func (s *AuthService) Login(
 		}
 
 		newUserDataCache := caches.UserDataCache{
+			Id:                 user.Id,
 			PublicId:           output.PublicId,
 			Name:               output.Name,
 			DisplayName:        output.DisplayName,
 			Email:              output.Email,
-			AccessToken:        *accessToken,
-			CSRFToken:          *csrfToken,
+			AccessToken:        *newAccessToken,
+			CSRFToken:          *newCSRFToken,
 			Role:               output.Role,
 			Plan:               output.Plan,
 			Status:             output.Status,
@@ -641,7 +653,7 @@ func (s *AuthService) Login(
 			newUserDataCache.AvatarURL = *output.AvatarURL
 		}
 		exception := caches.SetUserDataCache(
-			user.Id,
+			user.Name,
 			newUserDataCache,
 		)
 		if exception != nil {
@@ -656,7 +668,7 @@ func (s *AuthService) Login(
 		inputs.PartialUpdateUserInput{
 			Values: inputs.UpdateUserInput{
 				Status:       &user.PrevStatus,
-				RefreshToken: refreshToken,
+				RefreshToken: newRefreshToken,
 				UserAgent:    &reqDto.Header.UserAgent,
 				LoginCount:   &zeroLoginCount,
 			},
@@ -669,10 +681,15 @@ func (s *AuthService) Login(
 	}
 
 	return &dtos.LoginResDto{
-		AccessToken:  *accessToken,
+		PublicId:     user.PublicId,
+		Name:         user.Name,
+		DisplayName:  user.DisplayName,
+		Email:        user.Email,
+		AccessToken:  *newAccessToken,
 		RefreshToken: updatedUser.RefreshToken,
-		CSRFToken:    *csrfToken,
+		CSRFToken:    *newCSRFToken,
 		UpdatedAt:    updatedUser.UpdatedAt,
+		CreatedAt:    user.CreatedAt,
 	}, nil
 }
 
@@ -753,35 +770,37 @@ func (s *AuthService) LoginViaGoogle(
 		}
 	}
 
-	accessToken, exception := tokens.GenerateAccessToken(user.Id.String(), user.Name, user.Email, user.UserAgent)
+	newAccessToken, exception := tokens.GenerateAccessToken(user.Name, user.Email, user.UserAgent)
 	if exception != nil {
 		return nil, exception
 	}
-	refreshToken, exception := tokens.GenerateRefreshToken(user.Id.String(), user.Name, user.Email, user.UserAgent)
+	newRefreshToken, exception := tokens.GenerateRefreshToken(user.Name, user.Email, user.UserAgent)
 	if exception != nil {
 		return nil, exception
 	}
-	csrfToken, exception := tokens.GenerateCSRFToken()
+	newCSRFToken, exception := tokens.GenerateCSRFToken()
 	if exception != nil {
 		return nil, exception
 	}
 
 	// check if the user data cache exists
-	if _, exception := caches.GetUserDataCache(user.Id); exception == nil {
+	if _, exception := caches.GetUserDataCache(user.Name); exception == nil {
 		// then just update the existing user data cache
 		if exception = caches.UpdateUserDataCache(
-			user.Id,
+			user.Name,
 			caches.UpdateUserDataCacheDto{
-				AccessToken: accessToken,
+				AccessToken: newAccessToken,
+				CSRFToken:   newCSRFToken,
 			},
 		); exception != nil {
 			exception.Log()
 		}
 	} else { // else if it does not exist
-		// then we have to first get the relative data from differenct tables
+		// then we have to first get the relative data from different tables
 		// we done this by one custom sql so it's not that slow...
 		// once we have the required data, we set it as the user data cache
 		output := struct {
+			Id                 uuid.UUID        `gorm:"id"`
 			PublicId           string           `gorm:"public_id"`
 			Name               string           `gorm:"name"`
 			DisplayName        string           `gorm:"display_name"`
@@ -799,6 +818,7 @@ func (s *AuthService) LoginViaGoogle(
 		err := db.Raw(usersql.GetUserDataCacheByIdSQL, user.Id).
 			Row().
 			Scan(
+				&output.Id,
 				&output.PublicId,
 				&output.Name,
 				&output.DisplayName,
@@ -818,12 +838,13 @@ func (s *AuthService) LoginViaGoogle(
 		}
 
 		newUserDataCache := caches.UserDataCache{
+			Id:                 user.Id,
 			PublicId:           output.PublicId,
 			Name:               output.Name,
 			DisplayName:        output.DisplayName,
 			Email:              output.Email,
-			AccessToken:        *accessToken,
-			CSRFToken:          *csrfToken,
+			AccessToken:        *newAccessToken,
+			CSRFToken:          *newCSRFToken,
 			Role:               output.Role,
 			Plan:               output.Plan,
 			Status:             output.Status,
@@ -838,7 +859,7 @@ func (s *AuthService) LoginViaGoogle(
 			newUserDataCache.AvatarURL = *output.AvatarURL
 		}
 		exception := caches.SetUserDataCache(
-			user.Id,
+			user.Name,
 			newUserDataCache,
 		)
 		if exception != nil {
@@ -853,7 +874,7 @@ func (s *AuthService) LoginViaGoogle(
 		inputs.PartialUpdateUserInput{
 			Values: inputs.UpdateUserInput{
 				Status:       &user.PrevStatus,
-				RefreshToken: refreshToken,
+				RefreshToken: newRefreshToken,
 				UserAgent:    &reqDto.Header.UserAgent,
 				LoginCount:   &zeroLoginCount,
 			},
@@ -866,10 +887,15 @@ func (s *AuthService) LoginViaGoogle(
 	}
 
 	return &dtos.LoginViaGoogleResDto{
-		AccessToken:  *accessToken,
+		PublicId:     user.PublicId,
+		Name:         user.Name,
+		DisplayName:  user.DisplayName,
+		Email:        user.Email,
+		AccessToken:  *newAccessToken,
 		RefreshToken: updatedUser.RefreshToken,
-		CSRFToken:    *csrfToken,
+		CSRFToken:    *newCSRFToken,
 		UpdatedAt:    updatedUser.UpdatedAt,
+		CreatedAt:    user.CreatedAt,
 	}, nil
 }
 
@@ -899,7 +925,7 @@ func (s *AuthService) Logout(
 		return nil, exception
 	}
 
-	exception = caches.DeleteUserDataCache(reqDto.ContextFields.UserId)
+	exception = caches.DeleteUserDataCache(reqDto.ContextFields.UserName)
 	if exception != nil {
 		return nil, exception
 	}
@@ -1055,31 +1081,32 @@ func (s *AuthService) ForgetPassword(
 		return nil, exceptions.Auth.WrongAuthCode()
 	}
 
-	accessToken, exception := tokens.GenerateAccessToken(user.Id.String(), user.Name, user.Email, user.UserAgent)
+	newAccessToken, exception := tokens.GenerateAccessToken(user.Name, user.Email, user.UserAgent)
 	if exception != nil {
 		return nil, exception
 	}
-	refreshToken, exception := tokens.GenerateRefreshToken(user.Id.String(), user.Name, user.Email, user.UserAgent)
+	newRefreshToken, exception := tokens.GenerateRefreshToken(user.Name, user.Email, user.UserAgent)
 	if exception != nil {
 		return nil, exception
 	}
-	csrfToken, exception := tokens.GenerateCSRFToken()
+	newCSRFToken, exception := tokens.GenerateCSRFToken()
 	if exception != nil {
 		return nil, exception
 	}
 
 	// update the access token of the user
-	exception = caches.UpdateUserDataCache(user.Id, caches.UpdateUserDataCacheDto{AccessToken: accessToken})
+	exception = caches.UpdateUserDataCache(user.Name, caches.UpdateUserDataCacheDto{AccessToken: newAccessToken})
 	if exception != nil {
 		exception.Log() // if the cache does not exist the user, then just skip this update operation
 		// and also try to set the new user cache data
-		exception = caches.SetUserDataCache(user.Id, caches.UserDataCache{
+		exception = caches.SetUserDataCache(user.Name, caches.UserDataCache{
+			Id:                 user.Id,
 			PublicId:           user.PublicId,
 			Name:               user.Name,
 			DisplayName:        user.DisplayName,
 			Email:              user.Email,
-			AccessToken:        *accessToken,
-			CSRFToken:          *csrfToken,
+			AccessToken:        *newAccessToken,
+			CSRFToken:          *newCSRFToken,
 			Role:               user.Role,
 			Plan:               user.Plan,
 			Status:             user.Status,
@@ -1107,7 +1134,7 @@ func (s *AuthService) ForgetPassword(
 		inputs.PartialUpdateUserInput{
 			Values: inputs.UpdateUserInput{
 				Password:     &hashedPassword,
-				RefreshToken: refreshToken,
+				RefreshToken: newRefreshToken,
 				UserAgent:    &reqDto.Header.UserAgent,
 				LoginCount:   &zeroLoginCount,
 			},
@@ -1133,11 +1160,15 @@ func (s *AuthService) ResetMe(
 
 	tx := s.db.WithContext(ctx).Begin()
 
-	// try to retrive the target user to reset and validate his/her auth code first
-	var resetedUserAccount schemas.UserAccount
-	result := tx.Model(&resetedUserAccount).
+	// Instead of deleting the user, we recreate their relative data in the database
+	// and make sure not to update the access token and refresh token, and csrf token in the reset logic
+	// Note that the user will not logged out after the reset operation
+
+	// try to retrieve the target user to reset and validate his/her auth code first
+	var resetUserAccount schemas.UserAccount
+	result := tx.Model(&resetUserAccount).
 		Where("user_id = ? AND auth_code = ?", reqDto.ContextFields.UserId, reqDto.Body.AuthCode).
-		First(&resetedUserAccount)
+		First(&resetUserAccount)
 	if err := result.Error; err != nil {
 		tx.Rollback()
 		return nil, exceptions.UserAccount.NotFound().WithOrigin(err)
@@ -1150,7 +1181,7 @@ func (s *AuthService) ResetMe(
 	}
 	// and then re-create a new user info
 	if _, exception := s.userInfoRepository.CreateOneByUserId(
-		resetedUserAccount.UserId,
+		resetUserAccount.UserId,
 		inputs.CreateUserInfoInput{},
 		options.WithTransactionDB(tx),
 	); exception != nil {
@@ -1164,7 +1195,7 @@ func (s *AuthService) ResetMe(
 	}
 	// and then re-create a new user setting
 	if _, exception := s.userSettingRepository.CreateOneByUserId(
-		resetedUserAccount.UserId,
+		resetUserAccount.UserId,
 		inputs.CreateUserSettingInput{},
 		options.WithTransactionDB(tx),
 	); exception != nil {
@@ -1192,7 +1223,7 @@ func (s *AuthService) ResetMe(
 		}
 	}
 
-	// delete other stuff in the future
+	// delete other stuff in the future...
 
 	if err := tx.Commit().Error; err != nil {
 		return nil, exceptions.User.FailedToCommitTransaction().WithDetails(err)
@@ -1214,6 +1245,11 @@ func (s *AuthService) DeleteMe(
 
 	if err := db.Exec(authsql.DeleteMeSQL, reqDto.ContextFields.UserId, reqDto.Body.AuthCode).Error; err != nil {
 		return nil, exceptions.User.FailedToDelete().WithOrigin(err)
+	}
+
+	exception := caches.DeleteUserDataCache(reqDto.ContextFields.UserName)
+	if exception != nil {
+		exception.Log()
 	}
 
 	return &dtos.DeleteMeResDto{

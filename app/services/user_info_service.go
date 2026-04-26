@@ -104,7 +104,7 @@ func (s *UserInfoService) UpdateMyInfo(
 		return nil, exception
 	}
 
-	exception = caches.UpdateUserDataCache(reqDto.ContextFields.UserId, caches.UpdateUserDataCacheDto{
+	exception = caches.UpdateUserDataCache(reqDto.ContextFields.UserName, caches.UpdateUserDataCacheDto{
 		AvatarURL: reqDto.Body.Values.AvatarURL,
 	})
 	if exception != nil {

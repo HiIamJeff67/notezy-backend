@@ -14,7 +14,7 @@ func UserPlanMiddleware(atLeastUserPlan enums.UserPlan) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		currentUserPlanValue, exists := ctx.Get(types.ContextFieldName_User_Plan.String())
 		if !exists {
-			exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
+			exceptions.Context.MissPlacingOrWrongMiddlewareOrder(
 				"Cannot find the userPlan, " +
 					"please make sure the AuthMiddleware() is placing before the UserPlanMiddleware()",
 			).Log().SafelyAbortAndResponseWithJSON(ctx)
@@ -71,7 +71,7 @@ func AllowedUserPlanMiddleware(allowedPlan []enums.UserPlan) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		currentUserPlanValue, exists := ctx.Get(types.ContextFieldName_User_Plan.String())
 		if !exists {
-			exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
+			exceptions.Context.MissPlacingOrWrongMiddlewareOrder(
 				"Cannot find the userPlan, " +
 					"please make sure the AuthMiddleware() is placing before the AllowedUserPlanMiddleware()",
 			).Log().SafelyAbortAndResponseWithJSON(ctx)

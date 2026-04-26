@@ -34,6 +34,13 @@ func (b *UserBinder) BindGetUserData(controllerFunc types.ControllerFunc[*dtos.G
 		}
 		reqDto.ContextFields.UserId = *userId
 
+		userName, exception := contexts.GetAndConvertContextFieldToString(ctx, types.ContextFieldName_User_Name)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserName = *userName
+
 		controllerFunc(ctx, &reqDto)
 	}
 }
@@ -67,6 +74,13 @@ func (b *UserBinder) BindUpdateMe(controllerFunc types.ControllerFunc[*dtos.Upda
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
+
+		userName, exception := contexts.GetAndConvertContextFieldToString(ctx, types.ContextFieldName_User_Name)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserName = *userName
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exception := exceptions.User.InvalidDto().WithOrigin(err)

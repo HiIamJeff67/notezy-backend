@@ -21,4 +21,5 @@ var MigratingTriggerSQLs = []string{
 	maintainingblocktriggers.MaintainingFinalBlockGroupOnInsertTriggerSQL,
 	maintainingblocktriggers.MaintainingFinalBlockGroupOnUpdateTriggerSQL,
 	maintainingblocktriggers.MaintainingFinalBlockGroupOnDeleteTriggerSQL,
+	maintainingblocktriggers.MaintainingDescendantsBlockGroupIdOnUpdateTriggerSQL,
 }

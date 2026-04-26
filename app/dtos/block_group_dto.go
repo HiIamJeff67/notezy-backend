@@ -114,6 +114,22 @@ type InsertBlockGroupByBlockPackIdReqDto struct {
 	]
 }
 
+type InsertBlockGroupsByBlockPackIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			BlockPackId       uuid.UUID    `json:"blockPackId" validate:"required"`
+			PrevBlockGroupIds []*uuid.UUID `json:"prevBlockGroupIds" validate:"omitempty"`
+		},
+		any,
+	]
+}
+
 type InsertBlockGroupAndItsBlocksByBlockPackIdReqDto struct {
 	NotezyRequest[
 		struct {
@@ -320,6 +336,11 @@ type GetAllMyBlockGroupsByBlockPackIdResDto = []GetMyBlockGroupByIdResDto
 type InsertBlockGroupByBlockPackIdResDto struct {
 	Id        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
+}
+
+type InsertBlockGroupsByBlockPackIdResDto struct {
+	Ids       []uuid.UUID `json:"ids"`
+	CreatedAt time.Time   `json:"createdAt"`
 }
 
 type InsertBlockGroupAndItsBlocksByBlockPackIdResDto struct {

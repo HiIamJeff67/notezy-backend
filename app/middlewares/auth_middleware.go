@@ -4,14 +4,15 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 
 	caches "notezy-backend/app/caches"
 	cookies "notezy-backend/app/cookies"
 	exceptions "notezy-backend/app/exceptions"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
+	logs "notezy-backend/app/monitor/logs"
 	metrics "notezy-backend/app/monitor/metrics"
+	traces "notezy-backend/app/monitor/traces"
 	tokens "notezy-backend/app/tokens"
 	types "notezy-backend/shared/types"
 )
@@ -42,12 +43,7 @@ func _validateAccessTokenAndUserAgent(accessToken string) (*types.JWTClaims, *ca
 		return nil, nil, exception
 	}
 
-	userId, err := uuid.Parse(claims.Id)
-	if err != nil { // if the id is invalid somehow
-		return nil, nil, exceptions.Token.FailedToParseAccessToken().WithOrigin(err)
-	}
-
-	userDataCache, exception := caches.GetUserDataCache(userId)
+	userDataCache, exception := caches.GetUserDataCache(claims.Name)
 	if exception != nil { // if there's no user cache storing its accessToken, in this way, we're impossible to validate its accessToken
 		return nil, nil, exception.Log()
 	}
@@ -65,14 +61,9 @@ func _validateRefreshToken(refreshToken string) (*schemas.User, *exceptions.Exce
 		return nil, exception
 	}
 
-	userId, err := uuid.Parse(claims.Id)
-	if err != nil { // if the id is invalid somehow
-		return nil, exceptions.Token.FailedToParseAccessToken().WithOrigin(err)
-	}
-
 	userRepository := repositories.NewUserRepository()
-	user, exception := userRepository.GetOneById(
-		userId,
+	user, exception := userRepository.GetOneByName(
+		claims.Name,
 		[]schemas.UserRelation{
 			schemas.UserRelation_UserInfo,
 			schemas.UserRelation_UserSetting,
@@ -82,6 +73,7 @@ func _validateRefreshToken(refreshToken string) (*schemas.User, *exceptions.Exce
 	}
 
 	if refreshToken != user.RefreshToken { // if failed to compare and validate the refreshToken as the correct token storing in the database
+		logs.FInfo(traces.GetTrace(0).FileLineString(), "current: %s, backend: %s", refreshToken, user.RefreshToken)
 		return nil, exceptions.Auth.WrongRefreshToken()
 	}
 
@@ -106,7 +98,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			if claims, userDataCache, exception := _validateAccessTokenAndUserAgent(accessToken); exception == nil { // if validate the accessToken successfully
 				if currentUserAgent := ctx.GetHeader("User-Agent"); currentUserAgent == claims.UserAgent { // if the userAgent is matched
 					// if everything above is all fine, we should get the valid userDataCache and claims
-					ctx.Set(types.ContextFieldName_User_Id.String(), claims.Id)
+					ctx.Set(types.ContextFieldName_User_Id.String(), userDataCache.Id.String()) // remain that all the context values should be type of string
 					ctx.Set(types.ContextFieldName_User_PublicId.String(), userDataCache.PublicId)
 					ctx.Set(types.ContextFieldName_User_Name.String(), userDataCache.Name)
 					ctx.Set(types.ContextFieldName_User_DisplayName.String(), userDataCache.DisplayName)
@@ -116,12 +108,7 @@ func AuthMiddleware() gin.HandlerFunc {
 					ctx.Set(types.ContextFieldName_User_Role.String(), userDataCache.Role)
 					ctx.Set(types.ContextFieldName_User_Plan.String(), userDataCache.Plan)
 					// also extend the ttl of the user data cache
-					userId, err := uuid.Parse(claims.Id)
-					if err != nil {
-						exceptions.Token.FailedToParseAccessToken().Log().SafelyAbortAndResponseWithJSON(ctx, metrics.MetricNames.Server.Responses.Failed.Unauthorized)
-						return
-					}
-					if exception := caches.ExtendUserDataCacheTTL(userId); exception != nil {
+					if exception := caches.ExtendUserDataCacheTTL(userDataCache.Name); exception != nil {
 						exception.Log()
 					}
 					ctx.Next()
@@ -153,7 +140,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		// if we failed to validate the accessToken, but we have validated the refreshToken
 		// then we need to generate the new accessToken, and storing it in the cache, and regarding the entire validation as successful
-		newAccessToken, exception := tokens.GenerateAccessToken(_user.Id.String(), _user.Name, _user.Email, _user.UserAgent)
+		newAccessToken, exception := tokens.GenerateAccessToken(_user.Name, _user.Email, _user.UserAgent)
 		if exception != nil {
 			exception.Log().SafelyAbortAndResponseWithJSON(ctx, metrics.MetricNames.Server.Responses.Failed.Unauthorized)
 			return
@@ -167,7 +154,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		// at this stage, make sure we update the cache of the user data
 		exception = caches.UpdateUserDataCache(
-			_user.Id,
+			_user.Name,
 			caches.UpdateUserDataCacheDto{
 				AccessToken: newAccessToken,
 				CSRFToken:   newCSRFToken,
@@ -176,6 +163,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		if exception != nil {
 			exception.WithDetails("trying to set the new user data instead").Log()
 			newUserDataCache := caches.UserDataCache{
+				Id:                 _user.Id,
 				PublicId:           _user.PublicId,
 				Name:               _user.Name,
 				DisplayName:        _user.DisplayName,
@@ -195,12 +183,12 @@ func AuthMiddleware() gin.HandlerFunc {
 				newUserDataCache.AvatarURL = *_user.UserInfo.AvatarURL
 			}
 
-			if exception = caches.SetUserDataCache(_user.Id, newUserDataCache); exception != nil {
+			if exception = caches.SetUserDataCache(_user.Name, newUserDataCache); exception != nil {
 				exception.Log().SafelyAbortAndResponseWithJSON(ctx, metrics.MetricNames.Server.Responses.Failed.Unauthorized)
 				return
 			}
 		} else {
-			if exception := caches.ExtendUserDataCacheTTL(_user.Id); exception != nil {
+			if exception := caches.ExtendUserDataCacheTTL(_user.Name); exception != nil {
 				exception.Log()
 			}
 		}

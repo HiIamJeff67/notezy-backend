@@ -3,7 +3,6 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	traces "notezy-backend/app/monitor/traces"
@@ -204,26 +203,6 @@ func (d *AuthExceptionDomain) PermissionDeniedDueToTooManyRequests() *Exception 
 		IsInternal:     false,
 		Message:        "Too many requests, please wait for a while",
 		HTTPStatusCode: http.StatusTooManyRequests,
-		LastTrace:      traces.GetTrace(1),
-	}
-}
-
-/* ========================= Handling Internal Error ========================= */
-// (this part is usually due to the developer, ex. Place the middleware in the wrong order)
-
-func (d *AuthExceptionDomain) MissPlacingOrWrongMiddlewareOrder(optionalMessage ...string) *Exception {
-	message := "Miss placing or placing the middleware in the wrong order"
-	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], "", " ")) > 0 {
-		message = optionalMessage[0]
-	}
-
-	return &Exception{
-		Code:           d.BaseCode + 201,
-		Prefix:         d.Prefix,
-		Reason:         "MissPlacingOrWrongMiddlewareOrder",
-		IsInternal:     true,
-		Message:        message,
-		HTTPStatusCode: http.StatusInternalServerError,
 		LastTrace:      traces.GetTrace(1),
 	}
 }

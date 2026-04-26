@@ -11,13 +11,13 @@ import (
 
 type ResponseWriter struct {
 	gin.ResponseWriter
-	Body             *bytes.Buffer
-	Headers          http.Header
-	Mutex            sync.Mutex
-	IsTimeout        bool
-	HasWrotenHeaders bool
-	Code             int
-	BufferedSize     int
+	Body              *bytes.Buffer
+	Headers           http.Header
+	Mutex             sync.Mutex
+	IsTimeout         bool
+	HasWrittenHeaders bool
+	Code              int
+	BufferedSize      int
 }
 
 func NewResponseWriter(responseWriter gin.ResponseWriter, Body *bytes.Buffer) *ResponseWriter {
@@ -29,7 +29,7 @@ func NewResponseWriter(responseWriter gin.ResponseWriter, Body *bytes.Buffer) *R
 }
 
 func (rw *ResponseWriter) WriteHeaderNow() {
-	if !rw.HasWrotenHeaders {
+	if !rw.HasWrittenHeaders {
 		if rw.Code == 0 {
 			rw.Code = http.StatusOK
 		}
@@ -45,7 +45,7 @@ func (rw *ResponseWriter) WriteHeader(Code int) {
 	rw.Mutex.Lock()
 	defer rw.Mutex.Unlock()
 
-	if rw.IsTimeout || rw.HasWrotenHeaders || Code == -1 {
+	if rw.IsTimeout || rw.HasWrittenHeaders || Code == -1 {
 		return
 	}
 
@@ -58,7 +58,7 @@ func (rw *ResponseWriter) WriteHeader(Code int) {
 		destination[key] = val
 	}
 
-	rw.HasWrotenHeaders = true
+	rw.HasWrittenHeaders = true
 	rw.Code = Code
 	rw.ResponseWriter.WriteHeader(Code)
 }
@@ -107,6 +107,8 @@ func (rw *ResponseWriter) Status() int {
 	return rw.Code
 }
 
+// since the FlushToOriginalWriter will write response directly,
+// we should make sure it is only done once
 func (rw *ResponseWriter) FlushToOriginalWriter() error {
 	rw.Mutex.Lock()
 	defer rw.Mutex.Unlock()
@@ -124,7 +126,9 @@ func (rw *ResponseWriter) FlushToOriginalWriter() error {
 
 	if rw.Body.Len() > 0 {
 		_, err := rw.ResponseWriter.Write(rw.Body.Bytes())
-		return err
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return nil

@@ -70,7 +70,8 @@ type LogoutReqDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			UserId uuid.UUID // extracted from the access token of AuthMiddleware
+			UserId   uuid.UUID // extracted from the access token of AuthMiddleware
+			UserName string    // extracted  from the access token of AuthMiddleware
 		},
 		any,
 		any,
@@ -142,7 +143,8 @@ type ResetMeReqDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+			UserId   uuid.UUID // extracted from the access token of AuthMiddleware()
+			UserName string    // extracted from the access token of AuthMiddleware()
 		},
 		struct {
 			AuthCode string `json:"authCode" validate:"required,isnumberstring,len=6"`
@@ -157,7 +159,8 @@ type DeleteMeReqDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+			UserId   uuid.UUID // extracted from the access token of AuthMiddleware()
+			UserName string    //  extracted from the access token of AuthMiddleware()
 		},
 		struct {
 			AuthCode string `json:"authCode" validate:"omitempty,isnumberstring,len=6"`
@@ -168,31 +171,49 @@ type DeleteMeReqDto struct {
 
 /* ============================== Response DTO ============================== */
 type RegisterResDto struct {
+	PublicId     string    `json:"publicId"`
+	Name         string    `json:"name"`
+	DisplayName  string    `json:"displayName"`
+	Email        string    `json:"email"`
 	AccessToken  string    `json:"accessToken"`
-	RefreshToken string    `json:"refreshToken"`
+	RefreshToken string    `json:"refreshToken"` // only appear in response cookies
 	CSRFToken    string    `json:"csrfToken"`
 	CreatedAt    time.Time `json:"createdAt"`
 }
 
 type RegisterViaGoogleResDto struct {
+	PublicId     string    `json:"publicId"`
+	Name         string    `json:"name"`
+	DisplayName  string    `json:"displayName"`
+	Email        string    `json:"email"`
 	AccessToken  string    `json:"accessToken"`
-	RefreshToken string    `json:"refreshToken"`
+	RefreshToken string    `json:"refreshToken"` // only appear in response cookies
 	CSRFToken    string    `json:"csrfToken"`
 	CreatedAt    time.Time `json:"createdAt"`
 }
 
 type LoginResDto struct {
+	PublicId     string    `json:"publicId"`
+	Name         string    `json:"name"`
+	DisplayName  string    `json:"displayName"`
+	Email        string    `json:"email"`
 	AccessToken  string    `json:"accessToken"`
-	RefreshToken string    `json:"refreshToken"`
+	RefreshToken string    `json:"refreshToken"` // only appear in response cookies
 	CSRFToken    string    `json:"csrfToken"`
 	UpdatedAt    time.Time `json:"updatedAt"`
+	CreatedAt    time.Time `json:"createdAt"`
 }
 
 type LoginViaGoogleResDto struct {
+	PublicId     string    `json:"publicId"`
+	Name         string    `json:"name"`
+	DisplayName  string    `json:"displayName"`
+	Email        string    `json:"email"`
 	AccessToken  string    `json:"accessToken"`
-	RefreshToken string    `json:"refreshToken"`
+	RefreshToken string    `json:"refreshToken"` // only appear in response cookies
 	CSRFToken    string    `json:"csrfToken"`
 	UpdatedAt    time.Time `json:"updatedAt"`
+	CreatedAt    time.Time `json:"createdAt"`
 }
 
 type LogoutResDto struct {

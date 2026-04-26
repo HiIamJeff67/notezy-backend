@@ -1,5 +1,6 @@
 -- name: GetUserDataCacheById
 SELECT 
+    u.id,
     u.public_id,
     u.name, 
     u.display_name,

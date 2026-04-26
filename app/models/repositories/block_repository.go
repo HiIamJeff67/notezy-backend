@@ -14,6 +14,8 @@ import (
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
+	"notezy-backend/app/monitor/logs"
+	"notezy-backend/app/monitor/traces"
 	options "notezy-backend/app/options"
 	util "notezy-backend/app/util"
 	types "notezy-backend/shared/types"
@@ -117,6 +119,7 @@ func (r *BlockRepository) HavePermissions(
 	var count int64 = 0
 	result := query.Count(&count)
 	if err := result.Error; err != nil {
+		logs.FInfo(traces.GetTrace(0).FileLineString(), "YEE: %v", err)
 		return false
 	}
 
@@ -539,6 +542,7 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 
 	var valuePlaceholders []string
 	var valueArgs []interface{}
+	var ids []uuid.UUID
 	for _, in := range input {
 		if !parsedOptions.SkipPermissionCheck && !isBlockValid[in.Id] {
 			continue
@@ -563,6 +567,7 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 			in.PartialUpdateInput.Values.ParentBlockId,
 			setParentBlockIdNull,
 		)
+		ids = append(ids, in.Id)
 	}
 
 	sql := fmt.Sprintf(`
@@ -587,6 +592,27 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 	}); exception != nil {
 		return exception
 	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+	blocks, exception := r.CheckPermissionsAndGetManyByIds(
+		ids,
+		userId,
+		nil,
+		allowedPermissions,
+		opts...,
+	)
+	if exception != nil {
+		return nil
+	}
+	logs.Info(traces.GetTrace(0).FileLineString(), "---")
+	for _, block := range blocks {
+		logs.FInfo(traces.GetTrace(0).FileLineString(), "id: %s, parent_block_id: %v, block_group_id: %s", block.Id.String(), block.ParentBlockId, block.BlockGroupId.String())
+	}
+	logs.Info(traces.GetTrace(0).FileLineString(), "---")
 
 	return nil
 }

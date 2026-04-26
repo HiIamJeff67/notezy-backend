@@ -16,7 +16,7 @@ import (
 	types "notezy-backend/shared/types"
 )
 
-var authorizedRateLimiter *ratelimiter.HybridRateLimiter // use the bybrid one which including token bucket and cross server request management by redis
+var authorizedRateLimiter *ratelimiter.HybridRateLimiter // use the hybrid one which including token bucket and cross server request management by redis
 
 func InitAuthorizedRateLimiter(config configs.RateLimitConfig) {
 	if authorizedRateLimiter != nil {
@@ -50,7 +50,7 @@ func AuthorizedRateLimitMiddleware(config ...configs.RateLimitConfig) gin.Handle
 	return func(ctx *gin.Context) {
 		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
 		if exception != nil || userId == nil {
-			exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
+			exceptions.Context.MissPlacingOrWrongMiddlewareOrder(
 				"Cannot find the userId, " +
 					"please make sure the AuthMiddleware() is placing before the AuthorizedRateLimitMiddleware()",
 			).Log().SafelyAbortAndResponseWithJSON(ctx)
@@ -72,12 +72,12 @@ func AuthorizedRateLimitMiddleware(config ...configs.RateLimitConfig) gin.Handle
 }
 
 func setRateLimitHeaders(ctx *gin.Context, remaining int32, limiter *ratelimiter.HybridRateLimiter) {
-	// standard informations
+	// standard information
 	ctx.Header("X-RateLimit-Limit", strconv.Itoa(int(limiter.UserLimit)))
 	ctx.Header("X-RateLimit-Remaining", strconv.Itoa(int(remaining)))
 	ctx.Header("X-RateLimit-Reset", strconv.FormatInt(time.Now().Add(limiter.WindowDuration).Unix(), 10))
 
-	// extra informations
+	// extra information
 	ctx.Header("X-RateLimit-Window", limiter.WindowDuration.String())
 	ctx.Header("X-RateLimit-Policy", "hybrid-token-bucket")
 }

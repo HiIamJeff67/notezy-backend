@@ -14,7 +14,7 @@ func UserRoleMiddleware(atLeastUserRole enums.UserRole) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		currentUserRoleValue, exists := ctx.Get(types.ContextFieldName_User_Role.String())
 		if !exists {
-			exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
+			exceptions.Context.MissPlacingOrWrongMiddlewareOrder(
 				"Cannot find the userRole, " +
 					"please make sure the AuthMiddleware() is placing before the UserRoleMiddleware()",
 			).Log().SafelyAbortAndResponseWithJSON(ctx)
@@ -67,7 +67,7 @@ func AllowedUserRolesMiddleware(allowedRoles []enums.UserRole) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		currentUserRoleValue, exists := ctx.Get(types.ContextFieldName_User_Role.String())
 		if !exists {
-			exception := exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
+			exception := exceptions.Context.MissPlacingOrWrongMiddlewareOrder(
 				"Cannot find the userRole, " +
 					"please make sure the AuthMiddleware() is placing before the UserRoleMiddleware()",
 			)

@@ -17,9 +17,9 @@ A Middleware to provider CSRF token validation which should be placed after Auth
 */
 func CSRFMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		userName, exception := contexts.GetAndConvertContextFieldToString(ctx, types.ContextFieldName_User_Name)
 		if exception != nil {
-			exceptions.Auth.MissPlacingOrWrongMiddlewareOrder(
+			exceptions.Context.MissPlacingOrWrongMiddlewareOrder(
 				"Cannot find the userPlan, " +
 					"please make sure the AuthMiddleware() is placing before the CSRFMiddleware()",
 			).Log().SafelyAbortAndResponseWithJSON(ctx)
@@ -32,7 +32,7 @@ func CSRFMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		userDataCache, exception := caches.GetUserDataCache(*userId)
+		userDataCache, exception := caches.GetUserDataCache(*userName)
 		if exception != nil {
 			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
@@ -50,12 +50,19 @@ func CSRFMiddleware() gin.HandlerFunc {
 				dto := caches.UpdateUserDataCacheDto{
 					CSRFToken: newToken,
 				}
-				caches.UpdateUserDataCache(*userId, dto)
+				caches.UpdateUserDataCache(*userName, dto)
 
 				ctx.Header("X-CSRF-Token", *newToken)
+
+				ctx.Set(types.ContextFieldName_IsNewTokens.String(), true)
+				ctx.Set(types.ContextFieldName_CSRFToken.String(), *newToken)
 			}
 		}
 
 		ctx.Next()
 	}
 }
+
+// eyJzaWduYXR1cmUiOiJmWkZ5MkFMS2o5U2ptMmozRnhZRVM4Q2JJSnNvLzNMMGVQWitDQ3RLOXA0PSIsImV4cGlyZXNBdCI6IjIwMjYtMDQtMjlUMTU6Mzc6NDQuNTU3Mzg5ODM5WiIsImlzc3VlZEF0IjoiMjAyNi0wNC0yMlQxNTozNzo0NC41NTczODk4MzlaIn0=
+
+// eyJzaWduYXR1cmUiOiJmWkZ5MkFMS2o5U2ptMmozRnhZRVM4Q2JJSnNvLzNMMGVQWitDQ3RLOXA0PSIsImV4cGlyZXNBdCI6IjIwMjYtMDQtMjlUMTU6Mzc6NDQuNTU3Mzg5ODM5WiIsImlzc3VlZEF0IjoiMjAyNi0wNC0yMlQxNTozNzo0NC41NTczODk4MzlaIn0=

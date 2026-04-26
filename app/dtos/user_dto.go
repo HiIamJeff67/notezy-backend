@@ -5,7 +5,6 @@ import (
 
 	"github.com/google/uuid"
 
-	caches "notezy-backend/app/caches"
 	enums "notezy-backend/app/models/schemas/enums"
 )
 
@@ -17,7 +16,8 @@ type GetUserDataReqDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+			UserId   uuid.UUID // extracted from the access token of AuthMiddleware()
+			UserName string    // extracted from the access token of AuthMiddleware()
 		},
 		any,
 		any,
@@ -43,7 +43,8 @@ type UpdateMeReqDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+			UserId   uuid.UUID // extracted from the access token of AuthMiddleware()
+			UserName string    // extracted from the access token of AuthMiddleware()
 		},
 		struct {
 			PartialUpdateDto[struct {
@@ -83,7 +84,21 @@ type UpdatePlanReqDto struct {
 
 /* ============================== Response DTO ============================== */
 
-type GetUserDataResDto = caches.UserDataCache
+type GetUserDataResDto = struct {
+	PublicId           string           `json:"publicId"`           // user
+	Name               string           `json:"name"`               // user
+	DisplayName        string           `json:"displayName"`        // user
+	Email              string           `json:"email"`              // user
+	Role               enums.UserRole   `json:"role"`               // user
+	Plan               enums.UserPlan   `json:"plan"`               // user
+	Status             enums.UserStatus `json:"status"`             // user
+	AvatarURL          string           `json:"avatarURL"`          // user info
+	Language           enums.Language   `json:"language"`           // user setting
+	GeneralSettingCode int64            `json:"generalSettingCode"` // user setting
+	PrivacySettingCode int64            `json:"privacySettingCode"` // user setting
+	CreatedAt          time.Time        `json:"createdAt"`          // user
+	UpdatedAt          time.Time        `json:"updatedAt"`          // user
+}
 
 type GetMeResDto struct {
 	PublicId    string           `json:"publicId"`
@@ -94,6 +109,7 @@ type GetMeResDto struct {
 	Plan        enums.UserPlan   `json:"plan"`
 	Status      enums.UserStatus `json:"status"`
 	CreatedAt   time.Time        `json:"createdAt"`
+	UpdatedAt   time.Time        `json:"updatedAt"`
 }
 
 type UpdateMeResDto struct {

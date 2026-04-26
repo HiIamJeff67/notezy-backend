@@ -11,9 +11,8 @@ import (
 
 /* ============================== Generate Token Functions ============================== */
 
-func GenerateRefreshToken(id string, name string, email string, userAgent string) (*string, *exceptions.Exception) {
+func GenerateRefreshToken(name string, email string, userAgent string) (*string, *exceptions.Exception) {
 	claims := types.JWTClaims{
-		Id:        id,
 		Name:      name,
 		Email:     email,
 		UserAgent: userAgent,
