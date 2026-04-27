@@ -140,6 +140,38 @@ func configureDevelopmentBlockGroupRoutes() {
 			)...,
 		)
 		blockGroupRoutes.POST(
+			"/insertBlockGroupsByBlockPackId",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "insertBlockGroupsByBlockPackId"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.BlockGroup.InsertBlockGroupsByBlockPackId,
+					),
+				},
+				defaultMiddlewares,
+				blockGroupModule.Binder.BindInsertBlockGroupsByBlockPackId(
+					blockGroupModule.Controller.InsertBlockGroupsByBlockPackId,
+				),
+			)...,
+		)
+		blockGroupRoutes.POST(
+			"/batchInsertBlockGroupsByBlockPackIds",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "batchInsertBlockGroupsByBlockPackIds"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.BlockGroup.BatchInsertBlockGroupsByBlockPackIds,
+					),
+				},
+				defaultMiddlewares,
+				blockGroupModule.Binder.BindBatchInsertBlockGroupsByBlockPackIds(
+					blockGroupModule.Controller.BatchInsertBlockGroupsByBlockPackIds,
+				),
+			)...,
+		)
+		blockGroupRoutes.POST(
 			"/insertBlockGroupAndItsBlocksByBlockPackId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
@@ -168,6 +200,22 @@ func configureDevelopmentBlockGroupRoutes() {
 				defaultMiddlewares,
 				blockGroupModule.Binder.BindInsertBlockGroupsAndTheirBlocksByBlockPackId(
 					blockGroupModule.Controller.InsertBlockGroupsAndTheirBlocksByBlockPackId,
+				),
+			)...,
+		)
+		blockGroupRoutes.POST(
+			"/batchInsertBlockGroupsAndTheirBlocksByBlockPackIds",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "batchInsertBlockGroupsAndTheirBlocksByBlockPackIds"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.BlockGroup.BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds,
+					),
+				},
+				defaultMiddlewares,
+				blockGroupModule.Binder.BindBatchInsertBlockGroupsAndTheirBlocksByBlockPackIds(
+					blockGroupModule.Controller.BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds,
 				),
 			)...,
 		)

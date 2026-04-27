@@ -17,8 +17,6 @@ import (
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
-	"notezy-backend/app/monitor/logs"
-	"notezy-backend/app/monitor/traces"
 	options "notezy-backend/app/options"
 	validation "notezy-backend/app/validation"
 	constants "notezy-backend/shared/constants"
@@ -33,8 +31,11 @@ type BlockGroupServiceInterface interface {
 	GetMyBlockGroupsByPrevBlockGroupId(ctx context.Context, reqDto *dtos.GetMyBlockGroupsByPrevBlockGroupIdReqDto) (*dtos.GetMyBlockGroupsByPrevBlockGroupIdResDto, *exceptions.Exception)
 	GetAllMyBlockGroupsByBlockPackId(ctx context.Context, reqDto *dtos.GetAllMyBlockGroupsByBlockPackIdReqDto) (*dtos.GetAllMyBlockGroupsByBlockPackIdResDto, *exceptions.Exception)
 	InsertBlockGroupByBlockPackId(ctx context.Context, reqDto *dtos.InsertBlockGroupByBlockPackIdReqDto) (*dtos.InsertBlockGroupByBlockPackIdResDto, *exceptions.Exception)
+	InsertBlockGroupsByBlockPackId(ctx context.Context, reqDto *dtos.InsertBlockGroupsByBlockPackIdReqDto) (*dtos.InsertBlockGroupsByBlockPackIdResDto, *exceptions.Exception)
+	BatchInsertBlockGroupsByBlockPackIds(ctx context.Context, reqDto *dtos.BatchInsertBlockGroupsByBlockPackIdsReqDto) (*dtos.BatchInsertBlockGroupsByBlockPackIdsResDto, *exceptions.Exception)
 	InsertBlockGroupAndItsBlocksByBlockPackId(ctx context.Context, reqDto *dtos.InsertBlockGroupAndItsBlocksByBlockPackIdReqDto) (*dtos.InsertBlockGroupAndItsBlocksByBlockPackIdResDto, *exceptions.Exception)
 	InsertBlockGroupsAndTheirBlocksByBlockPackId(ctx context.Context, reqDto *dtos.InsertBlockGroupsAndTheirBlocksByBlockPackIdReqDto) (*dtos.InsertBlockGroupsAndTheirBlocksByBlockPackIdResDto, *exceptions.Exception)
+	BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds(ctx context.Context, reqDto *dtos.BatchInsertBlockGroupsAndTheirBlocksByBlockPackIdsReqDto) (*dtos.BatchInsertBlockGroupsAndTheirBlocksByBlockPackIdsResDto, *exceptions.Exception)
 	InsertSequentialBlockGroupsAndTheirBlocksByBlockPackId(ctx context.Context, reqDto *dtos.InsertSequentialBlockGroupsAndTheirBlocksByBlockPackIdReqDto) (*dtos.InsertSequentialBlockGroupsAndTheirBlocksByBlockPackIdResDto, *exceptions.Exception)
 	MoveMyBlockGroupById(ctx context.Context, reqDto *dtos.MoveMyBlockGroupByIdReqDto) (*dtos.MoveMyBlockGroupByIdResDto, *exceptions.Exception)
 	MoveMyBlockGroupsByIds(ctx context.Context, reqDto *dtos.MoveMyBlockGroupsByIdsReqDto) (*dtos.MoveMyBlockGroupsByIdsResDto, *exceptions.Exception)
@@ -389,13 +390,6 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 		}
 	}
 
-	if len(resDto) != len(blockGroups) {
-		for id, ok := range hasLinked {
-			logs.FInfo(traces.GetTrace(0).FileLineString(), "Is %s linked ? %b", id.String(), ok)
-		}
-		return nil, exceptions.BlockGroup.BrokenBlockGroupsLinkedListDetected(reqDto.Param.BlockPackId, blockGroupIds)
-	}
-
 	var flattenedBlocks []schemas.Block
 	result := db.Model(&schemas.Block{}).
 		Where("block_group_id IN ? AND deleted_at IS NULL", blockGroupIds).
@@ -595,6 +589,38 @@ func (s *BlockGroupService) InsertBlockGroupsByBlockPackId(
 	}, nil
 }
 
+func (s *BlockGroupService) BatchInsertBlockGroupsByBlockPackIds(
+	ctx context.Context, reqDto *dtos.BatchInsertBlockGroupsByBlockPackIdsReqDto,
+) (*dtos.BatchInsertBlockGroupsByBlockPackIdsResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	input := make([]inputs.BulkCreateBlockGroupInput, len(reqDto.Body.BlockPackContents))
+	for index, blockPackContent := range reqDto.Body.BlockPackContents {
+		input[index] = inputs.BulkCreateBlockGroupInput{
+			BlockPackId:      blockPackContent.BlockPackId,
+			PrevBlockGroupId: blockPackContent.PrevBlockGroupId,
+		}
+	}
+
+	newBlockGroupIds, exception := s.blockGroupRepository.InsertManyByBlockPackIds(
+		reqDto.ContextFields.UserId,
+		input,
+		options.WithDB(db),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.BatchInsertBlockGroupsByBlockPackIdsResDto{
+		Ids:       newBlockGroupIds,
+		CreatedAt: time.Now(),
+	}, nil
+}
+
 func (s *BlockGroupService) InsertBlockGroupAndItsBlocksByBlockPackId(
 	ctx context.Context, reqDto *dtos.InsertBlockGroupAndItsBlocksByBlockPackIdReqDto,
 ) (*dtos.InsertBlockGroupAndItsBlocksByBlockPackIdResDto, *exceptions.Exception) {
@@ -746,6 +772,134 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 				BlockGroupId uuid.UUID   `json:"blockGroupId"`
 				BlockIds     []uuid.UUID `json:"blockIds"`
 			}{
+				BlockGroupId: newBlockGroupIds[validateResult.Index],
+				BlockIds:     blockIds,
+			})
+			createBlockGroupContentInput = append(createBlockGroupContentInput, inputs.CreateBlockGroupContentInput{
+				BlockGroupId: newBlockGroupIds[validateResult.Index],
+				Blocks:       createBlockInputs,
+			})
+		} else {
+			resDto.FailedIndexes = append(resDto.FailedIndexes, validateResult.Index)
+			resDto.IsAllSuccess = false
+		}
+	}
+
+	if len(createBlockGroupContentInput) == 0 {
+		tx.Rollback()
+		return nil, exceptions.BlockGroup.FailedToCreate().WithDetails("no valid block tree structure in any of the given block groups")
+	}
+
+	_, exception = s.blockRepository.CreateManyByBlockGroupIds(
+		reqDto.ContextFields.UserId,
+		createBlockGroupContentInput,
+		options.WithTransactionDB(tx),
+		options.WithBatchSize(constants.MaxBatchCreateBlockSize),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithSkipPermissionCheck(),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
+	}
+
+	resDto.CreatedAt = time.Now()
+	return &resDto, nil
+}
+
+func (s *BlockGroupService) BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds(
+	ctx context.Context, reqDto *dtos.BatchInsertBlockGroupsAndTheirBlocksByBlockPackIdsReqDto,
+) (*dtos.BatchInsertBlockGroupsAndTheirBlocksByBlockPackIdsResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
+	}
+
+	tx := s.db.WithContext(ctx).Begin()
+
+	bulkCreateBlockGroupsInput := make([]inputs.BulkCreateBlockGroupInput, len(reqDto.Body.BlockGroupContents))
+	validateBlockDto := make([]dtos.ArborizedEditableBlock, len(reqDto.Body.BlockGroupContents))
+	for index, blockGroupContent := range reqDto.Body.BlockGroupContents {
+		bulkCreateBlockGroupsInput[index] = inputs.BulkCreateBlockGroupInput{
+			BlockPackId:      blockGroupContent.BlockPackId,
+			BlockGroupId:     blockGroupContent.BlockGroupId,
+			PrevBlockGroupId: blockGroupContent.PrevBlockGroupId,
+		}
+		validateBlockDto[index] = blockGroupContent.ArborizedEditableBlock
+	}
+
+	newBlockGroupIds, exception := s.blockGroupRepository.InsertManyByBlockPackIds(
+		reqDto.ContextFields.UserId,
+		bulkCreateBlockGroupsInput,
+		options.WithTransactionDB(tx),
+	)
+	if exception = exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
+		{First: len(newBlockGroupIds) == 0, Second: exceptions.BlockGroup.FailedToCreate().WithDetails("got nil block group id")},
+	}); exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	validBlockGroupIdToBlockPackId := make(map[uuid.UUID]uuid.UUID)
+	for validIndex, originalIndex := 0, 0; validIndex < len(newBlockGroupIds) && originalIndex < len(reqDto.Body.BlockGroupContents); originalIndex++ {
+		if reqDto.Body.BlockGroupContents[originalIndex].BlockGroupId != nil &&
+			newBlockGroupIds[validIndex] == *reqDto.Body.BlockGroupContents[originalIndex].BlockGroupId {
+			validBlockGroupIdToBlockPackId[newBlockGroupIds[validIndex]] = reqDto.Body.BlockGroupContents[originalIndex].BlockPackId
+			validIndex++
+		}
+	}
+
+	validateBlockFunc := func(validateDto dtos.ArborizedEditableBlock) ([]dtos.RawFlattenedEditableBlock, error) {
+		rawFlattenedBlocks, exception := s.editableBlockAdapter.FlattenToRaw(&validateDto)
+		if exception != nil {
+			return rawFlattenedBlocks, exception.GetOrigin()
+		}
+		return rawFlattenedBlocks, nil
+	}
+
+	validateBlockResults := concurrency.Execute(
+		validateBlockDto,
+		min(10, max(len(validateBlockDto)/10, len(validateBlockDto)%10)),
+		validateBlockFunc,
+	)
+
+	resDto := dtos.BatchInsertBlockGroupsAndTheirBlocksByBlockPackIdsResDto{
+		IsAllSuccess:   true,
+		FailedIndexes:  []int{},
+		SuccessIndexes: []int{},
+		SuccessBlockGroupAndBlockIds: []struct {
+			BlockPackId  uuid.UUID   `json:"blockPackId"`
+			BlockGroupId uuid.UUID   `json:"blockGroupId"`
+			BlockIds     []uuid.UUID `json:"blockIds"`
+		}{},
+		CreatedAt: time.Now(),
+	}
+	var createBlockGroupContentInput []inputs.CreateBlockGroupContentInput
+	for _, validateResult := range validateBlockResults {
+		if validateResult.Err == nil {
+			resDto.SuccessIndexes = append(resDto.SuccessIndexes, validateResult.Index)
+			blockIds := make([]uuid.UUID, len(validateResult.Data))
+			createBlockInputs := make([]inputs.CreateBlockInput, len(validateResult.Data))
+			for index, rawFlattenedBlock := range validateResult.Data {
+				blockIds[index] = rawFlattenedBlock.Id
+				createBlockInputs[index] = inputs.CreateBlockInput{
+					Id:            rawFlattenedBlock.Id,
+					ParentBlockId: rawFlattenedBlock.ParentBlockId,
+					Type:          rawFlattenedBlock.Type,
+					Props:         rawFlattenedBlock.Props,
+					Content:       rawFlattenedBlock.Content,
+				}
+			}
+			resDto.SuccessBlockGroupAndBlockIds = append(resDto.SuccessBlockGroupAndBlockIds, struct {
+				BlockPackId  uuid.UUID   `json:"blockPackId"`
+				BlockGroupId uuid.UUID   `json:"blockGroupId"`
+				BlockIds     []uuid.UUID `json:"blockIds"`
+			}{
+				BlockPackId:  validBlockGroupIdToBlockPackId[newBlockGroupIds[validateResult.Index]],
 				BlockGroupId: newBlockGroupIds[validateResult.Index],
 				BlockIds:     blockIds,
 			})

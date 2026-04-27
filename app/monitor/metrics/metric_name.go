@@ -112,8 +112,11 @@ type metricNameBlockGroup struct {
 	GetMyBlockGroupsByPrevBlockGroupId                     string
 	GetAllMyBlockGroupsByBlockPackId                       string
 	InsertBlockGroupByBlockPackId                          string
+	InsertBlockGroupsByBlockPackId                         string
+	BatchInsertBlockGroupsByBlockPackIds                   string
 	InsertBlockGroupAndItsBlocksByBlockPackId              string
 	InsertBlockGroupsAndTheirBlocksByBlockPackId           string
+	BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds     string
 	InsertSequentialBlockGroupsAndTheirBlocksByBlockPackId string
 	MoveMyBlockGroupById                                   string
 	MoveMyBlockGroupsByIds                                 string
@@ -287,8 +290,11 @@ var MetricNames = struct {
 				GetMyBlockGroupsByPrevBlockGroupId:                     "server.requests.blockGroup.getMyBlockGroupsByPrevBlockGroupId",
 				GetAllMyBlockGroupsByBlockPackId:                       "server.requests.blockGroup.getAllMyBlockGroupsByBlockPackId",
 				InsertBlockGroupByBlockPackId:                          "server.requests.blockGroup.insertBlockGroupByBlockPackId",
+				InsertBlockGroupsByBlockPackId:                         "server.requests.blockGroup.insertBlockGroupsByBlockPackId",
+				BatchInsertBlockGroupsByBlockPackIds:                   "server.requests.blockGroup.batchInsertBlockGroupsByBlockPackIds",
 				InsertBlockGroupAndItsBlocksByBlockPackId:              "server.requests.blockGroup.insertBlockGroupAndItsBlocksByBlockPackId",
 				InsertBlockGroupsAndTheirBlocksByBlockPackId:           "server.requests.blockGroup.insertBlockGroupsAndTheirBlocksByBlockPackId",
+				BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds:     "server.requests.blockGroup.batchInsertBlockGroupsAndTheirBlocksByBlockPackIds",
 				InsertSequentialBlockGroupsAndTheirBlocksByBlockPackId: "server.requests.blockGroup.insertSequentialBlockGroupsAndTheirBlocksByBlockPackId",
 				MoveMyBlockGroupById:                                   "server.requests.moveMyBlockGroupById",
 				MoveMyBlockGroupsByIds:                                 "server.requests.blockGroup.moveMyBlockGroupsByIds",

@@ -130,6 +130,24 @@ type InsertBlockGroupsByBlockPackIdReqDto struct {
 	]
 }
 
+type BatchInsertBlockGroupsByBlockPackIdsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			BlockPackContents []struct {
+				BlockPackId      uuid.UUID  `json:"blockPackId" validate:"required"`
+				PrevBlockGroupId *uuid.UUID `json:"prevBlockGroupIds" validate:"omitempty"`
+			} `json:"blockPackContent" validate:"required"`
+		},
+		any,
+	]
+}
+
 type InsertBlockGroupAndItsBlocksByBlockPackIdReqDto struct {
 	NotezyRequest[
 		struct {
@@ -158,6 +176,26 @@ type InsertBlockGroupsAndTheirBlocksByBlockPackIdReqDto struct {
 		struct {
 			BlockPackId        uuid.UUID `json:"blockPackId" validate:"required"`
 			BlockGroupContents []struct {
+				BlockGroupId           *uuid.UUID             `json:"blockGroupId" validate:"omitnil"` // support create block group in client side
+				PrevBlockGroupId       *uuid.UUID             `json:"prevBlockGroupId" validate:"omitnil"`
+				ArborizedEditableBlock ArborizedEditableBlock `json:"arborizedEditableBlock" validate:"required"`
+			} `json:"blockGroupContents" validate:"required"`
+		},
+		any,
+	]
+}
+
+type BatchInsertBlockGroupsAndTheirBlocksByBlockPackIdsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			BlockGroupContents []struct {
+				BlockPackId            uuid.UUID              `json:"blockPackId" validate:"required"`
 				BlockGroupId           *uuid.UUID             `json:"blockGroupId" validate:"omitnil"` // support create block group in client side
 				PrevBlockGroupId       *uuid.UUID             `json:"prevBlockGroupId" validate:"omitnil"`
 				ArborizedEditableBlock ArborizedEditableBlock `json:"arborizedEditableBlock" validate:"required"`
@@ -343,6 +381,11 @@ type InsertBlockGroupsByBlockPackIdResDto struct {
 	CreatedAt time.Time   `json:"createdAt"`
 }
 
+type BatchInsertBlockGroupsByBlockPackIdsResDto struct {
+	Ids       []uuid.UUID `json:"ids"`
+	CreatedAt time.Time   `json:"createdAt"`
+}
+
 type InsertBlockGroupAndItsBlocksByBlockPackIdResDto struct {
 	Id        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
@@ -353,6 +396,18 @@ type InsertBlockGroupsAndTheirBlocksByBlockPackIdResDto struct {
 	FailedIndexes                []int `json:"failedIndexes"`
 	SuccessIndexes               []int `json:"successIndexes"`
 	SuccessBlockGroupAndBlockIds []struct {
+		BlockGroupId uuid.UUID   `json:"blockGroupId"`
+		BlockIds     []uuid.UUID `json:"blockIds"`
+	} `json:"successBlockGroupAndBlockIds"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+type BatchInsertBlockGroupsAndTheirBlocksByBlockPackIdsResDto struct {
+	IsAllSuccess                 bool  `json:"isAllSuccess"`
+	FailedIndexes                []int `json:"failedIndexes"`
+	SuccessIndexes               []int `json:"successIndexes"`
+	SuccessBlockGroupAndBlockIds []struct {
+		BlockPackId  uuid.UUID   `json:"blockPackId"`
 		BlockGroupId uuid.UUID   `json:"blockGroupId"`
 		BlockIds     []uuid.UUID `json:"blockIds"`
 	} `json:"successBlockGroupAndBlockIds"`
