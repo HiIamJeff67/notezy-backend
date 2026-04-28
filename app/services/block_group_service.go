@@ -540,6 +540,7 @@ func (s *BlockGroupService) InsertBlockGroupByBlockPackId(
 		reqDto.Body.BlockPackId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateBlockGroupInput{
+			BlockGroupId:     reqDto.Body.BlockGroupId,
 			PrevBlockGroupId: reqDto.Body.PrevBlockGroupId,
 		},
 		options.WithDB(db),
@@ -566,10 +567,11 @@ func (s *BlockGroupService) InsertBlockGroupsByBlockPackId(
 
 	db := s.db.WithContext(ctx)
 
-	input := make([]inputs.CreateBlockGroupInput, len(reqDto.Body.PrevBlockGroupIds))
-	for index, prevBlockGroupId := range reqDto.Body.PrevBlockGroupIds {
+	input := make([]inputs.CreateBlockGroupInput, len(reqDto.Body.BlockPackContents))
+	for index, blockPackContent := range reqDto.Body.BlockPackContents {
 		input[index] = inputs.CreateBlockGroupInput{
-			PrevBlockGroupId: prevBlockGroupId,
+			BlockGroupId:     blockPackContent.BlockGroupId,
+			PrevBlockGroupId: blockPackContent.PrevBlockGroupId,
 		}
 	}
 
@@ -602,6 +604,7 @@ func (s *BlockGroupService) BatchInsertBlockGroupsByBlockPackIds(
 	for index, blockPackContent := range reqDto.Body.BlockPackContents {
 		input[index] = inputs.BulkCreateBlockGroupInput{
 			BlockPackId:      blockPackContent.BlockPackId,
+			BlockGroupId:     blockPackContent.BlockGroupId,
 			PrevBlockGroupId: blockPackContent.PrevBlockGroupId,
 		}
 	}

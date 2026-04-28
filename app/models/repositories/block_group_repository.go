@@ -15,6 +15,8 @@ import (
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
 	blockgroupsql "notezy-backend/app/models/sqls/block_group"
+	"notezy-backend/app/monitor/logs"
+	"notezy-backend/app/monitor/traces"
 	options "notezy-backend/app/options"
 	util "notezy-backend/app/util"
 	types "notezy-backend/shared/types"
@@ -727,7 +729,7 @@ func (r *BlockGroupRepository) InsertManyByBlockPackId(
 			colliderArgs = append(colliderArgs, collider.Id, tail, tail == uuid.Nil)
 		}
 
-		if len(colliderPlaceholders) > 0 && len(colliderPlaceholders) == len(colliderArgs) {
+		if len(colliderPlaceholders) > 0 && len(colliderArgs) > 0 {
 			sql := fmt.Sprintf(`
 				UPDATE "BlockGroupTable" AS bg
 				SET
@@ -1491,6 +1493,7 @@ func (r *BlockGroupRepository) SoftDeleteManyByIds(
 
 		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid, ?::boolean)")
 		valueArgs = append(valueArgs, descendant, ancestor, ancestor == nil)
+		logs.FInfo(traces.GetTrace(0).FileLineString(), "Relink %v to point %v", descendant, ancestor)
 	}
 
 	// delete first so that we can avoid the unique index of block group id and prev block group id while relink the descendants to their ancestors below
@@ -1505,7 +1508,7 @@ func (r *BlockGroupRepository) SoftDeleteManyByIds(
 		return exception
 	}
 
-	if len(valuePlaceholders) > 0 {
+	if len(valuePlaceholders) > 0 && len(valueArgs) > 0 {
 		sql := fmt.Sprintf(`
             UPDATE "BlockGroupTable" AS bg
             SET

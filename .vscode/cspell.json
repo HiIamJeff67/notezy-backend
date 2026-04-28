@@ -26,6 +26,7 @@
     "modcache",
     "hotreload",
     "gin",
+    "gorm",
     "GinAddr",
     "dtos",
     "comail",

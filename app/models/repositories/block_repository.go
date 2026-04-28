@@ -279,7 +279,15 @@ func (r *BlockRepository) CreateOneByBlockGroupId(
 	newBlock.BlockGroupId = blockGroupId
 
 	result := parsedOptions.DB.Model(&schemas.Block{}).
-		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
+		Clauses(
+			clause.Returning{Columns: []clause.Column{{Name: "id"}}},
+			clause.OnConflict{
+				Columns: []clause.Column{{Name: "id"}},
+				DoUpdates: clause.AssignmentColumns([]string{
+					"block_group_id", "parent_block_id", "type", "props", "content", "updated_at",
+				}),
+			},
+		).
 		Create(&newBlock)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Block.FailedToCreate().WithOrigin(result.Error)},
@@ -335,7 +343,15 @@ func (r *BlockRepository) CreateManyByBlockGroupId(
 	}
 
 	result := parsedOptions.DB.Model(&schemas.Block{}).
-		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
+		Clauses(
+			clause.Returning{Columns: []clause.Column{{Name: "id"}}},
+			clause.OnConflict{
+				Columns: []clause.Column{{Name: "id"}},
+				DoUpdates: clause.AssignmentColumns([]string{
+					"block_group_id", "parent_block_id", "type", "props", "content", "updated_at",
+				}),
+			},
+		).
 		CreateInBatches(&newBlocks, parsedOptions.BatchSize)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Block.FailedToCreate().WithOrigin(result.Error)},
@@ -408,7 +424,15 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 		}
 
 		result := parsedOptions.DB.Model(&schemas.Block{}).
-			Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
+			Clauses(
+				clause.Returning{Columns: []clause.Column{{Name: "id"}}},
+				clause.OnConflict{
+					Columns: []clause.Column{{Name: "id"}},
+					DoUpdates: clause.AssignmentColumns([]string{
+						"block_group_id", "parent_block_id", "type", "props", "content", "updated_at",
+					}),
+				},
+			).
 			CreateInBatches(&newBlocks, parsedOptions.BatchSize)
 		if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 			{First: result.Error != nil, Second: exceptions.Block.FailedToCreate().WithOrigin(result.Error)},
@@ -438,7 +462,15 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 	}
 
 	result := parsedOptions.DB.Model(&schemas.Block{}).
-		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
+		Clauses(
+			clause.Returning{Columns: []clause.Column{{Name: "id"}}},
+			clause.OnConflict{
+				Columns: []clause.Column{{Name: "id"}},
+				DoUpdates: clause.AssignmentColumns([]string{
+					"block_group_id", "parent_block_id", "type", "props", "content", "updated_at",
+				}),
+			},
+		).
 		CreateInBatches(&newBlocks, parsedOptions.BatchSize)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Block.FailedToCreate().WithOrigin(result.Error)},

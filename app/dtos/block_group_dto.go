@@ -108,6 +108,7 @@ type InsertBlockGroupByBlockPackIdReqDto struct {
 		},
 		struct {
 			BlockPackId      uuid.UUID  `json:"blockPackId" validate:"required"`
+			BlockGroupId     *uuid.UUID `json:"blockGroupId" validate:"omitnil"`
 			PrevBlockGroupId *uuid.UUID `json:"prevBlockGroupId" validate:"omitnil"`
 		},
 		any,
@@ -123,8 +124,11 @@ type InsertBlockGroupsByBlockPackIdReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			BlockPackId       uuid.UUID    `json:"blockPackId" validate:"required"`
-			PrevBlockGroupIds []*uuid.UUID `json:"prevBlockGroupIds" validate:"omitempty"`
+			BlockPackId       uuid.UUID `json:"blockPackId" validate:"required"`
+			BlockPackContents []struct {
+				BlockGroupId     *uuid.UUID `json:"blockGroupId" validate:"omitnil"`
+				PrevBlockGroupId *uuid.UUID `json:"prevBlockGroupId" validate:"omitnil"`
+			} `json:"blockPackContents" validate:"required"`
 		},
 		any,
 	]
@@ -141,7 +145,8 @@ type BatchInsertBlockGroupsByBlockPackIdsReqDto struct {
 		struct {
 			BlockPackContents []struct {
 				BlockPackId      uuid.UUID  `json:"blockPackId" validate:"required"`
-				PrevBlockGroupId *uuid.UUID `json:"prevBlockGroupIds" validate:"omitempty"`
+				BlockGroupId     *uuid.UUID `json:"blockGroupId" validate:"omitnil"`
+				PrevBlockGroupId *uuid.UUID `json:"prevBlockGroupIds" validate:"omitnil"`
 			} `json:"blockPackContent" validate:"required"`
 		},
 		any,
