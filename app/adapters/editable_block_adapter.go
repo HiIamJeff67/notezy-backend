@@ -8,10 +8,10 @@ import (
 
 	dtos "notezy-backend/app/dtos"
 	exceptions "notezy-backend/app/exceptions"
-	queue "notezy-backend/app/lib/queue"
 	enums "notezy-backend/app/models/schemas/enums"
 	constants "notezy-backend/shared/constants"
 	blocknote "notezy-backend/shared/lib/blocknote"
+	queue "notezy-backend/shared/lib/queue"
 )
 
 type EditableBlockAdapterInterface interface {

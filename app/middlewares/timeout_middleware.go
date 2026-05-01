@@ -10,13 +10,14 @@ import (
 	"github.com/gin-gonic/gin"
 
 	exceptions "notezy-backend/app/exceptions"
-	ratelimiter "notezy-backend/app/lib/ratelimiter"
 	metrics "notezy-backend/app/monitor/metrics"
+	ratelimit "notezy-backend/shared/lib/ratelimit"
+	responsewriter "notezy-backend/shared/lib/responsewriter"
 	types "notezy-backend/shared/types"
 )
 
 // use reusable buffer pool for timeout response writer to storing the current response of the handlers
-var timeoutReusableBufferPool *ratelimiter.ReusableBufferPool = ratelimiter.NewReusableBufferPool()
+var timeoutReusableBufferPool *ratelimit.ReusableBufferPool = ratelimit.NewReusableBufferPool()
 
 func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -29,7 +30,7 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 			timeoutReusableBufferPool.Put(currentBufferPool)
 		}()
 
-		writer := ratelimiter.NewResponseWriter(originalWriter, currentBufferPool)
+		writer := responsewriter.NewResponseWriter(originalWriter, currentBufferPool)
 		ctx.Writer = writer
 
 		ctxCopy := ctx.Copy()

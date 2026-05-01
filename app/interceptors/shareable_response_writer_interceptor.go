@@ -1,14 +1,15 @@
 package interceptors
 
 import (
-	ratelimiter "notezy-backend/app/lib/ratelimiter"
-
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+
+	ratelimit "notezy-backend/shared/lib/ratelimit"
+	responsewriter "notezy-backend/shared/lib/responsewriter"
 )
 
 // use the reusable buffer pool for interceptors which required multiple response writers
-var shareableResponseWritersReusableBufferPool *ratelimiter.ReusableBufferPool = ratelimiter.NewReusableBufferPool()
+var shareableResponseWritersReusableBufferPool *ratelimit.ReusableBufferPool = ratelimit.NewReusableBufferPool()
 
 // This interceptor is required if some interceptors in the current route require a response writer,
 // it will initialize, and manage and write with the response writer,
@@ -22,7 +23,7 @@ func ShareableResponseWriterInterceptor(interceptors ...func(string) gin.Handler
 			buffer.Reset()
 			shareableResponseWritersReusableBufferPool.Put(buffer)
 		}()
-		writer := ratelimiter.NewResponseWriter(ctx.Writer, buffer)
+		writer := responsewriter.NewResponseWriter(ctx.Writer, buffer)
 
 		ctx.Writer = writer // replace the response writer with the declared writer here
 		// so that we can re-write the response after the controller sent the response !!

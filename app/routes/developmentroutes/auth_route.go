@@ -76,6 +76,9 @@ func configureDevelopmentAuthRoutes() {
 			middlewares.TimeoutMiddleware(3*time.Second),
 			middlewares.AuthMiddleware(),
 			middlewares.AuthorizedRateLimitMiddleware(),
+			interceptors.ShareableResponseWriterInterceptor(
+				interceptors.EmbeddedInterceptor,
+			),
 			authModule.Binder.BindLogout(
 				authModule.Controller.Logout,
 			),

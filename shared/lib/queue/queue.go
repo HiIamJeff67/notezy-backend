@@ -19,10 +19,11 @@ func NewQueue[T any](capacity int) Queue[T] {
 		head:     nil,
 		tail:     nil,
 		size:     0,
-		capacity: capacity,
+		capacity: max(0, capacity),
 	}
 }
 
+// enqueue an element to the tail of the queue
 func (q *Queue[T]) Enqueue(element T) error {
 	if q.IsFull() {
 		return errors.New("queue is full")
@@ -45,6 +46,7 @@ func (q *Queue[T]) Enqueue(element T) error {
 	return nil
 }
 
+// dequeue an element from the head of the queue
 func (q *Queue[T]) Dequeue() (T, error) {
 	if q.head == nil || q.IsEmpty() {
 		var zero T
@@ -62,7 +64,8 @@ func (q *Queue[T]) Dequeue() (T, error) {
 	return result, nil
 }
 
-func (q *Queue[T]) Top() (T, error) {
+// get the head of the queue
+func (q *Queue[T]) Front() (T, error) {
 	if q.head == nil || q.IsEmpty() {
 		var zero T
 		return zero, errors.New("queue is empty")
@@ -70,19 +73,21 @@ func (q *Queue[T]) Top() (T, error) {
 	return q.head.element, nil
 }
 
+// get the current size of the queue
 func (q *Queue[T]) Size() int {
 	return q.size
 }
 
+// get the capacity, the maximum elements that the queue is affordable
 func (q *Queue[T]) Capacity() int {
 	return q.capacity
 }
 
+// set the capacity to the given value
 func (q *Queue[T]) SetCapacity(capacity int) error {
 	if capacity < q.size {
-		return errors.New("the new capacity is less than the current size of the queue, may cause data loss")
+		return errors.New("the new capacity is less than the current size of the queue, this operation will cause data loss which is unacceptable")
 	}
-
 	q.capacity = capacity
 	return nil
 }

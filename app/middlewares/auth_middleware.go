@@ -10,9 +10,7 @@ import (
 	exceptions "notezy-backend/app/exceptions"
 	repositories "notezy-backend/app/models/repositories"
 	schemas "notezy-backend/app/models/schemas"
-	logs "notezy-backend/app/monitor/logs"
 	metrics "notezy-backend/app/monitor/metrics"
-	traces "notezy-backend/app/monitor/traces"
 	tokens "notezy-backend/app/tokens"
 	types "notezy-backend/shared/types"
 )
@@ -22,7 +20,7 @@ func _extractAccessToken(ctx *gin.Context) (string, *exceptions.Exception) {
 	if exception != nil || len(strings.ReplaceAll(accessToken, " ", "")) == 0 {
 		authHeader := ctx.GetHeader("Authorization")
 		if !strings.HasPrefix(authHeader, "Bearer ") {
-			return "", exceptions.Token.FailedToExtractOrValidateAccessToken()
+			return "", exceptions.Token.FailedToExtractOrValidateAccessToken().WithOrigin(exception.Origin)
 		}
 		accessToken = strings.TrimPrefix(authHeader, "Bearer ")
 	}
@@ -32,7 +30,7 @@ func _extractAccessToken(ctx *gin.Context) (string, *exceptions.Exception) {
 func _extractRefreshToken(ctx *gin.Context) (string, *exceptions.Exception) {
 	refreshToken, exception := cookies.RefreshTokenCookieHandler.Get(ctx)
 	if exception != nil || strings.ReplaceAll(refreshToken, " ", "") == "" {
-		return "", exceptions.Token.FailedToExtractOrValidateRefreshToken()
+		return "", exceptions.Token.FailedToExtractOrValidateRefreshToken().WithOrigin(exception.Origin)
 	}
 	return refreshToken, nil
 }
@@ -73,7 +71,6 @@ func _validateRefreshToken(refreshToken string) (*schemas.User, *exceptions.Exce
 	}
 
 	if refreshToken != user.RefreshToken { // if failed to compare and validate the refreshToken as the correct token storing in the database
-		logs.FInfo(traces.GetTrace(0).FileLineString(), "current: %s, backend: %s", refreshToken, user.RefreshToken)
 		return nil, exceptions.Auth.WrongRefreshToken()
 	}
 

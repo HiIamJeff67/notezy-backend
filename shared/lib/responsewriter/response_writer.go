@@ -1,4 +1,4 @@
-package ratelimiter
+package responsewriter
 
 import (
 	"bytes"

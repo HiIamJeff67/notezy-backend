@@ -9,7 +9,6 @@ import (
 
 	util "notezy-backend/app/util"
 	constants "notezy-backend/shared/constants"
-	types "notezy-backend/shared/types"
 )
 
 func RegisterStringsValidation(validate *validator.Validate) {
@@ -100,43 +99,5 @@ func RegisterStringsValidation(validate *validator.Validate) {
 		}
 
 		return scheme != "" && parsedURL.Host != ""
-	})
-	validate.RegisterValidation("isprogramminglanguage", func(fl validator.FieldLevel) bool {
-		programmingLanguageStr := fl.Field().String()
-		if len(programmingLanguageStr) > constants.MaxProgrammingLanguageLength {
-			return false
-		}
-		for _, l := range types.AllSupportedProgrammingLanguageStrings {
-			if programmingLanguageStr == l {
-				return true
-			}
-		}
-		return false
-	})
-	validate.RegisterValidation("iscolororhexcode", func(fl validator.FieldLevel) bool {
-		val := fl.Field().String()
-
-		if val == "default" {
-			return true
-		}
-		validColors := []string{
-			"gray", "brown", "orange", "yellow", "green", "blue", "purple", "pink", "red",
-		}
-		for _, color := range validColors {
-			if val == color {
-				return true
-			}
-		}
-
-		if !strings.HasPrefix(val, "#") {
-			return false
-		}
-		cleanHexCode := val[1:]
-		length := len(cleanHexCode)
-		if length != 3 && length != 4 && length != 6 && length != 8 {
-			return false
-		}
-
-		return regexp.MustCompile(`^[0-9a-fA-F]+$`).MatchString(cleanHexCode)
 	})
 }

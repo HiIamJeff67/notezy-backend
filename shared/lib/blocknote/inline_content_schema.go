@@ -2,8 +2,6 @@ package blocknote
 
 import (
 	"encoding/json"
-
-	validation "notezy-backend/app/validation"
 )
 
 /* ============================== Other Type Definition ============================== */
@@ -43,7 +41,7 @@ type StyledText struct {
 
 func (*StyledText) isInlineContent() bool { return true }
 
-func (st *StyledText) Validate() error { return validation.Validator.Struct(st) }
+func (st *StyledText) Validate() error { return blockNoteValidator.Struct(st) }
 
 func NewStyledText(text string, styles Styles) *StyledText {
 	return &StyledText{
@@ -63,7 +61,7 @@ type Link struct {
 
 func (*Link) isInlineContent() bool { return true }
 
-func (l *Link) Validate() error { return validation.Validator.Struct(l) }
+func (l *Link) Validate() error { return blockNoteValidator.Struct(l) }
 
 func NewLink(href string, content []StyledText) *Link {
 	return &Link{

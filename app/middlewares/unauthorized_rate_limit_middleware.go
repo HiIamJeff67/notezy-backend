@@ -3,22 +3,22 @@ package middlewares
 import (
 	configs "notezy-backend/app/configs"
 	exceptions "notezy-backend/app/exceptions"
-	ratelimiter "notezy-backend/app/lib/ratelimiter"
 	logs "notezy-backend/app/monitor/logs"
 	metrics "notezy-backend/app/monitor/metrics"
 	traces "notezy-backend/app/monitor/traces"
+	ratelimit "notezy-backend/shared/lib/ratelimit"
 
 	"github.com/gin-gonic/gin"
 )
 
-var unauthorizedRateLimiter *ratelimiter.HybridRateLimiter
+var unauthorizedRateLimiter *ratelimit.HybridRateLimiter
 
 func InitUnauthorizedRateLimiter(config configs.RateLimitConfig) {
 	if unauthorizedRateLimiter != nil {
 		unauthorizedRateLimiter.Stop()
 	}
 
-	unauthorizedRateLimiter = ratelimiter.NewHybridRateLimiter(
+	unauthorizedRateLimiter = ratelimit.NewHybridRateLimiter(
 		config.RateLimit,
 		config.Burst,
 		config.UserLimit,
@@ -68,6 +68,6 @@ func StopUnauthorizedRateLimiter() {
 	if unauthorizedRateLimiter != nil {
 		unauthorizedRateLimiter.Stop()
 		unauthorizedRateLimiter = nil
-		logs.FInfo(traces.GetTrace(0).FileLineString(), "Unauthoized rate limiter stopped")
+		logs.FInfo(traces.GetTrace(0).FileLineString(), "Unauthorized rate limiter stopped")
 	}
 }

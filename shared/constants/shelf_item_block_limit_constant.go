@@ -17,20 +17,9 @@ const (
 	MaxMaterialsOfSubShelf  int32 = 1e+2 // max number of materials(files)
 	MaxBlockPackOfSubShelf  int32 = 1e+2 // max number of block packs
 
-	MaxShelfNameLength int = 128
-	MaxItemNameLength  int = 128
-
 	PeekFileSize            types.ByteType = 256 * types.Byte
 	MaxTextbookFileSize     types.ByteType = 5 * types.MB
 	MaxNotebookFileSize     types.ByteType = 5 * types.MB
 	MaxLearningCardFileSize types.ByteType = 1 * types.MB
 	MaxWorkFlowFileSize     types.ByteType = 10 * types.MB
-)
-
-/* ============================== Limitation of BlockContent or Props JSON ============================== */
-
-const (
-	MaxFileBlockCaptionLength = 512
-	MaxFileBlockNameLength    = 256
-	MaxHeadingLevel           = 6
 )

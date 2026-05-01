@@ -2,8 +2,6 @@ package blocknote
 
 import (
 	"encoding/json"
-
-	validation "notezy-backend/app/validation"
 )
 
 type BlockProps interface {
@@ -21,7 +19,7 @@ type BaseProps struct {
 
 func (bp *BaseProps) IsBlockProps() bool { return true }
 
-func (bp *BaseProps) Validate() error { return validation.Validator.Struct(bp) }
+func (bp *BaseProps) Validate() error { return blockNoteValidator.Struct(bp) }
 
 /* ============================== HeadingProps ============================== */
 
@@ -33,7 +31,7 @@ type HeadingProps struct {
 
 func (hp *HeadingProps) IsBlockProps() bool { return true }
 
-func (hp *HeadingProps) Validate() error { return validation.Validator.Struct(hp) }
+func (hp *HeadingProps) Validate() error { return blockNoteValidator.Struct(hp) }
 
 /* ============================== CheckListItemProps ============================== */
 
@@ -44,7 +42,7 @@ type CheckListItemProps struct {
 
 func (clip *CheckListItemProps) IsBlockProps() bool { return true }
 
-func (clip *CheckListItemProps) Validate() error { return validation.Validator.Struct(clip) }
+func (clip *CheckListItemProps) Validate() error { return blockNoteValidator.Struct(clip) }
 
 /* ============================== FileBlockProps ============================== */
 
@@ -59,7 +57,7 @@ type FileBlockProps struct {
 
 func (fbp *FileBlockProps) IsBlockProps() bool { return true }
 
-func (fbp *FileBlockProps) Validate() error { return validation.Validator.Struct(fbp) }
+func (fbp *FileBlockProps) Validate() error { return blockNoteValidator.Struct(fbp) }
 
 /* ============================== ImageBlock ============================== */
 
@@ -69,7 +67,7 @@ type ImageBlockProps struct {
 
 func (ibp *ImageBlockProps) IsBlockProps() bool { return true }
 
-func (ibp *ImageBlockProps) Validate() error { return validation.Validator.Struct(ibp) }
+func (ibp *ImageBlockProps) Validate() error { return blockNoteValidator.Struct(ibp) }
 
 /* ============================== VideoBlock ============================== */
 
@@ -79,7 +77,7 @@ type VideoBlockProps struct {
 
 func (vbp *VideoBlockProps) IsBlockProps() bool { return true }
 
-func (vbp *VideoBlockProps) Validate() error { return validation.Validator.Struct(vbp) }
+func (vbp *VideoBlockProps) Validate() error { return blockNoteValidator.Struct(vbp) }
 
 /* ============================== AudioBlock ============================== */
 
@@ -89,7 +87,7 @@ type AudioBlockProps struct {
 
 func (abp *AudioBlockProps) IsBlockProps() bool { return true }
 
-func (abp *AudioBlockProps) Validate() error { return validation.Validator.Struct(abp) }
+func (abp *AudioBlockProps) Validate() error { return blockNoteValidator.Struct(abp) }
 
 /* ============================== CodeBlockProps ============================== */
 
@@ -100,7 +98,7 @@ type CodeBlockProps struct {
 
 func (cbp *CodeBlockProps) IsBlockProps() bool { return true }
 
-func (cbp *CodeBlockProps) Validate() error { return validation.Validator.Struct(cbp) }
+func (cbp *CodeBlockProps) Validate() error { return blockNoteValidator.Struct(cbp) }
 
 /* ============================== TableCellProps ============================== */
 
@@ -112,7 +110,7 @@ type TableCellProps struct {
 
 func (tcp *TableCellProps) IsBlockProps() bool { return true }
 
-func (tcp *TableCellProps) Validate() error { return validation.Validator.Struct(tcp) }
+func (tcp *TableCellProps) Validate() error { return blockNoteValidator.Struct(tcp) }
 
 /* ============================== TableProps ============================== */
 
@@ -122,7 +120,7 @@ type TableProps struct {
 
 func (tp *TableProps) IsBlockProps() bool { return true }
 
-func (tp *TableProps) Validate() error { return validation.Validator.Struct(tp) }
+func (tp *TableProps) Validate() error { return blockNoteValidator.Struct(tp) }
 
 func ParseProps(blockType string, rawJSON []byte) (BlockProps, error) {
 	if len(rawJSON) == 0 || string(rawJSON) == "null" {

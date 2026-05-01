@@ -9,21 +9,21 @@ import (
 	configs "notezy-backend/app/configs"
 	contexts "notezy-backend/app/contexts"
 	exceptions "notezy-backend/app/exceptions"
-	ratelimiter "notezy-backend/app/lib/ratelimiter"
 	logs "notezy-backend/app/monitor/logs"
 	metrics "notezy-backend/app/monitor/metrics"
 	traces "notezy-backend/app/monitor/traces"
+	ratelimit "notezy-backend/shared/lib/ratelimit"
 	types "notezy-backend/shared/types"
 )
 
-var authorizedRateLimiter *ratelimiter.HybridRateLimiter // use the hybrid one which including token bucket and cross server request management by redis
+var authorizedRateLimiter *ratelimit.HybridRateLimiter // use the hybrid one which including token bucket and cross server request management by redis
 
 func InitAuthorizedRateLimiter(config configs.RateLimitConfig) {
 	if authorizedRateLimiter != nil {
 		authorizedRateLimiter.Stop()
 	}
 
-	authorizedRateLimiter = ratelimiter.NewHybridRateLimiter(
+	authorizedRateLimiter = ratelimit.NewHybridRateLimiter(
 		config.RateLimit,
 		config.Burst,
 		config.UserLimit,
@@ -71,7 +71,7 @@ func AuthorizedRateLimitMiddleware(config ...configs.RateLimitConfig) gin.Handle
 	}
 }
 
-func setRateLimitHeaders(ctx *gin.Context, remaining int32, limiter *ratelimiter.HybridRateLimiter) {
+func setRateLimitHeaders(ctx *gin.Context, remaining int32, limiter *ratelimit.HybridRateLimiter) {
 	// standard information
 	ctx.Header("X-RateLimit-Limit", strconv.Itoa(int(limiter.UserLimit)))
 	ctx.Header("X-RateLimit-Remaining", strconv.Itoa(int(remaining)))

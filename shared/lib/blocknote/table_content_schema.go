@@ -3,8 +3,6 @@ package blocknote
 import (
 	"encoding/json"
 	"fmt"
-
-	validation "notezy-backend/app/validation"
 )
 
 /* ============================== TableCell ============================== */
@@ -40,7 +38,7 @@ type TableContent struct {
 func (tc *TableContent) IsBlockContent() bool { return true }
 
 func (tc *TableContent) Validate() error {
-	if err := validation.Validator.Struct(tc); err != nil {
+	if err := blockNoteValidator.Struct(tc); err != nil {
 		return err
 	}
 

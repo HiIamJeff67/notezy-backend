@@ -9,7 +9,7 @@ import (
 
 	configs "notezy-backend/app/configs"
 	models "notezy-backend/app/models"
-	testroutes "notezy-backend/app/routes/test_routes"
+	testroutes "notezy-backend/app/routes/testroutes"
 	test "notezy-backend/test"
 )
 

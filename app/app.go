@@ -20,7 +20,7 @@ import (
 	caches "notezy-backend/app/caches"
 	configs "notezy-backend/app/configs"
 	models "notezy-backend/app/models"
-	developmentroutes "notezy-backend/app/routes/development_routes"
+	developmentroutes "notezy-backend/app/routes/developmentroutes"
 	util "notezy-backend/app/util"
 	constants "notezy-backend/shared/constants"
 )

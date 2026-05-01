@@ -11,9 +11,9 @@ var AccessTokenCookieHandler = NewCookieHandler(
 	types.ValidCookieName_AccessToken,     // name
 	"/",                                   // path
 	constants.ExpirationTimeOfAccessToken, // duration
-	true,                                  // secure
-	true,                                  // httpOnly
-	http.SameSiteLaxMode,                  // sameSite
+	constants.Mode == types.ModeType_Production, // secure (set to true only if is on the production)
+	true,                 // httpOnly
+	http.SameSiteLaxMode, // sameSite
 )
 
 // Note: make sure the path should start with "/" because we want this work at the all the subpath from "/"

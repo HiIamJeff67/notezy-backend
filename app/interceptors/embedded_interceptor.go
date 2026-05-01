@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	contexts "notezy-backend/app/contexts"
-	"notezy-backend/app/exceptions"
-	ratelimiter "notezy-backend/app/lib/ratelimiter"
+	exceptions "notezy-backend/app/exceptions"
+	responsewriter "notezy-backend/shared/lib/responsewriter"
 	types "notezy-backend/shared/types"
 )
 
@@ -15,7 +15,7 @@ import (
 // ex. the frontend require a publicId to indicate the user in their local database across APIs
 func EmbeddedInterceptor(responseWriterKey string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var writer *ratelimiter.ResponseWriter
+		var writer *responsewriter.ResponseWriter
 		existingWriter, exist := ctx.Get(responseWriterKey)
 		if !exist || existingWriter == nil {
 			exceptions.Context.MissPlacingOrWrongInterceptorOrder(
@@ -24,7 +24,7 @@ func EmbeddedInterceptor(responseWriterKey string) gin.HandlerFunc {
 			).Log()
 			return
 		}
-		writer = existingWriter.(*ratelimiter.ResponseWriter)
+		writer = existingWriter.(*responsewriter.ResponseWriter)
 
 		ctx.Next()
 

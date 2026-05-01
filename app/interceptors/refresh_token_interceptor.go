@@ -8,7 +8,7 @@ import (
 	contexts "notezy-backend/app/contexts"
 	cookies "notezy-backend/app/cookies"
 	exceptions "notezy-backend/app/exceptions"
-	ratelimiter "notezy-backend/app/lib/ratelimiter"
+	responsewriter "notezy-backend/shared/lib/responsewriter"
 	types "notezy-backend/shared/types"
 )
 
@@ -17,7 +17,7 @@ import (
 // so that it can access the `AccessToken` and `CSRFToken` in the context field
 func RefreshTokenInterceptor(responseWriterKey string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var writer *ratelimiter.ResponseWriter
+		var writer *responsewriter.ResponseWriter
 		existingWriter, exist := ctx.Get(responseWriterKey)
 		if !exist || existingWriter == nil {
 			exceptions.Context.MissPlacingOrWrongInterceptorOrder(
@@ -26,7 +26,7 @@ func RefreshTokenInterceptor(responseWriterKey string) gin.HandlerFunc {
 			).Log()
 			return
 		}
-		writer = existingWriter.(*ratelimiter.ResponseWriter)
+		writer = existingWriter.(*responsewriter.ResponseWriter)
 
 		ctx.Next() // execute the following first
 

@@ -23,17 +23,15 @@ const (
 /* ============================== Variable constraints ============================== */
 
 const (
-	MaxUserAgentLength           int = 2048
-	MaxURLLength                 int = 2048
-	MinPasswordLength            int = 8
-	MaxPasswordLength            int = 1024
-	MaxHexCodeLength             int = 20
-	MaxProgrammingLanguageLength int = 50
+	MaxUserAgentLength int = 2048
+	MaxURLLength       int = 2048
+	MinPasswordLength  int = 8
+	MaxPasswordLength  int = 1024
 
 	MaxRetriesOfGeneratingFakeName = 5
 	// make sure the below values are as the same as the constraint in the dto while registering or creating the user
 	MaxNameLength = 32
-	MinNameLenght = 6
+	MinNameLength = 6
 )
 
 /* ============================== Database or orm limitation ============================== */

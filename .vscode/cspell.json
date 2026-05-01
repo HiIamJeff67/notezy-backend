@@ -27,12 +27,13 @@
     "hotreload",
     "gin",
     "gorm",
-    "GinAddr",
     "dtos",
     "comail",
     "colog",
     "fileln",
     "NANP",
+    "appendonly",
+    "healthcheck",
     "alphanum",
     "alphaandnum",
     "timestamptz",
@@ -47,6 +48,7 @@
     "gqlerror",
     "jinzhu",
     "searchcursor",
+    "responsewriter",
     "gqlmodels",
     "gqlgen",
     "gqlparser",
@@ -58,6 +60,7 @@
     "datatype",
     "omitnil",
     "istoggleable",
+    "otelcol",
     "rowspan",
     "colspan",
     "parentblockid",
@@ -68,6 +71,10 @@
     "froms",
     "fcall",
     "notfuture",
-    "refreshable"
+    "notpast",
+    "refreshable",
+    "vbscript",
+    "authe2etest",
+    "println"
   ]
 }
