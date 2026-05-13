@@ -224,6 +224,7 @@ func (r *RootShelfRepository) CreateOneByOwnerId(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -292,6 +293,7 @@ func (r *RootShelfRepository) CreateManyByOwnerId(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -351,6 +353,7 @@ func (r *RootShelfRepository) UpdateOneById(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -438,6 +441,7 @@ func (r *RootShelfRepository) BulkUpdateManyByIds(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -516,7 +520,7 @@ func (r *RootShelfRepository) SoftDeleteOneById(
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
-	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -575,10 +579,12 @@ func (r *RootShelfRepository) SoftDeleteManyByUserId(
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	result := parsedOptions.DB.Model(&schemas.RootShelf{}).
-		Where("owner_id = ? AND deleted_at IS NULL", userId).
+		Scopes(r.rootShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Where("owner_id = ?", userId).
 		Delete(&schemas.RootShelf{})
 	if err := result.Error; err != nil {
 		return exceptions.Shelf.FailedToDelete().WithOrigin(err)
@@ -627,6 +633,7 @@ func (r *RootShelfRepository) HardDeleteManyByIds(
 		return exceptions.Shelf.NoChanges()
 	}
 
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -636,7 +643,7 @@ func (r *RootShelfRepository) HardDeleteManyByIds(
 
 	result := parsedOptions.DB.Model(&schemas.RootShelf{}).
 		Scopes(r.rootShelfScope.PassPermissionChecks(ids, userId, allowedPermissions)).
-		Scopes(r.rootShelfScope.FilterOnlyDeleted(types.Ternary_Positive)).
+		Scopes(r.rootShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Where("\"RootShelfTable\".id IN ?", ids).
 		Delete(&schemas.RootShelf{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
@@ -653,10 +660,12 @@ func (r *RootShelfRepository) HardDeleteManyByUserId(
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	result := parsedOptions.DB.Model(&schemas.RootShelf{}).
-		Where("owner_id = ? AND deleted_at IS NOT NULL", userId).
+		Scopes(r.rootShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Where("owner_id = ?", userId).
 		Delete(&schemas.RootShelf{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Shelf.FailedToDelete().WithOrigin(result.Error)},

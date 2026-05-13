@@ -246,7 +246,6 @@ func (r *BlockGroupRepository) CollectOrphanedBlockGroupsByIds(
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
 		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
-
 	}
 
 	var orphanedBlockGroupIds []uuid.UUID
@@ -274,6 +273,7 @@ func (r *BlockGroupRepository) CollectOrphanedBlockGroupsByIds(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -511,6 +511,7 @@ func (r *BlockGroupRepository) InsertOneByBlockPackId(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -692,6 +693,7 @@ func (r *BlockGroupRepository) InsertManyByBlockPackId(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -881,6 +883,7 @@ func (r *BlockGroupRepository) InsertManyByBlockPackIds(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -941,6 +944,7 @@ func (r *BlockGroupRepository) AppendOneByBlockPackId(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -965,7 +969,6 @@ func (r *BlockGroupRepository) AppendManyByBlockPackId(
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
 		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
-
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -1014,6 +1017,7 @@ func (r *BlockGroupRepository) AppendManyByBlockPackId(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -1034,7 +1038,6 @@ func (r *BlockGroupRepository) UpdateOneById(
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
 		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
-
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -1078,6 +1081,7 @@ func (r *BlockGroupRepository) UpdateOneById(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -1139,6 +1143,7 @@ func (r *BlockGroupRepository) RestoreSoftDeletedOneById(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -1326,6 +1331,7 @@ func (r *BlockGroupRepository) RestoreSoftDeletedManyByIds(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -1499,6 +1505,7 @@ func (r *BlockGroupRepository) SoftDeleteManyByIds(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}

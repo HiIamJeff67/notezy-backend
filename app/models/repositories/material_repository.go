@@ -219,6 +219,7 @@ func (r *MaterialRepository) CreateOneBySubShelfId(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.Material.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -308,6 +309,7 @@ func (r *MaterialRepository) UpdateOneById(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.Material.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}

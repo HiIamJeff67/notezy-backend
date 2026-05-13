@@ -472,6 +472,7 @@ func (s *AuthService) Login(
 			nil,
 			options.WithTransactionDB(tx),
 		); exception != nil {
+			tx.Rollback()
 			return nil, exception
 		}
 	} else if util.IsEmailString(reqDto.Body.Account) { // if the account field contains email
@@ -480,17 +481,21 @@ func (s *AuthService) Login(
 			nil,
 			options.WithTransactionDB(tx),
 		); exception != nil {
+			tx.Rollback()
 			return nil, exception
 		}
 	} else {
+		tx.Rollback()
 		return nil, exceptions.Auth.InvalidDto()
 	}
 
 	if user == nil {
+		tx.Rollback()
 		return nil, exceptions.Auth.InvalidDto()
 	}
 
 	if user.BlockLoginUntil.After(time.Now()) {
+		tx.Rollback()
 		return nil, exceptions.Auth.LoginBlockedDueToTryingTooManyTimes(user.BlockLoginUntil)
 	}
 
@@ -498,6 +503,7 @@ func (s *AuthService) Login(
 		newLoginCount := user.LoginCount + 1
 		blockLoginUntil, exception := util.GetLoginBlockedUntilByLoginCount(newLoginCount)
 		if exception != nil {
+			tx.Rollback()
 			return nil, exception
 		}
 
@@ -513,13 +519,16 @@ func (s *AuthService) Login(
 			options.WithTransactionDB(tx),
 		)
 		if exception != nil {
+			tx.Rollback()
 			return nil, exception
 		}
 
 		if blockLoginUntil != nil {
+			tx.Rollback()
 			return nil, exceptions.Auth.LoginBlockedDueToTryingTooManyTimes(*blockLoginUntil)
 		}
 
+		tx.Rollback()
 		return nil, exceptions.Auth.WrongPassword() // login procedure early ends here
 	}
 
@@ -540,14 +549,17 @@ func (s *AuthService) Login(
 
 	newAccessToken, exception := tokens.GenerateAccessToken(user.Name, user.Email, user.UserAgent)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 	newRefreshToken, exception := tokens.GenerateRefreshToken(user.Name, user.Email, user.UserAgent)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 	newCSRFToken, exception := tokens.GenerateCSRFToken()
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
@@ -602,6 +614,7 @@ func (s *AuthService) Login(
 				&output.UpdatedAt,
 			)
 		if err != nil {
+			tx.Rollback()
 			return nil, exceptions.User.NotFound().WithOrigin(err)
 		}
 
@@ -631,6 +644,7 @@ func (s *AuthService) Login(
 			newUserDataCache,
 		)
 		if exception != nil {
+			tx.Rollback()
 			return nil, exception.Log()
 		}
 	}
@@ -651,6 +665,7 @@ func (s *AuthService) Login(
 		options.WithTransactionDB(tx),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
@@ -693,14 +708,17 @@ func (s *AuthService) LoginViaGoogle(
 		[]schemas.UserRelation{schemas.UserRelation_UserAccount},
 		options.WithTransactionDB(tx),
 	); exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
 	if user == nil {
+		tx.Rollback()
 		return nil, exceptions.Auth.InvalidDto()
 	}
 
 	if user.BlockLoginUntil.After(time.Now()) {
+		tx.Rollback()
 		return nil, exceptions.Auth.LoginBlockedDueToTryingTooManyTimes(user.BlockLoginUntil)
 	}
 
@@ -708,6 +726,7 @@ func (s *AuthService) LoginViaGoogle(
 		newLoginCount := user.LoginCount + 1
 		blockLoginUntil, exception := util.GetLoginBlockedUntilByLoginCount(newLoginCount)
 		if exception != nil {
+			tx.Rollback()
 			return nil, exception
 		}
 
@@ -723,13 +742,16 @@ func (s *AuthService) LoginViaGoogle(
 			options.WithTransactionDB(tx),
 		)
 		if exception != nil {
+			tx.Rollback()
 			return nil, exception
 		}
 
 		if blockLoginUntil != nil {
+			tx.Rollback()
 			return nil, exceptions.Auth.LoginBlockedDueToTryingTooManyTimes(*blockLoginUntil)
 		}
 
+		tx.Rollback()
 		return nil, exceptions.Auth.WrongPassword() // login via google procedure early ends here
 	}
 
@@ -750,14 +772,17 @@ func (s *AuthService) LoginViaGoogle(
 
 	newAccessToken, exception := tokens.GenerateAccessToken(user.Name, user.Email, user.UserAgent)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 	newRefreshToken, exception := tokens.GenerateRefreshToken(user.Name, user.Email, user.UserAgent)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 	newCSRFToken, exception := tokens.GenerateCSRFToken()
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
@@ -812,6 +837,7 @@ func (s *AuthService) LoginViaGoogle(
 				&output.UpdatedAt,
 			)
 		if err != nil {
+			tx.Rollback()
 			return nil, exceptions.User.NotFound().WithOrigin(err)
 		}
 
@@ -841,6 +867,7 @@ func (s *AuthService) LoginViaGoogle(
 			newUserDataCache,
 		)
 		if exception != nil {
+			tx.Rollback()
 			return nil, exception.Log()
 		}
 	}
@@ -861,6 +888,7 @@ func (s *AuthService) LoginViaGoogle(
 		options.WithTransactionDB(tx),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
@@ -1020,6 +1048,7 @@ func (s *AuthService) ResetEmail(
 	}
 
 	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
 		return nil, exceptions.User.FailedToCommitTransaction().WithOrigin(err)
 	}
 
@@ -1046,6 +1075,7 @@ func (s *AuthService) ForgetPassword(
 			preloads,
 			options.WithTransactionDB(tx),
 		); exception != nil {
+			tx.Rollback()
 			return nil, exception
 		}
 	} else if util.IsAlphaAndNumberString(reqDto.Body.Account) { // if the account field contains user name
@@ -1054,26 +1084,32 @@ func (s *AuthService) ForgetPassword(
 			preloads,
 			options.WithTransactionDB(tx),
 		); exception != nil {
+			tx.Rollback()
 			return nil, exception
 		}
 	} else {
+		tx.Rollback()
 		return nil, exceptions.Auth.InvalidDto()
 	}
 
 	if reqDto.Body.AuthCode != user.UserAccount.AuthCode {
+		tx.Rollback()
 		return nil, exceptions.Auth.WrongAuthCode()
 	}
 
 	newAccessToken, exception := tokens.GenerateAccessToken(user.Name, user.Email, user.UserAgent)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 	newRefreshToken, exception := tokens.GenerateRefreshToken(user.Name, user.Email, user.UserAgent)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 	newCSRFToken, exception := tokens.GenerateCSRFToken()
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
@@ -1107,6 +1143,7 @@ func (s *AuthService) ForgetPassword(
 
 	hashedPassword, exception := s.hashPassword(reqDto.Body.NewPassword)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
@@ -1126,6 +1163,7 @@ func (s *AuthService) ForgetPassword(
 		options.WithTransactionDB(tx),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
@@ -1173,6 +1211,7 @@ func (s *AuthService) ResetMe(
 		inputs.CreateUserInfoInput{},
 		options.WithTransactionDB(tx),
 	); exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
@@ -1187,6 +1226,7 @@ func (s *AuthService) ResetMe(
 		inputs.CreateUserSettingInput{},
 		options.WithTransactionDB(tx),
 	); exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
@@ -1214,6 +1254,7 @@ func (s *AuthService) ResetMe(
 	// delete other stuff in the future...
 
 	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
 		return nil, exceptions.User.FailedToCommitTransaction().WithDetails(err)
 	}
 

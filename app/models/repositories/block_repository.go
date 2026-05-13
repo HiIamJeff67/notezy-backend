@@ -237,6 +237,7 @@ func (r *BlockRepository) CreateOneByBlockGroupId(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -317,6 +318,7 @@ func (r *BlockRepository) CreateManyByBlockGroupId(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -410,6 +412,7 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 
 		if shouldStartTransaction {
 			if err := parsedOptions.DB.Commit().Error; err != nil {
+				parsedOptions.DB.Rollback()
 				return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
 			}
 		}
@@ -512,6 +515,7 @@ func (r *BlockRepository) UpdateOneById(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -613,6 +617,7 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}

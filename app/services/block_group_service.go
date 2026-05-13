@@ -134,6 +134,11 @@ func (s *BlockGroupService) GetMyBlockGroupAndItsBlocksById(
 		Find(&blocks)
 	if err := result.Error; err != nil || len(blocks) == 0 {
 		// return the current node with empty editable block if we cannot find them
+		if err := tx.Commit().Error; err != nil {
+			tx.Rollback()
+			return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
+		}
+
 		return &dtos.GetMyBlockGroupAndItsBlocksByIdResDto{
 			Id:                        blockGroup.Id,
 			BlockPackId:               blockGroup.BlockPackId,
@@ -181,6 +186,11 @@ func (s *BlockGroupService) GetMyBlockGroupAndItsBlocksById(
 	}
 
 	if rawArborizedBlock == nil {
+		if err := tx.Commit().Error; err != nil {
+			tx.Rollback()
+			return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
+		}
+
 		return &dtos.GetMyBlockGroupAndItsBlocksByIdResDto{
 			Id:                        blockGroup.Id,
 			BlockPackId:               blockGroup.BlockPackId,
@@ -416,6 +426,7 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 		Find(&flattenedBlocks)
 	if err := result.Error; err != nil || len(flattenedBlocks) == 0 {
 		// return the current node with empty editable block if we cannot find them
+		tx.Rollback()
 		return &resDto, nil
 	}
 
@@ -575,9 +586,6 @@ func (s *BlockGroupService) InsertBlockGroupByBlockPackId(
 	if exception != nil {
 		return nil, exception
 	}
-	if newBlockGroupId == nil {
-		return nil, exceptions.BlockGroup.FailedToCreate().WithDetails("got nil block group id")
-	}
 
 	return &dtos.InsertBlockGroupByBlockPackIdResDto{
 		Id:        *newBlockGroupId,
@@ -672,10 +680,6 @@ func (s *BlockGroupService) InsertBlockGroupAndItsBlocksByBlockPackId(
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
-	}
-	if newBlockGroupId == nil {
-		tx.Rollback()
-		return nil, exceptions.BlockGroup.FailedToCreate().WithDetails("got nil block group id")
 	}
 
 	rawFlattenedBlocks, exception := s.editableBlockAdapter.FlattenToRaw(&reqDto.Body.ArborizedEditableBlock)
@@ -1637,6 +1641,7 @@ func (s *BlockGroupService) BatchMoveMyBlockGroupsByIds(
 	}
 
 	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
 		return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
 	}
 

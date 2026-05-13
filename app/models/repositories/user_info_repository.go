@@ -35,6 +35,7 @@ func (r *UserInfoRepository) GetOneByUserId(
 	userInfo := schemas.UserInfo{}
 	result := parsedOptions.DB.Table(schemas.UserInfo{}.TableName()).
 		Where("user_id = ?", userId).
+		Clauses(clause.Locking{Strength: "SHARE"}).
 		First(&userInfo)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.UserInfo.NotFound().WithOrigin(result.Error)},

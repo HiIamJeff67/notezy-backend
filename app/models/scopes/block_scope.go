@@ -24,7 +24,9 @@ func NewBlockScope() BlockScopeInterface {
 
 func (sc *BlockScope) PassPermissionCheck(id uuid.UUID, userId uuid.UUID, permissions []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		subQuery := db.Model(&schemas.UsersToShelves{}).
+		// Use gorm.DB.Session to build a fresh statement for the subquery to avoid inheriting outer query clauses (especially in UPDATE/DELETE).
+		subQuery := db.Session(&gorm.Session{NewDB: true}).
+			Model(&schemas.UsersToShelves{}).
 			Select("1").
 			Where("root_shelf_id = ss.root_shelf_id").
 			Where("user_id = ? AND permission IN ?", userId, permissions)
@@ -38,7 +40,9 @@ func (sc *BlockScope) PassPermissionCheck(id uuid.UUID, userId uuid.UUID, permis
 
 func (sc *BlockScope) PassPermissionChecks(ids []uuid.UUID, userId uuid.UUID, permissions []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		subQuery := db.Model(&schemas.UsersToShelves{}).
+		// Use gorm.DB.Session to build a fresh statement for the subquery to avoid inheriting outer query clauses (especially in UPDATE/DELETE).
+		subQuery := db.Session(&gorm.Session{NewDB: true}).
+			Model(&schemas.UsersToShelves{}).
 			Select("1").
 			Where("root_shelf_id = ss.root_shelf_id").
 			Where("user_id = ? AND permission IN ?", userId, permissions)

@@ -1,6 +1,10 @@
 .env
+
 *.temp
 temp/**.*
 tmp/**.*
+
+.gocache/
+
 backup-codes-thenotezy.*
 docs/general_designs/

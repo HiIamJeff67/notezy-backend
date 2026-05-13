@@ -44,6 +44,7 @@ func (r *ThemeRepository) GetOneById(
 	}
 
 	result := query.Where("id = ?", id).
+		Clauses(clause.Locking{Strength: "SHARE"}).
 		First(&theme)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Theme.NotFound().WithOrigin(err)

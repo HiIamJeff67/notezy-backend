@@ -282,6 +282,7 @@ func (r *SubShelfRepository) CreateOneByRootShelfId(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -391,6 +392,7 @@ func (r *SubShelfRepository) BulkCreateManyByRootShelfIds(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -448,6 +450,7 @@ func (r *SubShelfRepository) UpdateOneById(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -528,6 +531,7 @@ func (r *SubShelfRepository) BulkUpdateManyByIds(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}

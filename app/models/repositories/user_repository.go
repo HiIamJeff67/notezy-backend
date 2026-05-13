@@ -46,6 +46,7 @@ func (r *UserRepository) GetOneById(
 	}
 
 	result := db.Where("id = ?", id).
+		Clauses(clause.Locking{Strength: "SHARE"}).
 		First(&user)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.User.NotFound().WithOrigin(result.Error)},
@@ -74,6 +75,7 @@ func (r *UserRepository) GetOneByName(
 	}
 
 	result := db.Where("name = ?", name).
+		Clauses(clause.Locking{Strength: "SHARE"}).
 		First(&user)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.User.NotFound().WithOrigin(result.Error)},
@@ -102,6 +104,7 @@ func (r *UserRepository) GetOneByEmail(
 	}
 
 	result := query.Where("email = ?", email).
+		Clauses(clause.Locking{Strength: "SHARE"}).
 		First(&user)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.User.NotFound().WithOrigin(result.Error)},

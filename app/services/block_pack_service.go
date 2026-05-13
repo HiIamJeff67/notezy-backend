@@ -410,13 +410,11 @@ func (s *BlockPackService) BatchMoveMyBlockPacksByIds(
 	input := make([]inputs.BulkUpdateBlockPackInput, 0)
 	for _, movedBlockPack := range reqDto.Body.MovedBlockPacks {
 		for _, blockPackId := range movedBlockPack.BlockPackIds {
-			destinationParentSubShelfId := movedBlockPack.DestinationParentSubShelfId
-
 			input = append(input, inputs.BulkUpdateBlockPackInput{
 				Id: blockPackId,
 				PartialUpdateInput: inputs.PartialUpdateInput[inputs.UpdateBlockPackInput]{
 					Values: inputs.UpdateBlockPackInput{
-						ParentSubShelfId: &destinationParentSubShelfId,
+						ParentSubShelfId: &movedBlockPack.DestinationParentSubShelfId,
 					},
 				},
 			})

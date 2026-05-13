@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
 	exceptions "notezy-backend/app/exceptions"
@@ -160,11 +161,19 @@ func (r *BlockPackRepository) CheckPermissionAndGetOneWithOwnerIdById(
 ) (*uuid.UUID, *schemas.BlockPack, *exceptions.Exception) { // we should also return the owner id for the block groups and blocks
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
+	subQuery := parsedOptions.DB.Session(&gorm.Session{NewDB: true}).
+		Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = ss.root_shelf_id").
+		Where("user_id = ? AND permission IN ?", userId, allowedPermissions)
 	query := parsedOptions.DB.Model(&schemas.BlockPack{}).
 		Select("\"BlockPackTable\".*, owner_uts.user_id AS owner_id").
+		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
 		// inner join the owner's user to shelves table to extract owner's id
+		// note that this should be attach AFTER we have join the SubShelfTable of ss
+		// so we can't use PassPermissionCheck scope
 		Joins("INNER JOIN \"UsersToShelvesTable\" owner_uts ON ss.root_shelf_id = owner_uts.root_shelf_id AND owner_uts.permission = 'Owner'").
-		Scopes(r.blockPackScope.PassPermissionCheck(id, userId, allowedPermissions)).
+		Where("\"BlockPackTable\".id = ? AND EXISTS (?)", id, subQuery).
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockPackScope.IncludePreloads(preloads)).
 		Clauses(clause.Locking{Strength: "SHARE"})
@@ -193,11 +202,19 @@ func (r *BlockPackRepository) CheckPermissionsAndGetManyWithOwnerIdsByIds(
 ) ([]uuid.UUID, []schemas.BlockPack, *exceptions.Exception) { // we should also return the owner id for the block groups and blocks
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
+	subQuery := parsedOptions.DB.Session(&gorm.Session{NewDB: true}).
+		Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = ss.root_shelf_id").
+		Where("user_id = ? AND permission IN ?", userId, allowedPermissions)
 	query := parsedOptions.DB.Model(&schemas.BlockPack{}).
 		Select("\"BlockPackTable\".*, owner_uts.user_id AS owner_id").
+		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
 		// inner join the owner's user to shelves table to extract owner's id
+		// note that this should be attach AFTER we have join the SubShelfTable of ss
+		// so we can't use PassPermissionChecks scope
 		Joins("INNER JOIN \"UsersToShelvesTable\" owner_uts ON ss.root_shelf_id = owner_uts.root_shelf_id AND owner_uts.permission = 'Owner'").
-		Scopes(r.blockPackScope.PassPermissionChecks(ids, userId, allowedPermissions)).
+		Where("\"BlockPackTable\".id IN ? AND EXISTS (?)", ids, subQuery).
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockPackScope.IncludePreloads(preloads)).
 		Clauses(clause.Locking{Strength: "SHARE"})
@@ -298,6 +315,7 @@ func (r *BlockPackRepository) CreateOneBySubShelfId(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -382,6 +400,7 @@ func (r *BlockPackRepository) BulkCreateManyBySubShelfIds(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -456,6 +475,7 @@ func (r *BlockPackRepository) UpdateOneById(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
@@ -601,6 +621,7 @@ func (r *BlockPackRepository) BulkUpdateManyByIds(
 
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
 			return exceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}

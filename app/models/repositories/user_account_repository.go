@@ -35,6 +35,7 @@ func (r *UserAccountRepository) GetOneByUserId(
 	var userAccount schemas.UserAccount
 	result := parsedOptions.DB.Table(schemas.UserAccount{}.TableName()).
 		Where("user_id = ?", userId).
+		Clauses(clause.Locking{Strength: "SHARE"}).
 		First(&userAccount)
 	if err := result.Error; err != nil {
 		return nil, exceptions.UserAccount.NotFound().WithOrigin(err)

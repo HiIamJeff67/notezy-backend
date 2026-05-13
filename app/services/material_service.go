@@ -269,7 +269,7 @@ func (s *MaterialService) CreateTextbookMaterial(
 		return nil, exceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
-	tx := s.db.WithContext(ctx).Begin()
+	db := s.db.WithContext(ctx)
 
 	newMaterialId := uuid.New()
 	newContentKey := s.storage.GetKey(
@@ -287,10 +287,9 @@ func (s *MaterialService) CreateTextbookMaterial(
 			Type:       enums.MaterialType_Textbook,
 			ContentKey: newContentKey,
 		},
-		options.WithDB(tx),
+		options.WithDB(db),
 	)
 	if exception != nil {
-		tx.Rollback()
 		return nil, exception
 	}
 
@@ -298,24 +297,17 @@ func (s *MaterialService) CreateTextbookMaterial(
 
 	object, exception := s.storage.NewObject(newContentKey, newContentFile, zeroSize)
 	if exception != nil {
-		tx.Rollback()
 		return nil, exception
 	}
 
 	exception = s.storage.PutObjectByKey(ctx, newContentKey, object)
 	if exception != nil {
-		tx.Rollback()
 		return nil, exception
 	}
 
 	downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, newContentKey, nil)
 	if exception != nil {
 		return nil, exception
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		tx.Rollback()
-		return nil, exceptions.Material.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.CreateTextbookMaterialResDto{
@@ -332,7 +324,7 @@ func (s *MaterialService) CreateNotebookMaterial(
 		return nil, exceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
-	tx := s.db.WithContext(ctx).Begin()
+	db := s.db.WithContext(ctx)
 
 	newMaterialId := uuid.New()
 	newContentKey := s.storage.GetKey(
@@ -350,10 +342,9 @@ func (s *MaterialService) CreateNotebookMaterial(
 			Type:       enums.MaterialType_Notebook,
 			ContentKey: newContentKey,
 		},
-		options.WithDB(tx),
+		options.WithDB(db),
 	)
 	if exception != nil {
-		tx.Rollback()
 		return nil, exception
 	}
 
@@ -361,24 +352,17 @@ func (s *MaterialService) CreateNotebookMaterial(
 
 	object, exception := s.storage.NewObject(newContentKey, newContentFile, zeroSize)
 	if exception != nil {
-		tx.Rollback()
 		return nil, exception
 	}
 
 	exception = s.storage.PutObjectByKey(ctx, newContentKey, object)
 	if exception != nil {
-		tx.Rollback()
 		return nil, exception
 	}
 
 	downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, newContentKey, nil)
 	if exception != nil {
 		return nil, exception
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		tx.Rollback()
-		return nil, exceptions.Material.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.CreateNotebookMaterialResDto{

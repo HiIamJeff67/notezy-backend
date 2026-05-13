@@ -24,7 +24,9 @@ func NewRootShelfScope() RootShelfScopeInterface {
 
 func (sc *RootShelfScope) PassPermissionCheck(id uuid.UUID, userId uuid.UUID, permissions []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		subQuery := db.Model(&schemas.UsersToShelves{}).
+		// Use gorm.DB.Session to build a fresh statement for the subquery to avoid inheriting outer query clauses (especially in UPDATE/DELETE).
+		subQuery := db.Session(&gorm.Session{NewDB: true}).
+			Model(&schemas.UsersToShelves{}).
 			Select("1").
 			Where("root_shelf_id = \"RootShelfTable\".id AND user_id = ? AND permission IN ?", userId, permissions)
 		return db.Where("id = ? AND EXISTS (?)", id, subQuery)
@@ -33,7 +35,9 @@ func (sc *RootShelfScope) PassPermissionCheck(id uuid.UUID, userId uuid.UUID, pe
 
 func (sc *RootShelfScope) PassPermissionChecks(ids []uuid.UUID, userId uuid.UUID, permissions []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		subQuery := db.Model(&schemas.UsersToShelves{}).
+		// Use gorm.DB.Session to build a fresh statement for the subquery to avoid inheriting outer query clauses (especially in UPDATE/DELETE).
+		subQuery := db.Session(&gorm.Session{NewDB: true}).
+			Model(&schemas.UsersToShelves{}).
 			Select("1").
 			Where("root_shelf_id = \"RootShelfTable\".id AND user_id = ? AND permission IN ?", userId, permissions)
 		return db.Where("id IN ? AND EXISTS (?)", ids, subQuery)

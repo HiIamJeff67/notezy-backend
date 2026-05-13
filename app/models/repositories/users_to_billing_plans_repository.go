@@ -14,6 +14,12 @@ import (
 )
 
 type UsersToBillingPlansRepositoryInterface interface {
+	GetOnyById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.UsersToBillingPlans, *exceptions.Exception)
+	GetAllByUserId(userId uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.UsersToBillingPlans, *exceptions.Exception)
+	CreateOne(userId uuid.UUID, input inputs.CreateUsersToBillingPlansInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
+	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateUsersToBillingPlansInput, opts ...options.RepositoryOptions) (*schemas.UsersToBillingPlans, *exceptions.Exception)
+	DeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
+	DeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 }
 
 type UsersToBillingPlansRepository struct{}
@@ -30,6 +36,7 @@ func (r *UsersToBillingPlansRepository) GetOnyById(
 	var usersToBillingPlans schemas.UsersToBillingPlans
 	result := parsedOptions.DB.Table(schemas.UsersToBillingPlans{}.TableName()).
 		Where("id = ? and user_id = ?", id, userId).
+		Clauses(clause.Locking{Strength: "SHARE"}).
 		First(&usersToBillingPlans)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.UsersToBillingPlans.NotFound().WithOrigin(result.Error)},

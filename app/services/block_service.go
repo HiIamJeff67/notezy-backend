@@ -177,6 +177,9 @@ func (s *BlockService) GetMyBlocksByBlockGroupId(
 		Where("block_group_id = ?", reqDto.Param.BlockGroupId).
 		Find(&blocks)
 	if err := result.Error; err != nil || len(blocks) == 0 {
+		if err := db.Commit().Error; err != nil {
+			return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
+		}
 		return &dtos.GetMyBlocksByBlockGroupIdResDto{
 			RawArborizedEditableBlock: dtos.RawArborizedEditableBlock{},
 		}, nil
@@ -577,6 +580,7 @@ func (s *BlockService) UpdateMyBlockById(
 		} else {
 			_, err := blocknote.ParseProps(block.Type.String(), *reqDto.Body.Values.Props)
 			if err != nil {
+				tx.Rollback()
 				return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 			}
 			rawPropsJson := datatypes.JSON(*reqDto.Body.Values.Props)
@@ -595,6 +599,7 @@ func (s *BlockService) UpdateMyBlockById(
 			case '[':
 				var list blocknote.InlineContentList
 				if err := json.Unmarshal(trimContent, &list); err != nil {
+					tx.Rollback()
 					return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 				}
 				rawContentJson := datatypes.JSON(*reqDto.Body.Values.Content)
@@ -602,11 +607,13 @@ func (s *BlockService) UpdateMyBlockById(
 			case '{':
 				var table blocknote.TableContent
 				if err := json.Unmarshal(trimContent, &table); err != nil {
+					tx.Rollback()
 					return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 				}
 				rawContentJson := datatypes.JSON(*reqDto.Body.Values.Content)
 				updateInput.Values.Content = &rawContentJson
 			default:
+				tx.Rollback()
 				return nil, exceptions.Block.InvalidDto().WithOrigin(errors.New("invalid content format: must be array or object"))
 			}
 		}
@@ -635,6 +642,11 @@ func (s *BlockService) UpdateMyBlockById(
 	if exception != nil && !exceptions.CommonlyCompare(exception, exceptions.BlockGroup.NoChanges(), false) {
 		tx.Rollback()
 		return nil, exception
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.UpdateMyBlockByIdResDto{
@@ -855,6 +867,7 @@ func (s *BlockService) UpdateMyBlocksByIds(
 	}
 
 	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
 		return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
 	}
 
