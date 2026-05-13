@@ -163,6 +163,7 @@ type InsertBlockGroupAndItsBlocksByBlockPackIdReqDto struct {
 		},
 		struct {
 			BlockPackId            uuid.UUID              `json:"blockPackId" validate:"required"`
+			BlockGroupId           *uuid.UUID             `json:"blockGroupId" validate:"omitnil"` // support create block group in client side
 			PrevBlockGroupId       *uuid.UUID             `json:"prevBlockGroupId" validate:"omitnil"`
 			ArborizedEditableBlock ArborizedEditableBlock `json:"arborizedEditableBlock" validate:"required"`
 		},

@@ -80,6 +80,7 @@ type CreateBlockPackReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
+			Id                  *uuid.UUID                    `json:"id" validate:"omitnil"`
 			ParentSubShelfId    uuid.UUID                     `json:"parentSubShelfId" validate:"required"`
 			Name                string                        `json:"name" validate:"required,min=1,max=128"`
 			Icon                *enums.SupportedBlockPackIcon `json:"icon" validate:"omitnil,issupportedblockpackicon"`
@@ -99,6 +100,7 @@ type CreateBlockPacksReqDto struct {
 		},
 		struct {
 			CreatedBlockPacks []struct {
+				Id                  *uuid.UUID                    `json:"id" validate:"omitnil"`
 				ParentSubShelfId    uuid.UUID                     `json:"parentSubShelfId" validate:"required"`
 				Name                string                        `json:"name" validate:"required,min=1,max=128"`
 				Icon                *enums.SupportedBlockPackIcon `json:"icon" validate:"omitnil,issupportedblockpackicon"`

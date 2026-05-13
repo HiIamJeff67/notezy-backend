@@ -14,7 +14,7 @@ const (
 	MaterialType_Textbook      MaterialType = "Textbook"      // BlockNote(HTML or Markdown)
 	MaterialType_Notebook      MaterialType = "Notebook"      // BlockNote(Markdown)
 	MaterialType_LearningCards MaterialType = "LearningCards" // BlockNote(HTML)
-	MaterialType_Workflow      MaterialType = "Workflow"      // ReactFlow(Canva)
+	MaterialType_Workflow      MaterialType = "Workflow"      // ReactFlow(Canvas)
 )
 
 var AllMaterialTypes = []MaterialType{

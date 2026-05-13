@@ -17,6 +17,7 @@ func configureStaticRoutes() {
 		{
 			// configure avatars
 			globalImagesGroup.GET("/avatars/:id", func(ctx *gin.Context) {
+				ctx.Header("Cross-Origin-Resource-Policy", "cross-origin")
 				avatarId := ctx.Param("id")
 				filePath := fmt.Sprintf("./global/images/avatars/userAvatar%s.png", avatarId)
 

@@ -5,6 +5,7 @@ import (
 	controllers "notezy-backend/app/controllers"
 	models "notezy-backend/app/models"
 	repositories "notezy-backend/app/models/repositories"
+	"notezy-backend/app/models/scopes"
 	services "notezy-backend/app/services"
 	storages "notezy-backend/app/storages"
 )
@@ -15,8 +16,8 @@ type MaterialModule struct {
 }
 
 func NewMaterialModule() *MaterialModule {
-	subShelfRepository := repositories.NewSubShelfRepository()
-	materialRepository := repositories.NewMaterialRepository()
+	subShelfRepository := repositories.NewSubShelfRepository(scopes.NewSubShelfScope())
+	materialRepository := repositories.NewMaterialRepository(scopes.NewMaterialScope())
 
 	materialService := services.NewMaterialService(
 		models.NotezyDB,

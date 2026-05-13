@@ -13,8 +13,9 @@ import (
 	resolvers "notezy-backend/app/graphql/resolvers"
 	models "notezy-backend/app/models"
 	repositories "notezy-backend/app/models/repositories"
+	scopes "notezy-backend/app/models/scopes"
 	services "notezy-backend/app/services"
-	"notezy-backend/shared/types"
+	types "notezy-backend/shared/types"
 )
 
 func GraphQLHandler() gin.HandlerFunc {
@@ -29,7 +30,7 @@ func GraphQLHandler() gin.HandlerFunc {
 		),
 		services.NewRootShelfService(
 			models.NotezyDB,
-			repositories.NewRootShelfRepository(),
+			repositories.NewRootShelfRepository(scopes.NewRootShelfScope()),
 		),
 	)
 

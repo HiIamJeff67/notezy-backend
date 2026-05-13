@@ -2,11 +2,8 @@ package services
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	pg "github.com/lib/pq"
 	"gorm.io/gorm"
 
@@ -220,6 +217,7 @@ func (s *BlockPackService) CreateBlockPack(
 		reqDto.Body.ParentSubShelfId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateBlockPackInput{
+			Id:                  reqDto.Body.Id,
 			Name:                reqDto.Body.Name,
 			Icon:                reqDto.Body.Icon,
 			HeaderBackgroundURL: reqDto.Body.HeaderBackgroundURL,
@@ -248,6 +246,7 @@ func (s *BlockPackService) CreateBlockPacks(
 	input := make([]inputs.BulkCreateBlockPackInput, len(reqDto.Body.CreatedBlockPacks))
 	for index, createdBlockPack := range reqDto.Body.CreatedBlockPacks {
 		input[index] = inputs.BulkCreateBlockPackInput{
+			Id:                  createdBlockPack.Id,
 			ParentSubShelfId:    createdBlockPack.ParentSubShelfId,
 			Name:                createdBlockPack.Name,
 			Icon:                createdBlockPack.Icon,
@@ -345,22 +344,6 @@ func (s *BlockPackService) MoveMyBlockPackById(
 
 	db := s.db.WithContext(ctx)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
-
-	if !s.subShelfRepository.HasPermission(
-		reqDto.Body.DestinationParentSubShelfId,
-		reqDto.ContextFields.UserId,
-		allowedPermissions,
-		options.WithDB(db),
-		options.WithOnlyDeleted(types.Ternary_Negative),
-	) {
-		return nil, exceptions.Shelf.NoPermission("get the destination sub shelf")
-	}
-
 	_, exception := s.blockPackRepository.UpdateOneById(
 		reqDto.Body.BlockPackId,
 		reqDto.ContextFields.UserId,
@@ -389,22 +372,6 @@ func (s *BlockPackService) MoveMyBlockPacksByIds(
 	}
 
 	db := s.db.WithContext(ctx)
-
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
-
-	if !s.subShelfRepository.HasPermission(
-		reqDto.Body.DestinationParentSubShelfId,
-		reqDto.ContextFields.UserId,
-		allowedPermissions,
-		options.WithDB(db),
-		options.WithOnlyDeleted(types.Ternary_Negative),
-	) {
-		return nil, exceptions.Shelf.NoPermission("get the destination sub shelf")
-	}
 
 	input := make([]inputs.BulkUpdateBlockPackInput, len(reqDto.Body.BlockPackIds))
 	for index, blockPackId := range reqDto.Body.BlockPackIds {
@@ -440,84 +407,27 @@ func (s *BlockPackService) BatchMoveMyBlockPacksByIds(
 
 	db := s.db.WithContext(ctx)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
-
-	var blockPackIds []uuid.UUID
-	destinationParentSubShelfIds := make([]uuid.UUID, len(reqDto.Body.MovedBlockPacks))
-	for index, movedBlockPack := range reqDto.Body.MovedBlockPacks {
-		blockPackIds = append(blockPackIds, movedBlockPack.BlockPackIds...)
-		destinationParentSubShelfIds[index] = movedBlockPack.DestinationParentSubShelfId
-	}
-
-	isBlockPackValid := make(map[uuid.UUID]bool)
-	validBlockPacks, exception := s.blockPackRepository.CheckPermissionsAndGetManyByIds(
-		blockPackIds,
-		reqDto.ContextFields.UserId,
-		nil,
-		allowedPermissions,
-		options.WithDB(db),
-		options.WithOnlyDeleted(types.Ternary_Negative),
-	)
-	if exception != nil {
-		return nil, exception
-	}
-	for _, validBlockPack := range validBlockPacks {
-		isBlockPackValid[validBlockPack.Id] = true
-	}
-
-	isDestinationParentSubShelfValid := make(map[uuid.UUID]bool)
-	validDestinationParentSubShelves, exception := s.subShelfRepository.CheckPermissionsAndGetManyByIds(
-		destinationParentSubShelfIds,
-		reqDto.ContextFields.UserId,
-		nil,
-		allowedPermissions,
-		options.WithDB(db),
-		options.WithOnlyDeleted(types.Ternary_Negative),
-	)
-	if exception != nil {
-		return nil, exception
-	}
-	for _, validDestinationParentSubShelf := range validDestinationParentSubShelves {
-		isDestinationParentSubShelfValid[validDestinationParentSubShelf.Id] = true
-	}
-
-	var valuePlaceholders []string
-	var valueArgs []interface{}
+	input := make([]inputs.BulkUpdateBlockPackInput, 0)
 	for _, movedBlockPack := range reqDto.Body.MovedBlockPacks {
-		if !isDestinationParentSubShelfValid[movedBlockPack.DestinationParentSubShelfId] {
-			continue
-		}
-
 		for _, blockPackId := range movedBlockPack.BlockPackIds {
-			if !isBlockPackValid[blockPackId] {
-				continue
-			}
+			destinationParentSubShelfId := movedBlockPack.DestinationParentSubShelfId
 
-			valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid)")
-			valueArgs = append(valueArgs,
-				blockPackId,
-				movedBlockPack.DestinationParentSubShelfId,
-			)
+			input = append(input, inputs.BulkUpdateBlockPackInput{
+				Id: blockPackId,
+				PartialUpdateInput: inputs.PartialUpdateInput[inputs.UpdateBlockPackInput]{
+					Values: inputs.UpdateBlockPackInput{
+						ParentSubShelfId: &destinationParentSubShelfId,
+					},
+				},
+			})
 		}
 	}
 
-	sql := fmt.Sprintf(`
-		UPDATE "BlockPackTable" AS bp
-		SET
-			parent_sub_shelf_id = COALESCE(bp.parent_sub_shelf_id, v.dest_parent_sub_shelf_id::uuid),
-			updated_at = NOW()
-		FROM (VALUES %s) AS v(id, dest_parent_sub_shelf_id)
-		WHERE bp.id = v.id::uuid AND bp.deleted_at IS NULL
-	`, strings.Join(valuePlaceholders, ","))
-	result := s.db.Exec(sql, valueArgs...)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
-	}); exception != nil {
+	if exception := s.blockPackRepository.BulkUpdateManyByIds(
+		reqDto.ContextFields.UserId,
+		input,
+		options.WithDB(db),
+	); exception != nil {
 		return nil, exception
 	}
 

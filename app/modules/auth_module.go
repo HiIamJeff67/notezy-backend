@@ -2,10 +2,11 @@ package modules
 
 import (
 	binders "notezy-backend/app/binders"
-	"notezy-backend/app/configs"
+	configs "notezy-backend/app/configs"
 	controllers "notezy-backend/app/controllers"
 	models "notezy-backend/app/models"
 	repositories "notezy-backend/app/models/repositories"
+	scopes "notezy-backend/app/models/scopes"
 	services "notezy-backend/app/services"
 )
 
@@ -19,7 +20,7 @@ func NewAuthModule() *AuthModule {
 	userInfoRepository := repositories.NewUserInfoRepository()
 	userAccountRepository := repositories.NewUserAccountRepository()
 	userSettingRepository := repositories.NewUserSettingRepository()
-	rootShelfRepository := repositories.NewRootShelfRepository()
+	rootShelfRepository := repositories.NewRootShelfRepository(scopes.NewRootShelfScope())
 	oauthService := services.NewOAuthService(configs.OAuthGoogleConfig)
 
 	authService := services.NewAuthService(

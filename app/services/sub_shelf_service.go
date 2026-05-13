@@ -278,6 +278,7 @@ func (s *SubShelfService) CreateSubShelfByRootShelfId(
 		reqDto.Body.RootShelfId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateSubShelfInput{
+			Id:             reqDto.Body.Id,
 			Name:           reqDto.Body.Name,
 			PrevSubShelfId: reqDto.Body.PrevSubShelfId,
 		},
@@ -305,6 +306,7 @@ func (s *SubShelfService) CreateSubShelvesByRootShelfIds(
 	input := make([]inputs.BulkCreateSubShelfInput, len(reqDto.Body.CreatedSubShelves))
 	for index, createdSubShelf := range reqDto.Body.CreatedSubShelves {
 		input[index] = inputs.BulkCreateSubShelfInput{
+			Id:             createdSubShelf.Id,
 			RootShelfId:    createdSubShelf.RootShelfId,
 			PrevSubShelfId: createdSubShelf.PrevSubShelfId,
 			Name:           createdSubShelf.Name,
@@ -401,7 +403,7 @@ func (s *SubShelfService) MoveMySubShelf(
 		return nil, exceptions.Shelf.NoChanges()
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
 
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
@@ -414,14 +416,14 @@ func (s *SubShelfService) MoveMySubShelf(
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
-	if exception != nil {
+	if exception = exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
+		{First: from.RootShelfId != reqDto.Body.SourceRootShelfId, Second: exceptions.Shelf.NotFound()},
+	}); exception != nil {
+		tx.Rollback()
 		return nil, exception
-	}
-	if from.RootShelfId != reqDto.Body.SourceRootShelfId {
-		return nil, exceptions.Shelf.NotFound()
 	}
 
 	if reqDto.Body.DestinationSubShelfId != nil {
@@ -430,26 +432,27 @@ func (s *SubShelfService) MoveMySubShelf(
 			reqDto.ContextFields.UserId,
 			nil,
 			allowedPermissions,
-			options.WithDB(db),
+			options.WithTransactionDB(tx),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 		)
-		if exception != nil {
+		if exception = exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
+			{First: to.RootShelfId != reqDto.Body.DestinationRootShelfId, Second: exceptions.Shelf.NotFound()},
+			{
+				First: len(from.Path)+len(to.Path) > int(constants.MaxSubShelvesOfRootShelf),
+				Second: exceptions.Shelf.MaximumDepthExceeded(
+					int32(len(from.Path)+len(to.Path)),
+					constants.MaxSubShelvesOfRootShelf,
+				),
+			},
+		}); exception != nil {
+			tx.Rollback()
 			return nil, exception
-		}
-		if to.RootShelfId != reqDto.Body.DestinationRootShelfId {
-			return nil, exceptions.Shelf.NotFound()
-		}
-
-		if len(from.Path)+len(to.Path) > int(constants.MaxSubShelvesOfRootShelf) {
-			return nil, exceptions.Shelf.MaximumDepthExceeded(
-				int32(len(from.Path)+len(to.Path)),
-				constants.MaxSubShelvesOfRootShelf,
-			)
 		}
 
 		// check if to.Path contain any from.Id, if it's true, then it means the user is trying to move the sub shelf to its child
 		for _, parent := range to.Path {
 			if parent == reqDto.Body.SourceSubShelfId {
+				tx.Rollback()
 				return nil, exceptions.Shelf.InsertParentIntoItsChildren(
 					reqDto.Body.DestinationSubShelfId,
 					reqDto.Body.SourceSubShelfId,
@@ -458,7 +461,7 @@ func (s *SubShelfService) MoveMySubShelf(
 		}
 
 		to.Path = append(to.Path, to.Id)
-		result := db.Exec(`
+		result := tx.Exec(`
 			UPDATE "SubShelfTable" 
 			SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW() 
 			WHERE id = ? AND deleted_at IS NULL`,
@@ -466,18 +469,25 @@ func (s *SubShelfService) MoveMySubShelf(
 			reqDto.Body.SourceSubShelfId,
 		)
 		if err := result.Error; err != nil {
+			tx.Rollback()
 			return nil, exceptions.Shelf.FailedToUpdate().WithOrigin(err)
 		}
 	} else {
-		result := db.Exec(`
+		result := tx.Exec(`
 			UPDATE "SubShelfTable" 
 			SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW() 
 			WHERE id = ? AND deleted_at IS NULL`,
 			reqDto.Body.DestinationRootShelfId, nil, pg.Array([]uuid.UUID{}), reqDto.Body.SourceSubShelfId,
 		)
 		if err := result.Error; err != nil {
+			tx.Rollback()
 			return nil, exceptions.Shelf.FailedToUpdate().WithOrigin(err)
 		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.MoveMySubShelfResDto{
@@ -492,7 +502,7 @@ func (s *SubShelfService) MoveMySubShelves(
 		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
 
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
@@ -505,14 +515,16 @@ func (s *SubShelfService) MoveMySubShelves(
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 	for _, from := range froms {
 		if from.RootShelfId != reqDto.Body.SourceRootShelfId {
+			tx.Rollback()
 			return nil, exceptions.Shelf.NotFound()
 		}
 	}
@@ -523,15 +535,16 @@ func (s *SubShelfService) MoveMySubShelves(
 			reqDto.ContextFields.UserId,
 			nil,
 			allowedPermissions,
-			options.WithDB(db),
+			options.WithTransactionDB(tx),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 		)
-		if exception != nil {
+		if exception = exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
+			{First: to.RootShelfId != reqDto.Body.DestinationRootShelfId, Second: exceptions.Shelf.NotFound()},
+		}); exception != nil {
+			tx.Rollback()
 			return nil, exception
 		}
-		if to.RootShelfId != reqDto.Body.DestinationRootShelfId {
-			return nil, exceptions.Shelf.NotFound()
-		}
+
 		if to.Path == nil {
 			to.Path = []uuid.UUID{}
 		}
@@ -570,13 +583,14 @@ func (s *SubShelfService) MoveMySubShelves(
 		}
 
 		to.Path = append(to.Path, to.Id)
-		result := db.Exec(`
+		result := tx.Exec(`
 			UPDATE "SubShelfTable" 
 			SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW() 
 			WHERE id IN ? AND deleted_at IS NULL`,
 			reqDto.Body.DestinationRootShelfId, reqDto.Body.DestinationSubShelfId, pg.Array(to.Path), validSourceSubShelfIds,
 		)
 		if err := result.Error; err != nil {
+			tx.Rollback()
 			return nil, exceptions.Shelf.FailedToUpdate().WithOrigin(err)
 		}
 	} else {
@@ -585,15 +599,21 @@ func (s *SubShelfService) MoveMySubShelves(
 			validSourceSubShelfIds = append(validSourceSubShelfIds, from.Id)
 		}
 
-		result := db.Exec(`
+		result := tx.Exec(`
 			UPDATE "SubShelfTable" 
 			SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW() 
 			WHERE id IN ? AND deleted_at IS NULL`,
 			reqDto.Body.DestinationRootShelfId, nil, pg.Array([]uuid.UUID{}), validSourceSubShelfIds,
 		)
 		if err := result.Error; err != nil {
+			tx.Rollback()
 			return nil, exceptions.Shelf.FailedToUpdate().WithOrigin(err)
 		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.MoveMySubShelvesResDto{
@@ -608,7 +628,7 @@ func (s *SubShelfService) BatchMoveMySubShelves(
 		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
 
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
@@ -650,10 +670,11 @@ func (s *SubShelfService) BatchMoveMySubShelves(
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 	for _, validRootShelf := range validRootShelves {
@@ -666,10 +687,11 @@ func (s *SubShelfService) BatchMoveMySubShelves(
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 	for _, validSourceSubShelf := range validSourceSubShelves {
@@ -684,10 +706,11 @@ func (s *SubShelfService) BatchMoveMySubShelves(
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 	for _, validDestinationSubShelf := range validDestinationSubShelves {
@@ -772,12 +795,18 @@ func (s *SubShelfService) BatchMoveMySubShelves(
 		FROM (VALUES %s) AS v(source_id, dest_sub_shelf_id, dest_root_shelf_id, path)
 		WHERE s.id = v.source_id::uuid AND s.deleted_at IS NULL
 	`, strings.Join(valuePlaceholders, ","))
-	result := s.db.Exec(sql, valueArgs...)
+	result := tx.Exec(sql, valueArgs...)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
 	}); exception != nil {
+		tx.Rollback()
 		return nil, exception
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.BatchMoveMySubShelvesResDto{

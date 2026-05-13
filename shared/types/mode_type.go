@@ -1,9 +1,9 @@
 package types
 
-type ModeType string
+type Environment string
 
 const (
-	ModeType_Development ModeType = "development"
-	ModeType_Production  ModeType = "production"
-	ModeType_Test        ModeType = "test"
+	Environment_Development Environment = "development"
+	Environment_Production  Environment = "production"
+	Environment_Test        Environment = "test"
 )

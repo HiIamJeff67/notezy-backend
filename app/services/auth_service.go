@@ -121,14 +121,13 @@ func (s *AuthService) Register(
 		return nil, exceptions.Auth.InvalidDto().WithOrigin(err)
 	}
 
-	// Start transaction
-	tx := s.db.WithContext(ctx).Begin()
-
+	// put the hash part outside the transaction to decrease its blocking time from heavily hashing operation
 	hashedPassword, exception := s.hashPassword(reqDto.Body.Password)
 	if exception != nil {
-		tx.Rollback()
 		return nil, exception
 	}
+
+	tx := s.db.WithContext(ctx).Begin()
 
 	createUserInput := inputs.CreateUserInput{
 		Name:        reqDto.Body.Name,
@@ -146,7 +145,6 @@ func (s *AuthService) Register(
 		return nil, exception
 	}
 
-	// Generate accessToken
 	newAccessToken, exception := tokens.GenerateAccessToken(
 		createUserInput.Name,
 		createUserInput.Email,
@@ -156,7 +154,6 @@ func (s *AuthService) Register(
 		tx.Rollback()
 		return nil, exception
 	}
-	// Generate refreshToken
 	newRefreshToken, exception := tokens.GenerateRefreshToken(
 		createUserInput.Name,
 		createUserInput.Email,
@@ -166,18 +163,15 @@ func (s *AuthService) Register(
 		tx.Rollback()
 		return nil, exception
 	}
-	// Generate csrfToken
 	newCSRFToken, exception := tokens.GenerateCSRFToken()
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
 
-	// Generate authCode and its expiration time
 	authCode := util.GenerateAuthCode()
 	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
 
-	// Update user refresh token
 	newUser, exception := s.userRepository.UpdateOneById(
 		*newUserId,
 		inputs.PartialUpdateUserInput{
@@ -193,7 +187,6 @@ func (s *AuthService) Register(
 		return nil, exception
 	}
 
-	// Create user info
 	_, exception = s.userInfoRepository.CreateOneByUserId(
 		*newUserId,
 		inputs.CreateUserInfoInput{},
@@ -204,7 +197,6 @@ func (s *AuthService) Register(
 		return nil, exception
 	}
 
-	// Create user account
 	_, exception = s.userAccountRepository.CreateOneByUserId(
 		*newUserId,
 		inputs.CreateUserAccountInput{
@@ -218,7 +210,6 @@ func (s *AuthService) Register(
 		return nil, exception
 	}
 
-	// Create user setting
 	_, exception = s.userSettingRepository.CreateOneByUserId(
 		*newUserId,
 		inputs.CreateUserSettingInput{},
@@ -229,13 +220,11 @@ func (s *AuthService) Register(
 		return nil, exception
 	}
 
-	// Commit transaction
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return nil, exceptions.User.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	// Create user data cache
 	exception = caches.SetUserDataCache(
 		newUser.Name,
 		caches.UserDataCache{
@@ -261,7 +250,6 @@ func (s *AuthService) Register(
 		exception.Log()
 	}
 
-	// send the welcome email to the registered user
 	if exception = emails.AsyncSendWelcomeEmail(
 		newUser.Email,
 		newUser.Name,
@@ -289,25 +277,21 @@ func (s *AuthService) RegisterViaGoogle(
 		return nil, exceptions.Auth.InvalidDto().WithOrigin(err)
 	}
 
-	// Start transaction
-	tx := s.db.WithContext(ctx).Begin()
-
 	userInfo, exception := s.oauthService.GetGoogleUserInfo(ctx, reqDto.Body.AuthorizationCode)
 	if exception != nil {
-		tx.Rollback()
 		return nil, exception
 	}
 
 	fakePassword, exception := s.getOAuthFakePassword()
 	if exception != nil {
-		tx.Rollback()
 		return nil, exception
 	}
 	hashedPassword, exception := s.hashPassword(fakePassword)
 	if exception != nil {
-		tx.Rollback()
 		return nil, exception
 	}
+
+	tx := s.db.WithContext(ctx).Begin()
 
 	// try to generate fake name at most 5 times
 	var newUserId *uuid.UUID
@@ -343,7 +327,6 @@ func (s *AuthService) RegisterViaGoogle(
 		return nil, exception
 	}
 
-	// Generate accessToken
 	newAccessToken, exception := tokens.GenerateAccessToken(
 		createUserInput.Name,
 		createUserInput.Email,
@@ -353,7 +336,6 @@ func (s *AuthService) RegisterViaGoogle(
 		tx.Rollback()
 		return nil, exception
 	}
-	// Generate refreshToken
 	newRefreshToken, exception := tokens.GenerateRefreshToken(
 		createUserInput.Name,
 		createUserInput.Email,
@@ -363,18 +345,15 @@ func (s *AuthService) RegisterViaGoogle(
 		tx.Rollback()
 		return nil, exception
 	}
-	// Generate csrfToken
 	newCSRFToken, exception := tokens.GenerateCSRFToken()
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
 
-	// Generate authCode and its expiration time
 	authCode := util.GenerateAuthCode()
 	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
 
-	// Update user refresh token
 	newUser, exception := s.userRepository.UpdateOneById(
 		*newUserId,
 		inputs.PartialUpdateUserInput{
@@ -390,7 +369,6 @@ func (s *AuthService) RegisterViaGoogle(
 		return nil, exception
 	}
 
-	// Create user info
 	_, exception = s.userInfoRepository.CreateOneByUserId(
 		*newUserId,
 		inputs.CreateUserInfoInput{},
@@ -401,7 +379,6 @@ func (s *AuthService) RegisterViaGoogle(
 		return nil, exception
 	}
 
-	// Create user account
 	_, exception = s.userAccountRepository.CreateOneByUserId(
 		*newUserId,
 		inputs.CreateUserAccountInput{
@@ -416,7 +393,6 @@ func (s *AuthService) RegisterViaGoogle(
 		return nil, exception
 	}
 
-	// Create user setting
 	_, exception = s.userSettingRepository.CreateOneByUserId(
 		*newUserId,
 		inputs.CreateUserSettingInput{},
@@ -427,13 +403,6 @@ func (s *AuthService) RegisterViaGoogle(
 		return nil, exception
 	}
 
-	// Commit transaction
-	if err := tx.Commit().Error; err != nil {
-		tx.Rollback()
-		return nil, exceptions.User.FailedToCommitTransaction().WithOrigin(err)
-	}
-
-	// Create user data cache
 	exception = caches.SetUserDataCache(
 		newUser.Name,
 		caches.UserDataCache{
@@ -457,6 +426,11 @@ func (s *AuthService) RegisterViaGoogle(
 	)
 	if exception != nil {
 		exception.Log()
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.User.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	// send the welcome email to the registered user
@@ -487,7 +461,7 @@ func (s *AuthService) Login(
 		return nil, exceptions.User.InvalidInput().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
 
 	// otherwise, the user should provide their account and password
 	var user *schemas.User = nil
@@ -496,7 +470,7 @@ func (s *AuthService) Login(
 		if user, exception = s.userRepository.GetOneByName(
 			reqDto.Body.Account,
 			nil,
-			options.WithTransactionDB(db),
+			options.WithTransactionDB(tx),
 		); exception != nil {
 			return nil, exception
 		}
@@ -504,7 +478,7 @@ func (s *AuthService) Login(
 		if user, exception = s.userRepository.GetOneByEmail(
 			reqDto.Body.Account,
 			nil,
-			options.WithTransactionDB(db),
+			options.WithTransactionDB(tx),
 		); exception != nil {
 			return nil, exception
 		}
@@ -536,7 +510,7 @@ func (s *AuthService) Login(
 				},
 				SetNull: nil,
 			},
-			options.WithTransactionDB(db),
+			options.WithTransactionDB(tx),
 		)
 		if exception != nil {
 			return nil, exception
@@ -609,7 +583,7 @@ func (s *AuthService) Login(
 			CreatedAt          time.Time        `gorm:"created_at"`
 			UpdatedAt          time.Time        `gorm:"updated_at"`
 		}{}
-		err := db.Raw(usersql.GetUserDataCacheByIdSQL, user.Id).
+		err := tx.Raw(usersql.GetUserDataCacheByIdSQL, user.Id).
 			Row().
 			Scan(
 				&output.Id,
@@ -674,10 +648,15 @@ func (s *AuthService) Login(
 			},
 			SetNull: nil,
 		},
-		options.WithTransactionDB(db),
+		options.WithTransactionDB(tx),
 	)
 	if exception != nil {
 		return nil, exception
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.User.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.LoginResDto{
@@ -700,20 +679,19 @@ func (s *AuthService) LoginViaGoogle(
 		return nil, exceptions.Auth.InvalidDto().WithOrigin(err)
 	}
 
-	// Start transaction
-	db := s.db.WithContext(ctx)
-
 	userInfo, exception := s.oauthService.GetGoogleUserInfo(ctx, reqDto.Body.AuthorizationCode)
 	if exception != nil {
 		return nil, exception
 	}
+
+	tx := s.db.WithContext(ctx).Begin()
 
 	// otherwise, the user should provide their account and password
 	var user *schemas.User = nil
 	if user, exception = s.userRepository.GetOneByEmail(
 		userInfo.Email,
 		[]schemas.UserRelation{schemas.UserRelation_UserAccount},
-		options.WithTransactionDB(db),
+		options.WithTransactionDB(tx),
 	); exception != nil {
 		return nil, exception
 	}
@@ -742,7 +720,7 @@ func (s *AuthService) LoginViaGoogle(
 				},
 				SetNull: nil,
 			},
-			options.WithTransactionDB(db),
+			options.WithTransactionDB(tx),
 		)
 		if exception != nil {
 			return nil, exception
@@ -815,7 +793,7 @@ func (s *AuthService) LoginViaGoogle(
 			CreatedAt          time.Time        `gorm:"created_at"`
 			UpdatedAt          time.Time        `gorm:"updated_at"`
 		}{}
-		err := db.Raw(usersql.GetUserDataCacheByIdSQL, user.Id).
+		err := tx.Raw(usersql.GetUserDataCacheByIdSQL, user.Id).
 			Row().
 			Scan(
 				&output.Id,
@@ -880,10 +858,15 @@ func (s *AuthService) LoginViaGoogle(
 			},
 			SetNull: nil,
 		},
-		options.WithTransactionDB(db),
+		options.WithTransactionDB(tx),
 	)
 	if exception != nil {
 		return nil, exception
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.User.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.LoginViaGoogleResDto{
@@ -1052,7 +1035,7 @@ func (s *AuthService) ForgetPassword(
 		return nil, exceptions.User.InvalidInput().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
 
 	var user *schemas.User = nil
 	var exception *exceptions.Exception = nil
@@ -1061,7 +1044,7 @@ func (s *AuthService) ForgetPassword(
 		if user, exception = s.userRepository.GetOneByEmail(
 			reqDto.Body.Account,
 			preloads,
-			options.WithDB(db),
+			options.WithTransactionDB(tx),
 		); exception != nil {
 			return nil, exception
 		}
@@ -1069,7 +1052,7 @@ func (s *AuthService) ForgetPassword(
 		if user, exception = s.userRepository.GetOneByName(
 			reqDto.Body.Account,
 			preloads,
-			options.WithDB(db),
+			options.WithTransactionDB(tx),
 		); exception != nil {
 			return nil, exception
 		}
@@ -1140,10 +1123,15 @@ func (s *AuthService) ForgetPassword(
 			},
 			SetNull: nil,
 		},
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 	)
 	if exception != nil {
 		return nil, exception
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.User.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.ForgetPasswordResDto{

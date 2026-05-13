@@ -11,7 +11,7 @@ var AccessTokenCookieHandler = NewCookieHandler(
 	types.ValidCookieName_AccessToken,     // name
 	"/",                                   // path
 	constants.ExpirationTimeOfAccessToken, // duration
-	constants.Mode == types.ModeType_Production, // secure (set to true only if is on the production)
+	constants.CurrentEnvironment == types.Environment_Production, // secure (set to true only if is on the production)
 	true,                 // httpOnly
 	http.SameSiteLaxMode, // sameSite
 )

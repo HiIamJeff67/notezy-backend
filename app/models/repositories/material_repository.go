@@ -11,8 +11,10 @@ import (
 	inputs "notezy-backend/app/models/inputs"
 	schemas "notezy-backend/app/models/schemas"
 	enums "notezy-backend/app/models/schemas/enums"
+	scopes "notezy-backend/app/models/scopes"
 	options "notezy-backend/app/options"
 	util "notezy-backend/app/util"
+	array "notezy-backend/shared/lib/array"
 	types "notezy-backend/shared/types"
 )
 
@@ -32,10 +34,14 @@ type MaterialRepositoryInterface interface {
 	HardDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 }
 
-type MaterialRepository struct{}
+type MaterialRepository struct {
+	materialScope scopes.MaterialScopeInterface
+}
 
-func NewMaterialRepository() MaterialRepositoryInterface {
-	return &MaterialRepository{}
+func NewMaterialRepository(materialScope scopes.MaterialScopeInterface) MaterialRepositoryInterface {
+	return &MaterialRepository{
+		materialScope: materialScope,
+	}
 }
 
 func (r *MaterialRepository) HasPermission(
@@ -46,32 +52,20 @@ func (r *MaterialRepository) HasPermission(
 ) bool {
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
+	var marker int
+	result := parsedOptions.DB.
+		Model(&schemas.Material{}).
 		Select("1").
-		Where("root_shelf_id = ss.root_shelf_id").
-		Where("user_id = ? AND permission IN ?",
-			userId, allowedPermissions,
-		)
-	query := parsedOptions.DB.Model(&schemas.Material{}).
-		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
-		Where("\"MaterialTable\".id = ? AND EXISTS (?)",
-			id, subQuery,
-		)
-
-	switch parsedOptions.OnlyDeleted {
-	case types.Ternary_Positive:
-		query = query.Where("\"MaterialTable\".deleted_at IS NOT NULL")
-	case types.Ternary_Negative:
-		query = query.Where("\"MaterialTable\".deleted_at IS NULL")
-	}
-
-	var count int64 = 0
-	result := query.Count(&count)
+		Scopes(r.materialScope.PassPermissionCheck(id, userId, allowedPermissions)).
+		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Clauses(clause.Locking{Strength: "SHARE"}).
+		Limit(1).
+		Scan(&marker)
 	if err := result.Error; err != nil {
 		return false
 	}
 
-	return count > 0
+	return marker == 1
 }
 
 func (r *MaterialRepository) HavePermissions(
@@ -82,32 +76,19 @@ func (r *MaterialRepository) HavePermissions(
 ) bool {
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
-		Select("1").
-		Where("root_shelf_id = ss.root_shelf_id").
-		Where("user_id = ? AND permission IN ?",
-			userId, allowedPermissions,
-		)
-	query := parsedOptions.DB.Model(&schemas.Material{}).
-		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
-		Where("\"MaterialTable\".id IN ? EXISTS (?)",
-			ids, subQuery,
-		)
-
-	switch parsedOptions.OnlyDeleted {
-	case types.Ternary_Positive:
-		query = query.Where("\"MaterialTable\".deleted_at IS NOT NULL")
-	case types.Ternary_Negative:
-		query = query.Where("\"MaterialTable\".deleted_at IS NULL")
-	}
-
-	var count int64 = 0
-	result := query.Count(&count)
+	var permittedIds []uuid.UUID
+	result := parsedOptions.DB.
+		Model(&schemas.Material{}).
+		Select("DISTINCT \"MaterialTable\".id").
+		Scopes(r.materialScope.PassPermissionChecks(ids, userId, allowedPermissions)).
+		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Clauses(clause.Locking{Strength: "SHARE"}).
+		Find(&permittedIds)
 	if err := result.Error; err != nil {
 		return false
 	}
 
-	return count > 0
+	return array.GetDistinctCount(ids) == array.GetDistinctCount(permittedIds)
 }
 
 func (r *MaterialRepository) CheckPermissionAndGetOneById(
@@ -119,36 +100,17 @@ func (r *MaterialRepository) CheckPermissionAndGetOneById(
 ) (*schemas.Material, *exceptions.Exception) {
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
-		Select("1").
-		Where("root_shelf_id = ss.root_shelf_id").
-		Where("user_id = ? AND permission IN ?",
-			userId, allowedPermissions,
-		)
-	query := parsedOptions.DB.Model(&schemas.Material{}).
-		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
-		Where("\"MaterialTable\".id = ? AND EXISTS (?)",
-			id, subQuery,
-		)
-
-	switch parsedOptions.OnlyDeleted {
-	case types.Ternary_Positive:
-		query = query.Where("\"MaterialTable\".deleted_at IS NOT NULL")
-	case types.Ternary_Negative:
-		query = query.Where("\"MaterialTable\".deleted_at IS NULL")
-	}
-
-	if len(preloads) > 0 {
-		for _, preload := range preloads {
-			query = query.Preload(string(preload))
-		}
-	}
-
 	var material schemas.Material
-	result := query.First(&material)
+	result := parsedOptions.DB.
+		Model(&schemas.Material{}).
+		Scopes(r.materialScope.PassPermissionCheck(id, userId, allowedPermissions)).
+		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Scopes(r.materialScope.IncludePreloads(preloads)).
+		Clauses(clause.Locking{Strength: "SHARE"}).
+		First(&material)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Material.NotFound().WithOrigin(result.Error)},
-		{First: material.Id == uuid.Nil, Second: exceptions.BlockPack.NotFound()},
+		{First: material.Id == uuid.Nil, Second: exceptions.Material.NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -165,38 +127,17 @@ func (r *MaterialRepository) CheckPermissionsAndGetManyByIds(
 ) ([]schemas.Material, *exceptions.Exception) {
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
-		Select("1").
-		Where("root_shelf_id = ss.root_shelf_id").
-		Where("user_id = ? AND permission IN ?",
-			userId, allowedPermissions,
-		)
-	query := parsedOptions.DB.Model(&schemas.Material{}).
-		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
-		Where("\"MaterialTable\".id IN ? EXISTS (?)",
-			ids, subQuery,
-		)
-
-	switch parsedOptions.OnlyDeleted {
-	case types.Ternary_Positive:
-		query = query.Where("\"MaterialTable\".deleted_at IS NOT NULL")
-	case types.Ternary_Neutral:
-		break
-	case types.Ternary_Negative:
-		query = query.Where("\"MaterialTable\".deleted_at IS NULL")
-	}
-
-	if len(preloads) > 0 {
-		for _, preload := range preloads {
-			query = query.Preload(string(preload))
-		}
-	}
-
 	var materials []schemas.Material
-	result := query.Find(&materials)
+	result := parsedOptions.DB.
+		Model(&schemas.Material{}).
+		Scopes(r.materialScope.PassPermissionChecks(ids, userId, allowedPermissions)).
+		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Scopes(r.materialScope.IncludePreloads(preloads)).
+		Clauses(clause.Locking{Strength: "SHARE"}).
+		Find(&materials)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Material.NotFound().WithOrigin(result.Error)},
-		{First: len(materials) == 0, Second: exceptions.BlockPack.NotFound()},
+		{First: len(materials) == 0, Second: exceptions.Material.NotFound()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -234,21 +175,29 @@ func (r *MaterialRepository) CreateOneBySubShelfId(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
+	shouldStartTransaction := !parsedOptions.IsTransactionStarted && !parsedOptions.SkipPermissionCheck
+	if shouldStartTransaction {
+		parsedOptions.DB = parsedOptions.DB.Begin()
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
 	}
 
-	subShelfRepository := NewSubShelfRepository()
+	if !parsedOptions.SkipPermissionCheck {
+		allowedPermissions := []enums.AccessControlPermission{
+			enums.AccessControlPermission_Owner,
+			enums.AccessControlPermission_Admin,
+			enums.AccessControlPermission_Write,
+		}
 
-	if !subShelfRepository.HasPermission(
-		subShelfId,
-		userId,
-		allowedPermissions,
-		opts...,
-	) {
-		return nil, exceptions.Shelf.NoPermission("create a material under this shelf")
+		subShelfRepository := NewSubShelfRepository(scopes.NewSubShelfScope())
+
+		if !subShelfRepository.HasPermission(
+			subShelfId,
+			userId,
+			allowedPermissions,
+			opts...,
+		) {
+			return nil, exceptions.Shelf.NoPermission("create a material under this shelf")
+		}
 	}
 
 	var newMaterial schemas.Material
@@ -268,6 +217,12 @@ func (r *MaterialRepository) CreateOneBySubShelfId(
 		return nil, exception
 	}
 
+	if shouldStartTransaction {
+		if err := parsedOptions.DB.Commit().Error; err != nil {
+			return nil, exceptions.Material.FailedToCommitTransaction().WithOrigin(err)
+		}
+	}
+
 	return &newMaterial.Id, nil
 }
 
@@ -280,6 +235,12 @@ func (r *MaterialRepository) UpdateOneById(
 ) (*schemas.Material, *exceptions.Exception) {
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	shouldStartTransaction := !parsedOptions.IsTransactionStarted
+	if shouldStartTransaction {
+		parsedOptions.DB = parsedOptions.DB.Begin()
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+	}
 
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
@@ -313,7 +274,7 @@ func (r *MaterialRepository) UpdateOneById(
 
 	// if the root shelf id is required to be updated in the database
 	if input.Values.ParentSubShelfId != nil && (input.SetNull == nil || !(*input.SetNull)["ParentSubShelfId"]) {
-		subShelfRepository := NewSubShelfRepository()
+		subShelfRepository := NewSubShelfRepository(scopes.NewSubShelfScope())
 		// check if the user has the enough permission to the destination shelf
 		if !subShelfRepository.HasPermission(
 			*input.Values.ParentSubShelfId,
@@ -345,6 +306,12 @@ func (r *MaterialRepository) UpdateOneById(
 		return nil, exception
 	}
 
+	if shouldStartTransaction {
+		if err := parsedOptions.DB.Commit().Error; err != nil {
+			return nil, exceptions.Material.FailedToCommitTransaction().WithOrigin(err)
+		}
+	}
+
 	return &updates, nil
 }
 
@@ -356,26 +323,21 @@ func (r *MaterialRepository) RestoreSoftDeletedOneById(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	if !parsedOptions.SkipPermissionCheck {
-		allowedPermissions := []enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-		}
-
-		if !r.HasPermission(
-			id,
-			userId,
-			allowedPermissions,
-			opts...,
-		) {
-			return nil, exceptions.Material.NoPermission("restore a deleted material")
-		}
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
 	}
 
 	var restoredMaterial schemas.Material
-	result := parsedOptions.DB.Model(&restoredMaterial).
+	query := parsedOptions.DB.Model(&restoredMaterial).
+		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted))
+	if !parsedOptions.SkipPermissionCheck {
+		query = query.Scopes(r.materialScope.PassPermissionCheck(id, userId, allowedPermissions))
+	}
+
+	result := query.
 		Clauses(clause.Returning{}).
-		Where("id = ? AND deleted_at IS NOT NULL", id).
+		Where("\"MaterialTable\".id = ?", id).
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Material.FailedToUpdate().WithOrigin(result.Error)},
@@ -394,32 +356,26 @@ func (r *MaterialRepository) RestoreSoftDeletedManyByIds(
 	opts ...options.RepositoryOptions,
 ) ([]schemas.Material, *exceptions.Exception) {
 	if len(ids) == 0 {
-		return nil, exceptions.BlockGroup.NoChanges()
+		return nil, exceptions.Material.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
-
-	if !parsedOptions.SkipPermissionCheck {
-		allowedPermissions := []enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-		}
-
-		if !r.HavePermissions(
-			ids,
-			userId,
-			allowedPermissions,
-			opts...,
-		) {
-			return nil, exceptions.Material.NoPermission("restore deleted materials")
-		}
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
 	}
 
 	var restoredMaterials []schemas.Material
-	result := parsedOptions.DB.Model(restoredMaterials).
+	query := parsedOptions.DB.Model(&restoredMaterials).
+		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted))
+	if !parsedOptions.SkipPermissionCheck {
+		query = query.Scopes(r.materialScope.PassPermissionChecks(ids, userId, allowedPermissions))
+	}
+
+	result := query.
 		Clauses(clause.Returning{}).
-		Where("id IN ? AND deleted_at IS NOT NULL", ids).
+		Where("\"MaterialTable\".id IN ?", ids).
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Material.FailedToUpdate().WithOrigin(result.Error)},
@@ -445,17 +401,10 @@ func (r *MaterialRepository) SoftDeleteOneById(
 		enums.AccessControlPermission_Admin,
 	}
 
-	if !r.HasPermission(
-		id,
-		userId,
-		allowedPermissions,
-		opts...,
-	) {
-		return exceptions.Material.NoPermission("soft delete a material")
-	}
-
 	result := parsedOptions.DB.Model(&schemas.Material{}).
-		Where("id = ? AND deleted_at IS NULL", id).
+		Scopes(r.materialScope.PassPermissionCheck(id, userId, allowedPermissions)).
+		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Where("\"MaterialTable\".id = ?", id).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Material.FailedToUpdate().WithOrigin(result.Error)},
@@ -473,7 +422,7 @@ func (r *MaterialRepository) SoftDeleteManyByIds(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(ids) == 0 {
-		return exceptions.BlockGroup.NoChanges()
+		return exceptions.Material.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
@@ -484,17 +433,10 @@ func (r *MaterialRepository) SoftDeleteManyByIds(
 		enums.AccessControlPermission_Admin,
 	}
 
-	if !r.HavePermissions(
-		ids,
-		userId,
-		allowedPermissions,
-		opts...,
-	) {
-		return exceptions.Material.NoPermission("soft delete")
-	}
-
 	result := parsedOptions.DB.Model(&schemas.Material{}).
-		Where("id IN ? AND deleted_at IS NULL", ids).
+		Scopes(r.materialScope.PassPermissionChecks(ids, userId, allowedPermissions)).
+		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Where("\"MaterialTable\".id IN ?", ids).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Material.FailedToUpdate().WithOrigin(result.Error)},
@@ -519,17 +461,10 @@ func (r *MaterialRepository) HardDeleteOneById(
 		enums.AccessControlPermission_Admin,
 	}
 
-	if !r.HasPermission(
-		id,
-		userId,
-		allowedPermissions,
-		opts...,
-	) {
-		return exceptions.Material.NoPermission("hard delete a material")
-	}
-
 	result := parsedOptions.DB.Model(&schemas.Material{}).
-		Where("id = ? AND deleted_at IS NOT NULL", id).
+		Scopes(r.materialScope.PassPermissionCheck(id, userId, allowedPermissions)).
+		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Where("\"MaterialTable\".id = ?", id).
 		Delete(&schemas.Material{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Material.FailedToDelete().WithOrigin(result.Error)},
@@ -547,7 +482,7 @@ func (r *MaterialRepository) HardDeleteManyByIds(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(ids) == 0 {
-		return exceptions.BlockGroup.NoChanges()
+		return exceptions.Material.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
@@ -558,17 +493,10 @@ func (r *MaterialRepository) HardDeleteManyByIds(
 		enums.AccessControlPermission_Admin,
 	}
 
-	if !r.HavePermissions(
-		ids,
-		userId,
-		allowedPermissions,
-		opts...,
-	) {
-		return exceptions.Material.NoPermission("hard delete")
-	}
-
 	result := parsedOptions.DB.Model(&schemas.Material{}).
-		Where("id IN ? AND deleted_at IS NOT NULL", ids).
+		Scopes(r.materialScope.PassPermissionChecks(ids, userId, allowedPermissions)).
+		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Where("\"MaterialTable\".id IN ?", ids).
 		Delete(&schemas.Material{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Material.FailedToDelete().WithOrigin(result.Error)},

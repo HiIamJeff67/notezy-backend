@@ -25,7 +25,7 @@ func (rrfn RefreshableResponseFieldName) String() string {
 type EmbedAuthorizedResponseFieldName string
 
 const (
-	EmbeddedAuthorizedResponseFieldName_PublicId EmbedAuthorizedResponseFieldName = "embeddedPublicId"
+	EmbeddedAuthorizedResponseFieldName_PublicId EmbedAuthorizedResponseFieldName = "publicId"
 )
 
 func (earfn EmbedAuthorizedResponseFieldName) String() string {

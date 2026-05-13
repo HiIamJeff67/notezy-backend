@@ -42,14 +42,14 @@ func (UserAccount) TableName() string {
 
 /* ============================== Trigger Hook ============================== */
 
-func (ua *UserAccount) BeforeCreate(db *gorm.DB) error {
+func (ua *UserAccount) BeforeCreate(tx *gorm.DB) error {
 	if ua.BlockAuthCodeUntil.IsZero() {
 		ua.BlockAuthCodeUntil = time.Now().Add(-10 * time.Minute)
 	}
 	return nil
 }
 
-func (ua *UserAccount) BeforeUpdate(db *gorm.DB) error {
+func (ua *UserAccount) BeforeUpdate(tx *gorm.DB) error {
 	if ua.AuthCode != "" && ua.BlockAuthCodeUntil.After(time.Now()) {
 		return fmt.Errorf("cannot send auth code until: %v", ua.BlockAuthCodeUntil)
 	}

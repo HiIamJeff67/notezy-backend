@@ -56,10 +56,11 @@ func WithBatchSize(batchSize int) RepositoryOptions {
 
 func GetDefaultOptions() RepositoryOptionFields {
 	return RepositoryOptionFields{
-		DB:                  models.NotezyDB,
-		OnlyDeleted:         types.Ternary_Neutral,
-		SkipPermissionCheck: false,
-		BatchSize:           1000,
+		DB:                   models.NotezyDB,
+		OnlyDeleted:          types.Ternary_Neutral,
+		SkipPermissionCheck:  false,
+		BatchSize:            1000,
+		IsTransactionStarted: false,
 	}
 }
 

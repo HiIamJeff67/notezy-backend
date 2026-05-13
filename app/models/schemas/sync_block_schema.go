@@ -20,7 +20,7 @@ type SyncBlock struct {
 	UpdatedAt     time.Time       `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt     time.Time       `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 
-	Parent     *SyncBlock     `json:"parent" gorm:"foreignKey:ParentBlockId; references:Id; contraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	Parent     *SyncBlock     `json:"parent" gorm:"foreignKey:ParentBlockId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	Children   []SyncBlock    `json:"children" gorm:"foreignKey:ParentBlockId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	BlockGroup SyncBlockGroup `json:"blockGroup" gorm:"foreignKey:BlockGroupId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }

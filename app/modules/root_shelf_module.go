@@ -5,6 +5,7 @@ import (
 	controllers "notezy-backend/app/controllers"
 	models "notezy-backend/app/models"
 	repositories "notezy-backend/app/models/repositories"
+	scopes "notezy-backend/app/models/scopes"
 	services "notezy-backend/app/services"
 )
 
@@ -14,7 +15,7 @@ type RootShelfModule struct {
 }
 
 func NewRootShelfModule() *RootShelfModule {
-	rootShelfRepository := repositories.NewRootShelfRepository()
+	rootShelfRepository := repositories.NewRootShelfRepository(scopes.NewRootShelfScope())
 
 	rootShelfService := services.NewRootShelfService(
 		models.NotezyDB,

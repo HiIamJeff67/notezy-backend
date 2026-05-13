@@ -39,5 +39,3 @@ type MaterialRelation types.RelationName
 const (
 	MaterialRelation_ParentSubShelf MaterialRelation = "ParentSubShelf"
 )
-
-/* ============================== Relative Type Conversion ============================== */

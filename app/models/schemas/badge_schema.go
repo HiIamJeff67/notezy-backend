@@ -52,7 +52,7 @@ func (b *Badge) ToPublicBadge() *gqlmodels.PublicBadge {
 
 /* ============================== Trigger Hook ============================== */
 
-func (b *Badge) BeforeCreate(db *gorm.DB) error {
+func (b *Badge) BeforeCreate(tx *gorm.DB) error {
 	if b.PublicId == "" {
 		b.PublicId = uuid.NewString()
 	}

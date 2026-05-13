@@ -22,7 +22,3 @@ type UserSetting struct {
 func (UserSetting) TableName() string {
 	return types.TableName_UserSettingTable.String()
 }
-
-/* ============================== Relative Type Conversion ============================== */
-// note that there's no type like PublicUserSetting,
-// since the userSetting shouldn't be public

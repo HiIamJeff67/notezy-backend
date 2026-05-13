@@ -5,6 +5,7 @@ import (
 	controllers "notezy-backend/app/controllers"
 	models "notezy-backend/app/models"
 	repositories "notezy-backend/app/models/repositories"
+	"notezy-backend/app/models/scopes"
 	services "notezy-backend/app/services"
 )
 
@@ -14,8 +15,8 @@ type BlockPackModule struct {
 }
 
 func NewBlockPackModule() *BlockPackModule {
-	subShelfRepository := repositories.NewSubShelfRepository()
-	blockPackRepository := repositories.NewBlockPackRepository()
+	subShelfRepository := repositories.NewSubShelfRepository(scopes.NewSubShelfScope())
+	blockPackRepository := repositories.NewBlockPackRepository(scopes.NewBlockPackScope())
 
 	blockPackService := services.NewBlockPackService(
 		models.NotezyDB,

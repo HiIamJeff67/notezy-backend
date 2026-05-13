@@ -5,6 +5,7 @@ import (
 	controllers "notezy-backend/app/controllers"
 	models "notezy-backend/app/models"
 	repositories "notezy-backend/app/models/repositories"
+	scopes "notezy-backend/app/models/scopes"
 	services "notezy-backend/app/services"
 	storages "notezy-backend/app/storages"
 )
@@ -15,10 +16,10 @@ type SubShelfModule struct {
 }
 
 func NewSubShelfModule() *SubShelfModule {
-	subShelfRepository := repositories.NewSubShelfRepository()
-	rootShelfRepository := repositories.NewRootShelfRepository()
-	materialRepository := repositories.NewMaterialRepository()
-	blockPackRepository := repositories.NewBlockPackRepository()
+	subShelfRepository := repositories.NewSubShelfRepository(scopes.NewSubShelfScope())
+	rootShelfRepository := repositories.NewRootShelfRepository(scopes.NewRootShelfScope())
+	materialRepository := repositories.NewMaterialRepository(scopes.NewMaterialScope())
+	blockPackRepository := repositories.NewBlockPackRepository(scopes.NewBlockPackScope())
 
 	subShelfService := services.NewSubShelfService(
 		models.NotezyDB,

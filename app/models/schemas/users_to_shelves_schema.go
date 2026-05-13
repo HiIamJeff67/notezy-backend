@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 
 	enums "notezy-backend/app/models/schemas/enums"
 	types "notezy-backend/shared/types"
@@ -33,3 +34,16 @@ const (
 	UsersToShelvesRelation_User      UsersToShelvesRelation = "User"
 	UsersToShelvesRelation_RootShelf UsersToShelvesRelation = "RootShelf"
 )
+
+/* ============================== Trigger Hooks ============================== */
+
+func (uts *UsersToShelves) AfterSave(tx *gorm.DB) error {
+	if uts.Permission == "Owner" {
+		err := tx.Model(&RootShelf{Id: uts.RootShelfId}).
+			Update("owner_id", uts.UserId).Error
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

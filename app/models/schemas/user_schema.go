@@ -81,7 +81,7 @@ func (u *User) ToPublicUser() *gqlmodels.PublicUser {
 
 /* ============================== Trigger Hook ============================== */
 
-func (u *User) BeforeCreate(db *gorm.DB) error {
+func (u *User) BeforeCreate(tx *gorm.DB) error {
 	if u.BlockLoginUntil.IsZero() {
 		// just to make the new user can login
 		u.BlockLoginUntil = time.Now().Add(-10 * time.Minute)
@@ -92,8 +92,8 @@ func (u *User) BeforeCreate(db *gorm.DB) error {
 	return nil
 }
 
-func (u *User) BeforeUpdate(db *gorm.DB) error {
-	if db.Statement.Changed("Status") {
+func (u *User) BeforeUpdate(tx *gorm.DB) error {
+	if tx.Statement.Changed("Status") {
 		u.PrevStatus = u.Status
 	}
 	return nil

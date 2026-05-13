@@ -9,7 +9,7 @@ import (
 
 // we may name other search cursors based on their functionality.
 // ex. ImprovableSearchCursor, AlphaNameSearchCursor, TimeBasedSearchCursor,
-//     ClosestSeachCursor, ReachableSearchCursor, etc.
+//     ClosestSearchCursor, ReachableSearchCursor, etc.
 
 // This `SearchCursor` is a general and common search cursor used as default in most of the search scenarios
 type SearchCursor[SearchCursorFieldType any] struct {

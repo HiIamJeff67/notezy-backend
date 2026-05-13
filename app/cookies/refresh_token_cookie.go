@@ -11,7 +11,7 @@ var RefreshTokenCookieHandler = NewCookieHandler(
 	types.ValidCookieName_RefreshToken,     // name
 	"/",                                    // path
 	constants.ExpirationTimeOfRefreshToken, // duration
-	constants.Mode == types.ModeType_Production, // secure (set to true only if is on the production)
+	constants.CurrentEnvironment == types.Environment_Production, // secure (set to true only if is on the production)
 	true,                    // httpOnly
 	http.SameSiteStrictMode, // sameSite
 )

@@ -134,6 +134,7 @@ func (s *RootShelfService) CreateRootShelf(
 	newRootShelfId, exception := s.rootShelfRepository.CreateOneByOwnerId(
 		reqDto.ContextFields.UserId,
 		inputs.CreateRootShelfInput{
+			Id:             reqDto.Body.Id,
 			Name:           reqDto.Body.Name,
 			LastAnalyzedAt: &now,
 		},
@@ -163,6 +164,7 @@ func (s *RootShelfService) CreateRootShelves(
 	input := make([]inputs.CreateRootShelfInput, len(reqDto.Body.CreatedRootShelves))
 	for index, createdRootShelf := range reqDto.Body.CreatedRootShelves {
 		input[index] = inputs.CreateRootShelfInput{
+			Id:             createdRootShelf.Id,
 			Name:           createdRootShelf.Name,
 			LastAnalyzedAt: &now,
 		}

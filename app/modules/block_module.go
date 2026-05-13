@@ -6,6 +6,7 @@ import (
 	controllers "notezy-backend/app/controllers"
 	models "notezy-backend/app/models"
 	repositories "notezy-backend/app/models/repositories"
+	scopes "notezy-backend/app/models/scopes"
 	services "notezy-backend/app/services"
 )
 
@@ -15,9 +16,10 @@ type BlockModule struct {
 }
 
 func NewBlockModule() *BlockModule {
-	blockPackRepository := repositories.NewBlockPackRepository()
-	blockGroupRepository := repositories.NewBlockGroupRepository()
-	blockRepository := repositories.NewBlockRepository()
+	blockGroupScope := scopes.NewBlockGroupScope()
+	blockPackRepository := repositories.NewBlockPackRepository(scopes.NewBlockPackScope())
+	blockGroupRepository := repositories.NewBlockGroupRepository(blockGroupScope)
+	blockRepository := repositories.NewBlockRepository(scopes.NewBlockScope())
 	editableBlockAdapter := adapters.NewEditableBlockAdapter()
 
 	blockService := services.NewBlockService(

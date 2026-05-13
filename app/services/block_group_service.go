@@ -106,7 +106,7 @@ func (s *BlockGroupService) GetMyBlockGroupAndItsBlocksById(
 		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
 
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
@@ -120,15 +120,16 @@ func (s *BlockGroupService) GetMyBlockGroupAndItsBlocksById(
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
 	var blocks []schemas.Block
-	result := db.Model(&schemas.Block{}).
+	result := tx.Model(&schemas.Block{}).
 		Where("block_group_id = ?", blockGroup.Id).
 		Find(&blocks)
 	if err := result.Error; err != nil || len(blocks) == 0 {
@@ -150,6 +151,7 @@ func (s *BlockGroupService) GetMyBlockGroupAndItsBlocksById(
 	for _, block := range blocks {
 		if block.ParentBlockId == nil {
 			if root != nil {
+				tx.Rollback()
 				// duplicate root block detected
 				return nil, exceptions.BlockGroup.RepeatedRootBlockInBlockGroupDetected(blocks[0].BlockGroupId, block.Id)
 			}
@@ -174,6 +176,7 @@ func (s *BlockGroupService) GetMyBlockGroupAndItsBlocksById(
 
 	rawArborizedBlock, exception := s.editableBlockAdapter.ArborizeRawToRaw(root, childrenMap)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
@@ -188,6 +191,11 @@ func (s *BlockGroupService) GetMyBlockGroupAndItsBlocksById(
 			CreatedAt:                 blockGroup.CreatedAt,
 			RawArborizedEditableBlock: dtos.RawArborizedEditableBlock{},
 		}, nil
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.User.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.GetMyBlockGroupAndItsBlocksByIdResDto{
@@ -209,7 +217,7 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByIds(
 		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
 
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
@@ -223,10 +231,11 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByIds(
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
@@ -248,7 +257,7 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByIds(
 	}
 
 	var flattenedBlocks []schemas.Block
-	result := db.Model(&schemas.Block{}).
+	result := tx.Model(&schemas.Block{}).
 		Where("block_group_id IN ?", blockGroupIds).
 		Find(&flattenedBlocks)
 	if err := result.Error; err != nil || len(flattenedBlocks) == 0 {
@@ -273,6 +282,7 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByIds(
 		for _, block := range blocks {
 			if block.ParentBlockId == nil {
 				if root != nil {
+					tx.Rollback()
 					// duplicate root block detected
 					return nil, exceptions.BlockGroup.RepeatedRootBlockInBlockGroupDetected(blocks[0].BlockGroupId, block.Id)
 				}
@@ -297,6 +307,7 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByIds(
 
 		rawArborizedBlock, exception := s.editableBlockAdapter.ArborizeRawToRaw(root, childrenMap)
 		if exception != nil {
+			tx.Rollback()
 			return nil, exception
 		}
 
@@ -305,6 +316,11 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByIds(
 		} else {
 			resDto[index].RawArborizedEditableBlock = dtos.RawArborizedEditableBlock{}
 		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.User.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &resDto, nil
@@ -321,7 +337,7 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 		return &dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdResDto{}, nil
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
 
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
@@ -335,13 +351,15 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
 		if exceptions.CommonlyCompare(exceptions.BlockGroup.NotFound(), exception, false) {
+			tx.Rollback()
 			return &dtos.GetMyBlockGroupsAndTheirBlocksByBlockPackIdResDto{}, nil
 		}
+		tx.Rollback()
 		return nil, exception
 	}
 
@@ -356,6 +374,7 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 
 		if blockGroup.PrevBlockGroupId == nil {
 			if firstBlockGroup != nil {
+				tx.Rollback()
 				return nil, exceptions.BlockGroup.DuplicateBlockGroupsWithSamePrevBlockGroupId(reqDto.Param.BlockPackId)
 			}
 			firstBlockGroup = blockGroup
@@ -365,6 +384,7 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 	}
 
 	if firstBlockGroup == nil && len(blockGroups) > 0 {
+		tx.Rollback()
 		return nil, exceptions.BlockPack.NoRootBlockGroupInBlockPack(reqDto.Param.BlockPackId)
 	}
 
@@ -391,7 +411,7 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 	}
 
 	var flattenedBlocks []schemas.Block
-	result := db.Model(&schemas.Block{}).
+	result := tx.Model(&schemas.Block{}).
 		Where("block_group_id IN ? AND deleted_at IS NULL", blockGroupIds).
 		Find(&flattenedBlocks)
 	if err := result.Error; err != nil || len(flattenedBlocks) == 0 {
@@ -416,6 +436,7 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 		for _, block := range blocks {
 			if block.ParentBlockId == nil {
 				if root != nil {
+					tx.Rollback()
 					// duplicate root block detected
 					return nil, exceptions.BlockGroup.RepeatedRootBlockInBlockGroupDetected(blocks[0].BlockGroupId, block.Id)
 				}
@@ -440,6 +461,7 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 
 		rawArborizedBlock, exception := s.editableBlockAdapter.ArborizeRawToRaw(root, childrenMap)
 		if exception != nil {
+			tx.Rollback()
 			return nil, exception
 		}
 
@@ -448,6 +470,11 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 		} else {
 			resDto[index].RawArborizedEditableBlock = dtos.RawArborizedEditableBlock{}
 		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.User.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &resDto, nil
@@ -637,9 +664,10 @@ func (s *BlockGroupService) InsertBlockGroupAndItsBlocksByBlockPackId(
 		reqDto.Body.BlockPackId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateBlockGroupInput{
+			BlockGroupId:     reqDto.Body.BlockGroupId,
 			PrevBlockGroupId: reqDto.Body.PrevBlockGroupId,
 		},
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -670,7 +698,7 @@ func (s *BlockGroupService) InsertBlockGroupAndItsBlocksByBlockPackId(
 		*newBlockGroupId,
 		reqDto.ContextFields.UserId,
 		input,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 		options.WithBatchSize(constants.MaxBatchCreateBlockSize),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithSkipPermissionCheck(),
@@ -969,7 +997,7 @@ func (s *BlockGroupService) InsertSequentialBlockGroupsAndTheirBlocksByBlockPack
 		reqDto.Body.BlockPackId,
 		reqDto.ContextFields.UserId,
 		createBlockGroupsInput,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -1049,7 +1077,7 @@ func (s *BlockGroupService) InsertSequentialBlockGroupsAndTheirBlocksByBlockPack
 	_, exception = s.blockRepository.CreateManyByBlockGroupIds(
 		reqDto.ContextFields.UserId,
 		createBlocksInputs,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 		options.WithBatchSize(constants.MaxBatchCreateBlockSize),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithSkipPermissionCheck(),
@@ -1097,7 +1125,7 @@ func (s *BlockGroupService) MoveMyBlockGroupById(
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -1132,7 +1160,7 @@ func (s *BlockGroupService) MoveMyBlockGroupById(
 		&movableBlockGroup.Id,
 		reqDto.ContextFields.UserId,
 		nil,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	destinationNextBlockGroup, _ := s.blockGroupRepository.GetOneByPrevBlockGroupId(
@@ -1140,7 +1168,7 @@ func (s *BlockGroupService) MoveMyBlockGroupById(
 		reqDto.Body.DestinationBlockGroupId,
 		reqDto.ContextFields.UserId,
 		nil,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 
@@ -1153,7 +1181,7 @@ func (s *BlockGroupService) MoveMyBlockGroupById(
 			},
 			SetNull: nil,
 		},
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 	); exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -1170,7 +1198,7 @@ func (s *BlockGroupService) MoveMyBlockGroupById(
 					},
 					SetNull: nil,
 				},
-				options.WithDB(tx),
+				options.WithTransactionDB(tx),
 			); exception != nil {
 				tx.Rollback()
 				return nil, exception
@@ -1188,7 +1216,7 @@ func (s *BlockGroupService) MoveMyBlockGroupById(
 				},
 				SetNull: nil,
 			},
-			options.WithDB(tx),
+			options.WithTransactionDB(tx),
 		); exception != nil {
 			tx.Rollback()
 			return nil, exception
@@ -1234,7 +1262,7 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -1311,7 +1339,7 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 		&endBlockGroup.Id,
 		reqDto.ContextFields.UserId,
 		nil,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	// ignore the exception which indicate the destination next block group is not exist
@@ -1320,7 +1348,7 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 		reqDto.Body.DestinationBlockGroupId,
 		reqDto.ContextFields.UserId,
 		nil,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 
@@ -1334,7 +1362,7 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 			},
 			SetNull: nil,
 		},
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 	); exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -1353,7 +1381,7 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 					},
 					SetNull: nil,
 				},
-				options.WithDB(tx),
+				options.WithTransactionDB(tx),
 			); exception != nil {
 				tx.Rollback()
 				return nil, exception
@@ -1372,7 +1400,7 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 				},
 				SetNull: nil,
 			},
-			options.WithDB(tx),
+			options.WithTransactionDB(tx),
 		); exception != nil {
 			tx.Rollback()
 			return nil, exception
@@ -1552,6 +1580,7 @@ func (s *BlockGroupService) BatchMoveMyBlockGroupsByIds(
 
 	valuePlaceholdersStr := strings.Join(valuePlaceholders, ",")
 	if valuePlaceholdersStr == "" {
+		tx.Rollback()
 		return nil, exceptions.BlockGroup.NoChanges()
 	}
 

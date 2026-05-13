@@ -7,5 +7,5 @@ const (
 )
 
 const (
-	Mode types.ModeType = types.ModeType_Development // change the mode type to corresponded environment
+	CurrentEnvironment types.Environment = types.Environment_Development // change the mode type to corresponded environment
 )

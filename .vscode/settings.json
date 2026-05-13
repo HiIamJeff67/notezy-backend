@@ -8,5 +8,6 @@
       "otel-collector-config.dev.yaml",
       "otel-collector-config.yaml"
     ]
-  }
+  },
+  "editor.lineNumbers": "relative"
 }

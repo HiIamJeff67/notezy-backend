@@ -47,7 +47,8 @@ type CreateRootShelfReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			Name string `json:"name" validate:"required,min=1,max=128,isshelfname"`
+			Id   *uuid.UUID `json:"id" validate:"omitnil"`
+			Name string     `json:"name" validate:"required,min=1,max=128,isshelfname"`
 		},
 		any,
 	]
@@ -63,7 +64,8 @@ type CreateRootShelvesReqDto struct {
 		},
 		struct {
 			CreatedRootShelves []struct {
-				Name string `json:"name" validate:"required,min=1,max=128,isshelfname"`
+				Id   *uuid.UUID `json:"id" validate:"omitnil"`
+				Name string     `json:"name" validate:"required,min=1,max=128,isshelfname"`
 			} `json:"insertedRootShelves" validate:"required"`
 		},
 		any,
