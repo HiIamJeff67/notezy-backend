@@ -212,7 +212,7 @@ func (s *BlockService) GetMyBlocksByBlockGroupId(
 		}
 	}
 
-	rawArborizedBlock, exception := s.editableBlockAdapter.ArborizeRawToRaw(root, childrenMap)
+	rawArborizedBlock, _, exception := s.editableBlockAdapter.ArborizeRawToRaw(root, childrenMap)
 	if exception != nil {
 		return nil, exception
 	}
@@ -297,7 +297,7 @@ func (s *BlockService) GetMyBlocksByBlockGroupIds(
 			}
 		}
 
-		rawArborizedBlock, exception := s.editableBlockAdapter.ArborizeRawToRaw(root, childrenMap)
+		rawArborizedBlock, _, exception := s.editableBlockAdapter.ArborizeRawToRaw(root, childrenMap)
 		if exception != nil {
 			return nil, exception
 		}
@@ -392,12 +392,12 @@ func (s *BlockService) InsertBlock(
 		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
-
-	rawFlattenedBlocks, exception := s.editableBlockAdapter.FlattenToRaw(&reqDto.Body.ArborizedEditableBlock)
+	rawFlattenedBlocks, totalSize, exception := s.editableBlockAdapter.FlattenToRaw(&reqDto.Body.ArborizedEditableBlock)
 	if exception != nil {
 		return nil, exception
 	}
+
+	tx := s.db.WithContext(ctx).Begin()
 
 	input := make([]inputs.CreateBlockInput, len(rawFlattenedBlocks))
 	for index, rawFlattenedBlock := range rawFlattenedBlocks {
@@ -414,12 +414,29 @@ func (s *BlockService) InsertBlock(
 		reqDto.Body.BlockGroupId,
 		reqDto.ContextFields.UserId,
 		input,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithBatchSize(constants.MaxBatchCreateBlockSize),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
+	}
+
+	if _, exception = s.blockGroupRepository.IncrementSizeById(
+		reqDto.Body.BlockGroupId,
+		reqDto.ContextFields.UserId,
+		totalSize,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	); exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.InsertBlockResDto{
@@ -434,11 +451,13 @@ func (s *BlockService) InsertBlocks(
 		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
-
 	type ValidateBlockDto struct {
 		ParentBlockId          *uuid.UUID
 		ArborizedEditableBlock dtos.ArborizedEditableBlock
+	}
+	type FlattenedBlocksWithSize struct {
+		Blocks    []dtos.RawFlattenedEditableBlock
+		TotalSize int64
 	}
 	validateBlockDto := make([]ValidateBlockDto, len(reqDto.Body.InsertedBlocks))
 	for index, insertedBlock := range reqDto.Body.InsertedBlocks {
@@ -448,16 +467,19 @@ func (s *BlockService) InsertBlocks(
 		}
 	}
 
-	validateBlockFunc := func(validateBlockDto ValidateBlockDto) ([]dtos.RawFlattenedEditableBlock, error) {
-		rawFlattenedBlocks, exception := s.editableBlockAdapter.FlattenToRaw(&validateBlockDto.ArborizedEditableBlock)
+	validateBlockFunc := func(validateBlockDto ValidateBlockDto) (FlattenedBlocksWithSize, error) {
+		rawFlattenedBlocks, totalSize, exception := s.editableBlockAdapter.FlattenToRaw(&validateBlockDto.ArborizedEditableBlock)
 		if exception != nil {
-			return rawFlattenedBlocks, exception.GetOrigin()
+			return FlattenedBlocksWithSize{}, exception.GetOrigin()
 		}
 
 		if len(rawFlattenedBlocks) > 0 {
 			rawFlattenedBlocks[0].ParentBlockId = validateBlockDto.ParentBlockId
 		}
-		return rawFlattenedBlocks, nil
+		return FlattenedBlocksWithSize{
+			Blocks:    rawFlattenedBlocks,
+			TotalSize: totalSize,
+		}, nil
 	}
 
 	validateBlockResults := concurrency.Execute(
@@ -477,12 +499,13 @@ func (s *BlockService) InsertBlocks(
 		CreatedAt: time.Now(),
 	}
 	var createBlockGroupContentInput []inputs.CreateBlockGroupContentInput
+	sizeDeltaByBlockGroupId := make(map[uuid.UUID]int64)
 	for _, validateResult := range validateBlockResults {
 		if validateResult.Err == nil {
 			resDto.SuccessIndexes = append(resDto.SuccessIndexes, validateResult.Index)
-			blockIds := make([]uuid.UUID, len(validateResult.Data))
-			createBlockInputs := make([]inputs.CreateBlockInput, len(validateResult.Data))
-			for index, rawFlattenedBlock := range validateResult.Data {
+			blockIds := make([]uuid.UUID, len(validateResult.Data.Blocks))
+			createBlockInputs := make([]inputs.CreateBlockInput, len(validateResult.Data.Blocks))
+			for index, rawFlattenedBlock := range validateResult.Data.Blocks {
 				blockIds[index] = rawFlattenedBlock.Id
 				createBlockInputs[index] = inputs.CreateBlockInput{
 					Id:            rawFlattenedBlock.Id,
@@ -499,6 +522,7 @@ func (s *BlockService) InsertBlocks(
 				BlockGroupId: reqDto.Body.InsertedBlocks[validateResult.Index].BlockGroupId,
 				BlockIds:     blockIds,
 			})
+			sizeDeltaByBlockGroupId[reqDto.Body.InsertedBlocks[validateResult.Index].BlockGroupId] += validateResult.Data.TotalSize
 			createBlockGroupContentInput = append(createBlockGroupContentInput, inputs.CreateBlockGroupContentInput{
 				BlockGroupId: reqDto.Body.InsertedBlocks[validateResult.Index].BlockGroupId,
 				Blocks:       createBlockInputs,
@@ -513,16 +537,34 @@ func (s *BlockService) InsertBlocks(
 		return nil, exceptions.BlockGroup.FailedToCreate().WithDetails("no valid block tree structure in any of the given block groups")
 	}
 
+	tx := s.db.WithContext(ctx).Begin()
+
 	_, exception := s.blockRepository.CreateManyByBlockGroupIds(
 		reqDto.ContextFields.UserId,
 		createBlockGroupContentInput,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithBatchSize(constants.MaxBatchCreateBlockSize),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithSkipPermissionCheck(),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
+	}
+
+	if exception = s.blockGroupRepository.IncrementSizesByIds(
+		reqDto.ContextFields.UserId,
+		sizeDeltaByBlockGroupId,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	); exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	resDto.CreatedAt = time.Now()

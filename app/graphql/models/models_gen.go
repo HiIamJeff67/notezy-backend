@@ -41,15 +41,16 @@ type PrivateMaterial struct {
 }
 
 type PrivateRootShelf struct {
-	ID             uuid.UUID     `json:"id"`
-	Name           string        `json:"name"`
-	SubShelfCount  int32         `json:"subShelfCount"`
-	ItemCount      int32         `json:"itemCount"`
-	LastAnalyzedAt time.Time     `json:"lastAnalyzedAt"`
-	DeletedAt      *time.Time    `json:"deletedAt,omitempty"`
-	UpdatedAt      time.Time     `json:"updatedAt"`
-	CreatedAt      time.Time     `json:"createdAt"`
-	Owner          []*PublicUser `json:"owner"`
+	ID             uuid.UUID                     `json:"id"`
+	Name           string                        `json:"name"`
+	Permission     enums.AccessControlPermission `json:"permission"`
+	SubShelfCount  int32                         `json:"subShelfCount"`
+	ItemCount      int32                         `json:"itemCount"`
+	LastAnalyzedAt time.Time                     `json:"lastAnalyzedAt"`
+	DeletedAt      *time.Time                    `json:"deletedAt,omitempty"`
+	UpdatedAt      time.Time                     `json:"updatedAt"`
+	CreatedAt      time.Time                     `json:"createdAt"`
+	Owner          []*PublicUser                 `json:"owner"`
 }
 
 type PrivateSubShelf struct {

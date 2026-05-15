@@ -1,6 +1,7 @@
 fragment FragmentedBasicPrivateRootShelf on PrivateRootShelf {
   id
   name
+  permission
   subShelfCount
   itemCount
   lastAnalyzedAt

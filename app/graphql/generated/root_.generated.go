@@ -63,6 +63,7 @@ type ComplexityRoot struct {
 		LastAnalyzedAt func(childComplexity int) int
 		Name           func(childComplexity int) int
 		Owner          func(childComplexity int) int
+		Permission     func(childComplexity int) int
 		SubShelfCount  func(childComplexity int) int
 		UpdatedAt      func(childComplexity int) int
 	}
@@ -340,6 +341,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateRootShelf.Owner(childComplexity), true
+
+	case "PrivateRootShelf.permission":
+		if e.complexity.PrivateRootShelf.Permission == nil {
+			break
+		}
+
+		return e.complexity.PrivateRootShelf.Permission(childComplexity), true
 
 	case "PrivateRootShelf.subShelfCount":
 		if e.complexity.PrivateRootShelf.SubShelfCount == nil {
@@ -1004,9 +1012,10 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 
 var sources = []*ast.Source{
 	{Name: "../../../shared/graphql/schemas/enums/access_control_permission_enum.graphql", Input: `enum AccessControlPermission {
-  Read
-  Write
+  Owner
   Admin
+  Write
+  Read
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/enums/badge_type_enum.graphql", Input: `enum BadgeType {
@@ -1186,6 +1195,7 @@ interface SearchConnection {
 	{Name: "../../../shared/graphql/schemas/root_shelf.graphql", Input: `type PrivateRootShelf {
   id: UUID!
   name: String!
+  permission: AccessControlPermission!
   subShelfCount: Int32!
   itemCount: Int32!
   lastAnalyzedAt: Time!

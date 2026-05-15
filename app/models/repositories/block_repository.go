@@ -218,7 +218,6 @@ func (r *BlockRepository) CreateOneByBlockGroupId(
 
 	result := parsedOptions.DB.Model(&schemas.Block{}).
 		Clauses(
-			clause.Returning{Columns: []clause.Column{{Name: "id"}}},
 			clause.OnConflict{
 				Columns: []clause.Column{{Name: "id"}},
 				DoUpdates: clause.AssignmentColumns([]string{
@@ -295,7 +294,6 @@ func (r *BlockRepository) CreateManyByBlockGroupId(
 
 	result := parsedOptions.DB.Model(&schemas.Block{}).
 		Clauses(
-			clause.Returning{Columns: []clause.Column{{Name: "id"}}},
 			clause.OnConflict{
 				Columns: []clause.Column{{Name: "id"}},
 				DoUpdates: clause.AssignmentColumns([]string{

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	gqlmodels "notezy-backend/app/graphql/models"
+	"notezy-backend/app/models/schemas/enums"
 	"strconv"
 	"sync/atomic"
 	"time"
@@ -113,6 +114,50 @@ func (ec *executionContext) fieldContext_PrivateRootShelf_name(_ context.Context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PrivateRootShelf_permission(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRootShelf) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateRootShelf_permission(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Permission, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(enums.AccessControlPermission)
+	fc.Result = res
+	return ec.marshalNAccessControlPermission2notezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐAccessControlPermission(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PrivateRootShelf_permission(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PrivateRootShelf",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type AccessControlPermission does not have child fields")
 		},
 	}
 	return fc, nil
@@ -475,6 +520,11 @@ func (ec *executionContext) _PrivateRootShelf(ctx context.Context, sel ast.Selec
 			}
 		case "name":
 			out.Values[i] = ec._PrivateRootShelf_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "permission":
+			out.Values[i] = ec._PrivateRootShelf_permission(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

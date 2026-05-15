@@ -665,7 +665,7 @@ func (s *SubShelfService) BatchMoveMySubShelves(
 	}
 
 	isRootShelfValid := make(map[uuid.UUID]bool)
-	validRootShelves, exception := s.rootShelfRepository.CheckPermissionsAndGetManyByIds(
+	validRootShelves, _, exception := s.rootShelfRepository.CheckPermissionsAndGetManyByIds(
 		rootShelfIds,
 		reqDto.ContextFields.UserId,
 		nil,

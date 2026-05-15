@@ -7,7 +7,7 @@ import (
 )
 
 type CreateMaterialInput struct {
-	Id             uuid.UUID          `json:"id" gorm:"column:id;"` // we allowed the API to generate its id, since it's faster
+	Id             uuid.UUID          `json:"id" gorm:"column:id;"`
 	Name           string             `json:"name" gorm:"column:name;"`
 	Type           enums.MaterialType `json:"type" gorm:"column:type;"`
 	Size           int64              `json:"size" gorm:"column:size;"`

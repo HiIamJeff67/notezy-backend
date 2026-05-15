@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	gqlmodels "notezy-backend/app/graphql/models"
+	"notezy-backend/app/models/schemas/enums"
 	types "notezy-backend/shared/types"
 )
 
@@ -40,10 +41,11 @@ const (
 
 /* ============================== Relative Type Conversion ============================== */
 
-func (rs *RootShelf) ToPrivateRootShelf() *gqlmodels.PrivateRootShelf {
+func (rs *RootShelf) ToPrivateRootShelf(permission enums.AccessControlPermission) *gqlmodels.PrivateRootShelf {
 	return &gqlmodels.PrivateRootShelf{
 		ID:             rs.Id,
 		Name:           rs.Name,
+		Permission:     permission,
 		SubShelfCount:  rs.SubShelfCount,
 		ItemCount:      rs.ItemCount,
 		LastAnalyzedAt: rs.LastAnalyzedAt,

@@ -28,14 +28,11 @@ func (sc *BlockGroupScope) PassPermissionCheck(id uuid.UUID, userId uuid.UUID, p
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
 			Model(&schemas.UsersToShelves{}).
 			Select("1").
-			Where("root_shelf_id = ss.root_shelf_id").
+			Joins("INNER JOIN \"SubShelfTable\" ss ON ss.root_shelf_id = \"UsersToShelvesTable\".root_shelf_id").
+			Joins("INNER JOIN \"BlockPackTable\" bp ON bp.parent_sub_shelf_id = ss.id").
+			Where("bp.id = \"BlockGroupTable\".block_pack_id").
 			Where("user_id = ? AND permission IN ?", userId, permissions)
-		return db.
-			Joins("INNER JOIN \"BlockPackTable\" bp ON block_pack_id = bp.id").
-			Joins("INNER JOIN \"SubShelfTable\" ss ON bp.parent_sub_shelf_id = ss.id").
-			Where("\"BlockGroupTable\".id = ? AND EXISTS (?)",
-				id, subQuery,
-			)
+		return db.Where("\"BlockGroupTable\".id = ? AND EXISTS (?)", id, subQuery)
 	}
 }
 
@@ -45,14 +42,11 @@ func (sc *BlockGroupScope) PassPermissionChecks(ids []uuid.UUID, userId uuid.UUI
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
 			Model(&schemas.UsersToShelves{}).
 			Select("1").
-			Where("root_shelf_id = ss.root_shelf_id").
+			Joins("INNER JOIN \"SubShelfTable\" ss ON ss.root_shelf_id = \"UsersToShelvesTable\".root_shelf_id").
+			Joins("INNER JOIN \"BlockPackTable\" bp ON bp.parent_sub_shelf_id = ss.id").
+			Where("bp.id = \"BlockGroupTable\".block_pack_id").
 			Where("user_id = ? AND permission IN ?", userId, permissions)
-		return db.
-			Joins("INNER JOIN \"BlockPackTable\" bp ON block_pack_id = bp.id").
-			Joins("INNER JOIN \"SubShelfTable\" ss ON bp.parent_sub_shelf_id = ss.id").
-			Where("\"BlockGroupTable\".id IN ? AND EXISTS (?)",
-				ids, subQuery,
-			)
+		return db.Where("\"BlockGroupTable\".id IN ? AND EXISTS (?)", ids, subQuery)
 	}
 }
 

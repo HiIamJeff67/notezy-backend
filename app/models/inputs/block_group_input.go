@@ -16,6 +16,12 @@ type BulkCreateBlockGroupInput struct {
 type UpdateBlockGroupInput struct {
 	PrevBlockGroupId *uuid.UUID `json:"prevBlockGroupId" gorm:"column:prev_block_group_id;"`
 	Size             *int64     `json:"size" gorm:"column:size;"`
+	SizeDelta        *int64     `json:"sizeDelta"`
 }
 
 type PartialUpdateBlockGroupInput = PartialUpdateInput[UpdateBlockGroupInput]
+
+type BulkUpdateBlockGroupsInput struct {
+	Id                 uuid.UUID                                 `json:"id" gorm:"column:id;"`
+	PartialUpdateInput PartialUpdateInput[UpdateBlockGroupInput] `json:"partialUpdateInput"`
+}

@@ -308,6 +308,8 @@ func (ec *executionContext) fieldContext_SearchRootShelfEdge_node(_ context.Cont
 				return ec.fieldContext_PrivateRootShelf_id(ctx, field)
 			case "name":
 				return ec.fieldContext_PrivateRootShelf_name(ctx, field)
+			case "permission":
+				return ec.fieldContext_PrivateRootShelf_permission(ctx, field)
 			case "subShelfCount":
 				return ec.fieldContext_PrivateRootShelf_subShelfCount(ctx, field)
 			case "itemCount":

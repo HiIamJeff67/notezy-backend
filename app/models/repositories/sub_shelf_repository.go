@@ -267,10 +267,12 @@ func (r *SubShelfRepository) CreateOneByRootShelfId(
 	if err := copier.Copy(&newSubShelf, &input); err != nil {
 		return nil, exceptions.Shelf.InvalidInput().WithOrigin(err)
 	}
+	if newSubShelf.Id == uuid.Nil {
+		newSubShelf.Id = uuid.New()
+	}
 	newSubShelf.RootShelfId = rootShelfId
 
 	result := parsedOptions.DB.Model(&schemas.SubShelf{}).
-		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newSubShelf)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Shelf.FailedToCreate().WithOrigin(result.Error)},
@@ -347,7 +349,7 @@ func (r *SubShelfRepository) BulkCreateManyByRootShelfIds(
 
 	rootShelfRepository := NewRootShelfRepository(scopes.NewRootShelfScope())
 
-	validRootShelves, exception := rootShelfRepository.CheckPermissionsAndGetManyByIds(
+	validRootShelves, _, exception := rootShelfRepository.CheckPermissionsAndGetManyByIds(
 		rootShelfIds,
 		userId,
 		nil,
@@ -371,12 +373,14 @@ func (r *SubShelfRepository) BulkCreateManyByRootShelfIds(
 		if err := copier.Copy(&newSubShelf, &in); err != nil {
 			return nil, exceptions.Shelf.InvalidInput().WithOrigin(err)
 		}
+		if newSubShelf.Id == uuid.Nil {
+			newSubShelf.Id = uuid.New()
+		}
 		newSubShelf.RootShelfId = in.RootShelfId
 		newSubShelves = append(newSubShelves, newSubShelf)
 	}
 
 	result := parsedOptions.DB.Model(&schemas.SubShelf{}).
-		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		CreateInBatches(&newSubShelves, parsedOptions.BatchSize)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Shelf.FailedToCreate().WithOrigin(result.Error)},

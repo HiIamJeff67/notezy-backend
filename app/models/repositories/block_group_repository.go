@@ -39,6 +39,9 @@ type BlockGroupRepositoryInterface interface {
 	AppendOneByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
 	AppendManyByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, input []inputs.CreateBlockGroupInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateBlockGroupInput, opts ...options.RepositoryOptions) (*schemas.BlockGroup, *exceptions.Exception)
+	BulkUpdateManyByIds(userId uuid.UUID, input []inputs.BulkUpdateBlockGroupsInput, opts ...options.RepositoryOptions) *exceptions.Exception
+	IncrementSizeById(id uuid.UUID, userId uuid.UUID, sizeDelta int64, opts ...options.RepositoryOptions) (*schemas.BlockGroup, *exceptions.Exception)
+	IncrementSizesByIds(userId uuid.UUID, sizeDeltaById map[uuid.UUID]int64, opts ...options.RepositoryOptions) *exceptions.Exception
 	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.BlockGroup, *exceptions.Exception)
 	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.BlockGroup, *exceptions.Exception)
 	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
@@ -454,12 +457,14 @@ func (r *BlockGroupRepository) InsertOneByBlockPackId(
 	if input.BlockGroupId != nil {
 		newBlockGroup.Id = *input.BlockGroupId
 	}
+	if newBlockGroup.Id == uuid.Nil {
+		newBlockGroup.Id = uuid.New()
+	}
 	newBlockGroup.OwnerId = *ownerId // get the owner id from the CheckPermissionAndGetOneById
 	newBlockGroup.BlockPackId = blockPackId
 	newBlockGroup.PrevBlockGroupId = blockPack.FinalBlockGroupId
 
 	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
-		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newBlockGroup)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToCreate().WithOrigin(result.Error)},
@@ -927,12 +932,12 @@ func (r *BlockGroupRepository) AppendOneByBlockPackId(
 	}
 
 	var newBlockGroup schemas.BlockGroup
+	newBlockGroup.Id = uuid.New()
 	newBlockGroup.OwnerId = *ownerId // get the owner id from the CheckPermissionAndGetOneById
 	newBlockGroup.BlockPackId = blockPackId
 	newBlockGroup.PrevBlockGroupId = blockPack.FinalBlockGroupId
 
 	result := parsedOptions.DB.Model(&schemas.BlockGroup{}).
-		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newBlockGroup)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToCreate().WithOrigin(result.Error)},
@@ -1087,6 +1092,175 @@ func (r *BlockGroupRepository) UpdateOneById(
 	}
 
 	return &updates, nil
+}
+
+func (r *BlockGroupRepository) BulkUpdateManyByIds(
+	userId uuid.UUID,
+	input []inputs.BulkUpdateBlockGroupsInput,
+	opts ...options.RepositoryOptions,
+) *exceptions.Exception {
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	shouldStartTransaction := !parsedOptions.IsTransactionStarted && !parsedOptions.SkipPermissionCheck
+	if shouldStartTransaction {
+		parsedOptions.DB = parsedOptions.DB.Begin()
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+	}
+
+	isBlockGroupValid := make(map[uuid.UUID]bool)
+	if !parsedOptions.SkipPermissionCheck {
+		allowedPermissions := []enums.AccessControlPermission{
+			enums.AccessControlPermission_Owner,
+			enums.AccessControlPermission_Admin,
+			enums.AccessControlPermission_Write,
+		}
+
+		ids := make([]uuid.UUID, len(input))
+		for index, in := range input {
+			ids[index] = in.Id
+		}
+
+		validBlockGroups, exception := r.CheckPermissionsAndGetManyByIds(
+			ids,
+			userId,
+			nil,
+			allowedPermissions,
+			opts...,
+		)
+		if exception != nil {
+			return exceptions.BlockGroup.NoPermission("update these block groups")
+		}
+
+		for _, validBlockGroup := range validBlockGroups {
+			isBlockGroupValid[validBlockGroup.Id] = true
+		}
+	}
+
+	var valuePlaceholders []string
+	var valueArgs []interface{}
+	for _, in := range input {
+		if !parsedOptions.SkipPermissionCheck && !isBlockGroupValid[in.Id] {
+			continue
+		}
+
+		setPrevBlockGroupIdNull := false
+		if in.PartialUpdateInput.SetNull != nil {
+			for field, setNull := range *in.PartialUpdateInput.SetNull {
+				if strings.ToLower(field) == "prevblockgroupid" && setNull {
+					setPrevBlockGroupIdNull = true
+					break
+				}
+			}
+		}
+
+		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid, ?::bigint, ?::bigint, ?::boolean)")
+		valueArgs = append(valueArgs,
+			in.Id,
+			in.PartialUpdateInput.Values.PrevBlockGroupId,
+			in.PartialUpdateInput.Values.Size,
+			in.PartialUpdateInput.Values.SizeDelta,
+			setPrevBlockGroupIdNull,
+		)
+	}
+
+	if len(valuePlaceholders) == 0 {
+		return exceptions.BlockGroup.NoChanges()
+	}
+
+	sql := fmt.Sprintf(`
+		UPDATE "BlockGroupTable" AS bg
+		SET
+			prev_block_group_id = CASE
+				WHEN v.set_prev_block_group_id_null::boolean THEN NULL
+				ELSE COALESCE(v.prev_block_group_id::uuid, bg.prev_block_group_id)
+			END,
+			size = GREATEST(0, COALESCE(v.size::bigint, bg.size) + COALESCE(v.size_delta::bigint, 0)),
+			updated_at = NOW()
+		FROM (VALUES %s) AS v(id, prev_block_group_id, size, size_delta, set_prev_block_group_id_null)
+		WHERE bg.id = v.id::uuid AND bg.deleted_at IS NULL
+	`, strings.Join(valuePlaceholders, ","))
+	result := parsedOptions.DB.Exec(sql, valueArgs...)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
+	}); exception != nil {
+		return exception
+	}
+
+	if shouldStartTransaction {
+		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
+			return exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
+		}
+	}
+
+	return nil
+}
+
+func (r *BlockGroupRepository) IncrementSizeById(
+	id uuid.UUID,
+	userId uuid.UUID,
+	sizeDelta int64,
+	opts ...options.RepositoryOptions,
+) (*schemas.BlockGroup, *exceptions.Exception) {
+	exception := r.IncrementSizesByIds(
+		userId,
+		map[uuid.UUID]int64{
+			id: sizeDelta,
+		},
+		opts...,
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	return r.CheckPermissionAndGetOneById(
+		id,
+		userId,
+		nil,
+		allowedPermissions,
+		options.WithDB(parsedOptions.DB),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+}
+
+func (r *BlockGroupRepository) IncrementSizesByIds(
+	userId uuid.UUID,
+	sizeDeltaById map[uuid.UUID]int64,
+	opts ...options.RepositoryOptions,
+) *exceptions.Exception {
+	if len(sizeDeltaById) == 0 {
+		return exceptions.BlockGroup.NoChanges()
+	}
+
+	bulkUpdateInputs := make([]inputs.BulkUpdateBlockGroupsInput, 0, len(sizeDeltaById))
+	for id, sizeDelta := range sizeDeltaById {
+		if sizeDelta == 0 {
+			continue
+		}
+		delta := sizeDelta
+		bulkUpdateInputs = append(bulkUpdateInputs, inputs.BulkUpdateBlockGroupsInput{
+			Id: id,
+			PartialUpdateInput: inputs.PartialUpdateInput[inputs.UpdateBlockGroupInput]{
+				Values: inputs.UpdateBlockGroupInput{
+					SizeDelta: &delta,
+				},
+			},
+		})
+	}
+	if len(bulkUpdateInputs) == 0 {
+		return exceptions.BlockGroup.NoChanges()
+	}
+
+	return r.BulkUpdateManyByIds(userId, bulkUpdateInputs, opts...)
 }
 
 func (r *BlockGroupRepository) RestoreSoftDeletedOneById(

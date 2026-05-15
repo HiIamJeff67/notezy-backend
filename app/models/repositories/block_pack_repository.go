@@ -300,10 +300,12 @@ func (r *BlockPackRepository) CreateOneBySubShelfId(
 	if err := copier.Copy(&newBlockPack, &input); err != nil {
 		return nil, exceptions.BlockPack.FailedToCreate().WithOrigin(err)
 	}
+	if newBlockPack.Id == uuid.Nil {
+		newBlockPack.Id = uuid.New()
+	}
 	newBlockPack.ParentSubShelfId = subShelfId
 
 	result := parsedOptions.DB.Model(&schemas.BlockPack{}).
-		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newBlockPack)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToCreate().WithOrigin(result.Error)},
@@ -380,11 +382,13 @@ func (r *BlockPackRepository) BulkCreateManyBySubShelfIds(
 		if err := copier.Copy(&newBlockPack, &in); err != nil {
 			return nil, exceptions.BlockPack.InvalidInput().WithOrigin(err)
 		}
+		if newBlockPack.Id == uuid.Nil {
+			newBlockPack.Id = uuid.New()
+		}
 		newBlockPacks = append(newBlockPacks, newBlockPack)
 	}
 
 	result := parsedOptions.DB.Model(&schemas.BlockPack{}).
-		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		CreateInBatches(&newBlockPacks, parsedOptions.BatchSize)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Block.FailedToCreate().WithOrigin(result.Error)},

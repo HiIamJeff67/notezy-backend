@@ -68,7 +68,7 @@ func (s *RootShelfService) GetMyRootShelfById(
 
 	db := s.db.WithContext(ctx)
 
-	shelf, exception := s.rootShelfRepository.GetOneById(
+	shelf, permission, exception := s.rootShelfRepository.GetOneById(
 		reqDto.Param.RootShelfId,
 		reqDto.ContextFields.UserId,
 		nil,
@@ -82,6 +82,7 @@ func (s *RootShelfService) GetMyRootShelfById(
 	return &dtos.GetMyRootShelfByIdResDto{
 		Id:             shelf.Id,
 		Name:           shelf.Name,
+		Permission:     permission,
 		SubShelfCount:  shelf.SubShelfCount,
 		ItemCount:      shelf.ItemCount,
 		LastAnalyzedAt: shelf.LastAnalyzedAt,
@@ -116,6 +117,10 @@ func (s *RootShelfService) SearchRecentRootShelves(
 		Find(&resDto)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Shelf.NotFound().WithOrigin(err)
+	}
+
+	for index := range resDto {
+		resDto[index].Permission = enums.AccessControlPermission_Owner
 	}
 
 	return &resDto, nil
@@ -365,6 +370,11 @@ func (s *RootShelfService) DeleteMyRootShelvesByIds(
 func (s *RootShelfService) SearchPrivateRootShelves(
 	ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRootShelfInput,
 ) (*gqlmodels.SearchRootShelfConnection, *exceptions.Exception) {
+	type privateRootShelfRow struct {
+		schemas.RootShelf
+		Permission enums.AccessControlPermission `gorm:"column:permission"`
+	}
+
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
@@ -376,6 +386,7 @@ func (s *RootShelfService) SearchPrivateRootShelves(
 	db := s.db.WithContext(ctx)
 
 	query := db.Model(&schemas.RootShelf{}).
+		Select("\"RootShelfTable\".*, uts.permission AS permission").
 		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON \"RootShelfTable\".id = uts.root_shelf_id").
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
 		Where("\"RootShelfTable\".deleted_at IS NULL")
@@ -428,7 +439,7 @@ func (s *RootShelfService) SearchPrivateRootShelves(
 	limit = max(limit, constants.MaxSearchLimit)
 	query = query.Limit(limit + 1)
 
-	var shelves []schemas.RootShelf
+	var shelves []privateRootShelfRow
 	if err := query.Find(&shelves).Error; err != nil {
 		return nil, exceptions.Shelf.NotFound().WithOrigin(err)
 	}
@@ -452,7 +463,7 @@ func (s *RootShelfService) SearchPrivateRootShelves(
 
 		searchEdges[index] = &gqlmodels.SearchRootShelfEdge{
 			EncodedSearchCursor: *encodedSearchCursor,
-			Node:                shelf.ToPrivateRootShelf(),
+			Node:                shelf.RootShelf.ToPrivateRootShelf(shelf.Permission),
 		}
 	}
 

@@ -16,10 +16,10 @@ import (
 
 type EditableBlockAdapterInterface interface {
 	Flatten(root *dtos.ArborizedEditableBlock) ([]dtos.FlattenedEditableBlock, *exceptions.Exception)
-	FlattenToRaw(root *dtos.ArborizedEditableBlock) ([]dtos.RawFlattenedEditableBlock, *exceptions.Exception)
-	FlattenRawToRaw(root *dtos.RawArborizedEditableBlock) ([]dtos.RawFlattenedEditableBlock, *exceptions.Exception)
+	FlattenToRaw(root *dtos.ArborizedEditableBlock) ([]dtos.RawFlattenedEditableBlock, int64, *exceptions.Exception)
+	FlattenRawToRaw(root *dtos.RawArborizedEditableBlock) ([]dtos.RawFlattenedEditableBlock, int64, *exceptions.Exception)
 	Arborize(root *dtos.FlattenedEditableBlock, childrenMap map[uuid.UUID][]dtos.FlattenedEditableBlock) (*dtos.ArborizedEditableBlock, *exceptions.Exception)
-	ArborizeRawToRaw(root *dtos.RawFlattenedEditableBlock, childrenMap map[uuid.UUID][]dtos.RawFlattenedEditableBlock) (*dtos.RawArborizedEditableBlock, *exceptions.Exception)
+	ArborizeRawToRaw(root *dtos.RawFlattenedEditableBlock, childrenMap map[uuid.UUID][]dtos.RawFlattenedEditableBlock) (*dtos.RawArborizedEditableBlock, int64, *exceptions.Exception)
 }
 
 type EditableBlockAdapter struct{}
@@ -74,23 +74,24 @@ func (ebca *EditableBlockAdapter) Flatten(
 	return resultBlocks, nil
 }
 
-// method to conver(flatten) arborized editable block to raw flattened editable block
+// method to convert(flatten) arborized editable block to raw flattened editable block
 func (ebca *EditableBlockAdapter) FlattenToRaw(
 	root *dtos.ArborizedEditableBlock,
-) ([]dtos.RawFlattenedEditableBlock, *exceptions.Exception) {
+) ([]dtos.RawFlattenedEditableBlock, int64, *exceptions.Exception) {
 	if root == nil {
-		return []dtos.RawFlattenedEditableBlock{}, nil
+		return []dtos.RawFlattenedEditableBlock{}, 0, nil
 	}
 
 	rootProps, err := json.Marshal(root.Props)
 	if err != nil {
-		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
+		return nil, 0, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 	rootContent, err := json.Marshal(root.Content)
 	if err != nil {
-		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
+		return nil, 0, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
+	var totalSize int64 = int64(len(rootProps) + len(rootContent))
 	resultBlocks := []dtos.RawFlattenedEditableBlock{}
 	resultBlocks = append(resultBlocks, dtos.RawFlattenedEditableBlock{
 		Id:            root.Id,
@@ -105,7 +106,7 @@ func (ebca *EditableBlockAdapter) FlattenToRaw(
 	for !q.IsEmpty() {
 		current, err := q.Dequeue()
 		if err != nil {
-			return nil, exceptions.DataStructureLib.FailedToManipulateQueue().WithOrigin(err)
+			return nil, 0, exceptions.DataStructureLib.FailedToManipulateQueue().WithOrigin(err)
 		}
 
 		if visited[current.Id] {
@@ -116,13 +117,14 @@ func (ebca *EditableBlockAdapter) FlattenToRaw(
 		for _, child := range current.Children {
 			props, err := json.Marshal(child.Props)
 			if err != nil {
-				return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
+				return nil, 0, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 			}
 			content, err := json.Marshal(child.Content)
 			if err != nil {
-				return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
+				return nil, 0, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 			}
 
+			totalSize += int64(len(props) + len(content))
 			resultBlocks = append(resultBlocks, dtos.RawFlattenedEditableBlock{
 				Id:            child.Id,
 				ParentBlockId: &current.Id,
@@ -135,17 +137,18 @@ func (ebca *EditableBlockAdapter) FlattenToRaw(
 		}
 	}
 
-	return resultBlocks, nil
+	return resultBlocks, totalSize, nil
 }
 
 // method to convert(flatten) raw arborized editable block to raw flattened editable block
 func (ebca *EditableBlockAdapter) FlattenRawToRaw(
 	root *dtos.RawArborizedEditableBlock,
-) ([]dtos.RawFlattenedEditableBlock, *exceptions.Exception) {
+) ([]dtos.RawFlattenedEditableBlock, int64, *exceptions.Exception) {
 	if root == nil {
-		return []dtos.RawFlattenedEditableBlock{}, nil
+		return []dtos.RawFlattenedEditableBlock{}, 0, nil
 	}
 
+	var totalSize int64 = int64(len(root.Props) + len(root.Content))
 	resultBlocks := []dtos.RawFlattenedEditableBlock{}
 	resultBlocks = append(resultBlocks, dtos.RawFlattenedEditableBlock{
 		Id:            root.Id,
@@ -160,7 +163,7 @@ func (ebca *EditableBlockAdapter) FlattenRawToRaw(
 	for !q.IsEmpty() {
 		current, err := q.Dequeue()
 		if err != nil {
-			return nil, exceptions.DataStructureLib.FailedToManipulateQueue().WithOrigin(err)
+			return nil, 0, exceptions.DataStructureLib.FailedToManipulateQueue().WithOrigin(err)
 		}
 
 		if visited[current.Id] {
@@ -169,6 +172,7 @@ func (ebca *EditableBlockAdapter) FlattenRawToRaw(
 		visited[current.Id] = true
 
 		for _, child := range current.Children {
+			totalSize += int64(len(child.Props) + len(child.Content))
 			resultBlocks = append(resultBlocks, dtos.RawFlattenedEditableBlock{
 				Id:            child.Id,
 				ParentBlockId: &current.Id,
@@ -181,7 +185,7 @@ func (ebca *EditableBlockAdapter) FlattenRawToRaw(
 		}
 	}
 
-	return resultBlocks, nil
+	return resultBlocks, totalSize, nil
 }
 
 // method to convert(arborize) flattened editable block to arborized editable block
@@ -259,9 +263,9 @@ func (ebca *EditableBlockAdapter) Arborize(
 func (ebca *EditableBlockAdapter) ArborizeRawToRaw(
 	root *dtos.RawFlattenedEditableBlock,
 	childrenMap map[uuid.UUID][]dtos.RawFlattenedEditableBlock,
-) (*dtos.RawArborizedEditableBlock, *exceptions.Exception) {
+) (*dtos.RawArborizedEditableBlock, int64, *exceptions.Exception) {
 	if root == nil {
-		return &dtos.RawArborizedEditableBlock{}, nil
+		return &dtos.RawArborizedEditableBlock{}, 0, nil
 	}
 
 	var rootContent datatypes.JSON = root.Content
@@ -273,6 +277,7 @@ func (ebca *EditableBlockAdapter) ArborizeRawToRaw(
 			}
 		}
 	}
+	var totalSize int64 = int64(len(root.Props) + len(rootContent))
 	resultRoot := dtos.RawArborizedEditableBlock{
 		Id:       root.Id,
 		Type:     root.Type,
@@ -286,7 +291,7 @@ func (ebca *EditableBlockAdapter) ArborizeRawToRaw(
 	for !q.IsEmpty() {
 		current, err := q.Dequeue()
 		if err != nil {
-			return nil, exceptions.DataStructureLib.FailedToManipulateQueue().WithOrigin(err)
+			return nil, 0, exceptions.DataStructureLib.FailedToManipulateQueue().WithOrigin(err)
 		}
 		// at this point, current cannot be nil, because the root is not nil, and the below new element enqueued to the queue is alos not nil
 
@@ -319,11 +324,12 @@ func (ebca *EditableBlockAdapter) ArborizeRawToRaw(
 				}
 			}
 
+			totalSize += int64(len(arborizedEditableBlock.Props) + len(arborizedEditableBlock.Content))
 			current.Children = append(current.Children, arborizedEditableBlock)
 			currentChildPtr := &current.Children[len(current.Children)-1] // get the pointer to the child in current.Children
 			q.Enqueue(currentChildPtr)                                    // make sure we passing the pointer of the editable child to the queue, so that we can modify its children field later
 		}
 	}
 
-	return &resultRoot, nil
+	return &resultRoot, totalSize, nil
 }

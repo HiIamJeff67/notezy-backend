@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	enums "notezy-backend/app/models/schemas/enums"
 )
 
 /* ============================== Request DTO ============================== */
@@ -173,14 +175,15 @@ type DeleteMyRootShelvesByIdsReqDto struct {
 /* ============================== Response DTO ============================== */
 
 type GetMyRootShelfByIdResDto struct {
-	Id             uuid.UUID  `json:"id"`
-	Name           string     `json:"name"`
-	SubShelfCount  int32      `json:"subShelfCount"`
-	ItemCount      int32      `json:"itemCount"`
-	LastAnalyzedAt time.Time  `json:"lastAnalyzedAt"`
-	DeletedAt      *time.Time `json:"deletedAt"`
-	UpdatedAt      time.Time  `json:"updatedAt"`
-	CreatedAt      time.Time  `json:"createdAt"`
+	Id             uuid.UUID                     `json:"id"`
+	Name           string                        `json:"name"`
+	Permission     enums.AccessControlPermission `json:"permission"`
+	SubShelfCount  int32                         `json:"subShelfCount"`
+	ItemCount      int32                         `json:"itemCount"`
+	LastAnalyzedAt time.Time                     `json:"lastAnalyzedAt"`
+	DeletedAt      *time.Time                    `json:"deletedAt"`
+	UpdatedAt      time.Time                     `json:"updatedAt"`
+	CreatedAt      time.Time                     `json:"createdAt"`
 }
 
 type SearchRecentRootShelvesResDto []GetMyRootShelfByIdResDto

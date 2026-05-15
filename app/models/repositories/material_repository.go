@@ -207,7 +207,6 @@ func (r *MaterialRepository) CreateOneBySubShelfId(
 	newMaterial.ParentSubShelfId = subShelfId
 
 	result := parsedOptions.DB.Model(&schemas.Material{}).
-		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newMaterial)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Material.FailedToCreate().WithOrigin(result.Error)},

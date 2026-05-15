@@ -179,7 +179,7 @@ func (s *BlockGroupService) GetMyBlockGroupAndItsBlocksById(
 		}
 	}
 
-	rawArborizedBlock, exception := s.editableBlockAdapter.ArborizeRawToRaw(root, childrenMap)
+	rawArborizedBlock, _, exception := s.editableBlockAdapter.ArborizeRawToRaw(root, childrenMap)
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -315,7 +315,7 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByIds(
 			}
 		}
 
-		rawArborizedBlock, exception := s.editableBlockAdapter.ArborizeRawToRaw(root, childrenMap)
+		rawArborizedBlock, _, exception := s.editableBlockAdapter.ArborizeRawToRaw(root, childrenMap)
 		if exception != nil {
 			tx.Rollback()
 			return nil, exception
@@ -470,7 +470,7 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 			}
 		}
 
-		rawArborizedBlock, exception := s.editableBlockAdapter.ArborizeRawToRaw(root, childrenMap)
+		rawArborizedBlock, _, exception := s.editableBlockAdapter.ArborizeRawToRaw(root, childrenMap)
 		if exception != nil {
 			tx.Rollback()
 			return nil, exception
@@ -682,8 +682,9 @@ func (s *BlockGroupService) InsertBlockGroupAndItsBlocksByBlockPackId(
 		return nil, exception
 	}
 
-	rawFlattenedBlocks, exception := s.editableBlockAdapter.FlattenToRaw(&reqDto.Body.ArborizedEditableBlock)
+	rawFlattenedBlocks, totalSize, exception := s.editableBlockAdapter.FlattenToRaw(&reqDto.Body.ArborizedEditableBlock)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
@@ -708,6 +709,19 @@ func (s *BlockGroupService) InsertBlockGroupAndItsBlocksByBlockPackId(
 		options.WithSkipPermissionCheck(),
 	)
 	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	if exception = s.blockGroupRepository.IncrementSizesByIds(
+		reqDto.ContextFields.UserId,
+		map[uuid.UUID]int64{
+			*newBlockGroupId: totalSize,
+		},
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithSkipPermissionCheck(),
+	); exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
@@ -760,12 +774,19 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 		return nil, exceptions.BlockGroup.FailedToCreate().WithDetails("got nil block group id")
 	}
 
-	validateBlockFunc := func(validateDto dtos.ArborizedEditableBlock) ([]dtos.RawFlattenedEditableBlock, error) {
-		rawFlattenedBlocks, exception := s.editableBlockAdapter.FlattenToRaw(&validateDto)
+	type FlattenedBlocksWithSize struct {
+		Blocks    []dtos.RawFlattenedEditableBlock
+		TotalSize int64
+	}
+	validateBlockFunc := func(validateDto dtos.ArborizedEditableBlock) (FlattenedBlocksWithSize, error) {
+		rawFlattenedBlocks, totalSize, exception := s.editableBlockAdapter.FlattenToRaw(&validateDto)
 		if exception != nil {
-			return rawFlattenedBlocks, exception.GetOrigin()
+			return FlattenedBlocksWithSize{}, exception.GetOrigin()
 		}
-		return rawFlattenedBlocks, nil
+		return FlattenedBlocksWithSize{
+			Blocks:    rawFlattenedBlocks,
+			TotalSize: totalSize,
+		}, nil
 	}
 
 	validateBlockResults := concurrency.Execute(
@@ -785,15 +806,16 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 		CreatedAt: time.Now(),
 	}
 	var createBlockGroupContentInput []inputs.CreateBlockGroupContentInput
+	sizeDeltaByBlockGroupId := make(map[uuid.UUID]int64)
 	for _, validateResult := range validateBlockResults {
 		if validateResult.Err == nil {
 			resDto.SuccessIndexes = append(resDto.SuccessIndexes, validateResult.Index)
 			// note that since the order of newBlockGroupIds is the same as the reqDto
 			// and here the concurrency job worker will output a result with index in Result.Index
 			// which provide us enough ability to reorder and align the result with the block group ids here
-			blockIds := make([]uuid.UUID, len(validateResult.Data))
-			createBlockInputs := make([]inputs.CreateBlockInput, len(validateResult.Data))
-			for index, rawFlattenedBlock := range validateResult.Data {
+			blockIds := make([]uuid.UUID, len(validateResult.Data.Blocks))
+			createBlockInputs := make([]inputs.CreateBlockInput, len(validateResult.Data.Blocks))
+			for index, rawFlattenedBlock := range validateResult.Data.Blocks {
 				blockIds[index] = rawFlattenedBlock.Id
 				createBlockInputs[index] = inputs.CreateBlockInput{
 					Id:            rawFlattenedBlock.Id,
@@ -810,6 +832,7 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 				BlockGroupId: newBlockGroupIds[validateResult.Index],
 				BlockIds:     blockIds,
 			})
+			sizeDeltaByBlockGroupId[newBlockGroupIds[validateResult.Index]] += validateResult.Data.TotalSize
 			createBlockGroupContentInput = append(createBlockGroupContentInput, inputs.CreateBlockGroupContentInput{
 				BlockGroupId: newBlockGroupIds[validateResult.Index],
 				Blocks:       createBlockInputs,
@@ -834,6 +857,17 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 		options.WithSkipPermissionCheck(),
 	)
 	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	if exception = s.blockGroupRepository.IncrementSizesByIds(
+		reqDto.ContextFields.UserId,
+		sizeDeltaByBlockGroupId,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithSkipPermissionCheck(),
+	); exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
@@ -888,12 +922,19 @@ func (s *BlockGroupService) BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds(
 		}
 	}
 
-	validateBlockFunc := func(validateDto dtos.ArborizedEditableBlock) ([]dtos.RawFlattenedEditableBlock, error) {
-		rawFlattenedBlocks, exception := s.editableBlockAdapter.FlattenToRaw(&validateDto)
+	type FlattenedBlocksWithSize struct {
+		Blocks    []dtos.RawFlattenedEditableBlock
+		TotalSize int64
+	}
+	validateBlockFunc := func(validateDto dtos.ArborizedEditableBlock) (FlattenedBlocksWithSize, error) {
+		rawFlattenedBlocks, totalSize, exception := s.editableBlockAdapter.FlattenToRaw(&validateDto)
 		if exception != nil {
-			return rawFlattenedBlocks, exception.GetOrigin()
+			return FlattenedBlocksWithSize{}, exception.GetOrigin()
 		}
-		return rawFlattenedBlocks, nil
+		return FlattenedBlocksWithSize{
+			Blocks:    rawFlattenedBlocks,
+			TotalSize: totalSize,
+		}, nil
 	}
 
 	validateBlockResults := concurrency.Execute(
@@ -914,12 +955,13 @@ func (s *BlockGroupService) BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds(
 		CreatedAt: time.Now(),
 	}
 	var createBlockGroupContentInput []inputs.CreateBlockGroupContentInput
+	sizeDeltaByBlockGroupId := make(map[uuid.UUID]int64)
 	for _, validateResult := range validateBlockResults {
 		if validateResult.Err == nil {
 			resDto.SuccessIndexes = append(resDto.SuccessIndexes, validateResult.Index)
-			blockIds := make([]uuid.UUID, len(validateResult.Data))
-			createBlockInputs := make([]inputs.CreateBlockInput, len(validateResult.Data))
-			for index, rawFlattenedBlock := range validateResult.Data {
+			blockIds := make([]uuid.UUID, len(validateResult.Data.Blocks))
+			createBlockInputs := make([]inputs.CreateBlockInput, len(validateResult.Data.Blocks))
+			for index, rawFlattenedBlock := range validateResult.Data.Blocks {
 				blockIds[index] = rawFlattenedBlock.Id
 				createBlockInputs[index] = inputs.CreateBlockInput{
 					Id:            rawFlattenedBlock.Id,
@@ -938,6 +980,7 @@ func (s *BlockGroupService) BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds(
 				BlockGroupId: newBlockGroupIds[validateResult.Index],
 				BlockIds:     blockIds,
 			})
+			sizeDeltaByBlockGroupId[newBlockGroupIds[validateResult.Index]] += validateResult.Data.TotalSize
 			createBlockGroupContentInput = append(createBlockGroupContentInput, inputs.CreateBlockGroupContentInput{
 				BlockGroupId: newBlockGroupIds[validateResult.Index],
 				Blocks:       createBlockInputs,
@@ -962,6 +1005,17 @@ func (s *BlockGroupService) BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds(
 		options.WithSkipPermissionCheck(),
 	)
 	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	if exception = s.blockGroupRepository.IncrementSizesByIds(
+		reqDto.ContextFields.UserId,
+		sizeDeltaByBlockGroupId,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithSkipPermissionCheck(),
+	); exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
@@ -1012,12 +1066,19 @@ func (s *BlockGroupService) InsertSequentialBlockGroupsAndTheirBlocksByBlockPack
 		return nil, exceptions.BlockGroup.FailedToCreate().WithDetails("got nil block group id")
 	}
 
-	validateBlockFunc := func(validateDto dtos.ArborizedEditableBlock) ([]dtos.RawFlattenedEditableBlock, error) {
-		data, exception := s.editableBlockAdapter.FlattenToRaw(&validateDto)
+	type FlattenedBlocksWithSize struct {
+		Blocks    []dtos.RawFlattenedEditableBlock
+		TotalSize int64
+	}
+	validateBlockFunc := func(validateDto dtos.ArborizedEditableBlock) (FlattenedBlocksWithSize, error) {
+		data, totalSize, exception := s.editableBlockAdapter.FlattenToRaw(&validateDto)
 		if exception != nil {
-			return data, exception.GetOrigin()
+			return FlattenedBlocksWithSize{}, exception.GetOrigin()
 		}
-		return data, nil
+		return FlattenedBlocksWithSize{
+			Blocks:    data,
+			TotalSize: totalSize,
+		}, nil
 	}
 
 	validateBlockResults := concurrency.Execute(
@@ -1038,15 +1099,16 @@ func (s *BlockGroupService) InsertSequentialBlockGroupsAndTheirBlocksByBlockPack
 	}
 
 	var createBlocksInputs []inputs.CreateBlockGroupContentInput
+	sizeDeltaByBlockGroupId := make(map[uuid.UUID]int64)
 	for _, validateResult := range validateBlockResults {
 		if validateResult.Err == nil {
 			resDto.SuccessIndexes = append(resDto.SuccessIndexes, validateResult.Index)
 			// note that since the order of newBlockGroupIds is the same as the reqDto
 			// and here the concurrency job worker will output a result with index in Result.Index
 			// which provide us enough ability to reorder and align the result with the block group ids here
-			blockIds := make([]uuid.UUID, len(validateResult.Data))
-			createBlocksByBlockGroupInput := make([]inputs.CreateBlockInput, len(validateResult.Data))
-			for index, rawFlattenedBlock := range validateResult.Data {
+			blockIds := make([]uuid.UUID, len(validateResult.Data.Blocks))
+			createBlocksByBlockGroupInput := make([]inputs.CreateBlockInput, len(validateResult.Data.Blocks))
+			for index, rawFlattenedBlock := range validateResult.Data.Blocks {
 				blockIds[index] = rawFlattenedBlock.Id
 				createBlocksByBlockGroupInput[index] = inputs.CreateBlockInput{
 					Id:            rawFlattenedBlock.Id,
@@ -1063,6 +1125,7 @@ func (s *BlockGroupService) InsertSequentialBlockGroupsAndTheirBlocksByBlockPack
 				BlockGroupId: newBlockGroupIds[validateResult.Index],
 				BlockIds:     blockIds,
 			})
+			sizeDeltaByBlockGroupId[newBlockGroupIds[validateResult.Index]] += validateResult.Data.TotalSize
 			createBlocksInputs = append(createBlocksInputs, inputs.CreateBlockGroupContentInput{
 				BlockGroupId: newBlockGroupIds[validateResult.Index],
 				Blocks:       createBlocksByBlockGroupInput,
@@ -1087,6 +1150,17 @@ func (s *BlockGroupService) InsertSequentialBlockGroupsAndTheirBlocksByBlockPack
 		options.WithSkipPermissionCheck(),
 	)
 	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	if exception = s.blockGroupRepository.IncrementSizesByIds(
+		reqDto.ContextFields.UserId,
+		sizeDeltaByBlockGroupId,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithSkipPermissionCheck(),
+	); exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}

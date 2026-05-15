@@ -28,8 +28,8 @@ import (
 type ArborizedEditableBlock struct {
 	Id       uuid.UUID                `json:"id" validate:"required"`
 	Type     enums.BlockType          `json:"type" validate:"required,isblocktype"`
-	Props    blocknote.BlockProps     `json:"-"`
-	Content  blocknote.BlockContent   `json:"-"`
+	Props    blocknote.BlockProps     `json:"-"` // the validate is in the below `UnmarshalJSON` methods
+	Content  blocknote.BlockContent   `json:"-"` // the validate is in the below `UnmarshalJSON` methods
 	Children []ArborizedEditableBlock `json:"children" validate:"omitempty"`
 }
 
@@ -114,8 +114,8 @@ type FlattenedEditableBlock struct {
 	Id            uuid.UUID              `json:"id" validate:"required"`
 	ParentBlockId *uuid.UUID             `json:"parentBlockId" validate:"omitempty"`
 	Type          enums.BlockType        `json:"type" validate:"required,isblocktype"`
-	Props         blocknote.BlockProps   `json:"-"`
-	Content       blocknote.BlockContent `json:"-"`
+	Props         blocknote.BlockProps   `json:"-"` // the validate is in the below `UnmarshalJSON` methods
+	Content       blocknote.BlockContent `json:"-"` // the validate is in the below `UnmarshalJSON` methods
 }
 
 func (feb *FlattenedEditableBlock) UnmarshalJSON(data []byte) error {
