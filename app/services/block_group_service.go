@@ -713,17 +713,19 @@ func (s *BlockGroupService) InsertBlockGroupAndItsBlocksByBlockPackId(
 		return nil, exception
 	}
 
-	if exception = s.blockGroupRepository.IncrementSizesByIds(
-		reqDto.ContextFields.UserId,
-		map[uuid.UUID]int64{
-			*newBlockGroupId: totalSize,
-		},
-		options.WithTransactionDB(tx),
-		options.WithOnlyDeleted(types.Ternary_Negative),
-		options.WithSkipPermissionCheck(),
-	); exception != nil {
-		tx.Rollback()
-		return nil, exception
+	if totalSize > 0 { // if we increase the size with 0, it will yield an exception
+		if exception = s.blockGroupRepository.IncrementSizesByIds(
+			reqDto.ContextFields.UserId,
+			map[uuid.UUID]int64{
+				*newBlockGroupId: totalSize,
+			},
+			options.WithTransactionDB(tx),
+			options.WithOnlyDeleted(types.Ternary_Negative),
+			options.WithSkipPermissionCheck(),
+		); exception != nil {
+			tx.Rollback()
+			return nil, exception
+		}
 	}
 
 	if err := tx.Commit().Error; err != nil {
@@ -832,7 +834,9 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 				BlockGroupId: newBlockGroupIds[validateResult.Index],
 				BlockIds:     blockIds,
 			})
-			sizeDeltaByBlockGroupId[newBlockGroupIds[validateResult.Index]] += validateResult.Data.TotalSize
+			if validateResult.Data.TotalSize > 0 { // if we increase the size with 0 by using IncrementSizesByIds repository function, it will yield an exception
+				sizeDeltaByBlockGroupId[newBlockGroupIds[validateResult.Index]] += validateResult.Data.TotalSize
+			}
 			createBlockGroupContentInput = append(createBlockGroupContentInput, inputs.CreateBlockGroupContentInput{
 				BlockGroupId: newBlockGroupIds[validateResult.Index],
 				Blocks:       createBlockInputs,
@@ -861,15 +865,17 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 		return nil, exception
 	}
 
-	if exception = s.blockGroupRepository.IncrementSizesByIds(
-		reqDto.ContextFields.UserId,
-		sizeDeltaByBlockGroupId,
-		options.WithTransactionDB(tx),
-		options.WithOnlyDeleted(types.Ternary_Negative),
-		options.WithSkipPermissionCheck(),
-	); exception != nil {
-		tx.Rollback()
-		return nil, exception
+	if len(sizeDeltaByBlockGroupId) > 0 { // if we increase the size with 0, it will yield an exception
+		if exception = s.blockGroupRepository.IncrementSizesByIds(
+			reqDto.ContextFields.UserId,
+			sizeDeltaByBlockGroupId,
+			options.WithTransactionDB(tx),
+			options.WithOnlyDeleted(types.Ternary_Negative),
+			options.WithSkipPermissionCheck(),
+		); exception != nil {
+			tx.Rollback()
+			return nil, exception
+		}
 	}
 
 	if err := tx.Commit().Error; err != nil {
@@ -980,7 +986,9 @@ func (s *BlockGroupService) BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds(
 				BlockGroupId: newBlockGroupIds[validateResult.Index],
 				BlockIds:     blockIds,
 			})
-			sizeDeltaByBlockGroupId[newBlockGroupIds[validateResult.Index]] += validateResult.Data.TotalSize
+			if validateResult.Data.TotalSize > 0 { // if we increase the size with 0 by using IncrementSizesByIds repository function, it will yield an exception
+				sizeDeltaByBlockGroupId[newBlockGroupIds[validateResult.Index]] += validateResult.Data.TotalSize
+			}
 			createBlockGroupContentInput = append(createBlockGroupContentInput, inputs.CreateBlockGroupContentInput{
 				BlockGroupId: newBlockGroupIds[validateResult.Index],
 				Blocks:       createBlockInputs,
@@ -1009,15 +1017,17 @@ func (s *BlockGroupService) BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds(
 		return nil, exception
 	}
 
-	if exception = s.blockGroupRepository.IncrementSizesByIds(
-		reqDto.ContextFields.UserId,
-		sizeDeltaByBlockGroupId,
-		options.WithTransactionDB(tx),
-		options.WithOnlyDeleted(types.Ternary_Negative),
-		options.WithSkipPermissionCheck(),
-	); exception != nil {
-		tx.Rollback()
-		return nil, exception
+	if len(sizeDeltaByBlockGroupId) > 0 { // if we increase the size with 0, it will yield an exception
+		if exception = s.blockGroupRepository.IncrementSizesByIds(
+			reqDto.ContextFields.UserId,
+			sizeDeltaByBlockGroupId,
+			options.WithTransactionDB(tx),
+			options.WithOnlyDeleted(types.Ternary_Negative),
+			options.WithSkipPermissionCheck(),
+		); exception != nil {
+			tx.Rollback()
+			return nil, exception
+		}
 	}
 
 	if err := tx.Commit().Error; err != nil {
@@ -1125,7 +1135,9 @@ func (s *BlockGroupService) InsertSequentialBlockGroupsAndTheirBlocksByBlockPack
 				BlockGroupId: newBlockGroupIds[validateResult.Index],
 				BlockIds:     blockIds,
 			})
-			sizeDeltaByBlockGroupId[newBlockGroupIds[validateResult.Index]] += validateResult.Data.TotalSize
+			if validateResult.Data.TotalSize > 0 { // if we increase the size with 0 by using IncrementSizesByIds repository function, it will yield an exception
+				sizeDeltaByBlockGroupId[newBlockGroupIds[validateResult.Index]] += validateResult.Data.TotalSize
+			}
 			createBlocksInputs = append(createBlocksInputs, inputs.CreateBlockGroupContentInput{
 				BlockGroupId: newBlockGroupIds[validateResult.Index],
 				Blocks:       createBlocksByBlockGroupInput,
@@ -1154,15 +1166,17 @@ func (s *BlockGroupService) InsertSequentialBlockGroupsAndTheirBlocksByBlockPack
 		return nil, exception
 	}
 
-	if exception = s.blockGroupRepository.IncrementSizesByIds(
-		reqDto.ContextFields.UserId,
-		sizeDeltaByBlockGroupId,
-		options.WithTransactionDB(tx),
-		options.WithOnlyDeleted(types.Ternary_Negative),
-		options.WithSkipPermissionCheck(),
-	); exception != nil {
-		tx.Rollback()
-		return nil, exception
+	if len(sizeDeltaByBlockGroupId) > 0 { // if we increase the size with 0, it will yield an exception
+		if exception = s.blockGroupRepository.IncrementSizesByIds(
+			reqDto.ContextFields.UserId,
+			sizeDeltaByBlockGroupId,
+			options.WithTransactionDB(tx),
+			options.WithOnlyDeleted(types.Ternary_Negative),
+			options.WithSkipPermissionCheck(),
+		); exception != nil {
+			tx.Rollback()
+			return nil, exception
+		}
 	}
 
 	if err := tx.Commit().Error; err != nil {

@@ -886,6 +886,17 @@ func (r *BlockGroupRepository) InsertManyByBlockPackIds(
 		}
 	}
 
+	restoreResult := parsedOptions.DB.Model(&schemas.BlockGroup{}).
+		Where("id IN ? AND deleted_at IS NOT NULL", newBlockGroupIds).
+		Updates(map[string]interface{}{"deleted_at": nil})
+	if exception = exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: restoreResult.Error != nil, Second: exceptions.BlockGroup.FailedToUpdate().WithOrigin(restoreResult.Error)},
+		{First: restoreResult.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
+	}); exception != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exception
+	}
+
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
@@ -1154,12 +1165,11 @@ func (r *BlockGroupRepository) BulkUpdateManyByIds(
 			}
 		}
 
-		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid, ?::bigint, ?::bigint, ?::boolean)")
+		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid, ?::bigint, ?::boolean)")
 		valueArgs = append(valueArgs,
 			in.Id,
 			in.PartialUpdateInput.Values.PrevBlockGroupId,
 			in.PartialUpdateInput.Values.Size,
-			in.PartialUpdateInput.Values.SizeDelta,
 			setPrevBlockGroupIdNull,
 		)
 	}
@@ -1175,9 +1185,9 @@ func (r *BlockGroupRepository) BulkUpdateManyByIds(
 				WHEN v.set_prev_block_group_id_null::boolean THEN NULL
 				ELSE COALESCE(v.prev_block_group_id::uuid, bg.prev_block_group_id)
 			END,
-			size = GREATEST(0, COALESCE(v.size::bigint, bg.size) + COALESCE(v.size_delta::bigint, 0)),
+			size = GREATEST(0, COALESCE(v.size::bigint, bg.size)),
 			updated_at = NOW()
-		FROM (VALUES %s) AS v(id, prev_block_group_id, size, size_delta, set_prev_block_group_id_null)
+		FROM (VALUES %s) AS v(id, prev_block_group_id, size, set_prev_block_group_id_null)
 		WHERE bg.id = v.id::uuid AND bg.deleted_at IS NULL
 	`, strings.Join(valuePlaceholders, ","))
 	result := parsedOptions.DB.Exec(sql, valueArgs...)
@@ -1241,26 +1251,88 @@ func (r *BlockGroupRepository) IncrementSizesByIds(
 		return exceptions.BlockGroup.NoChanges()
 	}
 
-	bulkUpdateInputs := make([]inputs.BulkUpdateBlockGroupsInput, 0, len(sizeDeltaById))
+	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	shouldStartTransaction := !parsedOptions.IsTransactionStarted && !parsedOptions.SkipPermissionCheck
+	if shouldStartTransaction {
+		parsedOptions.DB = parsedOptions.DB.Begin()
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+	}
+
+	isBlockGroupValid := make(map[uuid.UUID]bool)
+	if !parsedOptions.SkipPermissionCheck {
+		allowedPermissions := []enums.AccessControlPermission{
+			enums.AccessControlPermission_Owner,
+			enums.AccessControlPermission_Admin,
+			enums.AccessControlPermission_Write,
+		}
+
+		ids := make([]uuid.UUID, 0, len(sizeDeltaById))
+		for id := range sizeDeltaById {
+			ids = append(ids, id)
+		}
+
+		validBlockGroups, exception := r.CheckPermissionsAndGetManyByIds(
+			ids,
+			userId,
+			nil,
+			allowedPermissions,
+			opts...,
+		)
+		if exception != nil {
+			return exceptions.BlockGroup.NoPermission("update these block groups")
+		}
+
+		for _, validBlockGroup := range validBlockGroups {
+			isBlockGroupValid[validBlockGroup.Id] = true
+		}
+	}
+
+	var valuePlaceholders []string
+	var valueArgs []interface{}
 	for id, sizeDelta := range sizeDeltaById {
 		if sizeDelta == 0 {
 			continue
 		}
-		delta := sizeDelta
-		bulkUpdateInputs = append(bulkUpdateInputs, inputs.BulkUpdateBlockGroupsInput{
-			Id: id,
-			PartialUpdateInput: inputs.PartialUpdateInput[inputs.UpdateBlockGroupInput]{
-				Values: inputs.UpdateBlockGroupInput{
-					SizeDelta: &delta,
-				},
-			},
-		})
+		if !parsedOptions.SkipPermissionCheck && !isBlockGroupValid[id] {
+			continue
+		}
+
+		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::bigint)")
+		valueArgs = append(valueArgs, id, sizeDelta)
 	}
-	if len(bulkUpdateInputs) == 0 {
+
+	if len(valuePlaceholders) == 0 {
+		if !parsedOptions.SkipPermissionCheck {
+			return exceptions.BlockGroup.NoPermission("update these block groups")
+		}
 		return exceptions.BlockGroup.NoChanges()
 	}
 
-	return r.BulkUpdateManyByIds(userId, bulkUpdateInputs, opts...)
+	sql := fmt.Sprintf(`
+		UPDATE "BlockGroupTable" AS bg
+		SET
+			size = GREATEST(0, bg.size + v.size_delta::bigint),
+			updated_at = NOW()
+		FROM (VALUES %s) AS v(id, size_delta)
+		WHERE bg.id = v.id::uuid AND bg.deleted_at IS NULL
+	`, strings.Join(valuePlaceholders, ","))
+	result := parsedOptions.DB.Exec(sql, valueArgs...)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToUpdate().WithOrigin(result.Error)},
+	}); exception != nil {
+		return exception
+	}
+
+	if shouldStartTransaction {
+		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
+			return exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
+		}
+	}
+
+	return nil
 }
 
 func (r *BlockGroupRepository) RestoreSoftDeletedOneById(

@@ -423,15 +423,17 @@ func (s *BlockService) InsertBlock(
 		return nil, exception
 	}
 
-	if _, exception = s.blockGroupRepository.IncrementSizeById(
-		reqDto.Body.BlockGroupId,
-		reqDto.ContextFields.UserId,
-		totalSize,
-		options.WithTransactionDB(tx),
-		options.WithOnlyDeleted(types.Ternary_Negative),
-	); exception != nil {
-		tx.Rollback()
-		return nil, exception
+	if totalSize > 0 {
+		if _, exception = s.blockGroupRepository.IncrementSizeById(
+			reqDto.Body.BlockGroupId,
+			reqDto.ContextFields.UserId,
+			totalSize,
+			options.WithTransactionDB(tx),
+			options.WithOnlyDeleted(types.Ternary_Negative),
+		); exception != nil {
+			tx.Rollback()
+			return nil, exception
+		}
 	}
 
 	if err := tx.Commit().Error; err != nil {
@@ -522,7 +524,9 @@ func (s *BlockService) InsertBlocks(
 				BlockGroupId: reqDto.Body.InsertedBlocks[validateResult.Index].BlockGroupId,
 				BlockIds:     blockIds,
 			})
-			sizeDeltaByBlockGroupId[reqDto.Body.InsertedBlocks[validateResult.Index].BlockGroupId] += validateResult.Data.TotalSize
+			if validateResult.Data.TotalSize > 0 { // if we increase the size with 0 by using IncrementSizesByIds repository function, it will yield an exception
+				sizeDeltaByBlockGroupId[reqDto.Body.InsertedBlocks[validateResult.Index].BlockGroupId] += validateResult.Data.TotalSize
+			}
 			createBlockGroupContentInput = append(createBlockGroupContentInput, inputs.CreateBlockGroupContentInput{
 				BlockGroupId: reqDto.Body.InsertedBlocks[validateResult.Index].BlockGroupId,
 				Blocks:       createBlockInputs,
@@ -552,14 +556,16 @@ func (s *BlockService) InsertBlocks(
 		return nil, exception
 	}
 
-	if exception = s.blockGroupRepository.IncrementSizesByIds(
-		reqDto.ContextFields.UserId,
-		sizeDeltaByBlockGroupId,
-		options.WithTransactionDB(tx),
-		options.WithOnlyDeleted(types.Ternary_Negative),
-	); exception != nil {
-		tx.Rollback()
-		return nil, exception
+	if len(sizeDeltaByBlockGroupId) > 0 { // if we increase the size with 0, it will yield an exception
+		if exception = s.blockGroupRepository.IncrementSizesByIds(
+			reqDto.ContextFields.UserId,
+			sizeDeltaByBlockGroupId,
+			options.WithTransactionDB(tx),
+			options.WithOnlyDeleted(types.Ternary_Negative),
+		); exception != nil {
+			tx.Rollback()
+			return nil, exception
+		}
 	}
 
 	if err := tx.Commit().Error; err != nil {
