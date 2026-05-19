@@ -714,11 +714,10 @@ func (s *BlockGroupService) InsertBlockGroupAndItsBlocksByBlockPackId(
 	}
 
 	if totalSize > 0 { // if we increase the size with 0, it will yield an exception
-		if exception = s.blockGroupRepository.IncrementSizesByIds(
+		if _, exception = s.blockGroupRepository.IncrementSizeById(
+			*newBlockGroupId,
 			reqDto.ContextFields.UserId,
-			map[uuid.UUID]int64{
-				*newBlockGroupId: totalSize,
-			},
+			totalSize, // add the total size of all new blocks to the block group
 			options.WithTransactionDB(tx),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 			options.WithSkipPermissionCheck(),

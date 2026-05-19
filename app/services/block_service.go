@@ -615,16 +615,22 @@ func (s *BlockService) UpdateMyBlockById(
 		},
 		SetNull: reqDto.Body.SetNull,
 	}
-	var affectedBlockGroupIds []uuid.UUID
-	if reqDto.Body.Values.BlockGroupId != nil && (*reqDto.Body.Values.BlockGroupId) != block.BlockGroupId {
-		affectedBlockGroupIds = append(affectedBlockGroupIds, block.BlockGroupId)
+	oldBlockGroupId := block.BlockGroupId
+	newBlockGroupId := oldBlockGroupId
+	if reqDto.Body.Values.BlockGroupId != nil {
+		newBlockGroupId = *reqDto.Body.Values.BlockGroupId
 	}
+
+	oldSize := int64(len(block.Props)) + int64(len(block.Content))
+	newProps := block.Props
+	newContent := block.Content
 
 	if reqDto.Body.Values.Props != nil {
 		propsString := string(bytes.TrimSpace(*reqDto.Body.Values.Props))
 		if propsString == "{}" || propsString == "" {
 			emptyPropsJson := datatypes.JSON("{}")
 			updateInput.Values.Props = &emptyPropsJson
+			newProps = emptyPropsJson
 		} else {
 			_, err := blocknote.ParseProps(block.Type.String(), *reqDto.Body.Values.Props)
 			if err != nil {
@@ -633,6 +639,7 @@ func (s *BlockService) UpdateMyBlockById(
 			}
 			rawPropsJson := datatypes.JSON(*reqDto.Body.Values.Props)
 			updateInput.Values.Props = &rawPropsJson
+			newProps = rawPropsJson
 		}
 	}
 
@@ -642,6 +649,7 @@ func (s *BlockService) UpdateMyBlockById(
 		if trimContentString == "null" || trimContentString == "[]" || trimContentString == "" {
 			emptyContentsJson := datatypes.JSON("[]")
 			updateInput.Values.Content = &emptyContentsJson
+			newContent = emptyContentsJson
 		} else {
 			switch trimContent[0] {
 			case '[':
@@ -652,6 +660,7 @@ func (s *BlockService) UpdateMyBlockById(
 				}
 				rawContentJson := datatypes.JSON(*reqDto.Body.Values.Content)
 				updateInput.Values.Content = &rawContentJson
+				newContent = rawContentJson
 			case '{':
 				var table blocknote.TableContent
 				if err := json.Unmarshal(trimContent, &table); err != nil {
@@ -660,6 +669,7 @@ func (s *BlockService) UpdateMyBlockById(
 				}
 				rawContentJson := datatypes.JSON(*reqDto.Body.Values.Content)
 				updateInput.Values.Content = &rawContentJson
+				newContent = rawContentJson
 			default:
 				tx.Rollback()
 				return nil, exceptions.Block.InvalidDto().WithOrigin(errors.New("invalid content format: must be array or object"))
@@ -678,6 +688,34 @@ func (s *BlockService) UpdateMyBlockById(
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
+	}
+
+	newSize := int64(len(newProps)) + int64(len(newContent))
+	blockGroupIdToSizeDelta := make(map[uuid.UUID]int64)
+	var affectedBlockGroupIds []uuid.UUID
+
+	if newBlockGroupId == oldBlockGroupId {
+		sizeDelta := newSize - oldSize
+		if sizeDelta != 0 {
+			blockGroupIdToSizeDelta[oldBlockGroupId] = sizeDelta
+		}
+	} else {
+		blockGroupIdToSizeDelta[oldBlockGroupId] -= oldSize
+		blockGroupIdToSizeDelta[newBlockGroupId] += newSize
+		affectedBlockGroupIds = append(affectedBlockGroupIds, oldBlockGroupId)
+	}
+
+	if len(blockGroupIdToSizeDelta) > 0 {
+		if exception := s.blockGroupRepository.IncrementSizesByIds(
+			reqDto.ContextFields.UserId,
+			blockGroupIdToSizeDelta,
+			options.WithTransactionDB(tx),
+			options.WithOnlyDeleted(types.Ternary_Negative),
+			options.WithSkipPermissionCheck(),
+		); exception != nil {
+			tx.Rollback()
+			return nil, exception
+		}
 	}
 
 	exception = s.blockGroupRepository.CollectOrphanedBlockGroupsByIds(
@@ -759,7 +797,10 @@ func (s *BlockService) UpdateMyBlocksByIds(
 		Content      *json.RawMessage `json:"content"`
 	}
 	validateBlockPropsAndContentDto := make([]ValidateBlockPropsAndContentDto, len(blocks))
+	affectedBlockGroupIdsMap := make(map[uuid.UUID]bool)
 	var affectedBlockGroupIds []uuid.UUID
+	blockIdToOriginalPropsSize := make(map[uuid.UUID]int64)
+	blockIdToOriginalContentSize := make(map[uuid.UUID]int64)
 	for index, block := range blocks {
 		if blockIdToUpdateDto[block.Id].Values.Type == nil {
 			validateBlockPropsAndContentDto[index] = ValidateBlockPropsAndContentDto{
@@ -781,8 +822,13 @@ func (s *BlockService) UpdateMyBlocksByIds(
 
 		if blockIdToUpdateDto[block.Id].Values.BlockGroupId != nil &&
 			(*blockIdToUpdateDto[block.Id].Values.BlockGroupId) != block.BlockGroupId {
-			affectedBlockGroupIds = append(affectedBlockGroupIds, block.BlockGroupId)
+			if !affectedBlockGroupIdsMap[block.BlockGroupId] {
+				affectedBlockGroupIdsMap[block.BlockGroupId] = true
+				affectedBlockGroupIds = append(affectedBlockGroupIds, block.BlockGroupId)
+			}
 		}
+		blockIdToOriginalPropsSize[block.Id] = int64(len(block.Props))
+		blockIdToOriginalContentSize[block.Id] = int64(len(block.Content))
 	}
 	validateBlockPropsAndContentFunc := func(validateBlockPropsAndContentDto ValidateBlockPropsAndContentDto) (inputs.BulkUpdateBlocksInput, error) {
 		result := inputs.BulkUpdateBlocksInput{
@@ -856,16 +902,47 @@ func (s *BlockService) UpdateMyBlocksByIds(
 		UpdatedAt: time.Now(),
 	}
 	successBlockGroupMap := make(map[uuid.UUID][]uuid.UUID)
+	blockGroupIdToSizeDelta := make(map[uuid.UUID]int64)
+	// note that the validateResult only consists of props and content
+	// please not using the field of parent block id and block group id, and type
 	for _, validateResult := range validateBlocksPropsAndContentResult {
 		if validateResult.Err == nil {
 			resDto.SuccessIndexes = append(resDto.SuccessIndexes, validateResult.Index)
-			successBlockGroupMap[validateBlockPropsAndContentDto[validateResult.Index].BlockGroupId] = append(successBlockGroupMap[validateBlockPropsAndContentDto[validateResult.Index].BlockGroupId], validateResult.Data.Id)
+			originalBlockGroupId := validateBlockPropsAndContentDto[validateResult.Index].BlockGroupId
+			targetBlockGroupId := originalBlockGroupId
+			if blockIdToUpdateDto[validateResult.Data.Id].Values.BlockGroupId != nil {
+				targetBlockGroupId = *blockIdToUpdateDto[validateResult.Data.Id].Values.BlockGroupId
+			}
+
+			var sizeDelta int64 = 0
+			var totalOriginalSize int64 = blockIdToOriginalPropsSize[validateResult.Data.Id] + blockIdToOriginalContentSize[validateResult.Data.Id]
+			var totalTargetSize int64 = blockIdToOriginalPropsSize[validateResult.Data.Id] + blockIdToOriginalContentSize[validateResult.Data.Id]
+			if validateResult.Data.PartialUpdateInput.Values.Props != nil {
+				sizeDelta += (int64(len(*validateResult.Data.PartialUpdateInput.Values.Props)) - blockIdToOriginalPropsSize[validateResult.Data.Id])
+				totalTargetSize += (int64(len(*validateResult.Data.PartialUpdateInput.Values.Props)) - blockIdToOriginalPropsSize[validateResult.Data.Id])
+			}
+			if validateResult.Data.PartialUpdateInput.Values.Content != nil {
+				sizeDelta += (int64(len(*validateResult.Data.PartialUpdateInput.Values.Content)) - blockIdToOriginalContentSize[validateResult.Data.Id])
+				totalTargetSize += (int64(len(*validateResult.Data.PartialUpdateInput.Values.Content)) - blockIdToOriginalContentSize[validateResult.Data.Id])
+			}
+
+			if targetBlockGroupId == originalBlockGroupId {
+				if sizeDelta != 0 {
+					blockGroupIdToSizeDelta[originalBlockGroupId] += sizeDelta
+				}
+			} else {
+				blockGroupIdToSizeDelta[originalBlockGroupId] -= totalOriginalSize
+				blockGroupIdToSizeDelta[targetBlockGroupId] += totalTargetSize
+			}
+
+			successBlockGroupMap[targetBlockGroupId] =
+				append(successBlockGroupMap[targetBlockGroupId], validateResult.Data.Id)
 			bulkUpdateBlocksInputs = append(bulkUpdateBlocksInputs, inputs.BulkUpdateBlocksInput{
 				Id: validateResult.Data.Id,
 				PartialUpdateInput: inputs.PartialUpdateInput[inputs.UpdateBlockInput]{
 					Values: inputs.UpdateBlockInput{
+						BlockGroupId:  &targetBlockGroupId,
 						ParentBlockId: blockIdToUpdateDto[validateResult.Data.Id].Values.ParentBlockId,
-						BlockGroupId:  blockIdToUpdateDto[validateResult.Data.Id].Values.BlockGroupId,
 						Type:          blockIdToUpdateDto[validateResult.Data.Id].Values.Type,
 						Props:         validateResult.Data.PartialUpdateInput.Values.Props,
 						Content:       validateResult.Data.PartialUpdateInput.Values.Content,
@@ -901,6 +978,19 @@ func (s *BlockService) UpdateMyBlocksByIds(
 		return nil, exception
 	}
 
+	if len(blockGroupIdToSizeDelta) > 0 {
+		if exception := s.blockGroupRepository.IncrementSizesByIds(
+			reqDto.ContextFields.UserId,
+			blockGroupIdToSizeDelta,
+			options.WithTransactionDB(tx),
+			options.WithOnlyDeleted(types.Ternary_Negative),
+			options.WithSkipPermissionCheck(),
+		); exception != nil {
+			tx.Rollback()
+			return nil, exception
+		}
+	}
+
 	// the garbage collection of the orphaned block group which don't have any blocks
 	exception = s.blockGroupRepository.CollectOrphanedBlockGroupsByIds(
 		affectedBlockGroupIds,
@@ -930,16 +1020,44 @@ func (s *BlockService) RestoreMyBlockById(
 		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
 
 	restoredBlock, exception := s.blockRepository.RestoreSoftDeletedOneById(
 		reqDto.Body.BlockId,
 		reqDto.ContextFields.UserId,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
+	}
+
+	if _, exception := s.blockGroupRepository.RestoreSoftDeletedManyByIds(
+		[]uuid.UUID{restoredBlock.BlockGroupId},
+		reqDto.ContextFields.UserId,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Positive),
+	); exception != nil && !exceptions.CommonlyCompare(exception, exceptions.BlockGroup.NoChanges(), false) {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	if _, exception := s.blockGroupRepository.IncrementSizeById(
+		restoredBlock.BlockGroupId,
+		reqDto.ContextFields.UserId,
+		int64(len(restoredBlock.Props))+int64(len(restoredBlock.Content)),
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithSkipPermissionCheck(),
+	); exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.RestoreMyBlockByIdResDto{
@@ -962,16 +1080,55 @@ func (s *BlockService) RestoreMyBlocksByIds(
 		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
 
 	restoredBlocks, exception := s.blockRepository.RestoreSoftDeletedManyByIds(
 		reqDto.Body.BlockIds,
 		reqDto.ContextFields.UserId,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
+	}
+
+	blockGroupIdToSizeDelta := make(map[uuid.UUID]int64)
+	for _, restoredBlock := range restoredBlocks {
+		blockGroupIdToSizeDelta[restoredBlock.BlockGroupId] += (int64(len(restoredBlock.Props)) + int64(len(restoredBlock.Content)))
+	}
+
+	if len(blockGroupIdToSizeDelta) > 0 {
+		restoreBlockGroupIds := make([]uuid.UUID, 0, len(blockGroupIdToSizeDelta))
+		for blockGroupId := range blockGroupIdToSizeDelta {
+			restoreBlockGroupIds = append(restoreBlockGroupIds, blockGroupId)
+		}
+
+		if _, exception := s.blockGroupRepository.RestoreSoftDeletedManyByIds(
+			restoreBlockGroupIds,
+			reqDto.ContextFields.UserId,
+			options.WithTransactionDB(tx),
+			options.WithOnlyDeleted(types.Ternary_Positive),
+		); exception != nil && !exceptions.CommonlyCompare(exception, exceptions.BlockGroup.NoChanges(), false) {
+			tx.Rollback()
+			return nil, exception
+		}
+
+		if exception := s.blockGroupRepository.IncrementSizesByIds(
+			reqDto.ContextFields.UserId,
+			blockGroupIdToSizeDelta,
+			options.WithTransactionDB(tx),
+			options.WithOnlyDeleted(types.Ternary_Negative),
+			options.WithSkipPermissionCheck(),
+		); exception != nil {
+			tx.Rollback()
+			return nil, exception
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	resDto := make(dtos.RestoreMyBlocksByIdsResDto, len(restoredBlocks))
@@ -1004,10 +1161,11 @@ func (s *BlockService) DeleteMyBlockById(
 	deletedBlock, exception := s.blockRepository.SoftDeleteOneById(
 		reqDto.Body.BlockId,
 		reqDto.ContextFields.UserId,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
@@ -1024,7 +1182,19 @@ func (s *BlockService) DeleteMyBlockById(
 		if exception := s.blockGroupRepository.SoftDeleteOneById(
 			deletedBlock.BlockGroupId,
 			reqDto.ContextFields.UserId,
-			options.WithDB(tx),
+			options.WithTransactionDB(tx),
+			options.WithOnlyDeleted(types.Ternary_Negative),
+			options.WithSkipPermissionCheck(),
+		); exception != nil {
+			tx.Rollback()
+			return nil, exception
+		}
+	} else { // update the size of the involved block group
+		if _, exception := s.blockGroupRepository.IncrementSizeById(
+			deletedBlock.BlockGroupId,
+			reqDto.ContextFields.UserId,
+			-int64(len(deletedBlock.Props))-int64(len(deletedBlock.Content)),
+			options.WithTransactionDB(tx),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 			options.WithSkipPermissionCheck(),
 		); exception != nil {
@@ -1034,6 +1204,7 @@ func (s *BlockService) DeleteMyBlockById(
 	}
 
 	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
 		return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
 	}
 
@@ -1065,11 +1236,13 @@ func (s *BlockService) DeleteMyBlocksByIds(
 	// the garbage collection of the orphaned block group which don't have any blocks
 	affectedBlockGroupIdsMap := make(map[uuid.UUID]bool)
 	var affectedBlockGroupIds []uuid.UUID
-	for _, block := range deletedBlocks {
-		if !affectedBlockGroupIdsMap[block.BlockGroupId] {
-			affectedBlockGroupIdsMap[block.BlockGroupId] = true
-			affectedBlockGroupIds = append(affectedBlockGroupIds, block.BlockGroupId)
+	blockGroupIdToSizeDelta := make(map[uuid.UUID]int64)
+	for _, deletedBlock := range deletedBlocks {
+		if !affectedBlockGroupIdsMap[deletedBlock.BlockGroupId] {
+			affectedBlockGroupIdsMap[deletedBlock.BlockGroupId] = true
+			affectedBlockGroupIds = append(affectedBlockGroupIds, deletedBlock.BlockGroupId)
 		}
+		blockGroupIdToSizeDelta[deletedBlock.BlockGroupId] -= (int64(len(deletedBlock.Props)) + int64(len(deletedBlock.Content)))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -1077,6 +1250,17 @@ func (s *BlockService) DeleteMyBlocksByIds(
 		enums.AccessControlPermission_Admin,
 		enums.AccessControlPermission_Write,
 	}
+	if exception := s.blockGroupRepository.IncrementSizesByIds(
+		reqDto.ContextFields.UserId,
+		blockGroupIdToSizeDelta,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithSkipPermissionCheck(),
+	); exception != nil && !exceptions.CommonlyCompare(exception, exceptions.BlockGroup.NoChanges(), false) {
+		tx.Rollback()
+		return nil, exception
+	}
+
 	exception = s.blockGroupRepository.CollectOrphanedBlockGroupsByIds(
 		affectedBlockGroupIds,
 		reqDto.ContextFields.UserId,
@@ -1090,6 +1274,7 @@ func (s *BlockService) DeleteMyBlocksByIds(
 	}
 
 	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
 		return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
 	}
 
