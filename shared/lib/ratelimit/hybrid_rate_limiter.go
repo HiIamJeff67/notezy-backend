@@ -46,7 +46,7 @@ func NewHybridRateLimiter(
 	isAuthorizedLimiter bool,
 ) *HybridRateLimiter {
 	syncInterval := windowDuration / constants.SynchronizationToWindowDurationRatio
-	syncInterval = max(constants.MinSynchornizationInterval, syncInterval)
+	syncInterval = max(constants.MinSynchronizationInterval, syncInterval)
 
 	hrl := &HybridRateLimiter{
 		Limiter:             rate.NewLimiter(rateLimit, burst),

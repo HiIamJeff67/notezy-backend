@@ -1,14 +1,14 @@
 package middlewares
 
 import (
+	"github.com/gin-gonic/gin"
+
 	configs "notezy-backend/app/configs"
 	exceptions "notezy-backend/app/exceptions"
 	logs "notezy-backend/app/monitor/logs"
 	metrics "notezy-backend/app/monitor/metrics"
 	traces "notezy-backend/app/monitor/traces"
 	ratelimit "notezy-backend/shared/lib/ratelimit"
-
-	"github.com/gin-gonic/gin"
 )
 
 var unauthorizedRateLimiter *ratelimit.HybridRateLimiter
@@ -39,7 +39,7 @@ func UnauthorizedRateLimitMiddleware(config ...configs.RateLimitConfig) gin.Hand
 	}
 
 	if unauthorizedRateLimiter == nil {
-		InitAuthorizedRateLimiter(cfg)
+		InitUnauthorizedRateLimiter(cfg)
 	}
 
 	return func(ctx *gin.Context) {

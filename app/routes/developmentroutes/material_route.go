@@ -19,9 +19,9 @@ func configureDevelopmentMaterialRoutes() {
 
 	materialRoutes := DevelopmentRouterGroup.Group("/material")
 	defaultMiddlewares := []gin.HandlerFunc{
+		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(3 * time.Second),
 		middlewares.AuthMiddleware(),
-		middlewares.AuthorizedRateLimitMiddleware(),
 		interceptors.ShareableResponseWriterInterceptor(
 			interceptors.RefreshTokenInterceptor,
 			interceptors.EmbeddedInterceptor,

@@ -18,9 +18,9 @@ func configureDevelopmentBlockGroupRoutes() {
 
 	blockGroupRoutes := DevelopmentRouterGroup.Group("/blockGroup")
 	defaultMiddlewares := []gin.HandlerFunc{
+		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(10 * time.Second),
 		middlewares.AuthMiddleware(),
-		middlewares.AuthorizedRateLimitMiddleware(),
 		interceptors.ShareableResponseWriterInterceptor(
 			interceptors.RefreshTokenInterceptor,
 			interceptors.EmbeddedInterceptor,

@@ -25,6 +25,7 @@ func configureDevelopmentAuthRoutes() {
 				otel.Meter(constants.ServiceName),
 				metrics.MetricNames.Server.Requests.Auth.Register,
 			),
+			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(5*time.Second),
 			authModule.Binder.BindRegister(
 				authModule.Controller.Register,
@@ -37,6 +38,7 @@ func configureDevelopmentAuthRoutes() {
 				otel.Meter(constants.ServiceName),
 				metrics.MetricNames.Server.Requests.Auth.RegisterViaGoogle,
 			),
+			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(5*time.Second),
 			authModule.Binder.BindRegisterViaGoogle(
 				authModule.Controller.RegisterViaGoogle,
@@ -49,6 +51,7 @@ func configureDevelopmentAuthRoutes() {
 				otel.Meter(constants.ServiceName),
 				metrics.MetricNames.Server.Requests.Auth.Login,
 			),
+			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(3*time.Second),
 			authModule.Binder.BindLogin(
 				authModule.Controller.Login,
@@ -61,6 +64,7 @@ func configureDevelopmentAuthRoutes() {
 				otel.Meter(constants.ServiceName),
 				metrics.MetricNames.Server.Requests.Auth.LoginViaGoogle,
 			),
+			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(3*time.Second),
 			authModule.Binder.BindLoginViaGoogle(
 				authModule.Controller.LoginViaGoogle,
@@ -73,9 +77,9 @@ func configureDevelopmentAuthRoutes() {
 				otel.Meter(constants.ServiceName),
 				metrics.MetricNames.Server.Requests.Auth.Logout,
 			),
+			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(3*time.Second),
 			middlewares.AuthMiddleware(),
-			middlewares.AuthorizedRateLimitMiddleware(),
 			interceptors.ShareableResponseWriterInterceptor(
 				interceptors.EmbeddedInterceptor,
 			),
@@ -90,6 +94,7 @@ func configureDevelopmentAuthRoutes() {
 				otel.Meter(constants.ServiceName),
 				metrics.MetricNames.Server.Requests.Auth.SendAuthCode,
 			),
+			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(3*time.Second),
 			authModule.Binder.BindSendAuthCode(
 				authModule.Controller.SendAuthCode,
@@ -102,9 +107,9 @@ func configureDevelopmentAuthRoutes() {
 				otel.Meter(constants.ServiceName),
 				metrics.MetricNames.Server.Requests.Auth.ValidateEmail,
 			),
+			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(3*time.Second),
 			middlewares.AuthMiddleware(),
-			middlewares.AuthorizedRateLimitMiddleware(),
 			middlewares.CSRFMiddleware(),
 			interceptors.ShareableResponseWriterInterceptor(
 				interceptors.RefreshTokenInterceptor,
@@ -121,9 +126,9 @@ func configureDevelopmentAuthRoutes() {
 				otel.Meter(constants.ServiceName),
 				metrics.MetricNames.Server.Requests.Auth.ResetEmail,
 			),
+			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(3*time.Second),
 			middlewares.AuthMiddleware(),
-			middlewares.AuthorizedRateLimitMiddleware(),
 			middlewares.UserRoleMiddleware(enums.UserRole_Normal),
 			middlewares.CSRFMiddleware(),
 			interceptors.ShareableResponseWriterInterceptor(
@@ -141,6 +146,7 @@ func configureDevelopmentAuthRoutes() {
 				otel.Meter(constants.ServiceName),
 				metrics.MetricNames.Server.Requests.Auth.ForgetPassword,
 			),
+			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(3*time.Second),
 			authModule.Binder.BindForgetPassword(
 				authModule.Controller.ForgetPassword,
@@ -153,9 +159,9 @@ func configureDevelopmentAuthRoutes() {
 				otel.Meter(constants.ServiceName),
 				metrics.MetricNames.Server.Requests.Auth.ResetMe,
 			),
+			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(3*time.Second),
 			middlewares.AuthMiddleware(),
-			middlewares.AuthorizedRateLimitMiddleware(),
 			middlewares.CSRFMiddleware(),
 			interceptors.ShareableResponseWriterInterceptor(
 				interceptors.RefreshTokenInterceptor,
@@ -172,9 +178,9 @@ func configureDevelopmentAuthRoutes() {
 				otel.Meter(constants.ServiceName),
 				metrics.MetricNames.Server.Requests.Auth.DeleteMe,
 			),
+			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(5*time.Second),
 			middlewares.AuthMiddleware(),
-			middlewares.AuthorizedRateLimitMiddleware(),
 			middlewares.CSRFMiddleware(),
 			interceptors.ShareableResponseWriterInterceptor(
 				interceptors.EmbeddedInterceptor,

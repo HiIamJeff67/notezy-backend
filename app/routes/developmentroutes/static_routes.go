@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	middlewares "notezy-backend/app/middlewares"
 	logs "notezy-backend/app/monitor/logs"
 	traces "notezy-backend/app/monitor/traces"
 )
@@ -14,6 +15,9 @@ func configureStaticRoutes() {
 	staticGroup := DevelopmentRouterGroup.Group("/static")
 	{
 		globalImagesGroup := staticGroup.Group("/globalImages")
+		globalImagesGroup.Use(
+			middlewares.UnauthorizedRateLimitMiddleware(),
+		)
 		{
 			// configure avatars
 			globalImagesGroup.GET("/avatars/:id", func(ctx *gin.Context) {

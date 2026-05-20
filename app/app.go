@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/fvbock/endless"
@@ -42,10 +43,16 @@ func StartApplication() {
 	defer shutdown()
 
 	developmentroutes.DevelopmentRouter = gin.Default()
+	proxies := strings.Split(util.GetEnv("GIN_TRUSTED_PROXIES", ""), ",")
+	if err := developmentroutes.DevelopmentRouter.SetTrustedProxies(proxies); err != nil {
+		fmt.Println("Failed to set trusted proxies for router: ", err)
+		return
+	}
 	developmentroutes.ConfigureDevelopmentRoutes()
 	ginAddr := util.GetEnv("GIN_DOMAIN", "") + ":" + util.GetEnv("GIN_PORT", "7777")
 	if err := endless.ListenAndServe(ginAddr, developmentroutes.DevelopmentRouter); err != nil {
 		fmt.Println("Failed to connect to the server")
+		return
 	}
 }
 

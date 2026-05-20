@@ -12,5 +12,5 @@ const (
 
 const (
 	SynchronizationToWindowDurationRatio = 10
-	MinSynchornizationInterval           = time.Second
+	MinSynchronizationInterval           = time.Second
 )

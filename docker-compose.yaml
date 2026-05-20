@@ -5,9 +5,12 @@ services:
     image: redis:7.2.3-alpine
     ports:
       - "${REDIS_PORT}:${DOCKER_REDIS_PORT}"
+    command: ["redis-server", "--appendonly", "yes"]
+    networks:
+      notezy-backend-net:
+        ipv4_address: 172.30.0.13
     volumes:
       - redis-data:/data
-    command: [ "redis-server", "--appendonly", "yes" ]
 
   notezy-db:
     # should be the same as DB_HOST(hosting service)
@@ -20,10 +23,13 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "${DB_PORT}:${DOCKER_DB_PORT}"
+    networks:
+      notezy-backend-net:
+        ipv4_address: 172.30.0.12
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 6
@@ -35,10 +41,14 @@ services:
     build:
       context: .
       dockerfile: infra/docker/Dockerfile.dev
+    networks:
+      notezy-backend-net:
+        ipv4_address: 172.30.0.11
     volumes:
       - .:/notezy-backend
       - /notezy-backend/tmp
     # entrypoint: ["${ENTRYPOINT_CMD}"]
+    # env_file: .env # this will allowed all the environment variables from .env file be callable in our backend codespace
     environment:
       DB_HOST: ${DB_HOST}
       DB_USER: ${DB_USER}
@@ -46,7 +56,8 @@ services:
       DB_NAME: ${DB_NAME}
       DB_PORT: ${DOCKER_DB_PORT}
       GIN_DOMAIN: ${GIN_DOMAIN}
-      GIN_PORT: ${GIN_PORT}
+      GIN_PORT: ${DOCKER_GIN_PORT}
+      GIN_TRUSTED_PROXIES: ${GIN_TRUSTED_PROXIES}
       JWT_ACCESS_TOKEN_SECRET_KEY: ${JWT_ACCESS_TOKEN_SECRET_KEY}
       JWT_REFRESH_TOKEN_SECRET_KEY: ${JWT_REFRESH_TOKEN_SECRET_KEY}
       SMTP_HOST: ${SMTP_HOST}
@@ -59,23 +70,39 @@ services:
       OAUTH_GOOGLE_CLIENT_ID: ${OAUTH_GOOGLE_CLIENT_ID}
       OAUTH_GOOGLE_CLIENT_SECRET: ${OAUTH_GOOGLE_CLIENT_SECRET}
       OAUTH_GOOGLE_REDIRECT_URL: ${OAUTH_GOOGLE_REDIRECT_URL}
-    ports:
-      - "${GIN_PORT}:${DOCKER_GIN_PORT}"
+    expose:
+      - "${GIN_PORT}"
     depends_on:
       notezy-db:
         condition: service_healthy
 
+  notezy-nginx:
+    image: nginx:1.27-alpine
+    container_name: ${DOCKER_NGINX_SERVICE_NAME}
+    ports:
+      - "${NGINX_HTTP_PORT}:${DOCKER_NGINX_HTTP_PORT}"
+    networks:
+      notezy-backend-net:
+        ipv4_address: 172.30.0.10
+    volumes:
+      - ./infra/nginx/default.dev.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - ${DOCKER_API_SERVICE_NAME}
+
   notezy-loki:
     container_name: ${DOCKER_LOKI_SERVICE_NAME}
     image: grafana/loki:latest
-    command: [ "-config.file=/etc/loki.yaml", "-config.expand-env=true" ]
+    command: ["-config.file=/etc/loki.yaml", "-config.expand-env=true"]
+    ports:
+      - "${LOKI_PORT}:${DOCKER_LOKI_PORT}"
+    environment:
+      DOCKER_LOKI_PORT: ${DOCKER_LOKI_PORT}
+    networks:
+      notezy-backend-net:
+        ipv4_address: 172.30.0.14
     volumes:
       - ./infra/monitor/loki-config.dev.yaml:/etc/loki.yaml
       - loki-data:/loki
-    environment:
-      DOCKER_LOKI_PORT: ${DOCKER_LOKI_PORT}
-    ports:
-      - "${LOKI_PORT}:${DOCKER_LOKI_PORT}"
     # healthcheck:
     #   test:
     #     [
@@ -89,10 +116,7 @@ services:
   notezy-tempo:
     container_name: ${DOCKER_TEMPO_SERVICE_NAME}
     image: grafana/tempo:2.9.1
-    command: [ "-config.file=/etc/tempo.yaml", "-config.expand-env=true" ]
-    volumes:
-      - ./infra/monitor/tempo-config.dev.yaml:/etc/tempo.yaml
-      - tempo-data:/var/tempo
+    command: ["-config.file=/etc/tempo.yaml", "-config.expand-env=true"]
     environment:
       DOCKER_TEMPO_PORT: ${DOCKER_TEMPO_PORT}
       DOCKER_OTEL_COLLECTOR_GRPC_PORT: ${DOCKER_OTEL_COLLECTOR_GRPC_PORT}
@@ -101,6 +125,12 @@ services:
       DOCKER_MIMIR_PORT: ${DOCKER_MIMIR_PORT}
     ports:
       - "${TEMPO_PORT}:${DOCKER_TEMPO_PORT}"
+    networks:
+      notezy-backend-net:
+        ipv4_address: 172.30.0.15
+    volumes:
+      - ./infra/monitor/tempo-config.dev.yaml:/etc/tempo.yaml
+      - tempo-data:/var/tempo
     depends_on:
       notezy-mimir:
         condition: service_started
@@ -108,7 +138,8 @@ services:
   notezy-mimir:
     container_name: ${DOCKER_MIMIR_SERVICE_NAME}
     image: grafana/mimir:latest
-    command: [ "-config.file=/etc/mimir.yaml", "-target=all", "-config.expand-env=true" ]
+    command:
+      ["-config.file=/etc/mimir.yaml", "-target=all", "-config.expand-env=true"]
     volumes:
       - ./infra/monitor/mimir-config.dev.yaml:/etc/mimir.yaml
       - mimir-data:/data/mimir
@@ -116,6 +147,9 @@ services:
       DOCKER_MIMIR_PORT: ${DOCKER_MIMIR_PORT}
     ports:
       - "${MIMIR_PORT}:${DOCKER_MIMIR_PORT}"
+    networks:
+      notezy-backend-net:
+        ipv4_address: 172.30.0.16
     # healthcheck:
     #   test:
     #     [
@@ -130,8 +164,6 @@ services:
   notezy-otel-collector:
     container_name: ${DOCKER_OTEL_COLLECTOR_SERVICE_NAME}
     image: otel/opentelemetry-collector-contrib:latest
-    volumes:
-      - ./infra/monitor/otel-collector-config.dev.yaml:/etc/otelcol-contrib/config.yaml
     environment:
       DOCKER_LOKI_SERVICE_NAME: ${DOCKER_LOKI_SERVICE_NAME}
       DOCKER_TEMPO_SERVICE_NAME: ${DOCKER_TEMPO_SERVICE_NAME}
@@ -141,6 +173,11 @@ services:
     ports:
       - "${OTEL_COLLECTOR_GRPC_PORT}:${DOCKER_OTEL_COLLECTOR_GRPC_PORT}" # OTLP gRPC
       - "${OTEL_COLLECTOR_HTTP_PORT}:${DOCKER_OTEL_COLLECTOR_HTTP_PORT}" # OTLP HTTP
+    networks:
+      notezy-backend-net:
+        ipv4_address: 172.30.0.17
+    volumes:
+      - ./infra/monitor/otel-collector-config.dev.yaml:/etc/otelcol-contrib/config.yaml
     depends_on:
       notezy-loki:
         condition: service_started
@@ -152,8 +189,6 @@ services:
   notezy-grafana:
     container_name: ${DOCKER_GRAFANA_SERVICE_NAME}
     image: grafana/grafana:latest
-    volumes:
-      - ./infra/monitor/grafana/datasources.dev.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
       GF_FEATURE_TOGGLE_ENABLE: ${GF_FEATURE_TOGGLE_ENABLE}
@@ -165,10 +200,22 @@ services:
       DOCKER_LOKI_PORT: ${DOCKER_LOKI_PORT}
     ports:
       - "${GRAFANA_PORT}:${DOCKER_GRAFANA_PORT}"
+    networks:
+      notezy-backend-net:
+        ipv4_address: 172.30.0.18
+    volumes:
+      - ./infra/monitor/grafana/datasources.dev.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
     depends_on:
       - notezy-loki
       - notezy-tempo
       - notezy-mimir
+
+networks:
+  notezy-backend-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16
 
 volumes:
   redis-data:

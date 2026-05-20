@@ -6,6 +6,7 @@ services:
     volumes:
       - redis-data:/data
     command: ["redis-server", "--appendonly", "yes"]
+
   notezy-db:
     # should be the same as DB_HOST(hosting service)
     container_name: ${DOCKER_DB_SERVICE_NAME}
@@ -22,6 +23,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
   notezy-api:
     container_name: ${DOCKER_API_SERVICE_NAME}
     image: ${DOCKER_API_SERVICE_NAME}:latest
@@ -38,6 +40,7 @@ services:
       DB_PORT: ${DOCKER_DB_PORT}
       GIN_DOMAIN: ${GIN_DOMAIN}
       GIN_PORT: ${GIN_PORT}
+      GIN_TRUSTED_PROXIES: ${GIN_TRUSTED_PROXIES}
       JWT_ACCESS_TOKEN_SECRET_KEY: ${JWT_ACCESS_TOKEN_SECRET_KEY}
       JWT_REFRESH_TOKEN_SECRET_KEY: ${JWT_REFRESH_TOKEN_SECRET_KEY}
       SMTP_HOST: ${SMTP_HOST}
@@ -55,6 +58,18 @@ services:
     depends_on:
       notezy-db:
         condition: service_healthy
+
+  notezy-nginx:
+    image: nginx:1.27-alpine
+    container_name: ${DOCKER_NGINX_SERVICE_NAME}
+    depends_on:
+      - ${DOCKER_API_SERVICE_NAME}
+    ports:
+      - "${NGINX_HTTP_PORT}:${DOCKER_NGINX_HTTP_PORT}"
+      - "${NGINX_HTTPS_PORT}:${DOCKER_NGINX_HTTPS_PORT}"
+    volumes:
+      - ./infra/nginx/default.prod.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./infra/nginx/ssl:/etc/nginx/ssl:ro
 
 volumes:
   redis-data:

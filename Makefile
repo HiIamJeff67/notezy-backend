@@ -1,18 +1,18 @@
 # ============================== Database Shortcut Commands ============================== #
 view-hotreload-dbs:
-	docker-compose run --rm notezy-api go run main.go viewDatabases
+	docker compose exec -T notezy-api go run main.go viewDatabases
 
 view-hotreload-enums:
-	docker-compose run --rm notezy-api go run main.go viewAllEnums
+	docker compose exec -T notezy-api go run main.go viewAllEnums
 
 psql:
 	docker exec -it notezy-db psql -U jeff -d notezy-db
 
 # =============== Migration Commands =============== #
 migrate-build-db:
-	docker-compose run --rm notezy-api ./notezy-backend migrateDB
+	docker compose exec -T notezy-api ./notezy-backend migrateDB
 migrate-hotreload-db:
-	docker-compose run --rm notezy-api go run main.go migrateDB
+	docker compose exec -T notezy-api go run main.go migrateDB
 
 clear-build-db:
 	docker exec -i notezy-db psql -U jeff -d notezy-db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
@@ -29,16 +29,16 @@ remigrate-hotreload-db:
 
 # =============== Seeding Commands =============== #
 seed-build-db:
-	docker-compose run --rm notezy-api ./notezy-backend seedDB
+	docker compose exec -T notezy-api ./notezy-backend seedDB
 seed-hotreload-db:
-	docker-compose run --rm notezy-api go run main.go seedDB
+	docker compose exec -T notezy-api go run main.go seedDB
 
 clear-go-cache:
 	go clean -modcache
 	go mod download
 
 test-auth-e2e:
-	docker-compose run --rm notezy-api go test ./test/e2e/auth
+	docker compose exec -T notezy-api go test ./test/e2e/auth
 
 # ============================== GraphQL Shortcut Commands ============================== #
 gql-generate: # update before generate

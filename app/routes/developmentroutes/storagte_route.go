@@ -15,7 +15,8 @@ import (
 func configureStorageRoutes() {
 	storageRoute := DevelopmentRouterGroup.Group("/storage")
 	storageRoute.Use(
-		middlewares.TimeoutMiddleware(5 * time.Second),
+		middlewares.UnauthorizedRateLimitMiddleware(),
+		middlewares.TimeoutMiddleware(5*time.Second),
 	)
 	{
 		// only on test environment

@@ -30,7 +30,7 @@ func isAllowedReferer(referer string, allowedDomains []string) bool {
 	return false
 }
 
-func DomainWhitelistMiddleware() gin.HandlerFunc {
+func DomainWhiteListMiddleware() gin.HandlerFunc {
 	var allowedDomains []string
 	if envDomains := util.GetEnv("ALLOWED_DOMAINS", ""); len(strings.ReplaceAll(envDomains, " ", "")) > 0 {
 		additionalDomains := strings.Split(envDomains, ",")
