@@ -74,10 +74,9 @@ type metricNameMaterial struct {
 	GetMyMaterialAndItsParentById    string
 	GetMyMaterialsByParentSubShelfId string
 	GetAllMyMaterialsByRootShelfId   string
-	CreateTextbookMaterial           string
-	CreateNotebookMaterial           string
+	CreateMyMaterial                 string
 	UpdateMyMaterialById             string
-	SaveMyNotebookMaterialById       string
+	SaveMyMaterialById               string
 	MoveMyMaterialById               string
 	MoveMyMaterialsByIds             string
 	RestoreMyMaterialById            string
@@ -254,10 +253,9 @@ var MetricNames = struct {
 				GetMyMaterialAndItsParentById:    "server.requests.material.getMyMaterialAndItsParentById",
 				GetMyMaterialsByParentSubShelfId: "server.requests.material.getMyMaterialsByParentSubShelfId",
 				GetAllMyMaterialsByRootShelfId:   "server.requests.material.getAllMyMaterialsByRootShelfId",
-				CreateTextbookMaterial:           "server.requests.material.createTextbookMaterial",
-				CreateNotebookMaterial:           "server.requests.material.createNotebookMaterial",
+				CreateMyMaterial:                 "server.requests.material.createMyMaterial",
 				UpdateMyMaterialById:             "server.requests.material.updateMyMaterialById",
-				SaveMyNotebookMaterialById:       "server.requests.material.saveMyNotebookMaterialById",
+				SaveMyMaterialById:               "server.requests.material.saveMyMaterialById",
 				MoveMyMaterialById:               "server.requests.material.moveMyMaterialById",
 				MoveMyMaterialsByIds:             "server.requests.material.moveMyMaterialsByIds",
 				RestoreMyMaterialById:            "server.requests.material.restoreMyMaterialById",

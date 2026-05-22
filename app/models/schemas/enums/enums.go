@@ -33,7 +33,6 @@ func IsValidEnumValues[EnumValue interface {
 		Language |
 		BadgeType |
 		AccessControlPermission |
-		MaterialType |
 		MaterialContentType |
 		BlockType |
 		SupportedBlockPackIcon |

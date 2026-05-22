@@ -18,8 +18,8 @@ const (
 	MaxBlockPackOfSubShelf  int32 = 1e+2 // max number of block packs
 
 	PeekFileSize            types.ByteType = 256 * types.Byte
-	MaxTextbookFileSize     types.ByteType = 5 * types.MB
-	MaxNotebookFileSize     types.ByteType = 5 * types.MB
-	MaxLearningCardFileSize types.ByteType = 1 * types.MB
-	MaxWorkFlowFileSize     types.ByteType = 10 * types.MB
+	MaxMaterialTextFileSize  types.ByteType = 5 * types.MB
+	MaxMaterialImageFileSize types.ByteType = 20 * types.MB
+	MaxMaterialVideoFileSize types.ByteType = 100 * types.MB
+	MaxMaterialAudioFileSize types.ByteType = 20 * types.MB
 )

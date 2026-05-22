@@ -23,10 +23,9 @@ type MaterialBinderInterface interface {
 	BindGetMyMaterialAndItsParentById(controllerFunc types.ControllerFunc[*dtos.GetMyMaterialAndItsParentByIdReqDto]) gin.HandlerFunc
 	BindGetMyMaterialsByParentSubShelfId(controllerFunc types.ControllerFunc[*dtos.GetMyMaterialsByParentSubShelfIdReqDto]) gin.HandlerFunc
 	BindGetAllMyMaterialsByRootShelfId(controllerFunc types.ControllerFunc[*dtos.GetAllMyMaterialsByRootShelfIdReqDto]) gin.HandlerFunc
-	BindCreateTextbookMaterial(controllerFunc types.ControllerFunc[*dtos.CreateTextbookMaterialReqDto]) gin.HandlerFunc
-	BindCreateNotebookMaterial(controllerFunc types.ControllerFunc[*dtos.CreateNotebookMaterialReqDto]) gin.HandlerFunc
+	BindCreateMyMaterial(controllerFunc types.ControllerFunc[*dtos.CreateMyMaterialReqDto]) gin.HandlerFunc
 	BindUpdateMyMaterialById(controllerFunc types.ControllerFunc[*dtos.UpdateMyMaterialByIdReqDto]) gin.HandlerFunc
-	BindSaveMyNotebookMaterialById(controllerFunc types.ControllerFunc[*dtos.SaveMyMaterialByIdReqDto]) gin.HandlerFunc
+	BindSaveMyMaterialById(controllerFunc types.ControllerFunc[*dtos.SaveMyMaterialByIdReqDto]) gin.HandlerFunc
 	BindMoveMyMaterialById(controllerFunc types.ControllerFunc[*dtos.MoveMyMaterialByIdReqDto]) gin.HandlerFunc
 	BindMoveMyMaterialsByIds(controllerFunc types.ControllerFunc[*dtos.MoveMyMaterialsByIdsReqDto]) gin.HandlerFunc
 	BindRestoreMyMaterialById(controllerFunc types.ControllerFunc[*dtos.RestoreMyMaterialByIdReqDto]) gin.HandlerFunc
@@ -162,39 +161,9 @@ func (b *MaterialBinder) BindGetAllMyMaterialsByRootShelfId(controllerFunc types
 	}
 }
 
-func (b *MaterialBinder) BindCreateTextbookMaterial(controllerFunc types.ControllerFunc[*dtos.CreateTextbookMaterialReqDto]) gin.HandlerFunc {
+func (b *MaterialBinder) BindCreateMyMaterial(controllerFunc types.ControllerFunc[*dtos.CreateMyMaterialReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.CreateTextbookMaterialReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserId = *userId
-
-		userPublicId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_PublicId)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserPublicId = *userPublicId
-
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Material.InvalidDto().WithOrigin(err)
-			exception.SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
-func (b *MaterialBinder) BindCreateNotebookMaterial(controllerFunc types.ControllerFunc[*dtos.CreateNotebookMaterialReqDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.CreateNotebookMaterialReqDto
+		var reqDto dtos.CreateMyMaterialReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -245,7 +214,7 @@ func (b *MaterialBinder) BindUpdateMyMaterialById(controllerFunc types.Controlle
 	}
 }
 
-func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.ControllerFunc[*dtos.SaveMyMaterialByIdReqDto]) gin.HandlerFunc {
+func (b *MaterialBinder) BindSaveMyMaterialById(controllerFunc types.ControllerFunc[*dtos.SaveMyMaterialByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.SaveMyMaterialByIdReqDto
 
@@ -273,6 +242,7 @@ func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.Con
 		}
 		var numberOfFiles = int64(len(fileHeaders))
 
+		// the number of files should be either zero or one
 		if numberOfFiles > 0 {
 			if numberOfFiles > 1 {
 				exceptions.Material.TooManyFiles(numberOfFiles).Log().SafelyAbortAndResponseWithJSON(ctx)
@@ -280,13 +250,6 @@ func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.Con
 			}
 
 			fileHeader := fileHeaders[0]
-
-			// check the file size
-			if fileHeader.Size > constants.MaxNotebookFileSize.ToInt64() {
-				exceptions.Material.FileTooLarge(fileHeader.Size, constants.MaxNotebookFileSize.ToInt64()).
-					Log().SafelyAbortAndResponseWithJSON(ctx)
-				return
-			}
 
 			// try to open the file
 			fileInterface, err := fileHeader.Open()
@@ -305,119 +268,35 @@ func (b *MaterialBinder) BindSaveMyTextbookMaterialById(controllerFunc types.Con
 			}
 
 			// detect the content type from the peeked bytes
-			detectedContentType := http.DetectContentType(peekedBytes)
-			// note that the content type may be detected in text/plain sometimes
-			if !strings.HasPrefix(detectedContentType, enums.MaterialContentType_PlainText.String()) &&
-				!strings.HasPrefix(detectedContentType, enums.MaterialContentType_JSON.String()) {
+			detectedContentType := strings.TrimSpace(strings.Split(http.DetectContentType(peekedBytes), ";")[0])
+			isAllowedContentType := false
+			for _, allowed := range enums.AllMaterialContentTypeStrings {
+				if allowed == detectedContentType {
+					isAllowedContentType = true
+					break
+				}
+			}
+			if !isAllowedContentType {
 				fileInterface.Close()
 				exceptions.Material.InvalidType(detectedContentType).Log().SafelyAbortAndResponseWithJSON(ctx)
 				return
 			}
 
-			// try to reset(restore) the reading pointer to the beginning of the file
-			if seeker, ok := fileInterface.(io.Seeker); ok { // try using seeker to do so
-				_, err := seeker.Seek(0, io.SeekStart)
-				if err != nil {
-					fileInterface.Close()
-					exceptions.Material.CannotOpenFiles().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-					return
-				}
-			} else { // if it cannot be seeked, then re-open the file
+			var maxSize int64
+			switch {
+			case strings.HasPrefix(detectedContentType, "image/"):
+				maxSize = constants.MaxMaterialImageFileSize.ToInt64()
+			case strings.HasPrefix(detectedContentType, "video/"):
+				maxSize = constants.MaxMaterialVideoFileSize.ToInt64()
+			case strings.HasPrefix(detectedContentType, "audio/"):
+				maxSize = constants.MaxMaterialAudioFileSize.ToInt64()
+			default:
+				maxSize = constants.MaxMaterialTextFileSize.ToInt64()
+			}
+			if fileHeader.Size > maxSize {
 				fileInterface.Close()
-				fileInterface, err = fileHeader.Open()
-				if err != nil {
-					exceptions.Material.CannotOpenFiles().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-					return
-				}
-			}
-
-			reqDto.Body.ContentFile = fileInterface // bind the file interface here
-			reqDto.ContextFields.Size = &fileHeaders[0].Size
-
-			// make sure the file is closed at the end
-			defer func(f io.Reader) {
-				if closer, ok := f.(io.Closer); ok {
-					closer.Close()
-				}
-			}(fileInterface)
-		}
-
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Material.InvalidDto().WithOrigin(err)
-			exception.SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
-func (b *MaterialBinder) BindSaveMyNotebookMaterialById(controllerFunc types.ControllerFunc[*dtos.SaveMyMaterialByIdReqDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.SaveMyMaterialByIdReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserId = *userId
-
-		userPublicId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_PublicId)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserPublicId = *userPublicId
-
-		// extract the fileHeader from the context field, and make sure it's only one fileHeader
-		fileHeaders, exception := contexts.GetAndConvertContextToMultipartFileHeaders(ctx)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		var numberOfFiles = int64(len(fileHeaders))
-
-		if numberOfFiles > 0 {
-			if numberOfFiles > 1 {
-				exceptions.Material.TooManyFiles(numberOfFiles).Log().SafelyAbortAndResponseWithJSON(ctx)
-				return
-			}
-
-			fileHeader := fileHeaders[0]
-
-			// check the file size
-			if fileHeader.Size > constants.MaxNotebookFileSize.ToInt64() {
-				exceptions.Material.FileTooLarge(fileHeader.Size, constants.MaxNotebookFileSize.ToInt64()).
+				exceptions.Material.FileTooLarge(fileHeader.Size, maxSize).
 					Log().SafelyAbortAndResponseWithJSON(ctx)
-				return
-			}
-
-			// try to open the file
-			fileInterface, err := fileHeader.Open()
-			if err != nil {
-				exceptions.Material.CannotOpenFiles().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-				return
-			}
-
-			// peek the first few bytes of the given file
-			bufferedReader := bufio.NewReader(fileInterface)
-			peekedBytes, err := bufferedReader.Peek(int(constants.PeekFileSize))
-			if err != nil && err != io.EOF {
-				fileInterface.Close()
-				exceptions.Material.CannotPeekFiles().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-				return
-			}
-
-			// detect the content type from the peeked bytes
-			detectedContentType := http.DetectContentType(peekedBytes)
-			// note that the content type may be detected in text/plain sometimes
-			if !strings.HasPrefix(detectedContentType, enums.MaterialContentType_PlainText.String()) &&
-				!strings.HasPrefix(detectedContentType, enums.MaterialContentType_JSON.String()) {
-				fileInterface.Close()
-				exceptions.Material.InvalidType(detectedContentType).Log().SafelyAbortAndResponseWithJSON(ctx)
 				return
 			}
 

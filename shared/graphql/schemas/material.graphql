@@ -2,7 +2,6 @@ type PrivateMaterial {
   id: UUID!
   parentSubShelfId: UUID!
   name: String!
-  type: MaterialType!
   size: Float!
   contentKey: String!
   contentType: MaterialContentType!

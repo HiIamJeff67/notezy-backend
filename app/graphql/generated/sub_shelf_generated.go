@@ -556,8 +556,6 @@ func (ec *executionContext) fieldContext_PrivateSubShelf_materials(_ context.Con
 				return ec.fieldContext_PrivateMaterial_parentSubShelfId(ctx, field)
 			case "name":
 				return ec.fieldContext_PrivateMaterial_name(ctx, field)
-			case "type":
-				return ec.fieldContext_PrivateMaterial_type(ctx, field)
 			case "size":
 				return ec.fieldContext_PrivateMaterial_size(ctx, field)
 			case "contentKey":

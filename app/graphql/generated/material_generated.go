@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	gqlmodels "notezy-backend/app/graphql/models"
-	"notezy-backend/app/models/schemas/enums"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -164,50 +163,6 @@ func (ec *executionContext) fieldContext_PrivateMaterial_name(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateMaterial_type(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateMaterial) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateMaterial_type(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Type, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(enums.MaterialType)
-	fc.Result = res
-	return ec.marshalNMaterialType2notezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐMaterialType(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PrivateMaterial_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PrivateMaterial",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type MaterialType does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _PrivateMaterial_size(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateMaterial) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PrivateMaterial_size(ctx, field)
 	if err != nil {
@@ -322,9 +277,9 @@ func (ec *executionContext) _PrivateMaterial_contentType(ctx context.Context, fi
 		}
 		return graphql.Null
 	}
-	res := resTmp.(enums.MaterialContentType)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNMaterialContentType2notezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐMaterialContentType(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateMaterial_contentType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -334,7 +289,7 @@ func (ec *executionContext) fieldContext_PrivateMaterial_contentType(_ context.C
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type MaterialContentType does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -616,11 +571,6 @@ func (ec *executionContext) _PrivateMaterial(ctx context.Context, sel ast.Select
 			}
 		case "name":
 			out.Values[i] = ec._PrivateMaterial_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "type":
-			out.Values[i] = ec._PrivateMaterial_type(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

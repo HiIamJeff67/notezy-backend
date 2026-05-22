@@ -93,34 +93,18 @@ func configureDevelopmentMaterialRoutes() {
 			)...,
 		)
 		materialRoutes.POST(
-			"/createTextbookMaterial",
+			"/createMyMaterial",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createTextbookMaterial"),
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createMyMaterial"),
 					middlewares.ApplyMeterMiddleware(
 						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Material.CreateTextbookMaterial,
+						metrics.MetricNames.Server.Requests.Material.CreateMyMaterial,
 					),
 				},
 				defaultMiddlewares,
-				materialModule.Binder.BindCreateTextbookMaterial(
-					materialModule.Controller.CreateTextbookMaterial,
-				),
-			)...,
-		)
-		materialRoutes.POST(
-			"/createNotebookMaterial",
-			middlewares.RepositionMiddleware(
-				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createNotebookMaterial"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Material.CreateNotebookMaterial,
-					),
-				},
-				defaultMiddlewares,
-				materialModule.Binder.BindCreateNotebookMaterial(
-					materialModule.Controller.CreateNotebookMaterial,
+				materialModule.Binder.BindCreateMyMaterial(
+					materialModule.Controller.CreateMyMaterial,
 				),
 			)...,
 		)
@@ -141,19 +125,19 @@ func configureDevelopmentMaterialRoutes() {
 			)...,
 		)
 		materialRoutes.PUT(
-			"/saveMyNotebookMaterialById",
+			"/saveMyMaterialById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "saveMyNotebookMaterialById"),
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "saveMyMaterialById"),
 					middlewares.ApplyMeterMiddleware(
 						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Material.SaveMyNotebookMaterialById,
+						metrics.MetricNames.Server.Requests.Material.SaveMyMaterialById,
 					),
 					adapters.MultipartAdapter(),
 				},
 				defaultMiddlewares,
-				materialModule.Binder.BindSaveMyNotebookMaterialById(
-					materialModule.Controller.SaveMyNotebookMaterialById,
+				materialModule.Binder.BindSaveMyMaterialById(
+					materialModule.Controller.SaveMyMaterialById,
 				),
 			)...,
 		)

@@ -25,7 +25,7 @@ type MaterialRepositoryInterface interface {
 	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.MaterialRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.Material, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.Material, *exceptions.Exception)
 	CreateOneBySubShelfId(subShelfId uuid.UUID, userId uuid.UUID, input inputs.CreateMaterialInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
-	UpdateOneById(id uuid.UUID, userId uuid.UUID, matchedMaterialType *enums.MaterialType, input inputs.PartialUpdateMaterialInput, opts ...options.RepositoryOptions) (*schemas.Material, *exceptions.Exception)
+	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateMaterialInput, opts ...options.RepositoryOptions) (*schemas.Material, *exceptions.Exception)
 	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.Material, *exceptions.Exception)
 	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.Material, *exceptions.Exception)
 	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
@@ -229,7 +229,6 @@ func (r *MaterialRepository) CreateOneBySubShelfId(
 func (r *MaterialRepository) UpdateOneById(
 	id uuid.UUID,
 	userId uuid.UUID,
-	matchedMaterialType *enums.MaterialType,
 	input inputs.PartialUpdateMaterialInput,
 	opts ...options.RepositoryOptions,
 ) (*schemas.Material, *exceptions.Exception) {
@@ -261,15 +260,6 @@ func (r *MaterialRepository) UpdateOneById(
 	}
 	if existingMaterial == nil {
 		return nil, exceptions.Material.NotFound()
-	}
-
-	// check if the material type is matched
-	if matchedMaterialType != nil && existingMaterial.Type != *matchedMaterialType {
-		return nil, exceptions.Material.MaterialTypeNotMatch(
-			existingMaterial.Id.String(),
-			existingMaterial.Type,
-			matchedMaterialType,
-		)
 	}
 
 	// if the root shelf id is required to be updated in the database

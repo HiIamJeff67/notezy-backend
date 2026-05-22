@@ -2,9 +2,9 @@ fragment FragmentedBasicPrivateMaterial on PrivateMaterial {
   id
   parentSubShelfId
   name
-  type
   size
   contentKey
+  contentType
   parseMediaType
   deletedAt
   updatedAt

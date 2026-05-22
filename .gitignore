@@ -8,3 +8,6 @@ tmp/**.*
 
 backup-codes-thenotezy.*
 docs/general_designs/
+
+.DS_Store
+*.pem

@@ -26,18 +26,17 @@ type SearchEdge interface {
 }
 
 type PrivateMaterial struct {
-	ID               uuid.UUID                 `json:"id"`
-	ParentSubShelfID uuid.UUID                 `json:"parentSubShelfId"`
-	Name             string                    `json:"name"`
-	Type             enums.MaterialType        `json:"type"`
-	Size             float64                   `json:"size"`
-	ContentKey       string                    `json:"contentKey"`
-	ContentType      enums.MaterialContentType `json:"contentType"`
-	ParseMediaType   string                    `json:"parseMediaType"`
-	DeletedAt        *time.Time                `json:"deletedAt,omitempty"`
-	UpdatedAt        time.Time                 `json:"updatedAt"`
-	CreatedAt        time.Time                 `json:"createdAt"`
-	ParentSubShelf   *PrivateSubShelf          `json:"parentSubShelf"`
+	ID               uuid.UUID        `json:"id"`
+	ParentSubShelfID uuid.UUID        `json:"parentSubShelfId"`
+	Name             string           `json:"name"`
+	Size             float64          `json:"size"`
+	ContentKey       string           `json:"contentKey"`
+	ContentType      string           `json:"contentType"`
+	ParseMediaType   string           `json:"parseMediaType"`
+	DeletedAt        *time.Time       `json:"deletedAt,omitempty"`
+	UpdatedAt        time.Time        `json:"updatedAt"`
+	CreatedAt        time.Time        `json:"createdAt"`
+	ParentSubShelf   *PrivateSubShelf `json:"parentSubShelf"`
 }
 
 type PrivateRootShelf struct {

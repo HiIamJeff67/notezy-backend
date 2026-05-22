@@ -11,7 +11,6 @@ var MigratingEnums = map[string][]string{
 	new(Language).Name():                  AllLanguageStrings,
 	new(BadgeType).Name():                 AllBadgeTypeStrings,
 	new(AccessControlPermission).Name():   AllAccessControlPermissionStrings,
-	new(MaterialType).Name():              AllMaterialTypeStrings,
 	new(MaterialContentType).Name():       AllMaterialContentTypeStrings,
 	new(SupportedBlockPackIcon).Name():    AllSupportedBlockPackIconStrings,
 	new(BlockType).Name():                 AllBlockTypeStrings,

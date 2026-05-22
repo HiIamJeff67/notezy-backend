@@ -51,7 +51,6 @@ type ComplexityRoot struct {
 		ParentSubShelfID func(childComplexity int) int
 		ParseMediaType   func(childComplexity int) int
 		Size             func(childComplexity int) int
-		Type             func(childComplexity int) int
 		UpdatedAt        func(childComplexity int) int
 	}
 
@@ -278,13 +277,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateMaterial.Size(childComplexity), true
-
-	case "PrivateMaterial.type":
-		if e.complexity.PrivateMaterial.Type == nil {
-			break
-		}
-
-		return e.complexity.PrivateMaterial.Type(childComplexity), true
 
 	case "PrivateMaterial.updatedAt":
 		if e.complexity.PrivateMaterial.UpdatedAt == nil {
@@ -1057,26 +1049,6 @@ var sources = []*ast.Source{
   Korean
 }
 `, BuiltIn: false},
-	{Name: "../../../shared/graphql/schemas/enums/material_content_type_enum.graphql", Input: `enum MaterialContentType {
-  Text_Plain
-  Text_HTML
-  Text_Markdown
-  Image_PNG
-  Image_JPG
-  Image_JPEG
-  Image_GIF
-  Image_SVG
-  Video_MP3
-  VIDEO_MP4
-}
-`, BuiltIn: false},
-	{Name: "../../../shared/graphql/schemas/enums/material_type_enum.graphql", Input: `enum MaterialType {
-  Textbook
-  Notebook
-  LearningCards
-  Workflow
-}
-`, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/enums/user_gender_enum.graphql", Input: `enum UserGender {
   Male
   Female
@@ -1169,10 +1141,9 @@ interface SearchConnection {
   id: UUID!
   parentSubShelfId: UUID!
   name: String!
-  type: MaterialType!
   size: Float!
   contentKey: String!
-  contentType: MaterialContentType!
+  contentType: String!
   parseMediaType: String!
   deletedAt: Time
   updatedAt: Time!

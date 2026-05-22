@@ -29,11 +29,9 @@ type MaterialServiceInterface interface {
 	GetMyMaterialAndItsParentById(ctx context.Context, reqDto *dtos.GetMyMaterialAndItsParentByIdReqDto) (*dtos.GetMyMaterialAndItsParentByIdResDto, *exceptions.Exception)
 	GetMyMaterialsByParentSubShelfId(ctx context.Context, reqDto *dtos.GetMyMaterialsByParentSubShelfIdReqDto) (*dtos.GetMyMaterialsByParentSubShelfIdResDto, *exceptions.Exception)
 	GetAllMyMaterialsByRootShelfId(ctx context.Context, reqDto *dtos.GetAllMyMaterialsByRootShelfIdReqDto) (*dtos.GetAllMyMaterialsByRootShelfIdResDto, *exceptions.Exception)
-	CreateTextbookMaterial(ctx context.Context, reqDto *dtos.CreateTextbookMaterialReqDto) (*dtos.CreateTextbookMaterialResDto, *exceptions.Exception)
-	CreateNotebookMaterial(ctx context.Context, reqDto *dtos.CreateNotebookMaterialReqDto) (*dtos.CreateNotebookMaterialResDto, *exceptions.Exception)
+	CreateMyMaterial(ctx context.Context, reqDto *dtos.CreateMyMaterialReqDto) (*dtos.CreateMyMaterialResDto, *exceptions.Exception)
 	UpdateMyMaterialById(ctx context.Context, reqDto *dtos.UpdateMyMaterialByIdReqDto) (*dtos.UpdateMyMaterialByIdResDto, *exceptions.Exception)
-	SaveMyTextbookMaterialById(ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception)
-	SaveMyNotebookMaterialById(ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception)
+	SaveMyMaterialById(ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception)
 	MoveMyMaterialById(ctx context.Context, reqDto *dtos.MoveMyMaterialByIdReqDto) (*dtos.MoveMyMaterialByIdResDto, *exceptions.Exception)
 	MoveMyMaterialsByIds(ctx context.Context, reqDto *dtos.MoveMyMaterialsByIdsReqDto) (*dtos.MoveMyMaterialsByIdsResDto, *exceptions.Exception)
 	RestoreMyMaterialById(ctx context.Context, reqDto *dtos.RestoreMyMaterialByIdReqDto) (*dtos.RestoreMyMaterialByIdResDto, *exceptions.Exception)
@@ -86,14 +84,16 @@ func (s *MaterialService) GetMyMaterialById(
 
 	downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, material.ContentKey, nil)
 	if exception != nil {
-		return nil, exception
+		exception.Log() // ignore the missing file in storage error
 	}
 
 	return &dtos.GetMyMaterialByIdResDto{
 		Id:               material.Id,
 		ParentSubShelfId: material.ParentSubShelfId,
 		Name:             material.Name,
-		Type:             material.Type,
+		Size:             material.Size,
+		ContentType:      material.ContentType,
+		ParseMediaType:   material.ParseMediaType,
 		DownloadURL:      downloadURL,
 		DeletedAt:        material.DeletedAt,
 		UpdatedAt:        material.UpdatedAt,
@@ -125,8 +125,9 @@ func (s *MaterialService) GetMyMaterialAndItsParentById(
 	).Row().
 		Scan(&resDto.Id,
 			&resDto.Name,
-			&resDto.Type,
 			&resDto.Size,
+			&resDto.ContentType,
+			&resDto.ParseMediaType,
 			&contentKey,
 			&resDto.DeletedAt,
 			&resDto.UpdatedAt,
@@ -149,9 +150,9 @@ func (s *MaterialService) GetMyMaterialAndItsParentById(
 
 	downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, contentKey, nil)
 	if exception != nil {
-		return nil, exception
+		exception.Log() // ignore the missing file in storage error
 	}
-	resDto.DownloadURL = downloadURL
+	resDto.DownloadURL = downloadURL // could be empty string
 
 	return &resDto, nil
 }
@@ -193,13 +194,15 @@ func (s *MaterialService) GetMyMaterialsByParentSubShelfId(
 	for _, material := range materials {
 		downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, material.ContentKey, nil)
 		if exception != nil {
-			return nil, exception
+			exception.Log() // ignore the missing file in storage error
 		}
 		resDto = append(resDto, dtos.GetMyMaterialByIdResDto{
 			Id:               material.Id,
 			ParentSubShelfId: material.ParentSubShelfId,
 			Name:             material.Name,
-			Type:             material.Type,
+			Size:             material.Size,
+			ContentType:      material.ContentType,
+			ParseMediaType:   material.ParseMediaType,
 			DownloadURL:      downloadURL,
 			DeletedAt:        material.DeletedAt,
 			UpdatedAt:        material.UpdatedAt,
@@ -245,13 +248,15 @@ func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
 	for _, material := range materials {
 		downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, material.ContentKey, nil)
 		if exception != nil {
-			return nil, exception
+			exception.Log() // ignore the missing file in storage error
 		}
 		resDto = append(resDto, dtos.GetMyMaterialByIdResDto{
 			Id:               material.Id,
 			ParentSubShelfId: material.ParentSubShelfId,
 			Name:             material.Name,
-			Type:             material.Type,
+			Size:             material.Size,
+			ContentType:      material.ContentType,
+			ParseMediaType:   material.ParseMediaType,
 			DownloadURL:      downloadURL,
 			DeletedAt:        material.DeletedAt,
 			UpdatedAt:        material.UpdatedAt,
@@ -262,9 +267,9 @@ func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
 	return &resDto, nil
 }
 
-func (s *MaterialService) CreateTextbookMaterial(
-	ctx context.Context, reqDto *dtos.CreateTextbookMaterialReqDto,
-) (*dtos.CreateTextbookMaterialResDto, *exceptions.Exception) {
+func (s *MaterialService) CreateMyMaterial(
+	ctx context.Context, reqDto *dtos.CreateMyMaterialReqDto,
+) (*dtos.CreateMyMaterialResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Material.InvalidDto().WithOrigin(err)
 	}
@@ -281,11 +286,11 @@ func (s *MaterialService) CreateTextbookMaterial(
 		reqDto.Body.ParentSubShelfId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateMaterialInput{
-			Id:         newMaterialId,
-			Name:       reqDto.Body.Name,
-			Size:       zeroSize,
-			Type:       enums.MaterialType_Textbook,
-			ContentKey: newContentKey,
+			Id:             newMaterialId,
+			Name:           reqDto.Body.Name,
+			Size:           zeroSize,
+			ContentKey:     newContentKey,
+			ParseMediaType: "",
 		},
 		options.WithDB(db),
 	)
@@ -305,70 +310,9 @@ func (s *MaterialService) CreateTextbookMaterial(
 		return nil, exception
 	}
 
-	downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, newContentKey, nil)
-	if exception != nil {
-		return nil, exception
-	}
-
-	return &dtos.CreateTextbookMaterialResDto{
-		Id:          newMaterialId,
-		DownloadURL: downloadURL,
-		CreatedAt:   time.Now(),
-	}, nil
-}
-
-func (s *MaterialService) CreateNotebookMaterial(
-	ctx context.Context, reqDto *dtos.CreateNotebookMaterialReqDto,
-) (*dtos.CreateNotebookMaterialResDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Material.InvalidDto().WithOrigin(err)
-	}
-
-	db := s.db.WithContext(ctx)
-
-	newMaterialId := uuid.New()
-	newContentKey := s.storage.GetKey(
-		reqDto.ContextFields.UserPublicId.String(),
-		newMaterialId.String(),
-	)
-	zeroSize := int64(0)
-	_, exception := s.materialRepository.CreateOneBySubShelfId(
-		reqDto.Body.ParentSubShelfId,
-		reqDto.ContextFields.UserId,
-		inputs.CreateMaterialInput{
-			Id:         newMaterialId,
-			Name:       reqDto.Body.Name,
-			Size:       zeroSize,
-			Type:       enums.MaterialType_Notebook,
-			ContentKey: newContentKey,
-		},
-		options.WithDB(db),
-	)
-	if exception != nil {
-		return nil, exception
-	}
-
-	newContentFile := bytes.NewReader([]byte{})
-
-	object, exception := s.storage.NewObject(newContentKey, newContentFile, zeroSize)
-	if exception != nil {
-		return nil, exception
-	}
-
-	exception = s.storage.PutObjectByKey(ctx, newContentKey, object)
-	if exception != nil {
-		return nil, exception
-	}
-
-	downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, newContentKey, nil)
-	if exception != nil {
-		return nil, exception
-	}
-
-	return &dtos.CreateNotebookMaterialResDto{
-		Id:          newMaterialId,
-		DownloadURL: downloadURL,
-		CreatedAt:   time.Now(),
+	return &dtos.CreateMyMaterialResDto{
+		Id:        newMaterialId,
+		CreatedAt: time.Now(),
 	}, nil
 }
 
@@ -384,7 +328,6 @@ func (s *MaterialService) UpdateMyMaterialById(
 	material, exception := s.materialRepository.UpdateOneById(
 		reqDto.Body.MaterialId,
 		reqDto.ContextFields.UserId,
-		&reqDto.Body.MaterialType,
 		inputs.PartialUpdateMaterialInput{
 			Values: inputs.UpdateMaterialInput{
 				Name: reqDto.Body.Values.Name,
@@ -402,9 +345,8 @@ func (s *MaterialService) UpdateMyMaterialById(
 	}, nil
 }
 
-// helper function for Save Material Services
-func (s *MaterialService) saveMyMaterialById(
-	ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto, materialType enums.MaterialType,
+func (s *MaterialService) SaveMyMaterialById(
+	ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto,
 ) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Material.InvalidDto().WithOrigin(err)
@@ -414,7 +356,7 @@ func (s *MaterialService) saveMyMaterialById(
 		return nil, exceptions.Material.InvalidDto()
 	}
 
-	tx := s.db.WithContext(ctx).Begin()
+	db := s.db.WithContext(ctx)
 
 	partialUpdate := inputs.PartialUpdateMaterialInput{
 		Values: inputs.UpdateMaterialInput{
@@ -432,57 +374,40 @@ func (s *MaterialService) saveMyMaterialById(
 	// extract the data in it and get its content type, parse media type, and actual size, etc.
 	object, exception := s.storage.NewObject(contentKey, reqDto.Body.ContentFile, fileHeaderSize)
 	if exception != nil {
-		tx.Rollback()
 		return nil, exception
 	}
 	if object == nil {
-		tx.Rollback()
 		return nil, exceptions.Material.CannotGetFileObjects()
 	}
 
 	size := object.Size
+	contentType, err := enums.ConvertStringToMaterialContentType(object.ContentType)
+	if err != nil {
+		return nil, exceptions.Material.InvalidType(object.ContentType).WithOrigin(err)
+	}
 	partialUpdate.Values.ParseMediaType = object.ParseMediaType
 	partialUpdate.Values.Size = &size
+	partialUpdate.Values.ContentType = contentType
 
 	material, exception := s.materialRepository.UpdateOneById(
 		reqDto.Body.MaterialId,
 		reqDto.ContextFields.UserId,
-		&materialType,
 		partialUpdate,
-		options.WithDB(tx),
+		options.WithDB(db),
 	)
 	if exception != nil {
-		tx.Rollback()
 		return nil, exception
 	}
 
 	// if there does exist a file, then put the file at the end to ensure the entire operation is consistent
 	exception = s.storage.PutObjectByKey(ctx, material.ContentKey, object)
 	if exception != nil {
-		tx.Rollback()
 		return nil, exception
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		tx.Rollback()
-		return nil, exceptions.Material.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.SaveMyMaterialByIdResDto{
 		UpdatedAt: material.UpdatedAt,
 	}, nil
-}
-
-func (s *MaterialService) SaveMyTextbookMaterialById(
-	ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto,
-) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception) {
-	return s.saveMyMaterialById(ctx, reqDto, enums.MaterialType_Textbook)
-}
-
-func (s *MaterialService) SaveMyNotebookMaterialById(
-	ctx context.Context, reqDto *dtos.SaveMyMaterialByIdReqDto,
-) (*dtos.SaveMyMaterialByIdResDto, *exceptions.Exception) {
-	return s.saveMyMaterialById(ctx, reqDto, enums.MaterialType_Notebook)
 }
 
 func (s *MaterialService) MoveMyMaterialById(
@@ -577,15 +502,16 @@ func (s *MaterialService) RestoreMyMaterialById(
 
 	downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, restoredMaterial.ContentKey, nil)
 	if exception != nil {
-		return nil, exception
+		exception.Log() // ignore the missing file in storage error
 	}
 
 	return &dtos.RestoreMyMaterialByIdResDto{
 		Id:               restoredMaterial.Id,
 		ParentSubShelfId: restoredMaterial.ParentSubShelfId,
 		Name:             restoredMaterial.Name,
-		Type:             restoredMaterial.Type,
 		Size:             restoredMaterial.Size,
+		ContentType:      restoredMaterial.ContentType,
+		ParseMediaType:   restoredMaterial.ParseMediaType,
 		DownloadURL:      downloadURL,
 		DeletedAt:        restoredMaterial.DeletedAt,
 		UpdatedAt:        restoredMaterial.UpdatedAt,
@@ -615,14 +541,15 @@ func (s *MaterialService) RestoreMyMaterialsByIds(
 	for _, restoredMaterial := range restoredMaterials {
 		downloadURL, exception := s.storage.PresignGetObjectByKey(ctx, restoredMaterial.ContentKey, nil)
 		if exception != nil {
-			return nil, exception
+			exception.Log() // ignore the missing file in storage error
 		}
 		resDto = append(resDto, dtos.RestoreMyMaterialByIdResDto{
 			Id:               restoredMaterial.Id,
 			ParentSubShelfId: restoredMaterial.ParentSubShelfId,
 			Name:             restoredMaterial.Name,
-			Type:             restoredMaterial.Type,
 			Size:             restoredMaterial.Size,
+			ContentType:      restoredMaterial.ContentType,
+			ParseMediaType:   restoredMaterial.ParseMediaType,
 			DownloadURL:      downloadURL,
 			DeletedAt:        restoredMaterial.DeletedAt,
 			UpdatedAt:        restoredMaterial.UpdatedAt,

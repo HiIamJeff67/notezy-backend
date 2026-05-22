@@ -14,10 +14,9 @@ type MaterialControllerInterface interface {
 	GetMyMaterialAndItsParentById(ctx *gin.Context, reqDto *dtos.GetMyMaterialAndItsParentByIdReqDto)
 	GetMyMaterialsByParentSubShelfId(ctx *gin.Context, reqDto *dtos.GetMyMaterialsByParentSubShelfIdReqDto)
 	GetAllMyMaterialsByRootShelfId(ctx *gin.Context, reqDto *dtos.GetAllMyMaterialsByRootShelfIdReqDto)
-	CreateTextbookMaterial(ctx *gin.Context, reqDto *dtos.CreateTextbookMaterialReqDto)
-	CreateNotebookMaterial(ctx *gin.Context, reqDto *dtos.CreateNotebookMaterialReqDto)
+	CreateMyMaterial(ctx *gin.Context, reqDto *dtos.CreateMyMaterialReqDto)
 	UpdateMyMaterialById(ctx *gin.Context, reqDto *dtos.UpdateMyMaterialByIdReqDto)
-	SaveMyNotebookMaterialById(ctx *gin.Context, reqDto *dtos.SaveMyMaterialByIdReqDto)
+	SaveMyMaterialById(ctx *gin.Context, reqDto *dtos.SaveMyMaterialByIdReqDto)
 	MoveMyMaterialById(ctx *gin.Context, reqDto *dtos.MoveMyMaterialByIdReqDto)
 	MoveMyMaterialsByIds(ctx *gin.Context, reqDto *dtos.MoveMyMaterialsByIdsReqDto)
 	RestoreMyMaterialById(ctx *gin.Context, reqDto *dtos.RestoreMyMaterialByIdReqDto)
@@ -92,8 +91,8 @@ func (c *MaterialController) GetAllMyMaterialsByRootShelfId(ctx *gin.Context, re
 	})
 }
 
-func (c *MaterialController) CreateTextbookMaterial(ctx *gin.Context, reqDto *dtos.CreateTextbookMaterialReqDto) {
-	resDto, exception := c.materialService.CreateTextbookMaterial(ctx.Request.Context(), reqDto)
+func (c *MaterialController) CreateMyMaterial(ctx *gin.Context, reqDto *dtos.CreateMyMaterialReqDto) {
+	resDto, exception := c.materialService.CreateMyMaterial(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
@@ -102,21 +101,7 @@ func (c *MaterialController) CreateTextbookMaterial(ctx *gin.Context, reqDto *dt
 	ctx.JSON(http.StatusOK, gin.H{
 		"success":   true,
 		"data":      resDto,
-		"exception": false,
-	})
-}
-
-func (c *MaterialController) CreateNotebookMaterial(ctx *gin.Context, reqDto *dtos.CreateNotebookMaterialReqDto) {
-	resDto, exception := c.materialService.CreateNotebookMaterial(ctx.Request.Context(), reqDto)
-	if exception != nil {
-		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      resDto,
-		"exception": false,
+		"exception": nil,
 	})
 }
 
@@ -130,12 +115,12 @@ func (c *MaterialController) UpdateMyMaterialById(ctx *gin.Context, reqDto *dtos
 	ctx.JSON(http.StatusOK, gin.H{
 		"success":   true,
 		"data":      resDto,
-		"exception": false,
+		"exception": nil,
 	})
 }
 
-func (c *MaterialController) SaveMyTextbookMaterialById(ctx *gin.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) {
-	resDto, exception := c.materialService.SaveMyTextbookMaterialById(ctx.Request.Context(), reqDto)
+func (c *MaterialController) SaveMyMaterialById(ctx *gin.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) {
+	resDto, exception := c.materialService.SaveMyMaterialById(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
@@ -144,21 +129,7 @@ func (c *MaterialController) SaveMyTextbookMaterialById(ctx *gin.Context, reqDto
 	ctx.JSON(http.StatusOK, gin.H{
 		"success":   true,
 		"data":      resDto,
-		"exception": false,
-	})
-}
-
-func (c *MaterialController) SaveMyNotebookMaterialById(ctx *gin.Context, reqDto *dtos.SaveMyMaterialByIdReqDto) {
-	resDto, exception := c.materialService.SaveMyNotebookMaterialById(ctx.Request.Context(), reqDto)
-	if exception != nil {
-		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      resDto,
-		"exception": false,
+		"exception": nil,
 	})
 }
 
@@ -172,7 +143,7 @@ func (c *MaterialController) MoveMyMaterialById(ctx *gin.Context, reqDto *dtos.M
 	ctx.JSON(http.StatusOK, gin.H{
 		"success":   true,
 		"data":      resDto,
-		"exception": false,
+		"exception": nil,
 	})
 }
 
@@ -186,7 +157,7 @@ func (c *MaterialController) MoveMyMaterialsByIds(ctx *gin.Context, reqDto *dtos
 	ctx.JSON(http.StatusOK, gin.H{
 		"success":   true,
 		"data":      resDto,
-		"exception": false,
+		"exception": nil,
 	})
 }
 

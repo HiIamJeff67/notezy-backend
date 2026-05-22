@@ -163,11 +163,8 @@ models:
     model: "notezy-backend/app/models/schemas/enums.BadgeType"
   AccessControlPermission:
     model: "notezy-backend/app/models/schemas/enums.AccessControlPermission"
-  MaterialType:
-    model: "notezy-backend/app/models/schemas/enums.MaterialType"
   MaterialContentType:
     model: "notezy-backend/app/models/schemas/enums.MaterialContentType"
-
   # ============================== Corresponded Schemas Which Have Prebuilt in Gorm ============================== #
 
   User:

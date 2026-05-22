@@ -72,24 +72,7 @@ type GetAllMyMaterialsByRootShelfIdReqDto struct {
 	]
 }
 
-type CreateTextbookMaterialReqDto struct {
-	NotezyRequest[
-		struct {
-			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
-		},
-		struct {
-			UserId       uuid.UUID // extracted from the access token of AuthMiddleware()
-			UserPublicId uuid.UUID // extracted from the AuthMiddleware()
-		},
-		struct {
-			ParentSubShelfId uuid.UUID `json:"parentSubShelfId" validate:"required"`
-			Name             string    `json:"name" validate:"required,min=1,max=128"`
-		},
-		any,
-	]
-}
-
-type CreateNotebookMaterialReqDto struct {
+type CreateMyMaterialReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -119,7 +102,6 @@ type UpdateMyMaterialByIdReqDto struct {
 			PartialUpdateDto[struct {
 				Name *string `json:"name" validate:"omitnil,min=1,max=128"`
 			}]
-			MaterialType enums.MaterialType `json:"type" validate:"required,ismaterialtype"` // for extra validation on the type
 		},
 		any,
 	]
@@ -239,50 +221,45 @@ type DeleteMyMaterialsByIdsReqDto struct {
 /* ============================== Response DTO ============================== */
 
 type GetMyMaterialByIdResDto struct {
-	Id               uuid.UUID          `json:"id"`
-	ParentSubShelfId uuid.UUID          `json:"parentSubShelfId"`
-	Name             string             `json:"name"`
-	Type             enums.MaterialType `json:"type"`
-	Size             int64              `json:"size"`
-	DownloadURL      string             `json:"downloadURL"`
-	DeletedAt        *time.Time         `json:"deletedAt"`
-	UpdatedAt        time.Time          `json:"updatedAt"`
-	CreatedAt        time.Time          `json:"createdAt"`
+	Id               uuid.UUID                 `json:"id"`
+	ParentSubShelfId uuid.UUID                 `json:"parentSubShelfId"`
+	Name             string                    `json:"name"`
+	Size             int64                     `json:"size"`
+	ContentType      enums.MaterialContentType `json:"contentType"`
+	ParseMediaType   string                    `json:"parseMediaType"`
+	DownloadURL      string                    `json:"downloadURL"`
+	DeletedAt        *time.Time                `json:"deletedAt"`
+	UpdatedAt        time.Time                 `json:"updatedAt"`
+	CreatedAt        time.Time                 `json:"createdAt"`
 }
 
 type GetMyMaterialAndItsParentByIdResDto struct {
-	Id                           uuid.UUID          `json:"id"`
-	Name                         string             `json:"name"`
-	Type                         enums.MaterialType `json:"type"`
-	Size                         int64              `json:"size"`
-	DownloadURL                  string             `json:"downloadURL"`
-	DeletedAt                    *time.Time         `json:"deletedAt"`
-	UpdatedAt                    time.Time          `json:"updatedAt"`
-	CreatedAt                    time.Time          `json:"createdAt"`
-	RootShelfId                  uuid.UUID          `json:"rootShelfId"`
-	ParentSubShelfId             uuid.UUID          `json:"parentSubShelfId"`
-	ParentSubShelfPrevSubShelfId *uuid.UUID         `json:"parentSubShelfPrevSubShelfId"`
-	ParentSubShelfName           string             `json:"parentSubShelfName"`
-	ParentSubShelfPath           types.UUIDArray    `json:"parentSubShelfPath"`
-	ParentSubShelfDeletedAt      time.Time          `json:"parentSubShelfDeletedAt"`
-	ParentSubShelfUpdatedAt      time.Time          `json:"parentSubShelfUpdatedAt"`
-	ParentSubShelfCreatedAt      time.Time          `json:"parentSubShelfCreatedAt"`
+	Id                           uuid.UUID                 `json:"id"`
+	Name                         string                    `json:"name"`
+	Size                         int64                     `json:"size"`
+	ContentType                  enums.MaterialContentType `json:"contentType"`
+	ParseMediaType               string                    `json:"parseMediaType"`
+	DownloadURL                  string                    `json:"downloadURL"`
+	DeletedAt                    *time.Time                `json:"deletedAt"`
+	UpdatedAt                    time.Time                 `json:"updatedAt"`
+	CreatedAt                    time.Time                 `json:"createdAt"`
+	RootShelfId                  uuid.UUID                 `json:"rootShelfId"`
+	ParentSubShelfId             uuid.UUID                 `json:"parentSubShelfId"`
+	ParentSubShelfPrevSubShelfId *uuid.UUID                `json:"parentSubShelfPrevSubShelfId"`
+	ParentSubShelfName           string                    `json:"parentSubShelfName"`
+	ParentSubShelfPath           types.UUIDArray           `json:"parentSubShelfPath"`
+	ParentSubShelfDeletedAt      *time.Time                `json:"parentSubShelfDeletedAt"`
+	ParentSubShelfUpdatedAt      time.Time                 `json:"parentSubShelfUpdatedAt"`
+	ParentSubShelfCreatedAt      time.Time                 `json:"parentSubShelfCreatedAt"`
 }
 
 type GetMyMaterialsByParentSubShelfIdResDto []GetMyMaterialByIdResDto
 
 type GetAllMyMaterialsByRootShelfIdResDto []GetMyMaterialByIdResDto
 
-type CreateTextbookMaterialResDto struct {
-	Id          uuid.UUID `json:"id"`
-	DownloadURL string    `json:"downloadURL"`
-	CreatedAt   time.Time `json:"createdAt"`
-}
-
-type CreateNotebookMaterialResDto struct {
-	Id          uuid.UUID `json:"id"`
-	DownloadURL string    `json:"downloadURL"`
-	CreatedAt   time.Time `json:"createdAt"`
+type CreateMyMaterialResDto struct {
+	Id        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type UpdateMyMaterialByIdResDto struct {
@@ -302,15 +279,16 @@ type MoveMyMaterialsByIdsResDto struct {
 }
 
 type RestoreMyMaterialByIdResDto struct {
-	Id               uuid.UUID          `json:"id"`
-	ParentSubShelfId uuid.UUID          `json:"parentSubShelfId"`
-	Name             string             `json:"name"`
-	Type             enums.MaterialType `json:"type"`
-	Size             int64              `json:"size"`
-	DownloadURL      string             `json:"downloadURL"`
-	DeletedAt        *time.Time         `json:"deletedAt"`
-	UpdatedAt        time.Time          `json:"updatedAt"`
-	CreatedAt        time.Time          `json:"createdAt"`
+	Id               uuid.UUID                 `json:"id"`
+	ParentSubShelfId uuid.UUID                 `json:"parentSubShelfId"`
+	Name             string                    `json:"name"`
+	Size             int64                     `json:"size"`
+	ContentType      enums.MaterialContentType `json:"contentType"`
+	ParseMediaType   string                    `json:"parseMediaType"`
+	DownloadURL      string                    `json:"downloadURL"`
+	DeletedAt        *time.Time                `json:"deletedAt"`
+	UpdatedAt        time.Time                 `json:"updatedAt"`
+	CreatedAt        time.Time                 `json:"createdAt"`
 }
 
 type RestoreMyMaterialsByIdsResDto = []RestoreMyMaterialByIdResDto

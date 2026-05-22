@@ -1,4 +1,7 @@
 enum MaterialContentType {
+  None
+  Application_JSON
+  Application_PDF
   Text_Plain
   Text_HTML
   Text_Markdown
@@ -7,6 +10,8 @@ enum MaterialContentType {
   Image_JPEG
   Image_GIF
   Image_SVG
-  Video_MP3
-  VIDEO_MP4
+  Image_WebP
+  Video_MP4
+  Video_WebM
+  Audio_Mpeg
 }

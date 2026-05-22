@@ -1,6 +1,0 @@
-enum MaterialType {
-  Textbook
-  Notebook
-  LearningCards
-  Workflow
-}

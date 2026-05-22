@@ -2,8 +2,9 @@
 SELECT
     m.id,
     m.name,
-    m.type,
     m.size,
+    m.content_type,
+    m.parse_media_type,
     m.content_key,
     m.deleted_at,
     m.updated_at,
