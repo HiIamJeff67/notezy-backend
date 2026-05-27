@@ -2,16 +2,20 @@ package triggers
 
 import (
 	accountingtriggersql "notezy-backend/app/models/schemas/triggers/accounting_triggers"
+	itemprojectiontriggersql "notezy-backend/app/models/schemas/triggers/item_projection_triggers"
 	maintainingblocktriggers "notezy-backend/app/models/schemas/triggers/maintaining_block_triggers"
-	shelfmaterialcascadingtriggersql "notezy-backend/app/models/schemas/triggers/shelf_material_cascading_triggers"
+	shelfitemcascadingtriggersql "notezy-backend/app/models/schemas/triggers/shelf_item_cascading_triggers"
 )
 
 var MigratingTriggerSQLs = []string{
-	shelfmaterialcascadingtriggersql.CascadingSoftDeleteRootShelfTriggerSQL,
-	shelfmaterialcascadingtriggersql.CascadingSoftDeleteSubShelfTriggerSQL,
-	shelfmaterialcascadingtriggersql.CascadingRestoreRootShelfTriggerSQL,
-	shelfmaterialcascadingtriggersql.CascadingRestoreSubShelfTriggerSQL,
-	shelfmaterialcascadingtriggersql.CascadingMoveSubShelfTriggerSQL,
+	shelfitemcascadingtriggersql.CascadingSoftDeleteRootShelfTriggerSQL,
+	shelfitemcascadingtriggersql.CascadingSoftDeleteSubShelfTriggerSQL,
+	shelfitemcascadingtriggersql.CascadingRestoreRootShelfTriggerSQL,
+	shelfitemcascadingtriggersql.CascadingRestoreSubShelfTriggerSQL,
+	shelfitemcascadingtriggersql.CascadingMoveSubShelfTriggerSQL,
+	itemprojectiontriggersql.ProjectSubShelvesToItemsTriggerSQL,
+	itemprojectiontriggersql.ProjectMaterialsToItemsTriggerSQL,
+	itemprojectiontriggersql.ProjectBlockPacksToItemsTriggerSQL,
 	accountingtriggersql.AccountingMutatedBlockPackTriggerSQL,
 	accountingtriggersql.AccountingInsertedBlockTriggerSQL,
 	accountingtriggersql.AccountingDeletedBlockTriggerSQL,

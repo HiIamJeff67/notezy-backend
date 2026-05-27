@@ -586,7 +586,7 @@ func (r *BlockPackRepository) BulkUpdateManyByIds(
 			}
 		}
 
-		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid, ?::string, ?::\"SupportedBlockPackIcon\", ?::string, ?::boolean, ?::boolean)")
+		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid, ?::string, ?::\"SupportedIcon\", ?::string, ?::boolean, ?::boolean)")
 		valueArgs = append(valueArgs,
 			in.Id,
 			in.PartialUpdateInput.Values.ParentSubShelfId,
@@ -605,7 +605,7 @@ func (r *BlockPackRepository) BulkUpdateManyByIds(
 			name = COALESCE(v.name::string, bp.name),
 			icon = CASE
 				WHEN v.set_icon_null::boolean THEN NULL
-				ELSE COALESCE(v.icon::"SupportedBlockPackIcon", bp.icon)
+				ELSE COALESCE(v.icon::"SupportedIcon", bp.icon)
 			END,
 			header_background_url = CASE
 				WHEN v.set_header_background_url_null::boolean THEN NULL

@@ -80,11 +80,11 @@ type CreateBlockPackReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			Id                  *uuid.UUID                    `json:"id" validate:"omitnil"`
-			ParentSubShelfId    uuid.UUID                     `json:"parentSubShelfId" validate:"required"`
-			Name                string                        `json:"name" validate:"required,min=1,max=128"`
-			Icon                *enums.SupportedBlockPackIcon `json:"icon" validate:"omitnil,issupportedblockpackicon"`
-			HeaderBackgroundURL *string                       `json:"headerBackgroundURL" validate:"omitnil"`
+			Id                  *uuid.UUID           `json:"id" validate:"omitnil"`
+			ParentSubShelfId    uuid.UUID            `json:"parentSubShelfId" validate:"required"`
+			Name                string               `json:"name" validate:"required,min=1,max=128"`
+			Icon                *enums.SupportedIcon `json:"icon" validate:"omitnil,issupportedicon"`
+			HeaderBackgroundURL *string              `json:"headerBackgroundURL" validate:"omitnil"`
 		},
 		any,
 	]
@@ -100,11 +100,11 @@ type CreateBlockPacksReqDto struct {
 		},
 		struct {
 			CreatedBlockPacks []struct {
-				Id                  *uuid.UUID                    `json:"id" validate:"omitnil"`
-				ParentSubShelfId    uuid.UUID                     `json:"parentSubShelfId" validate:"required"`
-				Name                string                        `json:"name" validate:"required,min=1,max=128"`
-				Icon                *enums.SupportedBlockPackIcon `json:"icon" validate:"omitnil,issupportedblockpackicon"`
-				HeaderBackgroundURL *string                       `json:"headerBackgroundURL" validate:"omitnil"`
+				Id                  *uuid.UUID           `json:"id" validate:"omitnil"`
+				ParentSubShelfId    uuid.UUID            `json:"parentSubShelfId" validate:"required"`
+				Name                string               `json:"name" validate:"required,min=1,max=128"`
+				Icon                *enums.SupportedIcon `json:"icon" validate:"omitnil,issupportedicon"`
+				HeaderBackgroundURL *string              `json:"headerBackgroundURL" validate:"omitnil"`
 			} `json:"createdBlockPacks" validate:"required"`
 		},
 		any,
@@ -122,9 +122,9 @@ type UpdateMyBlockPackByIdReqDto struct {
 		struct {
 			BlockPackId uuid.UUID `json:"blockPackId" validate:"required"`
 			PartialUpdateDto[struct {
-				Name                *string                       `json:"name" validate:"omitnil,min=1,max=128"`
-				Icon                *enums.SupportedBlockPackIcon `json:"icon" validate:"omitnil,issupportedblockpackicon"`
-				HeaderBackgroundURL *string                       `json:"headerBackgroundURL" validate:"omitnil"`
+				Name                *string              `json:"name" validate:"omitnil,min=1,max=128"`
+				Icon                *enums.SupportedIcon `json:"icon" validate:"omitnil,issupportedicon"`
+				HeaderBackgroundURL *string              `json:"headerBackgroundURL" validate:"omitnil"`
 			}]
 		},
 		any,
@@ -143,9 +143,9 @@ type UpdateMyBlockPacksByIdsReqDto struct {
 			UpdatedBlockPacks []struct {
 				BlockPackId uuid.UUID `json:"blockPackId" validate:"required"`
 				PartialUpdateDto[struct {
-					Name                *string                       `json:"name" validate:"omitnil,min=1,max=128"`
-					Icon                *enums.SupportedBlockPackIcon `json:"icon" validate:"omitnil,issupportedblockpackicon"`
-					HeaderBackgroundURL *string                       `json:"headerBackgroundURL" validate:"omitnil"`
+					Name                *string              `json:"name" validate:"omitnil,min=1,max=128"`
+					Icon                *enums.SupportedIcon `json:"icon" validate:"omitnil,issupportedicon"`
+					HeaderBackgroundURL *string              `json:"headerBackgroundURL" validate:"omitnil"`
 				}]
 			} `json:"updatedBlockPacks" validate:"required"`
 		},
@@ -266,34 +266,34 @@ type DeleteMyBlockPacksByIdsReqDto struct {
 /* ============================== Response DTO ============================== */
 
 type GetMyBlockPackByIdResDto struct {
-	Id                  uuid.UUID                     `json:"id" gorm:"column:id;"`
-	ParentSubShelfId    uuid.UUID                     `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id;"`
-	Name                string                        `json:"name" gorm:"column:name;"`
-	Icon                *enums.SupportedBlockPackIcon `json:"icon" gorm:"column:icon;"`
-	HeaderBackgroundURL *string                       `json:"headerBackgroundURL" gorm:"column:header_background_url;"`
-	BlockCount          int32                         `json:"blockCount" gorm:"column:block_count;"`
-	DeletedAt           *time.Time                    `json:"deletedAt" gorm:"column:deleted_at;"`
-	UpdatedAt           time.Time                     `json:"updatedAt" gorm:"column:updated_at;"`
-	CreatedAt           time.Time                     `json:"createdAt" gorm:"column:created_at;"`
+	Id                  uuid.UUID            `json:"id" gorm:"column:id;"`
+	ParentSubShelfId    uuid.UUID            `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id;"`
+	Name                string               `json:"name" gorm:"column:name;"`
+	Icon                *enums.SupportedIcon `json:"icon" gorm:"column:icon;"`
+	HeaderBackgroundURL *string              `json:"headerBackgroundURL" gorm:"column:header_background_url;"`
+	BlockCount          int32                `json:"blockCount" gorm:"column:block_count;"`
+	DeletedAt           *time.Time           `json:"deletedAt" gorm:"column:deleted_at;"`
+	UpdatedAt           time.Time            `json:"updatedAt" gorm:"column:updated_at;"`
+	CreatedAt           time.Time            `json:"createdAt" gorm:"column:created_at;"`
 }
 
 type GetMyBlockPackAndItsParentByIdResDto struct {
-	Id                           uuid.UUID                     `json:"id" gorm:"column:id;"`
-	Name                         string                        `json:"name" gorm:"column:name;"`
-	Icon                         *enums.SupportedBlockPackIcon `json:"icon" gorm:"column:icon;"`
-	HeaderBackgroundURL          *string                       `json:"headerBackgroundURL" gorm:"column:header_background_url;"`
-	BlockCount                   int32                         `json:"blockCount" gorm:"column:block_count;"`
-	DeletedAt                    *time.Time                    `json:"deletedAt" gorm:"column:deleted_at;"`
-	UpdatedAt                    time.Time                     `json:"updatedAt" gorm:"column:updated_at;"`
-	CreatedAt                    time.Time                     `json:"createdAt" gorm:"column:created_at;"`
-	RootShelfId                  uuid.UUID                     `json:"rootShelfId" gorm:"column:root_shelf_id;"`
-	ParentSubShelfId             uuid.UUID                     `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id;"`
-	ParentSubShelfPrevSubShelfId *uuid.UUID                    `json:"parentSubShelfPrevSubShelfId" gorm:"column:parent_sub_shelf_prev_sub_shelf_id;"`
-	ParentSubShelfName           string                        `json:"parentSubShelfName" gorm:"column:parent_sub_shelf_name;"`
-	ParentSubShelfPath           types.UUIDArray               `json:"parentSubShelfPath" gorm:"column:parent_sub_shelf_path;"`
-	ParentSubShelfDeletedAt      *time.Time                    `json:"parentSubShelfDeletedAt" gorm:"column:parent_sub_shelf_deleted_at;"`
-	ParentSubShelfUpdatedAt      time.Time                     `json:"parentSubShelfUpdatedAt" gorm:"column:parent_sub_shelf_updated_at;"`
-	ParentSubShelfCreatedAt      time.Time                     `json:"parentSubShelfCreatedAt" gorm:"column:parent_sub_shelf_created_at;"`
+	Id                           uuid.UUID            `json:"id" gorm:"column:id;"`
+	Name                         string               `json:"name" gorm:"column:name;"`
+	Icon                         *enums.SupportedIcon `json:"icon" gorm:"column:icon;"`
+	HeaderBackgroundURL          *string              `json:"headerBackgroundURL" gorm:"column:header_background_url;"`
+	BlockCount                   int32                `json:"blockCount" gorm:"column:block_count;"`
+	DeletedAt                    *time.Time           `json:"deletedAt" gorm:"column:deleted_at;"`
+	UpdatedAt                    time.Time            `json:"updatedAt" gorm:"column:updated_at;"`
+	CreatedAt                    time.Time            `json:"createdAt" gorm:"column:created_at;"`
+	RootShelfId                  uuid.UUID            `json:"rootShelfId" gorm:"column:root_shelf_id;"`
+	ParentSubShelfId             uuid.UUID            `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id;"`
+	ParentSubShelfPrevSubShelfId *uuid.UUID           `json:"parentSubShelfPrevSubShelfId" gorm:"column:parent_sub_shelf_prev_sub_shelf_id;"`
+	ParentSubShelfName           string               `json:"parentSubShelfName" gorm:"column:parent_sub_shelf_name;"`
+	ParentSubShelfPath           types.UUIDArray      `json:"parentSubShelfPath" gorm:"column:parent_sub_shelf_path;"`
+	ParentSubShelfDeletedAt      *time.Time           `json:"parentSubShelfDeletedAt" gorm:"column:parent_sub_shelf_deleted_at;"`
+	ParentSubShelfUpdatedAt      time.Time            `json:"parentSubShelfUpdatedAt" gorm:"column:parent_sub_shelf_updated_at;"`
+	ParentSubShelfCreatedAt      time.Time            `json:"parentSubShelfCreatedAt" gorm:"column:parent_sub_shelf_created_at;"`
 }
 
 type GetMyBlockPacksByParentSubShelfIdResDto = []GetMyBlockPackByIdResDto
@@ -331,15 +331,15 @@ type BatchMoveMyBlockPacksByIdsResDto struct {
 }
 
 type RestoreMyBlockPackByIdResDto struct {
-	Id                  uuid.UUID                     `json:"id" gorm:"column:id;"`
-	ParentSubShelfId    uuid.UUID                     `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id;"`
-	Name                string                        `json:"name" gorm:"column:name;"`
-	Icon                *enums.SupportedBlockPackIcon `json:"icon" gorm:"column:icon;"`
-	HeaderBackgroundURL *string                       `json:"headerBackgroundURL" gorm:"column:header_background_url;"`
-	BlockCount          int32                         `json:"blockCount" gorm:"column:block_count;"`
-	DeletedAt           *time.Time                    `json:"deletedAt"`
-	UpdatedAt           time.Time                     `json:"updatedAt"`
-	CreatedAt           time.Time                     `json:"createdAt"`
+	Id                  uuid.UUID            `json:"id" gorm:"column:id;"`
+	ParentSubShelfId    uuid.UUID            `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id;"`
+	Name                string               `json:"name" gorm:"column:name;"`
+	Icon                *enums.SupportedIcon `json:"icon" gorm:"column:icon;"`
+	HeaderBackgroundURL *string              `json:"headerBackgroundURL" gorm:"column:header_background_url;"`
+	BlockCount          int32                `json:"blockCount" gorm:"column:block_count;"`
+	DeletedAt           *time.Time           `json:"deletedAt"`
+	UpdatedAt           time.Time            `json:"updatedAt"`
+	CreatedAt           time.Time            `json:"createdAt"`
 }
 
 type RestoreMyBlockPacksByIdsResDto = []RestoreMyBlockPackByIdResDto

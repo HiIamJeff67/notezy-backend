@@ -65,7 +65,7 @@ DROP TRIGGER IF EXISTS trigger_cascading_move_sub_shelf ON "SubShelfTable"
 -- ============================== SQL Separator ==============================
 
 CREATE TRIGGER trigger_cascading_move_sub_shelf
-    AFTER UPDATE OF prev_sub_shelf_id
+    AFTER UPDATE OF prev_sub_shelf_id, root_shelf_id
     ON "SubShelfTable"
     FOR EACH ROW
     EXECUTE FUNCTION trigger_function_cascading_move_sub_shelf();

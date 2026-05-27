@@ -38,6 +38,7 @@ type User struct {
 	UsersToShelves      []UsersToShelves      `json:"usersToShelves" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	BlockGroups         []BlockGroup          `json:"blockGroups" gorm:"foreignKey:OwnerId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	SyncBlockGroups     []SyncBlockGroup      `json:"syncBlockGroups" gorm:"foreignKey:OwnerId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	UsersToStations     []UsersToStations     `json:"usersToStations" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	PlanLimitation      PlanLimitation        `json:"planLimitation" gorm:"foreignKey:Plan; references:Key; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UsersToBillingPlans []UsersToBillingPlans `json:"usersToBillingPlans" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
@@ -59,6 +60,8 @@ const (
 	UserRelation_UsersToShelves      UserRelation = "UsersToShelves"
 	UserRelation_BlockGroups         UserRelation = "BlockGroups"
 	UserRelation_SyncBlockGroups     UserRelation = "SyncBlockGroups"
+	UserRelation_UsersToStations     UserRelation = "UsersToStations"
+	UserRelation_PlanLimitation      UserRelation = "PlanLimitation"
 	UserRelation_UsersToBillingPlans UserRelation = "UsersToBillingPlans"
 )
 

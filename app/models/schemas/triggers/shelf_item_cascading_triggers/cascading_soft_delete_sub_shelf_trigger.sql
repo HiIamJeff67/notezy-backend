@@ -5,6 +5,10 @@ BEGIN
         UPDATE "MaterialTable"
         SET deleted_at = NEW.deleted_at
         WHERE parent_sub_shelf_id = NEW.id AND deleted_at IS NULL;
+
+        UPDATE "BlockPackTable"
+        SET deleted_at = NEW.deleted_at
+        WHERE parent_sub_shelf_id = NEW.id AND deleted_at IS NULL;
     END IF;
 
     RETURN NEW;

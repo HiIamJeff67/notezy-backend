@@ -7,10 +7,12 @@ var MigratingTables = []any{
 	&UserInfo{},
 	&UserAccount{},
 	&UserSetting{},
+
 	&UsersToBadges{},
 	&Badge{},
-	&UsersToBadges{},
+
 	&Theme{},
+
 	&UsersToShelves{},
 	&RootShelf{},
 	&SubShelf{},
@@ -20,6 +22,17 @@ var MigratingTables = []any{
 	&Block{},
 	&SyncBlockGroup{},
 	&SyncBlock{},
+	&Item{},
+
+	&UsersToStations{},
+	&Station{},
+	&Routine{},
+	&RoutinesToTasks{},
+	&RoutineTask{},
+	&RoutinesToTags{},
+	&RoutineTag{},
+	&RoutinesToItems{},
+
 	&UsersToBillingPlans{},
 
 	// private tables

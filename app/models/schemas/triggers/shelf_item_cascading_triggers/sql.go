@@ -1,4 +1,4 @@
-package shelfmaterialcascadingtriggersql
+package shelfitemcascadingtriggersql
 
 import (
 	_ "embed"

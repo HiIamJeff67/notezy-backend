@@ -35,7 +35,12 @@ func IsValidEnumValues[EnumValue interface {
 		AccessControlPermission |
 		MaterialContentType |
 		BlockType |
-		SupportedBlockPackIcon |
+		SupportedIcon |
+		ItemType |
+		RoutinePeriod |
+		RoutineStatus |
+		RoutineTaskPurpose |
+		RoutineTaskStatus |
 		string
 }](value EnumValue, validateValues []EnumValue) bool {
 	return slices.Contains(validateValues, value)

@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/go-playground/validator/v10" // make sure we use the version 10
 
@@ -99,5 +100,13 @@ func RegisterStringsValidation(validate *validator.Validate) {
 		}
 
 		return scheme != "" && parsedURL.Host != ""
+	})
+	validate.RegisterValidation("ishexcodecolor", func(fl validator.FieldLevel) bool {
+		return regexp.MustCompile(`^#[0-9a-fA-F]{6}$`).MatchString(fl.Field().String())
+	})
+	validate.RegisterValidation("istimezone", func(fl validator.FieldLevel) bool {
+		tzStr := fl.Field().String()
+		_, err := time.LoadLocation(tzStr)
+		return err == nil
 	})
 }

@@ -33,7 +33,7 @@ func configureStorageRoutes() {
 				}
 				defer rc.Close()
 				logs.Info(traces.GetTrace(0).FileLineString(), "Successfully get the files!")
-				logs.Info(traces.GetTrace(0).FileLineString(), "Details: ", object)
+				// logs.Info(traces.GetTrace(0).FileLineString(), "Details: ", object)
 				ctx.Data(http.StatusOK, object.ContentType, object.Data)
 			},
 		)

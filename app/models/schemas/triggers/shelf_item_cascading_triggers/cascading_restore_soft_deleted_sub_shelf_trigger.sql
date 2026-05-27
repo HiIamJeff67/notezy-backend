@@ -6,6 +6,11 @@ BEGIN
         SET deleted_at = NULL
         WHERE parent_sub_shelf_id = NEW.id
         AND deleted_at = OLD.deleted_at;
+
+        UPDATE "BlockPackTable"
+        SET deleted_at = NULL
+        WHERE parent_sub_shelf_id = NEW.id
+        AND deleted_at = OLD.deleted_at;
     END IF;
 
     RETURN NEW;
