@@ -259,10 +259,12 @@ func (r *BlockGroupRepository) CollectOrphanedBlockGroupsByIds(
 		allowedPermissions,
 	).Scan(&orphanedBlockGroupIds)
 	if result.Error != nil {
+		parsedOptions.DB.Rollback()
 		return exceptions.BlockGroup.NotFound().WithOrigin(result.Error)
 	}
 
 	if len(orphanedBlockGroupIds) == 0 {
+		parsedOptions.DB.Rollback()
 		return exceptions.BlockGroup.NoChanges()
 	}
 
@@ -271,6 +273,7 @@ func (r *BlockGroupRepository) CollectOrphanedBlockGroupsByIds(
 		userId,
 		opts...,
 	); exception != nil {
+		parsedOptions.DB.Rollback()
 		return exception
 	}
 
@@ -450,6 +453,7 @@ func (r *BlockGroupRepository) InsertOneByBlockPackId(
 	if exception := exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
 		{First: ownerId == nil || blockPack == nil, Second: exceptions.BlockPack.NoPermission("get owner's block pack")},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
@@ -471,6 +475,7 @@ func (r *BlockGroupRepository) InsertOneByBlockPackId(
 		{First: newBlockGroup.Id == uuid.Nil, Second: exceptions.BlockGroup.FailedToCreate()},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
@@ -483,6 +488,7 @@ func (r *BlockGroupRepository) InsertOneByBlockPackId(
 			opts...,
 		)
 		if exception != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exception
 		}
 
@@ -497,6 +503,7 @@ func (r *BlockGroupRepository) InsertOneByBlockPackId(
 			},
 			opts...,
 		); exception != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exception
 		}
 		if _, exception = r.UpdateOneById(
@@ -510,6 +517,7 @@ func (r *BlockGroupRepository) InsertOneByBlockPackId(
 			},
 			opts...,
 		); exception != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exception
 		}
 	}
@@ -793,6 +801,7 @@ func (r *BlockGroupRepository) InsertManyByBlockPackIds(
 		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToCreate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
@@ -886,12 +895,12 @@ func (r *BlockGroupRepository) InsertManyByBlockPackIds(
 		}
 	}
 
-	restoreResult := parsedOptions.DB.Model(&schemas.BlockGroup{}).
+	restoredResult := parsedOptions.DB.Model(&schemas.BlockGroup{}).
 		Where("id IN ? AND deleted_at IS NOT NULL", newBlockGroupIds).
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if exception = exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: restoreResult.Error != nil, Second: exceptions.BlockGroup.FailedToUpdate().WithOrigin(restoreResult.Error)},
-		{First: restoreResult.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
+		{First: restoredResult.Error != nil, Second: exceptions.BlockGroup.FailedToUpdate().WithOrigin(restoredResult.Error)},
+		{First: restoredResult.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -939,6 +948,7 @@ func (r *BlockGroupRepository) AppendOneByBlockPackId(
 	if exception := exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
 		{First: ownerId == nil || blockPack == nil, Second: exceptions.BlockPack.NoPermission("get owner's block pack")},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
@@ -955,6 +965,7 @@ func (r *BlockGroupRepository) AppendOneByBlockPackId(
 		{First: newBlockGroup.Id == uuid.Nil, Second: exceptions.BlockGroup.FailedToCreate()},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
@@ -1005,11 +1016,13 @@ func (r *BlockGroupRepository) AppendManyByBlockPackId(
 	if exception := exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
 		{First: ownerId == nil || blockPack == nil, Second: exceptions.BlockPack.NoPermission("get owner's block pack")},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
 	var newBlockGroups []schemas.BlockGroup
 	if err := copier.Copy(&newBlockGroups, &input); err != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exceptions.BlockGroup.FailedToCreate().WithOrigin(err)
 	}
 	ids := make([]uuid.UUID, len(input))
@@ -1028,6 +1041,7 @@ func (r *BlockGroupRepository) AppendManyByBlockPackId(
 		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToCreate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
@@ -1070,11 +1084,13 @@ func (r *BlockGroupRepository) UpdateOneById(
 		opts...,
 	)
 	if exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
 	updates, err := util.PartialUpdatePreprocess(input.Values, input.SetNull, *existingBlockGroup)
 	if err != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(
 			input.Values,
 			input.SetNull,
@@ -1092,6 +1108,7 @@ func (r *BlockGroupRepository) UpdateOneById(
 		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
@@ -1140,6 +1157,7 @@ func (r *BlockGroupRepository) BulkUpdateManyByIds(
 			opts...,
 		)
 		if exception != nil {
+			parsedOptions.DB.Rollback()
 			return exceptions.BlockGroup.NoPermission("update these block groups")
 		}
 
@@ -1175,6 +1193,7 @@ func (r *BlockGroupRepository) BulkUpdateManyByIds(
 	}
 
 	if len(valuePlaceholders) == 0 {
+		parsedOptions.DB.Rollback()
 		return exceptions.BlockGroup.NoChanges()
 	}
 
@@ -1195,6 +1214,7 @@ func (r *BlockGroupRepository) BulkUpdateManyByIds(
 		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockGroup.NoChanges()},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return exception
 	}
 
@@ -1281,6 +1301,7 @@ func (r *BlockGroupRepository) IncrementSizesByIds(
 			opts...,
 		)
 		if exception != nil {
+			parsedOptions.DB.Rollback()
 			return exceptions.BlockGroup.NoPermission("update these block groups")
 		}
 
@@ -1304,6 +1325,7 @@ func (r *BlockGroupRepository) IncrementSizesByIds(
 	}
 
 	if len(valuePlaceholders) == 0 {
+		parsedOptions.DB.Rollback()
 		if !parsedOptions.SkipPermissionCheck {
 			return exceptions.BlockGroup.NoPermission("update these block groups")
 		}
@@ -1322,6 +1344,7 @@ func (r *BlockGroupRepository) IncrementSizesByIds(
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.BlockGroup.FailedToUpdate().WithOrigin(result.Error)},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return exception
 	}
 

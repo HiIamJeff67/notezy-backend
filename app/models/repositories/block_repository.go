@@ -206,12 +206,14 @@ func (r *BlockRepository) CreateOneByBlockGroupId(
 			allowedPermissions,
 			opts...,
 		) {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.Block.NoPermission("get owner's block group")
 		}
 	}
 
 	var newBlock schemas.Block
 	if err := copier.Copy(&newBlock, &input); err != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exceptions.Block.InvalidInput().WithOrigin(err)
 	}
 	newBlock.BlockGroupId = blockGroupId
@@ -231,6 +233,7 @@ func (r *BlockRepository) CreateOneByBlockGroupId(
 		{First: newBlock.Id == uuid.Nil, Second: exceptions.Block.FailedToCreate()},
 		{First: result.RowsAffected == 0, Second: exceptions.Block.NoChanges()},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
@@ -278,6 +281,7 @@ func (r *BlockRepository) CreateManyByBlockGroupId(
 			allowedPermissions,
 			opts...,
 		) {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.Block.NoPermission("get owner's block group")
 		}
 	}
@@ -286,6 +290,7 @@ func (r *BlockRepository) CreateManyByBlockGroupId(
 	for index, in := range input {
 		var newBlock schemas.Block
 		if err := copier.Copy(&newBlock, &in); err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.Block.InvalidInput().WithOrigin(err)
 		}
 		newBlock.BlockGroupId = blockGroupId
@@ -306,6 +311,7 @@ func (r *BlockRepository) CreateManyByBlockGroupId(
 		{First: result.Error != nil, Second: exceptions.Block.FailedToCreate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.Block.NoChanges()},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
@@ -363,6 +369,7 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 			opts...,
 		)
 		if exception != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exception
 		}
 
@@ -377,6 +384,7 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 				for _, inputBlock := range in.Blocks {
 					var newBlock schemas.Block
 					if err := copier.Copy(&newBlock, &inputBlock); err != nil {
+						parsedOptions.DB.Rollback()
 						return nil, exceptions.Block.InvalidInput().WithOrigin(err)
 					}
 					newBlock.BlockGroupId = in.BlockGroupId
@@ -400,6 +408,7 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 			{First: result.Error != nil, Second: exceptions.Block.FailedToCreate().WithOrigin(result.Error)},
 			{First: result.RowsAffected == 0, Second: exceptions.Block.NoChanges()},
 		}); exception != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exception
 		}
 
@@ -445,6 +454,7 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 		{First: result.Error != nil, Second: exceptions.Block.FailedToCreate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.Block.NoChanges()},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
@@ -488,11 +498,13 @@ func (r *BlockRepository) UpdateOneById(
 		opts...,
 	)
 	if exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
 	updates, err := util.PartialUpdatePreprocess(input.Values, input.SetNull, *existingBlock)
 	if err != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(
 			input.Values,
 			input.SetNull,
@@ -508,6 +520,7 @@ func (r *BlockRepository) UpdateOneById(
 		{First: result.Error != nil, Second: exceptions.Block.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.Block.NoChanges()},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
@@ -552,6 +565,7 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 
 		validBlocks, exception := r.CheckPermissionsAndGetManyByIds(ids, userId, nil, allowedPermissions, opts...)
 		if exception != nil {
+			parsedOptions.DB.Rollback()
 			return exceptions.Block.NoPermission("update these blocks")
 		}
 
@@ -610,6 +624,7 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 		{First: result.Error != nil, Second: exceptions.Block.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.Block.NoChanges()},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return exception
 	}
 

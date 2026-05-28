@@ -247,6 +247,7 @@ func (r *SubShelfRepository) CreateOneByRootShelfId(
 		if exception = exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
 			{First: prevSubShelf.RootShelfId != rootShelfId, Second: exceptions.Shelf.InvalidDto("the given prev sub shelf is not one of the children of the given root shelf")},
 		}); exception != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exception
 		}
 		prevSubShelf.Path = append(prevSubShelf.Path, prevSubShelf.Id)
@@ -260,11 +261,13 @@ func (r *SubShelfRepository) CreateOneByRootShelfId(
 			allowedPermissions,
 			opts...,
 		) {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.Shelf.NoPermission("create sub shelf by the given root shelf")
 		}
 	}
 
 	if err := copier.Copy(&newSubShelf, &input); err != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exceptions.Shelf.InvalidInput().WithOrigin(err)
 	}
 	if newSubShelf.Id == uuid.Nil {
@@ -279,6 +282,7 @@ func (r *SubShelfRepository) CreateOneByRootShelfId(
 		{First: newSubShelf.Id == uuid.Nil, Second: exceptions.Shelf.FailedToCreate()},
 		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
@@ -340,6 +344,7 @@ func (r *SubShelfRepository) BulkCreateManyByRootShelfIds(
 		allowedPermissions,
 	)
 	if exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 	isPrevSubShelfValid := make(map[uuid.UUID]*uuid.UUID)
@@ -356,6 +361,7 @@ func (r *SubShelfRepository) BulkCreateManyByRootShelfIds(
 		allowedPermissions,
 	)
 	if exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 	isRootShelfValid := make(map[uuid.UUID]bool)
@@ -371,6 +377,7 @@ func (r *SubShelfRepository) BulkCreateManyByRootShelfIds(
 		}
 		var newSubShelf schemas.SubShelf
 		if err := copier.Copy(&newSubShelf, &in); err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.Shelf.InvalidInput().WithOrigin(err)
 		}
 		if newSubShelf.Id == uuid.Nil {
@@ -386,6 +393,7 @@ func (r *SubShelfRepository) BulkCreateManyByRootShelfIds(
 		{First: result.Error != nil, Second: exceptions.Shelf.FailedToCreate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
@@ -433,11 +441,13 @@ func (r *SubShelfRepository) UpdateOneById(
 		opts...,
 	)
 	if exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
 	updates, err := util.PartialUpdatePreprocess(input.Values, input.SetNull, *existingSubShelf)
 	if err != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(input.Values, input.SetNull, *existingSubShelf).WithOrigin(err)
 	}
 
@@ -449,6 +459,7 @@ func (r *SubShelfRepository) UpdateOneById(
 		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
@@ -496,6 +507,7 @@ func (r *SubShelfRepository) BulkUpdateManyByIds(
 			opts...,
 		)
 		if exception != nil {
+			parsedOptions.DB.Rollback()
 			return exception
 		}
 
@@ -530,6 +542,7 @@ func (r *SubShelfRepository) BulkUpdateManyByIds(
 		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return exception
 	}
 

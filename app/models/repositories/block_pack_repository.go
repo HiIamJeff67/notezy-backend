@@ -292,12 +292,14 @@ func (r *BlockPackRepository) CreateOneBySubShelfId(
 			allowedPermissions,
 			opts...,
 		) {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.Shelf.NoPermission("create a block pack under this shelf")
 		}
 	}
 
 	var newBlockPack schemas.BlockPack
 	if err := copier.Copy(&newBlockPack, &input); err != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exceptions.BlockPack.FailedToCreate().WithOrigin(err)
 	}
 	if newBlockPack.Id == uuid.Nil {
@@ -312,6 +314,7 @@ func (r *BlockPackRepository) CreateOneBySubShelfId(
 		{First: newBlockPack.Id == uuid.Nil, Second: exceptions.BlockPack.FailedToCreate()},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
@@ -365,6 +368,7 @@ func (r *BlockPackRepository) BulkCreateManyBySubShelfIds(
 			opts...,
 		)
 		if exception != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exception
 		}
 
@@ -380,6 +384,7 @@ func (r *BlockPackRepository) BulkCreateManyBySubShelfIds(
 		}
 		var newBlockPack schemas.BlockPack
 		if err := copier.Copy(&newBlockPack, &in); err != nil {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.BlockPack.InvalidInput().WithOrigin(err)
 		}
 		if newBlockPack.Id == uuid.Nil {
@@ -394,6 +399,7 @@ func (r *BlockPackRepository) BulkCreateManyBySubShelfIds(
 		{First: result.Error != nil, Second: exceptions.Block.FailedToCreate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
@@ -441,6 +447,7 @@ func (r *BlockPackRepository) UpdateOneById(
 		opts...,
 	)
 	if exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
@@ -453,12 +460,14 @@ func (r *BlockPackRepository) UpdateOneById(
 			allowedPermissions,
 			opts...,
 		) {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.Shelf.NoPermission("move a block pack to this shelf")
 		}
 	}
 
 	updates, err := util.PartialUpdatePreprocess(input.Values, input.SetNull, *existingBlockPack)
 	if err != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(
 			input.Values,
 			input.SetNull,
@@ -474,6 +483,7 @@ func (r *BlockPackRepository) UpdateOneById(
 		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
@@ -536,6 +546,7 @@ func (r *BlockPackRepository) BulkUpdateManyByIds(
 			opts...,
 		)
 		if exception != nil {
+			parsedOptions.DB.Rollback()
 			return exception
 		}
 
@@ -551,6 +562,7 @@ func (r *BlockPackRepository) BulkUpdateManyByIds(
 			opts...,
 		)
 		if exception != nil {
+			parsedOptions.DB.Rollback()
 			return exception
 		}
 
@@ -620,6 +632,7 @@ func (r *BlockPackRepository) BulkUpdateManyByIds(
 		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToCreate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.BlockPack.NoChanges()},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return exception
 	}
 

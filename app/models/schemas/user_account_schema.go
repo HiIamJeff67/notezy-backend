@@ -28,6 +28,10 @@ type UserAccount struct {
 	MaterialCount       int32              `json:"materialCount" gorm:"column:material_count; type:integer; not null; default:0;"`
 	WorkflowCount       int32              `json:"workflowCount" gorm:"column:workflow_count; type:integer; not null; default:0;"`
 	AdditionalItemCount int32              `json:"additionalItemCount" gorm:"column:additional_item_count; type:integer; not null; default:0;"`
+	StationCount        int32              `json:"stationCount" gorm:"column:station_count; type:integer; not null; default:0;"`
+	RoutineCount        int32              `json:"routineCount" gorm:"column:routine_count; type:integer; not null; default:0;"`
+	RoutineTaskCount    int32              `json:"routineTaskCount" gorm:"column:routine_task_count; type:integer; not null; default:0;"`
+	RoutineTagCount     int32              `json:"routineTagCount" gorm:"column:routine_tag_count; type:integer; not null; default:0;"`
 	UpdatedAt           time.Time          `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 }
 

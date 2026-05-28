@@ -12,6 +12,7 @@ import (
 
 type RoutineTask struct {
 	Id              uuid.UUID                `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid();"`
+	StationId       uuid.UUID                `json:"stationId" gorm:"column:station_id; type:uuid; not null;"`
 	Purpose         enums.RoutineTaskPurpose `json:"purpose" gorm:"column:purpose; type:\"RoutineTaskPurpose\"; not null; default:'CreateBlockPack';"`
 	Payload         datatypes.JSON           `json:"payload" gorm:"column:payload; type:jsonb; not null; default:'{}'; check:routine_task_check_payload_size,octet_length(payload::text) <= 2048;"`
 	Priority        int32                    `json:"priority" gorm:"column:priority; type:integer; not null; default:0;"`
@@ -24,6 +25,7 @@ type RoutineTask struct {
 	CreatedAt       time.Time                `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 
 	// relations
+	Station         Station           `json:"station" gorm:"foreignKey:StationId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	RoutinesToTasks []RoutinesToTasks `json:"task" gorm:"foreignKey:TaskId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
 
@@ -36,5 +38,6 @@ func (RoutineTask) TableName() string {
 type RoutineTaskRelation types.RelationName
 
 const (
+	RoutineTaskRelation_Station         RoutineTaskRelation = "Station"
 	RoutineTaskRelation_RoutinesToTasks RoutineTaskRelation = "RoutinesToTasks"
 )

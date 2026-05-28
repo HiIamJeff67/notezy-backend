@@ -22,4 +22,28 @@ var (
 
 	//go:embed accouting_mutated_material_trigger.sql
 	AccountingMutatedMaterialTriggerSQL string
+
+	//go:embed accounting_inserted_routine_task_trigger.sql
+	AccountingInsertedRoutineTaskTriggerSQL string
+
+	//go:embed accounting_deleted_routine_task_trigger.sql
+	AccountingDeletedRoutineTaskTriggerSQL string
+
+	//go:embed accounting_inserted_routine_tag_trigger.sql
+	AccountingInsertedRoutineTagTriggerSQL string
+
+	//go:embed accounting_deleted_routine_tag_trigger.sql
+	AccountingDeletedRoutineTagTriggerSQL string
+
+	//go:embed accounting_inserted_routine_trigger.sql
+	AccountingInsertedRoutineTriggerSQL string
+
+	//go:embed accounting_deleted_routine_trigger.sql
+	AccountingDeletedRoutineTriggerSQL string
+
+	//go:embed accounting_inserted_station_trigger.sql
+	AccountingInsertedStationTriggerSQL string
+
+	//go:embed accounting_deleted_station_trigger.sql
+	AccountingDeletedStationTriggerSQL string
 )

@@ -196,12 +196,14 @@ func (r *MaterialRepository) CreateOneBySubShelfId(
 			allowedPermissions,
 			opts...,
 		) {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.Shelf.NoPermission("create a material under this shelf")
 		}
 	}
 
 	var newMaterial schemas.Material
 	if err := copier.Copy(&newMaterial, &input); err != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exceptions.Material.FailedToCreate().WithOrigin(err)
 	}
 	newMaterial.ParentSubShelfId = subShelfId
@@ -213,6 +215,7 @@ func (r *MaterialRepository) CreateOneBySubShelfId(
 		{First: newMaterial.Id == uuid.Nil, Second: exceptions.Material.FailedToCreate()},
 		{First: result.RowsAffected == 0, Second: exceptions.Material.NoChanges()},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
@@ -256,9 +259,11 @@ func (r *MaterialRepository) UpdateOneById(
 		opts...,
 	)
 	if exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 	if existingMaterial == nil {
+		parsedOptions.DB.Rollback()
 		return nil, exceptions.Material.NotFound()
 	}
 
@@ -272,12 +277,14 @@ func (r *MaterialRepository) UpdateOneById(
 			allowedPermissions,
 			opts...,
 		) {
+			parsedOptions.DB.Rollback()
 			return nil, exceptions.Shelf.NoPermission("move a material to this shelf")
 		}
 	}
 
 	updates, err := util.PartialUpdatePreprocess(input.Values, input.SetNull, *existingMaterial)
 	if err != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(
 			input.Values,
 			input.SetNull,
@@ -293,6 +300,7 @@ func (r *MaterialRepository) UpdateOneById(
 		{First: result.Error != nil, Second: exceptions.Material.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.Material.NoChanges()},
 	}); exception != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
