@@ -113,8 +113,8 @@ func (r *StationRepository) CheckPermissionAndGetOneById(
 		Clauses(clause.Locking{Strength: "SHARE"}).
 		First(&station)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Shelf.NotFound().WithOrigin(result.Error)},
-		{First: station.Id == uuid.Nil, Second: exceptions.Shelf.NotFound()},
+		{First: result.Error != nil, Second: exceptions.Station.NotFound().WithOrigin(result.Error)},
+		{First: station.Id == uuid.Nil, Second: exceptions.Station.NotFound()},
 	}); exception != nil {
 		return nil, "", exception
 	}
@@ -133,8 +133,8 @@ func (r *StationRepository) CheckPermissionAndGetOneById(
 		Limit(1).
 		Scan(&permission)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Shelf.NotFound().WithOrigin(result.Error)},
-		{First: permission == "", Second: exceptions.Shelf.NotFound()},
+		{First: result.Error != nil, Second: exceptions.Station.NotFound().WithOrigin(result.Error)},
+		{First: permission == "", Second: exceptions.Station.NotFound()},
 	}); exception != nil {
 		return nil, "", exception
 	}
@@ -160,8 +160,8 @@ func (r *StationRepository) CheckPermissionsAndGetManyByIds(
 		Clauses(clause.Locking{Strength: "SHARE"}).
 		Find(&stations)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Shelf.NotFound().WithOrigin(result.Error)},
-		{First: len(stations) == 0, Second: exceptions.Shelf.NotFound()},
+		{First: result.Error != nil, Second: exceptions.Station.NotFound().WithOrigin(result.Error)},
+		{First: len(stations) == 0, Second: exceptions.Station.NotFound()},
 	}); exception != nil {
 		return nil, nil, exception
 	}
@@ -179,8 +179,8 @@ func (r *StationRepository) CheckPermissionsAndGetManyByIds(
 		Clauses(clause.Locking{Strength: "SHARE"}).
 		Find(&usersToStations)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Shelf.NotFound().WithOrigin(result.Error)},
-		{First: len(usersToStations) == 0, Second: exceptions.Shelf.NotFound()},
+		{First: result.Error != nil, Second: exceptions.Station.NotFound().WithOrigin(result.Error)},
+		{First: len(usersToStations) == 0, Second: exceptions.Station.NotFound()},
 	}); exception != nil {
 		return nil, nil, exception
 	}
@@ -194,7 +194,7 @@ func (r *StationRepository) CheckPermissionsAndGetManyByIds(
 	for index, station := range stations {
 		permission, exist := permissionByStationId[station.Id]
 		if !exist {
-			return nil, nil, exceptions.Shelf.NotFound()
+			return nil, nil, exceptions.Station.NotFound()
 		}
 		permissions[index] = permission
 	}
@@ -242,7 +242,7 @@ func (r *StationRepository) CreateOneByOwnerId(
 	newStation.OwnerId = ownerId
 	if err := copier.Copy(&newStation, &input); err != nil {
 		parsedOptions.DB.Rollback()
-		return nil, exceptions.Shelf.InvalidInput().WithOrigin(err)
+		return nil, exceptions.Station.InvalidInput().WithOrigin(err)
 	}
 	if newStation.Id == uuid.Nil {
 		newStation.Id = uuid.New()
@@ -252,9 +252,9 @@ func (r *StationRepository) CreateOneByOwnerId(
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newStation)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Shelf.FailedToCreate().WithOrigin(result.Error)},
-		{First: newStation.Id == uuid.Nil, Second: exceptions.Shelf.FailedToCreate()},
-		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: exceptions.Station.FailedToCreate().WithOrigin(result.Error)},
+		{First: newStation.Id == uuid.Nil, Second: exceptions.Station.FailedToCreate()},
+		{First: result.RowsAffected == 0, Second: exceptions.Station.NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -268,8 +268,8 @@ func (r *StationRepository) CreateOneByOwnerId(
 	result = parsedOptions.DB.Model(&schemas.UsersToStations{}).
 		Create(&newUsersToStations)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Shelf.FailedToCreate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: exceptions.Station.FailedToCreate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Station.NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -278,7 +278,7 @@ func (r *StationRepository) CreateOneByOwnerId(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+			return nil, exceptions.Station.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -291,7 +291,7 @@ func (r *StationRepository) CreateManyByOwnerId(
 	opts ...options.RepositoryOptions,
 ) ([]uuid.UUID, *exceptions.Exception) {
 	if len(input) == 0 {
-		return nil, exceptions.Shelf.NoChanges()
+		return nil, exceptions.Station.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
@@ -309,7 +309,7 @@ func (r *StationRepository) CreateManyByOwnerId(
 		newStation.OwnerId = ownerId
 		if err := copier.Copy(&newStation, &in); err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, exceptions.Shelf.InvalidInput().WithOrigin(err)
+			return nil, exceptions.Station.InvalidInput().WithOrigin(err)
 		}
 		if newStation.Id == uuid.Nil {
 			newStation.Id = uuid.New()
@@ -320,8 +320,8 @@ func (r *StationRepository) CreateManyByOwnerId(
 	result := parsedOptions.DB.Model(&schemas.Station{}).
 		CreateInBatches(&newStations, parsedOptions.BatchSize)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Shelf.FailedToCreate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: exceptions.Station.FailedToCreate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Station.NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -340,8 +340,8 @@ func (r *StationRepository) CreateManyByOwnerId(
 	result = parsedOptions.DB.Model(&schemas.UsersToStations{}).
 		CreateInBatches(&newUsersToStations, parsedOptions.BatchSize)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Shelf.FailedToCreate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: exceptions.Station.FailedToCreate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Station.NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -350,7 +350,7 @@ func (r *StationRepository) CreateManyByOwnerId(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+			return nil, exceptions.Station.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -401,8 +401,8 @@ func (r *StationRepository) UpdateOneById(
 		Select("*").
 		Updates(&updates)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: exceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Station.NoChanges()},
 	}); exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -411,7 +411,7 @@ func (r *StationRepository) UpdateOneById(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+			return nil, exceptions.Station.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -424,7 +424,7 @@ func (r *StationRepository) BulkUpdateManyByIds(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(input) == 0 {
-		return exceptions.Shelf.NoChanges()
+		return exceptions.Station.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
@@ -456,7 +456,7 @@ func (r *StationRepository) BulkUpdateManyByIds(
 	)
 	if exception != nil {
 		parsedOptions.DB.Rollback()
-		return exceptions.Shelf.NoPermission("update these stations")
+		return exceptions.Station.NoPermission("update these stations")
 	}
 
 	stationById := make(map[uuid.UUID]schemas.Station, len(validStations))
@@ -485,8 +485,8 @@ func (r *StationRepository) BulkUpdateManyByIds(
 			Select("*").
 			Updates(&updates)
 		if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-			{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
-			{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+			{First: result.Error != nil, Second: exceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
+			{First: result.RowsAffected == 0, Second: exceptions.Station.NoChanges()},
 		}); exception != nil {
 			parsedOptions.DB.Rollback()
 			return exception
@@ -496,7 +496,7 @@ func (r *StationRepository) BulkUpdateManyByIds(
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
-			return exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+			return exceptions.Station.FailedToCommitTransaction().WithOrigin(err)
 		}
 	}
 
@@ -524,9 +524,9 @@ func (r *StationRepository) RestoreSoftDeletedOneById(
 		Where("\"StationTable\".id = ?", id).
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
-		{First: restoredStation.Id == uuid.Nil, Second: exceptions.Shelf.FailedToUpdate()},
-		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: exceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
+		{First: restoredStation.Id == uuid.Nil, Second: exceptions.Station.FailedToUpdate()},
+		{First: result.RowsAffected == 0, Second: exceptions.Station.NoChanges()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -540,7 +540,7 @@ func (r *StationRepository) RestoreSoftDeletedManyByIds(
 	opts ...options.RepositoryOptions,
 ) ([]schemas.Station, *exceptions.Exception) {
 	if len(ids) == 0 {
-		return nil, exceptions.Shelf.NoChanges()
+		return nil, exceptions.Station.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
@@ -559,9 +559,9 @@ func (r *StationRepository) RestoreSoftDeletedManyByIds(
 		Where("\"StationTable\".id IN ?", ids).
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
-		{First: len(restoredStations) == 0, Second: exceptions.Shelf.FailedToUpdate()},
-		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: exceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
+		{First: len(restoredStations) == 0, Second: exceptions.Station.FailedToUpdate()},
+		{First: result.RowsAffected == 0, Second: exceptions.Station.NoChanges()},
 	}); exception != nil {
 		return nil, exception
 	}
@@ -588,8 +588,8 @@ func (r *StationRepository) SoftDeleteOneById(
 		Where("\"StationTable\".id = ?", id).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: exceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Station.NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -603,7 +603,7 @@ func (r *StationRepository) SoftDeleteManyByIds(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(ids) == 0 {
-		return exceptions.Shelf.NoChanges()
+		return exceptions.Station.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
@@ -620,8 +620,8 @@ func (r *StationRepository) SoftDeleteManyByIds(
 		Where("\"StationTable\".id IN ?", ids).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: exceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Station.NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -641,8 +641,8 @@ func (r *StationRepository) SoftDeleteManyByUserId(
 		Where("owner_id = ?", userId).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: exceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Station.NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -669,8 +669,8 @@ func (r *StationRepository) HardDeleteOneById(
 		Where("\"StationTable\".id = ?", id).
 		Delete(&schemas.Station{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Shelf.FailedToDelete().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: exceptions.Station.FailedToDelete().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Station.NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -684,7 +684,7 @@ func (r *StationRepository) HardDeleteManyByIds(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(ids) == 0 {
-		return exceptions.Shelf.NoChanges()
+		return exceptions.Station.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
@@ -701,8 +701,8 @@ func (r *StationRepository) HardDeleteManyByIds(
 		Where("\"StationTable\".id IN ?", ids).
 		Delete(&schemas.Station{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Shelf.FailedToDelete().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: exceptions.Station.FailedToDelete().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Station.NoChanges()},
 	}); exception != nil {
 		return exception
 	}
@@ -722,8 +722,8 @@ func (r *StationRepository) HardDeleteManyByUserId(
 		Where("owner_id = ?", userId).
 		Delete(&schemas.Station{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Shelf.FailedToDelete().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: exceptions.Shelf.NoChanges()},
+		{First: result.Error != nil, Second: exceptions.Station.FailedToDelete().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Station.NoChanges()},
 	}); exception != nil {
 		return exception
 	}

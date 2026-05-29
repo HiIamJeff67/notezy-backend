@@ -71,6 +71,11 @@ const (
 // ExceptionPrefix_Block ExceptionPrefix = "Block"						 			44
 // ExceptionPrefix_OAuth ExceptionPrefix = "OAuth"						 			45
 // ExceptionPrefix_UsersToBillingPlans ExceptionPrefix = "UsersToBillingPlans"		46
+// ExceptionPrefix_Item ExceptionPrefix = "Item"									47
+// ExceptionPrefix_Station ExceptionPrefix = "Station"								48
+// ExceptionPrefix_Routine ExceptionPrefix = "Routine" 								49
+// ExceptionPrefix_RoutineTag ExceptionPrefix = "RoutineTag"						50
+// ExceptionPrefix_RoutineTask ExceptionPrefix = "RoutineTask"						51
 
 // the exception code exceeded 990 are reserved for client exceptions
 // ExceptionPrefix_Client ExceptionPrefix = "ClientCommon" 				 			990

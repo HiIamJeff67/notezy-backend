@@ -22,29 +22,23 @@ func NewRoutineTaskScope() RoutineTaskScopeInterface {
 
 func (sc *RoutineTaskScope) PassPermissionCheck(id uuid.UUID, userId uuid.UUID, permissions []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		// Current schema keeps RoutineTask owner-scoped, while shared visibility comes through assigned routines.
+		// Use gorm.DB.Session to build a fresh statement for the subquery to avoid inheriting outer query clauses (especially in UPDATE/DELETE).
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
 			Model(&schemas.UsersToStations{}).
 			Select("1").
-			Joins("INNER JOIN \"RoutineTable\" r ON r.station_id = \"UsersToStationsTable\".station_id").
-			Joins("INNER JOIN \"RoutinesToTasksTable\" rtt ON rtt.routine_id = r.id").
-			Where("rtt.task_id = \"RoutineTaskTable\".id").
-			Where("\"UsersToStationsTable\".user_id = ? AND \"UsersToStationsTable\".permission IN ?", userId, permissions)
-		return db.Where("\"RoutineTaskTable\".id = ? AND (\"RoutineTaskTable\".owner_id = ? OR EXISTS (?))", id, userId, subQuery)
+			Where("station_id = \"RoutineTaskTable\".station_id AND user_id = ? AND permission IN ?", userId, permissions)
+		return db.Where("\"RoutineTaskTable\".id = ? AND EXISTS (?)", id, subQuery)
 	}
 }
 
 func (sc *RoutineTaskScope) PassPermissionChecks(ids []uuid.UUID, userId uuid.UUID, permissions []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		// Current schema keeps RoutineTask owner-scoped, while shared visibility comes through assigned routines.
+		// Use gorm.DB.Session to build a fresh statement for the subquery to avoid inheriting outer query clauses (especially in UPDATE/DELETE).
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
 			Model(&schemas.UsersToStations{}).
 			Select("1").
-			Joins("INNER JOIN \"RoutineTable\" r ON r.station_id = \"UsersToStationsTable\".station_id").
-			Joins("INNER JOIN \"RoutinesToTasksTable\" rtt ON rtt.routine_id = r.id").
-			Where("rtt.task_id = \"RoutineTaskTable\".id").
-			Where("\"UsersToStationsTable\".user_id = ? AND \"UsersToStationsTable\".permission IN ?", userId, permissions)
-		return db.Where("\"RoutineTaskTable\".id IN ? AND (\"RoutineTaskTable\".owner_id = ? OR EXISTS (?))", ids, userId, subQuery)
+			Where("station_id = \"RoutineTaskTable\".station_id AND user_id = ? AND permission IN ?", userId, permissions)
+		return db.Where("\"RoutineTaskTable\".id IN ? AND EXISTS (?)", ids, subQuery)
 	}
 }
 

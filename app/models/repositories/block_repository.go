@@ -432,6 +432,7 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 		for _, inputBlock := range in.Blocks {
 			var newBlock schemas.Block
 			if err := copier.Copy(&newBlock, &inputBlock); err != nil {
+				parsedOptions.DB.Rollback()
 				return nil, exceptions.Block.InvalidInput().WithOrigin(err)
 			}
 			newBlock.BlockGroupId = in.BlockGroupId

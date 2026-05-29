@@ -18,6 +18,7 @@ type RoutineTask struct {
 	Priority        int32                    `json:"priority" gorm:"column:priority; type:integer; not null; default:0;"`
 	Status          enums.RoutineTaskStatus  `json:"status" gorm:"column:status; type:\"RoutineTaskStatus\"; not null; default:'Idle';"`
 	Attempts        int32                    `json:"attempts" gorm:"column:attempts; type:integer; not null; default:0;"`
+	MaxAttempts     int32                    `json:"maxAttempts" gorm:"column:max_attempts; type:integer; not null; default:1;"`
 	ScheduledAt     time.Time                `json:"scheduledAt" gorm:"column:scheduled_at; type:timestamptz; not null; default:NOW();"`
 	ActualStartedAt *time.Time               `json:"actualStartedAt" gorm:"column:actual_started_at; type:timestamptz; default:null;"`
 	ActualEndedAt   *time.Time               `json:"actualEndedAt" gorm:"column:actual_ended_at; type:timestamptz; default:null;"`

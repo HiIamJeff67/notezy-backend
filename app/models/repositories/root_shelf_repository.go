@@ -243,6 +243,7 @@ func (r *RootShelfRepository) CreateOneByOwnerId(
 	var newRootShelf schemas.RootShelf
 	newRootShelf.OwnerId = ownerId
 	if err := copier.Copy(&newRootShelf, &input); err != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exceptions.Shelf.FailedToCreate().WithOrigin(err)
 	}
 	if newRootShelf.Id == uuid.Nil {
@@ -395,6 +396,7 @@ func (r *RootShelfRepository) UpdateOneById(
 
 	updates, err := util.PartialUpdatePreprocess(input.Values, input.SetNull, *existingRootShelf)
 	if err != nil {
+		parsedOptions.DB.Rollback()
 		return nil, exceptions.Util.FailedToPreprocessPartialUpdate(
 			input.Values, input.SetNull, *existingRootShelf,
 		).WithOrigin(err)

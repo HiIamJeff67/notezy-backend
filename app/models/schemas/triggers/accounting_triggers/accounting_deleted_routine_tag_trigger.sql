@@ -8,10 +8,11 @@ BEGIN
 
     WITH owner_deltas AS (
         SELECT
-            owner_id,
+            s.owner_id,
             count(*) as total_delta
-        FROM old_table
-        GROUP BY owner_id
+        FROM old_table ot
+        JOIN "StationTable" s ON s.id = ot.station_id
+        GROUP BY s.owner_id
     )
     UPDATE "UserAccountTable" ua
     SET
