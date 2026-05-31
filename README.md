@@ -1,8 +1,4 @@
-# Notezy Backend
-
-<a>
-  <img src="global/images/logo/NotezyDocumentationHeaderImage.png" alt="notezy" />
-</a>
+<a><img src="global/images/logo/NotezyDocumentationHeaderImage.png" alt="notezy" /></a>
 
 ## Contents
 
@@ -183,73 +179,76 @@
 ### Repository Structure
 
 ```text
-notezy-backend/
-  app/
-    adapters/
-    binders/
-    caches/
-    commands/
-    configs/
-    contexts/
-    controllers/
-    cookies/
-    dtos/
-    emails/
-    exceptions/
-    graphql/
-      dataloaders/
-      generated/
-      models/
-      resolvers/
-      scalars/
-    interceptors/
-    middlewares/
-    models/
-      inputs/
-      repositories/
-      schemas/
-        enums/
-        triggers/
-        constraints/
-      scopes/
-      seeds/
-      sqls/
-    modules/
-    monitor/
-      logs/
-      metrics/
-      traces/
-    options/
-    routes/
-      developmentroutes/
-      testroutes/
-    services/
-    storages/
-    tokens/
-    util/
-    validation/
-  infra/
-    docker/
-    graphql/
-    monitor/
-    nginx/
-    paypal/   (out of main infra scope in this report)
-  shared/
-    constants/
-    graphql/
-    lib/
-    types/
-  test/
-    e2e/
-    unit/
-  docs/
-  LICENSE.md
-  LICENSE(tw).md
-  LICENSES/
-  docker-compose.yaml
-  docker-compose.prod.yaml
-  go.mod
-  Makefile
+go-start-monolithic-kit/
+├── app/
+│   ├── adapters/
+│   ├── binders/
+│   ├── caches/
+│   ├── commands/
+│   ├── configs/
+│   ├── contexts/
+│   ├── controllers/
+│   ├── cookies/
+│   ├── dtos/
+│   ├── emails/
+│   ├── exceptions/
+│   ├── graphql/
+│   │   ├── dataloaders/
+│   │   ├── generated/
+│   │   ├── models/
+│   │   ├── resolvers/
+│   │   └── scalars/
+│   ├── interceptors/
+│   ├── middlewares/
+│   ├── models/
+│   │   ├── inputs/
+│   │   ├── repositories/
+│   │   ├── scopes/
+│   │   ├── schemas/
+│   │   │   ├── constraints/
+│   │   │   ├── enums/
+│   │   │   └── triggers/
+│   │   ├── seeds/
+│   │   └── sqls/
+│   ├── modules/
+│   ├── monitor/
+│   │   ├── logs/
+│   │   ├── metrics/
+│   │   └── traces/
+│   ├── options/
+│   ├── routes/
+│   │   ├── developmentroutes/
+│   │   └── testroutes/
+│   ├── services/
+│   ├── storages/
+│   ├── tokens/
+│   ├── util/
+│   └── validation/
+├── infra/
+│   ├── docker/
+│   ├── graphql/
+│   ├── monitor/
+│   ├── nginx/
+│   └── paypal/ (excluded scope)
+├── shared/
+│   ├── constants/
+│   ├── graphql/
+│   ├── lib/
+│   └── types/
+├── test/
+│   ├── e2e/
+│   └── unit/
+├── docs/
+├── LICENSES/
+├── docker-compose.prod.yaml
+├── docker-compose.yaml
+├── go.mod
+├── go.sum
+├── LICENSE(tw).md
+├── LICENSE.md
+├── main.go
+├── Makefile
+└── README.md
 ```
 
 ### Licensing and Third-Party Notices
