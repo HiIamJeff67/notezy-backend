@@ -11,7 +11,7 @@ import (
 
 /* ============================== Request DTO ============================== */
 
-type GetOneRoutineByIdReqDto struct {
+type GetMyRoutineByIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -27,7 +27,7 @@ type GetOneRoutineByIdReqDto struct {
 	]
 }
 
-type CreateOneRoutineByStationIdReqDto struct {
+type CreateRoutineByStationIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -51,7 +51,7 @@ type CreateOneRoutineByStationIdReqDto struct {
 	]
 }
 
-type BulkCreateManyRoutinesByStationIdsReqDto struct {
+type CreateRoutinesByStationIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -77,7 +77,7 @@ type BulkCreateManyRoutinesByStationIdsReqDto struct {
 	]
 }
 
-type UpdateOneRoutineByIdReqDto struct {
+type UpdateMyRoutineByIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -103,7 +103,7 @@ type UpdateOneRoutineByIdReqDto struct {
 	]
 }
 
-type BulkUpdateManyRoutinesByIdsReqDto struct {
+type UpdateMyRoutinesByIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -131,7 +131,7 @@ type BulkUpdateManyRoutinesByIdsReqDto struct {
 	]
 }
 
-type RestoreSoftDeletedOneRoutineByIdReqDto struct {
+type RestoreMyRoutineByIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -146,7 +146,7 @@ type RestoreSoftDeletedOneRoutineByIdReqDto struct {
 	]
 }
 
-type RestoreSoftDeletedManyRoutinesByIdsReqDto struct {
+type RestoreMyRoutinesByIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -161,7 +161,7 @@ type RestoreSoftDeletedManyRoutinesByIdsReqDto struct {
 	]
 }
 
-type SoftDeleteOneRoutineByIdReqDto struct {
+type DeleteMyRoutineByIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -176,7 +176,7 @@ type SoftDeleteOneRoutineByIdReqDto struct {
 	]
 }
 
-type SoftDeleteManyRoutinesByIdsReqDto struct {
+type DeleteMyRoutinesByIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -191,7 +191,7 @@ type SoftDeleteManyRoutinesByIdsReqDto struct {
 	]
 }
 
-type HardDeleteOneRoutineByIdReqDto struct {
+type HardDeleteMyRoutineByIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -206,7 +206,7 @@ type HardDeleteOneRoutineByIdReqDto struct {
 	]
 }
 
-type HardDeleteManyRoutinesByIdsReqDto struct {
+type HardDeleteMyRoutinesByIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -223,7 +223,7 @@ type HardDeleteManyRoutinesByIdsReqDto struct {
 
 /* ============================== Response DTO ============================== */
 
-type GetOneRoutineByIdResDto struct {
+type GetMyRoutineByIdResDto struct {
 	Id               uuid.UUID            `json:"id"`
 	StationId        uuid.UUID            `json:"stationId"`
 	Title            string               `json:"title"`
@@ -239,25 +239,25 @@ type GetOneRoutineByIdResDto struct {
 	CreatedAt        time.Time            `json:"createdAt"`
 }
 
-type CreateOneRoutineByStationIdResDto struct {
+type CreateRoutineByStationIdResDto struct {
 	Id        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-type BulkCreateManyRoutinesByStationIdsResDto struct {
+type CreateRoutinesByStationIdsResDto struct {
 	Ids       []uuid.UUID `json:"ids"`
 	CreatedAt time.Time   `json:"createdAt"`
 }
 
-type UpdateOneRoutineByIdResDto struct {
+type UpdateMyRoutineByIdResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type BulkUpdateManyRoutinesByIdsResDto struct {
+type UpdateMyRoutinesByIdsResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type RestoreSoftDeletedOneRoutineByIdResDto struct {
+type RestoreMyRoutineByIdResDto struct {
 	Id               uuid.UUID            `json:"id"`
 	StationId        uuid.UUID            `json:"stationId"`
 	Title            string               `json:"title"`
@@ -273,20 +273,20 @@ type RestoreSoftDeletedOneRoutineByIdResDto struct {
 	CreatedAt        time.Time            `json:"createdAt"`
 }
 
-type RestoreSoftDeletedManyRoutinesByIdsResDto = []RestoreSoftDeletedOneRoutineByIdResDto
+type RestoreMyRoutinesByIdsResDto = []RestoreMyRoutineByIdResDto
 
-type SoftDeleteOneRoutineByIdResDto struct {
+type DeleteMyRoutineByIdResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`
 }
 
-type SoftDeleteManyRoutinesByIdsResDto struct {
+type DeleteMyRoutinesByIdsResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`
 }
 
-type HardDeleteOneRoutineByIdResDto struct {
+type HardDeleteMyRoutineByIdResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`
 }
 
-type HardDeleteManyRoutinesByIdsResDto struct {
+type HardDeleteMyRoutinesByIdsResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`
 }

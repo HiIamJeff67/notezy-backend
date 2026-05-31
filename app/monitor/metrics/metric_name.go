@@ -38,6 +38,52 @@ type metricNameUserAccount struct {
 	UnbindGoogleAccount string
 }
 
+type metricNameStation struct {
+	GetMyStationById          string
+	CreateStation             string
+	CreateStations            string
+	UpdateMyStationById       string
+	UpdateMyStationsByIds     string
+	RestoreMyStationById      string
+	RestoreMyStationsByIds    string
+	DeleteMyStationById       string
+	DeleteMyStationsByIds     string
+	HardDeleteMyStationById   string
+	HardDeleteMyStationsByIds string
+}
+
+type metricNameRoutine struct {
+	GetMyRoutineById           string
+	CreateRoutineByStationId   string
+	CreateRoutinesByStationIds string
+	UpdateMyRoutineById        string
+	UpdateMyRoutinesByIds      string
+	RestoreMyRoutineById       string
+	RestoreMyRoutinesByIds     string
+	DeleteMyRoutineById        string
+	DeleteMyRoutinesByIds      string
+	HardDeleteMyRoutineById    string
+	HardDeleteMyRoutinesByIds  string
+}
+
+type metricNameRoutineTag struct {
+	GetMyRoutineTagById          string
+	CreateRoutineTag             string
+	CreateRoutineTags            string
+	UpdateMyRoutineTagById       string
+	UpdateMyRoutineTagsByIds     string
+	HardDeleteMyRoutineTagById   string
+	HardDeleteMyRoutineTagsByIds string
+}
+
+type metricNameRoutineTask struct {
+	GetMyRoutineTaskById          string
+	CreateRoutineTaskByStationId  string
+	UpdateMyRoutineTaskById       string
+	HardDeleteMyRoutineTaskById   string
+	HardDeleteMyRoutineTasksByIds string
+}
+
 type metricNameRootShelf struct {
 	GetMyRootShelfById        string
 	SearchRecentRootShelves   string
@@ -150,6 +196,10 @@ type MetricNameRequests struct {
 	UserInfo    metricNameUserInfo
 	UserSetting metricNameUserSetting
 	UserAccount metricNameUserAccount
+	Station     metricNameStation
+	Routine     metricNameRoutine
+	RoutineTag  metricNameRoutineTag
+	RoutineTask metricNameRoutineTask
 	RootShelf   metricNameRootShelf
 	SubShelf    metricNameSubShelf
 	Material    metricNameMaterial
@@ -218,6 +268,48 @@ var MetricNames = struct {
 				UpdateMyAccount:     "server.requests.userAccount.updateMyAccount",
 				BindGoogleAccount:   "server.requests.userAccount.bindGoogleAccount",
 				UnbindGoogleAccount: "server.requests.userAccount.unbindGoogleAccount",
+			},
+			Station: metricNameStation{
+				GetMyStationById:          "server.requests.station.getMyStationById",
+				CreateStation:             "server.requests.station.createStation",
+				CreateStations:            "server.requests.station.createStations",
+				UpdateMyStationById:       "server.requests.station.updateMyStationById",
+				UpdateMyStationsByIds:     "server.requests.station.updateMyStationsByIds",
+				RestoreMyStationById:      "server.requests.station.restoreMyStationById",
+				RestoreMyStationsByIds:    "server.requests.station.restoreMyStationsByIds",
+				DeleteMyStationById:       "server.requests.station.deleteMyStationById",
+				DeleteMyStationsByIds:     "server.requests.station.deleteMyStationsByIds",
+				HardDeleteMyStationById:   "server.requests.station.hardDeleteMyStationById",
+				HardDeleteMyStationsByIds: "server.requests.station.hardDeleteMyStationsByIds",
+			},
+			Routine: metricNameRoutine{
+				GetMyRoutineById:           "server.requests.routine.getMyRoutineById",
+				CreateRoutineByStationId:   "server.requests.routine.createRoutineByStationId",
+				CreateRoutinesByStationIds: "server.requests.routine.createRoutinesByStationIds",
+				UpdateMyRoutineById:        "server.requests.routine.updateMyRoutineById",
+				UpdateMyRoutinesByIds:      "server.requests.routine.updateMyRoutinesByIds",
+				RestoreMyRoutineById:       "server.requests.routine.restoreMyRoutineById",
+				RestoreMyRoutinesByIds:     "server.requests.routine.restoreMyRoutinesByIds",
+				DeleteMyRoutineById:        "server.requests.routine.deleteMyRoutineById",
+				DeleteMyRoutinesByIds:      "server.requests.routine.deleteMyRoutinesByIds",
+				HardDeleteMyRoutineById:    "server.requests.routine.hardDeleteMyRoutineById",
+				HardDeleteMyRoutinesByIds:  "server.requests.routine.hardDeleteMyRoutinesByIds",
+			},
+			RoutineTag: metricNameRoutineTag{
+				GetMyRoutineTagById:          "server.requests.routineTag.getMyRoutineTagById",
+				CreateRoutineTag:             "server.requests.routineTag.createRoutineTag",
+				CreateRoutineTags:            "server.requests.routineTag.createRoutineTags",
+				UpdateMyRoutineTagById:       "server.requests.routineTag.updateMyRoutineTagById",
+				UpdateMyRoutineTagsByIds:     "server.requests.routineTag.updateMyRoutineTagsByIds",
+				HardDeleteMyRoutineTagById:   "server.requests.routineTag.hardDeleteMyRoutineTagById",
+				HardDeleteMyRoutineTagsByIds: "server.requests.routineTag.hardDeleteMyRoutineTagsByIds",
+			},
+			RoutineTask: metricNameRoutineTask{
+				GetMyRoutineTaskById:          "server.requests.routineTask.getMyRoutineTaskById",
+				CreateRoutineTaskByStationId:  "server.requests.routineTask.createRoutineTaskByStationId",
+				UpdateMyRoutineTaskById:       "server.requests.routineTask.updateMyRoutineTaskById",
+				HardDeleteMyRoutineTaskById:   "server.requests.routineTask.hardDeleteMyRoutineTaskById",
+				HardDeleteMyRoutineTasksByIds: "server.requests.routineTask.hardDeleteMyRoutineTasksByIds",
 			},
 			RootShelf: metricNameRootShelf{
 				GetMyRootShelfById:        "server.requests.rootShelf.getMyRootShelfById",

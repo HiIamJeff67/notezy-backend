@@ -16,11 +16,11 @@ import (
 )
 
 type RoutineTaskServiceInterface interface {
-	GetOneById(ctx context.Context, reqDto *dtos.GetOneRoutineTaskByIdReqDto) (*dtos.GetOneRoutineTaskByIdResDto, *exceptions.Exception)
-	CreateOneByStationId(ctx context.Context, reqDto *dtos.CreateOneRoutineTaskByStationIdReqDto) (*dtos.CreateOneRoutineTaskByStationIdResDto, *exceptions.Exception)
-	UpdateOneById(ctx context.Context, reqDto *dtos.UpdateOneRoutineTaskByIdReqDto) (*dtos.UpdateOneRoutineTaskByIdResDto, *exceptions.Exception)
-	HardDeleteOneById(ctx context.Context, reqDto *dtos.HardDeleteOneRoutineTaskByIdReqDto) (*dtos.HardDeleteOneRoutineTaskByIdResDto, *exceptions.Exception)
-	HardDeleteManyByIds(ctx context.Context, reqDto *dtos.HardDeleteManyRoutineTasksByIdsReqDto) (*dtos.HardDeleteManyRoutineTasksByIdsResDto, *exceptions.Exception)
+	GetMyRoutineTaskById(ctx context.Context, reqDto *dtos.GetMyRoutineTaskByIdReqDto) (*dtos.GetMyRoutineTaskByIdResDto, *exceptions.Exception)
+	CreateRoutineTaskByStationId(ctx context.Context, reqDto *dtos.CreateRoutineTaskByStationIdReqDto) (*dtos.CreateRoutineTaskByStationIdResDto, *exceptions.Exception)
+	UpdateMyRoutineTaskById(ctx context.Context, reqDto *dtos.UpdateMyRoutineTaskByIdReqDto) (*dtos.UpdateMyRoutineTaskByIdResDto, *exceptions.Exception)
+	HardDeleteMyRoutineTaskById(ctx context.Context, reqDto *dtos.HardDeleteMyRoutineTaskByIdReqDto) (*dtos.HardDeleteMyRoutineTaskByIdResDto, *exceptions.Exception)
+	HardDeleteMyRoutineTasksByIds(ctx context.Context, reqDto *dtos.HardDeleteMyRoutineTasksByIdsReqDto) (*dtos.HardDeleteMyRoutineTasksByIdsResDto, *exceptions.Exception)
 }
 
 type RoutineTaskService struct {
@@ -43,10 +43,10 @@ func NewRoutineTaskService(
 
 /* ============================== Service Methods for RoutineTask ============================== */
 
-func (s *RoutineTaskService) GetOneById(
+func (s *RoutineTaskService) GetMyRoutineTaskById(
 	ctx context.Context,
-	reqDto *dtos.GetOneRoutineTaskByIdReqDto,
-) (*dtos.GetOneRoutineTaskByIdResDto, *exceptions.Exception) {
+	reqDto *dtos.GetMyRoutineTaskByIdReqDto,
+) (*dtos.GetMyRoutineTaskByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -62,7 +62,7 @@ func (s *RoutineTaskService) GetOneById(
 		return nil, exception
 	}
 
-	return &dtos.GetOneRoutineTaskByIdResDto{
+	return &dtos.GetMyRoutineTaskByIdResDto{
 		Id:              routineTask.Id,
 		StationId:       routineTask.StationId,
 		Purpose:         routineTask.Purpose,
@@ -79,10 +79,10 @@ func (s *RoutineTaskService) GetOneById(
 	}, nil
 }
 
-func (s *RoutineTaskService) CreateOneByStationId(
+func (s *RoutineTaskService) CreateRoutineTaskByStationId(
 	ctx context.Context,
-	reqDto *dtos.CreateOneRoutineTaskByStationIdReqDto,
-) (*dtos.CreateOneRoutineTaskByStationIdResDto, *exceptions.Exception) {
+	reqDto *dtos.CreateRoutineTaskByStationIdReqDto,
+) (*dtos.CreateRoutineTaskByStationIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -103,16 +103,16 @@ func (s *RoutineTaskService) CreateOneByStationId(
 		return nil, exception
 	}
 
-	return &dtos.CreateOneRoutineTaskByStationIdResDto{
+	return &dtos.CreateRoutineTaskByStationIdResDto{
 		Id:        *newRoutineTaskId,
 		CreatedAt: time.Now(),
 	}, nil
 }
 
-func (s *RoutineTaskService) UpdateOneById(
+func (s *RoutineTaskService) UpdateMyRoutineTaskById(
 	ctx context.Context,
-	reqDto *dtos.UpdateOneRoutineTaskByIdReqDto,
-) (*dtos.UpdateOneRoutineTaskByIdResDto, *exceptions.Exception) {
+	reqDto *dtos.UpdateMyRoutineTaskByIdReqDto,
+) (*dtos.UpdateMyRoutineTaskByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -137,15 +137,15 @@ func (s *RoutineTaskService) UpdateOneById(
 		return nil, exception
 	}
 
-	return &dtos.UpdateOneRoutineTaskByIdResDto{
+	return &dtos.UpdateMyRoutineTaskByIdResDto{
 		UpdatedAt: updatedRoutineTask.UpdatedAt,
 	}, nil
 }
 
-func (s *RoutineTaskService) HardDeleteOneById(
+func (s *RoutineTaskService) HardDeleteMyRoutineTaskById(
 	ctx context.Context,
-	reqDto *dtos.HardDeleteOneRoutineTaskByIdReqDto,
-) (*dtos.HardDeleteOneRoutineTaskByIdResDto, *exceptions.Exception) {
+	reqDto *dtos.HardDeleteMyRoutineTaskByIdReqDto,
+) (*dtos.HardDeleteMyRoutineTaskByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -160,15 +160,15 @@ func (s *RoutineTaskService) HardDeleteOneById(
 		return nil, exception
 	}
 
-	return &dtos.HardDeleteOneRoutineTaskByIdResDto{
+	return &dtos.HardDeleteMyRoutineTaskByIdResDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
 
-func (s *RoutineTaskService) HardDeleteManyByIds(
+func (s *RoutineTaskService) HardDeleteMyRoutineTasksByIds(
 	ctx context.Context,
-	reqDto *dtos.HardDeleteManyRoutineTasksByIdsReqDto,
-) (*dtos.HardDeleteManyRoutineTasksByIdsResDto, *exceptions.Exception) {
+	reqDto *dtos.HardDeleteMyRoutineTasksByIdsReqDto,
+) (*dtos.HardDeleteMyRoutineTasksByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -183,7 +183,7 @@ func (s *RoutineTaskService) HardDeleteManyByIds(
 		return nil, exception
 	}
 
-	return &dtos.HardDeleteManyRoutineTasksByIdsResDto{
+	return &dtos.HardDeleteMyRoutineTasksByIdsResDto{
 		DeletedAt: time.Now(),
 	}, nil
 }

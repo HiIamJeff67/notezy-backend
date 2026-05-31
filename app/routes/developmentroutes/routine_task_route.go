@@ -1,0 +1,111 @@
+package developmentroutes
+
+import (
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel"
+
+	interceptors "notezy-backend/app/interceptors"
+	middlewares "notezy-backend/app/middlewares"
+	modules "notezy-backend/app/modules"
+	metrics "notezy-backend/app/monitor/metrics"
+	constants "notezy-backend/shared/constants"
+)
+
+func configureDevelopmentRoutineTaskRoutes() {
+	routineTaskModule := modules.NewRoutineTaskModule()
+
+	routineTaskRoutes := DevelopmentRouterGroup.Group("/routineTask")
+	defaultMiddlewares := []gin.HandlerFunc{
+		middlewares.UnauthorizedRateLimitMiddleware(),
+		middlewares.TimeoutMiddleware(3 * time.Second),
+		middlewares.AuthMiddleware(),
+		interceptors.ShareableResponseWriterInterceptor(
+			interceptors.RefreshTokenInterceptor,
+			interceptors.EmbeddedInterceptor,
+		),
+	}
+	{
+		routineTaskRoutes.GET(
+			"/getMyRoutineTaskById",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyRoutineTaskById"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RoutineTask.GetMyRoutineTaskById,
+					),
+				},
+				defaultMiddlewares,
+				routineTaskModule.Binder.BindGetMyRoutineTaskById(
+					routineTaskModule.Controller.GetMyRoutineTaskById,
+				),
+			)...,
+		)
+		routineTaskRoutes.POST(
+			"/createRoutineTaskByStationId",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createRoutineTaskByStationId"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RoutineTask.CreateRoutineTaskByStationId,
+					),
+				},
+				defaultMiddlewares,
+				routineTaskModule.Binder.BindCreateRoutineTaskByStationId(
+					routineTaskModule.Controller.CreateRoutineTaskByStationId,
+				),
+			)...,
+		)
+		routineTaskRoutes.PUT(
+			"/updateMyRoutineTaskById",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "updateMyRoutineTaskById"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RoutineTask.UpdateMyRoutineTaskById,
+					),
+				},
+				defaultMiddlewares,
+				routineTaskModule.Binder.BindUpdateMyRoutineTaskById(
+					routineTaskModule.Controller.UpdateMyRoutineTaskById,
+				),
+			)...,
+		)
+		routineTaskRoutes.DELETE(
+			"/hardDeleteMyRoutineTaskById",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "hardDeleteMyRoutineTaskById"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RoutineTask.HardDeleteMyRoutineTaskById,
+					),
+				},
+				defaultMiddlewares,
+				routineTaskModule.Binder.BindHardDeleteMyRoutineTaskById(
+					routineTaskModule.Controller.HardDeleteMyRoutineTaskById,
+				),
+			)...,
+		)
+		routineTaskRoutes.DELETE(
+			"/hardDeleteMyRoutineTasksByIds",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "hardDeleteMyRoutineTasksByIds"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RoutineTask.HardDeleteMyRoutineTasksByIds,
+					),
+				},
+				defaultMiddlewares,
+				routineTaskModule.Binder.BindHardDeleteMyRoutineTasksByIds(
+					routineTaskModule.Controller.HardDeleteMyRoutineTasksByIds,
+				),
+			)...,
+		)
+	}
+}

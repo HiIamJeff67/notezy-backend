@@ -16,13 +16,13 @@ import (
 )
 
 type RoutineTagServiceInterface interface {
-	GetOneById(ctx context.Context, reqDto *dtos.GetOneRoutineTagByIdReqDto) (*dtos.GetOneRoutineTagByIdResDto, *exceptions.Exception)
-	CreateOneByUserId(ctx context.Context, reqDto *dtos.CreateOneRoutineTagByUserIdReqDto) (*dtos.CreateOneRoutineTagByUserIdResDto, *exceptions.Exception)
-	BulkCreateManyByUserId(ctx context.Context, reqDto *dtos.BulkCreateManyRoutineTagsByUserIdReqDto) (*dtos.BulkCreateManyRoutineTagsByUserIdResDto, *exceptions.Exception)
-	UpdateOneById(ctx context.Context, reqDto *dtos.UpdateOneRoutineTagByIdReqDto) (*dtos.UpdateOneRoutineTagByIdResDto, *exceptions.Exception)
-	BulkUpdateManyByIds(ctx context.Context, reqDto *dtos.BulkUpdateManyRoutineTagsByIdsReqDto) (*dtos.BulkUpdateManyRoutineTagsByIdsResDto, *exceptions.Exception)
-	HardDeleteOneById(ctx context.Context, reqDto *dtos.HardDeleteOneRoutineTagByIdReqDto) (*dtos.HardDeleteOneRoutineTagByIdResDto, *exceptions.Exception)
-	HardDeleteManyByIds(ctx context.Context, reqDto *dtos.HardDeleteManyRoutineTagsByIdsReqDto) (*dtos.HardDeleteManyRoutineTagsByIdsResDto, *exceptions.Exception)
+	GetMyRoutineTagById(ctx context.Context, reqDto *dtos.GetMyRoutineTagByIdReqDto) (*dtos.GetMyRoutineTagByIdResDto, *exceptions.Exception)
+	CreateRoutineTag(ctx context.Context, reqDto *dtos.CreateRoutineTagReqDto) (*dtos.CreateRoutineTagResDto, *exceptions.Exception)
+	CreateRoutineTags(ctx context.Context, reqDto *dtos.CreateRoutineTagsReqDto) (*dtos.CreateRoutineTagsResDto, *exceptions.Exception)
+	UpdateMyRoutineTagById(ctx context.Context, reqDto *dtos.UpdateMyRoutineTagByIdReqDto) (*dtos.UpdateMyRoutineTagByIdResDto, *exceptions.Exception)
+	UpdateMyRoutineTagsByIds(ctx context.Context, reqDto *dtos.UpdateMyRoutineTagsByIdsReqDto) (*dtos.UpdateMyRoutineTagsByIdsResDto, *exceptions.Exception)
+	HardDeleteMyRoutineTagById(ctx context.Context, reqDto *dtos.HardDeleteMyRoutineTagByIdReqDto) (*dtos.HardDeleteMyRoutineTagByIdResDto, *exceptions.Exception)
+	HardDeleteMyRoutineTagsByIds(ctx context.Context, reqDto *dtos.HardDeleteMyRoutineTagsByIdsReqDto) (*dtos.HardDeleteMyRoutineTagsByIdsResDto, *exceptions.Exception)
 }
 
 type RoutineTagService struct {
@@ -45,10 +45,10 @@ func NewRoutineTagService(
 
 /* ============================== Service Methods for RoutineTag ============================== */
 
-func (s *RoutineTagService) GetOneById(
+func (s *RoutineTagService) GetMyRoutineTagById(
 	ctx context.Context,
-	reqDto *dtos.GetOneRoutineTagByIdReqDto,
-) (*dtos.GetOneRoutineTagByIdResDto, *exceptions.Exception) {
+	reqDto *dtos.GetMyRoutineTagByIdReqDto,
+) (*dtos.GetMyRoutineTagByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -64,7 +64,7 @@ func (s *RoutineTagService) GetOneById(
 		return nil, exception
 	}
 
-	return &dtos.GetOneRoutineTagByIdResDto{
+	return &dtos.GetMyRoutineTagByIdResDto{
 		Id:        routineTag.Id,
 		Name:      routineTag.Name,
 		Color:     routineTag.Color,
@@ -74,10 +74,10 @@ func (s *RoutineTagService) GetOneById(
 	}, nil
 }
 
-func (s *RoutineTagService) CreateOneByUserId(
+func (s *RoutineTagService) CreateRoutineTag(
 	ctx context.Context,
-	reqDto *dtos.CreateOneRoutineTagByUserIdReqDto,
-) (*dtos.CreateOneRoutineTagByUserIdResDto, *exceptions.Exception) {
+	reqDto *dtos.CreateRoutineTagReqDto,
+) (*dtos.CreateRoutineTagResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -97,16 +97,16 @@ func (s *RoutineTagService) CreateOneByUserId(
 		return nil, exception
 	}
 
-	return &dtos.CreateOneRoutineTagByUserIdResDto{
+	return &dtos.CreateRoutineTagResDto{
 		Id:        *newRoutineTagId,
 		CreatedAt: time.Now(),
 	}, nil
 }
 
-func (s *RoutineTagService) BulkCreateManyByUserId(
+func (s *RoutineTagService) CreateRoutineTags(
 	ctx context.Context,
-	reqDto *dtos.BulkCreateManyRoutineTagsByUserIdReqDto,
-) (*dtos.BulkCreateManyRoutineTagsByUserIdResDto, *exceptions.Exception) {
+	reqDto *dtos.CreateRoutineTagsReqDto,
+) (*dtos.CreateRoutineTagsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -131,16 +131,16 @@ func (s *RoutineTagService) BulkCreateManyByUserId(
 		return nil, exception
 	}
 
-	return &dtos.BulkCreateManyRoutineTagsByUserIdResDto{
+	return &dtos.CreateRoutineTagsResDto{
 		Ids:       newRoutineTagIds,
 		CreatedAt: time.Now(),
 	}, nil
 }
 
-func (s *RoutineTagService) UpdateOneById(
+func (s *RoutineTagService) UpdateMyRoutineTagById(
 	ctx context.Context,
-	reqDto *dtos.UpdateOneRoutineTagByIdReqDto,
-) (*dtos.UpdateOneRoutineTagByIdResDto, *exceptions.Exception) {
+	reqDto *dtos.UpdateMyRoutineTagByIdReqDto,
+) (*dtos.UpdateMyRoutineTagByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -163,15 +163,15 @@ func (s *RoutineTagService) UpdateOneById(
 		return nil, exception
 	}
 
-	return &dtos.UpdateOneRoutineTagByIdResDto{
+	return &dtos.UpdateMyRoutineTagByIdResDto{
 		UpdatedAt: updatedRoutineTag.UpdatedAt,
 	}, nil
 }
 
-func (s *RoutineTagService) BulkUpdateManyByIds(
+func (s *RoutineTagService) UpdateMyRoutineTagsByIds(
 	ctx context.Context,
-	reqDto *dtos.BulkUpdateManyRoutineTagsByIdsReqDto,
-) (*dtos.BulkUpdateManyRoutineTagsByIdsResDto, *exceptions.Exception) {
+	reqDto *dtos.UpdateMyRoutineTagsByIdsReqDto,
+) (*dtos.UpdateMyRoutineTagsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -201,15 +201,15 @@ func (s *RoutineTagService) BulkUpdateManyByIds(
 		return nil, exception
 	}
 
-	return &dtos.BulkUpdateManyRoutineTagsByIdsResDto{
+	return &dtos.UpdateMyRoutineTagsByIdsResDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
 
-func (s *RoutineTagService) HardDeleteOneById(
+func (s *RoutineTagService) HardDeleteMyRoutineTagById(
 	ctx context.Context,
-	reqDto *dtos.HardDeleteOneRoutineTagByIdReqDto,
-) (*dtos.HardDeleteOneRoutineTagByIdResDto, *exceptions.Exception) {
+	reqDto *dtos.HardDeleteMyRoutineTagByIdReqDto,
+) (*dtos.HardDeleteMyRoutineTagByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -224,15 +224,15 @@ func (s *RoutineTagService) HardDeleteOneById(
 		return nil, exception
 	}
 
-	return &dtos.HardDeleteOneRoutineTagByIdResDto{
+	return &dtos.HardDeleteMyRoutineTagByIdResDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
 
-func (s *RoutineTagService) HardDeleteManyByIds(
+func (s *RoutineTagService) HardDeleteMyRoutineTagsByIds(
 	ctx context.Context,
-	reqDto *dtos.HardDeleteManyRoutineTagsByIdsReqDto,
-) (*dtos.HardDeleteManyRoutineTagsByIdsResDto, *exceptions.Exception) {
+	reqDto *dtos.HardDeleteMyRoutineTagsByIdsReqDto,
+) (*dtos.HardDeleteMyRoutineTagsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -247,7 +247,7 @@ func (s *RoutineTagService) HardDeleteManyByIds(
 		return nil, exception
 	}
 
-	return &dtos.HardDeleteManyRoutineTagsByIdsResDto{
+	return &dtos.HardDeleteMyRoutineTagsByIdsResDto{
 		DeletedAt: time.Now(),
 	}, nil
 }

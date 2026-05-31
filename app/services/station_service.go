@@ -17,17 +17,17 @@ import (
 )
 
 type StationServiceInterface interface {
-	GetOneById(ctx context.Context, reqDto *dtos.GetOneStationByIdReqDto) (*dtos.GetOneStationByIdResDto, *exceptions.Exception)
-	CreateOneByOwnerId(ctx context.Context, reqDto *dtos.CreateOneStationByOwnerIdReqDto) (*dtos.CreateOneStationByOwnerIdResDto, *exceptions.Exception)
-	CreateManyByOwnerId(ctx context.Context, reqDto *dtos.CreateManyStationsByOwnerIdReqDto) (*dtos.CreateManyStationsByOwnerIdResDto, *exceptions.Exception)
-	UpdateOneById(ctx context.Context, reqDto *dtos.UpdateOneStationByIdReqDto) (*dtos.UpdateOneStationByIdResDto, *exceptions.Exception)
-	BulkUpdateManyByIds(ctx context.Context, reqDto *dtos.BulkUpdateManyStationsByIdsReqDto) (*dtos.BulkUpdateManyStationsByIdsResDto, *exceptions.Exception)
-	RestoreSoftDeletedOneById(ctx context.Context, reqDto *dtos.RestoreSoftDeletedOneStationByIdReqDto) (*dtos.RestoreSoftDeletedOneStationByIdResDto, *exceptions.Exception)
-	RestoreSoftDeletedManyByIds(ctx context.Context, reqDto *dtos.RestoreSoftDeletedManyStationsByIdsReqDto) (*dtos.RestoreSoftDeletedManyStationsByIdsResDto, *exceptions.Exception)
-	SoftDeleteOneById(ctx context.Context, reqDto *dtos.SoftDeleteOneStationByIdReqDto) (*dtos.SoftDeleteOneStationByIdResDto, *exceptions.Exception)
-	SoftDeleteManyByIds(ctx context.Context, reqDto *dtos.SoftDeleteManyStationsByIdsReqDto) (*dtos.SoftDeleteManyStationsByIdsResDto, *exceptions.Exception)
-	HardDeleteOneById(ctx context.Context, reqDto *dtos.HardDeleteOneStationByIdReqDto) (*dtos.HardDeleteOneStationByIdResDto, *exceptions.Exception)
-	HardDeleteManyByIds(ctx context.Context, reqDto *dtos.HardDeleteManyStationsByIdsReqDto) (*dtos.HardDeleteManyStationsByIdsResDto, *exceptions.Exception)
+	GetMyStationById(ctx context.Context, reqDto *dtos.GetMyStationByIdReqDto) (*dtos.GetMyStationByIdResDto, *exceptions.Exception)
+	CreateStation(ctx context.Context, reqDto *dtos.CreateStationReqDto) (*dtos.CreateStationResDto, *exceptions.Exception)
+	CreateStations(ctx context.Context, reqDto *dtos.CreateStationsReqDto) (*dtos.CreateStationsResDto, *exceptions.Exception)
+	UpdateMyStationById(ctx context.Context, reqDto *dtos.UpdateMyStationByIdReqDto) (*dtos.UpdateMyStationByIdResDto, *exceptions.Exception)
+	UpdateMyStationsByIds(ctx context.Context, reqDto *dtos.UpdateMyStationsByIdsReqDto) (*dtos.UpdateMyStationsByIdsResDto, *exceptions.Exception)
+	RestoreMyStationById(ctx context.Context, reqDto *dtos.RestoreMyStationByIdReqDto) (*dtos.RestoreMyStationByIdResDto, *exceptions.Exception)
+	RestoreMyStationsByIds(ctx context.Context, reqDto *dtos.RestoreMyStationsByIdsReqDto) (*dtos.RestoreMyStationsByIdsResDto, *exceptions.Exception)
+	DeleteMyStationById(ctx context.Context, reqDto *dtos.DeleteMyStationByIdReqDto) (*dtos.DeleteMyStationByIdResDto, *exceptions.Exception)
+	DeleteMyStationsByIds(ctx context.Context, reqDto *dtos.DeleteMyStationsByIdsReqDto) (*dtos.DeleteMyStationsByIdsResDto, *exceptions.Exception)
+	HardDeleteMyStationById(ctx context.Context, reqDto *dtos.HardDeleteMyStationByIdReqDto) (*dtos.HardDeleteMyStationByIdResDto, *exceptions.Exception)
+	HardDeleteMyStationsByIds(ctx context.Context, reqDto *dtos.HardDeleteMyStationsByIdsReqDto) (*dtos.HardDeleteMyStationsByIdsResDto, *exceptions.Exception)
 }
 
 type StationService struct {
@@ -50,10 +50,10 @@ func NewStationService(
 
 /* ============================== Service Methods for Station ============================== */
 
-func (s *StationService) GetOneById(
+func (s *StationService) GetMyStationById(
 	ctx context.Context,
-	reqDto *dtos.GetOneStationByIdReqDto,
-) (*dtos.GetOneStationByIdResDto, *exceptions.Exception) {
+	reqDto *dtos.GetMyStationByIdReqDto,
+) (*dtos.GetMyStationByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -75,7 +75,7 @@ func (s *StationService) GetOneById(
 		return nil, exception
 	}
 
-	return &dtos.GetOneStationByIdResDto{
+	return &dtos.GetMyStationByIdResDto{
 		Id:                  station.Id,
 		OwnerId:             station.OwnerId,
 		Name:                station.Name,
@@ -90,10 +90,10 @@ func (s *StationService) GetOneById(
 	}, nil
 }
 
-func (s *StationService) CreateOneByOwnerId(
+func (s *StationService) CreateStation(
 	ctx context.Context,
-	reqDto *dtos.CreateOneStationByOwnerIdReqDto,
-) (*dtos.CreateOneStationByOwnerIdResDto, *exceptions.Exception) {
+	reqDto *dtos.CreateStationReqDto,
+) (*dtos.CreateStationResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -114,16 +114,16 @@ func (s *StationService) CreateOneByOwnerId(
 		return nil, exception
 	}
 
-	return &dtos.CreateOneStationByOwnerIdResDto{
+	return &dtos.CreateStationResDto{
 		Id:        *newStationId,
 		CreatedAt: time.Now(),
 	}, nil
 }
 
-func (s *StationService) CreateManyByOwnerId(
+func (s *StationService) CreateStations(
 	ctx context.Context,
-	reqDto *dtos.CreateManyStationsByOwnerIdReqDto,
-) (*dtos.CreateManyStationsByOwnerIdResDto, *exceptions.Exception) {
+	reqDto *dtos.CreateStationsReqDto,
+) (*dtos.CreateStationsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -149,16 +149,16 @@ func (s *StationService) CreateManyByOwnerId(
 		return nil, exception
 	}
 
-	return &dtos.CreateManyStationsByOwnerIdResDto{
+	return &dtos.CreateStationsResDto{
 		Ids:       newStationIds,
 		CreatedAt: time.Now(),
 	}, nil
 }
 
-func (s *StationService) UpdateOneById(
+func (s *StationService) UpdateMyStationById(
 	ctx context.Context,
-	reqDto *dtos.UpdateOneStationByIdReqDto,
-) (*dtos.UpdateOneStationByIdResDto, *exceptions.Exception) {
+	reqDto *dtos.UpdateMyStationByIdReqDto,
+) (*dtos.UpdateMyStationByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -182,15 +182,15 @@ func (s *StationService) UpdateOneById(
 		return nil, exception
 	}
 
-	return &dtos.UpdateOneStationByIdResDto{
+	return &dtos.UpdateMyStationByIdResDto{
 		UpdatedAt: updatedStation.UpdatedAt,
 	}, nil
 }
 
-func (s *StationService) BulkUpdateManyByIds(
+func (s *StationService) UpdateMyStationsByIds(
 	ctx context.Context,
-	reqDto *dtos.BulkUpdateManyStationsByIdsReqDto,
-) (*dtos.BulkUpdateManyStationsByIdsResDto, *exceptions.Exception) {
+	reqDto *dtos.UpdateMyStationsByIdsReqDto,
+) (*dtos.UpdateMyStationsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -221,15 +221,15 @@ func (s *StationService) BulkUpdateManyByIds(
 		return nil, exception
 	}
 
-	return &dtos.BulkUpdateManyStationsByIdsResDto{
+	return &dtos.UpdateMyStationsByIdsResDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
 
-func (s *StationService) RestoreSoftDeletedOneById(
+func (s *StationService) RestoreMyStationById(
 	ctx context.Context,
-	reqDto *dtos.RestoreSoftDeletedOneStationByIdReqDto,
-) (*dtos.RestoreSoftDeletedOneStationByIdResDto, *exceptions.Exception) {
+	reqDto *dtos.RestoreMyStationByIdReqDto,
+) (*dtos.RestoreMyStationByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -244,7 +244,7 @@ func (s *StationService) RestoreSoftDeletedOneById(
 		return nil, exception
 	}
 
-	return &dtos.RestoreSoftDeletedOneStationByIdResDto{
+	return &dtos.RestoreMyStationByIdResDto{
 		Id:                  restoredStation.Id,
 		OwnerId:             restoredStation.OwnerId,
 		Name:                restoredStation.Name,
@@ -258,10 +258,10 @@ func (s *StationService) RestoreSoftDeletedOneById(
 	}, nil
 }
 
-func (s *StationService) RestoreSoftDeletedManyByIds(
+func (s *StationService) RestoreMyStationsByIds(
 	ctx context.Context,
-	reqDto *dtos.RestoreSoftDeletedManyStationsByIdsReqDto,
-) (*dtos.RestoreSoftDeletedManyStationsByIdsResDto, *exceptions.Exception) {
+	reqDto *dtos.RestoreMyStationsByIdsReqDto,
+) (*dtos.RestoreMyStationsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -276,9 +276,9 @@ func (s *StationService) RestoreSoftDeletedManyByIds(
 		return nil, exception
 	}
 
-	resDto := dtos.RestoreSoftDeletedManyStationsByIdsResDto{}
+	resDto := dtos.RestoreMyStationsByIdsResDto{}
 	for _, restoredStation := range restoredStations {
-		resDto = append(resDto, dtos.RestoreSoftDeletedOneStationByIdResDto{
+		resDto = append(resDto, dtos.RestoreMyStationByIdResDto{
 			Id:                  restoredStation.Id,
 			OwnerId:             restoredStation.OwnerId,
 			Name:                restoredStation.Name,
@@ -295,10 +295,10 @@ func (s *StationService) RestoreSoftDeletedManyByIds(
 	return &resDto, nil
 }
 
-func (s *StationService) SoftDeleteOneById(
+func (s *StationService) DeleteMyStationById(
 	ctx context.Context,
-	reqDto *dtos.SoftDeleteOneStationByIdReqDto,
-) (*dtos.SoftDeleteOneStationByIdResDto, *exceptions.Exception) {
+	reqDto *dtos.DeleteMyStationByIdReqDto,
+) (*dtos.DeleteMyStationByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -313,15 +313,15 @@ func (s *StationService) SoftDeleteOneById(
 		return nil, exception
 	}
 
-	return &dtos.SoftDeleteOneStationByIdResDto{
+	return &dtos.DeleteMyStationByIdResDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
 
-func (s *StationService) SoftDeleteManyByIds(
+func (s *StationService) DeleteMyStationsByIds(
 	ctx context.Context,
-	reqDto *dtos.SoftDeleteManyStationsByIdsReqDto,
-) (*dtos.SoftDeleteManyStationsByIdsResDto, *exceptions.Exception) {
+	reqDto *dtos.DeleteMyStationsByIdsReqDto,
+) (*dtos.DeleteMyStationsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -336,15 +336,15 @@ func (s *StationService) SoftDeleteManyByIds(
 		return nil, exception
 	}
 
-	return &dtos.SoftDeleteManyStationsByIdsResDto{
+	return &dtos.DeleteMyStationsByIdsResDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
 
-func (s *StationService) HardDeleteOneById(
+func (s *StationService) HardDeleteMyStationById(
 	ctx context.Context,
-	reqDto *dtos.HardDeleteOneStationByIdReqDto,
-) (*dtos.HardDeleteOneStationByIdResDto, *exceptions.Exception) {
+	reqDto *dtos.HardDeleteMyStationByIdReqDto,
+) (*dtos.HardDeleteMyStationByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -359,15 +359,15 @@ func (s *StationService) HardDeleteOneById(
 		return nil, exception
 	}
 
-	return &dtos.HardDeleteOneStationByIdResDto{
+	return &dtos.HardDeleteMyStationByIdResDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
 
-func (s *StationService) HardDeleteManyByIds(
+func (s *StationService) HardDeleteMyStationsByIds(
 	ctx context.Context,
-	reqDto *dtos.HardDeleteManyStationsByIdsReqDto,
-) (*dtos.HardDeleteManyStationsByIdsResDto, *exceptions.Exception) {
+	reqDto *dtos.HardDeleteMyStationsByIdsReqDto,
+) (*dtos.HardDeleteMyStationsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -382,7 +382,7 @@ func (s *StationService) HardDeleteManyByIds(
 		return nil, exception
 	}
 
-	return &dtos.HardDeleteManyStationsByIdsResDto{
+	return &dtos.HardDeleteMyStationsByIdsResDto{
 		DeletedAt: time.Now(),
 	}, nil
 }

@@ -10,7 +10,7 @@ import (
 
 /* ============================== Request DTO ============================== */
 
-type GetOneRoutineTagByIdReqDto struct {
+type GetMyRoutineTagByIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -25,7 +25,7 @@ type GetOneRoutineTagByIdReqDto struct {
 	]
 }
 
-type CreateOneRoutineTagByUserIdReqDto struct {
+type CreateRoutineTagReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -43,7 +43,7 @@ type CreateOneRoutineTagByUserIdReqDto struct {
 	]
 }
 
-type BulkCreateManyRoutineTagsByUserIdReqDto struct {
+type CreateRoutineTagsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -63,7 +63,7 @@ type BulkCreateManyRoutineTagsByUserIdReqDto struct {
 	]
 }
 
-type UpdateOneRoutineTagByIdReqDto struct {
+type UpdateMyRoutineTagByIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -83,7 +83,7 @@ type UpdateOneRoutineTagByIdReqDto struct {
 	]
 }
 
-type BulkUpdateManyRoutineTagsByIdsReqDto struct {
+type UpdateMyRoutineTagsByIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -105,7 +105,7 @@ type BulkUpdateManyRoutineTagsByIdsReqDto struct {
 	]
 }
 
-type HardDeleteOneRoutineTagByIdReqDto struct {
+type HardDeleteMyRoutineTagByIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -120,7 +120,7 @@ type HardDeleteOneRoutineTagByIdReqDto struct {
 	]
 }
 
-type HardDeleteManyRoutineTagsByIdsReqDto struct {
+type HardDeleteMyRoutineTagsByIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -137,7 +137,7 @@ type HardDeleteManyRoutineTagsByIdsReqDto struct {
 
 /* ============================== Response DTO ============================== */
 
-type GetOneRoutineTagByIdResDto struct {
+type GetMyRoutineTagByIdResDto struct {
 	Id        uuid.UUID            `json:"id"`
 	Name      string               `json:"name"`
 	Color     string               `json:"color"`
@@ -146,28 +146,28 @@ type GetOneRoutineTagByIdResDto struct {
 	CreatedAt time.Time            `json:"createdAt"`
 }
 
-type CreateOneRoutineTagByUserIdResDto struct {
+type CreateRoutineTagResDto struct {
 	Id        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-type BulkCreateManyRoutineTagsByUserIdResDto struct {
+type CreateRoutineTagsResDto struct {
 	Ids       []uuid.UUID `json:"ids"`
 	CreatedAt time.Time   `json:"createdAt"`
 }
 
-type UpdateOneRoutineTagByIdResDto struct {
+type UpdateMyRoutineTagByIdResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type BulkUpdateManyRoutineTagsByIdsResDto struct {
+type UpdateMyRoutineTagsByIdsResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type HardDeleteOneRoutineTagByIdResDto struct {
+type HardDeleteMyRoutineTagByIdResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`
 }
 
-type HardDeleteManyRoutineTagsByIdsResDto struct {
+type HardDeleteMyRoutineTagsByIdsResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`
 }

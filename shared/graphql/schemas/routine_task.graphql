@@ -1,0 +1,19 @@
+type PrivateRoutineTask {
+  id: UUID!
+  stationId: UUID!
+  purpose: RoutineTaskPurpose!
+  payload: JSON!
+  priority: Int32!
+  status: RoutineTaskStatus!
+  attempts: Int32!
+  maxAttempts: Int32!
+  scheduledAt: Time!
+  actualStartedAt: Time
+  actualEndedAt: Time
+  updatedAt: Time!
+  createdAt: Time!
+
+  # relations
+  station: PrivateStation!
+  routines: [PrivateRoutine!]!
+}

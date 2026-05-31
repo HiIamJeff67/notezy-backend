@@ -11,7 +11,7 @@ import (
 
 /* ============================== Request DTO ============================== */
 
-type GetOneStationByIdReqDto struct {
+type GetMyStationByIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -27,7 +27,7 @@ type GetOneStationByIdReqDto struct {
 	]
 }
 
-type CreateOneStationByOwnerIdReqDto struct {
+type CreateStationReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -46,7 +46,7 @@ type CreateOneStationByOwnerIdReqDto struct {
 	]
 }
 
-type CreateManyStationsByOwnerIdReqDto struct {
+type CreateStationsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -67,7 +67,7 @@ type CreateManyStationsByOwnerIdReqDto struct {
 	]
 }
 
-type UpdateOneStationByIdReqDto struct {
+type UpdateMyStationByIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -88,7 +88,7 @@ type UpdateOneStationByIdReqDto struct {
 	]
 }
 
-type BulkUpdateManyStationsByIdsReqDto struct {
+type UpdateMyStationsByIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -111,7 +111,7 @@ type BulkUpdateManyStationsByIdsReqDto struct {
 	]
 }
 
-type RestoreSoftDeletedOneStationByIdReqDto struct {
+type RestoreMyStationByIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -126,7 +126,7 @@ type RestoreSoftDeletedOneStationByIdReqDto struct {
 	]
 }
 
-type RestoreSoftDeletedManyStationsByIdsReqDto struct {
+type RestoreMyStationsByIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -141,7 +141,7 @@ type RestoreSoftDeletedManyStationsByIdsReqDto struct {
 	]
 }
 
-type SoftDeleteOneStationByIdReqDto struct {
+type DeleteMyStationByIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -156,7 +156,7 @@ type SoftDeleteOneStationByIdReqDto struct {
 	]
 }
 
-type SoftDeleteManyStationsByIdsReqDto struct {
+type DeleteMyStationsByIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -171,7 +171,7 @@ type SoftDeleteManyStationsByIdsReqDto struct {
 	]
 }
 
-type HardDeleteOneStationByIdReqDto struct {
+type HardDeleteMyStationByIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -186,7 +186,7 @@ type HardDeleteOneStationByIdReqDto struct {
 	]
 }
 
-type HardDeleteManyStationsByIdsReqDto struct {
+type HardDeleteMyStationsByIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -203,7 +203,7 @@ type HardDeleteManyStationsByIdsReqDto struct {
 
 /* ============================== Response DTO ============================== */
 
-type GetOneStationByIdResDto struct {
+type GetMyStationByIdResDto struct {
 	Id                  uuid.UUID                     `json:"id"`
 	OwnerId             uuid.UUID                     `json:"ownerId"`
 	Name                string                        `json:"name"`
@@ -217,25 +217,25 @@ type GetOneStationByIdResDto struct {
 	CreatedAt           time.Time                     `json:"createdAt"`
 }
 
-type CreateOneStationByOwnerIdResDto struct {
+type CreateStationResDto struct {
 	Id        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-type CreateManyStationsByOwnerIdResDto struct {
+type CreateStationsResDto struct {
 	Ids       []uuid.UUID `json:"ids"`
 	CreatedAt time.Time   `json:"createdAt"`
 }
 
-type UpdateOneStationByIdResDto struct {
+type UpdateMyStationByIdResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type BulkUpdateManyStationsByIdsResDto struct {
+type UpdateMyStationsByIdsResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type RestoreSoftDeletedOneStationByIdResDto struct {
+type RestoreMyStationByIdResDto struct {
 	Id                  uuid.UUID                     `json:"id"`
 	OwnerId             uuid.UUID                     `json:"ownerId"`
 	Name                string                        `json:"name"`
@@ -249,20 +249,20 @@ type RestoreSoftDeletedOneStationByIdResDto struct {
 	CreatedAt           time.Time                     `json:"createdAt"`
 }
 
-type RestoreSoftDeletedManyStationsByIdsResDto = []RestoreSoftDeletedOneStationByIdResDto
+type RestoreMyStationsByIdsResDto = []RestoreMyStationByIdResDto
 
-type SoftDeleteOneStationByIdResDto struct {
+type DeleteMyStationByIdResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`
 }
 
-type SoftDeleteManyStationsByIdsResDto struct {
+type DeleteMyStationsByIdsResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`
 }
 
-type HardDeleteOneStationByIdResDto struct {
+type HardDeleteMyStationByIdResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`
 }
 
-type HardDeleteManyStationsByIdsResDto struct {
+type HardDeleteMyStationsByIdsResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`
 }

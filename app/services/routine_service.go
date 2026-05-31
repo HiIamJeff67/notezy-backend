@@ -17,17 +17,17 @@ import (
 )
 
 type RoutineServiceInterface interface {
-	GetOneById(ctx context.Context, reqDto *dtos.GetOneRoutineByIdReqDto) (*dtos.GetOneRoutineByIdResDto, *exceptions.Exception)
-	CreateOneByStationId(ctx context.Context, reqDto *dtos.CreateOneRoutineByStationIdReqDto) (*dtos.CreateOneRoutineByStationIdResDto, *exceptions.Exception)
-	BulkCreateManyByStationIds(ctx context.Context, reqDto *dtos.BulkCreateManyRoutinesByStationIdsReqDto) (*dtos.BulkCreateManyRoutinesByStationIdsResDto, *exceptions.Exception)
-	UpdateOneById(ctx context.Context, reqDto *dtos.UpdateOneRoutineByIdReqDto) (*dtos.UpdateOneRoutineByIdResDto, *exceptions.Exception)
-	BulkUpdateManyByIds(ctx context.Context, reqDto *dtos.BulkUpdateManyRoutinesByIdsReqDto) (*dtos.BulkUpdateManyRoutinesByIdsResDto, *exceptions.Exception)
-	RestoreSoftDeletedOneById(ctx context.Context, reqDto *dtos.RestoreSoftDeletedOneRoutineByIdReqDto) (*dtos.RestoreSoftDeletedOneRoutineByIdResDto, *exceptions.Exception)
-	RestoreSoftDeletedManyByIds(ctx context.Context, reqDto *dtos.RestoreSoftDeletedManyRoutinesByIdsReqDto) (*dtos.RestoreSoftDeletedManyRoutinesByIdsResDto, *exceptions.Exception)
-	SoftDeleteOneById(ctx context.Context, reqDto *dtos.SoftDeleteOneRoutineByIdReqDto) (*dtos.SoftDeleteOneRoutineByIdResDto, *exceptions.Exception)
-	SoftDeleteManyByIds(ctx context.Context, reqDto *dtos.SoftDeleteManyRoutinesByIdsReqDto) (*dtos.SoftDeleteManyRoutinesByIdsResDto, *exceptions.Exception)
-	HardDeleteOneById(ctx context.Context, reqDto *dtos.HardDeleteOneRoutineByIdReqDto) (*dtos.HardDeleteOneRoutineByIdResDto, *exceptions.Exception)
-	HardDeleteManyByIds(ctx context.Context, reqDto *dtos.HardDeleteManyRoutinesByIdsReqDto) (*dtos.HardDeleteManyRoutinesByIdsResDto, *exceptions.Exception)
+	GetMyRoutineById(ctx context.Context, reqDto *dtos.GetMyRoutineByIdReqDto) (*dtos.GetMyRoutineByIdResDto, *exceptions.Exception)
+	CreateRoutineByStationId(ctx context.Context, reqDto *dtos.CreateRoutineByStationIdReqDto) (*dtos.CreateRoutineByStationIdResDto, *exceptions.Exception)
+	CreateRoutinesByStationIds(ctx context.Context, reqDto *dtos.CreateRoutinesByStationIdsReqDto) (*dtos.CreateRoutinesByStationIdsResDto, *exceptions.Exception)
+	UpdateMyRoutineById(ctx context.Context, reqDto *dtos.UpdateMyRoutineByIdReqDto) (*dtos.UpdateMyRoutineByIdResDto, *exceptions.Exception)
+	UpdateMyRoutinesByIds(ctx context.Context, reqDto *dtos.UpdateMyRoutinesByIdsReqDto) (*dtos.UpdateMyRoutinesByIdsResDto, *exceptions.Exception)
+	RestoreMyRoutineById(ctx context.Context, reqDto *dtos.RestoreMyRoutineByIdReqDto) (*dtos.RestoreMyRoutineByIdResDto, *exceptions.Exception)
+	RestoreMyRoutinesByIds(ctx context.Context, reqDto *dtos.RestoreMyRoutinesByIdsReqDto) (*dtos.RestoreMyRoutinesByIdsResDto, *exceptions.Exception)
+	DeleteMyRoutineById(ctx context.Context, reqDto *dtos.DeleteMyRoutineByIdReqDto) (*dtos.DeleteMyRoutineByIdResDto, *exceptions.Exception)
+	DeleteMyRoutinesByIds(ctx context.Context, reqDto *dtos.DeleteMyRoutinesByIdsReqDto) (*dtos.DeleteMyRoutinesByIdsResDto, *exceptions.Exception)
+	HardDeleteMyRoutineById(ctx context.Context, reqDto *dtos.HardDeleteMyRoutineByIdReqDto) (*dtos.HardDeleteMyRoutineByIdResDto, *exceptions.Exception)
+	HardDeleteMyRoutinesByIds(ctx context.Context, reqDto *dtos.HardDeleteMyRoutinesByIdsReqDto) (*dtos.HardDeleteMyRoutinesByIdsResDto, *exceptions.Exception)
 }
 
 type RoutineService struct {
@@ -50,10 +50,10 @@ func NewRoutineService(
 
 /* ============================== Service Methods for Routine ============================== */
 
-func (s *RoutineService) GetOneById(
+func (s *RoutineService) GetMyRoutineById(
 	ctx context.Context,
-	reqDto *dtos.GetOneRoutineByIdReqDto,
-) (*dtos.GetOneRoutineByIdResDto, *exceptions.Exception) {
+	reqDto *dtos.GetMyRoutineByIdReqDto,
+) (*dtos.GetMyRoutineByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -75,7 +75,7 @@ func (s *RoutineService) GetOneById(
 		return nil, exception
 	}
 
-	return &dtos.GetOneRoutineByIdResDto{
+	return &dtos.GetMyRoutineByIdResDto{
 		Id:               routine.Id,
 		StationId:        routine.StationId,
 		Title:            routine.Title,
@@ -92,10 +92,10 @@ func (s *RoutineService) GetOneById(
 	}, nil
 }
 
-func (s *RoutineService) CreateOneByStationId(
+func (s *RoutineService) CreateRoutineByStationId(
 	ctx context.Context,
-	reqDto *dtos.CreateOneRoutineByStationIdReqDto,
-) (*dtos.CreateOneRoutineByStationIdResDto, *exceptions.Exception) {
+	reqDto *dtos.CreateRoutineByStationIdReqDto,
+) (*dtos.CreateRoutineByStationIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -121,16 +121,16 @@ func (s *RoutineService) CreateOneByStationId(
 		return nil, exception
 	}
 
-	return &dtos.CreateOneRoutineByStationIdResDto{
+	return &dtos.CreateRoutineByStationIdResDto{
 		Id:        *newRoutineId,
 		CreatedAt: time.Now(),
 	}, nil
 }
 
-func (s *RoutineService) BulkCreateManyByStationIds(
+func (s *RoutineService) CreateRoutinesByStationIds(
 	ctx context.Context,
-	reqDto *dtos.BulkCreateManyRoutinesByStationIdsReqDto,
-) (*dtos.BulkCreateManyRoutinesByStationIdsResDto, *exceptions.Exception) {
+	reqDto *dtos.CreateRoutinesByStationIdsReqDto,
+) (*dtos.CreateRoutinesByStationIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -161,16 +161,16 @@ func (s *RoutineService) BulkCreateManyByStationIds(
 		return nil, exception
 	}
 
-	return &dtos.BulkCreateManyRoutinesByStationIdsResDto{
+	return &dtos.CreateRoutinesByStationIdsResDto{
 		Ids:       newRoutineIds,
 		CreatedAt: time.Now(),
 	}, nil
 }
 
-func (s *RoutineService) UpdateOneById(
+func (s *RoutineService) UpdateMyRoutineById(
 	ctx context.Context,
-	reqDto *dtos.UpdateOneRoutineByIdReqDto,
-) (*dtos.UpdateOneRoutineByIdResDto, *exceptions.Exception) {
+	reqDto *dtos.UpdateMyRoutineByIdReqDto,
+) (*dtos.UpdateMyRoutineByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -199,15 +199,15 @@ func (s *RoutineService) UpdateOneById(
 		return nil, exception
 	}
 
-	return &dtos.UpdateOneRoutineByIdResDto{
+	return &dtos.UpdateMyRoutineByIdResDto{
 		UpdatedAt: updatedRoutine.UpdatedAt,
 	}, nil
 }
 
-func (s *RoutineService) BulkUpdateManyByIds(
+func (s *RoutineService) UpdateMyRoutinesByIds(
 	ctx context.Context,
-	reqDto *dtos.BulkUpdateManyRoutinesByIdsReqDto,
-) (*dtos.BulkUpdateManyRoutinesByIdsResDto, *exceptions.Exception) {
+	reqDto *dtos.UpdateMyRoutinesByIdsReqDto,
+) (*dtos.UpdateMyRoutinesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -243,15 +243,15 @@ func (s *RoutineService) BulkUpdateManyByIds(
 		return nil, exception
 	}
 
-	return &dtos.BulkUpdateManyRoutinesByIdsResDto{
+	return &dtos.UpdateMyRoutinesByIdsResDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
 
-func (s *RoutineService) RestoreSoftDeletedOneById(
+func (s *RoutineService) RestoreMyRoutineById(
 	ctx context.Context,
-	reqDto *dtos.RestoreSoftDeletedOneRoutineByIdReqDto,
-) (*dtos.RestoreSoftDeletedOneRoutineByIdResDto, *exceptions.Exception) {
+	reqDto *dtos.RestoreMyRoutineByIdReqDto,
+) (*dtos.RestoreMyRoutineByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -266,7 +266,7 @@ func (s *RoutineService) RestoreSoftDeletedOneById(
 		return nil, exception
 	}
 
-	return &dtos.RestoreSoftDeletedOneRoutineByIdResDto{
+	return &dtos.RestoreMyRoutineByIdResDto{
 		Id:               restoredRoutine.Id,
 		StationId:        restoredRoutine.StationId,
 		Title:            restoredRoutine.Title,
@@ -283,10 +283,10 @@ func (s *RoutineService) RestoreSoftDeletedOneById(
 	}, nil
 }
 
-func (s *RoutineService) RestoreSoftDeletedManyByIds(
+func (s *RoutineService) RestoreMyRoutinesByIds(
 	ctx context.Context,
-	reqDto *dtos.RestoreSoftDeletedManyRoutinesByIdsReqDto,
-) (*dtos.RestoreSoftDeletedManyRoutinesByIdsResDto, *exceptions.Exception) {
+	reqDto *dtos.RestoreMyRoutinesByIdsReqDto,
+) (*dtos.RestoreMyRoutinesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -301,9 +301,9 @@ func (s *RoutineService) RestoreSoftDeletedManyByIds(
 		return nil, exception
 	}
 
-	resDto := dtos.RestoreSoftDeletedManyRoutinesByIdsResDto{}
+	resDto := dtos.RestoreMyRoutinesByIdsResDto{}
 	for _, restoredRoutine := range restoredRoutines {
-		resDto = append(resDto, dtos.RestoreSoftDeletedOneRoutineByIdResDto{
+		resDto = append(resDto, dtos.RestoreMyRoutineByIdResDto{
 			Id:               restoredRoutine.Id,
 			StationId:        restoredRoutine.StationId,
 			Title:            restoredRoutine.Title,
@@ -323,10 +323,10 @@ func (s *RoutineService) RestoreSoftDeletedManyByIds(
 	return &resDto, nil
 }
 
-func (s *RoutineService) SoftDeleteOneById(
+func (s *RoutineService) DeleteMyRoutineById(
 	ctx context.Context,
-	reqDto *dtos.SoftDeleteOneRoutineByIdReqDto,
-) (*dtos.SoftDeleteOneRoutineByIdResDto, *exceptions.Exception) {
+	reqDto *dtos.DeleteMyRoutineByIdReqDto,
+) (*dtos.DeleteMyRoutineByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -341,15 +341,15 @@ func (s *RoutineService) SoftDeleteOneById(
 		return nil, exception
 	}
 
-	return &dtos.SoftDeleteOneRoutineByIdResDto{
+	return &dtos.DeleteMyRoutineByIdResDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
 
-func (s *RoutineService) SoftDeleteManyByIds(
+func (s *RoutineService) DeleteMyRoutinesByIds(
 	ctx context.Context,
-	reqDto *dtos.SoftDeleteManyRoutinesByIdsReqDto,
-) (*dtos.SoftDeleteManyRoutinesByIdsResDto, *exceptions.Exception) {
+	reqDto *dtos.DeleteMyRoutinesByIdsReqDto,
+) (*dtos.DeleteMyRoutinesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -364,15 +364,15 @@ func (s *RoutineService) SoftDeleteManyByIds(
 		return nil, exception
 	}
 
-	return &dtos.SoftDeleteManyRoutinesByIdsResDto{
+	return &dtos.DeleteMyRoutinesByIdsResDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
 
-func (s *RoutineService) HardDeleteOneById(
+func (s *RoutineService) HardDeleteMyRoutineById(
 	ctx context.Context,
-	reqDto *dtos.HardDeleteOneRoutineByIdReqDto,
-) (*dtos.HardDeleteOneRoutineByIdResDto, *exceptions.Exception) {
+	reqDto *dtos.HardDeleteMyRoutineByIdReqDto,
+) (*dtos.HardDeleteMyRoutineByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -387,15 +387,15 @@ func (s *RoutineService) HardDeleteOneById(
 		return nil, exception
 	}
 
-	return &dtos.HardDeleteOneRoutineByIdResDto{
+	return &dtos.HardDeleteMyRoutineByIdResDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
 
-func (s *RoutineService) HardDeleteManyByIds(
+func (s *RoutineService) HardDeleteMyRoutinesByIds(
 	ctx context.Context,
-	reqDto *dtos.HardDeleteManyRoutinesByIdsReqDto,
-) (*dtos.HardDeleteManyRoutinesByIdsResDto, *exceptions.Exception) {
+	reqDto *dtos.HardDeleteMyRoutinesByIdsReqDto,
+) (*dtos.HardDeleteMyRoutinesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
@@ -410,7 +410,7 @@ func (s *RoutineService) HardDeleteManyByIds(
 		return nil, exception
 	}
 
-	return &dtos.HardDeleteManyRoutinesByIdsResDto{
+	return &dtos.HardDeleteMyRoutinesByIdsResDto{
 		DeletedAt: time.Now(),
 	}, nil
 }

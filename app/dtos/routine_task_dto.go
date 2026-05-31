@@ -11,7 +11,7 @@ import (
 
 /* ============================== Request DTO ============================== */
 
-type GetOneRoutineTaskByIdReqDto struct {
+type GetMyRoutineTaskByIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -26,7 +26,7 @@ type GetOneRoutineTaskByIdReqDto struct {
 	]
 }
 
-type CreateOneRoutineTaskByStationIdReqDto struct {
+type CreateRoutineTaskByStationIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -45,7 +45,7 @@ type CreateOneRoutineTaskByStationIdReqDto struct {
 	]
 }
 
-type UpdateOneRoutineTaskByIdReqDto struct {
+type UpdateMyRoutineTaskByIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -67,7 +67,7 @@ type UpdateOneRoutineTaskByIdReqDto struct {
 	]
 }
 
-type HardDeleteOneRoutineTaskByIdReqDto struct {
+type HardDeleteMyRoutineTaskByIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -82,7 +82,7 @@ type HardDeleteOneRoutineTaskByIdReqDto struct {
 	]
 }
 
-type HardDeleteManyRoutineTasksByIdsReqDto struct {
+type HardDeleteMyRoutineTasksByIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -99,7 +99,7 @@ type HardDeleteManyRoutineTasksByIdsReqDto struct {
 
 /* ============================== Response DTO ============================== */
 
-type GetOneRoutineTaskByIdResDto struct {
+type GetMyRoutineTaskByIdResDto struct {
 	Id              uuid.UUID                `json:"id"`
 	StationId       uuid.UUID                `json:"stationId"`
 	Purpose         enums.RoutineTaskPurpose `json:"purpose"`
@@ -115,19 +115,19 @@ type GetOneRoutineTaskByIdResDto struct {
 	CreatedAt       time.Time                `json:"createdAt"`
 }
 
-type CreateOneRoutineTaskByStationIdResDto struct {
+type CreateRoutineTaskByStationIdResDto struct {
 	Id        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-type UpdateOneRoutineTaskByIdResDto struct {
+type UpdateMyRoutineTaskByIdResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type HardDeleteOneRoutineTaskByIdResDto struct {
+type HardDeleteMyRoutineTaskByIdResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`
 }
 
-type HardDeleteManyRoutineTasksByIdsResDto struct {
+type HardDeleteMyRoutineTasksByIdsResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`
 }
