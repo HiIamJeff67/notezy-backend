@@ -182,7 +182,7 @@ type RestoreMyMaterialsByIdsReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			MaterialIds []uuid.UUID `json:"materialIds" validate:"required,min=1,max=128"`
+			MaterialIds []uuid.UUID `json:"materialIds" validate:"required,min=1,max=1024"`
 		},
 		any,
 	]
@@ -212,7 +212,7 @@ type DeleteMyMaterialsByIdsReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			MaterialIds []uuid.UUID `json:"materialIds" validate:"required,min=1,max=128"`
+			MaterialIds []uuid.UUID `json:"materialIds" validate:"required,min=1,max=1024"`
 		},
 		any,
 	]
@@ -253,9 +253,9 @@ type GetMyMaterialAndItsParentByIdResDto struct {
 	ParentSubShelfCreatedAt      time.Time                 `json:"parentSubShelfCreatedAt"`
 }
 
-type GetMyMaterialsByParentSubShelfIdResDto []GetMyMaterialByIdResDto
+type GetMyMaterialsByParentSubShelfIdResDto = []GetMyMaterialByIdResDto
 
-type GetAllMyMaterialsByRootShelfIdResDto []GetMyMaterialByIdResDto
+type GetAllMyMaterialsByRootShelfIdResDto = []GetMyMaterialByIdResDto
 
 type CreateMyMaterialResDto struct {
 	Id        uuid.UUID `json:"id"`

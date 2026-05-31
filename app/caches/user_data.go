@@ -91,9 +91,9 @@ func isValidUserCacheData(userDataCache *UserDataCache) bool {
 		strings.ReplaceAll(userDataCache.DisplayName, " ", "") == "" ||
 		strings.ReplaceAll(userDataCache.Email, " ", "") == "" ||
 		strings.ReplaceAll(userDataCache.AccessToken, " ", "") == "" ||
-		!enums.IsValidEnumValues(userDataCache.Role, enums.AllUserRoles) ||
-		!enums.IsValidEnumValues(userDataCache.Plan, enums.AllUserPlans) ||
-		!enums.IsValidEnumValues(userDataCache.Status, enums.AllUserStatuses) {
+		!userDataCache.Role.IsValidEnum() ||
+		!userDataCache.Plan.IsValidEnum() ||
+		!userDataCache.Status.IsValidEnum() {
 		return false
 	}
 	return true

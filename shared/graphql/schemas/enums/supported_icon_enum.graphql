@@ -1,0 +1,17 @@
+enum SupportedIcon {
+  SupportedIcon_GrinningFace
+  SupportedIcon_SmilingFaceWithSmilingEyes
+  SupportedIcon_RedHeart
+  SupportedIcon_Fire
+  SupportedIcon_Star
+  SupportedIcon_Books
+  SupportedIcon_Notebook
+  SupportedIcon_PencilPaper
+  SupportedIcon_Lightbulb
+  SupportedIcon_Rocket
+  SupportedIcon_CheckMark
+  SupportedIcon_Pin
+  SupportedIcon_FolderOpen
+  SupportedIcon_Calendar
+  SupportedIcon_Clock
+}

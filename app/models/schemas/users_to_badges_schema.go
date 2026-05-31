@@ -18,12 +18,12 @@ type UsersToBadges struct {
 	Badge Badge `gorm:"foreignKey:BadgeId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
 
-// Users To Badges Table Name
+// UsersToBadges Table Name
 func (UsersToBadges) TableName() string {
 	return types.TableName_UsersToBadgesTable.String()
 }
 
-// Users To Badges Table Relations
+// UsersToBadges Table Relations
 type UsersToBadgesRelation types.RelationName
 
 const (

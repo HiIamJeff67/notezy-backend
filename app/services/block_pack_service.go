@@ -56,7 +56,7 @@ func NewBlockPackService(
 	}
 }
 
-/* ============================== Service Methods for Block Pack ============================== */
+/* ============================== Service Methods for BlockPack ============================== */
 
 func (s *BlockPackService) GetMyBlockPackById(
 	ctx context.Context, reqDto *dtos.GetMyBlockPackByIdReqDto,

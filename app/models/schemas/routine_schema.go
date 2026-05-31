@@ -12,8 +12,8 @@ import (
 type Routine struct {
 	Id               uuid.UUID            `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid();"`
 	StationId        uuid.UUID            `json:"stationId" gorm:"column:station_id; type:uuid; not null;"`
-	Title            string               `json:"title" gorm:"column:title; not null; default:'undefined';"`
-	Description      string               `json:"description" gorm:"column:description; not null; default:'';"`
+	Title            string               `json:"title" gorm:"column:title; size: 128; not null; default:'undefined';"`
+	Description      string               `json:"description" gorm:"column:description; size:1024; not null; default:'';"`
 	Status           enums.RoutineStatus  `json:"status" gorm:"column:status; type:\"RoutineStatus\"; not null; default:'Scheduled';"`
 	IsPinned         bool                 `json:"isPinned" gorm:"column:is_pinned; type:boolean; not null; default:false;"`
 	ScheduledStartAt time.Time            `json:"scheduledStartAt" gorm:"column:scheduled_start_at; type:timestamptz; not null; default:NOW();"`                 // check: routine_check_scheduled_start_minute_precision and routine_check_scheduled_time_in_period

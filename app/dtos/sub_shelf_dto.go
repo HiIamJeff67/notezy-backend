@@ -226,7 +226,7 @@ type RestoreMySubShelvesByIdsReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			SubShelfIds []uuid.UUID `json:"subShelfIds" validate:"required,min=1,max=128"`
+			SubShelfIds []uuid.UUID `json:"subShelfIds" validate:"required,min=1,max=1024"`
 		},
 		any,
 	]
@@ -256,7 +256,7 @@ type DeleteMySubShelvesByIdsReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			SubShelfIds []uuid.UUID `json:"subShelfIds" validate:"required,min=1,max=128"`
+			SubShelfIds []uuid.UUID `json:"subShelfIds" validate:"required,min=1,max=1024"`
 		},
 		any,
 	]

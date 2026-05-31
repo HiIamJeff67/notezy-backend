@@ -227,7 +227,7 @@ type RestoreMyBlockPacksByIdsReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			BlockPackIds []uuid.UUID `json:"blockPackIds" validate:"required,min=1,max=128"`
+			BlockPackIds []uuid.UUID `json:"blockPackIds" validate:"required,min=1,max=1024"`
 		},
 		any,
 	]
@@ -257,7 +257,7 @@ type DeleteMyBlockPacksByIdsReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			BlockPackIds []uuid.UUID `json:"blockPackIds" validate:"required,min=1,max=128"`
+			BlockPackIds []uuid.UUID `json:"blockPackIds" validate:"required,min=1,max=1024"`
 		},
 		any,
 	]

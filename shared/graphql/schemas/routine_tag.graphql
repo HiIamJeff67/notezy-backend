@@ -1,0 +1,13 @@
+type PrivateRoutineTag {
+  id: UUID!
+  name: String!
+  color: String!
+  icon: SupportedIcon
+  updatedAt: Time!
+  createdAt: Time!
+
+  # relations
+  owner: PublicUser!
+  sharers: [PublicUser!]!
+  routines: [PrivateRoutine!]!
+}

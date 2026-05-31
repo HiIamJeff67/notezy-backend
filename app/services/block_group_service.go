@@ -67,6 +67,8 @@ func NewBlockGroupService(
 	}
 }
 
+/* ============================== Service Methods for BlockGroup ============================== */
+
 func (s *BlockGroupService) GetMyBlockGroupById(
 	ctx context.Context, reqDto *dtos.GetMyBlockGroupByIdReqDto,
 ) (*dtos.GetMyBlockGroupByIdResDto, *exceptions.Exception) {

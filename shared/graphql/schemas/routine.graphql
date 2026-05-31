@@ -1,0 +1,19 @@
+type PrivateRoutine {
+  id: UUID!
+  stationId: UUID!
+  title: String!
+  description: String!
+  status: RoutineStatus!
+  isPinned: Bool!
+  scheduledStartAt: Time!
+  scheduledEndAt: Time!
+  period: RoutinePeriod
+  timezone: String!
+  deletedAt: Time
+  updatedAt: Time!
+  createdAt: Time!
+
+  # relations
+  station: PrivateStation!
+  tags: [PrivateRoutineTag!]!
+}

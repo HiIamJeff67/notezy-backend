@@ -3,7 +3,6 @@ package enums
 import (
 	"database/sql/driver"
 	"fmt"
-	"slices"
 )
 
 type Enum interface {
@@ -19,29 +18,4 @@ type Enum interface {
 func scanError(value any, e Enum) error {
 	// A Helper Function to Get the Error
 	return fmt.Errorf("failed to scan %T into %s", value, e.Name())
-}
-
-/* ========================= Validator for Validating Enums ========================= */
-
-func IsValidEnumValues[EnumValue interface {
-	UserRole |
-		UserPlan |
-		UserStatus |
-		UserGender |
-		Country |
-		CountryCode |
-		Language |
-		BadgeType |
-		AccessControlPermission |
-		MaterialContentType |
-		BlockType |
-		SupportedIcon |
-		ItemType |
-		RoutinePeriod |
-		RoutineStatus |
-		RoutineTaskPurpose |
-		RoutineTaskStatus |
-		string
-}](value EnumValue, validateValues []EnumValue) bool {
-	return slices.Contains(validateValues, value)
 }

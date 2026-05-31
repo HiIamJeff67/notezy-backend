@@ -16,7 +16,6 @@ var viewAllAvailableDatabasesCommand = &cobra.Command{
 	Long:  "Use some map to storing and printing the available databases in the project.",
 	Run: func(cmd *cobra.Command, args []string) {
 		logs.Info(traces.GetTrace(0).FileLineString(), "All available databases:")
-
 		for key, value := range models.DatabaseNameToInstance {
 			logs.FInfo(traces.GetTrace(0).FileLineString(), "database name: %v, instance: %v", key, value)
 		}
@@ -115,7 +114,7 @@ var seedDatabaseCommand = &cobra.Command{
 	},
 }
 
-/* ============================== Parepare Flags Helper Function ============================== */
+/* ============================== Prepare Flags Helper Function ============================== */
 
 func PrepareDatabaseCommandsFlags() {
 	/* register the flags of truncating database table command */

@@ -31,7 +31,7 @@ func NewBadgeService(db *gorm.DB) BadgeServiceInterface {
 
 /* ============================== Service Methods for Badge ============================== */
 
-/* ============================== Services for Public Badge ============================== */
+/* ============================== Services for GraphQL Badge ============================== */
 
 func (s *BadgeService) GetPublicBadgeByPublicId(
 	ctx context.Context, publicId string,

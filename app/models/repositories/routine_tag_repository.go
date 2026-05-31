@@ -22,8 +22,8 @@ type RoutineTagRepositoryInterface interface {
 	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineTagRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) (*schemas.RoutineTag, *exceptions.Exception)
 	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineTagRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.RoutineTag, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineTagRelation, opts ...options.RepositoryOptions) (*schemas.RoutineTag, *exceptions.Exception)
-	CreateOneByStationId(stationId uuid.UUID, userId uuid.UUID, input inputs.CreateRoutineTagInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
-	BulkCreateManyByStationIds(userId uuid.UUID, input []inputs.BulkCreateRoutineTagInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
+	CreateOneByUserId(userId uuid.UUID, input inputs.CreateRoutineTagInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
+	BulkCreateManyByUserId(userId uuid.UUID, input []inputs.BulkCreateRoutineTagInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateRoutineTagInput, opts ...options.RepositoryOptions) (*schemas.RoutineTag, *exceptions.Exception)
 	BulkUpdateManyByIds(userId uuid.UUID, input []inputs.BulkUpdateRoutineTagInput, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
@@ -153,8 +153,7 @@ func (r *RoutineTagRepository) GetOneById(
 	return r.CheckPermissionAndGetOneById(id, userId, preloads, allowedPermissions, opts...)
 }
 
-func (r *RoutineTagRepository) CreateOneByStationId(
-	stationId uuid.UUID,
+func (r *RoutineTagRepository) CreateOneByUserId(
 	userId uuid.UUID,
 	input inputs.CreateRoutineTagInput,
 	opts ...options.RepositoryOptions,
@@ -167,29 +166,13 @@ func (r *RoutineTagRepository) CreateOneByStationId(
 		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
-	stationRepository := NewStationRepository(scopes.NewStationScope())
-	if !stationRepository.HasPermission(stationId, userId, allowedPermissions, opts...) {
-		parsedOptions.DB.Rollback()
-		return nil, exceptions.RoutineTag.NoPermission("create a routine tag under this station")
-	}
-
 	newRoutineTag := schemas.RoutineTag{
-		Id:        uuid.New(),
-		StationId: stationId,
-		Color:     "#FFFFFF",
+		Id:    uuid.New(),
+		Color: "#FFFFFF",
 	}
 	if err := copier.Copy(&newRoutineTag, &input); err != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exceptions.RoutineTag.InvalidInput().WithOrigin(err)
-	}
-	newRoutineTag.StationId = stationId
-	if newRoutineTag.Color == "" {
-		newRoutineTag.Color = "#FFFFFF"
 	}
 
 	result := parsedOptions.DB.
@@ -202,6 +185,23 @@ func (r *RoutineTagRepository) CreateOneByStationId(
 		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
+
+	newUsersToRoutineTag := schemas.UsersToRoutineTags{
+		UserId:     userId,
+		TagId:      newRoutineTag.Id,
+		Permission: enums.AccessControlPermission_Owner,
+	}
+	result = parsedOptions.DB.
+		Model(&schemas.UsersToRoutineTags{}).
+		Create(&newUsersToRoutineTag)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.RoutineTag.FailedToCreate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.RoutineTag.NoChanges()},
+	}); exception != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exception
+	}
+
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
@@ -212,7 +212,7 @@ func (r *RoutineTagRepository) CreateOneByStationId(
 	return &newRoutineTag.Id, nil
 }
 
-func (r *RoutineTagRepository) BulkCreateManyByStationIds(
+func (r *RoutineTagRepository) BulkCreateManyByUserId(
 	userId uuid.UUID,
 	input []inputs.BulkCreateRoutineTagInput,
 	opts ...options.RepositoryOptions,
@@ -229,43 +229,19 @@ func (r *RoutineTagRepository) BulkCreateManyByStationIds(
 		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
-	stationIds := make([]uuid.UUID, len(input))
-	for index, in := range input {
-		stationIds[index] = in.StationId
-	}
-
-	stationRepository := NewStationRepository(scopes.NewStationScope())
-	validStations, _, exception := stationRepository.CheckPermissionsAndGetManyByIds(stationIds, userId, nil, allowedPermissions, opts...)
-	if exception != nil {
-		parsedOptions.DB.Rollback()
-		return nil, exception
-	}
-
-	isStationValid := make(map[uuid.UUID]bool, len(validStations))
-	for _, validStation := range validStations {
-		isStationValid[validStation.Id] = true
-	}
-
 	newRoutineTags := make([]schemas.RoutineTag, 0, len(input))
 	for _, in := range input {
-		if !isStationValid[in.StationId] {
-			continue
-		}
 		newRoutineTag := schemas.RoutineTag{
-			Id:        uuid.New(),
-			StationId: in.StationId,
-			Color:     "#FFFFFF",
+			Id:    uuid.New(),
+			Color: "#FFFFFF",
 		}
 		if err := copier.Copy(&newRoutineTag, &in); err != nil {
 			parsedOptions.DB.Rollback()
 			return nil, exceptions.RoutineTag.InvalidInput().WithOrigin(err)
 		}
-		newRoutineTag.StationId = in.StationId
+		if newRoutineTag.Id == uuid.Nil {
+			newRoutineTag.Id = uuid.New()
+		}
 		if newRoutineTag.Color == "" {
 			newRoutineTag.Color = "#FFFFFF"
 		}
@@ -287,9 +263,26 @@ func (r *RoutineTagRepository) BulkCreateManyByStationIds(
 		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
+
+	newUsersToRoutineTags := make([]schemas.UsersToRoutineTags, len(newRoutineTags))
 	newRoutineTagIds := make([]uuid.UUID, len(newRoutineTags))
 	for index, newRoutineTag := range newRoutineTags {
 		newRoutineTagIds[index] = newRoutineTag.Id
+		newUsersToRoutineTags[index] = schemas.UsersToRoutineTags{
+			UserId:     userId,
+			TagId:      newRoutineTag.Id,
+			Permission: enums.AccessControlPermission_Owner,
+		}
+	}
+	result = parsedOptions.DB.
+		Model(&schemas.UsersToRoutineTags{}).
+		CreateInBatches(&newUsersToRoutineTags, parsedOptions.BatchSize)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.RoutineTag.FailedToCreate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.RoutineTag.NoChanges()},
+	}); exception != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exception
 	}
 
 	if shouldStartTransaction {
@@ -325,13 +318,6 @@ func (r *RoutineTagRepository) UpdateOneById(
 	if exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
-	}
-	if input.Values.StationId != nil && (input.SetNull == nil || !(*input.SetNull)["StationId"]) {
-		stationRepository := NewStationRepository(scopes.NewStationScope())
-		if !stationRepository.HasPermission(*input.Values.StationId, userId, allowedPermissions, opts...) {
-			parsedOptions.DB.Rollback()
-			return nil, exceptions.RoutineTag.NoPermission("move a routine tag to this station")
-		}
 	}
 
 	updates, err := util.PartialUpdatePreprocess(input.Values, input.SetNull, *existingRoutineTag)
@@ -398,18 +384,11 @@ func (r *RoutineTagRepository) BulkUpdateManyByIds(
 	for _, validRoutineTag := range validRoutineTags {
 		routineTagById[validRoutineTag.Id] = validRoutineTag
 	}
-	stationRepository := NewStationRepository(scopes.NewStationScope())
 
 	for _, in := range input {
 		existingRoutineTag, exist := routineTagById[in.Id]
 		if !exist {
 			continue
-		}
-		if in.PartialUpdateInput.Values.StationId != nil &&
-			(in.PartialUpdateInput.SetNull == nil || !(*in.PartialUpdateInput.SetNull)["StationId"]) &&
-			!stationRepository.HasPermission(*in.PartialUpdateInput.Values.StationId, userId, allowedPermissions, opts...) {
-			parsedOptions.DB.Rollback()
-			return exceptions.RoutineTag.NoPermission("move these routine tags to the given stations")
 		}
 		updates, err := util.PartialUpdatePreprocess(in.PartialUpdateInput.Values, in.PartialUpdateInput.SetNull, existingRoutineTag)
 		if err != nil {

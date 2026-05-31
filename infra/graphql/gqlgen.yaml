@@ -147,6 +147,158 @@ models:
 
   # ============================== Corresponded Enums Which Have Prebuilt in Gorm ============================== #
 
+  AccessControlPermission:
+    model: "notezy-backend/app/models/schemas/enums.AccessControlPermission"
+  BadgeType:
+    model: "notezy-backend/app/models/schemas/enums.BadgeType"
+  CountryCode:
+    model: "notezy-backend/app/models/schemas/enums.CountryCode"
+    enum_values:
+      COUNTRY_CODE_886:
+        value: "notezy-backend/app/models/schemas/enums.CountryCode_Taiwan"
+      COUNTRY_CODE_81:
+        value: "notezy-backend/app/models/schemas/enums.CountryCode_Japan"
+      COUNTRY_CODE_60:
+        value: "notezy-backend/app/models/schemas/enums.CountryCode_Malaysia"
+      COUNTRY_CODE_65:
+        value: "notezy-backend/app/models/schemas/enums.CountryCode_Singapore"
+      COUNTRY_CODE_86:
+        value: "notezy-backend/app/models/schemas/enums.CountryCode_China"
+      COUNTRY_CODE_1:
+        value: "notezy-backend/app/models/schemas/enums.CountryCode_NANP"
+      COUNTRY_CODE_44:
+        value: "notezy-backend/app/models/schemas/enums.CountryCode_UnitedKingdom"
+      COUNTRY_CODE_61:
+        value: "notezy-backend/app/models/schemas/enums.CountryCode_Australia"
+  Country:
+    model: "notezy-backend/app/models/schemas/enums.Country"
+  ItemType:
+    model: "notezy-backend/app/models/schemas/enums.ItemType"
+    enum_values:
+      ItemType_BlockPack:
+        value: "notezy-backend/app/models/schemas/enums.ItemType_BlockPack"
+      ItemType_Material:
+        value: "notezy-backend/app/models/schemas/enums.ItemType_Material"
+  Language:
+    model: "notezy-backend/app/models/schemas/enums.Language"
+  MaterialContentType:
+    model: "notezy-backend/app/models/schemas/enums.MaterialContentType"
+    enum_values:
+      None:
+        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_None"
+      Application_JSON:
+        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_JSON"
+      Application_PDF:
+        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_PDF"
+      Text_Plain:
+        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_PlainText"
+      Text_HTML:
+        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_HTML"
+      Text_Markdown:
+        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_Markdown"
+      Image_PNG:
+        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_PNG"
+      Image_JPG:
+        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_JPG"
+      Image_JPEG:
+        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_JPEG"
+      Image_GIF:
+        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_GIF"
+      Image_SVG:
+        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_SVG"
+      Image_WebP:
+        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_WebP"
+      Video_MP4:
+        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_MP4"
+      Video_WebM:
+        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_WebM"
+      Audio_Mpeg:
+        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_Mpeg"
+  RoutinePeriod:
+    model: "notezy-backend/app/models/schemas/enums.RoutinePeriod"
+    enum_values:
+      RoutinePeriod_Daily:
+        value: "notezy-backend/app/models/schemas/enums.RoutinePeriod_Daily"
+      RoutinePeriod_Weekly:
+        value: "notezy-backend/app/models/schemas/enums.RoutinePeriod_Weekly"
+      RoutinePeriod_Monthly:
+        value: "notezy-backend/app/models/schemas/enums.RoutinePeriod_Monthly"
+      RoutinePeriod_Yearly:
+        value: "notezy-backend/app/models/schemas/enums.RoutinePeriod_Yearly"
+  RoutineStatus:
+    model: "notezy-backend/app/models/schemas/enums.RoutineStatus"
+    enum_values:
+      RoutineStatus_Scheduled:
+        value: "notezy-backend/app/models/schemas/enums.RoutineStatus_Scheduled"
+      RoutineStatus_InProgress:
+        value: "notezy-backend/app/models/schemas/enums.RoutineStatus_InProgress"
+      RoutineStatus_Completed:
+        value: "notezy-backend/app/models/schemas/enums.RoutineStatus_Completed"
+      RoutineStatus_OverDue:
+        value: "notezy-backend/app/models/schemas/enums.RoutineStatus_OverDue"
+  RoutineTaskPurpose:
+    model: "notezy-backend/app/models/schemas/enums.RoutineTaskPurpose"
+    enum_values:
+      RoutineTaskPurpose_CreateBlockPack:
+        value: "notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_CreateBlockPack"
+      RoutineTaskPurpose_DeleteBlockPack:
+        value: "notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_DeleteBlockPack"
+      RoutineTaskPurpose_CreateBlock:
+        value: "notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_CreateBlock"
+      RoutineTaskPurpose_UpdateBlock:
+        value: "notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_UpdateBlock"
+      RoutineTaskPurpose_DeleteBlock:
+        value: "notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_DeleteBlock"
+  RoutineTaskStatus:
+    model: "notezy-backend/app/models/schemas/enums.RoutineTaskStatus"
+    enum_values:
+      RoutineTaskStatus_Idle:
+        value: "notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Idle"
+      RoutineTaskStatus_Waiting:
+        value: "notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Waiting"
+      RoutineTaskStatus_Running:
+        value: "notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Running"
+      RoutineTaskStatus_Pause:
+        value: "notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Pause"
+      RoutineTaskStatus_Cancel:
+        value: "notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Cancel"
+      RoutineTaskStatus_Success:
+        value: "notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Success"
+      RoutineTaskStatus_Fail:
+        value: "notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Fail"
+  SupportedIcon:
+    model: "notezy-backend/app/models/schemas/enums.SupportedIcon"
+    enum_values:
+      SupportedIcon_GrinningFace:
+        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_GrinningFace"
+      SupportedIcon_SmilingFaceWithSmilingEyes:
+        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_SmilingFaceWithSmilingEyes"
+      SupportedIcon_RedHeart:
+        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_RedHeart"
+      SupportedIcon_Fire:
+        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_Fire"
+      SupportedIcon_Star:
+        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_Star"
+      SupportedIcon_Books:
+        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_Books"
+      SupportedIcon_Notebook:
+        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_Notebook"
+      SupportedIcon_PencilPaper:
+        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_PencilPaper"
+      SupportedIcon_Lightbulb:
+        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_Lightbulb"
+      SupportedIcon_Rocket:
+        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_Rocket"
+      SupportedIcon_CheckMark:
+        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_CheckMark"
+      SupportedIcon_Pin:
+        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_Pin"
+      SupportedIcon_FolderOpen:
+        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_FolderOpen"
+      SupportedIcon_Calendar:
+        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_Calendar"
+      SupportedIcon_Clock:
+        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_Clock"
   UserRole:
     model: "notezy-backend/app/models/schemas/enums.UserRole"
   UserPlan:
@@ -155,16 +307,7 @@ models:
     model: "notezy-backend/app/models/schemas/enums.UserStatus"
   UserGender:
     model: "notezy-backend/app/models/schemas/enums.UserGender"
-  Country:
-    model: "notezy-backend/app/models/schemas/enums.Country"
-  Language:
-    model: "notezy-backend/app/models/schemas/enums.Language"
-  BadgeType:
-    model: "notezy-backend/app/models/schemas/enums.BadgeType"
-  AccessControlPermission:
-    model: "notezy-backend/app/models/schemas/enums.AccessControlPermission"
-  MaterialContentType:
-    model: "notezy-backend/app/models/schemas/enums.MaterialContentType"
+
   # ============================== Corresponded Schemas Which Have Prebuilt in Gorm ============================== #
 
   User:

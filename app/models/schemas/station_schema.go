@@ -25,7 +25,6 @@ type Station struct {
 	Owner           User              `json:"owner" gorm:"foreignKey:OwnerId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UsersToStations []UsersToStations `json:"usersToStations" gorm:"foreignKey:StationId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	Routines        []Routine         `json:"routines" gorm:"foreignKey:StationId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	RoutineTags     []RoutineTag      `json:"routineTags" gorm:"foreignKey:StationId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	RoutineTasks    []RoutineTask     `json:"routineTasks" gorm:"foreignKey:StationId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
 
@@ -41,6 +40,5 @@ const (
 	StationRelation_Owner           StationRelation = "Owner"
 	StationRelation_UsersToStations StationRelation = "UsersToStations"
 	StationRelation_Routines        StationRelation = "Routines"
-	StationRelation_RoutineTags     StationRelation = "RoutineTags"
 	StationRelation_RoutineTasks    StationRelation = "RoutineTasks"
 )

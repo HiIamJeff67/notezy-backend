@@ -14,18 +14,16 @@ type CreateRoutineTagInput struct {
 }
 
 type BulkCreateRoutineTagInput struct {
-	Id        *uuid.UUID           `json:"id" gorm:"column:id;"`
-	StationId uuid.UUID            `json:"stationId" gorm:"column:station_id;"`
-	Name      string               `json:"name" gorm:"column:name;"`
-	Color     string               `json:"color" gorm:"column:color;"`
-	Icon      *enums.SupportedIcon `json:"icon" gorm:"column:icon;"`
+	Id    *uuid.UUID           `json:"id" gorm:"column:id;"`
+	Name  string               `json:"name" gorm:"column:name;"`
+	Color string               `json:"color" gorm:"column:color;"`
+	Icon  *enums.SupportedIcon `json:"icon" gorm:"column:icon;"`
 }
 
 type UpdateRoutineTagInput struct {
-	StationId *uuid.UUID           `json:"stationId" gorm:"column:station_id;"`
-	Name      *string              `json:"name" gorm:"column:name;"`
-	Color     *string              `json:"color" gorm:"column:color;"`
-	Icon      *enums.SupportedIcon `json:"icon" gorm:"column:icon;"`
+	Name  *string              `json:"name" gorm:"column:name;"`
+	Color *string              `json:"color" gorm:"column:color;"`
+	Icon  *enums.SupportedIcon `json:"icon" gorm:"column:icon;"`
 }
 
 type PartialUpdateRoutineTagInput = PartialUpdateInput[UpdateRoutineTagInput]

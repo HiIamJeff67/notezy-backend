@@ -30,12 +30,12 @@ func NewThemeService(db *gorm.DB) ThemeServiceInterface {
 	}
 }
 
-/* ============================== Service Methods for Themes ============================== */
+/* ============================== Service Methods for Theme ============================== */
 
 // get the theme which are created by the current user
 func (s *ThemeService) GetMyThemeById() {}
 
-/* ============================== Service Methods for Public Themes ============================== */
+/* ============================== Service Methods for Public Theme ============================== */
 
 func (s *ThemeService) GetPublicThemeByPublicId(
 	ctx context.Context, publicId string,

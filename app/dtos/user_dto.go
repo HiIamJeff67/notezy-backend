@@ -84,7 +84,7 @@ type UpdatePlanReqDto struct {
 
 /* ============================== Response DTO ============================== */
 
-type GetUserDataResDto = struct {
+type GetUserDataResDto struct {
 	PublicId           string           `json:"publicId"`           // user
 	Name               string           `json:"name"`               // user
 	DisplayName        string           `json:"displayName"`        // user

@@ -1,0 +1,7 @@
+enum RoutineTaskPurpose {
+  RoutineTaskPurpose_CreateBlockPack
+  RoutineTaskPurpose_DeleteBlockPack
+  RoutineTaskPurpose_CreateBlock
+  RoutineTaskPurpose_UpdateBlock
+  RoutineTaskPurpose_DeleteBlock
+}

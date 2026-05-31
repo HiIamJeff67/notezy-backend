@@ -22,12 +22,12 @@ type UsersToShelves struct {
 	RootShelf RootShelf `gorm:"foreignKey:RootShelfId; reference:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
 
-// Users To Shelves Table Name
+// UsersToShelves Table Name
 func (UsersToShelves) TableName() string {
 	return types.TableName_UsersToShelvesTable.String()
 }
 
-// Users To Shelves Table Relations
+// UsersToShelves Table Relations
 type UsersToShelvesRelation types.RelationName
 
 const (

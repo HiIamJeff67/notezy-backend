@@ -182,10 +182,7 @@ func (r *RoutineTaskRepository) CreateOneByStationId(
 	}
 
 	newRoutineTask := schemas.RoutineTask{
-		Id:          uuid.New(),
 		Status:      enums.RoutineTaskStatus_Idle,
-		Attempts:    0,
-		MaxAttempts: 1,
 		ScheduledAt: time.Now().Truncate(time.Minute),
 	}
 	if err := copier.Copy(&newRoutineTask, &input); err != nil {
@@ -196,12 +193,6 @@ func (r *RoutineTaskRepository) CreateOneByStationId(
 	newRoutineTask.ScheduledAt = time.Now().Truncate(time.Minute)
 	if len(newRoutineTask.Payload) == 0 {
 		newRoutineTask.Payload = datatypes.JSON([]byte("{}"))
-	}
-	if newRoutineTask.MaxAttempts <= 0 {
-		newRoutineTask.MaxAttempts = 1
-	}
-	if newRoutineTask.Purpose == "" {
-		newRoutineTask.Purpose = enums.RoutineTaskPurpose_CreateBlockPack
 	}
 
 	result := parsedOptions.DB.

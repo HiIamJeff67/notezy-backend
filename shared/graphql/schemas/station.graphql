@@ -1,0 +1,17 @@
+type PrivateStation {
+  id: UUID!
+  permission: AccessControlPermission!
+  name: String!
+  description: String!
+  icon: SupportedIcon
+  headerBackgroundURL: String
+  routineCount: Int32!
+  deletedAt: Time
+  createdAt: Time!
+  updatedAt: Time!
+
+  # relations
+  owner: PublicUser!
+  sharers: [PublicUser!]!
+  routines: [PrivateRoutine!]!
+}

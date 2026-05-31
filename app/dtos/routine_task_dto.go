@@ -1,0 +1,133 @@
+package dtos
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"gorm.io/datatypes"
+
+	enums "notezy-backend/app/models/schemas/enums"
+)
+
+/* ============================== Request DTO ============================== */
+
+type GetOneRoutineTaskByIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		any,
+		struct {
+			RoutineTaskId uuid.UUID `form:"routineTaskId" validate:"required"`
+		},
+	]
+}
+
+type CreateOneRoutineTaskByStationIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		struct {
+			StationId   uuid.UUID                `json:"stationId" validate:"required"`
+			Purpose     enums.RoutineTaskPurpose `json:"purpose" validate:"required,isroutinetaskpurpose"`
+			Payload     datatypes.JSON           `json:"payload" validate:"omitempty,max=2048"`
+			Priority    int32                    `json:"priority" validate:"omitempty,min=0"`
+			MaxAttempts int32                    `json:"maxAttempts" validate:"omitempty,min=1,max=20"`
+		},
+		any,
+	]
+}
+
+type UpdateOneRoutineTaskByIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		struct {
+			RoutineTaskId uuid.UUID `json:"routineTaskId" validate:"required"`
+			PartialUpdateDto[struct {
+				StationId   *uuid.UUID                `json:"stationId" validate:"omitnil"`
+				Purpose     *enums.RoutineTaskPurpose `json:"purpose" validate:"omitnil,isroutinetaskpurpose"`
+				Payload     *datatypes.JSON           `json:"payload" validate:"omitnil,max=2048"`
+				Priority    *int32                    `json:"priority" validate:"omitnil,min=0"`
+				MaxAttempts *int32                    `json:"maxAttempts" validate:"omitnil,min=1,max=20"`
+			}]
+		},
+		any,
+	]
+}
+
+type HardDeleteOneRoutineTaskByIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		struct {
+			RoutineTaskId uuid.UUID `json:"routineTaskId" validate:"required"`
+		},
+		any,
+	]
+}
+
+type HardDeleteManyRoutineTasksByIdsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		struct {
+			RoutineTaskIds []uuid.UUID `json:"routineTaskIds" validate:"required,min=1,max=1024"`
+		},
+		any,
+	]
+}
+
+/* ============================== Response DTO ============================== */
+
+type GetOneRoutineTaskByIdResDto struct {
+	Id              uuid.UUID                `json:"id"`
+	StationId       uuid.UUID                `json:"stationId"`
+	Purpose         enums.RoutineTaskPurpose `json:"purpose"`
+	Payload         datatypes.JSON           `json:"payload"`
+	Priority        int32                    `json:"priority"`
+	Status          enums.RoutineTaskStatus  `json:"status"`
+	Attempts        int32                    `json:"attempts"`
+	MaxAttempts     int32                    `json:"maxAttempts"`
+	ScheduledAt     time.Time                `json:"scheduledAt"`
+	ActualStartedAt *time.Time               `json:"actualStartedAt"`
+	ActualEndedAt   *time.Time               `json:"actualEndedAt"`
+	UpdatedAt       time.Time                `json:"updatedAt"`
+	CreatedAt       time.Time                `json:"createdAt"`
+}
+
+type CreateOneRoutineTaskByStationIdResDto struct {
+	Id        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+type UpdateOneRoutineTaskByIdResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type HardDeleteOneRoutineTaskByIdResDto struct {
+	DeletedAt time.Time `json:"deletedAt"`
+}
+
+type HardDeleteManyRoutineTasksByIdsResDto struct {
+	DeletedAt time.Time `json:"deletedAt"`
+}

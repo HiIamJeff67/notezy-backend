@@ -1,25 +1,48 @@
 CREATE OR REPLACE FUNCTION trigger_function_accounting_inserted_routine_tag()
 RETURNS TRIGGER AS $$
+DECLARE
+    r RECORD;
 BEGIN
     IF (TG_OP <> 'INSERT') THEN
         RAISE EXCEPTION 'Invalid operation for trigger_function_accounting_inserted_routine_tag: %. Expected INSERT.', TG_OP
         USING ERRCODE = 'program_limit_exceeded';
     END IF;
 
-    WITH owner_deltas AS (
+    -- Count only owned tags: permission = 'Owner'. Shared tags do not consume owner quota.
+    FOR r IN
+        WITH owner_tag_deltas AS (
+            SELECT
+                user_id,
+                count(*) as total_delta
+            FROM new_table
+            WHERE permission = 'Owner'
+            GROUP BY user_id
+        ),
+        updated_accounts AS (
+            UPDATE "UserAccountTable" ua
+            SET
+                routine_tag_count = routine_tag_count + otd.total_delta,
+                updated_at = NOW()
+            FROM owner_tag_deltas otd
+            WHERE ua.user_id = otd.user_id
+            RETURNING ua.user_id
+        )
+
         SELECT
-            s.owner_id,
-            count(*) as total_delta
-        FROM new_table nt
-        JOIN "StationTable" s ON s.id = nt.station_id
-        GROUP BY s.owner_id
-    )
-    UPDATE "UserAccountTable" ua
-    SET
-        routine_tag_count = routine_tag_count + od.total_delta,
-        updated_at = NOW()
-    FROM owner_deltas od
-    WHERE ua.user_id = od.owner_id;
+            ua.user_id,
+            u.plan,
+            acc.routine_tag_count,
+            pl.max_routine_tag_count
+        FROM updated_accounts ua
+        JOIN "UserAccountTable" acc ON acc.user_id = ua.user_id
+        JOIN "UserTable" u ON u.id = ua.user_id
+        JOIN "PlanLimitationTable" pl ON u.plan = pl.key
+        WHERE acc.routine_tag_count > pl.max_routine_tag_count
+    LOOP
+        RAISE EXCEPTION 'Quota exceeded: Plan "%" allows maximum % routine tags. Current count: %.',
+            r.plan, r.max_routine_tag_count, r.routine_tag_count
+        USING ERRCODE = 'check_violation';
+    END LOOP;
 
     RETURN NULL;
 END;
@@ -27,13 +50,13 @@ $$ LANGUAGE plpgsql;
 
 -- ============================== SQL Separator ==============================
 
-DROP TRIGGER IF EXISTS trigger_accounting_inserted_routine_tag ON "RoutineTagTable"
+DROP TRIGGER IF EXISTS trigger_accounting_inserted_routine_tag ON "UsersToRoutineTagsTable"
 
 -- ============================== SQL Separator ==============================
 
 CREATE TRIGGER trigger_accounting_inserted_routine_tag
     AFTER INSERT
-    ON "RoutineTagTable"
+    ON "UsersToRoutineTagsTable"
     REFERENCING NEW TABLE AS new_table
     FOR EACH STATEMENT
     EXECUTE FUNCTION trigger_function_accounting_inserted_routine_tag();

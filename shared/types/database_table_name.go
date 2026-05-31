@@ -25,15 +25,16 @@ const (
 	TableName_SyncBlockTable      TableName = "SyncBlockTable"
 	TableName_ItemTable           TableName = "ItemTable"
 
-	TableName_RoutinesToItemsTable   TableName = "RoutinesToItemsTable"
-	TableName_StationTable           TableName = "StationTable"
-	TableName_UsersToStationsTable   TableName = "UsersToStationsTable"
-	TableName_RoutineTable           TableName = "RoutineTable"
-	TableName_RoutineDependencyTable TableName = "RoutineDependencyTable"
-	TableName_RoutineTaskTable       TableName = "RoutineTaskTable"
-	TableName_RoutinesToTasksTable   TableName = "RoutinesToTasksTable"
-	TableName_RoutineTagTable        TableName = "RoutineTagTable"
-	TableName_RoutinesToTagsTable    TableName = "RoutinesToTagsTable"
+	TableName_RoutinesToItemsTable    TableName = "RoutinesToItemsTable"
+	TableName_UsersToStationsTable    TableName = "UsersToStationsTable"
+	TableName_UsersToRoutineTagsTable TableName = "UsersToRoutineTagsTable"
+	TableName_StationTable            TableName = "StationTable"
+	TableName_RoutineTable            TableName = "RoutineTable"
+	TableName_RoutineDependencyTable  TableName = "RoutineDependencyTable"
+	TableName_RoutineTaskTable        TableName = "RoutineTaskTable"
+	TableName_RoutinesToTasksTable    TableName = "RoutinesToTasksTable"
+	TableName_RoutineTagTable         TableName = "RoutineTagTable"
+	TableName_RoutinesToTagsTable     TableName = "RoutinesToTagsTable"
 
 	TableName_UsersToBillingPlansTable TableName = "UsersToBillingPlansTable"
 
@@ -65,15 +66,16 @@ var _validTableNames = map[string]TableName{
 	"SyncBlockTable":      TableName_SyncBlockTable,
 	"ItemTable":           TableName_ItemTable,
 
-	"RoutinesToItemsTable":   TableName_RoutinesToItemsTable,
-	"StationTable":           TableName_StationTable,
-	"UsersToStationsTable":   TableName_UsersToStationsTable,
-	"RoutineTable":           TableName_RoutineTable,
-	"RoutineDependencyTable": TableName_RoutineDependencyTable,
-	"RoutineTaskTable":       TableName_RoutineTaskTable,
-	"RoutinesToTasksTable":   TableName_RoutinesToTasksTable,
-	"RoutineTagTable":        TableName_RoutineTagTable,
-	"RoutinesToTagsTable":    TableName_RoutinesToTagsTable,
+	"RoutinesToItemsTable":    TableName_RoutinesToItemsTable,
+	"UsersToStationsTable":    TableName_UsersToStationsTable,
+	"UsersToRoutineTagsTable": TableName_UsersToRoutineTagsTable,
+	"StationTable":            TableName_StationTable,
+	"RoutineTable":            TableName_RoutineTable,
+	"RoutineDependencyTable":  TableName_RoutineDependencyTable,
+	"RoutineTaskTable":        TableName_RoutineTaskTable,
+	"RoutinesToTasksTable":    TableName_RoutinesToTasksTable,
+	"RoutineTagTable":         TableName_RoutineTagTable,
+	"RoutinesToTagsTable":     TableName_RoutinesToTagsTable,
 
 	"UsersToBillingPlansTable": TableName_UsersToBillingPlansTable,
 

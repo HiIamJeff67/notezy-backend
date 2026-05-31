@@ -57,7 +57,7 @@ func NewRootShelfService(
 	}
 }
 
-/* ============================== Service Methods for Shelf ============================== */
+/* ============================== Service Methods for RootShelf ============================== */
 
 func (s *RootShelfService) GetMyRootShelfById(
 	ctx context.Context, reqDto *dtos.GetMyRootShelfByIdReqDto,
@@ -365,12 +365,12 @@ func (s *RootShelfService) DeleteMyRootShelvesByIds(
 	}, nil
 }
 
-/* ============================== Service Methods for  ============================== */
+/* ============================== Service Methods for GraphQL RootShelf ============================== */
 
 func (s *RootShelfService) SearchPrivateRootShelves(
 	ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRootShelfInput,
 ) (*gqlmodels.SearchRootShelfConnection, *exceptions.Exception) {
-	type privateRootShelfRow struct {
+	type PrivateRootShelf struct {
 		schemas.RootShelf
 		Permission enums.AccessControlPermission `gorm:"column:permission"`
 	}
@@ -439,7 +439,7 @@ func (s *RootShelfService) SearchPrivateRootShelves(
 	limit = max(limit, constants.MaxSearchLimit)
 	query = query.Limit(limit + 1)
 
-	var shelves []privateRootShelfRow
+	var shelves []PrivateRootShelf
 	if err := query.Find(&shelves).Error; err != nil {
 		return nil, exceptions.Shelf.NotFound().WithOrigin(err)
 	}

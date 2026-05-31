@@ -26,10 +26,12 @@ type UsersToBillingPlans struct {
 	BillingPlan BillingPlan `gorm:"foreignKey:BillingPlanId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
 
+// UsersToBillingPlans Table Name
 func (UsersToBillingPlans) TableName() string {
 	return types.TableName_UsersToBillingPlansTable.String()
 }
 
+// UsersToBilling Plans Relations
 type UsersToBullingPlansRelation types.RelationName
 
 const (

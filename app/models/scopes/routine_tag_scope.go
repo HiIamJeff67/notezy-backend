@@ -24,9 +24,9 @@ func (sc *RoutineTagScope) PassPermissionCheck(id uuid.UUID, userId uuid.UUID, p
 	return func(db *gorm.DB) *gorm.DB {
 		// Use gorm.DB.Session to build a fresh statement for the subquery to avoid inheriting outer query clauses (especially in UPDATE/DELETE).
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
-			Model(&schemas.UsersToStations{}).
+			Model(&schemas.UsersToRoutineTags{}).
 			Select("1").
-			Where("station_id = \"RoutineTagTable\".station_id AND user_id = ? AND permission IN ?", userId, permissions)
+			Where("tag_id = \"RoutineTagTable\".id AND user_id = ? AND permission IN ?", userId, permissions)
 		return db.Where("\"RoutineTagTable\".id = ? AND EXISTS (?)", id, subQuery)
 	}
 }
@@ -35,9 +35,9 @@ func (sc *RoutineTagScope) PassPermissionChecks(ids []uuid.UUID, userId uuid.UUI
 	return func(db *gorm.DB) *gorm.DB {
 		// Use gorm.DB.Session to build a fresh statement for the subquery to avoid inheriting outer query clauses (especially in UPDATE/DELETE).
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
-			Model(&schemas.UsersToStations{}).
+			Model(&schemas.UsersToRoutineTags{}).
 			Select("1").
-			Where("station_id = \"RoutineTagTable\".station_id AND user_id = ? AND permission IN ?", userId, permissions)
+			Where("tag_id = \"RoutineTagTable\".id AND user_id = ? AND permission IN ?", userId, permissions)
 		return db.Where("\"RoutineTagTable\".id IN ? AND EXISTS (?)", ids, subQuery)
 	}
 }

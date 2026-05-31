@@ -15,10 +15,10 @@ type RoutineTask struct {
 	StationId       uuid.UUID                `json:"stationId" gorm:"column:station_id; type:uuid; not null;"`
 	Purpose         enums.RoutineTaskPurpose `json:"purpose" gorm:"column:purpose; type:\"RoutineTaskPurpose\"; not null; default:'CreateBlockPack';"`
 	Payload         datatypes.JSON           `json:"payload" gorm:"column:payload; type:jsonb; not null; default:'{}'; check:routine_task_check_payload_size,octet_length(payload::text) <= 2048;"`
-	Priority        int32                    `json:"priority" gorm:"column:priority; type:integer; not null; default:0;"`
+	Priority        int32                    `json:"priority" gorm:"column:priority; type:integer; not null; default:0; check:routine_task_check_priority_non_negative,priority >= 0;"`
 	Status          enums.RoutineTaskStatus  `json:"status" gorm:"column:status; type:\"RoutineTaskStatus\"; not null; default:'Idle';"`
-	Attempts        int32                    `json:"attempts" gorm:"column:attempts; type:integer; not null; default:0;"`
-	MaxAttempts     int32                    `json:"maxAttempts" gorm:"column:max_attempts; type:integer; not null; default:1;"`
+	Attempts        int32                    `json:"attempts" gorm:"column:attempts; type:integer; not null; default:0; check:routine_task_check_attempts_non_negative,attempts >= 0;"`
+	MaxAttempts     int32                    `json:"maxAttempts" gorm:"column:max_attempts; type:integer; not null; default:1; check:routine_task_check_max_attempts_non_negative,max_attempts > 0;"`
 	ScheduledAt     time.Time                `json:"scheduledAt" gorm:"column:scheduled_at; type:timestamptz; not null; default:NOW();"`
 	ActualStartedAt *time.Time               `json:"actualStartedAt" gorm:"column:actual_started_at; type:timestamptz; default:null;"`
 	ActualEndedAt   *time.Time               `json:"actualEndedAt" gorm:"column:actual_ended_at; type:timestamptz; default:null;"`

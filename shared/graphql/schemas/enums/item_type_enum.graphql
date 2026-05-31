@@ -1,0 +1,4 @@
+enum ItemType {
+  ItemType_BlockPack
+  ItemType_Material
+}

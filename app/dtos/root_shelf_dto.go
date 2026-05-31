@@ -136,7 +136,7 @@ type RestoreMyRootShelvesByIdsReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			RootShelfIds []uuid.UUID `json:"rootShelfIds" validate:"required,min=1,max=128"`
+			RootShelfIds []uuid.UUID `json:"rootShelfIds" validate:"required,min=1,max=1024"`
 		},
 		any,
 	]
@@ -166,7 +166,7 @@ type DeleteMyRootShelvesByIdsReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			RootShelfIds []uuid.UUID `json:"rootShelfIds" validate:"required,min=1,max=128"`
+			RootShelfIds []uuid.UUID `json:"rootShelfIds" validate:"required,min=1,max=1024"`
 		},
 		any,
 	]
@@ -186,7 +186,7 @@ type GetMyRootShelfByIdResDto struct {
 	CreatedAt      time.Time                     `json:"createdAt"`
 }
 
-type SearchRecentRootShelvesResDto []GetMyRootShelfByIdResDto
+type SearchRecentRootShelvesResDto = []GetMyRootShelfByIdResDto
 
 type CreateRootShelfResDto struct {
 	Id             uuid.UUID `json:"id"`

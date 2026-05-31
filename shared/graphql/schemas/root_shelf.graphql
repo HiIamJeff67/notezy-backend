@@ -10,5 +10,6 @@ type PrivateRootShelf {
   createdAt: Time!
 
   # relations
-  owner: [PublicUser!]!
+  owner: PublicUser!
+  sharers: [PublicUser!]!
 }

@@ -67,6 +67,8 @@ func NewBlockService(
 	}
 }
 
+/* ============================== Service Methods for Block ============================== */
+
 func (s *BlockService) GetMyBlockById(
 	ctx context.Context, reqDto *dtos.GetMyBlockByIdReqDto,
 ) (*dtos.GetMyBlockByIdResDto, *exceptions.Exception) {

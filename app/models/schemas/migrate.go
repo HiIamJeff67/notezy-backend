@@ -24,14 +24,15 @@ var MigratingTables = []any{
 	&SyncBlock{},
 	&Item{},
 
+	&RoutinesToItems{},
 	&UsersToStations{},
+	&UsersToRoutineTags{},
 	&Station{},
 	&Routine{},
 	&RoutinesToTasks{},
 	&RoutineTask{},
 	&RoutinesToTags{},
 	&RoutineTag{},
-	&RoutinesToItems{},
 
 	&UsersToBillingPlans{},
 

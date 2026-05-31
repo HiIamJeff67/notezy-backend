@@ -1,0 +1,6 @@
+enum RoutineStatus {
+  RoutineStatus_Scheduled
+  RoutineStatus_InProgress
+  RoutineStatus_Completed
+  RoutineStatus_OverDue
+}
