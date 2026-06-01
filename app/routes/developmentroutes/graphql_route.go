@@ -5,9 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	graphql "notezy-backend/app/graphql"
-	interceptors "notezy-backend/app/interceptors"
-	middlewares "notezy-backend/app/middlewares"
+	graphql "github.com/HiIamJeff67/notezy-backend/app/graphql"
+	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
+	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
 )
 
 func configureDevelopmentGraphQLRoutes() {

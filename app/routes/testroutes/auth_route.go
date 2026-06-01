@@ -5,9 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	middlewares "notezy-backend/app/middlewares"
-	enums "notezy-backend/app/models/schemas/enums"
-	modules "notezy-backend/app/modules"
+	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
 )
 
 // the route structure is different here, since we use these routes to do the e2e test

@@ -7,17 +7,17 @@ import (
 	pg "github.com/lib/pq"
 	"gorm.io/gorm"
 
-	dtos "notezy-backend/app/dtos"
-	exceptions "notezy-backend/app/exceptions"
-	inputs "notezy-backend/app/models/inputs"
-	repositories "notezy-backend/app/models/repositories"
-	schemas "notezy-backend/app/models/schemas"
-	enums "notezy-backend/app/models/schemas/enums"
-	blockpacksql "notezy-backend/app/models/sqls/block_pack"
-	options "notezy-backend/app/options"
-	validation "notezy-backend/app/validation"
-	constants "notezy-backend/shared/constants"
-	types "notezy-backend/shared/types"
+	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
+	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
+	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	blockpacksql "github.com/HiIamJeff67/notezy-backend/app/models/sqls/block_pack"
+	options "github.com/HiIamJeff67/notezy-backend/app/options"
+	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type BlockPackServiceInterface interface {

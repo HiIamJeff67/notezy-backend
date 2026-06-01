@@ -11,8 +11,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	util "notezy-backend/app/util"
-	test "notezy-backend/test"
+	util "github.com/HiIamJeff67/notezy-backend/app/util"
+	test "github.com/HiIamJeff67/notezy-backend/test"
 )
 
 /* ============================== Test Case Types ============================== */

@@ -6,9 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	middlewares "notezy-backend/app/middlewares"
-	logs "notezy-backend/app/monitor/logs"
-	traces "notezy-backend/app/monitor/traces"
+	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
+	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
+	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 )
 
 func configureStaticRoutes() {

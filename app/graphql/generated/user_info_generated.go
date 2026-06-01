@@ -5,8 +5,8 @@ package generated
 import (
 	"context"
 	"errors"
-	gqlmodels "notezy-backend/app/graphql/models"
-	"notezy-backend/app/models/schemas/enums"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
+	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	"strconv"
 	"sync/atomic"
 	"time"

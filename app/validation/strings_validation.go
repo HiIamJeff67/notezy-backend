@@ -8,8 +8,8 @@ import (
 
 	"github.com/go-playground/validator/v10" // make sure we use the version 10
 
-	util "notezy-backend/app/util"
-	constants "notezy-backend/shared/constants"
+	util "github.com/HiIamJeff67/notezy-backend/app/util"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 func RegisterStringsValidation(validate *validator.Validate) {

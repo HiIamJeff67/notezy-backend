@@ -4,7 +4,7 @@ import (
 	"math/rand/v2"
 	"strconv"
 
-	constants "notezy-backend/shared/constants"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 func GenerateAuthCode() string {

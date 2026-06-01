@@ -9,11 +9,11 @@ import (
 
 	uuid "github.com/google/uuid"
 
-	redislibraries "notezy-backend/app/caches/libraries"
-	exceptions "notezy-backend/app/exceptions"
-	logs "notezy-backend/app/monitor/logs"
-	traces "notezy-backend/app/monitor/traces"
-	types "notezy-backend/shared/types"
+	redislibraries "github.com/HiIamJeff67/notezy-backend/app/caches/libraries"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
+	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type RateLimitRecordCache struct {

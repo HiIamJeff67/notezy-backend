@@ -3,10 +3,10 @@ package binders
 import (
 	"github.com/gin-gonic/gin"
 
-	contexts "notezy-backend/app/contexts"
-	dtos "notezy-backend/app/dtos"
-	exceptions "notezy-backend/app/exceptions"
-	types "notezy-backend/shared/types"
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
+	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type AuthBinderInterface interface {

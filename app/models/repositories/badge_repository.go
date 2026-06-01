@@ -4,10 +4,10 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm/clause"
 
-	exceptions "notezy-backend/app/exceptions"
-	schemas "notezy-backend/app/models/schemas"
-	options "notezy-backend/app/options"
-	types "notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	options "github.com/HiIamJeff67/notezy-backend/app/options"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type BadgeRepositoryInterface interface {

@@ -1,9 +1,10 @@
 package schemas
 
 import (
-	enums "notezy-backend/app/models/schemas/enums"
-	"notezy-backend/shared/types"
 	"time"
+
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	"github.com/HiIamJeff67/notezy-backend/shared/types"
 
 	"github.com/google/uuid"
 )

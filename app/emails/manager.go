@@ -8,10 +8,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	exceptions "notezy-backend/app/exceptions"
-	logs "notezy-backend/app/monitor/logs"
-	traces "notezy-backend/app/monitor/traces"
-	constants "notezy-backend/shared/constants"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
+	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 /* ============================== Initialization & Instance ============================== */

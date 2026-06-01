@@ -4,7 +4,7 @@ package generated
 
 import (
 	"context"
-	"notezy-backend/app/models/schemas/enums"
+	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/vektah/gqlparser/v2/ast"

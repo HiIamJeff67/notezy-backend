@@ -18,12 +18,12 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 
-	caches "notezy-backend/app/caches"
-	configs "notezy-backend/app/configs"
-	models "notezy-backend/app/models"
-	developmentroutes "notezy-backend/app/routes/developmentroutes"
-	util "notezy-backend/app/util"
-	constants "notezy-backend/shared/constants"
+	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
+	configs "github.com/HiIamJeff67/notezy-backend/app/configs"
+	models "github.com/HiIamJeff67/notezy-backend/app/models"
+	developmentroutes "github.com/HiIamJeff67/notezy-backend/app/routes/developmentroutes"
+	util "github.com/HiIamJeff67/notezy-backend/app/util"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 func StartApplication() {

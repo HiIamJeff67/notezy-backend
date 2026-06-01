@@ -5,9 +5,9 @@ import (
 
 	"github.com/google/uuid"
 
-	gqlmodels "notezy-backend/app/graphql/models"
-	"notezy-backend/app/models/schemas/enums"
-	types "notezy-backend/shared/types"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
+	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type RootShelf struct {

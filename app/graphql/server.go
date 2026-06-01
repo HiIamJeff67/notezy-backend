@@ -8,14 +8,14 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-gonic/gin"
 
-	dataloaders "notezy-backend/app/graphql/dataloaders"
-	generated "notezy-backend/app/graphql/generated"
-	resolvers "notezy-backend/app/graphql/resolvers"
-	models "notezy-backend/app/models"
-	repositories "notezy-backend/app/models/repositories"
-	scopes "notezy-backend/app/models/scopes"
-	services "notezy-backend/app/services"
-	types "notezy-backend/shared/types"
+	dataloaders "github.com/HiIamJeff67/notezy-backend/app/graphql/dataloaders"
+	generated "github.com/HiIamJeff67/notezy-backend/app/graphql/generated"
+	resolvers "github.com/HiIamJeff67/notezy-backend/app/graphql/resolvers"
+	models "github.com/HiIamJeff67/notezy-backend/app/models"
+	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
+	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
+	services "github.com/HiIamJeff67/notezy-backend/app/services"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 func GraphQLHandler() gin.HandlerFunc {

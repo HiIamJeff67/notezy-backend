@@ -3,8 +3,8 @@ package tokens
 import (
 	"time"
 
-	exceptions "notezy-backend/app/exceptions"
-	util "notezy-backend/app/util"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	util "github.com/HiIamJeff67/notezy-backend/app/util"
 )
 
 var _jwtAccessTokenSecret []byte

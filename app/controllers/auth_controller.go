@@ -5,9 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	cookies "notezy-backend/app/cookies"
-	dtos "notezy-backend/app/dtos"
-	services "notezy-backend/app/services"
+	cookies "github.com/HiIamJeff67/notezy-backend/app/cookies"
+	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
+	services "github.com/HiIamJeff67/notezy-backend/app/services"
 )
 
 type AuthControllerInterface interface {

@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	constants "notezy-backend/shared/constants"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 // The weak rate limiter is an implementation of Leaky Bucket algorithm

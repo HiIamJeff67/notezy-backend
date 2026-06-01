@@ -3,7 +3,7 @@ package resolvers
 import (
 	"context"
 
-	gqlmodels "notezy-backend/app/graphql/models"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 )
 
 type UserResolverInterface interface {

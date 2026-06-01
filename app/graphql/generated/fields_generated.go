@@ -6,7 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	gqlmodels "notezy-backend/app/graphql/models"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	"strconv"
 	"sync/atomic"
 

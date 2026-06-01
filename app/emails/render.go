@@ -6,9 +6,9 @@ import (
 	"os"
 	"strings"
 
-	exceptions "notezy-backend/app/exceptions"
-	util "notezy-backend/app/util"
-	types "notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	util "github.com/HiIamJeff67/notezy-backend/app/util"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 /* ==================== HTML Email Renderer ==================== */

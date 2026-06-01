@@ -1,10 +1,11 @@
 package utilunittest
 
 import (
-	util "notezy-backend/app/util"
-	test "notezy-backend/test"
 	"testing"
 	"time"
+
+	util "github.com/HiIamJeff67/notezy-backend/app/util"
+	test "github.com/HiIamJeff67/notezy-backend/test"
 
 	"github.com/stretchr/testify/assert"
 )

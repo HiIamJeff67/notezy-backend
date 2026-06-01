@@ -7,11 +7,11 @@ import (
 	"github.com/google/uuid"
 	rate "golang.org/x/time/rate"
 
-	caches "notezy-backend/app/caches"
-	logs "notezy-backend/app/monitor/logs"
-	traces "notezy-backend/app/monitor/traces"
-	constants "notezy-backend/shared/constants"
-	types "notezy-backend/shared/types"
+	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
+	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
+	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type HybridRateLimitTask struct {

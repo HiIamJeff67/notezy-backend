@@ -5,7 +5,7 @@ import (
 	"io"
 	"time"
 
-	exceptions "notezy-backend/app/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 )
 
 type PutOptions struct {

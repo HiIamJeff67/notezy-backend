@@ -1,6 +1,6 @@
 package constants
 
-import types "notezy-backend/shared/types"
+import types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
 /* ============================== Limitation of Shelf and Items ============================== */
 
@@ -17,7 +17,7 @@ const (
 	MaxMaterialsOfSubShelf  int32 = 1e+2 // max number of materials(files)
 	MaxBlockPackOfSubShelf  int32 = 1e+2 // max number of block packs
 
-	PeekFileSize            types.ByteType = 256 * types.Byte
+	PeekFileSize             types.ByteType = 256 * types.Byte
 	MaxMaterialTextFileSize  types.ByteType = 5 * types.MB
 	MaxMaterialImageFileSize types.ByteType = 20 * types.MB
 	MaxMaterialVideoFileSize types.ByteType = 100 * types.MB

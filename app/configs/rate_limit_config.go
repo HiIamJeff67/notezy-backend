@@ -5,7 +5,7 @@ import (
 
 	"golang.org/x/time/rate"
 
-	types "notezy-backend/shared/types"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type RateLimitConfig struct {

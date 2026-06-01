@@ -9,7 +9,7 @@ BEGIN
     WITH owner_deltas AS (
         SELECT
             owner_id,
-            count(*) as station_delta,
+            count(*) as station_delta
         FROM old_table
         GROUP BY owner_id
     )

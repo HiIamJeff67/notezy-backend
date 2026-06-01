@@ -10,12 +10,12 @@ import (
 	uuid "github.com/google/uuid"
 	"github.com/jinzhu/copier"
 
-	redislibraries "notezy-backend/app/caches/libraries"
-	exceptions "notezy-backend/app/exceptions"
-	enums "notezy-backend/app/models/schemas/enums"
-	logs "notezy-backend/app/monitor/logs"
-	traces "notezy-backend/app/monitor/traces"
-	types "notezy-backend/shared/types"
+	redislibraries "github.com/HiIamJeff67/notezy-backend/app/caches/libraries"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
+	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type UserDataCache struct {

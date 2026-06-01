@@ -3,8 +3,8 @@ package emails
 import (
 	"time"
 
-	exceptions "notezy-backend/app/exceptions"
-	types "notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 const (

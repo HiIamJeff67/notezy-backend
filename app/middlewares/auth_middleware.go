@@ -5,14 +5,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	caches "notezy-backend/app/caches"
-	cookies "notezy-backend/app/cookies"
-	exceptions "notezy-backend/app/exceptions"
-	repositories "notezy-backend/app/models/repositories"
-	schemas "notezy-backend/app/models/schemas"
-	metrics "notezy-backend/app/monitor/metrics"
-	tokens "notezy-backend/app/tokens"
-	types "notezy-backend/shared/types"
+	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
+	cookies "github.com/HiIamJeff67/notezy-backend/app/cookies"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
+	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
+	tokens "github.com/HiIamJeff67/notezy-backend/app/tokens"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 func _extractAccessToken(ctx *gin.Context) (string, *exceptions.Exception) {

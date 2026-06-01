@@ -3,7 +3,7 @@ package validation
 import (
 	"github.com/go-playground/validator/v10" // make sure we use the version 10
 
-	blocknote "notezy-backend/shared/lib/blocknote"
+	blocknote "github.com/HiIamJeff67/notezy-backend/shared/lib/blocknote"
 )
 
 // initialize the validator to validate the inputs, dtos

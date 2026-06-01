@@ -6,11 +6,11 @@ import (
 	gophersdataloader "github.com/graph-gophers/dataloader/v7"
 	"gorm.io/gorm"
 
-	exceptions "notezy-backend/app/exceptions"
-	gqlmodels "notezy-backend/app/graphql/models"
-	"notezy-backend/app/models/repositories"
-	services "notezy-backend/app/services"
-	constants "notezy-backend/shared/constants"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
+	"github.com/HiIamJeff67/notezy-backend/app/models/repositories"
+	services "github.com/HiIamJeff67/notezy-backend/app/services"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 /* ============================== Enum Keys & Types ============================== */

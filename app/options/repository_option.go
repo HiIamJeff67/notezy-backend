@@ -3,8 +3,8 @@ package options
 import (
 	"gorm.io/gorm"
 
-	models "notezy-backend/app/models"
-	types "notezy-backend/shared/types"
+	models "github.com/HiIamJeff67/notezy-backend/app/models"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type RepositoryOptionFields struct {

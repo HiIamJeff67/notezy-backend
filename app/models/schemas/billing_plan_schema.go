@@ -3,8 +3,8 @@ package schemas
 import (
 	"time"
 
-	enums "notezy-backend/app/models/schemas/enums"
-	types "notezy-backend/shared/types"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 // This table is only mutatable by the admin, and accessable by both client user and admin.

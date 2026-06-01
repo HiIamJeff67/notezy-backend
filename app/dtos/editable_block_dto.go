@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 
-	enums "notezy-backend/app/models/schemas/enums"
-	blocknote "notezy-backend/shared/lib/blocknote"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	blocknote "github.com/HiIamJeff67/notezy-backend/shared/lib/blocknote"
 )
 
 /* ============================== Arborized Editable Block ============================== */

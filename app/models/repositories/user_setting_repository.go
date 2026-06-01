@@ -6,12 +6,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 
-	exceptions "notezy-backend/app/exceptions"
-	inputs "notezy-backend/app/models/inputs"
-	schemas "notezy-backend/app/models/schemas"
-	options "notezy-backend/app/options"
-	util "notezy-backend/app/util"
-	types "notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
+	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	options "github.com/HiIamJeff67/notezy-backend/app/options"
+	util "github.com/HiIamJeff67/notezy-backend/app/util"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type UserSettingRepositoryInterface interface {

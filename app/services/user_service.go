@@ -7,18 +7,18 @@ import (
 
 	"gorm.io/gorm"
 
-	caches "notezy-backend/app/caches"
-	dtos "notezy-backend/app/dtos"
-	exceptions "notezy-backend/app/exceptions"
-	gqlmodels "notezy-backend/app/graphql/models"
-	models "notezy-backend/app/models"
-	inputs "notezy-backend/app/models/inputs"
-	repositories "notezy-backend/app/models/repositories"
-	schemas "notezy-backend/app/models/schemas"
-	options "notezy-backend/app/options"
-	validation "notezy-backend/app/validation"
-	constants "notezy-backend/shared/constants"
-	searchcursor "notezy-backend/shared/lib/searchcursor"
+	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
+	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
+	models "github.com/HiIamJeff67/notezy-backend/app/models"
+	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
+	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
+	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	options "github.com/HiIamJeff67/notezy-backend/app/options"
+	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
 )
 
 type UserServiceInterface interface {

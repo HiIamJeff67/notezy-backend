@@ -4,7 +4,7 @@ package generated
 
 import (
 	"context"
-	"notezy-backend/app/graphql/scalars"
+	"github.com/HiIamJeff67/notezy-backend/app/graphql/scalars"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"

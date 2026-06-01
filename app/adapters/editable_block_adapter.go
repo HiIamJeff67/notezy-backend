@@ -6,12 +6,12 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 
-	dtos "notezy-backend/app/dtos"
-	exceptions "notezy-backend/app/exceptions"
-	enums "notezy-backend/app/models/schemas/enums"
-	constants "notezy-backend/shared/constants"
-	blocknote "notezy-backend/shared/lib/blocknote"
-	queue "notezy-backend/shared/lib/queue"
+	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	blocknote "github.com/HiIamJeff67/notezy-backend/shared/lib/blocknote"
+	queue "github.com/HiIamJeff67/notezy-backend/shared/lib/queue"
 )
 
 type EditableBlockAdapterInterface interface {

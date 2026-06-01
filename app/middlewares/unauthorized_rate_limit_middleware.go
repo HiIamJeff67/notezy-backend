@@ -3,12 +3,12 @@ package middlewares
 import (
 	"github.com/gin-gonic/gin"
 
-	configs "notezy-backend/app/configs"
-	exceptions "notezy-backend/app/exceptions"
-	logs "notezy-backend/app/monitor/logs"
-	metrics "notezy-backend/app/monitor/metrics"
-	traces "notezy-backend/app/monitor/traces"
-	ratelimit "notezy-backend/shared/lib/ratelimit"
+	configs "github.com/HiIamJeff67/notezy-backend/app/configs"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
+	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
+	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
+	ratelimit "github.com/HiIamJeff67/notezy-backend/shared/lib/ratelimit"
 )
 
 var unauthorizedRateLimiter *ratelimit.HybridRateLimiter

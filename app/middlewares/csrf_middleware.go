@@ -5,11 +5,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	caches "notezy-backend/app/caches"
-	contexts "notezy-backend/app/contexts"
-	exceptions "notezy-backend/app/exceptions"
-	tokens "notezy-backend/app/tokens"
-	types "notezy-backend/shared/types"
+	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	tokens "github.com/HiIamJeff67/notezy-backend/app/tokens"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 /*

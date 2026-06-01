@@ -5,10 +5,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	contexts "notezy-backend/app/contexts"
-	exceptions "notezy-backend/app/exceptions"
-	responsewriter "notezy-backend/shared/lib/responsewriter"
-	types "notezy-backend/shared/types"
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	responsewriter "github.com/HiIamJeff67/notezy-backend/shared/lib/responsewriter"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 // To add additional field to the response with possibly embedded data that is required for the frontend.

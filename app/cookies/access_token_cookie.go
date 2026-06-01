@@ -3,8 +3,8 @@ package cookies
 import (
 	"net/http"
 
-	constants "notezy-backend/shared/constants"
-	types "notezy-backend/shared/types"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 var AccessTokenCookieHandler = NewCookieHandler(

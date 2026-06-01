@@ -3,11 +3,11 @@ package commands
 import (
 	"github.com/spf13/cobra"
 
-	configs "notezy-backend/app/configs"
-	models "notezy-backend/app/models"
-	logs "notezy-backend/app/monitor/logs"
-	traces "notezy-backend/app/monitor/traces"
-	types "notezy-backend/shared/types"
+	configs "github.com/HiIamJeff67/notezy-backend/app/configs"
+	models "github.com/HiIamJeff67/notezy-backend/app/models"
+	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
+	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 var viewAllAvailableDatabasesCommand = &cobra.Command{

@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	constants "notezy-backend/shared/constants"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 var (

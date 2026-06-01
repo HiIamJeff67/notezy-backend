@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	traces "notezy-backend/app/monitor/traces"
+	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 )
 
 const (

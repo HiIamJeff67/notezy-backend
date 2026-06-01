@@ -41,7 +41,7 @@ package main
 import (
 	"fmt"
 
-	stack "notezy-backend/shared/lib/stack"
+	stack "github.com/HiIamJeff67/notezy-backend/shared/lib/stack"
 )
 
 func main() {

@@ -4,7 +4,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 
-	util "notezy-backend/app/util"
+	util "github.com/HiIamJeff67/notezy-backend/app/util"
 )
 
 var OAuthGoogleConfig = &oauth2.Config{

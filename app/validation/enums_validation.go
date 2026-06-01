@@ -3,8 +3,8 @@ package validation
 import (
 	"github.com/go-playground/validator/v10" // make sure we use the version 10
 
-	enums "notezy-backend/app/models/schemas/enums"
-	util "notezy-backend/app/util"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	util "github.com/HiIamJeff67/notezy-backend/app/util"
 )
 
 func RegisterEnumsValidation(validate *validator.Validate) {

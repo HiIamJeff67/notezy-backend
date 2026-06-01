@@ -4,8 +4,8 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	schemas "notezy-backend/app/models/schemas"
-	enums "notezy-backend/app/models/schemas/enums"
+	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 )
 
 type RoutineTagScopeInterface interface {

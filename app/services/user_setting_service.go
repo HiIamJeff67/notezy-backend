@@ -5,13 +5,13 @@ import (
 
 	"gorm.io/gorm"
 
-	dtos "notezy-backend/app/dtos"
-	exceptions "notezy-backend/app/exceptions"
-	models "notezy-backend/app/models"
-	inputs "notezy-backend/app/models/inputs"
-	repositories "notezy-backend/app/models/repositories"
-	options "notezy-backend/app/options"
-	validation "notezy-backend/app/validation"
+	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	models "github.com/HiIamJeff67/notezy-backend/app/models"
+	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
+	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
+	options "github.com/HiIamJeff67/notezy-backend/app/options"
+	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
 )
 
 type UserSettingServiceInterface interface {

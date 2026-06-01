@@ -1,8 +1,8 @@
 package testroutes
 
 import (
-	"notezy-backend/app/graphql"
-	middlewares "notezy-backend/app/middlewares"
+	"github.com/HiIamJeff67/notezy-backend/app/graphql"
+	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
 
 	"github.com/gin-gonic/gin"
 )

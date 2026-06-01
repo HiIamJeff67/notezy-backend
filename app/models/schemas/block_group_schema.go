@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	types "notezy-backend/shared/types"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type BlockGroup struct {

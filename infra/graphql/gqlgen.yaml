@@ -114,7 +114,7 @@ call_argument_directives_with_null: true
 # gqlgen will search for any type names in the schema in these go packages
 # if they match it will use them, otherwise it will generate them.
 autobind:
-  - "notezy-backend/app/models/schemas"
+  - "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 
 # This section declares type mapping between the GraphQL and go type systems
 #
@@ -133,201 +133,201 @@ models:
   # =============== Scalars =============== #
 
   UUID:
-    model: "notezy-backend/app/graphql/scalars.UUID"
+    model: "github.com/HiIamJeff67/notezy-backend/app/graphql/scalars.UUID"
     # marshal: notezy-backend/app/graphql/scalars.MarshalUUID
     # unmarshal: notezy-backend/app/graphql/scalars.UnmarshalUUID
   Time:
-    model: "notezy-backend/app/graphql/scalars.Time"
+    model: "github.com/HiIamJeff67/notezy-backend/app/graphql/scalars.Time"
     # marshal: notezy-backend/app/graphql/scalars.MarshalTime
     # unmarshal: notezy-backend/app/graphql/scalars.UnmarshalTime
   Base64Bytes:
-    model: "notezy-backend/app/graphql/scalars.Base64Bytes"
+    model: "github.com/HiIamJeff67/notezy-backend/app/graphql/scalars.Base64Bytes"
     # marshal: notezy-backend/app/graphql/scalar.MarshalBase64Bytes
     # unmarshal: notezy-backend/app/graphql/scalar.UnmarshalBase64Bytes
 
   # ============================== Corresponded Enums Which Have Prebuilt in Gorm ============================== #
 
   AccessControlPermission:
-    model: "notezy-backend/app/models/schemas/enums.AccessControlPermission"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.AccessControlPermission"
   BadgeType:
-    model: "notezy-backend/app/models/schemas/enums.BadgeType"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.BadgeType"
   CountryCode:
-    model: "notezy-backend/app/models/schemas/enums.CountryCode"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.CountryCode"
     enum_values:
       COUNTRY_CODE_886:
-        value: "notezy-backend/app/models/schemas/enums.CountryCode_Taiwan"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.CountryCode_Taiwan"
       COUNTRY_CODE_81:
-        value: "notezy-backend/app/models/schemas/enums.CountryCode_Japan"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.CountryCode_Japan"
       COUNTRY_CODE_60:
-        value: "notezy-backend/app/models/schemas/enums.CountryCode_Malaysia"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.CountryCode_Malaysia"
       COUNTRY_CODE_65:
-        value: "notezy-backend/app/models/schemas/enums.CountryCode_Singapore"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.CountryCode_Singapore"
       COUNTRY_CODE_86:
-        value: "notezy-backend/app/models/schemas/enums.CountryCode_China"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.CountryCode_China"
       COUNTRY_CODE_1:
-        value: "notezy-backend/app/models/schemas/enums.CountryCode_NANP"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.CountryCode_NANP"
       COUNTRY_CODE_44:
-        value: "notezy-backend/app/models/schemas/enums.CountryCode_UnitedKingdom"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.CountryCode_UnitedKingdom"
       COUNTRY_CODE_61:
-        value: "notezy-backend/app/models/schemas/enums.CountryCode_Australia"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.CountryCode_Australia"
   Country:
-    model: "notezy-backend/app/models/schemas/enums.Country"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.Country"
   ItemType:
-    model: "notezy-backend/app/models/schemas/enums.ItemType"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.ItemType"
     enum_values:
       ItemType_BlockPack:
-        value: "notezy-backend/app/models/schemas/enums.ItemType_BlockPack"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.ItemType_BlockPack"
       ItemType_Material:
-        value: "notezy-backend/app/models/schemas/enums.ItemType_Material"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.ItemType_Material"
   Language:
-    model: "notezy-backend/app/models/schemas/enums.Language"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.Language"
   MaterialContentType:
-    model: "notezy-backend/app/models/schemas/enums.MaterialContentType"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.MaterialContentType"
     enum_values:
       None:
-        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_None"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.MaterialContentType_None"
       Application_JSON:
-        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_JSON"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.MaterialContentType_JSON"
       Application_PDF:
-        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_PDF"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.MaterialContentType_PDF"
       Text_Plain:
-        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_PlainText"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.MaterialContentType_PlainText"
       Text_HTML:
-        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_HTML"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.MaterialContentType_HTML"
       Text_Markdown:
-        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_Markdown"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.MaterialContentType_Markdown"
       Image_PNG:
-        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_PNG"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.MaterialContentType_PNG"
       Image_JPG:
-        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_JPG"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.MaterialContentType_JPG"
       Image_JPEG:
-        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_JPEG"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.MaterialContentType_JPEG"
       Image_GIF:
-        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_GIF"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.MaterialContentType_GIF"
       Image_SVG:
-        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_SVG"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.MaterialContentType_SVG"
       Image_WebP:
-        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_WebP"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.MaterialContentType_WebP"
       Video_MP4:
-        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_MP4"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.MaterialContentType_MP4"
       Video_WebM:
-        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_WebM"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.MaterialContentType_WebM"
       Audio_Mpeg:
-        value: "notezy-backend/app/models/schemas/enums.MaterialContentType_Mpeg"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.MaterialContentType_Mpeg"
   RoutinePeriod:
-    model: "notezy-backend/app/models/schemas/enums.RoutinePeriod"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutinePeriod"
     enum_values:
       RoutinePeriod_Daily:
-        value: "notezy-backend/app/models/schemas/enums.RoutinePeriod_Daily"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutinePeriod_Daily"
       RoutinePeriod_Weekly:
-        value: "notezy-backend/app/models/schemas/enums.RoutinePeriod_Weekly"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutinePeriod_Weekly"
       RoutinePeriod_Monthly:
-        value: "notezy-backend/app/models/schemas/enums.RoutinePeriod_Monthly"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutinePeriod_Monthly"
       RoutinePeriod_Yearly:
-        value: "notezy-backend/app/models/schemas/enums.RoutinePeriod_Yearly"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutinePeriod_Yearly"
   RoutineStatus:
-    model: "notezy-backend/app/models/schemas/enums.RoutineStatus"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineStatus"
     enum_values:
       RoutineStatus_Scheduled:
-        value: "notezy-backend/app/models/schemas/enums.RoutineStatus_Scheduled"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineStatus_Scheduled"
       RoutineStatus_InProgress:
-        value: "notezy-backend/app/models/schemas/enums.RoutineStatus_InProgress"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineStatus_InProgress"
       RoutineStatus_Completed:
-        value: "notezy-backend/app/models/schemas/enums.RoutineStatus_Completed"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineStatus_Completed"
       RoutineStatus_OverDue:
-        value: "notezy-backend/app/models/schemas/enums.RoutineStatus_OverDue"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineStatus_OverDue"
   RoutineTaskPurpose:
-    model: "notezy-backend/app/models/schemas/enums.RoutineTaskPurpose"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose"
     enum_values:
       RoutineTaskPurpose_CreateBlockPack:
-        value: "notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_CreateBlockPack"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_CreateBlockPack"
       RoutineTaskPurpose_DeleteBlockPack:
-        value: "notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_DeleteBlockPack"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_DeleteBlockPack"
       RoutineTaskPurpose_CreateBlock:
-        value: "notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_CreateBlock"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_CreateBlock"
       RoutineTaskPurpose_UpdateBlock:
-        value: "notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_UpdateBlock"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_UpdateBlock"
       RoutineTaskPurpose_DeleteBlock:
-        value: "notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_DeleteBlock"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_DeleteBlock"
   RoutineTaskStatus:
-    model: "notezy-backend/app/models/schemas/enums.RoutineTaskStatus"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskStatus"
     enum_values:
       RoutineTaskStatus_Idle:
-        value: "notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Idle"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Idle"
       RoutineTaskStatus_Waiting:
-        value: "notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Waiting"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Waiting"
       RoutineTaskStatus_Running:
-        value: "notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Running"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Running"
       RoutineTaskStatus_Pause:
-        value: "notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Pause"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Pause"
       RoutineTaskStatus_Cancel:
-        value: "notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Cancel"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Cancel"
       RoutineTaskStatus_Success:
-        value: "notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Success"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Success"
       RoutineTaskStatus_Fail:
-        value: "notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Fail"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Fail"
   SupportedIcon:
-    model: "notezy-backend/app/models/schemas/enums.SupportedIcon"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.SupportedIcon"
     enum_values:
       SupportedIcon_GrinningFace:
-        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_GrinningFace"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.SupportedIcon_GrinningFace"
       SupportedIcon_SmilingFaceWithSmilingEyes:
-        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_SmilingFaceWithSmilingEyes"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.SupportedIcon_SmilingFaceWithSmilingEyes"
       SupportedIcon_RedHeart:
-        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_RedHeart"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.SupportedIcon_RedHeart"
       SupportedIcon_Fire:
-        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_Fire"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.SupportedIcon_Fire"
       SupportedIcon_Star:
-        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_Star"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.SupportedIcon_Star"
       SupportedIcon_Books:
-        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_Books"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.SupportedIcon_Books"
       SupportedIcon_Notebook:
-        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_Notebook"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.SupportedIcon_Notebook"
       SupportedIcon_PencilPaper:
-        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_PencilPaper"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.SupportedIcon_PencilPaper"
       SupportedIcon_Lightbulb:
-        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_Lightbulb"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.SupportedIcon_Lightbulb"
       SupportedIcon_Rocket:
-        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_Rocket"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.SupportedIcon_Rocket"
       SupportedIcon_CheckMark:
-        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_CheckMark"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.SupportedIcon_CheckMark"
       SupportedIcon_Pin:
-        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_Pin"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.SupportedIcon_Pin"
       SupportedIcon_FolderOpen:
-        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_FolderOpen"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.SupportedIcon_FolderOpen"
       SupportedIcon_Calendar:
-        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_Calendar"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.SupportedIcon_Calendar"
       SupportedIcon_Clock:
-        value: "notezy-backend/app/models/schemas/enums.SupportedIcon_Clock"
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.SupportedIcon_Clock"
   UserRole:
-    model: "notezy-backend/app/models/schemas/enums.UserRole"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.UserRole"
   UserPlan:
-    model: "notezy-backend/app/models/schemas/enums.UserPlan"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.UserPlan"
   UserStatus:
-    model: "notezy-backend/app/models/schemas/enums.UserStatus"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.UserStatus"
   UserGender:
-    model: "notezy-backend/app/models/schemas/enums.UserGender"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.UserGender"
 
   # ============================== Corresponded Schemas Which Have Prebuilt in Gorm ============================== #
 
   User:
-    model: "notezy-backend/app/models/schemas.User"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas.User"
   UserInfo:
-    model: "notezy-backend/app/models/schemas.UserInfo"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas.UserInfo"
   UserAccount:
-    model: "notezy-backend/app/models/schemas.UserAccount"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas.UserAccount"
   UserSetting:
-    model: "notezy-backend/app/models/schemas.UserSetting"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas.UserSetting"
   Theme:
-    model: "notezy-backend/app/models/schemas.Theme"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas.Theme"
   Badge:
-    model: "notezy-backend/app/models/schemas.Badge"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas.Badge"
   UsersToBadges:
-    model: "notezy-backend/app/models/schemas.UsersToBadges"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas.UsersToBadges"
   Shelf:
-    model: "notezy-backend/app/models/schemas.Shelf"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas.Shelf"
   Material:
-    model: "notezy-backend/app/models/schemas.Material"
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas.Material"
 
   # The GraphQL spec explicitly states that the Int type is a signed 32-bit
   # integer. Using Go int or int64 to represent it can lead to unexpected

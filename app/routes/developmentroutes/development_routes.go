@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	middlewares "notezy-backend/app/middlewares"
-	constants "notezy-backend/shared/constants"
+	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 var (

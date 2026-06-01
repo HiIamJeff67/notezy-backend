@@ -5,9 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	app "notezy-backend/app"
-	logs "notezy-backend/app/monitor/logs"
-	traces "notezy-backend/app/monitor/traces"
+	app "github.com/HiIamJeff67/notezy-backend/app"
+	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
+	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 )
 
 var rootCommand = &cobra.Command{

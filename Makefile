@@ -8,7 +8,7 @@ view-hotreload-enums:
 psql:
 	docker exec -it notezy-db psql -U jeff -d notezy-db
 
-# =============== Migration Commands =============== #
+# ============================== Migration Commands ============================== #
 migrate-build-db:
 	docker compose exec -T notezy-api ./notezy-backend migrateDB
 migrate-hotreload-db:
@@ -27,7 +27,7 @@ remigrate-hotreload-db:
 	make clear-hotreload-db
 	make migrate-hotreload-db
 
-# =============== Seeding Commands =============== #
+# ============================== Seeding Commands ============================== #
 seed-build-db:
 	docker compose exec -T notezy-api ./notezy-backend seedDB
 seed-hotreload-db:

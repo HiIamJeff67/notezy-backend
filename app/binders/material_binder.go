@@ -10,12 +10,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	contexts "notezy-backend/app/contexts"
-	dtos "notezy-backend/app/dtos"
-	exceptions "notezy-backend/app/exceptions"
-	"notezy-backend/app/models/schemas/enums"
-	constants "notezy-backend/shared/constants"
-	types "notezy-backend/shared/types"
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
+	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type MaterialBinderInterface interface {

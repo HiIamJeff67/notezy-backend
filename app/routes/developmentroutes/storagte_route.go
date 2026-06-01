@@ -6,10 +6,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	middlewares "notezy-backend/app/middlewares"
-	logs "notezy-backend/app/monitor/logs"
-	traces "notezy-backend/app/monitor/traces"
-	storages "notezy-backend/app/storages"
+	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
+	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
+	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
+	storages "github.com/HiIamJeff67/notezy-backend/app/storages"
 )
 
 func configureStorageRoutes() {

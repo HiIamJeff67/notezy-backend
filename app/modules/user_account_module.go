@@ -1,12 +1,12 @@
 package modules
 
 import (
-	binders "notezy-backend/app/binders"
-	"notezy-backend/app/configs"
-	controllers "notezy-backend/app/controllers"
-	models "notezy-backend/app/models"
-	repositories "notezy-backend/app/models/repositories"
-	services "notezy-backend/app/services"
+	binders "github.com/HiIamJeff67/notezy-backend/app/binders"
+	"github.com/HiIamJeff67/notezy-backend/app/configs"
+	controllers "github.com/HiIamJeff67/notezy-backend/app/controllers"
+	models "github.com/HiIamJeff67/notezy-backend/app/models"
+	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
+	services "github.com/HiIamJeff67/notezy-backend/app/services"
 )
 
 type UserAccountModule struct {

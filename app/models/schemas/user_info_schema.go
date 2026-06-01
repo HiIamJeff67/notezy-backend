@@ -5,9 +5,9 @@ import (
 
 	"github.com/google/uuid"
 
-	gqlmodels "notezy-backend/app/graphql/models"
-	enums "notezy-backend/app/models/schemas/enums"
-	types "notezy-backend/shared/types"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type UserInfo struct {

@@ -1,10 +1,10 @@
 package triggers
 
 import (
-	accountingtriggersql "notezy-backend/app/models/schemas/triggers/accounting_triggers"
-	itemprojectiontriggersql "notezy-backend/app/models/schemas/triggers/item_projection_triggers"
-	maintainingblocktriggers "notezy-backend/app/models/schemas/triggers/maintaining_block_triggers"
-	shelfitemcascadingtriggersql "notezy-backend/app/models/schemas/triggers/shelf_item_cascading_triggers"
+	accountingtriggersql "github.com/HiIamJeff67/notezy-backend/app/models/schemas/triggers/accounting_triggers"
+	itemprojectiontriggersql "github.com/HiIamJeff67/notezy-backend/app/models/schemas/triggers/item_projection_triggers"
+	maintainingblocktriggers "github.com/HiIamJeff67/notezy-backend/app/models/schemas/triggers/maintaining_block_triggers"
+	shelfitemcascadingtriggersql "github.com/HiIamJeff67/notezy-backend/app/models/schemas/triggers/shelf_item_cascading_triggers"
 )
 
 var MigratingTriggerSQLs = []string{

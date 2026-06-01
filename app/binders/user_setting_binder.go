@@ -3,9 +3,9 @@ package binders
 import (
 	"github.com/gin-gonic/gin"
 
-	contexts "notezy-backend/app/contexts"
-	dtos "notezy-backend/app/dtos"
-	types "notezy-backend/shared/types"
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
+	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type UserSettingBinderInterface interface {

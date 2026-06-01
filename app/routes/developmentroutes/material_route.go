@@ -6,12 +6,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/otel"
 
-	adapters "notezy-backend/app/adapters"
-	interceptors "notezy-backend/app/interceptors"
-	middlewares "notezy-backend/app/middlewares"
-	modules "notezy-backend/app/modules"
-	metrics "notezy-backend/app/monitor/metrics"
-	constants "notezy-backend/shared/constants"
+	adapters "github.com/HiIamJeff67/notezy-backend/app/adapters"
+	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
+	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
+	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
+	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 func configureDevelopmentMaterialRoutes() {

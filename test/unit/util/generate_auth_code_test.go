@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"testing"
 
-	util "notezy-backend/app/util"
-	constants "notezy-backend/shared/constants"
+	util "github.com/HiIamJeff67/notezy-backend/app/util"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 /* ============================== Test GenerateAuthCode() ============================== */

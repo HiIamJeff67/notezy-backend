@@ -7,8 +7,8 @@ import (
 
 	"golang.org/x/oauth2"
 
-	dtos "notezy-backend/app/dtos"
-	exceptions "notezy-backend/app/exceptions"
+	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 )
 
 type OAuthServiceInterface interface {

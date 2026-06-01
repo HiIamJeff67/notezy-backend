@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	dtos "notezy-backend/app/dtos"
-	services "notezy-backend/app/services"
+	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
+	services "github.com/HiIamJeff67/notezy-backend/app/services"
 )
 
 type SubShelfControllerInterface interface {

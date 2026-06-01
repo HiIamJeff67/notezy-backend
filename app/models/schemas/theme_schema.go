@@ -6,8 +6,8 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	gqlmodels "notezy-backend/app/graphql/models"
-	types "notezy-backend/shared/types"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type Theme struct {

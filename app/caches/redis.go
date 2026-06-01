@@ -8,13 +8,13 @@ import (
 
 	"github.com/go-redis/redis"
 
-	redislibraries "notezy-backend/app/caches/libraries"
-	configs "notezy-backend/app/configs"
-	exceptions "notezy-backend/app/exceptions"
-	logs "notezy-backend/app/monitor/logs"
-	traces "notezy-backend/app/monitor/traces"
-	util "notezy-backend/app/util"
-	types "notezy-backend/shared/types"
+	redislibraries "github.com/HiIamJeff67/notezy-backend/app/caches/libraries"
+	configs "github.com/HiIamJeff67/notezy-backend/app/configs"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
+	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
+	util "github.com/HiIamJeff67/notezy-backend/app/util"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 var (

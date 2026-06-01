@@ -38,7 +38,7 @@ package main
 import (
 	"fmt"
 
-	queue "notezy-backend/shared/lib/queue"
+	queue "github.com/HiIamJeff67/notezy-backend/shared/lib/queue"
 )
 
 func main() {

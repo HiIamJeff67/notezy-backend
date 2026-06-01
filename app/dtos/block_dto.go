@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 
-	enums "notezy-backend/app/models/schemas/enums"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 )
 
 /* ============================== Request DTO ============================== */

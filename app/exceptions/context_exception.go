@@ -3,8 +3,9 @@ package exceptions
 import (
 	"fmt"
 	"net/http"
-	traces "notezy-backend/app/monitor/traces"
 	"strings"
+
+	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 )
 
 const (

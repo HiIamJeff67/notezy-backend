@@ -7,11 +7,11 @@ import (
 
 	"gorm.io/gorm"
 
-	exceptions "notezy-backend/app/exceptions"
-	gqlmodels "notezy-backend/app/graphql/models"
-	schemas "notezy-backend/app/models/schemas"
-	constants "notezy-backend/shared/constants"
-	searchcursor "notezy-backend/shared/lib/searchcursor"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
+	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
 )
 
 type ThemeServiceInterface interface {

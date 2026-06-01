@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"testing"
 
-	util "notezy-backend/app/util"
+	util "github.com/HiIamJeff67/notezy-backend/app/util"
 )
 
 /* ============================== Test GenerateRandomFakeDisplayName() ============================== */

@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	enums "notezy-backend/app/models/schemas/enums"
-	types "notezy-backend/shared/types"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type SyncBlockGroup struct {

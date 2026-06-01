@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	testTargetPath = "notezy-backend/app/util/"
+	testTargetPath = "github.com/HiIamJeff67/notezy-backend/app/util/"
 )
 
 func TestFeatureInParallel(t *testing.T) {

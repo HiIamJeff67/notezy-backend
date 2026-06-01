@@ -1,4 +1,4 @@
-module notezy-backend
+module github.com/HiIamJeff67/notezy-backend
 
 go 1.26.0
 

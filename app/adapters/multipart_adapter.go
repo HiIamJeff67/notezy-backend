@@ -9,9 +9,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	exceptions "notezy-backend/app/exceptions"
-	constants "notezy-backend/shared/constants"
-	types "notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 func MultipartAdapter() gin.HandlerFunc {

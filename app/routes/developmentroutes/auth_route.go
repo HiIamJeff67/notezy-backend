@@ -5,12 +5,12 @@ import (
 
 	"go.opentelemetry.io/otel"
 
-	interceptors "notezy-backend/app/interceptors"
-	middlewares "notezy-backend/app/middlewares"
-	enums "notezy-backend/app/models/schemas/enums"
-	modules "notezy-backend/app/modules"
-	metrics "notezy-backend/app/monitor/metrics"
-	constants "notezy-backend/shared/constants"
+	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
+	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
+	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 func configureDevelopmentAuthRoutes() {

@@ -6,11 +6,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 
-	exceptions "notezy-backend/app/exceptions"
-	inputs "notezy-backend/app/models/inputs"
-	schemas "notezy-backend/app/models/schemas"
-	options "notezy-backend/app/options"
-	util "notezy-backend/app/util"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
+	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	options "github.com/HiIamJeff67/notezy-backend/app/options"
+	util "github.com/HiIamJeff67/notezy-backend/app/util"
 )
 
 type ThemeRepositoryInterface interface {

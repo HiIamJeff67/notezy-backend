@@ -5,11 +5,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	contexts "notezy-backend/app/contexts"
-	cookies "notezy-backend/app/cookies"
-	exceptions "notezy-backend/app/exceptions"
-	responsewriter "notezy-backend/shared/lib/responsewriter"
-	types "notezy-backend/shared/types"
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
+	cookies "github.com/HiIamJeff67/notezy-backend/app/cookies"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	responsewriter "github.com/HiIamJeff67/notezy-backend/shared/lib/responsewriter"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 // To add additional field to the response with adding additional field of `newAccessToken` and `newCSRFToken`,

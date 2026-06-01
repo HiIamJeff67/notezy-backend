@@ -1,13 +1,13 @@
 package modules
 
 import (
-	binders "notezy-backend/app/binders"
-	controllers "notezy-backend/app/controllers"
-	models "notezy-backend/app/models"
-	repositories "notezy-backend/app/models/repositories"
-	scopes "notezy-backend/app/models/scopes"
-	services "notezy-backend/app/services"
-	storages "notezy-backend/app/storages"
+	binders "github.com/HiIamJeff67/notezy-backend/app/binders"
+	controllers "github.com/HiIamJeff67/notezy-backend/app/controllers"
+	models "github.com/HiIamJeff67/notezy-backend/app/models"
+	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
+	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
+	services "github.com/HiIamJeff67/notezy-backend/app/services"
+	storages "github.com/HiIamJeff67/notezy-backend/app/storages"
 )
 
 type SubShelfModule struct {

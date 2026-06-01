@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	enums "notezy-backend/app/models/schemas/enums"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 )
 
 /* ============================== Request DTO ============================== */

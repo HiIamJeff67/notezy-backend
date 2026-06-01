@@ -5,8 +5,8 @@ import (
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 
-	exceptions "notezy-backend/app/exceptions"
-	metrics "notezy-backend/app/monitor/metrics"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
 )
 
 func ApplyTracerMiddleware(tracer trace.Tracer, spanName string) gin.HandlerFunc {

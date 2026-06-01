@@ -1,8 +1,8 @@
 package resolvers
 
 import (
-	dataloaders "notezy-backend/app/graphql/dataloaders"
-	services "notezy-backend/app/services"
+	dataloaders "github.com/HiIamJeff67/notezy-backend/app/graphql/dataloaders"
+	services "github.com/HiIamJeff67/notezy-backend/app/services"
 )
 
 // This file will not be regenerated automatically.

@@ -1,9 +1,9 @@
 package constraints
 
 import (
-	blockconstraints "notezy-backend/app/models/schemas/constraints/block_constraints"
-	routineconstraints "notezy-backend/app/models/schemas/constraints/routine_constraints"
-	userstobillingplansconstraints "notezy-backend/app/models/schemas/constraints/users_to_billing_plans_constraints"
+	blockconstraints "github.com/HiIamJeff67/notezy-backend/app/models/schemas/constraints/block_constraints"
+	routineconstraints "github.com/HiIamJeff67/notezy-backend/app/models/schemas/constraints/routine_constraints"
+	userstobillingplansconstraints "github.com/HiIamJeff67/notezy-backend/app/models/schemas/constraints/users_to_billing_plans_constraints"
 )
 
 var MigratingConstraintSQLs = []string{

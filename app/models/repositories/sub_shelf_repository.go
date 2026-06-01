@@ -9,15 +9,15 @@ import (
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm/clause"
 
-	exceptions "notezy-backend/app/exceptions"
-	inputs "notezy-backend/app/models/inputs"
-	schemas "notezy-backend/app/models/schemas"
-	enums "notezy-backend/app/models/schemas/enums"
-	scopes "notezy-backend/app/models/scopes"
-	options "notezy-backend/app/options"
-	util "notezy-backend/app/util"
-	array "notezy-backend/shared/lib/array"
-	types "notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
+	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
+	options "github.com/HiIamJeff67/notezy-backend/app/options"
+	util "github.com/HiIamJeff67/notezy-backend/app/util"
+	array "github.com/HiIamJeff67/notezy-backend/shared/lib/array"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type SubShelfRepositoryInterface interface {

@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	constants "notezy-backend/shared/constants"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 var (

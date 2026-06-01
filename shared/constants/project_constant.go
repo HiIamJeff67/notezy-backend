@@ -1,9 +1,9 @@
 package constants
 
-import types "notezy-backend/shared/types"
+import types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
 const (
-	ServiceName string = "notezy-backend"
+	ServiceName string = "github.com/HiIamJeff67/notezy-backend"
 )
 
 const (

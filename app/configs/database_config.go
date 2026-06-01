@@ -1,6 +1,6 @@
 package configs
 
-import util "notezy-backend/app/util"
+import util "github.com/HiIamJeff67/notezy-backend/app/util"
 
 type DatabaseConfig struct {
 	Host     string

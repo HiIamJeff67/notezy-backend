@@ -3,9 +3,9 @@ package middlewares
 import (
 	"github.com/gin-gonic/gin"
 
-	exceptions "notezy-backend/app/exceptions"
-	enums "notezy-backend/app/models/schemas/enums"
-	types "notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 // This UserPlanMiddleware() MUST be processed AFTER the AuthMiddleware()

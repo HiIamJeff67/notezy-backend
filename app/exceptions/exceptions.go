@@ -16,11 +16,11 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
 
-	logs "notezy-backend/app/monitor/logs"
-	metrics "notezy-backend/app/monitor/metrics"
-	traces "notezy-backend/app/monitor/traces"
-	constants "notezy-backend/shared/constants"
-	types "notezy-backend/shared/types"
+	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
+	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
+	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 /* ============================== Exception Field Type Definition ============================== */

@@ -5,10 +5,10 @@ import (
 
 	"gorm.io/gorm"
 
-	exceptions "notezy-backend/app/exceptions"
-	gqlmodels "notezy-backend/app/graphql/models"
-	models "notezy-backend/app/models"
-	schemas "notezy-backend/app/models/schemas"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
+	models "github.com/HiIamJeff67/notezy-backend/app/models"
+	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 )
 
 type BadgeServiceInterface interface {

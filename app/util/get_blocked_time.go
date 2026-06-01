@@ -3,8 +3,8 @@ package util
 import (
 	"time"
 
-	exceptions "notezy-backend/app/exceptions"
-	constants "notezy-backend/shared/constants"
+	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 /* ============================== Block Control of Login ============================== */

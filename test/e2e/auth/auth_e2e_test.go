@@ -7,14 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	configs "notezy-backend/app/configs"
-	models "notezy-backend/app/models"
-	testroutes "notezy-backend/app/routes/testroutes"
-	test "notezy-backend/test"
+	configs "github.com/HiIamJeff67/notezy-backend/app/configs"
+	models "github.com/HiIamJeff67/notezy-backend/app/models"
+	testroutes "github.com/HiIamJeff67/notezy-backend/app/routes/testroutes"
+	test "github.com/HiIamJeff67/notezy-backend/test"
 )
 
 const (
-	testTargetPath         = "notezy-backend/app/routes/test_routes/auth_route.go"
+	testTargetPath         = "github.com/HiIamJeff67/notezy-backend/app/routes/test_routes/auth_route.go"
 	testAuthRouteNamespace = "/testRoute/auth"
 )
 
