@@ -9,9 +9,9 @@ import (
 )
 
 type RoutinesToTags struct {
-	RoutineId uuid.UUID `json:"routineId" gorm:"routine_id; type:uuid; primaryKey;"`
-	TagId     uuid.UUID `json:"tagId" gorm:"tag_id; type:uuid; primaryKey;"`
-	CreatedAt time.Time `json:"createdAt" gorm:"created_at; type:timestamptz; not null; autoCreateTime:true;"`
+	RoutineId uuid.UUID `json:"routineId" gorm:"column:routine_id; type:uuid; primaryKey;"`
+	TagId     uuid.UUID `json:"tagId" gorm:"column:tag_id; type:uuid; primaryKey;"`
+	CreatedAt time.Time `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 
 	// relations
 	Routine Routine    `json:"routine" gorm:"foreignKey:RoutineId; reference:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`

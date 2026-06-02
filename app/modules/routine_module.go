@@ -15,11 +15,19 @@ type RoutineModule struct {
 }
 
 func NewRoutineModule() *RoutineModule {
+	stationRepository := repositories.NewStationRepository(scopes.NewStationScope())
 	routineRepository := repositories.NewRoutineRepository(scopes.NewRoutineScope())
+	routineTagRepository := repositories.NewRoutineTagRepository(scopes.NewRoutineTagScope())
+	routineTaskRepository := repositories.NewRoutineTaskRepository(scopes.NewRoutineTaskScope())
+	itemRepository := repositories.NewItemRepository(scopes.NewItemScope())
 
 	routineService := services.NewRoutineService(
 		models.NotezyDB,
+		stationRepository,
 		routineRepository,
+		routineTagRepository,
+		routineTaskRepository,
+		itemRepository,
 	)
 
 	routineBinder := binders.NewRoutineBinder()

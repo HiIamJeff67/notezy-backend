@@ -18,6 +18,12 @@ type RoutineBinderInterface interface {
 	BindCreateRoutinesByStationIds(controllerFunc types.ControllerFunc[*dtos.CreateRoutinesByStationIdsReqDto]) gin.HandlerFunc
 	BindUpdateMyRoutineById(controllerFunc types.ControllerFunc[*dtos.UpdateMyRoutineByIdReqDto]) gin.HandlerFunc
 	BindUpdateMyRoutinesByIds(controllerFunc types.ControllerFunc[*dtos.UpdateMyRoutinesByIdsReqDto]) gin.HandlerFunc
+	BindLinkRoutineTagById(controllerFunc types.ControllerFunc[*dtos.LinkRoutineTagByIdReqDto]) gin.HandlerFunc
+	BindBulkLinkRoutineTagsByIds(controllerFunc types.ControllerFunc[*dtos.BulkLinkRoutineTagsByIdsReqDto]) gin.HandlerFunc
+	BindLinkRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.LinkRoutineTaskByIdReqDto]) gin.HandlerFunc
+	BindBulkLinkRoutineTasksByIds(controllerFunc types.ControllerFunc[*dtos.BulkLinkRoutineTasksByIdsReqDto]) gin.HandlerFunc
+	BindLinkRoutineItemById(controllerFunc types.ControllerFunc[*dtos.LinkRoutineItemByIdReqDto]) gin.HandlerFunc
+	BindBulkLinkRoutineItemsByIds(controllerFunc types.ControllerFunc[*dtos.BulkLinkRoutineItemsByIdsReqDto]) gin.HandlerFunc
 	BindRestoreMyRoutineById(controllerFunc types.ControllerFunc[*dtos.RestoreMyRoutineByIdReqDto]) gin.HandlerFunc
 	BindRestoreMyRoutinesByIds(controllerFunc types.ControllerFunc[*dtos.RestoreMyRoutinesByIdsReqDto]) gin.HandlerFunc
 	BindDeleteMyRoutineById(controllerFunc types.ControllerFunc[*dtos.DeleteMyRoutineByIdReqDto]) gin.HandlerFunc
@@ -138,6 +144,144 @@ func (b *RoutineBinder) BindUpdateMyRoutineById(controllerFunc types.ControllerF
 func (b *RoutineBinder) BindUpdateMyRoutinesByIds(controllerFunc types.ControllerFunc[*dtos.UpdateMyRoutinesByIdsReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.UpdateMyRoutinesByIdsReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exception := exceptions.Routine.InvalidDto().WithOrigin(err)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RoutineBinder) BindLinkRoutineTagById(controllerFunc types.ControllerFunc[*dtos.LinkRoutineTagByIdReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.LinkRoutineTagByIdReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exception := exceptions.Routine.InvalidDto().WithOrigin(err)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RoutineBinder) BindBulkLinkRoutineTagsByIds(controllerFunc types.ControllerFunc[*dtos.BulkLinkRoutineTagsByIdsReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.BulkLinkRoutineTagsByIdsReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exception := exceptions.Routine.InvalidDto().WithOrigin(err)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RoutineBinder) BindLinkRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.LinkRoutineTaskByIdReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.LinkRoutineTaskByIdReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exception := exceptions.Routine.InvalidDto().WithOrigin(err)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RoutineBinder) BindBulkLinkRoutineTasksByIds(controllerFunc types.ControllerFunc[*dtos.BulkLinkRoutineTasksByIdsReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.BulkLinkRoutineTasksByIdsReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exception := exceptions.Routine.InvalidDto().WithOrigin(err)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RoutineBinder) BindLinkRoutineItemById(controllerFunc types.ControllerFunc[*dtos.LinkRoutineItemByIdReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.LinkRoutineItemByIdReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exception := exceptions.Routine.InvalidDto().WithOrigin(err)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RoutineBinder) BindBulkLinkRoutineItemsByIds(controllerFunc types.ControllerFunc[*dtos.BulkLinkRoutineItemsByIdsReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.BulkLinkRoutineItemsByIdsReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 

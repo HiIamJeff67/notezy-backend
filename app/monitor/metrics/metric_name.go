@@ -58,6 +58,12 @@ type metricNameRoutine struct {
 	CreateRoutinesByStationIds string
 	UpdateMyRoutineById        string
 	UpdateMyRoutinesByIds      string
+	LinkRoutineTagById         string
+	BulkLinkRoutineTagsByIds   string
+	LinkRoutineTaskById        string
+	BulkLinkRoutineTasksByIds  string
+	LinkRoutineItemById        string
+	BulkLinkRoutineItemsByIds  string
 	RestoreMyRoutineById       string
 	RestoreMyRoutinesByIds     string
 	DeleteMyRoutineById        string
@@ -288,6 +294,12 @@ var MetricNames = struct {
 				CreateRoutinesByStationIds: "server.requests.routine.createRoutinesByStationIds",
 				UpdateMyRoutineById:        "server.requests.routine.updateMyRoutineById",
 				UpdateMyRoutinesByIds:      "server.requests.routine.updateMyRoutinesByIds",
+				LinkRoutineTagById:         "server.requests.routine.linkRoutineTagById",
+				BulkLinkRoutineTagsByIds:   "server.requests.routine.bulkLinkRoutineTagsByIds",
+				LinkRoutineTaskById:        "server.requests.routine.linkRoutineTaskById",
+				BulkLinkRoutineTasksByIds:  "server.requests.routine.bulkLinkRoutineTasksByIds",
+				LinkRoutineItemById:        "server.requests.routine.linkRoutineItemById",
+				BulkLinkRoutineItemsByIds:  "server.requests.routine.bulkLinkRoutineItemsByIds",
 				RestoreMyRoutineById:       "server.requests.routine.restoreMyRoutineById",
 				RestoreMyRoutinesByIds:     "server.requests.routine.restoreMyRoutinesByIds",
 				DeleteMyRoutineById:        "server.requests.routine.deleteMyRoutineById",

@@ -131,6 +131,116 @@ type UpdateMyRoutinesByIdsReqDto struct {
 	]
 }
 
+type LinkRoutineTagByIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		struct {
+			RoutineId    uuid.UUID `json:"routineId" validate:"required"`
+			RoutineTagId uuid.UUID `json:"routineTagId" validate:"required"`
+			IsUnlink     bool      `json:"isUnlink"`
+		},
+		any,
+	]
+}
+
+type BulkLinkRoutineTagsByIdsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		struct {
+			LinkedRoutinesAndTags []struct {
+				RoutineId    uuid.UUID `json:"routineId" validate:"required"`
+				RoutineTagId uuid.UUID `json:"routineTagId" validate:"required"`
+			} `json:"linkedRoutinesAndTags" validate:"required,min=1,max=1024"`
+			IsUnlink bool `json:"isUnlink"`
+		},
+		any,
+	]
+}
+
+type LinkRoutineTaskByIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		struct {
+			RoutineId     uuid.UUID `json:"routineId" validate:"required"`
+			RoutineTaskId uuid.UUID `json:"routineTaskId" validate:"required"`
+			IsUnlink      bool      `json:"isUnlink"`
+		},
+		any,
+	]
+}
+
+type BulkLinkRoutineTasksByIdsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		struct {
+			LinkedRoutinesAndTasks []struct {
+				RoutineId     uuid.UUID `json:"routineId" validate:"required"`
+				RoutineTaskId uuid.UUID `json:"routineTaskId" validate:"required"`
+			} `json:"linkedRoutinesAndTasks" validate:"required,min=1,max=1024"`
+			IsUnlink bool `json:"isUnlink"`
+		},
+		any,
+	]
+}
+
+type LinkRoutineItemByIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		struct {
+			RoutineId uuid.UUID      `json:"routineId" validate:"required"`
+			ItemId    uuid.UUID      `json:"itemId" validate:"required"`
+			ItemType  enums.ItemType `json:"itemType" validate:"required,isitemtype"`
+			IsUnlink  bool           `json:"isUnlink"`
+		},
+		any,
+	]
+}
+
+type BulkLinkRoutineItemsByIdsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		struct {
+			LinkedRoutinesAndItems []struct {
+				RoutineId uuid.UUID      `json:"routineId" validate:"required"`
+				ItemId    uuid.UUID      `json:"itemId" validate:"required"`
+				ItemType  enums.ItemType `json:"itemType" validate:"required,isitemtype"`
+			} `json:"linkedRoutinesAndItems" validate:"required,min=1,max=1024"`
+			IsUnlink bool `json:"isUnlink"`
+		},
+		any,
+	]
+}
+
 type RestoreMyRoutineByIdReqDto struct {
 	NotezyRequest[
 		struct {
@@ -254,6 +364,30 @@ type UpdateMyRoutineByIdResDto struct {
 }
 
 type UpdateMyRoutinesByIdsResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type LinkRoutineTagByIdResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type BulkLinkRoutineTagsByIdsResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type LinkRoutineTaskByIdResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type BulkLinkRoutineTasksByIdsResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type LinkRoutineItemByIdResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type BulkLinkRoutineItemsByIdsResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 

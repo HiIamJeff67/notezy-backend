@@ -107,6 +107,102 @@ func configureDevelopmentRoutineRoutes() {
 				),
 			)...,
 		)
+		routineRoutes.POST(
+			"/linkRoutineTagById",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "linkRoutineTagById"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.Routine.LinkRoutineTagById,
+					),
+				},
+				defaultMiddlewares,
+				routineModule.Binder.BindLinkRoutineTagById(
+					routineModule.Controller.LinkRoutineTagById,
+				),
+			)...,
+		)
+		routineRoutes.POST(
+			"/bulkLinkRoutineTagsByIds",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "bulkLinkRoutineTagsByIds"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.Routine.BulkLinkRoutineTagsByIds,
+					),
+				},
+				defaultMiddlewares,
+				routineModule.Binder.BindBulkLinkRoutineTagsByIds(
+					routineModule.Controller.BulkLinkRoutineTagsByIds,
+				),
+			)...,
+		)
+		routineRoutes.POST(
+			"/linkRoutineTaskById",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "linkRoutineTaskById"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.Routine.LinkRoutineTaskById,
+					),
+				},
+				defaultMiddlewares,
+				routineModule.Binder.BindLinkRoutineTaskById(
+					routineModule.Controller.LinkRoutineTaskById,
+				),
+			)...,
+		)
+		routineRoutes.POST(
+			"/bulkLinkRoutineTasksByIds",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "bulkLinkRoutineTasksByIds"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.Routine.BulkLinkRoutineTasksByIds,
+					),
+				},
+				defaultMiddlewares,
+				routineModule.Binder.BindBulkLinkRoutineTasksByIds(
+					routineModule.Controller.BulkLinkRoutineTasksByIds,
+				),
+			)...,
+		)
+		routineRoutes.POST(
+			"/linkRoutineItemById",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "linkRoutineItemById"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.Routine.LinkRoutineItemById,
+					),
+				},
+				defaultMiddlewares,
+				routineModule.Binder.BindLinkRoutineItemById(
+					routineModule.Controller.LinkRoutineItemById,
+				),
+			)...,
+		)
+		routineRoutes.POST(
+			"/bulkLinkRoutineItemsByIds",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "bulkLinkRoutineItemsByIds"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.Routine.BulkLinkRoutineItemsByIds,
+					),
+				},
+				defaultMiddlewares,
+				routineModule.Binder.BindBulkLinkRoutineItemsByIds(
+					routineModule.Controller.BulkLinkRoutineItemsByIds,
+				),
+			)...,
+		)
 		routineRoutes.PATCH(
 			"/restoreMyRoutineById",
 			middlewares.RepositionMiddleware(

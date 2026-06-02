@@ -15,6 +15,12 @@ type RoutineControllerInterface interface {
 	CreateRoutinesByStationIds(ctx *gin.Context, reqDto *dtos.CreateRoutinesByStationIdsReqDto)
 	UpdateMyRoutineById(ctx *gin.Context, reqDto *dtos.UpdateMyRoutineByIdReqDto)
 	UpdateMyRoutinesByIds(ctx *gin.Context, reqDto *dtos.UpdateMyRoutinesByIdsReqDto)
+	LinkRoutineTagById(ctx *gin.Context, reqDto *dtos.LinkRoutineTagByIdReqDto)
+	BulkLinkRoutineTagsByIds(ctx *gin.Context, reqDto *dtos.BulkLinkRoutineTagsByIdsReqDto)
+	LinkRoutineTaskById(ctx *gin.Context, reqDto *dtos.LinkRoutineTaskByIdReqDto)
+	BulkLinkRoutineTasksByIds(ctx *gin.Context, reqDto *dtos.BulkLinkRoutineTasksByIdsReqDto)
+	LinkRoutineItemById(ctx *gin.Context, reqDto *dtos.LinkRoutineItemByIdReqDto)
+	BulkLinkRoutineItemsByIds(ctx *gin.Context, reqDto *dtos.BulkLinkRoutineItemsByIdsReqDto)
 	RestoreMyRoutineById(ctx *gin.Context, reqDto *dtos.RestoreMyRoutineByIdReqDto)
 	RestoreMyRoutinesByIds(ctx *gin.Context, reqDto *dtos.RestoreMyRoutinesByIdsReqDto)
 	DeleteMyRoutineById(ctx *gin.Context, reqDto *dtos.DeleteMyRoutineByIdReqDto)
@@ -91,6 +97,90 @@ func (c *RoutineController) UpdateMyRoutineById(ctx *gin.Context, reqDto *dtos.U
 
 func (c *RoutineController) UpdateMyRoutinesByIds(ctx *gin.Context, reqDto *dtos.UpdateMyRoutinesByIdsReqDto) {
 	resDto, exception := c.routineService.UpdateMyRoutinesByIds(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RoutineController) LinkRoutineTagById(ctx *gin.Context, reqDto *dtos.LinkRoutineTagByIdReqDto) {
+	resDto, exception := c.routineService.LinkRoutineTagById(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RoutineController) BulkLinkRoutineTagsByIds(ctx *gin.Context, reqDto *dtos.BulkLinkRoutineTagsByIdsReqDto) {
+	resDto, exception := c.routineService.BulkLinkRoutineTagsByIds(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RoutineController) LinkRoutineTaskById(ctx *gin.Context, reqDto *dtos.LinkRoutineTaskByIdReqDto) {
+	resDto, exception := c.routineService.LinkRoutineTaskById(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RoutineController) BulkLinkRoutineTasksByIds(ctx *gin.Context, reqDto *dtos.BulkLinkRoutineTasksByIdsReqDto) {
+	resDto, exception := c.routineService.BulkLinkRoutineTasksByIds(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RoutineController) LinkRoutineItemById(ctx *gin.Context, reqDto *dtos.LinkRoutineItemByIdReqDto) {
+	resDto, exception := c.routineService.LinkRoutineItemById(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RoutineController) BulkLinkRoutineItemsByIds(ctx *gin.Context, reqDto *dtos.BulkLinkRoutineItemsByIdsReqDto) {
+	resDto, exception := c.routineService.BulkLinkRoutineItemsByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
