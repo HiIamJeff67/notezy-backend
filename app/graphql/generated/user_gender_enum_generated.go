@@ -4,9 +4,9 @@ package generated
 
 import (
 	"context"
-	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -40,13 +40,13 @@ import (
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalNUserGender2notezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserGender(ctx context.Context, v any) (enums.UserGender, error) {
+func (ec *executionContext) unmarshalNUserGender2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserGender(ctx context.Context, v any) (enums.UserGender, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	res := enums.UserGender(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNUserGender2notezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserGender(ctx context.Context, sel ast.SelectionSet, v enums.UserGender) graphql.Marshaler {
+func (ec *executionContext) marshalNUserGender2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserGender(ctx context.Context, sel ast.SelectionSet, v enums.UserGender) graphql.Marshaler {
 	_ = sel
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {

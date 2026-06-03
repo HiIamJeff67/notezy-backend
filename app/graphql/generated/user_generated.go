@@ -6,14 +6,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
-	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
+	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -191,7 +191,7 @@ func (ec *executionContext) _PublicUser_role(ctx context.Context, field graphql.
 	}
 	res := resTmp.(enums.UserRole)
 	fc.Result = res
-	return ec.marshalNUserRole2notezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserRole(ctx, field.Selections, res)
+	return ec.marshalNUserRole2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserRole(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PublicUser_role(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -235,7 +235,7 @@ func (ec *executionContext) _PublicUser_plan(ctx context.Context, field graphql.
 	}
 	res := resTmp.(enums.UserPlan)
 	fc.Result = res
-	return ec.marshalNUserPlan2notezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserPlan(ctx, field.Selections, res)
+	return ec.marshalNUserPlan2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserPlan(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PublicUser_plan(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -279,7 +279,7 @@ func (ec *executionContext) _PublicUser_status(ctx context.Context, field graphq
 	}
 	res := resTmp.(enums.UserStatus)
 	fc.Result = res
-	return ec.marshalNUserStatus2notezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserStatus(ctx, field.Selections, res)
+	return ec.marshalNUserStatus2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PublicUser_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -367,7 +367,7 @@ func (ec *executionContext) _PublicUser_userInfo(ctx context.Context, field grap
 	}
 	res := resTmp.(*gqlmodels.PublicUserInfo)
 	fc.Result = res
-	return ec.marshalNPublicUserInfo2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUserInfo(ctx, field.Selections, res)
+	return ec.marshalNPublicUserInfo2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUserInfo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PublicUser_userInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -427,7 +427,7 @@ func (ec *executionContext) _PublicUser_badges(ctx context.Context, field graphq
 	}
 	res := resTmp.([]*gqlmodels.PublicBadge)
 	fc.Result = res
-	return ec.marshalNPublicBadge2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicBadgeᚄ(ctx, field.Selections, res)
+	return ec.marshalNPublicBadge2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicBadgeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PublicUser_badges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -487,7 +487,7 @@ func (ec *executionContext) _PublicUser_themes(ctx context.Context, field graphq
 	}
 	res := resTmp.([]*gqlmodels.PublicTheme)
 	fc.Result = res
-	return ec.marshalNPublicTheme2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicThemeᚄ(ctx, field.Selections, res)
+	return ec.marshalNPublicTheme2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicThemeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PublicUser_themes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -625,7 +625,7 @@ func (ec *executionContext) _PublicUser(ctx context.Context, sel ast.SelectionSe
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNPublicUser2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.PublicUser) graphql.Marshaler {
+func (ec *executionContext) marshalNPublicUser2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.PublicUser) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -649,7 +649,7 @@ func (ec *executionContext) marshalNPublicUser2ᚕᚖnotezyᚑbackendᚋappᚋgr
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPublicUser2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUser(ctx, sel, v[i])
+			ret[i] = ec.marshalNPublicUser2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUser(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -669,7 +669,7 @@ func (ec *executionContext) marshalNPublicUser2ᚕᚖnotezyᚑbackendᚋappᚋgr
 	return ret
 }
 
-func (ec *executionContext) marshalNPublicUser2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUser(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PublicUser) graphql.Marshaler {
+func (ec *executionContext) marshalNPublicUser2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUser(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PublicUser) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

@@ -4,12 +4,13 @@ package gqlmodels
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
-	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	"strconv"
 	"time"
 
+	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	"github.com/google/uuid"
 )
 
@@ -26,17 +27,17 @@ type SearchEdge interface {
 }
 
 type PrivateMaterial struct {
-	ID               uuid.UUID        `json:"id"`
-	ParentSubShelfID uuid.UUID        `json:"parentSubShelfId"`
-	Name             string           `json:"name"`
-	Size             float64          `json:"size"`
-	ContentKey       string           `json:"contentKey"`
-	ContentType      string           `json:"contentType"`
-	ParseMediaType   string           `json:"parseMediaType"`
-	DeletedAt        *time.Time       `json:"deletedAt,omitempty"`
-	UpdatedAt        time.Time        `json:"updatedAt"`
-	CreatedAt        time.Time        `json:"createdAt"`
-	ParentSubShelf   *PrivateSubShelf `json:"parentSubShelf"`
+	ID               uuid.UUID                 `json:"id"`
+	ParentSubShelfID uuid.UUID                 `json:"parentSubShelfId"`
+	Name             string                    `json:"name"`
+	Size             float64                   `json:"size"`
+	ContentKey       string                    `json:"contentKey"`
+	ContentType      enums.MaterialContentType `json:"contentType"`
+	ParseMediaType   string                    `json:"parseMediaType"`
+	DeletedAt        *time.Time                `json:"deletedAt,omitempty"`
+	UpdatedAt        time.Time                 `json:"updatedAt"`
+	CreatedAt        time.Time                 `json:"createdAt"`
+	ParentSubShelf   *PrivateSubShelf          `json:"parentSubShelf"`
 }
 
 type PrivateRootShelf struct {
@@ -49,7 +50,74 @@ type PrivateRootShelf struct {
 	DeletedAt      *time.Time                    `json:"deletedAt,omitempty"`
 	UpdatedAt      time.Time                     `json:"updatedAt"`
 	CreatedAt      time.Time                     `json:"createdAt"`
-	Owner          []*PublicUser                 `json:"owner"`
+	Owner          *PublicUser                   `json:"owner"`
+	Sharers        []*PublicUser                 `json:"sharers"`
+}
+
+type PrivateRoutine struct {
+	ID               uuid.UUID             `json:"id"`
+	StationID        uuid.UUID             `json:"stationId"`
+	Title            string                `json:"title"`
+	Description      string                `json:"description"`
+	Status           enums.RoutineStatus   `json:"status"`
+	IsPinned         bool                  `json:"isPinned"`
+	ScheduledStartAt time.Time             `json:"scheduledStartAt"`
+	ScheduledEndAt   time.Time             `json:"scheduledEndAt"`
+	Period           *enums.RoutinePeriod  `json:"period,omitempty"`
+	Timezone         string                `json:"timezone"`
+	DeletedAt        *time.Time            `json:"deletedAt,omitempty"`
+	UpdatedAt        time.Time             `json:"updatedAt"`
+	CreatedAt        time.Time             `json:"createdAt"`
+	Station          *PrivateStation       `json:"station"`
+	Tags             []*PrivateRoutineTag  `json:"tags"`
+	Tasks            []*PrivateRoutineTask `json:"tasks"`
+}
+
+type PrivateRoutineTag struct {
+	ID        uuid.UUID            `json:"id"`
+	Name      string               `json:"name"`
+	Color     string               `json:"color"`
+	Icon      *enums.SupportedIcon `json:"icon,omitempty"`
+	UpdatedAt time.Time            `json:"updatedAt"`
+	CreatedAt time.Time            `json:"createdAt"`
+	Owner     *PublicUser          `json:"owner"`
+	Sharers   []*PublicUser        `json:"sharers"`
+	Routines  []*PrivateRoutine    `json:"routines"`
+}
+
+type PrivateRoutineTask struct {
+	ID              uuid.UUID                `json:"id"`
+	StationID       uuid.UUID                `json:"stationId"`
+	Title           string                   `json:"title"`
+	Purpose         enums.RoutineTaskPurpose `json:"purpose"`
+	Payload         json.RawMessage          `json:"payload"`
+	Priority        int32                    `json:"priority"`
+	Status          enums.RoutineTaskStatus  `json:"status"`
+	Attempts        int32                    `json:"attempts"`
+	MaxAttempts     int32                    `json:"maxAttempts"`
+	ScheduledAt     time.Time                `json:"scheduledAt"`
+	ActualStartedAt *time.Time               `json:"actualStartedAt,omitempty"`
+	ActualEndedAt   *time.Time               `json:"actualEndedAt,omitempty"`
+	UpdatedAt       time.Time                `json:"updatedAt"`
+	CreatedAt       time.Time                `json:"createdAt"`
+	Station         *PrivateStation          `json:"station"`
+	Routines        []*PrivateRoutine        `json:"routines"`
+}
+
+type PrivateStation struct {
+	ID                  uuid.UUID                     `json:"id"`
+	Permission          enums.AccessControlPermission `json:"permission"`
+	Name                string                        `json:"name"`
+	Description         string                        `json:"description"`
+	Icon                *enums.SupportedIcon          `json:"icon,omitempty"`
+	HeaderBackgroundURL *string                       `json:"headerBackgroundURL,omitempty"`
+	RoutineCount        int32                         `json:"routineCount"`
+	DeletedAt           *time.Time                    `json:"deletedAt,omitempty"`
+	CreatedAt           time.Time                     `json:"createdAt"`
+	UpdatedAt           time.Time                     `json:"updatedAt"`
+	Owner               *PublicUser                   `json:"owner"`
+	Sharers             []*PublicUser                 `json:"sharers"`
+	Routines            []*PrivateRoutine             `json:"routines"`
 }
 
 type PrivateSubShelf struct {
@@ -191,6 +259,139 @@ type SearchRootShelfInput struct {
 	SortOrder *SearchSortOrder       `json:"sortOrder,omitempty"`
 }
 
+type SearchRoutineConnection struct {
+	SearchEdges    []*SearchRoutineEdge `json:"searchEdges"`
+	SearchPageInfo *SearchPageInfo      `json:"searchPageInfo"`
+	TotalCount     int32                `json:"totalCount"`
+	SearchTime     float64              `json:"searchTime"`
+}
+
+func (SearchRoutineConnection) IsSearchConnection()                     {}
+func (this SearchRoutineConnection) GetSearchPageInfo() *SearchPageInfo { return this.SearchPageInfo }
+func (this SearchRoutineConnection) GetTotalCount() int32               { return this.TotalCount }
+func (this SearchRoutineConnection) GetSearchTime() float64             { return this.SearchTime }
+
+type SearchRoutineCursorFields struct {
+	ID uuid.UUID `json:"id"`
+}
+
+type SearchRoutineEdge struct {
+	EncodedSearchCursor string          `json:"encodedSearchCursor"`
+	Node                *PrivateRoutine `json:"node"`
+}
+
+func (SearchRoutineEdge) IsSearchEdge()                       {}
+func (this SearchRoutineEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
+
+type SearchRoutineInput struct {
+	StationID *uuid.UUID           `json:"stationId,omitempty"`
+	Query     string               `json:"query"`
+	First     *int32               `json:"first,omitempty"`
+	SortBy    *SearchRoutineSortBy `json:"sortBy,omitempty"`
+	SortOrder *SearchSortOrder     `json:"sortOrder,omitempty"`
+}
+
+type SearchRoutineTagConnection struct {
+	SearchEdges    []*SearchRoutineTagEdge `json:"searchEdges"`
+	SearchPageInfo *SearchPageInfo         `json:"searchPageInfo"`
+	TotalCount     int32                   `json:"totalCount"`
+	SearchTime     float64                 `json:"searchTime"`
+}
+
+func (SearchRoutineTagConnection) IsSearchConnection() {}
+func (this SearchRoutineTagConnection) GetSearchPageInfo() *SearchPageInfo {
+	return this.SearchPageInfo
+}
+func (this SearchRoutineTagConnection) GetTotalCount() int32   { return this.TotalCount }
+func (this SearchRoutineTagConnection) GetSearchTime() float64 { return this.SearchTime }
+
+type SearchRoutineTagCursorFields struct {
+	ID uuid.UUID `json:"id"`
+}
+
+type SearchRoutineTagEdge struct {
+	EncodedSearchCursor string             `json:"encodedSearchCursor"`
+	Node                *PrivateRoutineTag `json:"node"`
+}
+
+func (SearchRoutineTagEdge) IsSearchEdge()                       {}
+func (this SearchRoutineTagEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
+
+type SearchRoutineTagInput struct {
+	Query     string                  `json:"query"`
+	After     *string                 `json:"after,omitempty"`
+	First     *int32                  `json:"first,omitempty"`
+	SortBy    *SearchRoutineTagSortBy `json:"sortBy,omitempty"`
+	SortOrder *SearchSortOrder        `json:"sortOrder,omitempty"`
+}
+
+type SearchRoutineTaskConnection struct {
+	SearchEdges    []*SearchRoutineTaskEdge `json:"searchEdges"`
+	SearchPageInfo *SearchPageInfo          `json:"searchPageInfo"`
+	TotalCount     int32                    `json:"totalCount"`
+	SearchTime     float64                  `json:"searchTime"`
+}
+
+func (SearchRoutineTaskConnection) IsSearchConnection() {}
+func (this SearchRoutineTaskConnection) GetSearchPageInfo() *SearchPageInfo {
+	return this.SearchPageInfo
+}
+func (this SearchRoutineTaskConnection) GetTotalCount() int32   { return this.TotalCount }
+func (this SearchRoutineTaskConnection) GetSearchTime() float64 { return this.SearchTime }
+
+type SearchRoutineTaskCursorFields struct {
+	ID uuid.UUID `json:"id"`
+}
+
+type SearchRoutineTaskEdge struct {
+	EncodedSearchCursor string              `json:"encodedSearchCursor"`
+	Node                *PrivateRoutineTask `json:"node"`
+}
+
+func (SearchRoutineTaskEdge) IsSearchEdge()                       {}
+func (this SearchRoutineTaskEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
+
+type SearchRoutineTaskInput struct {
+	StationID *uuid.UUID               `json:"stationId,omitempty"`
+	Query     string                   `json:"query"`
+	After     *string                  `json:"after,omitempty"`
+	First     *int32                   `json:"first,omitempty"`
+	SortBy    *SearchRoutineTaskSortBy `json:"sortBy,omitempty"`
+	SortOrder *SearchSortOrder         `json:"sortOrder,omitempty"`
+}
+
+type SearchStationConnection struct {
+	SearchEdges    []*SearchStationEdge `json:"searchEdges"`
+	SearchPageInfo *SearchPageInfo      `json:"searchPageInfo"`
+	TotalCount     int32                `json:"totalCount"`
+	SearchTime     float64              `json:"searchTime"`
+}
+
+func (SearchStationConnection) IsSearchConnection()                     {}
+func (this SearchStationConnection) GetSearchPageInfo() *SearchPageInfo { return this.SearchPageInfo }
+func (this SearchStationConnection) GetTotalCount() int32               { return this.TotalCount }
+func (this SearchStationConnection) GetSearchTime() float64             { return this.SearchTime }
+
+type SearchStationCursorFields struct {
+	ID uuid.UUID `json:"id"`
+}
+
+type SearchStationEdge struct {
+	EncodedSearchCursor string          `json:"encodedSearchCursor"`
+	Node                *PrivateStation `json:"node"`
+}
+
+func (SearchStationEdge) IsSearchEdge()                       {}
+func (this SearchStationEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
+
+type SearchStationInput struct {
+	Query     string               `json:"query"`
+	After     *string              `json:"after,omitempty"`
+	First     *int32               `json:"first,omitempty"`
+	SortBy    *SearchStationSortBy `json:"sortBy,omitempty"`
+	SortOrder *SearchSortOrder     `json:"sortOrder,omitempty"`
+}
+
 type SearchThemeConnection struct {
 	SearchEdges    []*SearchThemeEdge `json:"searchEdges"`
 	SearchPageInfo *SearchPageInfo    `json:"searchPageInfo"`
@@ -269,73 +470,6 @@ type SearchUserInput struct {
 	Filters   *SearchUserFilters `json:"filters,omitempty"`
 	SortBy    *SearchUserSortBy  `json:"sortBy,omitempty"`
 	SortOrder *SearchSortOrder   `json:"sortOrder,omitempty"`
-}
-
-type CountryCode string
-
-const (
-	CountryCodeCountryCode886 CountryCode = "COUNTRY_CODE_886"
-	CountryCodeCountryCode81  CountryCode = "COUNTRY_CODE_81"
-	CountryCodeCountryCode60  CountryCode = "COUNTRY_CODE_60"
-	CountryCodeCountryCode65  CountryCode = "COUNTRY_CODE_65"
-	CountryCodeCountryCode86  CountryCode = "COUNTRY_CODE_86"
-	CountryCodeCountryCode1   CountryCode = "COUNTRY_CODE_1"
-	CountryCodeCountryCode44  CountryCode = "COUNTRY_CODE_44"
-	CountryCodeCountryCode61  CountryCode = "COUNTRY_CODE_61"
-)
-
-var AllCountryCode = []CountryCode{
-	CountryCodeCountryCode886,
-	CountryCodeCountryCode81,
-	CountryCodeCountryCode60,
-	CountryCodeCountryCode65,
-	CountryCodeCountryCode86,
-	CountryCodeCountryCode1,
-	CountryCodeCountryCode44,
-	CountryCodeCountryCode61,
-}
-
-func (e CountryCode) IsValid() bool {
-	switch e {
-	case CountryCodeCountryCode886, CountryCodeCountryCode81, CountryCodeCountryCode60, CountryCodeCountryCode65, CountryCodeCountryCode86, CountryCodeCountryCode1, CountryCodeCountryCode44, CountryCodeCountryCode61:
-		return true
-	}
-	return false
-}
-
-func (e CountryCode) String() string {
-	return string(e)
-}
-
-func (e *CountryCode) UnmarshalGQL(v any) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = CountryCode(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid CountryCode", str)
-	}
-	return nil
-}
-
-func (e CountryCode) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-func (e *CountryCode) UnmarshalJSON(b []byte) error {
-	s, err := strconv.Unquote(string(b))
-	if err != nil {
-		return err
-	}
-	return e.UnmarshalGQL(s)
-}
-
-func (e CountryCode) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	e.MarshalGQL(&buf)
-	return buf.Bytes(), nil
 }
 
 type SearchBadgeSortBy string
@@ -454,6 +588,207 @@ func (e SearchRootShelfSortBy) MarshalJSON() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+type SearchRoutineSortBy string
+
+const (
+	SearchRoutineSortByRelevance        SearchRoutineSortBy = "RELEVANCE"
+	SearchRoutineSortByTitle            SearchRoutineSortBy = "TITLE"
+	SearchRoutineSortByStatus           SearchRoutineSortBy = "STATUS"
+	SearchRoutineSortByScheduledStartAt SearchRoutineSortBy = "SCHEDULED_START_AT"
+	SearchRoutineSortByScheduledEndAt   SearchRoutineSortBy = "SCHEDULED_END_AT"
+	SearchRoutineSortByPeriod           SearchRoutineSortBy = "PERIOD"
+	SearchRoutineSortByLastUpdate       SearchRoutineSortBy = "LAST_UPDATE"
+	SearchRoutineSortByCreatedAt        SearchRoutineSortBy = "CREATED_AT"
+)
+
+var AllSearchRoutineSortBy = []SearchRoutineSortBy{
+	SearchRoutineSortByRelevance,
+	SearchRoutineSortByTitle,
+	SearchRoutineSortByStatus,
+	SearchRoutineSortByScheduledStartAt,
+	SearchRoutineSortByScheduledEndAt,
+	SearchRoutineSortByPeriod,
+	SearchRoutineSortByLastUpdate,
+	SearchRoutineSortByCreatedAt,
+}
+
+func (e SearchRoutineSortBy) IsValid() bool {
+	switch e {
+	case SearchRoutineSortByRelevance, SearchRoutineSortByTitle, SearchRoutineSortByStatus, SearchRoutineSortByScheduledStartAt, SearchRoutineSortByScheduledEndAt, SearchRoutineSortByPeriod, SearchRoutineSortByLastUpdate, SearchRoutineSortByCreatedAt:
+		return true
+	}
+	return false
+}
+
+func (e SearchRoutineSortBy) String() string {
+	return string(e)
+}
+
+func (e *SearchRoutineSortBy) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SearchRoutineSortBy(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SearchRoutineSortBy", str)
+	}
+	return nil
+}
+
+func (e SearchRoutineSortBy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *SearchRoutineSortBy) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e SearchRoutineSortBy) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type SearchRoutineTagSortBy string
+
+const (
+	SearchRoutineTagSortByRelevance  SearchRoutineTagSortBy = "RELEVANCE"
+	SearchRoutineTagSortByName       SearchRoutineTagSortBy = "NAME"
+	SearchRoutineTagSortByLastUpdate SearchRoutineTagSortBy = "LAST_UPDATE"
+	SearchRoutineTagSortByCreatedAt  SearchRoutineTagSortBy = "CREATED_AT"
+)
+
+var AllSearchRoutineTagSortBy = []SearchRoutineTagSortBy{
+	SearchRoutineTagSortByRelevance,
+	SearchRoutineTagSortByName,
+	SearchRoutineTagSortByLastUpdate,
+	SearchRoutineTagSortByCreatedAt,
+}
+
+func (e SearchRoutineTagSortBy) IsValid() bool {
+	switch e {
+	case SearchRoutineTagSortByRelevance, SearchRoutineTagSortByName, SearchRoutineTagSortByLastUpdate, SearchRoutineTagSortByCreatedAt:
+		return true
+	}
+	return false
+}
+
+func (e SearchRoutineTagSortBy) String() string {
+	return string(e)
+}
+
+func (e *SearchRoutineTagSortBy) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SearchRoutineTagSortBy(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SearchRoutineTagSortBy", str)
+	}
+	return nil
+}
+
+func (e SearchRoutineTagSortBy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *SearchRoutineTagSortBy) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e SearchRoutineTagSortBy) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type SearchRoutineTaskSortBy string
+
+const (
+	SearchRoutineTaskSortByRelevance       SearchRoutineTaskSortBy = "RELEVANCE"
+	SearchRoutineTaskSortByTitle           SearchRoutineTaskSortBy = "TITLE"
+	SearchRoutineTaskSortByPurpose         SearchRoutineTaskSortBy = "PURPOSE"
+	SearchRoutineTaskSortByPriority        SearchRoutineTaskSortBy = "PRIORITY"
+	SearchRoutineTaskSortByStatus          SearchRoutineTaskSortBy = "STATUS"
+	SearchRoutineTaskSortByAttempts        SearchRoutineTaskSortBy = "ATTEMPTS"
+	SearchRoutineTaskSortByMaxAttempts     SearchRoutineTaskSortBy = "MAX_ATTEMPTS"
+	SearchRoutineTaskSortByScheduledAt     SearchRoutineTaskSortBy = "SCHEDULED_AT"
+	SearchRoutineTaskSortByActualStartedAt SearchRoutineTaskSortBy = "ACTUAL_STARTED_AT"
+	SearchRoutineTaskSortByActualEndedAt   SearchRoutineTaskSortBy = "ACTUAL_ENDED_AT"
+	SearchRoutineTaskSortByLastUpdate      SearchRoutineTaskSortBy = "LAST_UPDATE"
+	SearchRoutineTaskSortByCreatedAt       SearchRoutineTaskSortBy = "CREATED_AT"
+)
+
+var AllSearchRoutineTaskSortBy = []SearchRoutineTaskSortBy{
+	SearchRoutineTaskSortByRelevance,
+	SearchRoutineTaskSortByTitle,
+	SearchRoutineTaskSortByPurpose,
+	SearchRoutineTaskSortByPriority,
+	SearchRoutineTaskSortByStatus,
+	SearchRoutineTaskSortByAttempts,
+	SearchRoutineTaskSortByMaxAttempts,
+	SearchRoutineTaskSortByScheduledAt,
+	SearchRoutineTaskSortByActualStartedAt,
+	SearchRoutineTaskSortByActualEndedAt,
+	SearchRoutineTaskSortByLastUpdate,
+	SearchRoutineTaskSortByCreatedAt,
+}
+
+func (e SearchRoutineTaskSortBy) IsValid() bool {
+	switch e {
+	case SearchRoutineTaskSortByRelevance, SearchRoutineTaskSortByTitle, SearchRoutineTaskSortByPurpose, SearchRoutineTaskSortByPriority, SearchRoutineTaskSortByStatus, SearchRoutineTaskSortByAttempts, SearchRoutineTaskSortByMaxAttempts, SearchRoutineTaskSortByScheduledAt, SearchRoutineTaskSortByActualStartedAt, SearchRoutineTaskSortByActualEndedAt, SearchRoutineTaskSortByLastUpdate, SearchRoutineTaskSortByCreatedAt:
+		return true
+	}
+	return false
+}
+
+func (e SearchRoutineTaskSortBy) String() string {
+	return string(e)
+}
+
+func (e *SearchRoutineTaskSortBy) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SearchRoutineTaskSortBy(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SearchRoutineTaskSortBy", str)
+	}
+	return nil
+}
+
+func (e SearchRoutineTaskSortBy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *SearchRoutineTaskSortBy) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e SearchRoutineTaskSortBy) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
 type SearchSortOrder string
 
 const (
@@ -504,6 +839,67 @@ func (e *SearchSortOrder) UnmarshalJSON(b []byte) error {
 }
 
 func (e SearchSortOrder) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type SearchStationSortBy string
+
+const (
+	SearchStationSortByRelevance    SearchStationSortBy = "RELEVANCE"
+	SearchStationSortByName         SearchStationSortBy = "NAME"
+	SearchStationSortByRoutineCount SearchStationSortBy = "ROUTINE_COUNT"
+	SearchStationSortByLastUpdate   SearchStationSortBy = "LAST_UPDATE"
+	SearchStationSortByCreatedAt    SearchStationSortBy = "CREATED_AT"
+)
+
+var AllSearchStationSortBy = []SearchStationSortBy{
+	SearchStationSortByRelevance,
+	SearchStationSortByName,
+	SearchStationSortByRoutineCount,
+	SearchStationSortByLastUpdate,
+	SearchStationSortByCreatedAt,
+}
+
+func (e SearchStationSortBy) IsValid() bool {
+	switch e {
+	case SearchStationSortByRelevance, SearchStationSortByName, SearchStationSortByRoutineCount, SearchStationSortByLastUpdate, SearchStationSortByCreatedAt:
+		return true
+	}
+	return false
+}
+
+func (e SearchStationSortBy) String() string {
+	return string(e)
+}
+
+func (e *SearchStationSortBy) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SearchStationSortBy(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SearchStationSortBy", str)
+	}
+	return nil
+}
+
+func (e SearchStationSortBy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *SearchStationSortBy) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e SearchStationSortBy) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

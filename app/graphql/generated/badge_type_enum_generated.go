@@ -4,9 +4,9 @@ package generated
 
 import (
 	"context"
-	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -40,13 +40,13 @@ import (
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalNBadgeType2notezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐBadgeType(ctx context.Context, v any) (enums.BadgeType, error) {
+func (ec *executionContext) unmarshalNBadgeType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐBadgeType(ctx context.Context, v any) (enums.BadgeType, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	res := enums.BadgeType(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNBadgeType2notezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐBadgeType(ctx context.Context, sel ast.SelectionSet, v enums.BadgeType) graphql.Marshaler {
+func (ec *executionContext) marshalNBadgeType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐBadgeType(ctx context.Context, sel ast.SelectionSet, v enums.BadgeType) graphql.Marshaler {
 	_ = sel
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
@@ -57,7 +57,7 @@ func (ec *executionContext) marshalNBadgeType2notezyᚑbackendᚋappᚋmodelsᚋ
 	return res
 }
 
-func (ec *executionContext) unmarshalOBadgeType2ᚖnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐBadgeType(ctx context.Context, v any) (*enums.BadgeType, error) {
+func (ec *executionContext) unmarshalOBadgeType2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐBadgeType(ctx context.Context, v any) (*enums.BadgeType, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -66,7 +66,7 @@ func (ec *executionContext) unmarshalOBadgeType2ᚖnotezyᚑbackendᚋappᚋmode
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOBadgeType2ᚖnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐBadgeType(ctx context.Context, sel ast.SelectionSet, v *enums.BadgeType) graphql.Marshaler {
+func (ec *executionContext) marshalOBadgeType2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐBadgeType(ctx context.Context, sel ast.SelectionSet, v *enums.BadgeType) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

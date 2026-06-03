@@ -36,6 +36,7 @@ type CreateRoutineTaskByStationIdReqDto struct {
 		},
 		struct {
 			StationId   uuid.UUID                `json:"stationId" validate:"required"`
+			Title       string                   `json:"title" validate:"required,min=1,max=128"`
 			Purpose     enums.RoutineTaskPurpose `json:"purpose" validate:"required,isroutinetaskpurpose"`
 			Payload     datatypes.JSON           `json:"payload" validate:"omitempty,max=2048"`
 			Priority    int32                    `json:"priority" validate:"omitempty,min=0"`
@@ -57,6 +58,7 @@ type UpdateMyRoutineTaskByIdReqDto struct {
 			RoutineTaskId uuid.UUID `json:"routineTaskId" validate:"required"`
 			PartialUpdateDto[struct {
 				StationId   *uuid.UUID                `json:"stationId" validate:"omitnil"`
+				Title       *string                   `json:"title" validate:"omitnil,min=1,max=128"`
 				Purpose     *enums.RoutineTaskPurpose `json:"purpose" validate:"omitnil,isroutinetaskpurpose"`
 				Payload     *datatypes.JSON           `json:"payload" validate:"omitnil,max=2048"`
 				Priority    *int32                    `json:"priority" validate:"omitnil,min=0"`
@@ -102,6 +104,7 @@ type HardDeleteMyRoutineTasksByIdsReqDto struct {
 type GetMyRoutineTaskByIdResDto struct {
 	Id              uuid.UUID                `json:"id"`
 	StationId       uuid.UUID                `json:"stationId"`
+	Title           string                   `json:"title"`
 	Purpose         enums.RoutineTaskPurpose `json:"purpose"`
 	Payload         datatypes.JSON           `json:"payload"`
 	Priority        int32                    `json:"priority"`

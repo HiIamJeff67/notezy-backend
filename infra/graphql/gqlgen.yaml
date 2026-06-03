@@ -134,16 +134,28 @@ models:
 
   UUID:
     model: "github.com/HiIamJeff67/notezy-backend/app/graphql/scalars.UUID"
-    # marshal: notezy-backend/app/graphql/scalars.MarshalUUID
-    # unmarshal: notezy-backend/app/graphql/scalars.UnmarshalUUID
+    # marshal: github.com/HiIamJeff/notezy-backend/app/graphql/scalars.MarshalUUID
+    # unmarshal: github.com/HiIamJeff/notezy-backend/app/graphql/scalars.UnmarshalUUID
   Time:
     model: "github.com/HiIamJeff67/notezy-backend/app/graphql/scalars.Time"
-    # marshal: notezy-backend/app/graphql/scalars.MarshalTime
-    # unmarshal: notezy-backend/app/graphql/scalars.UnmarshalTime
+    # marshal: github.com/HiIamJeff/notezy-backend/app/graphql/scalars.MarshalTime
+    # unmarshal: github.com/HiIamJeff/notezy-backend/app/graphql/scalars.UnmarshalTime
   Base64Bytes:
     model: "github.com/HiIamJeff67/notezy-backend/app/graphql/scalars.Base64Bytes"
-    # marshal: notezy-backend/app/graphql/scalar.MarshalBase64Bytes
-    # unmarshal: notezy-backend/app/graphql/scalar.UnmarshalBase64Bytes
+    # marshal: github.com/HiIamJeff/notezy-backend/app/graphql/scalar.MarshalBase64Bytes
+    # unmarshal: github.com/HiIamJeff/notezy-backend/app/graphql/scalar.UnmarshalBase64Bytes
+  RawJSON:
+    model:
+      - "github.com/HiIamJeff67/notezy-backend/app/graphql/scalars.RawJSON"
+      - "encoding/json.RawMessage"
+      # marshal: github.com/HiIamJeff/notezy-backend/app/graphql/scalars.MarshalRawJSON
+      # unmarshal: github.com/HiIamJeff/notezy-backend/app/graphql/scalars.UnmarshalRawJSON
+  DatatypeJSON:
+    model:
+      - "github.com/HiIamJeff67/notezy-backend/app/graphql/scalars.DatatypeJSON"
+      - "gorm.io/datatype.JSON"
+      # marshal: github.com/HiIamJeff/notezy-backend/app/graphql/scalars.MarshalDatatypeJSON
+      # unmarshal: github.com/HiIamJeff/notezy-backend/app/graphql/scalars.UnmarshalDatatypeJSON
 
   # ============================== Corresponded Enums Which Have Prebuilt in Gorm ============================== #
 

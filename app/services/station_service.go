@@ -2,17 +2,24 @@ package services
 
 import (
 	"context"
+	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	models "github.com/HiIamJeff67/notezy-backend/app/models"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
+	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
@@ -388,3 +395,135 @@ func (s *StationService) HardDeleteMyStationsByIds(
 }
 
 /* ============================== Service Methods for GraphQL Station ============================== */
+
+func (s *StationService) SearchPrivateStations(
+	ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchStationInput,
+) (*gqlmodels.SearchStationConnection, *exceptions.Exception) {
+	type PrivateStation struct {
+		schemas.Station
+		Permission enums.AccessControlPermission `gorm:"column:permission"`
+	}
+
+	allowedPermisssions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+	startTime := time.Now()
+
+	db := s.db.WithContext(ctx)
+
+	query := db.Model(&schemas.Station{}).
+		Select("\"StationTable\".*, uts.permission AS permission").
+		Joins("LEFT JOIN \"UsersToStationsTable\" uts ON \"StationTable\".id = uts.station_id").
+		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermisssions).
+		Where("\"StationTable\".deleted_at IS NULL")
+
+	if len(strings.ReplaceAll(gqlInput.Query, " ", "")) > 0 {
+		query = query.Where(
+			"name ILIKE ?",
+			"%"+gqlInput.Query+"%",
+		)
+	}
+	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
+		searchCursor, err := searchcursor.Decode[gqlmodels.SearchStationCursorFields](*gqlInput.After)
+		if err != nil {
+			return nil, exceptions.Search.FailedToDecode().WithOrigin(err)
+		}
+
+		query.Where("id > ?", searchCursor.Fields.ID)
+	}
+
+	if gqlInput.SortBy != nil && gqlInput.SortOrder != nil {
+		var cending string = gqlmodels.SearchSortOrderAsc.String()
+		if *gqlInput.SortOrder == gqlmodels.SearchSortOrderDesc {
+			cending = gqlmodels.SearchSortOrderDesc.String()
+		}
+
+		switch *gqlInput.SortBy {
+		case gqlmodels.SearchStationSortByName:
+			query.Order("name " + cending).
+				Order("routine_count " + cending).
+				Order("updated_at " + cending).
+				Order("created_at " + cending)
+		case gqlmodels.SearchStationSortByRoutineCount:
+			query.Order("routine_count " + cending).
+				Order("name " + cending).
+				Order("updated_at " + cending).
+				Order("created_at " + cending)
+		case gqlmodels.SearchStationSortByLastUpdate:
+			query.Order("updated_at " + cending).
+				Order("name " + cending).
+				Order("routine_count " + cending).
+				Order("created_at " + cending)
+		case gqlmodels.SearchStationSortByCreatedAt:
+			query.Order("created_at " + cending).
+				Order("name " + cending).
+				Order("routine_count " + cending).
+				Order("updated_at " + cending)
+		default:
+			query.Order("name " + cending).
+				Order("routine_count " + cending).
+				Order("updated_at " + cending).
+				Order("created_at " + cending)
+		}
+	}
+
+	limit := constants.DefaultSearchLimit
+	if gqlInput.First != nil && *gqlInput.First > 0 {
+		limit = int(*gqlInput.First)
+	}
+	limit = min(limit, constants.MaxSearchLimit)
+	query = query.Limit(limit + 1)
+
+	var stations []PrivateStation
+	if err := query.Find(&stations).Error; err != nil {
+		return nil, exceptions.Station.NotFound().WithOrigin(err)
+	}
+
+	hasNextPage := len(stations) > limit
+	searchEdges := make([]*gqlmodels.SearchStationEdge, len(stations))
+
+	for index, station := range stations {
+		searchCursor := searchcursor.SearchCursor[gqlmodels.SearchStationCursorFields]{
+			Fields: gqlmodels.SearchStationCursorFields{
+				ID: station.Id,
+			},
+		}
+		encodedSearchCursor, err := searchCursor.Encode()
+		if err != nil {
+			return nil, exceptions.Search.FailedToEncode().WithOrigin(err)
+		}
+		if encodedSearchCursor == nil {
+			return nil, exceptions.Search.FailedToUnmarshalSearchCursor()
+		}
+
+		searchEdges[index] = &gqlmodels.SearchStationEdge{
+			EncodedSearchCursor: *encodedSearchCursor,
+			Node:                station.Station.ToPrivateStation(station.Permission),
+		}
+	}
+
+	searchPageInfo := &gqlmodels.SearchPageInfo{
+		HasNextPage:     hasNextPage,
+		HasPreviousPage: gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0,
+	}
+
+	if len(searchEdges) > 0 {
+		searchPageInfo.StartEncodedSearchCursor = &searchEdges[0].EncodedSearchCursor
+		searchPageInfo.EndEncodedSearchCursor = &searchEdges[len(searchEdges)-1].EncodedSearchCursor
+	}
+
+	searchTime := float64(time.Since(startTime).Nanoseconds()) / 1e6
+	if hasNextPage {
+		searchEdges = searchEdges[:limit]
+	}
+
+	return &gqlmodels.SearchStationConnection{
+		SearchEdges:    searchEdges,
+		SearchPageInfo: searchPageInfo,
+		TotalCount:     int32(len(searchEdges)),
+		SearchTime:     searchTime,
+	}, nil
+}

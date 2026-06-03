@@ -1,8 +1,9 @@
 type PrivateRoutineTask {
   id: UUID!
   stationId: UUID!
+  title: String!
   purpose: RoutineTaskPurpose!
-  payload: JSON!
+  payload: RawJSON!
   priority: Int32!
   status: RoutineTaskStatus!
   attempts: Int32!

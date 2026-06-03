@@ -6,11 +6,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	"strconv"
 	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -224,6 +224,34 @@ func (ec *executionContext) _SearchConnection(ctx context.Context, sel ast.Selec
 			return graphql.Null
 		}
 		return ec._SearchThemeConnection(ctx, sel, obj)
+	case gqlmodels.SearchStationConnection:
+		return ec._SearchStationConnection(ctx, sel, &obj)
+	case *gqlmodels.SearchStationConnection:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SearchStationConnection(ctx, sel, obj)
+	case gqlmodels.SearchRoutineTaskConnection:
+		return ec._SearchRoutineTaskConnection(ctx, sel, &obj)
+	case *gqlmodels.SearchRoutineTaskConnection:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SearchRoutineTaskConnection(ctx, sel, obj)
+	case gqlmodels.SearchRoutineTagConnection:
+		return ec._SearchRoutineTagConnection(ctx, sel, &obj)
+	case *gqlmodels.SearchRoutineTagConnection:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SearchRoutineTagConnection(ctx, sel, obj)
+	case gqlmodels.SearchRoutineConnection:
+		return ec._SearchRoutineConnection(ctx, sel, &obj)
+	case *gqlmodels.SearchRoutineConnection:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SearchRoutineConnection(ctx, sel, obj)
 	case gqlmodels.SearchRootShelfConnection:
 		return ec._SearchRootShelfConnection(ctx, sel, &obj)
 	case *gqlmodels.SearchRootShelfConnection:
@@ -261,6 +289,34 @@ func (ec *executionContext) _SearchEdge(ctx context.Context, sel ast.SelectionSe
 			return graphql.Null
 		}
 		return ec._SearchThemeEdge(ctx, sel, obj)
+	case gqlmodels.SearchStationEdge:
+		return ec._SearchStationEdge(ctx, sel, &obj)
+	case *gqlmodels.SearchStationEdge:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SearchStationEdge(ctx, sel, obj)
+	case gqlmodels.SearchRoutineTaskEdge:
+		return ec._SearchRoutineTaskEdge(ctx, sel, &obj)
+	case *gqlmodels.SearchRoutineTaskEdge:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SearchRoutineTaskEdge(ctx, sel, obj)
+	case gqlmodels.SearchRoutineTagEdge:
+		return ec._SearchRoutineTagEdge(ctx, sel, &obj)
+	case *gqlmodels.SearchRoutineTagEdge:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SearchRoutineTagEdge(ctx, sel, obj)
+	case gqlmodels.SearchRoutineEdge:
+		return ec._SearchRoutineEdge(ctx, sel, &obj)
+	case *gqlmodels.SearchRoutineEdge:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SearchRoutineEdge(ctx, sel, obj)
 	case gqlmodels.SearchRootShelfEdge:
 		return ec._SearchRootShelfEdge(ctx, sel, &obj)
 	case *gqlmodels.SearchRootShelfEdge:
@@ -336,7 +392,7 @@ func (ec *executionContext) _SearchPageInfo(ctx context.Context, sel ast.Selecti
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNSearchPageInfo2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchPageInfo(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchPageInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchPageInfo2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchPageInfo(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchPageInfo) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -346,7 +402,7 @@ func (ec *executionContext) marshalNSearchPageInfo2ᚖnotezyᚑbackendᚋappᚋg
 	return ec._SearchPageInfo(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOSearchSortOrder2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchSortOrder(ctx context.Context, v any) (*gqlmodels.SearchSortOrder, error) {
+func (ec *executionContext) unmarshalOSearchSortOrder2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchSortOrder(ctx context.Context, v any) (*gqlmodels.SearchSortOrder, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -355,7 +411,7 @@ func (ec *executionContext) unmarshalOSearchSortOrder2ᚖnotezyᚑbackendᚋapp�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOSearchSortOrder2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchSortOrder(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchSortOrder) graphql.Marshaler {
+func (ec *executionContext) marshalOSearchSortOrder2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchSortOrder(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchSortOrder) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

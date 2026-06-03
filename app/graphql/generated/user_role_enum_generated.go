@@ -4,9 +4,9 @@ package generated
 
 import (
 	"context"
-	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -40,13 +40,13 @@ import (
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalNUserRole2notezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserRole(ctx context.Context, v any) (enums.UserRole, error) {
+func (ec *executionContext) unmarshalNUserRole2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserRole(ctx context.Context, v any) (enums.UserRole, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	res := enums.UserRole(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNUserRole2notezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserRole(ctx context.Context, sel ast.SelectionSet, v enums.UserRole) graphql.Marshaler {
+func (ec *executionContext) marshalNUserRole2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserRole(ctx context.Context, sel ast.SelectionSet, v enums.UserRole) graphql.Marshaler {
 	_ = sel
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
@@ -57,7 +57,7 @@ func (ec *executionContext) marshalNUserRole2notezyᚑbackendᚋappᚋmodelsᚋs
 	return res
 }
 
-func (ec *executionContext) unmarshalOUserRole2ᚖnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserRole(ctx context.Context, v any) (*enums.UserRole, error) {
+func (ec *executionContext) unmarshalOUserRole2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserRole(ctx context.Context, v any) (*enums.UserRole, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -66,7 +66,7 @@ func (ec *executionContext) unmarshalOUserRole2ᚖnotezyᚑbackendᚋappᚋmodel
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOUserRole2ᚖnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserRole(ctx context.Context, sel ast.SelectionSet, v *enums.UserRole) graphql.Marshaler {
+func (ec *executionContext) marshalOUserRole2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserRole(ctx context.Context, sel ast.SelectionSet, v *enums.UserRole) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

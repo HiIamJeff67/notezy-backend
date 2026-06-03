@@ -3,3 +3,5 @@ scalar Int64
 scalar UUID
 scalar Time
 scalar Base64Bytes
+scalar RawJSON
+scalar DatatypeJSON

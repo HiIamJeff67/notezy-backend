@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
@@ -34,3 +35,19 @@ const (
 	RoutineTagRelation_UsersToRoutineTags RoutineTagRelation = "UsersToRoutineTags"
 	RoutineTagRelation_RoutinesToTags     RoutineTagRelation = "RoutinesToTags"
 )
+
+/* ============================== Relative Type Conversion ============================== */
+
+func (rt *RoutineTag) ToPrivateRoutineTag() *gqlmodels.PrivateRoutineTag {
+	return &gqlmodels.PrivateRoutineTag{
+		ID:        rt.Id,
+		Name:      rt.Name,
+		Color:     rt.Color,
+		Icon:      rt.Icon,
+		UpdatedAt: rt.UpdatedAt,
+		CreatedAt: rt.CreatedAt,
+		Owner:     &gqlmodels.PublicUser{},
+		Sharers:   make([]*gqlmodels.PublicUser, 0),
+		Routines:  make([]*gqlmodels.PrivateRoutine, 0),
+	}
+}

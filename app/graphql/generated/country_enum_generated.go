@@ -4,9 +4,9 @@ package generated
 
 import (
 	"context"
-	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -40,7 +40,7 @@ import (
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalOCountry2ᚖnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐCountry(ctx context.Context, v any) (*enums.Country, error) {
+func (ec *executionContext) unmarshalOCountry2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐCountry(ctx context.Context, v any) (*enums.Country, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -49,7 +49,7 @@ func (ec *executionContext) unmarshalOCountry2ᚖnotezyᚑbackendᚋappᚋmodels
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOCountry2ᚖnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐCountry(ctx context.Context, sel ast.SelectionSet, v *enums.Country) graphql.Marshaler {
+func (ec *executionContext) marshalOCountry2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐCountry(ctx context.Context, sel ast.SelectionSet, v *enums.Country) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

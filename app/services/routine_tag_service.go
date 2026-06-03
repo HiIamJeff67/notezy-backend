@@ -2,17 +2,24 @@ package services
 
 import (
 	"context"
+	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	models "github.com/HiIamJeff67/notezy-backend/app/models"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
+	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
 )
 
 type RoutineTagServiceInterface interface {
@@ -23,6 +30,9 @@ type RoutineTagServiceInterface interface {
 	UpdateMyRoutineTagsByIds(ctx context.Context, reqDto *dtos.UpdateMyRoutineTagsByIdsReqDto) (*dtos.UpdateMyRoutineTagsByIdsResDto, *exceptions.Exception)
 	HardDeleteMyRoutineTagById(ctx context.Context, reqDto *dtos.HardDeleteMyRoutineTagByIdReqDto) (*dtos.HardDeleteMyRoutineTagByIdResDto, *exceptions.Exception)
 	HardDeleteMyRoutineTagsByIds(ctx context.Context, reqDto *dtos.HardDeleteMyRoutineTagsByIdsReqDto) (*dtos.HardDeleteMyRoutineTagsByIdsResDto, *exceptions.Exception)
+
+	// services for private routine tags
+	SearchPrivateRoutineTags(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRoutineTagInput) (*gqlmodels.SearchRoutineTagConnection, *exceptions.Exception)
 }
 
 type RoutineTagService struct {
@@ -249,5 +259,129 @@ func (s *RoutineTagService) HardDeleteMyRoutineTagsByIds(
 
 	return &dtos.HardDeleteMyRoutineTagsByIdsResDto{
 		DeletedAt: time.Now(),
+	}, nil
+}
+
+/* ============================== Service Methods for GraphQL RoutineTag ============================== */
+
+func (s *RoutineTagService) SearchPrivateRoutineTags(
+	ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRoutineTagInput,
+) (*gqlmodels.SearchRoutineTagConnection, *exceptions.Exception) {
+	type PrivateRoutineTag struct {
+		schemas.RoutineTag
+		Permission enums.AccessControlPermission `gorm:"column:permission"`
+	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+	startTime := time.Now()
+
+	db := s.db.WithContext(ctx)
+
+	query := db.Model(&schemas.RoutineTag{}).
+		Select("\"RoutineTagTable\".*, utrt.permission AS permission").
+		Joins("LEFT JOIN \"UsersToRoutineTagsTable\" utrt ON \"RoutineTagTable\".id = utrt.tag_id").
+		Where("utrt.user_id = ? AND utrt.permission IN ?", userId, allowedPermissions)
+
+	if len(strings.ReplaceAll(gqlInput.Query, " ", "")) > 0 {
+		query = query.Where(
+			"name ILIKE ?",
+			"%"+gqlInput.Query+"%",
+		)
+	}
+	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
+		searchCursor, err := searchcursor.Decode[gqlmodels.SearchRoutineTagCursorFields](*gqlInput.After)
+		if err != nil {
+			return nil, exceptions.Search.FailedToDecode().WithOrigin(err)
+		}
+
+		query.Where("id > ?", searchCursor.Fields.ID)
+	}
+
+	if gqlInput.SortBy != nil && gqlInput.SortOrder != nil {
+		var cending string = gqlmodels.SearchSortOrderAsc.String()
+		if *gqlInput.SortOrder == gqlmodels.SearchSortOrderDesc {
+			cending = gqlmodels.SearchSortOrderDesc.String()
+		}
+
+		switch *gqlInput.SortBy {
+		case gqlmodels.SearchRoutineTagSortByName:
+			query.Order("name " + cending).
+				Order("updated_at " + cending).
+				Order("created_at " + cending)
+		case gqlmodels.SearchRoutineTagSortByLastUpdate:
+			query.Order("updated_at " + cending).
+				Order("name " + cending).
+				Order("created_at " + cending)
+		case gqlmodels.SearchRoutineTagSortByCreatedAt:
+			query.Order("created_at " + cending).
+				Order("name " + cending).
+				Order("updated_at " + cending)
+		default:
+			query.Order("name " + cending).
+				Order("updated_at " + cending).
+				Order("created_at " + cending)
+		}
+	}
+
+	limit := constants.DefaultSearchLimit
+	if gqlInput.First != nil && *gqlInput.First > 0 {
+		limit = int(*gqlInput.First)
+	}
+	limit = min(limit, constants.MaxSearchLimit)
+	query = query.Limit(limit + 1)
+
+	var routineTags []PrivateRoutineTag
+	if err := query.Find(&routineTags).Error; err != nil {
+		return nil, exceptions.RoutineTag.NotFound().WithOrigin(err)
+	}
+
+	hasNextPage := len(routineTags) > limit
+	searchEdges := make([]*gqlmodels.SearchRoutineTagEdge, len(routineTags))
+
+	for index, routineTag := range routineTags {
+		searchCursor := searchcursor.SearchCursor[gqlmodels.SearchRoutineTagCursorFields]{
+			Fields: gqlmodels.SearchRoutineTagCursorFields{
+				ID: routineTag.Id,
+			},
+		}
+		encodedSearchCursor, err := searchCursor.Encode()
+		if err != nil {
+			return nil, exceptions.Search.FailedToEncode().WithOrigin(err)
+		}
+		if encodedSearchCursor == nil {
+			return nil, exceptions.Search.FailedToUnmarshalSearchCursor()
+		}
+
+		searchEdges[index] = &gqlmodels.SearchRoutineTagEdge{
+			EncodedSearchCursor: *encodedSearchCursor,
+			Node:                routineTag.RoutineTag.ToPrivateRoutineTag(),
+		}
+	}
+
+	searchPageInfo := &gqlmodels.SearchPageInfo{
+		HasNextPage:     hasNextPage,
+		HasPreviousPage: gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0,
+	}
+
+	if len(searchEdges) > 0 {
+		searchPageInfo.StartEncodedSearchCursor = &searchEdges[0].EncodedSearchCursor
+		searchPageInfo.EndEncodedSearchCursor = &searchEdges[len(searchEdges)-1].EncodedSearchCursor
+	}
+
+	searchTime := float64(time.Since(startTime).Nanoseconds()) / 1e6
+	if hasNextPage {
+		searchEdges = searchEdges[:limit]
+	}
+
+	return &gqlmodels.SearchRoutineTagConnection{
+		SearchEdges:    searchEdges,
+		SearchPageInfo: searchPageInfo,
+		TotalCount:     int32(len(searchEdges)),
+		SearchTime:     searchTime,
 	}, nil
 }

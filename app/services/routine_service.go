@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
@@ -10,12 +11,15 @@ import (
 
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	models "github.com/HiIamJeff67/notezy-backend/app/models"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
@@ -37,6 +41,9 @@ type RoutineServiceInterface interface {
 	DeleteMyRoutinesByIds(ctx context.Context, reqDto *dtos.DeleteMyRoutinesByIdsReqDto) (*dtos.DeleteMyRoutinesByIdsResDto, *exceptions.Exception)
 	HardDeleteMyRoutineById(ctx context.Context, reqDto *dtos.HardDeleteMyRoutineByIdReqDto) (*dtos.HardDeleteMyRoutineByIdResDto, *exceptions.Exception)
 	HardDeleteMyRoutinesByIds(ctx context.Context, reqDto *dtos.HardDeleteMyRoutinesByIdsReqDto) (*dtos.HardDeleteMyRoutinesByIdsResDto, *exceptions.Exception)
+
+	// services for private routines
+	SearchPrivateRoutines(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRoutineInput) (*gqlmodels.SearchRoutineConnection, *exceptions.Exception)
 }
 
 type RoutineService struct {
@@ -998,5 +1005,149 @@ func (s *RoutineService) HardDeleteMyRoutinesByIds(
 
 	return &dtos.HardDeleteMyRoutinesByIdsResDto{
 		DeletedAt: time.Now(),
+	}, nil
+}
+
+/* ============================== Service Methods for GraphQL Routine ============================== */
+
+func (s *RoutineService) SearchPrivateRoutines(
+	ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRoutineInput,
+) (*gqlmodels.SearchRoutineConnection, *exceptions.Exception) {
+	type PrivateRoutine struct {
+		schemas.Routine
+		Permission enums.AccessControlPermission `gorm:"column:permission"`
+	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+	startTime := time.Now()
+
+	db := s.db.WithContext(ctx)
+
+	query := db.Model(&schemas.Routine{}).
+		Select("\"RoutineTable\".*, uts.permission AS permission").
+		Joins("LEFT JOIN \"UsersToStationsTable\" uts ON \"RoutineTable\".station_id = uts.station_id").
+		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
+		Where("\"RoutineTable\".deleted_at IS NULL")
+
+	if gqlInput.StationID != nil {
+		query = query.Where(
+			"\"RoutineTable\".station_id = ?",
+			*gqlInput.StationID,
+		)
+	}
+
+	if len(strings.ReplaceAll(gqlInput.Query, " ", "")) > 0 {
+		query = query.Where(
+			"title ILIKE ?",
+			"%"+gqlInput.Query+"%",
+		)
+	}
+
+	if gqlInput.SortBy != nil && gqlInput.SortOrder != nil {
+		var cending string = gqlmodels.SearchSortOrderAsc.String()
+		if *gqlInput.SortOrder == gqlmodels.SearchSortOrderDesc {
+			cending = gqlmodels.SearchSortOrderDesc.String()
+		}
+
+		switch *gqlInput.SortBy {
+		case gqlmodels.SearchRoutineSortByTitle:
+			query.Order("title " + cending).
+				Order("updated_at " + cending).
+				Order("created_at " + cending)
+		case gqlmodels.SearchRoutineSortByStatus:
+			query.Order("status " + cending).
+				Order("title " + cending).
+				Order("updated_at " + cending).
+				Order("created_at " + cending)
+		case gqlmodels.SearchRoutineSortByScheduledStartAt:
+			query.Order("scheduled_start_at " + cending).
+				Order("title " + cending).
+				Order("updated_at " + cending).
+				Order("created_at " + cending)
+		case gqlmodels.SearchRoutineSortByScheduledEndAt:
+			query.Order("scheduled_end_at " + cending).
+				Order("title " + cending).
+				Order("updated_at " + cending).
+				Order("created_at " + cending)
+		case gqlmodels.SearchRoutineSortByPeriod:
+			query.Order("period " + cending).
+				Order("title " + cending).
+				Order("updated_at " + cending).
+				Order("created_at " + cending)
+		case gqlmodels.SearchRoutineSortByLastUpdate:
+			query.Order("updated_at " + cending).
+				Order("title " + cending).
+				Order("created_at " + cending)
+		case gqlmodels.SearchRoutineSortByCreatedAt:
+			query.Order("created_at " + cending).
+				Order("title " + cending).
+				Order("updated_at " + cending)
+		default:
+			query.Order("title " + cending).
+				Order("updated_at " + cending).
+				Order("created_at " + cending)
+		}
+	}
+
+	limit := constants.DefaultSearchLimit
+	if gqlInput.First != nil && *gqlInput.First > 0 {
+		limit = int(*gqlInput.First)
+	}
+	limit = min(limit, constants.MaxSearchLimit)
+	query = query.Limit(limit + 1)
+
+	var routines []PrivateRoutine
+	if err := query.Find(&routines).Error; err != nil {
+		return nil, exceptions.Routine.NotFound().WithOrigin(err)
+	}
+
+	hasNextPage := len(routines) > limit
+	searchEdges := make([]*gqlmodels.SearchRoutineEdge, len(routines))
+
+	for index, routine := range routines {
+		searchCursor := searchcursor.SearchCursor[gqlmodels.SearchRoutineCursorFields]{
+			Fields: gqlmodels.SearchRoutineCursorFields{
+				ID: routine.Id,
+			},
+		}
+		encodedSearchCursor, err := searchCursor.Encode()
+		if err != nil {
+			return nil, exceptions.Search.FailedToEncode().WithOrigin(err)
+		}
+		if encodedSearchCursor == nil {
+			return nil, exceptions.Search.FailedToUnmarshalSearchCursor()
+		}
+
+		searchEdges[index] = &gqlmodels.SearchRoutineEdge{
+			EncodedSearchCursor: *encodedSearchCursor,
+			Node:                routine.Routine.ToPrivateRoutine(),
+		}
+	}
+
+	searchPageInfo := &gqlmodels.SearchPageInfo{
+		HasNextPage:     hasNextPage,
+		HasPreviousPage: false,
+	}
+
+	if len(searchEdges) > 0 {
+		searchPageInfo.StartEncodedSearchCursor = &searchEdges[0].EncodedSearchCursor
+		searchPageInfo.EndEncodedSearchCursor = &searchEdges[len(searchEdges)-1].EncodedSearchCursor
+	}
+
+	searchTime := float64(time.Since(startTime).Nanoseconds()) / 1e6
+	if hasNextPage {
+		searchEdges = searchEdges[:limit]
+	}
+
+	return &gqlmodels.SearchRoutineConnection{
+		SearchEdges:    searchEdges,
+		SearchPageInfo: searchPageInfo,
+		TotalCount:     int32(len(searchEdges)),
+		SearchTime:     searchTime,
 	}, nil
 }

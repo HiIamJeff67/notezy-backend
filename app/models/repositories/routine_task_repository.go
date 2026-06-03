@@ -191,6 +191,9 @@ func (r *RoutineTaskRepository) CreateOneByStationId(
 	}
 	newRoutineTask.StationId = stationId
 	newRoutineTask.ScheduledAt = time.Now().Truncate(time.Minute)
+	if newRoutineTask.Title == "" {
+		newRoutineTask.Title = "undefined"
+	}
 	if len(newRoutineTask.Payload) == 0 {
 		newRoutineTask.Payload = datatypes.JSON([]byte("{}"))
 	}
@@ -273,6 +276,9 @@ func (r *RoutineTaskRepository) BulkCreateManyByStationIds(
 		newRoutineTask.ScheduledAt = time.Now().Truncate(time.Minute)
 		if len(newRoutineTask.Payload) == 0 {
 			newRoutineTask.Payload = datatypes.JSON([]byte("{}"))
+		}
+		if newRoutineTask.Title == "" {
+			newRoutineTask.Title = "undefined"
 		}
 		if newRoutineTask.MaxAttempts <= 0 {
 			newRoutineTask.MaxAttempts = 1

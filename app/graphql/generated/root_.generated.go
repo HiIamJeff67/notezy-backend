@@ -6,11 +6,11 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -63,8 +63,75 @@ type ComplexityRoot struct {
 		Name           func(childComplexity int) int
 		Owner          func(childComplexity int) int
 		Permission     func(childComplexity int) int
+		Sharers        func(childComplexity int) int
 		SubShelfCount  func(childComplexity int) int
 		UpdatedAt      func(childComplexity int) int
+	}
+
+	PrivateRoutine struct {
+		CreatedAt        func(childComplexity int) int
+		DeletedAt        func(childComplexity int) int
+		Description      func(childComplexity int) int
+		ID               func(childComplexity int) int
+		IsPinned         func(childComplexity int) int
+		Period           func(childComplexity int) int
+		ScheduledEndAt   func(childComplexity int) int
+		ScheduledStartAt func(childComplexity int) int
+		Station          func(childComplexity int) int
+		StationID        func(childComplexity int) int
+		Status           func(childComplexity int) int
+		Tags             func(childComplexity int) int
+		Tasks            func(childComplexity int) int
+		Timezone         func(childComplexity int) int
+		Title            func(childComplexity int) int
+		UpdatedAt        func(childComplexity int) int
+	}
+
+	PrivateRoutineTag struct {
+		Color     func(childComplexity int) int
+		CreatedAt func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Icon      func(childComplexity int) int
+		Name      func(childComplexity int) int
+		Owner     func(childComplexity int) int
+		Routines  func(childComplexity int) int
+		Sharers   func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
+	}
+
+	PrivateRoutineTask struct {
+		ActualEndedAt   func(childComplexity int) int
+		ActualStartedAt func(childComplexity int) int
+		Attempts        func(childComplexity int) int
+		CreatedAt       func(childComplexity int) int
+		ID              func(childComplexity int) int
+		MaxAttempts     func(childComplexity int) int
+		Payload         func(childComplexity int) int
+		Priority        func(childComplexity int) int
+		Purpose         func(childComplexity int) int
+		Routines        func(childComplexity int) int
+		ScheduledAt     func(childComplexity int) int
+		Station         func(childComplexity int) int
+		StationID       func(childComplexity int) int
+		Status          func(childComplexity int) int
+		Title           func(childComplexity int) int
+		UpdatedAt       func(childComplexity int) int
+	}
+
+	PrivateStation struct {
+		CreatedAt           func(childComplexity int) int
+		DeletedAt           func(childComplexity int) int
+		Description         func(childComplexity int) int
+		HeaderBackgroundURL func(childComplexity int) int
+		ID                  func(childComplexity int) int
+		Icon                func(childComplexity int) int
+		Name                func(childComplexity int) int
+		Owner               func(childComplexity int) int
+		Permission          func(childComplexity int) int
+		RoutineCount        func(childComplexity int) int
+		Routines            func(childComplexity int) int
+		Sharers             func(childComplexity int) int
+		UpdatedAt           func(childComplexity int) int
 	}
 
 	PrivateSubShelf struct {
@@ -160,6 +227,54 @@ type ComplexityRoot struct {
 	}
 
 	SearchRootShelfEdge struct {
+		EncodedSearchCursor func(childComplexity int) int
+		Node                func(childComplexity int) int
+	}
+
+	SearchRoutineConnection struct {
+		SearchEdges    func(childComplexity int) int
+		SearchPageInfo func(childComplexity int) int
+		SearchTime     func(childComplexity int) int
+		TotalCount     func(childComplexity int) int
+	}
+
+	SearchRoutineEdge struct {
+		EncodedSearchCursor func(childComplexity int) int
+		Node                func(childComplexity int) int
+	}
+
+	SearchRoutineTagConnection struct {
+		SearchEdges    func(childComplexity int) int
+		SearchPageInfo func(childComplexity int) int
+		SearchTime     func(childComplexity int) int
+		TotalCount     func(childComplexity int) int
+	}
+
+	SearchRoutineTagEdge struct {
+		EncodedSearchCursor func(childComplexity int) int
+		Node                func(childComplexity int) int
+	}
+
+	SearchRoutineTaskConnection struct {
+		SearchEdges    func(childComplexity int) int
+		SearchPageInfo func(childComplexity int) int
+		SearchTime     func(childComplexity int) int
+		TotalCount     func(childComplexity int) int
+	}
+
+	SearchRoutineTaskEdge struct {
+		EncodedSearchCursor func(childComplexity int) int
+		Node                func(childComplexity int) int
+	}
+
+	SearchStationConnection struct {
+		SearchEdges    func(childComplexity int) int
+		SearchPageInfo func(childComplexity int) int
+		SearchTime     func(childComplexity int) int
+		TotalCount     func(childComplexity int) int
+	}
+
+	SearchStationEdge struct {
 		EncodedSearchCursor func(childComplexity int) int
 		Node                func(childComplexity int) int
 	}
@@ -341,6 +456,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateRootShelf.Permission(childComplexity), true
 
+	case "PrivateRootShelf.sharers":
+		if e.complexity.PrivateRootShelf.Sharers == nil {
+			break
+		}
+
+		return e.complexity.PrivateRootShelf.Sharers(childComplexity), true
+
 	case "PrivateRootShelf.subShelfCount":
 		if e.complexity.PrivateRootShelf.SubShelfCount == nil {
 			break
@@ -354,6 +476,384 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateRootShelf.UpdatedAt(childComplexity), true
+
+	case "PrivateRoutine.createdAt":
+		if e.complexity.PrivateRoutine.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutine.CreatedAt(childComplexity), true
+
+	case "PrivateRoutine.deletedAt":
+		if e.complexity.PrivateRoutine.DeletedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutine.DeletedAt(childComplexity), true
+
+	case "PrivateRoutine.description":
+		if e.complexity.PrivateRoutine.Description == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutine.Description(childComplexity), true
+
+	case "PrivateRoutine.id":
+		if e.complexity.PrivateRoutine.ID == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutine.ID(childComplexity), true
+
+	case "PrivateRoutine.isPinned":
+		if e.complexity.PrivateRoutine.IsPinned == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutine.IsPinned(childComplexity), true
+
+	case "PrivateRoutine.period":
+		if e.complexity.PrivateRoutine.Period == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutine.Period(childComplexity), true
+
+	case "PrivateRoutine.scheduledEndAt":
+		if e.complexity.PrivateRoutine.ScheduledEndAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutine.ScheduledEndAt(childComplexity), true
+
+	case "PrivateRoutine.scheduledStartAt":
+		if e.complexity.PrivateRoutine.ScheduledStartAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutine.ScheduledStartAt(childComplexity), true
+
+	case "PrivateRoutine.station":
+		if e.complexity.PrivateRoutine.Station == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutine.Station(childComplexity), true
+
+	case "PrivateRoutine.stationId":
+		if e.complexity.PrivateRoutine.StationID == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutine.StationID(childComplexity), true
+
+	case "PrivateRoutine.status":
+		if e.complexity.PrivateRoutine.Status == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutine.Status(childComplexity), true
+
+	case "PrivateRoutine.tags":
+		if e.complexity.PrivateRoutine.Tags == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutine.Tags(childComplexity), true
+
+	case "PrivateRoutine.tasks":
+		if e.complexity.PrivateRoutine.Tasks == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutine.Tasks(childComplexity), true
+
+	case "PrivateRoutine.timezone":
+		if e.complexity.PrivateRoutine.Timezone == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutine.Timezone(childComplexity), true
+
+	case "PrivateRoutine.title":
+		if e.complexity.PrivateRoutine.Title == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutine.Title(childComplexity), true
+
+	case "PrivateRoutine.updatedAt":
+		if e.complexity.PrivateRoutine.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutine.UpdatedAt(childComplexity), true
+
+	case "PrivateRoutineTag.color":
+		if e.complexity.PrivateRoutineTag.Color == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTag.Color(childComplexity), true
+
+	case "PrivateRoutineTag.createdAt":
+		if e.complexity.PrivateRoutineTag.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTag.CreatedAt(childComplexity), true
+
+	case "PrivateRoutineTag.id":
+		if e.complexity.PrivateRoutineTag.ID == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTag.ID(childComplexity), true
+
+	case "PrivateRoutineTag.icon":
+		if e.complexity.PrivateRoutineTag.Icon == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTag.Icon(childComplexity), true
+
+	case "PrivateRoutineTag.name":
+		if e.complexity.PrivateRoutineTag.Name == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTag.Name(childComplexity), true
+
+	case "PrivateRoutineTag.owner":
+		if e.complexity.PrivateRoutineTag.Owner == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTag.Owner(childComplexity), true
+
+	case "PrivateRoutineTag.routines":
+		if e.complexity.PrivateRoutineTag.Routines == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTag.Routines(childComplexity), true
+
+	case "PrivateRoutineTag.sharers":
+		if e.complexity.PrivateRoutineTag.Sharers == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTag.Sharers(childComplexity), true
+
+	case "PrivateRoutineTag.updatedAt":
+		if e.complexity.PrivateRoutineTag.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTag.UpdatedAt(childComplexity), true
+
+	case "PrivateRoutineTask.actualEndedAt":
+		if e.complexity.PrivateRoutineTask.ActualEndedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTask.ActualEndedAt(childComplexity), true
+
+	case "PrivateRoutineTask.actualStartedAt":
+		if e.complexity.PrivateRoutineTask.ActualStartedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTask.ActualStartedAt(childComplexity), true
+
+	case "PrivateRoutineTask.attempts":
+		if e.complexity.PrivateRoutineTask.Attempts == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTask.Attempts(childComplexity), true
+
+	case "PrivateRoutineTask.createdAt":
+		if e.complexity.PrivateRoutineTask.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTask.CreatedAt(childComplexity), true
+
+	case "PrivateRoutineTask.id":
+		if e.complexity.PrivateRoutineTask.ID == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTask.ID(childComplexity), true
+
+	case "PrivateRoutineTask.maxAttempts":
+		if e.complexity.PrivateRoutineTask.MaxAttempts == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTask.MaxAttempts(childComplexity), true
+
+	case "PrivateRoutineTask.payload":
+		if e.complexity.PrivateRoutineTask.Payload == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTask.Payload(childComplexity), true
+
+	case "PrivateRoutineTask.priority":
+		if e.complexity.PrivateRoutineTask.Priority == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTask.Priority(childComplexity), true
+
+	case "PrivateRoutineTask.purpose":
+		if e.complexity.PrivateRoutineTask.Purpose == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTask.Purpose(childComplexity), true
+
+	case "PrivateRoutineTask.routines":
+		if e.complexity.PrivateRoutineTask.Routines == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTask.Routines(childComplexity), true
+
+	case "PrivateRoutineTask.scheduledAt":
+		if e.complexity.PrivateRoutineTask.ScheduledAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTask.ScheduledAt(childComplexity), true
+
+	case "PrivateRoutineTask.station":
+		if e.complexity.PrivateRoutineTask.Station == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTask.Station(childComplexity), true
+
+	case "PrivateRoutineTask.stationId":
+		if e.complexity.PrivateRoutineTask.StationID == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTask.StationID(childComplexity), true
+
+	case "PrivateRoutineTask.status":
+		if e.complexity.PrivateRoutineTask.Status == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTask.Status(childComplexity), true
+
+	case "PrivateRoutineTask.title":
+		if e.complexity.PrivateRoutineTask.Title == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTask.Title(childComplexity), true
+
+	case "PrivateRoutineTask.updatedAt":
+		if e.complexity.PrivateRoutineTask.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTask.UpdatedAt(childComplexity), true
+
+	case "PrivateStation.createdAt":
+		if e.complexity.PrivateStation.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateStation.CreatedAt(childComplexity), true
+
+	case "PrivateStation.deletedAt":
+		if e.complexity.PrivateStation.DeletedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateStation.DeletedAt(childComplexity), true
+
+	case "PrivateStation.description":
+		if e.complexity.PrivateStation.Description == nil {
+			break
+		}
+
+		return e.complexity.PrivateStation.Description(childComplexity), true
+
+	case "PrivateStation.headerBackgroundURL":
+		if e.complexity.PrivateStation.HeaderBackgroundURL == nil {
+			break
+		}
+
+		return e.complexity.PrivateStation.HeaderBackgroundURL(childComplexity), true
+
+	case "PrivateStation.id":
+		if e.complexity.PrivateStation.ID == nil {
+			break
+		}
+
+		return e.complexity.PrivateStation.ID(childComplexity), true
+
+	case "PrivateStation.icon":
+		if e.complexity.PrivateStation.Icon == nil {
+			break
+		}
+
+		return e.complexity.PrivateStation.Icon(childComplexity), true
+
+	case "PrivateStation.name":
+		if e.complexity.PrivateStation.Name == nil {
+			break
+		}
+
+		return e.complexity.PrivateStation.Name(childComplexity), true
+
+	case "PrivateStation.owner":
+		if e.complexity.PrivateStation.Owner == nil {
+			break
+		}
+
+		return e.complexity.PrivateStation.Owner(childComplexity), true
+
+	case "PrivateStation.permission":
+		if e.complexity.PrivateStation.Permission == nil {
+			break
+		}
+
+		return e.complexity.PrivateStation.Permission(childComplexity), true
+
+	case "PrivateStation.routineCount":
+		if e.complexity.PrivateStation.RoutineCount == nil {
+			break
+		}
+
+		return e.complexity.PrivateStation.RoutineCount(childComplexity), true
+
+	case "PrivateStation.routines":
+		if e.complexity.PrivateStation.Routines == nil {
+			break
+		}
+
+		return e.complexity.PrivateStation.Routines(childComplexity), true
+
+	case "PrivateStation.sharers":
+		if e.complexity.PrivateStation.Sharers == nil {
+			break
+		}
+
+		return e.complexity.PrivateStation.Sharers(childComplexity), true
+
+	case "PrivateStation.updatedAt":
+		if e.complexity.PrivateStation.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateStation.UpdatedAt(childComplexity), true
 
 	case "PrivateSubShelf.createdAt":
 		if e.complexity.PrivateSubShelf.CreatedAt == nil {
@@ -818,6 +1318,174 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.SearchRootShelfEdge.Node(childComplexity), true
 
+	case "SearchRoutineConnection.searchEdges":
+		if e.complexity.SearchRoutineConnection.SearchEdges == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineConnection.SearchEdges(childComplexity), true
+
+	case "SearchRoutineConnection.searchPageInfo":
+		if e.complexity.SearchRoutineConnection.SearchPageInfo == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineConnection.SearchPageInfo(childComplexity), true
+
+	case "SearchRoutineConnection.searchTime":
+		if e.complexity.SearchRoutineConnection.SearchTime == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineConnection.SearchTime(childComplexity), true
+
+	case "SearchRoutineConnection.totalCount":
+		if e.complexity.SearchRoutineConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineConnection.TotalCount(childComplexity), true
+
+	case "SearchRoutineEdge.encodedSearchCursor":
+		if e.complexity.SearchRoutineEdge.EncodedSearchCursor == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineEdge.EncodedSearchCursor(childComplexity), true
+
+	case "SearchRoutineEdge.node":
+		if e.complexity.SearchRoutineEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineEdge.Node(childComplexity), true
+
+	case "SearchRoutineTagConnection.searchEdges":
+		if e.complexity.SearchRoutineTagConnection.SearchEdges == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineTagConnection.SearchEdges(childComplexity), true
+
+	case "SearchRoutineTagConnection.searchPageInfo":
+		if e.complexity.SearchRoutineTagConnection.SearchPageInfo == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineTagConnection.SearchPageInfo(childComplexity), true
+
+	case "SearchRoutineTagConnection.searchTime":
+		if e.complexity.SearchRoutineTagConnection.SearchTime == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineTagConnection.SearchTime(childComplexity), true
+
+	case "SearchRoutineTagConnection.totalCount":
+		if e.complexity.SearchRoutineTagConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineTagConnection.TotalCount(childComplexity), true
+
+	case "SearchRoutineTagEdge.encodedSearchCursor":
+		if e.complexity.SearchRoutineTagEdge.EncodedSearchCursor == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineTagEdge.EncodedSearchCursor(childComplexity), true
+
+	case "SearchRoutineTagEdge.node":
+		if e.complexity.SearchRoutineTagEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineTagEdge.Node(childComplexity), true
+
+	case "SearchRoutineTaskConnection.searchEdges":
+		if e.complexity.SearchRoutineTaskConnection.SearchEdges == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineTaskConnection.SearchEdges(childComplexity), true
+
+	case "SearchRoutineTaskConnection.searchPageInfo":
+		if e.complexity.SearchRoutineTaskConnection.SearchPageInfo == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineTaskConnection.SearchPageInfo(childComplexity), true
+
+	case "SearchRoutineTaskConnection.searchTime":
+		if e.complexity.SearchRoutineTaskConnection.SearchTime == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineTaskConnection.SearchTime(childComplexity), true
+
+	case "SearchRoutineTaskConnection.totalCount":
+		if e.complexity.SearchRoutineTaskConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineTaskConnection.TotalCount(childComplexity), true
+
+	case "SearchRoutineTaskEdge.encodedSearchCursor":
+		if e.complexity.SearchRoutineTaskEdge.EncodedSearchCursor == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineTaskEdge.EncodedSearchCursor(childComplexity), true
+
+	case "SearchRoutineTaskEdge.node":
+		if e.complexity.SearchRoutineTaskEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineTaskEdge.Node(childComplexity), true
+
+	case "SearchStationConnection.searchEdges":
+		if e.complexity.SearchStationConnection.SearchEdges == nil {
+			break
+		}
+
+		return e.complexity.SearchStationConnection.SearchEdges(childComplexity), true
+
+	case "SearchStationConnection.searchPageInfo":
+		if e.complexity.SearchStationConnection.SearchPageInfo == nil {
+			break
+		}
+
+		return e.complexity.SearchStationConnection.SearchPageInfo(childComplexity), true
+
+	case "SearchStationConnection.searchTime":
+		if e.complexity.SearchStationConnection.SearchTime == nil {
+			break
+		}
+
+		return e.complexity.SearchStationConnection.SearchTime(childComplexity), true
+
+	case "SearchStationConnection.totalCount":
+		if e.complexity.SearchStationConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.SearchStationConnection.TotalCount(childComplexity), true
+
+	case "SearchStationEdge.encodedSearchCursor":
+		if e.complexity.SearchStationEdge.EncodedSearchCursor == nil {
+			break
+		}
+
+		return e.complexity.SearchStationEdge.EncodedSearchCursor(childComplexity), true
+
+	case "SearchStationEdge.node":
+		if e.complexity.SearchStationEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.SearchStationEdge.Node(childComplexity), true
+
 	case "SearchThemeConnection.searchEdges":
 		if e.complexity.SearchThemeConnection.SearchEdges == nil {
 			break
@@ -915,6 +1583,14 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputSearchBadgeInput,
 		ec.unmarshalInputSearchRootShelfCursorFields,
 		ec.unmarshalInputSearchRootShelfInput,
+		ec.unmarshalInputSearchRoutineCursorFields,
+		ec.unmarshalInputSearchRoutineInput,
+		ec.unmarshalInputSearchRoutineTagCursorFields,
+		ec.unmarshalInputSearchRoutineTagInput,
+		ec.unmarshalInputSearchRoutineTaskCursorFields,
+		ec.unmarshalInputSearchRoutineTaskInput,
+		ec.unmarshalInputSearchStationCursorFields,
+		ec.unmarshalInputSearchStationInput,
 		ec.unmarshalInputSearchThemeCursorFields,
 		ec.unmarshalInputSearchThemeFilters,
 		ec.unmarshalInputSearchThemeInput,
@@ -1041,12 +1717,85 @@ var sources = []*ast.Source{
   Canada
 }
 `, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/enums/item_type_enum.graphql", Input: `enum ItemType {
+  ItemType_BlockPack
+  ItemType_Material
+}
+`, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/enums/language_enum.graphql", Input: `enum Language {
   English
   TraditionalChinese
   SimpleChinese
   Japanese
   Korean
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/enums/material_content_type_enum.graphql", Input: `enum MaterialContentType {
+  None
+  Application_JSON
+  Application_PDF
+  Text_Plain
+  Text_HTML
+  Text_Markdown
+  Image_PNG
+  Image_JPG
+  Image_JPEG
+  Image_GIF
+  Image_SVG
+  Image_WebP
+  Video_MP4
+  Video_WebM
+  Audio_Mpeg
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/enums/routine_period_enum.graphql", Input: `enum RoutinePeriod {
+  RoutinePeriod_Daily
+  RoutinePeriod_Weekly
+  RoutinePeriod_Monthly
+  RoutinePeriod_Yearly
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/enums/routine_status_enum.graphql", Input: `enum RoutineStatus {
+  RoutineStatus_Scheduled
+  RoutineStatus_InProgress
+  RoutineStatus_Completed
+  RoutineStatus_OverDue
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/enums/routine_task_purpose_enum.graphql", Input: `enum RoutineTaskPurpose {
+  RoutineTaskPurpose_CreateBlockPack
+  RoutineTaskPurpose_DeleteBlockPack
+  RoutineTaskPurpose_CreateBlock
+  RoutineTaskPurpose_UpdateBlock
+  RoutineTaskPurpose_DeleteBlock
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/enums/routine_task_status_enum.graphql", Input: `enum RoutineTaskStatus {
+  RoutineTaskStatus_Idle
+  RoutineTaskStatus_Waiting
+  RoutineTaskStatus_Running
+  RoutineTaskStatus_Pause
+  RoutineTaskStatus_Cancel
+  RoutineTaskStatus_Success
+  RoutineTaskStatus_Fail
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/enums/supported_icon_enum.graphql", Input: `enum SupportedIcon {
+  SupportedIcon_GrinningFace
+  SupportedIcon_SmilingFaceWithSmilingEyes
+  SupportedIcon_RedHeart
+  SupportedIcon_Fire
+  SupportedIcon_Star
+  SupportedIcon_Books
+  SupportedIcon_Notebook
+  SupportedIcon_PencilPaper
+  SupportedIcon_Lightbulb
+  SupportedIcon_Rocket
+  SupportedIcon_CheckMark
+  SupportedIcon_Pin
+  SupportedIcon_FolderOpen
+  SupportedIcon_Calendar
+  SupportedIcon_Clock
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/enums/user_gender_enum.graphql", Input: `enum UserGender {
@@ -1143,7 +1892,7 @@ interface SearchConnection {
   name: String!
   size: Float!
   contentKey: String!
-  contentType: String!
+  contentType: MaterialContentType!
   parseMediaType: String!
   deletedAt: Time
   updatedAt: Time!
@@ -1175,7 +1924,64 @@ interface SearchConnection {
   createdAt: Time!
 
   # relations
-  owner: [PublicUser!]!
+  owner: PublicUser!
+  sharers: [PublicUser!]!
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/routine.graphql", Input: `type PrivateRoutine {
+  id: UUID!
+  stationId: UUID!
+  title: String!
+  description: String!
+  status: RoutineStatus!
+  isPinned: Boolean!
+  scheduledStartAt: Time!
+  scheduledEndAt: Time!
+  period: RoutinePeriod
+  timezone: String!
+  deletedAt: Time
+  updatedAt: Time!
+  createdAt: Time!
+
+  # relations
+  station: PrivateStation!
+  tags: [PrivateRoutineTag!]!
+  tasks: [PrivateRoutineTask!]!
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/routine_tag.graphql", Input: `type PrivateRoutineTag {
+  id: UUID!
+  name: String!
+  color: String!
+  icon: SupportedIcon
+  updatedAt: Time!
+  createdAt: Time!
+
+  # relations
+  owner: PublicUser!
+  sharers: [PublicUser!]!
+  routines: [PrivateRoutine!]!
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/routine_task.graphql", Input: `type PrivateRoutineTask {
+  id: UUID!
+  stationId: UUID!
+  title: String!
+  purpose: RoutineTaskPurpose!
+  payload: RawJSON!
+  priority: Int32!
+  status: RoutineTaskStatus!
+  attempts: Int32!
+  maxAttempts: Int32!
+  scheduledAt: Time!
+  actualStartedAt: Time
+  actualEndedAt: Time
+  updatedAt: Time!
+  createdAt: Time!
+
+  # relations
+  station: PrivateStation!
+  routines: [PrivateRoutine!]!
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/scalar.graphql", Input: `scalar Int32
@@ -1183,6 +1989,8 @@ scalar Int64
 scalar UUID
 scalar Time
 scalar Base64Bytes
+scalar RawJSON
+scalar DatatypeJSON
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/search_badges.graphql", Input: `# =============== Search Filters & SortBy & SortOrder =============== #
 
@@ -1263,6 +2071,168 @@ type SearchRootShelfEdge implements SearchEdge {
 
 type SearchRootShelfConnection implements SearchConnection {
   searchEdges: [SearchRootShelfEdge!]!
+  searchPageInfo: SearchPageInfo!
+  totalCount: Int!
+  searchTime: Float!
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/search_routine_tags.graphql", Input: `# =============== Search SortBy & Input =============== #
+
+enum SearchRoutineTagSortBy {
+  RELEVANCE
+  NAME
+  LAST_UPDATE
+  CREATED_AT
+}
+
+input SearchRoutineTagInput {
+  query: String!
+  after: String
+  first: Int = 10
+  sortBy: SearchRoutineTagSortBy = RELEVANCE
+  sortOrder: SearchSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+input SearchRoutineTagCursorFields {
+  id: UUID!
+}
+
+# =============== Search Edge & Connection =============== #
+
+type SearchRoutineTagEdge implements SearchEdge {
+  encodedSearchCursor: String!
+  node: PrivateRoutineTag!
+}
+
+type SearchRoutineTagConnection implements SearchConnection {
+  searchEdges: [SearchRoutineTagEdge!]!
+  searchPageInfo: SearchPageInfo!
+  totalCount: Int!
+  searchTime: Float!
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/search_routine_tasks.graphql", Input: `# =============== Search SortBy & Input =============== #
+
+enum SearchRoutineTaskSortBy {
+  RELEVANCE
+  TITLE
+  PURPOSE
+  PRIORITY
+  STATUS
+  ATTEMPTS
+  MAX_ATTEMPTS
+  SCHEDULED_AT
+  ACTUAL_STARTED_AT
+  ACTUAL_ENDED_AT
+  LAST_UPDATE
+  CREATED_AT
+}
+
+input SearchRoutineTaskInput {
+  stationId: UUID
+  query: String!
+  after: String
+  first: Int = 10
+  sortBy: SearchRoutineTaskSortBy = RELEVANCE
+  sortOrder: SearchSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+input SearchRoutineTaskCursorFields {
+  id: UUID!
+}
+
+# =============== Search Edge & Connection =============== #
+
+type SearchRoutineTaskEdge implements SearchEdge {
+  encodedSearchCursor: String!
+  node: PrivateRoutineTask!
+}
+
+type SearchRoutineTaskConnection implements SearchConnection {
+  searchEdges: [SearchRoutineTaskEdge!]!
+  searchPageInfo: SearchPageInfo!
+  totalCount: Int!
+  searchTime: Float!
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/search_routines.graphql", Input: `# =============== Search SortBy & Input =============== #
+
+enum SearchRoutineSortBy {
+  RELEVANCE
+  TITLE
+  STATUS
+  SCHEDULED_START_AT
+  SCHEDULED_END_AT
+  PERIOD
+  LAST_UPDATE
+  CREATED_AT
+}
+
+input SearchRoutineInput {
+  stationId: UUID
+  query: String!
+  first: Int = 10
+  sortBy: SearchRoutineSortBy = RELEVANCE
+  sortOrder: SearchSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+input SearchRoutineCursorFields {
+  id: UUID!
+}
+
+# =============== Search Edge & Connection =============== #
+
+type SearchRoutineEdge implements SearchEdge {
+  encodedSearchCursor: String!
+  node: PrivateRoutine!
+}
+
+type SearchRoutineConnection implements SearchConnection {
+  searchEdges: [SearchRoutineEdge!]!
+  searchPageInfo: SearchPageInfo!
+  totalCount: Int!
+  searchTime: Float!
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/search_stations.graphql", Input: `# =============== Search SortBy & Input =============== #
+
+enum SearchStationSortBy {
+  RELEVANCE
+  NAME
+  ROUTINE_COUNT
+  LAST_UPDATE
+  CREATED_AT
+}
+
+input SearchStationInput {
+  query: String!
+  after: String
+  first: Int = 10
+  sortBy: SearchStationSortBy = RELEVANCE
+  sortOrder: SearchSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+input SearchStationCursorFields {
+  id: UUID!
+}
+
+# =============== Search Edge & Connection =============== #
+
+type SearchStationEdge implements SearchEdge {
+  encodedSearchCursor: String!
+  node: PrivateStation!
+}
+
+type SearchStationConnection implements SearchConnection {
+  searchEdges: [SearchStationEdge!]!
   searchPageInfo: SearchPageInfo!
   totalCount: Int!
   searchTime: Float!
@@ -1366,6 +2336,24 @@ type SearchUserConnection implements SearchConnection {
   searchPageInfo: SearchPageInfo!
   totalCount: Int!
   searchTime: Float!
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/station.graphql", Input: `type PrivateStation {
+  id: UUID!
+  permission: AccessControlPermission!
+  name: String!
+  description: String!
+  icon: SupportedIcon
+  headerBackgroundURL: String
+  routineCount: Int32!
+  deletedAt: Time
+  createdAt: Time!
+  updatedAt: Time!
+
+  # relations
+  owner: PublicUser!
+  sharers: [PublicUser!]!
+  routines: [PrivateRoutine!]!
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/sub_shelf.graphql", Input: `type PrivateSubShelf {

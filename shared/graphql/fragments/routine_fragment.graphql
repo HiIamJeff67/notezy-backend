@@ -1,0 +1,28 @@
+fragment FragmentedBasicPrivateRoutine on PrivateRoutine {
+  id
+  stationId
+  title
+  description
+  status
+  isPinned
+  scheduledStartAt
+  scheduledEndAt
+  period
+  timezone
+  deletedAt
+  updatedAt
+  createdAt
+}
+
+fragment FragmentedPrivateRoutine on PrivateRoutine {
+  ...FragmentedBasicPrivateRoutine
+  station {
+    ...FragmentedBasicPrivateStation
+  }
+  tags {
+    ...FragmentedBasicPrivateRoutineTag
+  }
+  tasks {
+    ...FragmentedBasicPrivateRoutineTask
+  }
+}

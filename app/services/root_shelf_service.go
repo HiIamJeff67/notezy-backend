@@ -436,7 +436,7 @@ func (s *RootShelfService) SearchPrivateRootShelves(
 	if gqlInput.First != nil && *gqlInput.First > 0 {
 		limit = int(*gqlInput.First)
 	}
-	limit = max(limit, constants.MaxSearchLimit)
+	limit = min(limit, constants.MaxSearchLimit)
 	query = query.Limit(limit + 1)
 
 	var shelves []PrivateRootShelf

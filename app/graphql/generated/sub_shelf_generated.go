@@ -6,13 +6,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	"github.com/google/uuid"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -405,7 +405,7 @@ func (ec *executionContext) _PrivateSubShelf_rootShelf(ctx context.Context, fiel
 	}
 	res := resTmp.(*gqlmodels.PrivateRootShelf)
 	fc.Result = res
-	return ec.marshalNPrivateRootShelf2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateRootShelf(ctx, field.Selections, res)
+	return ec.marshalNPrivateRootShelf2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateRootShelf(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateSubShelf_rootShelf(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -436,6 +436,8 @@ func (ec *executionContext) fieldContext_PrivateSubShelf_rootShelf(_ context.Con
 				return ec.fieldContext_PrivateRootShelf_createdAt(ctx, field)
 			case "owner":
 				return ec.fieldContext_PrivateRootShelf_owner(ctx, field)
+			case "sharers":
+				return ec.fieldContext_PrivateRootShelf_sharers(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PrivateRootShelf", field.Name)
 		},
@@ -471,7 +473,7 @@ func (ec *executionContext) _PrivateSubShelf_nextSubShelves(ctx context.Context,
 	}
 	res := resTmp.([]*gqlmodels.PrivateSubShelf)
 	fc.Result = res
-	return ec.marshalNPrivateSubShelf2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateSubShelfᚄ(ctx, field.Selections, res)
+	return ec.marshalNPrivateSubShelf2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateSubShelfᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateSubShelf_nextSubShelves(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -539,7 +541,7 @@ func (ec *executionContext) _PrivateSubShelf_materials(ctx context.Context, fiel
 	}
 	res := resTmp.([]*gqlmodels.PrivateMaterial)
 	fc.Result = res
-	return ec.marshalNPrivateMaterial2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateMaterialᚄ(ctx, field.Selections, res)
+	return ec.marshalNPrivateMaterial2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateMaterialᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateSubShelf_materials(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -678,7 +680,7 @@ func (ec *executionContext) _PrivateSubShelf(ctx context.Context, sel ast.Select
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNPrivateSubShelf2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateSubShelfᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.PrivateSubShelf) graphql.Marshaler {
+func (ec *executionContext) marshalNPrivateSubShelf2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateSubShelfᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.PrivateSubShelf) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -702,7 +704,7 @@ func (ec *executionContext) marshalNPrivateSubShelf2ᚕᚖnotezyᚑbackendᚋapp
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPrivateSubShelf2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateSubShelf(ctx, sel, v[i])
+			ret[i] = ec.marshalNPrivateSubShelf2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateSubShelf(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -722,7 +724,7 @@ func (ec *executionContext) marshalNPrivateSubShelf2ᚕᚖnotezyᚑbackendᚋapp
 	return ret
 }
 
-func (ec *executionContext) marshalNPrivateSubShelf2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateSubShelf(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PrivateSubShelf) graphql.Marshaler {
+func (ec *executionContext) marshalNPrivateSubShelf2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateSubShelf(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PrivateSubShelf) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

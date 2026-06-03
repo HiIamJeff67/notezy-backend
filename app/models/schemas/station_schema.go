@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
@@ -42,3 +43,23 @@ const (
 	StationRelation_Routines        StationRelation = "Routines"
 	StationRelation_RoutineTasks    StationRelation = "RoutineTasks"
 )
+
+/* ============================== Relative Type Conversion ============================== */
+
+func (s *Station) ToPrivateStation(permission enums.AccessControlPermission) *gqlmodels.PrivateStation {
+	return &gqlmodels.PrivateStation{
+		ID:                  s.Id,
+		Permission:          permission,
+		Name:                s.Name,
+		Description:         s.Description,
+		Icon:                s.Icon,
+		HeaderBackgroundURL: s.HeaderBackgroundURL,
+		RoutineCount:        s.RoutineCount,
+		DeletedAt:           s.DeletedAt,
+		UpdatedAt:           s.UpdatedAt,
+		CreatedAt:           s.CreatedAt,
+		Owner:               &gqlmodels.PublicUser{},
+		Sharers:             make([]*gqlmodels.PublicUser, 0),
+		Routines:            make([]*gqlmodels.PrivateRoutine, 0),
+	}
+}

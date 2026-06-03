@@ -1,0 +1,26 @@
+fragment FragmentedBasicPrivateRoutineTask on PrivateRoutineTask {
+  id
+  stationId
+  title
+  purpose
+  payload
+  priority
+  status
+  attempts
+  maxAttempts
+  scheduledAt
+  actualStartedAt
+  actualEndedAt
+  updatedAt
+  createdAt
+}
+
+fragment FragmentedPrivateRoutineTask on PrivateRoutineTask {
+  ...FragmentedBasicPrivateRoutineTask
+  station {
+    ...FragmentedBasicPrivateStation
+  }
+  routines {
+    ...FragmentedBasicPrivateRoutine
+  }
+}

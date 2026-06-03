@@ -6,13 +6,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
-	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	"strconv"
 	"sync/atomic"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
+	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	"github.com/google/uuid"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -147,7 +147,7 @@ func (ec *executionContext) _PrivateRootShelf_permission(ctx context.Context, fi
 	}
 	res := resTmp.(enums.AccessControlPermission)
 	fc.Result = res
-	return ec.marshalNAccessControlPermission2notezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐAccessControlPermission(ctx, field.Selections, res)
+	return ec.marshalNAccessControlPermission2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐAccessControlPermission(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateRootShelf_permission(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -450,12 +450,78 @@ func (ec *executionContext) _PrivateRootShelf_owner(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*gqlmodels.PublicUser)
+	res := resTmp.(*gqlmodels.PublicUser)
 	fc.Result = res
-	return ec.marshalNPublicUser2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUserᚄ(ctx, field.Selections, res)
+	return ec.marshalNPublicUser2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateRootShelf_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PrivateRootShelf",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "publicId":
+				return ec.fieldContext_PublicUser_publicId(ctx, field)
+			case "name":
+				return ec.fieldContext_PublicUser_name(ctx, field)
+			case "displayName":
+				return ec.fieldContext_PublicUser_displayName(ctx, field)
+			case "role":
+				return ec.fieldContext_PublicUser_role(ctx, field)
+			case "plan":
+				return ec.fieldContext_PublicUser_plan(ctx, field)
+			case "status":
+				return ec.fieldContext_PublicUser_status(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PublicUser_createdAt(ctx, field)
+			case "userInfo":
+				return ec.fieldContext_PublicUser_userInfo(ctx, field)
+			case "badges":
+				return ec.fieldContext_PublicUser_badges(ctx, field)
+			case "themes":
+				return ec.fieldContext_PublicUser_themes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PublicUser", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PrivateRootShelf_sharers(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRootShelf) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateRootShelf_sharers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Sharers, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*gqlmodels.PublicUser)
+	fc.Result = res
+	return ec.marshalNPublicUser2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUserᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PrivateRootShelf_sharers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PrivateRootShelf",
 		Field:      field,
@@ -560,6 +626,11 @@ func (ec *executionContext) _PrivateRootShelf(ctx context.Context, sel ast.Selec
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "sharers":
+			out.Values[i] = ec._PrivateRootShelf_sharers(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -587,7 +658,7 @@ func (ec *executionContext) _PrivateRootShelf(ctx context.Context, sel ast.Selec
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNPrivateRootShelf2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateRootShelf(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PrivateRootShelf) graphql.Marshaler {
+func (ec *executionContext) marshalNPrivateRootShelf2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateRootShelf(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PrivateRootShelf) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

@@ -54,3 +54,79 @@ query SearchRootShelves($input: SearchRootShelfInput!) {
     searchTime
   }
 }
+
+query SearchStations($input: SearchStationInput!) {
+  searchStations(input: $input) {
+    searchEdges {
+      node {
+        ...FragmentedPrivateStation
+      }
+      encodedSearchCursor
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}
+
+query SearchRoutines($input: SearchRoutineInput!) {
+  searchRoutines(input: $input) {
+    searchEdges {
+      node {
+        ...FragmentedPrivateRoutine
+      }
+      encodedSearchCursor
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}
+
+query SearchRoutineTags($input: SearchRoutineTagInput!) {
+  searchRoutineTags(input: $input) {
+    searchEdges {
+      node {
+        ...FragmentedPrivateRoutineTag
+      }
+      encodedSearchCursor
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}
+
+query SearchRoutineTasks($input: SearchRoutineTaskInput!) {
+  searchRoutineTasks(input: $input) {
+    searchEdges {
+      node {
+        ...FragmentedPrivateRoutineTasks
+      }
+      encodedSearchCursor
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}

@@ -6,12 +6,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	"strconv"
 	"sync"
 	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -57,7 +57,7 @@ func (ec *executionContext) _SearchUserConnection_searchEdges(ctx context.Contex
 	}
 	res := resTmp.([]*gqlmodels.SearchUserEdge)
 	fc.Result = res
-	return ec.marshalNSearchUserEdge2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserEdgeᚄ(ctx, field.Selections, res)
+	return ec.marshalNSearchUserEdge2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserEdgeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SearchUserConnection_searchEdges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -107,7 +107,7 @@ func (ec *executionContext) _SearchUserConnection_searchPageInfo(ctx context.Con
 	}
 	res := resTmp.(*gqlmodels.SearchPageInfo)
 	fc.Result = res
-	return ec.marshalNSearchPageInfo2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchPageInfo(ctx, field.Selections, res)
+	return ec.marshalNSearchPageInfo2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchPageInfo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SearchUserConnection_searchPageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -293,7 +293,7 @@ func (ec *executionContext) _SearchUserEdge_node(ctx context.Context, field grap
 	}
 	res := resTmp.(*gqlmodels.PublicUser)
 	fc.Result = res
-	return ec.marshalNPublicUser2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUser(ctx, field.Selections, res)
+	return ec.marshalNPublicUser2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SearchUserEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -378,21 +378,21 @@ func (ec *executionContext) unmarshalInputSearchUserFilters(ctx context.Context,
 		switch k {
 		case "role":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("role"))
-			data, err := ec.unmarshalOUserRole2ᚖnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserRole(ctx, v)
+			data, err := ec.unmarshalOUserRole2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserRole(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Role = data
 		case "plan":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("plan"))
-			data, err := ec.unmarshalOUserPlan2ᚖnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserPlan(ctx, v)
+			data, err := ec.unmarshalOUserPlan2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserPlan(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Plan = data
 		case "status":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			data, err := ec.unmarshalOUserStatus2ᚖnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserStatus(ctx, v)
+			data, err := ec.unmarshalOUserStatus2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserStatus(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -406,7 +406,7 @@ func (ec *executionContext) unmarshalInputSearchUserFilters(ctx context.Context,
 			it.HasAvatar = data
 		case "country":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("country"))
-			data, err := ec.unmarshalOCountry2ᚖnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐCountry(ctx, v)
+			data, err := ec.unmarshalOCountry2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐCountry(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -471,21 +471,21 @@ func (ec *executionContext) unmarshalInputSearchUserInput(ctx context.Context, o
 			it.First = data
 		case "filters":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filters"))
-			data, err := ec.unmarshalOSearchUserFilters2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserFilters(ctx, v)
+			data, err := ec.unmarshalOSearchUserFilters2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserFilters(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Filters = data
 		case "sortBy":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortBy"))
-			data, err := ec.unmarshalOSearchUserSortBy2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserSortBy(ctx, v)
+			data, err := ec.unmarshalOSearchUserSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserSortBy(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.SortBy = data
 		case "sortOrder":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortOrder"))
-			data, err := ec.unmarshalOSearchSortOrder2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchSortOrder(ctx, v)
+			data, err := ec.unmarshalOSearchSortOrder2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchSortOrder(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -606,11 +606,11 @@ func (ec *executionContext) _SearchUserEdge(ctx context.Context, sel ast.Selecti
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNSearchUserConnection2notezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserConnection(ctx context.Context, sel ast.SelectionSet, v gqlmodels.SearchUserConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchUserConnection2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserConnection(ctx context.Context, sel ast.SelectionSet, v gqlmodels.SearchUserConnection) graphql.Marshaler {
 	return ec._SearchUserConnection(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSearchUserConnection2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserConnection(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchUserConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchUserConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserConnection(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchUserConnection) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -620,7 +620,7 @@ func (ec *executionContext) marshalNSearchUserConnection2ᚖnotezyᚑbackendᚋa
 	return ec._SearchUserConnection(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSearchUserEdge2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.SearchUserEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchUserEdge2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.SearchUserEdge) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -644,7 +644,7 @@ func (ec *executionContext) marshalNSearchUserEdge2ᚕᚖnotezyᚑbackendᚋapp�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSearchUserEdge2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserEdge(ctx, sel, v[i])
+			ret[i] = ec.marshalNSearchUserEdge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserEdge(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -664,7 +664,7 @@ func (ec *executionContext) marshalNSearchUserEdge2ᚕᚖnotezyᚑbackendᚋapp�
 	return ret
 }
 
-func (ec *executionContext) marshalNSearchUserEdge2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserEdge(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchUserEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchUserEdge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserEdge(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchUserEdge) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -674,12 +674,12 @@ func (ec *executionContext) marshalNSearchUserEdge2ᚖnotezyᚑbackendᚋappᚋg
 	return ec._SearchUserEdge(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNSearchUserInput2notezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserInput(ctx context.Context, v any) (gqlmodels.SearchUserInput, error) {
+func (ec *executionContext) unmarshalNSearchUserInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserInput(ctx context.Context, v any) (gqlmodels.SearchUserInput, error) {
 	res, err := ec.unmarshalInputSearchUserInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOSearchUserFilters2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserFilters(ctx context.Context, v any) (*gqlmodels.SearchUserFilters, error) {
+func (ec *executionContext) unmarshalOSearchUserFilters2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserFilters(ctx context.Context, v any) (*gqlmodels.SearchUserFilters, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -687,7 +687,7 @@ func (ec *executionContext) unmarshalOSearchUserFilters2ᚖnotezyᚑbackendᚋap
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOSearchUserSortBy2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserSortBy(ctx context.Context, v any) (*gqlmodels.SearchUserSortBy, error) {
+func (ec *executionContext) unmarshalOSearchUserSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserSortBy(ctx context.Context, v any) (*gqlmodels.SearchUserSortBy, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -696,7 +696,7 @@ func (ec *executionContext) unmarshalOSearchUserSortBy2ᚖnotezyᚑbackendᚋapp
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOSearchUserSortBy2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserSortBy(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchUserSortBy) graphql.Marshaler {
+func (ec *executionContext) marshalOSearchUserSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserSortBy(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchUserSortBy) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

@@ -4,9 +4,9 @@ package generated
 
 import (
 	"context"
-	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -40,13 +40,13 @@ import (
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalNAccessControlPermission2notezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐAccessControlPermission(ctx context.Context, v any) (enums.AccessControlPermission, error) {
+func (ec *executionContext) unmarshalNAccessControlPermission2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐAccessControlPermission(ctx context.Context, v any) (enums.AccessControlPermission, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	res := enums.AccessControlPermission(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNAccessControlPermission2notezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐAccessControlPermission(ctx context.Context, sel ast.SelectionSet, v enums.AccessControlPermission) graphql.Marshaler {
+func (ec *executionContext) marshalNAccessControlPermission2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐAccessControlPermission(ctx context.Context, sel ast.SelectionSet, v enums.AccessControlPermission) graphql.Marshaler {
 	_ = sel
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {

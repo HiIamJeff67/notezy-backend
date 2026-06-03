@@ -6,13 +6,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -451,7 +451,7 @@ func (ec *executionContext) _PublicTheme_author(ctx context.Context, field graph
 	}
 	res := resTmp.(*gqlmodels.PublicUser)
 	fc.Result = res
-	return ec.marshalNPublicUser2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUser(ctx, field.Selections, res)
+	return ec.marshalNPublicUser2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PublicTheme_author(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -586,7 +586,7 @@ func (ec *executionContext) _PublicTheme(ctx context.Context, sel ast.SelectionS
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNPublicTheme2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicThemeᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.PublicTheme) graphql.Marshaler {
+func (ec *executionContext) marshalNPublicTheme2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicThemeᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.PublicTheme) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -610,7 +610,7 @@ func (ec *executionContext) marshalNPublicTheme2ᚕᚖnotezyᚑbackendᚋappᚋg
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPublicTheme2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicTheme(ctx, sel, v[i])
+			ret[i] = ec.marshalNPublicTheme2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicTheme(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -630,7 +630,7 @@ func (ec *executionContext) marshalNPublicTheme2ᚕᚖnotezyᚑbackendᚋappᚋg
 	return ret
 }
 
-func (ec *executionContext) marshalNPublicTheme2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicTheme(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PublicTheme) graphql.Marshaler {
+func (ec *executionContext) marshalNPublicTheme2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicTheme(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PublicTheme) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

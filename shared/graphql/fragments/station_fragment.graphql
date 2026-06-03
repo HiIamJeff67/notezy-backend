@@ -1,0 +1,25 @@
+fragment FragmentedBasicPrivateStation on PrivateStation {
+  id
+  permission
+  name
+  description
+  icon
+  headerBackgroundURL
+  routineCount
+  deletedAt
+  updatedAt
+  createdAt
+}
+
+fragment FragmentedPrivateStation on PrivateStation {
+  ...FragmentedBasicPrivateStation
+  owner {
+    ...FragmentedBasicPublicUser
+  }
+  sharers {
+    ...FragmentedBasicPublicUser
+  }
+  routines {
+    ...FragmentedBasicPrivateRoutine
+  }
+}

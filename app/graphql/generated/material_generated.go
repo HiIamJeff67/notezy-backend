@@ -6,13 +6,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
+	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	"github.com/google/uuid"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -277,9 +278,9 @@ func (ec *executionContext) _PrivateMaterial_contentType(ctx context.Context, fi
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(enums.MaterialContentType)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNMaterialContentType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐMaterialContentType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateMaterial_contentType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -289,7 +290,7 @@ func (ec *executionContext) fieldContext_PrivateMaterial_contentType(_ context.C
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type MaterialContentType does not have child fields")
 		},
 	}
 	return fc, nil
@@ -496,7 +497,7 @@ func (ec *executionContext) _PrivateMaterial_parentSubShelf(ctx context.Context,
 	}
 	res := resTmp.(*gqlmodels.PrivateSubShelf)
 	fc.Result = res
-	return ec.marshalNPrivateSubShelf2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateSubShelf(ctx, field.Selections, res)
+	return ec.marshalNPrivateSubShelf2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateSubShelf(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PrivateMaterial_parentSubShelf(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -638,7 +639,7 @@ func (ec *executionContext) _PrivateMaterial(ctx context.Context, sel ast.Select
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNPrivateMaterial2ᚕᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateMaterialᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.PrivateMaterial) graphql.Marshaler {
+func (ec *executionContext) marshalNPrivateMaterial2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateMaterialᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.PrivateMaterial) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -662,7 +663,7 @@ func (ec *executionContext) marshalNPrivateMaterial2ᚕᚖnotezyᚑbackendᚋapp
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPrivateMaterial2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateMaterial(ctx, sel, v[i])
+			ret[i] = ec.marshalNPrivateMaterial2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateMaterial(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -682,7 +683,7 @@ func (ec *executionContext) marshalNPrivateMaterial2ᚕᚖnotezyᚑbackendᚋapp
 	return ret
 }
 
-func (ec *executionContext) marshalNPrivateMaterial2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateMaterial(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PrivateMaterial) graphql.Marshaler {
+func (ec *executionContext) marshalNPrivateMaterial2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateMaterial(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PrivateMaterial) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

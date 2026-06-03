@@ -1,0 +1,36 @@
+# =============== Search SortBy & Input =============== #
+
+enum SearchRoutineTagSortBy {
+  RELEVANCE
+  NAME
+  LAST_UPDATE
+  CREATED_AT
+}
+
+input SearchRoutineTagInput {
+  query: String!
+  after: String
+  first: Int = 10
+  sortBy: SearchRoutineTagSortBy = RELEVANCE
+  sortOrder: SearchSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+input SearchRoutineTagCursorFields {
+  id: UUID!
+}
+
+# =============== Search Edge & Connection =============== #
+
+type SearchRoutineTagEdge implements SearchEdge {
+  encodedSearchCursor: String!
+  node: PrivateRoutineTag!
+}
+
+type SearchRoutineTagConnection implements SearchConnection {
+  searchEdges: [SearchRoutineTagEdge!]!
+  searchPageInfo: SearchPageInfo!
+  totalCount: Int!
+  searchTime: Float!
+}

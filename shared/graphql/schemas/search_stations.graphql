@@ -1,0 +1,37 @@
+# =============== Search SortBy & Input =============== #
+
+enum SearchStationSortBy {
+  RELEVANCE
+  NAME
+  ROUTINE_COUNT
+  LAST_UPDATE
+  CREATED_AT
+}
+
+input SearchStationInput {
+  query: String!
+  after: String
+  first: Int = 10
+  sortBy: SearchStationSortBy = RELEVANCE
+  sortOrder: SearchSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+input SearchStationCursorFields {
+  id: UUID!
+}
+
+# =============== Search Edge & Connection =============== #
+
+type SearchStationEdge implements SearchEdge {
+  encodedSearchCursor: String!
+  node: PrivateStation!
+}
+
+type SearchStationConnection implements SearchConnection {
+  searchEdges: [SearchStationEdge!]!
+  searchPageInfo: SearchPageInfo!
+  totalCount: Int!
+  searchTime: Float!
+}

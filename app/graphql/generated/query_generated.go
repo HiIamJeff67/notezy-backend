@@ -5,12 +5,12 @@ package generated
 import (
 	"context"
 	"fmt"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	"strconv"
 	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -65,7 +65,7 @@ func (ec *executionContext) field_Query_searchRootShelves_argsInput(
 ) (gqlmodels.SearchRootShelfInput, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSearchRootShelfInput2notezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchRootShelfInput(ctx, tmp)
+		return ec.unmarshalNSearchRootShelfInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchRootShelfInput(ctx, tmp)
 	}
 
 	var zeroVal gqlmodels.SearchRootShelfInput
@@ -88,7 +88,7 @@ func (ec *executionContext) field_Query_searchThemes_argsInput(
 ) (gqlmodels.SearchThemeInput, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSearchThemeInput2notezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchThemeInput(ctx, tmp)
+		return ec.unmarshalNSearchThemeInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchThemeInput(ctx, tmp)
 	}
 
 	var zeroVal gqlmodels.SearchThemeInput
@@ -111,7 +111,7 @@ func (ec *executionContext) field_Query_searchUsers_argsInput(
 ) (gqlmodels.SearchUserInput, error) {
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSearchUserInput2notezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserInput(ctx, tmp)
+		return ec.unmarshalNSearchUserInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserInput(ctx, tmp)
 	}
 
 	var zeroVal gqlmodels.SearchUserInput
@@ -154,7 +154,7 @@ func (ec *executionContext) _Query_searchUsers(ctx context.Context, field graphq
 	}
 	res := resTmp.(*gqlmodels.SearchUserConnection)
 	fc.Result = res
-	return ec.marshalNSearchUserConnection2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserConnection(ctx, field.Selections, res)
+	return ec.marshalNSearchUserConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchUserConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_searchUsers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -219,7 +219,7 @@ func (ec *executionContext) _Query_searchThemes(ctx context.Context, field graph
 	}
 	res := resTmp.(*gqlmodels.SearchThemeConnection)
 	fc.Result = res
-	return ec.marshalNSearchThemeConnection2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchThemeConnection(ctx, field.Selections, res)
+	return ec.marshalNSearchThemeConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchThemeConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_searchThemes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -284,7 +284,7 @@ func (ec *executionContext) _Query_searchRootShelves(ctx context.Context, field 
 	}
 	res := resTmp.(*gqlmodels.SearchRootShelfConnection)
 	fc.Result = res
-	return ec.marshalNSearchRootShelfConnection2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchRootShelfConnection(ctx, field.Selections, res)
+	return ec.marshalNSearchRootShelfConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchRootShelfConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_searchRootShelves(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {

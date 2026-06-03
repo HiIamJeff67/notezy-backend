@@ -1,0 +1,40 @@
+# =============== Search SortBy & Input =============== #
+
+enum SearchRoutineSortBy {
+  RELEVANCE
+  TITLE
+  STATUS
+  SCHEDULED_START_AT
+  SCHEDULED_END_AT
+  PERIOD
+  LAST_UPDATE
+  CREATED_AT
+}
+
+input SearchRoutineInput {
+  stationId: UUID
+  query: String!
+  first: Int = 10
+  sortBy: SearchRoutineSortBy = RELEVANCE
+  sortOrder: SearchSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+input SearchRoutineCursorFields {
+  id: UUID!
+}
+
+# =============== Search Edge & Connection =============== #
+
+type SearchRoutineEdge implements SearchEdge {
+  encodedSearchCursor: String!
+  node: PrivateRoutine!
+}
+
+type SearchRoutineConnection implements SearchConnection {
+  searchEdges: [SearchRoutineEdge!]!
+  searchPageInfo: SearchPageInfo!
+  totalCount: Int!
+  searchTime: Float!
+}

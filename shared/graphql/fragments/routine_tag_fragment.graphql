@@ -1,0 +1,21 @@
+fragment FragmentedBasicPrivateRoutineTag on PrivateRoutineTag {
+  id
+  name
+  color
+  icon
+  updatedAt
+  createdAt
+}
+
+fragment FragmentedPrivateRoutineTag on PrivateRoutineTag {
+  ...FragmentedBasicPrivateRoutineTag
+  owner {
+    ...FragmentedBasicPublicUser
+  }
+  sharers {
+    ...FragmentedBasicPublicUser
+  }
+  routines {
+    ...FragmentedBasicPrivateRoutine
+  }
+}

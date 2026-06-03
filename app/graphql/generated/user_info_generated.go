@@ -5,13 +5,13 @@ package generated
 import (
 	"context"
 	"errors"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
-	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	"strconv"
 	"sync/atomic"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
+	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -221,7 +221,7 @@ func (ec *executionContext) _PublicUserInfo_gender(ctx context.Context, field gr
 	}
 	res := resTmp.(enums.UserGender)
 	fc.Result = res
-	return ec.marshalNUserGender2notezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserGender(ctx, field.Selections, res)
+	return ec.marshalNUserGender2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserGender(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PublicUserInfo_gender(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -262,7 +262,7 @@ func (ec *executionContext) _PublicUserInfo_country(ctx context.Context, field g
 	}
 	res := resTmp.(*enums.Country)
 	fc.Result = res
-	return ec.marshalOCountry2ᚖnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐCountry(ctx, field.Selections, res)
+	return ec.marshalOCountry2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐCountry(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PublicUserInfo_country(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -392,7 +392,7 @@ func (ec *executionContext) _PublicUserInfo(ctx context.Context, sel ast.Selecti
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNPublicUserInfo2ᚖnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUserInfo(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PublicUserInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNPublicUserInfo2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUserInfo(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PublicUserInfo) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

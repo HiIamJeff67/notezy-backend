@@ -4,9 +4,9 @@ package generated
 
 import (
 	"context"
-	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -40,13 +40,13 @@ import (
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalNUserPlan2notezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserPlan(ctx context.Context, v any) (enums.UserPlan, error) {
+func (ec *executionContext) unmarshalNUserPlan2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserPlan(ctx context.Context, v any) (enums.UserPlan, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	res := enums.UserPlan(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNUserPlan2notezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserPlan(ctx context.Context, sel ast.SelectionSet, v enums.UserPlan) graphql.Marshaler {
+func (ec *executionContext) marshalNUserPlan2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserPlan(ctx context.Context, sel ast.SelectionSet, v enums.UserPlan) graphql.Marshaler {
 	_ = sel
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
@@ -57,7 +57,7 @@ func (ec *executionContext) marshalNUserPlan2notezyᚑbackendᚋappᚋmodelsᚋs
 	return res
 }
 
-func (ec *executionContext) unmarshalOUserPlan2ᚖnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserPlan(ctx context.Context, v any) (*enums.UserPlan, error) {
+func (ec *executionContext) unmarshalOUserPlan2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserPlan(ctx context.Context, v any) (*enums.UserPlan, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -66,7 +66,7 @@ func (ec *executionContext) unmarshalOUserPlan2ᚖnotezyᚑbackendᚋappᚋmodel
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOUserPlan2ᚖnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserPlan(ctx context.Context, sel ast.SelectionSet, v *enums.UserPlan) graphql.Marshaler {
+func (ec *executionContext) marshalOUserPlan2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐUserPlan(ctx context.Context, sel ast.SelectionSet, v *enums.UserPlan) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

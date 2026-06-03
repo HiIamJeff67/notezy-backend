@@ -52,6 +52,7 @@ func (rs *RootShelf) ToPrivateRootShelf(permission enums.AccessControlPermission
 		DeletedAt:      rs.DeletedAt,
 		UpdatedAt:      rs.UpdatedAt,
 		CreatedAt:      rs.CreatedAt,
-		Owner:          make([]*gqlmodels.PublicUser, 0),
+		Owner:          &gqlmodels.PublicUser{},
+		Sharers:        make([]*gqlmodels.PublicUser, 0),
 	}
 }

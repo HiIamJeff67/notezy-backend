@@ -8,6 +8,7 @@ import (
 )
 
 type CreateRoutineTaskInput struct {
+	Title       string                   `json:"title" gorm:"column:title;"`
 	Purpose     enums.RoutineTaskPurpose `json:"purpose" gorm:"column:purpose;"`
 	Payload     datatypes.JSON           `json:"payload" gorm:"column:payload;"`
 	Priority    int32                    `json:"priority" gorm:"column:priority;"`
@@ -16,6 +17,7 @@ type CreateRoutineTaskInput struct {
 
 type BulkCreateRoutineTaskInput struct {
 	StationId   uuid.UUID                `json:"stationId" gorm:"column:station_id;"`
+	Title       string                   `json:"title" gorm:"column:title;"`
 	Purpose     enums.RoutineTaskPurpose `json:"purpose" gorm:"column:purpose;"`
 	Payload     datatypes.JSON           `json:"payload" gorm:"column:payload;"`
 	Priority    int32                    `json:"priority" gorm:"column:priority;"`
@@ -24,6 +26,7 @@ type BulkCreateRoutineTaskInput struct {
 
 type UpdateRoutineTaskInput struct {
 	StationId   *uuid.UUID                `json:"stationId" gorm:"column:station_id;"`
+	Title       *string                   `json:"title" gorm:"column:title;"`
 	Purpose     *enums.RoutineTaskPurpose `json:"purpose" gorm:"column:purpose;"`
 	Payload     *datatypes.JSON           `json:"payload" gorm:"column:payload;"`
 	Priority    *int32                    `json:"priority" gorm:"column:priority;"`
