@@ -19,19 +19,55 @@ import (
 )
 
 func GraphQLHandler() gin.HandlerFunc {
+	dataloaders := dataloaders.NewDataloaders(models.NotezyDB)
+	userRepository := repositories.NewUserRepository()
+	rootShelfRepository := repositories.NewRootShelfRepository(scopes.NewRootShelfScope())
+	stationRepository := repositories.NewStationRepository(scopes.NewStationScope())
+	routineRepository := repositories.NewRoutineRepository(scopes.NewRoutineScope())
+	routineTagRepository := repositories.NewRoutineTagRepository(scopes.NewRoutineTagScope())
+	routineTaskRepository := repositories.NewRoutineTaskRepository(scopes.NewRoutineTaskScope())
+	itemRepository := repositories.NewItemRepository(scopes.NewItemScope())
+	userServices := services.NewUserService(
+		models.NotezyDB,
+		userRepository,
+	)
+	themeService := services.NewThemeService(
+		models.NotezyDB,
+	)
+	rootShelfService := services.NewRootShelfService(
+		models.NotezyDB,
+		rootShelfRepository,
+	)
+	stationService := services.NewStationService(
+		models.NotezyDB,
+		stationRepository,
+	)
+	routineService := services.NewRoutineService(
+		models.NotezyDB,
+		stationRepository,
+		routineRepository,
+		routineTagRepository,
+		routineTaskRepository,
+		itemRepository,
+	)
+	routineTagService := services.NewRoutineTagService(
+		models.NotezyDB,
+		routineTagRepository,
+	)
+	routineTaskService := services.NewRoutineTaskService(
+		models.NotezyDB,
+		routineTaskRepository,
+	)
+
 	resolver := resolvers.NewResolver(
-		dataloaders.NewDataloaders(models.NotezyDB),
-		services.NewUserService(
-			models.NotezyDB,
-			repositories.NewUserRepository(),
-		),
-		services.NewThemeService(
-			models.NotezyDB,
-		),
-		services.NewRootShelfService(
-			models.NotezyDB,
-			repositories.NewRootShelfRepository(scopes.NewRootShelfScope()),
-		),
+		dataloaders,
+		userServices,
+		themeService,
+		rootShelfService,
+		stationService,
+		routineService,
+		routineTagService,
+		routineTaskService,
 	)
 
 	config := generated.Config{

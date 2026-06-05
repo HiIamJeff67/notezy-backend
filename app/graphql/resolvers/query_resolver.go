@@ -7,10 +7,10 @@ package resolvers
 import (
 	"context"
 
-	"github.com/HiIamJeff67/notezy-backend/app/contexts"
-	"github.com/HiIamJeff67/notezy-backend/app/graphql/generated"
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
+	generated "github.com/HiIamJeff67/notezy-backend/app/graphql/generated"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
-	"github.com/HiIamJeff67/notezy-backend/shared/types"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 // SearchUsers is the resolver for the searchUsers field.
@@ -42,10 +42,90 @@ func (r *queryResolver) SearchRootShelves(ctx context.Context, input gqlmodels.S
 
 	userId, exception := contexts.GetAndConvertContextFieldToUUID(ginContext, types.ContextFieldName_User_Id)
 	if exception != nil {
-		exception.Log().SafelyAbortAndResponseWithJSON(ginContext)
 		return nil, exception.Log().ToGraphQLError(ctx)
 	}
+
 	result, exception := r.rootShelfService.SearchPrivateRootShelves(ctx, *userId, input)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	return result, nil
+}
+
+// SearchStations is the resolver for the searchStations field.
+func (r *queryResolver) SearchStations(ctx context.Context, input gqlmodels.SearchStationInput) (*gqlmodels.SearchStationConnection, error) {
+	ginContext, exception := contexts.GetAndConvertContextToGinContext(ctx)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ginContext, types.ContextFieldName_User_Id)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	result, exception := r.stationService.SearchPrivateStations(ctx, *userId, input)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	return result, nil
+}
+
+// SearchRoutines is the resolver for the searchRoutines field.
+func (r *queryResolver) SearchRoutines(ctx context.Context, input gqlmodels.SearchRoutineInput) (*gqlmodels.SearchRoutineConnection, error) {
+	ginContext, exception := contexts.GetAndConvertContextToGinContext(ctx)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ginContext, types.ContextFieldName_User_Id)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	result, exception := r.routineService.SearchPrivateRoutines(ctx, *userId, input)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	return result, nil
+}
+
+// SearchRoutineTags is the resolver for the searchRoutineTags field.
+func (r *queryResolver) SearchRoutineTags(ctx context.Context, input gqlmodels.SearchRoutineTagInput) (*gqlmodels.SearchRoutineTagConnection, error) {
+	ginContext, exception := contexts.GetAndConvertContextToGinContext(ctx)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ginContext, types.ContextFieldName_User_Id)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	result, exception := r.routineTagService.SearchPrivateRoutineTags(ctx, *userId, input)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	return result, nil
+}
+
+// SearchRoutineTasks is the resolver for the searchRoutineTasks field.
+func (r *queryResolver) SearchRoutineTasks(ctx context.Context, input gqlmodels.SearchRoutineTaskInput) (*gqlmodels.SearchRoutineTaskConnection, error) {
+	ginContext, exception := contexts.GetAndConvertContextToGinContext(ctx)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ginContext, types.ContextFieldName_User_Id)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	result, exception := r.routineTaskService.SearchPrivateRoutineTasks(ctx, *userId, input)
 	if exception != nil {
 		return nil, exception.Log().ToGraphQLError(ctx)
 	}

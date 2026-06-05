@@ -116,7 +116,7 @@ query SearchRoutineTasks($input: SearchRoutineTaskInput!) {
   searchRoutineTasks(input: $input) {
     searchEdges {
       node {
-        ...FragmentedPrivateRoutineTasks
+        ...FragmentedPrivateRoutineTask
       }
       encodedSearchCursor
     }

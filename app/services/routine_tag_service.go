@@ -31,7 +31,7 @@ type RoutineTagServiceInterface interface {
 	HardDeleteMyRoutineTagById(ctx context.Context, reqDto *dtos.HardDeleteMyRoutineTagByIdReqDto) (*dtos.HardDeleteMyRoutineTagByIdResDto, *exceptions.Exception)
 	HardDeleteMyRoutineTagsByIds(ctx context.Context, reqDto *dtos.HardDeleteMyRoutineTagsByIdsReqDto) (*dtos.HardDeleteMyRoutineTagsByIdsResDto, *exceptions.Exception)
 
-	// services for private routine tags
+	// services for graphql routine tags
 	SearchPrivateRoutineTags(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRoutineTagInput) (*gqlmodels.SearchRoutineTagConnection, *exceptions.Exception)
 }
 

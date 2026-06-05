@@ -2,6 +2,12 @@ type Query {
   searchUsers(input: SearchUserInput!): SearchUserConnection!
   searchThemes(input: SearchThemeInput!): SearchThemeConnection!
   searchRootShelves(input: SearchRootShelfInput!): SearchRootShelfConnection!
+  searchStations(input: SearchStationInput!): SearchStationConnection!
+  searchRoutines(input: SearchRoutineInput!): SearchRoutineConnection!
+  searchRoutineTags(input: SearchRoutineTagInput!): SearchRoutineTagConnection!
+  searchRoutineTasks(
+    input: SearchRoutineTaskInput!
+  ): SearchRoutineTaskConnection!
 }
 
 # type Mutation {}

@@ -195,9 +195,13 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		SearchRootShelves func(childComplexity int, input gqlmodels.SearchRootShelfInput) int
-		SearchThemes      func(childComplexity int, input gqlmodels.SearchThemeInput) int
-		SearchUsers       func(childComplexity int, input gqlmodels.SearchUserInput) int
+		SearchRootShelves  func(childComplexity int, input gqlmodels.SearchRootShelfInput) int
+		SearchRoutineTags  func(childComplexity int, input gqlmodels.SearchRoutineTagInput) int
+		SearchRoutineTasks func(childComplexity int, input gqlmodels.SearchRoutineTaskInput) int
+		SearchRoutines     func(childComplexity int, input gqlmodels.SearchRoutineInput) int
+		SearchStations     func(childComplexity int, input gqlmodels.SearchStationInput) int
+		SearchThemes       func(childComplexity int, input gqlmodels.SearchThemeInput) int
+		SearchUsers        func(childComplexity int, input gqlmodels.SearchUserInput) int
 	}
 
 	SearchBadgeConnection struct {
@@ -1182,6 +1186,54 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Query.SearchRootShelves(childComplexity, args["input"].(gqlmodels.SearchRootShelfInput)), true
 
+	case "Query.searchRoutineTags":
+		if e.complexity.Query.SearchRoutineTags == nil {
+			break
+		}
+
+		args, err := ec.field_Query_searchRoutineTags_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SearchRoutineTags(childComplexity, args["input"].(gqlmodels.SearchRoutineTagInput)), true
+
+	case "Query.searchRoutineTasks":
+		if e.complexity.Query.SearchRoutineTasks == nil {
+			break
+		}
+
+		args, err := ec.field_Query_searchRoutineTasks_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SearchRoutineTasks(childComplexity, args["input"].(gqlmodels.SearchRoutineTaskInput)), true
+
+	case "Query.searchRoutines":
+		if e.complexity.Query.SearchRoutines == nil {
+			break
+		}
+
+		args, err := ec.field_Query_searchRoutines_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SearchRoutines(childComplexity, args["input"].(gqlmodels.SearchRoutineInput)), true
+
+	case "Query.searchStations":
+		if e.complexity.Query.SearchStations == nil {
+			break
+		}
+
+		args, err := ec.field_Query_searchStations_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SearchStations(childComplexity, args["input"].(gqlmodels.SearchStationInput)), true
+
 	case "Query.searchThemes":
 		if e.complexity.Query.SearchThemes == nil {
 			break
@@ -1906,6 +1958,12 @@ interface SearchConnection {
   searchUsers(input: SearchUserInput!): SearchUserConnection!
   searchThemes(input: SearchThemeInput!): SearchThemeConnection!
   searchRootShelves(input: SearchRootShelfInput!): SearchRootShelfConnection!
+  searchStations(input: SearchStationInput!): SearchStationConnection!
+  searchRoutines(input: SearchRoutineInput!): SearchRoutineConnection!
+  searchRoutineTags(input: SearchRoutineTagInput!): SearchRoutineTagConnection!
+  searchRoutineTasks(
+    input: SearchRoutineTaskInput!
+  ): SearchRoutineTaskConnection!
 }
 
 # type Mutation {}

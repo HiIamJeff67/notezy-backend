@@ -26,7 +26,7 @@ type UserServiceInterface interface {
 	GetMe(ctx context.Context, reqDto *dtos.GetMeReqDto) (*dtos.GetMeResDto, *exceptions.Exception)
 	UpdateMe(ctx context.Context, reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Exception)
 
-	// services for public users
+	// services for graphql users
 	GetPublicUserByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicUser, *exceptions.Exception)
 	GetPublicAuthorByThemePublicIds(ctx context.Context, publicIds []string) ([]*gqlmodels.PublicUser, *exceptions.Exception)
 	SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.SearchUserInput) (*gqlmodels.SearchUserConnection, *exceptions.Exception)

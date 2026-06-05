@@ -42,7 +42,7 @@ type RoutineServiceInterface interface {
 	HardDeleteMyRoutineById(ctx context.Context, reqDto *dtos.HardDeleteMyRoutineByIdReqDto) (*dtos.HardDeleteMyRoutineByIdResDto, *exceptions.Exception)
 	HardDeleteMyRoutinesByIds(ctx context.Context, reqDto *dtos.HardDeleteMyRoutinesByIdsReqDto) (*dtos.HardDeleteMyRoutinesByIdsResDto, *exceptions.Exception)
 
-	// services for private routines
+	// services for graphql routines
 	SearchPrivateRoutines(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRoutineInput) (*gqlmodels.SearchRoutineConnection, *exceptions.Exception)
 }
 

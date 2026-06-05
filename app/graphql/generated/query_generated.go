@@ -20,6 +20,10 @@ type QueryResolver interface {
 	SearchUsers(ctx context.Context, input gqlmodels.SearchUserInput) (*gqlmodels.SearchUserConnection, error)
 	SearchThemes(ctx context.Context, input gqlmodels.SearchThemeInput) (*gqlmodels.SearchThemeConnection, error)
 	SearchRootShelves(ctx context.Context, input gqlmodels.SearchRootShelfInput) (*gqlmodels.SearchRootShelfConnection, error)
+	SearchStations(ctx context.Context, input gqlmodels.SearchStationInput) (*gqlmodels.SearchStationConnection, error)
+	SearchRoutines(ctx context.Context, input gqlmodels.SearchRoutineInput) (*gqlmodels.SearchRoutineConnection, error)
+	SearchRoutineTags(ctx context.Context, input gqlmodels.SearchRoutineTagInput) (*gqlmodels.SearchRoutineTagConnection, error)
+	SearchRoutineTasks(ctx context.Context, input gqlmodels.SearchRoutineTaskInput) (*gqlmodels.SearchRoutineTaskConnection, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -69,6 +73,98 @@ func (ec *executionContext) field_Query_searchRootShelves_argsInput(
 	}
 
 	var zeroVal gqlmodels.SearchRootShelfInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_searchRoutineTags_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_searchRoutineTags_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_searchRoutineTags_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (gqlmodels.SearchRoutineTagInput, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNSearchRoutineTagInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchRoutineTagInput(ctx, tmp)
+	}
+
+	var zeroVal gqlmodels.SearchRoutineTagInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_searchRoutineTasks_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_searchRoutineTasks_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_searchRoutineTasks_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (gqlmodels.SearchRoutineTaskInput, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNSearchRoutineTaskInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchRoutineTaskInput(ctx, tmp)
+	}
+
+	var zeroVal gqlmodels.SearchRoutineTaskInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_searchRoutines_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_searchRoutines_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_searchRoutines_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (gqlmodels.SearchRoutineInput, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNSearchRoutineInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchRoutineInput(ctx, tmp)
+	}
+
+	var zeroVal gqlmodels.SearchRoutineInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_searchStations_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_searchStations_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_searchStations_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (gqlmodels.SearchStationInput, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNSearchStationInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchStationInput(ctx, tmp)
+	}
+
+	var zeroVal gqlmodels.SearchStationInput
 	return zeroVal, nil
 }
 
@@ -321,6 +417,266 @@ func (ec *executionContext) fieldContext_Query_searchRootShelves(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_searchStations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_searchStations(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().SearchStations(rctx, fc.Args["input"].(gqlmodels.SearchStationInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*gqlmodels.SearchStationConnection)
+	fc.Result = res
+	return ec.marshalNSearchStationConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchStationConnection(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_searchStations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "searchEdges":
+				return ec.fieldContext_SearchStationConnection_searchEdges(ctx, field)
+			case "searchPageInfo":
+				return ec.fieldContext_SearchStationConnection_searchPageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_SearchStationConnection_totalCount(ctx, field)
+			case "searchTime":
+				return ec.fieldContext_SearchStationConnection_searchTime(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SearchStationConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_searchStations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_searchRoutines(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_searchRoutines(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().SearchRoutines(rctx, fc.Args["input"].(gqlmodels.SearchRoutineInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*gqlmodels.SearchRoutineConnection)
+	fc.Result = res
+	return ec.marshalNSearchRoutineConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchRoutineConnection(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_searchRoutines(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "searchEdges":
+				return ec.fieldContext_SearchRoutineConnection_searchEdges(ctx, field)
+			case "searchPageInfo":
+				return ec.fieldContext_SearchRoutineConnection_searchPageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_SearchRoutineConnection_totalCount(ctx, field)
+			case "searchTime":
+				return ec.fieldContext_SearchRoutineConnection_searchTime(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SearchRoutineConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_searchRoutines_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_searchRoutineTags(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_searchRoutineTags(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().SearchRoutineTags(rctx, fc.Args["input"].(gqlmodels.SearchRoutineTagInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*gqlmodels.SearchRoutineTagConnection)
+	fc.Result = res
+	return ec.marshalNSearchRoutineTagConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchRoutineTagConnection(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_searchRoutineTags(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "searchEdges":
+				return ec.fieldContext_SearchRoutineTagConnection_searchEdges(ctx, field)
+			case "searchPageInfo":
+				return ec.fieldContext_SearchRoutineTagConnection_searchPageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_SearchRoutineTagConnection_totalCount(ctx, field)
+			case "searchTime":
+				return ec.fieldContext_SearchRoutineTagConnection_searchTime(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SearchRoutineTagConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_searchRoutineTags_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_searchRoutineTasks(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_searchRoutineTasks(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().SearchRoutineTasks(rctx, fc.Args["input"].(gqlmodels.SearchRoutineTaskInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*gqlmodels.SearchRoutineTaskConnection)
+	fc.Result = res
+	return ec.marshalNSearchRoutineTaskConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchRoutineTaskConnection(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_searchRoutineTasks(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "searchEdges":
+				return ec.fieldContext_SearchRoutineTaskConnection_searchEdges(ctx, field)
+			case "searchPageInfo":
+				return ec.fieldContext_SearchRoutineTaskConnection_searchPageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_SearchRoutineTaskConnection_totalCount(ctx, field)
+			case "searchTime":
+				return ec.fieldContext_SearchRoutineTaskConnection_searchTime(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SearchRoutineTaskConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_searchRoutineTasks_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query___type(ctx, field)
 	if err != nil {
@@ -537,6 +893,94 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_searchRootShelves(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "searchStations":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_searchStations(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "searchRoutines":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_searchRoutines(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "searchRoutineTags":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_searchRoutineTags(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "searchRoutineTasks":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_searchRoutineTasks(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

@@ -15,7 +15,7 @@ import (
 )
 
 type ThemeServiceInterface interface {
-	// services for public themes
+	// services for graphql themes
 	GetPublicThemeByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicTheme, *exceptions.Exception)
 	SearchPublicThemes(ctx context.Context, gqlInput gqlmodels.SearchThemeInput) (*gqlmodels.SearchThemeConnection, *exceptions.Exception)
 }

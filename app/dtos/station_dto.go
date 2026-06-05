@@ -205,7 +205,6 @@ type HardDeleteMyStationsByIdsReqDto struct {
 
 type GetMyStationByIdResDto struct {
 	Id                  uuid.UUID                     `json:"id"`
-	OwnerId             uuid.UUID                     `json:"ownerId"`
 	Name                string                        `json:"name"`
 	Description         string                        `json:"description"`
 	Icon                *enums.SupportedIcon          `json:"icon"`
@@ -237,7 +236,6 @@ type UpdateMyStationsByIdsResDto struct {
 
 type RestoreMyStationByIdResDto struct {
 	Id                  uuid.UUID                     `json:"id"`
-	OwnerId             uuid.UUID                     `json:"ownerId"`
 	Name                string                        `json:"name"`
 	Description         string                        `json:"description"`
 	Icon                *enums.SupportedIcon          `json:"icon"`

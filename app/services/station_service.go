@@ -35,6 +35,9 @@ type StationServiceInterface interface {
 	DeleteMyStationsByIds(ctx context.Context, reqDto *dtos.DeleteMyStationsByIdsReqDto) (*dtos.DeleteMyStationsByIdsResDto, *exceptions.Exception)
 	HardDeleteMyStationById(ctx context.Context, reqDto *dtos.HardDeleteMyStationByIdReqDto) (*dtos.HardDeleteMyStationByIdResDto, *exceptions.Exception)
 	HardDeleteMyStationsByIds(ctx context.Context, reqDto *dtos.HardDeleteMyStationsByIdsReqDto) (*dtos.HardDeleteMyStationsByIdsResDto, *exceptions.Exception)
+
+	// services for graphql stations
+	SearchPrivateStations(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchStationInput) (*gqlmodels.SearchStationConnection, *exceptions.Exception)
 }
 
 type StationService struct {
@@ -84,7 +87,6 @@ func (s *StationService) GetMyStationById(
 
 	return &dtos.GetMyStationByIdResDto{
 		Id:                  station.Id,
-		OwnerId:             station.OwnerId,
 		Name:                station.Name,
 		Description:         station.Description,
 		Icon:                station.Icon,
@@ -253,7 +255,6 @@ func (s *StationService) RestoreMyStationById(
 
 	return &dtos.RestoreMyStationByIdResDto{
 		Id:                  restoredStation.Id,
-		OwnerId:             restoredStation.OwnerId,
 		Name:                restoredStation.Name,
 		Description:         restoredStation.Description,
 		Icon:                restoredStation.Icon,
@@ -287,7 +288,6 @@ func (s *StationService) RestoreMyStationsByIds(
 	for _, restoredStation := range restoredStations {
 		resDto = append(resDto, dtos.RestoreMyStationByIdResDto{
 			Id:                  restoredStation.Id,
-			OwnerId:             restoredStation.OwnerId,
 			Name:                restoredStation.Name,
 			Description:         restoredStation.Description,
 			Icon:                restoredStation.Icon,
