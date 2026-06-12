@@ -2,6 +2,7 @@ package binders
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -14,6 +15,7 @@ import (
 
 type RoutineTaskBinderInterface interface {
 	BindGetMyRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.GetMyRoutineTaskByIdReqDto]) gin.HandlerFunc
+	BindGetAllMyRoutineTasksByStationIds(controllerFunc types.ControllerFunc[*dtos.GetAllMyRoutineTasksByStationIdsReqDto]) gin.HandlerFunc
 	BindCreateRoutineTaskByStationId(controllerFunc types.ControllerFunc[*dtos.CreateRoutineTaskByStationIdReqDto]) gin.HandlerFunc
 	BindUpdateMyRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.UpdateMyRoutineTaskByIdReqDto]) gin.HandlerFunc
 	BindHardDeleteMyRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.HardDeleteMyRoutineTaskByIdReqDto]) gin.HandlerFunc
@@ -50,6 +52,36 @@ func (b *RoutineTaskBinder) BindGetMyRoutineTaskById(controllerFunc types.Contro
 			return
 		}
 		reqDto.Param.RoutineTaskId = routineTaskId
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RoutineTaskBinder) BindGetAllMyRoutineTasksByStationIds(
+	controllerFunc types.ControllerFunc[*dtos.GetAllMyRoutineTasksByStationIdsReqDto],
+) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.GetAllMyRoutineTasksByStationIdsReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		for _, stationIdsValue := range ctx.QueryArray("stationIds") {
+			for _, stationIdValue := range strings.Split(stationIdsValue, ",") {
+				stationId, err := uuid.Parse(strings.TrimSpace(stationIdValue))
+				if err != nil {
+					exceptions.RoutineTask.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+					return
+				}
+				reqDto.Param.StationIds = append(reqDto.Param.StationIds, stationId)
+			}
+		}
 
 		controllerFunc(ctx, &reqDto)
 	}

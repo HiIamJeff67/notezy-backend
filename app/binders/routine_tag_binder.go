@@ -14,6 +14,7 @@ import (
 
 type RoutineTagBinderInterface interface {
 	BindGetMyRoutineTagById(controllerFunc types.ControllerFunc[*dtos.GetMyRoutineTagByIdReqDto]) gin.HandlerFunc
+	BindGetAllMyRoutineTags(controllerFunc types.ControllerFunc[*dtos.GetAllMyRoutineTagsReqDto]) gin.HandlerFunc
 	BindCreateRoutineTag(controllerFunc types.ControllerFunc[*dtos.CreateRoutineTagReqDto]) gin.HandlerFunc
 	BindCreateRoutineTags(controllerFunc types.ControllerFunc[*dtos.CreateRoutineTagsReqDto]) gin.HandlerFunc
 	BindUpdateMyRoutineTagById(controllerFunc types.ControllerFunc[*dtos.UpdateMyRoutineTagByIdReqDto]) gin.HandlerFunc
@@ -52,6 +53,23 @@ func (b *RoutineTagBinder) BindGetMyRoutineTagById(controllerFunc types.Controll
 			return
 		}
 		reqDto.Param.RoutineTagId = routineTagId
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RoutineTagBinder) BindGetAllMyRoutineTags(controllerFunc types.ControllerFunc[*dtos.GetAllMyRoutineTagsReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.GetAllMyRoutineTagsReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
 
 		controllerFunc(ctx, &reqDto)
 	}

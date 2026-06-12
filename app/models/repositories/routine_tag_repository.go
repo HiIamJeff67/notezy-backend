@@ -22,6 +22,7 @@ type RoutineTagRepositoryInterface interface {
 	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineTagRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) (*schemas.RoutineTag, *exceptions.Exception)
 	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineTagRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.RoutineTag, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineTagRelation, opts ...options.RepositoryOptions) (*schemas.RoutineTag, *exceptions.Exception)
+	GetAllByUserId(userId uuid.UUID, preloads []schemas.RoutineTagRelation, opts ...options.RepositoryOptions) ([]schemas.RoutineTag, *exceptions.Exception)
 	CreateOneByUserId(userId uuid.UUID, input inputs.CreateRoutineTagInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
 	BulkCreateManyByUserId(userId uuid.UUID, input []inputs.BulkCreateRoutineTagInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateRoutineTagInput, opts ...options.RepositoryOptions) (*schemas.RoutineTag, *exceptions.Exception)
@@ -151,6 +152,36 @@ func (r *RoutineTagRepository) GetOneById(
 	}
 
 	return r.CheckPermissionAndGetOneById(id, userId, preloads, allowedPermissions, opts...)
+}
+
+func (r *RoutineTagRepository) GetAllByUserId(
+	userId uuid.UUID,
+	preloads []schemas.RoutineTagRelation,
+	opts ...options.RepositoryOptions,
+) ([]schemas.RoutineTag, *exceptions.Exception) {
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+	var routineTags []schemas.RoutineTag
+	result := parsedOptions.DB.
+		Model(&schemas.RoutineTag{}).
+		Select("\"RoutineTagTable\".*").
+		Joins("INNER JOIN \"UsersToRoutineTagsTable\" utrt ON utrt.tag_id = \"RoutineTagTable\".id").
+		Where("utrt.user_id = ? AND utrt.permission IN ?", userId, allowedPermissions).
+		Scopes(r.routineTagScope.IncludePreloads(preloads)).
+		Order("\"RoutineTagTable\".created_at ASC").
+		Order("\"RoutineTagTable\".id ASC").
+		Find(&routineTags)
+	if result.Error != nil {
+		return nil, exceptions.RoutineTag.NotFound().WithOrigin(result.Error)
+	}
+
+	return routineTags, nil
 }
 
 func (r *RoutineTagRepository) CreateOneByUserId(

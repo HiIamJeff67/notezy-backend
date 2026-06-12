@@ -11,6 +11,7 @@ import (
 
 type StationControllerInterface interface {
 	GetMyStationById(ctx *gin.Context, reqDto *dtos.GetMyStationByIdReqDto)
+	GetAllMyStations(ctx *gin.Context, reqDto *dtos.GetAllMyStationsReqDto)
 	CreateStation(ctx *gin.Context, reqDto *dtos.CreateStationReqDto)
 	CreateStations(ctx *gin.Context, reqDto *dtos.CreateStationsReqDto)
 	UpdateMyStationById(ctx *gin.Context, reqDto *dtos.UpdateMyStationByIdReqDto)
@@ -35,6 +36,20 @@ func NewStationController(service services.StationServiceInterface) StationContr
 
 func (c *StationController) GetMyStationById(ctx *gin.Context, reqDto *dtos.GetMyStationByIdReqDto) {
 	resDto, exception := c.stationService.GetMyStationById(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *StationController) GetAllMyStations(ctx *gin.Context, reqDto *dtos.GetAllMyStationsReqDto) {
+	resDto, exception := c.stationService.GetAllMyStations(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return

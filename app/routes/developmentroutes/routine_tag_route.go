@@ -43,6 +43,22 @@ func configureDevelopmentRoutineTagRoutes() {
 				),
 			)...,
 		)
+		routineTagRoutes.GET(
+			"/getAllMyRoutineTags",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getAllMyRoutineTags"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RoutineTag.GetAllMyRoutineTags,
+					),
+				},
+				defaultMiddlewares,
+				routineTagModule.Binder.BindGetAllMyRoutineTags(
+					routineTagModule.Controller.GetAllMyRoutineTags,
+				),
+			)...,
+		)
 		routineTagRoutes.POST(
 			"/createRoutineTag",
 			middlewares.RepositionMiddleware(

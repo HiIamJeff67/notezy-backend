@@ -11,6 +11,7 @@ import (
 
 type RoutineControllerInterface interface {
 	GetMyRoutineById(ctx *gin.Context, reqDto *dtos.GetMyRoutineByIdReqDto)
+	GetAllMyRoutinesByTimeRange(ctx *gin.Context, reqDto *dtos.GetAllMyRoutinesByTimeRangeReqDto)
 	CreateRoutineByStationId(ctx *gin.Context, reqDto *dtos.CreateRoutineByStationIdReqDto)
 	CreateRoutinesByStationIds(ctx *gin.Context, reqDto *dtos.CreateRoutinesByStationIdsReqDto)
 	UpdateMyRoutineById(ctx *gin.Context, reqDto *dtos.UpdateMyRoutineByIdReqDto)
@@ -41,6 +42,23 @@ func NewRoutineController(service services.RoutineServiceInterface) RoutineContr
 
 func (c *RoutineController) GetMyRoutineById(ctx *gin.Context, reqDto *dtos.GetMyRoutineByIdReqDto) {
 	resDto, exception := c.routineService.GetMyRoutineById(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RoutineController) GetAllMyRoutinesByTimeRange(
+	ctx *gin.Context,
+	reqDto *dtos.GetAllMyRoutinesByTimeRangeReqDto,
+) {
+	resDto, exception := c.routineService.GetAllMyRoutinesByTimeRange(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return

@@ -24,6 +24,7 @@ type RoutineRepositoryInterface interface {
 	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) (*schemas.Routine, *exceptions.Exception)
 	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.Routine, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineRelation, opts ...options.RepositoryOptions) (*schemas.Routine, *exceptions.Exception)
+	GetAllByTimeRange(from time.Time, to time.Time, stationIds []uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineRelation, opts ...options.RepositoryOptions) ([]schemas.Routine, *exceptions.Exception)
 	CreateOneByStationId(stationId uuid.UUID, userId uuid.UUID, input inputs.CreateRoutineInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
 	BulkCreateManyByStationIds(userId uuid.UUID, input []inputs.BulkCreateRoutineInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateRoutineInput, opts ...options.RepositoryOptions) (*schemas.Routine, *exceptions.Exception)
@@ -161,6 +162,48 @@ func (r *RoutineRepository) GetOneById(
 	}
 
 	return r.CheckPermissionAndGetOneById(id, userId, preloads, allowedPermissions, opts...)
+}
+
+func (r *RoutineRepository) GetAllByTimeRange(
+	from time.Time,
+	to time.Time,
+	stationIds []uuid.UUID,
+	userId uuid.UUID,
+	preloads []schemas.RoutineRelation,
+	opts ...options.RepositoryOptions,
+) ([]schemas.Routine, *exceptions.Exception) {
+	if len(stationIds) == 0 {
+		return []schemas.Routine{}, nil
+	}
+
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+
+	var routines []schemas.Routine
+	result := parsedOptions.DB.
+		Model(&schemas.Routine{}).
+		Select("\"RoutineTable\".*").
+		Joins("INNER JOIN \"UsersToStationsTable\" uts ON uts.station_id = \"RoutineTable\".station_id").
+		Joins("INNER JOIN \"StationTable\" station ON station.id = \"RoutineTable\".station_id AND station.deleted_at IS NULL").
+		Where("\"RoutineTable\".station_id IN ?", stationIds).
+		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
+		Where("\"RoutineTable\".scheduled_start_at < ? AND \"RoutineTable\".scheduled_end_at > ?", to, from).
+		Scopes(r.routineScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Scopes(r.routineScope.IncludePreloads(preloads)).
+		Order("\"RoutineTable\".scheduled_start_at ASC").
+		Order("\"RoutineTable\".scheduled_end_at ASC").
+		Order("\"RoutineTable\".id ASC").
+		Find(&routines)
+	if result.Error != nil {
+		return nil, exceptions.Routine.NotFound().WithOrigin(result.Error)
+	}
+
+	return routines, nil
 }
 
 func (r *RoutineRepository) CreateOneByStationId(

@@ -2,6 +2,8 @@ package binders
 
 import (
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -14,6 +16,7 @@ import (
 
 type RoutineBinderInterface interface {
 	BindGetMyRoutineById(controllerFunc types.ControllerFunc[*dtos.GetMyRoutineByIdReqDto]) gin.HandlerFunc
+	BindGetAllMyRoutinesByTimeRange(controllerFunc types.ControllerFunc[*dtos.GetAllMyRoutinesByTimeRangeReqDto]) gin.HandlerFunc
 	BindCreateRoutineByStationId(controllerFunc types.ControllerFunc[*dtos.CreateRoutineByStationIdReqDto]) gin.HandlerFunc
 	BindCreateRoutinesByStationIds(controllerFunc types.ControllerFunc[*dtos.CreateRoutinesByStationIdsReqDto]) gin.HandlerFunc
 	BindUpdateMyRoutineById(controllerFunc types.ControllerFunc[*dtos.UpdateMyRoutineByIdReqDto]) gin.HandlerFunc
@@ -66,6 +69,49 @@ func (b *RoutineBinder) BindGetMyRoutineById(controllerFunc types.ControllerFunc
 		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
 			exceptions.Routine.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
 			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RoutineBinder) BindGetAllMyRoutinesByTimeRange(
+	controllerFunc types.ControllerFunc[*dtos.GetAllMyRoutinesByTimeRangeReqDto],
+) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.GetAllMyRoutinesByTimeRangeReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		from, err := time.Parse(time.RFC3339, ctx.Query("from"))
+		if err != nil {
+			exceptions.Routine.InvalidInput().WithOrigin(fmt.Errorf("from must be an RFC3339 timestamp: %w", err)).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		to, err := time.Parse(time.RFC3339, ctx.Query("to"))
+		if err != nil {
+			exceptions.Routine.InvalidInput().WithOrigin(fmt.Errorf("to must be an RFC3339 timestamp: %w", err)).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.From = from
+		reqDto.Param.To = to
+
+		for _, stationIdsValue := range ctx.QueryArray("stationIds") {
+			for _, stationIdValue := range strings.Split(stationIdsValue, ",") {
+				stationId, err := uuid.Parse(strings.TrimSpace(stationIdValue))
+				if err != nil {
+					exceptions.Routine.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+					return
+				}
+				reqDto.Param.StationIds = append(reqDto.Param.StationIds, stationId)
+			}
 		}
 
 		controllerFunc(ctx, &reqDto)

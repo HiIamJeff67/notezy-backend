@@ -24,6 +24,7 @@ type StationRepositoryInterface interface {
 	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.StationRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) (*schemas.Station, enums.AccessControlPermission, *exceptions.Exception)
 	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.StationRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.Station, []enums.AccessControlPermission, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.StationRelation, opts ...options.RepositoryOptions) (*schemas.Station, enums.AccessControlPermission, *exceptions.Exception)
+	GetAllByUserId(userId uuid.UUID, preloads []schemas.StationRelation, opts ...options.RepositoryOptions) ([]schemas.Station, []enums.AccessControlPermission, *exceptions.Exception)
 	CreateOneByOwnerId(ownerId uuid.UUID, input inputs.CreateStationInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
 	CreateManyByOwnerId(ownerId uuid.UUID, input []inputs.CreateStationInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateStationInput, opts ...options.RepositoryOptions) (*schemas.Station, *exceptions.Exception)
@@ -222,6 +223,49 @@ func (r *StationRepository) GetOneById(
 		allowedPermissions,
 		opts...,
 	)
+}
+
+func (r *StationRepository) GetAllByUserId(
+	userId uuid.UUID,
+	preloads []schemas.StationRelation,
+	opts ...options.RepositoryOptions,
+) ([]schemas.Station, []enums.AccessControlPermission, *exceptions.Exception) {
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+	type stationWithPermission struct {
+		schemas.Station
+		Permission enums.AccessControlPermission `gorm:"column:permission"`
+	}
+
+	var stationsWithPermissions []stationWithPermission
+	result := parsedOptions.DB.
+		Model(&schemas.Station{}).
+		Select("\"StationTable\".*, uts.permission AS permission").
+		Joins("INNER JOIN \"UsersToStationsTable\" uts ON uts.station_id = \"StationTable\".id").
+		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
+		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Scopes(r.stationScope.IncludePreloads(preloads)).
+		Order("\"StationTable\".created_at ASC").
+		Order("\"StationTable\".id ASC").
+		Find(&stationsWithPermissions)
+	if result.Error != nil {
+		return nil, nil, exceptions.Station.NotFound().WithOrigin(result.Error)
+	}
+
+	stations := make([]schemas.Station, len(stationsWithPermissions))
+	permissions := make([]enums.AccessControlPermission, len(stationsWithPermissions))
+	for index, stationWithPermission := range stationsWithPermissions {
+		stations[index] = stationWithPermission.Station
+		permissions[index] = stationWithPermission.Permission
+	}
+
+	return stations, permissions, nil
 }
 
 func (r *StationRepository) CreateOneByOwnerId(

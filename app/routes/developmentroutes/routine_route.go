@@ -43,6 +43,22 @@ func configureDevelopmentRoutineRoutes() {
 				),
 			)...,
 		)
+		routineRoutes.GET(
+			"/getAllMyRoutinesByTimeRange",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getAllMyRoutinesByTimeRange"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.Routine.GetAllMyRoutinesByTimeRange,
+					),
+				},
+				defaultMiddlewares,
+				routineModule.Binder.BindGetAllMyRoutinesByTimeRange(
+					routineModule.Controller.GetAllMyRoutinesByTimeRange,
+				),
+			)...,
+		)
 		routineRoutes.POST(
 			"/createRoutineByStationId",
 			middlewares.RepositionMiddleware(

@@ -25,6 +25,7 @@ import (
 
 type StationServiceInterface interface {
 	GetMyStationById(ctx context.Context, reqDto *dtos.GetMyStationByIdReqDto) (*dtos.GetMyStationByIdResDto, *exceptions.Exception)
+	GetAllMyStations(ctx context.Context, reqDto *dtos.GetAllMyStationsReqDto) (*dtos.GetAllMyStationsResDto, *exceptions.Exception)
 	CreateStation(ctx context.Context, reqDto *dtos.CreateStationReqDto) (*dtos.CreateStationResDto, *exceptions.Exception)
 	CreateStations(ctx context.Context, reqDto *dtos.CreateStationsReqDto) (*dtos.CreateStationsResDto, *exceptions.Exception)
 	UpdateMyStationById(ctx context.Context, reqDto *dtos.UpdateMyStationByIdReqDto) (*dtos.UpdateMyStationByIdResDto, *exceptions.Exception)
@@ -97,6 +98,49 @@ func (s *StationService) GetMyStationById(
 		UpdatedAt:           station.UpdatedAt,
 		CreatedAt:           station.CreatedAt,
 	}, nil
+}
+
+func (s *StationService) GetAllMyStations(
+	ctx context.Context,
+	reqDto *dtos.GetAllMyStationsReqDto,
+) (*dtos.GetAllMyStationsResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+	}
+
+	onlyDeleted := types.Ternary_Negative
+	if reqDto.Param.OnlyDeleted != nil {
+		onlyDeleted = *reqDto.Param.OnlyDeleted
+	}
+
+	db := s.db.WithContext(ctx)
+	stations, permissions, exception := s.stationRepository.GetAllByUserId(
+		reqDto.ContextFields.UserId,
+		nil,
+		options.WithDB(db),
+		options.WithOnlyDeleted(onlyDeleted),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	resDto := make(dtos.GetAllMyStationsResDto, len(stations))
+	for index, station := range stations {
+		resDto[index] = dtos.GetMyStationByIdResDto{
+			Id:                  station.Id,
+			Name:                station.Name,
+			Description:         station.Description,
+			Icon:                station.Icon,
+			HeaderBackgroundURL: station.HeaderBackgroundURL,
+			Permission:          permissions[index],
+			RoutineCount:        station.RoutineCount,
+			DeletedAt:           station.DeletedAt,
+			UpdatedAt:           station.UpdatedAt,
+			CreatedAt:           station.CreatedAt,
+		}
+	}
+
+	return &resDto, nil
 }
 
 func (s *StationService) CreateStation(

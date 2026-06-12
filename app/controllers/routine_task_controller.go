@@ -11,6 +11,7 @@ import (
 
 type RoutineTaskControllerInterface interface {
 	GetMyRoutineTaskById(ctx *gin.Context, reqDto *dtos.GetMyRoutineTaskByIdReqDto)
+	GetAllMyRoutineTasksByStationIds(ctx *gin.Context, reqDto *dtos.GetAllMyRoutineTasksByStationIdsReqDto)
 	CreateRoutineTaskByStationId(ctx *gin.Context, reqDto *dtos.CreateRoutineTaskByStationIdReqDto)
 	UpdateMyRoutineTaskById(ctx *gin.Context, reqDto *dtos.UpdateMyRoutineTaskByIdReqDto)
 	HardDeleteMyRoutineTaskById(ctx *gin.Context, reqDto *dtos.HardDeleteMyRoutineTaskByIdReqDto)
@@ -29,6 +30,23 @@ func NewRoutineTaskController(service services.RoutineTaskServiceInterface) Rout
 
 func (c *RoutineTaskController) GetMyRoutineTaskById(ctx *gin.Context, reqDto *dtos.GetMyRoutineTaskByIdReqDto) {
 	resDto, exception := c.routineTaskService.GetMyRoutineTaskById(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RoutineTaskController) GetAllMyRoutineTasksByStationIds(
+	ctx *gin.Context,
+	reqDto *dtos.GetAllMyRoutineTasksByStationIdsReqDto,
+) {
+	resDto, exception := c.routineTaskService.GetAllMyRoutineTasksByStationIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return

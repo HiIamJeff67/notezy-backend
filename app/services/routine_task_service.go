@@ -24,6 +24,7 @@ import (
 
 type RoutineTaskServiceInterface interface {
 	GetMyRoutineTaskById(ctx context.Context, reqDto *dtos.GetMyRoutineTaskByIdReqDto) (*dtos.GetMyRoutineTaskByIdResDto, *exceptions.Exception)
+	GetAllMyRoutineTasksByStationIds(ctx context.Context, reqDto *dtos.GetAllMyRoutineTasksByStationIdsReqDto) (*dtos.GetAllMyRoutineTasksByStationIdsResDto, *exceptions.Exception)
 	CreateRoutineTaskByStationId(ctx context.Context, reqDto *dtos.CreateRoutineTaskByStationIdReqDto) (*dtos.CreateRoutineTaskByStationIdResDto, *exceptions.Exception)
 	UpdateMyRoutineTaskById(ctx context.Context, reqDto *dtos.UpdateMyRoutineTaskByIdReqDto) (*dtos.UpdateMyRoutineTaskByIdResDto, *exceptions.Exception)
 	HardDeleteMyRoutineTaskById(ctx context.Context, reqDto *dtos.HardDeleteMyRoutineTaskByIdReqDto) (*dtos.HardDeleteMyRoutineTaskByIdResDto, *exceptions.Exception)
@@ -88,6 +89,48 @@ func (s *RoutineTaskService) GetMyRoutineTaskById(
 		UpdatedAt:       routineTask.UpdatedAt,
 		CreatedAt:       routineTask.CreatedAt,
 	}, nil
+}
+
+func (s *RoutineTaskService) GetAllMyRoutineTasksByStationIds(
+	ctx context.Context,
+	reqDto *dtos.GetAllMyRoutineTasksByStationIdsReqDto,
+) (*dtos.GetAllMyRoutineTasksByStationIdsResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+	}
+
+	db := s.db.WithContext(ctx)
+	routineTasks, exception := s.routineTaskRepository.GetAllByStationIds(
+		reqDto.Param.StationIds,
+		reqDto.ContextFields.UserId,
+		nil,
+		options.WithDB(db),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	resDto := make(dtos.GetAllMyRoutineTasksByStationIdsResDto, len(routineTasks))
+	for index, routineTask := range routineTasks {
+		resDto[index] = dtos.GetMyRoutineTaskByIdResDto{
+			Id:              routineTask.Id,
+			StationId:       routineTask.StationId,
+			Title:           routineTask.Title,
+			Purpose:         routineTask.Purpose,
+			Payload:         routineTask.Payload,
+			Priority:        routineTask.Priority,
+			Status:          routineTask.Status,
+			Attempts:        routineTask.Attempts,
+			MaxAttempts:     routineTask.MaxAttempts,
+			ScheduledAt:     routineTask.ScheduledAt,
+			ActualStartedAt: routineTask.ActualStartedAt,
+			ActualEndedAt:   routineTask.ActualEndedAt,
+			UpdatedAt:       routineTask.UpdatedAt,
+			CreatedAt:       routineTask.CreatedAt,
+		}
+	}
+
+	return &resDto, nil
 }
 
 func (s *RoutineTaskService) CreateRoutineTaskByStationId(

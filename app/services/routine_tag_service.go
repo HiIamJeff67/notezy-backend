@@ -24,6 +24,7 @@ import (
 
 type RoutineTagServiceInterface interface {
 	GetMyRoutineTagById(ctx context.Context, reqDto *dtos.GetMyRoutineTagByIdReqDto) (*dtos.GetMyRoutineTagByIdResDto, *exceptions.Exception)
+	GetAllMyRoutineTags(ctx context.Context, reqDto *dtos.GetAllMyRoutineTagsReqDto) (*dtos.GetAllMyRoutineTagsResDto, *exceptions.Exception)
 	CreateRoutineTag(ctx context.Context, reqDto *dtos.CreateRoutineTagReqDto) (*dtos.CreateRoutineTagResDto, *exceptions.Exception)
 	CreateRoutineTags(ctx context.Context, reqDto *dtos.CreateRoutineTagsReqDto) (*dtos.CreateRoutineTagsResDto, *exceptions.Exception)
 	UpdateMyRoutineTagById(ctx context.Context, reqDto *dtos.UpdateMyRoutineTagByIdReqDto) (*dtos.UpdateMyRoutineTagByIdResDto, *exceptions.Exception)
@@ -82,6 +83,39 @@ func (s *RoutineTagService) GetMyRoutineTagById(
 		UpdatedAt: routineTag.UpdatedAt,
 		CreatedAt: routineTag.CreatedAt,
 	}, nil
+}
+
+func (s *RoutineTagService) GetAllMyRoutineTags(
+	ctx context.Context,
+	reqDto *dtos.GetAllMyRoutineTagsReqDto,
+) (*dtos.GetAllMyRoutineTagsResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+	}
+
+	db := s.db.WithContext(ctx)
+	routineTags, exception := s.routineTagRepository.GetAllByUserId(
+		reqDto.ContextFields.UserId,
+		nil,
+		options.WithDB(db),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	resDto := make(dtos.GetAllMyRoutineTagsResDto, len(routineTags))
+	for index, routineTag := range routineTags {
+		resDto[index] = dtos.GetMyRoutineTagByIdResDto{
+			Id:        routineTag.Id,
+			Name:      routineTag.Name,
+			Color:     routineTag.Color,
+			Icon:      routineTag.Icon,
+			UpdatedAt: routineTag.UpdatedAt,
+			CreatedAt: routineTag.CreatedAt,
+		}
+	}
+
+	return &resDto, nil
 }
 
 func (s *RoutineTagService) CreateRoutineTag(

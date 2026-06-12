@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -25,6 +26,7 @@ import (
 
 type RoutineServiceInterface interface {
 	GetMyRoutineById(ctx context.Context, reqDto *dtos.GetMyRoutineByIdReqDto) (*dtos.GetMyRoutineByIdResDto, *exceptions.Exception)
+	GetAllMyRoutinesByTimeRange(ctx context.Context, reqDto *dtos.GetAllMyRoutinesByTimeRangeReqDto) (*dtos.GetAllMyRoutinesByTimeRangeResDto, *exceptions.Exception)
 	CreateRoutineByStationId(ctx context.Context, reqDto *dtos.CreateRoutineByStationIdReqDto) (*dtos.CreateRoutineByStationIdResDto, *exceptions.Exception)
 	CreateRoutinesByStationIds(ctx context.Context, reqDto *dtos.CreateRoutinesByStationIdsReqDto) (*dtos.CreateRoutinesByStationIdsResDto, *exceptions.Exception)
 	UpdateMyRoutineById(ctx context.Context, reqDto *dtos.UpdateMyRoutineByIdReqDto) (*dtos.UpdateMyRoutineByIdResDto, *exceptions.Exception)
@@ -118,6 +120,53 @@ func (s *RoutineService) GetMyRoutineById(
 		UpdatedAt:        routine.UpdatedAt,
 		CreatedAt:        routine.CreatedAt,
 	}, nil
+}
+
+func (s *RoutineService) GetAllMyRoutinesByTimeRange(
+	ctx context.Context,
+	reqDto *dtos.GetAllMyRoutinesByTimeRangeReqDto,
+) (*dtos.GetAllMyRoutinesByTimeRangeResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+	}
+	if !reqDto.Param.From.Before(reqDto.Param.To) {
+		return nil, exceptions.Routine.InvalidInput().WithOrigin(fmt.Errorf("from must be before to"))
+	}
+
+	db := s.db.WithContext(ctx)
+	routines, exception := s.routineRepository.GetAllByTimeRange(
+		reqDto.Param.From,
+		reqDto.Param.To,
+		reqDto.Param.StationIds,
+		reqDto.ContextFields.UserId,
+		nil,
+		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	resDto := make(dtos.GetAllMyRoutinesByTimeRangeResDto, len(routines))
+	for index, routine := range routines {
+		resDto[index] = dtos.GetMyRoutineByIdResDto{
+			Id:               routine.Id,
+			StationId:        routine.StationId,
+			Title:            routine.Title,
+			Description:      routine.Description,
+			Status:           routine.Status,
+			IsPinned:         routine.IsPinned,
+			ScheduledStartAt: routine.ScheduledStartAt,
+			ScheduledEndAt:   routine.ScheduledEndAt,
+			Period:           routine.Period,
+			Timezone:         routine.Timezone,
+			DeletedAt:        routine.DeletedAt,
+			UpdatedAt:        routine.UpdatedAt,
+			CreatedAt:        routine.CreatedAt,
+		}
+	}
+
+	return &resDto, nil
 }
 
 func (s *RoutineService) CreateRoutineByStationId(

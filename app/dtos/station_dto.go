@@ -27,6 +27,21 @@ type GetMyStationByIdReqDto struct {
 	]
 }
 
+type GetAllMyStationsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		any,
+		struct {
+			OnlyDeleted *types.Ternary `form:"onlyDeleted" validate:"omitnil,min=0,max=2"`
+		},
+	]
+}
+
 type CreateStationReqDto struct {
 	NotezyRequest[
 		struct {
@@ -215,6 +230,8 @@ type GetMyStationByIdResDto struct {
 	UpdatedAt           time.Time                     `json:"updatedAt"`
 	CreatedAt           time.Time                     `json:"createdAt"`
 }
+
+type GetAllMyStationsResDto = []GetMyStationByIdResDto
 
 type CreateStationResDto struct {
 	Id        uuid.UUID `json:"id"`

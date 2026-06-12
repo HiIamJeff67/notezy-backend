@@ -14,6 +14,7 @@ import (
 
 type StationBinderInterface interface {
 	BindGetMyStationById(controllerFunc types.ControllerFunc[*dtos.GetMyStationByIdReqDto]) gin.HandlerFunc
+	BindGetAllMyStations(controllerFunc types.ControllerFunc[*dtos.GetAllMyStationsReqDto]) gin.HandlerFunc
 	BindCreateStation(controllerFunc types.ControllerFunc[*dtos.CreateStationReqDto]) gin.HandlerFunc
 	BindCreateStations(controllerFunc types.ControllerFunc[*dtos.CreateStationsReqDto]) gin.HandlerFunc
 	BindUpdateMyStationById(controllerFunc types.ControllerFunc[*dtos.UpdateMyStationByIdReqDto]) gin.HandlerFunc
@@ -56,6 +57,28 @@ func (b *StationBinder) BindGetMyStationById(controllerFunc types.ControllerFunc
 			return
 		}
 		reqDto.Param.StationId = stationId
+
+		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
+			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *StationBinder) BindGetAllMyStations(controllerFunc types.ControllerFunc[*dtos.GetAllMyStationsReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.GetAllMyStationsReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
 			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)

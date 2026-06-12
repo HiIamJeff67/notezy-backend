@@ -11,6 +11,7 @@ import (
 
 type RoutineTagControllerInterface interface {
 	GetMyRoutineTagById(ctx *gin.Context, reqDto *dtos.GetMyRoutineTagByIdReqDto)
+	GetAllMyRoutineTags(ctx *gin.Context, reqDto *dtos.GetAllMyRoutineTagsReqDto)
 	CreateRoutineTag(ctx *gin.Context, reqDto *dtos.CreateRoutineTagReqDto)
 	CreateRoutineTags(ctx *gin.Context, reqDto *dtos.CreateRoutineTagsReqDto)
 	UpdateMyRoutineTagById(ctx *gin.Context, reqDto *dtos.UpdateMyRoutineTagByIdReqDto)
@@ -31,6 +32,20 @@ func NewRoutineTagController(service services.RoutineTagServiceInterface) Routin
 
 func (c *RoutineTagController) GetMyRoutineTagById(ctx *gin.Context, reqDto *dtos.GetMyRoutineTagByIdReqDto) {
 	resDto, exception := c.routineTagService.GetMyRoutineTagById(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RoutineTagController) GetAllMyRoutineTags(ctx *gin.Context, reqDto *dtos.GetAllMyRoutineTagsReqDto) {
+	resDto, exception := c.routineTagService.GetAllMyRoutineTags(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return

@@ -25,6 +25,19 @@ type GetMyRoutineTagByIdReqDto struct {
 	]
 }
 
+type GetAllMyRoutineTagsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		any,
+		any,
+	]
+}
+
 type CreateRoutineTagReqDto struct {
 	NotezyRequest[
 		struct {
@@ -145,6 +158,8 @@ type GetMyRoutineTagByIdResDto struct {
 	UpdatedAt time.Time            `json:"updatedAt"`
 	CreatedAt time.Time            `json:"createdAt"`
 }
+
+type GetAllMyRoutineTagsResDto = []GetMyRoutineTagByIdResDto
 
 type CreateRoutineTagResDto struct {
 	Id        uuid.UUID `json:"id"`

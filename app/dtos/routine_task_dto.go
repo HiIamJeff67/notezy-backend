@@ -26,6 +26,21 @@ type GetMyRoutineTaskByIdReqDto struct {
 	]
 }
 
+type GetAllMyRoutineTasksByStationIdsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		any,
+		struct {
+			StationIds []uuid.UUID `form:"stationIds" validate:"required,min=1,max=1024"`
+		},
+	]
+}
+
 type CreateRoutineTaskByStationIdReqDto struct {
 	NotezyRequest[
 		struct {
@@ -117,6 +132,8 @@ type GetMyRoutineTaskByIdResDto struct {
 	UpdatedAt       time.Time                `json:"updatedAt"`
 	CreatedAt       time.Time                `json:"createdAt"`
 }
+
+type GetAllMyRoutineTasksByStationIdsResDto = []GetMyRoutineTaskByIdResDto
 
 type CreateRoutineTaskByStationIdResDto struct {
 	Id        uuid.UUID `json:"id"`

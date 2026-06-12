@@ -43,6 +43,22 @@ func configureDevelopmentStationRoutes() {
 				),
 			)...,
 		)
+		stationRoutes.GET(
+			"/getAllMyStations",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getAllMyStations"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.Station.GetAllMyStations,
+					),
+				},
+				defaultMiddlewares,
+				stationModule.Binder.BindGetAllMyStations(
+					stationModule.Controller.GetAllMyStations,
+				),
+			)...,
+		)
 		stationRoutes.POST(
 			"/createStation",
 			middlewares.RepositionMiddleware(
