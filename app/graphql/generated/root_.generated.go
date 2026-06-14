@@ -40,6 +40,19 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	PrivateItem struct {
+		CreatedAt        func(childComplexity int) int
+		DeletedAt        func(childComplexity int) int
+		ID               func(childComplexity int) int
+		ParentSubShelf   func(childComplexity int) int
+		ParentSubShelfID func(childComplexity int) int
+		RootShelf        func(childComplexity int) int
+		RootShelfID      func(childComplexity int) int
+		Routines         func(childComplexity int) int
+		Type             func(childComplexity int) int
+		UpdatedAt        func(childComplexity int) int
+	}
+
 	PrivateMaterial struct {
 		ContentKey       func(childComplexity int) int
 		ContentType      func(childComplexity int) int
@@ -59,6 +72,7 @@ type ComplexityRoot struct {
 		DeletedAt      func(childComplexity int) int
 		ID             func(childComplexity int) int
 		ItemCount      func(childComplexity int) int
+		Items          func(childComplexity int) int
 		LastAnalyzedAt func(childComplexity int) int
 		Name           func(childComplexity int) int
 		Owner          func(childComplexity int) int
@@ -74,6 +88,7 @@ type ComplexityRoot struct {
 		Description      func(childComplexity int) int
 		ID               func(childComplexity int) int
 		IsPinned         func(childComplexity int) int
+		Items            func(childComplexity int) int
 		Period           func(childComplexity int) int
 		ScheduledEndAt   func(childComplexity int) int
 		ScheduledStartAt func(childComplexity int) int
@@ -138,6 +153,7 @@ type ComplexityRoot struct {
 		CreatedAt      func(childComplexity int) int
 		DeletedAt      func(childComplexity int) int
 		ID             func(childComplexity int) int
+		Items          func(childComplexity int) int
 		Materials      func(childComplexity int) int
 		Name           func(childComplexity int) int
 		NextSubShelves func(childComplexity int) int
@@ -212,6 +228,18 @@ type ComplexityRoot struct {
 	}
 
 	SearchBadgeEdge struct {
+		EncodedSearchCursor func(childComplexity int) int
+		Node                func(childComplexity int) int
+	}
+
+	SearchItemConnection struct {
+		SearchEdges    func(childComplexity int) int
+		SearchPageInfo func(childComplexity int) int
+		SearchTime     func(childComplexity int) int
+		TotalCount     func(childComplexity int) int
+	}
+
+	SearchItemEdge struct {
 		EncodedSearchCursor func(childComplexity int) int
 		Node                func(childComplexity int) int
 	}
@@ -327,6 +355,76 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	_ = ec
 	switch typeName + "." + field {
 
+	case "PrivateItem.createdAt":
+		if e.complexity.PrivateItem.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateItem.CreatedAt(childComplexity), true
+
+	case "PrivateItem.deletedAt":
+		if e.complexity.PrivateItem.DeletedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateItem.DeletedAt(childComplexity), true
+
+	case "PrivateItem.id":
+		if e.complexity.PrivateItem.ID == nil {
+			break
+		}
+
+		return e.complexity.PrivateItem.ID(childComplexity), true
+
+	case "PrivateItem.parentSubShelf":
+		if e.complexity.PrivateItem.ParentSubShelf == nil {
+			break
+		}
+
+		return e.complexity.PrivateItem.ParentSubShelf(childComplexity), true
+
+	case "PrivateItem.parentSubShelfId":
+		if e.complexity.PrivateItem.ParentSubShelfID == nil {
+			break
+		}
+
+		return e.complexity.PrivateItem.ParentSubShelfID(childComplexity), true
+
+	case "PrivateItem.rootShelf":
+		if e.complexity.PrivateItem.RootShelf == nil {
+			break
+		}
+
+		return e.complexity.PrivateItem.RootShelf(childComplexity), true
+
+	case "PrivateItem.rootShelfId":
+		if e.complexity.PrivateItem.RootShelfID == nil {
+			break
+		}
+
+		return e.complexity.PrivateItem.RootShelfID(childComplexity), true
+
+	case "PrivateItem.routines":
+		if e.complexity.PrivateItem.Routines == nil {
+			break
+		}
+
+		return e.complexity.PrivateItem.Routines(childComplexity), true
+
+	case "PrivateItem.type":
+		if e.complexity.PrivateItem.Type == nil {
+			break
+		}
+
+		return e.complexity.PrivateItem.Type(childComplexity), true
+
+	case "PrivateItem.updatedAt":
+		if e.complexity.PrivateItem.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateItem.UpdatedAt(childComplexity), true
+
 	case "PrivateMaterial.contentKey":
 		if e.complexity.PrivateMaterial.ContentKey == nil {
 			break
@@ -432,6 +530,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateRootShelf.ItemCount(childComplexity), true
 
+	case "PrivateRootShelf.items":
+		if e.complexity.PrivateRootShelf.Items == nil {
+			break
+		}
+
+		return e.complexity.PrivateRootShelf.Items(childComplexity), true
+
 	case "PrivateRootShelf.lastAnalyzedAt":
 		if e.complexity.PrivateRootShelf.LastAnalyzedAt == nil {
 			break
@@ -515,6 +620,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateRoutine.IsPinned(childComplexity), true
+
+	case "PrivateRoutine.items":
+		if e.complexity.PrivateRoutine.Items == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutine.Items(childComplexity), true
 
 	case "PrivateRoutine.period":
 		if e.complexity.PrivateRoutine.Period == nil {
@@ -879,6 +991,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateSubShelf.ID(childComplexity), true
+
+	case "PrivateSubShelf.items":
+		if e.complexity.PrivateSubShelf.Items == nil {
+			break
+		}
+
+		return e.complexity.PrivateSubShelf.Items(childComplexity), true
 
 	case "PrivateSubShelf.materials":
 		if e.complexity.PrivateSubShelf.Materials == nil {
@@ -1300,6 +1419,48 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.SearchBadgeEdge.Node(childComplexity), true
 
+	case "SearchItemConnection.searchEdges":
+		if e.complexity.SearchItemConnection.SearchEdges == nil {
+			break
+		}
+
+		return e.complexity.SearchItemConnection.SearchEdges(childComplexity), true
+
+	case "SearchItemConnection.searchPageInfo":
+		if e.complexity.SearchItemConnection.SearchPageInfo == nil {
+			break
+		}
+
+		return e.complexity.SearchItemConnection.SearchPageInfo(childComplexity), true
+
+	case "SearchItemConnection.searchTime":
+		if e.complexity.SearchItemConnection.SearchTime == nil {
+			break
+		}
+
+		return e.complexity.SearchItemConnection.SearchTime(childComplexity), true
+
+	case "SearchItemConnection.totalCount":
+		if e.complexity.SearchItemConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.SearchItemConnection.TotalCount(childComplexity), true
+
+	case "SearchItemEdge.encodedSearchCursor":
+		if e.complexity.SearchItemEdge.EncodedSearchCursor == nil {
+			break
+		}
+
+		return e.complexity.SearchItemEdge.EncodedSearchCursor(childComplexity), true
+
+	case "SearchItemEdge.node":
+		if e.complexity.SearchItemEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.SearchItemEdge.Node(childComplexity), true
+
 	case "SearchPageInfo.endEncodedSearchCursor":
 		if e.complexity.SearchPageInfo.EndEncodedSearchCursor == nil {
 			break
@@ -1633,6 +1794,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputSearchBadgeCursorFields,
 		ec.unmarshalInputSearchBadgeFilters,
 		ec.unmarshalInputSearchBadgeInput,
+		ec.unmarshalInputSearchItemCursorFields,
+		ec.unmarshalInputSearchItemInput,
 		ec.unmarshalInputSearchRootShelfCursorFields,
 		ec.unmarshalInputSearchRootShelfInput,
 		ec.unmarshalInputSearchRoutineCursorFields,
@@ -1938,6 +2101,21 @@ interface SearchConnection {
   searchTime: Float!
 }
 `, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/item.graphql", Input: `type PrivateItem {
+    id: UUID!
+    parentSubShelfId: UUID!
+    rootShelfId: UUID!
+    type: ItemType!
+    deletedAt: Time
+    updatedAt: Time!
+    createdAt: Time!
+
+    # relations
+    parentSubShelf: PrivateSubShelf!
+    rootShelf: PrivateRootShelf!
+    routines: [PrivateRoutine!]!
+}
+`, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/material.graphql", Input: `type PrivateMaterial {
   id: UUID!
   parentSubShelfId: UUID!
@@ -1984,6 +2162,7 @@ interface SearchConnection {
   # relations
   owner: PublicUser!
   sharers: [PublicUser!]!
+  items: [PrivateItem!]!
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/routine.graphql", Input: `type PrivateRoutine {
@@ -2005,6 +2184,7 @@ interface SearchConnection {
   station: PrivateStation!
   tags: [PrivateRoutineTag!]!
   tasks: [PrivateRoutineTask!]!
+  items: [PrivateItem!]!
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/routine_tag.graphql", Input: `type PrivateRoutineTag {
@@ -2092,6 +2272,45 @@ type SearchBadgeConnection implements SearchConnection {
   searchPageInfo: SearchPageInfo!
   totalCount: Int!
   searchTime: Float!
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/search_items.graphql", Input: `# =============== Search SortBy & Input =============== #
+
+enum SearchItemSortBy {
+    RELEVANCE
+    TYPE
+    LAST_UPDATE
+    CREATED_AT
+}
+
+input SearchItemInput {
+    parentSubShelfId: UUID
+    rootShelfId: UUID
+    query: String!
+    after: String
+    first: Int = 10
+    sortBy: SearchItemSortBy = RELEVANCE
+    sortOrder: SearchSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+input SearchItemCursorFields {
+    id: UUID!
+}
+
+# =============== Search Edge & Connection =============== #
+
+type SearchItemEdge implements SearchEdge {
+    encodedSearchCursor: String!
+    node: PrivateItem!
+}
+
+type SearchItemConnection implements SearchConnection {
+    searchEdges: [SearchItemEdge!]!
+    searchPageInfo: SearchPageInfo!
+    totalCount: Int!
+    searchTime: Float!
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/search_root_shelves.graphql", Input: `# =============== Search SortBy & Input =============== #
@@ -2233,6 +2452,7 @@ enum SearchRoutineSortBy {
 input SearchRoutineInput {
   stationId: UUID
   query: String!
+  after: String
   first: Int = 10
   sortBy: SearchRoutineSortBy = RELEVANCE
   sortOrder: SearchSortOrder = DESC
@@ -2428,6 +2648,7 @@ type SearchUserConnection implements SearchConnection {
   rootShelf: PrivateRootShelf!
   nextSubShelves: [PrivateSubShelf!]!
   materials: [PrivateMaterial!]!
+  items: [PrivateItem!]!
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/theme.graphql", Input: `type PublicTheme {

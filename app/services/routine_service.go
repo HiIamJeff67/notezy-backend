@@ -1096,6 +1096,14 @@ func (s *RoutineService) SearchPrivateRoutines(
 			"%"+gqlInput.Query+"%",
 		)
 	}
+	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
+		searchCursor, err := searchcursor.Decode[gqlmodels.SearchRoutineCursorFields](*gqlInput.After)
+		if err != nil {
+			return nil, exceptions.Search.FailedToDecode().WithOrigin(err)
+		}
+
+		query.Where("id > ?", searchCursor.Fields.ID)
+	}
 
 	if gqlInput.SortBy != nil && gqlInput.SortOrder != nil {
 		var cending string = gqlmodels.SearchSortOrderAsc.String()

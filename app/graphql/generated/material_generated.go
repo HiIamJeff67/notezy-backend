@@ -530,6 +530,8 @@ func (ec *executionContext) fieldContext_PrivateMaterial_parentSubShelf(_ contex
 				return ec.fieldContext_PrivateSubShelf_nextSubShelves(ctx, field)
 			case "materials":
 				return ec.fieldContext_PrivateSubShelf_materials(ctx, field)
+			case "items":
+				return ec.fieldContext_PrivateSubShelf_items(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PrivateSubShelf", field.Name)
 		},

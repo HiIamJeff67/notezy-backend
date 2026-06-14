@@ -34,6 +34,9 @@ func GraphQLHandler() gin.HandlerFunc {
 	themeService := services.NewThemeService(
 		models.NotezyDB,
 	)
+	itemService := services.NewItemService(
+		models.NotezyDB,
+	)
 	rootShelfService := services.NewRootShelfService(
 		models.NotezyDB,
 		rootShelfRepository,
@@ -63,6 +66,7 @@ func GraphQLHandler() gin.HandlerFunc {
 		dataloaders,
 		userServices,
 		themeService,
+		itemService,
 		rootShelfService,
 		stationService,
 		routineService,

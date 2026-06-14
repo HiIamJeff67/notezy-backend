@@ -12,4 +12,5 @@ type PrivateRootShelf {
   # relations
   owner: PublicUser!
   sharers: [PublicUser!]!
+  items: [PrivateItem!]!
 }

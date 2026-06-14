@@ -1,0 +1,22 @@
+fragment FragmentedBasicPrivateItem on PrivateItem {
+    id
+    parentSubShelfId
+    rootShelfId
+    type
+    deletedAt
+    updatedAt
+    createdAt
+}
+
+fragment FragmentedPrivateItem on PrivateItem {
+    ...FragmentedBasicPrivateItem
+    parentSubShelf {
+        ...FragmentedBasicPrivateSubShelf
+    }
+    rootShelf {
+        ...FragmentedBasicPrivateRootShelf
+    }
+    routines {
+        ...FragmentedBasicPrivateRoutine
+    }
+}

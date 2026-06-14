@@ -1,0 +1,14 @@
+type PrivateItem {
+    id: UUID!
+    parentSubShelfId: UUID!
+    rootShelfId: UUID!
+    type: ItemType!
+    deletedAt: Time
+    updatedAt: Time!
+    createdAt: Time!
+
+    # relations
+    parentSubShelf: PrivateSubShelf!
+    rootShelf: PrivateRootShelf!
+    routines: [PrivateRoutine!]!
+}

@@ -13,6 +13,7 @@ type Resolver struct {
 	dataloader         dataloaders.Dataloaders
 	userService        services.UserServiceInterface
 	themeService       services.ThemeServiceInterface
+	itemService        services.ItemServiceInterface
 	rootShelfService   services.RootShelfServiceInterface
 	stationService     services.StationServiceInterface
 	routineService     services.RoutineServiceInterface
@@ -24,6 +25,7 @@ func NewResolver(
 	dataloader dataloaders.Dataloaders,
 	userService services.UserServiceInterface,
 	themeService services.ThemeServiceInterface,
+	itemService services.ItemServiceInterface,
 	rootShelfService services.RootShelfServiceInterface,
 	stationService services.StationServiceInterface,
 	routineService services.RoutineServiceInterface,
@@ -34,6 +36,7 @@ func NewResolver(
 		dataloader:         dataloader,
 		userService:        userService,
 		themeService:       themeService,
+		itemService:        itemService,
 		rootShelfService:   rootShelfService,
 		stationService:     stationService,
 		routineService:     routineService,

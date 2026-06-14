@@ -15,4 +15,10 @@ fragment FragmentedPrivateRootShelf on PrivateRootShelf {
   owner {
     ...FragmentedBasicPublicUser
   }
+  sharers {
+    ...FragmentedBasicPublicUser
+  }
+  items {
+    ...FragmentedBasicPrivateItem
+  }
 }

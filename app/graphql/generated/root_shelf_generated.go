@@ -556,6 +556,72 @@ func (ec *executionContext) fieldContext_PrivateRootShelf_sharers(_ context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _PrivateRootShelf_items(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRootShelf) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateRootShelf_items(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Items, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*gqlmodels.PrivateItem)
+	fc.Result = res
+	return ec.marshalNPrivateItem2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateItemᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PrivateRootShelf_items(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PrivateRootShelf",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PrivateItem_id(ctx, field)
+			case "parentSubShelfId":
+				return ec.fieldContext_PrivateItem_parentSubShelfId(ctx, field)
+			case "rootShelfId":
+				return ec.fieldContext_PrivateItem_rootShelfId(ctx, field)
+			case "type":
+				return ec.fieldContext_PrivateItem_type(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_PrivateItem_deletedAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PrivateItem_updatedAt(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PrivateItem_createdAt(ctx, field)
+			case "parentSubShelf":
+				return ec.fieldContext_PrivateItem_parentSubShelf(ctx, field)
+			case "rootShelf":
+				return ec.fieldContext_PrivateItem_rootShelf(ctx, field)
+			case "routines":
+				return ec.fieldContext_PrivateItem_routines(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PrivateItem", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 // endregion **************************** field.gotpl *****************************
 
 // region    **************************** input.gotpl *****************************
@@ -628,6 +694,11 @@ func (ec *executionContext) _PrivateRootShelf(ctx context.Context, sel ast.Selec
 			}
 		case "sharers":
 			out.Values[i] = ec._PrivateRootShelf_sharers(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "items":
+			out.Values[i] = ec._PrivateRootShelf_items(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

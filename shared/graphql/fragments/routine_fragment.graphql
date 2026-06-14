@@ -25,4 +25,7 @@ fragment FragmentedPrivateRoutine on PrivateRoutine {
   tasks {
     ...FragmentedBasicPrivateRoutineTask
   }
+  items {
+    ...FragmentedBasicPrivateItem
+  }
 }

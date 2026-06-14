@@ -32,8 +32,8 @@ import (
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _PrivateRoutineTag_id(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRoutineTag) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateRoutineTag_id(ctx, field)
+func (ec *executionContext) _PrivateItem_id(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateItem_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -63,9 +63,9 @@ func (ec *executionContext) _PrivateRoutineTag_id(ctx context.Context, field gra
 	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PrivateRoutineTag_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PrivateItem_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "PrivateRoutineTag",
+		Object:     "PrivateItem",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -76,8 +76,8 @@ func (ec *executionContext) fieldContext_PrivateRoutineTag_id(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateRoutineTag_name(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRoutineTag) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateRoutineTag_name(ctx, field)
+func (ec *executionContext) _PrivateItem_parentSubShelfId(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateItem_parentSubShelfId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -90,7 +90,7 @@ func (ec *executionContext) _PrivateRoutineTag_name(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
+		return obj.ParentSubShelfID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -102,26 +102,26 @@ func (ec *executionContext) _PrivateRoutineTag_name(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(uuid.UUID)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PrivateRoutineTag_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PrivateItem_parentSubShelfId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "PrivateRoutineTag",
+		Object:     "PrivateItem",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type UUID does not have child fields")
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateRoutineTag_color(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRoutineTag) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateRoutineTag_color(ctx, field)
+func (ec *executionContext) _PrivateItem_rootShelfId(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateItem_rootShelfId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -134,7 +134,7 @@ func (ec *executionContext) _PrivateRoutineTag_color(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Color, nil
+		return obj.RootShelfID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -146,26 +146,26 @@ func (ec *executionContext) _PrivateRoutineTag_color(ctx context.Context, field 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(uuid.UUID)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PrivateRoutineTag_color(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PrivateItem_rootShelfId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "PrivateRoutineTag",
+		Object:     "PrivateItem",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type UUID does not have child fields")
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateRoutineTag_icon(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRoutineTag) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateRoutineTag_icon(ctx, field)
+func (ec *executionContext) _PrivateItem_type(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateItem_type(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -178,7 +178,51 @@ func (ec *executionContext) _PrivateRoutineTag_icon(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Icon, nil
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(enums.ItemType)
+	fc.Result = res
+	return ec.marshalNItemType2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐItemType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PrivateItem_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PrivateItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ItemType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PrivateItem_deletedAt(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateItem_deletedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DeletedAt, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -187,26 +231,26 @@ func (ec *executionContext) _PrivateRoutineTag_icon(ctx context.Context, field g
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*enums.SupportedIcon)
+	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalOSupportedIcon2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐSupportedIcon(ctx, field.Selections, res)
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PrivateRoutineTag_icon(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PrivateItem_deletedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "PrivateRoutineTag",
+		Object:     "PrivateItem",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type SupportedIcon does not have child fields")
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateRoutineTag_updatedAt(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRoutineTag) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateRoutineTag_updatedAt(ctx, field)
+func (ec *executionContext) _PrivateItem_updatedAt(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateItem_updatedAt(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -236,9 +280,9 @@ func (ec *executionContext) _PrivateRoutineTag_updatedAt(ctx context.Context, fi
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PrivateRoutineTag_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PrivateItem_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "PrivateRoutineTag",
+		Object:     "PrivateItem",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -249,8 +293,8 @@ func (ec *executionContext) fieldContext_PrivateRoutineTag_updatedAt(_ context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateRoutineTag_createdAt(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRoutineTag) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateRoutineTag_createdAt(ctx, field)
+func (ec *executionContext) _PrivateItem_createdAt(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateItem_createdAt(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -280,9 +324,9 @@ func (ec *executionContext) _PrivateRoutineTag_createdAt(ctx context.Context, fi
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PrivateRoutineTag_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PrivateItem_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "PrivateRoutineTag",
+		Object:     "PrivateItem",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -293,8 +337,8 @@ func (ec *executionContext) fieldContext_PrivateRoutineTag_createdAt(_ context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateRoutineTag_owner(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRoutineTag) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateRoutineTag_owner(ctx, field)
+func (ec *executionContext) _PrivateItem_parentSubShelf(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateItem_parentSubShelf(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -307,7 +351,7 @@ func (ec *executionContext) _PrivateRoutineTag_owner(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Owner, nil
+		return obj.ParentSubShelf, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -319,48 +363,52 @@ func (ec *executionContext) _PrivateRoutineTag_owner(ctx context.Context, field 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*gqlmodels.PublicUser)
+	res := resTmp.(*gqlmodels.PrivateSubShelf)
 	fc.Result = res
-	return ec.marshalNPublicUser2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUser(ctx, field.Selections, res)
+	return ec.marshalNPrivateSubShelf2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateSubShelf(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PrivateRoutineTag_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PrivateItem_parentSubShelf(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "PrivateRoutineTag",
+		Object:     "PrivateItem",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "publicId":
-				return ec.fieldContext_PublicUser_publicId(ctx, field)
+			case "id":
+				return ec.fieldContext_PrivateSubShelf_id(ctx, field)
 			case "name":
-				return ec.fieldContext_PublicUser_name(ctx, field)
-			case "displayName":
-				return ec.fieldContext_PublicUser_displayName(ctx, field)
-			case "role":
-				return ec.fieldContext_PublicUser_role(ctx, field)
-			case "plan":
-				return ec.fieldContext_PublicUser_plan(ctx, field)
-			case "status":
-				return ec.fieldContext_PublicUser_status(ctx, field)
+				return ec.fieldContext_PrivateSubShelf_name(ctx, field)
+			case "rootShelfId":
+				return ec.fieldContext_PrivateSubShelf_rootShelfId(ctx, field)
+			case "prevSubShelfId":
+				return ec.fieldContext_PrivateSubShelf_prevSubShelfId(ctx, field)
+			case "path":
+				return ec.fieldContext_PrivateSubShelf_path(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_PrivateSubShelf_deletedAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PrivateSubShelf_updatedAt(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_PublicUser_createdAt(ctx, field)
-			case "userInfo":
-				return ec.fieldContext_PublicUser_userInfo(ctx, field)
-			case "badges":
-				return ec.fieldContext_PublicUser_badges(ctx, field)
-			case "themes":
-				return ec.fieldContext_PublicUser_themes(ctx, field)
+				return ec.fieldContext_PrivateSubShelf_createdAt(ctx, field)
+			case "rootShelf":
+				return ec.fieldContext_PrivateSubShelf_rootShelf(ctx, field)
+			case "nextSubShelves":
+				return ec.fieldContext_PrivateSubShelf_nextSubShelves(ctx, field)
+			case "materials":
+				return ec.fieldContext_PrivateSubShelf_materials(ctx, field)
+			case "items":
+				return ec.fieldContext_PrivateSubShelf_items(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type PublicUser", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type PrivateSubShelf", field.Name)
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateRoutineTag_sharers(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRoutineTag) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateRoutineTag_sharers(ctx, field)
+func (ec *executionContext) _PrivateItem_rootShelf(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateItem_rootShelf(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -373,7 +421,7 @@ func (ec *executionContext) _PrivateRoutineTag_sharers(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Sharers, nil
+		return obj.RootShelf, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -385,48 +433,52 @@ func (ec *executionContext) _PrivateRoutineTag_sharers(ctx context.Context, fiel
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*gqlmodels.PublicUser)
+	res := resTmp.(*gqlmodels.PrivateRootShelf)
 	fc.Result = res
-	return ec.marshalNPublicUser2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUserᚄ(ctx, field.Selections, res)
+	return ec.marshalNPrivateRootShelf2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateRootShelf(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PrivateRoutineTag_sharers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PrivateItem_rootShelf(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "PrivateRoutineTag",
+		Object:     "PrivateItem",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "publicId":
-				return ec.fieldContext_PublicUser_publicId(ctx, field)
+			case "id":
+				return ec.fieldContext_PrivateRootShelf_id(ctx, field)
 			case "name":
-				return ec.fieldContext_PublicUser_name(ctx, field)
-			case "displayName":
-				return ec.fieldContext_PublicUser_displayName(ctx, field)
-			case "role":
-				return ec.fieldContext_PublicUser_role(ctx, field)
-			case "plan":
-				return ec.fieldContext_PublicUser_plan(ctx, field)
-			case "status":
-				return ec.fieldContext_PublicUser_status(ctx, field)
+				return ec.fieldContext_PrivateRootShelf_name(ctx, field)
+			case "permission":
+				return ec.fieldContext_PrivateRootShelf_permission(ctx, field)
+			case "subShelfCount":
+				return ec.fieldContext_PrivateRootShelf_subShelfCount(ctx, field)
+			case "itemCount":
+				return ec.fieldContext_PrivateRootShelf_itemCount(ctx, field)
+			case "lastAnalyzedAt":
+				return ec.fieldContext_PrivateRootShelf_lastAnalyzedAt(ctx, field)
+			case "deletedAt":
+				return ec.fieldContext_PrivateRootShelf_deletedAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_PrivateRootShelf_updatedAt(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_PublicUser_createdAt(ctx, field)
-			case "userInfo":
-				return ec.fieldContext_PublicUser_userInfo(ctx, field)
-			case "badges":
-				return ec.fieldContext_PublicUser_badges(ctx, field)
-			case "themes":
-				return ec.fieldContext_PublicUser_themes(ctx, field)
+				return ec.fieldContext_PrivateRootShelf_createdAt(ctx, field)
+			case "owner":
+				return ec.fieldContext_PrivateRootShelf_owner(ctx, field)
+			case "sharers":
+				return ec.fieldContext_PrivateRootShelf_sharers(ctx, field)
+			case "items":
+				return ec.fieldContext_PrivateRootShelf_items(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type PublicUser", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type PrivateRootShelf", field.Name)
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateRoutineTag_routines(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRoutineTag) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateRoutineTag_routines(ctx, field)
+func (ec *executionContext) _PrivateItem_routines(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateItem_routines(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -456,9 +508,9 @@ func (ec *executionContext) _PrivateRoutineTag_routines(ctx context.Context, fie
 	return ec.marshalNPrivateRoutine2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateRoutineᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PrivateRoutineTag_routines(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PrivateItem_routines(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "PrivateRoutineTag",
+		Object:     "PrivateItem",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -517,56 +569,61 @@ func (ec *executionContext) fieldContext_PrivateRoutineTag_routines(_ context.Co
 
 // region    **************************** object.gotpl ****************************
 
-var privateRoutineTagImplementors = []string{"PrivateRoutineTag"}
+var privateItemImplementors = []string{"PrivateItem"}
 
-func (ec *executionContext) _PrivateRoutineTag(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.PrivateRoutineTag) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, privateRoutineTagImplementors)
+func (ec *executionContext) _PrivateItem(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.PrivateItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, privateItemImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("PrivateRoutineTag")
+			out.Values[i] = graphql.MarshalString("PrivateItem")
 		case "id":
-			out.Values[i] = ec._PrivateRoutineTag_id(ctx, field, obj)
+			out.Values[i] = ec._PrivateItem_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "name":
-			out.Values[i] = ec._PrivateRoutineTag_name(ctx, field, obj)
+		case "parentSubShelfId":
+			out.Values[i] = ec._PrivateItem_parentSubShelfId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "color":
-			out.Values[i] = ec._PrivateRoutineTag_color(ctx, field, obj)
+		case "rootShelfId":
+			out.Values[i] = ec._PrivateItem_rootShelfId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "icon":
-			out.Values[i] = ec._PrivateRoutineTag_icon(ctx, field, obj)
+		case "type":
+			out.Values[i] = ec._PrivateItem_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deletedAt":
+			out.Values[i] = ec._PrivateItem_deletedAt(ctx, field, obj)
 		case "updatedAt":
-			out.Values[i] = ec._PrivateRoutineTag_updatedAt(ctx, field, obj)
+			out.Values[i] = ec._PrivateItem_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "createdAt":
-			out.Values[i] = ec._PrivateRoutineTag_createdAt(ctx, field, obj)
+			out.Values[i] = ec._PrivateItem_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "owner":
-			out.Values[i] = ec._PrivateRoutineTag_owner(ctx, field, obj)
+		case "parentSubShelf":
+			out.Values[i] = ec._PrivateItem_parentSubShelf(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "sharers":
-			out.Values[i] = ec._PrivateRoutineTag_sharers(ctx, field, obj)
+		case "rootShelf":
+			out.Values[i] = ec._PrivateItem_rootShelf(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "routines":
-			out.Values[i] = ec._PrivateRoutineTag_routines(ctx, field, obj)
+			out.Values[i] = ec._PrivateItem_routines(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -597,7 +654,7 @@ func (ec *executionContext) _PrivateRoutineTag(ctx context.Context, sel ast.Sele
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNPrivateRoutineTag2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateRoutineTagᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.PrivateRoutineTag) graphql.Marshaler {
+func (ec *executionContext) marshalNPrivateItem2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.PrivateItem) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -621,7 +678,7 @@ func (ec *executionContext) marshalNPrivateRoutineTag2ᚕᚖgithubᚗcomᚋHiIam
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPrivateRoutineTag2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateRoutineTag(ctx, sel, v[i])
+			ret[i] = ec.marshalNPrivateItem2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateItem(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -641,14 +698,14 @@ func (ec *executionContext) marshalNPrivateRoutineTag2ᚕᚖgithubᚗcomᚋHiIam
 	return ret
 }
 
-func (ec *executionContext) marshalNPrivateRoutineTag2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateRoutineTag(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PrivateRoutineTag) graphql.Marshaler {
+func (ec *executionContext) marshalNPrivateItem2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateItem(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PrivateItem) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._PrivateRoutineTag(ctx, sel, v)
+	return ec._PrivateItem(ctx, sel, v)
 }
 
 // endregion ***************************** type.gotpl *****************************

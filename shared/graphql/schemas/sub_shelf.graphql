@@ -12,4 +12,5 @@ type PrivateSubShelf {
   rootShelf: PrivateRootShelf!
   nextSubShelves: [PrivateSubShelf!]!
   materials: [PrivateMaterial!]!
+  items: [PrivateItem!]!
 }

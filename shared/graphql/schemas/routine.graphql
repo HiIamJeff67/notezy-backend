@@ -17,4 +17,5 @@ type PrivateRoutine {
   station: PrivateStation!
   tags: [PrivateRoutineTag!]!
   tasks: [PrivateRoutineTask!]!
+  items: [PrivateItem!]!
 }

@@ -665,6 +665,8 @@ func (ec *executionContext) fieldContext_PrivateStation_routines(_ context.Conte
 				return ec.fieldContext_PrivateRoutine_tags(ctx, field)
 			case "tasks":
 				return ec.fieldContext_PrivateRoutine_tasks(ctx, field)
+			case "items":
+				return ec.fieldContext_PrivateRoutine_items(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PrivateRoutine", field.Name)
 		},

@@ -7,10 +7,10 @@ package resolvers
 import (
 	"context"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
-	generated "github.com/HiIamJeff67/notezy-backend/app/graphql/generated"
+	"github.com/HiIamJeff67/notezy-backend/app/contexts"
+	"github.com/HiIamJeff67/notezy-backend/app/graphql/generated"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	"github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 // SearchUsers is the resolver for the searchUsers field.

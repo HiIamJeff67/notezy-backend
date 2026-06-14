@@ -336,6 +336,8 @@ func (ec *executionContext) fieldContext_SearchRoutineEdge_node(_ context.Contex
 				return ec.fieldContext_PrivateRoutine_tags(ctx, field)
 			case "tasks":
 				return ec.fieldContext_PrivateRoutine_tasks(ctx, field)
+			case "items":
+				return ec.fieldContext_PrivateRoutine_items(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PrivateRoutine", field.Name)
 		},
@@ -391,7 +393,7 @@ func (ec *executionContext) unmarshalInputSearchRoutineInput(ctx context.Context
 		asMap["sortOrder"] = "DESC"
 	}
 
-	fieldsInOrder := [...]string{"stationId", "query", "first", "sortBy", "sortOrder"}
+	fieldsInOrder := [...]string{"stationId", "query", "after", "first", "sortBy", "sortOrder"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -412,6 +414,13 @@ func (ec *executionContext) unmarshalInputSearchRoutineInput(ctx context.Context
 				return it, err
 			}
 			it.Query = data
+		case "after":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.After = data
 		case "first":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
 			data, err := ec.unmarshalOInt2ᚖint32(ctx, v)
