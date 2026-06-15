@@ -551,6 +551,20 @@ func (ec *executionContext) _SearchItemEdge(ctx context.Context, sel ast.Selecti
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) marshalNSearchItemConnection2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchItemConnection(ctx context.Context, sel ast.SelectionSet, v gqlmodels.SearchItemConnection) graphql.Marshaler {
+	return ec._SearchItemConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSearchItemConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchItemConnection(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchItemConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SearchItemConnection(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNSearchItemEdge2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchItemEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.SearchItemEdge) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -603,6 +617,11 @@ func (ec *executionContext) marshalNSearchItemEdge2ᚖgithubᚗcomᚋHiIamJeff67
 		return graphql.Null
 	}
 	return ec._SearchItemEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNSearchItemInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchItemInput(ctx context.Context, v any) (gqlmodels.SearchItemInput, error) {
+	res, err := ec.unmarshalInputSearchItemInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOSearchItemSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchItemSortBy(ctx context.Context, v any) (*gqlmodels.SearchItemSortBy, error) {

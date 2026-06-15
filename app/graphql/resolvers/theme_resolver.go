@@ -14,7 +14,7 @@ type ThemeResolver struct {
 	themeService services.ThemeServiceInterface
 }
 
-func NewThemeReolsver(service services.ThemeServiceInterface) ThemeResolverInterface {
+func NewThemeResolver(service services.ThemeServiceInterface) ThemeResolverInterface {
 	return &ThemeResolver{
 		themeService: service,
 	}
@@ -24,6 +24,6 @@ func NewThemeReolsver(service services.ThemeServiceInterface) ThemeResolverInter
 // [MainSchema(as the filename) ---Indicator of MainSchema---> RelativeSchema(has the relationship between the MainSchema)]
 
 // [PublicTheme ---PublicTheme.PublicId---> PublicUser]
-func (r *ThemeResolver) Auther(ctx context.Context, obj *gqlmodels.PublicTheme) (*gqlmodels.PublicUser, error) {
+func (r *ThemeResolver) Author(ctx context.Context, obj *gqlmodels.PublicTheme) (*gqlmodels.PublicUser, error) {
 	return r.dataloader.UserDataLoader.LoadByThemePublicId(ctx, obj.PublicID)
 }

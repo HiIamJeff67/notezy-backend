@@ -335,6 +335,7 @@ func (this SearchRoutineEdge) GetEncodedSearchCursor() string { return this.Enco
 
 type SearchRoutineInput struct {
 	StationID *uuid.UUID           `json:"stationId,omitempty"`
+	TagID     *uuid.UUID           `json:"tagId,omitempty"`
 	Query     string               `json:"query"`
 	After     *string              `json:"after,omitempty"`
 	First     *int32               `json:"first,omitempty"`

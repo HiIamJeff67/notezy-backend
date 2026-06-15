@@ -211,6 +211,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		SearchItems        func(childComplexity int, input gqlmodels.SearchItemInput) int
 		SearchRootShelves  func(childComplexity int, input gqlmodels.SearchRootShelfInput) int
 		SearchRoutineTags  func(childComplexity int, input gqlmodels.SearchRoutineTagInput) int
 		SearchRoutineTasks func(childComplexity int, input gqlmodels.SearchRoutineTaskInput) int
@@ -1293,6 +1294,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PublicUserInfo.Introduction(childComplexity), true
 
+	case "Query.searchItems":
+		if e.complexity.Query.SearchItems == nil {
+			break
+		}
+
+		args, err := ec.field_Query_searchItems_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SearchItems(childComplexity, args["input"].(gqlmodels.SearchItemInput)), true
+
 	case "Query.searchRootShelves":
 		if e.complexity.Query.SearchRootShelves == nil {
 			break
@@ -2136,6 +2149,7 @@ interface SearchConnection {
   searchUsers(input: SearchUserInput!): SearchUserConnection!
   searchThemes(input: SearchThemeInput!): SearchThemeConnection!
   searchRootShelves(input: SearchRootShelfInput!): SearchRootShelfConnection!
+  searchItems(input: SearchItemInput!): SearchItemConnection!
   searchStations(input: SearchStationInput!): SearchStationConnection!
   searchRoutines(input: SearchRoutineInput!): SearchRoutineConnection!
   searchRoutineTags(input: SearchRoutineTagInput!): SearchRoutineTagConnection!
@@ -2451,6 +2465,7 @@ enum SearchRoutineSortBy {
 
 input SearchRoutineInput {
   stationId: UUID
+  tagId: UUID
   query: String!
   after: String
   first: Int = 10

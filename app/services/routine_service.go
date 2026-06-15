@@ -97,12 +97,17 @@ func (s *RoutineService) GetMyRoutineById(
 	routine, exception := s.routineRepository.GetOneById(
 		reqDto.Param.RoutineId,
 		reqDto.ContextFields.UserId,
-		nil,
+		[]schemas.RoutineRelation{schemas.RoutineRelation_RoutinesToTags},
 		options.WithDB(db),
 		options.WithOnlyDeleted(onlyDeleted),
 	)
 	if exception != nil {
 		return nil, exception
+	}
+
+	tagIds := make([]uuid.UUID, len(routine.RoutinesToTags))
+	for index, routineToTag := range routine.RoutinesToTags {
+		tagIds[index] = routineToTag.TagId
 	}
 
 	return &dtos.GetMyRoutineByIdResDto{
@@ -119,6 +124,7 @@ func (s *RoutineService) GetMyRoutineById(
 		DeletedAt:        routine.DeletedAt,
 		UpdatedAt:        routine.UpdatedAt,
 		CreatedAt:        routine.CreatedAt,
+		TagIds:           tagIds,
 	}, nil
 }
 
@@ -139,7 +145,7 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 		reqDto.Param.To,
 		reqDto.Param.StationIds,
 		reqDto.ContextFields.UserId,
-		nil,
+		[]schemas.RoutineRelation{schemas.RoutineRelation_RoutinesToTags},
 		options.WithDB(db),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
@@ -149,6 +155,10 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 
 	resDto := make(dtos.GetAllMyRoutinesByTimeRangeResDto, len(routines))
 	for index, routine := range routines {
+		tagIds := make([]uuid.UUID, len(routine.RoutinesToTags))
+		for index, routineToTag := range routine.RoutinesToTags {
+			tagIds[index] = routineToTag.TagId
+		}
 		resDto[index] = dtos.GetMyRoutineByIdResDto{
 			Id:               routine.Id,
 			StationId:        routine.StationId,
@@ -163,6 +173,7 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 			DeletedAt:        routine.DeletedAt,
 			UpdatedAt:        routine.UpdatedAt,
 			CreatedAt:        routine.CreatedAt,
+			TagIds:           tagIds,
 		}
 	}
 
@@ -1090,6 +1101,30 @@ func (s *RoutineService) SearchPrivateRoutines(
 		)
 	}
 
+	if gqlInput.TagID != nil {
+		if !s.routineTagRepository.HasPermission(
+			*gqlInput.TagID,
+			userId,
+			allowedPermissions,
+			options.WithDB(db),
+		) {
+			return nil, exceptions.RoutineTag.NoPermission("filter routines by this tag")
+		}
+
+		subQuery := db.
+			Session(&gorm.Session{NewDB: true}).
+			Model(&schemas.RoutinesToTags{}).
+			Select("routine_id").
+			Where(&schemas.RoutinesToTags{
+				TagId: *gqlInput.TagID,
+			})
+
+		query = query.Where(
+			"\"RoutineTable\".id IN (?)",
+			subQuery,
+		)
+	}
+
 	if len(strings.ReplaceAll(gqlInput.Query, " ", "")) > 0 {
 		query = query.Where(
 			"title ILIKE ?",
@@ -1102,7 +1137,10 @@ func (s *RoutineService) SearchPrivateRoutines(
 			return nil, exceptions.Search.FailedToDecode().WithOrigin(err)
 		}
 
-		query.Where("id > ?", searchCursor.Fields.ID)
+		query = query.Where(
+			"\"RoutineTable\".id > ?",
+			searchCursor.Fields.ID,
+		)
 	}
 
 	if gqlInput.SortBy != nil && gqlInput.SortOrder != nil {

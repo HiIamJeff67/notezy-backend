@@ -393,7 +393,7 @@ func (ec *executionContext) unmarshalInputSearchRoutineInput(ctx context.Context
 		asMap["sortOrder"] = "DESC"
 	}
 
-	fieldsInOrder := [...]string{"stationId", "query", "after", "first", "sortBy", "sortOrder"}
+	fieldsInOrder := [...]string{"stationId", "tagId", "query", "after", "first", "sortBy", "sortOrder"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -407,6 +407,13 @@ func (ec *executionContext) unmarshalInputSearchRoutineInput(ctx context.Context
 				return it, err
 			}
 			it.StationID = data
+		case "tagId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagId"))
+			data, err := ec.unmarshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TagID = data
 		case "query":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
 			data, err := ec.unmarshalNString2string(ctx, v)

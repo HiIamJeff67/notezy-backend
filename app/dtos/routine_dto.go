@@ -364,6 +364,7 @@ type GetMyRoutineByIdResDto struct {
 	DeletedAt        *time.Time           `json:"deletedAt"`
 	UpdatedAt        time.Time            `json:"updatedAt"`
 	CreatedAt        time.Time            `json:"createdAt"`
+	TagIds           []uuid.UUID          `json:"tagIds"`
 }
 
 type GetAllMyRoutinesByTimeRangeResDto = []GetMyRoutineByIdResDto
