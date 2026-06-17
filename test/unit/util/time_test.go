@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-/* ============================== Test IsTimeWithinDelta() ============================== */
+/* ============================== Test IsTimeWithin() ============================== */
 
 type IsTimeWithinDeltaArgType = struct {
 	T1    time.Time
@@ -28,7 +28,7 @@ func TestIsTimeWithinDelta(t *testing.T) {
 		t, "testdata/string_testdata/join_values_testdata.json",
 	)
 	for _, c := range cases {
-		got := util.IsTimeWithinDelta(c.Args.T1, c.Args.T2, c.Args.Delta)
+		got := util.IsTimeWithin(c.Args.T1, c.Args.T2, c.Args.Delta)
 		assert.Equal(t, c.Returns, got)
 	}
 }

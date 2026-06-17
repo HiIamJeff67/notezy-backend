@@ -29,7 +29,7 @@ func (sc *ItemScope) PassPermissionCheck(id uuid.UUID, itemType enums.ItemType, 
 			Model(&schemas.UsersToShelves{}).
 			Select("1").
 			Where("root_shelf_id = \"ItemTable\".root_shelf_id AND user_id = ? AND permission IN ?", userId, permissions)
-		return db.Where("\"ItemTable\".id = ? AND \"ItemTable\".item_type = ? AND EXISTS (?)", id, itemType, subQuery)
+		return db.Where("\"ItemTable\".id = ? AND \"ItemTable\".type = ? AND EXISTS (?)", id, itemType, subQuery)
 	}
 }
 
@@ -45,7 +45,7 @@ func (sc *ItemScope) PassPermissionChecks(itemIdentities []types.Pair[uuid.UUID,
 			Model(&schemas.UsersToShelves{}).
 			Select("1").
 			Where("root_shelf_id = \"ItemTable\".root_shelf_id AND user_id = ? AND permission IN ?", userId, permissions)
-		return db.Where("(\"ItemTable\".id, \"ItemTable\".item_type) IN ? AND EXISTS (?)", values, subQuery)
+		return db.Where("(\"ItemTable\".id, \"ItemTable\".type) IN ? AND EXISTS (?)", values, subQuery)
 	}
 }
 

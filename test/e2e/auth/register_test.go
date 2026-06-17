@@ -165,7 +165,7 @@ func (et *RegisterE2ETester) TestRegisterValidTestAccount(t *testing.T) {
 	}
 
 	now := time.Now()
-	if !util.IsTimeWithinDelta(res.Body.Data.CreatedAt, now, 10*time.Second) {
+	if !util.IsTimeWithin(res.Body.Data.CreatedAt, now, 10*time.Second) {
 		t.Errorf("expected body.data.createdAt to be %v (within tolerable time duration of %v), got %v", testCase.Response.Body.Data.CreatedAt, 10*time.Second, now)
 	}
 
@@ -214,7 +214,7 @@ func (et *RegisterE2ETester) TestRegisterValidUserAccount(t *testing.T) {
 		t.Errorf("expected body.data.accessToken to be exist, got nil")
 	}
 	now := time.Now()
-	if !util.IsTimeWithinDelta(res.Body.Data.CreatedAt, now, 10*time.Second) {
+	if !util.IsTimeWithin(res.Body.Data.CreatedAt, now, 10*time.Second) {
 		t.Errorf("expected body.data.createdAt to be %v (within tolerable time duration of %v), got %v", testCase.Response.Body.Data.CreatedAt, 10*time.Second, now)
 	}
 

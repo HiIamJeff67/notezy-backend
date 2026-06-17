@@ -1,7 +1,9 @@
 package exceptions
 
 import (
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 )
@@ -44,40 +46,54 @@ var Routine = &RoutineExceptionDomain{
 	},
 }
 
+/* ============================== Handling Time Range Validation ============================== */
+
+func (d *RoutineExceptionDomain) QueriedTimeRangeTooLarge(from time.Time, to time.Time) *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 1,
+		Prefix:         d.Prefix,
+		Reason:         "QueriedTimeRangeTooLarge",
+		IsInternal:     false,
+		Message:        fmt.Sprintf("Cannot querying with time range from %s to %s, which is too large", from.String(), to.String()),
+		HTTPStatusCode: http.StatusBadRequest,
+		LastTrace:      traces.GetTrace(1),
+	}
+}
+
 /* ============================== Handling Linking Error of Routines ============================== */
 
 func (d *RoutineExceptionDomain) FailedToLinkRoutineTags() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 1,
+		Code:           d.BaseCode + 11,
 		Prefix:         d.Prefix,
 		Reason:         "FailedToLinkRoutineTags",
-		IsInternal:     true,
+		IsInternal:     false,
 		Message:        "Cannot link the given routine tags to the target routine",
-		HTTPStatusCode: http.StatusInternalServerError,
+		HTTPStatusCode: http.StatusBadRequest,
 		LastTrace:      traces.GetTrace(1),
 	}
 }
 
 func (d *RoutineExceptionDomain) FailedToLinkRoutineTasks() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 2,
+		Code:           d.BaseCode + 12,
 		Prefix:         d.Prefix,
 		Reason:         "FailedToLinkRoutineTasks",
-		IsInternal:     true,
+		IsInternal:     false,
 		Message:        "Cannot link the given routine tasks to the target routine",
-		HTTPStatusCode: http.StatusInternalServerError,
+		HTTPStatusCode: http.StatusBadRequest,
 		LastTrace:      traces.GetTrace(1),
 	}
 }
 
 func (d *RoutineExceptionDomain) FailedToLinkItems() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 3,
+		Code:           d.BaseCode + 13,
 		Prefix:         d.Prefix,
 		Reason:         "FailedToLinkItems",
-		IsInternal:     true,
+		IsInternal:     false,
 		Message:        "Cannot link the given items to the target routine",
-		HTTPStatusCode: http.StatusInternalServerError,
+		HTTPStatusCode: http.StatusBadRequest,
 		LastTrace:      traces.GetTrace(1),
 	}
 }

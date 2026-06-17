@@ -88,15 +88,14 @@ type ComplexityRoot struct {
 		Description      func(childComplexity int) int
 		ID               func(childComplexity int) int
 		IsPinned         func(childComplexity int) int
-		Items            func(childComplexity int) int
+		ItemIds          func(childComplexity int) int
 		Period           func(childComplexity int) int
 		ScheduledEndAt   func(childComplexity int) int
 		ScheduledStartAt func(childComplexity int) int
-		Station          func(childComplexity int) int
 		StationID        func(childComplexity int) int
 		Status           func(childComplexity int) int
-		Tags             func(childComplexity int) int
-		Tasks            func(childComplexity int) int
+		TagIds           func(childComplexity int) int
+		TaskIds          func(childComplexity int) int
 		Timezone         func(childComplexity int) int
 		Title            func(childComplexity int) int
 		UpdatedAt        func(childComplexity int) int
@@ -622,12 +621,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateRoutine.IsPinned(childComplexity), true
 
-	case "PrivateRoutine.items":
-		if e.complexity.PrivateRoutine.Items == nil {
+	case "PrivateRoutine.itemIds":
+		if e.complexity.PrivateRoutine.ItemIds == nil {
 			break
 		}
 
-		return e.complexity.PrivateRoutine.Items(childComplexity), true
+		return e.complexity.PrivateRoutine.ItemIds(childComplexity), true
 
 	case "PrivateRoutine.period":
 		if e.complexity.PrivateRoutine.Period == nil {
@@ -650,13 +649,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateRoutine.ScheduledStartAt(childComplexity), true
 
-	case "PrivateRoutine.station":
-		if e.complexity.PrivateRoutine.Station == nil {
-			break
-		}
-
-		return e.complexity.PrivateRoutine.Station(childComplexity), true
-
 	case "PrivateRoutine.stationId":
 		if e.complexity.PrivateRoutine.StationID == nil {
 			break
@@ -671,19 +663,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateRoutine.Status(childComplexity), true
 
-	case "PrivateRoutine.tags":
-		if e.complexity.PrivateRoutine.Tags == nil {
+	case "PrivateRoutine.tagIds":
+		if e.complexity.PrivateRoutine.TagIds == nil {
 			break
 		}
 
-		return e.complexity.PrivateRoutine.Tags(childComplexity), true
+		return e.complexity.PrivateRoutine.TagIds(childComplexity), true
 
-	case "PrivateRoutine.tasks":
-		if e.complexity.PrivateRoutine.Tasks == nil {
+	case "PrivateRoutine.taskIds":
+		if e.complexity.PrivateRoutine.TaskIds == nil {
 			break
 		}
 
-		return e.complexity.PrivateRoutine.Tasks(childComplexity), true
+		return e.complexity.PrivateRoutine.TaskIds(childComplexity), true
 
 	case "PrivateRoutine.timezone":
 		if e.complexity.PrivateRoutine.Timezone == nil {
@@ -2195,10 +2187,9 @@ interface SearchConnection {
   createdAt: Time!
 
   # relations
-  station: PrivateStation!
-  tags: [PrivateRoutineTag!]!
-  tasks: [PrivateRoutineTask!]!
-  items: [PrivateItem!]!
+  tagIds: [UUID!]!
+  taskIds: [UUID!]!
+  itemIds: [UUID!]!
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/routine_tag.graphql", Input: `type PrivateRoutineTag {

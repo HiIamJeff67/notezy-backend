@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -490,14 +489,12 @@ func (ec *executionContext) fieldContext_PrivateRoutineTag_routines(_ context.Co
 				return ec.fieldContext_PrivateRoutine_updatedAt(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_PrivateRoutine_createdAt(ctx, field)
-			case "station":
-				return ec.fieldContext_PrivateRoutine_station(ctx, field)
-			case "tags":
-				return ec.fieldContext_PrivateRoutine_tags(ctx, field)
-			case "tasks":
-				return ec.fieldContext_PrivateRoutine_tasks(ctx, field)
-			case "items":
-				return ec.fieldContext_PrivateRoutine_items(ctx, field)
+			case "tagIds":
+				return ec.fieldContext_PrivateRoutine_tagIds(ctx, field)
+			case "taskIds":
+				return ec.fieldContext_PrivateRoutine_taskIds(ctx, field)
+			case "itemIds":
+				return ec.fieldContext_PrivateRoutine_itemIds(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PrivateRoutine", field.Name)
 		},
@@ -596,50 +593,6 @@ func (ec *executionContext) _PrivateRoutineTag(ctx context.Context, sel ast.Sele
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
-
-func (ec *executionContext) marshalNPrivateRoutineTag2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateRoutineTagᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.PrivateRoutineTag) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNPrivateRoutineTag2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateRoutineTag(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
 
 func (ec *executionContext) marshalNPrivateRoutineTag2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateRoutineTag(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PrivateRoutineTag) graphql.Marshaler {
 	if v == nil {

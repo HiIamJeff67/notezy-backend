@@ -152,7 +152,7 @@ func (et *LoginE2ETester) TestLoginValidTestAccountByName(t *testing.T) {
 	}
 
 	now := time.Now()
-	if !util.IsTimeWithinDelta(res.Body.Data.UpdatedAt, now, 10*time.Second) {
+	if !util.IsTimeWithin(res.Body.Data.UpdatedAt, now, 10*time.Second) {
 		t.Errorf("expected body.data.createdAt to be %v (within tolerable time duration of %v), got %v", testCase.Response.Body.Data.UpdatedAt, 10*time.Second, now)
 	}
 
@@ -202,7 +202,7 @@ func (et *LoginE2ETester) TestLoginValidTestAccountByEmail(t *testing.T) {
 	}
 
 	now := time.Now()
-	if !util.IsTimeWithinDelta(res.Body.Data.UpdatedAt, now, 10*time.Second) {
+	if !util.IsTimeWithin(res.Body.Data.UpdatedAt, now, 10*time.Second) {
 		t.Errorf("expected body.data.createdAt to be %v (within tolerable time duration of %v), got %v", testCase.Response.Body.Data.UpdatedAt, 10*time.Second, now)
 	}
 

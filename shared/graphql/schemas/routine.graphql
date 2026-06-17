@@ -14,8 +14,7 @@ type PrivateRoutine {
   createdAt: Time!
 
   # relations
-  station: PrivateStation!
-  tags: [PrivateRoutineTag!]!
-  tasks: [PrivateRoutineTask!]!
-  items: [PrivateItem!]!
+  tagIds: [UUID!]!
+  taskIds: [UUID!]!
+  itemIds: [UUID!]!
 }

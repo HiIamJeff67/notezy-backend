@@ -12,20 +12,11 @@ fragment FragmentedBasicPrivateRoutine on PrivateRoutine {
   deletedAt
   updatedAt
   createdAt
+  tagIds
+  taskIds
+  itemIds
 }
 
 fragment FragmentedPrivateRoutine on PrivateRoutine {
   ...FragmentedBasicPrivateRoutine
-  station {
-    ...FragmentedBasicPrivateStation
-  }
-  tags {
-    ...FragmentedBasicPrivateRoutineTag
-  }
-  tasks {
-    ...FragmentedBasicPrivateRoutineTask
-  }
-  items {
-    ...FragmentedBasicPrivateItem
-  }
 }

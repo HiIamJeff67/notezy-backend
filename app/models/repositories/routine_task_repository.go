@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -450,44 +452,75 @@ func (r *RoutineTaskRepository) BulkUpdateManyByIds(
 		return exceptions.RoutineTask.NoPermission("update these routine tasks")
 	}
 
-	routineTaskById := make(map[uuid.UUID]schemas.RoutineTask, len(validRoutineTasks))
+	isRoutineTaskValid := make(map[uuid.UUID]bool, len(validRoutineTasks))
 	for _, validRoutineTask := range validRoutineTasks {
-		routineTaskById[validRoutineTask.Id] = validRoutineTask
+		isRoutineTaskValid[validRoutineTask.Id] = true
 	}
-	stationRepository := NewStationRepository(scopes.NewStationScope())
 
+	targetStationIdSet := make(map[uuid.UUID]bool)
 	for _, in := range input {
-		existingRoutineTask, exist := routineTaskById[in.Id]
-		if !exist {
+		if in.PartialUpdateInput.Values.StationId == nil ||
+			(in.PartialUpdateInput.SetNull != nil && (*in.PartialUpdateInput.SetNull)["StationId"]) {
 			continue
 		}
-		if in.PartialUpdateInput.Values.StationId != nil &&
-			(in.PartialUpdateInput.SetNull == nil || !(*in.PartialUpdateInput.SetNull)["StationId"]) &&
-			!stationRepository.HasPermission(*in.PartialUpdateInput.Values.StationId, userId, allowedPermissions, opts...) {
+		targetStationIdSet[*in.PartialUpdateInput.Values.StationId] = true
+	}
+	if len(targetStationIdSet) > 0 {
+		targetStationIds := make([]uuid.UUID, 0, len(targetStationIdSet))
+		for targetStationId := range targetStationIdSet {
+			targetStationIds = append(targetStationIds, targetStationId)
+		}
+		stationRepository := NewStationRepository(scopes.NewStationScope())
+		if !stationRepository.HavePermissions(targetStationIds, userId, allowedPermissions, opts...) {
 			parsedOptions.DB.Rollback()
 			return exceptions.RoutineTask.NoPermission("move these routine tasks to the given stations")
 		}
-		updates, err := util.PartialUpdatePreprocess(in.PartialUpdateInput.Values, in.PartialUpdateInput.SetNull, existingRoutineTask)
-		if err != nil {
-			parsedOptions.DB.Rollback()
-			return exceptions.Util.FailedToPreprocessPartialUpdate(
-				in.PartialUpdateInput.Values,
-				in.PartialUpdateInput.SetNull,
-				existingRoutineTask,
-			).WithOrigin(err)
+	}
+
+	var valuePlaceholders []string
+	var valueArgs []interface{}
+	for _, in := range input {
+		if !isRoutineTaskValid[in.Id] {
+			continue
 		}
-		result := parsedOptions.DB.
-			Model(&schemas.RoutineTask{}).
-			Where("\"RoutineTaskTable\".id = ?", in.Id).
-			Select("*").
-			Updates(&updates)
-		if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-			{First: result.Error != nil, Second: exceptions.RoutineTask.FailedToUpdate().WithOrigin(result.Error)},
-			{First: result.RowsAffected == 0, Second: exceptions.RoutineTask.NoChanges()},
-		}); exception != nil {
-			parsedOptions.DB.Rollback()
-			return exception
-		}
+
+		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid, ?::text, ?::\"RoutineTaskPurpose\", ?::jsonb, ?::integer, ?::integer)")
+		valueArgs = append(valueArgs,
+			in.Id,
+			in.PartialUpdateInput.Values.StationId,
+			in.PartialUpdateInput.Values.Title,
+			in.PartialUpdateInput.Values.Purpose,
+			in.PartialUpdateInput.Values.Payload,
+			in.PartialUpdateInput.Values.Priority,
+			in.PartialUpdateInput.Values.MaxAttempts,
+		)
+	}
+
+	if len(valuePlaceholders) == 0 {
+		parsedOptions.DB.Rollback()
+		return exceptions.RoutineTask.NoChanges()
+	}
+
+	sql := fmt.Sprintf(`
+		UPDATE "RoutineTaskTable" AS rt
+		SET
+			station_id = COALESCE(v.station_id::uuid, rt.station_id),
+			title = COALESCE(v.title::text, rt.title),
+			purpose = COALESCE(v.purpose::"RoutineTaskPurpose", rt.purpose),
+			payload = COALESCE(v.payload::jsonb, rt.payload),
+			priority = COALESCE(v.priority::integer, rt.priority),
+			max_attempts = COALESCE(v.max_attempts::integer, rt.max_attempts),
+			updated_at = NOW()
+		FROM (VALUES %s) AS v(id, station_id, title, purpose, payload, priority, max_attempts)
+		WHERE rt.id = v.id::uuid
+	`, strings.Join(valuePlaceholders, ","))
+	result := parsedOptions.DB.Exec(sql, valueArgs...)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.RoutineTask.FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.RoutineTask.NoChanges()},
+	}); exception != nil {
+		parsedOptions.DB.Rollback()
+		return exception
 	}
 
 	if shouldStartTransaction {

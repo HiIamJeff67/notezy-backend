@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -503,38 +505,75 @@ func (r *StationRepository) BulkUpdateManyByIds(
 		return exceptions.Station.NoPermission("update these stations")
 	}
 
-	stationById := make(map[uuid.UUID]schemas.Station, len(validStations))
+	isStationValid := make(map[uuid.UUID]bool, len(validStations))
 	for _, validStation := range validStations {
-		stationById[validStation.Id] = validStation
+		isStationValid[validStation.Id] = true
 	}
 
+	var valuePlaceholders []string
+	var valueArgs []interface{}
 	for _, in := range input {
-		existingStation, exist := stationById[in.Id]
-		if !exist {
+		if !isStationValid[in.Id] {
 			continue
 		}
 
-		updates, err := util.PartialUpdatePreprocess(in.PartialUpdateInput.Values, in.PartialUpdateInput.SetNull, existingStation)
-		if err != nil {
-			parsedOptions.DB.Rollback()
-			return exceptions.Util.FailedToPreprocessPartialUpdate(
-				in.PartialUpdateInput.Values,
-				in.PartialUpdateInput.SetNull,
-				existingStation,
-			).WithOrigin(err)
+		setIconNull := false
+		setHeaderBackgroundURLNull := false
+		if in.PartialUpdateInput.SetNull != nil {
+			for field, setNull := range *in.PartialUpdateInput.SetNull {
+				if !setNull {
+					continue
+				}
+				switch strings.ToLower(strings.ReplaceAll(field, "_", "")) {
+				case "icon":
+					setIconNull = true
+				case "headerbackgroundurl":
+					setHeaderBackgroundURLNull = true
+				}
+			}
 		}
 
-		result := parsedOptions.DB.Model(&schemas.Station{}).
-			Where("\"StationTable\".id = ? AND \"StationTable\".deleted_at IS NULL", in.Id).
-			Select("*").
-			Updates(&updates)
-		if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-			{First: result.Error != nil, Second: exceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
-			{First: result.RowsAffected == 0, Second: exceptions.Station.NoChanges()},
-		}); exception != nil {
-			parsedOptions.DB.Rollback()
-			return exception
-		}
+		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::text, ?::text, ?::\"SupportedIcon\", ?::text, ?::boolean, ?::boolean)")
+		valueArgs = append(valueArgs,
+			in.Id,
+			in.PartialUpdateInput.Values.Name,
+			in.PartialUpdateInput.Values.Description,
+			in.PartialUpdateInput.Values.Icon,
+			in.PartialUpdateInput.Values.HeaderBackgroundURL,
+			setIconNull,
+			setHeaderBackgroundURLNull,
+		)
+	}
+
+	if len(valuePlaceholders) == 0 {
+		parsedOptions.DB.Rollback()
+		return exceptions.Station.NoChanges()
+	}
+
+	sql := fmt.Sprintf(`
+		UPDATE "StationTable" AS s
+		SET
+			name = COALESCE(v.name::text, s.name),
+			description = COALESCE(v.description::text, s.description),
+			icon = CASE
+				WHEN v.set_icon_null::boolean THEN NULL
+				ELSE COALESCE(v.icon::"SupportedIcon", s.icon)
+			END,
+			header_background_url = CASE
+				WHEN v.set_header_background_url_null::boolean THEN NULL
+				ELSE COALESCE(v.header_background_url::text, s.header_background_url)
+			END,
+			updated_at = NOW()
+		FROM (VALUES %s) AS v(id, name, description, icon, header_background_url, set_icon_null, set_header_background_url_null)
+		WHERE s.id = v.id::uuid AND s.deleted_at IS NULL
+	`, strings.Join(valuePlaceholders, ","))
+	result := parsedOptions.DB.Exec(sql, valueArgs...)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Station.NoChanges()},
+	}); exception != nil {
+		parsedOptions.DB.Rollback()
+		return exception
 	}
 
 	if shouldStartTransaction {

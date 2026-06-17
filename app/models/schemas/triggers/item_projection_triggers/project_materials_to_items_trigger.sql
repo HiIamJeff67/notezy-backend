@@ -5,7 +5,7 @@ BEGIN
         id,
         parent_sub_shelf_id,
         root_shelf_id,
-        item_type,
+        type,
         deleted_at,
         updated_at,
         created_at
@@ -21,7 +21,7 @@ BEGIN
     FROM new_rows AS material
     JOIN "SubShelfTable" AS sub_shelf
       ON sub_shelf.id = material.parent_sub_shelf_id
-    ON CONFLICT (id, item_type) DO UPDATE SET
+    ON CONFLICT (id, type) DO UPDATE SET
         parent_sub_shelf_id = EXCLUDED.parent_sub_shelf_id,
         root_shelf_id = EXCLUDED.root_shelf_id,
         deleted_at = EXCLUDED.deleted_at,
@@ -40,7 +40,7 @@ BEGIN
     DELETE FROM "ItemTable" item
     USING old_rows AS material
     WHERE item.id = material.id
-      AND item.item_type = 'Material'::"ItemType";
+      AND item.type = 'Material'::"ItemType";
 
     RETURN NULL;
 END;

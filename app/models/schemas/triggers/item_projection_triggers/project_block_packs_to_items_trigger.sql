@@ -5,7 +5,7 @@ BEGIN
         id,
         parent_sub_shelf_id,
         root_shelf_id,
-        item_type,
+        type,
         deleted_at,
         updated_at,
         created_at
@@ -21,7 +21,7 @@ BEGIN
     FROM new_rows AS block_pack
     JOIN "SubShelfTable" AS sub_shelf
       ON sub_shelf.id = block_pack.parent_sub_shelf_id
-    ON CONFLICT (id, item_type) DO UPDATE SET
+    ON CONFLICT (id, type) DO UPDATE SET
         parent_sub_shelf_id = EXCLUDED.parent_sub_shelf_id,
         root_shelf_id = EXCLUDED.root_shelf_id,
         deleted_at = EXCLUDED.deleted_at,
@@ -40,7 +40,7 @@ BEGIN
     DELETE FROM "ItemTable" item
     USING old_rows AS block_pack
     WHERE item.id = block_pack.id
-      AND item.item_type = 'BlockPack'::"ItemType";
+      AND item.type = 'BlockPack'::"ItemType";
 
     RETURN NULL;
 END;

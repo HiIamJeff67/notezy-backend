@@ -330,14 +330,12 @@ func (ec *executionContext) fieldContext_SearchRoutineEdge_node(_ context.Contex
 				return ec.fieldContext_PrivateRoutine_updatedAt(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_PrivateRoutine_createdAt(ctx, field)
-			case "station":
-				return ec.fieldContext_PrivateRoutine_station(ctx, field)
-			case "tags":
-				return ec.fieldContext_PrivateRoutine_tags(ctx, field)
-			case "tasks":
-				return ec.fieldContext_PrivateRoutine_tasks(ctx, field)
-			case "items":
-				return ec.fieldContext_PrivateRoutine_items(ctx, field)
+			case "tagIds":
+				return ec.fieldContext_PrivateRoutine_tagIds(ctx, field)
+			case "taskIds":
+				return ec.fieldContext_PrivateRoutine_taskIds(ctx, field)
+			case "itemIds":
+				return ec.fieldContext_PrivateRoutine_itemIds(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PrivateRoutine", field.Name)
 		},

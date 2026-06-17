@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	"github.com/HiIamJeff67/notezy-backend/app/models/scopes"
+	util "github.com/HiIamJeff67/notezy-backend/app/util"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
@@ -50,6 +52,7 @@ type RoutineServiceInterface interface {
 
 type RoutineService struct {
 	db                    *gorm.DB
+	routineScope          scopes.RoutineScopeInterface
 	stationRepository     repositories.StationRepositoryInterface
 	routineRepository     repositories.RoutineRepositoryInterface
 	routineTagRepository  repositories.RoutineTagRepositoryInterface
@@ -59,6 +62,7 @@ type RoutineService struct {
 
 func NewRoutineService(
 	db *gorm.DB,
+	routineScope scopes.RoutineScopeInterface,
 	stationRepository repositories.StationRepositoryInterface,
 	routineRepository repositories.RoutineRepositoryInterface,
 	routineTagRepository repositories.RoutineTagRepositoryInterface,
@@ -70,6 +74,7 @@ func NewRoutineService(
 	}
 	return &RoutineService{
 		db:                    db,
+		routineScope:          routineScope,
 		stationRepository:     stationRepository,
 		routineRepository:     routineRepository,
 		routineTagRepository:  routineTagRepository,
@@ -94,10 +99,15 @@ func (s *RoutineService) GetMyRoutineById(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	routine, exception := s.routineRepository.GetOneById(
 		reqDto.Param.RoutineId,
 		reqDto.ContextFields.UserId,
-		[]schemas.RoutineRelation{schemas.RoutineRelation_RoutinesToTags},
+		[]schemas.RoutineRelation{
+			schemas.RoutineRelation_RoutinesToTags,
+			schemas.RoutineRelation_RoutinesToTasks,
+			schemas.RoutineRelation_RoutinesToItems,
+		},
 		options.WithDB(db),
 		options.WithOnlyDeleted(onlyDeleted),
 	)
@@ -108,6 +118,14 @@ func (s *RoutineService) GetMyRoutineById(
 	tagIds := make([]uuid.UUID, len(routine.RoutinesToTags))
 	for index, routineToTag := range routine.RoutinesToTags {
 		tagIds[index] = routineToTag.TagId
+	}
+	taskIds := make([]uuid.UUID, len(routine.RoutinesToTasks))
+	for index, routineToTask := range routine.RoutinesToTasks {
+		taskIds[index] = routineToTask.TaskId
+	}
+	itemIds := make([]uuid.UUID, len(routine.RoutinesToItems))
+	for index, routineToItem := range routine.RoutinesToItems {
+		itemIds[index] = routineToItem.ItemId
 	}
 
 	return &dtos.GetMyRoutineByIdResDto{
@@ -125,6 +143,8 @@ func (s *RoutineService) GetMyRoutineById(
 		UpdatedAt:        routine.UpdatedAt,
 		CreatedAt:        routine.CreatedAt,
 		TagIds:           tagIds,
+		TaskIds:          taskIds,
+		ItemIds:          itemIds,
 	}, nil
 }
 
@@ -135,17 +155,25 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
-	if !reqDto.Param.From.Before(reqDto.Param.To) {
+	if !reqDto.Param.From.Before(reqDto.Param.To) { // make sure from is before to
 		return nil, exceptions.Routine.InvalidInput().WithOrigin(fmt.Errorf("from must be before to"))
+	}
+	if !util.IsTimeWithin(reqDto.Param.From, reqDto.Param.To, 360*24*time.Hour) { // make sure the time range is within 360 days which is approximate 1 year
+		return nil, exceptions.Routine.QueriedTimeRangeTooLarge(reqDto.Param.From, reqDto.Param.To)
 	}
 
 	db := s.db.WithContext(ctx)
+
 	routines, exception := s.routineRepository.GetAllByTimeRange(
 		reqDto.Param.From,
 		reqDto.Param.To,
 		reqDto.Param.StationIds,
 		reqDto.ContextFields.UserId,
-		[]schemas.RoutineRelation{schemas.RoutineRelation_RoutinesToTags},
+		[]schemas.RoutineRelation{
+			schemas.RoutineRelation_RoutinesToTags,
+			schemas.RoutineRelation_RoutinesToTasks,
+			schemas.RoutineRelation_RoutinesToItems,
+		},
 		options.WithDB(db),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
@@ -158,6 +186,14 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 		tagIds := make([]uuid.UUID, len(routine.RoutinesToTags))
 		for index, routineToTag := range routine.RoutinesToTags {
 			tagIds[index] = routineToTag.TagId
+		}
+		taskIds := make([]uuid.UUID, len(routine.RoutinesToTasks))
+		for index, routineToTask := range routine.RoutinesToTasks {
+			taskIds[index] = routineToTask.TaskId
+		}
+		itemIds := make([]uuid.UUID, len(routine.RoutinesToItems))
+		for index, routineToItem := range routine.RoutinesToItems {
+			itemIds[index] = routineToItem.ItemId
 		}
 		resDto[index] = dtos.GetMyRoutineByIdResDto{
 			Id:               routine.Id,
@@ -174,6 +210,8 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 			UpdatedAt:        routine.UpdatedAt,
 			CreatedAt:        routine.CreatedAt,
 			TagIds:           tagIds,
+			TaskIds:          taskIds,
+			ItemIds:          itemIds,
 		}
 	}
 
@@ -189,6 +227,7 @@ func (s *RoutineService) CreateRoutineByStationId(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	newRoutineId, exception := s.routineRepository.CreateOneByStationId(
 		reqDto.Body.StationId,
 		reqDto.ContextFields.UserId,
@@ -264,6 +303,7 @@ func (s *RoutineService) UpdateMyRoutineById(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	updatedRoutine, exception := s.routineRepository.UpdateOneById(
 		reqDto.Body.RoutineId,
 		reqDto.ContextFields.UserId,
@@ -910,6 +950,7 @@ func (s *RoutineService) RestoreMyRoutineById(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	restoredRoutine, exception := s.routineRepository.RestoreSoftDeletedOneById(
 		reqDto.Body.RoutineId,
 		reqDto.ContextFields.UserId,
@@ -945,6 +986,7 @@ func (s *RoutineService) RestoreMyRoutinesByIds(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	restoredRoutines, exception := s.routineRepository.RestoreSoftDeletedManyByIds(
 		reqDto.Body.RoutineIds,
 		reqDto.ContextFields.UserId,
@@ -985,6 +1027,7 @@ func (s *RoutineService) DeleteMyRoutineById(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	exception := s.routineRepository.SoftDeleteOneById(
 		reqDto.Body.RoutineId,
 		reqDto.ContextFields.UserId,
@@ -1008,6 +1051,7 @@ func (s *RoutineService) DeleteMyRoutinesByIds(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	exception := s.routineRepository.SoftDeleteManyByIds(
 		reqDto.Body.RoutineIds,
 		reqDto.ContextFields.UserId,
@@ -1031,6 +1075,7 @@ func (s *RoutineService) HardDeleteMyRoutineById(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	exception := s.routineRepository.HardDeleteOneById(
 		reqDto.Body.RoutineId,
 		reqDto.ContextFields.UserId,
@@ -1054,6 +1099,7 @@ func (s *RoutineService) HardDeleteMyRoutinesByIds(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	exception := s.routineRepository.HardDeleteManyByIds(
 		reqDto.Body.RoutineIds,
 		reqDto.ContextFields.UserId,
@@ -1197,7 +1243,13 @@ func (s *RoutineService) SearchPrivateRoutines(
 	query = query.Limit(limit + 1)
 
 	var routines []PrivateRoutine
-	if err := query.Find(&routines).Error; err != nil {
+	if err := query.Scopes(s.routineScope.IncludePreloads(
+		[]schemas.RoutineRelation{
+			schemas.RoutineRelation_RoutinesToTags,
+			schemas.RoutineRelation_RoutinesToTasks,
+			schemas.RoutineRelation_RoutinesToItems,
+		},
+	)).Find(&routines).Error; err != nil {
 		return nil, exceptions.Routine.NotFound().WithOrigin(err)
 	}
 
@@ -1218,9 +1270,19 @@ func (s *RoutineService) SearchPrivateRoutines(
 			return nil, exceptions.Search.FailedToUnmarshalSearchCursor()
 		}
 
+		finalRoutine := routine.Routine.ToPrivateRoutine()
+		for _, routineToTag := range routine.Routine.RoutinesToTags {
+			finalRoutine.TagIds = append(finalRoutine.TagIds, routineToTag.TagId)
+		}
+		for _, routineToTask := range routine.Routine.RoutinesToTasks {
+			finalRoutine.TaskIds = append(finalRoutine.TaskIds, routineToTask.TaskId)
+		}
+		for _, routineToItem := range routine.Routine.RoutinesToItems {
+			finalRoutine.ItemIds = append(finalRoutine.ItemIds, routineToItem.ItemId)
+		}
 		searchEdges[index] = &gqlmodels.SearchRoutineEdge{
 			EncodedSearchCursor: *encodedSearchCursor,
-			Node:                routine.Routine.ToPrivateRoutine(),
+			Node:                finalRoutine,
 		}
 	}
 

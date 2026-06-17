@@ -88,6 +88,7 @@ type metricNameRoutineTag struct {
 type metricNameRoutineTask struct {
 	GetMyRoutineTaskById             string
 	GetAllMyRoutineTasksByStationIds string
+	GetAllMyRoutineTasks             string
 	CreateRoutineTaskByStationId     string
 	UpdateMyRoutineTaskById          string
 	HardDeleteMyRoutineTaskById      string
@@ -326,6 +327,7 @@ var MetricNames = struct {
 			RoutineTask: metricNameRoutineTask{
 				GetMyRoutineTaskById:             "server.requests.routineTask.getMyRoutineTaskById",
 				GetAllMyRoutineTasksByStationIds: "server.requests.routineTask.getAllMyRoutineTasksByStationIds",
+				GetAllMyRoutineTasks:             "server.requests.routineTask.getAllMyRoutineTasks",
 				CreateRoutineTaskByStationId:     "server.requests.routineTask.createRoutineTaskByStationId",
 				UpdateMyRoutineTaskById:          "server.requests.routineTask.updateMyRoutineTaskById",
 				HardDeleteMyRoutineTaskById:      "server.requests.routineTask.hardDeleteMyRoutineTaskById",

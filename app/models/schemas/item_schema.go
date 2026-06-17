@@ -13,7 +13,7 @@ type Item struct {
 	Id               uuid.UUID      `json:"id" gorm:"column:id; type:uuid; primaryKey;"`
 	ParentSubShelfId uuid.UUID      `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id; type:uuid; not null;"`
 	RootShelfId      uuid.UUID      `json:"rootShelfId" gorm:"column:root_shelf_id; type:uuid; not null;"`
-	Type             enums.ItemType `json:"itemType" gorm:"column:item_type; type:\"ItemType\"; primaryKey;"`
+	Type             enums.ItemType `json:"itemType" gorm:"column:type; type:\"ItemType\"; primaryKey;"`
 	DeletedAt        *time.Time     `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz; default:null;"`
 	UpdatedAt        time.Time      `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt        time.Time      `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`

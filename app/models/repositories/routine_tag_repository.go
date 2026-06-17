@@ -1,6 +1,9 @@
 package repositories
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm/clause"
@@ -411,37 +414,63 @@ func (r *RoutineTagRepository) BulkUpdateManyByIds(
 		return exceptions.RoutineTag.NoPermission("update these routine tags")
 	}
 
-	routineTagById := make(map[uuid.UUID]schemas.RoutineTag, len(validRoutineTags))
+	isRoutineTagValid := make(map[uuid.UUID]bool, len(validRoutineTags))
 	for _, validRoutineTag := range validRoutineTags {
-		routineTagById[validRoutineTag.Id] = validRoutineTag
+		isRoutineTagValid[validRoutineTag.Id] = true
 	}
 
+	var valuePlaceholders []string
+	var valueArgs []interface{}
 	for _, in := range input {
-		existingRoutineTag, exist := routineTagById[in.Id]
-		if !exist {
+		if !isRoutineTagValid[in.Id] {
 			continue
 		}
-		updates, err := util.PartialUpdatePreprocess(in.PartialUpdateInput.Values, in.PartialUpdateInput.SetNull, existingRoutineTag)
-		if err != nil {
-			parsedOptions.DB.Rollback()
-			return exceptions.Util.FailedToPreprocessPartialUpdate(
-				in.PartialUpdateInput.Values,
-				in.PartialUpdateInput.SetNull,
-				existingRoutineTag,
-			).WithOrigin(err)
+
+		setIconNull := false
+		if in.PartialUpdateInput.SetNull != nil {
+			for field, setNull := range *in.PartialUpdateInput.SetNull {
+				if setNull && strings.ToLower(strings.ReplaceAll(field, "_", "")) == "icon" {
+					setIconNull = true
+					break
+				}
+			}
 		}
-		result := parsedOptions.DB.
-			Model(&schemas.RoutineTag{}).
-			Where("\"RoutineTagTable\".id = ?", in.Id).
-			Select("*").
-			Updates(&updates)
-		if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-			{First: result.Error != nil, Second: exceptions.RoutineTag.FailedToUpdate().WithOrigin(result.Error)},
-			{First: result.RowsAffected == 0, Second: exceptions.RoutineTag.NoChanges()},
-		}); exception != nil {
-			parsedOptions.DB.Rollback()
-			return exception
-		}
+
+		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::text, ?::text, ?::\"SupportedIcon\", ?::boolean)")
+		valueArgs = append(valueArgs,
+			in.Id,
+			in.PartialUpdateInput.Values.Name,
+			in.PartialUpdateInput.Values.Color,
+			in.PartialUpdateInput.Values.Icon,
+			setIconNull,
+		)
+	}
+
+	if len(valuePlaceholders) == 0 {
+		parsedOptions.DB.Rollback()
+		return exceptions.RoutineTag.NoChanges()
+	}
+
+	sql := fmt.Sprintf(`
+		UPDATE "RoutineTagTable" AS rt
+		SET
+			name = COALESCE(v.name::text, rt.name),
+			color = COALESCE(v.color::text, rt.color),
+			icon = CASE
+				WHEN v.set_icon_null::boolean THEN NULL
+				ELSE COALESCE(v.icon::"SupportedIcon", rt.icon)
+			END,
+			updated_at = NOW()
+		FROM (VALUES %s) AS v(id, name, color, icon, set_icon_null)
+		WHERE rt.id = v.id::uuid
+	`, strings.Join(valuePlaceholders, ","))
+	result := parsedOptions.DB.Exec(sql, valueArgs...)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.RoutineTag.FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.RoutineTag.NoChanges()},
+	}); exception != nil {
+		parsedOptions.DB.Rollback()
+		return exception
 	}
 
 	if shouldStartTransaction {

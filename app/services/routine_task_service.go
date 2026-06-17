@@ -25,6 +25,7 @@ import (
 type RoutineTaskServiceInterface interface {
 	GetMyRoutineTaskById(ctx context.Context, reqDto *dtos.GetMyRoutineTaskByIdReqDto) (*dtos.GetMyRoutineTaskByIdResDto, *exceptions.Exception)
 	GetAllMyRoutineTasksByStationIds(ctx context.Context, reqDto *dtos.GetAllMyRoutineTasksByStationIdsReqDto) (*dtos.GetAllMyRoutineTasksByStationIdsResDto, *exceptions.Exception)
+	GetAllMyRoutineTasks(ctx context.Context, reqDto *dtos.GetAllMyRoutineTasksReqDto) (*dtos.GetAllMyRoutineTasksResDto, *exceptions.Exception)
 	CreateRoutineTaskByStationId(ctx context.Context, reqDto *dtos.CreateRoutineTaskByStationIdReqDto) (*dtos.CreateRoutineTaskByStationIdResDto, *exceptions.Exception)
 	UpdateMyRoutineTaskById(ctx context.Context, reqDto *dtos.UpdateMyRoutineTaskByIdReqDto) (*dtos.UpdateMyRoutineTaskByIdResDto, *exceptions.Exception)
 	HardDeleteMyRoutineTaskById(ctx context.Context, reqDto *dtos.HardDeleteMyRoutineTaskByIdReqDto) (*dtos.HardDeleteMyRoutineTaskByIdResDto, *exceptions.Exception)
@@ -111,6 +112,60 @@ func (s *RoutineTaskService) GetAllMyRoutineTasksByStationIds(
 	}
 
 	resDto := make(dtos.GetAllMyRoutineTasksByStationIdsResDto, len(routineTasks))
+	for index, routineTask := range routineTasks {
+		resDto[index] = dtos.GetMyRoutineTaskByIdResDto{
+			Id:              routineTask.Id,
+			StationId:       routineTask.StationId,
+			Title:           routineTask.Title,
+			Purpose:         routineTask.Purpose,
+			Payload:         routineTask.Payload,
+			Priority:        routineTask.Priority,
+			Status:          routineTask.Status,
+			Attempts:        routineTask.Attempts,
+			MaxAttempts:     routineTask.MaxAttempts,
+			ScheduledAt:     routineTask.ScheduledAt,
+			ActualStartedAt: routineTask.ActualStartedAt,
+			ActualEndedAt:   routineTask.ActualEndedAt,
+			UpdatedAt:       routineTask.UpdatedAt,
+			CreatedAt:       routineTask.CreatedAt,
+		}
+	}
+
+	return &resDto, nil
+}
+
+func (s *RoutineTaskService) GetAllMyRoutineTasks(
+	ctx context.Context,
+	reqDto *dtos.GetAllMyRoutineTasksReqDto,
+) (*dtos.GetAllMyRoutineTasksResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+
+	var routineTasks []schemas.RoutineTask
+	result := db.Model(&schemas.RoutineTask{}).
+		Select("\"RoutineTaskTable\".*").
+		Joins("INNER JOIN \"UsersToStationsTable\" uts ON uts.station_id = \"RoutineTaskTable\".station_id").
+		Joins("INNER JOIN \"StationTable\" station ON station.id = \"RoutineTaskTable\".station_id AND station.deleted_at IS NULL").
+		Where("uts.user_id = ? AND uts.permission IN ?", reqDto.ContextFields.UserId, allowedPermissions).
+		Order("\"RoutineTaskTable\".scheduled_at ASC").
+		Order("\"RoutineTaskTable\".priority DESC").
+		Order("\"RoutineTaskTable\".id ASC").
+		Find(&routineTasks)
+	if result.Error != nil {
+		return nil, exceptions.RoutineTask.NotFound().WithOrigin(result.Error)
+	}
+
+	resDto := make(dtos.GetAllMyRoutineTasksResDto, len(routineTasks))
 	for index, routineTask := range routineTasks {
 		resDto[index] = dtos.GetMyRoutineTaskByIdResDto{
 			Id:              routineTask.Id,

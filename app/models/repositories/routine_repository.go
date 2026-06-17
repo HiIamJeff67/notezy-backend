@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -388,6 +390,14 @@ func (r *RoutineRepository) UpdateOneById(
 			return nil, exceptions.Routine.NoPermission("move a routine to this station")
 		}
 	}
+	if input.Values.ScheduledStartAt != nil {
+		truncatedScheduledStartAt := input.Values.ScheduledStartAt.Truncate(time.Minute)
+		input.Values.ScheduledStartAt = &truncatedScheduledStartAt
+	}
+	if input.Values.ScheduledEndAt != nil {
+		truncatedScheduledEndAt := input.Values.ScheduledEndAt.Truncate(time.Minute)
+		input.Values.ScheduledEndAt = &truncatedScheduledEndAt
+	}
 
 	updates, err := util.PartialUpdatePreprocess(input.Values, input.SetNull, *existingRoutine)
 	if err != nil {
@@ -449,44 +459,106 @@ func (r *RoutineRepository) BulkUpdateManyByIds(
 		parsedOptions.DB.Rollback()
 		return exceptions.Routine.NoPermission("update these routines")
 	}
-	routineById := make(map[uuid.UUID]schemas.Routine, len(validRoutines))
+	isRoutineValid := make(map[uuid.UUID]bool, len(validRoutines))
 	for _, validRoutine := range validRoutines {
-		routineById[validRoutine.Id] = validRoutine
+		isRoutineValid[validRoutine.Id] = true
 	}
-	stationRepository := NewStationRepository(scopes.NewStationScope())
 
+	targetStationIdSet := make(map[uuid.UUID]bool)
 	for _, in := range input {
-		existingRoutine, exist := routineById[in.Id]
-		if !exist {
+		if in.PartialUpdateInput.Values.StationId == nil ||
+			(in.PartialUpdateInput.SetNull != nil && (*in.PartialUpdateInput.SetNull)["StationId"]) {
 			continue
 		}
-		if in.PartialUpdateInput.Values.StationId != nil &&
-			(in.PartialUpdateInput.SetNull == nil || !(*in.PartialUpdateInput.SetNull)["StationId"]) &&
-			!stationRepository.HasPermission(*in.PartialUpdateInput.Values.StationId, userId, allowedPermissions, opts...) {
+		targetStationIdSet[*in.PartialUpdateInput.Values.StationId] = true
+	}
+	if len(targetStationIdSet) > 0 {
+		targetStationIds := make([]uuid.UUID, 0, len(targetStationIdSet))
+		for targetStationId := range targetStationIdSet {
+			targetStationIds = append(targetStationIds, targetStationId)
+		}
+		stationRepository := NewStationRepository(scopes.NewStationScope())
+		if !stationRepository.HavePermissions(targetStationIds, userId, allowedPermissions, opts...) {
 			parsedOptions.DB.Rollback()
 			return exceptions.Routine.NoPermission("move these routines to the given stations")
 		}
-		updates, err := util.PartialUpdatePreprocess(in.PartialUpdateInput.Values, in.PartialUpdateInput.SetNull, existingRoutine)
-		if err != nil {
-			parsedOptions.DB.Rollback()
-			return exceptions.Util.FailedToPreprocessPartialUpdate(
-				in.PartialUpdateInput.Values,
-				in.PartialUpdateInput.SetNull,
-				existingRoutine,
-			).WithOrigin(err)
+	}
+
+	var valuePlaceholders []string
+	var valueArgs []interface{}
+	for _, in := range input {
+		if !isRoutineValid[in.Id] {
+			continue
 		}
-		result := parsedOptions.DB.
-			Model(&schemas.Routine{}).
-			Where("\"RoutineTable\".id = ? AND \"RoutineTable\".deleted_at IS NULL", in.Id).
-			Select("*").
-			Updates(&updates)
-		if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-			{First: result.Error != nil, Second: exceptions.Routine.FailedToUpdate().WithOrigin(result.Error)},
-			{First: result.RowsAffected == 0, Second: exceptions.Routine.NoChanges()},
-		}); exception != nil {
-			parsedOptions.DB.Rollback()
-			return exception
+
+		setPeriodNull := false
+		if in.PartialUpdateInput.SetNull != nil {
+			for field, setNull := range *in.PartialUpdateInput.SetNull {
+				if setNull && strings.ToLower(strings.ReplaceAll(field, "_", "")) == "period" {
+					setPeriodNull = true
+					break
+				}
+			}
 		}
+
+		scheduledStartAt := in.PartialUpdateInput.Values.ScheduledStartAt
+		if scheduledStartAt != nil {
+			truncatedScheduledStartAt := scheduledStartAt.Truncate(time.Minute)
+			scheduledStartAt = &truncatedScheduledStartAt
+		}
+		scheduledEndAt := in.PartialUpdateInput.Values.ScheduledEndAt
+		if scheduledEndAt != nil {
+			truncatedScheduledEndAt := scheduledEndAt.Truncate(time.Minute)
+			scheduledEndAt = &truncatedScheduledEndAt
+		}
+
+		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid, ?::text, ?::text, ?::\"RoutineStatus\", ?::boolean, ?::timestamptz, ?::timestamptz, ?::\"RoutinePeriod\", ?::text, ?::boolean)")
+		valueArgs = append(valueArgs,
+			in.Id,
+			in.PartialUpdateInput.Values.StationId,
+			in.PartialUpdateInput.Values.Title,
+			in.PartialUpdateInput.Values.Description,
+			in.PartialUpdateInput.Values.Status,
+			in.PartialUpdateInput.Values.IsPinned,
+			scheduledStartAt,
+			scheduledEndAt,
+			in.PartialUpdateInput.Values.Period,
+			in.PartialUpdateInput.Values.Timezone,
+			setPeriodNull,
+		)
+	}
+
+	if len(valuePlaceholders) == 0 {
+		parsedOptions.DB.Rollback()
+		return exceptions.Routine.NoChanges()
+	}
+
+	sql := fmt.Sprintf(`
+		UPDATE "RoutineTable" AS r
+		SET
+			station_id = COALESCE(v.station_id::uuid, r.station_id),
+			title = COALESCE(v.title::text, r.title),
+			description = COALESCE(v.description::text, r.description),
+			status = COALESCE(v.status::"RoutineStatus", r.status),
+			is_pinned = COALESCE(v.is_pinned::boolean, r.is_pinned),
+			scheduled_start_at = COALESCE(v.scheduled_start_at::timestamptz, r.scheduled_start_at),
+			scheduled_end_at = COALESCE(v.scheduled_end_at::timestamptz, r.scheduled_end_at),
+			period = CASE
+				WHEN v.set_period_null::boolean THEN NULL
+				ELSE COALESCE(v.period::"RoutinePeriod", r.period)
+			END,
+			timezone = COALESCE(v.timezone::text, r.timezone),
+			updated_at = NOW()
+		FROM (VALUES %s) AS v(id, station_id, title, description, status, is_pinned, scheduled_start_at, scheduled_end_at, period, timezone, set_period_null)
+		WHERE r.id = v.id::uuid AND r.deleted_at IS NULL
+	`, strings.Join(valuePlaceholders, ","))
+	result := parsedOptions.DB.Exec(sql, valueArgs...)
+	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		{First: result.Error != nil, Second: exceptions.Routine.FailedToUpdate().WithOrigin(result.Error)},
+		{First: result.RowsAffected == 0, Second: exceptions.Routine.NoChanges()},
+	}); exception != nil {
+		parsedOptions.DB.Rollback()
+		return exception
 	}
 
 	if shouldStartTransaction {

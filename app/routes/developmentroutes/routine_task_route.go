@@ -59,6 +59,22 @@ func configureDevelopmentRoutineTaskRoutes() {
 				),
 			)...,
 		)
+		routineTaskRoutes.GET(
+			"/getAllMyRoutineTasks",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getAllMyRoutineTasks"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RoutineTask.GetAllMyRoutineTasks,
+					),
+				},
+				defaultMiddlewares,
+				routineTaskModule.Binder.BindGetAllMyRoutineTasks(
+					routineTaskModule.Controller.GetAllMyRoutineTasks,
+				),
+			)...,
+		)
 		routineTaskRoutes.POST(
 			"/createRoutineTaskByStationId",
 			middlewares.RepositionMiddleware(

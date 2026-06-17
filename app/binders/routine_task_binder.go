@@ -16,6 +16,7 @@ import (
 type RoutineTaskBinderInterface interface {
 	BindGetMyRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.GetMyRoutineTaskByIdReqDto]) gin.HandlerFunc
 	BindGetAllMyRoutineTasksByStationIds(controllerFunc types.ControllerFunc[*dtos.GetAllMyRoutineTasksByStationIdsReqDto]) gin.HandlerFunc
+	BindGetAllMyRoutineTasks(controllerFunc types.ControllerFunc[*dtos.GetAllMyRoutineTasksReqDto]) gin.HandlerFunc
 	BindCreateRoutineTaskByStationId(controllerFunc types.ControllerFunc[*dtos.CreateRoutineTaskByStationIdReqDto]) gin.HandlerFunc
 	BindUpdateMyRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.UpdateMyRoutineTaskByIdReqDto]) gin.HandlerFunc
 	BindHardDeleteMyRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.HardDeleteMyRoutineTaskByIdReqDto]) gin.HandlerFunc
@@ -82,6 +83,23 @@ func (b *RoutineTaskBinder) BindGetAllMyRoutineTasksByStationIds(
 				reqDto.Param.StationIds = append(reqDto.Param.StationIds, stationId)
 			}
 		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RoutineTaskBinder) BindGetAllMyRoutineTasks(controllerFunc types.ControllerFunc[*dtos.GetAllMyRoutineTasksReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.GetAllMyRoutineTasksReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
 
 		controllerFunc(ctx, &reqDto)
 	}

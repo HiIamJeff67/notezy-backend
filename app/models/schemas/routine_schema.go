@@ -64,8 +64,8 @@ func (r *Routine) ToPrivateRoutine() *gqlmodels.PrivateRoutine {
 		DeletedAt:        r.DeletedAt,
 		UpdatedAt:        r.UpdatedAt,
 		CreatedAt:        r.CreatedAt,
-		Station:          &gqlmodels.PrivateStation{},
-		Tags:             make([]*gqlmodels.PrivateRoutineTag, 0),
-		Tasks:            make([]*gqlmodels.PrivateRoutineTask, 0),
+		TagIds:           make([]uuid.UUID, 0),
+		TaskIds:          make([]uuid.UUID, 0),
+		ItemIds:          make([]uuid.UUID, 0),
 	}
 }

@@ -69,23 +69,22 @@ type PrivateRootShelf struct {
 }
 
 type PrivateRoutine struct {
-	ID               uuid.UUID             `json:"id"`
-	StationID        uuid.UUID             `json:"stationId"`
-	Title            string                `json:"title"`
-	Description      string                `json:"description"`
-	Status           enums.RoutineStatus   `json:"status"`
-	IsPinned         bool                  `json:"isPinned"`
-	ScheduledStartAt time.Time             `json:"scheduledStartAt"`
-	ScheduledEndAt   time.Time             `json:"scheduledEndAt"`
-	Period           *enums.RoutinePeriod  `json:"period,omitempty"`
-	Timezone         string                `json:"timezone"`
-	DeletedAt        *time.Time            `json:"deletedAt,omitempty"`
-	UpdatedAt        time.Time             `json:"updatedAt"`
-	CreatedAt        time.Time             `json:"createdAt"`
-	Station          *PrivateStation       `json:"station"`
-	Tags             []*PrivateRoutineTag  `json:"tags"`
-	Tasks            []*PrivateRoutineTask `json:"tasks"`
-	Items            []*PrivateItem        `json:"items"`
+	ID               uuid.UUID            `json:"id"`
+	StationID        uuid.UUID            `json:"stationId"`
+	Title            string               `json:"title"`
+	Description      string               `json:"description"`
+	Status           enums.RoutineStatus  `json:"status"`
+	IsPinned         bool                 `json:"isPinned"`
+	ScheduledStartAt time.Time            `json:"scheduledStartAt"`
+	ScheduledEndAt   time.Time            `json:"scheduledEndAt"`
+	Period           *enums.RoutinePeriod `json:"period,omitempty"`
+	Timezone         string               `json:"timezone"`
+	DeletedAt        *time.Time           `json:"deletedAt,omitempty"`
+	UpdatedAt        time.Time            `json:"updatedAt"`
+	CreatedAt        time.Time            `json:"createdAt"`
+	TagIds           []uuid.UUID          `json:"tagIds"`
+	TaskIds          []uuid.UUID          `json:"taskIds"`
+	ItemIds          []uuid.UUID          `json:"itemIds"`
 }
 
 type PrivateRoutineTag struct {

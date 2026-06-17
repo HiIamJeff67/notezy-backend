@@ -76,7 +76,7 @@ func TestFeatureInParallel(t *testing.T) {
 			})
 		})
 		t.Run(fmt.Sprintf("Test-Time-(%s)", testTargetPath+"time.go"), func(t *testing.T) {
-			t.Run("Test-IsTimeWithinDelta()", func(t *testing.T) {
+			t.Run("Test-IsTimeWithin()", func(t *testing.T) {
 				t.Parallel()
 				TestIsTimeWithinDelta(t)
 			})

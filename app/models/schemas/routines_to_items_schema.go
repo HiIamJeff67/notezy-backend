@@ -12,7 +12,7 @@ import (
 type RoutinesToItems struct {
 	RoutineId uuid.UUID      `json:"routineId" gorm:"column:routine_id; type:uuid; primaryKey;"`
 	ItemId    uuid.UUID      `json:"itemId" gorm:"column:item_id; type:uuid; primaryKey;"`
-	ItemType  enums.ItemType `json:"itemType" gorm:"column:item_type; type:\"ItemType\"; primaryKey;"`
+	ItemType  enums.ItemType `json:"itemType" gorm:"column:type; type:\"ItemType\"; primaryKey;"`
 	CreatedAt time.Time      `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 
 	// relations
