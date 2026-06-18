@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 /* ============================== Request DTO ============================== */
@@ -21,8 +20,24 @@ type GetMyRoutineByIdReqDto struct {
 		},
 		any,
 		struct {
-			RoutineId   uuid.UUID      `form:"routineId" validate:"required"`
-			OnlyDeleted *types.Ternary `form:"onlyDeleted" validate:"omitnil,min=0,max=2"`
+			RoutineId uuid.UUID `form:"routineId" validate:"required"`
+			IsDeleted *bool     `form:"isDeleted" validate:"omitnil"`
+		},
+	]
+}
+
+type GetMyRoutinesByStationIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		any,
+		struct {
+			StationId  uuid.UUID `form:"stationId" validate:"required"`
+			AreDeleted *bool     `form:"areDeleted" validate:"omitnil"`
 		},
 	]
 }
@@ -40,6 +55,7 @@ type GetAllMyRoutinesByTimeRangeReqDto struct {
 			From       time.Time   `form:"from" validate:"required"`
 			To         time.Time   `form:"to" validate:"required"`
 			StationIds []uuid.UUID `form:"stationIds" validate:"required,min=1,max=1024"`
+			AreDeleted *bool       `form:"areDeleted" validate:"omitnil"`
 		},
 	]
 }
@@ -355,6 +371,24 @@ type GetMyRoutineByIdResDto struct {
 	StationId        uuid.UUID            `json:"stationId"`
 	Title            string               `json:"title"`
 	Description      string               `json:"description"`
+	Status           enums.RoutineStatus  `json:"status"`
+	IsPinned         bool                 `json:"isPinned"`
+	ScheduledStartAt time.Time            `json:"scheduledStartAt"`
+	ScheduledEndAt   time.Time            `json:"scheduledEndAt"`
+	Period           *enums.RoutinePeriod `json:"period"`
+	Timezone         string               `json:"timezone"`
+	DeletedAt        *time.Time           `json:"deletedAt"`
+	UpdatedAt        time.Time            `json:"updatedAt"`
+	CreatedAt        time.Time            `json:"createdAt"`
+	TagIds           []uuid.UUID          `json:"tagIds"`
+	TaskIds          []uuid.UUID          `json:"taskIds"`
+	ItemIds          []uuid.UUID          `json:"itemIds"`
+}
+
+type GetMyRoutinesByStationIdResDto []struct {
+	Id               uuid.UUID            `json:"id"`
+	StationId        uuid.UUID            `json:"stationId"`
+	Title            string               `json:"title"`
 	Status           enums.RoutineStatus  `json:"status"`
 	IsPinned         bool                 `json:"isPinned"`
 	ScheduledStartAt time.Time            `json:"scheduledStartAt"`

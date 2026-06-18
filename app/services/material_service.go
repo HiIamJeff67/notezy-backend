@@ -16,6 +16,7 @@ import (
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	materialsql "github.com/HiIamJeff67/notezy-backend/app/models/sqls/material"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	storages "github.com/HiIamJeff67/notezy-backend/app/storages"
@@ -72,11 +73,20 @@ func (s *MaterialService) GetMyMaterialById(
 
 	db := s.db.WithContext(ctx)
 
+	onlyDeleted := types.Ternary_Neutral
+	if reqDto.Param.IsDeleted != nil {
+		if *reqDto.Param.IsDeleted {
+			onlyDeleted = types.Ternary_Positive
+		} else {
+			onlyDeleted = types.Ternary_Negative
+		}
+	}
+
 	material, exception := s.materialRepository.GetOneById(
 		reqDto.Param.MaterialId,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
-		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithOnlyDeleted(onlyDeleted),
 	)
 	if exception != nil {
 		return nil, exception
@@ -116,10 +126,18 @@ func (s *MaterialService) GetMyMaterialAndItsParentById(
 		enums.AccessControlPermission_Write,
 		enums.AccessControlPermission_Read,
 	}
-	onlyDeleted := types.Ternary_Negative
+
+	onlyDeleted := types.Ternary_Neutral
+	if reqDto.Param.IsDeleted != nil {
+		if *reqDto.Param.IsDeleted {
+			onlyDeleted = types.Ternary_Positive
+		} else {
+			onlyDeleted = types.Ternary_Negative
+		}
+	}
+
 	resDto := dtos.GetMyMaterialAndItsParentByIdResDto{}
 	var contentKey string
-
 	err := db.Raw(materialsql.GetMyMaterialAndItsParentByIdSQL,
 		reqDto.Param.MaterialId, reqDto.ContextFields.UserId, pg.Array(allowedPermissions), onlyDeleted,
 	).Row().
@@ -173,8 +191,16 @@ func (s *MaterialService) GetMyMaterialsByParentSubShelfId(
 		enums.AccessControlPermission_Read,
 	}
 
-	materials := []schemas.Material{}
+	onlyDeleted := types.Ternary_Neutral
+	if reqDto.Param.AreDeleted != nil {
+		if *reqDto.Param.AreDeleted {
+			onlyDeleted = types.Ternary_Positive
+		} else {
+			onlyDeleted = types.Ternary_Negative
+		}
+	}
 
+	materials := []schemas.Material{}
 	result := db.Model(&schemas.Material{}).
 		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"MaterialTable\".parent_sub_shelf_id = ss.id").
 		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
@@ -182,7 +208,7 @@ func (s *MaterialService) GetMyMaterialsByParentSubShelfId(
 			reqDto.Param.ParentSubShelfId,
 			reqDto.ContextFields.UserId,
 			allowedPermissions,
-		).Where("\"MaterialTable\".deleted_at IS NULL").
+		).Scopes(scopes.NewMaterialScope().FilterOnlyDeleted(onlyDeleted)).
 		Order("name ASC").
 		Limit(int(constants.MaxMaterialsOfSubShelf)).
 		Find(&materials)
@@ -229,14 +255,22 @@ func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
 		enums.AccessControlPermission_Read,
 	}
 
-	materials := []schemas.Material{}
+	onlyDeleted := types.Ternary_Neutral
+	if reqDto.Param.AreDeleted != nil {
+		if *reqDto.Param.AreDeleted {
+			onlyDeleted = types.Ternary_Positive
+		} else {
+			onlyDeleted = types.Ternary_Negative
+		}
+	}
 
+	materials := []schemas.Material{}
 	result := db.Model(&schemas.Material{}).
 		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"MaterialTable\".parent_sub_shelf_id = ss.id").
 		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
 		Where("ss.root_shelf_id = ? AND uts.user_id = ? AND uts.permission IN ?",
 			reqDto.Param.RootShelfId, reqDto.ContextFields.UserId, allowedPermissions,
-		).Where("\"MaterialTable\".deleted_at IS NULL").
+		).Scopes(scopes.NewMaterialScope().FilterOnlyDeleted(onlyDeleted)).
 		Limit(int(constants.MaxMaterialsOfRootShelf)).
 		Order("name ASC").
 		Find(&materials)

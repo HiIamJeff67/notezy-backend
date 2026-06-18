@@ -2,6 +2,7 @@ package binders
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -43,6 +44,16 @@ func (b *RootShelfBinder) BindGetMyRootShelfById(controllerFunc types.Controller
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
+
+		isDeletedString := ctx.Query("isDeleted")
+		if isDeletedString != "" {
+			isDeleted, err := strconv.ParseBool(isDeletedString)
+			if err != nil {
+				exceptions.Shelf.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.IsDeleted = &isDeleted
+		}
 
 		rootShelfIdString := ctx.Query("rootShelfId")
 		if rootShelfIdString == "" {

@@ -17,6 +17,7 @@ import (
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	storages "github.com/HiIamJeff67/notezy-backend/app/storages"
 	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
@@ -83,12 +84,21 @@ func (s *SubShelfService) GetMySubShelfById(
 
 	db := s.db.WithContext(ctx)
 
+	onlyDeleted := types.Ternary_Neutral
+	if reqDto.Param.IsDeleted != nil {
+		if *reqDto.Param.IsDeleted {
+			onlyDeleted = types.Ternary_Positive
+		} else {
+			onlyDeleted = types.Ternary_Negative
+		}
+	}
+
 	subShelf, exception := s.subShelfRepository.GetOneById(
 		reqDto.Param.SubShelfId,
 		reqDto.ContextFields.UserId,
 		nil,
 		options.WithDB(db),
-		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithOnlyDeleted(onlyDeleted),
 	)
 	if exception != nil {
 		return nil, exception
@@ -122,8 +132,16 @@ func (s *SubShelfService) GetMySubShelvesByPrevSubShelfId(
 		enums.AccessControlPermission_Read,
 	}
 
-	resDto := dtos.GetMySubShelvesByPrevSubShelfIdResDto{}
+	onlyDeleted := types.Ternary_Neutral
+	if reqDto.Param.AreDeleted != nil {
+		if *reqDto.Param.AreDeleted {
+			onlyDeleted = types.Ternary_Positive
+		} else {
+			onlyDeleted = types.Ternary_Negative
+		}
+	}
 
+	resDto := dtos.GetMySubShelvesByPrevSubShelfIdResDto{}
 	subQuery := db.Model(&schemas.UsersToShelves{}).
 		Select("1").
 		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?",
@@ -132,7 +150,7 @@ func (s *SubShelfService) GetMySubShelvesByPrevSubShelfId(
 	result := s.db.Model(&schemas.SubShelf{}).
 		Where("prev_sub_shelf_id = ? AND EXISTS (?)",
 			reqDto.Param.PrevSubShelfId, subQuery,
-		).Where("\"SubShelfTable\".deleted_at IS NULL").
+		).Scopes(scopes.NewSubShelfScope().FilterOnlyDeleted(onlyDeleted)).
 		Order("\"SubShelfTable\".name ASC").
 		Limit(int(constants.MaxSubShelvesOfSubShelf)).
 		Find(&resDto)
@@ -159,8 +177,16 @@ func (s *SubShelfService) GetAllMySubShelvesByRootShelfId(
 		enums.AccessControlPermission_Read,
 	}
 
-	resDto := dtos.GetAllMySubShelvesByRootShelfIdResDto{}
+	onlyDeleted := types.Ternary_Neutral
+	if reqDto.Param.AreDeleted != nil {
+		if *reqDto.Param.AreDeleted {
+			onlyDeleted = types.Ternary_Positive
+		} else {
+			onlyDeleted = types.Ternary_Negative
+		}
+	}
 
+	resDto := dtos.GetAllMySubShelvesByRootShelfIdResDto{}
 	subQuery := db.Model(&schemas.UsersToShelves{}).
 		Select("1").
 		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?",
@@ -169,7 +195,7 @@ func (s *SubShelfService) GetAllMySubShelvesByRootShelfId(
 	result := s.db.Model(&schemas.SubShelf{}).
 		Where("root_shelf_id = ? AND EXISTS (?)",
 			reqDto.Param.RootShelfId, subQuery,
-		).Where("\"SubShelfTable\".deleted_at IS NULL").
+		).Scopes(scopes.NewSubShelfScope().FilterOnlyDeleted(onlyDeleted)).
 		Order("\"SubShelfTable\".name ASC").
 		Limit(int(constants.MaxSubShelvesOfSubShelf)).
 		Find(&resDto)
@@ -196,8 +222,16 @@ func (s *SubShelfService) GetMySubShelvesAndItemsByPrevSubShelfId(
 		enums.AccessControlPermission_Read,
 	}
 
-	resDto := dtos.GetMySubShelvesAndItemsByPrevSubShelfIdResDto{}
+	onlyDeleted := types.Ternary_Neutral
+	if reqDto.Param.AreDeleted != nil {
+		if *reqDto.Param.AreDeleted {
+			onlyDeleted = types.Ternary_Positive
+		} else {
+			onlyDeleted = types.Ternary_Negative
+		}
+	}
 
+	resDto := dtos.GetMySubShelvesAndItemsByPrevSubShelfIdResDto{}
 	subQuery := db.Model(&schemas.UsersToShelves{}).
 		Select("1").
 		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?",
@@ -206,7 +240,7 @@ func (s *SubShelfService) GetMySubShelvesAndItemsByPrevSubShelfId(
 	resultOfGettingSubShelves := db.Model(&schemas.SubShelf{}).
 		Where("prev_sub_shelf_id = ? AND EXISTS (?)",
 			reqDto.Param.PrevSubShelfId, subQuery,
-		).Where("\"SubShelfTable\".deleted_at IS NULL").
+		).Scopes(scopes.NewSubShelfScope().FilterOnlyDeleted(onlyDeleted)).
 		Order("\"SubShelfTable\".name ASC").
 		Limit(int(constants.MaxSubShelvesOfSubShelf)).
 		Find(&resDto.SubShelves)
@@ -222,7 +256,7 @@ func (s *SubShelfService) GetMySubShelvesAndItemsByPrevSubShelfId(
 			reqDto.Param.PrevSubShelfId,
 			reqDto.ContextFields.UserId,
 			allowedPermissions,
-		).Where("\"MaterialTable\".deleted_at IS NULL").
+		).Scopes(scopes.NewMaterialScope().FilterOnlyDeleted(onlyDeleted)).
 		Order("\"MaterialTable\".name ASC").
 		Limit(int(constants.MaxMaterialsOfSubShelf)).
 		Find(&materials)
@@ -256,7 +290,7 @@ func (s *SubShelfService) GetMySubShelvesAndItemsByPrevSubShelfId(
 			reqDto.Param.PrevSubShelfId,
 			reqDto.ContextFields.UserId,
 			allowedPermissions,
-		).Where("\"BlockPackTable\".deleted_at IS NULL").
+		).Scopes(scopes.NewBlockPackScope().FilterOnlyDeleted(onlyDeleted)).
 		Order("\"BlockPackTable\".name ASC").
 		Limit(int(constants.MaxBlockPackOfSubShelf)).
 		Scan(&resDto.BlockPacks)
@@ -399,7 +433,6 @@ func (s *SubShelfService) MoveMySubShelf(
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
-
 	if reqDto.Body.DestinationSubShelfId != nil &&
 		reqDto.Body.SourceSubShelfId == *reqDto.Body.DestinationSubShelfId {
 		return nil, exceptions.Shelf.NoChanges()

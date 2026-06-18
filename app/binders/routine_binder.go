@@ -2,6 +2,7 @@ package binders
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 
 type RoutineBinderInterface interface {
 	BindGetMyRoutineById(controllerFunc types.ControllerFunc[*dtos.GetMyRoutineByIdReqDto]) gin.HandlerFunc
+	BindGetMyRoutinesByStationId(controllerFunc types.ControllerFunc[*dtos.GetMyRoutinesByStationIdReqDto]) gin.HandlerFunc
 	BindGetAllMyRoutinesByTimeRange(controllerFunc types.ControllerFunc[*dtos.GetAllMyRoutinesByTimeRangeReqDto]) gin.HandlerFunc
 	BindCreateRoutineByStationId(controllerFunc types.ControllerFunc[*dtos.CreateRoutineByStationIdReqDto]) gin.HandlerFunc
 	BindCreateRoutinesByStationIds(controllerFunc types.ControllerFunc[*dtos.CreateRoutinesByStationIdsReqDto]) gin.HandlerFunc
@@ -54,6 +56,16 @@ func (b *RoutineBinder) BindGetMyRoutineById(controllerFunc types.ControllerFunc
 		}
 		reqDto.ContextFields.UserId = *userId
 
+		isDeletedString := ctx.Query("isDeleted")
+		if isDeletedString != "" {
+			isDeleted, err := strconv.ParseBool(isDeletedString)
+			if err != nil {
+				exceptions.Routine.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.IsDeleted = &isDeleted
+		}
+
 		routineIdString := ctx.Query("routineId")
 		if routineIdString == "" {
 			exceptions.Routine.InvalidInput().WithOrigin(fmt.Errorf("routineId is required")).SafelyAbortAndResponseWithJSON(ctx)
@@ -70,9 +82,46 @@ func (b *RoutineBinder) BindGetMyRoutineById(controllerFunc types.ControllerFunc
 	}
 }
 
-func (b *RoutineBinder) BindGetAllMyRoutinesByTimeRange(
-	controllerFunc types.ControllerFunc[*dtos.GetAllMyRoutinesByTimeRangeReqDto],
-) gin.HandlerFunc {
+func (b *RoutineBinder) BindGetMyRoutinesByStationId(controllerFunc types.ControllerFunc[*dtos.GetMyRoutinesByStationIdReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.GetMyRoutinesByStationIdReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		areDeletedString := ctx.Query("areDeleted")
+		if areDeletedString != "" {
+			areDeleted, err := strconv.ParseBool(areDeletedString)
+			if err != nil {
+				exceptions.Routine.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.AreDeleted = &areDeleted
+		}
+
+		stationIdString := ctx.Query("stationId")
+		if stationIdString == "" {
+			exceptions.Routine.InvalidInput().WithOrigin(fmt.Errorf("stationId is required")).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		stationId, err := uuid.Parse(stationIdString)
+		if err != nil {
+			exceptions.Routine.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.StationId = stationId
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RoutineBinder) BindGetAllMyRoutinesByTimeRange(controllerFunc types.ControllerFunc[*dtos.GetAllMyRoutinesByTimeRangeReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.GetAllMyRoutinesByTimeRangeReqDto
 
@@ -97,6 +146,16 @@ func (b *RoutineBinder) BindGetAllMyRoutinesByTimeRange(
 		}
 		reqDto.Param.From = from
 		reqDto.Param.To = to
+
+		areDeletedString := ctx.Query("areDeleted")
+		if areDeletedString != "" {
+			areDeleted, err := strconv.ParseBool(areDeletedString)
+			if err != nil {
+				exceptions.Routine.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.AreDeleted = &areDeleted
+		}
 
 		for _, stationIdsValue := range ctx.QueryArray("stationIds") {
 			for _, stationIdValue := range strings.Split(stationIdsValue, ",") {

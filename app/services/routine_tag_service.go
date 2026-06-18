@@ -63,8 +63,12 @@ func (s *RoutineTagService) GetMyRoutineTagById(
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
+	if reqDto.Param.IsDeleted != nil && *reqDto.Param.IsDeleted {
+		return nil, exceptions.RoutineTag.NotFound()
+	}
 
 	db := s.db.WithContext(ctx)
+
 	routineTag, exception := s.routineTagRepository.GetOneById(
 		reqDto.Param.RoutineTagId,
 		reqDto.ContextFields.UserId,
@@ -92,8 +96,13 @@ func (s *RoutineTagService) GetAllMyRoutineTags(
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
+	if reqDto.Param.AreDeleted != nil && *reqDto.Param.AreDeleted {
+		resDto := dtos.GetAllMyRoutineTagsResDto{}
+		return &resDto, nil
+	}
 
 	db := s.db.WithContext(ctx)
+
 	routineTags, exception := s.routineTagRepository.GetAllByUserId(
 		reqDto.ContextFields.UserId,
 		nil,
@@ -127,6 +136,7 @@ func (s *RoutineTagService) CreateRoutineTag(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	newRoutineTagId, exception := s.routineTagRepository.CreateOneByUserId(
 		reqDto.ContextFields.UserId,
 		inputs.CreateRoutineTagInput{
@@ -190,6 +200,7 @@ func (s *RoutineTagService) UpdateMyRoutineTagById(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	updatedRoutineTag, exception := s.routineTagRepository.UpdateOneById(
 		reqDto.Body.RoutineTagId,
 		reqDto.ContextFields.UserId,
@@ -259,6 +270,7 @@ func (s *RoutineTagService) HardDeleteMyRoutineTagById(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	exception := s.routineTagRepository.HardDeleteOneById(
 		reqDto.Body.RoutineTagId,
 		reqDto.ContextFields.UserId,
@@ -282,6 +294,7 @@ func (s *RoutineTagService) HardDeleteMyRoutineTagsByIds(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	exception := s.routineTagRepository.HardDeleteManyByIds(
 		reqDto.Body.RoutineTagIds,
 		reqDto.ContextFields.UserId,
@@ -306,15 +319,15 @@ func (s *RoutineTagService) SearchPrivateRoutineTags(
 		Permission enums.AccessControlPermission `gorm:"column:permission"`
 	}
 
+	startTime := time.Now()
+	db := s.db.WithContext(ctx)
+
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 		enums.AccessControlPermission_Write,
 		enums.AccessControlPermission_Read,
 	}
-	startTime := time.Now()
-
-	db := s.db.WithContext(ctx)
 
 	query := db.Model(&schemas.RoutineTag{}).
 		Select("\"RoutineTagTable\".*, utrt.permission AS permission").

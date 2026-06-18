@@ -2,6 +2,7 @@ package binders
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -42,6 +43,16 @@ func (b *RoutineTaskBinder) BindGetMyRoutineTaskById(controllerFunc types.Contro
 		}
 		reqDto.ContextFields.UserId = *userId
 
+		isDeletedString := ctx.Query("isDeleted")
+		if isDeletedString != "" {
+			isDeleted, err := strconv.ParseBool(isDeletedString)
+			if err != nil {
+				exceptions.RoutineTask.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.IsDeleted = &isDeleted
+		}
+
 		routineTaskIdString := ctx.Query("routineTaskId")
 		if routineTaskIdString == "" {
 			exceptions.RoutineTask.InvalidInput().WithOrigin(fmt.Errorf("routineTaskId is required")).SafelyAbortAndResponseWithJSON(ctx)
@@ -73,6 +84,16 @@ func (b *RoutineTaskBinder) BindGetAllMyRoutineTasksByStationIds(
 		}
 		reqDto.ContextFields.UserId = *userId
 
+		areDeletedString := ctx.Query("areDeleted")
+		if areDeletedString != "" {
+			areDeleted, err := strconv.ParseBool(areDeletedString)
+			if err != nil {
+				exceptions.RoutineTask.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.AreDeleted = &areDeleted
+		}
+
 		for _, stationIdsValue := range ctx.QueryArray("stationIds") {
 			for _, stationIdValue := range strings.Split(stationIdsValue, ",") {
 				stationId, err := uuid.Parse(strings.TrimSpace(stationIdValue))
@@ -100,6 +121,16 @@ func (b *RoutineTaskBinder) BindGetAllMyRoutineTasks(controllerFunc types.Contro
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
+
+		areDeletedString := ctx.Query("areDeleted")
+		if areDeletedString != "" {
+			areDeleted, err := strconv.ParseBool(areDeletedString)
+			if err != nil {
+				exceptions.RoutineTask.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.AreDeleted = &areDeleted
+		}
 
 		controllerFunc(ctx, &reqDto)
 	}

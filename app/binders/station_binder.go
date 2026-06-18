@@ -2,6 +2,7 @@ package binders
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -46,6 +47,16 @@ func (b *StationBinder) BindGetMyStationById(controllerFunc types.ControllerFunc
 		}
 		reqDto.ContextFields.UserId = *userId
 
+		isDeletedString := ctx.Query("isDeleted")
+		if isDeletedString != "" {
+			isDeleted, err := strconv.ParseBool(isDeletedString)
+			if err != nil {
+				exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.IsDeleted = &isDeleted
+		}
+
 		stationIdString := ctx.Query("stationId")
 		if stationIdString == "" {
 			exceptions.Station.InvalidInput().WithOrigin(fmt.Errorf("stationId is required")).SafelyAbortAndResponseWithJSON(ctx)
@@ -75,9 +86,14 @@ func (b *StationBinder) BindGetAllMyStations(controllerFunc types.ControllerFunc
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
-			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
-			return
+		areDeletedString := ctx.Query("areDeleted")
+		if areDeletedString != "" {
+			areDeleted, err := strconv.ParseBool(areDeletedString)
+			if err != nil {
+				exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.AreDeleted = &areDeleted
 		}
 
 		controllerFunc(ctx, &reqDto)

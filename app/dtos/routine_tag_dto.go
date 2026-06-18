@@ -21,6 +21,7 @@ type GetMyRoutineTagByIdReqDto struct {
 		any,
 		struct {
 			RoutineTagId uuid.UUID `form:"routineTagId" validate:"required"`
+			IsDeleted    *bool     `form:"isDeleted" validate:"omitnil"`
 		},
 	]
 }
@@ -34,7 +35,9 @@ type GetAllMyRoutineTagsReqDto struct {
 			UserId uuid.UUID
 		},
 		any,
-		any,
+		struct {
+			AreDeleted *bool `form:"areDeleted" validate:"omitnil"`
+		},
 	]
 }
 

@@ -13,6 +13,7 @@ import (
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	blockpacksql "github.com/HiIamJeff67/notezy-backend/app/models/sqls/block_pack"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
@@ -67,11 +68,20 @@ func (s *BlockPackService) GetMyBlockPackById(
 
 	db := s.db.WithContext(ctx)
 
+	onlyDeleted := types.Ternary_Neutral
+	if reqDto.Param.IsDeleted != nil {
+		if *reqDto.Param.IsDeleted {
+			onlyDeleted = types.Ternary_Positive
+		} else {
+			onlyDeleted = types.Ternary_Negative
+		}
+	}
+
 	blockPack, exception := s.blockPackRepository.GetOneById(
 		reqDto.Param.BlockPackId,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
-		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithOnlyDeleted(onlyDeleted),
 	)
 	if exception != nil {
 		return nil, exception
@@ -105,9 +115,17 @@ func (s *BlockPackService) GetMyBlockPackAndItsParentById(
 		enums.AccessControlPermission_Write,
 		enums.AccessControlPermission_Read,
 	}
-	onlyDeleted := types.Ternary_Negative
-	resDto := dtos.GetMyBlockPackAndItsParentByIdResDto{}
 
+	onlyDeleted := types.Ternary_Neutral
+	if reqDto.Param.IsDeleted != nil {
+		if *reqDto.Param.IsDeleted {
+			onlyDeleted = types.Ternary_Positive
+		} else {
+			onlyDeleted = types.Ternary_Negative
+		}
+	}
+
+	resDto := dtos.GetMyBlockPackAndItsParentByIdResDto{}
 	err := db.Raw(blockpacksql.GetMyBlockPackAndItsParentByIdSQL,
 		reqDto.Param.BlockPackId, reqDto.ContextFields.UserId, pg.Array(allowedPermissions), onlyDeleted,
 	).Row().
@@ -143,6 +161,15 @@ func (s *BlockPackService) GetMyBlockPacksByParentSubShelfId(
 
 	db := s.db.WithContext(ctx)
 
+	onlyDeleted := types.Ternary_Neutral
+	if reqDto.Param.AreDeleted != nil {
+		if *reqDto.Param.AreDeleted {
+			onlyDeleted = types.Ternary_Positive
+		} else {
+			onlyDeleted = types.Ternary_Negative
+		}
+	}
+
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
@@ -151,7 +178,6 @@ func (s *BlockPackService) GetMyBlockPacksByParentSubShelfId(
 	}
 
 	resDto := dtos.GetMyBlockPacksByParentSubShelfIdResDto{}
-
 	result := db.Model(&schemas.BlockPack{}).
 		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"BlockPackTable\".parent_sub_shelf_id = ss.id").
 		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
@@ -159,7 +185,7 @@ func (s *BlockPackService) GetMyBlockPacksByParentSubShelfId(
 			reqDto.Param.ParentSubShelfId,
 			reqDto.ContextFields.UserId,
 			allowedPermissions,
-		).Where("\"BlockPackTable\".deleted_at IS NULL").
+		).Scopes(scopes.NewBlockPackScope().FilterOnlyDeleted(onlyDeleted)).
 		Order("name ASC").
 		Limit(int(constants.MaxBlockPackOfSubShelf)).
 		Scan(&resDto)
@@ -178,6 +204,14 @@ func (s *BlockPackService) GetAllMyBlockPacksByRootShelfId(
 	}
 
 	db := s.db.WithContext(ctx)
+	onlyDeleted := types.Ternary_Neutral
+	if reqDto.Param.AreDeleted != nil {
+		if *reqDto.Param.AreDeleted {
+			onlyDeleted = types.Ternary_Positive
+		} else {
+			onlyDeleted = types.Ternary_Negative
+		}
+	}
 
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
@@ -187,13 +221,12 @@ func (s *BlockPackService) GetAllMyBlockPacksByRootShelfId(
 	}
 
 	resDto := dtos.GetAllMyBlockPacksByRootShelfIdResDto{}
-
 	result := db.Model(&schemas.BlockPack{}).
 		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"BlockPackTable\".parent_sub_shelf_id = ss.id").
 		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
 		Where("ss.root_shelf_id = ? AND uts.user_id = ? AND uts.permission IN ?",
 			reqDto.Param.RootShelfId, reqDto.ContextFields.UserId, allowedPermissions,
-		).Where("\"BlockPackTable\".deleted_at IS NULL").
+		).Scopes(scopes.NewBlockPackScope().FilterOnlyDeleted(onlyDeleted)).
 		Limit(int(constants.MaxBlockPackOfRootShelf)).
 		Order("name ASC").
 		Scan(&resDto)

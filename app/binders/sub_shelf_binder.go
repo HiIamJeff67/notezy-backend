@@ -2,6 +2,7 @@ package binders
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -49,6 +50,16 @@ func (b *SubShelfBinder) BindGetMySubShelfById(controllerFunc types.ControllerFu
 		}
 		reqDto.ContextFields.UserId = *userId
 
+		isDeletedString := ctx.Query("isDeleted")
+		if isDeletedString != "" {
+			isDeleted, err := strconv.ParseBool(isDeletedString)
+			if err != nil {
+				exceptions.Shelf.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.IsDeleted = &isDeleted
+		}
+
 		subShelfIdString := ctx.Query("subShelfId")
 		if subShelfIdString == "" {
 			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("subShelfId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
@@ -77,6 +88,16 @@ func (b *SubShelfBinder) BindGetMySubShelvesByPrevSubShelfId(controllerFunc type
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
+
+		areDeletedString := ctx.Query("areDeleted")
+		if areDeletedString != "" {
+			areDeleted, err := strconv.ParseBool(areDeletedString)
+			if err != nil {
+				exceptions.Shelf.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.AreDeleted = &areDeleted
+		}
 
 		prevSubShelfIdString := ctx.Query("prevSubShelfId")
 		if prevSubShelfIdString == "" {
@@ -107,6 +128,16 @@ func (b *SubShelfBinder) BindGetAllMySubShelvesByRootShelfId(controllerFunc type
 		}
 		reqDto.ContextFields.UserId = *userId
 
+		areDeletedString := ctx.Query("areDeleted")
+		if areDeletedString != "" {
+			areDeleted, err := strconv.ParseBool(areDeletedString)
+			if err != nil {
+				exceptions.Shelf.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.AreDeleted = &areDeleted
+		}
+
 		rootShelfIdString := ctx.Query("rootShelfId")
 		if rootShelfIdString == "" {
 			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("rootShelfId is required")).SafelyAbortAndResponseWithJSON(ctx)
@@ -135,6 +166,16 @@ func (b *SubShelfBinder) BindGetMySubShelvesAndItemsByPrevSubShelfId(controllerF
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
+
+		areDeletedString := ctx.Query("areDeleted")
+		if areDeletedString != "" {
+			areDeleted, err := strconv.ParseBool(areDeletedString)
+			if err != nil {
+				exceptions.Shelf.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.AreDeleted = &areDeleted
+		}
 
 		prevSubShelfIdString := ctx.Query("prevSubShelfId")
 		if prevSubShelfIdString == "" {

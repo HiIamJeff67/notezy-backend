@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -53,6 +54,16 @@ func (b *MaterialBinder) BindGetMyMaterialById(controllerFunc types.ControllerFu
 		}
 		reqDto.ContextFields.UserId = *userId
 
+		isDeletedString := ctx.Query("isDeleted")
+		if isDeletedString != "" {
+			isDeleted, err := strconv.ParseBool(isDeletedString)
+			if err != nil {
+				exceptions.Material.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.IsDeleted = &isDeleted
+		}
+
 		materialIdString := ctx.Query("materialId")
 		if materialIdString == "" {
 			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("materialId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
@@ -81,6 +92,16 @@ func (b *MaterialBinder) BindGetMyMaterialAndItsParentById(controllerFunc types.
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
+
+		isDeletedString := ctx.Query("isDeleted")
+		if isDeletedString != "" {
+			isDeleted, err := strconv.ParseBool(isDeletedString)
+			if err != nil {
+				exceptions.Material.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.IsDeleted = &isDeleted
+		}
 
 		materialIdString := ctx.Query("materialId")
 		if materialIdString == "" {
@@ -123,9 +144,14 @@ func (b *MaterialBinder) BindGetMyMaterialsByParentSubShelfId(controllerFunc typ
 		}
 		reqDto.Param.ParentSubShelfId = parentSubShelfId
 
-		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
-			exceptions.Material.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
+		areDeletedString := ctx.Query("areDeleted")
+		if areDeletedString != "" {
+			areDeleted, err := strconv.ParseBool(areDeletedString)
+			if err != nil {
+				exceptions.Material.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.AreDeleted = &areDeleted
 		}
 
 		controllerFunc(ctx, &reqDto)
@@ -156,6 +182,16 @@ func (b *MaterialBinder) BindGetAllMyMaterialsByRootShelfId(controllerFunc types
 			return
 		}
 		reqDto.Param.RootShelfId = rootShelfId
+
+		areDeletedString := ctx.Query("areDeleted")
+		if areDeletedString != "" {
+			areDeleted, err := strconv.ParseBool(areDeletedString)
+			if err != nil {
+				exceptions.Material.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.AreDeleted = &areDeleted
+		}
 
 		controllerFunc(ctx, &reqDto)
 	}

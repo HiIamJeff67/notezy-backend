@@ -2,6 +2,7 @@ package binders
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -42,6 +43,16 @@ func (b *RoutineTagBinder) BindGetMyRoutineTagById(controllerFunc types.Controll
 		}
 		reqDto.ContextFields.UserId = *userId
 
+		isDeletedString := ctx.Query("isDeleted")
+		if isDeletedString != "" {
+			isDeleted, err := strconv.ParseBool(isDeletedString)
+			if err != nil {
+				exceptions.RoutineTag.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.IsDeleted = &isDeleted
+		}
+
 		routineTagIdString := ctx.Query("routineTagId")
 		if routineTagIdString == "" {
 			exceptions.RoutineTag.InvalidInput().WithOrigin(fmt.Errorf("routineTagId is required")).SafelyAbortAndResponseWithJSON(ctx)
@@ -70,6 +81,16 @@ func (b *RoutineTagBinder) BindGetAllMyRoutineTags(controllerFunc types.Controll
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
+
+		areDeletedString := ctx.Query("areDeleted")
+		if areDeletedString != "" {
+			areDeleted, err := strconv.ParseBool(areDeletedString)
+			if err != nil {
+				exceptions.RoutineTag.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.AreDeleted = &areDeleted
+		}
 
 		controllerFunc(ctx, &reqDto)
 	}

@@ -18,7 +18,7 @@ type GetMyBlockGroupByIdReqDto struct {
 		},
 		any,
 		struct {
-			BlockGroupId uuid.UUID `json:"blockGroupId" validate:"required"`
+			BlockGroupId uuid.UUID `form:"blockGroupId" validate:"required"`
 		},
 	]
 }
@@ -33,7 +33,7 @@ type GetMyBlockGroupAndItsBlocksByIdReqDto struct {
 		},
 		any,
 		struct {
-			BlockGroupId uuid.UUID `json:"blockGroupId" validate:"required"`
+			BlockGroupId uuid.UUID `form:"blockGroupId" validate:"required"`
 		},
 	]
 }
@@ -48,7 +48,7 @@ type GetMyBlockGroupsAndTheirBlocksByIdsReqDto struct {
 		},
 		any,
 		struct {
-			BlockGroupIds []uuid.UUID `json:"blockPackIds" form:"blockGroupIds" validate:"required"`
+			BlockGroupIds []uuid.UUID `form:"blockGroupIds" validate:"required"`
 		},
 	]
 }
@@ -63,7 +63,7 @@ type GetMyBlockGroupsAndTheirBlocksByBlockPackIdReqDto struct {
 		},
 		any,
 		struct {
-			BlockPackId uuid.UUID `json:"blockPackId" validate:"required"`
+			BlockPackId uuid.UUID `form:"blockPackId" validate:"required"`
 		},
 	]
 }
@@ -78,7 +78,7 @@ type GetMyBlockGroupsByPrevBlockGroupIdReqDto struct {
 		},
 		any,
 		struct {
-			PrevBlockGroupId uuid.UUID `json:"prevBlockGroupId" validate:"required"`
+			PrevBlockGroupId uuid.UUID `form:"prevBlockGroupId" validate:"required"`
 		},
 	]
 }
@@ -93,7 +93,7 @@ type GetAllMyBlockGroupsByBlockPackIdReqDto struct {
 		},
 		any,
 		struct {
-			BlockPackId uuid.UUID `json:"blockPackId" validate:"required"`
+			BlockPackId uuid.UUID `form:"blockPackId" validate:"required"`
 		},
 	]
 }

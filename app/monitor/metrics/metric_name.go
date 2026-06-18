@@ -55,6 +55,7 @@ type metricNameStation struct {
 
 type metricNameRoutine struct {
 	GetMyRoutineById            string
+	GetMyRoutinesByStationId    string
 	GetAllMyRoutinesByTimeRange string
 	CreateRoutineByStationId    string
 	CreateRoutinesByStationIds  string
@@ -296,6 +297,7 @@ var MetricNames = struct {
 			},
 			Routine: metricNameRoutine{
 				GetMyRoutineById:            "server.requests.routine.getMyRoutineById",
+				GetMyRoutinesByStationId:    "server.requests.routine.getMyRoutinesByStationId",
 				GetAllMyRoutinesByTimeRange: "server.requests.routine.getAllMyRoutinesByTimeRange",
 				CreateRoutineByStationId:    "server.requests.routine.createRoutineByStationId",
 				CreateRoutinesByStationIds:  "server.requests.routine.createRoutinesByStationIds",

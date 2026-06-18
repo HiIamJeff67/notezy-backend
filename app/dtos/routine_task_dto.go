@@ -22,6 +22,7 @@ type GetMyRoutineTaskByIdReqDto struct {
 		any,
 		struct {
 			RoutineTaskId uuid.UUID `form:"routineTaskId" validate:"required"`
+			IsDeleted     *bool     `form:"isDeleted" validate:"omitnil"`
 		},
 	]
 }
@@ -37,6 +38,7 @@ type GetAllMyRoutineTasksByStationIdsReqDto struct {
 		any,
 		struct {
 			StationIds []uuid.UUID `form:"stationIds" validate:"required,min=1,max=1024"`
+			AreDeleted *bool       `form:"areDeleted" validate:"omitnil"`
 		},
 	]
 }
@@ -50,7 +52,9 @@ type GetAllMyRoutineTasksReqDto struct {
 			UserId uuid.UUID
 		},
 		any,
-		any,
+		struct {
+			AreDeleted *bool `form:"areDeleted" validate:"omitnil"`
+		},
 	]
 }
 

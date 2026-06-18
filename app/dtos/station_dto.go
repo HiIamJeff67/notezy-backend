@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 /* ============================== Request DTO ============================== */
@@ -21,8 +20,8 @@ type GetMyStationByIdReqDto struct {
 		},
 		any,
 		struct {
-			StationId   uuid.UUID      `form:"stationId" validate:"required"`
-			OnlyDeleted *types.Ternary `form:"onlyDeleted" validate:"omitnil,min=0,max=2"`
+			StationId uuid.UUID `form:"stationId" validate:"required"`
+			IsDeleted *bool     `form:"isDeleted" validate:"omitnil"`
 		},
 	]
 }
@@ -37,7 +36,7 @@ type GetAllMyStationsReqDto struct {
 		},
 		any,
 		struct {
-			OnlyDeleted *types.Ternary `form:"onlyDeleted" validate:"omitnil,min=0,max=2"`
+			AreDeleted *bool `form:"areDeleted" validate:"omitnil"`
 		},
 	]
 }

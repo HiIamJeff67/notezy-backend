@@ -62,8 +62,12 @@ func (s *RoutineTaskService) GetMyRoutineTaskById(
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
+	if reqDto.Param.IsDeleted != nil && *reqDto.Param.IsDeleted {
+		return nil, exceptions.RoutineTask.NotFound()
+	}
 
 	db := s.db.WithContext(ctx)
+
 	routineTask, exception := s.routineTaskRepository.GetOneById(
 		reqDto.Param.RoutineTaskId,
 		reqDto.ContextFields.UserId,
@@ -99,8 +103,13 @@ func (s *RoutineTaskService) GetAllMyRoutineTasksByStationIds(
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
+	if reqDto.Param.AreDeleted != nil && *reqDto.Param.AreDeleted {
+		resDto := dtos.GetAllMyRoutineTasksByStationIdsResDto{}
+		return &resDto, nil
+	}
 
 	db := s.db.WithContext(ctx)
+
 	routineTasks, exception := s.routineTaskRepository.GetAllByStationIds(
 		reqDto.Param.StationIds,
 		reqDto.ContextFields.UserId,
@@ -153,6 +162,10 @@ func (s *RoutineTaskService) GetAllMyRoutineTasks(
 ) (*dtos.GetAllMyRoutineTasksResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+	}
+	if reqDto.Param.AreDeleted != nil && *reqDto.Param.AreDeleted {
+		resDto := dtos.GetAllMyRoutineTasksResDto{}
+		return &resDto, nil
 	}
 
 	db := s.db.WithContext(ctx)
@@ -210,6 +223,7 @@ func (s *RoutineTaskService) CreateRoutineTaskByStationId(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	newRoutineTaskId, exception := s.routineTaskRepository.CreateOneByStationId(
 		reqDto.Body.StationId,
 		reqDto.ContextFields.UserId,
@@ -241,6 +255,7 @@ func (s *RoutineTaskService) UpdateMyRoutineTaskById(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	updatedRoutineTask, exception := s.routineTaskRepository.UpdateOneById(
 		reqDto.Body.RoutineTaskId,
 		reqDto.ContextFields.UserId,
@@ -275,6 +290,7 @@ func (s *RoutineTaskService) HardDeleteMyRoutineTaskById(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	exception := s.routineTaskRepository.HardDeleteOneById(
 		reqDto.Body.RoutineTaskId,
 		reqDto.ContextFields.UserId,
@@ -298,6 +314,7 @@ func (s *RoutineTaskService) HardDeleteMyRoutineTasksByIds(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	exception := s.routineTaskRepository.HardDeleteManyByIds(
 		reqDto.Body.RoutineTaskIds,
 		reqDto.ContextFields.UserId,
@@ -322,15 +339,15 @@ func (s *RoutineTaskService) SearchPrivateRoutineTasks(
 		Permission enums.AccessControlPermission `gorm:"column:permission"`
 	}
 
+	startTime := time.Now()
+	db := s.db.WithContext(ctx)
+
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 		enums.AccessControlPermission_Write,
 		enums.AccessControlPermission_Read,
 	}
-	startTime := time.Now()
-
-	db := s.db.WithContext(ctx)
 
 	query := db.Model(&schemas.RoutineTask{}).
 		Select("\"RoutineTaskTable\".*, uts.permission AS permission").

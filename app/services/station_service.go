@@ -69,12 +69,17 @@ func (s *StationService) GetMyStationById(
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
-	onlyDeleted := types.Ternary_Negative
-	if reqDto.Param.OnlyDeleted != nil {
-		onlyDeleted = *reqDto.Param.OnlyDeleted
+	db := s.db.WithContext(ctx)
+
+	onlyDeleted := types.Ternary_Neutral
+	if reqDto.Param.IsDeleted != nil {
+		if *reqDto.Param.IsDeleted {
+			onlyDeleted = types.Ternary_Positive
+		} else {
+			onlyDeleted = types.Ternary_Negative
+		}
 	}
 
-	db := s.db.WithContext(ctx)
 	station, permission, exception := s.stationRepository.GetOneById(
 		reqDto.Param.StationId,
 		reqDto.ContextFields.UserId,
@@ -108,12 +113,17 @@ func (s *StationService) GetAllMyStations(
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
-	onlyDeleted := types.Ternary_Negative
-	if reqDto.Param.OnlyDeleted != nil {
-		onlyDeleted = *reqDto.Param.OnlyDeleted
+	db := s.db.WithContext(ctx)
+
+	onlyDeleted := types.Ternary_Neutral
+	if reqDto.Param.AreDeleted != nil {
+		if *reqDto.Param.AreDeleted {
+			onlyDeleted = types.Ternary_Positive
+		} else {
+			onlyDeleted = types.Ternary_Negative
+		}
 	}
 
-	db := s.db.WithContext(ctx)
 	stations, permissions, exception := s.stationRepository.GetAllByUserId(
 		reqDto.ContextFields.UserId,
 		nil,
@@ -161,6 +171,7 @@ func (s *StationService) CreateStation(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	newStationId, exception := s.stationRepository.CreateOneByOwnerId(
 		reqDto.ContextFields.UserId,
 		inputs.CreateStationInput{
@@ -226,6 +237,7 @@ func (s *StationService) UpdateMyStationById(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	updatedStation, exception := s.stationRepository.UpdateOneById(
 		reqDto.Body.StationId,
 		reqDto.ContextFields.UserId,
@@ -297,6 +309,7 @@ func (s *StationService) RestoreMyStationById(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	restoredStation, exception := s.stationRepository.RestoreSoftDeletedOneById(
 		reqDto.Body.StationId,
 		reqDto.ContextFields.UserId,
@@ -328,6 +341,7 @@ func (s *StationService) RestoreMyStationsByIds(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	restoredStations, exception := s.stationRepository.RestoreSoftDeletedManyByIds(
 		reqDto.Body.StationIds,
 		reqDto.ContextFields.UserId,
@@ -364,6 +378,7 @@ func (s *StationService) DeleteMyStationById(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	exception := s.stationRepository.SoftDeleteOneById(
 		reqDto.Body.StationId,
 		reqDto.ContextFields.UserId,
@@ -387,6 +402,7 @@ func (s *StationService) DeleteMyStationsByIds(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	exception := s.stationRepository.SoftDeleteManyByIds(
 		reqDto.Body.StationIds,
 		reqDto.ContextFields.UserId,
@@ -410,6 +426,7 @@ func (s *StationService) HardDeleteMyStationById(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	exception := s.stationRepository.HardDeleteOneById(
 		reqDto.Body.StationId,
 		reqDto.ContextFields.UserId,
@@ -433,6 +450,7 @@ func (s *StationService) HardDeleteMyStationsByIds(
 	}
 
 	db := s.db.WithContext(ctx)
+
 	exception := s.stationRepository.HardDeleteManyByIds(
 		reqDto.Body.StationIds,
 		reqDto.ContextFields.UserId,
@@ -457,15 +475,15 @@ func (s *StationService) SearchPrivateStations(
 		Permission enums.AccessControlPermission `gorm:"column:permission"`
 	}
 
+	startTime := time.Now()
+	db := s.db.WithContext(ctx)
+
 	allowedPermisssions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 		enums.AccessControlPermission_Write,
 		enums.AccessControlPermission_Read,
 	}
-	startTime := time.Now()
-
-	db := s.db.WithContext(ctx)
 
 	query := db.Model(&schemas.Station{}).
 		Select("\"StationTable\".*, uts.permission AS permission").

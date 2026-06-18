@@ -21,6 +21,7 @@ type GetMyRootShelfByIdReqDto struct {
 		any,
 		struct {
 			RootShelfId uuid.UUID `form:"rootShelfId" validate:"required"`
+			IsDeleted   *bool     `form:"isDeleted" validate:"omitnil"`
 		},
 	]
 }

@@ -28,6 +28,7 @@ import (
 
 type RoutineServiceInterface interface {
 	GetMyRoutineById(ctx context.Context, reqDto *dtos.GetMyRoutineByIdReqDto) (*dtos.GetMyRoutineByIdResDto, *exceptions.Exception)
+	GetMyRoutinesByStationId(ctx context.Context, reqDto *dtos.GetMyRoutinesByStationIdReqDto) (*dtos.GetMyRoutinesByStationIdResDto, *exceptions.Exception)
 	GetAllMyRoutinesByTimeRange(ctx context.Context, reqDto *dtos.GetAllMyRoutinesByTimeRangeReqDto) (*dtos.GetAllMyRoutinesByTimeRangeResDto, *exceptions.Exception)
 	CreateRoutineByStationId(ctx context.Context, reqDto *dtos.CreateRoutineByStationIdReqDto) (*dtos.CreateRoutineByStationIdResDto, *exceptions.Exception)
 	CreateRoutinesByStationIds(ctx context.Context, reqDto *dtos.CreateRoutinesByStationIdsReqDto) (*dtos.CreateRoutinesByStationIdsResDto, *exceptions.Exception)
@@ -86,19 +87,22 @@ func NewRoutineService(
 /* ============================== Service Methods for Routine ============================== */
 
 func (s *RoutineService) GetMyRoutineById(
-	ctx context.Context,
-	reqDto *dtos.GetMyRoutineByIdReqDto,
+	ctx context.Context, reqDto *dtos.GetMyRoutineByIdReqDto,
 ) (*dtos.GetMyRoutineByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
-	onlyDeleted := types.Ternary_Negative
-	if reqDto.Param.OnlyDeleted != nil {
-		onlyDeleted = *reqDto.Param.OnlyDeleted
-	}
-
 	db := s.db.WithContext(ctx)
+
+	onlyDeleted := types.Ternary_Neutral
+	if reqDto.Param.IsDeleted != nil {
+		if *reqDto.Param.IsDeleted {
+			onlyDeleted = types.Ternary_Positive
+		} else {
+			onlyDeleted = types.Ternary_Negative
+		}
+	}
 
 	routine, exception := s.routineRepository.GetOneById(
 		reqDto.Param.RoutineId,
@@ -148,9 +152,110 @@ func (s *RoutineService) GetMyRoutineById(
 	}, nil
 }
 
+func (s *RoutineService) GetMyRoutinesByStationId(
+	ctx context.Context, reqDto *dtos.GetMyRoutinesByStationIdReqDto,
+) (*dtos.GetMyRoutinesByStationIdResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+
+	onlyDeleted := types.Ternary_Neutral
+	if reqDto.Param.AreDeleted != nil {
+		if *reqDto.Param.AreDeleted {
+			onlyDeleted = types.Ternary_Positive
+		} else {
+			onlyDeleted = types.Ternary_Negative
+		}
+	}
+
+	var routines []schemas.Routine
+	query := db.Model(&schemas.Routine{}).
+		Select("\"RoutineTable\".*").
+		Joins("INNER JOIN \"UsersToStationsTable\" uts ON uts.station_id = \"RoutineTable\".station_id").
+		Joins("INNER JOIN \"StationTable\" station ON station.id = \"RoutineTable\".station_id AND station.deleted_at IS NULL").
+		Where("\"RoutineTable\".station_id = ?", reqDto.Param.StationId).
+		Where("uts.user_id = ? AND uts.permission IN ?", reqDto.ContextFields.UserId, allowedPermissions).
+		Scopes(s.routineScope.IncludePreloads(
+			[]schemas.RoutineRelation{
+				schemas.RoutineRelation_RoutinesToTags,
+				schemas.RoutineRelation_RoutinesToTasks,
+				schemas.RoutineRelation_RoutinesToItems,
+			},
+		))
+
+	query = query.Scopes(s.routineScope.FilterOnlyDeleted(onlyDeleted))
+
+	result := query.Order("\"RoutineTable\".scheduled_start_at ASC").
+		Order("\"RoutineTable\".scheduled_end_at ASC").
+		Order("\"RoutineTable\".id ASC").
+		Find(&routines)
+	if result.Error != nil {
+		return nil, exceptions.Routine.NotFound().WithOrigin(result.Error)
+	}
+
+	resDto := make(dtos.GetMyRoutinesByStationIdResDto, len(routines))
+	for index, routine := range routines {
+		tagIds := make([]uuid.UUID, len(routine.RoutinesToTags))
+		for index, routineToTag := range routine.RoutinesToTags {
+			tagIds[index] = routineToTag.TagId
+		}
+		taskIds := make([]uuid.UUID, len(routine.RoutinesToTasks))
+		for index, routineToTask := range routine.RoutinesToTasks {
+			taskIds[index] = routineToTask.TaskId
+		}
+		itemIds := make([]uuid.UUID, len(routine.RoutinesToItems))
+		for index, routineToItem := range routine.RoutinesToItems {
+			itemIds[index] = routineToItem.ItemId
+		}
+		resDto[index] = struct {
+			Id               uuid.UUID            "json:\"id\""
+			StationId        uuid.UUID            "json:\"stationId\""
+			Title            string               "json:\"title\""
+			Status           enums.RoutineStatus  "json:\"status\""
+			IsPinned         bool                 "json:\"isPinned\""
+			ScheduledStartAt time.Time            "json:\"scheduledStartAt\""
+			ScheduledEndAt   time.Time            "json:\"scheduledEndAt\""
+			Period           *enums.RoutinePeriod "json:\"period\""
+			Timezone         string               "json:\"timezone\""
+			DeletedAt        *time.Time           "json:\"deletedAt\""
+			UpdatedAt        time.Time            "json:\"updatedAt\""
+			CreatedAt        time.Time            "json:\"createdAt\""
+			TagIds           []uuid.UUID          "json:\"tagIds\""
+			TaskIds          []uuid.UUID          "json:\"taskIds\""
+			ItemIds          []uuid.UUID          "json:\"itemIds\""
+		}{
+			Id:               routine.Id,
+			StationId:        routine.StationId,
+			Title:            routine.Title,
+			Status:           routine.Status,
+			IsPinned:         routine.IsPinned,
+			ScheduledStartAt: routine.ScheduledStartAt,
+			ScheduledEndAt:   routine.ScheduledEndAt,
+			Period:           routine.Period,
+			Timezone:         routine.Timezone,
+			DeletedAt:        routine.DeletedAt,
+			UpdatedAt:        routine.UpdatedAt,
+			CreatedAt:        routine.CreatedAt,
+			TagIds:           tagIds,
+			TaskIds:          taskIds,
+			ItemIds:          itemIds,
+		}
+	}
+
+	return &resDto, nil
+}
+
 func (s *RoutineService) GetAllMyRoutinesByTimeRange(
-	ctx context.Context,
-	reqDto *dtos.GetAllMyRoutinesByTimeRangeReqDto,
+	ctx context.Context, reqDto *dtos.GetAllMyRoutinesByTimeRangeReqDto,
 ) (*dtos.GetAllMyRoutinesByTimeRangeResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
@@ -164,6 +269,15 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 
 	db := s.db.WithContext(ctx)
 
+	onlyDeleted := types.Ternary_Neutral
+	if reqDto.Param.AreDeleted != nil {
+		if *reqDto.Param.AreDeleted {
+			onlyDeleted = types.Ternary_Positive
+		} else {
+			onlyDeleted = types.Ternary_Negative
+		}
+	}
+
 	routines, exception := s.routineRepository.GetAllByTimeRange(
 		reqDto.Param.From,
 		reqDto.Param.To,
@@ -175,7 +289,7 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 			schemas.RoutineRelation_RoutinesToItems,
 		},
 		options.WithDB(db),
-		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithOnlyDeleted(onlyDeleted),
 	)
 	if exception != nil {
 		return nil, exception
@@ -234,8 +348,7 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 }
 
 func (s *RoutineService) CreateRoutineByStationId(
-	ctx context.Context,
-	reqDto *dtos.CreateRoutineByStationIdReqDto,
+	ctx context.Context, reqDto *dtos.CreateRoutineByStationIdReqDto,
 ) (*dtos.CreateRoutineByStationIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
@@ -270,8 +383,7 @@ func (s *RoutineService) CreateRoutineByStationId(
 }
 
 func (s *RoutineService) CreateRoutinesByStationIds(
-	ctx context.Context,
-	reqDto *dtos.CreateRoutinesByStationIdsReqDto,
+	ctx context.Context, reqDto *dtos.CreateRoutinesByStationIdsReqDto,
 ) (*dtos.CreateRoutinesByStationIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
@@ -310,8 +422,7 @@ func (s *RoutineService) CreateRoutinesByStationIds(
 }
 
 func (s *RoutineService) UpdateMyRoutineById(
-	ctx context.Context,
-	reqDto *dtos.UpdateMyRoutineByIdReqDto,
+	ctx context.Context, reqDto *dtos.UpdateMyRoutineByIdReqDto,
 ) (*dtos.UpdateMyRoutineByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
@@ -348,8 +459,7 @@ func (s *RoutineService) UpdateMyRoutineById(
 }
 
 func (s *RoutineService) UpdateMyRoutinesByIds(
-	ctx context.Context,
-	reqDto *dtos.UpdateMyRoutinesByIdsReqDto,
+	ctx context.Context, reqDto *dtos.UpdateMyRoutinesByIdsReqDto,
 ) (*dtos.UpdateMyRoutinesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
@@ -392,20 +502,19 @@ func (s *RoutineService) UpdateMyRoutinesByIds(
 }
 
 func (s *RoutineService) LinkRoutineTagById(
-	ctx context.Context,
-	reqDto *dtos.LinkRoutineTagByIdReqDto,
+	ctx context.Context, reqDto *dtos.LinkRoutineTagByIdReqDto,
 ) (*dtos.LinkRoutineTagByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
+
+	tx := s.db.WithContext(ctx).Begin()
 
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 		enums.AccessControlPermission_Write,
 	}
-
-	tx := s.db.WithContext(ctx).Begin()
 
 	if !s.routineRepository.HasPermission(
 		reqDto.Body.RoutineId,
@@ -461,20 +570,19 @@ func (s *RoutineService) LinkRoutineTagById(
 }
 
 func (s *RoutineService) BulkLinkRoutineTagsByIds(
-	ctx context.Context,
-	reqDto *dtos.BulkLinkRoutineTagsByIdsReqDto,
+	ctx context.Context, reqDto *dtos.BulkLinkRoutineTagsByIdsReqDto,
 ) (*dtos.BulkLinkRoutineTagsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
+
+	tx := s.db.WithContext(ctx).Begin()
 
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 		enums.AccessControlPermission_Write,
 	}
-
-	tx := s.db.WithContext(ctx).Begin()
 
 	isRoutineExist := make(map[uuid.UUID]bool)
 	isRoutineTagExist := make(map[uuid.UUID]bool)
@@ -574,20 +682,19 @@ func (s *RoutineService) BulkLinkRoutineTagsByIds(
 }
 
 func (s *RoutineService) LinkRoutineTaskById(
-	ctx context.Context,
-	reqDto *dtos.LinkRoutineTaskByIdReqDto,
+	ctx context.Context, reqDto *dtos.LinkRoutineTaskByIdReqDto,
 ) (*dtos.LinkRoutineTaskByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
+
+	tx := s.db.WithContext(ctx).Begin()
 
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 		enums.AccessControlPermission_Write,
 	}
-
-	tx := s.db.WithContext(ctx).Begin()
 
 	if !s.routineRepository.HasPermission(
 		reqDto.Body.RoutineId,
@@ -643,20 +750,19 @@ func (s *RoutineService) LinkRoutineTaskById(
 }
 
 func (s *RoutineService) BulkLinkRoutineTasksByIds(
-	ctx context.Context,
-	reqDto *dtos.BulkLinkRoutineTasksByIdsReqDto,
+	ctx context.Context, reqDto *dtos.BulkLinkRoutineTasksByIdsReqDto,
 ) (*dtos.BulkLinkRoutineTasksByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
+
+	tx := s.db.WithContext(ctx).Begin()
 
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 		enums.AccessControlPermission_Write,
 	}
-
-	tx := s.db.WithContext(ctx).Begin()
 
 	isRoutineExist := make(map[uuid.UUID]bool)
 	isRoutineTaskExist := make(map[uuid.UUID]bool)
@@ -756,20 +862,19 @@ func (s *RoutineService) BulkLinkRoutineTasksByIds(
 }
 
 func (s *RoutineService) LinkRoutineItemById(
-	ctx context.Context,
-	reqDto *dtos.LinkRoutineItemByIdReqDto,
+	ctx context.Context, reqDto *dtos.LinkRoutineItemByIdReqDto,
 ) (*dtos.LinkRoutineItemByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
+
+	tx := s.db.WithContext(ctx).Begin()
 
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 		enums.AccessControlPermission_Write,
 	}
-
-	tx := s.db.WithContext(ctx).Begin()
 
 	if !s.routineRepository.HasPermission(
 		reqDto.Body.RoutineId,
@@ -832,20 +937,19 @@ func (s *RoutineService) LinkRoutineItemById(
 }
 
 func (s *RoutineService) BulkLinkRoutineItemsByIds(
-	ctx context.Context,
-	reqDto *dtos.BulkLinkRoutineItemsByIdsReqDto,
+	ctx context.Context, reqDto *dtos.BulkLinkRoutineItemsByIdsReqDto,
 ) (*dtos.BulkLinkRoutineItemsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
+
+	tx := s.db.WithContext(ctx).Begin()
 
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 		enums.AccessControlPermission_Write,
 	}
-
-	tx := s.db.WithContext(ctx).Begin()
 
 	isRoutineExist := make(map[uuid.UUID]bool)
 	isItemExist := make(map[types.Pair[uuid.UUID, enums.ItemType]]bool)
@@ -957,8 +1061,7 @@ func (s *RoutineService) BulkLinkRoutineItemsByIds(
 }
 
 func (s *RoutineService) RestoreMyRoutineById(
-	ctx context.Context,
-	reqDto *dtos.RestoreMyRoutineByIdReqDto,
+	ctx context.Context, reqDto *dtos.RestoreMyRoutineByIdReqDto,
 ) (*dtos.RestoreMyRoutineByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
@@ -993,8 +1096,7 @@ func (s *RoutineService) RestoreMyRoutineById(
 }
 
 func (s *RoutineService) RestoreMyRoutinesByIds(
-	ctx context.Context,
-	reqDto *dtos.RestoreMyRoutinesByIdsReqDto,
+	ctx context.Context, reqDto *dtos.RestoreMyRoutinesByIdsReqDto,
 ) (*dtos.RestoreMyRoutinesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
@@ -1034,8 +1136,7 @@ func (s *RoutineService) RestoreMyRoutinesByIds(
 }
 
 func (s *RoutineService) DeleteMyRoutineById(
-	ctx context.Context,
-	reqDto *dtos.DeleteMyRoutineByIdReqDto,
+	ctx context.Context, reqDto *dtos.DeleteMyRoutineByIdReqDto,
 ) (*dtos.DeleteMyRoutineByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
@@ -1058,8 +1159,7 @@ func (s *RoutineService) DeleteMyRoutineById(
 }
 
 func (s *RoutineService) DeleteMyRoutinesByIds(
-	ctx context.Context,
-	reqDto *dtos.DeleteMyRoutinesByIdsReqDto,
+	ctx context.Context, reqDto *dtos.DeleteMyRoutinesByIdsReqDto,
 ) (*dtos.DeleteMyRoutinesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
@@ -1082,8 +1182,7 @@ func (s *RoutineService) DeleteMyRoutinesByIds(
 }
 
 func (s *RoutineService) HardDeleteMyRoutineById(
-	ctx context.Context,
-	reqDto *dtos.HardDeleteMyRoutineByIdReqDto,
+	ctx context.Context, reqDto *dtos.HardDeleteMyRoutineByIdReqDto,
 ) (*dtos.HardDeleteMyRoutineByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
@@ -1106,8 +1205,7 @@ func (s *RoutineService) HardDeleteMyRoutineById(
 }
 
 func (s *RoutineService) HardDeleteMyRoutinesByIds(
-	ctx context.Context,
-	reqDto *dtos.HardDeleteMyRoutinesByIdsReqDto,
+	ctx context.Context, reqDto *dtos.HardDeleteMyRoutinesByIdsReqDto,
 ) (*dtos.HardDeleteMyRoutinesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
@@ -1139,15 +1237,15 @@ func (s *RoutineService) SearchPrivateRoutines(
 		Permission enums.AccessControlPermission `gorm:"column:permission"`
 	}
 
+	startTime := time.Now()
+	db := s.db.WithContext(ctx)
+
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 		enums.AccessControlPermission_Write,
 		enums.AccessControlPermission_Read,
 	}
-	startTime := time.Now()
-
-	db := s.db.WithContext(ctx)
 
 	query := db.Model(&schemas.Routine{}).
 		Select("\"RoutineTable\".*, uts.permission AS permission").

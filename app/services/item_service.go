@@ -46,15 +46,15 @@ func (s *ItemService) SearchPrivateItems(
 		Permission enums.AccessControlPermission `gorm:"column:permission"`
 	}
 
+	startTime := time.Now()
+	db := s.db.WithContext(ctx)
+
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 		enums.AccessControlPermission_Write,
 		enums.AccessControlPermission_Read,
 	}
-	startTime := time.Now()
-
-	db := s.db.WithContext(ctx)
 
 	query := db.Model(&schemas.Item{}).
 		Select("\"ItemTable\".*, uts.permission AS permission").

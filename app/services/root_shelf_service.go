@@ -68,12 +68,21 @@ func (s *RootShelfService) GetMyRootShelfById(
 
 	db := s.db.WithContext(ctx)
 
+	onlyDeleted := types.Ternary_Neutral
+	if reqDto.Param.IsDeleted != nil {
+		if *reqDto.Param.IsDeleted {
+			onlyDeleted = types.Ternary_Positive
+		} else {
+			onlyDeleted = types.Ternary_Negative
+		}
+	}
+
 	shelf, permission, exception := s.rootShelfRepository.GetOneById(
 		reqDto.Param.RootShelfId,
 		reqDto.ContextFields.UserId,
 		nil,
 		options.WithDB(db),
-		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithOnlyDeleted(onlyDeleted),
 	)
 	if exception != nil {
 		return nil, exception

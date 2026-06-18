@@ -2,6 +2,7 @@ package binders
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -49,6 +50,16 @@ func (b *BlockPackBinder) BindGetMyBlockPackById(controllerFunc types.Controller
 		}
 		reqDto.ContextFields.UserId = *userId
 
+		isDeletedString := ctx.Query("isDeleted")
+		if isDeletedString != "" {
+			isDeleted, err := strconv.ParseBool(isDeletedString)
+			if err != nil {
+				exceptions.BlockPack.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.IsDeleted = &isDeleted
+		}
+
 		blockPackIdString := ctx.Query("blockPackId")
 		if blockPackIdString == "" {
 			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("blockPackId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
@@ -77,6 +88,16 @@ func (b *BlockPackBinder) BindGetMyBlockPackAndItsParentById(controllerFunc type
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
+
+		isDeletedString := ctx.Query("isDeleted")
+		if isDeletedString != "" {
+			isDeleted, err := strconv.ParseBool(isDeletedString)
+			if err != nil {
+				exceptions.BlockPack.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.IsDeleted = &isDeleted
+		}
 
 		blockPackIdString := ctx.Query("blockPackId")
 		if blockPackIdString == "" {
@@ -107,6 +128,16 @@ func (b *BlockPackBinder) BindGetMyBlockPacksByParentSubShelfId(controllerFunc t
 		}
 		reqDto.ContextFields.UserId = *userId
 
+		areDeletedString := ctx.Query("areDeleted")
+		if areDeletedString != "" {
+			areDeleted, err := strconv.ParseBool(areDeletedString)
+			if err != nil {
+				exceptions.BlockPack.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.AreDeleted = &areDeleted
+		}
+
 		parentSubShelfIdString := ctx.Query("parentSubShelfId")
 		if parentSubShelfIdString == "" {
 			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("parentSubShelfId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
@@ -135,6 +166,16 @@ func (b *BlockPackBinder) BindGetAllMyBlockPacksByRootShelfId(controllerFunc typ
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
+
+		areDeletedString := ctx.Query("areDeleted")
+		if areDeletedString != "" {
+			areDeleted, err := strconv.ParseBool(areDeletedString)
+			if err != nil {
+				exceptions.BlockPack.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+				return
+			}
+			reqDto.Param.AreDeleted = &areDeleted
+		}
 
 		rootShelfIdString := ctx.Query("rootShelfId")
 		if rootShelfIdString == "" {
