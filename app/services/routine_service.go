@@ -195,11 +195,26 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 		for index, routineToItem := range routine.RoutinesToItems {
 			itemIds[index] = routineToItem.ItemId
 		}
-		resDto[index] = dtos.GetMyRoutineByIdResDto{
+		resDto[index] = struct {
+			Id               uuid.UUID            "json:\"id\""
+			StationId        uuid.UUID            "json:\"stationId\""
+			Title            string               "json:\"title\""
+			Status           enums.RoutineStatus  "json:\"status\""
+			IsPinned         bool                 "json:\"isPinned\""
+			ScheduledStartAt time.Time            "json:\"scheduledStartAt\""
+			ScheduledEndAt   time.Time            "json:\"scheduledEndAt\""
+			Period           *enums.RoutinePeriod "json:\"period\""
+			Timezone         string               "json:\"timezone\""
+			DeletedAt        *time.Time           "json:\"deletedAt\""
+			UpdatedAt        time.Time            "json:\"updatedAt\""
+			CreatedAt        time.Time            "json:\"createdAt\""
+			TagIds           []uuid.UUID          "json:\"tagIds\""
+			TaskIds          []uuid.UUID          "json:\"taskIds\""
+			ItemIds          []uuid.UUID          "json:\"itemIds\""
+		}{
 			Id:               routine.Id,
 			StationId:        routine.StationId,
 			Title:            routine.Title,
-			Description:      routine.Description,
 			Status:           routine.Status,
 			IsPinned:         routine.IsPinned,
 			ScheduledStartAt: routine.ScheduledStartAt,
@@ -1140,35 +1155,31 @@ func (s *RoutineService) SearchPrivateRoutines(
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
 		Where("\"RoutineTable\".deleted_at IS NULL")
 
-	if gqlInput.StationID != nil {
+	if len(gqlInput.StationIds) > 0 {
 		query = query.Where(
-			"\"RoutineTable\".station_id = ?",
-			*gqlInput.StationID,
+			"\"RoutineTable\".station_id IN ?",
+			gqlInput.StationIds,
 		)
 	}
 
-	if gqlInput.TagID != nil {
-		if !s.routineTagRepository.HasPermission(
-			*gqlInput.TagID,
+	if len(gqlInput.TagIds) > 0 {
+		if !s.routineTagRepository.HavePermissions(
+			gqlInput.TagIds,
 			userId,
 			allowedPermissions,
 			options.WithDB(db),
 		) {
-			return nil, exceptions.RoutineTag.NoPermission("filter routines by this tag")
+			return nil, exceptions.RoutineTag.NoPermission("filter routines by these tags")
 		}
 
 		subQuery := db.
 			Session(&gorm.Session{NewDB: true}).
 			Model(&schemas.RoutinesToTags{}).
-			Select("routine_id").
-			Where(&schemas.RoutinesToTags{
-				TagId: *gqlInput.TagID,
-			})
+			Select("1").
+			Where("\"RoutinesToTagsTable\".routine_id = \"RoutineTable\".id").
+			Where("\"RoutinesToTagsTable\".tag_id IN ?", gqlInput.TagIds)
 
-		query = query.Where(
-			"\"RoutineTable\".id IN (?)",
-			subQuery,
-		)
+		query = query.Where("EXISTS (?)", subQuery)
 	}
 
 	if len(strings.ReplaceAll(gqlInput.Query, " ", "")) > 0 {
@@ -1270,7 +1281,7 @@ func (s *RoutineService) SearchPrivateRoutines(
 			return nil, exceptions.Search.FailedToUnmarshalSearchCursor()
 		}
 
-		finalRoutine := routine.Routine.ToPrivateRoutine()
+		finalRoutine := routine.Routine.ToPrivateSearchableRoutine()
 		for _, routineToTag := range routine.Routine.RoutinesToTags {
 			finalRoutine.TagIds = append(finalRoutine.TagIds, routineToTag.TagId)
 		}

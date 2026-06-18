@@ -76,7 +76,7 @@ type CreateStationsReqDto struct {
 				Description         string               `json:"description" validate:"max=1024"`
 				Icon                *enums.SupportedIcon `json:"icon" validate:"omitnil,issupportedicon"`
 				HeaderBackgroundURL *string              `json:"headerBackgroundURL" validate:"omitnil,isimageurl"`
-			} `json:"createdStations" validate:"required,min=1,max=1024"`
+			} `json:"createdStations" validate:"required,min=1,max=200"`
 		},
 		any,
 	]
@@ -231,7 +231,17 @@ type GetMyStationByIdResDto struct {
 	CreatedAt           time.Time                     `json:"createdAt"`
 }
 
-type GetAllMyStationsResDto = []GetMyStationByIdResDto
+type GetAllMyStationsResDto = []struct {
+	Id                  uuid.UUID                     `json:"id"`
+	Name                string                        `json:"name"`
+	Icon                *enums.SupportedIcon          `json:"icon"`
+	HeaderBackgroundURL *string                       `json:"headerBackgroundURL"`
+	Permission          enums.AccessControlPermission `json:"permission"`
+	RoutineCount        int32                         `json:"routineCount"`
+	DeletedAt           *time.Time                    `json:"deletedAt"`
+	UpdatedAt           time.Time                     `json:"updatedAt"`
+	CreatedAt           time.Time                     `json:"createdAt"`
+}
 
 type CreateStationResDto struct {
 	Id        uuid.UUID `json:"id"`

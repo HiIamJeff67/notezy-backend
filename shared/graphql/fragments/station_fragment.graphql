@@ -13,13 +13,20 @@ fragment FragmentedBasicPrivateStation on PrivateStation {
 
 fragment FragmentedPrivateStation on PrivateStation {
   ...FragmentedBasicPrivateStation
-  owner {
-    ...FragmentedBasicPublicUser
-  }
-  sharers {
-    ...FragmentedBasicPublicUser
-  }
-  routines {
-    ...FragmentedBasicPrivateRoutine
-  }
+}
+
+fragment FragmentedBasicPrivateSearchableStation on PrivateSearchableStation {
+  id
+  permission
+  name
+  icon
+  headerBackgroundURL
+  routineCount
+  deletedAt
+  updatedAt
+  createdAt
+}
+
+fragment FragmentedPrivateSearchableStation on PrivateSearchableStation {
+  ...FragmentedBasicPrivateSearchableStation
 }

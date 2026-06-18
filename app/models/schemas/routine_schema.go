@@ -69,3 +69,23 @@ func (r *Routine) ToPrivateRoutine() *gqlmodels.PrivateRoutine {
 		ItemIds:          make([]uuid.UUID, 0),
 	}
 }
+
+func (r *Routine) ToPrivateSearchableRoutine() *gqlmodels.PrivateSearchableRoutine {
+	return &gqlmodels.PrivateSearchableRoutine{
+		ID:               r.Id,
+		StationID:        r.StationId,
+		Title:            r.Title,
+		Status:           r.Status,
+		IsPinned:         r.IsPinned,
+		ScheduledStartAt: r.ScheduledStartAt,
+		ScheduledEndAt:   r.ScheduledEndAt,
+		Period:           r.Period,
+		Timezone:         r.Timezone,
+		DeletedAt:        r.DeletedAt,
+		UpdatedAt:        r.UpdatedAt,
+		CreatedAt:        r.CreatedAt,
+		TagIds:           make([]uuid.UUID, 0),
+		TaskIds:          make([]uuid.UUID, 0),
+		ItemIds:          make([]uuid.UUID, 0),
+	}
+}

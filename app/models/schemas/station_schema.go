@@ -58,8 +58,19 @@ func (s *Station) ToPrivateStation(permission enums.AccessControlPermission) *gq
 		DeletedAt:           s.DeletedAt,
 		UpdatedAt:           s.UpdatedAt,
 		CreatedAt:           s.CreatedAt,
-		Owner:               &gqlmodels.PublicUser{},
-		Sharers:             make([]*gqlmodels.PublicUser, 0),
-		Routines:            make([]*gqlmodels.PrivateRoutine, 0),
+	}
+}
+
+func (s *Station) ToPrivateSearchableStation(permission enums.AccessControlPermission) *gqlmodels.PrivateSearchableStation {
+	return &gqlmodels.PrivateSearchableStation{
+		ID:                  s.Id,
+		Permission:          permission,
+		Name:                s.Name,
+		Icon:                s.Icon,
+		HeaderBackgroundURL: s.HeaderBackgroundURL,
+		RoutineCount:        s.RoutineCount,
+		DeletedAt:           s.DeletedAt,
+		UpdatedAt:           s.UpdatedAt,
+		CreatedAt:           s.CreatedAt,
 	}
 }

@@ -291,9 +291,9 @@ func (ec *executionContext) _SearchRoutineEdge_node(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*gqlmodels.PrivateRoutine)
+	res := resTmp.(*gqlmodels.PrivateSearchableRoutine)
 	fc.Result = res
-	return ec.marshalNPrivateRoutine2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateRoutine(ctx, field.Selections, res)
+	return ec.marshalNPrivateSearchableRoutine2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateSearchableRoutine(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SearchRoutineEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -305,39 +305,37 @@ func (ec *executionContext) fieldContext_SearchRoutineEdge_node(_ context.Contex
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_PrivateRoutine_id(ctx, field)
+				return ec.fieldContext_PrivateSearchableRoutine_id(ctx, field)
 			case "stationId":
-				return ec.fieldContext_PrivateRoutine_stationId(ctx, field)
+				return ec.fieldContext_PrivateSearchableRoutine_stationId(ctx, field)
 			case "title":
-				return ec.fieldContext_PrivateRoutine_title(ctx, field)
-			case "description":
-				return ec.fieldContext_PrivateRoutine_description(ctx, field)
+				return ec.fieldContext_PrivateSearchableRoutine_title(ctx, field)
 			case "status":
-				return ec.fieldContext_PrivateRoutine_status(ctx, field)
+				return ec.fieldContext_PrivateSearchableRoutine_status(ctx, field)
 			case "isPinned":
-				return ec.fieldContext_PrivateRoutine_isPinned(ctx, field)
+				return ec.fieldContext_PrivateSearchableRoutine_isPinned(ctx, field)
 			case "scheduledStartAt":
-				return ec.fieldContext_PrivateRoutine_scheduledStartAt(ctx, field)
+				return ec.fieldContext_PrivateSearchableRoutine_scheduledStartAt(ctx, field)
 			case "scheduledEndAt":
-				return ec.fieldContext_PrivateRoutine_scheduledEndAt(ctx, field)
+				return ec.fieldContext_PrivateSearchableRoutine_scheduledEndAt(ctx, field)
 			case "period":
-				return ec.fieldContext_PrivateRoutine_period(ctx, field)
+				return ec.fieldContext_PrivateSearchableRoutine_period(ctx, field)
 			case "timezone":
-				return ec.fieldContext_PrivateRoutine_timezone(ctx, field)
+				return ec.fieldContext_PrivateSearchableRoutine_timezone(ctx, field)
 			case "deletedAt":
-				return ec.fieldContext_PrivateRoutine_deletedAt(ctx, field)
+				return ec.fieldContext_PrivateSearchableRoutine_deletedAt(ctx, field)
 			case "updatedAt":
-				return ec.fieldContext_PrivateRoutine_updatedAt(ctx, field)
+				return ec.fieldContext_PrivateSearchableRoutine_updatedAt(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_PrivateRoutine_createdAt(ctx, field)
+				return ec.fieldContext_PrivateSearchableRoutine_createdAt(ctx, field)
 			case "tagIds":
-				return ec.fieldContext_PrivateRoutine_tagIds(ctx, field)
+				return ec.fieldContext_PrivateSearchableRoutine_tagIds(ctx, field)
 			case "taskIds":
-				return ec.fieldContext_PrivateRoutine_taskIds(ctx, field)
+				return ec.fieldContext_PrivateSearchableRoutine_taskIds(ctx, field)
 			case "itemIds":
-				return ec.fieldContext_PrivateRoutine_itemIds(ctx, field)
+				return ec.fieldContext_PrivateSearchableRoutine_itemIds(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type PrivateRoutine", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type PrivateSearchableRoutine", field.Name)
 		},
 	}
 	return fc, nil
@@ -391,27 +389,27 @@ func (ec *executionContext) unmarshalInputSearchRoutineInput(ctx context.Context
 		asMap["sortOrder"] = "DESC"
 	}
 
-	fieldsInOrder := [...]string{"stationId", "tagId", "query", "after", "first", "sortBy", "sortOrder"}
+	fieldsInOrder := [...]string{"stationIds", "tagIds", "query", "after", "first", "sortBy", "sortOrder"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "stationId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stationId"))
-			data, err := ec.unmarshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+		case "stationIds":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stationIds"))
+			data, err := ec.unmarshalNUUID2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.StationID = data
-		case "tagId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagId"))
-			data, err := ec.unmarshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			it.StationIds = data
+		case "tagIds":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagIds"))
+			data, err := ec.unmarshalNUUID2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.TagID = data
+			it.TagIds = data
 		case "query":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
 			data, err := ec.unmarshalNString2string(ctx, v)

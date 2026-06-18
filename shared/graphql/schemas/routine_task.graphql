@@ -13,8 +13,4 @@ type PrivateRoutineTask {
   actualEndedAt: Time
   updatedAt: Time!
   createdAt: Time!
-
-  # relations
-  station: PrivateStation!
-  routines: [PrivateRoutine!]!
 }

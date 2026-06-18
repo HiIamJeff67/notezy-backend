@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strconv"
 	"sync/atomic"
 	"time"
@@ -642,156 +641,6 @@ func (ec *executionContext) fieldContext_PrivateRoutineTask_createdAt(_ context.
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateRoutineTask_station(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRoutineTask) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateRoutineTask_station(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Station, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*gqlmodels.PrivateStation)
-	fc.Result = res
-	return ec.marshalNPrivateStation2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateStation(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PrivateRoutineTask_station(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PrivateRoutineTask",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_PrivateStation_id(ctx, field)
-			case "permission":
-				return ec.fieldContext_PrivateStation_permission(ctx, field)
-			case "name":
-				return ec.fieldContext_PrivateStation_name(ctx, field)
-			case "description":
-				return ec.fieldContext_PrivateStation_description(ctx, field)
-			case "icon":
-				return ec.fieldContext_PrivateStation_icon(ctx, field)
-			case "headerBackgroundURL":
-				return ec.fieldContext_PrivateStation_headerBackgroundURL(ctx, field)
-			case "routineCount":
-				return ec.fieldContext_PrivateStation_routineCount(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_PrivateStation_deletedAt(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_PrivateStation_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_PrivateStation_updatedAt(ctx, field)
-			case "owner":
-				return ec.fieldContext_PrivateStation_owner(ctx, field)
-			case "sharers":
-				return ec.fieldContext_PrivateStation_sharers(ctx, field)
-			case "routines":
-				return ec.fieldContext_PrivateStation_routines(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PrivateStation", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _PrivateRoutineTask_routines(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRoutineTask) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateRoutineTask_routines(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Routines, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*gqlmodels.PrivateRoutine)
-	fc.Result = res
-	return ec.marshalNPrivateRoutine2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateRoutineᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PrivateRoutineTask_routines(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PrivateRoutineTask",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_PrivateRoutine_id(ctx, field)
-			case "stationId":
-				return ec.fieldContext_PrivateRoutine_stationId(ctx, field)
-			case "title":
-				return ec.fieldContext_PrivateRoutine_title(ctx, field)
-			case "description":
-				return ec.fieldContext_PrivateRoutine_description(ctx, field)
-			case "status":
-				return ec.fieldContext_PrivateRoutine_status(ctx, field)
-			case "isPinned":
-				return ec.fieldContext_PrivateRoutine_isPinned(ctx, field)
-			case "scheduledStartAt":
-				return ec.fieldContext_PrivateRoutine_scheduledStartAt(ctx, field)
-			case "scheduledEndAt":
-				return ec.fieldContext_PrivateRoutine_scheduledEndAt(ctx, field)
-			case "period":
-				return ec.fieldContext_PrivateRoutine_period(ctx, field)
-			case "timezone":
-				return ec.fieldContext_PrivateRoutine_timezone(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_PrivateRoutine_deletedAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_PrivateRoutine_updatedAt(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_PrivateRoutine_createdAt(ctx, field)
-			case "tagIds":
-				return ec.fieldContext_PrivateRoutine_tagIds(ctx, field)
-			case "taskIds":
-				return ec.fieldContext_PrivateRoutine_taskIds(ctx, field)
-			case "itemIds":
-				return ec.fieldContext_PrivateRoutine_itemIds(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PrivateRoutine", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 // endregion **************************** field.gotpl *****************************
 
 // region    **************************** input.gotpl *****************************
@@ -876,16 +725,6 @@ func (ec *executionContext) _PrivateRoutineTask(ctx context.Context, sel ast.Sel
 			}
 		case "createdAt":
 			out.Values[i] = ec._PrivateRoutineTask_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "station":
-			out.Values[i] = ec._PrivateRoutineTask_station(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "routines":
-			out.Values[i] = ec._PrivateRoutineTask_routines(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

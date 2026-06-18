@@ -146,7 +146,21 @@ type GetMyRoutineTaskByIdResDto struct {
 	CreatedAt       time.Time                `json:"createdAt"`
 }
 
-type GetAllMyRoutineTasksByStationIdsResDto = []GetMyRoutineTaskByIdResDto
+type GetAllMyRoutineTasksByStationIdsResDto = []struct {
+	Id              uuid.UUID                `json:"id"`
+	StationId       uuid.UUID                `json:"stationId"`
+	Title           string                   `json:"title"`
+	Purpose         enums.RoutineTaskPurpose `json:"purpose"`
+	Priority        int32                    `json:"priority"`
+	Status          enums.RoutineTaskStatus  `json:"status"`
+	Attempts        int32                    `json:"attempts"`
+	MaxAttempts     int32                    `json:"maxAttempts"`
+	ScheduledAt     time.Time                `json:"scheduledAt"`
+	ActualStartedAt *time.Time               `json:"actualStartedAt"`
+	ActualEndedAt   *time.Time               `json:"actualEndedAt"`
+	UpdatedAt       time.Time                `json:"updatedAt"`
+	CreatedAt       time.Time                `json:"createdAt"`
+}
 
 type GetAllMyRoutineTasksResDto = []GetMyRoutineTaskByIdResDto
 

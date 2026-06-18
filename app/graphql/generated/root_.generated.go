@@ -107,9 +107,6 @@ type ComplexityRoot struct {
 		ID        func(childComplexity int) int
 		Icon      func(childComplexity int) int
 		Name      func(childComplexity int) int
-		Owner     func(childComplexity int) int
-		Routines  func(childComplexity int) int
-		Sharers   func(childComplexity int) int
 		UpdatedAt func(childComplexity int) int
 	}
 
@@ -123,13 +120,41 @@ type ComplexityRoot struct {
 		Payload         func(childComplexity int) int
 		Priority        func(childComplexity int) int
 		Purpose         func(childComplexity int) int
-		Routines        func(childComplexity int) int
 		ScheduledAt     func(childComplexity int) int
-		Station         func(childComplexity int) int
 		StationID       func(childComplexity int) int
 		Status          func(childComplexity int) int
 		Title           func(childComplexity int) int
 		UpdatedAt       func(childComplexity int) int
+	}
+
+	PrivateSearchableRoutine struct {
+		CreatedAt        func(childComplexity int) int
+		DeletedAt        func(childComplexity int) int
+		ID               func(childComplexity int) int
+		IsPinned         func(childComplexity int) int
+		ItemIds          func(childComplexity int) int
+		Period           func(childComplexity int) int
+		ScheduledEndAt   func(childComplexity int) int
+		ScheduledStartAt func(childComplexity int) int
+		StationID        func(childComplexity int) int
+		Status           func(childComplexity int) int
+		TagIds           func(childComplexity int) int
+		TaskIds          func(childComplexity int) int
+		Timezone         func(childComplexity int) int
+		Title            func(childComplexity int) int
+		UpdatedAt        func(childComplexity int) int
+	}
+
+	PrivateSearchableStation struct {
+		CreatedAt           func(childComplexity int) int
+		DeletedAt           func(childComplexity int) int
+		HeaderBackgroundURL func(childComplexity int) int
+		ID                  func(childComplexity int) int
+		Icon                func(childComplexity int) int
+		Name                func(childComplexity int) int
+		Permission          func(childComplexity int) int
+		RoutineCount        func(childComplexity int) int
+		UpdatedAt           func(childComplexity int) int
 	}
 
 	PrivateStation struct {
@@ -140,11 +165,8 @@ type ComplexityRoot struct {
 		ID                  func(childComplexity int) int
 		Icon                func(childComplexity int) int
 		Name                func(childComplexity int) int
-		Owner               func(childComplexity int) int
 		Permission          func(childComplexity int) int
 		RoutineCount        func(childComplexity int) int
-		Routines            func(childComplexity int) int
-		Sharers             func(childComplexity int) int
 		UpdatedAt           func(childComplexity int) int
 	}
 
@@ -733,27 +755,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateRoutineTag.Name(childComplexity), true
 
-	case "PrivateRoutineTag.owner":
-		if e.complexity.PrivateRoutineTag.Owner == nil {
-			break
-		}
-
-		return e.complexity.PrivateRoutineTag.Owner(childComplexity), true
-
-	case "PrivateRoutineTag.routines":
-		if e.complexity.PrivateRoutineTag.Routines == nil {
-			break
-		}
-
-		return e.complexity.PrivateRoutineTag.Routines(childComplexity), true
-
-	case "PrivateRoutineTag.sharers":
-		if e.complexity.PrivateRoutineTag.Sharers == nil {
-			break
-		}
-
-		return e.complexity.PrivateRoutineTag.Sharers(childComplexity), true
-
 	case "PrivateRoutineTag.updatedAt":
 		if e.complexity.PrivateRoutineTag.UpdatedAt == nil {
 			break
@@ -824,26 +825,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateRoutineTask.Purpose(childComplexity), true
 
-	case "PrivateRoutineTask.routines":
-		if e.complexity.PrivateRoutineTask.Routines == nil {
-			break
-		}
-
-		return e.complexity.PrivateRoutineTask.Routines(childComplexity), true
-
 	case "PrivateRoutineTask.scheduledAt":
 		if e.complexity.PrivateRoutineTask.ScheduledAt == nil {
 			break
 		}
 
 		return e.complexity.PrivateRoutineTask.ScheduledAt(childComplexity), true
-
-	case "PrivateRoutineTask.station":
-		if e.complexity.PrivateRoutineTask.Station == nil {
-			break
-		}
-
-		return e.complexity.PrivateRoutineTask.Station(childComplexity), true
 
 	case "PrivateRoutineTask.stationId":
 		if e.complexity.PrivateRoutineTask.StationID == nil {
@@ -872,6 +859,174 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateRoutineTask.UpdatedAt(childComplexity), true
+
+	case "PrivateSearchableRoutine.createdAt":
+		if e.complexity.PrivateSearchableRoutine.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableRoutine.CreatedAt(childComplexity), true
+
+	case "PrivateSearchableRoutine.deletedAt":
+		if e.complexity.PrivateSearchableRoutine.DeletedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableRoutine.DeletedAt(childComplexity), true
+
+	case "PrivateSearchableRoutine.id":
+		if e.complexity.PrivateSearchableRoutine.ID == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableRoutine.ID(childComplexity), true
+
+	case "PrivateSearchableRoutine.isPinned":
+		if e.complexity.PrivateSearchableRoutine.IsPinned == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableRoutine.IsPinned(childComplexity), true
+
+	case "PrivateSearchableRoutine.itemIds":
+		if e.complexity.PrivateSearchableRoutine.ItemIds == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableRoutine.ItemIds(childComplexity), true
+
+	case "PrivateSearchableRoutine.period":
+		if e.complexity.PrivateSearchableRoutine.Period == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableRoutine.Period(childComplexity), true
+
+	case "PrivateSearchableRoutine.scheduledEndAt":
+		if e.complexity.PrivateSearchableRoutine.ScheduledEndAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableRoutine.ScheduledEndAt(childComplexity), true
+
+	case "PrivateSearchableRoutine.scheduledStartAt":
+		if e.complexity.PrivateSearchableRoutine.ScheduledStartAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableRoutine.ScheduledStartAt(childComplexity), true
+
+	case "PrivateSearchableRoutine.stationId":
+		if e.complexity.PrivateSearchableRoutine.StationID == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableRoutine.StationID(childComplexity), true
+
+	case "PrivateSearchableRoutine.status":
+		if e.complexity.PrivateSearchableRoutine.Status == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableRoutine.Status(childComplexity), true
+
+	case "PrivateSearchableRoutine.tagIds":
+		if e.complexity.PrivateSearchableRoutine.TagIds == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableRoutine.TagIds(childComplexity), true
+
+	case "PrivateSearchableRoutine.taskIds":
+		if e.complexity.PrivateSearchableRoutine.TaskIds == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableRoutine.TaskIds(childComplexity), true
+
+	case "PrivateSearchableRoutine.timezone":
+		if e.complexity.PrivateSearchableRoutine.Timezone == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableRoutine.Timezone(childComplexity), true
+
+	case "PrivateSearchableRoutine.title":
+		if e.complexity.PrivateSearchableRoutine.Title == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableRoutine.Title(childComplexity), true
+
+	case "PrivateSearchableRoutine.updatedAt":
+		if e.complexity.PrivateSearchableRoutine.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableRoutine.UpdatedAt(childComplexity), true
+
+	case "PrivateSearchableStation.createdAt":
+		if e.complexity.PrivateSearchableStation.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableStation.CreatedAt(childComplexity), true
+
+	case "PrivateSearchableStation.deletedAt":
+		if e.complexity.PrivateSearchableStation.DeletedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableStation.DeletedAt(childComplexity), true
+
+	case "PrivateSearchableStation.headerBackgroundURL":
+		if e.complexity.PrivateSearchableStation.HeaderBackgroundURL == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableStation.HeaderBackgroundURL(childComplexity), true
+
+	case "PrivateSearchableStation.id":
+		if e.complexity.PrivateSearchableStation.ID == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableStation.ID(childComplexity), true
+
+	case "PrivateSearchableStation.icon":
+		if e.complexity.PrivateSearchableStation.Icon == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableStation.Icon(childComplexity), true
+
+	case "PrivateSearchableStation.name":
+		if e.complexity.PrivateSearchableStation.Name == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableStation.Name(childComplexity), true
+
+	case "PrivateSearchableStation.permission":
+		if e.complexity.PrivateSearchableStation.Permission == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableStation.Permission(childComplexity), true
+
+	case "PrivateSearchableStation.routineCount":
+		if e.complexity.PrivateSearchableStation.RoutineCount == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableStation.RoutineCount(childComplexity), true
+
+	case "PrivateSearchableStation.updatedAt":
+		if e.complexity.PrivateSearchableStation.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableStation.UpdatedAt(childComplexity), true
 
 	case "PrivateStation.createdAt":
 		if e.complexity.PrivateStation.CreatedAt == nil {
@@ -922,13 +1077,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateStation.Name(childComplexity), true
 
-	case "PrivateStation.owner":
-		if e.complexity.PrivateStation.Owner == nil {
-			break
-		}
-
-		return e.complexity.PrivateStation.Owner(childComplexity), true
-
 	case "PrivateStation.permission":
 		if e.complexity.PrivateStation.Permission == nil {
 			break
@@ -942,20 +1090,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateStation.RoutineCount(childComplexity), true
-
-	case "PrivateStation.routines":
-		if e.complexity.PrivateStation.Routines == nil {
-			break
-		}
-
-		return e.complexity.PrivateStation.Routines(childComplexity), true
-
-	case "PrivateStation.sharers":
-		if e.complexity.PrivateStation.Sharers == nil {
-			break
-		}
-
-		return e.complexity.PrivateStation.Sharers(childComplexity), true
 
 	case "PrivateStation.updatedAt":
 		if e.complexity.PrivateStation.UpdatedAt == nil {
@@ -2191,7 +2325,26 @@ interface SearchConnection {
   taskIds: [UUID!]!
   itemIds: [UUID!]!
 }
-`, BuiltIn: false},
+
+type PrivateSearchableRoutine {
+  id: UUID!
+  stationId: UUID!
+  title: String!
+  status: RoutineStatus!
+  isPinned: Boolean!
+  scheduledStartAt: Time!
+  scheduledEndAt: Time!
+  period: RoutinePeriod
+  timezone: String!
+  deletedAt: Time
+  updatedAt: Time!
+  createdAt: Time!
+
+  # relations
+  tagIds: [UUID!]!
+  taskIds: [UUID!]!
+  itemIds: [UUID!]! 
+}`, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/routine_tag.graphql", Input: `type PrivateRoutineTag {
   id: UUID!
   name: String!
@@ -2199,11 +2352,6 @@ interface SearchConnection {
   icon: SupportedIcon
   updatedAt: Time!
   createdAt: Time!
-
-  # relations
-  owner: PublicUser!
-  sharers: [PublicUser!]!
-  routines: [PrivateRoutine!]!
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/routine_task.graphql", Input: `type PrivateRoutineTask {
@@ -2221,10 +2369,6 @@ interface SearchConnection {
   actualEndedAt: Time
   updatedAt: Time!
   createdAt: Time!
-
-  # relations
-  station: PrivateStation!
-  routines: [PrivateRoutine!]!
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/scalar.graphql", Input: `scalar Int32
@@ -2455,8 +2599,8 @@ enum SearchRoutineSortBy {
 }
 
 input SearchRoutineInput {
-  stationId: UUID
-  tagId: UUID
+  stationIds: [UUID!]!
+  tagIds: [UUID!]!
   query: String!
   after: String
   first: Int = 10
@@ -2474,7 +2618,7 @@ input SearchRoutineCursorFields {
 
 type SearchRoutineEdge implements SearchEdge {
   encodedSearchCursor: String!
-  node: PrivateRoutine!
+  node: PrivateSearchableRoutine!
 }
 
 type SearchRoutineConnection implements SearchConnection {
@@ -2512,7 +2656,7 @@ input SearchStationCursorFields {
 
 type SearchStationEdge implements SearchEdge {
   encodedSearchCursor: String!
-  node: PrivateStation!
+  node: PrivateSearchableStation!
 }
 
 type SearchStationConnection implements SearchConnection {
@@ -2633,13 +2777,19 @@ type SearchUserConnection implements SearchConnection {
   deletedAt: Time
   createdAt: Time!
   updatedAt: Time!
-
-  # relations
-  owner: PublicUser!
-  sharers: [PublicUser!]!
-  routines: [PrivateRoutine!]!
 }
-`, BuiltIn: false},
+
+type PrivateSearchableStation {
+  id: UUID!
+  permission: AccessControlPermission!
+  name: String!
+  icon: SupportedIcon
+  headerBackgroundURL: String
+  routineCount: Int32!
+  deletedAt: Time
+  createdAt: Time!
+  updatedAt: Time!
+}`, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/sub_shelf.graphql", Input: `type PrivateSubShelf {
   id: UUID!
   name: String!

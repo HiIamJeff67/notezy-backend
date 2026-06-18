@@ -3,7 +3,6 @@ fragment FragmentedBasicPrivateRoutineTask on PrivateRoutineTask {
   stationId
   title
   purpose
-  payload
   priority
   status
   attempts
@@ -17,10 +16,4 @@ fragment FragmentedBasicPrivateRoutineTask on PrivateRoutineTask {
 
 fragment FragmentedPrivateRoutineTask on PrivateRoutineTask {
   ...FragmentedBasicPrivateRoutineTask
-  station {
-    ...FragmentedBasicPrivateStation
-  }
-  routines {
-    ...FragmentedBasicPrivateRoutine
-  }
 }

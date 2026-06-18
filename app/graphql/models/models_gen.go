@@ -94,9 +94,6 @@ type PrivateRoutineTag struct {
 	Icon      *enums.SupportedIcon `json:"icon,omitempty"`
 	UpdatedAt time.Time            `json:"updatedAt"`
 	CreatedAt time.Time            `json:"createdAt"`
-	Owner     *PublicUser          `json:"owner"`
-	Sharers   []*PublicUser        `json:"sharers"`
-	Routines  []*PrivateRoutine    `json:"routines"`
 }
 
 type PrivateRoutineTask struct {
@@ -114,8 +111,36 @@ type PrivateRoutineTask struct {
 	ActualEndedAt   *time.Time               `json:"actualEndedAt,omitempty"`
 	UpdatedAt       time.Time                `json:"updatedAt"`
 	CreatedAt       time.Time                `json:"createdAt"`
-	Station         *PrivateStation          `json:"station"`
-	Routines        []*PrivateRoutine        `json:"routines"`
+}
+
+type PrivateSearchableRoutine struct {
+	ID               uuid.UUID            `json:"id"`
+	StationID        uuid.UUID            `json:"stationId"`
+	Title            string               `json:"title"`
+	Status           enums.RoutineStatus  `json:"status"`
+	IsPinned         bool                 `json:"isPinned"`
+	ScheduledStartAt time.Time            `json:"scheduledStartAt"`
+	ScheduledEndAt   time.Time            `json:"scheduledEndAt"`
+	Period           *enums.RoutinePeriod `json:"period,omitempty"`
+	Timezone         string               `json:"timezone"`
+	DeletedAt        *time.Time           `json:"deletedAt,omitempty"`
+	UpdatedAt        time.Time            `json:"updatedAt"`
+	CreatedAt        time.Time            `json:"createdAt"`
+	TagIds           []uuid.UUID          `json:"tagIds"`
+	TaskIds          []uuid.UUID          `json:"taskIds"`
+	ItemIds          []uuid.UUID          `json:"itemIds"`
+}
+
+type PrivateSearchableStation struct {
+	ID                  uuid.UUID                     `json:"id"`
+	Permission          enums.AccessControlPermission `json:"permission"`
+	Name                string                        `json:"name"`
+	Icon                *enums.SupportedIcon          `json:"icon,omitempty"`
+	HeaderBackgroundURL *string                       `json:"headerBackgroundURL,omitempty"`
+	RoutineCount        int32                         `json:"routineCount"`
+	DeletedAt           *time.Time                    `json:"deletedAt,omitempty"`
+	CreatedAt           time.Time                     `json:"createdAt"`
+	UpdatedAt           time.Time                     `json:"updatedAt"`
 }
 
 type PrivateStation struct {
@@ -129,9 +154,6 @@ type PrivateStation struct {
 	DeletedAt           *time.Time                    `json:"deletedAt,omitempty"`
 	CreatedAt           time.Time                     `json:"createdAt"`
 	UpdatedAt           time.Time                     `json:"updatedAt"`
-	Owner               *PublicUser                   `json:"owner"`
-	Sharers             []*PublicUser                 `json:"sharers"`
-	Routines            []*PrivateRoutine             `json:"routines"`
 }
 
 type PrivateSubShelf struct {
@@ -325,21 +347,21 @@ type SearchRoutineCursorFields struct {
 }
 
 type SearchRoutineEdge struct {
-	EncodedSearchCursor string          `json:"encodedSearchCursor"`
-	Node                *PrivateRoutine `json:"node"`
+	EncodedSearchCursor string                    `json:"encodedSearchCursor"`
+	Node                *PrivateSearchableRoutine `json:"node"`
 }
 
 func (SearchRoutineEdge) IsSearchEdge()                       {}
 func (this SearchRoutineEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
 
 type SearchRoutineInput struct {
-	StationID *uuid.UUID           `json:"stationId,omitempty"`
-	TagID     *uuid.UUID           `json:"tagId,omitempty"`
-	Query     string               `json:"query"`
-	After     *string              `json:"after,omitempty"`
-	First     *int32               `json:"first,omitempty"`
-	SortBy    *SearchRoutineSortBy `json:"sortBy,omitempty"`
-	SortOrder *SearchSortOrder     `json:"sortOrder,omitempty"`
+	StationIds []uuid.UUID          `json:"stationIds"`
+	TagIds     []uuid.UUID          `json:"tagIds"`
+	Query      string               `json:"query"`
+	After      *string              `json:"after,omitempty"`
+	First      *int32               `json:"first,omitempty"`
+	SortBy     *SearchRoutineSortBy `json:"sortBy,omitempty"`
+	SortOrder  *SearchSortOrder     `json:"sortOrder,omitempty"`
 }
 
 type SearchRoutineTagConnection struct {
@@ -428,8 +450,8 @@ type SearchStationCursorFields struct {
 }
 
 type SearchStationEdge struct {
-	EncodedSearchCursor string          `json:"encodedSearchCursor"`
-	Node                *PrivateStation `json:"node"`
+	EncodedSearchCursor string                    `json:"encodedSearchCursor"`
+	Node                *PrivateSearchableStation `json:"node"`
 }
 
 func (SearchStationEdge) IsSearchEdge()                       {}

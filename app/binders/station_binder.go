@@ -58,11 +58,6 @@ func (b *StationBinder) BindGetMyStationById(controllerFunc types.ControllerFunc
 		}
 		reqDto.Param.StationId = stationId
 
-		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
-			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-
 		controllerFunc(ctx, &reqDto)
 	}
 }

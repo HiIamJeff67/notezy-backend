@@ -5,9 +5,4 @@ type PrivateRoutineTag {
   icon: SupportedIcon
   updatedAt: Time!
   createdAt: Time!
-
-  # relations
-  owner: PublicUser!
-  sharers: [PublicUser!]!
-  routines: [PrivateRoutine!]!
 }

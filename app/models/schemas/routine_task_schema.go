@@ -64,7 +64,5 @@ func (rt *RoutineTask) ToPrivateRoutineTask() *gqlmodels.PrivateRoutineTask {
 		ActualEndedAt:   rt.ActualEndedAt,
 		UpdatedAt:       rt.UpdatedAt,
 		CreatedAt:       rt.CreatedAt,
-		Station:         &gqlmodels.PrivateStation{},
-		Routines:        make([]*gqlmodels.PrivateRoutine, 0),
 	}
 }

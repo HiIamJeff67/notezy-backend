@@ -369,7 +369,23 @@ type GetMyRoutineByIdResDto struct {
 	ItemIds          []uuid.UUID          `json:"itemIds"`
 }
 
-type GetAllMyRoutinesByTimeRangeResDto = []GetMyRoutineByIdResDto
+type GetAllMyRoutinesByTimeRangeResDto = []struct {
+	Id               uuid.UUID            `json:"id"`
+	StationId        uuid.UUID            `json:"stationId"`
+	Title            string               `json:"title"`
+	Status           enums.RoutineStatus  `json:"status"`
+	IsPinned         bool                 `json:"isPinned"`
+	ScheduledStartAt time.Time            `json:"scheduledStartAt"`
+	ScheduledEndAt   time.Time            `json:"scheduledEndAt"`
+	Period           *enums.RoutinePeriod `json:"period"`
+	Timezone         string               `json:"timezone"`
+	DeletedAt        *time.Time           `json:"deletedAt"`
+	UpdatedAt        time.Time            `json:"updatedAt"`
+	CreatedAt        time.Time            `json:"createdAt"`
+	TagIds           []uuid.UUID          `json:"tagIds"`
+	TaskIds          []uuid.UUID          `json:"taskIds"`
+	ItemIds          []uuid.UUID          `json:"itemIds"`
+}
 
 type CreateRoutineByStationIdResDto struct {
 	Id        uuid.UUID `json:"id"`

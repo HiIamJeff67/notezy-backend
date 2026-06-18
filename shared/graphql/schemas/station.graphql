@@ -9,9 +9,16 @@ type PrivateStation {
   deletedAt: Time
   createdAt: Time!
   updatedAt: Time!
+}
 
-  # relations
-  owner: PublicUser!
-  sharers: [PublicUser!]!
-  routines: [PrivateRoutine!]!
+type PrivateSearchableStation {
+  id: UUID!
+  permission: AccessControlPermission!
+  name: String!
+  icon: SupportedIcon
+  headerBackgroundURL: String
+  routineCount: Int32!
+  deletedAt: Time
+  createdAt: Time!
+  updatedAt: Time!
 }

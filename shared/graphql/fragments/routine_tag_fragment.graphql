@@ -9,13 +9,4 @@ fragment FragmentedBasicPrivateRoutineTag on PrivateRoutineTag {
 
 fragment FragmentedPrivateRoutineTag on PrivateRoutineTag {
   ...FragmentedBasicPrivateRoutineTag
-  owner {
-    ...FragmentedBasicPublicUser
-  }
-  sharers {
-    ...FragmentedBasicPublicUser
-  }
-  routines {
-    ...FragmentedBasicPrivateRoutine
-  }
 }

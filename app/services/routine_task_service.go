@@ -113,12 +113,25 @@ func (s *RoutineTaskService) GetAllMyRoutineTasksByStationIds(
 
 	resDto := make(dtos.GetAllMyRoutineTasksByStationIdsResDto, len(routineTasks))
 	for index, routineTask := range routineTasks {
-		resDto[index] = dtos.GetMyRoutineTaskByIdResDto{
+		resDto[index] = struct {
+			Id              uuid.UUID                "json:\"id\""
+			StationId       uuid.UUID                "json:\"stationId\""
+			Title           string                   "json:\"title\""
+			Purpose         enums.RoutineTaskPurpose "json:\"purpose\""
+			Priority        int32                    "json:\"priority\""
+			Status          enums.RoutineTaskStatus  "json:\"status\""
+			Attempts        int32                    "json:\"attempts\""
+			MaxAttempts     int32                    "json:\"maxAttempts\""
+			ScheduledAt     time.Time                "json:\"scheduledAt\""
+			ActualStartedAt *time.Time               "json:\"actualStartedAt\""
+			ActualEndedAt   *time.Time               "json:\"actualEndedAt\""
+			UpdatedAt       time.Time                "json:\"updatedAt\""
+			CreatedAt       time.Time                "json:\"createdAt\""
+		}{
 			Id:              routineTask.Id,
 			StationId:       routineTask.StationId,
 			Title:           routineTask.Title,
 			Purpose:         routineTask.Purpose,
-			Payload:         routineTask.Payload,
 			Priority:        routineTask.Priority,
 			Status:          routineTask.Status,
 			Attempts:        routineTask.Attempts,

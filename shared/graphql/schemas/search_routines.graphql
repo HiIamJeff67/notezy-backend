@@ -12,8 +12,8 @@ enum SearchRoutineSortBy {
 }
 
 input SearchRoutineInput {
-  stationId: UUID
-  tagId: UUID
+  stationIds: [UUID!]!
+  tagIds: [UUID!]!
   query: String!
   after: String
   first: Int = 10
@@ -31,7 +31,7 @@ input SearchRoutineCursorFields {
 
 type SearchRoutineEdge implements SearchEdge {
   encodedSearchCursor: String!
-  node: PrivateRoutine!
+  node: PrivateSearchableRoutine!
 }
 
 type SearchRoutineConnection implements SearchConnection {

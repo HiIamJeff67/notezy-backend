@@ -316,12 +316,6 @@ func (ec *executionContext) fieldContext_SearchRoutineTagEdge_node(_ context.Con
 				return ec.fieldContext_PrivateRoutineTag_updatedAt(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_PrivateRoutineTag_createdAt(ctx, field)
-			case "owner":
-				return ec.fieldContext_PrivateRoutineTag_owner(ctx, field)
-			case "sharers":
-				return ec.fieldContext_PrivateRoutineTag_sharers(ctx, field)
-			case "routines":
-				return ec.fieldContext_PrivateRoutineTag_routines(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PrivateRoutineTag", field.Name)
 		},

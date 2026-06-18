@@ -20,3 +20,25 @@ fragment FragmentedBasicPrivateRoutine on PrivateRoutine {
 fragment FragmentedPrivateRoutine on PrivateRoutine {
   ...FragmentedBasicPrivateRoutine
 }
+
+fragment FragmentedBasicPrivateSearchableRoutine on PrivateSearchableRoutine {
+  id
+  stationId
+  title
+  status
+  isPinned
+  scheduledStartAt
+  scheduledEndAt
+  period
+  timezone
+  deletedAt
+  updatedAt
+  createdAt
+  tagIds
+  taskIds
+  itemIds
+}
+
+fragment FragmentedPrivateSearchableRoutine on PrivateSearchableRoutine {
+  ...FragmentedBasicPrivateSearchableRoutine
+}

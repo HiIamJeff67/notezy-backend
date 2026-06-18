@@ -78,7 +78,7 @@ query SearchStations($input: SearchStationInput!) {
   searchStations(input: $input) {
     searchEdges {
       node {
-        ...FragmentedPrivateStation
+        ...FragmentedPrivateSearchableStation
       }
       encodedSearchCursor
     }
@@ -97,7 +97,7 @@ query SearchRoutines($input: SearchRoutineInput!) {
   searchRoutines(input: $input) {
     searchEdges {
       node {
-        ...FragmentedPrivateRoutine
+        ...FragmentedPrivateSearchableRoutine
       }
       encodedSearchCursor
     }

@@ -46,8 +46,5 @@ func (rt *RoutineTag) ToPrivateRoutineTag() *gqlmodels.PrivateRoutineTag {
 		Icon:      rt.Icon,
 		UpdatedAt: rt.UpdatedAt,
 		CreatedAt: rt.CreatedAt,
-		Owner:     &gqlmodels.PublicUser{},
-		Sharers:   make([]*gqlmodels.PublicUser, 0),
-		Routines:  make([]*gqlmodels.PrivateRoutine, 0),
 	}
 }

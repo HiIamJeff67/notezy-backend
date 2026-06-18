@@ -66,11 +66,6 @@ func (b *RoutineBinder) BindGetMyRoutineById(controllerFunc types.ControllerFunc
 		}
 		reqDto.Param.RoutineId = routineId
 
-		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
-			exceptions.Routine.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-
 		controllerFunc(ctx, &reqDto)
 	}
 }

@@ -291,9 +291,9 @@ func (ec *executionContext) _SearchStationEdge_node(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*gqlmodels.PrivateStation)
+	res := resTmp.(*gqlmodels.PrivateSearchableStation)
 	fc.Result = res
-	return ec.marshalNPrivateStation2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateStation(ctx, field.Selections, res)
+	return ec.marshalNPrivateSearchableStation2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateSearchableStation(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SearchStationEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -305,33 +305,25 @@ func (ec *executionContext) fieldContext_SearchStationEdge_node(_ context.Contex
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_PrivateStation_id(ctx, field)
+				return ec.fieldContext_PrivateSearchableStation_id(ctx, field)
 			case "permission":
-				return ec.fieldContext_PrivateStation_permission(ctx, field)
+				return ec.fieldContext_PrivateSearchableStation_permission(ctx, field)
 			case "name":
-				return ec.fieldContext_PrivateStation_name(ctx, field)
-			case "description":
-				return ec.fieldContext_PrivateStation_description(ctx, field)
+				return ec.fieldContext_PrivateSearchableStation_name(ctx, field)
 			case "icon":
-				return ec.fieldContext_PrivateStation_icon(ctx, field)
+				return ec.fieldContext_PrivateSearchableStation_icon(ctx, field)
 			case "headerBackgroundURL":
-				return ec.fieldContext_PrivateStation_headerBackgroundURL(ctx, field)
+				return ec.fieldContext_PrivateSearchableStation_headerBackgroundURL(ctx, field)
 			case "routineCount":
-				return ec.fieldContext_PrivateStation_routineCount(ctx, field)
+				return ec.fieldContext_PrivateSearchableStation_routineCount(ctx, field)
 			case "deletedAt":
-				return ec.fieldContext_PrivateStation_deletedAt(ctx, field)
+				return ec.fieldContext_PrivateSearchableStation_deletedAt(ctx, field)
 			case "createdAt":
-				return ec.fieldContext_PrivateStation_createdAt(ctx, field)
+				return ec.fieldContext_PrivateSearchableStation_createdAt(ctx, field)
 			case "updatedAt":
-				return ec.fieldContext_PrivateStation_updatedAt(ctx, field)
-			case "owner":
-				return ec.fieldContext_PrivateStation_owner(ctx, field)
-			case "sharers":
-				return ec.fieldContext_PrivateStation_sharers(ctx, field)
-			case "routines":
-				return ec.fieldContext_PrivateStation_routines(ctx, field)
+				return ec.fieldContext_PrivateSearchableStation_updatedAt(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type PrivateStation", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type PrivateSearchableStation", field.Name)
 		},
 	}
 	return fc, nil

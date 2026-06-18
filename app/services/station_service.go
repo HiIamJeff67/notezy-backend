@@ -126,10 +126,19 @@ func (s *StationService) GetAllMyStations(
 
 	resDto := make(dtos.GetAllMyStationsResDto, len(stations))
 	for index, station := range stations {
-		resDto[index] = dtos.GetMyStationByIdResDto{
+		resDto[index] = struct {
+			Id                  uuid.UUID                     "json:\"id\""
+			Name                string                        "json:\"name\""
+			Icon                *enums.SupportedIcon          "json:\"icon\""
+			HeaderBackgroundURL *string                       "json:\"headerBackgroundURL\""
+			Permission          enums.AccessControlPermission "json:\"permission\""
+			RoutineCount        int32                         "json:\"routineCount\""
+			DeletedAt           *time.Time                    "json:\"deletedAt\""
+			UpdatedAt           time.Time                     "json:\"updatedAt\""
+			CreatedAt           time.Time                     "json:\"createdAt\""
+		}{
 			Id:                  station.Id,
 			Name:                station.Name,
-			Description:         station.Description,
 			Icon:                station.Icon,
 			HeaderBackgroundURL: station.HeaderBackgroundURL,
 			Permission:          permissions[index],
@@ -545,7 +554,7 @@ func (s *StationService) SearchPrivateStations(
 
 		searchEdges[index] = &gqlmodels.SearchStationEdge{
 			EncodedSearchCursor: *encodedSearchCursor,
-			Node:                station.Station.ToPrivateStation(station.Permission),
+			Node:                station.Station.ToPrivateSearchableStation(station.Permission),
 		}
 	}
 
