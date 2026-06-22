@@ -2,5 +2,4 @@ enum RoutinePeriod {
   RoutinePeriod_Daily
   RoutinePeriod_Weekly
   RoutinePeriod_Monthly
-  RoutinePeriod_Yearly
 }

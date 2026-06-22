@@ -88,7 +88,7 @@ func (r *BlockRepository) HavePermissions(
 	var permittedIds []uuid.UUID
 	result := parsedOptions.DB.
 		Model(&schemas.Block{}).
-		Select("DISTINCT \"BlockTable\".id").
+		Select(`DISTINCT "BlockTable".id`).
 		Scopes(r.blockScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.blockScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Clauses(clause.Locking{Strength: "SHARE"}).
@@ -592,7 +592,7 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 				}
 			}
 		}
-		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::\"BlockType\", ?::jsonb, ?::jsonb, ?::uuid, ?::uuid, ?::boolean)")
+		valuePlaceholders = append(valuePlaceholders, `(?::uuid, ?::"BlockType", ?::jsonb, ?::jsonb, ?::uuid, ?::uuid, ?::boolean)`)
 		valueArgs = append(valueArgs,
 			in.Id,
 			in.PartialUpdateInput.Values.Type,
@@ -661,7 +661,7 @@ func (r *BlockRepository) RestoreSoftDeletedOneById(
 
 	result := query.
 		Clauses(clause.Returning{}).
-		Where("\"BlockTable\".id = ?", id).
+		Where(`"BlockTable".id = ?`, id).
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Block.FailedToUpdate().WithOrigin(result.Error)},
@@ -699,7 +699,7 @@ func (r *BlockRepository) RestoreSoftDeletedManyByIds(
 
 	result := query.
 		Clauses(clause.Returning{}).
-		Where("\"BlockTable\".id IN ?", ids).
+		Where(`"BlockTable".id IN ?`, ids).
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Block.FailedToUpdate().WithOrigin(result.Error)},
@@ -733,7 +733,7 @@ func (r *BlockRepository) SoftDeleteOneById(
 
 	result := query.
 		Clauses(clause.Returning{}).
-		Where("\"BlockTable\".id = ?", id).
+		Where(`"BlockTable".id = ?`, id).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Block.FailedToUpdate().WithOrigin(result.Error)},
@@ -771,7 +771,7 @@ func (r *BlockRepository) SoftDeleteManyByIds(
 
 	result := query.
 		Clauses(clause.Returning{}).
-		Where("\"BlockTable\".id IN ?", ids).
+		Where(`"BlockTable".id IN ?`, ids).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Block.FailedToUpdate().WithOrigin(result.Error)},
@@ -803,7 +803,7 @@ func (r *BlockRepository) HardDeleteOneById(
 	}
 
 	result := query.
-		Where("\"BlockTable\".id = ?", id).
+		Where(`"BlockTable".id = ?`, id).
 		Delete(&schemas.Block{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Block.FailedToDelete().WithOrigin(result.Error)},
@@ -839,7 +839,7 @@ func (r *BlockRepository) HardDeleteManyByIds(
 	}
 
 	result := query.
-		Where("\"BlockTable\".id IN ?", ids).
+		Where(`"BlockTable".id IN ?`, ids).
 		Delete(&schemas.Block{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Block.FailedToDelete().WithOrigin(result.Error)},

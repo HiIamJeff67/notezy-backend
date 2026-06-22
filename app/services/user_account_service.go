@@ -77,6 +77,10 @@ func (s *UserAccountService) GetMyAccount(
 		MaterialCount:       userAccount.MaterialCount,
 		WorkflowCount:       userAccount.WorkflowCount,
 		AdditionalItemCount: userAccount.AdditionalItemCount,
+		StationCount:        userAccount.StationCount,
+		RoutineCount:        userAccount.RoutineCount,
+		RoutineTaskCount:    userAccount.RoutineTaskCount,
+		RoutineTagCount:     userAccount.RoutineTagCount,
 		UpdatedAt:           userAccount.UpdatedAt,
 	}, nil
 }

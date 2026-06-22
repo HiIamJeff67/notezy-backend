@@ -86,7 +86,7 @@ func (r *BlockPackRepository) HavePermissions(
 	var permittedIds []uuid.UUID
 	result := parsedOptions.DB.
 		Model(&schemas.BlockPack{}).
-		Select("DISTINCT \"BlockPackTable\".id").
+		Select(`DISTINCT "BlockPackTable".id`).
 		Scopes(r.blockPackScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Clauses(clause.Locking{Strength: "SHARE"}).
@@ -167,13 +167,13 @@ func (r *BlockPackRepository) CheckPermissionAndGetOneWithOwnerIdById(
 		Where("root_shelf_id = ss.root_shelf_id").
 		Where("user_id = ? AND permission IN ?", userId, allowedPermissions)
 	query := parsedOptions.DB.Model(&schemas.BlockPack{}).
-		Select("\"BlockPackTable\".*, owner_uts.user_id AS owner_id").
-		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
+		Select(`"BlockPackTable".*, owner_uts.user_id AS owner_id`).
+		Joins(`INNER JOIN "SubShelfTable" ss ON parent_sub_shelf_id = ss.id`).
 		// inner join the owner's user to shelves table to extract owner's id
 		// note that this should be attach AFTER we have join the SubShelfTable of ss
 		// so we can't use PassPermissionCheck scope
-		Joins("INNER JOIN \"UsersToShelvesTable\" owner_uts ON ss.root_shelf_id = owner_uts.root_shelf_id AND owner_uts.permission = 'Owner'").
-		Where("\"BlockPackTable\".id = ? AND EXISTS (?)", id, subQuery).
+		Joins(`INNER JOIN "UsersToShelvesTable" owner_uts ON ss.root_shelf_id = owner_uts.root_shelf_id AND owner_uts.permission = 'Owner'`).
+		Where(`"BlockPackTable".id = ? AND EXISTS (?)`, id, subQuery).
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockPackScope.IncludePreloads(preloads)).
 		Clauses(clause.Locking{Strength: "SHARE"})
@@ -208,13 +208,13 @@ func (r *BlockPackRepository) CheckPermissionsAndGetManyWithOwnerIdsByIds(
 		Where("root_shelf_id = ss.root_shelf_id").
 		Where("user_id = ? AND permission IN ?", userId, allowedPermissions)
 	query := parsedOptions.DB.Model(&schemas.BlockPack{}).
-		Select("\"BlockPackTable\".*, owner_uts.user_id AS owner_id").
-		Joins("INNER JOIN \"SubShelfTable\" ss ON parent_sub_shelf_id = ss.id").
+		Select(`"BlockPackTable".*, owner_uts.user_id AS owner_id`).
+		Joins(`INNER JOIN "SubShelfTable" ss ON parent_sub_shelf_id = ss.id`).
 		// inner join the owner's user to shelves table to extract owner's id
 		// note that this should be attach AFTER we have join the SubShelfTable of ss
 		// so we can't use PassPermissionChecks scope
-		Joins("INNER JOIN \"UsersToShelvesTable\" owner_uts ON ss.root_shelf_id = owner_uts.root_shelf_id AND owner_uts.permission = 'Owner'").
-		Where("\"BlockPackTable\".id IN ? AND EXISTS (?)", ids, subQuery).
+		Joins(`INNER JOIN "UsersToShelvesTable" owner_uts ON ss.root_shelf_id = owner_uts.root_shelf_id AND owner_uts.permission = 'Owner'`).
+		Where(`"BlockPackTable".id IN ? AND EXISTS (?)`, ids, subQuery).
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockPackScope.IncludePreloads(preloads)).
 		Clauses(clause.Locking{Strength: "SHARE"})
@@ -598,7 +598,7 @@ func (r *BlockPackRepository) BulkUpdateManyByIds(
 			}
 		}
 
-		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid, ?::string, ?::\"SupportedIcon\", ?::string, ?::boolean, ?::boolean)")
+		valuePlaceholders = append(valuePlaceholders, `(?::uuid, ?::uuid, ?::string, ?::"SupportedIcon", ?::string, ?::boolean, ?::boolean)`)
 		valueArgs = append(valueArgs,
 			in.Id,
 			in.PartialUpdateInput.Values.ParentSubShelfId,
@@ -668,7 +668,7 @@ func (r *BlockPackRepository) RestoreSoftDeletedOneById(
 
 	result := query.
 		Clauses(clause.Returning{}).
-		Where("\"BlockPackTable\".id = ?", id).
+		Where(`"BlockPackTable".id = ?`, id).
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToUpdate().WithOrigin(result.Error)},
@@ -706,7 +706,7 @@ func (r *BlockPackRepository) RestoreSoftDeletedManyByIds(
 
 	result := query.
 		Clauses(&clause.Returning{}).
-		Where("\"BlockPackTable\".id IN ?", ids).
+		Where(`"BlockPackTable".id IN ?`, ids).
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToUpdate().WithOrigin(result.Error)},
@@ -737,7 +737,7 @@ func (r *BlockPackRepository) SoftDeleteOneById(
 	}
 
 	result := query.
-		Where("\"BlockPackTable\".id = ?", id).
+		Where(`"BlockPackTable".id = ?`, id).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToDelete().WithOrigin(result.Error)},
@@ -773,7 +773,7 @@ func (r *BlockPackRepository) SoftDeleteManyByIds(
 	}
 
 	result := query.
-		Where("\"BlockPackTable\".id IN ?", ids).
+		Where(`"BlockPackTable".id IN ?`, ids).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToDelete().WithOrigin(result.Error)},
@@ -804,7 +804,7 @@ func (r *BlockPackRepository) HardDeleteOneById(
 	}
 
 	result := query.
-		Where("\"BlockPackTable\".id = ?", id).
+		Where(`"BlockPackTable".id = ?`, id).
 		Delete(&schemas.BlockPack{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToDelete().WithOrigin(result.Error)},
@@ -840,7 +840,7 @@ func (r *BlockPackRepository) HardDeleteManyByIds(
 	}
 
 	result := query.
-		Where("\"BlockPackTable\".id IN ?", ids).
+		Where(`"BlockPackTable".id IN ?`, ids).
 		Delete(&schemas.BlockPack{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.BlockPack.FailedToDelete().WithOrigin(result.Error)},

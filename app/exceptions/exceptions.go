@@ -799,6 +799,37 @@ func (d *FileExceptionDomain) FailedToDetectContentType() *Exception {
 	}
 }
 
+/* ============================== Marshaler Exception Domain Definition ============================== */
+
+type MarshalerExceptionDomain struct {
+	_BaseCode ExceptionCode
+	_Prefix   ExceptionPrefix
+}
+
+func (d *MarshalerExceptionDomain) FailedToMarshalData(data any) *Exception {
+	return &Exception{
+		Code:           d._BaseCode + 61,
+		Prefix:         d._Prefix,
+		Reason:         "FailedToMarshal",
+		IsInternal:     true,
+		Message:        fmt.Sprintf("Failed to marshal data of %v", data),
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastTrace:      traces.GetTrace(1),
+	}
+}
+
+func (d *MarshalerExceptionDomain) FailedToUnmarshalObject(object any) *Exception {
+	return &Exception{
+		Code:           d._BaseCode + 61,
+		Prefix:         d._Prefix,
+		Reason:         "FailedToUnmarshal",
+		IsInternal:     true,
+		Message:        fmt.Sprintf("Failed to unmarshal object of %v", object),
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastTrace:      traces.GetTrace(1),
+	}
+}
+
 /* ============================== Test Exception Domain Definition ============================== */
 
 type TestExceptionDomain struct {

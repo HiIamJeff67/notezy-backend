@@ -29,6 +29,10 @@ type RoutineControllerInterface interface {
 	DeleteMyRoutinesByIds(ctx *gin.Context, reqDto *dtos.DeleteMyRoutinesByIdsReqDto)
 	HardDeleteMyRoutineById(ctx *gin.Context, reqDto *dtos.HardDeleteMyRoutineByIdReqDto)
 	HardDeleteMyRoutinesByIds(ctx *gin.Context, reqDto *dtos.HardDeleteMyRoutinesByIdsReqDto)
+	VisualizeMyRoutineStatusCount(ctx *gin.Context, reqDto *dtos.VisualizeMyRoutineStatusCountReqDto)
+	VisualizeMyRoutinePeriodCount(ctx *gin.Context, reqDto *dtos.VisualizeMyRoutinePeriodCountReqDto)
+	VisualizeMyRoutineScheduledStartAtCount(ctx *gin.Context, reqDto *dtos.VisualizeMyRoutineScheduledStartAtCountReqDto)
+	VisualizeMyRoutineScheduledEndAtCount(ctx *gin.Context, reqDto *dtos.VisualizeMyRoutineScheduledEndAtCountReqDto)
 }
 
 type RoutineController struct {
@@ -298,6 +302,62 @@ func (c *RoutineController) HardDeleteMyRoutineById(ctx *gin.Context, reqDto *dt
 
 func (c *RoutineController) HardDeleteMyRoutinesByIds(ctx *gin.Context, reqDto *dtos.HardDeleteMyRoutinesByIdsReqDto) {
 	resDto, exception := c.routineService.HardDeleteMyRoutinesByIds(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RoutineController) VisualizeMyRoutineStatusCount(ctx *gin.Context, reqDto *dtos.VisualizeMyRoutineStatusCountReqDto) {
+	resDto, exception := c.routineService.VisualizeMyRoutineStatusCount(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RoutineController) VisualizeMyRoutinePeriodCount(ctx *gin.Context, reqDto *dtos.VisualizeMyRoutinePeriodCountReqDto) {
+	resDto, exception := c.routineService.VisualizeMyRoutinePeriodCount(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RoutineController) VisualizeMyRoutineScheduledStartAtCount(ctx *gin.Context, reqDto *dtos.VisualizeMyRoutineScheduledStartAtCountReqDto) {
+	resDto, exception := c.routineService.VisualizeMyRoutineScheduledStartAtCount(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RoutineController) VisualizeMyRoutineScheduledEndAtCount(ctx *gin.Context, reqDto *dtos.VisualizeMyRoutineScheduledEndAtCountReqDto) {
+	resDto, exception := c.routineService.VisualizeMyRoutineScheduledEndAtCount(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return

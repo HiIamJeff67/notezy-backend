@@ -13,21 +13,18 @@ const (
 	RoutinePeriod_Daily   RoutinePeriod = "Daily"
 	RoutinePeriod_Weekly  RoutinePeriod = "Weekly"
 	RoutinePeriod_Monthly RoutinePeriod = "Monthly"
-	RoutinePeriod_Yearly  RoutinePeriod = "Yearly"
 )
 
 var AllRoutinePeriods = []RoutinePeriod{
 	RoutinePeriod_Daily,
 	RoutinePeriod_Weekly,
 	RoutinePeriod_Monthly,
-	RoutinePeriod_Yearly,
 }
 
 var AllRoutinePeriodStrings = []string{
 	string(RoutinePeriod_Daily),
 	string(RoutinePeriod_Weekly),
 	string(RoutinePeriod_Monthly),
-	string(RoutinePeriod_Yearly),
 }
 
 func (rp RoutinePeriod) Name() string {

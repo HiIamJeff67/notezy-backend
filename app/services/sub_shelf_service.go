@@ -144,14 +144,14 @@ func (s *SubShelfService) GetMySubShelvesByPrevSubShelfId(
 	resDto := dtos.GetMySubShelvesByPrevSubShelfIdResDto{}
 	subQuery := db.Model(&schemas.UsersToShelves{}).
 		Select("1").
-		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?",
+		Where(`root_shelf_id = "SubShelfTable".root_shelf_id AND user_id = ? AND permission IN ?`,
 			reqDto.ContextFields.UserId, allowedPermissions,
 		)
 	result := s.db.Model(&schemas.SubShelf{}).
 		Where("prev_sub_shelf_id = ? AND EXISTS (?)",
 			reqDto.Param.PrevSubShelfId, subQuery,
 		).Scopes(scopes.NewSubShelfScope().FilterOnlyDeleted(onlyDeleted)).
-		Order("\"SubShelfTable\".name ASC").
+		Order(`"SubShelfTable".name ASC`).
 		Limit(int(constants.MaxSubShelvesOfSubShelf)).
 		Find(&resDto)
 	if err := result.Error; err != nil {
@@ -189,14 +189,14 @@ func (s *SubShelfService) GetAllMySubShelvesByRootShelfId(
 	resDto := dtos.GetAllMySubShelvesByRootShelfIdResDto{}
 	subQuery := db.Model(&schemas.UsersToShelves{}).
 		Select("1").
-		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?",
+		Where(`root_shelf_id = "SubShelfTable".root_shelf_id AND user_id = ? AND permission IN ?`,
 			reqDto.ContextFields.UserId, allowedPermissions,
 		)
 	result := s.db.Model(&schemas.SubShelf{}).
 		Where("root_shelf_id = ? AND EXISTS (?)",
 			reqDto.Param.RootShelfId, subQuery,
 		).Scopes(scopes.NewSubShelfScope().FilterOnlyDeleted(onlyDeleted)).
-		Order("\"SubShelfTable\".name ASC").
+		Order(`"SubShelfTable".name ASC`).
 		Limit(int(constants.MaxSubShelvesOfSubShelf)).
 		Find(&resDto)
 	if err := result.Error; err != nil {
@@ -234,14 +234,14 @@ func (s *SubShelfService) GetMySubShelvesAndItemsByPrevSubShelfId(
 	resDto := dtos.GetMySubShelvesAndItemsByPrevSubShelfIdResDto{}
 	subQuery := db.Model(&schemas.UsersToShelves{}).
 		Select("1").
-		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?",
+		Where(`root_shelf_id = "SubShelfTable".root_shelf_id AND user_id = ? AND permission IN ?`,
 			reqDto.ContextFields.UserId, allowedPermissions,
 		)
 	resultOfGettingSubShelves := db.Model(&schemas.SubShelf{}).
 		Where("prev_sub_shelf_id = ? AND EXISTS (?)",
 			reqDto.Param.PrevSubShelfId, subQuery,
 		).Scopes(scopes.NewSubShelfScope().FilterOnlyDeleted(onlyDeleted)).
-		Order("\"SubShelfTable\".name ASC").
+		Order(`"SubShelfTable".name ASC`).
 		Limit(int(constants.MaxSubShelvesOfSubShelf)).
 		Find(&resDto.SubShelves)
 	if err := resultOfGettingSubShelves.Error; err != nil {
@@ -250,14 +250,14 @@ func (s *SubShelfService) GetMySubShelvesAndItemsByPrevSubShelfId(
 
 	materials := []schemas.Material{}
 	resultOfGettingMaterials := db.Model(&schemas.Material{}).
-		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"MaterialTable\".parent_sub_shelf_id = ss.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
+		Joins(`LEFT JOIN "SubShelfTable" ss ON "MaterialTable".parent_sub_shelf_id = ss.id`).
+		Joins(`LEFT JOIN "UsersToShelvesTable" uts ON ss.root_shelf_id = uts.root_shelf_id`).
 		Where("ss.id = ? AND uts.user_id = ? AND uts.permission IN ?",
 			reqDto.Param.PrevSubShelfId,
 			reqDto.ContextFields.UserId,
 			allowedPermissions,
 		).Scopes(scopes.NewMaterialScope().FilterOnlyDeleted(onlyDeleted)).
-		Order("\"MaterialTable\".name ASC").
+		Order(`"MaterialTable".name ASC`).
 		Limit(int(constants.MaxMaterialsOfSubShelf)).
 		Find(&materials)
 	if err := resultOfGettingMaterials.Error; err != nil {
@@ -284,14 +284,14 @@ func (s *SubShelfService) GetMySubShelvesAndItemsByPrevSubShelfId(
 	}
 
 	resultOfGettingBlockPacks := db.Model(&schemas.BlockPack{}).
-		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"BlockPackTable\".parent_sub_shelf_id = ss.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
+		Joins(`LEFT JOIN "SubShelfTable" ss ON "BlockPackTable".parent_sub_shelf_id = ss.id`).
+		Joins(`LEFT JOIN "UsersToShelvesTable" uts ON ss.root_shelf_id = uts.root_shelf_id`).
 		Where("ss.id = ? AND uts.user_id = ? AND uts.permission IN ?",
 			reqDto.Param.PrevSubShelfId,
 			reqDto.ContextFields.UserId,
 			allowedPermissions,
 		).Scopes(scopes.NewBlockPackScope().FilterOnlyDeleted(onlyDeleted)).
-		Order("\"BlockPackTable\".name ASC").
+		Order(`"BlockPackTable".name ASC`).
 		Limit(int(constants.MaxBlockPackOfSubShelf)).
 		Scan(&resDto.BlockPacks)
 	if err := resultOfGettingBlockPacks.Error; err != nil {

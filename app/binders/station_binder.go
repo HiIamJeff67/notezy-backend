@@ -10,6 +10,7 @@ import (
 	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
@@ -26,6 +27,7 @@ type StationBinderInterface interface {
 	BindDeleteMyStationsByIds(controllerFunc types.ControllerFunc[*dtos.DeleteMyStationsByIdsReqDto]) gin.HandlerFunc
 	BindHardDeleteMyStationById(controllerFunc types.ControllerFunc[*dtos.HardDeleteMyStationByIdReqDto]) gin.HandlerFunc
 	BindHardDeleteMyStationsByIds(controllerFunc types.ControllerFunc[*dtos.HardDeleteMyStationsByIdsReqDto]) gin.HandlerFunc
+	BindVisualizeMyTotalCount(controllerFunc types.ControllerFunc[*dtos.VisualizeMyTotalCountReqDto]) gin.HandlerFunc
 }
 
 type StationBinder struct{}
@@ -325,6 +327,35 @@ func (b *StationBinder) BindHardDeleteMyStationsByIds(controllerFunc types.Contr
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *StationBinder) BindVisualizeMyTotalCount(controllerFunc types.ControllerFunc[*dtos.VisualizeMyTotalCountReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.VisualizeMyTotalCountReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		permissionString := ctx.Query("permission")
+		if permissionString == "" {
+			exceptions.Station.InvalidInput().WithOrigin(fmt.Errorf("permission is required")).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		permission, err := enums.ConvertStringToAccessControlPermission(permissionString)
+		if err != nil {
+			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.Permission = *permission
 
 		controllerFunc(ctx, &reqDto)
 	}

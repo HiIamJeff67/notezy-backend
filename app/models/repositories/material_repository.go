@@ -79,7 +79,7 @@ func (r *MaterialRepository) HavePermissions(
 	var permittedIds []uuid.UUID
 	result := parsedOptions.DB.
 		Model(&schemas.Material{}).
-		Select("DISTINCT \"MaterialTable\".id").
+		Select(`DISTINCT "MaterialTable".id`).
 		Scopes(r.materialScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Clauses(clause.Locking{Strength: "SHARE"}).
@@ -336,7 +336,7 @@ func (r *MaterialRepository) RestoreSoftDeletedOneById(
 
 	result := query.
 		Clauses(clause.Returning{}).
-		Where("\"MaterialTable\".id = ?", id).
+		Where(`"MaterialTable".id = ?`, id).
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Material.FailedToUpdate().WithOrigin(result.Error)},
@@ -374,7 +374,7 @@ func (r *MaterialRepository) RestoreSoftDeletedManyByIds(
 
 	result := query.
 		Clauses(clause.Returning{}).
-		Where("\"MaterialTable\".id IN ?", ids).
+		Where(`"MaterialTable".id IN ?`, ids).
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Material.FailedToUpdate().WithOrigin(result.Error)},
@@ -403,7 +403,7 @@ func (r *MaterialRepository) SoftDeleteOneById(
 	result := parsedOptions.DB.Model(&schemas.Material{}).
 		Scopes(r.materialScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Where("\"MaterialTable\".id = ?", id).
+		Where(`"MaterialTable".id = ?`, id).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Material.FailedToUpdate().WithOrigin(result.Error)},
@@ -435,7 +435,7 @@ func (r *MaterialRepository) SoftDeleteManyByIds(
 	result := parsedOptions.DB.Model(&schemas.Material{}).
 		Scopes(r.materialScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Where("\"MaterialTable\".id IN ?", ids).
+		Where(`"MaterialTable".id IN ?`, ids).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Material.FailedToUpdate().WithOrigin(result.Error)},
@@ -463,7 +463,7 @@ func (r *MaterialRepository) HardDeleteOneById(
 	result := parsedOptions.DB.Model(&schemas.Material{}).
 		Scopes(r.materialScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Where("\"MaterialTable\".id = ?", id).
+		Where(`"MaterialTable".id = ?`, id).
 		Delete(&schemas.Material{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Material.FailedToDelete().WithOrigin(result.Error)},
@@ -495,7 +495,7 @@ func (r *MaterialRepository) HardDeleteManyByIds(
 	result := parsedOptions.DB.Model(&schemas.Material{}).
 		Scopes(r.materialScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Where("\"MaterialTable\".id IN ?", ids).
+		Where(`"MaterialTable".id IN ?`, ids).
 		Delete(&schemas.Material{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Material.FailedToDelete().WithOrigin(result.Error)},

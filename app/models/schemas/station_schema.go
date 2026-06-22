@@ -17,7 +17,8 @@ type Station struct {
 	Description         string               `json:"description" gorm:"column:description; size:1024; not null; default:'';"`
 	Icon                *enums.SupportedIcon `json:"icon" gorm:"column:icon; type:\"SupportedIcon\"; default:null;"`
 	HeaderBackgroundURL *string              `json:"headerBackgroundURL" gorm:"column:header_background_url; default:null;"`
-	RoutineCount        int32                `json:"routineCount" gorm:"column:routine_count; type:integer; not null; default:0; check:station_check_max_routine_count,routine_count <= 500;"`
+	RoutineCount        int64                `json:"routineCount" gorm:"column:routine_count; type:bigint; not null; default:0; check:station_check_max_routine_count,routine_count <= 500;"`
+	RoutineTaskCount    int64                `json:"routineTaskCount" gorm:"column:routine_task_count; type:bigint; not null; default:0; check:station_check_max_routine_task_count,routine_task_count <= 100;"`
 	DeletedAt           *time.Time           `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz; default:null;"`
 	UpdatedAt           time.Time            `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt           time.Time            `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
@@ -55,6 +56,7 @@ func (s *Station) ToPrivateStation(permission enums.AccessControlPermission) *gq
 		Icon:                s.Icon,
 		HeaderBackgroundURL: s.HeaderBackgroundURL,
 		RoutineCount:        s.RoutineCount,
+		RoutineTaskCount:    s.RoutineTaskCount,
 		DeletedAt:           s.DeletedAt,
 		UpdatedAt:           s.UpdatedAt,
 		CreatedAt:           s.CreatedAt,
@@ -69,6 +71,7 @@ func (s *Station) ToPrivateSearchableStation(permission enums.AccessControlPermi
 		Icon:                s.Icon,
 		HeaderBackgroundURL: s.HeaderBackgroundURL,
 		RoutineCount:        s.RoutineCount,
+		RoutineTaskCount:    s.RoutineTaskCount,
 		DeletedAt:           s.DeletedAt,
 		UpdatedAt:           s.UpdatedAt,
 		CreatedAt:           s.CreatedAt,

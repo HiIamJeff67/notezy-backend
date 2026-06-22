@@ -154,6 +154,7 @@ type ComplexityRoot struct {
 		Name                func(childComplexity int) int
 		Permission          func(childComplexity int) int
 		RoutineCount        func(childComplexity int) int
+		RoutineTaskCount    func(childComplexity int) int
 		UpdatedAt           func(childComplexity int) int
 	}
 
@@ -167,6 +168,7 @@ type ComplexityRoot struct {
 		Name                func(childComplexity int) int
 		Permission          func(childComplexity int) int
 		RoutineCount        func(childComplexity int) int
+		RoutineTaskCount    func(childComplexity int) int
 		UpdatedAt           func(childComplexity int) int
 	}
 
@@ -1021,6 +1023,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateSearchableStation.RoutineCount(childComplexity), true
 
+	case "PrivateSearchableStation.routineTaskCount":
+		if e.complexity.PrivateSearchableStation.RoutineTaskCount == nil {
+			break
+		}
+
+		return e.complexity.PrivateSearchableStation.RoutineTaskCount(childComplexity), true
+
 	case "PrivateSearchableStation.updatedAt":
 		if e.complexity.PrivateSearchableStation.UpdatedAt == nil {
 			break
@@ -1090,6 +1099,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateStation.RoutineCount(childComplexity), true
+
+	case "PrivateStation.routineTaskCount":
+		if e.complexity.PrivateStation.RoutineTaskCount == nil {
+			break
+		}
+
+		return e.complexity.PrivateStation.RoutineTaskCount(childComplexity), true
 
 	case "PrivateStation.updatedAt":
 		if e.complexity.PrivateStation.UpdatedAt == nil {
@@ -2106,7 +2122,6 @@ var sources = []*ast.Source{
   RoutinePeriod_Daily
   RoutinePeriod_Weekly
   RoutinePeriod_Monthly
-  RoutinePeriod_Yearly
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/enums/routine_status_enum.graphql", Input: `enum RoutineStatus {
@@ -2292,8 +2307,8 @@ interface SearchConnection {
   id: UUID!
   name: String!
   permission: AccessControlPermission!
-  subShelfCount: Int32!
-  itemCount: Int32!
+  subShelfCount: Int64!
+  itemCount: Int64!
   lastAnalyzedAt: Time!
   deletedAt: Time
   updatedAt: Time!
@@ -2773,7 +2788,8 @@ type SearchUserConnection implements SearchConnection {
   description: String!
   icon: SupportedIcon
   headerBackgroundURL: String
-  routineCount: Int32!
+  routineCount: Int64!
+  routineTaskCount: Int64!
   deletedAt: Time
   createdAt: Time!
   updatedAt: Time!
@@ -2785,11 +2801,13 @@ type PrivateSearchableStation {
   name: String!
   icon: SupportedIcon
   headerBackgroundURL: String
-  routineCount: Int32!
+  routineCount: Int64!
+  routineTaskCount: Int64!
   deletedAt: Time
   createdAt: Time!
   updatedAt: Time!
-}`, BuiltIn: false},
+}
+`, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/sub_shelf.graphql", Input: `type PrivateSubShelf {
   id: UUID!
   name: String!

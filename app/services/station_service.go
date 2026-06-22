@@ -36,6 +36,7 @@ type StationServiceInterface interface {
 	DeleteMyStationsByIds(ctx context.Context, reqDto *dtos.DeleteMyStationsByIdsReqDto) (*dtos.DeleteMyStationsByIdsResDto, *exceptions.Exception)
 	HardDeleteMyStationById(ctx context.Context, reqDto *dtos.HardDeleteMyStationByIdReqDto) (*dtos.HardDeleteMyStationByIdResDto, *exceptions.Exception)
 	HardDeleteMyStationsByIds(ctx context.Context, reqDto *dtos.HardDeleteMyStationsByIdsReqDto) (*dtos.HardDeleteMyStationsByIdsResDto, *exceptions.Exception)
+	VisualizeMyTotalCount(ctx context.Context, reqDto *dtos.VisualizeMyTotalCountReqDto) (*dtos.VisualizeMyTotalCountResDto, *exceptions.Exception)
 
 	// services for graphql stations
 	SearchPrivateStations(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchStationInput) (*gqlmodels.SearchStationConnection, *exceptions.Exception)
@@ -66,7 +67,7 @@ func (s *StationService) GetMyStationById(
 	reqDto *dtos.GetMyStationByIdReqDto,
 ) (*dtos.GetMyStationByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -99,6 +100,7 @@ func (s *StationService) GetMyStationById(
 		HeaderBackgroundURL: station.HeaderBackgroundURL,
 		Permission:          permission,
 		RoutineCount:        station.RoutineCount,
+		RoutineTaskCount:    station.RoutineTaskCount,
 		DeletedAt:           station.DeletedAt,
 		UpdatedAt:           station.UpdatedAt,
 		CreatedAt:           station.CreatedAt,
@@ -110,7 +112,7 @@ func (s *StationService) GetAllMyStations(
 	reqDto *dtos.GetAllMyStationsReqDto,
 ) (*dtos.GetAllMyStationsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -142,7 +144,8 @@ func (s *StationService) GetAllMyStations(
 			Icon                *enums.SupportedIcon          "json:\"icon\""
 			HeaderBackgroundURL *string                       "json:\"headerBackgroundURL\""
 			Permission          enums.AccessControlPermission "json:\"permission\""
-			RoutineCount        int32                         "json:\"routineCount\""
+			RoutineCount        int64                         "json:\"routineCount\""
+			RoutineTaskCount    int64                         "json:\"routineTaskCount\""
 			DeletedAt           *time.Time                    "json:\"deletedAt\""
 			UpdatedAt           time.Time                     "json:\"updatedAt\""
 			CreatedAt           time.Time                     "json:\"createdAt\""
@@ -153,6 +156,7 @@ func (s *StationService) GetAllMyStations(
 			HeaderBackgroundURL: station.HeaderBackgroundURL,
 			Permission:          permissions[index],
 			RoutineCount:        station.RoutineCount,
+			RoutineTaskCount:    station.RoutineTaskCount,
 			DeletedAt:           station.DeletedAt,
 			UpdatedAt:           station.UpdatedAt,
 			CreatedAt:           station.CreatedAt,
@@ -167,7 +171,7 @@ func (s *StationService) CreateStation(
 	reqDto *dtos.CreateStationReqDto,
 ) (*dtos.CreateStationResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -198,7 +202,7 @@ func (s *StationService) CreateStations(
 	reqDto *dtos.CreateStationsReqDto,
 ) (*dtos.CreateStationsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -233,7 +237,7 @@ func (s *StationService) UpdateMyStationById(
 	reqDto *dtos.UpdateMyStationByIdReqDto,
 ) (*dtos.UpdateMyStationByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -266,7 +270,7 @@ func (s *StationService) UpdateMyStationsByIds(
 	reqDto *dtos.UpdateMyStationsByIdsReqDto,
 ) (*dtos.UpdateMyStationsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -305,7 +309,7 @@ func (s *StationService) RestoreMyStationById(
 	reqDto *dtos.RestoreMyStationByIdReqDto,
 ) (*dtos.RestoreMyStationByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -326,6 +330,7 @@ func (s *StationService) RestoreMyStationById(
 		Icon:                restoredStation.Icon,
 		HeaderBackgroundURL: restoredStation.HeaderBackgroundURL,
 		RoutineCount:        restoredStation.RoutineCount,
+		RoutineTaskCount:    restoredStation.RoutineTaskCount,
 		DeletedAt:           restoredStation.DeletedAt,
 		UpdatedAt:           restoredStation.UpdatedAt,
 		CreatedAt:           restoredStation.CreatedAt,
@@ -337,7 +342,7 @@ func (s *StationService) RestoreMyStationsByIds(
 	reqDto *dtos.RestoreMyStationsByIdsReqDto,
 ) (*dtos.RestoreMyStationsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -360,6 +365,7 @@ func (s *StationService) RestoreMyStationsByIds(
 			Icon:                restoredStation.Icon,
 			HeaderBackgroundURL: restoredStation.HeaderBackgroundURL,
 			RoutineCount:        restoredStation.RoutineCount,
+			RoutineTaskCount:    restoredStation.RoutineTaskCount,
 			DeletedAt:           restoredStation.DeletedAt,
 			UpdatedAt:           restoredStation.UpdatedAt,
 			CreatedAt:           restoredStation.CreatedAt,
@@ -374,7 +380,7 @@ func (s *StationService) DeleteMyStationById(
 	reqDto *dtos.DeleteMyStationByIdReqDto,
 ) (*dtos.DeleteMyStationByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -398,7 +404,7 @@ func (s *StationService) DeleteMyStationsByIds(
 	reqDto *dtos.DeleteMyStationsByIdsReqDto,
 ) (*dtos.DeleteMyStationsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -422,7 +428,7 @@ func (s *StationService) HardDeleteMyStationById(
 	reqDto *dtos.HardDeleteMyStationByIdReqDto,
 ) (*dtos.HardDeleteMyStationByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -446,7 +452,7 @@ func (s *StationService) HardDeleteMyStationsByIds(
 	reqDto *dtos.HardDeleteMyStationsByIdsReqDto,
 ) (*dtos.HardDeleteMyStationsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -462,6 +468,106 @@ func (s *StationService) HardDeleteMyStationsByIds(
 
 	return &dtos.HardDeleteMyStationsByIdsResDto{
 		DeletedAt: time.Now(),
+	}, nil
+}
+
+/* ============================== Service Methods for Charts ============================== */
+
+func (s *StationService) VisualizeMyTotalCount(
+	ctx context.Context, reqDto *dtos.VisualizeMyTotalCountReqDto,
+) (*dtos.VisualizeMyTotalCountResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	var totals struct {
+		StationCount     int64 `gorm:"column:station_count;"`
+		RoutineCount     int64 `gorm:"column:routine_count;"`
+		RoutineTaskCount int64 `gorm:"column:routine_task_count;"`
+		RoutineTagCount  int64 `gorm:"column:routine_tag_count;"`
+	}
+
+	if reqDto.Param.Permission == enums.AccessControlPermission_Owner {
+		result := db.Model(&schemas.UserAccount{}).
+			Select("station_count, routine_count, routine_task_count, routine_tag_count").
+			Where(`user_id = ?`, reqDto.ContextFields.UserId).
+			Scan(&totals)
+		if result.Error != nil {
+			return nil, exceptions.Station.NotFound().WithOrigin(result.Error)
+		}
+
+		return &dtos.VisualizeMyTotalCountResDto{
+			Data: []dtos.TwoDimensionalDatum[int64]{
+				dtos.TwoDimensionalDatum[int64]{
+					Id:    "station-total-count",
+					X:     "Station Total Count",
+					Value: totals.StationCount,
+				},
+				dtos.TwoDimensionalDatum[int64]{
+					Id:    "routine-total-count",
+					X:     "Routine Total Count",
+					Value: totals.RoutineCount,
+				},
+				dtos.TwoDimensionalDatum[int64]{
+					Id:    "routine-task-total-count",
+					X:     "Routine Task Total Count",
+					Value: totals.RoutineTaskCount,
+				},
+				dtos.TwoDimensionalDatum[int64]{
+					Id:    "routine-tag-total-count",
+					X:     "Routine Tag Total Count",
+					Value: totals.RoutineTagCount,
+				},
+			},
+		}, nil
+	}
+
+	result := db.Model(&schemas.Station{}).
+		Select(`
+			COUNT(DISTINCT "StationTable".id) AS station_count,
+			COALESCE(SUM("StationTable".routine_count), 0) AS routine_count,
+			COALESCE(SUM("StationTable".routine_task_count), 0) AS routine_task_count
+		`).
+		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = "StationTable".id`).
+		Where("uts.user_id = ? AND uts.permission = ?", reqDto.ContextFields.UserId, reqDto.Param.Permission).
+		Where(`"StationTable".deleted_at IS NULL`).
+		Scan(&totals)
+	if result.Error != nil {
+		return nil, exceptions.Station.NotFound().WithOrigin(result.Error)
+	}
+
+	result = db.Model(&schemas.UsersToRoutineTags{}).
+		Where("user_id = ? AND permission = ?", reqDto.ContextFields.UserId, reqDto.Param.Permission).
+		Count(&totals.RoutineTagCount)
+	if result.Error != nil {
+		return nil, exceptions.RoutineTag.NotFound().WithOrigin(result.Error)
+	}
+
+	return &dtos.VisualizeMyTotalCountResDto{
+		Data: []dtos.TwoDimensionalDatum[int64]{
+			dtos.TwoDimensionalDatum[int64]{
+				Id:    "station-total-count",
+				X:     "Station Total Count",
+				Value: totals.StationCount,
+			},
+			dtos.TwoDimensionalDatum[int64]{
+				Id:    "routine-total-count",
+				X:     "Routine Total Count",
+				Value: totals.RoutineCount,
+			},
+			dtos.TwoDimensionalDatum[int64]{
+				Id:    "routine-task-total-count",
+				X:     "Routine Task Total Count",
+				Value: totals.RoutineTaskCount,
+			},
+			dtos.TwoDimensionalDatum[int64]{
+				Id:    "routine-tag-total-count",
+				X:     "Routine Tag Total Count",
+				Value: totals.RoutineTagCount,
+			},
+		},
 	}, nil
 }
 
@@ -486,10 +592,10 @@ func (s *StationService) SearchPrivateStations(
 	}
 
 	query := db.Model(&schemas.Station{}).
-		Select("\"StationTable\".*, uts.permission AS permission").
-		Joins("LEFT JOIN \"UsersToStationsTable\" uts ON \"StationTable\".id = uts.station_id").
+		Select(`"StationTable".*, uts.permission AS permission`).
+		Joins(`LEFT JOIN "UsersToStationsTable" uts ON "StationTable".id = uts.station_id`).
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermisssions).
-		Where("\"StationTable\".deleted_at IS NULL")
+		Where(`"StationTable".deleted_at IS NULL`)
 
 	if len(strings.ReplaceAll(gqlInput.Query, " ", "")) > 0 {
 		query = query.Where(

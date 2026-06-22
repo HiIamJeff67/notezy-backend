@@ -16,7 +16,7 @@ type BlockPack struct {
 	Name                string               `json:"name" gorm:"column:name; size:128; not null; default:'undefined'; uniqueIndex:block_pack_idx_parent_sub_shelf_id_name,where:deleted_at IS NULL;"`
 	Icon                *enums.SupportedIcon `json:"icon" gorm:"column:icon; type:\"SupportedIcon\"; default:null;"`
 	HeaderBackgroundURL *string              `json:"headerBackgroundURL" gorm:"column:header_background_url; default:null;"`
-	BlockCount          int32                `json:"blockCount" gorm:"block_count; type:integer; not null; default:0; check:block_pack_check_max_block_count,block_count <= 1000;"`
+	BlockCount          int64                `json:"blockCount" gorm:"column:block_count; type:bigint; not null; default:0; check:block_pack_check_max_block_count,block_count <= 1000;"`
 	DeletedAt           *time.Time           `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz; default:null;"`
 	UpdatedAt           time.Time            `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt           time.Time            `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`

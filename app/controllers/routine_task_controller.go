@@ -17,6 +17,11 @@ type RoutineTaskControllerInterface interface {
 	UpdateMyRoutineTaskById(ctx *gin.Context, reqDto *dtos.UpdateMyRoutineTaskByIdReqDto)
 	HardDeleteMyRoutineTaskById(ctx *gin.Context, reqDto *dtos.HardDeleteMyRoutineTaskByIdReqDto)
 	HardDeleteMyRoutineTasksByIds(ctx *gin.Context, reqDto *dtos.HardDeleteMyRoutineTasksByIdsReqDto)
+	VisualizeMyRoutineTaskStatusCount(ctx *gin.Context, reqDto *dtos.VisualizeMyRoutineTaskStatusCountReqDto)
+	VisualizeMyRoutineTaskPurposeCount(ctx *gin.Context, reqDto *dtos.VisualizeMyRoutineTaskPurposeCountReqDto)
+	VisualizeMyRoutineTaskScheduledAtCount(ctx *gin.Context, reqDto *dtos.VisualizeMyRoutineTaskScheduledAtCountReqDto)
+	VisualizeMyRoutineTaskActualStartedAtCount(ctx *gin.Context, reqDto *dtos.VisualizeMyRoutineTaskActualStartedAtCountReqDto)
+	VisualizeMyRoutineTaskActualEndedAtCount(ctx *gin.Context, reqDto *dtos.VisualizeMyRoutineTaskActualEndedAtCountReqDto)
 }
 
 type RoutineTaskController struct {
@@ -118,6 +123,91 @@ func (c *RoutineTaskController) HardDeleteMyRoutineTaskById(ctx *gin.Context, re
 
 func (c *RoutineTaskController) HardDeleteMyRoutineTasksByIds(ctx *gin.Context, reqDto *dtos.HardDeleteMyRoutineTasksByIdsReqDto) {
 	resDto, exception := c.routineTaskService.HardDeleteMyRoutineTasksByIds(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RoutineTaskController) VisualizeMyRoutineTaskStatusCount(
+	ctx *gin.Context,
+	reqDto *dtos.VisualizeMyRoutineTaskStatusCountReqDto,
+) {
+	resDto, exception := c.routineTaskService.VisualizeMyRoutineTaskStatusCount(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RoutineTaskController) VisualizeMyRoutineTaskPurposeCount(
+	ctx *gin.Context,
+	reqDto *dtos.VisualizeMyRoutineTaskPurposeCountReqDto,
+) {
+	resDto, exception := c.routineTaskService.VisualizeMyRoutineTaskPurposeCount(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RoutineTaskController) VisualizeMyRoutineTaskScheduledAtCount(
+	ctx *gin.Context,
+	reqDto *dtos.VisualizeMyRoutineTaskScheduledAtCountReqDto,
+) {
+	resDto, exception := c.routineTaskService.VisualizeMyRoutineTaskScheduledAtCount(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RoutineTaskController) VisualizeMyRoutineTaskActualStartedAtCount(
+	ctx *gin.Context,
+	reqDto *dtos.VisualizeMyRoutineTaskActualStartedAtCountReqDto,
+) {
+	resDto, exception := c.routineTaskService.VisualizeMyRoutineTaskActualStartedAtCount(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RoutineTaskController) VisualizeMyRoutineTaskActualEndedAtCount(
+	ctx *gin.Context,
+	reqDto *dtos.VisualizeMyRoutineTaskActualEndedAtCountReqDto,
+) {
+	resDto, exception := c.routineTaskService.VisualizeMyRoutineTaskActualEndedAtCount(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return

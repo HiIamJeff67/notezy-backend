@@ -1,9 +1,9 @@
 CREATE OR REPLACE FUNCTION trigger_function_accounting_mutated_material()
 RETURNS TRIGGER AS $$
 DECLARE
-    current_count INTEGER;
+    current_count BIGINT;
     max_count INTEGER;
-    current_count_per_root_shelf INTEGER;
+    current_count_per_root_shelf BIGINT;
     max_count_per_root_shelf INTEGER;
     plan_name TEXT;
     root_shelf_id UUID;

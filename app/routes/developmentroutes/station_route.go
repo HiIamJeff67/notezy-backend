@@ -59,6 +59,22 @@ func configureDevelopmentStationRoutes() {
 				),
 			)...,
 		)
+		stationRoutes.GET(
+			"/visualizeMyTotalCount",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "visualizeMyTotalCount"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.Station.VisualizeMyTotalCount,
+					),
+				},
+				defaultMiddlewares,
+				stationModule.Binder.BindVisualizeMyTotalCount(
+					stationModule.Controller.VisualizeMyTotalCount,
+				),
+			)...,
+		)
 		stationRoutes.POST(
 			"/createStation",
 			middlewares.RepositionMiddleware(

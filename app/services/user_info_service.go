@@ -127,7 +127,7 @@ func (s *UserInfoService) GetPublicUserInfoByUserPublicId(
 
 	userInfo := schemas.UserInfo{}
 	result := db.Table(schemas.UserInfo{}.TableName()).
-		Joins("LEFT JOIN \"UserTable\" u ON u.id = user_id").
+		Joins(`LEFT JOIN "UserTable" u ON u.id = user_id`).
 		Where("u.public_id = ?", publicId).
 		First(&userInfo)
 	if err := result.Error; err != nil {
@@ -164,7 +164,7 @@ func (s *UserInfoService) GetPublicUserInfosByUserPublicIds(
 	}
 	result := db.Table(schemas.UserInfo{}.TableName()+" ui").
 		Select("ui.*, u.public_id as user_public_id").
-		Joins("LEFT JOIN \"UserTable\" u ON u.id = ui.user_id").
+		Joins(`LEFT JOIN "UserTable" u ON u.id = ui.user_id`).
 		Where("u.public_id IN ?", uniquePublicIds).
 		Find(&userInfosWithPublicUserIds)
 	if err := result.Error; err != nil {

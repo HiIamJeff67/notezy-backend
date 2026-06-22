@@ -179,8 +179,8 @@ type GetMyRootShelfByIdResDto struct {
 	Id             uuid.UUID                     `json:"id"`
 	Name           string                        `json:"name"`
 	Permission     enums.AccessControlPermission `json:"permission"`
-	SubShelfCount  int32                         `json:"subShelfCount"`
-	ItemCount      int32                         `json:"itemCount"`
+	SubShelfCount  int64                         `json:"subShelfCount"`
+	ItemCount      int64                         `json:"itemCount"`
 	LastAnalyzedAt time.Time                     `json:"lastAnalyzedAt"`
 	DeletedAt      *time.Time                    `json:"deletedAt"`
 	UpdatedAt      time.Time                     `json:"updatedAt"`
@@ -212,8 +212,8 @@ type UpdateMyRootShelvesByIdsResDto struct {
 type RestoreMyRootShelfByIdResDto struct {
 	Id             uuid.UUID  `json:"id"`
 	Name           string     `json:"name"`
-	SubShelfCount  int32      `json:"subShelfCount"`
-	ItemCount      int32      `json:"itemCount"`
+	SubShelfCount  int64      `json:"subShelfCount"`
+	ItemCount      int64      `json:"itemCount"`
 	LastAnalyzedAt time.Time  `json:"lastAnalyzedAt"`
 	DeletedAt      *time.Time `json:"deletedAt"`
 	UpdatedAt      time.Time  `json:"updatedAt"`

@@ -57,23 +57,23 @@ func (s *ItemService) SearchPrivateItems(
 	}
 
 	query := db.Model(&schemas.Item{}).
-		Select("\"ItemTable\".*, uts.permission AS permission").
-		Joins("INNER JOIN \"UsersToShelvesTable\" uts ON \"ItemTable\".root_shelf_id = uts.root_shelf_id").
-		Joins("LEFT JOIN \"MaterialTable\" m ON \"ItemTable\".type = 'Material'::\"ItemType\" AND m.id = \"ItemTable\".id").
-		Joins("LEFT JOIN \"BlockPackTable\" bp ON \"ItemTable\".type = 'BlockPack'::\"ItemType\" AND bp.id = \"ItemTable\".id").
+		Select(`"ItemTable".*, uts.permission AS permission`).
+		Joins(`INNER JOIN "UsersToShelvesTable" uts ON "ItemTable".root_shelf_id = uts.root_shelf_id`).
+		Joins(`LEFT JOIN "MaterialTable" m ON "ItemTable".type = 'Material'::"ItemType" AND m.id = "ItemTable".id`).
+		Joins(`LEFT JOIN "BlockPackTable" bp ON "ItemTable".type = 'BlockPack'::"ItemType" AND bp.id = "ItemTable".id`).
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
-		Where("\"ItemTable\".deleted_at IS NULL")
+		Where(`"ItemTable".deleted_at IS NULL`)
 
 	if gqlInput.ParentSubShelfID != nil {
 		query = query.Where(
-			"\"ItemTable\".parent_sub_shelf_id = ?",
+			`"ItemTable".parent_sub_shelf_id = ?`,
 			*gqlInput.ParentSubShelfID,
 		)
 	}
 
 	if gqlInput.RootShelfID != nil {
 		query = query.Where(
-			"\"ItemTable\".root_shelf_id = ?",
+			`"ItemTable".root_shelf_id = ?`,
 			*gqlInput.RootShelfID,
 		)
 	}

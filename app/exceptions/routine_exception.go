@@ -23,6 +23,7 @@ type RoutineExceptionDomain struct {
 	DatabaseExceptionDomain
 	TypeExceptionDomain
 	FileExceptionDomain
+	MarshalerExceptionDomain
 }
 
 var Routine = &RoutineExceptionDomain{
@@ -44,13 +45,17 @@ var Routine = &RoutineExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_Routine,
 		_Prefix:   ExceptionPrefix_Routine,
 	},
+	MarshalerExceptionDomain: MarshalerExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_Routine,
+		_Prefix:   ExceptionPrefix_Routine,
+	},
 }
 
 /* ============================== Handling Time Range Validation ============================== */
 
 func (d *RoutineExceptionDomain) QueriedTimeRangeTooLarge(from time.Time, to time.Time) *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 1,
+		Code:           d.BaseCode + 11,
 		Prefix:         d.Prefix,
 		Reason:         "QueriedTimeRangeTooLarge",
 		IsInternal:     false,
@@ -64,7 +69,7 @@ func (d *RoutineExceptionDomain) QueriedTimeRangeTooLarge(from time.Time, to tim
 
 func (d *RoutineExceptionDomain) FailedToLinkRoutineTags() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 11,
+		Code:           d.BaseCode + 21,
 		Prefix:         d.Prefix,
 		Reason:         "FailedToLinkRoutineTags",
 		IsInternal:     false,
@@ -76,7 +81,7 @@ func (d *RoutineExceptionDomain) FailedToLinkRoutineTags() *Exception {
 
 func (d *RoutineExceptionDomain) FailedToLinkRoutineTasks() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 12,
+		Code:           d.BaseCode + 22,
 		Prefix:         d.Prefix,
 		Reason:         "FailedToLinkRoutineTasks",
 		IsInternal:     false,
@@ -88,7 +93,7 @@ func (d *RoutineExceptionDomain) FailedToLinkRoutineTasks() *Exception {
 
 func (d *RoutineExceptionDomain) FailedToLinkItems() *Exception {
 	return &Exception{
-		Code:           d.BaseCode + 13,
+		Code:           d.BaseCode + 23,
 		Prefix:         d.Prefix,
 		Reason:         "FailedToLinkItems",
 		IsInternal:     false,

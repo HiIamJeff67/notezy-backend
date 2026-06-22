@@ -2,13 +2,11 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
-	"github.com/HiIamJeff67/notezy-backend/app/models/scopes"
-	util "github.com/HiIamJeff67/notezy-backend/app/util"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
@@ -19,7 +17,10 @@ import (
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
+	util "github.com/HiIamJeff67/notezy-backend/app/util"
 	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
@@ -46,6 +47,10 @@ type RoutineServiceInterface interface {
 	DeleteMyRoutinesByIds(ctx context.Context, reqDto *dtos.DeleteMyRoutinesByIdsReqDto) (*dtos.DeleteMyRoutinesByIdsResDto, *exceptions.Exception)
 	HardDeleteMyRoutineById(ctx context.Context, reqDto *dtos.HardDeleteMyRoutineByIdReqDto) (*dtos.HardDeleteMyRoutineByIdResDto, *exceptions.Exception)
 	HardDeleteMyRoutinesByIds(ctx context.Context, reqDto *dtos.HardDeleteMyRoutinesByIdsReqDto) (*dtos.HardDeleteMyRoutinesByIdsResDto, *exceptions.Exception)
+	VisualizeMyRoutineStatusCount(ctx context.Context, reqDto *dtos.VisualizeMyRoutineStatusCountReqDto) (*dtos.VisualizeMyRoutineStatusCountResDto, *exceptions.Exception)
+	VisualizeMyRoutinePeriodCount(ctx context.Context, reqDto *dtos.VisualizeMyRoutinePeriodCountReqDto) (*dtos.VisualizeMyRoutinePeriodCountResDto, *exceptions.Exception)
+	VisualizeMyRoutineScheduledStartAtCount(ctx context.Context, reqDto *dtos.VisualizeMyRoutineScheduledStartAtCountReqDto) (*dtos.VisualizeMyRoutineScheduledStartAtCountResDto, *exceptions.Exception)
+	VisualizeMyRoutineScheduledEndAtCount(ctx context.Context, reqDto *dtos.VisualizeMyRoutineScheduledEndAtCountReqDto) (*dtos.VisualizeMyRoutineScheduledEndAtCountResDto, *exceptions.Exception)
 
 	// services for graphql routines
 	SearchPrivateRoutines(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRoutineInput) (*gqlmodels.SearchRoutineConnection, *exceptions.Exception)
@@ -84,13 +89,98 @@ func NewRoutineService(
 	}
 }
 
+/* ============================== Helper Functions ============================== */
+
+func (s *RoutineService) visualizeMyRoutineTimeCount(
+	ctx context.Context,
+	userId uuid.UUID,
+	permission enums.AccessControlPermission,
+	timeHourUnit int,
+	queryRangeStartedAt time.Time,
+	queryRangeEndedAt time.Time,
+	columnName string,
+	fieldName string,
+) ([]dtos.TwoDimensionalDatum[int64], *exceptions.Exception) {
+	db := s.db.WithContext(ctx)
+
+	var buckets []struct {
+		BucketStart  time.Time `gorm:"column:bucket_start;"`
+		RoutineCount int64     `gorm:"column:routine_count;"`
+	}
+	result := db.
+		Table(
+			`generate_series(
+				date_trunc('hour', ?::timestamptz),
+				date_trunc('hour', ?::timestamptz - interval '1 microsecond'),
+				?::integer * interval '1 hour'
+			) AS buckets(bucket_start)`,
+			queryRangeStartedAt,
+			queryRangeEndedAt,
+			timeHourUnit,
+		).
+		Select(`
+			buckets.bucket_start AS bucket_start,
+			COUNT(uts.station_id) AS routine_count
+		`).
+		Joins(
+			`LEFT JOIN "RoutineTable" routine
+				ON routine.`+columnName+` >= buckets.bucket_start
+				AND routine.`+columnName+` < buckets.bucket_start + ?::integer * interval '1 hour'
+				AND routine.deleted_at IS NULL`,
+			timeHourUnit,
+		).
+		Joins(
+			`LEFT JOIN "UsersToStationsTable" uts
+				ON uts.station_id = routine.station_id
+				AND uts.user_id = ?
+				AND uts.permission = ?`,
+			userId,
+			permission,
+		).
+		Group("buckets.bucket_start").
+		Order("buckets.bucket_start ASC").
+		Scan(&buckets)
+	if err := result.Error; err != nil {
+		return nil, exceptions.Routine.NotFound().WithOrigin(err)
+	}
+
+	data := make([]dtos.TwoDimensionalDatum[int64], len(buckets))
+	for index, bucket := range buckets {
+		bucketEnd := bucket.BucketStart.Add(time.Duration(timeHourUnit) * time.Hour)
+		x := bucket.BucketStart.Format(time.DateOnly)
+		if timeHourUnit < 24 {
+			x = bucket.BucketStart.Format("2006-01-02 15:04")
+		}
+
+		metadata := map[string]any{
+			"bucketStart":  bucket.BucketStart,
+			"bucketEnd":    bucketEnd,
+			"timeHourUnit": timeHourUnit,
+			"field":        fieldName,
+		}
+		meta, err := json.Marshal(metadata)
+		if err != nil {
+			return nil, exceptions.Routine.FailedToMarshalData(metadata)
+		}
+
+		data[index] = dtos.TwoDimensionalDatum[int64]{
+			Id:    bucket.BucketStart.Format(time.RFC3339),
+			X:     x,
+			Value: bucket.RoutineCount,
+			Meta:  meta,
+		}
+	}
+
+	return data, nil
+}
+
 /* ============================== Service Methods for Routine ============================== */
 
 func (s *RoutineService) GetMyRoutineById(
 	ctx context.Context, reqDto *dtos.GetMyRoutineByIdReqDto,
 ) (*dtos.GetMyRoutineByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -156,7 +246,7 @@ func (s *RoutineService) GetMyRoutinesByStationId(
 	ctx context.Context, reqDto *dtos.GetMyRoutinesByStationIdReqDto,
 ) (*dtos.GetMyRoutinesByStationIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -179,10 +269,10 @@ func (s *RoutineService) GetMyRoutinesByStationId(
 
 	var routines []schemas.Routine
 	query := db.Model(&schemas.Routine{}).
-		Select("\"RoutineTable\".*").
-		Joins("INNER JOIN \"UsersToStationsTable\" uts ON uts.station_id = \"RoutineTable\".station_id").
-		Joins("INNER JOIN \"StationTable\" station ON station.id = \"RoutineTable\".station_id AND station.deleted_at IS NULL").
-		Where("\"RoutineTable\".station_id = ?", reqDto.Param.StationId).
+		Select(`"RoutineTable".*`).
+		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = "RoutineTable".station_id`).
+		Joins(`INNER JOIN "StationTable" station ON station.id = "RoutineTable".station_id AND station.deleted_at IS NULL`).
+		Where(`"RoutineTable".station_id = ?`, reqDto.Param.StationId).
 		Where("uts.user_id = ? AND uts.permission IN ?", reqDto.ContextFields.UserId, allowedPermissions).
 		Scopes(s.routineScope.IncludePreloads(
 			[]schemas.RoutineRelation{
@@ -194,9 +284,9 @@ func (s *RoutineService) GetMyRoutinesByStationId(
 
 	query = query.Scopes(s.routineScope.FilterOnlyDeleted(onlyDeleted))
 
-	result := query.Order("\"RoutineTable\".scheduled_start_at ASC").
-		Order("\"RoutineTable\".scheduled_end_at ASC").
-		Order("\"RoutineTable\".id ASC").
+	result := query.Order(`"RoutineTable".scheduled_start_at ASC`).
+		Order(`"RoutineTable".scheduled_end_at ASC`).
+		Order(`"RoutineTable".id ASC`).
 		Find(&routines)
 	if result.Error != nil {
 		return nil, exceptions.Routine.NotFound().WithOrigin(result.Error)
@@ -258,7 +348,7 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 	ctx context.Context, reqDto *dtos.GetAllMyRoutinesByTimeRangeReqDto,
 ) (*dtos.GetAllMyRoutinesByTimeRangeResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 	if !reqDto.Param.From.Before(reqDto.Param.To) { // make sure from is before to
 		return nil, exceptions.Routine.InvalidInput().WithOrigin(fmt.Errorf("from must be before to"))
@@ -351,7 +441,7 @@ func (s *RoutineService) CreateRoutineByStationId(
 	ctx context.Context, reqDto *dtos.CreateRoutineByStationIdReqDto,
 ) (*dtos.CreateRoutineByStationIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -386,7 +476,7 @@ func (s *RoutineService) CreateRoutinesByStationIds(
 	ctx context.Context, reqDto *dtos.CreateRoutinesByStationIdsReqDto,
 ) (*dtos.CreateRoutinesByStationIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -425,7 +515,7 @@ func (s *RoutineService) UpdateMyRoutineById(
 	ctx context.Context, reqDto *dtos.UpdateMyRoutineByIdReqDto,
 ) (*dtos.UpdateMyRoutineByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -462,7 +552,7 @@ func (s *RoutineService) UpdateMyRoutinesByIds(
 	ctx context.Context, reqDto *dtos.UpdateMyRoutinesByIdsReqDto,
 ) (*dtos.UpdateMyRoutinesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -505,7 +595,7 @@ func (s *RoutineService) LinkRoutineTagById(
 	ctx context.Context, reqDto *dtos.LinkRoutineTagByIdReqDto,
 ) (*dtos.LinkRoutineTagByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
@@ -573,7 +663,7 @@ func (s *RoutineService) BulkLinkRoutineTagsByIds(
 	ctx context.Context, reqDto *dtos.BulkLinkRoutineTagsByIdsReqDto,
 ) (*dtos.BulkLinkRoutineTagsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
@@ -685,7 +775,7 @@ func (s *RoutineService) LinkRoutineTaskById(
 	ctx context.Context, reqDto *dtos.LinkRoutineTaskByIdReqDto,
 ) (*dtos.LinkRoutineTaskByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
@@ -753,7 +843,7 @@ func (s *RoutineService) BulkLinkRoutineTasksByIds(
 	ctx context.Context, reqDto *dtos.BulkLinkRoutineTasksByIdsReqDto,
 ) (*dtos.BulkLinkRoutineTasksByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
@@ -865,7 +955,7 @@ func (s *RoutineService) LinkRoutineItemById(
 	ctx context.Context, reqDto *dtos.LinkRoutineItemByIdReqDto,
 ) (*dtos.LinkRoutineItemByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
@@ -940,7 +1030,7 @@ func (s *RoutineService) BulkLinkRoutineItemsByIds(
 	ctx context.Context, reqDto *dtos.BulkLinkRoutineItemsByIdsReqDto,
 ) (*dtos.BulkLinkRoutineItemsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
@@ -1064,7 +1154,7 @@ func (s *RoutineService) RestoreMyRoutineById(
 	ctx context.Context, reqDto *dtos.RestoreMyRoutineByIdReqDto,
 ) (*dtos.RestoreMyRoutineByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -1099,7 +1189,7 @@ func (s *RoutineService) RestoreMyRoutinesByIds(
 	ctx context.Context, reqDto *dtos.RestoreMyRoutinesByIdsReqDto,
 ) (*dtos.RestoreMyRoutinesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -1139,7 +1229,7 @@ func (s *RoutineService) DeleteMyRoutineById(
 	ctx context.Context, reqDto *dtos.DeleteMyRoutineByIdReqDto,
 ) (*dtos.DeleteMyRoutineByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -1162,7 +1252,7 @@ func (s *RoutineService) DeleteMyRoutinesByIds(
 	ctx context.Context, reqDto *dtos.DeleteMyRoutinesByIdsReqDto,
 ) (*dtos.DeleteMyRoutinesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -1185,7 +1275,7 @@ func (s *RoutineService) HardDeleteMyRoutineById(
 	ctx context.Context, reqDto *dtos.HardDeleteMyRoutineByIdReqDto,
 ) (*dtos.HardDeleteMyRoutineByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -1208,7 +1298,7 @@ func (s *RoutineService) HardDeleteMyRoutinesByIds(
 	ctx context.Context, reqDto *dtos.HardDeleteMyRoutinesByIdsReqDto,
 ) (*dtos.HardDeleteMyRoutinesByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -1224,6 +1314,235 @@ func (s *RoutineService) HardDeleteMyRoutinesByIds(
 
 	return &dtos.HardDeleteMyRoutinesByIdsResDto{
 		DeletedAt: time.Now(),
+	}, nil
+}
+
+/* ============================== Service Methods for Charts ============================== */
+
+func (s *RoutineService) VisualizeMyRoutineStatusCount(
+	ctx context.Context, reqDto *dtos.VisualizeMyRoutineStatusCountReqDto,
+) (*dtos.VisualizeMyRoutineStatusCountResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	var counts struct {
+		ScheduledCount  int64 `gorm:"column:scheduled_count;"`
+		InProgressCount int64 `gorm:"column:in_progress_count;"`
+		CompletedCount  int64 `gorm:"column:completed_count;"`
+		OverDueCount    int64 `gorm:"column:over_due_count;"`
+	}
+	result := db.Model(&schemas.Routine{}).
+		Select(`
+			COUNT(*) FILTER (WHERE status = ?) as scheduled_count,
+			COUNT(*) FILTER (WHERE status = ?) as in_progress_count,
+			COUNT(*) FILTER (WHERE status = ?) as completed_count,
+			COUNT(*) FILTER (WHERE status = ?) as over_due_count
+		`,
+			enums.RoutineStatus_Scheduled,
+			enums.RoutineStatus_InProgress,
+			enums.RoutineStatus_Completed,
+			enums.RoutineStatus_OverDue,
+		).
+		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = "RoutineTable".station_id`).
+		Where("uts.user_id = ? AND uts.permission = ?", reqDto.ContextFields.UserId, reqDto.Param.Permission).
+		Where(`"RoutineTable".deleted_at IS NULL`).
+		Scan(&counts)
+	if err := result.Error; err != nil {
+		return nil, exceptions.Routine.NotFound().WithOrigin(err)
+	}
+
+	scheduledRoutineMetadata := map[string]string{"status": "scheduled"}
+	scheduledRoutineMeta, err := json.Marshal(scheduledRoutineMetadata)
+	if err != nil {
+		return nil, exceptions.Routine.FailedToMarshalData(scheduledRoutineMetadata)
+	}
+
+	inProgressRoutineMetadata := map[string]string{"status": "inProgress"}
+	inProgressRoutineMeta, err := json.Marshal(inProgressRoutineMetadata)
+	if err != nil {
+		return nil, exceptions.Routine.FailedToMarshalData(inProgressRoutineMetadata)
+	}
+
+	completedRoutineMetadata := map[string]string{"status": "completed"}
+	completedRoutineMeta, err := json.Marshal(completedRoutineMetadata)
+	if err != nil {
+		return nil, exceptions.Routine.FailedToMarshalData(completedRoutineMetadata)
+	}
+
+	overDueRoutineMetadata := map[string]string{"status": "overDue"}
+	overDueRoutineMeta, err := json.Marshal(overDueRoutineMetadata)
+	if err != nil {
+		return nil, exceptions.Routine.FailedToMarshalData(overDueRoutineMetadata)
+	}
+
+	return &dtos.VisualizeMyRoutineStatusCountResDto{
+		Data: []dtos.TwoDimensionalDatum[int64]{
+			dtos.TwoDimensionalDatum[int64]{
+				Id:    "scheduled-routine-count",
+				X:     "Scheduled Routine Count",
+				Value: counts.ScheduledCount,
+				Meta:  scheduledRoutineMeta,
+			},
+			dtos.TwoDimensionalDatum[int64]{
+				Id:    "in-progress-routine-count",
+				X:     "In Progress Routine Count",
+				Value: counts.InProgressCount,
+				Meta:  inProgressRoutineMeta,
+			},
+			dtos.TwoDimensionalDatum[int64]{
+				Id:    "completed-routine-count",
+				X:     "Completed Routine Count",
+				Value: counts.CompletedCount,
+				Meta:  completedRoutineMeta,
+			},
+			dtos.TwoDimensionalDatum[int64]{
+				Id:    "over-due-routine-count",
+				X:     "Over Due Routine Count",
+				Value: counts.OverDueCount,
+				Meta:  overDueRoutineMeta,
+			},
+		},
+	}, nil
+}
+
+func (s *RoutineService) VisualizeMyRoutinePeriodCount(
+	ctx context.Context, reqDto *dtos.VisualizeMyRoutinePeriodCountReqDto,
+) (*dtos.VisualizeMyRoutinePeriodCountResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	var counts struct {
+		DailyCount   int64 `gorm:"column:daily_count;"`
+		WeeklyCount  int64 `gorm:"column:weekly_count;"`
+		MonthlyCount int64 `gorm:"column:monthly_count;"`
+	}
+	result := db.Model(&schemas.Routine{}).
+		Select(`
+			COUNT(*) FILTER (WHERE period = ?) as daily_count,
+			COUNT(*) FILTER (WHERE period = ?) as weekly_count,
+			COUNT(*) FILTER (WHERE period = ?) as monthly_count
+		`,
+			enums.RoutinePeriod_Daily,
+			enums.RoutinePeriod_Weekly,
+			enums.RoutinePeriod_Monthly,
+		).
+		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = "RoutineTable".station_id`).
+		Where("uts.user_id = ? AND uts.permission = ?", reqDto.ContextFields.UserId, reqDto.Param.Permission).
+		Where(`"RoutineTable".deleted_at IS NULL`).
+		Scan(&counts)
+	if err := result.Error; err != nil {
+		return nil, exceptions.Routine.NotFound().WithOrigin(err)
+	}
+
+	dailyRoutineMetadata := map[string]string{"period": "daily"}
+	dailyRoutineMeta, err := json.Marshal(dailyRoutineMetadata)
+	if err != nil {
+		return nil, exceptions.Routine.FailedToMarshalData(dailyRoutineMetadata)
+	}
+
+	weeklyRoutineMetadata := map[string]string{"period": "daily"}
+	weeklyRoutineMeta, err := json.Marshal(weeklyRoutineMetadata)
+	if err != nil {
+		return nil, exceptions.Routine.FailedToMarshalData(weeklyRoutineMetadata)
+	}
+
+	monthlyRoutineMetadata := map[string]string{"period": "daily"}
+	monthlyRoutineMeta, err := json.Marshal(monthlyRoutineMetadata)
+	if err != nil {
+		return nil, exceptions.Routine.FailedToMarshalData(monthlyRoutineMetadata)
+	}
+
+	return &dtos.VisualizeMyRoutinePeriodCountResDto{
+		Data: []dtos.TwoDimensionalDatum[int64]{
+			dtos.TwoDimensionalDatum[int64]{
+				Id:    "daily-routine-count",
+				X:     "Daily Routine Count",
+				Value: counts.DailyCount,
+				Meta:  dailyRoutineMeta,
+			},
+			dtos.TwoDimensionalDatum[int64]{
+				Id:    "weekly-routine-count",
+				X:     "Weekly Routine Count",
+				Value: counts.WeeklyCount,
+				Meta:  weeklyRoutineMeta,
+			},
+			dtos.TwoDimensionalDatum[int64]{
+				Id:    "monthly-routine-count",
+				X:     "Monthly Routine Count",
+				Value: counts.MonthlyCount,
+				Meta:  monthlyRoutineMeta,
+			},
+		},
+	}, nil
+}
+
+func (s *RoutineService) VisualizeMyRoutineScheduledStartAtCount(
+	ctx context.Context, reqDto *dtos.VisualizeMyRoutineScheduledStartAtCountReqDto,
+) (*dtos.VisualizeMyRoutineScheduledStartAtCountResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
+	}
+	if !reqDto.Param.QueryRangeStartedAt.Before(reqDto.Param.QueryRangeEndedAt) {
+		return nil, exceptions.Routine.InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
+	}
+	if !util.IsTimeWithin(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
+		return nil, exceptions.Routine.QueriedTimeRangeTooLarge(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt)
+	}
+
+	data, exception := s.visualizeMyRoutineTimeCount(
+		ctx,
+		reqDto.ContextFields.UserId,
+		reqDto.Param.Permission,
+		reqDto.Param.TimeHourUnit,
+		reqDto.Param.QueryRangeStartedAt,
+		reqDto.Param.QueryRangeEndedAt,
+		"scheduled_start_at",
+		"scheduledStartAt",
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.VisualizeMyRoutineScheduledStartAtCountResDto{
+		Data: data,
+	}, nil
+}
+
+func (s *RoutineService) VisualizeMyRoutineScheduledEndAtCount(
+	ctx context.Context, reqDto *dtos.VisualizeMyRoutineScheduledEndAtCountReqDto,
+) (*dtos.VisualizeMyRoutineScheduledEndAtCountResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
+	}
+	if !reqDto.Param.QueryRangeStartedAt.Before(reqDto.Param.QueryRangeEndedAt) {
+		return nil, exceptions.Routine.InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
+	}
+	if !util.IsTimeWithin(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
+		return nil, exceptions.Routine.QueriedTimeRangeTooLarge(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt)
+	}
+
+	data, exception := s.visualizeMyRoutineTimeCount(
+		ctx,
+		reqDto.ContextFields.UserId,
+		reqDto.Param.Permission,
+		reqDto.Param.TimeHourUnit,
+		reqDto.Param.QueryRangeStartedAt,
+		reqDto.Param.QueryRangeEndedAt,
+		"scheduled_end_at",
+		"scheduledEndAt",
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.VisualizeMyRoutineScheduledEndAtCountResDto{
+		Data: data,
 	}, nil
 }
 
@@ -1248,14 +1567,14 @@ func (s *RoutineService) SearchPrivateRoutines(
 	}
 
 	query := db.Model(&schemas.Routine{}).
-		Select("\"RoutineTable\".*, uts.permission AS permission").
-		Joins("LEFT JOIN \"UsersToStationsTable\" uts ON \"RoutineTable\".station_id = uts.station_id").
+		Select(`"RoutineTable".*, uts.permission AS permission`).
+		Joins(`LEFT JOIN "UsersToStationsTable" uts ON "RoutineTable".station_id = uts.station_id`).
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
-		Where("\"RoutineTable\".deleted_at IS NULL")
+		Where(`"RoutineTable".deleted_at IS NULL`)
 
 	if len(gqlInput.StationIds) > 0 {
 		query = query.Where(
-			"\"RoutineTable\".station_id IN ?",
+			`"RoutineTable".station_id IN ?`,
 			gqlInput.StationIds,
 		)
 	}
@@ -1274,8 +1593,8 @@ func (s *RoutineService) SearchPrivateRoutines(
 			Session(&gorm.Session{NewDB: true}).
 			Model(&schemas.RoutinesToTags{}).
 			Select("1").
-			Where("\"RoutinesToTagsTable\".routine_id = \"RoutineTable\".id").
-			Where("\"RoutinesToTagsTable\".tag_id IN ?", gqlInput.TagIds)
+			Where(`"RoutinesToTagsTable".routine_id = "RoutineTable".id`).
+			Where(`"RoutinesToTagsTable".tag_id IN ?`, gqlInput.TagIds)
 
 		query = query.Where("EXISTS (?)", subQuery)
 	}
@@ -1293,7 +1612,7 @@ func (s *RoutineService) SearchPrivateRoutines(
 		}
 
 		query = query.Where(
-			"\"RoutineTable\".id > ?",
+			`"RoutineTable".id > ?`,
 			searchCursor.Fields.ID,
 		)
 	}

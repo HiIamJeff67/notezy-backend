@@ -8,7 +8,6 @@ CHECK (
             WHEN 'Daily'::"RoutinePeriod" THEN INTERVAL '1 day'
             WHEN 'Weekly'::"RoutinePeriod" THEN INTERVAL '1 week'
             WHEN 'Monthly'::"RoutinePeriod" THEN INTERVAL '1 month'
-            WHEN 'Yearly'::"RoutinePeriod" THEN INTERVAL '1 year'
         END
     )
 );

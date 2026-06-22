@@ -275,7 +275,7 @@ type GetMyBlockPackByIdResDto struct {
 	Name                string               `json:"name" gorm:"column:name;"`
 	Icon                *enums.SupportedIcon `json:"icon" gorm:"column:icon;"`
 	HeaderBackgroundURL *string              `json:"headerBackgroundURL" gorm:"column:header_background_url;"`
-	BlockCount          int32                `json:"blockCount" gorm:"column:block_count;"`
+	BlockCount          int64                `json:"blockCount" gorm:"column:block_count;"`
 	DeletedAt           *time.Time           `json:"deletedAt" gorm:"column:deleted_at;"`
 	UpdatedAt           time.Time            `json:"updatedAt" gorm:"column:updated_at;"`
 	CreatedAt           time.Time            `json:"createdAt" gorm:"column:created_at;"`
@@ -286,7 +286,7 @@ type GetMyBlockPackAndItsParentByIdResDto struct {
 	Name                         string               `json:"name" gorm:"column:name;"`
 	Icon                         *enums.SupportedIcon `json:"icon" gorm:"column:icon;"`
 	HeaderBackgroundURL          *string              `json:"headerBackgroundURL" gorm:"column:header_background_url;"`
-	BlockCount                   int32                `json:"blockCount" gorm:"column:block_count;"`
+	BlockCount                   int64                `json:"blockCount" gorm:"column:block_count;"`
 	DeletedAt                    *time.Time           `json:"deletedAt" gorm:"column:deleted_at;"`
 	UpdatedAt                    time.Time            `json:"updatedAt" gorm:"column:updated_at;"`
 	CreatedAt                    time.Time            `json:"createdAt" gorm:"column:created_at;"`
@@ -340,7 +340,7 @@ type RestoreMyBlockPackByIdResDto struct {
 	Name                string               `json:"name" gorm:"column:name;"`
 	Icon                *enums.SupportedIcon `json:"icon" gorm:"column:icon;"`
 	HeaderBackgroundURL *string              `json:"headerBackgroundURL" gorm:"column:header_background_url;"`
-	BlockCount          int32                `json:"blockCount" gorm:"column:block_count;"`
+	BlockCount          int64                `json:"blockCount" gorm:"column:block_count;"`
 	DeletedAt           *time.Time           `json:"deletedAt"`
 	UpdatedAt           time.Time            `json:"updatedAt"`
 	CreatedAt           time.Time            `json:"createdAt"`

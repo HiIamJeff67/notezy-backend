@@ -22,6 +22,7 @@ type StationControllerInterface interface {
 	DeleteMyStationsByIds(ctx *gin.Context, reqDto *dtos.DeleteMyStationsByIdsReqDto)
 	HardDeleteMyStationById(ctx *gin.Context, reqDto *dtos.HardDeleteMyStationByIdReqDto)
 	HardDeleteMyStationsByIds(ctx *gin.Context, reqDto *dtos.HardDeleteMyStationsByIdsReqDto)
+	VisualizeMyTotalCount(ctx *gin.Context, reqDto *dtos.VisualizeMyTotalCountReqDto)
 }
 
 type StationController struct {
@@ -190,6 +191,20 @@ func (c *StationController) HardDeleteMyStationById(ctx *gin.Context, reqDto *dt
 
 func (c *StationController) HardDeleteMyStationsByIds(ctx *gin.Context, reqDto *dtos.HardDeleteMyStationsByIdsReqDto) {
 	resDto, exception := c.stationService.HardDeleteMyStationsByIds(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *StationController) VisualizeMyTotalCount(ctx *gin.Context, reqDto *dtos.VisualizeMyTotalCountReqDto) {
+	resDto, exception := c.stationService.VisualizeMyTotalCount(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return

@@ -316,6 +316,8 @@ func (ec *executionContext) fieldContext_SearchStationEdge_node(_ context.Contex
 				return ec.fieldContext_PrivateSearchableStation_headerBackgroundURL(ctx, field)
 			case "routineCount":
 				return ec.fieldContext_PrivateSearchableStation_routineCount(ctx, field)
+			case "routineTaskCount":
+				return ec.fieldContext_PrivateSearchableStation_routineTaskCount(ctx, field)
 			case "deletedAt":
 				return ec.fieldContext_PrivateSearchableStation_deletedAt(ctx, field)
 			case "createdAt":

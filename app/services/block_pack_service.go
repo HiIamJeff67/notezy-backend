@@ -179,8 +179,8 @@ func (s *BlockPackService) GetMyBlockPacksByParentSubShelfId(
 
 	resDto := dtos.GetMyBlockPacksByParentSubShelfIdResDto{}
 	result := db.Model(&schemas.BlockPack{}).
-		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"BlockPackTable\".parent_sub_shelf_id = ss.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
+		Joins(`LEFT JOIN "SubShelfTable" ss ON "BlockPackTable".parent_sub_shelf_id = ss.id`).
+		Joins(`LEFT JOIN "UsersToShelvesTable" uts ON ss.root_shelf_id = uts.root_shelf_id`).
 		Where("ss.id = ? AND uts.user_id = ? AND uts.permission IN ?",
 			reqDto.Param.ParentSubShelfId,
 			reqDto.ContextFields.UserId,
@@ -222,8 +222,8 @@ func (s *BlockPackService) GetAllMyBlockPacksByRootShelfId(
 
 	resDto := dtos.GetAllMyBlockPacksByRootShelfIdResDto{}
 	result := db.Model(&schemas.BlockPack{}).
-		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"BlockPackTable\".parent_sub_shelf_id = ss.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
+		Joins(`LEFT JOIN "SubShelfTable" ss ON "BlockPackTable".parent_sub_shelf_id = ss.id`).
+		Joins(`LEFT JOIN "UsersToShelvesTable" uts ON ss.root_shelf_id = uts.root_shelf_id`).
 		Where("ss.root_shelf_id = ? AND uts.user_id = ? AND uts.permission IN ?",
 			reqDto.Param.RootShelfId, reqDto.ContextFields.UserId, allowedPermissions,
 		).Scopes(scopes.NewBlockPackScope().FilterOnlyDeleted(onlyDeleted)).

@@ -6,13 +6,29 @@ BEGIN
         USING ERRCODE = 'program_limit_exceeded';
     END IF;
 
-    WITH owner_deltas AS (
+    WITH station_deltas AS (
         SELECT
-            s.owner_id,
+            station_id,
             count(*) as total_delta
         FROM old_table ot
-        JOIN "StationTable" s ON s.id = ot.station_id
-        GROUP BY s.owner_id
+        GROUP BY station_id
+    ),
+    updated_stations AS (
+        UPDATE "StationTable" s
+        SET
+            routine_task_count = GREATEST(0, routine_task_count - sd.total_delta),
+            updated_at = NOW()
+        FROM station_deltas sd
+        WHERE s.id = sd.station_id
+        RETURNING s.id, s.owner_id
+    ),
+    owner_deltas AS (
+        SELECT
+            us.owner_id,
+            sum(sd.total_delta) as total_delta
+        FROM updated_stations us
+        JOIN station_deltas sd ON sd.station_id = us.id
+        GROUP BY us.owner_id
     )
     UPDATE "UserAccountTable" ua
     SET

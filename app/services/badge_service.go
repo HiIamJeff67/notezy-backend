@@ -57,8 +57,8 @@ func (s *BadgeService) GetPublicBadgeByUserPublicId(
 	badge := schemas.Badge{}
 	result := db.Table(schemas.Badge{}.TableName()+" b").
 		Select("b.*, utb.user_id").
-		Joins("LEFT JOIN \"UsersToBadgesTable\" utb ON utb.badge_id = b.id").
-		Joins("LEFT JOIN \"UserTable\" u ON u.id = utb.user_id").
+		Joins(`LEFT JOIN "UsersToBadgesTable" utb ON utb.badge_id = b.id`).
+		Joins(`LEFT JOIN "UserTable" u ON u.id = utb.user_id`).
 		Where("u.public_id = ?", publicId).
 		First(&badge)
 	if err := result.Error; err != nil {
@@ -95,8 +95,8 @@ func (s *BadgeService) GetPublicBadgesByUserPublicIds(
 	}
 	result := db.Table(schemas.Badge{}.TableName()+" b").
 		Select("b.*, u.public_id as user_public_id").
-		Joins("LEFT JOIN \"UsersToBadgesTable\" utb ON utb.badge_id = b.id").
-		Joins("LEFT JOIN \"UserTable\" u ON u.id = utb.user_id").
+		Joins(`LEFT JOIN "UsersToBadgesTable" utb ON utb.badge_id = b.id`).
+		Joins(`LEFT JOIN "UserTable" u ON u.id = utb.user_id`).
 		Where("u.public_id IN ?", uniquePublicIds).
 		Find(&badgesWithPublicUserIds)
 	if err := result.Error; err != nil {

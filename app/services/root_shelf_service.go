@@ -113,7 +113,7 @@ func (s *RootShelfService) SearchRecentRootShelves(
 	resDto := dtos.SearchRecentRootShelvesResDto{}
 
 	query := db.Model(&schemas.RootShelf{}).
-		Where("owner_id = ? AND \"RootShelfTable\".deleted_at IS NULL",
+		Where(`owner_id = ? AND "RootShelfTable".deleted_at IS NULL`,
 			reqDto.ContextFields.UserId,
 		)
 	if len(strings.ReplaceAll(reqDto.Param.Query, " ", "")) > 0 {
@@ -395,10 +395,10 @@ func (s *RootShelfService) SearchPrivateRootShelves(
 	db := s.db.WithContext(ctx)
 
 	query := db.Model(&schemas.RootShelf{}).
-		Select("\"RootShelfTable\".*, uts.permission AS permission").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON \"RootShelfTable\".id = uts.root_shelf_id").
+		Select(`"RootShelfTable".*, uts.permission AS permission`).
+		Joins(`LEFT JOIN "UsersToShelvesTable" uts ON "RootShelfTable".id = uts.root_shelf_id`).
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
-		Where("\"RootShelfTable\".deleted_at IS NULL")
+		Where(`"RootShelfTable".deleted_at IS NULL`)
 
 	if len(strings.ReplaceAll(gqlInput.Query, " ", "")) > 0 {
 		query = query.Where(

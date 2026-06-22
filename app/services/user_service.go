@@ -206,7 +206,7 @@ func (s *UserService) GetPublicAuthorByThemePublicIds(
 	}
 	result := db.Table(schemas.User{}.TableName()+" u").
 		Select("u.*, t.public_id as theme_public_id").
-		Joins("LEFT JOIN \"ThemeTable\" t ON t.author_id = u.id").
+		Joins(`LEFT JOIN "ThemeTable" t ON t.author_id = u.id`).
 		Where("t.public_id IN ?", uniquePublicIds).
 		Find(&authorsWithPublicThemeIds)
 	if err := result.Error; err != nil {

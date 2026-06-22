@@ -235,8 +235,6 @@ models:
         value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutinePeriod_Weekly"
       RoutinePeriod_Monthly:
         value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutinePeriod_Monthly"
-      RoutinePeriod_Yearly:
-        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutinePeriod_Yearly"
   RoutineStatus:
     model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineStatus"
     enum_values:

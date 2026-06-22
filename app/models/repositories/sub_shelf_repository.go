@@ -84,7 +84,7 @@ func (r *SubShelfRepository) HavePermissions(
 	var permittedIds []uuid.UUID
 	result := parsedOptions.DB.
 		Model(&schemas.SubShelf{}).
-		Select("DISTINCT \"SubShelfTable\".id").
+		Select(`DISTINCT "SubShelfTable".id`).
 		Scopes(r.subShelfScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.subShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Clauses(clause.Locking{Strength: "SHARE"}).
@@ -192,7 +192,7 @@ func (r *SubShelfRepository) GetAllByRootShelfId(
 
 	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
 		Select("1").
-		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id AND user_id = ? AND permission IN ?",
+		Where(`root_shelf_id = "SubShelfTable".root_shelf_id AND user_id = ? AND permission IN ?`,
 			userId, allowedPermissions,
 		)
 	query := parsedOptions.DB.Model(&schemas.SubShelf{}).
@@ -574,7 +574,7 @@ func (r *SubShelfRepository) RestoreSoftDeletedOneById(
 		Scopes(r.subShelfScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.subShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Clauses(clause.Returning{}).
-		Where("\"SubShelfTable\".id = ?", id).
+		Where(`"SubShelfTable".id = ?`, id).
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
@@ -609,7 +609,7 @@ func (r *SubShelfRepository) RestoreSoftDeletedManyByIds(
 		Scopes(r.subShelfScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.subShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Clauses(clause.Returning{}).
-		Where("\"SubShelfTable\".id IN ?", ids).
+		Where(`"SubShelfTable".id IN ?`, ids).
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
@@ -638,7 +638,7 @@ func (r *SubShelfRepository) SoftDeleteOneById(
 	result := parsedOptions.DB.Model(&schemas.SubShelf{}).
 		Scopes(r.subShelfScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.subShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Where("\"SubShelfTable\".id = ?", id).
+		Where(`"SubShelfTable".id = ?`, id).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
@@ -670,7 +670,7 @@ func (r *SubShelfRepository) SoftDeleteManyByIds(
 	result := parsedOptions.DB.Model(&schemas.SubShelf{}).
 		Scopes(r.subShelfScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.subShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Where("\"SubShelfTable\".id IN ?", ids).
+		Where(`"SubShelfTable".id IN ?`, ids).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
@@ -698,7 +698,7 @@ func (r *SubShelfRepository) HardDeleteOneById(
 	result := parsedOptions.DB.Model(&schemas.SubShelf{}).
 		Scopes(r.subShelfScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.subShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Where("\"SubShelfTable\".id = ?", id).
+		Where(`"SubShelfTable".id = ?`, id).
 		Delete(&schemas.SubShelf{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Shelf.FailedToDelete().WithOrigin(result.Error)},
@@ -730,7 +730,7 @@ func (r *SubShelfRepository) HardDeleteManyByIds(
 	result := parsedOptions.DB.Model(&schemas.SubShelf{}).
 		Scopes(r.subShelfScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.subShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Where("\"SubShelfTable\".id IN ?", ids).
+		Where(`"SubShelfTable".id IN ?`, ids).
 		Delete(&schemas.SubShelf{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Shelf.FailedToDelete().WithOrigin(result.Error)},

@@ -85,7 +85,7 @@ func (r *RootShelfRepository) HavePermissions(
 	var permittedIds []uuid.UUID
 	result := parsedOptions.DB.
 		Model(&schemas.RootShelf{}).
-		Select("DISTINCT \"RootShelfTable\".id").
+		Select(`DISTINCT "RootShelfTable".id`).
 		Scopes(r.rootShelfScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.rootShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Clauses(clause.Locking{Strength: "SHARE"}).
@@ -474,7 +474,7 @@ func (r *RootShelfRepository) BulkUpdateManyByIds(
 			continue
 		}
 
-		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::string, ?::integer, ?::integer, ?::timestamptz)")
+		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::string, ?::bigint, ?::bigint, ?::timestamptz)")
 		valueArgs = append(valueArgs,
 			in.Id,
 			in.PartialUpdateInput.Values.Name,
@@ -488,8 +488,8 @@ func (r *RootShelfRepository) BulkUpdateManyByIds(
 		UPDATE "RootShelfTable" AS r
 		SET
 			name = COALESCE(v.name::string, r.name),
-			sub_shelf_count = COALESCE(v.sub_shelf_count::integer, r.sub_shelf_count),
-			item_count = COALESCE(v.item_count:integer, r.item_count),
+			sub_shelf_count = COALESCE(v.sub_shelf_count::bigint, r.sub_shelf_count),
+			item_count = COALESCE(v.item_count::bigint, r.item_count),
 			last_analyzed_at = COALESCE(v.last_analyzed_at, r.last_analyzed_at),
 			updated_at = NOW()
 		FROM (VALUES %s) AS v(id, name, sub_shelf_count, item_count, last_analyzed_at)
@@ -532,7 +532,7 @@ func (r *RootShelfRepository) RestoreSoftDeletedOneById(
 		Scopes(r.rootShelfScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.rootShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Clauses(clause.Returning{}).
-		Where("\"RootShelfTable\".id = ?", id).
+		Where(`"RootShelfTable".id = ?`, id).
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
@@ -567,7 +567,7 @@ func (r *RootShelfRepository) RestoreSoftDeletedManyByIds(
 		Scopes(r.rootShelfScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.rootShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Clauses(clause.Returning{}).
-		Where("\"RootShelfTable\".id IN ?", ids).
+		Where(`"RootShelfTable".id IN ?`, ids).
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
@@ -596,7 +596,7 @@ func (r *RootShelfRepository) SoftDeleteOneById(
 	result := parsedOptions.DB.Model(&schemas.RootShelf{}).
 		Scopes(r.rootShelfScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.rootShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Where("\"RootShelfTable\".id = ?", id).
+		Where(`"RootShelfTable".id = ?`, id).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
@@ -628,7 +628,7 @@ func (r *RootShelfRepository) SoftDeleteManyByIds(
 	result := parsedOptions.DB.Model(&schemas.RootShelf{}).
 		Scopes(r.rootShelfScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.rootShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Where("\"RootShelfTable\".id IN ?", ids).
+		Where(`"RootShelfTable".id IN ?`, ids).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)},
@@ -677,7 +677,7 @@ func (r *RootShelfRepository) HardDeleteOneById(
 	result := parsedOptions.DB.Model(&schemas.RootShelf{}).
 		Scopes(r.rootShelfScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.rootShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Where("\"RootShelfTable\".id = ?", id).
+		Where(`"RootShelfTable".id = ?`, id).
 		Delete(&schemas.RootShelf{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Shelf.FailedToDelete().WithOrigin(result.Error)},
@@ -709,7 +709,7 @@ func (r *RootShelfRepository) HardDeleteManyByIds(
 	result := parsedOptions.DB.Model(&schemas.RootShelf{}).
 		Scopes(r.rootShelfScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.rootShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Where("\"RootShelfTable\".id IN ?", ids).
+		Where(`"RootShelfTable".id IN ?`, ids).
 		Delete(&schemas.RootShelf{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Shelf.FailedToDelete().WithOrigin(result.Error)},

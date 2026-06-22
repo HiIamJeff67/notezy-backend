@@ -131,6 +131,90 @@ type HardDeleteMyRoutineTasksByIdsReqDto struct {
 	]
 }
 
+type VisualizeMyRoutineTaskStatusCountReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		any,
+		struct {
+			Permission enums.AccessControlPermission `json:"permission" validate:"isaccesscontrolpermission,required"`
+		},
+	]
+}
+
+type VisualizeMyRoutineTaskPurposeCountReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		any,
+		struct {
+			Permission enums.AccessControlPermission `json:"permission" validate:"isaccesscontrolpermission,required"`
+		},
+	]
+}
+
+type VisualizeMyRoutineTaskScheduledAtCountReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		any,
+		struct {
+			Permission          enums.AccessControlPermission `json:"permission" validate:"isaccesscontrolpermission,required"`
+			TimeHourUnit        int                           `json:"timeHourUnit" validate:"required,min=1"`
+			QueryRangeStartedAt time.Time                     `json:"queryRangeStartedAt" validate:"required"`
+			QueryRangeEndedAt   time.Time                     `json:"queryRangeEndedAt" validate:"required"`
+		},
+	]
+}
+
+type VisualizeMyRoutineTaskActualStartedAtCountReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		any,
+		struct {
+			Permission          enums.AccessControlPermission `json:"permission" validate:"isaccesscontrolpermission,required"`
+			TimeHourUnit        int                           `json:"timeHourUnit" validate:"required,min=1"`
+			QueryRangeStartedAt time.Time                     `json:"queryRangeStartedAt" validate:"required"`
+			QueryRangeEndedAt   time.Time                     `json:"queryRangeEndedAt" validate:"required"`
+		},
+	]
+}
+
+type VisualizeMyRoutineTaskActualEndedAtCountReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		any,
+		struct {
+			Permission          enums.AccessControlPermission `json:"permission" validate:"isaccesscontrolpermission,required"`
+			TimeHourUnit        int                           `json:"timeHourUnit" validate:"required,min=1"`
+			QueryRangeStartedAt time.Time                     `json:"queryRangeStartedAt" validate:"required"`
+			QueryRangeEndedAt   time.Time                     `json:"queryRangeEndedAt" validate:"required"`
+		},
+	]
+}
+
 /* ============================== Response DTO ============================== */
 
 type GetMyRoutineTaskByIdResDto struct {
@@ -184,3 +268,13 @@ type HardDeleteMyRoutineTaskByIdResDto struct {
 type HardDeleteMyRoutineTasksByIdsResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`
 }
+
+type VisualizeMyRoutineTaskStatusCountResDto = TwoDimensionalData[int64]
+
+type VisualizeMyRoutineTaskPurposeCountResDto = TwoDimensionalData[int64]
+
+type VisualizeMyRoutineTaskScheduledAtCountResDto = TwoDimensionalData[int64]
+
+type VisualizeMyRoutineTaskActualStartedAtCountResDto = TwoDimensionalData[int64]
+
+type VisualizeMyRoutineTaskActualEndedAtCountResDto = TwoDimensionalData[int64]

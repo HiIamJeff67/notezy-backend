@@ -86,7 +86,7 @@ func (r *StationRepository) HavePermissions(
 	var permittedIds []uuid.UUID
 	result := parsedOptions.DB.
 		Model(&schemas.Station{}).
-		Select("DISTINCT \"StationTable\".id").
+		Select(`DISTINCT "StationTable".id`).
 		Scopes(r.stationScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Clauses(clause.Locking{Strength: "SHARE"}).
@@ -248,13 +248,13 @@ func (r *StationRepository) GetAllByUserId(
 	var stationsWithPermissions []stationWithPermission
 	result := parsedOptions.DB.
 		Model(&schemas.Station{}).
-		Select("\"StationTable\".*, uts.permission AS permission").
-		Joins("INNER JOIN \"UsersToStationsTable\" uts ON uts.station_id = \"StationTable\".id").
+		Select(`"StationTable".*, uts.permission AS permission`).
+		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = "StationTable".id`).
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
 		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.stationScope.IncludePreloads(preloads)).
-		Order("\"StationTable\".created_at ASC").
-		Order("\"StationTable\".id ASC").
+		Order(`"StationTable".created_at ASC`).
+		Order(`"StationTable".id ASC`).
 		Find(&stationsWithPermissions)
 	if result.Error != nil {
 		return nil, nil, exceptions.Station.NotFound().WithOrigin(result.Error)
@@ -443,7 +443,7 @@ func (r *StationRepository) UpdateOneById(
 	}
 
 	result := parsedOptions.DB.Model(&schemas.Station{}).
-		Where("\"StationTable\".id = ? AND \"StationTable\".deleted_at IS NULL", id).
+		Where(`"StationTable".id = ? AND "StationTable".deleted_at IS NULL`, id).
 		Select("*").
 		Updates(&updates)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
@@ -533,7 +533,7 @@ func (r *StationRepository) BulkUpdateManyByIds(
 			}
 		}
 
-		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::text, ?::text, ?::\"SupportedIcon\", ?::text, ?::boolean, ?::boolean)")
+		valuePlaceholders = append(valuePlaceholders, `(?::uuid, ?::text, ?::text, ?::"SupportedIcon", ?::text, ?::boolean, ?::boolean)`)
 		valueArgs = append(valueArgs,
 			in.Id,
 			in.PartialUpdateInput.Values.Name,
@@ -604,7 +604,7 @@ func (r *StationRepository) RestoreSoftDeletedOneById(
 		Scopes(r.stationScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Clauses(clause.Returning{}).
-		Where("\"StationTable\".id = ?", id).
+		Where(`"StationTable".id = ?`, id).
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
@@ -639,7 +639,7 @@ func (r *StationRepository) RestoreSoftDeletedManyByIds(
 		Scopes(r.stationScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Clauses(clause.Returning{}).
-		Where("\"StationTable\".id IN ?", ids).
+		Where(`"StationTable".id IN ?`, ids).
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
@@ -668,7 +668,7 @@ func (r *StationRepository) SoftDeleteOneById(
 	result := parsedOptions.DB.Model(&schemas.Station{}).
 		Scopes(r.stationScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Where("\"StationTable\".id = ?", id).
+		Where(`"StationTable".id = ?`, id).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
@@ -700,7 +700,7 @@ func (r *StationRepository) SoftDeleteManyByIds(
 	result := parsedOptions.DB.Model(&schemas.Station{}).
 		Scopes(r.stationScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Where("\"StationTable\".id IN ?", ids).
+		Where(`"StationTable".id IN ?`, ids).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
@@ -749,7 +749,7 @@ func (r *StationRepository) HardDeleteOneById(
 	result := parsedOptions.DB.Model(&schemas.Station{}).
 		Scopes(r.stationScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Where("\"StationTable\".id = ?", id).
+		Where(`"StationTable".id = ?`, id).
 		Delete(&schemas.Station{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Station.FailedToDelete().WithOrigin(result.Error)},
@@ -781,7 +781,7 @@ func (r *StationRepository) HardDeleteManyByIds(
 	result := parsedOptions.DB.Model(&schemas.Station{}).
 		Scopes(r.stationScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Where("\"StationTable\".id IN ?", ids).
+		Where(`"StationTable".id IN ?`, ids).
 		Delete(&schemas.Station{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Station.FailedToDelete().WithOrigin(result.Error)},

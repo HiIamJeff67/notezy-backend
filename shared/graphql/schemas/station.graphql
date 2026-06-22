@@ -5,7 +5,8 @@ type PrivateStation {
   description: String!
   icon: SupportedIcon
   headerBackgroundURL: String
-  routineCount: Int32!
+  routineCount: Int64!
+  routineTaskCount: Int64!
   deletedAt: Time
   createdAt: Time!
   updatedAt: Time!
@@ -17,7 +18,8 @@ type PrivateSearchableStation {
   name: String!
   icon: SupportedIcon
   headerBackgroundURL: String
-  routineCount: Int32!
+  routineCount: Int64!
+  routineTaskCount: Int64!
   deletedAt: Time
   createdAt: Time!
   updatedAt: Time!

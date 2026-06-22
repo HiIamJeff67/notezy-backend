@@ -25,9 +25,9 @@ var DefaultAuthorizedRateLimitConfig = RateLimitConfig{
 }
 
 var DefaultUnauthorizedRateLimitConfig = RateLimitConfig{
-	RateLimit:         rate.Limit(10),                   // 10 requests/second
-	Burst:             5,                                // allowed 20 additional requests/second for burst
-	UserLimit:         300,                              // 300 requests/each life time of the bucket (= 300 requests/`WindowDuration`) for each users
+	RateLimit:         rate.Limit(100),                  // 100 requests/second
+	Burst:             10,                               // allowed 10 additional requests/second for burst
+	UserLimit:         1000,                             // 1000 requests/each life time of the bucket (= 1000 requests/`WindowDuration`) for each users
 	WindowDuration:    time.Minute,                      // 1 minutes to reset the bucket
 	BackendServerName: types.BackendServerName_EastAsia, // the current server
 }

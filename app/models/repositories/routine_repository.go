@@ -84,7 +84,7 @@ func (r *RoutineRepository) HavePermissions(
 	var permittedIds []uuid.UUID
 	result := parsedOptions.DB.
 		Model(&schemas.Routine{}).
-		Select("DISTINCT \"RoutineTable\".id").
+		Select(`DISTINCT "RoutineTable".id`).
 		Scopes(r.routineScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.routineScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Clauses(clause.Locking{Strength: "SHARE"}).
@@ -189,17 +189,17 @@ func (r *RoutineRepository) GetAllByTimeRange(
 	var routines []schemas.Routine
 	result := parsedOptions.DB.
 		Model(&schemas.Routine{}).
-		Select("\"RoutineTable\".*").
-		Joins("INNER JOIN \"UsersToStationsTable\" uts ON uts.station_id = \"RoutineTable\".station_id").
-		Joins("INNER JOIN \"StationTable\" station ON station.id = \"RoutineTable\".station_id AND station.deleted_at IS NULL").
-		Where("\"RoutineTable\".station_id IN ?", stationIds).
+		Select(`"RoutineTable".*`).
+		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = "RoutineTable".station_id`).
+		Joins(`INNER JOIN "StationTable" station ON station.id = "RoutineTable".station_id AND station.deleted_at IS NULL`).
+		Where(`"RoutineTable".station_id IN ?`, stationIds).
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
-		Where("\"RoutineTable\".scheduled_start_at < ? AND \"RoutineTable\".scheduled_end_at > ?", to, from).
+		Where(`"RoutineTable".scheduled_start_at < ? AND "RoutineTable".scheduled_end_at > ?`, to, from).
 		Scopes(r.routineScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.routineScope.IncludePreloads(preloads)).
-		Order("\"RoutineTable\".scheduled_start_at ASC").
-		Order("\"RoutineTable\".scheduled_end_at ASC").
-		Order("\"RoutineTable\".id ASC").
+		Order(`"RoutineTable".scheduled_start_at ASC`).
+		Order(`"RoutineTable".scheduled_end_at ASC`).
+		Order(`"RoutineTable".id ASC`).
 		Find(&routines)
 	if result.Error != nil {
 		return nil, exceptions.Routine.NotFound().WithOrigin(result.Error)
@@ -406,7 +406,7 @@ func (r *RoutineRepository) UpdateOneById(
 	}
 
 	result := parsedOptions.DB.Model(&schemas.Routine{}).
-		Where("\"RoutineTable\".id = ? AND \"RoutineTable\".deleted_at IS NULL", id).
+		Where(`"RoutineTable".id = ? AND "RoutineTable".deleted_at IS NULL`, id).
 		Select("*").
 		Updates(&updates)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
@@ -512,7 +512,7 @@ func (r *RoutineRepository) BulkUpdateManyByIds(
 			scheduledEndAt = &truncatedScheduledEndAt
 		}
 
-		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid, ?::text, ?::text, ?::\"RoutineStatus\", ?::boolean, ?::timestamptz, ?::timestamptz, ?::\"RoutinePeriod\", ?::text, ?::boolean)")
+		valuePlaceholders = append(valuePlaceholders, `(?::uuid, ?::uuid, ?::text, ?::text, ?::"RoutineStatus", ?::boolean, ?::timestamptz, ?::timestamptz, ?::"RoutinePeriod", ?::text, ?::boolean)`)
 		valueArgs = append(valueArgs,
 			in.Id,
 			in.PartialUpdateInput.Values.StationId,
@@ -590,7 +590,7 @@ func (r *RoutineRepository) RestoreSoftDeletedOneById(
 		Scopes(r.routineScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.routineScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Clauses(clause.Returning{}).
-		Where("\"RoutineTable\".id = ?", id).
+		Where(`"RoutineTable".id = ?`, id).
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Routine.FailedToUpdate().WithOrigin(result.Error)},
@@ -626,7 +626,7 @@ func (r *RoutineRepository) RestoreSoftDeletedManyByIds(
 		Scopes(r.routineScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.routineScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Clauses(clause.Returning{}).
-		Where("\"RoutineTable\".id IN ?", ids).
+		Where(`"RoutineTable".id IN ?`, ids).
 		Updates(map[string]interface{}{"deleted_at": nil})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Routine.FailedToUpdate().WithOrigin(result.Error)},
@@ -655,7 +655,7 @@ func (r *RoutineRepository) SoftDeleteOneById(
 		Model(&schemas.Routine{}).
 		Scopes(r.routineScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.routineScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Where("\"RoutineTable\".id = ?", id).
+		Where(`"RoutineTable".id = ?`, id).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Routine.FailedToUpdate().WithOrigin(result.Error)},
@@ -688,7 +688,7 @@ func (r *RoutineRepository) SoftDeleteManyByIds(
 		Model(&schemas.Routine{}).
 		Scopes(r.routineScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.routineScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Where("\"RoutineTable\".id IN ?", ids).
+		Where(`"RoutineTable".id IN ?`, ids).
 		Update("deleted_at", time.Now())
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Routine.FailedToUpdate().WithOrigin(result.Error)},
@@ -717,7 +717,7 @@ func (r *RoutineRepository) HardDeleteOneById(
 		Model(&schemas.Routine{}).
 		Scopes(r.routineScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.routineScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Where("\"RoutineTable\".id = ?", id).
+		Where(`"RoutineTable".id = ?`, id).
 		Delete(&schemas.Routine{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Routine.FailedToDelete().WithOrigin(result.Error)},
@@ -750,7 +750,7 @@ func (r *RoutineRepository) HardDeleteManyByIds(
 		Model(&schemas.Routine{}).
 		Scopes(r.routineScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.routineScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Where("\"RoutineTable\".id IN ?", ids).
+		Where(`"RoutineTable".id IN ?`, ids).
 		Delete(&schemas.Routine{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Routine.FailedToDelete().WithOrigin(result.Error)},

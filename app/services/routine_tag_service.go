@@ -61,7 +61,7 @@ func (s *RoutineTagService) GetMyRoutineTagById(
 	reqDto *dtos.GetMyRoutineTagByIdReqDto,
 ) (*dtos.GetMyRoutineTagByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
 	if reqDto.Param.IsDeleted != nil && *reqDto.Param.IsDeleted {
 		return nil, exceptions.RoutineTag.NotFound()
@@ -94,7 +94,7 @@ func (s *RoutineTagService) GetAllMyRoutineTags(
 	reqDto *dtos.GetAllMyRoutineTagsReqDto,
 ) (*dtos.GetAllMyRoutineTagsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
 	if reqDto.Param.AreDeleted != nil && *reqDto.Param.AreDeleted {
 		resDto := dtos.GetAllMyRoutineTagsResDto{}
@@ -132,7 +132,7 @@ func (s *RoutineTagService) CreateRoutineTag(
 	reqDto *dtos.CreateRoutineTagReqDto,
 ) (*dtos.CreateRoutineTagResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -162,7 +162,7 @@ func (s *RoutineTagService) CreateRoutineTags(
 	reqDto *dtos.CreateRoutineTagsReqDto,
 ) (*dtos.CreateRoutineTagsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -196,7 +196,7 @@ func (s *RoutineTagService) UpdateMyRoutineTagById(
 	reqDto *dtos.UpdateMyRoutineTagByIdReqDto,
 ) (*dtos.UpdateMyRoutineTagByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -228,7 +228,7 @@ func (s *RoutineTagService) UpdateMyRoutineTagsByIds(
 	reqDto *dtos.UpdateMyRoutineTagsByIdsReqDto,
 ) (*dtos.UpdateMyRoutineTagsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -266,7 +266,7 @@ func (s *RoutineTagService) HardDeleteMyRoutineTagById(
 	reqDto *dtos.HardDeleteMyRoutineTagByIdReqDto,
 ) (*dtos.HardDeleteMyRoutineTagByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -290,7 +290,7 @@ func (s *RoutineTagService) HardDeleteMyRoutineTagsByIds(
 	reqDto *dtos.HardDeleteMyRoutineTagsByIdsReqDto,
 ) (*dtos.HardDeleteMyRoutineTagsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
@@ -330,8 +330,8 @@ func (s *RoutineTagService) SearchPrivateRoutineTags(
 	}
 
 	query := db.Model(&schemas.RoutineTag{}).
-		Select("\"RoutineTagTable\".*, utrt.permission AS permission").
-		Joins("LEFT JOIN \"UsersToRoutineTagsTable\" utrt ON \"RoutineTagTable\".id = utrt.tag_id").
+		Select(`"RoutineTagTable".*, utrt.permission AS permission`).
+		Joins(`LEFT JOIN "UsersToRoutineTagsTable" utrt ON "RoutineTagTable".id = utrt.tag_id`).
 		Where("utrt.user_id = ? AND utrt.permission IN ?", userId, allowedPermissions)
 
 	if len(strings.ReplaceAll(gqlInput.Query, " ", "")) > 0 {

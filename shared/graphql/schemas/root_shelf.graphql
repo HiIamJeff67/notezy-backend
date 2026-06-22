@@ -2,8 +2,8 @@ type PrivateRootShelf {
   id: UUID!
   name: String!
   permission: AccessControlPermission!
-  subShelfCount: Int32!
-  itemCount: Int32!
+  subShelfCount: Int64!
+  itemCount: Int64!
   lastAnalyzedAt: Time!
   deletedAt: Time
   updatedAt: Time!

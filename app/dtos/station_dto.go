@@ -215,6 +215,21 @@ type HardDeleteMyStationsByIdsReqDto struct {
 	]
 }
 
+type VisualizeMyTotalCountReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		any,
+		struct {
+			Permission enums.AccessControlPermission `json:"permission" validate:"isaccesscontrolpermission,required"`
+		},
+	]
+}
+
 /* ============================== Response DTO ============================== */
 
 type GetMyStationByIdResDto struct {
@@ -224,7 +239,8 @@ type GetMyStationByIdResDto struct {
 	Icon                *enums.SupportedIcon          `json:"icon"`
 	HeaderBackgroundURL *string                       `json:"headerBackgroundURL"`
 	Permission          enums.AccessControlPermission `json:"permission"`
-	RoutineCount        int32                         `json:"routineCount"`
+	RoutineCount        int64                         `json:"routineCount"`
+	RoutineTaskCount    int64                         `json:"routineTaskCount"`
 	DeletedAt           *time.Time                    `json:"deletedAt"`
 	UpdatedAt           time.Time                     `json:"updatedAt"`
 	CreatedAt           time.Time                     `json:"createdAt"`
@@ -236,7 +252,8 @@ type GetAllMyStationsResDto = []struct {
 	Icon                *enums.SupportedIcon          `json:"icon"`
 	HeaderBackgroundURL *string                       `json:"headerBackgroundURL"`
 	Permission          enums.AccessControlPermission `json:"permission"`
-	RoutineCount        int32                         `json:"routineCount"`
+	RoutineCount        int64                         `json:"routineCount"`
+	RoutineTaskCount    int64                         `json:"routineTaskCount"`
 	DeletedAt           *time.Time                    `json:"deletedAt"`
 	UpdatedAt           time.Time                     `json:"updatedAt"`
 	CreatedAt           time.Time                     `json:"createdAt"`
@@ -267,7 +284,8 @@ type RestoreMyStationByIdResDto struct {
 	Icon                *enums.SupportedIcon          `json:"icon"`
 	HeaderBackgroundURL *string                       `json:"headerBackgroundURL"`
 	Permission          enums.AccessControlPermission `json:"permission"`
-	RoutineCount        int32                         `json:"routineCount"`
+	RoutineCount        int64                         `json:"routineCount"`
+	RoutineTaskCount    int64                         `json:"routineTaskCount"`
 	DeletedAt           *time.Time                    `json:"deletedAt"`
 	UpdatedAt           time.Time                     `json:"updatedAt"`
 	CreatedAt           time.Time                     `json:"createdAt"`
@@ -290,3 +308,5 @@ type HardDeleteMyStationByIdResDto struct {
 type HardDeleteMyStationsByIdsResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`
 }
+
+type VisualizeMyTotalCountResDto = TwoDimensionalData[int64]

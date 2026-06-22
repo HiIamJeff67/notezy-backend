@@ -78,7 +78,7 @@ func (r *RoutineTagRepository) HavePermissions(
 	var permittedIds []uuid.UUID
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTag{}).
-		Select("DISTINCT \"RoutineTagTable\".id").
+		Select(`DISTINCT "RoutineTagTable".id`).
 		Scopes(r.routineTagScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Clauses(clause.Locking{Strength: "SHARE"}).
 		Find(&permittedIds)
@@ -173,12 +173,12 @@ func (r *RoutineTagRepository) GetAllByUserId(
 	var routineTags []schemas.RoutineTag
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTag{}).
-		Select("\"RoutineTagTable\".*").
-		Joins("INNER JOIN \"UsersToRoutineTagsTable\" utrt ON utrt.tag_id = \"RoutineTagTable\".id").
+		Select(`"RoutineTagTable".*`).
+		Joins(`INNER JOIN "UsersToRoutineTagsTable" utrt ON utrt.tag_id = "RoutineTagTable".id`).
 		Where("utrt.user_id = ? AND utrt.permission IN ?", userId, allowedPermissions).
 		Scopes(r.routineTagScope.IncludePreloads(preloads)).
-		Order("\"RoutineTagTable\".created_at ASC").
-		Order("\"RoutineTagTable\".id ASC").
+		Order(`"RoutineTagTable".created_at ASC`).
+		Order(`"RoutineTagTable".id ASC`).
 		Find(&routineTags)
 	if result.Error != nil {
 		return nil, exceptions.RoutineTag.NotFound().WithOrigin(result.Error)
@@ -362,7 +362,7 @@ func (r *RoutineTagRepository) UpdateOneById(
 
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTag{}).
-		Where("\"RoutineTagTable\".id = ?", id).
+		Where(`"RoutineTagTable".id = ?`, id).
 		Select("*").
 		Updates(&updates)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
@@ -436,7 +436,7 @@ func (r *RoutineTagRepository) BulkUpdateManyByIds(
 			}
 		}
 
-		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::text, ?::text, ?::\"SupportedIcon\", ?::boolean)")
+		valuePlaceholders = append(valuePlaceholders, `(?::uuid, ?::text, ?::text, ?::"SupportedIcon", ?::boolean)`)
 		valueArgs = append(valueArgs,
 			in.Id,
 			in.PartialUpdateInput.Values.Name,
@@ -497,7 +497,7 @@ func (r *RoutineTagRepository) HardDeleteOneById(
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTag{}).
 		Scopes(r.routineTagScope.PassPermissionCheck(id, userId, allowedPermissions)).
-		Where("\"RoutineTagTable\".id = ?", id).
+		Where(`"RoutineTagTable".id = ?`, id).
 		Delete(&schemas.RoutineTag{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.RoutineTag.FailedToDelete().WithOrigin(result.Error)},
@@ -527,7 +527,7 @@ func (r *RoutineTagRepository) HardDeleteManyByIds(
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTag{}).
 		Scopes(r.routineTagScope.PassPermissionChecks(ids, userId, allowedPermissions)).
-		Where("\"RoutineTagTable\".id IN ?", ids).
+		Where(`"RoutineTagTable".id IN ?`, ids).
 		Delete(&schemas.RoutineTag{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.RoutineTag.FailedToDelete().WithOrigin(result.Error)},

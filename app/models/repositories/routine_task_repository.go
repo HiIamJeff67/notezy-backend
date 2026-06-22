@@ -80,7 +80,7 @@ func (r *RoutineTaskRepository) HavePermissions(
 	var permittedIds []uuid.UUID
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTask{}).
-		Select("DISTINCT \"RoutineTaskTable\".id").
+		Select(`DISTINCT "RoutineTaskTable".id`).
 		Scopes(r.routineTaskScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Clauses(clause.Locking{Strength: "SHARE"}).
 		Find(&permittedIds)
@@ -180,15 +180,15 @@ func (r *RoutineTaskRepository) GetAllByStationIds(
 	var routineTasks []schemas.RoutineTask
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTask{}).
-		Select("\"RoutineTaskTable\".*").
-		Joins("INNER JOIN \"UsersToStationsTable\" uts ON uts.station_id = \"RoutineTaskTable\".station_id").
-		Joins("INNER JOIN \"StationTable\" station ON station.id = \"RoutineTaskTable\".station_id AND station.deleted_at IS NULL").
-		Where("\"RoutineTaskTable\".station_id IN ?", stationIds).
+		Select(`"RoutineTaskTable".*`).
+		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = "RoutineTaskTable".station_id`).
+		Joins(`INNER JOIN "StationTable" station ON station.id = "RoutineTaskTable".station_id AND station.deleted_at IS NULL`).
+		Where(`"RoutineTaskTable".station_id IN ?`, stationIds).
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
 		Scopes(r.routineTaskScope.IncludePreloads(preloads)).
-		Order("\"RoutineTaskTable\".scheduled_at ASC").
-		Order("\"RoutineTaskTable\".priority DESC").
-		Order("\"RoutineTaskTable\".id ASC").
+		Order(`"RoutineTaskTable".scheduled_at ASC`).
+		Order(`"RoutineTaskTable".priority DESC`).
+		Order(`"RoutineTaskTable".id ASC`).
 		Find(&routineTasks)
 	if result.Error != nil {
 		return nil, exceptions.RoutineTask.NotFound().WithOrigin(result.Error)
@@ -400,7 +400,7 @@ func (r *RoutineTaskRepository) UpdateOneById(
 
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTask{}).
-		Where("\"RoutineTaskTable\".id = ?", id).
+		Where(`"RoutineTaskTable".id = ?`, id).
 		Select("*").
 		Updates(&updates)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
@@ -484,7 +484,7 @@ func (r *RoutineTaskRepository) BulkUpdateManyByIds(
 			continue
 		}
 
-		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::uuid, ?::text, ?::\"RoutineTaskPurpose\", ?::jsonb, ?::integer, ?::integer)")
+		valuePlaceholders = append(valuePlaceholders, `(?::uuid, ?::uuid, ?::text, ?::"RoutineTaskPurpose", ?::jsonb, ?::integer, ?::integer)`)
 		valueArgs = append(valueArgs,
 			in.Id,
 			in.PartialUpdateInput.Values.StationId,
@@ -547,7 +547,7 @@ func (r *RoutineTaskRepository) HardDeleteOneById(
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTask{}).
 		Scopes(r.routineTaskScope.PassPermissionCheck(id, userId, allowedPermissions)).
-		Where("\"RoutineTaskTable\".id = ?", id).
+		Where(`"RoutineTaskTable".id = ?`, id).
 		Delete(&schemas.RoutineTask{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.RoutineTask.FailedToDelete().WithOrigin(result.Error)},
@@ -577,7 +577,7 @@ func (r *RoutineTaskRepository) HardDeleteManyByIds(
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTask{}).
 		Scopes(r.routineTaskScope.PassPermissionChecks(ids, userId, allowedPermissions)).
-		Where("\"RoutineTaskTable\".id IN ?", ids).
+		Where(`"RoutineTaskTable".id IN ?`, ids).
 		Delete(&schemas.RoutineTask{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.RoutineTask.FailedToDelete().WithOrigin(result.Error)},

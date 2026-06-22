@@ -68,7 +68,7 @@ func (r *ItemRepository) HavePermissions(
 	var permittedItems []schemas.Item
 	result := parsedOptions.DB.
 		Model(&schemas.Item{}).
-		Select("DISTINCT \"ItemTable\".id, \"ItemTable\".type").
+		Select(`DISTINCT "ItemTable".id, "ItemTable".type`).
 		Scopes(r.itemScope.PassPermissionChecks(itemIdentities, userId, allowedPermissions)).
 		Scopes(r.itemScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Clauses(clause.Locking{Strength: "SHARE"}).

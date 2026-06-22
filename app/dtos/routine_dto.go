@@ -364,6 +364,72 @@ type HardDeleteMyRoutinesByIdsReqDto struct {
 	]
 }
 
+type VisualizeMyRoutineStatusCountReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		any,
+		struct {
+			Permission enums.AccessControlPermission `json:"permission" validate:"isaccesscontrolpermission,required"`
+		},
+	]
+}
+
+type VisualizeMyRoutinePeriodCountReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		any,
+		struct {
+			Permission enums.AccessControlPermission `json:"permission" validate:"isaccesscontrolpermission,required"`
+		},
+	]
+}
+
+type VisualizeMyRoutineScheduledStartAtCountReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		any,
+		struct {
+			Permission          enums.AccessControlPermission `json:"permission" validate:"isaccesscontrolpermission,required"`
+			TimeHourUnit        int                           `json:"timeHourUnit" validate:"required,min=1"`
+			QueryRangeStartedAt time.Time                     `json:"queryRangeStartedAt" validate:"required"`
+			QueryRangeEndedAt   time.Time                     `json:"queryRangeEndedAt" validate:"required"`
+		},
+	]
+}
+
+type VisualizeMyRoutineScheduledEndAtCountReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		any,
+		struct {
+			Permission          enums.AccessControlPermission `json:"permission" validate:"isaccesscontrolpermission,required"`
+			TimeHourUnit        int                           `json:"timeHourUnit" validate:"required,min=1"`
+			QueryRangeStartedAt time.Time                     `json:"queryRangeStartedAt" validate:"required"`
+			QueryRangeEndedAt   time.Time                     `json:"queryRangeEndedAt" validate:"required"`
+		},
+	]
+}
+
 /* ============================== Response DTO ============================== */
 
 type GetMyRoutineByIdResDto struct {
@@ -496,3 +562,11 @@ type HardDeleteMyRoutineByIdResDto struct {
 type HardDeleteMyRoutinesByIdsResDto struct {
 	DeletedAt time.Time `json:"deletedAt"`
 }
+
+type VisualizeMyRoutineStatusCountResDto = TwoDimensionalData[int64]
+
+type VisualizeMyRoutinePeriodCountResDto = TwoDimensionalData[int64]
+
+type VisualizeMyRoutineScheduledStartAtCountResDto = TwoDimensionalData[int64]
+
+type VisualizeMyRoutineScheduledEndAtCountResDto = TwoDimensionalData[int64]

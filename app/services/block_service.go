@@ -340,7 +340,7 @@ func (s *BlockService) GetMyBlocksByBlockPackId(
 
 	var blocks []schemas.Block
 	result := db.Model(&schemas.Block{}).
-		Joins("INNER JOIN \"BlockGroupTable\" bg ON \"BlockTable\".block_group_id = bg.id").
+		Joins(`INNER JOIN "BlockGroupTable" bg ON "BlockTable".block_group_id = bg.id`).
 		Where("bg.block_pack_id = ?", reqDto.Param.BlockPackId).
 		Find(&blocks)
 	if err := result.Error; err != nil {
@@ -377,7 +377,7 @@ func (s *BlockService) GetAllMyBlocks(
 	// since we're getting blocks with the owner id of block group, there's no need to check the permission of the owner
 	var resDto dtos.GetAllMyBlocksResDto
 	result := db.Model(&schemas.Block{}).
-		Joins("LEFT JOIN \"BlockGroupTable\" bg ON bg.id = block_group_id").
+		Joins(`LEFT JOIN "BlockGroupTable" bg ON bg.id = block_group_id`).
 		Where("bg.owner_id = ?", reqDto.ContextFields.UserId).
 		Find(&resDto)
 	if err := result.Error; err != nil {

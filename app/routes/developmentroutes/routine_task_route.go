@@ -75,6 +75,86 @@ func configureDevelopmentRoutineTaskRoutes() {
 				),
 			)...,
 		)
+		routineTaskRoutes.GET(
+			"/visualizeMyRoutineTaskStatusCount",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "visualizeMyRoutineTaskStatusCount"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RoutineTask.VisualizeMyRoutineTaskStatusCount,
+					),
+				},
+				defaultMiddlewares,
+				routineTaskModule.Binder.BindVisualizeMyRoutineTaskStatusCount(
+					routineTaskModule.Controller.VisualizeMyRoutineTaskStatusCount,
+				),
+			)...,
+		)
+		routineTaskRoutes.GET(
+			"/visualizeMyRoutineTaskPurposeCount",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "visualizeMyRoutineTaskPurposeCount"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RoutineTask.VisualizeMyRoutineTaskPurposeCount,
+					),
+				},
+				defaultMiddlewares,
+				routineTaskModule.Binder.BindVisualizeMyRoutineTaskPurposeCount(
+					routineTaskModule.Controller.VisualizeMyRoutineTaskPurposeCount,
+				),
+			)...,
+		)
+		routineTaskRoutes.GET(
+			"/visualizeMyRoutineTaskScheduledAtCount",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "visualizeMyRoutineTaskScheduledAtCount"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RoutineTask.VisualizeMyRoutineTaskScheduledAtCount,
+					),
+				},
+				defaultMiddlewares,
+				routineTaskModule.Binder.BindVisualizeMyRoutineTaskScheduledAtCount(
+					routineTaskModule.Controller.VisualizeMyRoutineTaskScheduledAtCount,
+				),
+			)...,
+		)
+		routineTaskRoutes.GET(
+			"/visualizeMyRoutineTaskActualStartedAtCount",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "visualizeMyRoutineTaskActualStartedAtCount"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RoutineTask.VisualizeMyRoutineTaskActualStartedAtCount,
+					),
+				},
+				defaultMiddlewares,
+				routineTaskModule.Binder.BindVisualizeMyRoutineTaskActualStartedAtCount(
+					routineTaskModule.Controller.VisualizeMyRoutineTaskActualStartedAtCount,
+				),
+			)...,
+		)
+		routineTaskRoutes.GET(
+			"/visualizeMyRoutineTaskActualEndedAtCount",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "visualizeMyRoutineTaskActualEndedAtCount"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RoutineTask.VisualizeMyRoutineTaskActualEndedAtCount,
+					),
+				},
+				defaultMiddlewares,
+				routineTaskModule.Binder.BindVisualizeMyRoutineTaskActualEndedAtCount(
+					routineTaskModule.Controller.VisualizeMyRoutineTaskActualEndedAtCount,
+				),
+			)...,
+		)
 		routineTaskRoutes.POST(
 			"/createRoutineTaskByStationId",
 			middlewares.RepositionMiddleware(

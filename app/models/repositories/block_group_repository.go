@@ -95,7 +95,7 @@ func (r *BlockGroupRepository) HavePermissions(
 	var permittedIds []uuid.UUID
 	result := parsedOptions.DB.
 		Model(&schemas.BlockGroup{}).
-		Select("DISTINCT \"BlockGroupTable\".id").
+		Select(`DISTINCT "BlockGroupTable".id`).
 		Scopes(r.blockGroupScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.blockGroupScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Clauses(clause.Locking{Strength: "SHARE"}).
@@ -174,8 +174,8 @@ func (r *BlockGroupRepository) CheckPermissionsAndGetManyByBlockPackId(
 			userId, allowedPermissions,
 		)
 	query := parsedOptions.DB.Model(&schemas.BlockGroup{}).
-		Joins("INNER JOIN \"BlockPackTable\" bp ON block_pack_id = bp.id").
-		Joins("INNER JOIN \"SubShelfTable\" ss ON bp.parent_sub_shelf_id = ss.id").
+		Joins(`INNER JOIN "BlockPackTable" bp ON block_pack_id = bp.id`).
+		Joins(`INNER JOIN "SubShelfTable" ss ON bp.parent_sub_shelf_id = ss.id`).
 		Where("bp.id = ? AND EXISTS (?)",
 			blockPackId, subQuery,
 		)
@@ -215,9 +215,9 @@ func (r *BlockGroupRepository) CheckPermissionAndGetValidIds(
 			userId, allowedPermissions,
 		)
 	query := parsedOptions.DB.Model(&schemas.BlockGroup{}).
-		Joins("INNER JOIN \"BlockPackTable\" bp ON block_pack_id = bp.id").
-		Joins("INNER JOIN \"SubShelfTable\" ss ON bp.parent_sub_shelf_id = ss.id").
-		Where("\"BlockGroupTable\".id IN ? AND EXISTS (?)",
+		Joins(`INNER JOIN "BlockPackTable" bp ON block_pack_id = bp.id`).
+		Joins(`INNER JOIN "SubShelfTable" ss ON bp.parent_sub_shelf_id = ss.id`).
+		Where(`"BlockGroupTable".id IN ? AND EXISTS (?)`,
 			ids, subQuery,
 		)
 
@@ -331,9 +331,9 @@ func (r *BlockGroupRepository) GetOneByPrevBlockGroupId(
 			userId, allowedPermissions,
 		)
 	query := parsedOptions.DB.Model(&schemas.BlockGroup{}).
-		Joins("INNER JOIN \"BlockPackTable\" bp ON block_pack_id = bp.id").
-		Joins("INNER JOIN \"SubShelfTable\" ss ON bp.parent_sub_shelf_id = ss.id").
-		Where("bp.id = ? AND \"BlockGroupTable\".prev_block_group_id = ? AND EXISTS (?)",
+		Joins(`INNER JOIN "BlockPackTable" bp ON block_pack_id = bp.id`).
+		Joins(`INNER JOIN "SubShelfTable" ss ON bp.parent_sub_shelf_id = ss.id`).
+		Where(`bp.id = ? AND "BlockGroupTable".prev_block_group_id = ? AND EXISTS (?)`,
 			blockPackId, prevBlockGroupId, subQuery,
 		)
 
@@ -373,8 +373,8 @@ func (r *BlockGroupRepository) GetManyByPrevBlockGroupIds(
 		Where("root_shelf_id = ss.root_shelf_id").
 		Where("user_id = ? AND permission IN ?", userId, allowedPermissions)
 	query := parsedOptions.DB.Model(&schemas.BlockGroup{}).
-		Joins("INNER JOIN \"BlockPackTable\" bp ON block_pack_id = bp.id").
-		Joins("INNER JOIN \"SubShelfTable\" ss ON bp.parent_sub_shelf_id = ss.id").
+		Joins(`INNER JOIN "BlockPackTable" bp ON block_pack_id = bp.id`).
+		Joins(`INNER JOIN "SubShelfTable" ss ON bp.parent_sub_shelf_id = ss.id`).
 		Where("EXISTS (?)", subQuery)
 
 	var nilPrevBlockPackIds []uuid.UUID
@@ -385,7 +385,7 @@ func (r *BlockGroupRepository) GetManyByPrevBlockGroupIds(
 		if PrevBlockGroupIds[index] == nil {
 			nilPrevBlockPackIds = append(nilPrevBlockPackIds, BlockPackIds[index])
 		} else {
-			nonNilConditions = append(nonNilConditions, "(\"BlockGroupTable\".block_pack_id = ? AND \"BlockGroupTable\".prev_block_group_id = ?)")
+			nonNilConditions = append(nonNilConditions, `("BlockGroupTable".block_pack_id = ? AND "BlockGroupTable".prev_block_group_id = ?)`)
 			nonNilArgs = append(nonNilArgs, BlockPackIds[index], *PrevBlockGroupIds[index])
 		}
 	}
@@ -394,7 +394,7 @@ func (r *BlockGroupRepository) GetManyByPrevBlockGroupIds(
 	var combinedArgs []interface{}
 
 	if len(nilPrevBlockPackIds) > 0 {
-		combinedConditions = append(combinedConditions, "(\"BlockGroupTable\".block_pack_id IN ? AND \"BlockGroupTable\".prev_block_group_id IS NULL)")
+		combinedConditions = append(combinedConditions, `("BlockGroupTable".block_pack_id IN ? AND "BlockGroupTable".prev_block_group_id IS NULL)`)
 		combinedArgs = append(combinedArgs, nilPrevBlockPackIds)
 	}
 

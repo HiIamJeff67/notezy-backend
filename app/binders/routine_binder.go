@@ -12,6 +12,7 @@ import (
 	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
@@ -35,6 +36,10 @@ type RoutineBinderInterface interface {
 	BindDeleteMyRoutinesByIds(controllerFunc types.ControllerFunc[*dtos.DeleteMyRoutinesByIdsReqDto]) gin.HandlerFunc
 	BindHardDeleteMyRoutineById(controllerFunc types.ControllerFunc[*dtos.HardDeleteMyRoutineByIdReqDto]) gin.HandlerFunc
 	BindHardDeleteMyRoutinesByIds(controllerFunc types.ControllerFunc[*dtos.HardDeleteMyRoutinesByIdsReqDto]) gin.HandlerFunc
+	BindVisualizeMyRoutineStatusCount(controllerFunc types.ControllerFunc[*dtos.VisualizeMyRoutineStatusCountReqDto]) gin.HandlerFunc
+	BindVisualizeMyRoutinePeriodCount(controllerFunc types.ControllerFunc[*dtos.VisualizeMyRoutinePeriodCountReqDto]) gin.HandlerFunc
+	BindVisualizeMyRoutineScheduledStartAtCount(controllerFunc types.ControllerFunc[*dtos.VisualizeMyRoutineScheduledStartAtCountReqDto]) gin.HandlerFunc
+	BindVisualizeMyRoutineScheduledEndAtCount(controllerFunc types.ControllerFunc[*dtos.VisualizeMyRoutineScheduledEndAtCountReqDto]) gin.HandlerFunc
 }
 
 type RoutineBinder struct{}
@@ -535,6 +540,172 @@ func (b *RoutineBinder) BindHardDeleteMyRoutinesByIds(controllerFunc types.Contr
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RoutineBinder) BindVisualizeMyRoutineStatusCount(controllerFunc types.ControllerFunc[*dtos.VisualizeMyRoutineStatusCountReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.VisualizeMyRoutineStatusCountReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		permissionString := ctx.Query("permission")
+		if permissionString == "" {
+			exceptions.Routine.InvalidInput().WithOrigin(fmt.Errorf("permission is required")).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		permission, err := enums.ConvertStringToAccessControlPermission(permissionString)
+		if err != nil {
+			exceptions.Routine.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.Permission = *permission
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RoutineBinder) BindVisualizeMyRoutinePeriodCount(controllerFunc types.ControllerFunc[*dtos.VisualizeMyRoutinePeriodCountReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.VisualizeMyRoutinePeriodCountReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		permissionString := ctx.Query("permission")
+		if permissionString == "" {
+			exceptions.Routine.InvalidInput().WithOrigin(fmt.Errorf("permission is required")).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		permission, err := enums.ConvertStringToAccessControlPermission(permissionString)
+		if err != nil {
+			exceptions.Routine.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.Permission = *permission
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RoutineBinder) BindVisualizeMyRoutineScheduledStartAtCount(controllerFunc types.ControllerFunc[*dtos.VisualizeMyRoutineScheduledStartAtCountReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.VisualizeMyRoutineScheduledStartAtCountReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		permissionString := ctx.Query("permission")
+		if permissionString == "" {
+			exceptions.Routine.InvalidInput().WithOrigin(fmt.Errorf("permission is required")).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		permission, err := enums.ConvertStringToAccessControlPermission(permissionString)
+		if err != nil {
+			exceptions.Routine.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.Permission = *permission
+
+		timeHourUnitString := ctx.Query("timeHourUnit")
+		if timeHourUnitString == "" {
+			exceptions.Routine.InvalidInput().WithOrigin(fmt.Errorf("timeHourUnit is required")).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		timeHourUnit, err := strconv.Atoi(timeHourUnitString)
+		if err != nil {
+			exceptions.Routine.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.TimeHourUnit = timeHourUnit
+
+		queryRangeStartedAt, err := time.Parse(time.RFC3339, ctx.Query("queryRangeStartedAt"))
+		if err != nil {
+			exceptions.Routine.InvalidInput().WithOrigin(fmt.Errorf("queryRangeStartedAt must be an RFC3339 timestamp: %w", err)).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		queryRangeEndedAt, err := time.Parse(time.RFC3339, ctx.Query("queryRangeEndedAt"))
+		if err != nil {
+			exceptions.Routine.InvalidInput().WithOrigin(fmt.Errorf("queryRangeEndedAt must be an RFC3339 timestamp: %w", err)).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.QueryRangeStartedAt = queryRangeStartedAt
+		reqDto.Param.QueryRangeEndedAt = queryRangeEndedAt
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RoutineBinder) BindVisualizeMyRoutineScheduledEndAtCount(controllerFunc types.ControllerFunc[*dtos.VisualizeMyRoutineScheduledEndAtCountReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.VisualizeMyRoutineScheduledEndAtCountReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		permissionString := ctx.Query("permission")
+		if permissionString == "" {
+			exceptions.Routine.InvalidInput().WithOrigin(fmt.Errorf("permission is required")).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		permission, err := enums.ConvertStringToAccessControlPermission(permissionString)
+		if err != nil {
+			exceptions.Routine.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.Permission = *permission
+
+		timeHourUnitString := ctx.Query("timeHourUnit")
+		if timeHourUnitString == "" {
+			exceptions.Routine.InvalidInput().WithOrigin(fmt.Errorf("timeHourUnit is required")).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		timeHourUnit, err := strconv.Atoi(timeHourUnitString)
+		if err != nil {
+			exceptions.Routine.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.TimeHourUnit = timeHourUnit
+
+		queryRangeStartedAt, err := time.Parse(time.RFC3339, ctx.Query("queryRangeStartedAt"))
+		if err != nil {
+			exceptions.Routine.InvalidInput().WithOrigin(fmt.Errorf("queryRangeStartedAt must be an RFC3339 timestamp: %w", err)).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		queryRangeEndedAt, err := time.Parse(time.RFC3339, ctx.Query("queryRangeEndedAt"))
+		if err != nil {
+			exceptions.Routine.InvalidInput().WithOrigin(fmt.Errorf("queryRangeEndedAt must be an RFC3339 timestamp: %w", err)).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.QueryRangeStartedAt = queryRangeStartedAt
+		reqDto.Param.QueryRangeEndedAt = queryRangeEndedAt
 
 		controllerFunc(ctx, &reqDto)
 	}

@@ -75,6 +75,70 @@ func configureDevelopmentRoutineRoutes() {
 				),
 			)...,
 		)
+		routineRoutes.GET(
+			"/visualizeMyRoutineStatusCount",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "visualizeMyRoutineStatusCount"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.Routine.VisualizeMyRoutineStatusCount,
+					),
+				},
+				defaultMiddlewares,
+				routineModule.Binder.BindVisualizeMyRoutineStatusCount(
+					routineModule.Controller.VisualizeMyRoutineStatusCount,
+				),
+			)...,
+		)
+		routineRoutes.GET(
+			"/visualizeMyRoutinePeriodCount",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "visualizeMyRoutinePeriodCount"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.Routine.VisualizeMyRoutinePeriodCount,
+					),
+				},
+				defaultMiddlewares,
+				routineModule.Binder.BindVisualizeMyRoutinePeriodCount(
+					routineModule.Controller.VisualizeMyRoutinePeriodCount,
+				),
+			)...,
+		)
+		routineRoutes.GET(
+			"/visualizeMyRoutineScheduledStartAtCount",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "visualizeMyRoutineScheduledStartAtCount"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.Routine.VisualizeMyRoutineScheduledStartAtCount,
+					),
+				},
+				defaultMiddlewares,
+				routineModule.Binder.BindVisualizeMyRoutineScheduledStartAtCount(
+					routineModule.Controller.VisualizeMyRoutineScheduledStartAtCount,
+				),
+			)...,
+		)
+		routineRoutes.GET(
+			"/visualizeMyRoutineScheduledEndAtCount",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "visualizeMyRoutineScheduledEndAtCount"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.Routine.VisualizeMyRoutineScheduledEndAtCount,
+					),
+				},
+				defaultMiddlewares,
+				routineModule.Binder.BindVisualizeMyRoutineScheduledEndAtCount(
+					routineModule.Controller.VisualizeMyRoutineScheduledEndAtCount,
+				),
+			)...,
+		)
 		routineRoutes.POST(
 			"/createRoutineByStationId",
 			middlewares.RepositionMiddleware(

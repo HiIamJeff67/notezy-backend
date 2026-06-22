@@ -64,13 +64,11 @@ var (
 		"RoutinePeriod_Daily":   enums.RoutinePeriod_Daily,
 		"RoutinePeriod_Weekly":  enums.RoutinePeriod_Weekly,
 		"RoutinePeriod_Monthly": enums.RoutinePeriod_Monthly,
-		"RoutinePeriod_Yearly":  enums.RoutinePeriod_Yearly,
 	}
 	marshalORoutinePeriod2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐRoutinePeriod = map[enums.RoutinePeriod]string{
 		enums.RoutinePeriod_Daily:   "RoutinePeriod_Daily",
 		enums.RoutinePeriod_Weekly:  "RoutinePeriod_Weekly",
 		enums.RoutinePeriod_Monthly: "RoutinePeriod_Monthly",
-		enums.RoutinePeriod_Yearly:  "RoutinePeriod_Yearly",
 	}
 )
 

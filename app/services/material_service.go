@@ -202,8 +202,8 @@ func (s *MaterialService) GetMyMaterialsByParentSubShelfId(
 
 	materials := []schemas.Material{}
 	result := db.Model(&schemas.Material{}).
-		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"MaterialTable\".parent_sub_shelf_id = ss.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
+		Joins(`LEFT JOIN "SubShelfTable" ss ON "MaterialTable".parent_sub_shelf_id = ss.id`).
+		Joins(`LEFT JOIN "UsersToShelvesTable" uts ON ss.root_shelf_id = uts.root_shelf_id`).
 		Where("ss.id = ? AND uts.user_id = ? AND uts.permission IN ?",
 			reqDto.Param.ParentSubShelfId,
 			reqDto.ContextFields.UserId,
@@ -266,8 +266,8 @@ func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
 
 	materials := []schemas.Material{}
 	result := db.Model(&schemas.Material{}).
-		Joins("LEFT JOIN \"SubShelfTable\" ss ON \"MaterialTable\".parent_sub_shelf_id = ss.id").
-		Joins("LEFT JOIN \"UsersToShelvesTable\" uts ON ss.root_shelf_id = uts.root_shelf_id").
+		Joins(`LEFT JOIN "SubShelfTable" ss ON "MaterialTable".parent_sub_shelf_id = ss.id`).
+		Joins(`LEFT JOIN "UsersToShelvesTable" uts ON ss.root_shelf_id = uts.root_shelf_id`).
 		Where("ss.root_shelf_id = ? AND uts.user_id = ? AND uts.permission IN ?",
 			reqDto.Param.RootShelfId, reqDto.ContextFields.UserId, allowedPermissions,
 		).Scopes(scopes.NewMaterialScope().FilterOnlyDeleted(onlyDeleted)).

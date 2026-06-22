@@ -14,8 +14,8 @@ type CreateRootShelfInput struct {
 
 type UpdateRootShelfInput struct {
 	Name           *string    `json:"name" gorm:"column:name;"`
-	SubShelfCount  *int32     `json:"subShelfCount" gorm:"column:sub_shelf_count;"`
-	ItemCount      *int32     `json:"itemCount" gorm:"column:item_count;"`
+	SubShelfCount  *int64     `json:"subShelfCount" gorm:"column:sub_shelf_count;"`
+	ItemCount      *int64     `json:"itemCount" gorm:"column:item_count;"`
 	LastAnalyzedAt *time.Time `json:"lastAnalyzedAt" gorm:"column:last_analyzed_at;"`
 }
 

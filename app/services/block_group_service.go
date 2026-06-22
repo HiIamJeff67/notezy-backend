@@ -513,13 +513,13 @@ func (s *BlockGroupService) GetMyBlockGroupsByPrevBlockGroupId(
 
 	subQuery := db.Model(&schemas.UsersToShelves{}).
 		Select("1").
-		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id").
+		Where(`root_shelf_id = "SubShelfTable".root_shelf_id`).
 		Where("user_id = ? AND permission IN ?",
 			reqDto.ContextFields.UserId, allowedPermissions,
 		)
 	result := db.Model(&schemas.BlockGroup{}).
-		Joins("INNER JOIN \"BlockPackTable\" bp ON block_pack_id = bp.id").
-		Joins("INNER JOIN \"SubShelfTable\" ss ON bp.parent_sub_shelf_id = ss.id").
+		Joins(`INNER JOIN "BlockPackTable" bp ON block_pack_id = bp.id`).
+		Joins(`INNER JOIN "SubShelfTable" ss ON bp.parent_sub_shelf_id = ss.id`).
 		Where("prev_block_group_id = ? AND EXISTS (?) AND deleted_at IS NULL",
 			reqDto.Param.PrevBlockGroupId, subQuery,
 		).Find(&resDto)
@@ -550,13 +550,13 @@ func (s *BlockGroupService) GetAllMyBlockGroupsByBlockPackId(
 
 	subQuery := db.Model(&schemas.UsersToShelves{}).
 		Select("1").
-		Where("root_shelf_id = \"SubShelfTable\".root_shelf_id").
+		Where(`root_shelf_id = "SubShelfTable".root_shelf_id`).
 		Where("user_id = ? AND permission IN ?",
 			reqDto.ContextFields.UserId, allowedPermissions,
 		)
 	result := db.Model(&schemas.BlockGroup{}).
-		Joins("INNER JOIN \"BlockPackTable\" bp ON block_pack_id = bp.id").
-		Joins("INNER JOIN \"SubShelfTable\" ss ON bp.parent_sub_shelf_id = ss.id").
+		Joins(`INNER JOIN "BlockPackTable" bp ON block_pack_id = bp.id`).
+		Joins(`INNER JOIN "SubShelfTable" ss ON bp.parent_sub_shelf_id = ss.id`).
 		Where("block_pack_id = ? AND EXISTS (?) AND deleted_at IS NULL",
 			reqDto.Param.BlockPackId, subQuery,
 		).Find(&resDto)

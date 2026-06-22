@@ -57,8 +57,8 @@ type PrivateRootShelf struct {
 	ID             uuid.UUID                     `json:"id"`
 	Name           string                        `json:"name"`
 	Permission     enums.AccessControlPermission `json:"permission"`
-	SubShelfCount  int32                         `json:"subShelfCount"`
-	ItemCount      int32                         `json:"itemCount"`
+	SubShelfCount  int64                         `json:"subShelfCount"`
+	ItemCount      int64                         `json:"itemCount"`
 	LastAnalyzedAt time.Time                     `json:"lastAnalyzedAt"`
 	DeletedAt      *time.Time                    `json:"deletedAt,omitempty"`
 	UpdatedAt      time.Time                     `json:"updatedAt"`
@@ -137,7 +137,8 @@ type PrivateSearchableStation struct {
 	Name                string                        `json:"name"`
 	Icon                *enums.SupportedIcon          `json:"icon,omitempty"`
 	HeaderBackgroundURL *string                       `json:"headerBackgroundURL,omitempty"`
-	RoutineCount        int32                         `json:"routineCount"`
+	RoutineCount        int64                         `json:"routineCount"`
+	RoutineTaskCount    int64                         `json:"routineTaskCount"`
 	DeletedAt           *time.Time                    `json:"deletedAt,omitempty"`
 	CreatedAt           time.Time                     `json:"createdAt"`
 	UpdatedAt           time.Time                     `json:"updatedAt"`
@@ -150,7 +151,8 @@ type PrivateStation struct {
 	Description         string                        `json:"description"`
 	Icon                *enums.SupportedIcon          `json:"icon,omitempty"`
 	HeaderBackgroundURL *string                       `json:"headerBackgroundURL,omitempty"`
-	RoutineCount        int32                         `json:"routineCount"`
+	RoutineCount        int64                         `json:"routineCount"`
+	RoutineTaskCount    int64                         `json:"routineTaskCount"`
 	DeletedAt           *time.Time                    `json:"deletedAt,omitempty"`
 	CreatedAt           time.Time                     `json:"createdAt"`
 	UpdatedAt           time.Time                     `json:"updatedAt"`

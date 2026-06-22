@@ -1,7 +1,7 @@
 CREATE OR REPLACE FUNCTION trigger_function_accounting_mutated_root_shelf()
 RETURNS TRIGGER AS $$
 DECLARE
-    current_count INTEGER;
+    current_count BIGINT;
     max_count INTEGER;
     plan_name TEXT;
 BEGIN

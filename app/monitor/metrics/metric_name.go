@@ -51,28 +51,33 @@ type metricNameStation struct {
 	DeleteMyStationsByIds     string
 	HardDeleteMyStationById   string
 	HardDeleteMyStationsByIds string
+	VisualizeMyTotalCount     string
 }
 
 type metricNameRoutine struct {
-	GetMyRoutineById            string
-	GetMyRoutinesByStationId    string
-	GetAllMyRoutinesByTimeRange string
-	CreateRoutineByStationId    string
-	CreateRoutinesByStationIds  string
-	UpdateMyRoutineById         string
-	UpdateMyRoutinesByIds       string
-	LinkRoutineTagById          string
-	BulkLinkRoutineTagsByIds    string
-	LinkRoutineTaskById         string
-	BulkLinkRoutineTasksByIds   string
-	LinkRoutineItemById         string
-	BulkLinkRoutineItemsByIds   string
-	RestoreMyRoutineById        string
-	RestoreMyRoutinesByIds      string
-	DeleteMyRoutineById         string
-	DeleteMyRoutinesByIds       string
-	HardDeleteMyRoutineById     string
-	HardDeleteMyRoutinesByIds   string
+	GetMyRoutineById                        string
+	GetMyRoutinesByStationId                string
+	GetAllMyRoutinesByTimeRange             string
+	CreateRoutineByStationId                string
+	CreateRoutinesByStationIds              string
+	UpdateMyRoutineById                     string
+	UpdateMyRoutinesByIds                   string
+	LinkRoutineTagById                      string
+	BulkLinkRoutineTagsByIds                string
+	LinkRoutineTaskById                     string
+	BulkLinkRoutineTasksByIds               string
+	LinkRoutineItemById                     string
+	BulkLinkRoutineItemsByIds               string
+	RestoreMyRoutineById                    string
+	RestoreMyRoutinesByIds                  string
+	DeleteMyRoutineById                     string
+	DeleteMyRoutinesByIds                   string
+	HardDeleteMyRoutineById                 string
+	HardDeleteMyRoutinesByIds               string
+	VisualizeMyRoutineStatusCount           string
+	VisualizeMyRoutinePeriodCount           string
+	VisualizeMyRoutineScheduledStartAtCount string
+	VisualizeMyRoutineScheduledEndAtCount   string
 }
 
 type metricNameRoutineTag struct {
@@ -87,13 +92,18 @@ type metricNameRoutineTag struct {
 }
 
 type metricNameRoutineTask struct {
-	GetMyRoutineTaskById             string
-	GetAllMyRoutineTasksByStationIds string
-	GetAllMyRoutineTasks             string
-	CreateRoutineTaskByStationId     string
-	UpdateMyRoutineTaskById          string
-	HardDeleteMyRoutineTaskById      string
-	HardDeleteMyRoutineTasksByIds    string
+	GetMyRoutineTaskById                       string
+	GetAllMyRoutineTasksByStationIds           string
+	GetAllMyRoutineTasks                       string
+	CreateRoutineTaskByStationId               string
+	UpdateMyRoutineTaskById                    string
+	HardDeleteMyRoutineTaskById                string
+	HardDeleteMyRoutineTasksByIds              string
+	VisualizeMyRoutineTaskStatusCount          string
+	VisualizeMyRoutineTaskPurposeCount         string
+	VisualizeMyRoutineTaskScheduledAtCount     string
+	VisualizeMyRoutineTaskActualStartedAtCount string
+	VisualizeMyRoutineTaskActualEndedAtCount   string
 }
 
 type metricNameRootShelf struct {
@@ -294,27 +304,32 @@ var MetricNames = struct {
 				DeleteMyStationsByIds:     "server.requests.station.deleteMyStationsByIds",
 				HardDeleteMyStationById:   "server.requests.station.hardDeleteMyStationById",
 				HardDeleteMyStationsByIds: "server.requests.station.hardDeleteMyStationsByIds",
+				VisualizeMyTotalCount:     "server.requests.station.visualizeMyTotalCount",
 			},
 			Routine: metricNameRoutine{
-				GetMyRoutineById:            "server.requests.routine.getMyRoutineById",
-				GetMyRoutinesByStationId:    "server.requests.routine.getMyRoutinesByStationId",
-				GetAllMyRoutinesByTimeRange: "server.requests.routine.getAllMyRoutinesByTimeRange",
-				CreateRoutineByStationId:    "server.requests.routine.createRoutineByStationId",
-				CreateRoutinesByStationIds:  "server.requests.routine.createRoutinesByStationIds",
-				UpdateMyRoutineById:         "server.requests.routine.updateMyRoutineById",
-				UpdateMyRoutinesByIds:       "server.requests.routine.updateMyRoutinesByIds",
-				LinkRoutineTagById:          "server.requests.routine.linkRoutineTagById",
-				BulkLinkRoutineTagsByIds:    "server.requests.routine.bulkLinkRoutineTagsByIds",
-				LinkRoutineTaskById:         "server.requests.routine.linkRoutineTaskById",
-				BulkLinkRoutineTasksByIds:   "server.requests.routine.bulkLinkRoutineTasksByIds",
-				LinkRoutineItemById:         "server.requests.routine.linkRoutineItemById",
-				BulkLinkRoutineItemsByIds:   "server.requests.routine.bulkLinkRoutineItemsByIds",
-				RestoreMyRoutineById:        "server.requests.routine.restoreMyRoutineById",
-				RestoreMyRoutinesByIds:      "server.requests.routine.restoreMyRoutinesByIds",
-				DeleteMyRoutineById:         "server.requests.routine.deleteMyRoutineById",
-				DeleteMyRoutinesByIds:       "server.requests.routine.deleteMyRoutinesByIds",
-				HardDeleteMyRoutineById:     "server.requests.routine.hardDeleteMyRoutineById",
-				HardDeleteMyRoutinesByIds:   "server.requests.routine.hardDeleteMyRoutinesByIds",
+				GetMyRoutineById:                        "server.requests.routine.getMyRoutineById",
+				GetMyRoutinesByStationId:                "server.requests.routine.getMyRoutinesByStationId",
+				GetAllMyRoutinesByTimeRange:             "server.requests.routine.getAllMyRoutinesByTimeRange",
+				CreateRoutineByStationId:                "server.requests.routine.createRoutineByStationId",
+				CreateRoutinesByStationIds:              "server.requests.routine.createRoutinesByStationIds",
+				UpdateMyRoutineById:                     "server.requests.routine.updateMyRoutineById",
+				UpdateMyRoutinesByIds:                   "server.requests.routine.updateMyRoutinesByIds",
+				LinkRoutineTagById:                      "server.requests.routine.linkRoutineTagById",
+				BulkLinkRoutineTagsByIds:                "server.requests.routine.bulkLinkRoutineTagsByIds",
+				LinkRoutineTaskById:                     "server.requests.routine.linkRoutineTaskById",
+				BulkLinkRoutineTasksByIds:               "server.requests.routine.bulkLinkRoutineTasksByIds",
+				LinkRoutineItemById:                     "server.requests.routine.linkRoutineItemById",
+				BulkLinkRoutineItemsByIds:               "server.requests.routine.bulkLinkRoutineItemsByIds",
+				RestoreMyRoutineById:                    "server.requests.routine.restoreMyRoutineById",
+				RestoreMyRoutinesByIds:                  "server.requests.routine.restoreMyRoutinesByIds",
+				DeleteMyRoutineById:                     "server.requests.routine.deleteMyRoutineById",
+				DeleteMyRoutinesByIds:                   "server.requests.routine.deleteMyRoutinesByIds",
+				HardDeleteMyRoutineById:                 "server.requests.routine.hardDeleteMyRoutineById",
+				HardDeleteMyRoutinesByIds:               "server.requests.routine.hardDeleteMyRoutinesByIds",
+				VisualizeMyRoutineStatusCount:           "server.requests.routine.visualizeMyRoutineStatusCount",
+				VisualizeMyRoutinePeriodCount:           "server.requests.routine.visualizeMyRoutinePeriodCount",
+				VisualizeMyRoutineScheduledStartAtCount: "server.requests.routine.visualizeMyRoutineScheduledStartAtCount",
+				VisualizeMyRoutineScheduledEndAtCount:   "server.requests.routine.visualizeMyRoutineScheduledEndAtCount",
 			},
 			RoutineTag: metricNameRoutineTag{
 				GetMyRoutineTagById:          "server.requests.routineTag.getMyRoutineTagById",
@@ -327,13 +342,18 @@ var MetricNames = struct {
 				HardDeleteMyRoutineTagsByIds: "server.requests.routineTag.hardDeleteMyRoutineTagsByIds",
 			},
 			RoutineTask: metricNameRoutineTask{
-				GetMyRoutineTaskById:             "server.requests.routineTask.getMyRoutineTaskById",
-				GetAllMyRoutineTasksByStationIds: "server.requests.routineTask.getAllMyRoutineTasksByStationIds",
-				GetAllMyRoutineTasks:             "server.requests.routineTask.getAllMyRoutineTasks",
-				CreateRoutineTaskByStationId:     "server.requests.routineTask.createRoutineTaskByStationId",
-				UpdateMyRoutineTaskById:          "server.requests.routineTask.updateMyRoutineTaskById",
-				HardDeleteMyRoutineTaskById:      "server.requests.routineTask.hardDeleteMyRoutineTaskById",
-				HardDeleteMyRoutineTasksByIds:    "server.requests.routineTask.hardDeleteMyRoutineTasksByIds",
+				GetMyRoutineTaskById:                       "server.requests.routineTask.getMyRoutineTaskById",
+				GetAllMyRoutineTasksByStationIds:           "server.requests.routineTask.getAllMyRoutineTasksByStationIds",
+				GetAllMyRoutineTasks:                       "server.requests.routineTask.getAllMyRoutineTasks",
+				CreateRoutineTaskByStationId:               "server.requests.routineTask.createRoutineTaskByStationId",
+				UpdateMyRoutineTaskById:                    "server.requests.routineTask.updateMyRoutineTaskById",
+				HardDeleteMyRoutineTaskById:                "server.requests.routineTask.hardDeleteMyRoutineTaskById",
+				HardDeleteMyRoutineTasksByIds:              "server.requests.routineTask.hardDeleteMyRoutineTasksByIds",
+				VisualizeMyRoutineTaskStatusCount:          "server.requests.routineTask.visualizeMyRoutineTaskStatusCount",
+				VisualizeMyRoutineTaskPurposeCount:         "server.requests.routineTask.visualizeMyRoutineTaskPurposeCount",
+				VisualizeMyRoutineTaskScheduledAtCount:     "server.requests.routineTask.visualizeMyRoutineTaskScheduledAtCount",
+				VisualizeMyRoutineTaskActualStartedAtCount: "server.requests.routineTask.visualizeMyRoutineTaskActualStartedAtCount",
+				VisualizeMyRoutineTaskActualEndedAtCount:   "server.requests.routineTask.visualizeMyRoutineTaskActualEndedAtCount",
 			},
 			RootShelf: metricNameRootShelf{
 				GetMyRootShelfById:        "server.requests.rootShelf.getMyRootShelfById",
