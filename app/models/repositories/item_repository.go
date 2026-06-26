@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"github.com/google/uuid"
-	"gorm.io/gorm/clause"
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
@@ -47,7 +46,7 @@ func (r *ItemRepository) HasPermission(
 		Select("1").
 		Scopes(r.itemScope.PassPermissionCheck(id, itemType, userId, allowedPermissions)).
 		Scopes(r.itemScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Limit(1).
 		Scan(&marker)
 	if err := result.Error; err != nil {
@@ -71,7 +70,7 @@ func (r *ItemRepository) HavePermissions(
 		Select(`DISTINCT "ItemTable".id, "ItemTable".type`).
 		Scopes(r.itemScope.PassPermissionChecks(itemIdentities, userId, allowedPermissions)).
 		Scopes(r.itemScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&permittedItems)
 	if err := result.Error; err != nil {
 		return false
@@ -104,7 +103,7 @@ func (r *ItemRepository) CheckPermissionAndGetOneById(
 		Scopes(r.itemScope.PassPermissionCheck(id, itemType, userId, allowedPermissions)).
 		Scopes(r.itemScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.itemScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&item)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Item.NotFound().WithOrigin(result.Error)},
@@ -131,7 +130,7 @@ func (r *ItemRepository) CheckPermissionsAndGetManyByIds(
 		Scopes(r.itemScope.PassPermissionChecks(itemIdentities, userId, allowedPermissions)).
 		Scopes(r.itemScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.itemScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&items)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Item.NotFound().WithOrigin(result.Error)},

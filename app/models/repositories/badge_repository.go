@@ -2,10 +2,10 @@ package repositories
 
 import (
 	"github.com/google/uuid"
-	"gorm.io/gorm/clause"
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
@@ -37,7 +37,7 @@ func (r *BadgeRepository) GetOneById(
 	}
 
 	result := query.Where("id = ?", id).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&badge)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Badge.NotFound().WithOrigin(result.Error)},

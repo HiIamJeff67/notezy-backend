@@ -20,7 +20,7 @@ var (
 	//go:embed accounting_mutated_sub_shelf_trigger.sql
 	AccountingMutatedSubShelfTriggerSQL string
 
-	//go:embed accouting_mutated_material_trigger.sql
+	//go:embed accounting_mutated_material_trigger.sql
 	AccountingMutatedMaterialTriggerSQL string
 
 	//go:embed accounting_inserted_routine_task_trigger.sql
@@ -28,6 +28,9 @@ var (
 
 	//go:embed accounting_deleted_routine_task_trigger.sql
 	AccountingDeletedRoutineTaskTriggerSQL string
+
+	//go:embed accounting_updated_routine_task_trigger.sql
+	AccountingUpdatedRoutineTaskTriggerSQL string
 
 	//go:embed accounting_inserted_routine_tag_trigger.sql
 	AccountingInsertedRoutineTagTriggerSQL string

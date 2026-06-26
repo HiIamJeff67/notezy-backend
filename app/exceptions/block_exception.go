@@ -11,19 +11,19 @@ const (
 type BlockExceptionDomain struct {
 	BaseCode ExceptionCode
 	Prefix   ExceptionPrefix
+	APIExceptionDomain
 	DatabaseExceptionDomain
-	FileExceptionDomain
 	TypeExceptionDomain
 }
 
 var Block = &BlockExceptionDomain{
 	BaseCode: ExceptionBaseCode_Block,
 	Prefix:   ExceptionPrefix_Block,
-	DatabaseExceptionDomain: DatabaseExceptionDomain{
+	APIExceptionDomain: APIExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_Block,
 		_Prefix:   ExceptionPrefix_Block,
 	},
-	FileExceptionDomain: FileExceptionDomain{
+	DatabaseExceptionDomain: DatabaseExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_Block,
 		_Prefix:   ExceptionPrefix_Block,
 	},

@@ -76,21 +76,21 @@ type UnbindGoogleAccountReqDto struct {
 /* ============================== Response DTO ============================== */
 
 type GetMyAccountResDto struct {
-	CountryCode         *enums.CountryCode `json:"countryCode"`
-	PhoneNumber         *string            `json:"phoneNumber"`
-	GoogleCredential    *string            `json:"googleCrendential"`
-	DiscordCredential   *string            `json:"discordCrendential"`
-	RootShelfCount      int64              `json:"rootShelfCount"`
-	BlockPackCount      int64              `json:"blockPackCount"`
-	BlockCount          int64              `json:"blockCount"`
-	MaterialCount       int64              `json:"materialCount"`
-	WorkflowCount       int64              `json:"workflowCount"`
-	AdditionalItemCount int64              `json:"additionalItemCount"`
-	StationCount        int64              `json:"stationCount"`
-	RoutineCount        int64              `json:"routineCount"`
-	RoutineTaskCount    int64              `json:"routineTaskCount"`
-	RoutineTagCount     int64              `json:"routineTagCount"`
-	UpdatedAt           time.Time          `json:"updatedAt"`
+	CountryCode              *enums.CountryCode `json:"countryCode"`
+	PhoneNumber              *string            `json:"phoneNumber"`
+	GoogleCredential         *string            `json:"googleCrendential"`
+	DiscordCredential        *string            `json:"discordCrendential"`
+	RootShelfCount           int64              `json:"rootShelfCount"`
+	BlockPackCount           int64              `json:"blockPackCount"`
+	BlockCount               int64              `json:"blockCount"`
+	MaterialCount            int64              `json:"materialCount"`
+	WorkflowCount            int64              `json:"workflowCount"`
+	AdditionalItemCount      int64              `json:"additionalItemCount"`
+	StationCount             int64              `json:"stationCount"`
+	RoutineCount             int64              `json:"routineCount"`
+	RoutineTaskCostUnitCount int64              `json:"routineTaskCostUnitCount"`
+	RoutineTagCount          int64              `json:"routineTagCount"`
+	UpdatedAt                time.Time          `json:"updatedAt"`
 }
 
 type UpdateMyAccountResDto struct {

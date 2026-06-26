@@ -4,10 +4,12 @@ type PrivateRoutineTask {
   title: String!
   purpose: RoutineTaskPurpose!
   payload: RawJSON!
+  costUnit: Int64!
   priority: Int32!
   status: RoutineTaskStatus!
   attempts: Int32!
   maxAttempts: Int32!
+  period: RoutinePeriod
   scheduledAt: Time!
   actualStartedAt: Time
   actualEndedAt: Time

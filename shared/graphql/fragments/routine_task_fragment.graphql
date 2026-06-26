@@ -3,10 +3,12 @@ fragment FragmentedBasicPrivateRoutineTask on PrivateRoutineTask {
   stationId
   title
   purpose
+  costUnit
   priority
   status
   attempts
   maxAttempts
+  period
   scheduledAt
   actualStartedAt
   actualEndedAt

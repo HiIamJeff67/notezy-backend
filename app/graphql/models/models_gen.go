@@ -102,10 +102,12 @@ type PrivateRoutineTask struct {
 	Title           string                   `json:"title"`
 	Purpose         enums.RoutineTaskPurpose `json:"purpose"`
 	Payload         json.RawMessage          `json:"payload"`
+	CostUnit        int64                    `json:"costUnit"`
 	Priority        int32                    `json:"priority"`
 	Status          enums.RoutineTaskStatus  `json:"status"`
 	Attempts        int32                    `json:"attempts"`
 	MaxAttempts     int32                    `json:"maxAttempts"`
+	Period          *enums.RoutinePeriod     `json:"period,omitempty"`
 	ScheduledAt     time.Time                `json:"scheduledAt"`
 	ActualStartedAt *time.Time               `json:"actualStartedAt,omitempty"`
 	ActualEndedAt   *time.Time               `json:"actualEndedAt,omitempty"`

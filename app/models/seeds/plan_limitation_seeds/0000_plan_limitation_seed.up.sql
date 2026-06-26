@@ -15,16 +15,16 @@ INSERT INTO "PlanLimitationTable" (
     max_station_count,
     max_routine_tag_count,
     max_routine_count_per_station,
-    max_routine_task_count_per_station,
+    max_routine_task_cost_unit_count,
     max_routine_task_attempts,
     updated_at,
     created_at
 ) VALUES
-('Free',        10,     20,     1000,   10,     10,     2,      5,      20,     20,     100,    5242880,   10,   5,     20,     1,      3,  NOW(), NOW()),
-('Pro',         50,     100,    5000,   50,     50,     10,     50,     100,    100,    200,    20971520,  20,   25,    50,     5,      10, NOW(), NOW()),
-('Premium',     150,    300,    15000,  150,    150,    30,     150,    200,    200,    500,    52428800,  50,   50,    100,    15,     10, NOW(), NOW()),
-('Ultimate',    300,    200,    30000,  300,    300,    60,     300,    500,    500,    1000,   209715200, 100,  100,   300,    30,     20, NOW(), NOW()),
-('Enterprise',  1000,   2000,   100000, 1000,   1000,   100,    1000,   1000,   1000,   1000,   524288000, 200,  200,   500,    100,    20, NOW(), NOW())
+('Free',        10,     20,     1000,   10,     10,     2,      5,      20,     20,     100,    5242880,   10,   5,     20,     64,     3,  NOW(), NOW()),
+('Pro',         50,     100,    5000,   50,     50,     10,     50,     100,    100,    200,    20971520,  20,   25,    50,     256,    10, NOW(), NOW()),
+('Premium',     150,    300,    15000,  150,    150,    30,     150,    200,    200,    500,    52428800,  50,   50,    100,    5120,   10, NOW(), NOW()),
+('Ultimate',    300,    200,    30000,  300,    300,    60,     300,    500,    500,    1000,   209715200, 100,  100,   300,    10240,  20, NOW(), NOW()),
+('Enterprise',  1000,   2000,   100000, 1000,   1000,   100,    1000,   1000,   1000,   1000,   524288000, 200,  200,   500,    51200,  20, NOW(), NOW())
 ON CONFLICT (key) DO UPDATE SET
     max_root_shelf_count = EXCLUDED.max_root_shelf_count, 
     max_block_pack_count = EXCLUDED.max_block_pack_count, 
@@ -40,6 +40,6 @@ ON CONFLICT (key) DO UPDATE SET
     max_station_count = EXCLUDED.max_station_count,
     max_routine_tag_count = EXCLUDED.max_routine_tag_count,
     max_routine_count_per_station = EXCLUDED.max_routine_count_per_station,
-    max_routine_task_count_per_station = EXCLUDED.max_routine_task_count_per_station,
+    max_routine_task_cost_unit_count = EXCLUDED.max_routine_task_cost_unit_count,
     max_routine_task_attempts = EXCLUDED.max_routine_task_attempts,
     updated_at = NOW();

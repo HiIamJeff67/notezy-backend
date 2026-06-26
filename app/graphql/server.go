@@ -8,6 +8,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-gonic/gin"
 
+	adapters "github.com/HiIamJeff67/notezy-backend/app/adapters"
 	dataloaders "github.com/HiIamJeff67/notezy-backend/app/graphql/dataloaders"
 	generated "github.com/HiIamJeff67/notezy-backend/app/graphql/generated"
 	resolvers "github.com/HiIamJeff67/notezy-backend/app/graphql/resolvers"
@@ -28,6 +29,8 @@ func GraphQLHandler() gin.HandlerFunc {
 	routineTagRepository := repositories.NewRoutineTagRepository(scopes.NewRoutineTagScope())
 	routineTaskRepository := repositories.NewRoutineTaskRepository(scopes.NewRoutineTaskScope())
 	itemRepository := repositories.NewItemRepository(scopes.NewItemScope())
+	editableBlockAdapter := adapters.NewEditableBlockAdapter()
+	routineTaskPayloadAdapter := adapters.NewRoutineTaskPayloadAdapter(editableBlockAdapter)
 	userServices := services.NewUserService(
 		models.NotezyDB,
 		userRepository,
@@ -62,6 +65,7 @@ func GraphQLHandler() gin.HandlerFunc {
 	routineTaskService := services.NewRoutineTaskService(
 		models.NotezyDB,
 		routineTaskRepository,
+		routineTaskPayloadAdapter,
 	)
 
 	resolver := resolvers.NewResolver(

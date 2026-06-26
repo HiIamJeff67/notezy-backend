@@ -114,10 +114,12 @@ type ComplexityRoot struct {
 		ActualEndedAt   func(childComplexity int) int
 		ActualStartedAt func(childComplexity int) int
 		Attempts        func(childComplexity int) int
+		CostUnit        func(childComplexity int) int
 		CreatedAt       func(childComplexity int) int
 		ID              func(childComplexity int) int
 		MaxAttempts     func(childComplexity int) int
 		Payload         func(childComplexity int) int
+		Period          func(childComplexity int) int
 		Priority        func(childComplexity int) int
 		Purpose         func(childComplexity int) int
 		ScheduledAt     func(childComplexity int) int
@@ -785,6 +787,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateRoutineTask.Attempts(childComplexity), true
 
+	case "PrivateRoutineTask.costUnit":
+		if e.complexity.PrivateRoutineTask.CostUnit == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTask.CostUnit(childComplexity), true
+
 	case "PrivateRoutineTask.createdAt":
 		if e.complexity.PrivateRoutineTask.CreatedAt == nil {
 			break
@@ -812,6 +821,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateRoutineTask.Payload(childComplexity), true
+
+	case "PrivateRoutineTask.period":
+		if e.complexity.PrivateRoutineTask.Period == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTask.Period(childComplexity), true
 
 	case "PrivateRoutineTask.priority":
 		if e.complexity.PrivateRoutineTask.Priority == nil {
@@ -2375,10 +2391,12 @@ type PrivateSearchableRoutine {
   title: String!
   purpose: RoutineTaskPurpose!
   payload: RawJSON!
+  costUnit: Int64!
   priority: Int32!
   status: RoutineTaskStatus!
   attempts: Int32!
   maxAttempts: Int32!
+  period: RoutinePeriod
   scheduledAt: Time!
   actualStartedAt: Time
   actualEndedAt: Time

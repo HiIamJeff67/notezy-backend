@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	adapters "github.com/HiIamJeff67/notezy-backend/app/adapters"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
@@ -43,20 +44,26 @@ type RoutineTaskServiceInterface interface {
 }
 
 type RoutineTaskService struct {
-	db                    *gorm.DB
-	routineTaskRepository repositories.RoutineTaskRepositoryInterface
+	db                        *gorm.DB
+	routineTaskRepository     repositories.RoutineTaskRepositoryInterface
+	routineTaskPayloadAdapter adapters.RoutineTaskPayloadAdapterInterface
 }
 
 func NewRoutineTaskService(
 	db *gorm.DB,
 	routineTaskRepository repositories.RoutineTaskRepositoryInterface,
+	routineTaskPayloadAdapter adapters.RoutineTaskPayloadAdapterInterface,
 ) RoutineTaskServiceInterface {
 	if db == nil {
 		db = models.NotezyDB
 	}
+	if routineTaskPayloadAdapter == nil {
+		routineTaskPayloadAdapter = adapters.NewRoutineTaskPayloadAdapter(nil)
+	}
 	return &RoutineTaskService{
-		db:                    db,
-		routineTaskRepository: routineTaskRepository,
+		db:                        db,
+		routineTaskRepository:     routineTaskRepository,
+		routineTaskPayloadAdapter: routineTaskPayloadAdapter,
 	}
 }
 
@@ -148,8 +155,7 @@ func (s *RoutineTaskService) visualizeMyRoutineTaskTimeCount(
 /* ============================== Service Methods for RoutineTask ============================== */
 
 func (s *RoutineTaskService) GetMyRoutineTaskById(
-	ctx context.Context,
-	reqDto *dtos.GetMyRoutineTaskByIdReqDto,
+	ctx context.Context, reqDto *dtos.GetMyRoutineTaskByIdReqDto,
 ) (*dtos.GetMyRoutineTaskByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.RoutineTask.InvalidDto().WithOrigin(err)
@@ -176,10 +182,12 @@ func (s *RoutineTaskService) GetMyRoutineTaskById(
 		Title:           routineTask.Title,
 		Purpose:         routineTask.Purpose,
 		Payload:         routineTask.Payload,
+		CostUnit:        routineTask.CostUnit,
 		Priority:        routineTask.Priority,
 		Status:          routineTask.Status,
 		Attempts:        routineTask.Attempts,
 		MaxAttempts:     routineTask.MaxAttempts,
+		Period:          routineTask.Period,
 		ScheduledAt:     routineTask.ScheduledAt,
 		ActualStartedAt: routineTask.ActualStartedAt,
 		ActualEndedAt:   routineTask.ActualEndedAt,
@@ -189,8 +197,7 @@ func (s *RoutineTaskService) GetMyRoutineTaskById(
 }
 
 func (s *RoutineTaskService) GetAllMyRoutineTasksByStationIds(
-	ctx context.Context,
-	reqDto *dtos.GetAllMyRoutineTasksByStationIdsReqDto,
+	ctx context.Context, reqDto *dtos.GetAllMyRoutineTasksByStationIdsReqDto,
 ) (*dtos.GetAllMyRoutineTasksByStationIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.RoutineTask.InvalidDto().WithOrigin(err)
@@ -219,10 +226,12 @@ func (s *RoutineTaskService) GetAllMyRoutineTasksByStationIds(
 			StationId       uuid.UUID                "json:\"stationId\""
 			Title           string                   "json:\"title\""
 			Purpose         enums.RoutineTaskPurpose "json:\"purpose\""
+			CostUnit        int64                    "json:\"costUnit\""
 			Priority        int32                    "json:\"priority\""
 			Status          enums.RoutineTaskStatus  "json:\"status\""
 			Attempts        int32                    "json:\"attempts\""
 			MaxAttempts     int32                    "json:\"maxAttempts\""
+			Period          *enums.RoutinePeriod     "json:\"period\""
 			ScheduledAt     time.Time                "json:\"scheduledAt\""
 			ActualStartedAt *time.Time               "json:\"actualStartedAt\""
 			ActualEndedAt   *time.Time               "json:\"actualEndedAt\""
@@ -233,10 +242,12 @@ func (s *RoutineTaskService) GetAllMyRoutineTasksByStationIds(
 			StationId:       routineTask.StationId,
 			Title:           routineTask.Title,
 			Purpose:         routineTask.Purpose,
+			CostUnit:        routineTask.CostUnit,
 			Priority:        routineTask.Priority,
 			Status:          routineTask.Status,
 			Attempts:        routineTask.Attempts,
 			MaxAttempts:     routineTask.MaxAttempts,
+			Period:          routineTask.Period,
 			ScheduledAt:     routineTask.ScheduledAt,
 			ActualStartedAt: routineTask.ActualStartedAt,
 			ActualEndedAt:   routineTask.ActualEndedAt,
@@ -249,8 +260,7 @@ func (s *RoutineTaskService) GetAllMyRoutineTasksByStationIds(
 }
 
 func (s *RoutineTaskService) GetAllMyRoutineTasks(
-	ctx context.Context,
-	reqDto *dtos.GetAllMyRoutineTasksReqDto,
+	ctx context.Context, reqDto *dtos.GetAllMyRoutineTasksReqDto,
 ) (*dtos.GetAllMyRoutineTasksResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.RoutineTask.InvalidDto().WithOrigin(err)
@@ -291,10 +301,12 @@ func (s *RoutineTaskService) GetAllMyRoutineTasks(
 			Title:           routineTask.Title,
 			Purpose:         routineTask.Purpose,
 			Payload:         routineTask.Payload,
+			CostUnit:        routineTask.CostUnit,
 			Priority:        routineTask.Priority,
 			Status:          routineTask.Status,
 			Attempts:        routineTask.Attempts,
 			MaxAttempts:     routineTask.MaxAttempts,
+			Period:          routineTask.Period,
 			ScheduledAt:     routineTask.ScheduledAt,
 			ActualStartedAt: routineTask.ActualStartedAt,
 			ActualEndedAt:   routineTask.ActualEndedAt,
@@ -307,11 +319,13 @@ func (s *RoutineTaskService) GetAllMyRoutineTasks(
 }
 
 func (s *RoutineTaskService) CreateRoutineTaskByStationId(
-	ctx context.Context,
-	reqDto *dtos.CreateRoutineTaskByStationIdReqDto,
+	ctx context.Context, reqDto *dtos.CreateRoutineTaskByStationIdReqDto,
 ) (*dtos.CreateRoutineTaskByStationIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+	}
+	if exception := s.routineTaskPayloadAdapter.Parse(reqDto.Body.Purpose, reqDto.Body.Payload); exception != nil {
+		return nil, exception
 	}
 
 	db := s.db.WithContext(ctx)
@@ -325,6 +339,8 @@ func (s *RoutineTaskService) CreateRoutineTaskByStationId(
 			Payload:     reqDto.Body.Payload,
 			Priority:    reqDto.Body.Priority,
 			MaxAttempts: reqDto.Body.MaxAttempts,
+			Period:      reqDto.Body.Period,
+			ScheduledAt: reqDto.Body.ScheduledAt,
 		},
 		options.WithDB(db),
 	)
@@ -339,14 +355,37 @@ func (s *RoutineTaskService) CreateRoutineTaskByStationId(
 }
 
 func (s *RoutineTaskService) UpdateMyRoutineTaskById(
-	ctx context.Context,
-	reqDto *dtos.UpdateMyRoutineTaskByIdReqDto,
+	ctx context.Context, reqDto *dtos.UpdateMyRoutineTaskByIdReqDto,
 ) (*dtos.UpdateMyRoutineTaskByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
+	if reqDto.Body.Values.Purpose != nil || reqDto.Body.Values.Payload != nil {
+		finalPurpose := reqDto.Body.Values.Purpose
+		finalPayload := reqDto.Body.Values.Payload
+		if finalPurpose == nil || finalPayload == nil {
+			existingRoutineTask, exception := s.routineTaskRepository.GetOneById(
+				reqDto.Body.RoutineTaskId,
+				reqDto.ContextFields.UserId,
+				nil,
+				options.WithDB(db),
+			)
+			if exception != nil {
+				return nil, exception
+			}
+			if finalPurpose == nil {
+				finalPurpose = &existingRoutineTask.Purpose
+			}
+			if finalPayload == nil {
+				finalPayload = &existingRoutineTask.Payload
+			}
+		}
+		if exception := s.routineTaskPayloadAdapter.Parse(*finalPurpose, *finalPayload); exception != nil {
+			return nil, exception
+		}
+	}
 
 	updatedRoutineTask, exception := s.routineTaskRepository.UpdateOneById(
 		reqDto.Body.RoutineTaskId,
@@ -359,6 +398,8 @@ func (s *RoutineTaskService) UpdateMyRoutineTaskById(
 				Payload:     reqDto.Body.Values.Payload,
 				Priority:    reqDto.Body.Values.Priority,
 				MaxAttempts: reqDto.Body.Values.MaxAttempts,
+				Period:      reqDto.Body.Values.Period,
+				ScheduledAt: reqDto.Body.Values.ScheduledAt,
 			},
 			SetNull: reqDto.Body.SetNull,
 		},
@@ -374,8 +415,7 @@ func (s *RoutineTaskService) UpdateMyRoutineTaskById(
 }
 
 func (s *RoutineTaskService) HardDeleteMyRoutineTaskById(
-	ctx context.Context,
-	reqDto *dtos.HardDeleteMyRoutineTaskByIdReqDto,
+	ctx context.Context, reqDto *dtos.HardDeleteMyRoutineTaskByIdReqDto,
 ) (*dtos.HardDeleteMyRoutineTaskByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.RoutineTask.InvalidDto().WithOrigin(err)
@@ -398,8 +438,7 @@ func (s *RoutineTaskService) HardDeleteMyRoutineTaskById(
 }
 
 func (s *RoutineTaskService) HardDeleteMyRoutineTasksByIds(
-	ctx context.Context,
-	reqDto *dtos.HardDeleteMyRoutineTasksByIdsReqDto,
+	ctx context.Context, reqDto *dtos.HardDeleteMyRoutineTasksByIdsReqDto,
 ) (*dtos.HardDeleteMyRoutineTasksByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.RoutineTask.InvalidDto().WithOrigin(err)
@@ -557,8 +596,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskStatusCount(
 }
 
 func (s *RoutineTaskService) VisualizeMyRoutineTaskPurposeCount(
-	ctx context.Context,
-	reqDto *dtos.VisualizeMyRoutineTaskPurposeCountReqDto,
+	ctx context.Context, reqDto *dtos.VisualizeMyRoutineTaskPurposeCountReqDto,
 ) (*dtos.VisualizeMyRoutineTaskPurposeCountResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.RoutineTask.InvalidDto().WithOrigin(err)
@@ -607,8 +645,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskPurposeCount(
 }
 
 func (s *RoutineTaskService) VisualizeMyRoutineTaskScheduledAtCount(
-	ctx context.Context,
-	reqDto *dtos.VisualizeMyRoutineTaskScheduledAtCountReqDto,
+	ctx context.Context, reqDto *dtos.VisualizeMyRoutineTaskScheduledAtCountReqDto,
 ) (*dtos.VisualizeMyRoutineTaskScheduledAtCountResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.RoutineTask.InvalidDto().WithOrigin(err)
@@ -640,8 +677,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskScheduledAtCount(
 }
 
 func (s *RoutineTaskService) VisualizeMyRoutineTaskActualStartedAtCount(
-	ctx context.Context,
-	reqDto *dtos.VisualizeMyRoutineTaskActualStartedAtCountReqDto,
+	ctx context.Context, reqDto *dtos.VisualizeMyRoutineTaskActualStartedAtCountReqDto,
 ) (*dtos.VisualizeMyRoutineTaskActualStartedAtCountResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.RoutineTask.InvalidDto().WithOrigin(err)
@@ -673,8 +709,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskActualStartedAtCount(
 }
 
 func (s *RoutineTaskService) VisualizeMyRoutineTaskActualEndedAtCount(
-	ctx context.Context,
-	reqDto *dtos.VisualizeMyRoutineTaskActualEndedAtCountReqDto,
+	ctx context.Context, reqDto *dtos.VisualizeMyRoutineTaskActualEndedAtCountReqDto,
 ) (*dtos.VisualizeMyRoutineTaskActualEndedAtCountResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.RoutineTask.InvalidDto().WithOrigin(err)

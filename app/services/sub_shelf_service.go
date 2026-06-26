@@ -452,6 +452,7 @@ func (s *SubShelfService) MoveMySubShelf(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception = exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
@@ -468,6 +469,7 @@ func (s *SubShelfService) MoveMySubShelf(
 			nil,
 			allowedPermissions,
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 		)
 		if exception = exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
@@ -551,6 +553,7 @@ func (s *SubShelfService) MoveMySubShelves(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -571,6 +574,7 @@ func (s *SubShelfService) MoveMySubShelves(
 			nil,
 			allowedPermissions,
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 		)
 		if exception = exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
@@ -706,6 +710,7 @@ func (s *SubShelfService) BatchMoveMySubShelves(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -723,6 +728,7 @@ func (s *SubShelfService) BatchMoveMySubShelves(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -742,6 +748,7 @@ func (s *SubShelfService) BatchMoveMySubShelves(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {

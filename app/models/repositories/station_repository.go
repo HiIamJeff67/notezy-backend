@@ -65,7 +65,7 @@ func (r *StationRepository) HasPermission(
 		Select("1").
 		Scopes(r.stationScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Limit(1).
 		Scan(&marker)
 	if err := result.Error; err != nil {
@@ -89,7 +89,7 @@ func (r *StationRepository) HavePermissions(
 		Select(`DISTINCT "StationTable".id`).
 		Scopes(r.stationScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&permittedIds)
 	if err := result.Error; err != nil {
 		return false
@@ -113,7 +113,7 @@ func (r *StationRepository) CheckPermissionAndGetOneById(
 		Scopes(r.stationScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.stationScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&station)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Station.NotFound().WithOrigin(result.Error)},
@@ -132,7 +132,7 @@ func (r *StationRepository) CheckPermissionAndGetOneById(
 			userId,
 			allowedPermissions,
 		).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Limit(1).
 		Scan(&permission)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
@@ -160,7 +160,7 @@ func (r *StationRepository) CheckPermissionsAndGetManyByIds(
 		Scopes(r.stationScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.stationScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&stations)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Station.NotFound().WithOrigin(result.Error)},
@@ -179,7 +179,7 @@ func (r *StationRepository) CheckPermissionsAndGetManyByIds(
 			userId,
 			allowedPermissions,
 		).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&usersToStations)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Station.NotFound().WithOrigin(result.Error)},
@@ -281,7 +281,7 @@ func (r *StationRepository) CreateOneByOwnerId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	var newStation schemas.Station
@@ -346,7 +346,7 @@ func (r *StationRepository) CreateManyByOwnerId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	newStations := make([]schemas.Station, 0, len(input))
@@ -415,7 +415,7 @@ func (r *StationRepository) UpdateOneById(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -479,7 +479,7 @@ func (r *StationRepository) BulkUpdateManyByIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{

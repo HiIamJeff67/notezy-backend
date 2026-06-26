@@ -8,6 +8,7 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	util "github.com/HiIamJeff67/notezy-backend/app/util"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
@@ -36,7 +37,7 @@ func (r *UsersToBillingPlansRepository) GetOnyById(
 	var usersToBillingPlans schemas.UsersToBillingPlans
 	result := parsedOptions.DB.Table(schemas.UsersToBillingPlans{}.TableName()).
 		Where("id = ? and user_id = ?", id, userId).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&usersToBillingPlans)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.UsersToBillingPlans.NotFound().WithOrigin(result.Error)},

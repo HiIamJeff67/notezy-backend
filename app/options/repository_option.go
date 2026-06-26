@@ -7,12 +7,19 @@ import (
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
+const (
+	LockingStrengthUpdate      = "UPDATE"
+	LockingStrengthNoKeyUpdate = "NO KEY UPDATE"
+	LockingStrengthShare       = "SHARE"
+)
+
 type RepositoryOptionFields struct {
 	DB                   *gorm.DB
 	IsTransactionStarted bool
 	OnlyDeleted          types.Ternary
 	SkipPermissionCheck  bool
 	BatchSize            int
+	LockingStrength      *string
 }
 
 type RepositoryOptions func(*RepositoryOptionFields)
@@ -54,6 +61,12 @@ func WithBatchSize(batchSize int) RepositoryOptions {
 	}
 }
 
+func WithLockingStrength(lockingStrength string) RepositoryOptions {
+	return func(ros *RepositoryOptionFields) {
+		ros.LockingStrength = &lockingStrength
+	}
+}
+
 func GetDefaultOptions() RepositoryOptionFields {
 	return RepositoryOptionFields{
 		DB:                   models.NotezyDB,
@@ -61,6 +74,7 @@ func GetDefaultOptions() RepositoryOptionFields {
 		SkipPermissionCheck:  false,
 		BatchSize:            1000,
 		IsTransactionStarted: false,
+		LockingStrength:      nil,
 	}
 }
 

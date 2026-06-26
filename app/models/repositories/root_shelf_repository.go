@@ -64,7 +64,7 @@ func (r *RootShelfRepository) HasPermission(
 		Select("1").
 		Scopes(r.rootShelfScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.rootShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Limit(1).
 		Scan(&marker)
 	if err := result.Error; err != nil {
@@ -88,7 +88,7 @@ func (r *RootShelfRepository) HavePermissions(
 		Select(`DISTINCT "RootShelfTable".id`).
 		Scopes(r.rootShelfScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.rootShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&permittedIds)
 	if err := result.Error; err != nil {
 		return false
@@ -112,7 +112,7 @@ func (r *RootShelfRepository) CheckPermissionAndGetOneById(
 		Scopes(r.rootShelfScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.rootShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.rootShelfScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&rootShelf)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Shelf.NotFound().WithOrigin(result.Error)},
@@ -131,7 +131,7 @@ func (r *RootShelfRepository) CheckPermissionAndGetOneById(
 			userId,
 			allowedPermissions,
 		).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Limit(1).
 		Scan(&permission)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
@@ -159,7 +159,7 @@ func (r *RootShelfRepository) CheckPermissionsAndGetManyByIds(
 		Scopes(r.rootShelfScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.rootShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.rootShelfScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&rootShelves)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Shelf.NotFound().WithOrigin(result.Error)},
@@ -178,7 +178,7 @@ func (r *RootShelfRepository) CheckPermissionsAndGetManyByIds(
 			userId,
 			allowedPermissions,
 		).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&usersToShelves)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Shelf.NotFound().WithOrigin(result.Error)},
@@ -237,7 +237,7 @@ func (r *RootShelfRepository) CreateOneByOwnerId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	var newRootShelf schemas.RootShelf
@@ -304,7 +304,7 @@ func (r *RootShelfRepository) CreateManyByOwnerId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	var newRootShelves []schemas.RootShelf
@@ -373,7 +373,7 @@ func (r *RootShelfRepository) UpdateOneById(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if !parsedOptions.IsTransactionStarted {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -435,7 +435,7 @@ func (r *RootShelfRepository) BulkUpdateManyByIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted && !parsedOptions.SkipPermissionCheck
 	if shouldStartTransaction { // only start the transaction when the permission check is required
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	isRootShelfValid := make(map[uuid.UUID]bool)

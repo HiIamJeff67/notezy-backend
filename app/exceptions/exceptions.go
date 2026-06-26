@@ -595,6 +595,19 @@ type APIExceptionDomain struct {
 	_Prefix   ExceptionPrefix
 }
 
+// action should be for examples: "read", "write", "execute", "update", "delete", etc.
+func (d *APIExceptionDomain) NoPermission(action string) *Exception {
+	return &Exception{
+		Code:           d._BaseCode + 11,
+		Prefix:         d._Prefix,
+		Reason:         "NoPermission",
+		IsInternal:     false,
+		Message:        fmt.Sprintf("You don't have any permission to %s", action),
+		HTTPStatusCode: http.StatusBadRequest,
+		LastTrace:      traces.GetTrace(1),
+	}
+}
+
 /* ============================== GraphQL Exception Domain Definition ============================== */
 
 type GraphQLExceptionDomain struct {
@@ -690,22 +703,9 @@ type FileExceptionDomain struct {
 	_Prefix   ExceptionPrefix
 }
 
-// action should be for examples: "read", "write", "execute", "update", "delete", etc.
-func (d *FileExceptionDomain) NoPermission(action string) *Exception {
-	return &Exception{
-		Code:           d._BaseCode + 41,
-		Prefix:         d._Prefix,
-		Reason:         "NoPermission",
-		IsInternal:     false,
-		Message:        fmt.Sprintf("You don't have any permission to %s", action),
-		HTTPStatusCode: http.StatusBadRequest,
-		LastTrace:      traces.GetTrace(1),
-	}
-}
-
 func (d *FileExceptionDomain) FileTooLarge(fileSize int64, maxFileSize int64) *Exception {
 	return &Exception{
-		Code:           d._BaseCode + 42,
+		Code:           d._BaseCode + 41,
 		Prefix:         d._Prefix,
 		Reason:         "FileTooLarge",
 		IsInternal:     false,
@@ -717,7 +717,7 @@ func (d *FileExceptionDomain) FileTooLarge(fileSize int64, maxFileSize int64) *E
 
 func (d *FileExceptionDomain) TooManyFiles(numberOfFiles int64) *Exception {
 	return &Exception{
-		Code:           d._BaseCode + 43,
+		Code:           d._BaseCode + 42,
 		Prefix:         d._Prefix,
 		Reason:         "TooManyFiles",
 		IsInternal:     false,
@@ -729,7 +729,7 @@ func (d *FileExceptionDomain) TooManyFiles(numberOfFiles int64) *Exception {
 
 func (d *FileExceptionDomain) CannotGetFileObjects() *Exception {
 	return &Exception{
-		Code:           d._BaseCode + 44,
+		Code:           d._BaseCode + 43,
 		Prefix:         d._Prefix,
 		Reason:         "CannotGetFileObjects",
 		IsInternal:     true,
@@ -741,7 +741,7 @@ func (d *FileExceptionDomain) CannotGetFileObjects() *Exception {
 
 func (d *FileExceptionDomain) CannotOpenFiles() *Exception {
 	return &Exception{
-		Code:           d._BaseCode + 45,
+		Code:           d._BaseCode + 44,
 		Prefix:         d._Prefix,
 		Reason:         "CannotOpenFiles",
 		IsInternal:     true,
@@ -753,7 +753,7 @@ func (d *FileExceptionDomain) CannotOpenFiles() *Exception {
 
 func (d *FileExceptionDomain) CannotPeekFiles() *Exception {
 	return &Exception{
-		Code:           d._BaseCode + 46,
+		Code:           d._BaseCode + 45,
 		Prefix:         d._Prefix,
 		Reason:         "CannotPeekFiles",
 		IsInternal:     true,
@@ -765,7 +765,7 @@ func (d *FileExceptionDomain) CannotPeekFiles() *Exception {
 
 func (d *FileExceptionDomain) CannotCloseFiles() *Exception {
 	return &Exception{
-		Code:           d._BaseCode + 47,
+		Code:           d._BaseCode + 46,
 		Prefix:         d._Prefix,
 		Reason:         "CannotCloseFiles",
 		IsInternal:     true,
@@ -777,7 +777,7 @@ func (d *FileExceptionDomain) CannotCloseFiles() *Exception {
 
 func (d *FileExceptionDomain) CannotReadFileBytes() *Exception {
 	return &Exception{
-		Code:           d._BaseCode + 48,
+		Code:           d._BaseCode + 47,
 		Prefix:         d._Prefix,
 		Reason:         "CannotReadFileBytes",
 		IsInternal:     true,
@@ -789,7 +789,7 @@ func (d *FileExceptionDomain) CannotReadFileBytes() *Exception {
 
 func (d *FileExceptionDomain) FailedToDetectContentType() *Exception {
 	return &Exception{
-		Code:           d._BaseCode + 49,
+		Code:           d._BaseCode + 48,
 		Prefix:         d._Prefix,
 		Reason:         "FailedToDetectContentType",
 		IsInternal:     true,
@@ -825,6 +825,25 @@ func (d *MarshalerExceptionDomain) FailedToUnmarshalObject(object any) *Exceptio
 		Reason:         "FailedToUnmarshal",
 		IsInternal:     true,
 		Message:        fmt.Sprintf("Failed to unmarshal object of %v", object),
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastTrace:      traces.GetTrace(1),
+	}
+}
+
+/* ============================== Durable Job Exception Domain Definition ============================== */
+
+type DurableJobExceptionDomain struct {
+	_BaseCode ExceptionCode
+	_Prefix   ExceptionPrefix
+}
+
+func (d *DurableJobExceptionDomain) FailedToClaim(domain string) *Exception {
+	return &Exception{
+		Code:           d._BaseCode + 71,
+		Prefix:         d._Prefix,
+		Reason:         "FailedToClaim",
+		IsInternal:     true,
+		Message:        fmt.Sprintf("Failed to claim in the domain of %s", domain),
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastTrace:      traces.GetTrace(1),
 	}

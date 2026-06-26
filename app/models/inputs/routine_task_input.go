@@ -1,6 +1,8 @@
 package inputs
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 
@@ -13,6 +15,8 @@ type CreateRoutineTaskInput struct {
 	Payload     datatypes.JSON           `json:"payload" gorm:"column:payload;"`
 	Priority    int32                    `json:"priority" gorm:"column:priority;"`
 	MaxAttempts int32                    `json:"maxAttempts" gorm:"column:max_attempts;"`
+	Period      *enums.RoutinePeriod     `json:"period" gorm:"column:period;"`
+	ScheduledAt time.Time                `json:"scheduledAt" gorm:"column:scheduled_at;"`
 }
 
 type BulkCreateRoutineTaskInput struct {
@@ -22,6 +26,8 @@ type BulkCreateRoutineTaskInput struct {
 	Payload     datatypes.JSON           `json:"payload" gorm:"column:payload;"`
 	Priority    int32                    `json:"priority" gorm:"column:priority;"`
 	MaxAttempts int32                    `json:"maxAttempts" gorm:"column:max_attempts;"`
+	Period      *enums.RoutinePeriod     `json:"period" gorm:"column:period;"`
+	ScheduledAt time.Time                `json:"scheduledAt" gorm:"column:scheduled_at;"`
 }
 
 type UpdateRoutineTaskInput struct {
@@ -31,6 +37,8 @@ type UpdateRoutineTaskInput struct {
 	Payload     *datatypes.JSON           `json:"payload" gorm:"column:payload;"`
 	Priority    *int32                    `json:"priority" gorm:"column:priority;"`
 	MaxAttempts *int32                    `json:"maxAttempts" gorm:"column:max_attempts;"`
+	Period      *enums.RoutinePeriod      `json:"period" gorm:"column:period;"`
+	ScheduledAt *time.Time                `json:"scheduledAt" gorm:"column:scheduled_at;"`
 }
 
 type PartialUpdateRoutineTaskInput = PartialUpdateInput[UpdateRoutineTaskInput]

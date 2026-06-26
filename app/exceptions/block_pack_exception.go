@@ -20,19 +20,19 @@ const (
 type BlockPackExceptionDomain struct {
 	BaseCode ExceptionCode
 	Prefix   ExceptionPrefix
+	APIExceptionDomain
 	DatabaseExceptionDomain
-	FileExceptionDomain
 	TypeExceptionDomain
 }
 
 var BlockPack = &BlockPackExceptionDomain{
 	BaseCode: ExceptionBaseCode_BlockPack,
 	Prefix:   ExceptionPrefix_BlockPack,
-	DatabaseExceptionDomain: DatabaseExceptionDomain{
+	APIExceptionDomain: APIExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_BlockPack,
 		_Prefix:   ExceptionPrefix_BlockPack,
 	},
-	FileExceptionDomain: FileExceptionDomain{
+	DatabaseExceptionDomain: DatabaseExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_BlockPack,
 		_Prefix:   ExceptionPrefix_BlockPack,
 	},

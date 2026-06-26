@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
-	"gorm.io/gorm/clause"
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
@@ -57,7 +56,7 @@ func (r *RoutineTagRepository) HasPermission(
 		Model(&schemas.RoutineTag{}).
 		Select("1").
 		Scopes(r.routineTagScope.PassPermissionCheck(id, userId, allowedPermissions)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Limit(1).
 		Scan(&marker)
 	if err := result.Error; err != nil {
@@ -80,7 +79,7 @@ func (r *RoutineTagRepository) HavePermissions(
 		Model(&schemas.RoutineTag{}).
 		Select(`DISTINCT "RoutineTagTable".id`).
 		Scopes(r.routineTagScope.PassPermissionChecks(ids, userId, allowedPermissions)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&permittedIds)
 	if err := result.Error; err != nil {
 		return false
@@ -103,7 +102,7 @@ func (r *RoutineTagRepository) CheckPermissionAndGetOneById(
 		Model(&schemas.RoutineTag{}).
 		Scopes(r.routineTagScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.routineTagScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&routineTag)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.RoutineTag.NotFound().WithOrigin(result.Error)},
@@ -129,7 +128,7 @@ func (r *RoutineTagRepository) CheckPermissionsAndGetManyByIds(
 		Model(&schemas.RoutineTag{}).
 		Scopes(r.routineTagScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.routineTagScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&routineTags)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.RoutineTag.NotFound().WithOrigin(result.Error)},
@@ -197,7 +196,7 @@ func (r *RoutineTagRepository) CreateOneByUserId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	newRoutineTag := schemas.RoutineTag{
@@ -260,7 +259,7 @@ func (r *RoutineTagRepository) BulkCreateManyByUserId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	newRoutineTags := make([]schemas.RoutineTag, 0, len(input))
@@ -340,7 +339,7 @@ func (r *RoutineTagRepository) UpdateOneById(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -396,7 +395,7 @@ func (r *RoutineTagRepository) BulkUpdateManyByIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{

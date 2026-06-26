@@ -74,7 +74,7 @@ func (r *BlockGroupRepository) HasPermission(
 		Select("1").
 		Scopes(r.blockGroupScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.blockGroupScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Limit(1).
 		Scan(&marker)
 	if err := result.Error; err != nil {
@@ -98,7 +98,7 @@ func (r *BlockGroupRepository) HavePermissions(
 		Select(`DISTINCT "BlockGroupTable".id`).
 		Scopes(r.blockGroupScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.blockGroupScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&permittedIds)
 	if err := result.Error; err != nil {
 		return false
@@ -122,7 +122,7 @@ func (r *BlockGroupRepository) CheckPermissionAndGetOneById(
 		Scopes(r.blockGroupScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.blockGroupScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockGroupScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&blockGroup)
 	if err := result.Error; err != nil {
 		return nil, exceptions.BlockGroup.NotFound().WithOrigin(err)
@@ -146,7 +146,7 @@ func (r *BlockGroupRepository) CheckPermissionsAndGetManyByIds(
 		Scopes(r.blockGroupScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.blockGroupScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockGroupScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&blockGroups)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.BlockGroup.NotFound().WithOrigin(result.Error)},
@@ -184,7 +184,7 @@ func (r *BlockGroupRepository) CheckPermissionsAndGetManyByBlockPackId(
 	result := query.
 		Scopes(r.blockGroupScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockGroupScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&blockGroups)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.BlockGroup.NotFound().WithOrigin(result.Error)},
@@ -224,7 +224,7 @@ func (r *BlockGroupRepository) CheckPermissionAndGetValidIds(
 	var validIds []uuid.UUID
 	if err := query.
 		Scopes(r.blockGroupScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Scan(&validIds).Error; err != nil {
 		return make([]uuid.UUID, len(ids)), exceptions.BlockGroup.NotFound().WithOrigin(err)
 	}
@@ -248,7 +248,7 @@ func (r *BlockGroupRepository) CollectOrphanedBlockGroupsByIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	var orphanedBlockGroupIds []uuid.UUID
@@ -341,7 +341,7 @@ func (r *BlockGroupRepository) GetOneByPrevBlockGroupId(
 	if err := query.
 		Scopes(r.blockGroupScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockGroupScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&blockGroup).Error; err != nil {
 		return nil, exceptions.BlockGroup.NotFound().WithOrigin(err)
 	}
@@ -411,7 +411,7 @@ func (r *BlockGroupRepository) GetManyByPrevBlockGroupIds(
 	result := query.
 		Scopes(r.blockGroupScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockGroupScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&blockGroups)
 	if result.Error != nil {
 		return nil, exceptions.BlockGroup.NotFound().WithOrigin(result.Error)
@@ -432,7 +432,7 @@ func (r *BlockGroupRepository) InsertOneByBlockPackId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -548,7 +548,7 @@ func (r *BlockGroupRepository) InsertManyByBlockPackId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -729,7 +729,7 @@ func (r *BlockGroupRepository) InsertManyByBlockPackIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -927,7 +927,7 @@ func (r *BlockGroupRepository) AppendOneByBlockPackId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -995,7 +995,7 @@ func (r *BlockGroupRepository) AppendManyByBlockPackId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -1067,7 +1067,7 @@ func (r *BlockGroupRepository) UpdateOneById(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -1133,7 +1133,7 @@ func (r *BlockGroupRepository) BulkUpdateManyByIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted && !parsedOptions.SkipPermissionCheck
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	isBlockGroupValid := make(map[uuid.UUID]bool)
@@ -1277,7 +1277,7 @@ func (r *BlockGroupRepository) IncrementSizesByIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted && !parsedOptions.SkipPermissionCheck
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	isBlockGroupValid := make(map[uuid.UUID]bool)
@@ -1369,7 +1369,7 @@ func (r *BlockGroupRepository) RestoreSoftDeletedOneById(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -1435,7 +1435,7 @@ func (r *BlockGroupRepository) RestoreSoftDeletedManyByIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -1631,7 +1631,7 @@ func (r *BlockGroupRepository) SoftDeleteManyByIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{

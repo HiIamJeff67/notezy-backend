@@ -314,6 +314,8 @@ func (ec *executionContext) fieldContext_SearchRoutineTaskEdge_node(_ context.Co
 				return ec.fieldContext_PrivateRoutineTask_purpose(ctx, field)
 			case "payload":
 				return ec.fieldContext_PrivateRoutineTask_payload(ctx, field)
+			case "costUnit":
+				return ec.fieldContext_PrivateRoutineTask_costUnit(ctx, field)
 			case "priority":
 				return ec.fieldContext_PrivateRoutineTask_priority(ctx, field)
 			case "status":
@@ -322,6 +324,8 @@ func (ec *executionContext) fieldContext_SearchRoutineTaskEdge_node(_ context.Co
 				return ec.fieldContext_PrivateRoutineTask_attempts(ctx, field)
 			case "maxAttempts":
 				return ec.fieldContext_PrivateRoutineTask_maxAttempts(ctx, field)
+			case "period":
+				return ec.fieldContext_PrivateRoutineTask_period(ctx, field)
 			case "scheduledAt":
 				return ec.fieldContext_PrivateRoutineTask_scheduledAt(ctx, field)
 			case "actualStartedAt":

@@ -65,7 +65,7 @@ func (r *BlockPackRepository) HasPermission(
 		Select("1").
 		Scopes(r.blockPackScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Limit(1).
 		Scan(&marker)
 	if err := result.Error; err != nil {
@@ -89,7 +89,7 @@ func (r *BlockPackRepository) HavePermissions(
 		Select(`DISTINCT "BlockPackTable".id`).
 		Scopes(r.blockPackScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&permittedIds)
 	if err := result.Error; err != nil {
 		return false
@@ -113,7 +113,7 @@ func (r *BlockPackRepository) CheckPermissionAndGetOneById(
 		Scopes(r.blockPackScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockPackScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&blockPack)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.BlockPack.NotFound().WithOrigin(result.Error)},
@@ -140,7 +140,7 @@ func (r *BlockPackRepository) CheckPermissionsAndGetManyByIds(
 		Scopes(r.blockPackScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockPackScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&blockPacks)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.BlockPack.NotFound().WithOrigin(result.Error)},
@@ -176,7 +176,7 @@ func (r *BlockPackRepository) CheckPermissionAndGetOneWithOwnerIdById(
 		Where(`"BlockPackTable".id = ? AND EXISTS (?)`, id, subQuery).
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockPackScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"})
+		Scopes(scopes.Locking(parsedOptions.LockingStrength))
 
 	var blockPackWithOwnerId struct {
 		schemas.BlockPack
@@ -217,7 +217,7 @@ func (r *BlockPackRepository) CheckPermissionsAndGetManyWithOwnerIdsByIds(
 		Where(`"BlockPackTable".id IN ? AND EXISTS (?)`, ids, subQuery).
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockPackScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"})
+		Scopes(scopes.Locking(parsedOptions.LockingStrength))
 
 	var blockPacksWithOwnerIds []struct {
 		schemas.BlockPack
@@ -274,7 +274,7 @@ func (r *BlockPackRepository) CreateOneBySubShelfId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted && !parsedOptions.SkipPermissionCheck
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	if !parsedOptions.SkipPermissionCheck {
@@ -339,7 +339,7 @@ func (r *BlockPackRepository) BulkCreateManyBySubShelfIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted && !parsedOptions.SkipPermissionCheck
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	isParentSubShelfIdValid := make(map[uuid.UUID]bool)
@@ -430,7 +430,7 @@ func (r *BlockPackRepository) UpdateOneById(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -508,7 +508,7 @@ func (r *BlockPackRepository) BulkUpdateManyByIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted && !parsedOptions.SkipPermissionCheck
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	isSubShelfValid := make(map[uuid.UUID]bool)

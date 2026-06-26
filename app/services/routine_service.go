@@ -611,6 +611,7 @@ func (s *RoutineService) LinkRoutineTagById(
 		reqDto.ContextFields.UserId,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	) {
 		tx.Rollback()
@@ -622,6 +623,7 @@ func (s *RoutineService) LinkRoutineTagById(
 		reqDto.ContextFields.UserId,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	) {
 		tx.Rollback()
@@ -696,6 +698,7 @@ func (s *RoutineService) BulkLinkRoutineTagsByIds(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -713,6 +716,7 @@ func (s *RoutineService) BulkLinkRoutineTagsByIds(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -791,6 +795,7 @@ func (s *RoutineService) LinkRoutineTaskById(
 		reqDto.ContextFields.UserId,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	) {
 		tx.Rollback()
@@ -802,6 +807,7 @@ func (s *RoutineService) LinkRoutineTaskById(
 		reqDto.ContextFields.UserId,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	) {
 		tx.Rollback()
@@ -876,6 +882,7 @@ func (s *RoutineService) BulkLinkRoutineTasksByIds(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -893,6 +900,7 @@ func (s *RoutineService) BulkLinkRoutineTasksByIds(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -971,6 +979,7 @@ func (s *RoutineService) LinkRoutineItemById(
 		reqDto.ContextFields.UserId,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	) {
 		tx.Rollback()
@@ -983,6 +992,7 @@ func (s *RoutineService) LinkRoutineItemById(
 		reqDto.ContextFields.UserId,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	) {
 		tx.Rollback()
@@ -1067,6 +1077,7 @@ func (s *RoutineService) BulkLinkRoutineItemsByIds(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -1084,6 +1095,7 @@ func (s *RoutineService) BulkLinkRoutineItemsByIds(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {

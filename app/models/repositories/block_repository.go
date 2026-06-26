@@ -67,7 +67,7 @@ func (r *BlockRepository) HasPermission(
 		Select("1").
 		Scopes(r.blockScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.blockScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Limit(1).
 		Scan(&marker)
 	if err := result.Error; err != nil {
@@ -91,7 +91,7 @@ func (r *BlockRepository) HavePermissions(
 		Select(`DISTINCT "BlockTable".id`).
 		Scopes(r.blockScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.blockScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&permittedIds)
 	if err := result.Error; err != nil {
 		return false
@@ -115,7 +115,7 @@ func (r *BlockRepository) CheckPermissionAndGetOneById(
 		Scopes(r.blockScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.blockScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&block)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Block.NotFound().WithOrigin(result.Error)},
@@ -142,7 +142,7 @@ func (r *BlockRepository) CheckPermissionsAndGetManyByIds(
 		Scopes(r.blockScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.blockScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&blocks)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Block.NotFound().WithOrigin(result.Error)},
@@ -188,7 +188,7 @@ func (r *BlockRepository) CreateOneByBlockGroupId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted && !parsedOptions.SkipPermissionCheck
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	if !parsedOptions.SkipPermissionCheck {
@@ -263,7 +263,7 @@ func (r *BlockRepository) CreateManyByBlockGroupId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted && !parsedOptions.SkipPermissionCheck
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	if !parsedOptions.SkipPermissionCheck {
@@ -346,7 +346,7 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 		shouldStartTransaction := !parsedOptions.IsTransactionStarted
 		if shouldStartTransaction {
 			parsedOptions.DB = parsedOptions.DB.Begin()
-			opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+			opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 		}
 
 		allowedPermissions := []enums.AccessControlPermission{
@@ -479,7 +479,7 @@ func (r *BlockRepository) UpdateOneById(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -549,7 +549,7 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted && !parsedOptions.SkipPermissionCheck
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	isBlockValid := make(map[uuid.UUID]bool)

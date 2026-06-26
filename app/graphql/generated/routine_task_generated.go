@@ -251,6 +251,50 @@ func (ec *executionContext) fieldContext_PrivateRoutineTask_payload(_ context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _PrivateRoutineTask_costUnit(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRoutineTask) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateRoutineTask_costUnit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CostUnit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PrivateRoutineTask_costUnit(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PrivateRoutineTask",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PrivateRoutineTask_priority(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRoutineTask) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PrivateRoutineTask_priority(ctx, field)
 	if err != nil {
@@ -422,6 +466,47 @@ func (ec *executionContext) fieldContext_PrivateRoutineTask_maxAttempts(_ contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int32 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PrivateRoutineTask_period(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRoutineTask) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateRoutineTask_period(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Period, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*enums.RoutinePeriod)
+	fc.Result = res
+	return ec.marshalORoutinePeriod2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐRoutinePeriod(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PrivateRoutineTask_period(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PrivateRoutineTask",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type RoutinePeriod does not have child fields")
 		},
 	}
 	return fc, nil
@@ -689,6 +774,11 @@ func (ec *executionContext) _PrivateRoutineTask(ctx context.Context, sel ast.Sel
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "costUnit":
+			out.Values[i] = ec._PrivateRoutineTask_costUnit(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "priority":
 			out.Values[i] = ec._PrivateRoutineTask_priority(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -709,6 +799,8 @@ func (ec *executionContext) _PrivateRoutineTask(ctx context.Context, sel ast.Sel
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "period":
+			out.Values[i] = ec._PrivateRoutineTask_period(ctx, field, obj)
 		case "scheduledAt":
 			out.Values[i] = ec._PrivateRoutineTask_scheduledAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

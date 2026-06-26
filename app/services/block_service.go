@@ -417,6 +417,7 @@ func (s *BlockService) InsertBlock(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithBatchSize(constants.MaxBatchCreateBlockSize),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
@@ -431,6 +432,7 @@ func (s *BlockService) InsertBlock(
 			reqDto.ContextFields.UserId,
 			totalSize,
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 		); exception != nil {
 			tx.Rollback()
@@ -549,6 +551,7 @@ func (s *BlockService) InsertBlocks(
 		reqDto.ContextFields.UserId,
 		createBlockGroupContentInput,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithBatchSize(constants.MaxBatchCreateBlockSize),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithSkipPermissionCheck(),
@@ -563,6 +566,7 @@ func (s *BlockService) InsertBlocks(
 			reqDto.ContextFields.UserId,
 			sizeDeltaByBlockGroupId,
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 		); exception != nil {
 			tx.Rollback()
@@ -600,6 +604,7 @@ func (s *BlockService) UpdateMyBlockById(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -684,6 +689,7 @@ func (s *BlockService) UpdateMyBlockById(
 		reqDto.ContextFields.UserId,
 		updateInput,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithSkipPermissionCheck(),
 	)
@@ -712,6 +718,7 @@ func (s *BlockService) UpdateMyBlockById(
 			reqDto.ContextFields.UserId,
 			blockGroupIdToSizeDelta,
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 			options.WithSkipPermissionCheck(),
 		); exception != nil {
@@ -725,6 +732,7 @@ func (s *BlockService) UpdateMyBlockById(
 		reqDto.ContextFields.UserId,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil && !exceptions.CommonlyCompare(exception, exceptions.BlockGroup.NoChanges(), false) {
@@ -784,6 +792,7 @@ func (s *BlockService) UpdateMyBlocksByIds(
 		nil,
 		allowedPemissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -972,6 +981,7 @@ func (s *BlockService) UpdateMyBlocksByIds(
 		reqDto.ContextFields.UserId,
 		bulkUpdateBlocksInputs,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithSkipPermissionCheck(),
 	)
@@ -985,6 +995,7 @@ func (s *BlockService) UpdateMyBlocksByIds(
 			reqDto.ContextFields.UserId,
 			blockGroupIdToSizeDelta,
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 			options.WithSkipPermissionCheck(),
 		); exception != nil {
@@ -999,6 +1010,7 @@ func (s *BlockService) UpdateMyBlocksByIds(
 		reqDto.ContextFields.UserId,
 		allowedPemissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil && !exceptions.CommonlyCompare(exception, exceptions.BlockGroup.NoChanges(), false) {
@@ -1028,6 +1040,7 @@ func (s *BlockService) RestoreMyBlockById(
 		reqDto.Body.BlockId,
 		reqDto.ContextFields.UserId,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -1039,6 +1052,7 @@ func (s *BlockService) RestoreMyBlockById(
 		[]uuid.UUID{restoredBlock.BlockGroupId},
 		reqDto.ContextFields.UserId,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Positive),
 	); exception != nil && !exceptions.CommonlyCompare(exception, exceptions.BlockGroup.NoChanges(), false) {
 		tx.Rollback()
@@ -1050,6 +1064,7 @@ func (s *BlockService) RestoreMyBlockById(
 		reqDto.ContextFields.UserId,
 		int64(len(restoredBlock.Props))+int64(len(restoredBlock.Content)),
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithSkipPermissionCheck(),
 	); exception != nil {
@@ -1088,6 +1103,7 @@ func (s *BlockService) RestoreMyBlocksByIds(
 		reqDto.Body.BlockIds,
 		reqDto.ContextFields.UserId,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -1110,6 +1126,7 @@ func (s *BlockService) RestoreMyBlocksByIds(
 			restoreBlockGroupIds,
 			reqDto.ContextFields.UserId,
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Positive),
 		); exception != nil && !exceptions.CommonlyCompare(exception, exceptions.BlockGroup.NoChanges(), false) {
 			tx.Rollback()
@@ -1120,6 +1137,7 @@ func (s *BlockService) RestoreMyBlocksByIds(
 			reqDto.ContextFields.UserId,
 			blockGroupIdToSizeDelta,
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 			options.WithSkipPermissionCheck(),
 		); exception != nil {
@@ -1164,6 +1182,7 @@ func (s *BlockService) DeleteMyBlockById(
 		reqDto.Body.BlockId,
 		reqDto.ContextFields.UserId,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -1185,6 +1204,7 @@ func (s *BlockService) DeleteMyBlockById(
 			deletedBlock.BlockGroupId,
 			reqDto.ContextFields.UserId,
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 			options.WithSkipPermissionCheck(),
 		); exception != nil {
@@ -1197,6 +1217,7 @@ func (s *BlockService) DeleteMyBlockById(
 			reqDto.ContextFields.UserId,
 			-int64(len(deletedBlock.Props))-int64(len(deletedBlock.Content)),
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 			options.WithSkipPermissionCheck(),
 		); exception != nil {
@@ -1228,6 +1249,7 @@ func (s *BlockService) DeleteMyBlocksByIds(
 		reqDto.Body.BlockIds,
 		reqDto.ContextFields.UserId,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -1256,6 +1278,7 @@ func (s *BlockService) DeleteMyBlocksByIds(
 		reqDto.ContextFields.UserId,
 		blockGroupIdToSizeDelta,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithSkipPermissionCheck(),
 	); exception != nil && !exceptions.CommonlyCompare(exception, exceptions.BlockGroup.NoChanges(), false) {
@@ -1268,6 +1291,7 @@ func (s *BlockService) DeleteMyBlocksByIds(
 		reqDto.ContextFields.UserId,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil && !exceptions.CommonlyCompare(exception, exceptions.BlockGroup.NoChanges(), false) {

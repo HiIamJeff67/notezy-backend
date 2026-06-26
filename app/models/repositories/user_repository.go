@@ -9,6 +9,7 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	util "github.com/HiIamJeff67/notezy-backend/app/util"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
@@ -46,7 +47,7 @@ func (r *UserRepository) GetOneById(
 	}
 
 	result := db.Where("id = ?", id).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&user)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.User.NotFound().WithOrigin(result.Error)},
@@ -75,7 +76,7 @@ func (r *UserRepository) GetOneByName(
 	}
 
 	result := db.Where("name = ?", name).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&user)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.User.NotFound().WithOrigin(result.Error)},
@@ -104,7 +105,7 @@ func (r *UserRepository) GetOneByEmail(
 	}
 
 	result := query.Where("email = ?", email).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&user)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.User.NotFound().WithOrigin(result.Error)},

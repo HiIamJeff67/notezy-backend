@@ -1,6 +1,7 @@
 package modules
 
 import (
+	adapters "github.com/HiIamJeff67/notezy-backend/app/adapters"
 	binders "github.com/HiIamJeff67/notezy-backend/app/binders"
 	controllers "github.com/HiIamJeff67/notezy-backend/app/controllers"
 	models "github.com/HiIamJeff67/notezy-backend/app/models"
@@ -16,10 +17,13 @@ type RoutineTaskModule struct {
 
 func NewRoutineTaskModule() *RoutineTaskModule {
 	routineTaskRepository := repositories.NewRoutineTaskRepository(scopes.NewRoutineTaskScope())
+	editableBlockAdapter := adapters.NewEditableBlockAdapter()
+	routineTaskPayloadAdapter := adapters.NewRoutineTaskPayloadAdapter(editableBlockAdapter)
 
 	routineTaskService := services.NewRoutineTaskService(
 		models.NotezyDB,
 		routineTaskRepository,
+		routineTaskPayloadAdapter,
 	)
 
 	routineTaskBinder := binders.NewRoutineTaskBinder()

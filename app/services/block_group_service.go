@@ -123,6 +123,7 @@ func (s *BlockGroupService) GetMyBlockGroupAndItsBlocksById(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -244,6 +245,7 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByIds(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -364,6 +366,7 @@ func (s *BlockGroupService) GetMyBlockGroupsAndTheirBlocksByBlockPackId(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -678,6 +681,7 @@ func (s *BlockGroupService) InsertBlockGroupAndItsBlocksByBlockPackId(
 			PrevBlockGroupId: reqDto.Body.PrevBlockGroupId,
 		},
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -706,6 +710,7 @@ func (s *BlockGroupService) InsertBlockGroupAndItsBlocksByBlockPackId(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithBatchSize(constants.MaxBatchCreateBlockSize),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithSkipPermissionCheck(),
@@ -721,6 +726,7 @@ func (s *BlockGroupService) InsertBlockGroupAndItsBlocksByBlockPackId(
 			reqDto.ContextFields.UserId,
 			totalSize, // add the total size of all new blocks to the block group
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 			options.WithSkipPermissionCheck(),
 		); exception != nil {
@@ -767,6 +773,7 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 		reqDto.ContextFields.UserId,
 		createBlockGroupsInput,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -857,6 +864,7 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 		reqDto.ContextFields.UserId,
 		createBlockGroupContentInput,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithBatchSize(constants.MaxBatchCreateBlockSize),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithSkipPermissionCheck(),
@@ -871,6 +879,7 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 			reqDto.ContextFields.UserId,
 			sizeDeltaByBlockGroupId,
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 			options.WithSkipPermissionCheck(),
 		); exception != nil {
@@ -912,6 +921,7 @@ func (s *BlockGroupService) BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds(
 		reqDto.ContextFields.UserId,
 		bulkCreateBlockGroupsInput,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception = exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
 		{First: len(newBlockGroupIds) == 0, Second: exceptions.BlockGroup.FailedToCreate().WithDetails("got nil block group id")},
@@ -1009,6 +1019,7 @@ func (s *BlockGroupService) BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds(
 		reqDto.ContextFields.UserId,
 		createBlockGroupContentInput,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithBatchSize(constants.MaxBatchCreateBlockSize),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithSkipPermissionCheck(),
@@ -1023,6 +1034,7 @@ func (s *BlockGroupService) BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds(
 			reqDto.ContextFields.UserId,
 			sizeDeltaByBlockGroupId,
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 			options.WithSkipPermissionCheck(),
 		); exception != nil {
@@ -1067,6 +1079,7 @@ func (s *BlockGroupService) InsertSequentialBlockGroupsAndTheirBlocksByBlockPack
 		reqDto.ContextFields.UserId,
 		createBlockGroupsInput,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -1158,6 +1171,7 @@ func (s *BlockGroupService) InsertSequentialBlockGroupsAndTheirBlocksByBlockPack
 		reqDto.ContextFields.UserId,
 		createBlocksInputs,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithBatchSize(constants.MaxBatchCreateBlockSize),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithSkipPermissionCheck(),
@@ -1172,6 +1186,7 @@ func (s *BlockGroupService) InsertSequentialBlockGroupsAndTheirBlocksByBlockPack
 			reqDto.ContextFields.UserId,
 			sizeDeltaByBlockGroupId,
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 			options.WithSkipPermissionCheck(),
 		); exception != nil {
@@ -1219,6 +1234,7 @@ func (s *BlockGroupService) MoveMyBlockGroupById(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -1254,6 +1270,7 @@ func (s *BlockGroupService) MoveMyBlockGroupById(
 		reqDto.ContextFields.UserId,
 		nil,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	destinationNextBlockGroup, _ := s.blockGroupRepository.GetOneByPrevBlockGroupId(
@@ -1262,6 +1279,7 @@ func (s *BlockGroupService) MoveMyBlockGroupById(
 		reqDto.ContextFields.UserId,
 		nil,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 
@@ -1275,6 +1293,7 @@ func (s *BlockGroupService) MoveMyBlockGroupById(
 			SetNull: nil,
 		},
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	); exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -1292,6 +1311,7 @@ func (s *BlockGroupService) MoveMyBlockGroupById(
 					SetNull: nil,
 				},
 				options.WithTransactionDB(tx),
+				options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			); exception != nil {
 				tx.Rollback()
 				return nil, exception
@@ -1310,6 +1330,7 @@ func (s *BlockGroupService) MoveMyBlockGroupById(
 				SetNull: nil,
 			},
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		); exception != nil {
 			tx.Rollback()
 			return nil, exception
@@ -1356,6 +1377,7 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -1433,6 +1455,7 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 		reqDto.ContextFields.UserId,
 		nil,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	// ignore the exception which indicate the destination next block group is not exist
@@ -1442,6 +1465,7 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 		reqDto.ContextFields.UserId,
 		nil,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 
@@ -1456,6 +1480,7 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 			SetNull: nil,
 		},
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	); exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -1475,6 +1500,7 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 					SetNull: nil,
 				},
 				options.WithTransactionDB(tx),
+				options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			); exception != nil {
 				tx.Rollback()
 				return nil, exception
@@ -1494,6 +1520,7 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 				SetNull: nil,
 			},
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		); exception != nil {
 			tx.Rollback()
 			return nil, exception
@@ -1548,6 +1575,7 @@ func (s *BlockGroupService) BatchMoveMyBlockGroupsByIds(
 		},
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -1569,6 +1597,7 @@ func (s *BlockGroupService) BatchMoveMyBlockGroupsByIds(
 			},
 			allowedPermissions,
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 		)
 		if exception != nil {
@@ -1592,6 +1621,7 @@ func (s *BlockGroupService) BatchMoveMyBlockGroupsByIds(
 			reqDto.ContextFields.UserId,
 			nil,
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 		)
 		if exception != nil {

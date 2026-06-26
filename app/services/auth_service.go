@@ -139,6 +139,7 @@ func (s *AuthService) Register(
 	newUserId, exception := s.userRepository.CreateOne(
 		createUserInput,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -181,6 +182,7 @@ func (s *AuthService) Register(
 			SetNull: nil,
 		},
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -191,6 +193,7 @@ func (s *AuthService) Register(
 		*newUserId,
 		inputs.CreateUserInfoInput{},
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -204,6 +207,7 @@ func (s *AuthService) Register(
 			AuthCodeExpiredAt: authCodeExpiredAt,
 		},
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -214,6 +218,7 @@ func (s *AuthService) Register(
 		*newUserId,
 		inputs.CreateUserSettingInput{},
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -317,6 +322,7 @@ func (s *AuthService) RegisterViaGoogle(
 		newUserId, exception = s.userRepository.CreateOne(
 			createUserInput,
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		)
 		if exception == nil {
 			break
@@ -363,6 +369,7 @@ func (s *AuthService) RegisterViaGoogle(
 			SetNull: nil,
 		},
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -373,6 +380,7 @@ func (s *AuthService) RegisterViaGoogle(
 		*newUserId,
 		inputs.CreateUserInfoInput{},
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -387,6 +395,7 @@ func (s *AuthService) RegisterViaGoogle(
 			GoogleCredential:  &userInfo.Id,
 		},
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -397,6 +406,7 @@ func (s *AuthService) RegisterViaGoogle(
 		*newUserId,
 		inputs.CreateUserSettingInput{},
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -471,6 +481,7 @@ func (s *AuthService) Login(
 			reqDto.Body.Account,
 			nil,
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		); exception != nil {
 			tx.Rollback()
 			return nil, exception
@@ -480,6 +491,7 @@ func (s *AuthService) Login(
 			reqDto.Body.Account,
 			nil,
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		); exception != nil {
 			tx.Rollback()
 			return nil, exception
@@ -517,6 +529,7 @@ func (s *AuthService) Login(
 				SetNull: nil,
 			},
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		)
 		if exception != nil {
 			tx.Rollback()
@@ -663,6 +676,7 @@ func (s *AuthService) Login(
 			SetNull: nil,
 		},
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -707,6 +721,7 @@ func (s *AuthService) LoginViaGoogle(
 		userInfo.Email,
 		[]schemas.UserRelation{schemas.UserRelation_UserAccount},
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	); exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -740,6 +755,7 @@ func (s *AuthService) LoginViaGoogle(
 				SetNull: nil,
 			},
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		)
 		if exception != nil {
 			tx.Rollback()
@@ -886,6 +902,7 @@ func (s *AuthService) LoginViaGoogle(
 			SetNull: nil,
 		},
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -1041,6 +1058,7 @@ func (s *AuthService) ResetEmail(
 			SetNull: nil,
 		},
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -1074,6 +1092,7 @@ func (s *AuthService) ForgetPassword(
 			reqDto.Body.Account,
 			preloads,
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		); exception != nil {
 			tx.Rollback()
 			return nil, exception
@@ -1083,6 +1102,7 @@ func (s *AuthService) ForgetPassword(
 			reqDto.Body.Account,
 			preloads,
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		); exception != nil {
 			tx.Rollback()
 			return nil, exception
@@ -1161,6 +1181,7 @@ func (s *AuthService) ForgetPassword(
 			SetNull: nil,
 		},
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -1210,6 +1231,7 @@ func (s *AuthService) ResetMe(
 		resetUserAccount.UserId,
 		inputs.CreateUserInfoInput{},
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	); exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -1225,6 +1247,7 @@ func (s *AuthService) ResetMe(
 		resetUserAccount.UserId,
 		inputs.CreateUserSettingInput{},
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	); exception != nil {
 		tx.Rollback()
 		return nil, exception
@@ -1239,6 +1262,7 @@ func (s *AuthService) ResetMe(
 	if exception := s.rootShelfRepository.SoftDeleteManyByUserId(
 		reqDto.ContextFields.UserId,
 		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	); exception != nil {
 		// skip if there's no root shelves to soft delete
 	} else {
@@ -1246,6 +1270,7 @@ func (s *AuthService) ResetMe(
 		if exception := s.rootShelfRepository.HardDeleteManyByUserId(
 			reqDto.ContextFields.UserId,
 			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		); exception != nil {
 			// skip if there's no root shelves to hard delete
 		}

@@ -58,7 +58,7 @@ func (r *MaterialRepository) HasPermission(
 		Select("1").
 		Scopes(r.materialScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Limit(1).
 		Scan(&marker)
 	if err := result.Error; err != nil {
@@ -82,7 +82,7 @@ func (r *MaterialRepository) HavePermissions(
 		Select(`DISTINCT "MaterialTable".id`).
 		Scopes(r.materialScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&permittedIds)
 	if err := result.Error; err != nil {
 		return false
@@ -106,7 +106,7 @@ func (r *MaterialRepository) CheckPermissionAndGetOneById(
 		Scopes(r.materialScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.materialScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&material)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Material.NotFound().WithOrigin(result.Error)},
@@ -133,7 +133,7 @@ func (r *MaterialRepository) CheckPermissionsAndGetManyByIds(
 		Scopes(r.materialScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.materialScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&materials)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Material.NotFound().WithOrigin(result.Error)},
@@ -178,7 +178,7 @@ func (r *MaterialRepository) CreateOneBySubShelfId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted && !parsedOptions.SkipPermissionCheck
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	if !parsedOptions.SkipPermissionCheck {
@@ -241,7 +241,7 @@ func (r *MaterialRepository) UpdateOneById(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{

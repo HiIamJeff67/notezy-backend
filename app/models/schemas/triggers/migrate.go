@@ -24,6 +24,7 @@ var MigratingTriggerSQLs = []string{
 	accountingtriggersql.AccountingMutatedMaterialTriggerSQL,
 	accountingtriggersql.AccountingInsertedRoutineTaskTriggerSQL,
 	accountingtriggersql.AccountingDeletedRoutineTaskTriggerSQL,
+	accountingtriggersql.AccountingUpdatedRoutineTaskTriggerSQL,
 	accountingtriggersql.AccountingInsertedRoutineTagTriggerSQL,
 	accountingtriggersql.AccountingDeletedRoutineTagTriggerSQL,
 	accountingtriggersql.AccountingInsertedRoutineTriggerSQL,

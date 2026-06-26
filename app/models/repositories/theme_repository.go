@@ -9,6 +9,7 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	util "github.com/HiIamJeff67/notezy-backend/app/util"
 )
@@ -44,7 +45,7 @@ func (r *ThemeRepository) GetOneById(
 	}
 
 	result := query.Where("id = ?", id).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&theme)
 	if err := result.Error; err != nil {
 		return nil, exceptions.Theme.NotFound().WithOrigin(err)

@@ -6,10 +6,17 @@ import (
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
+/* ============================== Routine Task limitations ============================== */
+
+const (
+	RoutineTaskEngineTickerDuration     time.Duration = 1 * time.Minute
+	RoutineTaskClaimerMaxClaimableTasks int           = 1e6
+)
+
 /* ============================== Email Worker limitations ============================== */
 
 const (
-	EmailWorkerManagerTickerDuration = 100 * time.Millisecond
+	EmailWorkerManagerTickerDuration time.Duration = 100 * time.Millisecond
 )
 
 /* ============================== Storage limitations ============================== */

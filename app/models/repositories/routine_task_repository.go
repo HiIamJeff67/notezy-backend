@@ -7,8 +7,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
-	"gorm.io/datatypes"
-	"gorm.io/gorm/clause"
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
@@ -59,7 +57,7 @@ func (r *RoutineTaskRepository) HasPermission(
 		Model(&schemas.RoutineTask{}).
 		Select("1").
 		Scopes(r.routineTaskScope.PassPermissionCheck(id, userId, allowedPermissions)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Limit(1).
 		Scan(&marker)
 	if err := result.Error; err != nil {
@@ -82,7 +80,7 @@ func (r *RoutineTaskRepository) HavePermissions(
 		Model(&schemas.RoutineTask{}).
 		Select(`DISTINCT "RoutineTaskTable".id`).
 		Scopes(r.routineTaskScope.PassPermissionChecks(ids, userId, allowedPermissions)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&permittedIds)
 	if err := result.Error; err != nil {
 		return false
@@ -105,7 +103,7 @@ func (r *RoutineTaskRepository) CheckPermissionAndGetOneById(
 		Model(&schemas.RoutineTask{}).
 		Scopes(r.routineTaskScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.routineTaskScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&routineTask)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.RoutineTask.NotFound().WithOrigin(result.Error)},
@@ -131,7 +129,7 @@ func (r *RoutineTaskRepository) CheckPermissionsAndGetManyByIds(
 		Model(&schemas.RoutineTask{}).
 		Scopes(r.routineTaskScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.routineTaskScope.IncludePreloads(preloads)).
-		Clauses(clause.Locking{Strength: "SHARE"}).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&routineTasks)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.RoutineTask.NotFound().WithOrigin(result.Error)},
@@ -208,7 +206,7 @@ func (r *RoutineTaskRepository) CreateOneByStationId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -217,27 +215,23 @@ func (r *RoutineTaskRepository) CreateOneByStationId(
 		enums.AccessControlPermission_Write,
 	}
 	stationRepository := NewStationRepository(scopes.NewStationScope())
-	if !stationRepository.HasPermission(stationId, userId, allowedPermissions, opts...) {
+	if !stationRepository.HasPermission(
+		stationId,
+		userId,
+		allowedPermissions,
+		opts...,
+	) {
 		parsedOptions.DB.Rollback()
 		return nil, exceptions.RoutineTask.NoPermission("create a routine task under this station")
 	}
 
-	newRoutineTask := schemas.RoutineTask{
-		Status:      enums.RoutineTaskStatus_Idle,
-		ScheduledAt: time.Now().Truncate(time.Minute),
-	}
+	newRoutineTask := schemas.RoutineTask{}
 	if err := copier.Copy(&newRoutineTask, &input); err != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exceptions.RoutineTask.InvalidInput().WithOrigin(err)
 	}
 	newRoutineTask.StationId = stationId
-	newRoutineTask.ScheduledAt = time.Now().Truncate(time.Minute)
-	if newRoutineTask.Title == "" {
-		newRoutineTask.Title = "undefined"
-	}
-	if len(newRoutineTask.Payload) == 0 {
-		newRoutineTask.Payload = datatypes.JSON([]byte("{}"))
-	}
+	newRoutineTask.ScheduledAt = input.ScheduledAt.Truncate(time.Minute)
 
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTask{}).
@@ -249,6 +243,7 @@ func (r *RoutineTaskRepository) CreateOneByStationId(
 		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
+
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
@@ -273,7 +268,7 @@ func (r *RoutineTaskRepository) BulkCreateManyByStationIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -303,30 +298,20 @@ func (r *RoutineTaskRepository) BulkCreateManyByStationIds(
 		if !isStationValid[in.StationId] {
 			continue
 		}
+		if in.ScheduledAt.IsZero() {
+			parsedOptions.DB.Rollback()
+			return nil, exceptions.RoutineTask.InvalidInput().WithOrigin(fmt.Errorf("scheduledAt is required"))
+		}
 		newRoutineTask := schemas.RoutineTask{
-			Id:          uuid.New(),
-			Status:      enums.RoutineTaskStatus_Idle,
-			Attempts:    0,
-			MaxAttempts: 1,
-			ScheduledAt: time.Now().Truncate(time.Minute),
+			Id:        uuid.New(),
+			StationId: in.StationId,
 		}
 		if err := copier.Copy(&newRoutineTask, &in); err != nil {
 			parsedOptions.DB.Rollback()
 			return nil, exceptions.RoutineTask.InvalidInput().WithOrigin(err)
 		}
-		newRoutineTask.ScheduledAt = time.Now().Truncate(time.Minute)
-		if len(newRoutineTask.Payload) == 0 {
-			newRoutineTask.Payload = datatypes.JSON([]byte("{}"))
-		}
-		if newRoutineTask.Title == "" {
-			newRoutineTask.Title = "undefined"
-		}
-		if newRoutineTask.MaxAttempts <= 0 {
-			newRoutineTask.MaxAttempts = 1
-		}
-		if newRoutineTask.Purpose == "" {
-			newRoutineTask.Purpose = enums.RoutineTaskPurpose_CreateBlockPack
-		}
+		newRoutineTask.StationId = in.StationId
+		newRoutineTask.ScheduledAt = in.ScheduledAt.Truncate(time.Minute)
 		newRoutineTasks = append(newRoutineTasks, newRoutineTask)
 	}
 
@@ -371,7 +356,7 @@ func (r *RoutineTaskRepository) UpdateOneById(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -390,6 +375,10 @@ func (r *RoutineTaskRepository) UpdateOneById(
 			parsedOptions.DB.Rollback()
 			return nil, exceptions.RoutineTask.NoPermission("move a routine task to this station")
 		}
+	}
+	if input.Values.ScheduledAt != nil {
+		truncatedScheduledAt := input.Values.ScheduledAt.Truncate(time.Minute)
+		input.Values.ScheduledAt = &truncatedScheduledAt
 	}
 
 	updates, err := util.PartialUpdatePreprocess(input.Values, input.SetNull, *existingRoutineTask)
@@ -410,6 +399,7 @@ func (r *RoutineTaskRepository) UpdateOneById(
 		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
+
 	if shouldStartTransaction {
 		if err := parsedOptions.DB.Commit().Error; err != nil {
 			parsedOptions.DB.Rollback()
@@ -434,7 +424,7 @@ func (r *RoutineTaskRepository) BulkUpdateManyByIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -484,7 +474,23 @@ func (r *RoutineTaskRepository) BulkUpdateManyByIds(
 			continue
 		}
 
-		valuePlaceholders = append(valuePlaceholders, `(?::uuid, ?::uuid, ?::text, ?::"RoutineTaskPurpose", ?::jsonb, ?::integer, ?::integer)`)
+		setPeriodNull := false
+		if in.PartialUpdateInput.SetNull != nil {
+			for field, setNull := range *in.PartialUpdateInput.SetNull {
+				if setNull && strings.ToLower(strings.ReplaceAll(field, "_", "")) == "period" {
+					setPeriodNull = true
+					break
+				}
+			}
+		}
+
+		scheduledAt := in.PartialUpdateInput.Values.ScheduledAt
+		if scheduledAt != nil {
+			truncatedScheduledAt := scheduledAt.Truncate(time.Minute)
+			scheduledAt = &truncatedScheduledAt
+		}
+
+		valuePlaceholders = append(valuePlaceholders, `(?::uuid, ?::uuid, ?::text, ?::"RoutineTaskPurpose", ?::jsonb, ?::integer, ?::integer, ?::"RoutinePeriod", ?::timestamptz, ?::boolean)`)
 		valueArgs = append(valueArgs,
 			in.Id,
 			in.PartialUpdateInput.Values.StationId,
@@ -493,6 +499,9 @@ func (r *RoutineTaskRepository) BulkUpdateManyByIds(
 			in.PartialUpdateInput.Values.Payload,
 			in.PartialUpdateInput.Values.Priority,
 			in.PartialUpdateInput.Values.MaxAttempts,
+			in.PartialUpdateInput.Values.Period,
+			scheduledAt,
+			setPeriodNull,
 		)
 	}
 
@@ -510,8 +519,13 @@ func (r *RoutineTaskRepository) BulkUpdateManyByIds(
 			payload = COALESCE(v.payload::jsonb, rt.payload),
 			priority = COALESCE(v.priority::integer, rt.priority),
 			max_attempts = COALESCE(v.max_attempts::integer, rt.max_attempts),
+			period = CASE
+				WHEN v.set_period_null::boolean THEN NULL
+				ELSE COALESCE(v.period::"RoutinePeriod", rt.period)
+			END,
+			scheduled_at = COALESCE(v.scheduled_at::timestamptz, rt.scheduled_at),
 			updated_at = NOW()
-		FROM (VALUES %s) AS v(id, station_id, title, purpose, payload, priority, max_attempts)
+		FROM (VALUES %s) AS v(id, station_id, title, purpose, payload, priority, max_attempts, period, scheduled_at, set_period_null)
 		WHERE rt.id = v.id::uuid
 	`, strings.Join(valuePlaceholders, ","))
 	result := parsedOptions.DB.Exec(sql, valueArgs...)

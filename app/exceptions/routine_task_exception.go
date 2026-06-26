@@ -14,7 +14,7 @@ type RoutineTaskExceptionDomain struct {
 	APIExceptionDomain
 	DatabaseExceptionDomain
 	TypeExceptionDomain
-	FileExceptionDomain
+	DurableJobExceptionDomain
 }
 
 var RoutineTask = &RoutineTaskExceptionDomain{
@@ -32,7 +32,7 @@ var RoutineTask = &RoutineTaskExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_RoutineTask,
 		_Prefix:   ExceptionPrefix_RoutineTask,
 	},
-	FileExceptionDomain: FileExceptionDomain{
+	DurableJobExceptionDomain: DurableJobExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_RoutineTask,
 		_Prefix:   ExceptionPrefix_RoutineTask,
 	},
