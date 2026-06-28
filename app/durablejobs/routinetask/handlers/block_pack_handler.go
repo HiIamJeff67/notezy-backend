@@ -27,6 +27,6 @@ func (h *BlockPackHandler) HandleCreateBlockPacks() {
 
 }
 
-func (h *BlockPackHandler) HandleDeleteBlockPacks() {
+func (h *BlockPackHandler) HandleResetBlockPacks() {
 
 }

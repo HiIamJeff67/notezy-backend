@@ -40,6 +40,19 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	PrivateBlock struct {
+		BlockGroupID  func(childComplexity int) int
+		ChildrenIds   func(childComplexity int) int
+		Content       func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
+		DeletedAt     func(childComplexity int) int
+		ID            func(childComplexity int) int
+		ParentBlockID func(childComplexity int) int
+		Props         func(childComplexity int) int
+		Type          func(childComplexity int) int
+		UpdatedAt     func(childComplexity int) int
+	}
+
 	PrivateItem struct {
 		CreatedAt        func(childComplexity int) int
 		DeletedAt        func(childComplexity int) int
@@ -236,6 +249,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		SearchBlocks       func(childComplexity int, input gqlmodels.SearchBlockInput) int
 		SearchItems        func(childComplexity int, input gqlmodels.SearchItemInput) int
 		SearchRootShelves  func(childComplexity int, input gqlmodels.SearchRootShelfInput) int
 		SearchRoutineTags  func(childComplexity int, input gqlmodels.SearchRoutineTagInput) int
@@ -254,6 +268,18 @@ type ComplexityRoot struct {
 	}
 
 	SearchBadgeEdge struct {
+		EncodedSearchCursor func(childComplexity int) int
+		Node                func(childComplexity int) int
+	}
+
+	SearchBlockConnection struct {
+		SearchEdges    func(childComplexity int) int
+		SearchPageInfo func(childComplexity int) int
+		SearchTime     func(childComplexity int) int
+		TotalCount     func(childComplexity int) int
+	}
+
+	SearchBlockEdge struct {
 		EncodedSearchCursor func(childComplexity int) int
 		Node                func(childComplexity int) int
 	}
@@ -380,6 +406,76 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "PrivateBlock.blockGroupId":
+		if e.complexity.PrivateBlock.BlockGroupID == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlock.BlockGroupID(childComplexity), true
+
+	case "PrivateBlock.childrenIds":
+		if e.complexity.PrivateBlock.ChildrenIds == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlock.ChildrenIds(childComplexity), true
+
+	case "PrivateBlock.content":
+		if e.complexity.PrivateBlock.Content == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlock.Content(childComplexity), true
+
+	case "PrivateBlock.createdAt":
+		if e.complexity.PrivateBlock.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlock.CreatedAt(childComplexity), true
+
+	case "PrivateBlock.deletedAt":
+		if e.complexity.PrivateBlock.DeletedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlock.DeletedAt(childComplexity), true
+
+	case "PrivateBlock.id":
+		if e.complexity.PrivateBlock.ID == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlock.ID(childComplexity), true
+
+	case "PrivateBlock.parentBlockId":
+		if e.complexity.PrivateBlock.ParentBlockID == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlock.ParentBlockID(childComplexity), true
+
+	case "PrivateBlock.props":
+		if e.complexity.PrivateBlock.Props == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlock.Props(childComplexity), true
+
+	case "PrivateBlock.type":
+		if e.complexity.PrivateBlock.Type == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlock.Type(childComplexity), true
+
+	case "PrivateBlock.updatedAt":
+		if e.complexity.PrivateBlock.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlock.UpdatedAt(childComplexity), true
 
 	case "PrivateItem.createdAt":
 		if e.complexity.PrivateItem.CreatedAt == nil {
@@ -1452,6 +1548,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PublicUserInfo.Introduction(childComplexity), true
 
+	case "Query.searchBlocks":
+		if e.complexity.Query.SearchBlocks == nil {
+			break
+		}
+
+		args, err := ec.field_Query_searchBlocks_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SearchBlocks(childComplexity, args["input"].(gqlmodels.SearchBlockInput)), true
+
 	case "Query.searchItems":
 		if e.complexity.Query.SearchItems == nil {
 			break
@@ -1589,6 +1697,48 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.SearchBadgeEdge.Node(childComplexity), true
+
+	case "SearchBlockConnection.searchEdges":
+		if e.complexity.SearchBlockConnection.SearchEdges == nil {
+			break
+		}
+
+		return e.complexity.SearchBlockConnection.SearchEdges(childComplexity), true
+
+	case "SearchBlockConnection.searchPageInfo":
+		if e.complexity.SearchBlockConnection.SearchPageInfo == nil {
+			break
+		}
+
+		return e.complexity.SearchBlockConnection.SearchPageInfo(childComplexity), true
+
+	case "SearchBlockConnection.searchTime":
+		if e.complexity.SearchBlockConnection.SearchTime == nil {
+			break
+		}
+
+		return e.complexity.SearchBlockConnection.SearchTime(childComplexity), true
+
+	case "SearchBlockConnection.totalCount":
+		if e.complexity.SearchBlockConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.SearchBlockConnection.TotalCount(childComplexity), true
+
+	case "SearchBlockEdge.encodedSearchCursor":
+		if e.complexity.SearchBlockEdge.EncodedSearchCursor == nil {
+			break
+		}
+
+		return e.complexity.SearchBlockEdge.EncodedSearchCursor(childComplexity), true
+
+	case "SearchBlockEdge.node":
+		if e.complexity.SearchBlockEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.SearchBlockEdge.Node(childComplexity), true
 
 	case "SearchItemConnection.searchEdges":
 		if e.complexity.SearchItemConnection.SearchEdges == nil {
@@ -1965,6 +2115,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputSearchBadgeCursorFields,
 		ec.unmarshalInputSearchBadgeFilters,
 		ec.unmarshalInputSearchBadgeInput,
+		ec.unmarshalInputSearchBlockCursorFields,
+		ec.unmarshalInputSearchBlockInput,
 		ec.unmarshalInputSearchItemCursorFields,
 		ec.unmarshalInputSearchItemInput,
 		ec.unmarshalInputSearchRootShelfCursorFields,
@@ -2080,6 +2232,21 @@ var sources = []*ast.Source{
   Steel
 }
 `, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/enums/block_type_enum.graphql", Input: `enum BlockType {
+    BlockType_Paragraph # paragraph
+	BlockType_Heading, # heading
+	BlockType_Quote, # quote
+	BlockType_BulletListItem, # bulletListItem
+	BlockType_NumberedListItem, # numberedListItem
+	BlockType_CheckListItem, # checkListItem
+	BlockType_ToggleListItem, # toggleListItem
+	BlockType_Image, # image
+	BlockType_Video, # video
+	BlockType_Audio, # audio
+	BlockType_File, # file
+	BlockType_Table, # table
+	BlockType_CodeBlock, # codeBlock
+}`, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/enums/country_code_enum.graphql", Input: `enum CountryCode {
   COUNTRY_CODE_886 # Taiwan
   COUNTRY_CODE_81 # Japan
@@ -2148,11 +2315,20 @@ var sources = []*ast.Source{
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/enums/routine_task_purpose_enum.graphql", Input: `enum RoutineTaskPurpose {
+  RoutineTaskPurpose_CreateRootShelf
+  RoutineTaskPurpose_UpdateRootShelf
+  RoutineTaskPurpose_ResetRootShelf
+  RoutineTaskPurpose_CreateSubShelf
+  RoutineTaskPurpose_UpdateSubShelf
+  RoutineTaskPurpose_ResetSubShelf
   RoutineTaskPurpose_CreateBlockPack
-  RoutineTaskPurpose_DeleteBlockPack
-  RoutineTaskPurpose_CreateBlock
+  RoutineTaskPurpose_UpdateBlockPack
+  RoutineTaskPurpose_ResetBlockPack
+  RoutineTaskPurpose_AppendBlock
   RoutineTaskPurpose_UpdateBlock
-  RoutineTaskPurpose_DeleteBlock
+  RoutineTaskPurpose_ResetBlock
+  RoutineTaskPurpose_CreateRoutine
+  RoutineTaskPurpose_UpdateRoutine
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/enums/routine_task_status_enum.graphql", Input: `enum RoutineTaskStatus {
@@ -2220,6 +2396,21 @@ var sources = []*ast.Source{
 
   # relations
   users: [PublicUser!]!
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/block.graphql", Input: `type PrivateBlock {
+    id: UUID!
+    parentBlockId: UUID
+    blockGroupId: UUID!
+    type: BlockType!
+    props: DatatypeJSON!
+    content: DatatypeJSON!
+    deletedAt: Time
+    updatedAt: Time!
+    createdAt: Time!
+
+    # relations
+    childrenIds: [UUID!]!
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/fields.graphql", Input: `# every schemas or graphql types which want to be searchable
@@ -2307,6 +2498,7 @@ interface SearchConnection {
   searchThemes(input: SearchThemeInput!): SearchThemeConnection!
   searchRootShelves(input: SearchRootShelfInput!): SearchRootShelfConnection!
   searchItems(input: SearchItemInput!): SearchItemConnection!
+  searchBlocks(input: SearchBlockInput!): SearchBlockConnection!
   searchStations(input: SearchStationInput!): SearchStationConnection!
   searchRoutines(input: SearchRoutineInput!): SearchRoutineConnection!
   searchRoutineTags(input: SearchRoutineTagInput!): SearchRoutineTagConnection!
@@ -2456,6 +2648,42 @@ type SearchBadgeConnection implements SearchConnection {
   searchTime: Float!
 }
 `, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/search_block.graphql", Input: `# =============== Search SortBy & Input =============== #
+
+enum SearchBlockSortBy {
+    RELEVANCE
+    TYPE
+    LAST_UPDATE
+    CREATED_AT
+}
+
+input SearchBlockInput {
+    query: String!
+    after: String
+    first: Int = 10
+    sortBy: SearchBlockSortBy = RELEVANCE
+    sortOrder: SearchSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+input SearchBlockCursorFields {
+    id: UUID!
+}
+
+# =============== Search Edge & Connection =============== #
+
+type SearchBlockEdge implements SearchEdge {
+    encodedSearchCursor: String!
+    node: PrivateBlock!
+}
+
+type SearchBlockConnection implements SearchConnection {
+    searchEdges: [SearchBlockEdge!]!
+    searchPageInfo: SearchPageInfo!
+    totalCount: Int!
+    searchTime: Float!
+}`, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/search_items.graphql", Input: `# =============== Search SortBy & Input =============== #
 
 enum SearchItemSortBy {

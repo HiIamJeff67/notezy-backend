@@ -1,0 +1,15 @@
+fragment FragmentedBasicPrivateBlock on PrivateBlock {
+    id
+    parentBlockId
+    blockGroupId
+    type
+    props
+    content
+    deletedAt
+    updatedAt
+    createdAt
+}
+
+fragment FragmentedPrivateBlock on PrivateBlock {
+    ...FragmentedBasicPrivateBlock
+}

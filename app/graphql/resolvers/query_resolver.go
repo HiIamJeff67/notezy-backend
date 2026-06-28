@@ -73,6 +73,26 @@ func (r *queryResolver) SearchItems(ctx context.Context, input gqlmodels.SearchI
 	return result, nil
 }
 
+// SearchBlocks is the resolver for the searchBlocks field.
+func (r *queryResolver) SearchBlocks(ctx context.Context, input gqlmodels.SearchBlockInput) (*gqlmodels.SearchBlockConnection, error) {
+	ginContext, exception := contexts.GetAndConvertContextToGinContext(ctx)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ginContext, types.ContextFieldName_User_Id)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	result, exception := r.blockService.SearchPrivateBlocks(ctx, *userId, input)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	return result, nil
+}
+
 // SearchStations is the resolver for the searchStations field.
 func (r *queryResolver) SearchStations(ctx context.Context, input gqlmodels.SearchStationInput) (*gqlmodels.SearchStationConnection, error) {
 	ginContext, exception := contexts.GetAndConvertContextToGinContext(ctx)

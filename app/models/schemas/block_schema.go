@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
@@ -15,8 +16,8 @@ type Block struct {
 	ParentBlockId *uuid.UUID      `json:"parentBlockId" gorm:"column:parent_block_id; type:uuid; check:block_check_parent_block_id_is_not_itself,parent_block_id != id;"` // unique index of block_idx_root
 	BlockGroupId  uuid.UUID       `json:"blockGroupId" gorm:"column:block_group_id; type:uuid; not null;"`                                                                // unique index of block_idx_root
 	Type          enums.BlockType `json:"type" gorm:"column:type; type:\"BlockType\"; not null; default:'paragraph';"`
-	Props         datatypes.JSON  `json:"props" gorm:"column:props; type:jsonb; not null; default:'{}'; check:block_check_props_size,octet_length(props::text) <= 10240;"`
-	Content       datatypes.JSON  `json:"content" gorm:"column:content; type:jsonb; default:'{}'; check:block_check_content_size,octet_length(content::text) <= 10240;"`
+	Props         datatypes.JSON  `json:"props" gorm:"column:props; type:jsonb; not null; default:'{}'; check:block_check_props_size,octet_length(props::text) <= 4096;"`
+	Content       datatypes.JSON  `json:"content" gorm:"column:content; type:jsonb; default:'{}'; check:block_check_content_size,octet_length(content::text) <= 16384;"`
 	DeletedAt     *time.Time      `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz; default:null;"`
 	UpdatedAt     time.Time       `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt     time.Time       `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
@@ -40,3 +41,25 @@ const (
 	BlockRelation_Children   BlockRelation = "Children"
 	BlockRelation_BlockGroup BlockRelation = "BlockGroup"
 )
+
+/* ============================== Relative Type Conversion ============================== */
+
+func (b *Block) ToPrivateBlock() *gqlmodels.PrivateBlock {
+	childrenIds := make([]uuid.UUID, 0, len(b.Children))
+	for _, child := range b.Children {
+		childrenIds = append(childrenIds, child.Id)
+	}
+
+	return &gqlmodels.PrivateBlock{
+		ID:            b.Id,
+		ParentBlockID: b.ParentBlockId,
+		BlockGroupID:  b.BlockGroupId,
+		Type:          b.Type,
+		Props:         b.Props,
+		Content:       b.Content,
+		DeletedAt:     b.DeletedAt,
+		UpdatedAt:     b.UpdatedAt,
+		CreatedAt:     b.CreatedAt,
+		ChildrenIds:   childrenIds,
+	}
+}

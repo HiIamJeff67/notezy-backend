@@ -59,18 +59,36 @@ func (ec *executionContext) marshalNRoutineTaskPurpose2githubᚗcomᚋHiIamJeff6
 
 var (
 	unmarshalNRoutineTaskPurpose2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐRoutineTaskPurpose = map[string]enums.RoutineTaskPurpose{
+		"RoutineTaskPurpose_CreateRootShelf": enums.RoutineTaskPurpose_CreateRootShelf,
+		"RoutineTaskPurpose_UpdateRootShelf": enums.RoutineTaskPurpose_UpdateRootShelf,
+		"RoutineTaskPurpose_ResetRootShelf":  enums.RoutineTaskPurpose_ResetRootShelf,
+		"RoutineTaskPurpose_CreateSubShelf":  enums.RoutineTaskPurpose_CreateSubShelf,
+		"RoutineTaskPurpose_UpdateSubShelf":  enums.RoutineTaskPurpose_UpdateSubShelf,
+		"RoutineTaskPurpose_ResetSubShelf":   enums.RoutineTaskPurpose_ResetSubShelf,
 		"RoutineTaskPurpose_CreateBlockPack": enums.RoutineTaskPurpose_CreateBlockPack,
-		"RoutineTaskPurpose_DeleteBlockPack": enums.RoutineTaskPurpose_DeleteBlockPack,
-		"RoutineTaskPurpose_CreateBlock":     enums.RoutineTaskPurpose_CreateBlock,
+		"RoutineTaskPurpose_UpdateBlockPack": enums.RoutineTaskPurpose_UpdateBlockPack,
+		"RoutineTaskPurpose_ResetBlockPack":  enums.RoutineTaskPurpose_ResetBlockPack,
+		"RoutineTaskPurpose_AppendBlock":     enums.RoutineTaskPurpose_AppendBlock,
 		"RoutineTaskPurpose_UpdateBlock":     enums.RoutineTaskPurpose_UpdateBlock,
-		"RoutineTaskPurpose_DeleteBlock":     enums.RoutineTaskPurpose_DeleteBlock,
+		"RoutineTaskPurpose_ResetBlock":      enums.RoutineTaskPurpose_ResetBlock,
+		"RoutineTaskPurpose_CreateRoutine":   enums.RoutineTaskPurpose_CreateRoutine,
+		"RoutineTaskPurpose_UpdateRoutine":   enums.RoutineTaskPurpose_UpdateRoutine,
 	}
 	marshalNRoutineTaskPurpose2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐRoutineTaskPurpose = map[enums.RoutineTaskPurpose]string{
+		enums.RoutineTaskPurpose_CreateRootShelf: "RoutineTaskPurpose_CreateRootShelf",
+		enums.RoutineTaskPurpose_UpdateRootShelf: "RoutineTaskPurpose_UpdateRootShelf",
+		enums.RoutineTaskPurpose_ResetRootShelf:  "RoutineTaskPurpose_ResetRootShelf",
+		enums.RoutineTaskPurpose_CreateSubShelf:  "RoutineTaskPurpose_CreateSubShelf",
+		enums.RoutineTaskPurpose_UpdateSubShelf:  "RoutineTaskPurpose_UpdateSubShelf",
+		enums.RoutineTaskPurpose_ResetSubShelf:   "RoutineTaskPurpose_ResetSubShelf",
 		enums.RoutineTaskPurpose_CreateBlockPack: "RoutineTaskPurpose_CreateBlockPack",
-		enums.RoutineTaskPurpose_DeleteBlockPack: "RoutineTaskPurpose_DeleteBlockPack",
-		enums.RoutineTaskPurpose_CreateBlock:     "RoutineTaskPurpose_CreateBlock",
+		enums.RoutineTaskPurpose_UpdateBlockPack: "RoutineTaskPurpose_UpdateBlockPack",
+		enums.RoutineTaskPurpose_ResetBlockPack:  "RoutineTaskPurpose_ResetBlockPack",
+		enums.RoutineTaskPurpose_AppendBlock:     "RoutineTaskPurpose_AppendBlock",
 		enums.RoutineTaskPurpose_UpdateBlock:     "RoutineTaskPurpose_UpdateBlock",
-		enums.RoutineTaskPurpose_DeleteBlock:     "RoutineTaskPurpose_DeleteBlock",
+		enums.RoutineTaskPurpose_ResetBlock:      "RoutineTaskPurpose_ResetBlock",
+		enums.RoutineTaskPurpose_CreateRoutine:   "RoutineTaskPurpose_CreateRoutine",
+		enums.RoutineTaskPurpose_UpdateRoutine:   "RoutineTaskPurpose_UpdateRoutine",
 	}
 )
 

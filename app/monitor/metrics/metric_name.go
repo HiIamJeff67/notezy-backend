@@ -201,6 +201,8 @@ type metricNameBlock struct {
 	GetMyBlocksByBlockGroupIds string
 	GetMyBlocksByBlockPackId   string
 	GetAllMyBlocks             string
+	AppendBlock                string
+	AppendBlocks               string
 	InsertBlock                string
 	InsertBlocks               string
 	UpdateMyBlockById          string
@@ -445,6 +447,8 @@ var MetricNames = struct {
 				GetMyBlocksByBlockGroupIds: "server.requests.block.getMyBlocksByBlockGroupIds",
 				GetMyBlocksByBlockPackId:   "server.requests.block.getMyBlocksByBlockPackId",
 				GetAllMyBlocks:             "server.requests.block.getAllMyBlocks",
+				AppendBlock:                "server.requests.block.appendBlock",
+				AppendBlocks:               "server.requests.block.appendBlocks",
 				InsertBlock:                "server.requests.block.insertBlock",
 				InsertBlocks:               "server.requests.block.insertBlocks",
 				UpdateMyBlockById:          "server.requests.block.updateMyBlockById",

@@ -76,7 +76,7 @@ func (s *ThemeService) SearchPublicThemes(
 			return nil, exceptions.Search.FailedToDecode().WithOrigin(err)
 		}
 
-		query.Where("public_id > ?", searchCursor.Fields.PublicID)
+		query = query.Where("public_id > ?", searchCursor.Fields.PublicID)
 	}
 
 	if gqlInput.SortBy != nil && gqlInput.SortOrder != nil {
@@ -87,19 +87,19 @@ func (s *ThemeService) SearchPublicThemes(
 
 		switch *gqlInput.SortBy {
 		case gqlmodels.SearchThemeSortByName:
-			query.Order("name " + cending).
+			query = query.Order("name " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchThemeSortByLastUpdate:
-			query.Order("updated_at " + cending).
+			query = query.Order("updated_at " + cending).
 				Order("name " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchThemeSortByCreatedAt:
-			query.Order("created_at " + cending).
+			query = query.Order("created_at " + cending).
 				Order("name " + cending).
 				Order("updated_at " + cending)
 		default:
-			query.Order("name " + cending).
+			query = query.Order("name " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		}

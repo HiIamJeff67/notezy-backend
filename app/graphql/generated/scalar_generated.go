@@ -11,6 +11,7 @@ import (
 	"github.com/HiIamJeff67/notezy-backend/app/graphql/scalars"
 	"github.com/google/uuid"
 	"github.com/vektah/gqlparser/v2/ast"
+	"gorm.io/datatypes"
 )
 
 // region    ************************** generated!.gotpl **************************
@@ -42,6 +43,28 @@ import (
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
+
+func (ec *executionContext) unmarshalNDatatypeJSON2gormᚗioᚋdatatypesᚐJSON(ctx context.Context, v any) (datatypes.JSON, error) {
+	res, err := scalars.UnmarshalDatatypeJSON(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNDatatypeJSON2gormᚗioᚋdatatypesᚐJSON(ctx context.Context, sel ast.SelectionSet, v datatypes.JSON) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	_ = sel
+	res := scalars.MarshalDatatypeJSON(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
 
 func (ec *executionContext) unmarshalNInt322int32(ctx context.Context, v any) (int32, error) {
 	res, err := graphql.UnmarshalInt32(v)

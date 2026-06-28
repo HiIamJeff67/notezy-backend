@@ -1,0 +1,15 @@
+enum BlockType {
+    BlockType_Paragraph # paragraph
+	BlockType_Heading, # heading
+	BlockType_Quote, # quote
+	BlockType_BulletListItem, # bulletListItem
+	BlockType_NumberedListItem, # numberedListItem
+	BlockType_CheckListItem, # checkListItem
+	BlockType_ToggleListItem, # toggleListItem
+	BlockType_Image, # image
+	BlockType_Video, # video
+	BlockType_Audio, # audio
+	BlockType_File, # file
+	BlockType_Table, # table
+	BlockType_CodeBlock, # codeBlock
+}

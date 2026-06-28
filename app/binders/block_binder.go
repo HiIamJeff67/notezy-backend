@@ -19,6 +19,8 @@ type BlockBinderInterface interface {
 	BindGetMyBlocksByBlockGroupIds(controllerFunc types.ControllerFunc[*dtos.GetMyBlocksByBlockGroupIdsReqDto]) gin.HandlerFunc
 	BindGetMyBlocksByBlockPackId(controllerFunc types.ControllerFunc[*dtos.GetMyBlocksByBlockPackIdReqDto]) gin.HandlerFunc
 	BindGetAllMyBlocks(controllerFunc types.ControllerFunc[*dtos.GetAllMyBlocksReqDto]) gin.HandlerFunc
+	BindAppendBlock(controllerFunc types.ControllerFunc[*dtos.AppendBlockReqDto]) gin.HandlerFunc
+	BindAppendBlocks(controllerFunc types.ControllerFunc[*dtos.AppendBlocksReqDto]) gin.HandlerFunc
 	BindInsertBlock(controllerFunc types.ControllerFunc[*dtos.InsertBlockReqDto]) gin.HandlerFunc
 	BindInsertBlocks(controllerFunc types.ControllerFunc[*dtos.InsertBlocksReqDto]) gin.HandlerFunc
 	BindUpdateMyBlockById(controllerFunc types.ControllerFunc[*dtos.UpdateMyBlockByIdReqDto]) gin.HandlerFunc
@@ -178,6 +180,50 @@ func (b *BlockBinder) BindGetAllMyBlocks(controllerFunc types.ControllerFunc[*dt
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *BlockBinder) BindAppendBlock(controllerFunc types.ControllerFunc[*dtos.AppendBlockReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.AppendBlockReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *BlockBinder) BindAppendBlocks(controllerFunc types.ControllerFunc[*dtos.AppendBlocksReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.AppendBlocksReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
 
 		controllerFunc(ctx, &reqDto)
 	}

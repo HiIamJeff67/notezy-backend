@@ -1,0 +1,36 @@
+# =============== Search SortBy & Input =============== #
+
+enum SearchBlockSortBy {
+    RELEVANCE
+    TYPE
+    LAST_UPDATE
+    CREATED_AT
+}
+
+input SearchBlockInput {
+    query: String!
+    after: String
+    first: Int = 10
+    sortBy: SearchBlockSortBy = RELEVANCE
+    sortOrder: SearchSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+input SearchBlockCursorFields {
+    id: UUID!
+}
+
+# =============== Search Edge & Connection =============== #
+
+type SearchBlockEdge implements SearchEdge {
+    encodedSearchCursor: String!
+    node: PrivateBlock!
+}
+
+type SearchBlockConnection implements SearchConnection {
+    searchEdges: [SearchBlockEdge!]!
+    searchPageInfo: SearchPageInfo!
+    totalCount: Int!
+    searchTime: Float!
+}

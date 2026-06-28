@@ -412,7 +412,7 @@ func (s *RootShelfService) SearchPrivateRootShelves(
 			return nil, exceptions.Search.FailedToDecode().WithOrigin(err)
 		}
 
-		query.Where("id > ?", searchCursor.Fields.ID)
+		query = query.Where("id > ?", searchCursor.Fields.ID)
 	}
 
 	if gqlInput.SortBy != nil && gqlInput.SortOrder != nil {
@@ -423,19 +423,19 @@ func (s *RootShelfService) SearchPrivateRootShelves(
 
 		switch *gqlInput.SortBy {
 		case gqlmodels.SearchRootShelfSortByName:
-			query.Order("name " + cending).
+			query = query.Order("name " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchRootShelfSortByLastUpdate:
-			query.Order("updated_at " + cending).
+			query = query.Order("updated_at " + cending).
 				Order("name " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchRootShelfSortByCreatedAt:
-			query.Order("created_at " + cending).
+			query = query.Order("created_at " + cending).
 				Order("name " + cending).
 				Order("updated_at " + cending)
 		default:
-			query.Order("name " + cending).
+			query = query.Order("name " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		}

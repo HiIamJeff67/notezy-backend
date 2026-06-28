@@ -14,6 +14,7 @@ type Resolver struct {
 	userService        services.UserServiceInterface
 	themeService       services.ThemeServiceInterface
 	itemService        services.ItemServiceInterface
+	blockService       services.BlockServiceInterface
 	rootShelfService   services.RootShelfServiceInterface
 	stationService     services.StationServiceInterface
 	routineService     services.RoutineServiceInterface
@@ -26,6 +27,7 @@ func NewResolver(
 	userService services.UserServiceInterface,
 	themeService services.ThemeServiceInterface,
 	itemService services.ItemServiceInterface,
+	blockService services.BlockServiceInterface,
 	rootShelfService services.RootShelfServiceInterface,
 	stationService services.StationServiceInterface,
 	routineService services.RoutineServiceInterface,
@@ -37,6 +39,7 @@ func NewResolver(
 		userService:        userService,
 		themeService:       themeService,
 		itemService:        itemService,
+		blockService:       blockService,
 		rootShelfService:   rootShelfService,
 		stationService:     stationService,
 		routineService:     routineService,

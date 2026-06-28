@@ -124,6 +124,38 @@ func configureDevelopmentBlockRoutes() {
 			)...,
 		)
 		blockRoutes.POST(
+			"/appendBlock",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "appendBlock"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.Block.AppendBlock,
+					),
+				},
+				defaultMiddlewares,
+				blockModule.Binder.BindAppendBlock(
+					blockModule.Controller.AppendBlock,
+				),
+			)...,
+		)
+		blockRoutes.POST(
+			"/appendBlocks",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "appendBlocks"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.Block.AppendBlocks,
+					),
+				},
+				defaultMiddlewares,
+				blockModule.Binder.BindAppendBlocks(
+					blockModule.Controller.AppendBlocks,
+				),
+			)...,
+		)
+		blockRoutes.POST(
 			"/insertBlock",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{

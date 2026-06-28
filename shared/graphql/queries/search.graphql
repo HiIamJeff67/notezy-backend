@@ -36,6 +36,25 @@ query SearchThemes($input: SearchThemeInput!) {
   }
 }
 
+query SearchRootShelves($input: SearchRootShelfInput!) {
+  searchRootShelves(input: $input) {
+    searchEdges {
+      node {
+        ...FragmentedPrivateRootShelf
+      }
+      encodedSearchCursor
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}
+
 query SearchItems($input: SearchItemInput!) {
   searchItems(input: $input) {
     searchEdges {
@@ -55,11 +74,11 @@ query SearchItems($input: SearchItemInput!) {
   }
 }
 
-query SearchRootShelves($input: SearchRootShelfInput!) {
-  searchRootShelves(input: $input) {
+query SearchBlocks($input: SearchBlockInput!) {
+  searchBlocks(input: $input) {
     searchEdges {
       node {
-        ...FragmentedPrivateRootShelf
+        ...FragmentedPrivateBlock
       }
       encodedSearchCursor
     }

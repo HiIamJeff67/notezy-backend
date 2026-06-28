@@ -117,6 +117,40 @@ type InsertBlockReqDto struct {
 	]
 }
 
+type AppendBlockReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			BlockPackId            uuid.UUID              `json:"blockPackId" validate:"required"`
+			ArborizedEditableBlock ArborizedEditableBlock `json:"arborizedEditableBlock" validate:"required"`
+		},
+		any,
+	]
+}
+
+type AppendBlocksReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			AppendedBlocks []struct {
+				BlockPackId            uuid.UUID              `json:"blockPackId" validate:"required"`
+				ArborizedEditableBlock ArborizedEditableBlock `json:"arborizedEditableBlock" validate:"required"`
+			} `json:"appendedBlocks" validate:"required,min=1"`
+		},
+		any,
+	]
+}
+
 type InsertBlocksReqDto struct {
 	NotezyRequest[
 		struct {
@@ -286,6 +320,25 @@ type GetMyBlocksByBlockPackIdResDto = []GetMyBlockByIdResDto
 type GetAllMyBlocksResDto = []GetMyBlockByIdResDto
 
 type InsertBlockResDto struct {
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+type AppendBlockResDto struct {
+	BlockPackId  uuid.UUID   `json:"blockPackId"`
+	BlockGroupId uuid.UUID   `json:"blockGroupId"`
+	BlockIds     []uuid.UUID `json:"blockIds"`
+	CreatedAt    time.Time   `json:"createdAt"`
+}
+
+type AppendBlocksResDto struct {
+	IsAllSuccess                bool  `json:"isAllSuccess"`
+	FailedIndexes               []int `json:"failedIndexes"`
+	SuccessIndexes              []int `json:"successIndexes"`
+	SuccessBlockPackAppendItems []struct {
+		BlockPackId  uuid.UUID   `json:"blockPackId"`
+		BlockGroupId uuid.UUID   `json:"blockGroupId"`
+		BlockIds     []uuid.UUID `json:"blockIds"`
+	} `json:"successBlockPackAppendItems"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 

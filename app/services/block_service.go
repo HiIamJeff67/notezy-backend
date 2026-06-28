@@ -5,15 +5,19 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	adapters "github.com/HiIamJeff67/notezy-backend/app/adapters"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
@@ -23,6 +27,7 @@ import (
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 	blocknote "github.com/HiIamJeff67/notezy-backend/shared/lib/blocknote"
 	concurrency "github.com/HiIamJeff67/notezy-backend/shared/lib/concurrency"
+	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
@@ -33,6 +38,8 @@ type BlockServiceInterface interface {
 	GetMyBlocksByBlockGroupIds(ctx context.Context, reqDto *dtos.GetMyBlocksByBlockGroupIdsReqDto) (*dtos.GetMyBlocksByBlockGroupIdsResDto, *exceptions.Exception)
 	GetMyBlocksByBlockPackId(ctx context.Context, reqDto *dtos.GetMyBlocksByBlockPackIdReqDto) (*dtos.GetMyBlocksByBlockPackIdResDto, *exceptions.Exception)
 	GetAllMyBlocks(ctx context.Context, reqDto *dtos.GetAllMyBlocksReqDto) (*dtos.GetAllMyBlocksResDto, *exceptions.Exception)
+	AppendBlock(ctx context.Context, reqDto *dtos.AppendBlockReqDto) (*dtos.AppendBlockResDto, *exceptions.Exception)
+	AppendBlocks(ctx context.Context, reqDto *dtos.AppendBlocksReqDto) (*dtos.AppendBlocksResDto, *exceptions.Exception)
 	InsertBlock(ctx context.Context, reqDto *dtos.InsertBlockReqDto) (*dtos.InsertBlockResDto, *exceptions.Exception)
 	InsertBlocks(ctx context.Context, reqDto *dtos.InsertBlocksReqDto) (*dtos.InsertBlocksResDto, *exceptions.Exception)
 	UpdateMyBlockById(ctx context.Context, reqDto *dtos.UpdateMyBlockByIdReqDto) (*dtos.UpdateMyBlockByIdResDto, *exceptions.Exception)
@@ -41,6 +48,7 @@ type BlockServiceInterface interface {
 	RestoreMyBlocksByIds(ctx context.Context, reqDto *dtos.RestoreMyBlocksByIdsReqDto) (*dtos.RestoreMyBlocksByIdsResDto, *exceptions.Exception)
 	DeleteMyBlockById(ctx context.Context, reqDto *dtos.DeleteMyBlockByIdReqDto) (*dtos.DeleteMyBlockByIdResDto, *exceptions.Exception)
 	DeleteMyBlocksByIds(ctx context.Context, reqDto *dtos.DeleteMyBlocksByIdsReqDto) (*dtos.DeleteMyBlockPacksByIdsResDto, *exceptions.Exception)
+	SearchPrivateBlocks(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchBlockInput) (*gqlmodels.SearchBlockConnection, *exceptions.Exception)
 }
 
 type BlockService struct {
@@ -384,6 +392,292 @@ func (s *BlockService) GetAllMyBlocks(
 		return nil, exceptions.Block.NotFound()
 	}
 
+	return &resDto, nil
+}
+
+func (s *BlockService) AppendBlock(
+	ctx context.Context, reqDto *dtos.AppendBlockReqDto,
+) (*dtos.AppendBlockResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
+	}
+
+	rawFlattenedBlocks, totalSize, exception := s.editableBlockAdapter.FlattenToRaw(&reqDto.Body.ArborizedEditableBlock)
+	if exception != nil {
+		return nil, exception
+	}
+	if len(rawFlattenedBlocks) == 0 {
+		return nil, exceptions.Block.InvalidDto().WithOrigin(errors.New("empty block tree"))
+	}
+
+	tx := s.db.WithContext(ctx).Begin()
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	ownerId, blockPack, exception := s.blockPackRepository.CheckPermissionAndGetOneWithOwnerIdById(
+		reqDto.Body.BlockPackId,
+		reqDto.ContextFields.UserId,
+		nil,
+		allowedPermissions,
+		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	blockGroupId := uuid.New()
+	newBlockGroup := schemas.BlockGroup{
+		Id:               blockGroupId,
+		OwnerId:          *ownerId,
+		BlockPackId:      reqDto.Body.BlockPackId,
+		PrevBlockGroupId: blockPack.FinalBlockGroupId,
+		Size:             totalSize,
+	}
+
+	newBlocks := make([]schemas.Block, len(rawFlattenedBlocks))
+	blockIds := make([]uuid.UUID, len(rawFlattenedBlocks))
+	for index, rawFlattenedBlock := range rawFlattenedBlocks {
+		blockIds[index] = rawFlattenedBlock.Id
+		newBlocks[index] = schemas.Block{
+			Id:            rawFlattenedBlock.Id,
+			ParentBlockId: rawFlattenedBlock.ParentBlockId,
+			BlockGroupId:  blockGroupId,
+			Type:          rawFlattenedBlock.Type,
+			Props:         rawFlattenedBlock.Props,
+			Content:       rawFlattenedBlock.Content,
+		}
+	}
+
+	if err := tx.Create(&newBlockGroup).Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.BlockGroup.FailedToCreate().WithOrigin(err)
+	}
+
+	if err := tx.CreateInBatches(&newBlocks, constants.MaxBatchCreateBlockSize).Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.Block.FailedToCreate().WithOrigin(err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
+	}
+
+	return &dtos.AppendBlockResDto{
+		BlockPackId:  reqDto.Body.BlockPackId,
+		BlockGroupId: blockGroupId,
+		BlockIds:     blockIds,
+		CreatedAt:    time.Now(),
+	}, nil
+}
+
+func (s *BlockService) AppendBlocks(
+	ctx context.Context, reqDto *dtos.AppendBlocksReqDto,
+) (*dtos.AppendBlocksResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Block.InvalidDto().WithOrigin(err)
+	}
+
+	type ValidateBlockDto struct {
+		BlockPackId            uuid.UUID
+		ArborizedEditableBlock dtos.ArborizedEditableBlock
+	}
+	type FlattenedAppendBlock struct {
+		BlockPackId uuid.UUID
+		Blocks      []dtos.RawFlattenedEditableBlock
+		TotalSize   int64
+	}
+	type AppendedBlockResult struct {
+		BlockPackId  uuid.UUID
+		BlockGroupId uuid.UUID
+		BlockIds     []uuid.UUID
+	}
+
+	validateBlockDtos := make([]ValidateBlockDto, len(reqDto.Body.AppendedBlocks))
+	for index, appendedBlock := range reqDto.Body.AppendedBlocks {
+		validateBlockDtos[index] = ValidateBlockDto{
+			BlockPackId:            appendedBlock.BlockPackId,
+			ArborizedEditableBlock: appendedBlock.ArborizedEditableBlock,
+		}
+	}
+
+	validateBlockFunc := func(validateBlockDto ValidateBlockDto) (FlattenedAppendBlock, error) {
+		rawFlattenedBlocks, totalSize, exception := s.editableBlockAdapter.FlattenToRaw(&validateBlockDto.ArborizedEditableBlock)
+		if exception != nil {
+			return FlattenedAppendBlock{}, exception.GetOrigin()
+		}
+		if len(rawFlattenedBlocks) == 0 {
+			return FlattenedAppendBlock{}, errors.New("empty block tree")
+		}
+		return FlattenedAppendBlock{
+			BlockPackId: validateBlockDto.BlockPackId,
+			Blocks:      rawFlattenedBlocks,
+			TotalSize:   totalSize,
+		}, nil
+	}
+
+	validateBlockResults := concurrency.Execute(validateBlockDtos, 20, validateBlockFunc)
+
+	resDto := dtos.AppendBlocksResDto{
+		IsAllSuccess:   true,
+		FailedIndexes:  []int{},
+		SuccessIndexes: []int{},
+		SuccessBlockPackAppendItems: []struct {
+			BlockPackId  uuid.UUID   `json:"blockPackId"`
+			BlockGroupId uuid.UUID   `json:"blockGroupId"`
+			BlockIds     []uuid.UUID `json:"blockIds"`
+		}{},
+		CreatedAt: time.Now(),
+	}
+	validAppendBlocksByIndex := make(map[int]FlattenedAppendBlock)
+	for _, validateResult := range validateBlockResults {
+		if validateResult.Err != nil {
+			resDto.FailedIndexes = append(resDto.FailedIndexes, validateResult.Index)
+			resDto.IsAllSuccess = false
+			continue
+		}
+		resDto.SuccessIndexes = append(resDto.SuccessIndexes, validateResult.Index)
+		validAppendBlocksByIndex[validateResult.Index] = validateResult.Data
+	}
+
+	if len(validAppendBlocksByIndex) == 0 {
+		return nil, exceptions.Block.FailedToCreate().WithDetails("no valid block tree structure in any of the given block packs")
+	}
+
+	validIndexes := make([]int, 0, len(validAppendBlocksByIndex))
+	for index := range validAppendBlocksByIndex {
+		validIndexes = append(validIndexes, index)
+	}
+	sort.Ints(validIndexes)
+
+	blockPackIds := make([]uuid.UUID, 0)
+	seenBlockPackIds := map[uuid.UUID]bool{}
+	for _, index := range validIndexes {
+		blockPackId := validAppendBlocksByIndex[index].BlockPackId
+		if seenBlockPackIds[blockPackId] {
+			continue
+		}
+		blockPackIds = append(blockPackIds, blockPackId)
+		seenBlockPackIds[blockPackId] = true
+	}
+	sort.Slice(blockPackIds, func(i int, j int) bool {
+		return blockPackIds[i].String() < blockPackIds[j].String()
+	})
+
+	tx := s.db.WithContext(ctx).Begin()
+
+	subQuery := tx.Session(&gorm.Session{NewDB: true}).
+		Model(&schemas.UsersToShelves{}).
+		Select("1").
+		Where("root_shelf_id = ss.root_shelf_id").
+		Where("user_id = ? AND permission IN ?", reqDto.ContextFields.UserId, []enums.AccessControlPermission{
+			enums.AccessControlPermission_Owner,
+			enums.AccessControlPermission_Admin,
+			enums.AccessControlPermission_Write,
+		})
+	var blockPackAppendTargets []struct {
+		Id                uuid.UUID  `gorm:"column:id;"`
+		FinalBlockGroupId *uuid.UUID `gorm:"column:final_block_group_id;"`
+		OwnerId           uuid.UUID  `gorm:"column:owner_id;"`
+	}
+	result := tx.Model(&schemas.BlockPack{}).
+		Select(`"BlockPackTable".id, "BlockPackTable".final_block_group_id, owner_uts.user_id AS owner_id`).
+		Joins(`INNER JOIN "SubShelfTable" ss ON parent_sub_shelf_id = ss.id`).
+		Joins(`INNER JOIN "UsersToShelvesTable" owner_uts ON ss.root_shelf_id = owner_uts.root_shelf_id AND owner_uts.permission = 'Owner'`).
+		Where(`"BlockPackTable".id IN ? AND "BlockPackTable".deleted_at IS NULL AND EXISTS (?)`, blockPackIds, subQuery).
+		Clauses(clause.Locking{
+			Strength: options.LockingStrengthNoKeyUpdate,
+			Table:    clause.Table{Name: clause.CurrentTable},
+		}).
+		Order(`"BlockPackTable".id ASC`).
+		Find(&blockPackAppendTargets)
+	if result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.BlockPack.NotFound().WithOrigin(result.Error)
+	}
+	if len(blockPackAppendTargets) != len(blockPackIds) {
+		tx.Rollback()
+		return nil, exceptions.BlockPack.NoPermission("append blocks to the given block packs")
+	}
+
+	ownerIdsByBlockPackId := make(map[uuid.UUID]uuid.UUID, len(blockPackAppendTargets))
+	tailBlockGroupIdsByBlockPackId := make(map[uuid.UUID]*uuid.UUID, len(blockPackAppendTargets))
+	for _, target := range blockPackAppendTargets {
+		ownerIdsByBlockPackId[target.Id] = target.OwnerId
+		tailBlockGroupIdsByBlockPackId[target.Id] = target.FinalBlockGroupId
+	}
+
+	newBlockGroups := make([]schemas.BlockGroup, 0, len(validIndexes))
+	newBlocks := make([]schemas.Block, 0)
+	appendedBlockResultsByIndex := make(map[int]AppendedBlockResult, len(validIndexes))
+	for _, index := range validIndexes {
+		validAppendBlock := validAppendBlocksByIndex[index]
+		blockGroupId := uuid.New()
+		prevBlockGroupId := tailBlockGroupIdsByBlockPackId[validAppendBlock.BlockPackId]
+		tailBlockGroupIdsByBlockPackId[validAppendBlock.BlockPackId] = &blockGroupId
+
+		newBlockGroups = append(newBlockGroups, schemas.BlockGroup{
+			Id:               blockGroupId,
+			OwnerId:          ownerIdsByBlockPackId[validAppendBlock.BlockPackId],
+			BlockPackId:      validAppendBlock.BlockPackId,
+			PrevBlockGroupId: prevBlockGroupId,
+			Size:             validAppendBlock.TotalSize,
+		})
+
+		blockIds := make([]uuid.UUID, len(validAppendBlock.Blocks))
+		for blockIndex, rawFlattenedBlock := range validAppendBlock.Blocks {
+			blockIds[blockIndex] = rawFlattenedBlock.Id
+			newBlocks = append(newBlocks, schemas.Block{
+				Id:            rawFlattenedBlock.Id,
+				ParentBlockId: rawFlattenedBlock.ParentBlockId,
+				BlockGroupId:  blockGroupId,
+				Type:          rawFlattenedBlock.Type,
+				Props:         rawFlattenedBlock.Props,
+				Content:       rawFlattenedBlock.Content,
+			})
+		}
+
+		appendedBlockResultsByIndex[index] = AppendedBlockResult{
+			BlockPackId:  validAppendBlock.BlockPackId,
+			BlockGroupId: blockGroupId,
+			BlockIds:     blockIds,
+		}
+	}
+
+	if err := tx.CreateInBatches(&newBlockGroups, constants.MaxBatchCreateBlockSize).Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.BlockGroup.FailedToCreate().WithOrigin(err)
+	}
+
+	if err := tx.CreateInBatches(&newBlocks, constants.MaxBatchCreateBlockSize).Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.Block.FailedToCreate().WithOrigin(err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
+	}
+
+	for _, index := range validIndexes {
+		appendedBlockResult := appendedBlockResultsByIndex[index]
+		resDto.SuccessBlockPackAppendItems = append(resDto.SuccessBlockPackAppendItems, struct {
+			BlockPackId  uuid.UUID   `json:"blockPackId"`
+			BlockGroupId uuid.UUID   `json:"blockGroupId"`
+			BlockIds     []uuid.UUID `json:"blockIds"`
+		}{
+			BlockPackId:  appendedBlockResult.BlockPackId,
+			BlockGroupId: appendedBlockResult.BlockGroupId,
+			BlockIds:     appendedBlockResult.BlockIds,
+		})
+	}
+	resDto.CreatedAt = time.Now()
 	return &resDto, nil
 }
 
@@ -1306,5 +1600,137 @@ func (s *BlockService) DeleteMyBlocksByIds(
 
 	return &dtos.DeleteMyBlockPacksByIdsResDto{
 		DeletedAt: time.Now(),
+	}, nil
+}
+
+/* ============================== Service Methods for GraphQL Block ============================== */
+
+func (s *BlockService) SearchPrivateBlocks(
+	ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchBlockInput,
+) (*gqlmodels.SearchBlockConnection, *exceptions.Exception) {
+	startTime := time.Now()
+	db := s.db.WithContext(ctx)
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+
+	query := db.Model(&schemas.Block{}).
+		Select(`"BlockTable".*`).
+		Joins(`INNER JOIN "BlockGroupTable" bg ON bg.id = "BlockTable".block_group_id`).
+		Joins(`INNER JOIN "BlockPackTable" bp ON bp.id = bg.block_pack_id`).
+		Joins(`INNER JOIN "SubShelfTable" ss ON ss.id = bp.parent_sub_shelf_id`).
+		Joins(`INNER JOIN "UsersToShelvesTable" uts ON uts.root_shelf_id = ss.root_shelf_id`).
+		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
+		Where(`"BlockTable".deleted_at IS NULL`).
+		Where(`bg.deleted_at IS NULL`).
+		Where(`bp.deleted_at IS NULL`).
+		Where(`ss.deleted_at IS NULL`).
+		Preload(string(schemas.BlockRelation_Children), func(db *gorm.DB) *gorm.DB {
+			return db.Select("id", "parent_block_id").Where("deleted_at IS NULL")
+		})
+
+	if len(strings.ReplaceAll(gqlInput.Query, " ", "")) > 0 {
+		pattern := "%" + gqlInput.Query + "%"
+		query = query.Where(
+			`"BlockTable".content::text ILIKE ? OR "BlockTable".props::text ILIKE ? OR "BlockTable".type::text ILIKE ?`,
+			pattern,
+			pattern,
+			pattern,
+		)
+	}
+	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
+		searchCursor, err := searchcursor.Decode[gqlmodels.SearchBlockCursorFields](*gqlInput.After)
+		if err != nil {
+			return nil, exceptions.Search.FailedToDecode().WithOrigin(err)
+		}
+
+		query = query.Where(`"BlockTable".id > ?`, searchCursor.Fields.ID)
+	}
+
+	if gqlInput.SortBy != nil && gqlInput.SortOrder != nil {
+		cending := gqlmodels.SearchSortOrderAsc.String()
+		if *gqlInput.SortOrder == gqlmodels.SearchSortOrderDesc {
+			cending = gqlmodels.SearchSortOrderDesc.String()
+		}
+
+		switch *gqlInput.SortBy {
+		case gqlmodels.SearchBlockSortByType:
+			query = query.Order(`"BlockTable".type ` + cending).
+				Order(`"BlockTable".updated_at ` + cending).
+				Order(`"BlockTable".created_at ` + cending)
+		case gqlmodels.SearchBlockSortByLastUpdate:
+			query = query.Order(`"BlockTable".updated_at ` + cending).
+				Order(`"BlockTable".type ` + cending).
+				Order(`"BlockTable".created_at ` + cending)
+		case gqlmodels.SearchBlockSortByCreatedAt:
+			query = query.Order(`"BlockTable".created_at ` + cending).
+				Order(`"BlockTable".type ` + cending).
+				Order(`"BlockTable".updated_at ` + cending)
+		default:
+			query = query.Order(`"BlockTable".type ` + cending).
+				Order(`"BlockTable".updated_at ` + cending).
+				Order(`"BlockTable".created_at ` + cending)
+		}
+	}
+
+	limit := constants.DefaultSearchLimit
+	if gqlInput.First != nil && *gqlInput.First > 0 {
+		limit = int(*gqlInput.First)
+	}
+	limit = min(limit, constants.MaxSearchLimit)
+	query = query.Limit(limit + 1)
+
+	var blocks []schemas.Block
+	if err := query.Find(&blocks).Error; err != nil {
+		return nil, exceptions.Block.NotFound().WithOrigin(err)
+	}
+
+	hasNextPage := len(blocks) > limit
+	searchEdges := make([]*gqlmodels.SearchBlockEdge, len(blocks))
+
+	for index, block := range blocks {
+		searchCursor := searchcursor.SearchCursor[gqlmodels.SearchBlockCursorFields]{
+			Fields: gqlmodels.SearchBlockCursorFields{
+				ID: block.Id,
+			},
+		}
+		encodedSearchCursor, err := searchCursor.Encode()
+		if err != nil {
+			return nil, exceptions.Search.FailedToEncode().WithOrigin(err)
+		}
+		if encodedSearchCursor == nil {
+			return nil, exceptions.Search.FailedToUnmarshalSearchCursor()
+		}
+
+		searchEdges[index] = &gqlmodels.SearchBlockEdge{
+			EncodedSearchCursor: *encodedSearchCursor,
+			Node:                block.ToPrivateBlock(),
+		}
+	}
+
+	searchPageInfo := &gqlmodels.SearchPageInfo{
+		HasNextPage:     hasNextPage,
+		HasPreviousPage: gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0,
+	}
+
+	if hasNextPage {
+		searchEdges = searchEdges[:limit]
+	}
+	if len(searchEdges) > 0 {
+		searchPageInfo.StartEncodedSearchCursor = &searchEdges[0].EncodedSearchCursor
+		searchPageInfo.EndEncodedSearchCursor = &searchEdges[len(searchEdges)-1].EncodedSearchCursor
+	}
+
+	searchTime := float64(time.Since(startTime).Nanoseconds()) / 1e6
+
+	return &gqlmodels.SearchBlockConnection{
+		SearchEdges:    searchEdges,
+		SearchPageInfo: searchPageInfo,
+		TotalCount:     int32(len(searchEdges)),
+		SearchTime:     searchTime,
 	}, nil
 }

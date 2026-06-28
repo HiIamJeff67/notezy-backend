@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 	"time"
@@ -187,6 +188,85 @@ func (r *RoutineRepository) GetAllByTimeRange(
 	}
 
 	var routines []schemas.Routine
+	timeRangeCondition := `
+		(
+			(
+				"RoutineTable".period IS NULL
+				AND "RoutineTable".scheduled_start_at < @query_to
+				AND "RoutineTable".scheduled_end_at > @query_from
+			)
+			OR (
+				"RoutineTable".period = 'Daily'::"RoutinePeriod"
+				AND EXISTS (
+					SELECT 1
+					FROM generate_series(
+						date_trunc('day', CAST(@query_from AS timestamptz) AT TIME ZONE "RoutineTable".timezone) - interval '1 day',
+						date_trunc('day', CAST(@query_to AS timestamptz) AT TIME ZONE "RoutineTable".timezone),
+						interval '1 day'
+					) AS occurrence(bucket_start)
+					CROSS JOIN LATERAL (
+						SELECT occurrence.bucket_start + (
+							("RoutineTable".scheduled_start_at AT TIME ZONE "RoutineTable".timezone)
+							- date_trunc('day', "RoutineTable".scheduled_start_at AT TIME ZONE "RoutineTable".timezone)
+						) AS occurrence_start_at
+					) daily_occurrence
+					WHERE (daily_occurrence.occurrence_start_at AT TIME ZONE "RoutineTable".timezone) >= "RoutineTable".scheduled_start_at
+						AND (daily_occurrence.occurrence_start_at AT TIME ZONE "RoutineTable".timezone) < @query_to
+						AND ((daily_occurrence.occurrence_start_at AT TIME ZONE "RoutineTable".timezone) + ("RoutineTable".scheduled_end_at - "RoutineTable".scheduled_start_at)) > @query_from
+				)
+			)
+			OR (
+				"RoutineTable".period = 'Weekly'::"RoutinePeriod"
+				AND EXISTS (
+					SELECT 1
+					FROM generate_series(
+						date_trunc('week', CAST(@query_from AS timestamptz) AT TIME ZONE "RoutineTable".timezone) - interval '1 week',
+						date_trunc('week', CAST(@query_to AS timestamptz) AT TIME ZONE "RoutineTable".timezone),
+						interval '1 week'
+					) AS occurrence(bucket_start)
+					CROSS JOIN LATERAL (
+						SELECT occurrence.bucket_start + (
+							("RoutineTable".scheduled_start_at AT TIME ZONE "RoutineTable".timezone)
+							- date_trunc('week', "RoutineTable".scheduled_start_at AT TIME ZONE "RoutineTable".timezone)
+						) AS occurrence_start_at
+					) weekly_occurrence
+					WHERE (weekly_occurrence.occurrence_start_at AT TIME ZONE "RoutineTable".timezone) >= "RoutineTable".scheduled_start_at
+						AND (weekly_occurrence.occurrence_start_at AT TIME ZONE "RoutineTable".timezone) < @query_to
+						AND ((weekly_occurrence.occurrence_start_at AT TIME ZONE "RoutineTable".timezone) + ("RoutineTable".scheduled_end_at - "RoutineTable".scheduled_start_at)) > @query_from
+				)
+			)
+			OR (
+				"RoutineTable".period = 'Monthly'::"RoutinePeriod"
+				AND EXISTS (
+					SELECT 1
+					FROM generate_series(
+						date_trunc('month', CAST(@query_from AS timestamptz) AT TIME ZONE "RoutineTable".timezone) - interval '1 month',
+						date_trunc('month', CAST(@query_to AS timestamptz) AT TIME ZONE "RoutineTable".timezone),
+						interval '1 month'
+					) AS occurrence(bucket_start)
+					CROSS JOIN LATERAL (
+						SELECT "RoutineTable".scheduled_start_at AT TIME ZONE "RoutineTable".timezone AS routine_start_at
+					) routine_local
+					CROSS JOIN LATERAL (
+						SELECT make_timestamp(
+							EXTRACT(YEAR FROM occurrence.bucket_start)::integer,
+							EXTRACT(MONTH FROM occurrence.bucket_start)::integer,
+							LEAST(
+								EXTRACT(DAY FROM routine_local.routine_start_at)::integer,
+								EXTRACT(DAY FROM (date_trunc('month', occurrence.bucket_start) + interval '1 month' - interval '1 day'))::integer
+							),
+							EXTRACT(HOUR FROM routine_local.routine_start_at)::integer,
+							EXTRACT(MINUTE FROM routine_local.routine_start_at)::integer,
+							EXTRACT(SECOND FROM routine_local.routine_start_at)::double precision
+						) AS occurrence_start_at
+					) monthly_occurrence
+					WHERE (monthly_occurrence.occurrence_start_at AT TIME ZONE "RoutineTable".timezone) >= "RoutineTable".scheduled_start_at
+						AND (monthly_occurrence.occurrence_start_at AT TIME ZONE "RoutineTable".timezone) < @query_to
+						AND ((monthly_occurrence.occurrence_start_at AT TIME ZONE "RoutineTable".timezone) + ("RoutineTable".scheduled_end_at - "RoutineTable".scheduled_start_at)) > @query_from
+				)
+			)
+		)
+	`
 	result := parsedOptions.DB.
 		Model(&schemas.Routine{}).
 		Select(`"RoutineTable".*`).
@@ -194,7 +274,7 @@ func (r *RoutineRepository) GetAllByTimeRange(
 		Joins(`INNER JOIN "StationTable" station ON station.id = "RoutineTable".station_id AND station.deleted_at IS NULL`).
 		Where(`"RoutineTable".station_id IN ?`, stationIds).
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
-		Where(`"RoutineTable".scheduled_start_at < ? AND "RoutineTable".scheduled_end_at > ?`, to, from).
+		Where(timeRangeCondition, sql.Named("query_from", from), sql.Named("query_to", to)).
 		Scopes(r.routineScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.routineScope.IncludePreloads(preloads)).
 		Order(`"RoutineTable".scheduled_start_at ASC`).

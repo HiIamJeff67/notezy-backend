@@ -1637,39 +1637,39 @@ func (s *RoutineService) SearchPrivateRoutines(
 
 		switch *gqlInput.SortBy {
 		case gqlmodels.SearchRoutineSortByTitle:
-			query.Order("title " + cending).
+			query = query.Order("title " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchRoutineSortByStatus:
-			query.Order("status " + cending).
+			query = query.Order("status " + cending).
 				Order("title " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchRoutineSortByScheduledStartAt:
-			query.Order("scheduled_start_at " + cending).
+			query = query.Order("scheduled_start_at " + cending).
 				Order("title " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchRoutineSortByScheduledEndAt:
-			query.Order("scheduled_end_at " + cending).
+			query = query.Order("scheduled_end_at " + cending).
 				Order("title " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchRoutineSortByPeriod:
-			query.Order("period " + cending).
+			query = query.Order("period " + cending).
 				Order("title " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchRoutineSortByLastUpdate:
-			query.Order("updated_at " + cending).
+			query = query.Order("updated_at " + cending).
 				Order("title " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchRoutineSortByCreatedAt:
-			query.Order("created_at " + cending).
+			query = query.Order("created_at " + cending).
 				Order("title " + cending).
 				Order("updated_at " + cending)
 		default:
-			query.Order("title " + cending).
+			query = query.Order("title " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		}

@@ -797,69 +797,69 @@ func (s *RoutineTaskService) SearchPrivateRoutineTasks(
 
 		switch *gqlInput.SortBy {
 		case gqlmodels.SearchRoutineTaskSortByTitle:
-			query.Order("title " + cending).
+			query = query.Order("title " + cending).
 				Order("scheduled_at " + cending).
 				Order("priority " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchRoutineTaskSortByPurpose:
-			query.Order("purpose " + cending).
+			query = query.Order("purpose " + cending).
 				Order("scheduled_at " + cending).
 				Order("priority " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchRoutineTaskSortByPriority:
-			query.Order("priority " + cending).
+			query = query.Order("priority " + cending).
 				Order("scheduled_at " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchRoutineTaskSortByStatus:
-			query.Order("status " + cending).
+			query = query.Order("status " + cending).
 				Order("scheduled_at " + cending).
 				Order("priority " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchRoutineTaskSortByAttempts:
-			query.Order("attempts " + cending).
+			query = query.Order("attempts " + cending).
 				Order("scheduled_at " + cending).
 				Order("priority " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchRoutineTaskSortByMaxAttempts:
-			query.Order("max_attempts " + cending).
+			query = query.Order("max_attempts " + cending).
 				Order("scheduled_at " + cending).
 				Order("priority " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchRoutineTaskSortByScheduledAt:
-			query.Order("scheduled_at " + cending).
+			query = query.Order("scheduled_at " + cending).
 				Order("priority " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchRoutineTaskSortByActualStartedAt:
-			query.Order("actual_started_at " + cending).
+			query = query.Order("actual_started_at " + cending).
 				Order("scheduled_at " + cending).
 				Order("priority " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchRoutineTaskSortByActualEndedAt:
-			query.Order("actual_ended_at " + cending).
+			query = query.Order("actual_ended_at " + cending).
 				Order("scheduled_at " + cending).
 				Order("priority " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchRoutineTaskSortByLastUpdate:
-			query.Order("updated_at " + cending).
+			query = query.Order("updated_at " + cending).
 				Order("scheduled_at " + cending).
 				Order("priority " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchRoutineTaskSortByCreatedAt:
-			query.Order("created_at " + cending).
+			query = query.Order("created_at " + cending).
 				Order("scheduled_at " + cending).
 				Order("priority " + cending).
 				Order("updated_at " + cending)
 		default:
-			query.Order("scheduled_at " + cending).
+			query = query.Order("scheduled_at " + cending).
 				Order("priority " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)

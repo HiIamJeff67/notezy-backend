@@ -12,6 +12,7 @@ import (
 
 	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	"github.com/google/uuid"
+	"gorm.io/datatypes"
 )
 
 type SearchConnection interface {
@@ -24,6 +25,19 @@ type SearchConnection interface {
 type SearchEdge interface {
 	IsSearchEdge()
 	GetEncodedSearchCursor() string
+}
+
+type PrivateBlock struct {
+	ID            uuid.UUID       `json:"id"`
+	ParentBlockID *uuid.UUID      `json:"parentBlockId,omitempty"`
+	BlockGroupID  uuid.UUID       `json:"blockGroupId"`
+	Type          enums.BlockType `json:"type"`
+	Props         datatypes.JSON  `json:"props"`
+	Content       datatypes.JSON  `json:"content"`
+	DeletedAt     *time.Time      `json:"deletedAt,omitempty"`
+	UpdatedAt     time.Time       `json:"updatedAt"`
+	CreatedAt     time.Time       `json:"createdAt"`
+	ChildrenIds   []uuid.UUID     `json:"childrenIds"`
 }
 
 type PrivateItem struct {
@@ -259,6 +273,38 @@ type SearchBadgeInput struct {
 	Filters   *SearchBadgeFilters `json:"filters,omitempty"`
 	SortBy    *SearchBadgeSortBy  `json:"sortBy,omitempty"`
 	SortOrder *SearchSortOrder    `json:"sortOrder,omitempty"`
+}
+
+type SearchBlockConnection struct {
+	SearchEdges    []*SearchBlockEdge `json:"searchEdges"`
+	SearchPageInfo *SearchPageInfo    `json:"searchPageInfo"`
+	TotalCount     int32              `json:"totalCount"`
+	SearchTime     float64            `json:"searchTime"`
+}
+
+func (SearchBlockConnection) IsSearchConnection()                     {}
+func (this SearchBlockConnection) GetSearchPageInfo() *SearchPageInfo { return this.SearchPageInfo }
+func (this SearchBlockConnection) GetTotalCount() int32               { return this.TotalCount }
+func (this SearchBlockConnection) GetSearchTime() float64             { return this.SearchTime }
+
+type SearchBlockCursorFields struct {
+	ID uuid.UUID `json:"id"`
+}
+
+type SearchBlockEdge struct {
+	EncodedSearchCursor string        `json:"encodedSearchCursor"`
+	Node                *PrivateBlock `json:"node"`
+}
+
+func (SearchBlockEdge) IsSearchEdge()                       {}
+func (this SearchBlockEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
+
+type SearchBlockInput struct {
+	Query     string             `json:"query"`
+	After     *string            `json:"after,omitempty"`
+	First     *int32             `json:"first,omitempty"`
+	SortBy    *SearchBlockSortBy `json:"sortBy,omitempty"`
+	SortOrder *SearchSortOrder   `json:"sortOrder,omitempty"`
 }
 
 type SearchItemConnection struct {
@@ -601,6 +647,65 @@ func (e *SearchBadgeSortBy) UnmarshalJSON(b []byte) error {
 }
 
 func (e SearchBadgeSortBy) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type SearchBlockSortBy string
+
+const (
+	SearchBlockSortByRelevance  SearchBlockSortBy = "RELEVANCE"
+	SearchBlockSortByType       SearchBlockSortBy = "TYPE"
+	SearchBlockSortByLastUpdate SearchBlockSortBy = "LAST_UPDATE"
+	SearchBlockSortByCreatedAt  SearchBlockSortBy = "CREATED_AT"
+)
+
+var AllSearchBlockSortBy = []SearchBlockSortBy{
+	SearchBlockSortByRelevance,
+	SearchBlockSortByType,
+	SearchBlockSortByLastUpdate,
+	SearchBlockSortByCreatedAt,
+}
+
+func (e SearchBlockSortBy) IsValid() bool {
+	switch e {
+	case SearchBlockSortByRelevance, SearchBlockSortByType, SearchBlockSortByLastUpdate, SearchBlockSortByCreatedAt:
+		return true
+	}
+	return false
+}
+
+func (e SearchBlockSortBy) String() string {
+	return string(e)
+}
+
+func (e *SearchBlockSortBy) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SearchBlockSortBy(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SearchBlockSortBy", str)
+	}
+	return nil
+}
+
+func (e SearchBlockSortBy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *SearchBlockSortBy) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e SearchBlockSortBy) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

@@ -609,7 +609,7 @@ func (s *StationService) SearchPrivateStations(
 			return nil, exceptions.Search.FailedToDecode().WithOrigin(err)
 		}
 
-		query.Where("id > ?", searchCursor.Fields.ID)
+		query = query.Where("id > ?", searchCursor.Fields.ID)
 	}
 
 	if gqlInput.SortBy != nil && gqlInput.SortOrder != nil {
@@ -620,27 +620,27 @@ func (s *StationService) SearchPrivateStations(
 
 		switch *gqlInput.SortBy {
 		case gqlmodels.SearchStationSortByName:
-			query.Order("name " + cending).
+			query = query.Order("name " + cending).
 				Order("routine_count " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchStationSortByRoutineCount:
-			query.Order("routine_count " + cending).
+			query = query.Order("routine_count " + cending).
 				Order("name " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchStationSortByLastUpdate:
-			query.Order("updated_at " + cending).
+			query = query.Order("updated_at " + cending).
 				Order("name " + cending).
 				Order("routine_count " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchStationSortByCreatedAt:
-			query.Order("created_at " + cending).
+			query = query.Order("created_at " + cending).
 				Order("name " + cending).
 				Order("routine_count " + cending).
 				Order("updated_at " + cending)
 		default:
-			query.Order("name " + cending).
+			query = query.Order("name " + cending).
 				Order("routine_count " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)

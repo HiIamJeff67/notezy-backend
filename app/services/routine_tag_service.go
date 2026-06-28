@@ -346,7 +346,7 @@ func (s *RoutineTagService) SearchPrivateRoutineTags(
 			return nil, exceptions.Search.FailedToDecode().WithOrigin(err)
 		}
 
-		query.Where("id > ?", searchCursor.Fields.ID)
+		query = query.Where("id > ?", searchCursor.Fields.ID)
 	}
 
 	if gqlInput.SortBy != nil && gqlInput.SortOrder != nil {
@@ -357,19 +357,19 @@ func (s *RoutineTagService) SearchPrivateRoutineTags(
 
 		switch *gqlInput.SortBy {
 		case gqlmodels.SearchRoutineTagSortByName:
-			query.Order("name " + cending).
+			query = query.Order("name " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchRoutineTagSortByLastUpdate:
-			query.Order("updated_at " + cending).
+			query = query.Order("updated_at " + cending).
 				Order("name " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchRoutineTagSortByCreatedAt:
-			query.Order("created_at " + cending).
+			query = query.Order("created_at " + cending).
 				Order("name " + cending).
 				Order("updated_at " + cending)
 		default:
-			query.Order("name " + cending).
+			query = query.Order("name " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		}

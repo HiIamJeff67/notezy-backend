@@ -90,7 +90,7 @@ func (s *ItemService) SearchPrivateItems(
 			return nil, exceptions.Search.FailedToDecode().WithOrigin(err)
 		}
 
-		query.Where("id > ?", searchCursor.Fields.ID)
+		query = query.Where("id > ?", searchCursor.Fields.ID)
 	}
 
 	if gqlInput.SortBy != nil && gqlInput.SortOrder != nil {
@@ -101,19 +101,19 @@ func (s *ItemService) SearchPrivateItems(
 
 		switch *gqlInput.SortBy {
 		case gqlmodels.SearchItemSortByType:
-			query.Order("type " + cending).
+			query = query.Order("type " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchItemSortByLastUpdate:
-			query.Order("updated_at " + cending).
+			query = query.Order("updated_at " + cending).
 				Order("type " + cending).
 				Order("created_at " + cending)
 		case gqlmodels.SearchItemSortByCreatedAt:
-			query.Order("created_at " + cending).
+			query = query.Order("created_at " + cending).
 				Order("type " + cending).
 				Order("updated_at " + cending)
 		default:
-			query.Order("type " + cending).
+			query = query.Order("type " + cending).
 				Order("updated_at " + cending).
 				Order("created_at " + cending)
 		}

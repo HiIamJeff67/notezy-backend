@@ -163,6 +163,35 @@ models:
     model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.AccessControlPermission"
   BadgeType:
     model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.BadgeType"
+  BlockType:
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.BlockType"
+    enum_values:
+      BlockType_Paragraph:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.BlockType_Paragraph"
+      BlockType_Heading:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.BlockType_Heading"
+      BlockType_Quote:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.BlockType_Quote"
+      BlockType_BulletListItem:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.BlockType_BulletListItem"
+      BlockType_NumberedListItem:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.BlockType_NumberedListItem"
+      BlockType_CheckListItem:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.BlockType_CheckListItem"
+      BlockType_ToggleListItem:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.BlockType_ToggleListItem"
+      BlockType_Image:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.BlockType_Image"
+      BlockType_Video:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.BlockType_Video"
+      BlockType_Audio:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.BlockType_Audio"
+      BlockType_File:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.BlockType_File"
+      BlockType_Table:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.BlockType_Table"
+      BlockType_CodeBlock:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.BlockType_CodeBlock"
   CountryCode:
     model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.CountryCode"
     enum_values:
@@ -249,16 +278,34 @@ models:
   RoutineTaskPurpose:
     model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose"
     enum_values:
+      RoutineTaskPurpose_CreateRootShelf:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_CreateRootShelf"
+      RoutineTaskPurpose_UpdateRootShelf:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_UpdateRootShelf"
+      RoutineTaskPurpose_ResetRootShelf:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_ResetRootShelf"
+      RoutineTaskPurpose_CreateSubShelf:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_CreateSubShelf"
+      RoutineTaskPurpose_UpdateSubShelf:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_UpdateSubShelf"
+      RoutineTaskPurpose_ResetSubShelf:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_ResetSubShelf"
       RoutineTaskPurpose_CreateBlockPack:
         value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_CreateBlockPack"
-      RoutineTaskPurpose_DeleteBlockPack:
-        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_DeleteBlockPack"
-      RoutineTaskPurpose_CreateBlock:
-        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_CreateBlock"
+      RoutineTaskPurpose_UpdateBlockPack:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_UpdateBlockPack"
+      RoutineTaskPurpose_ResetBlockPack:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_ResetBlockPack"
+      RoutineTaskPurpose_AppendBlock:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_AppendBlock"
       RoutineTaskPurpose_UpdateBlock:
         value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_UpdateBlock"
-      RoutineTaskPurpose_DeleteBlock:
-        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_DeleteBlock"
+      RoutineTaskPurpose_ResetBlock:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_ResetBlock"
+      RoutineTaskPurpose_CreateRoutine:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_CreateRoutine"
+      RoutineTaskPurpose_UpdateRoutine:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskPurpose_UpdateRoutine"
   RoutineTaskStatus:
     model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskStatus"
     enum_values:
