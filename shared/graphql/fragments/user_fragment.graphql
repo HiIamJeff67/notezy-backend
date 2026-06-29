@@ -10,13 +10,4 @@ fragment FragmentedBasicPublicUser on PublicUser {
 
 fragment FragmentedPublicUser on PublicUser {
   ...FragmentedBasicPublicUser
-  userInfo {
-    ...FragmentedBasicPublicUserInfo
-  }
-  badges {
-    ...FragmentedBasicPublicBadge
-  }
-  themes {
-    ...FragmentedBasicPublicTheme
-  }
 }

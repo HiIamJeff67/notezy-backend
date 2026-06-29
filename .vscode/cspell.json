@@ -79,6 +79,9 @@
     "mutatable",
     "accessable",
     "reappend",
-    "maintainingblocktriggers"
+    "maintainingblocktriggers", 
+    "routinetask", 
+    "durablejob", 
+    "durablejobs"
   ]
 }

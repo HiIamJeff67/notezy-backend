@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
@@ -15,8 +16,7 @@ import (
 )
 
 type ThemeServiceInterface interface {
-	// services for graphql themes
-	GetPublicThemeByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicTheme, *exceptions.Exception)
+	GetPublicThemeByPublicId(ctx context.Context, publicId uuid.UUID) (*gqlmodels.PublicTheme, *exceptions.Exception)
 	SearchPublicThemes(ctx context.Context, gqlInput gqlmodels.SearchThemeInput) (*gqlmodels.SearchThemeConnection, *exceptions.Exception)
 }
 
@@ -38,7 +38,7 @@ func (s *ThemeService) GetMyThemeById() {}
 /* ============================== Service Methods for Public Theme ============================== */
 
 func (s *ThemeService) GetPublicThemeByPublicId(
-	ctx context.Context, publicId string,
+	ctx context.Context, publicId uuid.UUID,
 ) (*gqlmodels.PublicTheme, *exceptions.Exception) {
 	db := s.db.WithContext(ctx)
 
@@ -59,7 +59,6 @@ func (s *ThemeService) SearchPublicThemes(
 	gqlInput gqlmodels.SearchThemeInput,
 ) (*gqlmodels.SearchThemeConnection, *exceptions.Exception) {
 	startTime := time.Now()
-
 	db := s.db.WithContext(ctx)
 
 	query := db.Model(&schemas.Theme{})

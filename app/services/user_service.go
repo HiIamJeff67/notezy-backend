@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 
 	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
@@ -27,8 +28,8 @@ type UserServiceInterface interface {
 	UpdateMe(ctx context.Context, reqDto *dtos.UpdateMeReqDto) (*dtos.UpdateMeResDto, *exceptions.Exception)
 
 	// services for graphql users
-	GetPublicUserByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicUser, *exceptions.Exception)
-	GetPublicAuthorByThemePublicIds(ctx context.Context, publicIds []string) ([]*gqlmodels.PublicUser, *exceptions.Exception)
+	GetPublicUserByPublicId(ctx context.Context, publicId uuid.UUID) (*gqlmodels.PublicUser, *exceptions.Exception)
+	GetPublicAuthorByThemePublicIds(ctx context.Context, publicIds []uuid.UUID) ([]*gqlmodels.PublicUser, *exceptions.Exception)
 	SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.SearchUserInput) (*gqlmodels.SearchUserConnection, *exceptions.Exception)
 }
 
@@ -164,7 +165,7 @@ func (s *UserService) UpdateMe(
 /* ============================== Service Methods for Public User (Only available in GraphQL) ============================== */
 
 func (s *UserService) GetPublicUserByPublicId(
-	ctx context.Context, publicId string,
+	ctx context.Context, publicId uuid.UUID,
 ) (*gqlmodels.PublicUser, *exceptions.Exception) {
 	db := s.db.WithContext(ctx)
 
@@ -180,7 +181,7 @@ func (s *UserService) GetPublicUserByPublicId(
 }
 
 func (s *UserService) GetPublicAuthorByThemePublicIds(
-	ctx context.Context, publicIds []string,
+	ctx context.Context, publicIds []uuid.UUID,
 ) ([]*gqlmodels.PublicUser, *exceptions.Exception) {
 	if len(publicIds) == 0 {
 		return []*gqlmodels.PublicUser{}, nil
@@ -188,8 +189,8 @@ func (s *UserService) GetPublicAuthorByThemePublicIds(
 
 	db := s.db.WithContext(ctx)
 
-	uniquePublicIds := make([]string, 0)
-	seen := make(map[string]bool)
+	uniquePublicIds := make([]uuid.UUID, 0)
+	seen := make(map[uuid.UUID]bool)
 	for _, publicId := range publicIds {
 		if !seen[publicId] {
 			uniquePublicIds = append(uniquePublicIds, publicId)
@@ -202,7 +203,7 @@ func (s *UserService) GetPublicAuthorByThemePublicIds(
 
 	var authorsWithPublicThemeIds []*struct {
 		schemas.User
-		ThemePublicId string `gorm:"theme_public_id"`
+		ThemePublicId uuid.UUID `gorm:"theme_public_id"`
 	}
 	result := db.Table(schemas.User{}.TableName()+" u").
 		Select("u.*, t.public_id as theme_public_id").
@@ -213,7 +214,7 @@ func (s *UserService) GetPublicAuthorByThemePublicIds(
 		return nil, exceptions.User.NotFound().WithOrigin(err)
 	}
 
-	publicIdToIndexesMap := make(map[string][]int)
+	publicIdToIndexesMap := make(map[uuid.UUID][]int)
 	for index, publicId := range publicIds {
 		publicIdToIndexesMap[publicId] = append(publicIdToIndexesMap[publicId], index)
 	}

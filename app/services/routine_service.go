@@ -52,7 +52,6 @@ type RoutineServiceInterface interface {
 	VisualizeMyRoutineScheduledStartAtCount(ctx context.Context, reqDto *dtos.VisualizeMyRoutineScheduledStartAtCountReqDto) (*dtos.VisualizeMyRoutineScheduledStartAtCountResDto, *exceptions.Exception)
 	VisualizeMyRoutineScheduledEndAtCount(ctx context.Context, reqDto *dtos.VisualizeMyRoutineScheduledEndAtCountReqDto) (*dtos.VisualizeMyRoutineScheduledEndAtCountResDto, *exceptions.Exception)
 
-	// services for graphql routines
 	SearchPrivateRoutines(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRoutineInput) (*gqlmodels.SearchRoutineConnection, *exceptions.Exception)
 }
 
@@ -1563,11 +1562,6 @@ func (s *RoutineService) VisualizeMyRoutineScheduledEndAtCount(
 func (s *RoutineService) SearchPrivateRoutines(
 	ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRoutineInput,
 ) (*gqlmodels.SearchRoutineConnection, *exceptions.Exception) {
-	type PrivateRoutine struct {
-		schemas.Routine
-		Permission enums.AccessControlPermission `gorm:"column:permission"`
-	}
-
 	startTime := time.Now()
 	db := s.db.WithContext(ctx)
 
@@ -1582,7 +1576,7 @@ func (s *RoutineService) SearchPrivateRoutines(
 		Select(`"RoutineTable".*, uts.permission AS permission`).
 		Joins(`LEFT JOIN "UsersToStationsTable" uts ON "RoutineTable".station_id = uts.station_id`).
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
-		Where(`"RoutineTable".deleted_at IS NULL`)
+		Scopes(s.routineScope.FilterOnlyDeleted(types.Ternary_Negative))
 
 	if len(gqlInput.StationIds) > 0 {
 		query = query.Where(
@@ -1682,7 +1676,7 @@ func (s *RoutineService) SearchPrivateRoutines(
 	limit = min(limit, constants.MaxSearchLimit)
 	query = query.Limit(limit + 1)
 
-	var routines []PrivateRoutine
+	var routines []schemas.Routine
 	if err := query.Scopes(s.routineScope.IncludePreloads(
 		[]schemas.RoutineRelation{
 			schemas.RoutineRelation_RoutinesToTags,
@@ -1710,19 +1704,9 @@ func (s *RoutineService) SearchPrivateRoutines(
 			return nil, exceptions.Search.FailedToUnmarshalSearchCursor()
 		}
 
-		finalRoutine := routine.Routine.ToPrivateSearchableRoutine()
-		for _, routineToTag := range routine.Routine.RoutinesToTags {
-			finalRoutine.TagIds = append(finalRoutine.TagIds, routineToTag.TagId)
-		}
-		for _, routineToTask := range routine.Routine.RoutinesToTasks {
-			finalRoutine.TaskIds = append(finalRoutine.TaskIds, routineToTask.TaskId)
-		}
-		for _, routineToItem := range routine.Routine.RoutinesToItems {
-			finalRoutine.ItemIds = append(finalRoutine.ItemIds, routineToItem.ItemId)
-		}
 		searchEdges[index] = &gqlmodels.SearchRoutineEdge{
 			EncodedSearchCursor: *encodedSearchCursor,
-			Node:                finalRoutine,
+			Node:                routine.ToPrivateSearchableRoutine(),
 		}
 	}
 

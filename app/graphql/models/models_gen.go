@@ -41,45 +41,29 @@ type PrivateBlock struct {
 }
 
 type PrivateItem struct {
-	ID               uuid.UUID         `json:"id"`
-	ParentSubShelfID uuid.UUID         `json:"parentSubShelfId"`
-	RootShelfID      uuid.UUID         `json:"rootShelfId"`
-	Type             enums.ItemType    `json:"type"`
-	DeletedAt        *time.Time        `json:"deletedAt,omitempty"`
-	UpdatedAt        time.Time         `json:"updatedAt"`
-	CreatedAt        time.Time         `json:"createdAt"`
-	ParentSubShelf   *PrivateSubShelf  `json:"parentSubShelf"`
-	RootShelf        *PrivateRootShelf `json:"rootShelf"`
-	Routines         []*PrivateRoutine `json:"routines"`
-}
-
-type PrivateMaterial struct {
-	ID               uuid.UUID                 `json:"id"`
-	ParentSubShelfID uuid.UUID                 `json:"parentSubShelfId"`
-	Name             string                    `json:"name"`
-	Size             float64                   `json:"size"`
-	ContentKey       string                    `json:"contentKey"`
-	ContentType      enums.MaterialContentType `json:"contentType"`
-	ParseMediaType   string                    `json:"parseMediaType"`
-	DeletedAt        *time.Time                `json:"deletedAt,omitempty"`
-	UpdatedAt        time.Time                 `json:"updatedAt"`
-	CreatedAt        time.Time                 `json:"createdAt"`
-	ParentSubShelf   *PrivateSubShelf          `json:"parentSubShelf"`
+	ID               uuid.UUID      `json:"id"`
+	ParentSubShelfID uuid.UUID      `json:"parentSubShelfId"`
+	RootShelfID      uuid.UUID      `json:"rootShelfId"`
+	Type             enums.ItemType `json:"type"`
+	DeletedAt        *time.Time     `json:"deletedAt,omitempty"`
+	UpdatedAt        time.Time      `json:"updatedAt"`
+	CreatedAt        time.Time      `json:"createdAt"`
+	RoutineIds       []uuid.UUID    `json:"routineIds"`
 }
 
 type PrivateRootShelf struct {
-	ID             uuid.UUID                     `json:"id"`
-	Name           string                        `json:"name"`
-	Permission     enums.AccessControlPermission `json:"permission"`
-	SubShelfCount  int64                         `json:"subShelfCount"`
-	ItemCount      int64                         `json:"itemCount"`
-	LastAnalyzedAt time.Time                     `json:"lastAnalyzedAt"`
-	DeletedAt      *time.Time                    `json:"deletedAt,omitempty"`
-	UpdatedAt      time.Time                     `json:"updatedAt"`
-	CreatedAt      time.Time                     `json:"createdAt"`
-	Owner          *PublicUser                   `json:"owner"`
-	Sharers        []*PublicUser                 `json:"sharers"`
-	Items          []*PrivateItem                `json:"items"`
+	ID              uuid.UUID                     `json:"id"`
+	Name            string                        `json:"name"`
+	Permission      enums.AccessControlPermission `json:"permission"`
+	SubShelfCount   int64                         `json:"subShelfCount"`
+	ItemCount       int64                         `json:"itemCount"`
+	LastAnalyzedAt  time.Time                     `json:"lastAnalyzedAt"`
+	DeletedAt       *time.Time                    `json:"deletedAt,omitempty"`
+	UpdatedAt       time.Time                     `json:"updatedAt"`
+	CreatedAt       time.Time                     `json:"createdAt"`
+	OwnerPublicID   uuid.UUID                     `json:"ownerPublicId"`
+	SharerPublicIds []uuid.UUID                   `json:"sharerPublicIds"`
+	ItemIds         []uuid.UUID                   `json:"itemIds"`
 }
 
 type PrivateRoutine struct {
@@ -175,54 +159,48 @@ type PrivateStation struct {
 }
 
 type PrivateSubShelf struct {
-	ID             uuid.UUID          `json:"id"`
-	Name           string             `json:"name"`
-	RootShelfID    uuid.UUID          `json:"rootShelfId"`
-	PrevSubShelfID *uuid.UUID         `json:"prevSubShelfId,omitempty"`
-	Path           []uuid.UUID        `json:"path"`
-	DeletedAt      *time.Time         `json:"deletedAt,omitempty"`
-	UpdatedAt      time.Time          `json:"updatedAt"`
-	CreatedAt      time.Time          `json:"createdAt"`
-	RootShelf      *PrivateRootShelf  `json:"rootShelf"`
-	NextSubShelves []*PrivateSubShelf `json:"nextSubShelves"`
-	Materials      []*PrivateMaterial `json:"materials"`
-	Items          []*PrivateItem     `json:"items"`
+	ID              uuid.UUID   `json:"id"`
+	Name            string      `json:"name"`
+	RootShelfID     uuid.UUID   `json:"rootShelfId"`
+	PrevSubShelfID  *uuid.UUID  `json:"prevSubShelfId,omitempty"`
+	Path            []uuid.UUID `json:"path"`
+	DeletedAt       *time.Time  `json:"deletedAt,omitempty"`
+	UpdatedAt       time.Time   `json:"updatedAt"`
+	CreatedAt       time.Time   `json:"createdAt"`
+	NextSubShelfIds []uuid.UUID `json:"nextSubShelfIds"`
+	ItemIds         []uuid.UUID `json:"itemIds"`
 }
 
 type PublicBadge struct {
-	PublicID    string          `json:"publicId"`
+	PublicID    uuid.UUID       `json:"publicId"`
 	Title       string          `json:"title"`
 	Description string          `json:"description"`
 	Type        enums.BadgeType `json:"type"`
 	ImageURL    *string         `json:"imageURL,omitempty"`
 	CreatedAt   time.Time       `json:"createdAt"`
-	Users       []*PublicUser   `json:"users"`
 }
 
 type PublicTheme struct {
-	PublicID      string      `json:"publicId"`
-	Name          string      `json:"name"`
-	IsDark        bool        `json:"isDark"`
-	Version       string      `json:"version"`
-	IsDefault     bool        `json:"isDefault"`
-	DownloadURL   *string     `json:"downloadURL,omitempty"`
-	DownloadCount int64       `json:"downloadCount"`
-	CreatedAt     time.Time   `json:"createdAt"`
-	UpdatedAt     time.Time   `json:"updatedAt"`
-	Author        *PublicUser `json:"author"`
+	PublicID      uuid.UUID `json:"publicId"`
+	Name          string    `json:"name"`
+	IsDark        bool      `json:"isDark"`
+	AuthorID      uuid.UUID `json:"authorId"`
+	Version       string    `json:"version"`
+	IsDefault     bool      `json:"isDefault"`
+	DownloadURL   *string   `json:"downloadURL,omitempty"`
+	DownloadCount int64     `json:"downloadCount"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
 type PublicUser struct {
-	PublicID    string           `json:"publicId"`
+	PublicID    uuid.UUID        `json:"publicId"`
 	Name        string           `json:"name"`
 	DisplayName string           `json:"displayName"`
 	Role        enums.UserRole   `json:"role"`
 	Plan        enums.UserPlan   `json:"plan"`
 	Status      enums.UserStatus `json:"status"`
 	CreatedAt   time.Time        `json:"createdAt"`
-	UserInfo    *PublicUserInfo  `json:"userInfo"`
-	Badges      []*PublicBadge   `json:"badges"`
-	Themes      []*PublicTheme   `json:"themes"`
 }
 
 type PublicUserInfo struct {
@@ -251,7 +229,7 @@ func (this SearchBadgeConnection) GetTotalCount() int32               { return t
 func (this SearchBadgeConnection) GetSearchTime() float64             { return this.SearchTime }
 
 type SearchBadgeCursorFields struct {
-	PublicID string `json:"publicId"`
+	PublicID uuid.UUID `json:"publicId"`
 }
 
 type SearchBadgeEdge struct {
@@ -515,6 +493,40 @@ type SearchStationInput struct {
 	SortOrder *SearchSortOrder     `json:"sortOrder,omitempty"`
 }
 
+type SearchSubShelfConnection struct {
+	SearchEdges    []*SearchSubShelfEdge `json:"searchEdges"`
+	SearchPageInfo *SearchPageInfo       `json:"searchPageInfo"`
+	TotalCount     int32                 `json:"totalCount"`
+	SearchTime     float64               `json:"searchTime"`
+}
+
+func (SearchSubShelfConnection) IsSearchConnection()                     {}
+func (this SearchSubShelfConnection) GetSearchPageInfo() *SearchPageInfo { return this.SearchPageInfo }
+func (this SearchSubShelfConnection) GetTotalCount() int32               { return this.TotalCount }
+func (this SearchSubShelfConnection) GetSearchTime() float64             { return this.SearchTime }
+
+type SearchSubShelfCursorFields struct {
+	ID uuid.UUID `json:"id"`
+}
+
+type SearchSubShelfEdge struct {
+	EncodedSearchCursor string           `json:"encodedSearchCursor"`
+	Node                *PrivateSubShelf `json:"node"`
+}
+
+func (SearchSubShelfEdge) IsSearchEdge()                       {}
+func (this SearchSubShelfEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
+
+type SearchSubShelfInput struct {
+	RootShelfID    *uuid.UUID            `json:"rootShelfId,omitempty"`
+	PrevSubShelfID *uuid.UUID            `json:"prevSubShelfId,omitempty"`
+	Query          string                `json:"query"`
+	After          *string               `json:"after,omitempty"`
+	First          *int32                `json:"first,omitempty"`
+	SortBy         *SearchSubShelfSortBy `json:"sortBy,omitempty"`
+	SortOrder      *SearchSortOrder      `json:"sortOrder,omitempty"`
+}
+
 type SearchThemeConnection struct {
 	SearchEdges    []*SearchThemeEdge `json:"searchEdges"`
 	SearchPageInfo *SearchPageInfo    `json:"searchPageInfo"`
@@ -528,7 +540,7 @@ func (this SearchThemeConnection) GetTotalCount() int32               { return t
 func (this SearchThemeConnection) GetSearchTime() float64             { return this.SearchTime }
 
 type SearchThemeCursorFields struct {
-	PublicID string `json:"publicId"`
+	PublicID uuid.UUID `json:"publicId"`
 }
 
 type SearchThemeEdge struct {
@@ -566,7 +578,7 @@ func (this SearchUserConnection) GetTotalCount() int32               { return th
 func (this SearchUserConnection) GetSearchTime() float64             { return this.SearchTime }
 
 type SearchUserCursorFields struct {
-	PublicID string `json:"publicId"`
+	PublicID uuid.UUID `json:"publicId"`
 }
 
 type SearchUserEdge struct {
@@ -1141,6 +1153,67 @@ func (e *SearchStationSortBy) UnmarshalJSON(b []byte) error {
 }
 
 func (e SearchStationSortBy) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type SearchSubShelfSortBy string
+
+const (
+	SearchSubShelfSortByRelevance  SearchSubShelfSortBy = "RELEVANCE"
+	SearchSubShelfSortByName       SearchSubShelfSortBy = "NAME"
+	SearchSubShelfSortByPathLength SearchSubShelfSortBy = "PATH_LENGTH"
+	SearchSubShelfSortByLastUpdate SearchSubShelfSortBy = "LAST_UPDATE"
+	SearchSubShelfSortByCreatedAt  SearchSubShelfSortBy = "CREATED_AT"
+)
+
+var AllSearchSubShelfSortBy = []SearchSubShelfSortBy{
+	SearchSubShelfSortByRelevance,
+	SearchSubShelfSortByName,
+	SearchSubShelfSortByPathLength,
+	SearchSubShelfSortByLastUpdate,
+	SearchSubShelfSortByCreatedAt,
+}
+
+func (e SearchSubShelfSortBy) IsValid() bool {
+	switch e {
+	case SearchSubShelfSortByRelevance, SearchSubShelfSortByName, SearchSubShelfSortByPathLength, SearchSubShelfSortByLastUpdate, SearchSubShelfSortByCreatedAt:
+		return true
+	}
+	return false
+}
+
+func (e SearchSubShelfSortBy) String() string {
+	return string(e)
+}
+
+func (e *SearchSubShelfSortBy) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SearchSubShelfSortBy(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SearchSubShelfSortBy", str)
+	}
+	return nil
+}
+
+func (e SearchSubShelfSortBy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *SearchSubShelfSortBy) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e SearchSubShelfSortBy) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

@@ -3,6 +3,7 @@ package dataloaders
 import (
 	"context"
 
+	"github.com/google/uuid"
 	gophersdataloader "github.com/graph-gophers/dataloader/v7"
 	"gorm.io/gorm"
 
@@ -22,7 +23,7 @@ const (
 )
 
 type UserLoaderKey struct {
-	PublicId string         `json:"publicId"`
+	PublicId uuid.UUID      `json:"publicId"`
 	Source   LoadUserSource `json:"source"`
 }
 
@@ -33,7 +34,7 @@ type UserResultType = gophersdataloader.Result[*gqlmodels.PublicUser]
 type UserDataloaderInterface interface {
 	GetLoader() *UserLoaderType
 	batchFunction() UserBatchFunctionType
-	LoadByThemePublicId(originalContext context.Context, publicId string) (*gqlmodels.PublicUser, error)
+	LoadByThemePublicId(originalContext context.Context, publicId uuid.UUID) (*gqlmodels.PublicUser, error)
 }
 
 type UserDataloader struct {
@@ -64,7 +65,7 @@ func (d *UserDataloader) GetLoader() *UserLoaderType {
 
 func (d *UserDataloader) batchFunction() UserBatchFunctionType {
 	return func(ctx context.Context, keys []UserLoaderKey) []*UserResultType {
-		keysBySource := make(map[LoadUserSource][]string)
+		keysBySource := make(map[LoadUserSource][]uuid.UUID)
 		keyToIndexesMap := make(map[UserLoaderKey][]int)
 
 		for index, key := range keys {
@@ -113,7 +114,7 @@ func (d *UserDataloader) batchFunction() UserBatchFunctionType {
 
 /* ============================== Load Functions ============================== */
 
-func (d *UserDataloader) LoadByThemePublicId(originalContext context.Context, publicId string) (*gqlmodels.PublicUser, error) {
+func (d *UserDataloader) LoadByThemePublicId(originalContext context.Context, publicId uuid.UUID) (*gqlmodels.PublicUser, error) {
 	future := d.loader.Load(
 		originalContext,
 		UserLoaderKey{

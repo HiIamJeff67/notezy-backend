@@ -22,6 +22,7 @@ import (
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
@@ -48,11 +49,16 @@ type BlockServiceInterface interface {
 	RestoreMyBlocksByIds(ctx context.Context, reqDto *dtos.RestoreMyBlocksByIdsReqDto) (*dtos.RestoreMyBlocksByIdsResDto, *exceptions.Exception)
 	DeleteMyBlockById(ctx context.Context, reqDto *dtos.DeleteMyBlockByIdReqDto) (*dtos.DeleteMyBlockByIdResDto, *exceptions.Exception)
 	DeleteMyBlocksByIds(ctx context.Context, reqDto *dtos.DeleteMyBlocksByIdsReqDto) (*dtos.DeleteMyBlockPacksByIdsResDto, *exceptions.Exception)
+
 	SearchPrivateBlocks(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchBlockInput) (*gqlmodels.SearchBlockConnection, *exceptions.Exception)
 }
 
 type BlockService struct {
 	db                   *gorm.DB
+	blockScope           scopes.BlockScopeInterface
+	blockGroupScope      scopes.BlockGroupScopeInterface
+	blockPackScope       scopes.BlockPackScopeInterface
+	subShelfScope        scopes.SubShelfScopeInterface
 	blockPackRepository  repositories.BlockPackRepositoryInterface
 	blockGroupRepository repositories.BlockGroupRepositoryInterface
 	blockRepository      repositories.BlockRepositoryInterface
@@ -61,6 +67,10 @@ type BlockService struct {
 
 func NewBlockService(
 	db *gorm.DB,
+	blockScope scopes.BlockScopeInterface,
+	blockGroupScope scopes.BlockGroupScopeInterface,
+	blockPackScope scopes.BlockPackScopeInterface,
+	subShelfScope scopes.SubShelfScopeInterface,
 	blockPackRepository repositories.BlockPackRepositoryInterface,
 	blockGroupRepository repositories.BlockGroupRepositoryInterface,
 	blockRepository repositories.BlockRepositoryInterface,
@@ -68,6 +78,10 @@ func NewBlockService(
 ) BlockServiceInterface {
 	return &BlockService{
 		db:                   db,
+		blockScope:           blockScope,
+		blockGroupScope:      blockGroupScope,
+		blockPackScope:       blockPackScope,
+		subShelfScope:        subShelfScope,
 		blockPackRepository:  blockPackRepository,
 		blockGroupRepository: blockGroupRepository,
 		blockRepository:      blockRepository,
@@ -1620,18 +1634,20 @@ func (s *BlockService) SearchPrivateBlocks(
 
 	query := db.Model(&schemas.Block{}).
 		Select(`"BlockTable".*`).
-		Joins(`INNER JOIN "BlockGroupTable" bg ON bg.id = "BlockTable".block_group_id`).
-		Joins(`INNER JOIN "BlockPackTable" bp ON bp.id = bg.block_pack_id`).
-		Joins(`INNER JOIN "SubShelfTable" ss ON ss.id = bp.parent_sub_shelf_id`).
-		Joins(`INNER JOIN "UsersToShelvesTable" uts ON uts.root_shelf_id = ss.root_shelf_id`).
+		Joins(`INNER JOIN "BlockGroupTable" ON "BlockGroupTable".id = "BlockTable".block_group_id`).
+		Joins(`INNER JOIN "BlockPackTable" ON "BlockPackTable".id = "BlockGroupTable".block_pack_id`).
+		Joins(`INNER JOIN "SubShelfTable" ON "SubShelfTable".id = "BlockPackTable".parent_sub_shelf_id`).
+		Joins(`INNER JOIN "UsersToShelvesTable" uts ON uts.root_shelf_id = "SubShelfTable".root_shelf_id`).
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
-		Where(`"BlockTable".deleted_at IS NULL`).
-		Where(`bg.deleted_at IS NULL`).
-		Where(`bp.deleted_at IS NULL`).
-		Where(`ss.deleted_at IS NULL`).
-		Preload(string(schemas.BlockRelation_Children), func(db *gorm.DB) *gorm.DB {
-			return db.Select("id", "parent_block_id").Where("deleted_at IS NULL")
-		})
+		Scopes(s.blockScope.FilterOnlyDeleted(types.Ternary_Negative)).
+		Scopes(s.blockGroupScope.FilterOnlyDeleted(types.Ternary_Negative)).
+		Scopes(s.blockPackScope.FilterOnlyDeleted(types.Ternary_Negative)).
+		Scopes(s.subShelfScope.FilterOnlyDeleted(types.Ternary_Negative)).
+		Scopes(s.blockScope.IncludePreloads(
+			[]schemas.BlockRelation{
+				schemas.BlockRelation_Children,
+			},
+		))
 
 	if len(strings.ReplaceAll(gqlInput.Query, " ", "")) > 0 {
 		pattern := "%" + gqlInput.Query + "%"

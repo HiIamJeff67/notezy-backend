@@ -13,8 +13,10 @@ import (
 	models "github.com/HiIamJeff67/notezy-backend/app/models"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type ItemServiceInterface interface {
@@ -22,17 +24,20 @@ type ItemServiceInterface interface {
 }
 
 type ItemService struct {
-	db *gorm.DB
+	db        *gorm.DB
+	itemScope scopes.ItemScopeInterface
 }
 
 func NewItemService(
 	db *gorm.DB,
+	itemScope scopes.ItemScopeInterface,
 ) ItemServiceInterface {
 	if db == nil {
 		db = models.NotezyDB
 	}
 	return &ItemService{
-		db: db,
+		db:        db,
+		itemScope: itemScope,
 	}
 }
 
@@ -62,7 +67,7 @@ func (s *ItemService) SearchPrivateItems(
 		Joins(`LEFT JOIN "MaterialTable" m ON "ItemTable".type = 'Material'::"ItemType" AND m.id = "ItemTable".id`).
 		Joins(`LEFT JOIN "BlockPackTable" bp ON "ItemTable".type = 'BlockPack'::"ItemType" AND bp.id = "ItemTable".id`).
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
-		Where(`"ItemTable".deleted_at IS NULL`)
+		Scopes(s.itemScope.FilterOnlyDeleted(types.Ternary_Negative))
 
 	if gqlInput.ParentSubShelfID != nil {
 		query = query.Where(
@@ -127,7 +132,11 @@ func (s *ItemService) SearchPrivateItems(
 	query = query.Limit(limit + 1)
 
 	var items []PrivateItem
-	if err := query.Find(&items).Error; err != nil {
+	if err := query.Scopes(s.itemScope.IncludePreloads(
+		[]schemas.ItemRelation{
+			schemas.ItemRelation_RoutinesToItems,
+		},
+	)).Find(&items).Error; err != nil {
 		return nil, exceptions.Item.NotFound().WithOrigin(err)
 	}
 
@@ -150,18 +159,7 @@ func (s *ItemService) SearchPrivateItems(
 
 		searchEdges[index] = &gqlmodels.SearchItemEdge{
 			EncodedSearchCursor: *encodedSearchCursor,
-			Node: &gqlmodels.PrivateItem{
-				ID:               item.Id,
-				ParentSubShelfID: item.ParentSubShelfId,
-				RootShelfID:      item.RootShelfId,
-				Type:             item.Type,
-				DeletedAt:        item.DeletedAt,
-				UpdatedAt:        item.UpdatedAt,
-				CreatedAt:        item.CreatedAt,
-				ParentSubShelf:   &gqlmodels.PrivateSubShelf{},
-				RootShelf:        &gqlmodels.PrivateRootShelf{},
-				Routines:         make([]*gqlmodels.PrivateRoutine, 0),
-			},
+			Node:                item.Item.ToPrivateItem(),
 		}
 	}
 

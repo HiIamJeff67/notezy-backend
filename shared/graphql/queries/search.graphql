@@ -55,6 +55,25 @@ query SearchRootShelves($input: SearchRootShelfInput!) {
   }
 }
 
+query SearchSubShelves($input: SearchSubShelfInput!) {
+  searchSubShelves(input: $input) {
+    searchEdges {
+      node {
+        ...FragmentedPrivateSubShelf
+      }
+      encodedSearchCursor
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}
+
 query SearchItems($input: SearchItemInput!) {
   searchItems(input: $input) {
     searchEdges {

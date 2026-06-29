@@ -51,17 +51,26 @@ const (
 /* ============================== Relative Type Conversion ============================== */
 
 func (ss *SubShelf) ToPrivateSubShelf() *gqlmodels.PrivateSubShelf {
+	nextSubShelfIds := make([]uuid.UUID, 0, len(ss.NextSubShelves))
+	for _, nextSubShelf := range ss.NextSubShelves {
+		nextSubShelfIds = append(nextSubShelfIds, nextSubShelf.Id)
+	}
+
+	itemIds := make([]uuid.UUID, 0, len(ss.Items))
+	for _, item := range ss.Items {
+		itemIds = append(itemIds, item.Id)
+	}
+
 	return &gqlmodels.PrivateSubShelf{
-		ID:             ss.Id,
-		Name:           ss.Name,
-		RootShelfID:    ss.RootShelfId,
-		PrevSubShelfID: ss.PrevSubShelfId,
-		Path:           ss.Path,
-		DeletedAt:      ss.DeletedAt,
-		UpdatedAt:      ss.UpdatedAt,
-		CreatedAt:      ss.CreatedAt,
-		RootShelf:      nil,
-		NextSubShelves: make([]*gqlmodels.PrivateSubShelf, 0),
-		Materials:      make([]*gqlmodels.PrivateMaterial, 0),
+		ID:              ss.Id,
+		Name:            ss.Name,
+		RootShelfID:     ss.RootShelfId,
+		PrevSubShelfID:  ss.PrevSubShelfId,
+		Path:            ss.Path,
+		DeletedAt:       ss.DeletedAt,
+		UpdatedAt:       ss.UpdatedAt,
+		CreatedAt:       ss.CreatedAt,
+		NextSubShelfIds: nextSubShelfIds,
+		ItemIds:         itemIds,
 	}
 }

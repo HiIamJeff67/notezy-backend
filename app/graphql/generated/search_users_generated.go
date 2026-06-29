@@ -318,12 +318,6 @@ func (ec *executionContext) fieldContext_SearchUserEdge_node(_ context.Context, 
 				return ec.fieldContext_PublicUser_status(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_PublicUser_createdAt(ctx, field)
-			case "userInfo":
-				return ec.fieldContext_PublicUser_userInfo(ctx, field)
-			case "badges":
-				return ec.fieldContext_PublicUser_badges(ctx, field)
-			case "themes":
-				return ec.fieldContext_PublicUser_themes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PublicUser", field.Name)
 		},
@@ -351,7 +345,7 @@ func (ec *executionContext) unmarshalInputSearchUserCursorFields(ctx context.Con
 		switch k {
 		case "publicId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("publicId"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
 			if err != nil {
 				return it, err
 			}

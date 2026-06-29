@@ -8,7 +8,5 @@ type PrivateItem {
     createdAt: Time!
 
     # relations
-    parentSubShelf: PrivateSubShelf!
-    rootShelf: PrivateRootShelf!
-    routines: [PrivateRoutine!]!
+    routineIds: [UUID!]!
 }

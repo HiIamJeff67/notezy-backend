@@ -5,15 +5,14 @@ package generated
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
-	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	"github.com/google/uuid"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -57,9 +56,9 @@ func (ec *executionContext) _PublicUser_publicId(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(uuid.UUID)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PublicUser_publicId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -69,7 +68,7 @@ func (ec *executionContext) fieldContext_PublicUser_publicId(_ context.Context, 
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type UUID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -339,192 +338,6 @@ func (ec *executionContext) fieldContext_PublicUser_createdAt(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _PublicUser_userInfo(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicUser) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PublicUser_userInfo(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UserInfo, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*gqlmodels.PublicUserInfo)
-	fc.Result = res
-	return ec.marshalNPublicUserInfo2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUserInfo(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PublicUser_userInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PublicUser",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "avatarURL":
-				return ec.fieldContext_PublicUserInfo_avatarURL(ctx, field)
-			case "coverBackgroundURL":
-				return ec.fieldContext_PublicUserInfo_coverBackgroundURL(ctx, field)
-			case "header":
-				return ec.fieldContext_PublicUserInfo_header(ctx, field)
-			case "introduction":
-				return ec.fieldContext_PublicUserInfo_introduction(ctx, field)
-			case "gender":
-				return ec.fieldContext_PublicUserInfo_gender(ctx, field)
-			case "country":
-				return ec.fieldContext_PublicUserInfo_country(ctx, field)
-			case "birthDate":
-				return ec.fieldContext_PublicUserInfo_birthDate(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PublicUserInfo", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _PublicUser_badges(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicUser) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PublicUser_badges(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Badges, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*gqlmodels.PublicBadge)
-	fc.Result = res
-	return ec.marshalNPublicBadge2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicBadgeᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PublicUser_badges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PublicUser",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "publicId":
-				return ec.fieldContext_PublicBadge_publicId(ctx, field)
-			case "title":
-				return ec.fieldContext_PublicBadge_title(ctx, field)
-			case "description":
-				return ec.fieldContext_PublicBadge_description(ctx, field)
-			case "type":
-				return ec.fieldContext_PublicBadge_type(ctx, field)
-			case "imageURL":
-				return ec.fieldContext_PublicBadge_imageURL(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_PublicBadge_createdAt(ctx, field)
-			case "users":
-				return ec.fieldContext_PublicBadge_users(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PublicBadge", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _PublicUser_themes(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicUser) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PublicUser_themes(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Themes, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*gqlmodels.PublicTheme)
-	fc.Result = res
-	return ec.marshalNPublicTheme2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicThemeᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PublicUser_themes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PublicUser",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "publicId":
-				return ec.fieldContext_PublicTheme_publicId(ctx, field)
-			case "name":
-				return ec.fieldContext_PublicTheme_name(ctx, field)
-			case "isDark":
-				return ec.fieldContext_PublicTheme_isDark(ctx, field)
-			case "version":
-				return ec.fieldContext_PublicTheme_version(ctx, field)
-			case "isDefault":
-				return ec.fieldContext_PublicTheme_isDefault(ctx, field)
-			case "downloadURL":
-				return ec.fieldContext_PublicTheme_downloadURL(ctx, field)
-			case "downloadCount":
-				return ec.fieldContext_PublicTheme_downloadCount(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_PublicTheme_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_PublicTheme_updatedAt(ctx, field)
-			case "author":
-				return ec.fieldContext_PublicTheme_author(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PublicTheme", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 // endregion **************************** field.gotpl *****************************
 
 // region    **************************** input.gotpl *****************************
@@ -583,21 +396,6 @@ func (ec *executionContext) _PublicUser(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "userInfo":
-			out.Values[i] = ec._PublicUser_userInfo(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "badges":
-			out.Values[i] = ec._PublicUser_badges(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "themes":
-			out.Values[i] = ec._PublicUser_themes(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -624,50 +422,6 @@ func (ec *executionContext) _PublicUser(ctx context.Context, sel ast.SelectionSe
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
-
-func (ec *executionContext) marshalNPublicUser2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.PublicUser) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNPublicUser2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUser(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
 
 func (ec *executionContext) marshalNPublicUser2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUser(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PublicUser) graphql.Marshaler {
 	if v == nil {

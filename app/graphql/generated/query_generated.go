@@ -20,6 +20,7 @@ type QueryResolver interface {
 	SearchUsers(ctx context.Context, input gqlmodels.SearchUserInput) (*gqlmodels.SearchUserConnection, error)
 	SearchThemes(ctx context.Context, input gqlmodels.SearchThemeInput) (*gqlmodels.SearchThemeConnection, error)
 	SearchRootShelves(ctx context.Context, input gqlmodels.SearchRootShelfInput) (*gqlmodels.SearchRootShelfConnection, error)
+	SearchSubShelves(ctx context.Context, input gqlmodels.SearchSubShelfInput) (*gqlmodels.SearchSubShelfConnection, error)
 	SearchItems(ctx context.Context, input gqlmodels.SearchItemInput) (*gqlmodels.SearchItemConnection, error)
 	SearchBlocks(ctx context.Context, input gqlmodels.SearchBlockInput) (*gqlmodels.SearchBlockConnection, error)
 	SearchStations(ctx context.Context, input gqlmodels.SearchStationInput) (*gqlmodels.SearchStationConnection, error)
@@ -213,6 +214,29 @@ func (ec *executionContext) field_Query_searchStations_argsInput(
 	}
 
 	var zeroVal gqlmodels.SearchStationInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_searchSubShelves_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_searchSubShelves_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_searchSubShelves_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (gqlmodels.SearchSubShelfInput, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNSearchSubShelfInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchSubShelfInput(ctx, tmp)
+	}
+
+	var zeroVal gqlmodels.SearchSubShelfInput
 	return zeroVal, nil
 }
 
@@ -459,6 +483,71 @@ func (ec *executionContext) fieldContext_Query_searchRootShelves(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_searchRootShelves_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_searchSubShelves(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_searchSubShelves(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().SearchSubShelves(rctx, fc.Args["input"].(gqlmodels.SearchSubShelfInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*gqlmodels.SearchSubShelfConnection)
+	fc.Result = res
+	return ec.marshalNSearchSubShelfConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchSubShelfConnection(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_searchSubShelves(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "searchEdges":
+				return ec.fieldContext_SearchSubShelfConnection_searchEdges(ctx, field)
+			case "searchPageInfo":
+				return ec.fieldContext_SearchSubShelfConnection_searchPageInfo(ctx, field)
+			case "totalCount":
+				return ec.fieldContext_SearchSubShelfConnection_totalCount(ctx, field)
+			case "searchTime":
+				return ec.fieldContext_SearchSubShelfConnection_searchTime(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SearchSubShelfConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_searchSubShelves_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -1071,6 +1160,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_searchRootShelves(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "searchSubShelves":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_searchSubShelves(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

@@ -5,14 +5,13 @@ package generated
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
-	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
+	"github.com/google/uuid"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -56,9 +55,9 @@ func (ec *executionContext) _PublicTheme_publicId(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(uuid.UUID)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PublicTheme_publicId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -68,7 +67,7 @@ func (ec *executionContext) fieldContext_PublicTheme_publicId(_ context.Context,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type UUID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -157,6 +156,50 @@ func (ec *executionContext) fieldContext_PublicTheme_isDark(_ context.Context, f
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PublicTheme_authorId(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicTheme) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PublicTheme_authorId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AuthorID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uuid.UUID)
+	fc.Result = res
+	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PublicTheme_authorId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PublicTheme",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -423,72 +466,6 @@ func (ec *executionContext) fieldContext_PublicTheme_updatedAt(_ context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _PublicTheme_author(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PublicTheme) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PublicTheme_author(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Author, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*gqlmodels.PublicUser)
-	fc.Result = res
-	return ec.marshalNPublicUser2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PublicTheme_author(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PublicTheme",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "publicId":
-				return ec.fieldContext_PublicUser_publicId(ctx, field)
-			case "name":
-				return ec.fieldContext_PublicUser_name(ctx, field)
-			case "displayName":
-				return ec.fieldContext_PublicUser_displayName(ctx, field)
-			case "role":
-				return ec.fieldContext_PublicUser_role(ctx, field)
-			case "plan":
-				return ec.fieldContext_PublicUser_plan(ctx, field)
-			case "status":
-				return ec.fieldContext_PublicUser_status(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_PublicUser_createdAt(ctx, field)
-			case "userInfo":
-				return ec.fieldContext_PublicUser_userInfo(ctx, field)
-			case "badges":
-				return ec.fieldContext_PublicUser_badges(ctx, field)
-			case "themes":
-				return ec.fieldContext_PublicUser_themes(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PublicUser", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 // endregion **************************** field.gotpl *****************************
 
 // region    **************************** input.gotpl *****************************
@@ -527,6 +504,11 @@ func (ec *executionContext) _PublicTheme(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "authorId":
+			out.Values[i] = ec._PublicTheme_authorId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "version":
 			out.Values[i] = ec._PublicTheme_version(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -551,11 +533,6 @@ func (ec *executionContext) _PublicTheme(ctx context.Context, sel ast.SelectionS
 			}
 		case "updatedAt":
 			out.Values[i] = ec._PublicTheme_updatedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "author":
-			out.Values[i] = ec._PublicTheme_author(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -585,50 +562,6 @@ func (ec *executionContext) _PublicTheme(ctx context.Context, sel ast.SelectionS
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
-
-func (ec *executionContext) marshalNPublicTheme2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicThemeᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.PublicTheme) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNPublicTheme2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicTheme(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
 
 func (ec *executionContext) marshalNPublicTheme2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicTheme(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PublicTheme) graphql.Marshaler {
 	if v == nil {

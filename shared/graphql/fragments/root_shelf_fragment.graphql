@@ -8,17 +8,11 @@ fragment FragmentedBasicPrivateRootShelf on PrivateRootShelf {
   deletedAt
   updatedAt
   createdAt
+  ownerPublicId
+  sharerPublicIds
+  itemIds
 }
 
 fragment FragmentedPrivateRootShelf on PrivateRootShelf {
   ...FragmentedBasicPrivateRootShelf
-  owner {
-    ...FragmentedBasicPublicUser
-  }
-  sharers {
-    ...FragmentedBasicPublicUser
-  }
-  items {
-    ...FragmentedBasicPrivateItem
-  }
 }

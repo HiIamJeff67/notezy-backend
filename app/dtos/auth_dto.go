@@ -171,7 +171,7 @@ type DeleteMeReqDto struct {
 
 /* ============================== Response DTO ============================== */
 type RegisterResDto struct {
-	PublicId     string    `json:"publicId"`
+	PublicId     uuid.UUID `json:"publicId"`
 	Name         string    `json:"name"`
 	DisplayName  string    `json:"displayName"`
 	Email        string    `json:"email"`
@@ -182,7 +182,7 @@ type RegisterResDto struct {
 }
 
 type RegisterViaGoogleResDto struct {
-	PublicId     string    `json:"publicId"`
+	PublicId     uuid.UUID `json:"publicId"`
 	Name         string    `json:"name"`
 	DisplayName  string    `json:"displayName"`
 	Email        string    `json:"email"`
@@ -193,7 +193,7 @@ type RegisterViaGoogleResDto struct {
 }
 
 type LoginResDto struct {
-	PublicId     string    `json:"publicId"`
+	PublicId     uuid.UUID `json:"publicId"`
 	Name         string    `json:"name"`
 	DisplayName  string    `json:"displayName"`
 	Email        string    `json:"email"`
@@ -205,7 +205,7 @@ type LoginResDto struct {
 }
 
 type LoginViaGoogleResDto struct {
-	PublicId     string    `json:"publicId"`
+	PublicId     uuid.UUID `json:"publicId"`
 	Name         string    `json:"name"`
 	DisplayName  string    `json:"displayName"`
 	Email        string    `json:"email"`

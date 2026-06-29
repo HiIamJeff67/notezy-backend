@@ -7,20 +7,10 @@ fragment FragmentedBasicPrivateSubShelf on PrivateSubShelf {
   deletedAt
   updatedAt
   createdAt
+  nextSubShelfIds
+  itemIds
 }
 
 fragment FragmentedPrivateSubShelf on PrivateSubShelf {
   ...FragmentedBasicPrivateSubShelf
-  rootShelf {
-    ...FragmentedBasicPrivateRootShelf
-  }
-  nextSubShelves {
-    ...FragmentedBasicPrivateSubShelf
-  }
-  materials {
-    ...FragmentedBasicPrivateMaterial
-  }
-  items {
-    ...FragmentedBasicPrivateItem
-  }
 }

@@ -316,8 +316,6 @@ func (ec *executionContext) fieldContext_SearchBadgeEdge_node(_ context.Context,
 				return ec.fieldContext_PublicBadge_imageURL(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_PublicBadge_createdAt(ctx, field)
-			case "users":
-				return ec.fieldContext_PublicBadge_users(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PublicBadge", field.Name)
 		},
@@ -345,7 +343,7 @@ func (ec *executionContext) unmarshalInputSearchBadgeCursorFields(ctx context.Co
 		switch k {
 		case "publicId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("publicId"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
 			if err != nil {
 				return it, err
 			}

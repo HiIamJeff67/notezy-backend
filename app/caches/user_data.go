@@ -20,7 +20,7 @@ import (
 
 type UserDataCache struct {
 	Id                 uuid.UUID        `json:"id"`                 // !only here
-	PublicId           string           `json:"publicId"`           // user
+	PublicId           uuid.UUID        `json:"publicId"`           // user
 	Name               string           `json:"name"`               // user
 	DisplayName        string           `json:"displayName"`        // user
 	Email              string           `json:"email"`              // user
@@ -86,7 +86,7 @@ func formatUserDataKey(identifier string) string {
 }
 
 func isValidUserCacheData(userDataCache *UserDataCache) bool {
-	if strings.ReplaceAll(userDataCache.PublicId, " ", "") == "" ||
+	if userDataCache.PublicId == uuid.Nil ||
 		strings.ReplaceAll(userDataCache.Name, " ", "") == "" ||
 		strings.ReplaceAll(userDataCache.DisplayName, " ", "") == "" ||
 		strings.ReplaceAll(userDataCache.Email, " ", "") == "" ||

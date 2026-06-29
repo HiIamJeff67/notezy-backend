@@ -33,7 +33,7 @@ input SearchUserInput {
 # and included some attributes as weights of the search algorithm
 # for better search experience
 input SearchUserCursorFields {
-  publicId: String!
+  publicId: UUID!
   # environmentAttributes: SearchUserEnvironmentAttributes
   # add some weight to effect the searching result here
 }

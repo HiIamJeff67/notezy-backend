@@ -48,32 +48,71 @@ func (a *RoutineTaskPayloadAdapter) Parse(
 	switch purpose {
 	case enums.RoutineTaskPurpose_CreateRootShelf:
 		var parsedPayload dtos.CreateRootShelfRoutineTaskPayload
-		return a.unmarshalAndValidate(payload, &parsedPayload)
+		if err := json.Unmarshal(payload, &parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		if err := validation.Validator.Struct(&parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		return nil
 
 	case enums.RoutineTaskPurpose_UpdateRootShelf:
 		var parsedPayload dtos.UpdateRootShelfRoutineTaskPayload
-		return a.unmarshalAndValidate(payload, &parsedPayload)
+		if err := json.Unmarshal(payload, &parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		if err := validation.Validator.Struct(&parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		return nil
 
 	case enums.RoutineTaskPurpose_ResetRootShelf:
 		var parsedPayload dtos.ResetRootShelfRoutineTaskPayload
-		return a.unmarshalAndValidate(payload, &parsedPayload)
+		if err := json.Unmarshal(payload, &parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		if err := validation.Validator.Struct(&parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		return nil
 
 	case enums.RoutineTaskPurpose_CreateSubShelf:
 		var parsedPayload dtos.CreateSubShelfRoutineTaskPayload
-		return a.unmarshalAndValidate(payload, &parsedPayload)
+		if err := json.Unmarshal(payload, &parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		if err := validation.Validator.Struct(&parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		return nil
 
 	case enums.RoutineTaskPurpose_UpdateSubShelf:
 		var parsedPayload dtos.UpdateSubShelfRoutineTaskPayload
-		return a.unmarshalAndValidate(payload, &parsedPayload)
+		if err := json.Unmarshal(payload, &parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		if err := validation.Validator.Struct(&parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		return nil
 
 	case enums.RoutineTaskPurpose_ResetSubShelf:
 		var parsedPayload dtos.ResetSubShelfRoutineTaskPayload
-		return a.unmarshalAndValidate(payload, &parsedPayload)
+		if err := json.Unmarshal(payload, &parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		if err := validation.Validator.Struct(&parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		return nil
 
 	case enums.RoutineTaskPurpose_CreateBlockPack:
 		var parsedPayload dtos.CreateBlockPackRoutineTaskPayload
-		if exception := a.unmarshalAndValidate(payload, &parsedPayload); exception != nil {
-			return exception
+		if err := json.Unmarshal(payload, &parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		if err := validation.Validator.Struct(&parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
 		}
 
 		validateBlockDto := make([]dtos.ArborizedEditableBlock, len(parsedPayload.Template.BlockGroups))
@@ -108,12 +147,15 @@ func (a *RoutineTaskPayloadAdapter) Parse(
 
 	case enums.RoutineTaskPurpose_UpdateBlockPack:
 		var parsedPayload dtos.UpdateBlockPackRoutineTaskPayload
-		if exception := a.unmarshalAndValidate(payload, &parsedPayload); exception != nil {
-			return exception
+		if err := json.Unmarshal(payload, &parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		if err := validation.Validator.Struct(&parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
 		}
 
 		for index, updatedBlock := range parsedPayload.UpdatedBlocks {
-			if exception := a.validateSingleEditableBlock(updatedBlock.ArborizedEditableBlock); exception != nil {
+			if exception := a.validateArborizedEditableBlock(updatedBlock.ArborizedEditableBlock); exception != nil {
 				return exceptions.RoutineTask.InvalidDto().
 					WithOrigin(fmt.Errorf(
 						"invalid updatedBlocks[%d].arborizedEditableBlock: %w",
@@ -126,12 +168,21 @@ func (a *RoutineTaskPayloadAdapter) Parse(
 
 	case enums.RoutineTaskPurpose_ResetBlockPack:
 		var parsedPayload dtos.ResetBlockPackRoutineTaskPayload
-		return a.unmarshalAndValidate(payload, &parsedPayload)
+		if err := json.Unmarshal(payload, &parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		if err := validation.Validator.Struct(&parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		return nil
 
 	case enums.RoutineTaskPurpose_AppendBlock:
 		var parsedPayload dtos.AppendBlockRoutineTaskPayload
-		if exception := a.unmarshalAndValidate(payload, &parsedPayload); exception != nil {
-			return exception
+		if err := json.Unmarshal(payload, &parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		if err := validation.Validator.Struct(&parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
 		}
 		if exception := a.validateArborizedEditableBlock(&parsedPayload.ArborizedEditableBlock); exception != nil {
 			return exception
@@ -140,45 +191,51 @@ func (a *RoutineTaskPayloadAdapter) Parse(
 
 	case enums.RoutineTaskPurpose_UpdateBlock:
 		var parsedPayload dtos.UpdateBlockRoutineTaskPayload
-		if exception := a.unmarshalAndValidate(payload, &parsedPayload); exception != nil {
-			return exception
+		if err := json.Unmarshal(payload, &parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
 		}
-		if exception := a.validateSingleEditableBlock(parsedPayload.ArborizedEditableBlock); exception != nil {
+		if err := validation.Validator.Struct(&parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		if exception := a.validateArborizedEditableBlock(parsedPayload.ArborizedEditableBlock); exception != nil {
 			return exception
 		}
 		return nil
 
 	case enums.RoutineTaskPurpose_ResetBlock:
 		var parsedPayload dtos.ResetBlockRoutineTaskPayload
-		return a.unmarshalAndValidate(payload, &parsedPayload)
+		if err := json.Unmarshal(payload, &parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		if err := validation.Validator.Struct(&parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		return nil
 
 	case enums.RoutineTaskPurpose_CreateRoutine:
 		var parsedPayload dtos.CreateRoutineRoutineTaskPayload
-		return a.unmarshalAndValidate(payload, &parsedPayload)
+		if err := json.Unmarshal(payload, &parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		if err := validation.Validator.Struct(&parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		return nil
 
 	case enums.RoutineTaskPurpose_UpdateRoutine:
 		var parsedPayload dtos.UpdateRoutineRoutineTaskPayload
-		return a.unmarshalAndValidate(payload, &parsedPayload)
+		if err := json.Unmarshal(payload, &parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		if err := validation.Validator.Struct(&parsedPayload); err != nil {
+			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+		}
+		return nil
 
 	default:
 		return exceptions.RoutineTask.InvalidDto().
 			WithOrigin(fmt.Errorf("unsupported routine task purpose: %s", purpose))
 	}
-}
-
-/* ============================== Routine Task Payload Shared Validation ============================== */
-
-func (a *RoutineTaskPayloadAdapter) unmarshalAndValidate(
-	payload datatypes.JSON,
-	target any,
-) *exceptions.Exception {
-	if err := json.Unmarshal(payload, target); err != nil {
-		return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
-	}
-	if err := validation.Validator.Struct(target); err != nil {
-		return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
-	}
-	return nil
 }
 
 func (a *RoutineTaskPayloadAdapter) validateArborizedEditableBlock(
@@ -196,18 +253,11 @@ func (a *RoutineTaskPayloadAdapter) validateArborizedEditableBlock(
 		return exceptions.RoutineTask.InvalidDto().
 			WithOrigin(fmt.Errorf("arborizedEditableBlock must contain at least one block"))
 	}
-	return nil
-}
 
-func (a *RoutineTaskPayloadAdapter) validateSingleEditableBlock(
-	arborizedEditableBlock *dtos.ArborizedEditableBlock,
-) *exceptions.Exception {
-	if exception := a.validateArborizedEditableBlock(arborizedEditableBlock); exception != nil {
-		return exception
-	}
 	if len(arborizedEditableBlock.Children) > 0 {
 		return exceptions.RoutineTask.InvalidDto().
 			WithOrigin(fmt.Errorf("arborizedEditableBlock must not contain children for update operations"))
 	}
+
 	return nil
 }

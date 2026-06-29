@@ -13,7 +13,7 @@ import (
 
 type Badge struct {
 	Id          uuid.UUID       `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid()"`
-	PublicId    string          `json:"publicId" gorm:"column:public_id; unique; not null; default:'';"`
+	PublicId    uuid.UUID       `json:"publicId" gorm:"column:public_id; type:uuid; unique; not null; default:gen_random_uuid();"`
 	Title       string          `json:"title" gorm:"column:title; not null; size:64;"`
 	Description string          `json:"description" gorm:"column:description; not null; size:256;"`
 	Type        enums.BadgeType `json:"type" gorm:"column:type; type:\"BadgeType\"; not null; default:'Bronze';"`
@@ -46,15 +46,14 @@ func (b *Badge) ToPublicBadge() *gqlmodels.PublicBadge {
 		Type:        b.Type,
 		ImageURL:    b.ImageURL,
 		CreatedAt:   b.CreatedAt,
-		Users:       []*gqlmodels.PublicUser{},
 	}
 }
 
 /* ============================== Trigger Hook ============================== */
 
 func (b *Badge) BeforeCreate(tx *gorm.DB) error {
-	if b.PublicId == "" {
-		b.PublicId = uuid.NewString()
+	if b.PublicId == uuid.Nil {
+		b.PublicId = uuid.New()
 	}
 	return nil
 }

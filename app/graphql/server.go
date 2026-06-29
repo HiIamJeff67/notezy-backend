@@ -16,6 +16,7 @@ import (
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	services "github.com/HiIamJeff67/notezy-backend/app/services"
+	storages "github.com/HiIamJeff67/notezy-backend/app/storages"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
@@ -23,15 +24,24 @@ func GraphQLHandler() gin.HandlerFunc {
 	dataloaders := dataloaders.NewDataloaders(models.NotezyDB)
 	userRepository := repositories.NewUserRepository()
 	routineScope := scopes.NewRoutineScope()
-	rootShelfRepository := repositories.NewRootShelfRepository(scopes.NewRootShelfScope())
-	stationRepository := repositories.NewStationRepository(scopes.NewStationScope())
+	rootShelfScope := scopes.NewRootShelfScope()
+	stationScope := scopes.NewStationScope()
+	itemScope := scopes.NewItemScope()
+	blockScope := scopes.NewBlockScope()
+	blockPackScope := scopes.NewBlockPackScope()
+	blockGroupScope := scopes.NewBlockGroupScope()
+	subShelfScope := scopes.NewSubShelfScope()
+	rootShelfRepository := repositories.NewRootShelfRepository(rootShelfScope)
+	subShelfRepository := repositories.NewSubShelfRepository(subShelfScope)
+	stationRepository := repositories.NewStationRepository(stationScope)
 	routineRepository := repositories.NewRoutineRepository(routineScope)
 	routineTagRepository := repositories.NewRoutineTagRepository(scopes.NewRoutineTagScope())
 	routineTaskRepository := repositories.NewRoutineTaskRepository(scopes.NewRoutineTaskScope())
-	itemRepository := repositories.NewItemRepository(scopes.NewItemScope())
-	blockPackRepository := repositories.NewBlockPackRepository(scopes.NewBlockPackScope())
-	blockGroupRepository := repositories.NewBlockGroupRepository(scopes.NewBlockGroupScope())
-	blockRepository := repositories.NewBlockRepository(scopes.NewBlockScope())
+	itemRepository := repositories.NewItemRepository(itemScope)
+	materialRepository := repositories.NewMaterialRepository(scopes.NewMaterialScope())
+	blockPackRepository := repositories.NewBlockPackRepository(blockPackScope)
+	blockGroupRepository := repositories.NewBlockGroupRepository(blockGroupScope)
+	blockRepository := repositories.NewBlockRepository(blockScope)
 	editableBlockAdapter := adapters.NewEditableBlockAdapter()
 	routineTaskPayloadAdapter := adapters.NewRoutineTaskPayloadAdapter(editableBlockAdapter)
 	userServices := services.NewUserService(
@@ -43,9 +53,14 @@ func GraphQLHandler() gin.HandlerFunc {
 	)
 	itemService := services.NewItemService(
 		models.NotezyDB,
+		itemScope,
 	)
 	blockService := services.NewBlockService(
 		models.NotezyDB,
+		blockScope,
+		blockGroupScope,
+		blockPackScope,
+		subShelfScope,
 		blockPackRepository,
 		blockGroupRepository,
 		blockRepository,
@@ -53,10 +68,21 @@ func GraphQLHandler() gin.HandlerFunc {
 	)
 	rootShelfService := services.NewRootShelfService(
 		models.NotezyDB,
+		rootShelfScope,
 		rootShelfRepository,
+	)
+	subShelfService := services.NewSubShelfService(
+		models.NotezyDB,
+		storages.InMemoryStorage,
+		subShelfScope,
+		subShelfRepository,
+		rootShelfRepository,
+		materialRepository,
+		blockPackRepository,
 	)
 	stationService := services.NewStationService(
 		models.NotezyDB,
+		stationScope,
 		stationRepository,
 	)
 	routineService := services.NewRoutineService(
@@ -85,6 +111,7 @@ func GraphQLHandler() gin.HandlerFunc {
 		itemService,
 		blockService,
 		rootShelfService,
+		subShelfService,
 		stationService,
 		routineService,
 		routineTagService,

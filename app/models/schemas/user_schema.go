@@ -13,12 +13,12 @@ import (
 
 type User struct {
 	Id              uuid.UUID        `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid();"`
-	PublicId        string           `json:"publicId" gorm:"column:public_id; unique; not null; default:'';"` // generated at BeforeCreate() trigger below
-	Name            string           `json:"name" gorm:"column:name; unique; not null; size:32;"`             // validate:"required,min=6,max=16,alphaandnum"
-	DisplayName     string           `json:"displayName" gorm:"column:display_name; not null; size:32;"`      // validate:"required,min=6,max=32,alphaandnum"
-	Email           string           `json:"email" gorm:"column:email; unique; not null;"`                    // validate:"required,email"
-	Password        string           `json:"password" gorm:"column:password; not null; size:1024;"`           // validate:"required,min=8,max=1024"      // since we store the hashed password which is quite long
-	RefreshToken    string           `json:"refreshToken" gorm:"column:refresh_token; not null;"`             // validate:"omitnil"
+	PublicId        uuid.UUID        `json:"publicId" gorm:"column:public_id; type:uuid; unique; not null; default:gen_random_uuid();"` // generated at BeforeCreate() trigger below
+	Name            string           `json:"name" gorm:"column:name; unique; not null; size:32;"`                                       // validate:"required,min=6,max=16,alphaandnum"
+	DisplayName     string           `json:"displayName" gorm:"column:display_name; not null; size:32;"`                                // validate:"required,min=6,max=32,alphaandnum"
+	Email           string           `json:"email" gorm:"column:email; unique; not null;"`                                              // validate:"required,email"
+	Password        string           `json:"password" gorm:"column:password; not null; size:1024;"`                                     // validate:"required,min=8,max=1024"      // since we store the hashed password which is quite long
+	RefreshToken    string           `json:"refreshToken" gorm:"column:refresh_token; not null;"`                                       // validate:"omitnil"
 	LoginCount      int32            `json:"loginCount" gorm:"column:login_count; type:integer; not null; default:0;"`
 	BlockLoginUntil time.Time        `json:"blockLoginUntil" gorm:"column:block_login_until; type:timestamptz; not null;"`
 	UserAgent       string           `json:"userAgent" gorm:"column:user_agent; not null;"`                          // validate:"required,isuseragent"
@@ -80,9 +80,6 @@ func (u *User) ToPublicUser() *gqlmodels.PublicUser {
 		Plan:        u.Plan,
 		Status:      u.Status,
 		CreatedAt:   u.CreatedAt,
-		UserInfo:    &gqlmodels.PublicUserInfo{},
-		Badges:      make([]*gqlmodels.PublicBadge, 0),
-		Themes:      make([]*gqlmodels.PublicTheme, 0),
 	}
 }
 
@@ -93,8 +90,8 @@ func (u *User) BeforeCreate(tx *gorm.DB) error {
 		// just to make the new user can login
 		u.BlockLoginUntil = time.Now().Add(-10 * time.Minute)
 	}
-	if u.PublicId == "" {
-		u.PublicId = uuid.NewString()
+	if u.PublicId == uuid.Nil {
+		u.PublicId = uuid.New()
 	}
 	return nil
 }

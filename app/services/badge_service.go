@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
@@ -13,9 +14,9 @@ import (
 
 type BadgeServiceInterface interface {
 	// services for public badges
-	GetPublicBadgeByPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicBadge, *exceptions.Exception)
-	GetPublicBadgeByUserPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicBadge, *exceptions.Exception)
-	GetPublicBadgesByUserPublicIds(ctx context.Context, publicIds []string) ([]*gqlmodels.PublicBadge, *exceptions.Exception)
+	GetPublicBadgeByPublicId(ctx context.Context, publicId uuid.UUID) (*gqlmodels.PublicBadge, *exceptions.Exception)
+	GetPublicBadgeByUserPublicId(ctx context.Context, publicId uuid.UUID) (*gqlmodels.PublicBadge, *exceptions.Exception)
+	GetPublicBadgesByUserPublicIds(ctx context.Context, publicIds []uuid.UUID) ([]*gqlmodels.PublicBadge, *exceptions.Exception)
 }
 
 type BadgeService struct {
@@ -34,7 +35,7 @@ func NewBadgeService(db *gorm.DB) BadgeServiceInterface {
 /* ============================== Services for GraphQL Badge ============================== */
 
 func (s *BadgeService) GetPublicBadgeByPublicId(
-	ctx context.Context, publicId string,
+	ctx context.Context, publicId uuid.UUID,
 ) (*gqlmodels.PublicBadge, *exceptions.Exception) {
 	db := s.db.WithContext(ctx)
 
@@ -50,7 +51,7 @@ func (s *BadgeService) GetPublicBadgeByPublicId(
 }
 
 func (s *BadgeService) GetPublicBadgeByUserPublicId(
-	ctx context.Context, publicId string,
+	ctx context.Context, publicId uuid.UUID,
 ) (*gqlmodels.PublicBadge, *exceptions.Exception) {
 	db := s.db.WithContext(ctx)
 
@@ -69,7 +70,7 @@ func (s *BadgeService) GetPublicBadgeByUserPublicId(
 }
 
 func (s *BadgeService) GetPublicBadgesByUserPublicIds(
-	ctx context.Context, publicIds []string,
+	ctx context.Context, publicIds []uuid.UUID,
 ) ([]*gqlmodels.PublicBadge, *exceptions.Exception) {
 	if len(publicIds) == 0 {
 		return []*gqlmodels.PublicBadge{}, nil
@@ -77,8 +78,8 @@ func (s *BadgeService) GetPublicBadgesByUserPublicIds(
 
 	db := s.db.WithContext(ctx)
 
-	uniquePublicIds := make([]string, 0)
-	seen := make(map[string]bool)
+	uniquePublicIds := make([]uuid.UUID, 0)
+	seen := make(map[uuid.UUID]bool)
 	for _, publicId := range publicIds {
 		if !seen[publicId] {
 			uniquePublicIds = append(uniquePublicIds, publicId)
@@ -91,7 +92,7 @@ func (s *BadgeService) GetPublicBadgesByUserPublicIds(
 
 	var badgesWithPublicUserIds []*struct {
 		schemas.Badge
-		UserPublicId string `gorm:"column:user_public_id"`
+		UserPublicId uuid.UUID `gorm:"column:user_public_id"`
 	}
 	result := db.Table(schemas.Badge{}.TableName()+" b").
 		Select("b.*, u.public_id as user_public_id").
@@ -103,7 +104,7 @@ func (s *BadgeService) GetPublicBadgesByUserPublicIds(
 		return nil, exceptions.Badge.NotFound().WithOrigin(err)
 	}
 
-	publicIdToIndexesMap := make(map[string][]int)
+	publicIdToIndexesMap := make(map[uuid.UUID][]int)
 	for index, publicId := range publicIds {
 		publicIdToIndexesMap[publicId] = append(publicIdToIndexesMap[publicId], index)
 	}

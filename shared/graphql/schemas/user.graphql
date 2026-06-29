@@ -3,7 +3,7 @@
 
 type PublicUser {
   # id: UUID!
-  publicId: String! # the encoded of this field is the identifier of the PublicUser
+  publicId: UUID! # the encoded of this field is the identifier of the PublicUser
   name: String!
   displayName: String!
   # email: String!
@@ -18,9 +18,4 @@ type PublicUser {
   status: UserStatus!
   createdAt: Time!
   # updatedAt: Time!
-
-  # relations
-  userInfo: PublicUserInfo!
-  badges: [PublicBadge!]!
-  themes: [PublicTheme!]!
 }

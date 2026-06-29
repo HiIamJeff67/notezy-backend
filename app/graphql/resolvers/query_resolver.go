@@ -53,6 +53,26 @@ func (r *queryResolver) SearchRootShelves(ctx context.Context, input gqlmodels.S
 	return result, nil
 }
 
+// SearchSubShelves is the resolver for the searchSubShelves field.
+func (r *queryResolver) SearchSubShelves(ctx context.Context, input gqlmodels.SearchSubShelfInput) (*gqlmodels.SearchSubShelfConnection, error) {
+	ginContext, exception := contexts.GetAndConvertContextToGinContext(ctx)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ginContext, types.ContextFieldName_User_Id)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	result, exception := r.subShelfService.SearchPrivateSubShelves(ctx, *userId, input)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	return result, nil
+}
+
 // SearchItems is the resolver for the searchItems field
 func (r *queryResolver) SearchItems(ctx context.Context, input gqlmodels.SearchItemInput) (*gqlmodels.SearchItemConnection, error) {
 	ginContext, exception := contexts.GetAndConvertContextToGinContext(ctx)

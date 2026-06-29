@@ -12,7 +12,7 @@ import (
 
 type Theme struct {
 	Id            uuid.UUID `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid();"`
-	PublicId      string    `json:"publicId" gorm:"column:public_id; unique; not null; default:'';"`
+	PublicId      uuid.UUID `json:"publicId" gorm:"column:public_id; type:uuid; unique; not null; default:gen_random_uuid();"`
 	AuthorId      uuid.UUID `json:"authorId" gorm:"column:author_id; type:uuid; not null; uniqueIndex;"`
 	Name          string    `json:"name" gorm:"column:name; size:128; unique; not null;"`
 	IsDark        bool      `json:"isDark" gorm:"column:is_dark; type:boolean; not null; default:true;"`
@@ -52,15 +52,15 @@ func (t *Theme) ToPublicTheme() *gqlmodels.PublicTheme {
 		DownloadCount: t.DownloadCount,
 		CreatedAt:     t.CreatedAt,
 		UpdatedAt:     t.UpdatedAt,
-		Author:        &gqlmodels.PublicUser{},
+		AuthorID:      t.AuthorId,
 	}
 }
 
 /* ============================== Trigger Hook ============================== */
 
 func (t *Theme) BeforeCreate(tx *gorm.DB) error {
-	if t.PublicId == "" {
-		t.PublicId = uuid.NewString()
+	if t.PublicId == uuid.Nil {
+		t.PublicId = uuid.New()
 	}
 	return nil
 }

@@ -6,17 +6,9 @@ fragment FragmentedBasicPrivateItem on PrivateItem {
     deletedAt
     updatedAt
     createdAt
+    routineIds
 }
 
 fragment FragmentedPrivateItem on PrivateItem {
     ...FragmentedBasicPrivateItem
-    parentSubShelf {
-        ...FragmentedBasicPrivateSubShelf
-    }
-    rootShelf {
-        ...FragmentedBasicPrivateRootShelf
-    }
-    routines {
-        ...FragmentedBasicPrivateRoutine
-    }
 }

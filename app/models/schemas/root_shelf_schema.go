@@ -23,6 +23,7 @@ type RootShelf struct {
 
 	// relations
 	SubShelves     []SubShelf       `json:"subShelves" gorm:"foreignKey:RootShelfId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	Items          []Item           `json:"items" gorm:"foreignKey:RootShelfId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UsersToShelves []UsersToShelves `json:"usersToShelves" gorm:"foreignKey:RootShelfId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
 
@@ -35,24 +36,42 @@ func (RootShelf) TableName() string {
 type RootShelfRelation types.RelationName
 
 const (
-	RootShelfRelation_SubShelves     RootShelfRelation = "SubShelves"
-	RootShelfRelation_UsersToShelves RootShelfRelation = "UsersToShelves"
+	RootShelfRelation_SubShelves          RootShelfRelation = "SubShelves"
+	RootShelfRelation_Items               RootShelfRelation = "Items"
+	RootShelfRelation_UsersToShelves      RootShelfRelation = "UsersToShelves"
+	RootShelfRelation_UsersToShelves_User RootShelfRelation = "UsersToShelves.User"
 )
 
 /* ============================== Relative Type Conversion ============================== */
 
 func (rs *RootShelf) ToPrivateRootShelf(permission enums.AccessControlPermission) *gqlmodels.PrivateRootShelf {
+	ownerPublicId := uuid.Nil
+	sharerPublicIds := make([]uuid.UUID, 0, len(rs.UsersToShelves))
+	for _, usersToShelf := range rs.UsersToShelves {
+		if usersToShelf.UserId == rs.OwnerId {
+			ownerPublicId = usersToShelf.User.PublicId
+			continue
+		}
+		sharerPublicIds = append(sharerPublicIds, usersToShelf.User.PublicId)
+	}
+
+	itemIds := make([]uuid.UUID, len(rs.Items))
+	for index, item := range rs.Items {
+		itemIds[index] = item.Id
+	}
+
 	return &gqlmodels.PrivateRootShelf{
-		ID:             rs.Id,
-		Name:           rs.Name,
-		Permission:     permission,
-		SubShelfCount:  rs.SubShelfCount,
-		ItemCount:      rs.ItemCount,
-		LastAnalyzedAt: rs.LastAnalyzedAt,
-		DeletedAt:      rs.DeletedAt,
-		UpdatedAt:      rs.UpdatedAt,
-		CreatedAt:      rs.CreatedAt,
-		Owner:          &gqlmodels.PublicUser{},
-		Sharers:        make([]*gqlmodels.PublicUser, 0),
+		ID:              rs.Id,
+		Name:            rs.Name,
+		Permission:      permission,
+		SubShelfCount:   rs.SubShelfCount,
+		ItemCount:       rs.ItemCount,
+		LastAnalyzedAt:  rs.LastAnalyzedAt,
+		DeletedAt:       rs.DeletedAt,
+		UpdatedAt:       rs.UpdatedAt,
+		CreatedAt:       rs.CreatedAt,
+		OwnerPublicID:   ownerPublicId,
+		SharerPublicIds: sharerPublicIds,
+		ItemIds:         itemIds,
 	}
 }

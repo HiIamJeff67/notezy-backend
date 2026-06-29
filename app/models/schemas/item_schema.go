@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
@@ -37,3 +38,23 @@ const (
 	ItemRelation_RootShelf       ItemRelation = "RootShelf"
 	ItemRelation_RoutinesToItems ItemRelation = "RoutinesToItems"
 )
+
+/* ============================== Relative Type Conversion ============================== */
+
+func (i *Item) ToPrivateItem() *gqlmodels.PrivateItem {
+	routineIds := make([]uuid.UUID, 0, len(i.RoutinesToItems))
+	for _, routineToItem := range i.RoutinesToItems {
+		routineIds = append(routineIds, routineToItem.RoutineId)
+	}
+
+	return &gqlmodels.PrivateItem{
+		ID:               i.Id,
+		ParentSubShelfID: i.ParentSubShelfId,
+		RootShelfID:      i.RootShelfId,
+		Type:             i.Type,
+		DeletedAt:        i.DeletedAt,
+		UpdatedAt:        i.UpdatedAt,
+		CreatedAt:        i.CreatedAt,
+		RoutineIds:       routineIds,
+	}
+}

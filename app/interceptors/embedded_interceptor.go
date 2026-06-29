@@ -45,7 +45,7 @@ func EmbeddedInterceptor(responseWriterKey string) gin.HandlerFunc {
 			return
 		}
 
-		publicId, exception := contexts.GetAndConvertContextFieldToString(ctx, types.ContextFieldName_User_PublicId)
+		publicId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_PublicId)
 		if exception != nil || publicId == nil {
 			return
 		}

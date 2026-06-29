@@ -50,6 +50,21 @@ const (
 /* ============================== Relative Type Conversion ============================== */
 
 func (r *Routine) ToPrivateRoutine() *gqlmodels.PrivateRoutine {
+	tagIds := make([]uuid.UUID, 0, len(r.RoutinesToTags))
+	for _, routineToTag := range r.RoutinesToTags {
+		tagIds = append(tagIds, routineToTag.TagId)
+	}
+
+	taskIds := make([]uuid.UUID, 0, len(r.RoutinesToTasks))
+	for _, routineToTask := range r.RoutinesToTasks {
+		taskIds = append(taskIds, routineToTask.TaskId)
+	}
+
+	itemIds := make([]uuid.UUID, 0, len(r.RoutinesToItems))
+	for _, routineToItem := range r.RoutinesToItems {
+		itemIds = append(itemIds, routineToItem.ItemId)
+	}
+
 	return &gqlmodels.PrivateRoutine{
 		ID:               r.Id,
 		StationID:        r.StationId,
@@ -64,13 +79,28 @@ func (r *Routine) ToPrivateRoutine() *gqlmodels.PrivateRoutine {
 		DeletedAt:        r.DeletedAt,
 		UpdatedAt:        r.UpdatedAt,
 		CreatedAt:        r.CreatedAt,
-		TagIds:           make([]uuid.UUID, 0),
-		TaskIds:          make([]uuid.UUID, 0),
-		ItemIds:          make([]uuid.UUID, 0),
+		TagIds:           tagIds,
+		TaskIds:          taskIds,
+		ItemIds:          itemIds,
 	}
 }
 
 func (r *Routine) ToPrivateSearchableRoutine() *gqlmodels.PrivateSearchableRoutine {
+	tagIds := make([]uuid.UUID, 0, len(r.RoutinesToTags))
+	for _, routineToTag := range r.RoutinesToTags {
+		tagIds = append(tagIds, routineToTag.TagId)
+	}
+
+	taskIds := make([]uuid.UUID, 0, len(r.RoutinesToTasks))
+	for _, routineToTask := range r.RoutinesToTasks {
+		taskIds = append(taskIds, routineToTask.TaskId)
+	}
+
+	itemIds := make([]uuid.UUID, 0, len(r.RoutinesToItems))
+	for _, routineToItem := range r.RoutinesToItems {
+		itemIds = append(itemIds, routineToItem.ItemId)
+	}
+
 	return &gqlmodels.PrivateSearchableRoutine{
 		ID:               r.Id,
 		StationID:        r.StationId,
@@ -84,8 +114,8 @@ func (r *Routine) ToPrivateSearchableRoutine() *gqlmodels.PrivateSearchableRouti
 		DeletedAt:        r.DeletedAt,
 		UpdatedAt:        r.UpdatedAt,
 		CreatedAt:        r.CreatedAt,
-		TagIds:           make([]uuid.UUID, 0),
-		TaskIds:          make([]uuid.UUID, 0),
-		ItemIds:          make([]uuid.UUID, 0),
+		TagIds:           tagIds,
+		TaskIds:          taskIds,
+		ItemIds:          itemIds,
 	}
 }

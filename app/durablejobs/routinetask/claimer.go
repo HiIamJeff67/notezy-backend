@@ -30,7 +30,7 @@ func (c *Claimer) Claim(
 		Raw(`WITH claimable_tasks AS (
 				SELECT id
 				FROM "RoutineTaskTable"
-				WHERE status = ?
+				WHERE status IN ?
 				AND scheduled_at <= NOW()
 				AND attempts < max_attempts
 				ORDER BY priority DESC, scheduled_at ASC, id ASC
@@ -48,7 +48,10 @@ func (c *Claimer) Claim(
 			WHERE routine_task.id = claimable_tasks.id
 			RETURNING routine_task.*;
 			`,
-			enums.RoutineTaskStatus_Waiting,
+			[]enums.RoutineTaskStatus{
+				enums.RoutineTaskStatus_Idle,
+				enums.RoutineTaskStatus_Waiting,
+			},
 			constants.RoutineTaskClaimerMaxClaimableTasks,
 			enums.RoutineTaskStatus_Running,
 		).

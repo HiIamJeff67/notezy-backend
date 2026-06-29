@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 
 	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
@@ -22,8 +23,8 @@ type UserInfoServiceInterface interface {
 	UpdateMyInfo(ctx context.Context, reqDto *dtos.UpdateMyInfoReqDto) (*dtos.UpdateMyInfoResDto, *exceptions.Exception)
 
 	// services for public userInfos
-	GetPublicUserInfoByUserPublicId(ctx context.Context, publicId string) (*gqlmodels.PublicUserInfo, *exceptions.Exception)
-	GetPublicUserInfosByUserPublicIds(ctx context.Context, publicIds []string) ([]*gqlmodels.PublicUserInfo, *exceptions.Exception)
+	GetPublicUserInfoByUserPublicId(ctx context.Context, publicId uuid.UUID) (*gqlmodels.PublicUserInfo, *exceptions.Exception)
+	GetPublicUserInfosByUserPublicIds(ctx context.Context, publicIds []uuid.UUID) ([]*gqlmodels.PublicUserInfo, *exceptions.Exception)
 }
 
 type UserInfoService struct {
@@ -121,7 +122,7 @@ func (s *UserInfoService) UpdateMyInfo(
 // use the searchable user cursor (we only give the search functionality on users)
 func (s *UserInfoService) GetPublicUserInfoByUserPublicId(
 	ctx context.Context,
-	publicId string,
+	publicId uuid.UUID,
 ) (*gqlmodels.PublicUserInfo, *exceptions.Exception) {
 	db := s.db.WithContext(ctx)
 
@@ -138,7 +139,7 @@ func (s *UserInfoService) GetPublicUserInfoByUserPublicId(
 }
 
 func (s *UserInfoService) GetPublicUserInfosByUserPublicIds(
-	ctx context.Context, publicIds []string,
+	ctx context.Context, publicIds []uuid.UUID,
 ) ([]*gqlmodels.PublicUserInfo, *exceptions.Exception) {
 	if len(publicIds) == 0 {
 		return []*gqlmodels.PublicUserInfo{}, nil
@@ -146,8 +147,8 @@ func (s *UserInfoService) GetPublicUserInfosByUserPublicIds(
 
 	db := s.db.WithContext(ctx)
 
-	uniquePublicIds := make([]string, 0)
-	seen := make(map[string]bool)
+	uniquePublicIds := make([]uuid.UUID, 0)
+	seen := make(map[uuid.UUID]bool)
 	for _, publicId := range publicIds {
 		if !seen[publicId] {
 			uniquePublicIds = append(uniquePublicIds, publicId)
@@ -160,7 +161,7 @@ func (s *UserInfoService) GetPublicUserInfosByUserPublicIds(
 
 	var userInfosWithPublicUserIds []*struct {
 		schemas.UserInfo
-		UserPublicId string `gorm:"column:user_public_id"`
+		UserPublicId uuid.UUID `gorm:"column:user_public_id"`
 	}
 	result := db.Table(schemas.UserInfo{}.TableName()+" ui").
 		Select("ui.*, u.public_id as user_public_id").
@@ -171,7 +172,7 @@ func (s *UserInfoService) GetPublicUserInfosByUserPublicIds(
 		return nil, exceptions.UserInfo.NotFound().WithOrigin(err)
 	}
 
-	publicIdToIndexesMap := make(map[string][]int)
+	publicIdToIndexesMap := make(map[uuid.UUID][]int)
 	for index, publidId := range publicIds {
 		publicIdToIndexesMap[publidId] = append(publicIdToIndexesMap[publidId], index)
 	}

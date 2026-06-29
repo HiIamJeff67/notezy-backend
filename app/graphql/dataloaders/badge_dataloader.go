@@ -3,6 +3,7 @@ package dataloaders
 import (
 	"context"
 
+	"github.com/google/uuid"
 	gophersdataloader "github.com/graph-gophers/dataloader/v7"
 	"gorm.io/gorm"
 
@@ -21,7 +22,7 @@ const (
 )
 
 type BadgeLoaderKey struct {
-	PublicId string          `json:"publicId"`
+	PublicId uuid.UUID       `json:"publicId"`
 	Source   LoadBadgeSource `json:"source"`
 }
 
@@ -34,7 +35,7 @@ type BadgeDataloaderInterface interface {
 	batchFunction() BadgeBatchFunctionType
 
 	// load functions
-	LoadByUserPublicId(originalContext context.Context, id string) (*gqlmodels.PublicBadge, error)
+	LoadByUserPublicId(originalContext context.Context, id uuid.UUID) (*gqlmodels.PublicBadge, error)
 }
 
 type BadgeDataloader struct {
@@ -62,7 +63,7 @@ func (d *BadgeDataloader) GetLoader() *BadgeLoaderType {
 // this batch function will fetch the PublicBadges using the publicIds of the "PublicUsers"
 func (d *BadgeDataloader) batchFunction() BadgeBatchFunctionType {
 	return func(ctx context.Context, keys []BadgeLoaderKey) []*BadgeResultType {
-		keysBySource := make(map[LoadBadgeSource][]string)
+		keysBySource := make(map[LoadBadgeSource][]uuid.UUID)
 		keyToIndexesMap := make(map[BadgeLoaderKey][]int)
 
 		for index, key := range keys {
@@ -111,7 +112,7 @@ func (d *BadgeDataloader) batchFunction() BadgeBatchFunctionType {
 
 /* ============================== Load Functions ============================== */
 
-func (d *BadgeDataloader) LoadByUserPublicId(originalContext context.Context, publicId string) (*gqlmodels.PublicBadge, error) {
+func (d *BadgeDataloader) LoadByUserPublicId(originalContext context.Context, publicId uuid.UUID) (*gqlmodels.PublicBadge, error) {
 	future := d.loader.Load(
 		originalContext,
 		BadgeLoaderKey{

@@ -15,10 +15,12 @@ type RootShelfModule struct {
 }
 
 func NewRootShelfModule() *RootShelfModule {
-	rootShelfRepository := repositories.NewRootShelfRepository(scopes.NewRootShelfScope())
+	rootShelfScope := scopes.NewRootShelfScope()
+	rootShelfRepository := repositories.NewRootShelfRepository(rootShelfScope)
 
 	rootShelfService := services.NewRootShelfService(
 		models.NotezyDB,
+		rootShelfScope,
 		rootShelfRepository,
 	)
 

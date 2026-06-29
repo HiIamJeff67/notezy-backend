@@ -24,7 +24,7 @@ input SearchBadgeInput {
 # type SearchBadgeEnvironmentAttributes {}
 
 input SearchBadgeCursorFields {
-  publicId: String!
+  publicId: UUID!
   # environmentAttributes: SearchBadgeEnvironmentAttributes
 }
 

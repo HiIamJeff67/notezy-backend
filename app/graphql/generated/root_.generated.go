@@ -57,42 +57,26 @@ type ComplexityRoot struct {
 		CreatedAt        func(childComplexity int) int
 		DeletedAt        func(childComplexity int) int
 		ID               func(childComplexity int) int
-		ParentSubShelf   func(childComplexity int) int
 		ParentSubShelfID func(childComplexity int) int
-		RootShelf        func(childComplexity int) int
 		RootShelfID      func(childComplexity int) int
-		Routines         func(childComplexity int) int
+		RoutineIds       func(childComplexity int) int
 		Type             func(childComplexity int) int
 		UpdatedAt        func(childComplexity int) int
 	}
 
-	PrivateMaterial struct {
-		ContentKey       func(childComplexity int) int
-		ContentType      func(childComplexity int) int
-		CreatedAt        func(childComplexity int) int
-		DeletedAt        func(childComplexity int) int
-		ID               func(childComplexity int) int
-		Name             func(childComplexity int) int
-		ParentSubShelf   func(childComplexity int) int
-		ParentSubShelfID func(childComplexity int) int
-		ParseMediaType   func(childComplexity int) int
-		Size             func(childComplexity int) int
-		UpdatedAt        func(childComplexity int) int
-	}
-
 	PrivateRootShelf struct {
-		CreatedAt      func(childComplexity int) int
-		DeletedAt      func(childComplexity int) int
-		ID             func(childComplexity int) int
-		ItemCount      func(childComplexity int) int
-		Items          func(childComplexity int) int
-		LastAnalyzedAt func(childComplexity int) int
-		Name           func(childComplexity int) int
-		Owner          func(childComplexity int) int
-		Permission     func(childComplexity int) int
-		Sharers        func(childComplexity int) int
-		SubShelfCount  func(childComplexity int) int
-		UpdatedAt      func(childComplexity int) int
+		CreatedAt       func(childComplexity int) int
+		DeletedAt       func(childComplexity int) int
+		ID              func(childComplexity int) int
+		ItemCount       func(childComplexity int) int
+		ItemIds         func(childComplexity int) int
+		LastAnalyzedAt  func(childComplexity int) int
+		Name            func(childComplexity int) int
+		OwnerPublicID   func(childComplexity int) int
+		Permission      func(childComplexity int) int
+		SharerPublicIds func(childComplexity int) int
+		SubShelfCount   func(childComplexity int) int
+		UpdatedAt       func(childComplexity int) int
 	}
 
 	PrivateRoutine struct {
@@ -188,18 +172,16 @@ type ComplexityRoot struct {
 	}
 
 	PrivateSubShelf struct {
-		CreatedAt      func(childComplexity int) int
-		DeletedAt      func(childComplexity int) int
-		ID             func(childComplexity int) int
-		Items          func(childComplexity int) int
-		Materials      func(childComplexity int) int
-		Name           func(childComplexity int) int
-		NextSubShelves func(childComplexity int) int
-		Path           func(childComplexity int) int
-		PrevSubShelfID func(childComplexity int) int
-		RootShelf      func(childComplexity int) int
-		RootShelfID    func(childComplexity int) int
-		UpdatedAt      func(childComplexity int) int
+		CreatedAt       func(childComplexity int) int
+		DeletedAt       func(childComplexity int) int
+		ID              func(childComplexity int) int
+		ItemIds         func(childComplexity int) int
+		Name            func(childComplexity int) int
+		NextSubShelfIds func(childComplexity int) int
+		Path            func(childComplexity int) int
+		PrevSubShelfID  func(childComplexity int) int
+		RootShelfID     func(childComplexity int) int
+		UpdatedAt       func(childComplexity int) int
 	}
 
 	PublicBadge struct {
@@ -209,11 +191,10 @@ type ComplexityRoot struct {
 		PublicID    func(childComplexity int) int
 		Title       func(childComplexity int) int
 		Type        func(childComplexity int) int
-		Users       func(childComplexity int) int
 	}
 
 	PublicTheme struct {
-		Author        func(childComplexity int) int
+		AuthorID      func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		DownloadCount func(childComplexity int) int
 		DownloadURL   func(childComplexity int) int
@@ -226,7 +207,6 @@ type ComplexityRoot struct {
 	}
 
 	PublicUser struct {
-		Badges      func(childComplexity int) int
 		CreatedAt   func(childComplexity int) int
 		DisplayName func(childComplexity int) int
 		Name        func(childComplexity int) int
@@ -234,8 +214,6 @@ type ComplexityRoot struct {
 		PublicID    func(childComplexity int) int
 		Role        func(childComplexity int) int
 		Status      func(childComplexity int) int
-		Themes      func(childComplexity int) int
-		UserInfo    func(childComplexity int) int
 	}
 
 	PublicUserInfo struct {
@@ -256,6 +234,7 @@ type ComplexityRoot struct {
 		SearchRoutineTasks func(childComplexity int, input gqlmodels.SearchRoutineTaskInput) int
 		SearchRoutines     func(childComplexity int, input gqlmodels.SearchRoutineInput) int
 		SearchStations     func(childComplexity int, input gqlmodels.SearchStationInput) int
+		SearchSubShelves   func(childComplexity int, input gqlmodels.SearchSubShelfInput) int
 		SearchThemes       func(childComplexity int, input gqlmodels.SearchThemeInput) int
 		SearchUsers        func(childComplexity int, input gqlmodels.SearchUserInput) int
 	}
@@ -359,6 +338,18 @@ type ComplexityRoot struct {
 	}
 
 	SearchStationEdge struct {
+		EncodedSearchCursor func(childComplexity int) int
+		Node                func(childComplexity int) int
+	}
+
+	SearchSubShelfConnection struct {
+		SearchEdges    func(childComplexity int) int
+		SearchPageInfo func(childComplexity int) int
+		SearchTime     func(childComplexity int) int
+		TotalCount     func(childComplexity int) int
+	}
+
+	SearchSubShelfEdge struct {
 		EncodedSearchCursor func(childComplexity int) int
 		Node                func(childComplexity int) int
 	}
@@ -498,26 +489,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateItem.ID(childComplexity), true
 
-	case "PrivateItem.parentSubShelf":
-		if e.complexity.PrivateItem.ParentSubShelf == nil {
-			break
-		}
-
-		return e.complexity.PrivateItem.ParentSubShelf(childComplexity), true
-
 	case "PrivateItem.parentSubShelfId":
 		if e.complexity.PrivateItem.ParentSubShelfID == nil {
 			break
 		}
 
 		return e.complexity.PrivateItem.ParentSubShelfID(childComplexity), true
-
-	case "PrivateItem.rootShelf":
-		if e.complexity.PrivateItem.RootShelf == nil {
-			break
-		}
-
-		return e.complexity.PrivateItem.RootShelf(childComplexity), true
 
 	case "PrivateItem.rootShelfId":
 		if e.complexity.PrivateItem.RootShelfID == nil {
@@ -526,12 +503,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateItem.RootShelfID(childComplexity), true
 
-	case "PrivateItem.routines":
-		if e.complexity.PrivateItem.Routines == nil {
+	case "PrivateItem.routineIds":
+		if e.complexity.PrivateItem.RoutineIds == nil {
 			break
 		}
 
-		return e.complexity.PrivateItem.Routines(childComplexity), true
+		return e.complexity.PrivateItem.RoutineIds(childComplexity), true
 
 	case "PrivateItem.type":
 		if e.complexity.PrivateItem.Type == nil {
@@ -546,83 +523,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateItem.UpdatedAt(childComplexity), true
-
-	case "PrivateMaterial.contentKey":
-		if e.complexity.PrivateMaterial.ContentKey == nil {
-			break
-		}
-
-		return e.complexity.PrivateMaterial.ContentKey(childComplexity), true
-
-	case "PrivateMaterial.contentType":
-		if e.complexity.PrivateMaterial.ContentType == nil {
-			break
-		}
-
-		return e.complexity.PrivateMaterial.ContentType(childComplexity), true
-
-	case "PrivateMaterial.createdAt":
-		if e.complexity.PrivateMaterial.CreatedAt == nil {
-			break
-		}
-
-		return e.complexity.PrivateMaterial.CreatedAt(childComplexity), true
-
-	case "PrivateMaterial.deletedAt":
-		if e.complexity.PrivateMaterial.DeletedAt == nil {
-			break
-		}
-
-		return e.complexity.PrivateMaterial.DeletedAt(childComplexity), true
-
-	case "PrivateMaterial.id":
-		if e.complexity.PrivateMaterial.ID == nil {
-			break
-		}
-
-		return e.complexity.PrivateMaterial.ID(childComplexity), true
-
-	case "PrivateMaterial.name":
-		if e.complexity.PrivateMaterial.Name == nil {
-			break
-		}
-
-		return e.complexity.PrivateMaterial.Name(childComplexity), true
-
-	case "PrivateMaterial.parentSubShelf":
-		if e.complexity.PrivateMaterial.ParentSubShelf == nil {
-			break
-		}
-
-		return e.complexity.PrivateMaterial.ParentSubShelf(childComplexity), true
-
-	case "PrivateMaterial.parentSubShelfId":
-		if e.complexity.PrivateMaterial.ParentSubShelfID == nil {
-			break
-		}
-
-		return e.complexity.PrivateMaterial.ParentSubShelfID(childComplexity), true
-
-	case "PrivateMaterial.parseMediaType":
-		if e.complexity.PrivateMaterial.ParseMediaType == nil {
-			break
-		}
-
-		return e.complexity.PrivateMaterial.ParseMediaType(childComplexity), true
-
-	case "PrivateMaterial.size":
-		if e.complexity.PrivateMaterial.Size == nil {
-			break
-		}
-
-		return e.complexity.PrivateMaterial.Size(childComplexity), true
-
-	case "PrivateMaterial.updatedAt":
-		if e.complexity.PrivateMaterial.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.PrivateMaterial.UpdatedAt(childComplexity), true
 
 	case "PrivateRootShelf.createdAt":
 		if e.complexity.PrivateRootShelf.CreatedAt == nil {
@@ -652,12 +552,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateRootShelf.ItemCount(childComplexity), true
 
-	case "PrivateRootShelf.items":
-		if e.complexity.PrivateRootShelf.Items == nil {
+	case "PrivateRootShelf.itemIds":
+		if e.complexity.PrivateRootShelf.ItemIds == nil {
 			break
 		}
 
-		return e.complexity.PrivateRootShelf.Items(childComplexity), true
+		return e.complexity.PrivateRootShelf.ItemIds(childComplexity), true
 
 	case "PrivateRootShelf.lastAnalyzedAt":
 		if e.complexity.PrivateRootShelf.LastAnalyzedAt == nil {
@@ -673,12 +573,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateRootShelf.Name(childComplexity), true
 
-	case "PrivateRootShelf.owner":
-		if e.complexity.PrivateRootShelf.Owner == nil {
+	case "PrivateRootShelf.ownerPublicId":
+		if e.complexity.PrivateRootShelf.OwnerPublicID == nil {
 			break
 		}
 
-		return e.complexity.PrivateRootShelf.Owner(childComplexity), true
+		return e.complexity.PrivateRootShelf.OwnerPublicID(childComplexity), true
 
 	case "PrivateRootShelf.permission":
 		if e.complexity.PrivateRootShelf.Permission == nil {
@@ -687,12 +587,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateRootShelf.Permission(childComplexity), true
 
-	case "PrivateRootShelf.sharers":
-		if e.complexity.PrivateRootShelf.Sharers == nil {
+	case "PrivateRootShelf.sharerPublicIds":
+		if e.complexity.PrivateRootShelf.SharerPublicIds == nil {
 			break
 		}
 
-		return e.complexity.PrivateRootShelf.Sharers(childComplexity), true
+		return e.complexity.PrivateRootShelf.SharerPublicIds(childComplexity), true
 
 	case "PrivateRootShelf.subShelfCount":
 		if e.complexity.PrivateRootShelf.SubShelfCount == nil {
@@ -1247,19 +1147,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateSubShelf.ID(childComplexity), true
 
-	case "PrivateSubShelf.items":
-		if e.complexity.PrivateSubShelf.Items == nil {
+	case "PrivateSubShelf.itemIds":
+		if e.complexity.PrivateSubShelf.ItemIds == nil {
 			break
 		}
 
-		return e.complexity.PrivateSubShelf.Items(childComplexity), true
-
-	case "PrivateSubShelf.materials":
-		if e.complexity.PrivateSubShelf.Materials == nil {
-			break
-		}
-
-		return e.complexity.PrivateSubShelf.Materials(childComplexity), true
+		return e.complexity.PrivateSubShelf.ItemIds(childComplexity), true
 
 	case "PrivateSubShelf.name":
 		if e.complexity.PrivateSubShelf.Name == nil {
@@ -1268,12 +1161,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateSubShelf.Name(childComplexity), true
 
-	case "PrivateSubShelf.nextSubShelves":
-		if e.complexity.PrivateSubShelf.NextSubShelves == nil {
+	case "PrivateSubShelf.nextSubShelfIds":
+		if e.complexity.PrivateSubShelf.NextSubShelfIds == nil {
 			break
 		}
 
-		return e.complexity.PrivateSubShelf.NextSubShelves(childComplexity), true
+		return e.complexity.PrivateSubShelf.NextSubShelfIds(childComplexity), true
 
 	case "PrivateSubShelf.path":
 		if e.complexity.PrivateSubShelf.Path == nil {
@@ -1288,13 +1181,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateSubShelf.PrevSubShelfID(childComplexity), true
-
-	case "PrivateSubShelf.rootShelf":
-		if e.complexity.PrivateSubShelf.RootShelf == nil {
-			break
-		}
-
-		return e.complexity.PrivateSubShelf.RootShelf(childComplexity), true
 
 	case "PrivateSubShelf.rootShelfId":
 		if e.complexity.PrivateSubShelf.RootShelfID == nil {
@@ -1352,19 +1238,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PublicBadge.Type(childComplexity), true
 
-	case "PublicBadge.users":
-		if e.complexity.PublicBadge.Users == nil {
+	case "PublicTheme.authorId":
+		if e.complexity.PublicTheme.AuthorID == nil {
 			break
 		}
 
-		return e.complexity.PublicBadge.Users(childComplexity), true
-
-	case "PublicTheme.author":
-		if e.complexity.PublicTheme.Author == nil {
-			break
-		}
-
-		return e.complexity.PublicTheme.Author(childComplexity), true
+		return e.complexity.PublicTheme.AuthorID(childComplexity), true
 
 	case "PublicTheme.createdAt":
 		if e.complexity.PublicTheme.CreatedAt == nil {
@@ -1429,13 +1308,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PublicTheme.Version(childComplexity), true
 
-	case "PublicUser.badges":
-		if e.complexity.PublicUser.Badges == nil {
-			break
-		}
-
-		return e.complexity.PublicUser.Badges(childComplexity), true
-
 	case "PublicUser.createdAt":
 		if e.complexity.PublicUser.CreatedAt == nil {
 			break
@@ -1484,20 +1356,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PublicUser.Status(childComplexity), true
-
-	case "PublicUser.themes":
-		if e.complexity.PublicUser.Themes == nil {
-			break
-		}
-
-		return e.complexity.PublicUser.Themes(childComplexity), true
-
-	case "PublicUser.userInfo":
-		if e.complexity.PublicUser.UserInfo == nil {
-			break
-		}
-
-		return e.complexity.PublicUser.UserInfo(childComplexity), true
 
 	case "PublicUserInfo.avatarURL":
 		if e.complexity.PublicUserInfo.AvatarURL == nil {
@@ -1631,6 +1489,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.SearchStations(childComplexity, args["input"].(gqlmodels.SearchStationInput)), true
+
+	case "Query.searchSubShelves":
+		if e.complexity.Query.SearchSubShelves == nil {
+			break
+		}
+
+		args, err := ec.field_Query_searchSubShelves_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SearchSubShelves(childComplexity, args["input"].(gqlmodels.SearchSubShelfInput)), true
 
 	case "Query.searchThemes":
 		if e.complexity.Query.SearchThemes == nil {
@@ -2020,6 +1890,48 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.SearchStationEdge.Node(childComplexity), true
 
+	case "SearchSubShelfConnection.searchEdges":
+		if e.complexity.SearchSubShelfConnection.SearchEdges == nil {
+			break
+		}
+
+		return e.complexity.SearchSubShelfConnection.SearchEdges(childComplexity), true
+
+	case "SearchSubShelfConnection.searchPageInfo":
+		if e.complexity.SearchSubShelfConnection.SearchPageInfo == nil {
+			break
+		}
+
+		return e.complexity.SearchSubShelfConnection.SearchPageInfo(childComplexity), true
+
+	case "SearchSubShelfConnection.searchTime":
+		if e.complexity.SearchSubShelfConnection.SearchTime == nil {
+			break
+		}
+
+		return e.complexity.SearchSubShelfConnection.SearchTime(childComplexity), true
+
+	case "SearchSubShelfConnection.totalCount":
+		if e.complexity.SearchSubShelfConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.SearchSubShelfConnection.TotalCount(childComplexity), true
+
+	case "SearchSubShelfEdge.encodedSearchCursor":
+		if e.complexity.SearchSubShelfEdge.EncodedSearchCursor == nil {
+			break
+		}
+
+		return e.complexity.SearchSubShelfEdge.EncodedSearchCursor(childComplexity), true
+
+	case "SearchSubShelfEdge.node":
+		if e.complexity.SearchSubShelfEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.SearchSubShelfEdge.Node(childComplexity), true
+
 	case "SearchThemeConnection.searchEdges":
 		if e.complexity.SearchThemeConnection.SearchEdges == nil {
 			break
@@ -2129,6 +2041,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputSearchRoutineTaskInput,
 		ec.unmarshalInputSearchStationCursorFields,
 		ec.unmarshalInputSearchStationInput,
+		ec.unmarshalInputSearchSubShelfCursorFields,
+		ec.unmarshalInputSearchSubShelfInput,
 		ec.unmarshalInputSearchThemeCursorFields,
 		ec.unmarshalInputSearchThemeFilters,
 		ec.unmarshalInputSearchThemeInput,
@@ -2387,15 +2301,12 @@ var sources = []*ast.Source{
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/badge.graphql", Input: `type PublicBadge {
   # id: UUID!
-  publicId: String! # the encoded of this field is the identifier of the PublicBadge
+  publicId: UUID! # the encoded of this field is the identifier of the PublicBadge
   title: String!
   description: String!
   type: BadgeType!
   imageURL: String
   createdAt: Time!
-
-  # relations
-  users: [PublicUser!]!
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/block.graphql", Input: `type PrivateBlock {
@@ -2472,39 +2383,20 @@ interface SearchConnection {
     createdAt: Time!
 
     # relations
-    parentSubShelf: PrivateSubShelf!
-    rootShelf: PrivateRootShelf!
-    routines: [PrivateRoutine!]!
-}
-`, BuiltIn: false},
-	{Name: "../../../shared/graphql/schemas/material.graphql", Input: `type PrivateMaterial {
-  id: UUID!
-  parentSubShelfId: UUID!
-  name: String!
-  size: Float!
-  contentKey: String!
-  contentType: MaterialContentType!
-  parseMediaType: String!
-  deletedAt: Time
-  updatedAt: Time!
-  createdAt: Time!
-
-  # relations
-  parentSubShelf: PrivateSubShelf!
+    routineIds: [UUID!]!
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/query.graphql", Input: `type Query {
   searchUsers(input: SearchUserInput!): SearchUserConnection!
   searchThemes(input: SearchThemeInput!): SearchThemeConnection!
   searchRootShelves(input: SearchRootShelfInput!): SearchRootShelfConnection!
+  searchSubShelves(input: SearchSubShelfInput!): SearchSubShelfConnection!
   searchItems(input: SearchItemInput!): SearchItemConnection!
   searchBlocks(input: SearchBlockInput!): SearchBlockConnection!
   searchStations(input: SearchStationInput!): SearchStationConnection!
   searchRoutines(input: SearchRoutineInput!): SearchRoutineConnection!
   searchRoutineTags(input: SearchRoutineTagInput!): SearchRoutineTagConnection!
-  searchRoutineTasks(
-    input: SearchRoutineTaskInput!
-  ): SearchRoutineTaskConnection!
+  searchRoutineTasks(input: SearchRoutineTaskInput!): SearchRoutineTaskConnection!
 }
 
 # type Mutation {}
@@ -2523,9 +2415,9 @@ interface SearchConnection {
   createdAt: Time!
 
   # relations
-  owner: PublicUser!
-  sharers: [PublicUser!]!
-  items: [PrivateItem!]!
+  ownerPublicId: UUID!
+  sharerPublicIds: [UUID!]!
+  itemIds: [UUID!]!
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/routine.graphql", Input: `type PrivateRoutine {
@@ -2630,7 +2522,7 @@ input SearchBadgeInput {
 # type SearchBadgeEnvironmentAttributes {}
 
 input SearchBadgeCursorFields {
-  publicId: String!
+  publicId: UUID!
   # environmentAttributes: SearchBadgeEnvironmentAttributes
 }
 
@@ -2927,6 +2819,48 @@ type SearchStationConnection implements SearchConnection {
   searchTime: Float!
 }
 `, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/search_sub_shelves.graphql", Input: `# =============== Search SortBy & Input =============== #
+
+enum SearchSubShelfSortBy {
+  RELEVANCE
+  NAME
+  PATH_LENGTH
+  LAST_UPDATE
+  CREATED_AT
+}
+
+input SearchSubShelfInput {
+  rootShelfId: UUID
+  prevSubShelfId: UUID
+  query: String!
+  after: String
+  first: Int = 10
+  sortBy: SearchSubShelfSortBy = RELEVANCE
+  sortOrder: SearchSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+# type SearchSubShelfEnvironmentAttributes {}
+
+input SearchSubShelfCursorFields {
+  id: UUID!
+  # environmentAttributes: SearchSubShelfEnvironmentAttributes
+}
+
+# =============== Search Edge & Connection =============== #
+
+type SearchSubShelfEdge implements SearchEdge {
+  encodedSearchCursor: String!
+  node: PrivateSubShelf!
+}
+
+type SearchSubShelfConnection implements SearchConnection {
+  searchEdges: [SearchSubShelfEdge!]!
+  searchPageInfo: SearchPageInfo!
+  totalCount: Int!
+  searchTime: Float!
+}`, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/search_themes.graphql", Input: `# =============== Search Filters & SortBy & Input =============== #
 
 input SearchThemeFilters {
@@ -2955,7 +2889,7 @@ input SearchThemeInput {
 # type SearchThemeEnvironmentAttributes {}
 
 input SearchThemeCursorFields {
-  publicId: String!
+  publicId: UUID!
   # environmentAttributes: SearchThemeEnvironmentAttributes
 }
 
@@ -3008,7 +2942,7 @@ input SearchUserInput {
 # and included some attributes as weights of the search algorithm
 # for better search experience
 input SearchUserCursorFields {
-  publicId: String!
+  publicId: UUID!
   # environmentAttributes: SearchUserEnvironmentAttributes
   # add some weight to effect the searching result here
 }
@@ -3065,27 +2999,22 @@ type PrivateSearchableStation {
   createdAt: Time!
 
   # relations
-  rootShelf: PrivateRootShelf!
-  nextSubShelves: [PrivateSubShelf!]!
-  materials: [PrivateMaterial!]!
-  items: [PrivateItem!]!
+  nextSubShelfIds: [UUID!]!
+  itemIds: [UUID!]!
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/theme.graphql", Input: `type PublicTheme {
   # id: UUID!
-  publicId: String! # the encoded of this field is the identifier of the PublicTheme
+  publicId: UUID! # the encoded of this field is the identifier of the PublicTheme
   name: String!
   isDark: Boolean!
-  #   authorId: UUID!
+  authorId: UUID!
   version: String!
   isDefault: Boolean!
   downloadURL: String
   downloadCount: Int64!
   createdAt: Time!
   updatedAt: Time!
-
-  # relations
-  author: PublicUser!
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/user.graphql", Input: `# the complete user structure: app/models/schemas/user_schema.go
@@ -3093,7 +3022,7 @@ type PrivateSearchableStation {
 
 type PublicUser {
   # id: UUID!
-  publicId: String! # the encoded of this field is the identifier of the PublicUser
+  publicId: UUID! # the encoded of this field is the identifier of the PublicUser
   name: String!
   displayName: String!
   # email: String!
@@ -3108,11 +3037,6 @@ type PublicUser {
   status: UserStatus!
   createdAt: Time!
   # updatedAt: Time!
-
-  # relations
-  userInfo: PublicUserInfo!
-  badges: [PublicBadge!]!
-  themes: [PublicTheme!]!
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/user_info.graphql", Input: `type PublicUserInfo {

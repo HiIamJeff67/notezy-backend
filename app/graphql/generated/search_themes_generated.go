@@ -310,6 +310,8 @@ func (ec *executionContext) fieldContext_SearchThemeEdge_node(_ context.Context,
 				return ec.fieldContext_PublicTheme_name(ctx, field)
 			case "isDark":
 				return ec.fieldContext_PublicTheme_isDark(ctx, field)
+			case "authorId":
+				return ec.fieldContext_PublicTheme_authorId(ctx, field)
 			case "version":
 				return ec.fieldContext_PublicTheme_version(ctx, field)
 			case "isDefault":
@@ -322,8 +324,6 @@ func (ec *executionContext) fieldContext_SearchThemeEdge_node(_ context.Context,
 				return ec.fieldContext_PublicTheme_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_PublicTheme_updatedAt(ctx, field)
-			case "author":
-				return ec.fieldContext_PublicTheme_author(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PublicTheme", field.Name)
 		},
@@ -351,7 +351,7 @@ func (ec *executionContext) unmarshalInputSearchThemeCursorFields(ctx context.Co
 		switch k {
 		case "publicId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("publicId"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
 			if err != nil {
 				return it, err
 			}

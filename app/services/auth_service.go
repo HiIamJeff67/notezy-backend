@@ -594,7 +594,7 @@ func (s *AuthService) Login(
 		// once we have the required data, we set it as the user data cache
 		output := struct {
 			Id                 uuid.UUID        `gorm:"id"`
-			PublicId           string           `gorm:"public_id"`
+			PublicId           uuid.UUID        `gorm:"public_id"`
 			Name               string           `gorm:"name"`
 			DisplayName        string           `gorm:"display_name"`
 			Email              string           `gorm:"email"`
@@ -820,7 +820,7 @@ func (s *AuthService) LoginViaGoogle(
 		// once we have the required data, we set it as the user data cache
 		output := struct {
 			Id                 uuid.UUID        `gorm:"id"`
-			PublicId           string           `gorm:"public_id"`
+			PublicId           uuid.UUID        `gorm:"public_id"`
 			Name               string           `gorm:"name"`
 			DisplayName        string           `gorm:"display_name"`
 			Email              string           `gorm:"email"`

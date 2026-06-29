@@ -1,12 +1,9 @@
 type PublicBadge {
   # id: UUID!
-  publicId: String! # the encoded of this field is the identifier of the PublicBadge
+  publicId: UUID! # the encoded of this field is the identifier of the PublicBadge
   title: String!
   description: String!
   type: BadgeType!
   imageURL: String
   createdAt: Time!
-
-  # relations
-  users: [PublicUser!]!
 }

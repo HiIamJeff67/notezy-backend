@@ -9,8 +9,6 @@ type PrivateSubShelf {
   createdAt: Time!
 
   # relations
-  rootShelf: PrivateRootShelf!
-  nextSubShelves: [PrivateSubShelf!]!
-  materials: [PrivateMaterial!]!
-  items: [PrivateItem!]!
+  nextSubShelfIds: [UUID!]!
+  itemIds: [UUID!]!
 }

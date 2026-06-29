@@ -16,6 +16,7 @@ import (
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
@@ -35,17 +36,18 @@ type RootShelfServiceInterface interface {
 	DeleteMyRootShelfById(ctx context.Context, reqDto *dtos.DeleteMyRootShelfByIdReqDto) (*dtos.DeleteMyRootShelfByIdResDto, *exceptions.Exception)
 	DeleteMyRootShelvesByIds(ctx context.Context, reqDto *dtos.DeleteMyRootShelvesByIdsReqDto) (*dtos.DeleteMyRootShelvesByIdsResDto, *exceptions.Exception)
 
-	// services for graphql shelves
 	SearchPrivateRootShelves(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRootShelfInput) (*gqlmodels.SearchRootShelfConnection, *exceptions.Exception)
 }
 
 type RootShelfService struct {
 	db                  *gorm.DB
+	rootShelfScope      scopes.RootShelfScopeInterface
 	rootShelfRepository repositories.RootShelfRepositoryInterface
 }
 
 func NewRootShelfService(
 	db *gorm.DB,
+	rootShelfScope scopes.RootShelfScopeInterface,
 	rootShelfRepository repositories.RootShelfRepositoryInterface,
 ) RootShelfServiceInterface {
 	if db == nil {
@@ -53,6 +55,7 @@ func NewRootShelfService(
 	}
 	return &RootShelfService{
 		db:                  db,
+		rootShelfScope:      rootShelfScope,
 		rootShelfRepository: rootShelfRepository,
 	}
 }
@@ -384,21 +387,21 @@ func (s *RootShelfService) SearchPrivateRootShelves(
 		Permission enums.AccessControlPermission `gorm:"column:permission"`
 	}
 
+	startTime := time.Now()
+	db := s.db.WithContext(ctx)
+
 	allowedPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,
 		enums.AccessControlPermission_Write,
 		enums.AccessControlPermission_Read,
 	}
-	startTime := time.Now()
-
-	db := s.db.WithContext(ctx)
 
 	query := db.Model(&schemas.RootShelf{}).
 		Select(`"RootShelfTable".*, uts.permission AS permission`).
 		Joins(`LEFT JOIN "UsersToShelvesTable" uts ON "RootShelfTable".id = uts.root_shelf_id`).
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
-		Where(`"RootShelfTable".deleted_at IS NULL`)
+		Scopes(s.rootShelfScope.FilterOnlyDeleted(types.Ternary_Negative))
 
 	if len(strings.ReplaceAll(gqlInput.Query, " ", "")) > 0 {
 		query = query.Where(
@@ -449,7 +452,13 @@ func (s *RootShelfService) SearchPrivateRootShelves(
 	query = query.Limit(limit + 1)
 
 	var shelves []PrivateRootShelf
-	if err := query.Find(&shelves).Error; err != nil {
+	if err := query.Scopes(s.rootShelfScope.IncludePreloads(
+		[]schemas.RootShelfRelation{
+			schemas.RootShelfRelation_UsersToShelves,
+			schemas.RootShelfRelation_UsersToShelves_User,
+			schemas.RootShelfRelation_Items,
+		},
+	)).Find(&shelves).Error; err != nil {
 		return nil, exceptions.Shelf.NotFound().WithOrigin(err)
 	}
 

@@ -12,6 +12,7 @@ import (
 
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	models "github.com/HiIamJeff67/notezy-backend/app/models"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
@@ -22,6 +23,7 @@ import (
 	storages "github.com/HiIamJeff67/notezy-backend/app/storages"
 	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
@@ -41,11 +43,14 @@ type SubShelfServiceInterface interface {
 	RestoreMySubShelvesByIds(ctx context.Context, reqDto *dtos.RestoreMySubShelvesByIdsReqDto) (*dtos.RestoreMySubShelvesByIdsResDto, *exceptions.Exception)
 	DeleteMySubShelfById(ctx context.Context, reqDto *dtos.DeleteMySubShelfByIdReqDto) (*dtos.DeleteMySubShelfByIdResDto, *exceptions.Exception)
 	DeleteMySubShelvesByIds(ctx context.Context, reqDto *dtos.DeleteMySubShelvesByIdsReqDto) (*dtos.DeleteMySubShelvesByIdsResDto, *exceptions.Exception)
+
+	SearchPrivateSubShelves(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchSubShelfInput) (*gqlmodels.SearchSubShelfConnection, *exceptions.Exception)
 }
 
 type SubShelfService struct {
 	db                  *gorm.DB
 	storage             storages.StorageInterface
+	subShelfScope       scopes.SubShelfScopeInterface
 	subShelfRepository  repositories.SubShelfRepositoryInterface
 	rootShelfRepository repositories.RootShelfRepositoryInterface
 	materialRepository  repositories.MaterialRepositoryInterface
@@ -55,6 +60,7 @@ type SubShelfService struct {
 func NewSubShelfService(
 	db *gorm.DB,
 	storage storages.StorageInterface,
+	subShelfScope scopes.SubShelfScopeInterface,
 	subShelfRepository repositories.SubShelfRepositoryInterface,
 	rootShelfRepository repositories.RootShelfRepositoryInterface,
 	materialRepository repositories.MaterialRepositoryInterface,
@@ -66,6 +72,7 @@ func NewSubShelfService(
 	return &SubShelfService{
 		db:                  db,
 		storage:             storage,
+		subShelfScope:       subShelfScope,
 		subShelfRepository:  subShelfRepository,
 		rootShelfRepository: rootShelfRepository,
 		materialRepository:  materialRepository,
@@ -963,5 +970,154 @@ func (s *SubShelfService) DeleteMySubShelvesByIds(
 
 	return &dtos.DeleteMySubShelvesByIdsResDto{
 		DeletedAt: time.Now(),
+	}, nil
+}
+
+/* ============================== Service Methods for GraphQL SubShelf ============================== */
+
+func (s *SubShelfService) SearchPrivateSubShelves(
+	ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchSubShelfInput,
+) (*gqlmodels.SearchSubShelfConnection, *exceptions.Exception) {
+	startTime := time.Now()
+	db := s.db.WithContext(ctx)
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+
+	query := db.Model(&schemas.SubShelf{}).
+		Select(`"SubShelfTable".*`).
+		Joins(`INNER JOIN "UsersToShelvesTable" uts ON "SubShelfTable".root_shelf_id = uts.root_shelf_id`).
+		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
+		Scopes(s.subShelfScope.FilterOnlyDeleted(types.Ternary_Negative))
+
+	if gqlInput.RootShelfID != nil {
+		query = query.Where(
+			`"SubShelfTable".root_shelf_id = ?`,
+			*gqlInput.RootShelfID,
+		)
+	}
+
+	if gqlInput.PrevSubShelfID != nil {
+		query = query.Where(
+			`"SubShelfTable".prev_sub_shelf_id = ?`,
+			*gqlInput.PrevSubShelfID,
+		)
+	}
+
+	if len(strings.ReplaceAll(gqlInput.Query, " ", "")) > 0 {
+		query = query.Where(
+			`"SubShelfTable".name ILIKE ?`,
+			"%"+gqlInput.Query+"%",
+		)
+	}
+	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
+		searchCursor, err := searchcursor.Decode[gqlmodels.SearchSubShelfCursorFields](*gqlInput.After)
+		if err != nil {
+			return nil, exceptions.Search.FailedToDecode().WithOrigin(err)
+		}
+
+		query = query.Where(`"SubShelfTable".id > ?`, searchCursor.Fields.ID)
+	}
+
+	if gqlInput.SortBy != nil && gqlInput.SortOrder != nil {
+		cending := gqlmodels.SearchSortOrderAsc.String()
+		if *gqlInput.SortOrder == gqlmodels.SearchSortOrderDesc {
+			cending = gqlmodels.SearchSortOrderDesc.String()
+		}
+
+		switch *gqlInput.SortBy {
+		case gqlmodels.SearchSubShelfSortByName:
+			query = query.Order(`"SubShelfTable".name ` + cending).
+				Order(`cardinality("SubShelfTable".path) ` + cending).
+				Order(`"SubShelfTable".updated_at ` + cending).
+				Order(`"SubShelfTable".created_at ` + cending)
+		case gqlmodels.SearchSubShelfSortByPathLength:
+			query = query.Order(`cardinality("SubShelfTable".path) ` + cending).
+				Order(`"SubShelfTable".name ` + cending).
+				Order(`"SubShelfTable".updated_at ` + cending).
+				Order(`"SubShelfTable".created_at ` + cending)
+		case gqlmodels.SearchSubShelfSortByLastUpdate:
+			query = query.Order(`"SubShelfTable".updated_at ` + cending).
+				Order(`"SubShelfTable".name ` + cending).
+				Order(`cardinality("SubShelfTable".path) ` + cending).
+				Order(`"SubShelfTable".created_at ` + cending)
+		case gqlmodels.SearchSubShelfSortByCreatedAt:
+			query = query.Order(`"SubShelfTable".created_at ` + cending).
+				Order(`"SubShelfTable".name ` + cending).
+				Order(`cardinality("SubShelfTable".path) ` + cending).
+				Order(`"SubShelfTable".updated_at ` + cending)
+		default:
+			query = query.Order(`"SubShelfTable".name ` + cending).
+				Order(`cardinality("SubShelfTable".path) ` + cending).
+				Order(`"SubShelfTable".updated_at ` + cending).
+				Order(`"SubShelfTable".created_at ` + cending)
+		}
+	}
+
+	limit := constants.DefaultSearchLimit
+	if gqlInput.First != nil && *gqlInput.First > 0 {
+		limit = int(*gqlInput.First)
+	}
+	limit = min(limit, constants.MaxSearchLimit)
+	query = query.Limit(limit + 1)
+
+	var subShelves []schemas.SubShelf
+	if err := query.Scopes(s.subShelfScope.IncludePreloads(
+		[]schemas.SubShelfRelation{
+			schemas.SubShelfRelation_NextSubShelves,
+			schemas.SubShelfRelation_Items,
+		},
+	)).Find(&subShelves).Error; err != nil {
+		return nil, exceptions.Shelf.NotFound().WithOrigin(err)
+	}
+
+	hasNextPage := len(subShelves) > limit
+	searchEdges := make([]*gqlmodels.SearchSubShelfEdge, len(subShelves))
+
+	for index, subShelf := range subShelves {
+		searchCursor := searchcursor.SearchCursor[gqlmodels.SearchSubShelfCursorFields]{
+			Fields: gqlmodels.SearchSubShelfCursorFields{
+				ID: subShelf.Id,
+			},
+		}
+		encodedSearchCursor, err := searchCursor.Encode()
+		if err != nil {
+			return nil, exceptions.Search.FailedToEncode().WithOrigin(err)
+		}
+		if encodedSearchCursor == nil {
+			return nil, exceptions.Search.FailedToUnmarshalSearchCursor()
+		}
+
+		searchEdges[index] = &gqlmodels.SearchSubShelfEdge{
+			EncodedSearchCursor: *encodedSearchCursor,
+			Node:                subShelf.ToPrivateSubShelf(),
+		}
+	}
+
+	if hasNextPage {
+		searchEdges = searchEdges[:limit]
+	}
+
+	searchPageInfo := &gqlmodels.SearchPageInfo{
+		HasNextPage:     hasNextPage,
+		HasPreviousPage: gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0,
+	}
+
+	if len(searchEdges) > 0 {
+		searchPageInfo.StartEncodedSearchCursor = &searchEdges[0].EncodedSearchCursor
+		searchPageInfo.EndEncodedSearchCursor = &searchEdges[len(searchEdges)-1].EncodedSearchCursor
+	}
+
+	searchTime := float64(time.Since(startTime).Nanoseconds()) / 1e6
+
+	return &gqlmodels.SearchSubShelfConnection{
+		SearchEdges:    searchEdges,
+		SearchPageInfo: searchPageInfo,
+		TotalCount:     int32(len(searchEdges)),
+		SearchTime:     searchTime,
 	}, nil
 }

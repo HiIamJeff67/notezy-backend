@@ -39,7 +39,6 @@ type RoutineTaskServiceInterface interface {
 	VisualizeMyRoutineTaskActualStartedAtCount(ctx context.Context, reqDto *dtos.VisualizeMyRoutineTaskActualStartedAtCountReqDto) (*dtos.VisualizeMyRoutineTaskActualStartedAtCountResDto, *exceptions.Exception)
 	VisualizeMyRoutineTaskActualEndedAtCount(ctx context.Context, reqDto *dtos.VisualizeMyRoutineTaskActualEndedAtCountReqDto) (*dtos.VisualizeMyRoutineTaskActualEndedAtCountResDto, *exceptions.Exception)
 
-	// services for graphql routine tasks
 	SearchPrivateRoutineTasks(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRoutineTaskInput) (*gqlmodels.SearchRoutineTaskConnection, *exceptions.Exception)
 }
 

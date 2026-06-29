@@ -16,6 +16,7 @@ import (
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
@@ -38,17 +39,18 @@ type StationServiceInterface interface {
 	HardDeleteMyStationsByIds(ctx context.Context, reqDto *dtos.HardDeleteMyStationsByIdsReqDto) (*dtos.HardDeleteMyStationsByIdsResDto, *exceptions.Exception)
 	VisualizeMyTotalCount(ctx context.Context, reqDto *dtos.VisualizeMyTotalCountReqDto) (*dtos.VisualizeMyTotalCountResDto, *exceptions.Exception)
 
-	// services for graphql stations
 	SearchPrivateStations(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchStationInput) (*gqlmodels.SearchStationConnection, *exceptions.Exception)
 }
 
 type StationService struct {
 	db                *gorm.DB
+	stationScope      scopes.StationScopeInterface
 	stationRepository repositories.StationRepositoryInterface
 }
 
 func NewStationService(
 	db *gorm.DB,
+	stationScope scopes.StationScopeInterface,
 	stationRepository repositories.StationRepositoryInterface,
 ) StationServiceInterface {
 	if db == nil {
@@ -56,6 +58,7 @@ func NewStationService(
 	}
 	return &StationService{
 		db:                db,
+		stationScope:      stationScope,
 		stationRepository: stationRepository,
 	}
 }
@@ -595,7 +598,7 @@ func (s *StationService) SearchPrivateStations(
 		Select(`"StationTable".*, uts.permission AS permission`).
 		Joins(`LEFT JOIN "UsersToStationsTable" uts ON "StationTable".id = uts.station_id`).
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermisssions).
-		Where(`"StationTable".deleted_at IS NULL`)
+		Scopes(s.stationScope.FilterOnlyDeleted(types.Ternary_Negative))
 
 	if len(strings.ReplaceAll(gqlInput.Query, " ", "")) > 0 {
 		query = query.Where(

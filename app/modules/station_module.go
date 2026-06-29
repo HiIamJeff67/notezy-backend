@@ -15,10 +15,12 @@ type StationModule struct {
 }
 
 func NewStationModule() *StationModule {
-	stationRepository := repositories.NewStationRepository(scopes.NewStationScope())
+	stationScope := scopes.NewStationScope()
+	stationRepository := repositories.NewStationRepository(stationScope)
 
 	stationService := services.NewStationService(
 		models.NotezyDB,
+		stationScope,
 		stationRepository,
 	)
 

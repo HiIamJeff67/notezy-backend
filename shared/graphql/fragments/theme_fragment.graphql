@@ -2,6 +2,7 @@ fragment FragmentedBasicPublicTheme on PublicTheme {
   publicId
   name
   isDark
+  authorId
   version
   isDefault
   downloadURL
@@ -12,7 +13,4 @@ fragment FragmentedBasicPublicTheme on PublicTheme {
 
 fragment FragmentedPublicTheme on PublicTheme {
   ...FragmentedBasicPublicTheme
-  author {
-    ...FragmentedBasicPublicUser
-  }
 }
