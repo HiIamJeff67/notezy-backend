@@ -51,251 +51,274 @@ func (h BlockPackHandler) HandleCreateBlockPack(
 	ctx context.Context,
 	tasks []schemas.RoutineTask,
 	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
-) map[uuid.UUID]*exceptions.Exception {
-	results := make(map[uuid.UUID]*exceptions.Exception)
-	ownerIdToTasks := make(map[uuid.UUID][]schemas.RoutineTask)
-	for _, task := range tasks {
+) ([]bool, *exceptions.Exception) {
+	successes := make([]bool, len(tasks))
+	blockPackInputs := make([]inputs.BulkCreateBlockPackInput, 0, len(tasks))
+	blockGroupInputsByTask := make([][]inputs.BulkCreateBlockGroupInput, 0, len(tasks))
+	blockGroupSizeUpdatesByTask := make([][]inputs.BulkUpdateBlockGroupInput, 0, len(tasks))
+	blockContentsByTask := make([][]inputs.BulkCreateBlockGroupContentInput, 0, len(tasks))
+	taskIndexes := make([]int, 0, len(tasks))
+
+	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
 		if !exists {
-			results[task.Id] = exceptions.Station.NoPermission("run this routine task")
 			continue
 		}
-		ownerIdToTasks[ownerId] = append(ownerIdToTasks[ownerId], task)
+
+		payload, exception := decodePayload[dtos.CreateBlockPackRoutineTaskPayload](task)
+		if exception != nil {
+			continue
+		}
+
+		blockPackId := uuid.New()
+		taskBlockGroupInputs := make([]inputs.BulkCreateBlockGroupInput, 0, len(payload.Template.BlockGroups))
+		taskBlockGroupSizeUpdates := make([]inputs.BulkUpdateBlockGroupInput, 0, len(payload.Template.BlockGroups))
+		taskBlockContents := make([]inputs.BulkCreateBlockGroupContentInput, 0, len(payload.Template.BlockGroups))
+		isTaskValid := true
+
+		blockGroupIdsByClientId := make(map[string]uuid.UUID, len(payload.Template.BlockGroups))
+		for _, blockGroup := range payload.Template.BlockGroups {
+			blockGroupIdsByClientId[blockGroup.ClientId] = uuid.New()
+		}
+
+		for _, blockGroup := range payload.Template.BlockGroups {
+			blockGroupId := blockGroupIdsByClientId[blockGroup.ClientId]
+			var prevBlockGroupId *uuid.UUID
+			if blockGroup.PrevClientId != nil {
+				id := blockGroupIdsByClientId[*blockGroup.PrevClientId]
+				prevBlockGroupId = &id
+			}
+
+			flattenedBlocks, _, totalSize, exception := flattenArborizedBlock(
+				h.editableBlockAdapter,
+				blockGroupId,
+				&blockGroup.ArborizedEditableBlock,
+			)
+			if exception != nil {
+				isTaskValid = false
+				continue
+			}
+
+			taskBlockGroupInputs = append(taskBlockGroupInputs, inputs.BulkCreateBlockGroupInput{
+				UserId:           ownerId,
+				BlockPackId:      blockPackId,
+				BlockGroupId:     &blockGroupId,
+				PrevBlockGroupId: prevBlockGroupId,
+			})
+			size := totalSize
+			taskBlockGroupSizeUpdates = append(taskBlockGroupSizeUpdates, inputs.BulkUpdateBlockGroupInput{
+				UserId: ownerId,
+				Id:     blockGroupId,
+				PartialUpdateInput: inputs.PartialUpdateBlockGroupInput{
+					Values: inputs.UpdateBlockGroupInput{Size: &size},
+				},
+			})
+
+			blockInputs := make([]inputs.CreateBlockInput, len(flattenedBlocks))
+			for index, block := range flattenedBlocks {
+				blockInputs[index] = inputs.CreateBlockInput{
+					Id:            block.Id,
+					ParentBlockId: block.ParentBlockId,
+					Type:          block.Type,
+					Props:         block.Props,
+					Content:       block.Content,
+				}
+			}
+			taskBlockContents = append(taskBlockContents, inputs.BulkCreateBlockGroupContentInput{
+				UserId:       ownerId,
+				BlockGroupId: blockGroupId,
+				Blocks:       blockInputs,
+			})
+		}
+		if !isTaskValid {
+			continue
+		}
+
+		blockPackInputs = append(blockPackInputs, inputs.BulkCreateBlockPackInput{
+			UserId:              ownerId,
+			Id:                  &blockPackId,
+			ParentSubShelfId:    payload.TargetSubShelfId,
+			Name:                payload.Template.Name,
+			Icon:                payload.Template.Icon,
+			HeaderBackgroundURL: payload.Template.HeaderBackgroundURL,
+		})
+		blockGroupInputsByTask = append(blockGroupInputsByTask, taskBlockGroupInputs)
+		blockGroupSizeUpdatesByTask = append(blockGroupSizeUpdatesByTask, taskBlockGroupSizeUpdates)
+		blockContentsByTask = append(blockContentsByTask, taskBlockContents)
+		taskIndexes = append(taskIndexes, taskIndex)
+	}
+	if len(blockPackInputs) == 0 {
+		return successes, nil
 	}
 
-	for ownerId, createTasks := range ownerIdToTasks {
-		blockPackInputs := make([]inputs.BulkCreateBlockPackInput, 0, len(createTasks))
-		blockGroupInputs := make([]inputs.BulkCreateBlockGroupInput, 0)
-		blockGroupSizeUpdates := make([]inputs.BulkUpdateBlockGroupsInput, 0)
-		blockContents := make([]inputs.CreateBlockGroupContentInput, 0)
+	tx := h.db.WithContext(ctx).Begin()
 
-		for _, task := range createTasks {
-			payload, exception := decodePayload[dtos.CreateBlockPackRoutineTaskPayload](task)
-			if exception != nil {
-				results[task.Id] = exception
-				continue
-			}
+	blockPackSuccesses, exception := h.blockPackRepository.BulkCreateMany(
+		blockPackInputs,
+		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return successes, exception
+	}
 
-			blockPackId := uuid.New()
-			taskBlockGroupInputs := make([]inputs.BulkCreateBlockGroupInput, 0, len(payload.Template.BlockGroups))
-			taskBlockGroupSizeUpdates := make([]inputs.BulkUpdateBlockGroupsInput, 0, len(payload.Template.BlockGroups))
-			taskBlockContents := make([]inputs.CreateBlockGroupContentInput, 0, len(payload.Template.BlockGroups))
-			isTaskValid := true
-
-			blockGroupIdsByClientId := make(map[string]uuid.UUID, len(payload.Template.BlockGroups))
-			for _, blockGroup := range payload.Template.BlockGroups {
-				blockGroupIdsByClientId[blockGroup.ClientId] = uuid.New()
-			}
-
-			for _, blockGroup := range payload.Template.BlockGroups {
-				blockGroupId := blockGroupIdsByClientId[blockGroup.ClientId]
-				var prevBlockGroupId *uuid.UUID
-				if blockGroup.PrevClientId != nil {
-					id := blockGroupIdsByClientId[*blockGroup.PrevClientId]
-					prevBlockGroupId = &id
-				}
-
-				flattenedBlocks, _, totalSize, exception := flattenArborizedBlock(
-					h.editableBlockAdapter,
-					blockGroupId,
-					&blockGroup.ArborizedEditableBlock,
-				)
-				if exception != nil {
-					results[task.Id] = exception
-					isTaskValid = false
-					continue
-				}
-
-				taskBlockGroupInputs = append(taskBlockGroupInputs, inputs.BulkCreateBlockGroupInput{
-					BlockPackId:      blockPackId,
-					BlockGroupId:     &blockGroupId,
-					PrevBlockGroupId: prevBlockGroupId,
-				})
-				taskBlockGroupSizeUpdates = append(taskBlockGroupSizeUpdates, inputs.BulkUpdateBlockGroupsInput{
-					Id: blockGroupId,
-					PartialUpdateInput: inputs.PartialUpdateBlockGroupInput{
-						Values: inputs.UpdateBlockGroupInput{Size: &totalSize},
-					},
-				})
-
-				blockInputs := make([]inputs.CreateBlockInput, len(flattenedBlocks))
-				for index, block := range flattenedBlocks {
-					blockInputs[index] = inputs.CreateBlockInput{
-						Id:            block.Id,
-						ParentBlockId: block.ParentBlockId,
-						Type:          block.Type,
-						Props:         block.Props,
-						Content:       block.Content,
-					}
-				}
-				taskBlockContents = append(taskBlockContents, inputs.CreateBlockGroupContentInput{
-					BlockGroupId: blockGroupId,
-					Blocks:       blockInputs,
-				})
-			}
-			if !isTaskValid {
-				continue
-			}
-
-			blockPackInputs = append(blockPackInputs, inputs.BulkCreateBlockPackInput{
-				Id:                  &blockPackId,
-				ParentSubShelfId:    payload.TargetSubShelfId,
-				Name:                payload.Template.Name,
-				Icon:                payload.Template.Icon,
-				HeaderBackgroundURL: payload.Template.HeaderBackgroundURL,
-			})
-			blockGroupInputs = append(blockGroupInputs, taskBlockGroupInputs...)
-			blockGroupSizeUpdates = append(blockGroupSizeUpdates, taskBlockGroupSizeUpdates...)
-			blockContents = append(blockContents, taskBlockContents...)
+	blockGroupInputs := make([]inputs.BulkCreateBlockGroupInput, 0)
+	blockGroupSizeUpdates := make([]inputs.BulkUpdateBlockGroupInput, 0)
+	blockContents := make([]inputs.BulkCreateBlockGroupContentInput, 0)
+	successfulTaskIndexes := make([]int, 0, len(taskIndexes))
+	for index, success := range blockPackSuccesses {
+		if success {
+			blockGroupInputs = append(blockGroupInputs, blockGroupInputsByTask[index]...)
+			blockGroupSizeUpdates = append(blockGroupSizeUpdates, blockGroupSizeUpdatesByTask[index]...)
+			blockContents = append(blockContents, blockContentsByTask[index]...)
+			successfulTaskIndexes = append(successfulTaskIndexes, taskIndexes[index])
 		}
+	}
 
-		if len(blockPackInputs) == 0 {
-			continue
-		}
-
-		tx := h.db.WithContext(ctx).Begin()
-		if _, exception := h.blockPackRepository.BulkCreateManyBySubShelfIds(
-			ownerId,
-			blockPackInputs,
+	if len(blockGroupInputs) > 0 {
+		blockGroupSuccesses, exception := h.blockGroupRepository.BulkCreateMany(
+			blockGroupInputs,
 			options.WithTransactionDB(tx),
 			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Negative),
-		); exception != nil {
+		)
+		if exception != nil {
 			tx.Rollback()
-			for _, task := range createTasks {
-				if results[task.Id] == nil {
-					results[task.Id] = exception
-				}
-			}
-			continue
+			return successes, exception
 		}
-		if len(blockGroupInputs) > 0 {
-			if _, exception := h.blockGroupRepository.InsertManyByBlockPackIds(
-				ownerId,
-				blockGroupInputs,
-				options.WithTransactionDB(tx),
-				options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
-				options.WithOnlyDeleted(types.Ternary_Negative),
-			); exception != nil {
+		for _, success := range blockGroupSuccesses {
+			if !success {
 				tx.Rollback()
-				for _, task := range createTasks {
-					if results[task.Id] == nil {
-						results[task.Id] = exception
-					}
-				}
-				continue
-			}
-		}
-		if len(blockGroupSizeUpdates) > 0 {
-			if exception := h.blockGroupRepository.BulkUpdateManyByIds(
-				ownerId,
-				blockGroupSizeUpdates,
-				options.WithTransactionDB(tx),
-				options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
-				options.WithOnlyDeleted(types.Ternary_Negative),
-			); exception != nil {
-				tx.Rollback()
-				for _, task := range createTasks {
-					if results[task.Id] == nil {
-						results[task.Id] = exception
-					}
-				}
-				continue
-			}
-		}
-		if len(blockContents) > 0 {
-			if _, exception := h.blockRepository.CreateManyByBlockGroupIds(
-				ownerId,
-				blockContents,
-				options.WithTransactionDB(tx),
-				options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
-				options.WithBatchSize(constants.MaxBatchCreateBlockSize),
-				options.WithOnlyDeleted(types.Ternary_Negative),
-			); exception != nil {
-				tx.Rollback()
-				for _, task := range createTasks {
-					if results[task.Id] == nil {
-						results[task.Id] = exception
-					}
-				}
-				continue
-			}
-		}
-		if err := tx.Commit().Error; err != nil {
-			tx.Rollback()
-			for _, task := range createTasks {
-				if results[task.Id] == nil {
-					results[task.Id] = exceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
-				}
+				return successes, nil
 			}
 		}
 	}
 
-	return results
+	if len(blockGroupSizeUpdates) > 0 {
+		sizeSuccesses, exception := h.blockGroupRepository.BulkUpdateMany(
+			blockGroupSizeUpdates,
+			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
+			options.WithOnlyDeleted(types.Ternary_Negative),
+		)
+		if exception != nil {
+			tx.Rollback()
+			return successes, exception
+		}
+		for _, success := range sizeSuccesses {
+			if !success {
+				tx.Rollback()
+				return successes, nil
+			}
+		}
+	}
+
+	if len(blockContents) > 0 {
+		blockSuccesses, exception := h.blockRepository.BulkCreateMany(
+			blockContents,
+			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
+			options.WithBatchSize(constants.MaxBatchCreateBlockSize),
+			options.WithOnlyDeleted(types.Ternary_Negative),
+		)
+		if exception != nil {
+			tx.Rollback()
+			return successes, exception
+		}
+		for _, success := range blockSuccesses {
+			if !success {
+				tx.Rollback()
+				return successes, nil
+			}
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return successes, exceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
+	}
+
+	for _, taskIndex := range successfulTaskIndexes {
+		successes[taskIndex] = true
+	}
+
+	return successes, nil
 }
 
 func (h BlockPackHandler) HandleUpdateBlockPack(
 	ctx context.Context,
 	tasks []schemas.RoutineTask,
 	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
-) map[uuid.UUID]*exceptions.Exception {
-	results := make(map[uuid.UUID]*exceptions.Exception)
-	ownerIdToTasks := make(map[uuid.UUID][]schemas.RoutineTask)
-	for _, task := range tasks {
+) ([]bool, *exceptions.Exception) {
+	successes := make([]bool, len(tasks))
+	preparedInputs := make([]struct {
+		TaskIndex   int
+		UserId      uuid.UUID
+		BlockId     uuid.UUID
+		BlockPackId uuid.UUID
+		Input       inputs.BulkUpdateBlockInput
+	}, 0)
+	pairPlaceholders := make([]string, 0)
+	pairArgs := make([]any, 0)
+
+	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
 		if !exists {
-			results[task.Id] = exceptions.Station.NoPermission("run this routine task")
 			continue
 		}
-		ownerIdToTasks[ownerId] = append(ownerIdToTasks[ownerId], task)
-	}
 
-	for ownerId, updateTasks := range ownerIdToTasks {
-		blockIds := make([]uuid.UUID, 0)
-		updateInputs := make([]inputs.BulkUpdateBlocksInput, 0)
-		pairPlaceholders := make([]string, 0)
-		pairArgs := make([]any, 0)
+		payload, exception := decodePayload[dtos.UpdateBlockPackRoutineTaskPayload](task)
+		if exception != nil {
+			continue
+		}
 
-		for _, task := range updateTasks {
-			payload, exception := decodePayload[dtos.UpdateBlockPackRoutineTaskPayload](task)
+		isTaskValid := true
+		taskPreparedInputs := make([]struct {
+			TaskIndex   int
+			UserId      uuid.UUID
+			BlockId     uuid.UUID
+			BlockPackId uuid.UUID
+			Input       inputs.BulkUpdateBlockInput
+		}, 0, len(payload.UpdatedBlocks))
+		taskPairPlaceholders := make([]string, 0, len(payload.UpdatedBlocks))
+		taskPairArgs := make([]any, 0, len(payload.UpdatedBlocks)*2)
+		for _, block := range payload.UpdatedBlocks {
+			blockGroupId := uuid.New()
+			flattenedBlocks, _, _, exception := flattenArborizedBlock(
+				h.editableBlockAdapter,
+				blockGroupId,
+				block.ArborizedEditableBlock,
+			)
 			if exception != nil {
-				results[task.Id] = exception
+				isTaskValid = false
+				continue
+			}
+			if len(flattenedBlocks) != 1 {
+				isTaskValid = false
 				continue
 			}
 
-			taskBlockIds := make([]uuid.UUID, 0, len(payload.UpdatedBlocks))
-			taskUpdateInputs := make([]inputs.BulkUpdateBlocksInput, 0, len(payload.UpdatedBlocks))
-			taskPairPlaceholders := make([]string, 0, len(payload.UpdatedBlocks))
-			taskPairArgs := make([]any, 0, len(payload.UpdatedBlocks)*2)
-			isTaskValid := true
-
-			for _, block := range payload.UpdatedBlocks {
-				blockGroupId := uuid.New()
-				flattenedBlocks, _, _, exception := flattenArborizedBlock(
-					h.editableBlockAdapter,
-					blockGroupId,
-					block.ArborizedEditableBlock,
-				)
-				if exception != nil {
-					results[task.Id] = exception
-					isTaskValid = false
-					continue
-				}
-				if len(flattenedBlocks) != 1 {
-					results[task.Id] = exceptions.RoutineTask.InvalidDto().
-						WithDetails("UpdateBlockPack updatedBlocks must not contain children")
-					isTaskValid = false
-					continue
-				}
-
-				blockType := flattenedBlocks[0].Type
-				props := datatypes.JSON(flattenedBlocks[0].Props)
-				content := datatypes.JSON(flattenedBlocks[0].Content)
-				taskBlockIds = append(taskBlockIds, block.BlockId)
-				taskPairPlaceholders = append(taskPairPlaceholders, "(?::uuid, ?::uuid)")
-				taskPairArgs = append(taskPairArgs, block.BlockId, payload.BlockPackId)
-				taskUpdateInputs = append(taskUpdateInputs, inputs.BulkUpdateBlocksInput{
-					Id: block.BlockId,
+			blockType := flattenedBlocks[0].Type
+			props := datatypes.JSON(flattenedBlocks[0].Props)
+			content := datatypes.JSON(flattenedBlocks[0].Content)
+			taskPairPlaceholders = append(taskPairPlaceholders, "(?::uuid, ?::uuid)")
+			taskPairArgs = append(taskPairArgs, block.BlockId, payload.BlockPackId)
+			taskPreparedInputs = append(taskPreparedInputs, struct {
+				TaskIndex   int
+				UserId      uuid.UUID
+				BlockId     uuid.UUID
+				BlockPackId uuid.UUID
+				Input       inputs.BulkUpdateBlockInput
+			}{
+				TaskIndex:   taskIndex,
+				UserId:      ownerId,
+				BlockId:     block.BlockId,
+				BlockPackId: payload.BlockPackId,
+				Input: inputs.BulkUpdateBlockInput{
+					UserId: ownerId,
+					Id:     block.BlockId,
 					PartialUpdateInput: inputs.PartialUpdateBlockInput{
 						Values: inputs.UpdateBlockInput{
 							Type:    &blockType,
@@ -303,131 +326,152 @@ func (h BlockPackHandler) HandleUpdateBlockPack(
 							Content: &content,
 						},
 					},
-				})
-			}
-			if !isTaskValid {
-				continue
-			}
-
-			blockIds = append(blockIds, taskBlockIds...)
-			pairPlaceholders = append(pairPlaceholders, taskPairPlaceholders...)
-			pairArgs = append(pairArgs, taskPairArgs...)
-			updateInputs = append(updateInputs, taskUpdateInputs...)
+				},
+			})
 		}
-
-		if len(updateInputs) == 0 {
+		if !isTaskValid {
 			continue
 		}
-
-		tx := h.db.WithContext(ctx).Begin()
-		var validCount int64
-		sql := fmt.Sprintf(`
-			WITH pairs(block_id, block_pack_id) AS (VALUES %s)
-			SELECT COUNT(*)
-			FROM pairs p
-			INNER JOIN "BlockTable" b ON b.id = p.block_id::uuid AND b.deleted_at IS NULL
-			INNER JOIN "BlockGroupTable" bg ON bg.id = b.block_group_id AND bg.deleted_at IS NULL
-			WHERE bg.block_pack_id = p.block_pack_id::uuid
-		`, strings.Join(pairPlaceholders, ","))
-		if err := tx.Raw(sql, pairArgs...).Scan(&validCount).Error; err != nil {
-			tx.Rollback()
-			for _, task := range updateTasks {
-				if results[task.Id] == nil {
-					results[task.Id] = exceptions.Block.NotFound().WithOrigin(err)
-				}
-			}
-			continue
-		}
-		if validCount != int64(len(blockIds)) {
-			tx.Rollback()
-			exception := exceptions.Block.NoPermission("update blocks outside this block pack")
-			for _, task := range updateTasks {
-				if results[task.Id] == nil {
-					results[task.Id] = exception
-				}
-			}
-			continue
-		}
-
-		if exception := h.blockRepository.BulkUpdateManyByIds(
-			ownerId,
-			updateInputs,
-			options.WithTransactionDB(tx),
-			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
-			options.WithOnlyDeleted(types.Ternary_Negative),
-		); exception != nil {
-			tx.Rollback()
-			for _, task := range updateTasks {
-				if results[task.Id] == nil {
-					results[task.Id] = exception
-				}
-			}
-			continue
-		}
-		if err := tx.Commit().Error; err != nil {
-			tx.Rollback()
-			for _, task := range updateTasks {
-				if results[task.Id] == nil {
-					results[task.Id] = exceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
-				}
-			}
-		}
+		pairPlaceholders = append(pairPlaceholders, taskPairPlaceholders...)
+		pairArgs = append(pairArgs, taskPairArgs...)
+		preparedInputs = append(preparedInputs, taskPreparedInputs...)
 	}
 
-	return results
+	if len(preparedInputs) == 0 {
+		return successes, nil
+	}
+
+	var validRows []struct {
+		BlockId     uuid.UUID `gorm:"column:block_id"`
+		BlockPackId uuid.UUID `gorm:"column:block_pack_id"`
+	}
+	sql := fmt.Sprintf(`
+		WITH pairs(block_id, block_pack_id) AS (VALUES %s)
+		SELECT p.block_id::uuid, p.block_pack_id::uuid
+		FROM pairs p
+		INNER JOIN "BlockTable" b ON b.id = p.block_id::uuid AND b.deleted_at IS NULL
+		INNER JOIN "BlockGroupTable" bg ON bg.id = b.block_group_id AND bg.deleted_at IS NULL
+		WHERE bg.block_pack_id = p.block_pack_id::uuid
+	`, strings.Join(pairPlaceholders, ","))
+	if err := h.db.WithContext(ctx).Raw(sql, pairArgs...).Scan(&validRows).Error; err != nil {
+		return successes, exceptions.Block.NotFound().WithOrigin(err)
+	}
+	validBlockByBlockPack := make(map[[2]uuid.UUID]bool, len(validRows))
+	for _, validRow := range validRows {
+		validBlockByBlockPack[[2]uuid.UUID{validRow.BlockId, validRow.BlockPackId}] = true
+	}
+
+	bulkInputs := make([]inputs.BulkUpdateBlockInput, 0, len(preparedInputs))
+	taskIndexes := make([]int, 0, len(preparedInputs))
+	for _, preparedInput := range preparedInputs {
+		if !validBlockByBlockPack[[2]uuid.UUID{preparedInput.BlockId, preparedInput.BlockPackId}] {
+			continue
+		}
+		bulkInputs = append(bulkInputs, preparedInput.Input)
+		taskIndexes = append(taskIndexes, preparedInput.TaskIndex)
+	}
+	if len(bulkInputs) == 0 {
+		return successes, nil
+	}
+
+	bulkSuccesses, exception := h.blockRepository.BulkUpdateMany(
+		bulkInputs,
+		options.WithDB(h.db.WithContext(ctx)),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return successes, exception
+	}
+
+	for index, success := range bulkSuccesses {
+		successes[taskIndexes[index]] = success
+	}
+
+	return successes, nil
 }
 
 func (h BlockPackHandler) HandleResetBlockPack(
 	ctx context.Context,
 	tasks []schemas.RoutineTask,
 	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
-) map[uuid.UUID]*exceptions.Exception {
-	results := make(map[uuid.UUID]*exceptions.Exception)
-	blockPackIdsByOwnerId := make(map[uuid.UUID][]uuid.UUID)
-	ownerIdToTasks := make(map[uuid.UUID][]schemas.RoutineTask)
+) ([]bool, *exceptions.Exception) {
+	successes := make([]bool, len(tasks))
+	blockPackIds := make([]uuid.UUID, 0, len(tasks))
+	ownerIdByBlockPackId := make(map[uuid.UUID]uuid.UUID, len(tasks))
+	taskIndexesByBlockPackId := make(map[uuid.UUID][]int, len(tasks))
 
-	for _, task := range tasks {
+	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
 		if !exists {
-			results[task.Id] = exceptions.Station.NoPermission("run this routine task")
 			continue
 		}
 
 		payload, exception := decodePayload[dtos.ResetBlockPackRoutineTaskPayload](task)
 		if exception != nil {
-			results[task.Id] = exception
 			continue
 		}
-		blockPackIdsByOwnerId[ownerId] = append(blockPackIdsByOwnerId[ownerId], payload.BlockPackId)
-		ownerIdToTasks[ownerId] = append(ownerIdToTasks[ownerId], task)
+		blockPackIds = append(blockPackIds, payload.BlockPackId)
+		ownerIdByBlockPackId[payload.BlockPackId] = ownerId
+		taskIndexesByBlockPackId[payload.BlockPackId] = append(taskIndexesByBlockPackId[payload.BlockPackId], taskIndex)
 	}
 
-	for ownerId, blockPackIds := range blockPackIdsByOwnerId {
-		var blockGroupIds []uuid.UUID
-		if err := h.db.WithContext(ctx).
-			Model(&schemas.BlockGroup{}).
-			Where("block_pack_id IN ? AND deleted_at IS NULL", blockPackIds).
-			Pluck("id", &blockGroupIds).Error; err != nil {
-			for _, task := range ownerIdToTasks[ownerId] {
-				results[task.Id] = exceptions.BlockGroup.NotFound().WithOrigin(err)
+	if len(blockPackIds) == 0 {
+		return successes, nil
+	}
+
+	var blockGroups []struct {
+		Id          uuid.UUID `gorm:"column:id"`
+		BlockPackId uuid.UUID `gorm:"column:block_pack_id"`
+	}
+	if err := h.db.WithContext(ctx).
+		Model(&schemas.BlockGroup{}).
+		Select("id, block_pack_id").
+		Where("block_pack_id IN ? AND deleted_at IS NULL", blockPackIds).
+		Find(&blockGroups).Error; err != nil {
+		return successes, exceptions.BlockGroup.NotFound().WithOrigin(err)
+	}
+	if len(blockGroups) == 0 {
+		for _, taskIndexes := range taskIndexesByBlockPackId {
+			for _, taskIndex := range taskIndexes {
+				successes[taskIndex] = true
 			}
-			continue
 		}
-		if len(blockGroupIds) == 0 {
-			continue
+		return successes, nil
+	}
+
+	bulkInputs := make([]inputs.BulkDeleteBlockGroupInput, 0, len(blockGroups))
+	taskIndexes := make([][]int, 0, len(blockGroups))
+	for _, blockGroup := range blockGroups {
+		bulkInputs = append(bulkInputs, inputs.BulkDeleteBlockGroupInput{
+			UserId: ownerIdByBlockPackId[blockGroup.BlockPackId],
+			Id:     blockGroup.Id,
+		})
+		taskIndexes = append(taskIndexes, taskIndexesByBlockPackId[blockGroup.BlockPackId])
+	}
+
+	bulkSuccesses, exception := h.blockGroupRepository.BulkDeleteMany(
+		bulkInputs,
+		options.WithDB(h.db.WithContext(ctx)),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return successes, exception
+	}
+
+	for _, indexes := range taskIndexesByBlockPackId {
+		for _, taskIndex := range indexes {
+			successes[taskIndex] = true
 		}
-		if exception := h.blockGroupRepository.SoftDeleteManyByIds(
-			blockGroupIds,
-			ownerId,
-			options.WithDB(h.db.WithContext(ctx)),
-			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
-			options.WithOnlyDeleted(types.Ternary_Negative),
-		); exception != nil {
-			for _, task := range ownerIdToTasks[ownerId] {
-				results[task.Id] = exception
+	}
+	for index, success := range bulkSuccesses {
+		if !success {
+			for _, taskIndex := range taskIndexes[index] {
+				successes[taskIndex] = false
 			}
 		}
 	}
 
-	return results
+	return successes, nil
 }

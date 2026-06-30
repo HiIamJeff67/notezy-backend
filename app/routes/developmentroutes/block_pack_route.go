@@ -172,34 +172,34 @@ func configureDevelopmentBlockPackRoutes() {
 			)...,
 		)
 		blockPackRoutes.PUT(
-			"/moveMyBlockPacksByIds",
+			"/moveMyBlockPacksByParentSubShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "moveMyBlockPacksByIds"),
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "moveMyBlockPacksByParentSubShelfId"),
 					middlewares.ApplyMeterMiddleware(
 						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.BlockPack.MoveMyBlockPacksByIds,
+						metrics.MetricNames.Server.Requests.BlockPack.MoveMyBlockPacksByParentSubShelfId,
 					),
 				},
 				defaultMiddlewares,
-				blockPackModule.Binder.BindMoveMyBlockPacksByIds(
-					blockPackModule.Controller.MoveMyBlockPacksByIds,
+				blockPackModule.Binder.BindMoveMyBlockPacksByParentSubShelfId(
+					blockPackModule.Controller.MoveMyBlockPacksByParentSubShelfId,
 				),
 			)...,
 		)
 		blockPackRoutes.PUT(
-			"/batchMoveMyBlockPacksByIds",
+			"/moveMyBlockPacksByParentSubShelfIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "batchMoveMyBlockPacksByIds"),
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "moveMyBlockPacksByParentSubShelfIds"),
 					middlewares.ApplyMeterMiddleware(
 						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.BlockPack.BatchMoveMyBlockPacksByIds,
+						metrics.MetricNames.Server.Requests.BlockPack.MoveMyBlockPacksByParentSubShelfIds,
 					),
 				},
 				defaultMiddlewares,
-				blockPackModule.Binder.BindBatchMoveMyBlockPacksByIds(
-					blockPackModule.Controller.BatchMoveMyBlockPacksByIds,
+				blockPackModule.Binder.BindMoveMyBlockPacksByParentSubShelfIds(
+					blockPackModule.Controller.MoveMyBlockPacksByParentSubShelfIds,
 				),
 			)...,
 		)

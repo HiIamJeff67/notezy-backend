@@ -31,8 +31,8 @@ type BlockPackServiceInterface interface {
 	UpdateMyBlockPackById(ctx context.Context, reqDto *dtos.UpdateMyBlockPackByIdReqDto) (*dtos.UpdateMyBlockPackByIdResDto, *exceptions.Exception)
 	UpdateMyBlockPacksByIds(ctx context.Context, reqDto *dtos.UpdateMyBlockPacksByIdsReqDto) (*dtos.UpdateMyBlockPacksByIdsResDto, *exceptions.Exception)
 	MoveMyBlockPackById(ctx context.Context, reqDto *dtos.MoveMyBlockPackByIdReqDto) (*dtos.MoveMyBlockPackByIdResDto, *exceptions.Exception)
-	MoveMyBlockPacksByIds(ctx context.Context, reqDto *dtos.MoveMyBlockPacksByIdsReqDto) (*dtos.MoveMyBlockPacksByIdsResDto, *exceptions.Exception)
-	BatchMoveMyBlockPacksByIds(ctx context.Context, reqDto *dtos.BatchMoveMyBlockPacksByIdsReqDto) (*dtos.BatchMoveMyBlockPacksByIdsResDto, *exceptions.Exception)
+	MoveMyBlockPacksByParentSubShelfId(ctx context.Context, reqDto *dtos.MoveMyBlockPacksByParentSubShelfIdReqDto) (*dtos.MoveMyBlockPacksByParentSubShelfIdResDto, *exceptions.Exception)
+	MoveMyBlockPacksByParentSubShelfIds(ctx context.Context, reqDto *dtos.MoveMyBlockPacksByParentSubShelfIdsReqDto) (*dtos.MoveMyBlockPacksByParentSubShelfIdsResDto, *exceptions.Exception)
 	RestoreMyBlockPackById(ctx context.Context, reqDto *dtos.RestoreMyBlockPackByIdReqDto) (*dtos.RestoreMyBlockPackByIdResDto, *exceptions.Exception)
 	RestoreMyBlockPacksByIds(ctx context.Context, reqDto *dtos.RestoreMyBlockPacksByIdsReqDto) (*dtos.RestoreMyBlockPacksByIdsResDto, *exceptions.Exception)
 	DeleteMyBlockPackById(ctx context.Context, reqDto *dtos.DeleteMyBlockPackByIdReqDto) (*dtos.DeleteMyBlockPackByIdResDto, *exceptions.Exception)
@@ -276,9 +276,9 @@ func (s *BlockPackService) CreateBlockPacks(
 
 	db := s.db.WithContext(ctx)
 
-	input := make([]inputs.BulkCreateBlockPackInput, len(reqDto.Body.CreatedBlockPacks))
+	input := make([]inputs.CreateBlockPackBySubShelfIdInput, len(reqDto.Body.CreatedBlockPacks))
 	for index, createdBlockPack := range reqDto.Body.CreatedBlockPacks {
-		input[index] = inputs.BulkCreateBlockPackInput{
+		input[index] = inputs.CreateBlockPackBySubShelfIdInput{
 			Id:                  createdBlockPack.Id,
 			ParentSubShelfId:    createdBlockPack.ParentSubShelfId,
 			Name:                createdBlockPack.Name,
@@ -286,7 +286,7 @@ func (s *BlockPackService) CreateBlockPacks(
 			HeaderBackgroundURL: createdBlockPack.HeaderBackgroundURL,
 		}
 	}
-	newBlockPackIds, exception := s.blockPackRepository.BulkCreateManyBySubShelfIds(
+	newBlockPackIds, exception := s.blockPackRepository.CreateManyBySubShelfIds(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),
@@ -341,9 +341,9 @@ func (s *BlockPackService) UpdateMyBlockPacksByIds(
 
 	db := s.db.WithContext(ctx)
 
-	input := make([]inputs.BulkUpdateBlockPackInput, len(reqDto.Body.UpdatedBlockPacks))
+	input := make([]inputs.UpdateBlockPackByIdInput, len(reqDto.Body.UpdatedBlockPacks))
 	for index, updatedBlockPack := range reqDto.Body.UpdatedBlockPacks {
-		input[index] = inputs.BulkUpdateBlockPackInput{
+		input[index] = inputs.UpdateBlockPackByIdInput{
 			Id: updatedBlockPack.BlockPackId,
 			PartialUpdateInput: inputs.PartialUpdateInput[inputs.UpdateBlockPackInput]{
 				Values: inputs.UpdateBlockPackInput{
@@ -354,7 +354,7 @@ func (s *BlockPackService) UpdateMyBlockPacksByIds(
 			},
 		}
 	}
-	exception := s.blockPackRepository.BulkUpdateManyByIds(
+	exception := s.blockPackRepository.UpdateManyByIds(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),
@@ -397,18 +397,18 @@ func (s *BlockPackService) MoveMyBlockPackById(
 	}, nil
 }
 
-func (s *BlockPackService) MoveMyBlockPacksByIds(
-	ctx context.Context, reqDto *dtos.MoveMyBlockPacksByIdsReqDto,
-) (*dtos.MoveMyBlockPacksByIdsResDto, *exceptions.Exception) {
+func (s *BlockPackService) MoveMyBlockPacksByParentSubShelfId(
+	ctx context.Context, reqDto *dtos.MoveMyBlockPacksByParentSubShelfIdReqDto,
+) (*dtos.MoveMyBlockPacksByParentSubShelfIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.BlockPack.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
 
-	input := make([]inputs.BulkUpdateBlockPackInput, len(reqDto.Body.BlockPackIds))
+	input := make([]inputs.UpdateBlockPackByIdInput, len(reqDto.Body.BlockPackIds))
 	for index, blockPackId := range reqDto.Body.BlockPackIds {
-		input[index] = inputs.BulkUpdateBlockPackInput{
+		input[index] = inputs.UpdateBlockPackByIdInput{
 			Id: blockPackId,
 			PartialUpdateInput: inputs.PartialUpdateInput[inputs.UpdateBlockPackInput]{
 				Values: inputs.UpdateBlockPackInput{
@@ -417,7 +417,7 @@ func (s *BlockPackService) MoveMyBlockPacksByIds(
 			},
 		}
 	}
-	exception := s.blockPackRepository.BulkUpdateManyByIds(
+	exception := s.blockPackRepository.UpdateManyByIds(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),
@@ -426,24 +426,24 @@ func (s *BlockPackService) MoveMyBlockPacksByIds(
 		return nil, exception
 	}
 
-	return &dtos.MoveMyBlockPacksByIdsResDto{
+	return &dtos.MoveMyBlockPacksByParentSubShelfIdResDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
 
-func (s *BlockPackService) BatchMoveMyBlockPacksByIds(
-	ctx context.Context, reqDto *dtos.BatchMoveMyBlockPacksByIdsReqDto,
-) (*dtos.BatchMoveMyBlockPacksByIdsResDto, *exceptions.Exception) {
+func (s *BlockPackService) MoveMyBlockPacksByParentSubShelfIds(
+	ctx context.Context, reqDto *dtos.MoveMyBlockPacksByParentSubShelfIdsReqDto,
+) (*dtos.MoveMyBlockPacksByParentSubShelfIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.BlockPack.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
 
-	input := make([]inputs.BulkUpdateBlockPackInput, 0)
+	input := make([]inputs.UpdateBlockPackByIdInput, 0)
 	for _, movedBlockPack := range reqDto.Body.MovedBlockPacks {
 		for _, blockPackId := range movedBlockPack.BlockPackIds {
-			input = append(input, inputs.BulkUpdateBlockPackInput{
+			input = append(input, inputs.UpdateBlockPackByIdInput{
 				Id: blockPackId,
 				PartialUpdateInput: inputs.PartialUpdateInput[inputs.UpdateBlockPackInput]{
 					Values: inputs.UpdateBlockPackInput{
@@ -454,7 +454,7 @@ func (s *BlockPackService) BatchMoveMyBlockPacksByIds(
 		}
 	}
 
-	if exception := s.blockPackRepository.BulkUpdateManyByIds(
+	if exception := s.blockPackRepository.UpdateManyByIds(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),
@@ -462,7 +462,7 @@ func (s *BlockPackService) BatchMoveMyBlockPacksByIds(
 		return nil, exception
 	}
 
-	return &dtos.BatchMoveMyBlockPacksByIdsResDto{
+	return &dtos.MoveMyBlockPacksByParentSubShelfIdsResDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }

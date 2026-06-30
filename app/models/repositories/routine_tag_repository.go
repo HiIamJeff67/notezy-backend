@@ -25,10 +25,10 @@ type RoutineTagRepositoryInterface interface {
 	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineTagRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.RoutineTag, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineTagRelation, opts ...options.RepositoryOptions) (*schemas.RoutineTag, *exceptions.Exception)
 	GetAllByUserId(userId uuid.UUID, preloads []schemas.RoutineTagRelation, opts ...options.RepositoryOptions) ([]schemas.RoutineTag, *exceptions.Exception)
-	CreateOneByUserId(userId uuid.UUID, input inputs.CreateRoutineTagInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
-	BulkCreateManyByUserId(userId uuid.UUID, input []inputs.BulkCreateRoutineTagInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
+	CreateOne(userId uuid.UUID, input inputs.CreateRoutineTagInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
+	CreateMany(userId uuid.UUID, input []inputs.CreateRoutineTagInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateRoutineTagInput, opts ...options.RepositoryOptions) (*schemas.RoutineTag, *exceptions.Exception)
-	BulkUpdateManyByIds(userId uuid.UUID, input []inputs.BulkUpdateRoutineTagInput, opts ...options.RepositoryOptions) *exceptions.Exception
+	UpdateManyByIds(userId uuid.UUID, input []inputs.UpdateRoutineTagByIdInput, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 }
@@ -186,7 +186,7 @@ func (r *RoutineTagRepository) GetAllByUserId(
 	return routineTags, nil
 }
 
-func (r *RoutineTagRepository) CreateOneByUserId(
+func (r *RoutineTagRepository) CreateOne(
 	userId uuid.UUID,
 	input inputs.CreateRoutineTagInput,
 	opts ...options.RepositoryOptions,
@@ -196,7 +196,8 @@ func (r *RoutineTagRepository) CreateOneByUserId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	newRoutineTag := schemas.RoutineTag{
@@ -245,9 +246,9 @@ func (r *RoutineTagRepository) CreateOneByUserId(
 	return &newRoutineTag.Id, nil
 }
 
-func (r *RoutineTagRepository) BulkCreateManyByUserId(
+func (r *RoutineTagRepository) CreateMany(
 	userId uuid.UUID,
-	input []inputs.BulkCreateRoutineTagInput,
+	input []inputs.CreateRoutineTagInput,
 	opts ...options.RepositoryOptions,
 ) ([]uuid.UUID, *exceptions.Exception) {
 	if len(input) == 0 {
@@ -259,7 +260,8 @@ func (r *RoutineTagRepository) BulkCreateManyByUserId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	newRoutineTags := make([]schemas.RoutineTag, 0, len(input))
@@ -339,7 +341,8 @@ func (r *RoutineTagRepository) UpdateOneById(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -381,9 +384,9 @@ func (r *RoutineTagRepository) UpdateOneById(
 	return &updates, nil
 }
 
-func (r *RoutineTagRepository) BulkUpdateManyByIds(
+func (r *RoutineTagRepository) UpdateManyByIds(
 	userId uuid.UUID,
-	input []inputs.BulkUpdateRoutineTagInput,
+	input []inputs.UpdateRoutineTagByIdInput,
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(input) == 0 {
@@ -395,7 +398,8 @@ func (r *RoutineTagRepository) BulkUpdateManyByIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -425,15 +429,7 @@ func (r *RoutineTagRepository) BulkUpdateManyByIds(
 			continue
 		}
 
-		setIconNull := false
-		if in.PartialUpdateInput.SetNull != nil {
-			for field, setNull := range *in.PartialUpdateInput.SetNull {
-				if setNull && strings.ToLower(strings.ReplaceAll(field, "_", "")) == "icon" {
-					setIconNull = true
-					break
-				}
-			}
-		}
+		setIconNull := util.CheckSetNull(in.PartialUpdateInput.SetNull, "Icon")
 
 		valuePlaceholders = append(valuePlaceholders, `(?::uuid, ?::text, ?::text, ?::"SupportedIcon", ?::boolean)`)
 		valueArgs = append(valueArgs,

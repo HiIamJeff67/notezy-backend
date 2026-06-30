@@ -6,14 +6,15 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+
 	handlers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
-	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 type HandlerManager struct {
@@ -22,6 +23,11 @@ type HandlerManager struct {
 	workerPool    sync.WaitGroup
 	db            *gorm.DB
 	registries    map[enums.RoutineTaskPurpose]handlers.PurposeHandlerFunc
+}
+
+type purposeTaskGroup struct {
+	handlerFunc handlers.PurposeHandlerFunc
+	tasks       []schemas.RoutineTask
 }
 
 func NewHandlerManager(maxWorkers int, db *gorm.DB) HandlerManager {
@@ -87,10 +93,6 @@ func (hm *HandlerManager) Manage(ctx context.Context, claimedTasks []schemas.Rou
 		return exception
 	}
 
-	type purposeTaskGroup struct {
-		handler handlers.PurposeHandlerFunc
-		tasks   []schemas.RoutineTask
-	}
 	groupsByPurpose := make(map[enums.RoutineTaskPurpose]purposeTaskGroup)
 	for _, task := range claimedTasks {
 		if _, exists := taskIdToOwnerId[task.Id]; !exists {
@@ -105,7 +107,7 @@ func (hm *HandlerManager) Manage(ctx context.Context, claimedTasks []schemas.Rou
 		}
 
 		group := groupsByPurpose[task.Purpose]
-		group.handler = registry
+		group.handlerFunc = registry
 		group.tasks = append(group.tasks, task)
 		groupsByPurpose[task.Purpose] = group
 	}
@@ -126,9 +128,9 @@ func (hm *HandlerManager) Manage(ctx context.Context, claimedTasks []schemas.Rou
 				hm.workerPool.Done()
 			}()
 
-			handlerResults := group.handler(ctx, group.tasks, taskIdToOwnerId)
-			for _, task := range group.tasks {
-				if handlerResults[task.Id] != nil {
+			handlerResults, exception := group.handlerFunc(ctx, group.tasks, taskIdToOwnerId)
+			for index, task := range group.tasks {
+				if exception != nil || index >= len(handlerResults) || !handlerResults[index] {
 					_ = hm.markFailed(ctx, task)
 					continue
 				}
@@ -180,6 +182,7 @@ func (hm *HandlerManager) resolveTaskOwners(
 		}
 		taskIdToOwnerId[task.Id] = ownerId
 	}
+
 	return taskIdToOwnerId, nil
 }
 
@@ -218,6 +221,7 @@ func (hm *HandlerManager) markSucceeded(ctx context.Context, task schemas.Routin
 	if result.Error != nil {
 		return exceptions.RoutineTask.FailedToUpdate().WithOrigin(result.Error)
 	}
+
 	return nil
 }
 
@@ -239,5 +243,6 @@ func (hm *HandlerManager) markFailed(ctx context.Context, task schemas.RoutineTa
 	if result.Error != nil {
 		return exceptions.RoutineTask.FailedToUpdate().WithOrigin(result.Error)
 	}
+
 	return nil
 }

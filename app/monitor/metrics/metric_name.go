@@ -63,11 +63,11 @@ type metricNameRoutine struct {
 	UpdateMyRoutineById                     string
 	UpdateMyRoutinesByIds                   string
 	LinkRoutineTagById                      string
-	BulkLinkRoutineTagsByIds                string
+	LinkRoutineTagsByIds                    string
 	LinkRoutineTaskById                     string
-	BulkLinkRoutineTasksByIds               string
+	LinkRoutineTasksByIds                   string
 	LinkRoutineItemById                     string
-	BulkLinkRoutineItemsByIds               string
+	LinkRoutineItemsByIds                   string
 	RestoreMyRoutineById                    string
 	RestoreMyRoutinesByIds                  string
 	DeleteMyRoutineById                     string
@@ -129,8 +129,8 @@ type metricNameSubShelf struct {
 	UpdateMySubShelfById                    string
 	UpdateMySubShelvesByIds                 string
 	MoveMySubShelf                          string
-	MoveMySubShelves                        string
-	BatchMoveMySubShelves                   string
+	MoveMySubShelvesByRootShelfId           string
+	MoveMySubShelvesByRootShelfIds          string
 	RestoreMySubShelfById                   string
 	RestoreMySubShelvesByIds                string
 	DeleteMySubShelfById                    string
@@ -154,21 +154,21 @@ type metricNameMaterial struct {
 }
 
 type metricNameBlockPack struct {
-	GetMyBlockPackById                string
-	GetMyBlockPackAndItsParentById    string
-	GetMyBlockPacksByParentSubShelfId string
-	GetAllMyBlockPacksByRootShelfId   string
-	CreateBlockPack                   string
-	CreateBlockPacks                  string
-	UpdateMyBlockPackById             string
-	UpdateMyBlockPacksByIds           string
-	MoveMyBlockPackById               string
-	MoveMyBlockPacksByIds             string
-	BatchMoveMyBlockPacksByIds        string
-	RestoreMyBlockPackById            string
-	RestoreMyBlockPacksByIds          string
-	DeleteMyBlockPackById             string
-	DeleteMyBlockPacksByIds           string
+	GetMyBlockPackById                  string
+	GetMyBlockPackAndItsParentById      string
+	GetMyBlockPacksByParentSubShelfId   string
+	GetAllMyBlockPacksByRootShelfId     string
+	CreateBlockPack                     string
+	CreateBlockPacks                    string
+	UpdateMyBlockPackById               string
+	UpdateMyBlockPacksByIds             string
+	MoveMyBlockPackById                 string
+	MoveMyBlockPacksByParentSubShelfId  string
+	MoveMyBlockPacksByParentSubShelfIds string
+	RestoreMyBlockPackById              string
+	RestoreMyBlockPacksByIds            string
+	DeleteMyBlockPackById               string
+	DeleteMyBlockPacksByIds             string
 }
 
 type metricNameBlockGroup struct {
@@ -180,14 +180,14 @@ type metricNameBlockGroup struct {
 	GetAllMyBlockGroupsByBlockPackId                       string
 	InsertBlockGroupByBlockPackId                          string
 	InsertBlockGroupsByBlockPackId                         string
-	BatchInsertBlockGroupsByBlockPackIds                   string
+	InsertBlockGroupsByBlockPackIds                        string
 	InsertBlockGroupAndItsBlocksByBlockPackId              string
 	InsertBlockGroupsAndTheirBlocksByBlockPackId           string
-	BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds     string
+	InsertBlockGroupsAndTheirBlocksByBlockPackIds          string
 	InsertSequentialBlockGroupsAndTheirBlocksByBlockPackId string
 	MoveMyBlockGroupById                                   string
-	MoveMyBlockGroupsByIds                                 string
-	BatchMoveMyBlockGroupsByIds                            string
+	MoveMyBlockGroupsByBlockPackId                         string
+	MoveMyBlockGroupsByBlockPackIds                        string
 	RestoreMyBlockGroupById                                string
 	RestoreMyBlockGroupsByIds                              string
 	DeleteMyBlockGroupById                                 string
@@ -317,11 +317,11 @@ var MetricNames = struct {
 				UpdateMyRoutineById:                     "server.requests.routine.updateMyRoutineById",
 				UpdateMyRoutinesByIds:                   "server.requests.routine.updateMyRoutinesByIds",
 				LinkRoutineTagById:                      "server.requests.routine.linkRoutineTagById",
-				BulkLinkRoutineTagsByIds:                "server.requests.routine.bulkLinkRoutineTagsByIds",
+				LinkRoutineTagsByIds:                    "server.requests.routine.linkRoutineTagsByIds",
 				LinkRoutineTaskById:                     "server.requests.routine.linkRoutineTaskById",
-				BulkLinkRoutineTasksByIds:               "server.requests.routine.bulkLinkRoutineTasksByIds",
+				LinkRoutineTasksByIds:                   "server.requests.routine.linkRoutineTasksByIds",
 				LinkRoutineItemById:                     "server.requests.routine.linkRoutineItemById",
-				BulkLinkRoutineItemsByIds:               "server.requests.routine.bulkLinkRoutineItemsByIds",
+				LinkRoutineItemsByIds:                   "server.requests.routine.linkRoutineItemsByIds",
 				RestoreMyRoutineById:                    "server.requests.routine.restoreMyRoutineById",
 				RestoreMyRoutinesByIds:                  "server.requests.routine.restoreMyRoutinesByIds",
 				DeleteMyRoutineById:                     "server.requests.routine.deleteMyRoutineById",
@@ -379,8 +379,8 @@ var MetricNames = struct {
 				UpdateMySubShelfById:                    "server.requests.subShelf.updateMySubShelfById",
 				UpdateMySubShelvesByIds:                 "server.requests.subShelf.UpdateMySubShelvesByIds",
 				MoveMySubShelf:                          "server.requests.subShelf.moveMySubShelf",
-				MoveMySubShelves:                        "server.requests.subShelf.moveMySubShelves",
-				BatchMoveMySubShelves:                   "server.requests.subShelf.BatchMoveMySubShelves",
+				MoveMySubShelvesByRootShelfId:           "server.requests.subShelf.moveMySubShelvesByRootShelfId",
+				MoveMySubShelvesByRootShelfIds:          "server.requests.subShelf.moveMySubShelvesByRootShelfIds",
 				RestoreMySubShelfById:                   "server.requests.subShelf.restoreMySubShelfById",
 				RestoreMySubShelvesByIds:                "server.requests.subShelf.restoreMySubShelvesByIds",
 				DeleteMySubShelfById:                    "server.requests.subShelf.deleteMySubShelfById",
@@ -402,21 +402,21 @@ var MetricNames = struct {
 				DeleteMyMaterialsByIds:           "server.requests.material.deleteMyMaterialsByIds",
 			},
 			BlockPack: metricNameBlockPack{
-				GetMyBlockPackById:                "server.requests.blockPack.getMyBlockPackById",
-				GetMyBlockPackAndItsParentById:    "server.requests.blockPack.getMyBlockPackAndItsParentById",
-				GetMyBlockPacksByParentSubShelfId: "server.requests.blockPack.getMyBlockPacksByParentSubShelfId",
-				GetAllMyBlockPacksByRootShelfId:   "server.requests.blockPack.getAllMyBlockPacksByRootShelfId",
-				CreateBlockPack:                   "server.requests.blockPack.createBlockPack",
-				CreateBlockPacks:                  "server.requests.blockPack.CreateBlockPacks",
-				UpdateMyBlockPackById:             "server.requests.blockPack.updateMyBlockPackById",
-				UpdateMyBlockPacksByIds:           "server.requests.blockPack.UpdateMyBlockPacksByIds",
-				MoveMyBlockPackById:               "server.requests.blockPack.moveMyBlockPackById",
-				MoveMyBlockPacksByIds:             "server.requests.blockPack.moveMyBlockPacksByIds",
-				BatchMoveMyBlockPacksByIds:        "server.requests.blockPack.BatchMoveMyBlockPacksByIds",
-				RestoreMyBlockPackById:            "server.requests.blockPack.restoreMyBlockPackById",
-				RestoreMyBlockPacksByIds:          "server.requests.blockPack.restoreMyBlockPacksByIds",
-				DeleteMyBlockPackById:             "server.requests.blockPack.deleteMyBlockPackById",
-				DeleteMyBlockPacksByIds:           "server.requests.blockPack.deleteMyBlockPacksByIds",
+				GetMyBlockPackById:                  "server.requests.blockPack.getMyBlockPackById",
+				GetMyBlockPackAndItsParentById:      "server.requests.blockPack.getMyBlockPackAndItsParentById",
+				GetMyBlockPacksByParentSubShelfId:   "server.requests.blockPack.getMyBlockPacksByParentSubShelfId",
+				GetAllMyBlockPacksByRootShelfId:     "server.requests.blockPack.getAllMyBlockPacksByRootShelfId",
+				CreateBlockPack:                     "server.requests.blockPack.createBlockPack",
+				CreateBlockPacks:                    "server.requests.blockPack.CreateBlockPacks",
+				UpdateMyBlockPackById:               "server.requests.blockPack.updateMyBlockPackById",
+				UpdateMyBlockPacksByIds:             "server.requests.blockPack.UpdateMyBlockPacksByIds",
+				MoveMyBlockPackById:                 "server.requests.blockPack.moveMyBlockPackById",
+				MoveMyBlockPacksByParentSubShelfId:  "server.requests.blockPack.moveMyBlockPacksByParentSubShelfId",
+				MoveMyBlockPacksByParentSubShelfIds: "server.requests.blockPack.moveMyBlockPacksByParentSubShelfIds",
+				RestoreMyBlockPackById:              "server.requests.blockPack.restoreMyBlockPackById",
+				RestoreMyBlockPacksByIds:            "server.requests.blockPack.restoreMyBlockPacksByIds",
+				DeleteMyBlockPackById:               "server.requests.blockPack.deleteMyBlockPackById",
+				DeleteMyBlockPacksByIds:             "server.requests.blockPack.deleteMyBlockPacksByIds",
 			},
 			BlockGroup: metricNameBlockGroup{
 				GetMyBlockGroupById:                                    "server.requests.blockGroup.getMyBlockGroupById",
@@ -427,14 +427,14 @@ var MetricNames = struct {
 				GetAllMyBlockGroupsByBlockPackId:                       "server.requests.blockGroup.getAllMyBlockGroupsByBlockPackId",
 				InsertBlockGroupByBlockPackId:                          "server.requests.blockGroup.insertBlockGroupByBlockPackId",
 				InsertBlockGroupsByBlockPackId:                         "server.requests.blockGroup.insertBlockGroupsByBlockPackId",
-				BatchInsertBlockGroupsByBlockPackIds:                   "server.requests.blockGroup.batchInsertBlockGroupsByBlockPackIds",
+				InsertBlockGroupsByBlockPackIds:                        "server.requests.blockGroup.insertBlockGroupsByBlockPackIds",
 				InsertBlockGroupAndItsBlocksByBlockPackId:              "server.requests.blockGroup.insertBlockGroupAndItsBlocksByBlockPackId",
 				InsertBlockGroupsAndTheirBlocksByBlockPackId:           "server.requests.blockGroup.insertBlockGroupsAndTheirBlocksByBlockPackId",
-				BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds:     "server.requests.blockGroup.batchInsertBlockGroupsAndTheirBlocksByBlockPackIds",
+				InsertBlockGroupsAndTheirBlocksByBlockPackIds:          "server.requests.blockGroup.insertBlockGroupsAndTheirBlocksByBlockPackIds",
 				InsertSequentialBlockGroupsAndTheirBlocksByBlockPackId: "server.requests.blockGroup.insertSequentialBlockGroupsAndTheirBlocksByBlockPackId",
 				MoveMyBlockGroupById:                                   "server.requests.moveMyBlockGroupById",
-				MoveMyBlockGroupsByIds:                                 "server.requests.blockGroup.moveMyBlockGroupsByIds",
-				BatchMoveMyBlockGroupsByIds:                            "server.requests.blockGroup.batchMoveMyBlockGroupsByIds",
+				MoveMyBlockGroupsByBlockPackId:                         "server.requests.blockGroup.moveMyBlockGroupsByBlockPackId",
+				MoveMyBlockGroupsByBlockPackIds:                        "server.requests.blockGroup.moveMyBlockGroupsByBlockPackIds",
 				RestoreMyBlockGroupById:                                "server.requests.blockGroup.restoreMyBlockGroupById",
 				RestoreMyBlockGroupsByIds:                              "server.requests.blockGroup.restoreMyBlockGroupsByIds",
 				DeleteMyBlockGroupById:                                 "server.requests.blockGroup.deleteMyBlockGroupById",

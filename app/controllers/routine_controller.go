@@ -18,11 +18,11 @@ type RoutineControllerInterface interface {
 	UpdateMyRoutineById(ctx *gin.Context, reqDto *dtos.UpdateMyRoutineByIdReqDto)
 	UpdateMyRoutinesByIds(ctx *gin.Context, reqDto *dtos.UpdateMyRoutinesByIdsReqDto)
 	LinkRoutineTagById(ctx *gin.Context, reqDto *dtos.LinkRoutineTagByIdReqDto)
-	BulkLinkRoutineTagsByIds(ctx *gin.Context, reqDto *dtos.BulkLinkRoutineTagsByIdsReqDto)
+	LinkRoutineTagsByIds(ctx *gin.Context, reqDto *dtos.LinkRoutineTagsByIdsReqDto)
 	LinkRoutineTaskById(ctx *gin.Context, reqDto *dtos.LinkRoutineTaskByIdReqDto)
-	BulkLinkRoutineTasksByIds(ctx *gin.Context, reqDto *dtos.BulkLinkRoutineTasksByIdsReqDto)
+	LinkRoutineTasksByIds(ctx *gin.Context, reqDto *dtos.LinkRoutineTasksByIdsReqDto)
 	LinkRoutineItemById(ctx *gin.Context, reqDto *dtos.LinkRoutineItemByIdReqDto)
-	BulkLinkRoutineItemsByIds(ctx *gin.Context, reqDto *dtos.BulkLinkRoutineItemsByIdsReqDto)
+	LinkRoutineItemsByIds(ctx *gin.Context, reqDto *dtos.LinkRoutineItemsByIdsReqDto)
 	RestoreMyRoutineById(ctx *gin.Context, reqDto *dtos.RestoreMyRoutineByIdReqDto)
 	RestoreMyRoutinesByIds(ctx *gin.Context, reqDto *dtos.RestoreMyRoutinesByIdsReqDto)
 	DeleteMyRoutineById(ctx *gin.Context, reqDto *dtos.DeleteMyRoutineByIdReqDto)
@@ -160,8 +160,8 @@ func (c *RoutineController) LinkRoutineTagById(ctx *gin.Context, reqDto *dtos.Li
 	})
 }
 
-func (c *RoutineController) BulkLinkRoutineTagsByIds(ctx *gin.Context, reqDto *dtos.BulkLinkRoutineTagsByIdsReqDto) {
-	resDto, exception := c.routineService.BulkLinkRoutineTagsByIds(ctx.Request.Context(), reqDto)
+func (c *RoutineController) LinkRoutineTagsByIds(ctx *gin.Context, reqDto *dtos.LinkRoutineTagsByIdsReqDto) {
+	resDto, exception := c.routineService.LinkRoutineTagsByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
@@ -188,8 +188,8 @@ func (c *RoutineController) LinkRoutineTaskById(ctx *gin.Context, reqDto *dtos.L
 	})
 }
 
-func (c *RoutineController) BulkLinkRoutineTasksByIds(ctx *gin.Context, reqDto *dtos.BulkLinkRoutineTasksByIdsReqDto) {
-	resDto, exception := c.routineService.BulkLinkRoutineTasksByIds(ctx.Request.Context(), reqDto)
+func (c *RoutineController) LinkRoutineTasksByIds(ctx *gin.Context, reqDto *dtos.LinkRoutineTasksByIdsReqDto) {
+	resDto, exception := c.routineService.LinkRoutineTasksByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
@@ -216,8 +216,8 @@ func (c *RoutineController) LinkRoutineItemById(ctx *gin.Context, reqDto *dtos.L
 	})
 }
 
-func (c *RoutineController) BulkLinkRoutineItemsByIds(ctx *gin.Context, reqDto *dtos.BulkLinkRoutineItemsByIdsReqDto) {
-	resDto, exception := c.routineService.BulkLinkRoutineItemsByIds(ctx.Request.Context(), reqDto)
+func (c *RoutineController) LinkRoutineItemsByIds(ctx *gin.Context, reqDto *dtos.LinkRoutineItemsByIdsReqDto) {
+	resDto, exception := c.routineService.LinkRoutineItemsByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return

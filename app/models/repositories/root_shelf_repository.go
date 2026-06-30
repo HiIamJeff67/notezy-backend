@@ -26,10 +26,10 @@ type RootShelfRepositoryInterface interface {
 	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RootShelfRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) (*schemas.RootShelf, enums.AccessControlPermission, *exceptions.Exception)
 	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.RootShelfRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.RootShelf, []enums.AccessControlPermission, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RootShelfRelation, opts ...options.RepositoryOptions) (*schemas.RootShelf, enums.AccessControlPermission, *exceptions.Exception)
-	CreateOneByOwnerId(ownerId uuid.UUID, input inputs.CreateRootShelfInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
-	CreateManyByOwnerId(ownerId uuid.UUID, input []inputs.CreateRootShelfInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
+	CreateOne(ownerId uuid.UUID, input inputs.CreateRootShelfInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
+	CreateMany(ownerId uuid.UUID, input []inputs.CreateRootShelfInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateRootShelfInput, opts ...options.RepositoryOptions) (*schemas.RootShelf, *exceptions.Exception)
-	BulkUpdateManyByIds(userId uuid.UUID, input []inputs.BulkUpdateRootShelfInput, opts ...options.RepositoryOptions) *exceptions.Exception
+	UpdateManyByIds(userId uuid.UUID, input []inputs.UpdateRootShelfByIdInput, opts ...options.RepositoryOptions) *exceptions.Exception
 	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.RootShelf, *exceptions.Exception)
 	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.RootShelf, *exceptions.Exception)
 	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
@@ -38,6 +38,12 @@ type RootShelfRepositoryInterface interface {
 	HardDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteManyByIds(sids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteManyByUserId(userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
+
+	/* ============================== System Only Method ============================== */
+
+	BulkCheckPermissionsAndGetManyByIds(inputs []inputs.BulkCheckRootShelfPermissionInput, preloads []schemas.RootShelfRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]bool, []schemas.RootShelf, *exceptions.Exception)
+	BulkCreateMany(inputs []inputs.BulkCreateRootShelfInput, opts ...options.RepositoryOptions) ([]bool, *exceptions.Exception)
+	BulkUpdateMany(inputs []inputs.BulkUpdateRootShelfInput, opts ...options.RepositoryOptions) ([]bool, *exceptions.Exception)
 }
 
 type RootShelfRepository struct {
@@ -226,7 +232,7 @@ func (r *RootShelfRepository) GetOneById(
 	)
 }
 
-func (r *RootShelfRepository) CreateOneByOwnerId(
+func (r *RootShelfRepository) CreateOne(
 	ownerId uuid.UUID,
 	input inputs.CreateRootShelfInput,
 	opts ...options.RepositoryOptions,
@@ -237,7 +243,8 @@ func (r *RootShelfRepository) CreateOneByOwnerId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	var newRootShelf schemas.RootShelf
@@ -289,7 +296,7 @@ func (r *RootShelfRepository) CreateOneByOwnerId(
 	return &newRootShelf.Id, nil
 }
 
-func (r *RootShelfRepository) CreateManyByOwnerId(
+func (r *RootShelfRepository) CreateMany(
 	ownerId uuid.UUID,
 	input []inputs.CreateRootShelfInput,
 	opts ...options.RepositoryOptions,
@@ -304,7 +311,8 @@ func (r *RootShelfRepository) CreateManyByOwnerId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	var newRootShelves []schemas.RootShelf
@@ -314,9 +322,6 @@ func (r *RootShelfRepository) CreateManyByOwnerId(
 		if err := copier.Copy(&newRootShelf, &in); err != nil {
 			parsedOptions.DB.Rollback()
 			return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
-		}
-		if newRootShelf.Id == uuid.Nil {
-			newRootShelf.Id = uuid.New()
 		}
 		newRootShelves = append(newRootShelves, newRootShelf)
 	}
@@ -373,7 +378,8 @@ func (r *RootShelfRepository) UpdateOneById(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if !parsedOptions.IsTransactionStarted {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -424,9 +430,9 @@ func (r *RootShelfRepository) UpdateOneById(
 	return &updates, nil
 }
 
-func (r *RootShelfRepository) BulkUpdateManyByIds(
+func (r *RootShelfRepository) UpdateManyByIds(
 	userId uuid.UUID,
-	input []inputs.BulkUpdateRootShelfInput,
+	input []inputs.UpdateRootShelfByIdInput,
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
@@ -435,7 +441,8 @@ func (r *RootShelfRepository) BulkUpdateManyByIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted && !parsedOptions.SkipPermissionCheck
 	if shouldStartTransaction { // only start the transaction when the permission check is required
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	isRootShelfValid := make(map[uuid.UUID]bool)
@@ -474,7 +481,7 @@ func (r *RootShelfRepository) BulkUpdateManyByIds(
 			continue
 		}
 
-		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::string, ?::bigint, ?::bigint, ?::timestamptz)")
+		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::text, ?::bigint, ?::bigint, ?::timestamptz)")
 		valueArgs = append(valueArgs,
 			in.Id,
 			in.PartialUpdateInput.Values.Name,
@@ -487,7 +494,7 @@ func (r *RootShelfRepository) BulkUpdateManyByIds(
 	sql := fmt.Sprintf(`
 		UPDATE "RootShelfTable" AS r
 		SET
-			name = COALESCE(v.name::string, r.name),
+			name = COALESCE(v.name::text, r.name),
 			sub_shelf_count = COALESCE(v.sub_shelf_count::bigint, r.sub_shelf_count),
 			item_count = COALESCE(v.item_count::bigint, r.item_count),
 			last_analyzed_at = COALESCE(v.last_analyzed_at, r.last_analyzed_at),
@@ -740,4 +747,263 @@ func (r *RootShelfRepository) HardDeleteManyByUserId(
 	}
 
 	return nil
+}
+
+/* ============================== System Only Method ============================== */
+
+func (r *RootShelfRepository) BulkCheckPermissionsAndGetManyByIds(
+	inputs []inputs.BulkCheckRootShelfPermissionInput,
+	preloads []schemas.RootShelfRelation,
+	allowedPermissions []enums.AccessControlPermission,
+	opts ...options.RepositoryOptions,
+) ([]bool, []schemas.RootShelf, *exceptions.Exception) {
+	if len(inputs) == 0 {
+		return []bool{}, []schemas.RootShelf{}, nil
+	}
+
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	successes := make([]bool, len(inputs))
+	ids := make([]uuid.UUID, 0, len(inputs))
+	userIds := make([]uuid.UUID, 0, len(inputs))
+	for _, in := range inputs {
+		ids = append(ids, in.Id)
+		userIds = append(userIds, in.UserId)
+	}
+
+	var validTargets []struct {
+		Id     uuid.UUID `gorm:"column:id"`
+		UserId uuid.UUID `gorm:"column:user_id"`
+	}
+	result := parsedOptions.DB.Model(&schemas.RootShelf{}).
+		Select(`"RootShelfTable".id, uts.user_id`).
+		Joins(`INNER JOIN "UsersToShelvesTable" AS uts ON uts.root_shelf_id = "RootShelfTable".id`).
+		Where(`"RootShelfTable".id IN ?`, ids).
+		Where("uts.user_id IN ? AND uts.permission IN ?", userIds, allowedPermissions).
+		Scopes(r.rootShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Scan(&validTargets)
+	if result.Error != nil {
+		return nil, nil, exceptions.Shelf.NotFound().WithOrigin(result.Error)
+	}
+
+	validTargetByUserId := make(map[[2]uuid.UUID]bool, len(validTargets))
+	for _, validTarget := range validTargets {
+		validTargetByUserId[[2]uuid.UUID{validTarget.Id, validTarget.UserId}] = true
+	}
+
+	validIdSet := make(map[uuid.UUID]bool, len(validTargets))
+	for _, in := range inputs {
+		if validTargetByUserId[[2]uuid.UUID{in.Id, in.UserId}] {
+			validIdSet[in.Id] = true
+		}
+	}
+
+	validIds := make([]uuid.UUID, 0, len(validIdSet))
+	for validId := range validIdSet {
+		validIds = append(validIds, validId)
+	}
+	if len(validIds) == 0 {
+		return successes, []schemas.RootShelf{}, nil
+	}
+
+	var rootShelves []schemas.RootShelf
+	result = parsedOptions.DB.Model(&schemas.RootShelf{}).
+		Where(`"RootShelfTable".id IN ?`, validIds).
+		Scopes(r.rootShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Scopes(r.rootShelfScope.IncludePreloads(preloads)).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
+		Find(&rootShelves)
+	if result.Error != nil {
+		return nil, nil, exceptions.Shelf.NotFound().WithOrigin(result.Error)
+	}
+
+	foundIdSet := make(map[uuid.UUID]bool, len(rootShelves))
+	for _, rootShelf := range rootShelves {
+		foundIdSet[rootShelf.Id] = true
+	}
+	for index, in := range inputs {
+		if validTargetByUserId[[2]uuid.UUID{in.Id, in.UserId}] && foundIdSet[in.Id] {
+			successes[index] = true
+		}
+	}
+
+	return successes, rootShelves, nil
+}
+
+func (r *RootShelfRepository) BulkCreateMany(
+	inputs []inputs.BulkCreateRootShelfInput,
+	opts ...options.RepositoryOptions,
+) ([]bool, *exceptions.Exception) {
+	if len(inputs) == 0 {
+		return []bool{}, exceptions.Shelf.NoChanges()
+	}
+
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	shouldStartTransaction := !parsedOptions.IsTransactionStarted
+	if shouldStartTransaction {
+		parsedOptions.DB = parsedOptions.DB.Begin()
+	}
+
+	newRootShelves := make([]schemas.RootShelf, len(inputs))
+	newUsersToShelves := make([]schemas.UsersToShelves, len(inputs))
+	for index, in := range inputs {
+		newRootShelfId := uuid.New()
+		if in.Id != nil && *in.Id != uuid.Nil {
+			newRootShelfId = *in.Id
+		}
+
+		newRootShelves[index] = schemas.RootShelf{
+			Id:             newRootShelfId,
+			OwnerId:        in.UserId,
+			Name:           in.Name,
+			LastAnalyzedAt: time.Now(),
+		}
+		if in.LastAnalyzedAt != nil {
+			newRootShelves[index].LastAnalyzedAt = *in.LastAnalyzedAt
+		}
+
+		newUsersToShelves[index] = schemas.UsersToShelves{
+			UserId:      in.UserId,
+			RootShelfId: newRootShelfId,
+			Permission:  enums.AccessControlPermission_Owner,
+		}
+	}
+
+	result := parsedOptions.DB.Model(&schemas.RootShelf{}).
+		CreateInBatches(&newRootShelves, parsedOptions.BatchSize)
+	if result.Error != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exceptions.Shelf.FailedToCreate().WithOrigin(result.Error)
+	}
+
+	result = parsedOptions.DB.Model(&schemas.UsersToShelves{}).
+		CreateInBatches(&newUsersToShelves, parsedOptions.BatchSize)
+	if result.Error != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exceptions.Shelf.FailedToCreate().WithOrigin(result.Error)
+	}
+
+	if shouldStartTransaction {
+		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
+			return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+		}
+	}
+
+	successes := make([]bool, len(inputs))
+	for index := range successes {
+		successes[index] = true
+	}
+
+	return successes, nil
+}
+
+func (r *RootShelfRepository) BulkUpdateMany(
+	bulkInputs []inputs.BulkUpdateRootShelfInput,
+	opts ...options.RepositoryOptions,
+) ([]bool, *exceptions.Exception) {
+	if len(bulkInputs) == 0 {
+		return []bool{}, exceptions.Shelf.NoChanges()
+	}
+
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	shouldStartTransaction := !parsedOptions.IsTransactionStarted
+	if shouldStartTransaction {
+		parsedOptions.DB = parsedOptions.DB.Begin()
+	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	checkInputs := make([]inputs.BulkCheckRootShelfPermissionInput, len(bulkInputs))
+	for index, in := range bulkInputs {
+		checkInputs[index] = inputs.BulkCheckRootShelfPermissionInput{
+			UserId: in.UserId,
+			Id:     in.Id,
+		}
+	}
+	checkOptions := append(opts, options.WithTransactionDB(parsedOptions.DB))
+	checkOptions = append(checkOptions, options.WithOnlyDeleted(types.Ternary_Negative))
+	checkOptions = append(checkOptions, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+	successes, _, exception := r.BulkCheckPermissionsAndGetManyByIds(checkInputs, nil, allowedPermissions, checkOptions...)
+	if exception != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exception
+	}
+
+	valuePlaceholders := make([]string, 0, len(bulkInputs))
+	valueArgs := make([]interface{}, 0, len(bulkInputs)*6)
+	for index, in := range bulkInputs {
+		if !successes[index] {
+			continue
+		}
+
+		valuePlaceholders = append(valuePlaceholders, "(?::int, ?::uuid, ?::text, ?::bigint, ?::bigint, ?::timestamptz)")
+		valueArgs = append(valueArgs,
+			index,
+			in.Id,
+			in.PartialUpdateInput.Values.Name,
+			in.PartialUpdateInput.Values.SubShelfCount,
+			in.PartialUpdateInput.Values.ItemCount,
+			in.PartialUpdateInput.Values.LastAnalyzedAt,
+		)
+	}
+	if len(valuePlaceholders) == 0 {
+		if shouldStartTransaction {
+			parsedOptions.DB.Rollback()
+		}
+		return successes, nil
+	}
+
+	sql := fmt.Sprintf(`
+		WITH payload(idx, id, name, sub_shelf_count, item_count, last_analyzed_at) AS (
+			VALUES %s
+		),
+		updated AS (
+			UPDATE "RootShelfTable" AS rs
+			SET
+				name = COALESCE(v.name::text, rs.name),
+				sub_shelf_count = COALESCE(v.sub_shelf_count::bigint, rs.sub_shelf_count),
+				item_count = COALESCE(v.item_count::bigint, rs.item_count),
+				last_analyzed_at = COALESCE(v.last_analyzed_at::timestamptz, rs.last_analyzed_at),
+				updated_at = NOW()
+			FROM payload AS v
+			WHERE rs.id = v.id::uuid
+				AND rs.deleted_at IS NULL
+			RETURNING rs.id
+		)
+		SELECT v.idx
+		FROM payload AS v
+		INNER JOIN updated AS u ON u.id = v.id::uuid
+	`, strings.Join(valuePlaceholders, ","))
+
+	var updatedIndexes []struct {
+		Index int `gorm:"column:idx"`
+	}
+	result := parsedOptions.DB.Raw(sql, valueArgs...).Scan(&updatedIndexes)
+	if result.Error != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)
+	}
+
+	if shouldStartTransaction {
+		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
+			return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+		}
+	}
+
+	successes = make([]bool, len(bulkInputs))
+	for _, updatedIndex := range updatedIndexes {
+		if updatedIndex.Index >= 0 && updatedIndex.Index < len(successes) {
+			successes[updatedIndex.Index] = true
+		}
+	}
+
+	return successes, nil
 }

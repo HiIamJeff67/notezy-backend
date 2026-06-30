@@ -25,11 +25,11 @@ type RoutineBinderInterface interface {
 	BindUpdateMyRoutineById(controllerFunc types.ControllerFunc[*dtos.UpdateMyRoutineByIdReqDto]) gin.HandlerFunc
 	BindUpdateMyRoutinesByIds(controllerFunc types.ControllerFunc[*dtos.UpdateMyRoutinesByIdsReqDto]) gin.HandlerFunc
 	BindLinkRoutineTagById(controllerFunc types.ControllerFunc[*dtos.LinkRoutineTagByIdReqDto]) gin.HandlerFunc
-	BindBulkLinkRoutineTagsByIds(controllerFunc types.ControllerFunc[*dtos.BulkLinkRoutineTagsByIdsReqDto]) gin.HandlerFunc
+	BindLinkRoutineTagsByIds(controllerFunc types.ControllerFunc[*dtos.LinkRoutineTagsByIdsReqDto]) gin.HandlerFunc
 	BindLinkRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.LinkRoutineTaskByIdReqDto]) gin.HandlerFunc
-	BindBulkLinkRoutineTasksByIds(controllerFunc types.ControllerFunc[*dtos.BulkLinkRoutineTasksByIdsReqDto]) gin.HandlerFunc
+	BindLinkRoutineTasksByIds(controllerFunc types.ControllerFunc[*dtos.LinkRoutineTasksByIdsReqDto]) gin.HandlerFunc
 	BindLinkRoutineItemById(controllerFunc types.ControllerFunc[*dtos.LinkRoutineItemByIdReqDto]) gin.HandlerFunc
-	BindBulkLinkRoutineItemsByIds(controllerFunc types.ControllerFunc[*dtos.BulkLinkRoutineItemsByIdsReqDto]) gin.HandlerFunc
+	BindLinkRoutineItemsByIds(controllerFunc types.ControllerFunc[*dtos.LinkRoutineItemsByIdsReqDto]) gin.HandlerFunc
 	BindRestoreMyRoutineById(controllerFunc types.ControllerFunc[*dtos.RestoreMyRoutineByIdReqDto]) gin.HandlerFunc
 	BindRestoreMyRoutinesByIds(controllerFunc types.ControllerFunc[*dtos.RestoreMyRoutinesByIdsReqDto]) gin.HandlerFunc
 	BindDeleteMyRoutineById(controllerFunc types.ControllerFunc[*dtos.DeleteMyRoutineByIdReqDto]) gin.HandlerFunc
@@ -292,9 +292,9 @@ func (b *RoutineBinder) BindLinkRoutineTagById(controllerFunc types.ControllerFu
 	}
 }
 
-func (b *RoutineBinder) BindBulkLinkRoutineTagsByIds(controllerFunc types.ControllerFunc[*dtos.BulkLinkRoutineTagsByIdsReqDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindLinkRoutineTagsByIds(controllerFunc types.ControllerFunc[*dtos.LinkRoutineTagsByIdsReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.BulkLinkRoutineTagsByIdsReqDto
+		var reqDto dtos.LinkRoutineTagsByIdsReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -338,9 +338,9 @@ func (b *RoutineBinder) BindLinkRoutineTaskById(controllerFunc types.ControllerF
 	}
 }
 
-func (b *RoutineBinder) BindBulkLinkRoutineTasksByIds(controllerFunc types.ControllerFunc[*dtos.BulkLinkRoutineTasksByIdsReqDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindLinkRoutineTasksByIds(controllerFunc types.ControllerFunc[*dtos.LinkRoutineTasksByIdsReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.BulkLinkRoutineTasksByIdsReqDto
+		var reqDto dtos.LinkRoutineTasksByIdsReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -384,9 +384,9 @@ func (b *RoutineBinder) BindLinkRoutineItemById(controllerFunc types.ControllerF
 	}
 }
 
-func (b *RoutineBinder) BindBulkLinkRoutineItemsByIds(controllerFunc types.ControllerFunc[*dtos.BulkLinkRoutineItemsByIdsReqDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindLinkRoutineItemsByIds(controllerFunc types.ControllerFunc[*dtos.LinkRoutineItemsByIdsReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.BulkLinkRoutineItemsByIdsReqDto
+		var reqDto dtos.LinkRoutineItemsByIdsReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 

@@ -40,211 +40,267 @@ func (h SubShelfHandler) HandleCreateSubShelf(
 	ctx context.Context,
 	tasks []schemas.RoutineTask,
 	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
-) map[uuid.UUID]*exceptions.Exception {
-	results := make(map[uuid.UUID]*exceptions.Exception)
-	inputsByOwnerId := make(map[uuid.UUID][]inputs.BulkCreateSubShelfInput)
+) ([]bool, *exceptions.Exception) {
+	successes := make([]bool, len(tasks))
+	bulkInputs := make([]inputs.BulkCreateSubShelfInput, 0, len(tasks))
+	taskIndexes := make([]int, 0, len(tasks))
 
-	for _, task := range tasks {
+	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
 		if !exists {
-			results[task.Id] = exceptions.Station.NoPermission("run this routine task")
 			continue
 		}
 
 		payload, exception := decodePayload[dtos.CreateSubShelfRoutineTaskPayload](task)
 		if exception != nil {
-			results[task.Id] = exception
 			continue
 		}
-		inputsByOwnerId[ownerId] = append(inputsByOwnerId[ownerId], inputs.BulkCreateSubShelfInput{
+		bulkInputs = append(bulkInputs, inputs.BulkCreateSubShelfInput{
+			UserId:         ownerId,
 			Id:             payload.Id,
 			RootShelfId:    payload.RootShelfId,
 			PrevSubShelfId: payload.PrevSubShelfId,
 			Name:           payload.Name,
 		})
+		taskIndexes = append(taskIndexes, taskIndex)
 	}
 
-	for ownerId, createInputs := range inputsByOwnerId {
-		if _, exception := h.subShelfRepository.BulkCreateManyByRootShelfIds(
-			ownerId,
-			createInputs,
-			options.WithDB(h.db.WithContext(ctx)),
-			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
-			options.WithOnlyDeleted(types.Ternary_Negative),
-		); exception != nil {
-			for _, task := range tasks {
-				if taskIdToOwnerId[task.Id] == ownerId {
-					results[task.Id] = exception
-				}
-			}
-		}
+	if len(bulkInputs) == 0 {
+		return successes, nil
+	}
+	bulkSuccesses, exception := h.subShelfRepository.BulkCreateMany(
+		bulkInputs,
+		options.WithDB(h.db.WithContext(ctx)),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return successes, exception
 	}
 
-	return results
+	for index, success := range bulkSuccesses {
+		successes[taskIndexes[index]] = success
+	}
+
+	return successes, nil
 }
 
 func (h SubShelfHandler) HandleUpdateSubShelf(
 	ctx context.Context,
 	tasks []schemas.RoutineTask,
 	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
-) map[uuid.UUID]*exceptions.Exception {
-	results := make(map[uuid.UUID]*exceptions.Exception)
-	inputsByOwnerId := make(map[uuid.UUID][]inputs.BulkUpdateSubShelfInput)
+) ([]bool, *exceptions.Exception) {
+	successes := make([]bool, len(tasks))
+	bulkInputs := make([]inputs.BulkUpdateSubShelfInput, 0, len(tasks))
+	taskIndexes := make([]int, 0, len(tasks))
 
-	for _, task := range tasks {
+	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
 		if !exists {
-			results[task.Id] = exceptions.Station.NoPermission("run this routine task")
 			continue
 		}
 
 		payload, exception := decodePayload[dtos.UpdateSubShelfRoutineTaskPayload](task)
 		if exception != nil {
-			results[task.Id] = exception
 			continue
 		}
 		if payload.Name == nil {
 			continue
 		}
-		inputsByOwnerId[ownerId] = append(inputsByOwnerId[ownerId], inputs.BulkUpdateSubShelfInput{
-			Id: payload.SubShelfId,
+		bulkInputs = append(bulkInputs, inputs.BulkUpdateSubShelfInput{
+			UserId: ownerId,
+			Id:     payload.SubShelfId,
 			PartialUpdateInput: inputs.PartialUpdateSubShelfInput{
 				Values: inputs.UpdateSubShelfInput{
 					Name: payload.Name,
 				},
 			},
 		})
+		taskIndexes = append(taskIndexes, taskIndex)
 	}
 
-	for ownerId, updateInputs := range inputsByOwnerId {
-		if exception := h.subShelfRepository.BulkUpdateManyByIds(
-			ownerId,
-			updateInputs,
-			options.WithDB(h.db.WithContext(ctx)),
-			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
-			options.WithOnlyDeleted(types.Ternary_Negative),
-		); exception != nil {
-			for _, task := range tasks {
-				if taskIdToOwnerId[task.Id] == ownerId {
-					results[task.Id] = exception
-				}
-			}
-		}
+	if len(bulkInputs) == 0 {
+		return successes, nil
+	}
+	bulkSuccesses, exception := h.subShelfRepository.BulkUpdateMany(
+		bulkInputs,
+		options.WithDB(h.db.WithContext(ctx)),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return successes, exception
 	}
 
-	return results
+	for index, success := range bulkSuccesses {
+		successes[taskIndexes[index]] = success
+	}
+
+	return successes, nil
 }
 
 func (h SubShelfHandler) HandleResetSubShelf(
 	ctx context.Context,
 	tasks []schemas.RoutineTask,
 	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
-) map[uuid.UUID]*exceptions.Exception {
-	results := make(map[uuid.UUID]*exceptions.Exception)
-	subShelfIdsByOwnerId := make(map[uuid.UUID][]uuid.UUID)
-	ownerIdToTasks := make(map[uuid.UUID][]schemas.RoutineTask)
+) ([]bool, *exceptions.Exception) {
+	successes := make([]bool, len(tasks))
+	subShelfIds := make([]uuid.UUID, 0, len(tasks))
+	ownerIdBySubShelfId := make(map[uuid.UUID]uuid.UUID, len(tasks))
+	taskIndexesBySubShelfId := make(map[uuid.UUID][]int, len(tasks))
 
-	for _, task := range tasks {
+	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
 		if !exists {
-			results[task.Id] = exceptions.Station.NoPermission("run this routine task")
 			continue
 		}
 
 		payload, exception := decodePayload[dtos.ResetSubShelfRoutineTaskPayload](task)
 		if exception != nil {
-			results[task.Id] = exception
 			continue
 		}
-		subShelfIdsByOwnerId[ownerId] = append(subShelfIdsByOwnerId[ownerId], payload.SubShelfId)
-		ownerIdToTasks[ownerId] = append(ownerIdToTasks[ownerId], task)
+		subShelfIds = append(subShelfIds, payload.SubShelfId)
+		ownerIdBySubShelfId[payload.SubShelfId] = ownerId
+		taskIndexesBySubShelfId[payload.SubShelfId] = append(taskIndexesBySubShelfId[payload.SubShelfId], taskIndex)
 	}
 
-	for ownerId, subShelfIds := range subShelfIdsByOwnerId {
-		db := h.db.WithContext(ctx)
-		var childSubShelfIds []uuid.UUID
-		if err := db.Model(&schemas.SubShelf{}).
-			Where("prev_sub_shelf_id IN ? AND deleted_at IS NULL", subShelfIds).
-			Pluck("id", &childSubShelfIds).Error; err != nil {
-			for _, task := range ownerIdToTasks[ownerId] {
-				results[task.Id] = exceptions.Shelf.NotFound().WithOrigin(err)
-			}
-			continue
-		}
+	if len(subShelfIds) == 0 {
+		return successes, nil
+	}
 
-		var blockPackIds []uuid.UUID
-		if err := db.Model(&schemas.BlockPack{}).
-			Where("parent_sub_shelf_id IN ? AND deleted_at IS NULL", subShelfIds).
-			Pluck("id", &blockPackIds).Error; err != nil {
-			for _, task := range ownerIdToTasks[ownerId] {
-				results[task.Id] = exceptions.BlockPack.NotFound().WithOrigin(err)
-			}
-			continue
-		}
+	db := h.db.WithContext(ctx)
+	var childSubShelves []struct {
+		Id             uuid.UUID `gorm:"column:id"`
+		PrevSubShelfId uuid.UUID `gorm:"column:prev_sub_shelf_id"`
+	}
+	if err := db.Model(&schemas.SubShelf{}).
+		Select("id, prev_sub_shelf_id").
+		Where("prev_sub_shelf_id IN ? AND deleted_at IS NULL", subShelfIds).
+		Find(&childSubShelves).Error; err != nil {
+		return successes, exceptions.Shelf.NotFound().WithOrigin(err)
+	}
 
-		var materialIds []uuid.UUID
-		if err := db.Model(&schemas.Material{}).
-			Where("parent_sub_shelf_id IN ? AND deleted_at IS NULL", subShelfIds).
-			Pluck("id", &materialIds).Error; err != nil {
-			for _, task := range ownerIdToTasks[ownerId] {
-				results[task.Id] = exceptions.Material.NotFound().WithOrigin(err)
-			}
-			continue
-		}
+	var blockPacks []struct {
+		Id               uuid.UUID `gorm:"column:id"`
+		ParentSubShelfId uuid.UUID `gorm:"column:parent_sub_shelf_id"`
+	}
+	if err := db.Model(&schemas.BlockPack{}).
+		Select("id, parent_sub_shelf_id").
+		Where("parent_sub_shelf_id IN ? AND deleted_at IS NULL", subShelfIds).
+		Find(&blockPacks).Error; err != nil {
+		return successes, exceptions.BlockPack.NotFound().WithOrigin(err)
+	}
 
-		tx := db.Begin()
-		if len(childSubShelfIds) > 0 {
-			if exception := h.subShelfRepository.SoftDeleteManyByIds(
-				childSubShelfIds,
-				ownerId,
-				options.WithTransactionDB(tx),
-				options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
-				options.WithOnlyDeleted(types.Ternary_Negative),
-			); exception != nil {
-				tx.Rollback()
-				for _, task := range ownerIdToTasks[ownerId] {
-					results[task.Id] = exception
-				}
-				continue
-			}
+	var materials []struct {
+		Id               uuid.UUID `gorm:"column:id"`
+		ParentSubShelfId uuid.UUID `gorm:"column:parent_sub_shelf_id"`
+	}
+	if err := db.Model(&schemas.Material{}).
+		Select("id, parent_sub_shelf_id").
+		Where("parent_sub_shelf_id IN ? AND deleted_at IS NULL", subShelfIds).
+		Find(&materials).Error; err != nil {
+		return successes, exceptions.Material.NotFound().WithOrigin(err)
+	}
+
+	for _, taskIndexes := range taskIndexesBySubShelfId {
+		for _, taskIndex := range taskIndexes {
+			successes[taskIndex] = true
 		}
-		if len(blockPackIds) > 0 {
-			if exception := h.blockPackRepository.SoftDeleteManyByIds(
-				blockPackIds,
-				ownerId,
-				options.WithTransactionDB(tx),
-				options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
-				options.WithOnlyDeleted(types.Ternary_Negative),
-			); exception != nil {
-				tx.Rollback()
-				for _, task := range ownerIdToTasks[ownerId] {
-					results[task.Id] = exception
-				}
-				continue
-			}
+	}
+
+	tx := db.Begin()
+
+	if len(childSubShelves) > 0 {
+		bulkInputs := make([]inputs.BulkDeleteSubShelfInput, 0, len(childSubShelves))
+		taskIndexes := make([][]int, 0, len(childSubShelves))
+		for _, childSubShelf := range childSubShelves {
+			bulkInputs = append(bulkInputs, inputs.BulkDeleteSubShelfInput{
+				UserId: ownerIdBySubShelfId[childSubShelf.PrevSubShelfId],
+				Id:     childSubShelf.Id,
+			})
+			taskIndexes = append(taskIndexes, taskIndexesBySubShelfId[childSubShelf.PrevSubShelfId])
 		}
-		if len(materialIds) > 0 {
-			if exception := h.materialRepository.SoftDeleteManyByIds(
-				materialIds,
-				ownerId,
-				options.WithTransactionDB(tx),
-				options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
-				options.WithOnlyDeleted(types.Ternary_Negative),
-			); exception != nil {
-				tx.Rollback()
-				for _, task := range ownerIdToTasks[ownerId] {
-					results[task.Id] = exception
-				}
-				continue
-			}
-		}
-		if err := tx.Commit().Error; err != nil {
+		bulkSuccesses, exception := h.subShelfRepository.BulkDeleteMany(
+			bulkInputs,
+			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
+			options.WithOnlyDeleted(types.Ternary_Negative),
+		)
+		if exception != nil {
 			tx.Rollback()
-			for _, task := range ownerIdToTasks[ownerId] {
-				results[task.Id] = exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+			return successes, exception
+		}
+		for index, success := range bulkSuccesses {
+			if !success {
+				for _, taskIndex := range taskIndexes[index] {
+					successes[taskIndex] = false
+				}
 			}
 		}
 	}
 
-	return results
+	if len(blockPacks) > 0 {
+		bulkInputs := make([]inputs.BulkDeleteBlockPackInput, 0, len(blockPacks))
+		taskIndexes := make([][]int, 0, len(blockPacks))
+		for _, blockPack := range blockPacks {
+			bulkInputs = append(bulkInputs, inputs.BulkDeleteBlockPackInput{
+				UserId: ownerIdBySubShelfId[blockPack.ParentSubShelfId],
+				Id:     blockPack.Id,
+			})
+			taskIndexes = append(taskIndexes, taskIndexesBySubShelfId[blockPack.ParentSubShelfId])
+		}
+		bulkSuccesses, exception := h.blockPackRepository.BulkDeleteMany(
+			bulkInputs,
+			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
+			options.WithOnlyDeleted(types.Ternary_Negative),
+		)
+		if exception != nil {
+			tx.Rollback()
+			return successes, exception
+		}
+		for index, success := range bulkSuccesses {
+			if !success {
+				for _, taskIndex := range taskIndexes[index] {
+					successes[taskIndex] = false
+				}
+			}
+		}
+	}
+
+	if len(materials) > 0 {
+		bulkInputs := make([]inputs.BulkDeleteMaterialInput, 0, len(materials))
+		taskIndexes := make([][]int, 0, len(materials))
+		for _, material := range materials {
+			bulkInputs = append(bulkInputs, inputs.BulkDeleteMaterialInput{
+				UserId: ownerIdBySubShelfId[material.ParentSubShelfId],
+				Id:     material.Id,
+			})
+			taskIndexes = append(taskIndexes, taskIndexesBySubShelfId[material.ParentSubShelfId])
+		}
+		bulkSuccesses, exception := h.materialRepository.BulkDeleteMany(
+			bulkInputs,
+			options.WithTransactionDB(tx),
+			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
+			options.WithOnlyDeleted(types.Ternary_Negative),
+		)
+		if exception != nil {
+			tx.Rollback()
+			return successes, exception
+		}
+		for index, success := range bulkSuccesses {
+			if !success {
+				for _, taskIndex := range taskIndexes[index] {
+					successes[taskIndex] = false
+				}
+			}
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return successes, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+	}
+
+	return successes, nil
 }

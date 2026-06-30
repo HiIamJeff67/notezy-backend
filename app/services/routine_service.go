@@ -36,11 +36,11 @@ type RoutineServiceInterface interface {
 	UpdateMyRoutineById(ctx context.Context, reqDto *dtos.UpdateMyRoutineByIdReqDto) (*dtos.UpdateMyRoutineByIdResDto, *exceptions.Exception)
 	UpdateMyRoutinesByIds(ctx context.Context, reqDto *dtos.UpdateMyRoutinesByIdsReqDto) (*dtos.UpdateMyRoutinesByIdsResDto, *exceptions.Exception)
 	LinkRoutineTagById(ctx context.Context, reqDto *dtos.LinkRoutineTagByIdReqDto) (*dtos.LinkRoutineTagByIdResDto, *exceptions.Exception)
-	BulkLinkRoutineTagsByIds(ctx context.Context, reqDto *dtos.BulkLinkRoutineTagsByIdsReqDto) (*dtos.BulkLinkRoutineTagsByIdsResDto, *exceptions.Exception)
+	LinkRoutineTagsByIds(ctx context.Context, reqDto *dtos.LinkRoutineTagsByIdsReqDto) (*dtos.LinkRoutineTagsByIdsResDto, *exceptions.Exception)
 	LinkRoutineTaskById(ctx context.Context, reqDto *dtos.LinkRoutineTaskByIdReqDto) (*dtos.LinkRoutineTaskByIdResDto, *exceptions.Exception)
-	BulkLinkRoutineTasksByIds(ctx context.Context, reqDto *dtos.BulkLinkRoutineTasksByIdsReqDto) (*dtos.BulkLinkRoutineTasksByIdsResDto, *exceptions.Exception)
+	LinkRoutineTasksByIds(ctx context.Context, reqDto *dtos.LinkRoutineTasksByIdsReqDto) (*dtos.LinkRoutineTasksByIdsResDto, *exceptions.Exception)
 	LinkRoutineItemById(ctx context.Context, reqDto *dtos.LinkRoutineItemByIdReqDto) (*dtos.LinkRoutineItemByIdResDto, *exceptions.Exception)
-	BulkLinkRoutineItemsByIds(ctx context.Context, reqDto *dtos.BulkLinkRoutineItemsByIdsReqDto) (*dtos.BulkLinkRoutineItemsByIdsResDto, *exceptions.Exception)
+	LinkRoutineItemsByIds(ctx context.Context, reqDto *dtos.LinkRoutineItemsByIdsReqDto) (*dtos.LinkRoutineItemsByIdsResDto, *exceptions.Exception)
 	RestoreMyRoutineById(ctx context.Context, reqDto *dtos.RestoreMyRoutineByIdReqDto) (*dtos.RestoreMyRoutineByIdResDto, *exceptions.Exception)
 	RestoreMyRoutinesByIds(ctx context.Context, reqDto *dtos.RestoreMyRoutinesByIdsReqDto) (*dtos.RestoreMyRoutinesByIdsResDto, *exceptions.Exception)
 	DeleteMyRoutineById(ctx context.Context, reqDto *dtos.DeleteMyRoutineByIdReqDto) (*dtos.DeleteMyRoutineByIdResDto, *exceptions.Exception)
@@ -480,9 +480,9 @@ func (s *RoutineService) CreateRoutinesByStationIds(
 
 	db := s.db.WithContext(ctx)
 
-	input := make([]inputs.BulkCreateRoutineInput, len(reqDto.Body.CreatedRoutines))
+	input := make([]inputs.CreateRoutineByStationIdInput, len(reqDto.Body.CreatedRoutines))
 	for index, createdRoutine := range reqDto.Body.CreatedRoutines {
-		input[index] = inputs.BulkCreateRoutineInput{
+		input[index] = inputs.CreateRoutineByStationIdInput{
 			Id:               createdRoutine.Id,
 			StationId:        createdRoutine.StationId,
 			Title:            createdRoutine.Title,
@@ -495,7 +495,7 @@ func (s *RoutineService) CreateRoutinesByStationIds(
 			Timezone:         createdRoutine.Timezone,
 		}
 	}
-	newRoutineIds, exception := s.routineRepository.BulkCreateManyByStationIds(
+	newRoutineIds, exception := s.routineRepository.CreateManyByStationIds(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),
@@ -556,9 +556,9 @@ func (s *RoutineService) UpdateMyRoutinesByIds(
 
 	db := s.db.WithContext(ctx)
 
-	input := make([]inputs.BulkUpdateRoutineInput, len(reqDto.Body.UpdatedRoutines))
+	input := make([]inputs.UpdateRoutineByIdInput, len(reqDto.Body.UpdatedRoutines))
 	for index, updatedRoutine := range reqDto.Body.UpdatedRoutines {
-		input[index] = inputs.BulkUpdateRoutineInput{
+		input[index] = inputs.UpdateRoutineByIdInput{
 			Id: updatedRoutine.RoutineId,
 			PartialUpdateInput: inputs.PartialUpdateInput[inputs.UpdateRoutineInput]{
 				Values: inputs.UpdateRoutineInput{
@@ -576,7 +576,7 @@ func (s *RoutineService) UpdateMyRoutinesByIds(
 			},
 		}
 	}
-	exception := s.routineRepository.BulkUpdateManyByIds(
+	exception := s.routineRepository.UpdateManyByIds(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),
@@ -660,9 +660,9 @@ func (s *RoutineService) LinkRoutineTagById(
 	}, nil
 }
 
-func (s *RoutineService) BulkLinkRoutineTagsByIds(
-	ctx context.Context, reqDto *dtos.BulkLinkRoutineTagsByIdsReqDto,
-) (*dtos.BulkLinkRoutineTagsByIdsResDto, *exceptions.Exception) {
+func (s *RoutineService) LinkRoutineTagsByIds(
+	ctx context.Context, reqDto *dtos.LinkRoutineTagsByIdsReqDto,
+) (*dtos.LinkRoutineTagsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
@@ -769,7 +769,7 @@ func (s *RoutineService) BulkLinkRoutineTagsByIds(
 		return nil, exceptions.Routine.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	return &dtos.BulkLinkRoutineTagsByIdsResDto{
+	return &dtos.LinkRoutineTagsByIdsResDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
@@ -844,9 +844,9 @@ func (s *RoutineService) LinkRoutineTaskById(
 	}, nil
 }
 
-func (s *RoutineService) BulkLinkRoutineTasksByIds(
-	ctx context.Context, reqDto *dtos.BulkLinkRoutineTasksByIdsReqDto,
-) (*dtos.BulkLinkRoutineTasksByIdsResDto, *exceptions.Exception) {
+func (s *RoutineService) LinkRoutineTasksByIds(
+	ctx context.Context, reqDto *dtos.LinkRoutineTasksByIdsReqDto,
+) (*dtos.LinkRoutineTasksByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
@@ -953,7 +953,7 @@ func (s *RoutineService) BulkLinkRoutineTasksByIds(
 		return nil, exceptions.Routine.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	return &dtos.BulkLinkRoutineTasksByIdsResDto{
+	return &dtos.LinkRoutineTasksByIdsResDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
@@ -1035,9 +1035,9 @@ func (s *RoutineService) LinkRoutineItemById(
 	}, nil
 }
 
-func (s *RoutineService) BulkLinkRoutineItemsByIds(
-	ctx context.Context, reqDto *dtos.BulkLinkRoutineItemsByIdsReqDto,
-) (*dtos.BulkLinkRoutineItemsByIdsResDto, *exceptions.Exception) {
+func (s *RoutineService) LinkRoutineItemsByIds(
+	ctx context.Context, reqDto *dtos.LinkRoutineItemsByIdsReqDto,
+) (*dtos.LinkRoutineItemsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
@@ -1156,7 +1156,7 @@ func (s *RoutineService) BulkLinkRoutineItemsByIds(
 		return nil, exceptions.Routine.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	return &dtos.BulkLinkRoutineItemsByIdsResDto{
+	return &dtos.LinkRoutineItemsByIdsResDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }

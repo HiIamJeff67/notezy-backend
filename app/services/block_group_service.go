@@ -32,14 +32,14 @@ type BlockGroupServiceInterface interface {
 	GetAllMyBlockGroupsByBlockPackId(ctx context.Context, reqDto *dtos.GetAllMyBlockGroupsByBlockPackIdReqDto) (*dtos.GetAllMyBlockGroupsByBlockPackIdResDto, *exceptions.Exception)
 	InsertBlockGroupByBlockPackId(ctx context.Context, reqDto *dtos.InsertBlockGroupByBlockPackIdReqDto) (*dtos.InsertBlockGroupByBlockPackIdResDto, *exceptions.Exception)
 	InsertBlockGroupsByBlockPackId(ctx context.Context, reqDto *dtos.InsertBlockGroupsByBlockPackIdReqDto) (*dtos.InsertBlockGroupsByBlockPackIdResDto, *exceptions.Exception)
-	BatchInsertBlockGroupsByBlockPackIds(ctx context.Context, reqDto *dtos.BatchInsertBlockGroupsByBlockPackIdsReqDto) (*dtos.BatchInsertBlockGroupsByBlockPackIdsResDto, *exceptions.Exception)
+	InsertBlockGroupsByBlockPackIds(ctx context.Context, reqDto *dtos.InsertBlockGroupsByBlockPackIdsReqDto) (*dtos.InsertBlockGroupsByBlockPackIdsResDto, *exceptions.Exception)
 	InsertBlockGroupAndItsBlocksByBlockPackId(ctx context.Context, reqDto *dtos.InsertBlockGroupAndItsBlocksByBlockPackIdReqDto) (*dtos.InsertBlockGroupAndItsBlocksByBlockPackIdResDto, *exceptions.Exception)
 	InsertBlockGroupsAndTheirBlocksByBlockPackId(ctx context.Context, reqDto *dtos.InsertBlockGroupsAndTheirBlocksByBlockPackIdReqDto) (*dtos.InsertBlockGroupsAndTheirBlocksByBlockPackIdResDto, *exceptions.Exception)
-	BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds(ctx context.Context, reqDto *dtos.BatchInsertBlockGroupsAndTheirBlocksByBlockPackIdsReqDto) (*dtos.BatchInsertBlockGroupsAndTheirBlocksByBlockPackIdsResDto, *exceptions.Exception)
+	InsertBlockGroupsAndTheirBlocksByBlockPackIds(ctx context.Context, reqDto *dtos.InsertBlockGroupsAndTheirBlocksByBlockPackIdsReqDto) (*dtos.InsertBlockGroupsAndTheirBlocksByBlockPackIdsResDto, *exceptions.Exception)
 	InsertSequentialBlockGroupsAndTheirBlocksByBlockPackId(ctx context.Context, reqDto *dtos.InsertSequentialBlockGroupsAndTheirBlocksByBlockPackIdReqDto) (*dtos.InsertSequentialBlockGroupsAndTheirBlocksByBlockPackIdResDto, *exceptions.Exception)
 	MoveMyBlockGroupById(ctx context.Context, reqDto *dtos.MoveMyBlockGroupByIdReqDto) (*dtos.MoveMyBlockGroupByIdResDto, *exceptions.Exception)
-	MoveMyBlockGroupsByIds(ctx context.Context, reqDto *dtos.MoveMyBlockGroupsByIdsReqDto) (*dtos.MoveMyBlockGroupsByIdsResDto, *exceptions.Exception)
-	BatchMoveMyBlockGroupsByIds(ctx context.Context, reqDto *dtos.BatchMoveMyBlockGroupsByIdsReqDto) (*dtos.BatchMoveMyBlockGroupsByIdsResDto, *exceptions.Exception)
+	MoveMyBlockGroupsByBlockPackId(ctx context.Context, reqDto *dtos.MoveMyBlockGroupsByBlockPackIdReqDto) (*dtos.MoveMyBlockGroupsByBlockPackIdResDto, *exceptions.Exception)
+	MoveMyBlockGroupsByBlockPackIds(ctx context.Context, reqDto *dtos.MoveMyBlockGroupsByBlockPackIdsReqDto) (*dtos.MoveMyBlockGroupsByBlockPackIdsResDto, *exceptions.Exception)
 	RestoreMyBlockGroupById(ctx context.Context, reqDto *dtos.RestoreMyBlockGroupByIdReqDto) (*dtos.RestoreMyBlockGroupByIdResDto, *exceptions.Exception)
 	RestoreMyBlockGroupsByIds(ctx context.Context, reqDto *dtos.RestoreMyBlockGroupsByIdsReqDto) (*dtos.RestoreMyBlockGroupsByIdsResDto, *exceptions.Exception)
 	DeleteMyBlockGroupById(ctx context.Context, reqDto *dtos.DeleteMyBlockGroupByIdReqDto) (*dtos.DeleteMyBlockGroupByIdResDto, *exceptions.Exception)
@@ -631,18 +631,18 @@ func (s *BlockGroupService) InsertBlockGroupsByBlockPackId(
 	}, nil
 }
 
-func (s *BlockGroupService) BatchInsertBlockGroupsByBlockPackIds(
-	ctx context.Context, reqDto *dtos.BatchInsertBlockGroupsByBlockPackIdsReqDto,
-) (*dtos.BatchInsertBlockGroupsByBlockPackIdsResDto, *exceptions.Exception) {
+func (s *BlockGroupService) InsertBlockGroupsByBlockPackIds(
+	ctx context.Context, reqDto *dtos.InsertBlockGroupsByBlockPackIdsReqDto,
+) (*dtos.InsertBlockGroupsByBlockPackIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
 
-	input := make([]inputs.BulkCreateBlockGroupInput, len(reqDto.Body.BlockPackContents))
+	input := make([]inputs.CreateBlockGroupByBlockPackIdInput, len(reqDto.Body.BlockPackContents))
 	for index, blockPackContent := range reqDto.Body.BlockPackContents {
-		input[index] = inputs.BulkCreateBlockGroupInput{
+		input[index] = inputs.CreateBlockGroupByBlockPackIdInput{
 			BlockPackId:      blockPackContent.BlockPackId,
 			BlockGroupId:     blockPackContent.BlockGroupId,
 			PrevBlockGroupId: blockPackContent.PrevBlockGroupId,
@@ -658,7 +658,7 @@ func (s *BlockGroupService) BatchInsertBlockGroupsByBlockPackIds(
 		return nil, exception
 	}
 
-	return &dtos.BatchInsertBlockGroupsByBlockPackIdsResDto{
+	return &dtos.InsertBlockGroupsByBlockPackIdsResDto{
 		Ids:       newBlockGroupIds,
 		CreatedAt: time.Now(),
 	}, nil
@@ -897,19 +897,19 @@ func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackId(
 	return &resDto, nil
 }
 
-func (s *BlockGroupService) BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds(
-	ctx context.Context, reqDto *dtos.BatchInsertBlockGroupsAndTheirBlocksByBlockPackIdsReqDto,
-) (*dtos.BatchInsertBlockGroupsAndTheirBlocksByBlockPackIdsResDto, *exceptions.Exception) {
+func (s *BlockGroupService) InsertBlockGroupsAndTheirBlocksByBlockPackIds(
+	ctx context.Context, reqDto *dtos.InsertBlockGroupsAndTheirBlocksByBlockPackIdsReqDto,
+) (*dtos.InsertBlockGroupsAndTheirBlocksByBlockPackIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
 
-	bulkCreateBlockGroupsInput := make([]inputs.BulkCreateBlockGroupInput, len(reqDto.Body.BlockGroupContents))
+	batchCreateBlockGroupsInput := make([]inputs.CreateBlockGroupByBlockPackIdInput, len(reqDto.Body.BlockGroupContents))
 	validateBlockDto := make([]dtos.ArborizedEditableBlock, len(reqDto.Body.BlockGroupContents))
 	for index, blockGroupContent := range reqDto.Body.BlockGroupContents {
-		bulkCreateBlockGroupsInput[index] = inputs.BulkCreateBlockGroupInput{
+		batchCreateBlockGroupsInput[index] = inputs.CreateBlockGroupByBlockPackIdInput{
 			BlockPackId:      blockGroupContent.BlockPackId,
 			BlockGroupId:     blockGroupContent.BlockGroupId,
 			PrevBlockGroupId: blockGroupContent.PrevBlockGroupId,
@@ -919,7 +919,7 @@ func (s *BlockGroupService) BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds(
 
 	newBlockGroupIds, exception := s.blockGroupRepository.InsertManyByBlockPackIds(
 		reqDto.ContextFields.UserId,
-		bulkCreateBlockGroupsInput,
+		batchCreateBlockGroupsInput,
 		options.WithTransactionDB(tx),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
@@ -960,7 +960,7 @@ func (s *BlockGroupService) BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds(
 		validateBlockFunc,
 	)
 
-	resDto := dtos.BatchInsertBlockGroupsAndTheirBlocksByBlockPackIdsResDto{
+	resDto := dtos.InsertBlockGroupsAndTheirBlocksByBlockPackIdsResDto{
 		IsAllSuccess:   true,
 		FailedIndexes:  []int{},
 		SuccessIndexes: []int{},
@@ -1347,9 +1347,9 @@ func (s *BlockGroupService) MoveMyBlockGroupById(
 	}, nil
 }
 
-func (s *BlockGroupService) MoveMyBlockGroupsByIds(
-	ctx context.Context, reqDto *dtos.MoveMyBlockGroupsByIdsReqDto,
-) (*dtos.MoveMyBlockGroupsByIdsResDto, *exceptions.Exception) {
+func (s *BlockGroupService) MoveMyBlockGroupsByBlockPackId(
+	ctx context.Context, reqDto *dtos.MoveMyBlockGroupsByBlockPackIdReqDto,
+) (*dtos.MoveMyBlockGroupsByBlockPackIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
@@ -1532,14 +1532,14 @@ func (s *BlockGroupService) MoveMyBlockGroupsByIds(
 		return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	return &dtos.MoveMyBlockGroupsByIdsResDto{
+	return &dtos.MoveMyBlockGroupsByBlockPackIdResDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
 
-func (s *BlockGroupService) BatchMoveMyBlockGroupsByIds(
-	ctx context.Context, reqDto *dtos.BatchMoveMyBlockGroupsByIdsReqDto,
-) (*dtos.BatchMoveMyBlockGroupsByIdsResDto, *exceptions.Exception) {
+func (s *BlockGroupService) MoveMyBlockGroupsByBlockPackIds(
+	ctx context.Context, reqDto *dtos.MoveMyBlockGroupsByBlockPackIdsReqDto,
+) (*dtos.MoveMyBlockGroupsByBlockPackIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
 	}
@@ -1764,7 +1764,7 @@ func (s *BlockGroupService) BatchMoveMyBlockGroupsByIds(
 		return nil, exceptions.BlockGroup.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	return &dtos.BatchMoveMyBlockGroupsByIdsResDto{
+	return &dtos.MoveMyBlockGroupsByBlockPackIdsResDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }

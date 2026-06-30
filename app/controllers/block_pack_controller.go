@@ -19,8 +19,8 @@ type BlockPackControllerInterface interface {
 	UpdateMyBlockPackById(ctx *gin.Context, reqDto *dtos.UpdateMyBlockPackByIdReqDto)
 	UpdateMyBlockPacksByIds(ctx *gin.Context, reqDto *dtos.UpdateMyBlockPacksByIdsReqDto)
 	MoveMyBlockPackById(ctx *gin.Context, reqDto *dtos.MoveMyBlockPackByIdReqDto)
-	MoveMyBlockPacksByIds(ctx *gin.Context, reqDto *dtos.MoveMyBlockPacksByIdsReqDto)
-	BatchMoveMyBlockPacksByIds(ctx *gin.Context, reqDto *dtos.BatchMoveMyBlockPacksByIdsReqDto)
+	MoveMyBlockPacksByParentSubShelfId(ctx *gin.Context, reqDto *dtos.MoveMyBlockPacksByParentSubShelfIdReqDto)
+	MoveMyBlockPacksByParentSubShelfIds(ctx *gin.Context, reqDto *dtos.MoveMyBlockPacksByParentSubShelfIdsReqDto)
 	RestoreMyBlockPackById(ctx *gin.Context, reqDto *dtos.RestoreMyBlockPackByIdReqDto)
 	RestoreMyBlockPacksByIds(ctx *gin.Context, reqDto *dtos.RestoreMyBlockPacksByIdsReqDto)
 	DeleteMyBlockPackById(ctx *gin.Context, reqDto *dtos.DeleteMyBlockPackByIdReqDto)
@@ -163,8 +163,8 @@ func (c *BlockPackController) MoveMyBlockPackById(ctx *gin.Context, reqDto *dtos
 	})
 }
 
-func (c *BlockPackController) MoveMyBlockPacksByIds(ctx *gin.Context, reqDto *dtos.MoveMyBlockPacksByIdsReqDto) {
-	resDto, exception := c.blockPackService.MoveMyBlockPacksByIds(ctx.Request.Context(), reqDto)
+func (c *BlockPackController) MoveMyBlockPacksByParentSubShelfId(ctx *gin.Context, reqDto *dtos.MoveMyBlockPacksByParentSubShelfIdReqDto) {
+	resDto, exception := c.blockPackService.MoveMyBlockPacksByParentSubShelfId(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
@@ -177,8 +177,8 @@ func (c *BlockPackController) MoveMyBlockPacksByIds(ctx *gin.Context, reqDto *dt
 	})
 }
 
-func (c *BlockPackController) BatchMoveMyBlockPacksByIds(ctx *gin.Context, reqDto *dtos.BatchMoveMyBlockPacksByIdsReqDto) {
-	resDto, exception := c.blockPackService.BatchMoveMyBlockPacksByIds(ctx.Request.Context(), reqDto)
+func (c *BlockPackController) MoveMyBlockPacksByParentSubShelfIds(ctx *gin.Context, reqDto *dtos.MoveMyBlockPacksByParentSubShelfIdsReqDto) {
+	resDto, exception := c.blockPackService.MoveMyBlockPacksByParentSubShelfIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return

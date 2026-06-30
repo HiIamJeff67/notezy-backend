@@ -1149,8 +1149,8 @@ func (s *BlockService) UpdateMyBlocksByIds(
 		blockIdToOriginalPropsSize[block.Id] = int64(len(block.Props))
 		blockIdToOriginalContentSize[block.Id] = int64(len(block.Content))
 	}
-	validateBlockPropsAndContentFunc := func(validateBlockPropsAndContentDto ValidateBlockPropsAndContentDto) (inputs.BulkUpdateBlocksInput, error) {
-		result := inputs.BulkUpdateBlocksInput{
+	validateBlockPropsAndContentFunc := func(validateBlockPropsAndContentDto ValidateBlockPropsAndContentDto) (inputs.UpdateBlockByIdInput, error) {
+		result := inputs.UpdateBlockByIdInput{
 			Id: validateBlockPropsAndContentDto.Id,
 			PartialUpdateInput: inputs.PartialUpdateInput[inputs.UpdateBlockInput]{
 				Values: inputs.UpdateBlockInput{},
@@ -1209,7 +1209,7 @@ func (s *BlockService) UpdateMyBlocksByIds(
 		validateBlockPropsAndContentFunc,
 	)
 
-	var bulkUpdateBlocksInputs []inputs.BulkUpdateBlocksInput
+	var batchUpdateBlocksInputs []inputs.UpdateBlockByIdInput
 	resDto := dtos.UpdateMyBlocksByIdsResDto{
 		IsAllSuccess:   true,
 		FailedIndexes:  []int{},
@@ -1256,7 +1256,7 @@ func (s *BlockService) UpdateMyBlocksByIds(
 
 			successBlockGroupMap[targetBlockGroupId] =
 				append(successBlockGroupMap[targetBlockGroupId], validateResult.Data.Id)
-			bulkUpdateBlocksInputs = append(bulkUpdateBlocksInputs, inputs.BulkUpdateBlocksInput{
+			batchUpdateBlocksInputs = append(batchUpdateBlocksInputs, inputs.UpdateBlockByIdInput{
 				Id: validateResult.Data.Id,
 				PartialUpdateInput: inputs.PartialUpdateInput[inputs.UpdateBlockInput]{
 					Values: inputs.UpdateBlockInput{
@@ -1285,9 +1285,9 @@ func (s *BlockService) UpdateMyBlocksByIds(
 		})
 	}
 
-	exception = s.blockRepository.BulkUpdateManyByIds(
+	exception = s.blockRepository.UpdateManyByIds(
 		reqDto.ContextFields.UserId,
-		bulkUpdateBlocksInputs,
+		batchUpdateBlocksInputs,
 		options.WithTransactionDB(tx),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),

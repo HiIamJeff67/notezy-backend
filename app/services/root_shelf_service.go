@@ -148,7 +148,7 @@ func (s *RootShelfService) CreateRootShelf(
 	db := s.db.WithContext(ctx)
 
 	now := time.Now()
-	newRootShelfId, exception := s.rootShelfRepository.CreateOneByOwnerId(
+	newRootShelfId, exception := s.rootShelfRepository.CreateOne(
 		reqDto.ContextFields.UserId,
 		inputs.CreateRootShelfInput{
 			Id:             reqDto.Body.Id,
@@ -186,7 +186,7 @@ func (s *RootShelfService) CreateRootShelves(
 			LastAnalyzedAt: &now,
 		}
 	}
-	newRootShelfIds, exception := s.rootShelfRepository.CreateManyByOwnerId(
+	newRootShelfIds, exception := s.rootShelfRepository.CreateMany(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),
@@ -240,9 +240,9 @@ func (s *RootShelfService) UpdateMyRootShelvesByIds(
 
 	db := s.db.WithContext(ctx)
 
-	input := make([]inputs.BulkUpdateRootShelfInput, len(reqDto.Body.UpdatedRootShelves))
+	input := make([]inputs.UpdateRootShelfByIdInput, len(reqDto.Body.UpdatedRootShelves))
 	for index, updatedRootShelf := range reqDto.Body.UpdatedRootShelves {
-		input[index] = inputs.BulkUpdateRootShelfInput{
+		input[index] = inputs.UpdateRootShelfByIdInput{
 			Id: updatedRootShelf.RootShelfId,
 			PartialUpdateInput: inputs.PartialUpdateInput[inputs.UpdateRootShelfInput]{
 				Values: inputs.UpdateRootShelfInput{
@@ -252,7 +252,7 @@ func (s *RootShelfService) UpdateMyRootShelvesByIds(
 			},
 		}
 	}
-	exception := s.rootShelfRepository.BulkUpdateManyByIds(
+	exception := s.rootShelfRepository.UpdateManyByIds(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),

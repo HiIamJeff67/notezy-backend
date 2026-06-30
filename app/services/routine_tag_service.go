@@ -136,7 +136,7 @@ func (s *RoutineTagService) CreateRoutineTag(
 
 	db := s.db.WithContext(ctx)
 
-	newRoutineTagId, exception := s.routineTagRepository.CreateOneByUserId(
+	newRoutineTagId, exception := s.routineTagRepository.CreateOne(
 		reqDto.ContextFields.UserId,
 		inputs.CreateRoutineTagInput{
 			Id:    reqDto.Body.Id,
@@ -166,16 +166,16 @@ func (s *RoutineTagService) CreateRoutineTags(
 
 	db := s.db.WithContext(ctx)
 
-	input := make([]inputs.BulkCreateRoutineTagInput, len(reqDto.Body.CreatedRoutineTags))
+	input := make([]inputs.CreateRoutineTagInput, len(reqDto.Body.CreatedRoutineTags))
 	for index, createdRoutineTag := range reqDto.Body.CreatedRoutineTags {
-		input[index] = inputs.BulkCreateRoutineTagInput{
+		input[index] = inputs.CreateRoutineTagInput{
 			Id:    createdRoutineTag.Id,
 			Name:  createdRoutineTag.Name,
 			Color: createdRoutineTag.Color,
 			Icon:  createdRoutineTag.Icon,
 		}
 	}
-	newRoutineTagIds, exception := s.routineTagRepository.BulkCreateManyByUserId(
+	newRoutineTagIds, exception := s.routineTagRepository.CreateMany(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),
@@ -232,9 +232,9 @@ func (s *RoutineTagService) UpdateMyRoutineTagsByIds(
 
 	db := s.db.WithContext(ctx)
 
-	input := make([]inputs.BulkUpdateRoutineTagInput, len(reqDto.Body.UpdatedRoutineTags))
+	input := make([]inputs.UpdateRoutineTagByIdInput, len(reqDto.Body.UpdatedRoutineTags))
 	for index, updatedRoutineTag := range reqDto.Body.UpdatedRoutineTags {
-		input[index] = inputs.BulkUpdateRoutineTagInput{
+		input[index] = inputs.UpdateRoutineTagByIdInput{
 			Id: updatedRoutineTag.RoutineTagId,
 			PartialUpdateInput: inputs.PartialUpdateInput[inputs.UpdateRoutineTagInput]{
 				Values: inputs.UpdateRoutineTagInput{
@@ -246,7 +246,7 @@ func (s *RoutineTagService) UpdateMyRoutineTagsByIds(
 			},
 		}
 	}
-	exception := s.routineTagRepository.BulkUpdateManyByIds(
+	exception := s.routineTagRepository.UpdateManyByIds(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),

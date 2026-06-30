@@ -31,23 +31,23 @@ func (h RoutineHandler) HandleCreateRoutine(
 	ctx context.Context,
 	tasks []schemas.RoutineTask,
 	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
-) map[uuid.UUID]*exceptions.Exception {
-	results := make(map[uuid.UUID]*exceptions.Exception)
-	inputsByOwnerId := make(map[uuid.UUID][]inputs.BulkCreateRoutineInput)
+) ([]bool, *exceptions.Exception) {
+	successes := make([]bool, len(tasks))
+	bulkInputs := make([]inputs.BulkCreateRoutineInput, 0, len(tasks))
+	taskIndexes := make([]int, 0, len(tasks))
 
-	for _, task := range tasks {
+	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
 		if !exists {
-			results[task.Id] = exceptions.Station.NoPermission("run this routine task")
 			continue
 		}
 
 		payload, exception := decodePayload[dtos.CreateRoutineRoutineTaskPayload](task)
 		if exception != nil {
-			results[task.Id] = exception
 			continue
 		}
-		inputsByOwnerId[ownerId] = append(inputsByOwnerId[ownerId], inputs.BulkCreateRoutineInput{
+		bulkInputs = append(bulkInputs, inputs.BulkCreateRoutineInput{
+			UserId:           ownerId,
 			Id:               payload.Id,
 			StationId:        payload.StationId,
 			Title:            payload.Title,
@@ -59,49 +59,51 @@ func (h RoutineHandler) HandleCreateRoutine(
 			Period:           payload.Period,
 			Timezone:         payload.Timezone,
 		})
+		taskIndexes = append(taskIndexes, taskIndex)
 	}
 
-	for ownerId, createInputs := range inputsByOwnerId {
-		if _, exception := h.routineRepository.BulkCreateManyByStationIds(
-			ownerId,
-			createInputs,
-			options.WithDB(h.db.WithContext(ctx)),
-			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
-			options.WithOnlyDeleted(types.Ternary_Negative),
-		); exception != nil {
-			for _, task := range tasks {
-				if taskIdToOwnerId[task.Id] == ownerId {
-					results[task.Id] = exception
-				}
-			}
-		}
+	if len(bulkInputs) == 0 {
+		return successes, nil
+	}
+	bulkSuccesses, exception := h.routineRepository.BulkCreateMany(
+		bulkInputs,
+		options.WithDB(h.db.WithContext(ctx)),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return successes, exception
 	}
 
-	return results
+	for index, success := range bulkSuccesses {
+		successes[taskIndexes[index]] = success
+	}
+
+	return successes, nil
 }
 
 func (h RoutineHandler) HandleUpdateRoutine(
 	ctx context.Context,
 	tasks []schemas.RoutineTask,
 	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
-) map[uuid.UUID]*exceptions.Exception {
-	results := make(map[uuid.UUID]*exceptions.Exception)
-	inputsByOwnerId := make(map[uuid.UUID][]inputs.BulkUpdateRoutineInput)
+) ([]bool, *exceptions.Exception) {
+	successes := make([]bool, len(tasks))
+	bulkInputs := make([]inputs.BulkUpdateRoutineInput, 0, len(tasks))
+	taskIndexes := make([]int, 0, len(tasks))
 
-	for _, task := range tasks {
+	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
 		if !exists {
-			results[task.Id] = exceptions.Station.NoPermission("run this routine task")
 			continue
 		}
 
 		payload, exception := decodePayload[dtos.UpdateRoutineRoutineTaskPayload](task)
 		if exception != nil {
-			results[task.Id] = exception
 			continue
 		}
-		inputsByOwnerId[ownerId] = append(inputsByOwnerId[ownerId], inputs.BulkUpdateRoutineInput{
-			Id: payload.RoutineId,
+		bulkInputs = append(bulkInputs, inputs.BulkUpdateRoutineInput{
+			UserId: ownerId,
+			Id:     payload.RoutineId,
 			PartialUpdateInput: inputs.PartialUpdateRoutineInput{
 				Values: inputs.UpdateRoutineInput{
 					Title:            payload.Title,
@@ -115,23 +117,25 @@ func (h RoutineHandler) HandleUpdateRoutine(
 				},
 			},
 		})
+		taskIndexes = append(taskIndexes, taskIndex)
 	}
 
-	for ownerId, updateInputs := range inputsByOwnerId {
-		if exception := h.routineRepository.BulkUpdateManyByIds(
-			ownerId,
-			updateInputs,
-			options.WithDB(h.db.WithContext(ctx)),
-			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
-			options.WithOnlyDeleted(types.Ternary_Negative),
-		); exception != nil {
-			for _, task := range tasks {
-				if taskIdToOwnerId[task.Id] == ownerId {
-					results[task.Id] = exception
-				}
-			}
-		}
+	if len(bulkInputs) == 0 {
+		return successes, nil
+	}
+	bulkSuccesses, exception := h.routineRepository.BulkUpdateMany(
+		bulkInputs,
+		options.WithDB(h.db.WithContext(ctx)),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return successes, exception
 	}
 
-	return results
+	for index, success := range bulkSuccesses {
+		successes[taskIndexes[index]] = success
+	}
+
+	return successes, nil
 }

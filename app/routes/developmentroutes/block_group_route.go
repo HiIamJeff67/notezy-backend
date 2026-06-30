@@ -156,18 +156,18 @@ func configureDevelopmentBlockGroupRoutes() {
 			)...,
 		)
 		blockGroupRoutes.POST(
-			"/batchInsertBlockGroupsByBlockPackIds",
+			"/insertBlockGroupsByBlockPackIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "batchInsertBlockGroupsByBlockPackIds"),
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "insertBlockGroupsByBlockPackIds"),
 					middlewares.ApplyMeterMiddleware(
 						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.BlockGroup.BatchInsertBlockGroupsByBlockPackIds,
+						metrics.MetricNames.Server.Requests.BlockGroup.InsertBlockGroupsByBlockPackIds,
 					),
 				},
 				defaultMiddlewares,
-				blockGroupModule.Binder.BindBatchInsertBlockGroupsByBlockPackIds(
-					blockGroupModule.Controller.BatchInsertBlockGroupsByBlockPackIds,
+				blockGroupModule.Binder.BindInsertBlockGroupsByBlockPackIds(
+					blockGroupModule.Controller.InsertBlockGroupsByBlockPackIds,
 				),
 			)...,
 		)
@@ -204,18 +204,18 @@ func configureDevelopmentBlockGroupRoutes() {
 			)...,
 		)
 		blockGroupRoutes.POST(
-			"/batchInsertBlockGroupsAndTheirBlocksByBlockPackIds",
+			"/insertBlockGroupsAndTheirBlocksByBlockPackIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "batchInsertBlockGroupsAndTheirBlocksByBlockPackIds"),
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "insertBlockGroupsAndTheirBlocksByBlockPackIds"),
 					middlewares.ApplyMeterMiddleware(
 						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.BlockGroup.BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds,
+						metrics.MetricNames.Server.Requests.BlockGroup.InsertBlockGroupsAndTheirBlocksByBlockPackIds,
 					),
 				},
 				defaultMiddlewares,
-				blockGroupModule.Binder.BindBatchInsertBlockGroupsAndTheirBlocksByBlockPackIds(
-					blockGroupModule.Controller.BatchInsertBlockGroupsAndTheirBlocksByBlockPackIds,
+				blockGroupModule.Binder.BindInsertBlockGroupsAndTheirBlocksByBlockPackIds(
+					blockGroupModule.Controller.InsertBlockGroupsAndTheirBlocksByBlockPackIds,
 				),
 			)...,
 		)
@@ -252,34 +252,34 @@ func configureDevelopmentBlockGroupRoutes() {
 			)...,
 		)
 		blockGroupRoutes.PUT(
-			"/moveMyBlockGroupsByIds",
+			"/moveMyBlockGroupsByBlockPackId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "moveMyBlockGroupsByIds"),
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "moveMyBlockGroupsByBlockPackId"),
 					middlewares.ApplyMeterMiddleware(
 						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.BlockGroup.MoveMyBlockGroupsByIds,
+						metrics.MetricNames.Server.Requests.BlockGroup.MoveMyBlockGroupsByBlockPackId,
 					),
 				},
 				defaultMiddlewares,
-				blockGroupModule.Binder.BindMoveMyBlockGroupsByIds(
-					blockGroupModule.Controller.MoveMyBlockGroupsByIds,
+				blockGroupModule.Binder.BindMoveMyBlockGroupsByBlockPackId(
+					blockGroupModule.Controller.MoveMyBlockGroupsByBlockPackId,
 				),
 			)...,
 		)
 		blockGroupRoutes.PUT(
-			"/batchMoveMyBlockGroupsByIds",
+			"/moveMyBlockGroupsByBlockPackIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "batchMoveMyBlockGroupsByIds"),
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "moveMyBlockGroupsByBlockPackIds"),
 					middlewares.ApplyMeterMiddleware(
 						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.BlockGroup.BatchMoveMyBlockGroupsByIds,
+						metrics.MetricNames.Server.Requests.BlockGroup.MoveMyBlockGroupsByBlockPackIds,
 					),
 				},
 				defaultMiddlewares,
-				blockGroupModule.Binder.BindBatchMoveMyBlockGroupsByIds(
-					blockGroupModule.Controller.BatchMoveMyBlockGroupsByIds,
+				blockGroupModule.Binder.BindMoveMyBlockGroupsByBlockPackIds(
+					blockGroupModule.Controller.MoveMyBlockGroupsByBlockPackIds,
 				),
 			)...,
 		)

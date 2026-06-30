@@ -30,7 +30,31 @@ type UpdateBlockInput struct {
 
 type PartialUpdateBlockInput = PartialUpdateInput[UpdateBlockInput]
 
-type BulkUpdateBlocksInput struct {
+type UpdateBlockByIdInput struct {
 	Id                 uuid.UUID                            `json:"id" gorm:"column:id;"`
 	PartialUpdateInput PartialUpdateInput[UpdateBlockInput] `json:"partialUpdateInput"`
+}
+
+/* ============================== System Only Input ============================== */
+
+type BulkCheckBlockPermissionInput struct {
+	UserId uuid.UUID `json:"userId" gorm:"column:user_id;"`
+	Id     uuid.UUID `json:"id" gorm:"column:id;"`
+}
+
+type BulkCreateBlockGroupContentInput struct {
+	UserId       uuid.UUID `json:"userId" gorm:"column:user_id;"`
+	BlockGroupId uuid.UUID `json:"blockGroupId" gorm:"column:block_group_id;"`
+	Blocks       []CreateBlockInput
+}
+
+type BulkUpdateBlockInput struct {
+	UserId             uuid.UUID                            `json:"userId" gorm:"column:user_id;"`
+	Id                 uuid.UUID                            `json:"id" gorm:"column:id;"`
+	PartialUpdateInput PartialUpdateInput[UpdateBlockInput] `json:"partialUpdateInput"`
+}
+
+type BulkDeleteBlockInput struct {
+	UserId uuid.UUID `json:"userId" gorm:"column:user_id;"`
+	Id     uuid.UUID `json:"id" gorm:"column:id;"`
 }

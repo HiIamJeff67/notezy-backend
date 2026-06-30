@@ -11,4 +11,4 @@ var GetMyBlockPackAndItsParentByIdSQL string
 var MoveMyBlockPackByIdSQL string
 
 //go:embed move_my_block_packs_by_ids.sql
-var MoveMyBlockPacksByIdsSQL string
+var MoveMyBlockPacksByParentSubShelfIdSQL string

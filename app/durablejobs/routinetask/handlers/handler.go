@@ -18,7 +18,7 @@ type PurposeHandlerFunc func(
 	ctx context.Context,
 	tasks []schemas.RoutineTask,
 	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
-) map[uuid.UUID]*exceptions.Exception
+) ([]bool, *exceptions.Exception)
 
 func decodePayload[T any](task schemas.RoutineTask) (*T, *exceptions.Exception) {
 	var payload T

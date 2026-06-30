@@ -37,8 +37,8 @@ type SubShelfServiceInterface interface {
 	UpdateMySubShelfById(ctx context.Context, reqDto *dtos.UpdateMySubShelfByIdReqDto) (*dtos.UpdateMySubShelfByIdResDto, *exceptions.Exception)
 	UpdateMySubShelvesByIds(ctx context.Context, reqDto *dtos.UpdateMySubShelvesByIdsReqDto) (*dtos.UpdateMySubShelvesByIdsResDto, *exceptions.Exception)
 	MoveMySubShelf(ctx context.Context, reqDto *dtos.MoveMySubShelfReqDto) (*dtos.MoveMySubShelfResDto, *exceptions.Exception)
-	MoveMySubShelves(ctx context.Context, reqDto *dtos.MoveMySubShelvesReqDto) (*dtos.MoveMySubShelvesResDto, *exceptions.Exception)
-	BatchMoveMySubShelves(ctx context.Context, reqDto *dtos.BatchMoveMySubShelvesReqDto) (*dtos.BatchMoveMySubShelvesResDto, *exceptions.Exception)
+	MoveMySubShelvesByRootShelfId(ctx context.Context, reqDto *dtos.MoveMySubShelvesByRootShelfIdReqDto) (*dtos.MoveMySubShelvesByRootShelfIdResDto, *exceptions.Exception)
+	MoveMySubShelvesByRootShelfIds(ctx context.Context, reqDto *dtos.MoveMySubShelvesByRootShelfIdsReqDto) (*dtos.MoveMySubShelvesByRootShelfIdsResDto, *exceptions.Exception)
 	RestoreMySubShelfById(ctx context.Context, reqDto *dtos.RestoreMySubShelfByIdReqDto) (*dtos.RestoreMySubShelfByIdResDto, *exceptions.Exception)
 	RestoreMySubShelvesByIds(ctx context.Context, reqDto *dtos.RestoreMySubShelvesByIdsReqDto) (*dtos.RestoreMySubShelvesByIdsResDto, *exceptions.Exception)
 	DeleteMySubShelfById(ctx context.Context, reqDto *dtos.DeleteMySubShelfByIdReqDto) (*dtos.DeleteMySubShelfByIdResDto, *exceptions.Exception)
@@ -346,16 +346,16 @@ func (s *SubShelfService) CreateSubShelvesByRootShelfIds(
 
 	db := s.db.WithContext(ctx)
 
-	input := make([]inputs.BulkCreateSubShelfInput, len(reqDto.Body.CreatedSubShelves))
+	input := make([]inputs.CreateSubShelfByRootShelfIdInput, len(reqDto.Body.CreatedSubShelves))
 	for index, createdSubShelf := range reqDto.Body.CreatedSubShelves {
-		input[index] = inputs.BulkCreateSubShelfInput{
+		input[index] = inputs.CreateSubShelfByRootShelfIdInput{
 			Id:             createdSubShelf.Id,
 			RootShelfId:    createdSubShelf.RootShelfId,
 			PrevSubShelfId: createdSubShelf.PrevSubShelfId,
 			Name:           createdSubShelf.Name,
 		}
 	}
-	newSubShelfIds, exception := s.subShelfRepository.BulkCreateManyByRootShelfIds(
+	newSubShelfIds, exception := s.subShelfRepository.CreateManyByRootShelfIds(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),
@@ -408,9 +408,9 @@ func (s *SubShelfService) UpdateMySubShelvesByIds(
 
 	db := s.db.WithContext(ctx)
 
-	input := make([]inputs.BulkUpdateSubShelfInput, len(reqDto.Body.UpdatedSubShelves))
+	input := make([]inputs.UpdateSubShelfByIdInput, len(reqDto.Body.UpdatedSubShelves))
 	for index, updatedSubShelf := range reqDto.Body.UpdatedSubShelves {
-		input[index] = inputs.BulkUpdateSubShelfInput{
+		input[index] = inputs.UpdateSubShelfByIdInput{
 			Id: updatedSubShelf.SubShelfId,
 			PartialUpdateInput: inputs.PartialUpdateInput[inputs.UpdateSubShelfInput]{
 				Values: inputs.UpdateSubShelfInput{
@@ -420,7 +420,7 @@ func (s *SubShelfService) UpdateMySubShelvesByIds(
 			},
 		}
 	}
-	exception := s.subShelfRepository.BulkUpdateManyByIds(
+	exception := s.subShelfRepository.UpdateManyByIds(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),
@@ -539,9 +539,9 @@ func (s *SubShelfService) MoveMySubShelf(
 	}, nil
 }
 
-func (s *SubShelfService) MoveMySubShelves(
-	ctx context.Context, reqDto *dtos.MoveMySubShelvesReqDto,
-) (*dtos.MoveMySubShelvesResDto, *exceptions.Exception) {
+func (s *SubShelfService) MoveMySubShelvesByRootShelfId(
+	ctx context.Context, reqDto *dtos.MoveMySubShelvesByRootShelfIdReqDto,
+) (*dtos.MoveMySubShelvesByRootShelfIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
@@ -662,14 +662,14 @@ func (s *SubShelfService) MoveMySubShelves(
 		return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	return &dtos.MoveMySubShelvesResDto{
+	return &dtos.MoveMySubShelvesByRootShelfIdResDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
 
-func (s *SubShelfService) BatchMoveMySubShelves(
-	ctx context.Context, reqDto *dtos.BatchMoveMySubShelvesReqDto,
-) (*dtos.BatchMoveMySubShelvesResDto, *exceptions.Exception) {
+func (s *SubShelfService) MoveMySubShelvesByRootShelfIds(
+	ctx context.Context, reqDto *dtos.MoveMySubShelvesByRootShelfIdsReqDto,
+) (*dtos.MoveMySubShelvesByRootShelfIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
@@ -858,7 +858,7 @@ func (s *SubShelfService) BatchMoveMySubShelves(
 		return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	return &dtos.BatchMoveMySubShelvesResDto{
+	return &dtos.MoveMySubShelvesByRootShelfIdsResDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }

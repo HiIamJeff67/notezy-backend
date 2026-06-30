@@ -27,10 +27,10 @@ type StationRepositoryInterface interface {
 	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.StationRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.Station, []enums.AccessControlPermission, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.StationRelation, opts ...options.RepositoryOptions) (*schemas.Station, enums.AccessControlPermission, *exceptions.Exception)
 	GetAllByUserId(userId uuid.UUID, preloads []schemas.StationRelation, opts ...options.RepositoryOptions) ([]schemas.Station, []enums.AccessControlPermission, *exceptions.Exception)
-	CreateOneByOwnerId(ownerId uuid.UUID, input inputs.CreateStationInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
-	CreateManyByOwnerId(ownerId uuid.UUID, input []inputs.CreateStationInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
+	CreateOne(ownerId uuid.UUID, input inputs.CreateStationInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
+	CreateMany(ownerId uuid.UUID, input []inputs.CreateStationInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateStationInput, opts ...options.RepositoryOptions) (*schemas.Station, *exceptions.Exception)
-	BulkUpdateManyByIds(userId uuid.UUID, input []inputs.BulkUpdateStationInput, opts ...options.RepositoryOptions) *exceptions.Exception
+	UpdateManyByIds(userId uuid.UUID, input []inputs.UpdateStationByIdInput, opts ...options.RepositoryOptions) *exceptions.Exception
 	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.Station, *exceptions.Exception)
 	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.Station, *exceptions.Exception)
 	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
@@ -39,6 +39,12 @@ type StationRepositoryInterface interface {
 	HardDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteManyByUserId(userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
+
+	/* ============================== System Only Method ============================== */
+
+	BulkCheckPermissionsAndGetManyByIds(inputs []inputs.BulkCheckStationPermissionInput, preloads []schemas.StationRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]bool, []schemas.Station, *exceptions.Exception)
+	BulkCreateMany(inputs []inputs.BulkCreateStationInput, opts ...options.RepositoryOptions) ([]bool, *exceptions.Exception)
+	BulkUpdateMany(inputs []inputs.BulkUpdateStationInput, opts ...options.RepositoryOptions) ([]bool, *exceptions.Exception)
 }
 
 type StationRepository struct {
@@ -270,7 +276,7 @@ func (r *StationRepository) GetAllByUserId(
 	return stations, permissions, nil
 }
 
-func (r *StationRepository) CreateOneByOwnerId(
+func (r *StationRepository) CreateOne(
 	ownerId uuid.UUID,
 	input inputs.CreateStationInput,
 	opts ...options.RepositoryOptions,
@@ -281,7 +287,8 @@ func (r *StationRepository) CreateOneByOwnerId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	var newStation schemas.Station
@@ -331,7 +338,7 @@ func (r *StationRepository) CreateOneByOwnerId(
 	return &newStation.Id, nil
 }
 
-func (r *StationRepository) CreateManyByOwnerId(
+func (r *StationRepository) CreateMany(
 	ownerId uuid.UUID,
 	input []inputs.CreateStationInput,
 	opts ...options.RepositoryOptions,
@@ -346,7 +353,8 @@ func (r *StationRepository) CreateManyByOwnerId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	newStations := make([]schemas.Station, 0, len(input))
@@ -415,7 +423,8 @@ func (r *StationRepository) UpdateOneById(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -464,9 +473,9 @@ func (r *StationRepository) UpdateOneById(
 	return &updates, nil
 }
 
-func (r *StationRepository) BulkUpdateManyByIds(
+func (r *StationRepository) UpdateManyByIds(
 	userId uuid.UUID,
-	input []inputs.BulkUpdateStationInput,
+	input []inputs.UpdateStationByIdInput,
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(input) == 0 {
@@ -479,7 +488,8 @@ func (r *StationRepository) BulkUpdateManyByIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -517,21 +527,8 @@ func (r *StationRepository) BulkUpdateManyByIds(
 			continue
 		}
 
-		setIconNull := false
-		setHeaderBackgroundURLNull := false
-		if in.PartialUpdateInput.SetNull != nil {
-			for field, setNull := range *in.PartialUpdateInput.SetNull {
-				if !setNull {
-					continue
-				}
-				switch strings.ToLower(strings.ReplaceAll(field, "_", "")) {
-				case "icon":
-					setIconNull = true
-				case "headerbackgroundurl":
-					setHeaderBackgroundURLNull = true
-				}
-			}
-		}
+		setIconNull := util.CheckSetNull(in.PartialUpdateInput.SetNull, "Icon")
+		setHeaderBackgroundURLNull := util.CheckSetNull(in.PartialUpdateInput.SetNull, "HeaderBackgroundURL")
 
 		valuePlaceholders = append(valuePlaceholders, `(?::uuid, ?::text, ?::text, ?::"SupportedIcon", ?::text, ?::boolean, ?::boolean)`)
 		valueArgs = append(valueArgs,
@@ -812,4 +809,267 @@ func (r *StationRepository) HardDeleteManyByUserId(
 	}
 
 	return nil
+}
+
+/* ============================== System Only Method ============================== */
+
+func (r *StationRepository) BulkCheckPermissionsAndGetManyByIds(
+	inputs []inputs.BulkCheckStationPermissionInput,
+	preloads []schemas.StationRelation,
+	allowedPermissions []enums.AccessControlPermission,
+	opts ...options.RepositoryOptions,
+) ([]bool, []schemas.Station, *exceptions.Exception) {
+	if len(inputs) == 0 {
+		return []bool{}, []schemas.Station{}, nil
+	}
+
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	successes := make([]bool, len(inputs))
+	ids := make([]uuid.UUID, 0, len(inputs))
+	userIds := make([]uuid.UUID, 0, len(inputs))
+	for _, in := range inputs {
+		ids = append(ids, in.Id)
+		userIds = append(userIds, in.UserId)
+	}
+
+	var validTargets []struct {
+		Id     uuid.UUID `gorm:"column:id"`
+		UserId uuid.UUID `gorm:"column:user_id"`
+	}
+	result := parsedOptions.DB.Model(&schemas.Station{}).
+		Select(`"StationTable".id, uts.user_id`).
+		Joins(`INNER JOIN "UsersToStationsTable" AS uts ON uts.station_id = "StationTable".id`).
+		Where(`"StationTable".id IN ?`, ids).
+		Where("uts.user_id IN ? AND uts.permission IN ?", userIds, allowedPermissions).
+		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Scan(&validTargets)
+	if result.Error != nil {
+		return nil, nil, exceptions.Station.NotFound().WithOrigin(result.Error)
+	}
+
+	validTargetByUserId := make(map[[2]uuid.UUID]bool, len(validTargets))
+	for _, validTarget := range validTargets {
+		validTargetByUserId[[2]uuid.UUID{validTarget.Id, validTarget.UserId}] = true
+	}
+
+	validIdSet := make(map[uuid.UUID]bool, len(validTargets))
+	for _, in := range inputs {
+		if validTargetByUserId[[2]uuid.UUID{in.Id, in.UserId}] {
+			validIdSet[in.Id] = true
+		}
+	}
+
+	validIds := make([]uuid.UUID, 0, len(validIdSet))
+	for validId := range validIdSet {
+		validIds = append(validIds, validId)
+	}
+	if len(validIds) == 0 {
+		return successes, []schemas.Station{}, nil
+	}
+
+	var stations []schemas.Station
+	result = parsedOptions.DB.Model(&schemas.Station{}).
+		Where(`"StationTable".id IN ?`, validIds).
+		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Scopes(r.stationScope.IncludePreloads(preloads)).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
+		Find(&stations)
+	if result.Error != nil {
+		return nil, nil, exceptions.Station.NotFound().WithOrigin(result.Error)
+	}
+
+	foundIdSet := make(map[uuid.UUID]bool, len(stations))
+	for _, station := range stations {
+		foundIdSet[station.Id] = true
+	}
+	for index, in := range inputs {
+		if validTargetByUserId[[2]uuid.UUID{in.Id, in.UserId}] && foundIdSet[in.Id] {
+			successes[index] = true
+		}
+	}
+
+	return successes, stations, nil
+}
+
+func (r *StationRepository) BulkCreateMany(
+	inputs []inputs.BulkCreateStationInput,
+	opts ...options.RepositoryOptions,
+) ([]bool, *exceptions.Exception) {
+	if len(inputs) == 0 {
+		return []bool{}, exceptions.Station.NoChanges()
+	}
+
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	shouldStartTransaction := !parsedOptions.IsTransactionStarted
+	if shouldStartTransaction {
+		parsedOptions.DB = parsedOptions.DB.Begin()
+	}
+
+	newStations := make([]schemas.Station, len(inputs))
+	newUsersToStations := make([]schemas.UsersToStations, len(inputs))
+	for index, in := range inputs {
+		newStationId := uuid.New()
+		if in.Id != nil && *in.Id != uuid.Nil {
+			newStationId = *in.Id
+		}
+
+		newStations[index] = schemas.Station{
+			Id:                  newStationId,
+			OwnerId:             in.UserId,
+			Name:                in.Name,
+			Description:         in.Description,
+			Icon:                in.Icon,
+			HeaderBackgroundURL: in.HeaderBackgroundURL,
+		}
+		newUsersToStations[index] = schemas.UsersToStations{
+			UserId:     in.UserId,
+			StationId:  newStationId,
+			Permission: enums.AccessControlPermission_Owner,
+		}
+	}
+
+	result := parsedOptions.DB.Model(&schemas.Station{}).
+		CreateInBatches(&newStations, parsedOptions.BatchSize)
+	if result.Error != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exceptions.Station.FailedToCreate().WithOrigin(result.Error)
+	}
+
+	result = parsedOptions.DB.Model(&schemas.UsersToStations{}).
+		CreateInBatches(&newUsersToStations, parsedOptions.BatchSize)
+	if result.Error != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exceptions.Station.FailedToCreate().WithOrigin(result.Error)
+	}
+
+	if shouldStartTransaction {
+		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
+			return nil, exceptions.Station.FailedToCommitTransaction().WithOrigin(err)
+		}
+	}
+
+	return make([]bool, len(inputs)), nil
+}
+
+func (r *StationRepository) BulkUpdateMany(
+	bulkInputs []inputs.BulkUpdateStationInput,
+	opts ...options.RepositoryOptions,
+) ([]bool, *exceptions.Exception) {
+	if len(bulkInputs) == 0 {
+		return []bool{}, exceptions.Station.NoChanges()
+	}
+
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	shouldStartTransaction := !parsedOptions.IsTransactionStarted
+	if shouldStartTransaction {
+		parsedOptions.DB = parsedOptions.DB.Begin()
+	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	checkInputs := make([]inputs.BulkCheckStationPermissionInput, len(bulkInputs))
+	for index, in := range bulkInputs {
+		checkInputs[index] = inputs.BulkCheckStationPermissionInput{
+			UserId: in.UserId,
+			Id:     in.Id,
+		}
+	}
+	checkOptions := append(opts, options.WithTransactionDB(parsedOptions.DB))
+	checkOptions = append(checkOptions, options.WithOnlyDeleted(types.Ternary_Negative))
+	checkOptions = append(checkOptions, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+	successes, _, exception := r.BulkCheckPermissionsAndGetManyByIds(checkInputs, nil, allowedPermissions, checkOptions...)
+	if exception != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exception
+	}
+
+	valuePlaceholders := make([]string, 0, len(bulkInputs))
+	valueArgs := make([]interface{}, 0, len(bulkInputs)*8)
+	for index, in := range bulkInputs {
+		if !successes[index] {
+			continue
+		}
+
+		setIconNull := util.CheckSetNull(in.PartialUpdateInput.SetNull, "Icon")
+		setHeaderBackgroundURLNull := util.CheckSetNull(in.PartialUpdateInput.SetNull, "HeaderBackgroundURL")
+
+		valuePlaceholders = append(valuePlaceholders, `(?::int, ?::uuid, ?::text, ?::text, ?::"SupportedIcon", ?::text, ?::boolean, ?::boolean)`)
+		valueArgs = append(valueArgs,
+			index,
+			in.Id,
+			in.PartialUpdateInput.Values.Name,
+			in.PartialUpdateInput.Values.Description,
+			in.PartialUpdateInput.Values.Icon,
+			in.PartialUpdateInput.Values.HeaderBackgroundURL,
+			setIconNull,
+			setHeaderBackgroundURLNull,
+		)
+	}
+	if len(valuePlaceholders) == 0 {
+		if shouldStartTransaction {
+			parsedOptions.DB.Rollback()
+		}
+		return successes, nil
+	}
+
+	sql := fmt.Sprintf(`
+		WITH payload(idx, id, name, description, icon, header_background_url, set_icon_null, set_header_background_url_null) AS (
+			VALUES %s
+		),
+		updated AS (
+			UPDATE "StationTable" AS s
+			SET
+				name = COALESCE(v.name::text, s.name),
+				description = COALESCE(v.description::text, s.description),
+				icon = CASE
+					WHEN v.set_icon_null::boolean THEN NULL
+					ELSE COALESCE(v.icon::"SupportedIcon", s.icon)
+				END,
+				header_background_url = CASE
+					WHEN v.set_header_background_url_null::boolean THEN NULL
+					ELSE COALESCE(v.header_background_url::text, s.header_background_url)
+				END,
+				updated_at = NOW()
+			FROM payload AS v
+			WHERE s.id = v.id::uuid
+				AND s.deleted_at IS NULL
+			RETURNING s.id
+		)
+		SELECT v.idx
+		FROM payload AS v
+		INNER JOIN updated AS u ON u.id = v.id::uuid
+	`, strings.Join(valuePlaceholders, ","))
+
+	var updatedIndexes []struct {
+		Index int `gorm:"column:idx"`
+	}
+	result := parsedOptions.DB.Raw(sql, valueArgs...).Scan(&updatedIndexes)
+	if result.Error != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exceptions.Station.FailedToUpdate().WithOrigin(result.Error)
+	}
+
+	if shouldStartTransaction {
+		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
+			return nil, exceptions.Station.FailedToCommitTransaction().WithOrigin(err)
+		}
+	}
+
+	successes = make([]bool, len(bulkInputs))
+	for _, updatedIndex := range updatedIndexes {
+		if updatedIndex.Index >= 0 && updatedIndex.Index < len(successes) {
+			successes[updatedIndex.Index] = true
+		}
+	}
+
+	return successes, nil
 }

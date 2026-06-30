@@ -19,8 +19,8 @@ type SubShelfControllerInterface interface {
 	UpdateMySubShelfById(ctx *gin.Context, reqDto *dtos.UpdateMySubShelfByIdReqDto)
 	UpdateMySubShelvesByIds(ctx *gin.Context, reqDto *dtos.UpdateMySubShelvesByIdsReqDto)
 	MoveMySubShelf(ctx *gin.Context, reqDto *dtos.MoveMySubShelfReqDto)
-	MoveMySubShelves(ctx *gin.Context, reqDto *dtos.MoveMySubShelvesReqDto)
-	BatchMoveMySubShelves(ctx *gin.Context, reqDto *dtos.BatchMoveMySubShelvesReqDto)
+	MoveMySubShelvesByRootShelfId(ctx *gin.Context, reqDto *dtos.MoveMySubShelvesByRootShelfIdReqDto)
+	MoveMySubShelvesByRootShelfIds(ctx *gin.Context, reqDto *dtos.MoveMySubShelvesByRootShelfIdsReqDto)
 	RestoreMySubShelfById(ctx *gin.Context, reqDto *dtos.RestoreMySubShelfByIdReqDto)
 	RestoreMySubShelvesByIds(ctx *gin.Context, reqDto *dtos.RestoreMySubShelvesByIdsReqDto)
 	DeleteMySubShelfById(ctx *gin.Context, reqDto *dtos.DeleteMySubShelfByIdReqDto)
@@ -163,8 +163,8 @@ func (c *SubShelfController) MoveMySubShelf(ctx *gin.Context, reqDto *dtos.MoveM
 	})
 }
 
-func (c *SubShelfController) MoveMySubShelves(ctx *gin.Context, reqDto *dtos.MoveMySubShelvesReqDto) {
-	resDto, exception := c.subShelfService.MoveMySubShelves(ctx.Request.Context(), reqDto)
+func (c *SubShelfController) MoveMySubShelvesByRootShelfId(ctx *gin.Context, reqDto *dtos.MoveMySubShelvesByRootShelfIdReqDto) {
+	resDto, exception := c.subShelfService.MoveMySubShelvesByRootShelfId(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
@@ -177,8 +177,8 @@ func (c *SubShelfController) MoveMySubShelves(ctx *gin.Context, reqDto *dtos.Mov
 	})
 }
 
-func (c *SubShelfController) BatchMoveMySubShelves(ctx *gin.Context, reqDto *dtos.BatchMoveMySubShelvesReqDto) {
-	resDto, exception := c.subShelfService.BatchMoveMySubShelves(ctx.Request.Context(), reqDto)
+func (c *SubShelfController) MoveMySubShelvesByRootShelfIds(ctx *gin.Context, reqDto *dtos.MoveMySubShelvesByRootShelfIdsReqDto) {
+	resDto, exception := c.subShelfService.MoveMySubShelvesByRootShelfIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return

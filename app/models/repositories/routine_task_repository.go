@@ -27,9 +27,9 @@ type RoutineTaskRepositoryInterface interface {
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineTaskRelation, opts ...options.RepositoryOptions) (*schemas.RoutineTask, *exceptions.Exception)
 	GetAllByStationIds(stationIds []uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineTaskRelation, opts ...options.RepositoryOptions) ([]schemas.RoutineTask, *exceptions.Exception)
 	CreateOneByStationId(stationId uuid.UUID, userId uuid.UUID, input inputs.CreateRoutineTaskInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
-	BulkCreateManyByStationIds(userId uuid.UUID, input []inputs.BulkCreateRoutineTaskInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
+	CreateManyByStationIds(userId uuid.UUID, input []inputs.CreateRoutineTaskByStationIdInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateRoutineTaskInput, opts ...options.RepositoryOptions) (*schemas.RoutineTask, *exceptions.Exception)
-	BulkUpdateManyByIds(userId uuid.UUID, input []inputs.BulkUpdateRoutineTaskInput, opts ...options.RepositoryOptions) *exceptions.Exception
+	UpdateManyByIds(userId uuid.UUID, input []inputs.UpdateRoutineTaskByIdInput, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 }
@@ -206,7 +206,8 @@ func (r *RoutineTaskRepository) CreateOneByStationId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -254,9 +255,9 @@ func (r *RoutineTaskRepository) CreateOneByStationId(
 	return &newRoutineTask.Id, nil
 }
 
-func (r *RoutineTaskRepository) BulkCreateManyByStationIds(
+func (r *RoutineTaskRepository) CreateManyByStationIds(
 	userId uuid.UUID,
-	input []inputs.BulkCreateRoutineTaskInput,
+	input []inputs.CreateRoutineTaskByStationIdInput,
 	opts ...options.RepositoryOptions,
 ) ([]uuid.UUID, *exceptions.Exception) {
 	if len(input) == 0 {
@@ -268,7 +269,8 @@ func (r *RoutineTaskRepository) BulkCreateManyByStationIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -356,7 +358,8 @@ func (r *RoutineTaskRepository) UpdateOneById(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -369,7 +372,7 @@ func (r *RoutineTaskRepository) UpdateOneById(
 		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
-	if input.Values.StationId != nil && (input.SetNull == nil || !(*input.SetNull)["StationId"]) {
+	if input.Values.StationId != nil && !util.CheckSetNull(input.SetNull, "StationId") {
 		stationRepository := NewStationRepository(scopes.NewStationScope())
 		if !stationRepository.HasPermission(*input.Values.StationId, userId, allowedPermissions, opts...) {
 			parsedOptions.DB.Rollback()
@@ -410,9 +413,9 @@ func (r *RoutineTaskRepository) UpdateOneById(
 	return &updates, nil
 }
 
-func (r *RoutineTaskRepository) BulkUpdateManyByIds(
+func (r *RoutineTaskRepository) UpdateManyByIds(
 	userId uuid.UUID,
-	input []inputs.BulkUpdateRoutineTaskInput,
+	input []inputs.UpdateRoutineTaskByIdInput,
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(input) == 0 {
@@ -424,7 +427,8 @@ func (r *RoutineTaskRepository) BulkUpdateManyByIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -450,7 +454,7 @@ func (r *RoutineTaskRepository) BulkUpdateManyByIds(
 	targetStationIdSet := make(map[uuid.UUID]bool)
 	for _, in := range input {
 		if in.PartialUpdateInput.Values.StationId == nil ||
-			(in.PartialUpdateInput.SetNull != nil && (*in.PartialUpdateInput.SetNull)["StationId"]) {
+			util.CheckSetNull(in.PartialUpdateInput.SetNull, "StationId") {
 			continue
 		}
 		targetStationIdSet[*in.PartialUpdateInput.Values.StationId] = true
@@ -474,15 +478,7 @@ func (r *RoutineTaskRepository) BulkUpdateManyByIds(
 			continue
 		}
 
-		setPeriodNull := false
-		if in.PartialUpdateInput.SetNull != nil {
-			for field, setNull := range *in.PartialUpdateInput.SetNull {
-				if setNull && strings.ToLower(strings.ReplaceAll(field, "_", "")) == "period" {
-					setPeriodNull = true
-					break
-				}
-			}
-		}
+		setPeriodNull := util.CheckSetNull(in.PartialUpdateInput.SetNull, "Period")
 
 		scheduledAt := in.PartialUpdateInput.Values.ScheduledAt
 		if scheduledAt != nil {

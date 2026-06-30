@@ -19,7 +19,7 @@ type CreateRoutineTaskInput struct {
 	ScheduledAt time.Time                `json:"scheduledAt" gorm:"column:scheduled_at;"`
 }
 
-type BulkCreateRoutineTaskInput struct {
+type CreateRoutineTaskByStationIdInput struct {
 	StationId   uuid.UUID                `json:"stationId" gorm:"column:station_id;"`
 	Title       string                   `json:"title" gorm:"column:title;"`
 	Purpose     enums.RoutineTaskPurpose `json:"purpose" gorm:"column:purpose;"`
@@ -43,7 +43,7 @@ type UpdateRoutineTaskInput struct {
 
 type PartialUpdateRoutineTaskInput = PartialUpdateInput[UpdateRoutineTaskInput]
 
-type BulkUpdateRoutineTaskInput struct {
+type UpdateRoutineTaskByIdInput struct {
 	Id                 uuid.UUID                                  `json:"id" gorm:"column:id;"`
 	PartialUpdateInput PartialUpdateInput[UpdateRoutineTaskInput] `json:"partialUpdateInput"`
 }

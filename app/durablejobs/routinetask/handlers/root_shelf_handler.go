@@ -37,150 +37,185 @@ func (h RootShelfHandler) HandleCreateRootShelf(
 	ctx context.Context,
 	tasks []schemas.RoutineTask,
 	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
-) map[uuid.UUID]*exceptions.Exception {
-	results := make(map[uuid.UUID]*exceptions.Exception)
-	inputsByOwnerId := make(map[uuid.UUID][]inputs.CreateRootShelfInput)
+) ([]bool, *exceptions.Exception) {
+	successes := make([]bool, len(tasks))
+	bulkInputs := make([]inputs.BulkCreateRootShelfInput, 0, len(tasks))
+	taskIndexes := make([]int, 0, len(tasks))
 
-	for _, task := range tasks {
+	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
 		if !exists {
-			results[task.Id] = exceptions.Station.NoPermission("run this routine task")
 			continue
 		}
 
 		payload, exception := decodePayload[dtos.CreateRootShelfRoutineTaskPayload](task)
 		if exception != nil {
-			results[task.Id] = exception
 			continue
 		}
-		inputsByOwnerId[ownerId] = append(inputsByOwnerId[ownerId], inputs.CreateRootShelfInput{
-			Id:   payload.Id,
-			Name: payload.Name,
+		bulkInputs = append(bulkInputs, inputs.BulkCreateRootShelfInput{
+			UserId: ownerId,
+			Id:     payload.Id,
+			Name:   payload.Name,
 		})
+		taskIndexes = append(taskIndexes, taskIndex)
 	}
 
-	for ownerId, createInputs := range inputsByOwnerId {
-		if _, exception := h.rootShelfRepository.CreateManyByOwnerId(
-			ownerId,
-			createInputs,
-			options.WithDB(h.db.WithContext(ctx)),
-			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
-			options.WithOnlyDeleted(types.Ternary_Negative),
-		); exception != nil {
-			for _, task := range tasks {
-				if taskIdToOwnerId[task.Id] == ownerId {
-					results[task.Id] = exception
-				}
-			}
-		}
+	if len(bulkInputs) == 0 {
+		return successes, nil
+	}
+	bulkSuccesses, exception := h.rootShelfRepository.BulkCreateMany(
+		bulkInputs,
+		options.WithDB(h.db.WithContext(ctx)),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return successes, exception
 	}
 
-	return results
+	for index, success := range bulkSuccesses {
+		successes[taskIndexes[index]] = success
+	}
+
+	return successes, nil
 }
 
 func (h RootShelfHandler) HandleUpdateRootShelf(
 	ctx context.Context,
 	tasks []schemas.RoutineTask,
 	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
-) map[uuid.UUID]*exceptions.Exception {
-	results := make(map[uuid.UUID]*exceptions.Exception)
-	inputsByOwnerId := make(map[uuid.UUID][]inputs.BulkUpdateRootShelfInput)
+) ([]bool, *exceptions.Exception) {
+	successes := make([]bool, len(tasks))
+	bulkInputs := make([]inputs.BulkUpdateRootShelfInput, 0, len(tasks))
+	taskIndexes := make([]int, 0, len(tasks))
 
-	for _, task := range tasks {
+	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
 		if !exists {
-			results[task.Id] = exceptions.Station.NoPermission("run this routine task")
 			continue
 		}
 
 		payload, exception := decodePayload[dtos.UpdateRootShelfRoutineTaskPayload](task)
 		if exception != nil {
-			results[task.Id] = exception
 			continue
 		}
 		if payload.Name == nil {
 			continue
 		}
-		inputsByOwnerId[ownerId] = append(inputsByOwnerId[ownerId], inputs.BulkUpdateRootShelfInput{
-			Id: payload.RootShelfId,
+		bulkInputs = append(bulkInputs, inputs.BulkUpdateRootShelfInput{
+			UserId: ownerId,
+			Id:     payload.RootShelfId,
 			PartialUpdateInput: inputs.PartialUpdateRootShelfInput{
 				Values: inputs.UpdateRootShelfInput{
 					Name: payload.Name,
 				},
 			},
 		})
+		taskIndexes = append(taskIndexes, taskIndex)
 	}
 
-	for ownerId, updateInputs := range inputsByOwnerId {
-		if exception := h.rootShelfRepository.BulkUpdateManyByIds(
-			ownerId,
-			updateInputs,
-			options.WithDB(h.db.WithContext(ctx)),
-			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
-			options.WithOnlyDeleted(types.Ternary_Negative),
-		); exception != nil {
-			for _, task := range tasks {
-				if taskIdToOwnerId[task.Id] == ownerId {
-					results[task.Id] = exception
-				}
-			}
-		}
+	if len(bulkInputs) == 0 {
+		return successes, nil
 	}
 
-	return results
+	bulkSuccesses, exception := h.rootShelfRepository.BulkUpdateMany(
+		bulkInputs,
+		options.WithDB(h.db.WithContext(ctx)),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return successes, exception
+	}
+
+	for index, success := range bulkSuccesses {
+		successes[taskIndexes[index]] = success
+	}
+
+	return successes, nil
 }
 
 func (h RootShelfHandler) HandleResetRootShelf(
 	ctx context.Context,
 	tasks []schemas.RoutineTask,
 	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
-) map[uuid.UUID]*exceptions.Exception {
-	results := make(map[uuid.UUID]*exceptions.Exception)
-	rootShelfIdsByOwnerId := make(map[uuid.UUID][]uuid.UUID)
-	ownerIdToTasks := make(map[uuid.UUID][]schemas.RoutineTask)
+) ([]bool, *exceptions.Exception) {
+	successes := make([]bool, len(tasks))
+	rootShelfIds := make([]uuid.UUID, 0, len(tasks))
+	taskIndexesByRootShelfId := make(map[uuid.UUID][]int, len(tasks))
+	ownerIdByRootShelfId := make(map[uuid.UUID]uuid.UUID, len(tasks))
 
-	for _, task := range tasks {
+	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
 		if !exists {
-			results[task.Id] = exceptions.Station.NoPermission("run this routine task")
 			continue
 		}
 
 		payload, exception := decodePayload[dtos.ResetRootShelfRoutineTaskPayload](task)
 		if exception != nil {
-			results[task.Id] = exception
 			continue
 		}
-		rootShelfIdsByOwnerId[ownerId] = append(rootShelfIdsByOwnerId[ownerId], payload.RootShelfId)
-		ownerIdToTasks[ownerId] = append(ownerIdToTasks[ownerId], task)
+		rootShelfIds = append(rootShelfIds, payload.RootShelfId)
+		taskIndexesByRootShelfId[payload.RootShelfId] = append(taskIndexesByRootShelfId[payload.RootShelfId], taskIndex)
+		ownerIdByRootShelfId[payload.RootShelfId] = ownerId
 	}
 
-	for ownerId, rootShelfIds := range rootShelfIdsByOwnerId {
-		var subShelfIds []uuid.UUID
-		if err := h.db.WithContext(ctx).
-			Model(&schemas.SubShelf{}).
-			Where("root_shelf_id IN ? AND deleted_at IS NULL", rootShelfIds).
-			Pluck("id", &subShelfIds).Error; err != nil {
-			for _, task := range ownerIdToTasks[ownerId] {
-				results[task.Id] = exceptions.Shelf.NotFound().WithOrigin(err)
+	if len(rootShelfIds) == 0 {
+		return successes, nil
+	}
+
+	var rows []struct {
+		Id          uuid.UUID `gorm:"column:id"`
+		RootShelfId uuid.UUID `gorm:"column:root_shelf_id"`
+	}
+	if err := h.db.WithContext(ctx).
+		Model(&schemas.SubShelf{}).
+		Select("id, root_shelf_id").
+		Where("root_shelf_id IN ? AND deleted_at IS NULL", rootShelfIds).
+		Find(&rows).Error; err != nil {
+		return successes, exceptions.Shelf.NotFound().WithOrigin(err)
+	}
+
+	bulkInputs := make([]inputs.BulkDeleteSubShelfInput, 0, len(rows))
+	taskIndexes := make([][]int, 0, len(rows))
+	for _, row := range rows {
+		bulkInputs = append(bulkInputs, inputs.BulkDeleteSubShelfInput{
+			UserId: ownerIdByRootShelfId[row.RootShelfId],
+			Id:     row.Id,
+		})
+		taskIndexes = append(taskIndexes, taskIndexesByRootShelfId[row.RootShelfId])
+	}
+	if len(bulkInputs) == 0 {
+		for _, indexes := range taskIndexesByRootShelfId {
+			for _, taskIndex := range indexes {
+				successes[taskIndex] = true
 			}
-			continue
 		}
-		if len(subShelfIds) == 0 {
-			continue
+		return successes, nil
+	}
+
+	bulkSuccesses, exception := h.subShelfRepository.BulkDeleteMany(
+		bulkInputs,
+		options.WithDB(h.db.WithContext(ctx)),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return successes, exception
+	}
+
+	for _, indexes := range taskIndexesByRootShelfId {
+		for _, taskIndex := range indexes {
+			successes[taskIndex] = true
 		}
-		if exception := h.subShelfRepository.SoftDeleteManyByIds(
-			subShelfIds,
-			ownerId,
-			options.WithDB(h.db.WithContext(ctx)),
-			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
-			options.WithOnlyDeleted(types.Ternary_Negative),
-		); exception != nil {
-			for _, task := range ownerIdToTasks[ownerId] {
-				results[task.Id] = exception
+	}
+	for index, success := range bulkSuccesses {
+		if !success {
+			for _, taskIndex := range taskIndexes[index] {
+				successes[taskIndex] = false
 			}
 		}
 	}
 
-	return results
+	return successes, nil
 }

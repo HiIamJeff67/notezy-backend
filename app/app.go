@@ -20,6 +20,7 @@ import (
 
 	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
 	configs "github.com/HiIamJeff67/notezy-backend/app/configs"
+	"github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask"
 	models "github.com/HiIamJeff67/notezy-backend/app/models"
 	developmentroutes "github.com/HiIamJeff67/notezy-backend/app/routes/developmentroutes"
 	util "github.com/HiIamJeff67/notezy-backend/app/util"
@@ -34,13 +35,16 @@ func StartApplication() {
 	defer caches.DisconnectToAllRedis()
 	reloadRedisLibraries()
 
-	ctx := context.Background()
-	shutdown, err := initOTel(ctx)
+	shutdownOTel, err := initOTel(context.Background())
 	if err != nil {
 		fmt.Println("Failed to initialize OpenTelemetry: ", err)
 		return
 	}
-	defer shutdown()
+	defer shutdownOTel()
+
+	routineTaskEngine := routinetask.NewEngine(models.NotezyDB)
+	shutdownRoutineTaskEngine := routineTaskEngine.Start(context.Background())
+	defer shutdownRoutineTaskEngine()
 
 	developmentroutes.DevelopmentRouter = gin.Default()
 	proxies := strings.Split(util.GetEnv("GIN_TRUSTED_PROXIES", ""), ",")

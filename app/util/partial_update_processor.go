@@ -91,6 +91,13 @@ func findFieldByName(structReflect reflect.Value, structType reflect.Type, field
 		}
 	}
 
+	normalizedFieldName := normalizePartialUpdateFieldName(fieldName)
+	for i := 0; i < structReflect.NumField(); i++ {
+		if normalizePartialUpdateFieldName(structType.Field(i).Name) == normalizedFieldName {
+			return structReflect.Field(i), true
+		}
+	}
+
 	return reflect.Value{}, false
 }
 
@@ -106,8 +113,23 @@ func isZeroValue(v reflect.Value) bool {
 /* ============================== Helper functions for directly partial update operations ============================== */
 
 func CheckSetNull(setNullMap *map[string]bool, fieldName string) bool {
-	if setNullMap != nil {
-		return (*setNullMap)[fieldName]
+	if setNullMap == nil {
+		return false
 	}
+	if (*setNullMap)[fieldName] {
+		return true
+	}
+
+	normalizedFieldName := normalizePartialUpdateFieldName(fieldName)
+	for setNullFieldName, shouldSetNull := range *setNullMap {
+		if shouldSetNull && normalizePartialUpdateFieldName(setNullFieldName) == normalizedFieldName {
+			return true
+		}
+	}
+
 	return false
+}
+
+func normalizePartialUpdateFieldName(fieldName string) string {
+	return strings.ToLower(strings.ReplaceAll(fieldName, "_", ""))
 }

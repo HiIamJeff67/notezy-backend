@@ -2,9 +2,11 @@ package routinetask
 
 import (
 	"context"
+	"sync"
 	"sync/atomic"
 	"time"
 
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 	"gorm.io/gorm"
 )
 
@@ -15,26 +17,46 @@ type Engine struct {
 	handlerManager HandlerManager
 }
 
-func NewEngine(maxWorkers int, db *gorm.DB) Engine {
+func NewEngine(db *gorm.DB, maxWorkers ...int) Engine {
+	initialMaxWorkers := constants.RoutineTaskEngineMaxWorkers
+	if len(maxWorkers) > 0 {
+		initialMaxWorkers = min(initialMaxWorkers, maxWorkers[0])
+	}
 	return Engine{
 		claimer:        NewClaimer(db),
-		handlerManager: NewHandlerManager(maxWorkers, db),
+		handlerManager: NewHandlerManager(initialMaxWorkers, db),
 		ticker:         time.NewTicker(time.Minute),
 		isHealthy:      1,
 	}
 }
 
-func (e *Engine) Start(ctx context.Context) {
-	e.runOnce(ctx)
+func (e *Engine) Start(ctx context.Context) func() {
+	ctx, cancel := context.WithCancel(ctx)
+	done := make(chan struct{})
+	var shutdownOnce sync.Once
 
-	for {
-		select {
-		case <-ctx.Done():
-			e.Stop()
-			return
-		case <-e.ticker.C:
-			e.runOnce(ctx)
+	go func() {
+		// note that defer is added using stack (LIFO data structure)
+		// hence `e.Stop()` will be executed before the `close(done)` below
+		defer close(done) // executed last
+		defer e.Stop()    // executed first
+
+		e.runOnce(ctx) // run once right after started
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-e.ticker.C:
+				e.runOnce(ctx)
+			}
 		}
+	}()
+
+	return func() {
+		shutdownOnce.Do(func() {
+			cancel()
+			<-done
+		})
 	}
 }
 

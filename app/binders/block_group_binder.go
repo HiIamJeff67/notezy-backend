@@ -21,14 +21,14 @@ type BlockGroupBinderInterface interface {
 	BindGetAllMyBlockGroupsByBlockPackId(controllerFunc types.ControllerFunc[*dtos.GetAllMyBlockGroupsByBlockPackIdReqDto]) gin.HandlerFunc
 	BindInsertBlockGroupByBlockPackId(controllerFunc types.ControllerFunc[*dtos.InsertBlockGroupByBlockPackIdReqDto]) gin.HandlerFunc
 	BindInsertBlockGroupsByBlockPackId(controllerFunc types.ControllerFunc[*dtos.InsertBlockGroupsByBlockPackIdReqDto]) gin.HandlerFunc
-	BindBatchInsertBlockGroupsByBlockPackIds(controllerFunc types.ControllerFunc[*dtos.BatchInsertBlockGroupsByBlockPackIdsReqDto]) gin.HandlerFunc
+	BindInsertBlockGroupsByBlockPackIds(controllerFunc types.ControllerFunc[*dtos.InsertBlockGroupsByBlockPackIdsReqDto]) gin.HandlerFunc
 	BindInsertBlockGroupAndItsBlocksByBlockPackId(controllerFunc types.ControllerFunc[*dtos.InsertBlockGroupAndItsBlocksByBlockPackIdReqDto]) gin.HandlerFunc
 	BindInsertBlockGroupsAndTheirBlocksByBlockPackId(controllerFunc types.ControllerFunc[*dtos.InsertBlockGroupsAndTheirBlocksByBlockPackIdReqDto]) gin.HandlerFunc
-	BindBatchInsertBlockGroupsAndTheirBlocksByBlockPackIds(controllerFunc types.ControllerFunc[*dtos.BatchInsertBlockGroupsAndTheirBlocksByBlockPackIdsReqDto]) gin.HandlerFunc
+	BindInsertBlockGroupsAndTheirBlocksByBlockPackIds(controllerFunc types.ControllerFunc[*dtos.InsertBlockGroupsAndTheirBlocksByBlockPackIdsReqDto]) gin.HandlerFunc
 	BindInsertSequentialBlockGroupsAndTheirBlocksByBlockPackId(controllerFunc types.ControllerFunc[*dtos.InsertSequentialBlockGroupsAndTheirBlocksByBlockPackIdReqDto]) gin.HandlerFunc
 	BindMoveMyBlockGroupById(controllerFunc types.ControllerFunc[*dtos.MoveMyBlockGroupByIdReqDto]) gin.HandlerFunc
-	BindMoveMyBlockGroupsByIds(controllerFunc types.ControllerFunc[*dtos.MoveMyBlockGroupsByIdsReqDto]) gin.HandlerFunc
-	BindBatchMoveMyBlockGroupsByIds(controllerFunc types.ControllerFunc[*dtos.BatchMoveMyBlockGroupsByIdsReqDto]) gin.HandlerFunc
+	BindMoveMyBlockGroupsByBlockPackId(controllerFunc types.ControllerFunc[*dtos.MoveMyBlockGroupsByBlockPackIdReqDto]) gin.HandlerFunc
+	BindMoveMyBlockGroupsByBlockPackIds(controllerFunc types.ControllerFunc[*dtos.MoveMyBlockGroupsByBlockPackIdsReqDto]) gin.HandlerFunc
 	BindRestoreMyBlockGroupById(controllerFunc types.ControllerFunc[*dtos.RestoreMyBlockGroupByIdReqDto]) gin.HandlerFunc
 	BindRestoreMyBlockGroupsByIds(controllerFunc types.ControllerFunc[*dtos.RestoreMyBlockGroupsByIdsReqDto]) gin.HandlerFunc
 	BindDeleteMyBlockGroupById(controllerFunc types.ControllerFunc[*dtos.DeleteMyBlockGroupByIdReqDto]) gin.HandlerFunc
@@ -259,9 +259,9 @@ func (b *BlockGroupBinder) BindInsertBlockGroupsByBlockPackId(controllerFunc typ
 	}
 }
 
-func (b *BlockGroupBinder) BindBatchInsertBlockGroupsByBlockPackIds(controllerFunc types.ControllerFunc[*dtos.BatchInsertBlockGroupsByBlockPackIdsReqDto]) gin.HandlerFunc {
+func (b *BlockGroupBinder) BindInsertBlockGroupsByBlockPackIds(controllerFunc types.ControllerFunc[*dtos.InsertBlockGroupsByBlockPackIdsReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.BatchInsertBlockGroupsByBlockPackIdsReqDto
+		var reqDto dtos.InsertBlockGroupsByBlockPackIdsReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -328,9 +328,9 @@ func (b *BlockGroupBinder) BindInsertBlockGroupsAndTheirBlocksByBlockPackId(cont
 	}
 }
 
-func (b *BlockGroupBinder) BindBatchInsertBlockGroupsAndTheirBlocksByBlockPackIds(controllerFunc types.ControllerFunc[*dtos.BatchInsertBlockGroupsAndTheirBlocksByBlockPackIdsReqDto]) gin.HandlerFunc {
+func (b *BlockGroupBinder) BindInsertBlockGroupsAndTheirBlocksByBlockPackIds(controllerFunc types.ControllerFunc[*dtos.InsertBlockGroupsAndTheirBlocksByBlockPackIdsReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.BatchInsertBlockGroupsAndTheirBlocksByBlockPackIdsReqDto
+		var reqDto dtos.InsertBlockGroupsAndTheirBlocksByBlockPackIdsReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -397,9 +397,9 @@ func (b *BlockGroupBinder) BindMoveMyBlockGroupById(controllerFunc types.Control
 	}
 }
 
-func (b *BlockGroupBinder) BindMoveMyBlockGroupsByIds(controllerFunc types.ControllerFunc[*dtos.MoveMyBlockGroupsByIdsReqDto]) gin.HandlerFunc {
+func (b *BlockGroupBinder) BindMoveMyBlockGroupsByBlockPackId(controllerFunc types.ControllerFunc[*dtos.MoveMyBlockGroupsByBlockPackIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.MoveMyBlockGroupsByIdsReqDto
+		var reqDto dtos.MoveMyBlockGroupsByBlockPackIdReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -420,9 +420,9 @@ func (b *BlockGroupBinder) BindMoveMyBlockGroupsByIds(controllerFunc types.Contr
 	}
 }
 
-func (b *BlockGroupBinder) BindBatchMoveMyBlockGroupsByIds(controllerFunc types.ControllerFunc[*dtos.BatchMoveMyBlockGroupsByIdsReqDto]) gin.HandlerFunc {
+func (b *BlockGroupBinder) BindMoveMyBlockGroupsByBlockPackIds(controllerFunc types.ControllerFunc[*dtos.MoveMyBlockGroupsByBlockPackIdsReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.BatchMoveMyBlockGroupsByIdsReqDto
+		var reqDto dtos.MoveMyBlockGroupsByBlockPackIdsReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 

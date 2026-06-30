@@ -181,7 +181,7 @@ type LinkRoutineTagByIdReqDto struct {
 	]
 }
 
-type BulkLinkRoutineTagsByIdsReqDto struct {
+type LinkRoutineTagsByIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -217,7 +217,7 @@ type LinkRoutineTaskByIdReqDto struct {
 	]
 }
 
-type BulkLinkRoutineTasksByIdsReqDto struct {
+type LinkRoutineTasksByIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -254,7 +254,7 @@ type LinkRoutineItemByIdReqDto struct {
 	]
 }
 
-type BulkLinkRoutineItemsByIdsReqDto struct {
+type LinkRoutineItemsByIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -509,7 +509,7 @@ type LinkRoutineTagByIdResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type BulkLinkRoutineTagsByIdsResDto struct {
+type LinkRoutineTagsByIdsResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
@@ -517,7 +517,7 @@ type LinkRoutineTaskByIdResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type BulkLinkRoutineTasksByIdsResDto struct {
+type LinkRoutineTasksByIdsResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
@@ -525,7 +525,7 @@ type LinkRoutineItemByIdResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type BulkLinkRoutineItemsByIdsResDto struct {
+type LinkRoutineItemsByIdsResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 

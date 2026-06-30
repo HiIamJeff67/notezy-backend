@@ -179,7 +179,7 @@ func (s *StationService) CreateStation(
 
 	db := s.db.WithContext(ctx)
 
-	newStationId, exception := s.stationRepository.CreateOneByOwnerId(
+	newStationId, exception := s.stationRepository.CreateOne(
 		reqDto.ContextFields.UserId,
 		inputs.CreateStationInput{
 			Id:                  reqDto.Body.Id,
@@ -220,7 +220,7 @@ func (s *StationService) CreateStations(
 			HeaderBackgroundURL: createdStation.HeaderBackgroundURL,
 		}
 	}
-	newStationIds, exception := s.stationRepository.CreateManyByOwnerId(
+	newStationIds, exception := s.stationRepository.CreateMany(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),
@@ -278,9 +278,9 @@ func (s *StationService) UpdateMyStationsByIds(
 
 	db := s.db.WithContext(ctx)
 
-	input := make([]inputs.BulkUpdateStationInput, len(reqDto.Body.UpdatedStations))
+	input := make([]inputs.UpdateStationByIdInput, len(reqDto.Body.UpdatedStations))
 	for index, updatedStation := range reqDto.Body.UpdatedStations {
-		input[index] = inputs.BulkUpdateStationInput{
+		input[index] = inputs.UpdateStationByIdInput{
 			Id: updatedStation.StationId,
 			PartialUpdateInput: inputs.PartialUpdateInput[inputs.UpdateStationInput]{
 				Values: inputs.UpdateStationInput{
@@ -293,7 +293,7 @@ func (s *StationService) UpdateMyStationsByIds(
 			},
 		}
 	}
-	exception := s.stationRepository.BulkUpdateManyByIds(
+	exception := s.stationRepository.UpdateManyByIds(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),

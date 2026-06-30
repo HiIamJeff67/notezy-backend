@@ -31,13 +31,20 @@ type BlockRepositoryInterface interface {
 	CreateManyByBlockGroupId(blockGroupId uuid.UUID, userId uuid.UUID, input []inputs.CreateBlockInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	CreateManyByBlockGroupIds(userId uuid.UUID, input []inputs.CreateBlockGroupContentInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateBlockInput, opts ...options.RepositoryOptions) (*schemas.Block, *exceptions.Exception)
-	BulkUpdateManyByIds(userId uuid.UUID, input []inputs.BulkUpdateBlocksInput, opts ...options.RepositoryOptions) *exceptions.Exception
+	UpdateManyByIds(userId uuid.UUID, input []inputs.UpdateBlockByIdInput, opts ...options.RepositoryOptions) *exceptions.Exception
 	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.Block, *exceptions.Exception)
 	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.Block, *exceptions.Exception)
 	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.Block, *exceptions.Exception)
 	SoftDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.Block, *exceptions.Exception)
 	HardDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
+
+	/* ============================== System Only Method ============================== */
+
+	BulkCheckPermissionsAndGetManyByIds(inputs []inputs.BulkCheckBlockPermissionInput, preloads []schemas.BlockRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]bool, []schemas.Block, *exceptions.Exception)
+	BulkCreateMany(inputs []inputs.BulkCreateBlockGroupContentInput, opts ...options.RepositoryOptions) ([]bool, *exceptions.Exception)
+	BulkUpdateMany(inputs []inputs.BulkUpdateBlockInput, opts ...options.RepositoryOptions) ([]bool, *exceptions.Exception)
+	BulkDeleteMany(inputs []inputs.BulkDeleteBlockInput, opts ...options.RepositoryOptions) ([]bool, *exceptions.Exception)
 }
 
 type BlockRepository struct {
@@ -188,7 +195,8 @@ func (r *BlockRepository) CreateOneByBlockGroupId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted && !parsedOptions.SkipPermissionCheck
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	if !parsedOptions.SkipPermissionCheck {
@@ -263,7 +271,8 @@ func (r *BlockRepository) CreateManyByBlockGroupId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted && !parsedOptions.SkipPermissionCheck
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	if !parsedOptions.SkipPermissionCheck {
@@ -346,7 +355,8 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 		shouldStartTransaction := !parsedOptions.IsTransactionStarted
 		if shouldStartTransaction {
 			parsedOptions.DB = parsedOptions.DB.Begin()
-			opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+			opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+			opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 		}
 
 		allowedPermissions := []enums.AccessControlPermission{
@@ -479,7 +489,8 @@ func (r *BlockRepository) UpdateOneById(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -535,9 +546,9 @@ func (r *BlockRepository) UpdateOneById(
 	return &updates, nil
 }
 
-func (r *BlockRepository) BulkUpdateManyByIds(
+func (r *BlockRepository) UpdateManyByIds(
 	userId uuid.UUID,
-	input []inputs.BulkUpdateBlocksInput,
+	input []inputs.UpdateBlockByIdInput,
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	// since there're no nullable fields may update in this repository function,
@@ -549,7 +560,8 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted && !parsedOptions.SkipPermissionCheck
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	isBlockValid := make(map[uuid.UUID]bool)
@@ -583,15 +595,7 @@ func (r *BlockRepository) BulkUpdateManyByIds(
 			continue
 		}
 
-		setParentBlockIdNull := false
-		if in.PartialUpdateInput.SetNull != nil {
-			for field, setNull := range *in.PartialUpdateInput.SetNull {
-				if strings.ToLower(field) == "parentblockid" && setNull {
-					setParentBlockIdNull = true
-					break
-				}
-			}
-		}
+		setParentBlockIdNull := util.CheckSetNull(in.PartialUpdateInput.SetNull, "ParentBlockId")
 		valuePlaceholders = append(valuePlaceholders, `(?::uuid, ?::"BlockType", ?::jsonb, ?::jsonb, ?::uuid, ?::uuid, ?::boolean)`)
 		valueArgs = append(valueArgs,
 			in.Id,
@@ -849,4 +853,373 @@ func (r *BlockRepository) HardDeleteManyByIds(
 	}
 
 	return nil
+}
+
+/* ============================== System Only Method ============================== */
+
+func (r *BlockRepository) BulkCheckPermissionsAndGetManyByIds(
+	inputs []inputs.BulkCheckBlockPermissionInput,
+	preloads []schemas.BlockRelation,
+	allowedPermissions []enums.AccessControlPermission,
+	opts ...options.RepositoryOptions,
+) ([]bool, []schemas.Block, *exceptions.Exception) {
+	if len(inputs) == 0 {
+		return []bool{}, []schemas.Block{}, nil
+	}
+
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	successes := make([]bool, len(inputs))
+	ids := make([]uuid.UUID, 0, len(inputs))
+	userIds := make([]uuid.UUID, 0, len(inputs))
+	for _, in := range inputs {
+		ids = append(ids, in.Id)
+		userIds = append(userIds, in.UserId)
+	}
+
+	var validTargets []struct {
+		Id     uuid.UUID `gorm:"column:id"`
+		UserId uuid.UUID `gorm:"column:user_id"`
+	}
+	result := parsedOptions.DB.Model(&schemas.Block{}).
+		Select(`"BlockTable".id, uts.user_id`).
+		Joins(`INNER JOIN "BlockGroupTable" AS bg ON bg.id = "BlockTable".block_group_id`).
+		Joins(`INNER JOIN "BlockPackTable" AS bp ON bp.id = bg.block_pack_id`).
+		Joins(`INNER JOIN "SubShelfTable" AS ss ON ss.id = bp.parent_sub_shelf_id`).
+		Joins(`INNER JOIN "UsersToShelvesTable" AS uts ON uts.root_shelf_id = ss.root_shelf_id`).
+		Where(`"BlockTable".id IN ?`, ids).
+		Where("uts.user_id IN ? AND uts.permission IN ?", userIds, allowedPermissions).
+		Scopes(r.blockScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Scan(&validTargets)
+	if result.Error != nil {
+		return nil, nil, exceptions.Block.NotFound().WithOrigin(result.Error)
+	}
+
+	validTargetByUserId := make(map[[2]uuid.UUID]bool, len(validTargets))
+	for _, validTarget := range validTargets {
+		validTargetByUserId[[2]uuid.UUID{validTarget.Id, validTarget.UserId}] = true
+	}
+
+	validIdSet := make(map[uuid.UUID]bool, len(validTargets))
+	for _, in := range inputs {
+		if validTargetByUserId[[2]uuid.UUID{in.Id, in.UserId}] {
+			validIdSet[in.Id] = true
+		}
+	}
+
+	validIds := make([]uuid.UUID, 0, len(validIdSet))
+	for validId := range validIdSet {
+		validIds = append(validIds, validId)
+	}
+	if len(validIds) == 0 {
+		return successes, []schemas.Block{}, nil
+	}
+
+	var blocks []schemas.Block
+	result = parsedOptions.DB.Model(&schemas.Block{}).
+		Where(`"BlockTable".id IN ?`, validIds).
+		Scopes(r.blockScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Scopes(r.blockScope.IncludePreloads(preloads)).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
+		Find(&blocks)
+	if result.Error != nil {
+		return nil, nil, exceptions.Block.NotFound().WithOrigin(result.Error)
+	}
+
+	foundIdSet := make(map[uuid.UUID]bool, len(blocks))
+	for _, block := range blocks {
+		foundIdSet[block.Id] = true
+	}
+	for index, in := range inputs {
+		if validTargetByUserId[[2]uuid.UUID{in.Id, in.UserId}] && foundIdSet[in.Id] {
+			successes[index] = true
+		}
+	}
+
+	return successes, blocks, nil
+}
+
+func (r *BlockRepository) BulkCreateMany(
+	bulkInputs []inputs.BulkCreateBlockGroupContentInput,
+	opts ...options.RepositoryOptions,
+) ([]bool, *exceptions.Exception) {
+	if len(bulkInputs) == 0 {
+		return []bool{}, exceptions.Block.NoChanges()
+	}
+
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	shouldStartTransaction := !parsedOptions.IsTransactionStarted
+	if shouldStartTransaction {
+		parsedOptions.DB = parsedOptions.DB.Begin()
+	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	checkInputs := make([]inputs.BulkCheckBlockGroupPermissionInput, len(bulkInputs))
+	for index, in := range bulkInputs {
+		checkInputs[index] = inputs.BulkCheckBlockGroupPermissionInput{
+			UserId: in.UserId,
+			Id:     in.BlockGroupId,
+		}
+	}
+	blockGroupRepository := NewBlockGroupRepository(scopes.NewBlockGroupScope())
+	checkOptions := append(opts, options.WithTransactionDB(parsedOptions.DB))
+	checkOptions = append(checkOptions, options.WithOnlyDeleted(types.Ternary_Negative))
+	checkOptions = append(checkOptions, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+	successes, _, exception := blockGroupRepository.BulkCheckPermissionsAndGetManyByIds(checkInputs, nil, allowedPermissions, checkOptions...)
+	if exception != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exception
+	}
+
+	newBlocks := make([]schemas.Block, 0)
+	for index, in := range bulkInputs {
+		if !successes[index] {
+			continue
+		}
+		for _, inputBlock := range in.Blocks {
+			newBlocks = append(newBlocks, schemas.Block{
+				Id:            inputBlock.Id,
+				ParentBlockId: inputBlock.ParentBlockId,
+				BlockGroupId:  in.BlockGroupId,
+				Type:          inputBlock.Type,
+				Props:         inputBlock.Props,
+				Content:       inputBlock.Content,
+			})
+		}
+	}
+	if len(newBlocks) == 0 {
+		if shouldStartTransaction {
+			parsedOptions.DB.Rollback()
+		}
+		return successes, nil
+	}
+
+	result := parsedOptions.DB.Model(&schemas.Block{}).
+		Clauses(
+			clause.Returning{Columns: []clause.Column{{Name: "id"}}},
+			clause.OnConflict{
+				Columns: []clause.Column{{Name: "id"}},
+				DoUpdates: clause.AssignmentColumns([]string{
+					"block_group_id", "parent_block_id", "type", "props", "content", "updated_at",
+				}),
+			},
+		).
+		CreateInBatches(&newBlocks, parsedOptions.BatchSize)
+	if result.Error != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exceptions.Block.FailedToCreate().WithOrigin(result.Error)
+	}
+
+	if shouldStartTransaction {
+		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
+			return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
+		}
+	}
+
+	return successes, nil
+}
+
+func (r *BlockRepository) BulkUpdateMany(
+	bulkInputs []inputs.BulkUpdateBlockInput,
+	opts ...options.RepositoryOptions,
+) ([]bool, *exceptions.Exception) {
+	if len(bulkInputs) == 0 {
+		return []bool{}, exceptions.Block.NoChanges()
+	}
+
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	shouldStartTransaction := !parsedOptions.IsTransactionStarted
+	if shouldStartTransaction {
+		parsedOptions.DB = parsedOptions.DB.Begin()
+	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	checkInputs := make([]inputs.BulkCheckBlockPermissionInput, len(bulkInputs))
+	for index, in := range bulkInputs {
+		checkInputs[index] = inputs.BulkCheckBlockPermissionInput{
+			UserId: in.UserId,
+			Id:     in.Id,
+		}
+	}
+	checkOptions := append(opts, options.WithTransactionDB(parsedOptions.DB))
+	checkOptions = append(checkOptions, options.WithOnlyDeleted(types.Ternary_Negative))
+	checkOptions = append(checkOptions, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+	successes, _, exception := r.BulkCheckPermissionsAndGetManyByIds(checkInputs, nil, allowedPermissions, checkOptions...)
+	if exception != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exception
+	}
+
+	valuePlaceholders := make([]string, 0, len(bulkInputs))
+	valueArgs := make([]interface{}, 0, len(bulkInputs)*8)
+	for index, in := range bulkInputs {
+		if !successes[index] {
+			continue
+		}
+
+		setParentBlockIdNull := util.CheckSetNull(in.PartialUpdateInput.SetNull, "ParentBlockId")
+		valuePlaceholders = append(valuePlaceholders, `(?::int, ?::uuid, ?::"BlockType", ?::jsonb, ?::jsonb, ?::uuid, ?::uuid, ?::boolean)`)
+		valueArgs = append(valueArgs,
+			index,
+			in.Id,
+			in.PartialUpdateInput.Values.Type,
+			in.PartialUpdateInput.Values.Props,
+			in.PartialUpdateInput.Values.Content,
+			in.PartialUpdateInput.Values.BlockGroupId,
+			in.PartialUpdateInput.Values.ParentBlockId,
+			setParentBlockIdNull,
+		)
+	}
+	if len(valuePlaceholders) == 0 {
+		if shouldStartTransaction {
+			parsedOptions.DB.Rollback()
+		}
+		return successes, nil
+	}
+
+	sql := fmt.Sprintf(`
+		WITH payload(idx, id, type, props, content, block_group_id, parent_block_id, set_parent_block_id_null) AS (
+			VALUES %s
+		),
+		updated AS (
+			UPDATE "BlockTable" AS b
+			SET
+				type = COALESCE(v.type::"BlockType", b.type),
+				props = COALESCE(v.props::jsonb, b.props),
+				content = COALESCE(v.content::jsonb, b.content),
+				block_group_id = COALESCE(v.block_group_id::uuid, b.block_group_id),
+				parent_block_id = CASE
+					WHEN v.set_parent_block_id_null::boolean THEN NULL
+					ELSE COALESCE(v.parent_block_id::uuid, b.parent_block_id)
+				END,
+				updated_at = NOW()
+			FROM payload AS v
+			WHERE b.id = v.id::uuid
+				AND b.deleted_at IS NULL
+			RETURNING b.id
+		)
+		SELECT v.idx
+		FROM payload AS v
+		INNER JOIN updated AS u ON u.id = v.id::uuid
+	`, strings.Join(valuePlaceholders, ","))
+
+	var updatedIndexes []struct {
+		Index int `gorm:"column:idx"`
+	}
+	result := parsedOptions.DB.Raw(sql, valueArgs...).Scan(&updatedIndexes)
+	if result.Error != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exceptions.Block.FailedToUpdate().WithOrigin(result.Error)
+	}
+
+	if shouldStartTransaction {
+		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
+			return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
+		}
+	}
+
+	successes = make([]bool, len(bulkInputs))
+	for _, updatedIndex := range updatedIndexes {
+		if updatedIndex.Index >= 0 && updatedIndex.Index < len(successes) {
+			successes[updatedIndex.Index] = true
+		}
+	}
+
+	return successes, nil
+}
+
+func (r *BlockRepository) BulkDeleteMany(
+	bulkInputs []inputs.BulkDeleteBlockInput,
+	opts ...options.RepositoryOptions,
+) ([]bool, *exceptions.Exception) {
+	if len(bulkInputs) == 0 {
+		return []bool{}, exceptions.Block.NoChanges()
+	}
+
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	shouldStartTransaction := !parsedOptions.IsTransactionStarted
+	if shouldStartTransaction {
+		parsedOptions.DB = parsedOptions.DB.Begin()
+	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	checkInputs := make([]inputs.BulkCheckBlockPermissionInput, len(bulkInputs))
+	for index, in := range bulkInputs {
+		checkInputs[index] = inputs.BulkCheckBlockPermissionInput{
+			UserId: in.UserId,
+			Id:     in.Id,
+		}
+	}
+	checkOptions := append(opts, options.WithTransactionDB(parsedOptions.DB))
+	checkOptions = append(checkOptions, options.WithOnlyDeleted(types.Ternary_Negative))
+	checkOptions = append(checkOptions, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+	successes, _, exception := r.BulkCheckPermissionsAndGetManyByIds(checkInputs, nil, allowedPermissions, checkOptions...)
+	if exception != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exception
+	}
+
+	validIds := make([]uuid.UUID, 0, len(bulkInputs))
+	for index, in := range bulkInputs {
+		if successes[index] {
+			validIds = append(validIds, in.Id)
+		}
+	}
+	if len(validIds) == 0 {
+		if shouldStartTransaction {
+			parsedOptions.DB.Rollback()
+		}
+		return successes, nil
+	}
+
+	var deletedBlocks []schemas.Block
+	result := parsedOptions.DB.Model(&deletedBlocks).
+		Clauses(clause.Returning{}).
+		Where("id IN ? AND deleted_at IS NULL", validIds).
+		Updates(map[string]interface{}{"deleted_at": time.Now(), "updated_at": time.Now()})
+	if result.Error != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exceptions.Block.FailedToDelete().WithOrigin(result.Error)
+	}
+
+	if shouldStartTransaction {
+		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
+			return nil, exceptions.Block.FailedToCommitTransaction().WithOrigin(err)
+		}
+	}
+
+	deletedIdSet := make(map[uuid.UUID]bool, len(deletedBlocks))
+	for _, deletedBlock := range deletedBlocks {
+		deletedIdSet[deletedBlock.Id] = true
+	}
+	for index, in := range bulkInputs {
+		if successes[index] && deletedIdSet[in.Id] {
+			successes[index] = true
+		} else {
+			successes[index] = false
+		}
+	}
+
+	return successes, nil
 }

@@ -172,34 +172,34 @@ func configureDevelopmentSubShelfRoutes() {
 			)...,
 		)
 		subShelfRoutes.PUT(
-			"/moveMySubShelves",
+			"/moveMySubShelvesByRootShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "moveMySubShelves"),
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "moveMySubShelvesByRootShelfId"),
 					middlewares.ApplyMeterMiddleware(
 						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.SubShelf.MoveMySubShelves,
+						metrics.MetricNames.Server.Requests.SubShelf.MoveMySubShelvesByRootShelfId,
 					),
 				},
 				defaultMiddlewares,
-				subShelfModule.Binder.BindMoveMySubShelves(
-					subShelfModule.Controller.MoveMySubShelves,
+				subShelfModule.Binder.BindMoveMySubShelvesByRootShelfId(
+					subShelfModule.Controller.MoveMySubShelvesByRootShelfId,
 				),
 			)...,
 		)
 		subShelfRoutes.PUT(
-			"/batchMoveMySubShelves",
+			"/moveMySubShelvesByRootShelfIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "batchMoveMySubShelves"),
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "moveMySubShelvesByRootShelfIds"),
 					middlewares.ApplyMeterMiddleware(
 						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.SubShelf.BatchMoveMySubShelves,
+						metrics.MetricNames.Server.Requests.SubShelf.MoveMySubShelvesByRootShelfIds,
 					),
 				},
 				defaultMiddlewares,
-				subShelfModule.Binder.BindBatchMoveMySubShelves(
-					subShelfModule.Controller.BatchMoveMySubShelves,
+				subShelfModule.Binder.BindMoveMySubShelvesByRootShelfIds(
+					subShelfModule.Controller.MoveMySubShelvesByRootShelfIds,
 				),
 			)...,
 		)

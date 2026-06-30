@@ -29,15 +29,21 @@ type RoutineRepositoryInterface interface {
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineRelation, opts ...options.RepositoryOptions) (*schemas.Routine, *exceptions.Exception)
 	GetAllByTimeRange(from time.Time, to time.Time, stationIds []uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineRelation, opts ...options.RepositoryOptions) ([]schemas.Routine, *exceptions.Exception)
 	CreateOneByStationId(stationId uuid.UUID, userId uuid.UUID, input inputs.CreateRoutineInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
-	BulkCreateManyByStationIds(userId uuid.UUID, input []inputs.BulkCreateRoutineInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
+	CreateManyByStationIds(userId uuid.UUID, input []inputs.CreateRoutineByStationIdInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateRoutineInput, opts ...options.RepositoryOptions) (*schemas.Routine, *exceptions.Exception)
-	BulkUpdateManyByIds(userId uuid.UUID, input []inputs.BulkUpdateRoutineInput, opts ...options.RepositoryOptions) *exceptions.Exception
+	UpdateManyByIds(userId uuid.UUID, input []inputs.UpdateRoutineByIdInput, opts ...options.RepositoryOptions) *exceptions.Exception
 	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.Routine, *exceptions.Exception)
 	RestoreSoftDeletedManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.Routine, *exceptions.Exception)
 	SoftDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	SoftDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
+
+	/* ============================== System Only Method ============================== */
+
+	BulkCheckPermissionsAndGetManyByIds(inputs []inputs.BulkCheckRoutinePermissionInput, preloads []schemas.RoutineRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]bool, []schemas.Routine, *exceptions.Exception)
+	BulkCreateMany(inputs []inputs.BulkCreateRoutineInput, opts ...options.RepositoryOptions) ([]bool, *exceptions.Exception)
+	BulkUpdateMany(inputs []inputs.BulkUpdateRoutineInput, opts ...options.RepositoryOptions) ([]bool, *exceptions.Exception)
 }
 
 type RoutineRepository struct {
@@ -300,7 +306,8 @@ func (r *RoutineRepository) CreateOneByStationId(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -349,9 +356,9 @@ func (r *RoutineRepository) CreateOneByStationId(
 	return &newRoutine.Id, nil
 }
 
-func (r *RoutineRepository) BulkCreateManyByStationIds(
+func (r *RoutineRepository) CreateManyByStationIds(
 	userId uuid.UUID,
-	input []inputs.BulkCreateRoutineInput,
+	input []inputs.CreateRoutineByStationIdInput,
 	opts ...options.RepositoryOptions,
 ) ([]uuid.UUID, *exceptions.Exception) {
 	if len(input) == 0 {
@@ -364,7 +371,8 @@ func (r *RoutineRepository) BulkCreateManyByStationIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -450,7 +458,8 @@ func (r *RoutineRepository) UpdateOneById(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -463,7 +472,7 @@ func (r *RoutineRepository) UpdateOneById(
 		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
-	if input.Values.StationId != nil && (input.SetNull == nil || !(*input.SetNull)["StationId"]) {
+	if input.Values.StationId != nil && !util.CheckSetNull(input.SetNull, "StationId") {
 		stationRepository := NewStationRepository(scopes.NewStationScope())
 		if !stationRepository.HasPermission(*input.Values.StationId, userId, allowedPermissions, opts...) {
 			parsedOptions.DB.Rollback()
@@ -507,9 +516,9 @@ func (r *RoutineRepository) UpdateOneById(
 	return &updates, nil
 }
 
-func (r *RoutineRepository) BulkUpdateManyByIds(
+func (r *RoutineRepository) UpdateManyByIds(
 	userId uuid.UUID,
-	input []inputs.BulkUpdateRoutineInput,
+	input []inputs.UpdateRoutineByIdInput,
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(input) == 0 {
@@ -522,7 +531,8 @@ func (r *RoutineRepository) BulkUpdateManyByIds(
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
-		opts = append(opts, options.WithTransactionDB(parsedOptions.DB), options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
+		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
 	allowedPermissions := []enums.AccessControlPermission{
@@ -547,7 +557,7 @@ func (r *RoutineRepository) BulkUpdateManyByIds(
 	targetStationIdSet := make(map[uuid.UUID]bool)
 	for _, in := range input {
 		if in.PartialUpdateInput.Values.StationId == nil ||
-			(in.PartialUpdateInput.SetNull != nil && (*in.PartialUpdateInput.SetNull)["StationId"]) {
+			util.CheckSetNull(in.PartialUpdateInput.SetNull, "StationId") {
 			continue
 		}
 		targetStationIdSet[*in.PartialUpdateInput.Values.StationId] = true
@@ -571,15 +581,7 @@ func (r *RoutineRepository) BulkUpdateManyByIds(
 			continue
 		}
 
-		setPeriodNull := false
-		if in.PartialUpdateInput.SetNull != nil {
-			for field, setNull := range *in.PartialUpdateInput.SetNull {
-				if setNull && strings.ToLower(strings.ReplaceAll(field, "_", "")) == "period" {
-					setPeriodNull = true
-					break
-				}
-			}
-		}
+		setPeriodNull := util.CheckSetNull(in.PartialUpdateInput.SetNull, "Period")
 
 		scheduledStartAt := in.PartialUpdateInput.Values.ScheduledStartAt
 		if scheduledStartAt != nil {
@@ -840,4 +842,400 @@ func (r *RoutineRepository) HardDeleteManyByIds(
 	}
 
 	return nil
+}
+
+/* ============================== System Only Method ============================== */
+
+func (r *RoutineRepository) BulkCheckPermissionsAndGetManyByIds(
+	inputs []inputs.BulkCheckRoutinePermissionInput,
+	preloads []schemas.RoutineRelation,
+	allowedPermissions []enums.AccessControlPermission,
+	opts ...options.RepositoryOptions,
+) ([]bool, []schemas.Routine, *exceptions.Exception) {
+	if len(inputs) == 0 {
+		return []bool{}, []schemas.Routine{}, nil
+	}
+
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	successes := make([]bool, len(inputs))
+	ids := make([]uuid.UUID, 0, len(inputs))
+	userIds := make([]uuid.UUID, 0, len(inputs))
+	for _, in := range inputs {
+		ids = append(ids, in.Id)
+		userIds = append(userIds, in.UserId)
+	}
+
+	var validTargets []struct {
+		Id     uuid.UUID `gorm:"column:id"`
+		UserId uuid.UUID `gorm:"column:user_id"`
+	}
+	result := parsedOptions.DB.Model(&schemas.Routine{}).
+		Select(`"RoutineTable".id, uts.user_id`).
+		Joins(`INNER JOIN "UsersToStationsTable" AS uts ON uts.station_id = "RoutineTable".station_id`).
+		Where(`"RoutineTable".id IN ?`, ids).
+		Where("uts.user_id IN ? AND uts.permission IN ?", userIds, allowedPermissions).
+		Scopes(r.routineScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Scan(&validTargets)
+	if result.Error != nil {
+		return nil, nil, exceptions.Routine.NotFound().WithOrigin(result.Error)
+	}
+
+	validTargetByUserId := make(map[[2]uuid.UUID]bool, len(validTargets))
+	for _, validTarget := range validTargets {
+		validTargetByUserId[[2]uuid.UUID{validTarget.Id, validTarget.UserId}] = true
+	}
+
+	validIdSet := make(map[uuid.UUID]bool, len(validTargets))
+	for _, in := range inputs {
+		if validTargetByUserId[[2]uuid.UUID{in.Id, in.UserId}] {
+			validIdSet[in.Id] = true
+		}
+	}
+
+	validIds := make([]uuid.UUID, 0, len(validIdSet))
+	for validId := range validIdSet {
+		validIds = append(validIds, validId)
+	}
+	if len(validIds) == 0 {
+		return successes, []schemas.Routine{}, nil
+	}
+
+	var routines []schemas.Routine
+	result = parsedOptions.DB.Model(&schemas.Routine{}).
+		Where(`"RoutineTable".id IN ?`, validIds).
+		Scopes(r.routineScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Scopes(r.routineScope.IncludePreloads(preloads)).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
+		Find(&routines)
+	if result.Error != nil {
+		return nil, nil, exceptions.Routine.NotFound().WithOrigin(result.Error)
+	}
+
+	foundIdSet := make(map[uuid.UUID]bool, len(routines))
+	for _, routine := range routines {
+		foundIdSet[routine.Id] = true
+	}
+	for index, in := range inputs {
+		if validTargetByUserId[[2]uuid.UUID{in.Id, in.UserId}] && foundIdSet[in.Id] {
+			successes[index] = true
+		}
+	}
+
+	return successes, routines, nil
+}
+
+func (r *RoutineRepository) BulkCreateMany(
+	inputs []inputs.BulkCreateRoutineInput,
+	opts ...options.RepositoryOptions,
+) ([]bool, *exceptions.Exception) {
+	if len(inputs) == 0 {
+		return []bool{}, exceptions.Routine.NoChanges()
+	}
+
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	shouldStartTransaction := !parsedOptions.IsTransactionStarted
+	if shouldStartTransaction {
+		parsedOptions.DB = parsedOptions.DB.Begin()
+	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	now := time.Now().Truncate(time.Minute)
+	successes := make([]bool, len(inputs))
+	stationIds := make([]uuid.UUID, 0, len(inputs))
+	userIds := make([]uuid.UUID, 0, len(inputs))
+	for _, in := range inputs {
+		stationIds = append(stationIds, in.StationId)
+		userIds = append(userIds, in.UserId)
+	}
+
+	var validTargets []struct {
+		Id     uuid.UUID `gorm:"column:id"`
+		UserId uuid.UUID `gorm:"column:user_id"`
+	}
+	result := parsedOptions.DB.Model(&schemas.Station{}).
+		Select(`"StationTable".id, uts.user_id`).
+		Joins(`INNER JOIN "UsersToStationsTable" AS uts ON uts.station_id = "StationTable".id`).
+		Where(`"StationTable".id IN ? AND "StationTable".deleted_at IS NULL`, stationIds).
+		Where("uts.user_id IN ? AND uts.permission IN ?", userIds, allowedPermissions).
+		Scan(&validTargets)
+	if result.Error != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exceptions.Routine.FailedToCreate().WithOrigin(result.Error)
+	}
+
+	validTargetByUserId := make(map[[2]uuid.UUID]bool, len(validTargets))
+	for _, validTarget := range validTargets {
+		validTargetByUserId[[2]uuid.UUID{validTarget.Id, validTarget.UserId}] = true
+	}
+
+	newRoutines := make([]schemas.Routine, 0, len(inputs))
+	successIndexes := make([]int, 0, len(inputs))
+	for index, in := range inputs {
+		if !validTargetByUserId[[2]uuid.UUID{in.StationId, in.UserId}] {
+			continue
+		}
+
+		newRoutineId := uuid.New()
+		if in.Id != nil && *in.Id != uuid.Nil {
+			newRoutineId = *in.Id
+		}
+
+		scheduledStartAt := in.ScheduledStartAt
+		if scheduledStartAt == nil {
+			scheduledStartAt = &now
+		} else {
+			truncatedScheduledStartAt := scheduledStartAt.Truncate(time.Minute)
+			scheduledStartAt = &truncatedScheduledStartAt
+		}
+
+		scheduledEndAt := in.ScheduledEndAt
+		if scheduledEndAt == nil {
+			defaultScheduledEndAt := scheduledStartAt.Add(time.Hour)
+			scheduledEndAt = &defaultScheduledEndAt
+		} else {
+			truncatedScheduledEndAt := scheduledEndAt.Truncate(time.Minute)
+			scheduledEndAt = &truncatedScheduledEndAt
+		}
+
+		status := enums.RoutineStatus_Scheduled
+		if in.Status != nil {
+			status = *in.Status
+		}
+		isPinned := false
+		if in.IsPinned != nil {
+			isPinned = *in.IsPinned
+		}
+		timezone := "UTC"
+		if in.Timezone != nil {
+			timezone = *in.Timezone
+		}
+
+		newRoutines = append(newRoutines, schemas.Routine{
+			Id:               newRoutineId,
+			StationId:        in.StationId,
+			Title:            in.Title,
+			Description:      in.Description,
+			Status:           status,
+			IsPinned:         isPinned,
+			ScheduledStartAt: *scheduledStartAt,
+			ScheduledEndAt:   *scheduledEndAt,
+			Period:           in.Period,
+			Timezone:         timezone,
+		})
+		successIndexes = append(successIndexes, index)
+	}
+
+	if len(newRoutines) == 0 {
+		if shouldStartTransaction {
+			parsedOptions.DB.Rollback()
+		}
+		return successes, nil
+	}
+
+	result = parsedOptions.DB.Model(&schemas.Routine{}).
+		CreateInBatches(&newRoutines, parsedOptions.BatchSize)
+	if result.Error != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exceptions.Routine.FailedToCreate().WithOrigin(result.Error)
+	}
+
+	if shouldStartTransaction {
+		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
+			return nil, exceptions.Routine.FailedToCommitTransaction().WithOrigin(err)
+		}
+	}
+
+	for _, successIndex := range successIndexes {
+		successes[successIndex] = true
+	}
+
+	return successes, nil
+}
+
+func (r *RoutineRepository) BulkUpdateMany(
+	bulkInputs []inputs.BulkUpdateRoutineInput,
+	opts ...options.RepositoryOptions,
+) ([]bool, *exceptions.Exception) {
+	if len(bulkInputs) == 0 {
+		return []bool{}, exceptions.Routine.NoChanges()
+	}
+
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	shouldStartTransaction := !parsedOptions.IsTransactionStarted
+	if shouldStartTransaction {
+		parsedOptions.DB = parsedOptions.DB.Begin()
+	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+
+	checkInputs := make([]inputs.BulkCheckRoutinePermissionInput, len(bulkInputs))
+	for index, in := range bulkInputs {
+		checkInputs[index] = inputs.BulkCheckRoutinePermissionInput{
+			UserId: in.UserId,
+			Id:     in.Id,
+		}
+	}
+	checkOptions := append(opts, options.WithTransactionDB(parsedOptions.DB))
+	checkOptions = append(checkOptions, options.WithOnlyDeleted(types.Ternary_Negative))
+	checkOptions = append(checkOptions, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+	successes, _, exception := r.BulkCheckPermissionsAndGetManyByIds(checkInputs, nil, allowedPermissions, checkOptions...)
+	if exception != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exception
+	}
+
+	targetStationIds := make([]uuid.UUID, 0, len(bulkInputs))
+	targetUserIds := make([]uuid.UUID, 0, len(bulkInputs))
+	for index, in := range bulkInputs {
+		if !successes[index] ||
+			in.PartialUpdateInput.Values.StationId == nil ||
+			util.CheckSetNull(in.PartialUpdateInput.SetNull, "StationId") {
+			continue
+		}
+		targetStationIds = append(targetStationIds, *in.PartialUpdateInput.Values.StationId)
+		targetUserIds = append(targetUserIds, in.UserId)
+	}
+	if len(targetStationIds) > 0 {
+		var validTargets []struct {
+			Id     uuid.UUID `gorm:"column:id"`
+			UserId uuid.UUID `gorm:"column:user_id"`
+		}
+		result := parsedOptions.DB.Model(&schemas.Station{}).
+			Select(`"StationTable".id, uts.user_id`).
+			Joins(`INNER JOIN "UsersToStationsTable" AS uts ON uts.station_id = "StationTable".id`).
+			Where(`"StationTable".id IN ? AND "StationTable".deleted_at IS NULL`, targetStationIds).
+			Where("uts.user_id IN ? AND uts.permission IN ?", targetUserIds, allowedPermissions).
+			Scan(&validTargets)
+		if result.Error != nil {
+			parsedOptions.DB.Rollback()
+			return nil, exceptions.Routine.FailedToUpdate().WithOrigin(result.Error)
+		}
+
+		validTargetByUserId := make(map[[2]uuid.UUID]bool, len(validTargets))
+		for _, validTarget := range validTargets {
+			validTargetByUserId[[2]uuid.UUID{validTarget.Id, validTarget.UserId}] = true
+		}
+		for index, in := range bulkInputs {
+			if !successes[index] ||
+				in.PartialUpdateInput.Values.StationId == nil ||
+				util.CheckSetNull(in.PartialUpdateInput.SetNull, "StationId") {
+				continue
+			}
+			if !validTargetByUserId[[2]uuid.UUID{*in.PartialUpdateInput.Values.StationId, in.UserId}] {
+				successes[index] = false
+			}
+		}
+	}
+
+	valuePlaceholders := make([]string, 0, len(bulkInputs))
+	valueArgs := make([]interface{}, 0, len(bulkInputs)*12)
+	for index, in := range bulkInputs {
+		if !successes[index] {
+			continue
+		}
+
+		setPeriodNull := util.CheckSetNull(in.PartialUpdateInput.SetNull, "Period")
+
+		scheduledStartAt := in.PartialUpdateInput.Values.ScheduledStartAt
+		if scheduledStartAt != nil {
+			truncatedScheduledStartAt := scheduledStartAt.Truncate(time.Minute)
+			scheduledStartAt = &truncatedScheduledStartAt
+		}
+
+		scheduledEndAt := in.PartialUpdateInput.Values.ScheduledEndAt
+		if scheduledEndAt != nil {
+			truncatedScheduledEndAt := scheduledEndAt.Truncate(time.Minute)
+			scheduledEndAt = &truncatedScheduledEndAt
+		}
+
+		valuePlaceholders = append(valuePlaceholders, `(?::int, ?::uuid, ?::uuid, ?::text, ?::text, ?::"RoutineStatus", ?::boolean, ?::timestamptz, ?::timestamptz, ?::"RoutinePeriod", ?::text, ?::boolean)`)
+		valueArgs = append(valueArgs,
+			index,
+			in.Id,
+			in.PartialUpdateInput.Values.StationId,
+			in.PartialUpdateInput.Values.Title,
+			in.PartialUpdateInput.Values.Description,
+			in.PartialUpdateInput.Values.Status,
+			in.PartialUpdateInput.Values.IsPinned,
+			scheduledStartAt,
+			scheduledEndAt,
+			in.PartialUpdateInput.Values.Period,
+			in.PartialUpdateInput.Values.Timezone,
+			setPeriodNull,
+		)
+	}
+	if len(valuePlaceholders) == 0 {
+		if shouldStartTransaction {
+			parsedOptions.DB.Rollback()
+		}
+		return successes, nil
+	}
+
+	sql := fmt.Sprintf(`
+		WITH payload(idx, id, station_id, title, description, status, is_pinned, scheduled_start_at, scheduled_end_at, period, timezone, set_period_null) AS (
+			VALUES %s
+		),
+		updated AS (
+			UPDATE "RoutineTable" AS r
+			SET
+				station_id = COALESCE(v.station_id::uuid, r.station_id),
+				title = COALESCE(v.title::text, r.title),
+				description = COALESCE(v.description::text, r.description),
+				status = COALESCE(v.status::"RoutineStatus", r.status),
+				is_pinned = COALESCE(v.is_pinned::boolean, r.is_pinned),
+				scheduled_start_at = COALESCE(v.scheduled_start_at::timestamptz, r.scheduled_start_at),
+				scheduled_end_at = COALESCE(v.scheduled_end_at::timestamptz, r.scheduled_end_at),
+				period = CASE
+					WHEN v.set_period_null::boolean THEN NULL
+					ELSE COALESCE(v.period::"RoutinePeriod", r.period)
+				END,
+				timezone = COALESCE(v.timezone::text, r.timezone),
+				updated_at = NOW()
+			FROM payload AS v
+			WHERE r.id = v.id::uuid
+				AND r.deleted_at IS NULL
+			RETURNING r.id
+		)
+		SELECT v.idx
+		FROM payload AS v
+		INNER JOIN updated AS u ON u.id = v.id::uuid
+	`, strings.Join(valuePlaceholders, ","))
+
+	var updatedIndexes []struct {
+		Index int `gorm:"column:idx"`
+	}
+	result := parsedOptions.DB.Raw(sql, valueArgs...).Scan(&updatedIndexes)
+	if result.Error != nil {
+		parsedOptions.DB.Rollback()
+		return nil, exceptions.Routine.FailedToUpdate().WithOrigin(result.Error)
+	}
+
+	if shouldStartTransaction {
+		if err := parsedOptions.DB.Commit().Error; err != nil {
+			parsedOptions.DB.Rollback()
+			return nil, exceptions.Routine.FailedToCommitTransaction().WithOrigin(err)
+		}
+	}
+
+	successes = make([]bool, len(bulkInputs))
+	for _, updatedIndex := range updatedIndexes {
+		if updatedIndex.Index >= 0 && updatedIndex.Index < len(successes) {
+			successes[updatedIndex.Index] = true
+		}
+	}
+
+	return successes, nil
 }

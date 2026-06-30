@@ -168,7 +168,7 @@ type MoveMySubShelfReqDto struct {
 	]
 }
 
-type MoveMySubShelvesReqDto struct {
+type MoveMySubShelvesByRootShelfIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -186,7 +186,7 @@ type MoveMySubShelvesReqDto struct {
 	]
 }
 
-type BatchMoveMySubShelvesReqDto struct {
+type MoveMySubShelvesByRootShelfIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -311,11 +311,11 @@ type MoveMySubShelfResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type MoveMySubShelvesResDto struct {
+type MoveMySubShelvesByRootShelfIdResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type BatchMoveMySubShelvesResDto struct {
+type MoveMySubShelvesByRootShelfIdsResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 

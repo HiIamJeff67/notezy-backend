@@ -134,7 +134,7 @@ type InsertBlockGroupsByBlockPackIdReqDto struct {
 	]
 }
 
-type BatchInsertBlockGroupsByBlockPackIdsReqDto struct {
+type InsertBlockGroupsByBlockPackIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -191,7 +191,7 @@ type InsertBlockGroupsAndTheirBlocksByBlockPackIdReqDto struct {
 	]
 }
 
-type BatchInsertBlockGroupsAndTheirBlocksByBlockPackIdsReqDto struct {
+type InsertBlockGroupsAndTheirBlocksByBlockPackIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -246,7 +246,7 @@ type MoveMyBlockGroupByIdReqDto struct {
 	]
 }
 
-type MoveMyBlockGroupsByIdsReqDto struct {
+type MoveMyBlockGroupsByBlockPackIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -264,7 +264,7 @@ type MoveMyBlockGroupsByIdsReqDto struct {
 	]
 }
 
-type BatchMoveMyBlockGroupsByIdsReqDto struct {
+type MoveMyBlockGroupsByBlockPackIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -387,7 +387,7 @@ type InsertBlockGroupsByBlockPackIdResDto struct {
 	CreatedAt time.Time   `json:"createdAt"`
 }
 
-type BatchInsertBlockGroupsByBlockPackIdsResDto struct {
+type InsertBlockGroupsByBlockPackIdsResDto struct {
 	Ids       []uuid.UUID `json:"ids"`
 	CreatedAt time.Time   `json:"createdAt"`
 }
@@ -408,7 +408,7 @@ type InsertBlockGroupsAndTheirBlocksByBlockPackIdResDto struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-type BatchInsertBlockGroupsAndTheirBlocksByBlockPackIdsResDto struct {
+type InsertBlockGroupsAndTheirBlocksByBlockPackIdsResDto struct {
 	IsAllSuccess                 bool  `json:"isAllSuccess"`
 	FailedIndexes                []int `json:"failedIndexes"`
 	SuccessIndexes               []int `json:"successIndexes"`
@@ -435,11 +435,11 @@ type MoveMyBlockGroupByIdResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type MoveMyBlockGroupsByIdsResDto struct {
+type MoveMyBlockGroupsByBlockPackIdResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type BatchMoveMyBlockGroupsByIdsResDto struct {
+type MoveMyBlockGroupsByBlockPackIdsResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 

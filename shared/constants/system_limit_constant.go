@@ -9,6 +9,7 @@ import (
 /* ============================== Routine Task limitations ============================== */
 
 const (
+	RoutineTaskEngineMaxWorkers         int           = 8
 	RoutineTaskEngineTickerDuration     time.Duration = 1 * time.Minute
 	RoutineTaskClaimerMaxClaimableTasks int           = 1e6
 )
