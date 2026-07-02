@@ -37,6 +37,7 @@ func GraphQLHandler() gin.HandlerFunc {
 	routineRepository := repositories.NewRoutineRepository(routineScope)
 	routineTagRepository := repositories.NewRoutineTagRepository(scopes.NewRoutineTagScope())
 	routineTaskRepository := repositories.NewRoutineTaskRepository(scopes.NewRoutineTaskScope())
+	routineTaskRecordRepository := repositories.NewRoutineTaskRecordRepository(scopes.NewRoutineTaskRecordScope())
 	itemRepository := repositories.NewItemRepository(itemScope)
 	materialRepository := repositories.NewMaterialRepository(scopes.NewMaterialScope())
 	blockPackRepository := repositories.NewBlockPackRepository(blockPackScope)
@@ -103,6 +104,10 @@ func GraphQLHandler() gin.HandlerFunc {
 		routineTaskRepository,
 		routineTaskPayloadAdapter,
 	)
+	routineTaskRecordService := services.NewRoutineTaskRecordService(
+		models.NotezyDB,
+		routineTaskRecordRepository,
+	)
 
 	resolver := resolvers.NewResolver(
 		dataloaders,
@@ -116,6 +121,7 @@ func GraphQLHandler() gin.HandlerFunc {
 		routineService,
 		routineTagService,
 		routineTaskService,
+		routineTaskRecordService,
 	)
 
 	config := generated.Config{

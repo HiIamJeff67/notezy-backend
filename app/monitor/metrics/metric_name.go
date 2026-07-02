@@ -97,6 +97,8 @@ type metricNameRoutineTask struct {
 	GetAllMyRoutineTasks                       string
 	CreateRoutineTaskByStationId               string
 	UpdateMyRoutineTaskById                    string
+	PauseMyRoutineTaskById                     string
+	ResumeMyRoutineTaskById                    string
 	HardDeleteMyRoutineTaskById                string
 	HardDeleteMyRoutineTasksByIds              string
 	VisualizeMyRoutineTaskStatusCount          string
@@ -104,6 +106,15 @@ type metricNameRoutineTask struct {
 	VisualizeMyRoutineTaskScheduledAtCount     string
 	VisualizeMyRoutineTaskActualStartedAtCount string
 	VisualizeMyRoutineTaskActualEndedAtCount   string
+}
+
+type metricNameRoutineTaskRecord struct {
+	GetAllMyRoutineTaskRecordsByRoutineTaskId        string
+	VisualizeMyRoutineTaskRecordStatusCount          string
+	VisualizeMyRoutineTaskRecordPurposeCount         string
+	VisualizeMyRoutineTaskRecordScheduledAtCount     string
+	VisualizeMyRoutineTaskRecordActualStartedAtCount string
+	VisualizeMyRoutineTaskRecordActualEndedAtCount   string
 }
 
 type metricNameRootShelf struct {
@@ -214,22 +225,23 @@ type metricNameBlock struct {
 }
 
 type MetricNameRequests struct {
-	Total       string
-	Auth        metricNameAuth
-	User        metricNameUser
-	UserInfo    metricNameUserInfo
-	UserSetting metricNameUserSetting
-	UserAccount metricNameUserAccount
-	Station     metricNameStation
-	Routine     metricNameRoutine
-	RoutineTag  metricNameRoutineTag
-	RoutineTask metricNameRoutineTask
-	RootShelf   metricNameRootShelf
-	SubShelf    metricNameSubShelf
-	Material    metricNameMaterial
-	BlockPack   metricNameBlockPack
-	BlockGroup  metricNameBlockGroup
-	Block       metricNameBlock
+	Total             string
+	Auth              metricNameAuth
+	User              metricNameUser
+	UserInfo          metricNameUserInfo
+	UserSetting       metricNameUserSetting
+	UserAccount       metricNameUserAccount
+	Station           metricNameStation
+	Routine           metricNameRoutine
+	RoutineTag        metricNameRoutineTag
+	RoutineTask       metricNameRoutineTask
+	RoutineTaskRecord metricNameRoutineTaskRecord
+	RootShelf         metricNameRootShelf
+	SubShelf          metricNameSubShelf
+	Material          metricNameMaterial
+	BlockPack         metricNameBlockPack
+	BlockGroup        metricNameBlockGroup
+	Block             metricNameBlock
 }
 
 /* ============================== responses fields ============================== */
@@ -349,6 +361,8 @@ var MetricNames = struct {
 				GetAllMyRoutineTasks:                       "server.requests.routineTask.getAllMyRoutineTasks",
 				CreateRoutineTaskByStationId:               "server.requests.routineTask.createRoutineTaskByStationId",
 				UpdateMyRoutineTaskById:                    "server.requests.routineTask.updateMyRoutineTaskById",
+				PauseMyRoutineTaskById:                     "server.requests.routineTask.pauseMyRoutineTaskById",
+				ResumeMyRoutineTaskById:                    "server.requests.routineTask.resumeMyRoutineTaskById",
 				HardDeleteMyRoutineTaskById:                "server.requests.routineTask.hardDeleteMyRoutineTaskById",
 				HardDeleteMyRoutineTasksByIds:              "server.requests.routineTask.hardDeleteMyRoutineTasksByIds",
 				VisualizeMyRoutineTaskStatusCount:          "server.requests.routineTask.visualizeMyRoutineTaskStatusCount",
@@ -356,6 +370,14 @@ var MetricNames = struct {
 				VisualizeMyRoutineTaskScheduledAtCount:     "server.requests.routineTask.visualizeMyRoutineTaskScheduledAtCount",
 				VisualizeMyRoutineTaskActualStartedAtCount: "server.requests.routineTask.visualizeMyRoutineTaskActualStartedAtCount",
 				VisualizeMyRoutineTaskActualEndedAtCount:   "server.requests.routineTask.visualizeMyRoutineTaskActualEndedAtCount",
+			},
+			RoutineTaskRecord: metricNameRoutineTaskRecord{
+				GetAllMyRoutineTaskRecordsByRoutineTaskId:        "server.requests.routineTaskRecord.getAllMyRoutineTaskRecordsByRoutineTaskId",
+				VisualizeMyRoutineTaskRecordStatusCount:          "server.requests.routineTaskRecord.visualizeMyRoutineTaskRecordStatusCount",
+				VisualizeMyRoutineTaskRecordPurposeCount:         "server.requests.routineTaskRecord.visualizeMyRoutineTaskRecordPurposeCount",
+				VisualizeMyRoutineTaskRecordScheduledAtCount:     "server.requests.routineTaskRecord.visualizeMyRoutineTaskRecordScheduledAtCount",
+				VisualizeMyRoutineTaskRecordActualStartedAtCount: "server.requests.routineTaskRecord.visualizeMyRoutineTaskRecordActualStartedAtCount",
+				VisualizeMyRoutineTaskRecordActualEndedAtCount:   "server.requests.routineTaskRecord.visualizeMyRoutineTaskRecordActualEndedAtCount",
 			},
 			RootShelf: metricNameRootShelf{
 				GetMyRootShelfById:        "server.requests.rootShelf.getMyRootShelfById",

@@ -1,0 +1,11 @@
+enum RoutineTaskRecordErrorCode {
+  RoutineTaskRecordErrorCode_PermissionDenied
+  RoutineTaskRecordErrorCode_PayloadInvalid
+  RoutineTaskRecordErrorCode_TargetNotFound
+  RoutineTaskRecordErrorCode_PlanLimitExceeded
+  RoutineTaskRecordErrorCode_HandlerFailed
+  RoutineTaskRecordErrorCode_DatabaseError
+  RoutineTaskRecordErrorCode_Timeout
+  RoutineTaskRecordErrorCode_Canceled
+  RoutineTaskRecordErrorCode_Unknown
+}

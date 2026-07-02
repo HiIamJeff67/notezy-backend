@@ -14,9 +14,6 @@ const (
 	RoutineTaskStatus_Waiting RoutineTaskStatus = "Waiting" // include scheduling, but we don't need to present to the client
 	RoutineTaskStatus_Running RoutineTaskStatus = "Running"
 	RoutineTaskStatus_Pause   RoutineTaskStatus = "Pause"
-	RoutineTaskStatus_Cancel  RoutineTaskStatus = "Cancel"
-	RoutineTaskStatus_Success RoutineTaskStatus = "Success"
-	RoutineTaskStatus_Fail    RoutineTaskStatus = "Fail"
 )
 
 var AllRoutineTaskStatuses = []RoutineTaskStatus{
@@ -24,9 +21,6 @@ var AllRoutineTaskStatuses = []RoutineTaskStatus{
 	RoutineTaskStatus_Waiting,
 	RoutineTaskStatus_Running,
 	RoutineTaskStatus_Pause,
-	RoutineTaskStatus_Cancel,
-	RoutineTaskStatus_Success,
-	RoutineTaskStatus_Fail,
 }
 
 var AllRoutineTaskStatusStrings = []string{
@@ -34,9 +28,6 @@ var AllRoutineTaskStatusStrings = []string{
 	string(RoutineTaskStatus_Waiting),
 	string(RoutineTaskStatus_Running),
 	string(RoutineTaskStatus_Pause),
-	string(RoutineTaskStatus_Cancel),
-	string(RoutineTaskStatus_Success),
-	string(RoutineTaskStatus_Fail),
 }
 
 func (rts RoutineTaskStatus) Name() string {

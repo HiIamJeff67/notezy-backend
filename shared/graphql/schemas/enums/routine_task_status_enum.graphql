@@ -3,7 +3,4 @@ enum RoutineTaskStatus {
   RoutineTaskStatus_Waiting
   RoutineTaskStatus_Running
   RoutineTaskStatus_Pause
-  RoutineTaskStatus_Cancel
-  RoutineTaskStatus_Success
-  RoutineTaskStatus_Fail
 }

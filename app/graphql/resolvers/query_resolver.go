@@ -193,6 +193,26 @@ func (r *queryResolver) SearchRoutineTasks(ctx context.Context, input gqlmodels.
 	return result, nil
 }
 
+// SearchRoutineTaskRecords is the resolver for the searchRoutineTaskRecords field.
+func (r *queryResolver) SearchRoutineTaskRecords(ctx context.Context, input gqlmodels.SearchRoutineTaskRecordInput) (*gqlmodels.SearchRoutineTaskRecordConnection, error) {
+	ginContext, exception := contexts.GetAndConvertContextToGinContext(ctx)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ginContext, types.ContextFieldName_User_Id)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	result, exception := r.routineTaskRecordService.SearchPrivateRoutineTaskRecords(ctx, *userId, input)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	return result, nil
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 

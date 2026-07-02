@@ -15,6 +15,8 @@ type RoutineTaskControllerInterface interface {
 	GetAllMyRoutineTasks(ctx *gin.Context, reqDto *dtos.GetAllMyRoutineTasksReqDto)
 	CreateRoutineTaskByStationId(ctx *gin.Context, reqDto *dtos.CreateRoutineTaskByStationIdReqDto)
 	UpdateMyRoutineTaskById(ctx *gin.Context, reqDto *dtos.UpdateMyRoutineTaskByIdReqDto)
+	PauseMyRoutineTaskById(ctx *gin.Context, reqDto *dtos.PauseMyRoutineTaskByIdReqDto)
+	ResumeMyRoutineTaskById(ctx *gin.Context, reqDto *dtos.ResumeMyRoutineTaskByIdReqDto)
 	HardDeleteMyRoutineTaskById(ctx *gin.Context, reqDto *dtos.HardDeleteMyRoutineTaskByIdReqDto)
 	HardDeleteMyRoutineTasksByIds(ctx *gin.Context, reqDto *dtos.HardDeleteMyRoutineTasksByIdsReqDto)
 	VisualizeMyRoutineTaskStatusCount(ctx *gin.Context, reqDto *dtos.VisualizeMyRoutineTaskStatusCountReqDto)
@@ -95,6 +97,34 @@ func (c *RoutineTaskController) CreateRoutineTaskByStationId(ctx *gin.Context, r
 
 func (c *RoutineTaskController) UpdateMyRoutineTaskById(ctx *gin.Context, reqDto *dtos.UpdateMyRoutineTaskByIdReqDto) {
 	resDto, exception := c.routineTaskService.UpdateMyRoutineTaskById(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RoutineTaskController) PauseMyRoutineTaskById(ctx *gin.Context, reqDto *dtos.PauseMyRoutineTaskByIdReqDto) {
+	resDto, exception := c.routineTaskService.PauseMyRoutineTaskById(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RoutineTaskController) ResumeMyRoutineTaskById(ctx *gin.Context, reqDto *dtos.ResumeMyRoutineTaskByIdReqDto) {
+	resDto, exception := c.routineTaskService.ResumeMyRoutineTaskById(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return

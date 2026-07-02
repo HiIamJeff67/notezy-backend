@@ -187,3 +187,22 @@ query SearchRoutineTasks($input: SearchRoutineTaskInput!) {
     searchTime
   }
 }
+
+query SearchRoutineTaskRecords($input: SearchRoutineTaskRecordInput!) {
+  searchRoutineTaskRecords(input: $input) {
+    searchEdges {
+      node {
+        ...FragmentedPrivateRoutineTaskRecord
+      }
+      encodedSearchCursor
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}

@@ -317,12 +317,38 @@ models:
         value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Running"
       RoutineTaskStatus_Pause:
         value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Pause"
-      RoutineTaskStatus_Cancel:
-        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Cancel"
-      RoutineTaskStatus_Success:
-        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Success"
-      RoutineTaskStatus_Fail:
-        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskStatus_Fail"
+  RoutineTaskRecordStatus:
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskRecordStatus"
+    enum_values:
+      RoutineTaskRecordStatus_Running:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskRecordStatus_Running"
+      RoutineTaskRecordStatus_Success:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskRecordStatus_Success"
+      RoutineTaskRecordStatus_Failed:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskRecordStatus_Failed"
+      RoutineTaskRecordStatus_Cancel:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskRecordStatus_Cancel"
+  RoutineTaskRecordErrorCode:
+    model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskRecordErrorCode"
+    enum_values:
+      RoutineTaskRecordErrorCode_PermissionDenied:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskRecordErrorCode_PermissionDenied"
+      RoutineTaskRecordErrorCode_PayloadInvalid:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskRecordErrorCode_PayloadInvalid"
+      RoutineTaskRecordErrorCode_TargetNotFound:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskRecordErrorCode_TargetNotFound"
+      RoutineTaskRecordErrorCode_PlanLimitExceeded:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskRecordErrorCode_PlanLimitExceeded"
+      RoutineTaskRecordErrorCode_HandlerFailed:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskRecordErrorCode_HandlerFailed"
+      RoutineTaskRecordErrorCode_DatabaseError:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskRecordErrorCode_DatabaseError"
+      RoutineTaskRecordErrorCode_Timeout:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskRecordErrorCode_Timeout"
+      RoutineTaskRecordErrorCode_Canceled:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskRecordErrorCode_Canceled"
+      RoutineTaskRecordErrorCode_Unknown:
+        value: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.RoutineTaskRecordErrorCode_Unknown"
   SupportedIcon:
     model: "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums.SupportedIcon"
     enum_values:

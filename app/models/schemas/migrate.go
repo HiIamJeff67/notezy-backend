@@ -31,6 +31,7 @@ var MigratingTables = []any{
 	&Routine{},
 	&RoutinesToTasks{},
 	&RoutineTask{},
+	&RoutineTaskRecord{},
 	&RoutinesToTags{},
 	&RoutineTag{},
 

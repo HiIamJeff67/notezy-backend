@@ -126,6 +126,22 @@ type ComplexityRoot struct {
 		UpdatedAt       func(childComplexity int) int
 	}
 
+	PrivateRoutineTaskRecord struct {
+		ActualEndedAt   func(childComplexity int) int
+		ActualStartedAt func(childComplexity int) int
+		CostUnit        func(childComplexity int) int
+		CreatedAt       func(childComplexity int) int
+		ErrorCode       func(childComplexity int) int
+		ErrorReason     func(childComplexity int) int
+		ID              func(childComplexity int) int
+		Purpose         func(childComplexity int) int
+		RoutineTaskID   func(childComplexity int) int
+		ScheduledAt     func(childComplexity int) int
+		Status          func(childComplexity int) int
+		TotalAttempts   func(childComplexity int) int
+		UpdatedAt       func(childComplexity int) int
+	}
+
 	PrivateSearchableRoutine struct {
 		CreatedAt        func(childComplexity int) int
 		DeletedAt        func(childComplexity int) int
@@ -227,16 +243,17 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		SearchBlocks       func(childComplexity int, input gqlmodels.SearchBlockInput) int
-		SearchItems        func(childComplexity int, input gqlmodels.SearchItemInput) int
-		SearchRootShelves  func(childComplexity int, input gqlmodels.SearchRootShelfInput) int
-		SearchRoutineTags  func(childComplexity int, input gqlmodels.SearchRoutineTagInput) int
-		SearchRoutineTasks func(childComplexity int, input gqlmodels.SearchRoutineTaskInput) int
-		SearchRoutines     func(childComplexity int, input gqlmodels.SearchRoutineInput) int
-		SearchStations     func(childComplexity int, input gqlmodels.SearchStationInput) int
-		SearchSubShelves   func(childComplexity int, input gqlmodels.SearchSubShelfInput) int
-		SearchThemes       func(childComplexity int, input gqlmodels.SearchThemeInput) int
-		SearchUsers        func(childComplexity int, input gqlmodels.SearchUserInput) int
+		SearchBlocks             func(childComplexity int, input gqlmodels.SearchBlockInput) int
+		SearchItems              func(childComplexity int, input gqlmodels.SearchItemInput) int
+		SearchRootShelves        func(childComplexity int, input gqlmodels.SearchRootShelfInput) int
+		SearchRoutineTags        func(childComplexity int, input gqlmodels.SearchRoutineTagInput) int
+		SearchRoutineTaskRecords func(childComplexity int, input gqlmodels.SearchRoutineTaskRecordInput) int
+		SearchRoutineTasks       func(childComplexity int, input gqlmodels.SearchRoutineTaskInput) int
+		SearchRoutines           func(childComplexity int, input gqlmodels.SearchRoutineInput) int
+		SearchStations           func(childComplexity int, input gqlmodels.SearchStationInput) int
+		SearchSubShelves         func(childComplexity int, input gqlmodels.SearchSubShelfInput) int
+		SearchThemes             func(childComplexity int, input gqlmodels.SearchThemeInput) int
+		SearchUsers              func(childComplexity int, input gqlmodels.SearchUserInput) int
 	}
 
 	SearchBadgeConnection struct {
@@ -326,6 +343,18 @@ type ComplexityRoot struct {
 	}
 
 	SearchRoutineTaskEdge struct {
+		EncodedSearchCursor func(childComplexity int) int
+		Node                func(childComplexity int) int
+	}
+
+	SearchRoutineTaskRecordConnection struct {
+		SearchEdges    func(childComplexity int) int
+		SearchPageInfo func(childComplexity int) int
+		SearchTime     func(childComplexity int) int
+		TotalCount     func(childComplexity int) int
+	}
+
+	SearchRoutineTaskRecordEdge struct {
 		EncodedSearchCursor func(childComplexity int) int
 		Node                func(childComplexity int) int
 	}
@@ -873,6 +902,97 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateRoutineTask.UpdatedAt(childComplexity), true
+
+	case "PrivateRoutineTaskRecord.actualEndedAt":
+		if e.complexity.PrivateRoutineTaskRecord.ActualEndedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTaskRecord.ActualEndedAt(childComplexity), true
+
+	case "PrivateRoutineTaskRecord.actualStartedAt":
+		if e.complexity.PrivateRoutineTaskRecord.ActualStartedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTaskRecord.ActualStartedAt(childComplexity), true
+
+	case "PrivateRoutineTaskRecord.costUnit":
+		if e.complexity.PrivateRoutineTaskRecord.CostUnit == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTaskRecord.CostUnit(childComplexity), true
+
+	case "PrivateRoutineTaskRecord.createdAt":
+		if e.complexity.PrivateRoutineTaskRecord.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTaskRecord.CreatedAt(childComplexity), true
+
+	case "PrivateRoutineTaskRecord.errorCode":
+		if e.complexity.PrivateRoutineTaskRecord.ErrorCode == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTaskRecord.ErrorCode(childComplexity), true
+
+	case "PrivateRoutineTaskRecord.errorReason":
+		if e.complexity.PrivateRoutineTaskRecord.ErrorReason == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTaskRecord.ErrorReason(childComplexity), true
+
+	case "PrivateRoutineTaskRecord.id":
+		if e.complexity.PrivateRoutineTaskRecord.ID == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTaskRecord.ID(childComplexity), true
+
+	case "PrivateRoutineTaskRecord.purpose":
+		if e.complexity.PrivateRoutineTaskRecord.Purpose == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTaskRecord.Purpose(childComplexity), true
+
+	case "PrivateRoutineTaskRecord.routineTaskId":
+		if e.complexity.PrivateRoutineTaskRecord.RoutineTaskID == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTaskRecord.RoutineTaskID(childComplexity), true
+
+	case "PrivateRoutineTaskRecord.scheduledAt":
+		if e.complexity.PrivateRoutineTaskRecord.ScheduledAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTaskRecord.ScheduledAt(childComplexity), true
+
+	case "PrivateRoutineTaskRecord.status":
+		if e.complexity.PrivateRoutineTaskRecord.Status == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTaskRecord.Status(childComplexity), true
+
+	case "PrivateRoutineTaskRecord.totalAttempts":
+		if e.complexity.PrivateRoutineTaskRecord.TotalAttempts == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTaskRecord.TotalAttempts(childComplexity), true
+
+	case "PrivateRoutineTaskRecord.updatedAt":
+		if e.complexity.PrivateRoutineTaskRecord.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTaskRecord.UpdatedAt(childComplexity), true
 
 	case "PrivateSearchableRoutine.createdAt":
 		if e.complexity.PrivateSearchableRoutine.CreatedAt == nil {
@@ -1454,6 +1574,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Query.SearchRoutineTags(childComplexity, args["input"].(gqlmodels.SearchRoutineTagInput)), true
 
+	case "Query.searchRoutineTaskRecords":
+		if e.complexity.Query.SearchRoutineTaskRecords == nil {
+			break
+		}
+
+		args, err := ec.field_Query_searchRoutineTaskRecords_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SearchRoutineTaskRecords(childComplexity, args["input"].(gqlmodels.SearchRoutineTaskRecordInput)), true
+
 	case "Query.searchRoutineTasks":
 		if e.complexity.Query.SearchRoutineTasks == nil {
 			break
@@ -1848,6 +1980,48 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.SearchRoutineTaskEdge.Node(childComplexity), true
 
+	case "SearchRoutineTaskRecordConnection.searchEdges":
+		if e.complexity.SearchRoutineTaskRecordConnection.SearchEdges == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineTaskRecordConnection.SearchEdges(childComplexity), true
+
+	case "SearchRoutineTaskRecordConnection.searchPageInfo":
+		if e.complexity.SearchRoutineTaskRecordConnection.SearchPageInfo == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineTaskRecordConnection.SearchPageInfo(childComplexity), true
+
+	case "SearchRoutineTaskRecordConnection.searchTime":
+		if e.complexity.SearchRoutineTaskRecordConnection.SearchTime == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineTaskRecordConnection.SearchTime(childComplexity), true
+
+	case "SearchRoutineTaskRecordConnection.totalCount":
+		if e.complexity.SearchRoutineTaskRecordConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineTaskRecordConnection.TotalCount(childComplexity), true
+
+	case "SearchRoutineTaskRecordEdge.encodedSearchCursor":
+		if e.complexity.SearchRoutineTaskRecordEdge.EncodedSearchCursor == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineTaskRecordEdge.EncodedSearchCursor(childComplexity), true
+
+	case "SearchRoutineTaskRecordEdge.node":
+		if e.complexity.SearchRoutineTaskRecordEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.SearchRoutineTaskRecordEdge.Node(childComplexity), true
+
 	case "SearchStationConnection.searchEdges":
 		if e.complexity.SearchStationConnection.SearchEdges == nil {
 			break
@@ -2039,6 +2213,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputSearchRoutineTagInput,
 		ec.unmarshalInputSearchRoutineTaskCursorFields,
 		ec.unmarshalInputSearchRoutineTaskInput,
+		ec.unmarshalInputSearchRoutineTaskRecordCursorFields,
+		ec.unmarshalInputSearchRoutineTaskRecordInput,
 		ec.unmarshalInputSearchStationCursorFields,
 		ec.unmarshalInputSearchStationInput,
 		ec.unmarshalInputSearchSubShelfCursorFields,
@@ -2245,14 +2421,30 @@ var sources = []*ast.Source{
   RoutineTaskPurpose_UpdateRoutine
 }
 `, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/enums/routine_task_record_error_code_enum.graphql", Input: `enum RoutineTaskRecordErrorCode {
+  RoutineTaskRecordErrorCode_PermissionDenied
+  RoutineTaskRecordErrorCode_PayloadInvalid
+  RoutineTaskRecordErrorCode_TargetNotFound
+  RoutineTaskRecordErrorCode_PlanLimitExceeded
+  RoutineTaskRecordErrorCode_HandlerFailed
+  RoutineTaskRecordErrorCode_DatabaseError
+  RoutineTaskRecordErrorCode_Timeout
+  RoutineTaskRecordErrorCode_Canceled
+  RoutineTaskRecordErrorCode_Unknown
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/enums/routine_task_record_status_enum.graphql", Input: `enum RoutineTaskRecordStatus {
+  RoutineTaskRecordStatus_Running
+  RoutineTaskRecordStatus_Success
+  RoutineTaskRecordStatus_Failed
+  RoutineTaskRecordStatus_Cancel
+}
+`, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/enums/routine_task_status_enum.graphql", Input: `enum RoutineTaskStatus {
   RoutineTaskStatus_Idle
   RoutineTaskStatus_Waiting
   RoutineTaskStatus_Running
   RoutineTaskStatus_Pause
-  RoutineTaskStatus_Cancel
-  RoutineTaskStatus_Success
-  RoutineTaskStatus_Fail
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/enums/supported_icon_enum.graphql", Input: `enum SupportedIcon {
@@ -2397,6 +2589,7 @@ interface SearchConnection {
   searchRoutines(input: SearchRoutineInput!): SearchRoutineConnection!
   searchRoutineTags(input: SearchRoutineTagInput!): SearchRoutineTagConnection!
   searchRoutineTasks(input: SearchRoutineTaskInput!): SearchRoutineTaskConnection!
+  searchRoutineTaskRecords(input: SearchRoutineTaskRecordInput!): SearchRoutineTaskRecordConnection!
 }
 
 # type Mutation {}
@@ -2481,6 +2674,22 @@ type PrivateSearchableRoutine {
   attempts: Int32!
   maxAttempts: Int32!
   period: RoutinePeriod
+  scheduledAt: Time!
+  actualStartedAt: Time
+  actualEndedAt: Time
+  updatedAt: Time!
+  createdAt: Time!
+}
+`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/routine_task_record.graphql", Input: `type PrivateRoutineTaskRecord {
+  id: UUID!
+  routineTaskId: UUID!
+  purpose: RoutineTaskPurpose!
+  status: RoutineTaskRecordStatus!
+  errorCode: RoutineTaskRecordErrorCode
+  errorReason: String
+  costUnit: Int64!
+  totalAttempts: Int64!
   scheduledAt: Time!
   actualStartedAt: Time
   actualEndedAt: Time
@@ -2692,6 +2901,50 @@ type SearchRoutineTagConnection implements SearchConnection {
   searchTime: Float!
 }
 `, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/search_routine_task_records.graphql", Input: `# =============== Search SortBy & Input =============== #
+
+enum SearchRoutineTaskRecordSortBy {
+  RELEVANCE
+  PURPOSE
+  STATUS
+  COST_UNIT
+  TOTAL_ATTEMPTS
+  SCHEDULED_AT
+  ACTUAL_STARTED_AT
+  ACTUAL_ENDED_AT
+  LAST_UPDATE
+  CREATED_AT
+}
+
+input SearchRoutineTaskRecordInput {
+  routineTaskIds: [UUID!]!
+  query: String!
+  after: String
+  first: Int = 10
+  sortBy: SearchRoutineTaskRecordSortBy = RELEVANCE
+  sortOrder: SearchSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+input SearchRoutineTaskRecordCursorFields {
+  id: UUID!
+}
+
+# =============== Search Edge & Connection =============== #
+
+type SearchRoutineTaskRecordEdge implements SearchEdge {
+  encodedSearchCursor: String!
+  node: PrivateRoutineTaskRecord!
+}
+
+type SearchRoutineTaskRecordConnection implements SearchConnection {
+  searchEdges: [SearchRoutineTaskRecordEdge!]!
+  searchPageInfo: SearchPageInfo!
+  totalCount: Int!
+  searchTime: Float!
+}
+`, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/search_routine_tasks.graphql", Input: `# =============== Search SortBy & Input =============== #
 
 enum SearchRoutineTaskSortBy {
@@ -2860,7 +3113,8 @@ type SearchSubShelfConnection implements SearchConnection {
   searchPageInfo: SearchPageInfo!
   totalCount: Int!
   searchTime: Float!
-}`, BuiltIn: false},
+}
+`, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/search_themes.graphql", Input: `# =============== Search Filters & SortBy & Input =============== #
 
 input SearchThemeFilters {

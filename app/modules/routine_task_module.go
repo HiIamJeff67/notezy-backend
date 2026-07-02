@@ -25,7 +25,6 @@ func NewRoutineTaskModule() *RoutineTaskModule {
 		routineTaskRepository,
 		routineTaskPayloadAdapter,
 	)
-
 	routineTaskBinder := binders.NewRoutineTaskBinder()
 
 	routineTaskController := controllers.NewRoutineTaskController(

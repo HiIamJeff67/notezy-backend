@@ -238,6 +238,13 @@ func (ec *executionContext) _SearchConnection(ctx context.Context, sel ast.Selec
 			return graphql.Null
 		}
 		return ec._SearchStationConnection(ctx, sel, obj)
+	case gqlmodels.SearchRoutineTaskRecordConnection:
+		return ec._SearchRoutineTaskRecordConnection(ctx, sel, &obj)
+	case *gqlmodels.SearchRoutineTaskRecordConnection:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SearchRoutineTaskRecordConnection(ctx, sel, obj)
 	case gqlmodels.SearchRoutineTaskConnection:
 		return ec._SearchRoutineTaskConnection(ctx, sel, &obj)
 	case *gqlmodels.SearchRoutineTaskConnection:
@@ -324,6 +331,13 @@ func (ec *executionContext) _SearchEdge(ctx context.Context, sel ast.SelectionSe
 			return graphql.Null
 		}
 		return ec._SearchStationEdge(ctx, sel, obj)
+	case gqlmodels.SearchRoutineTaskRecordEdge:
+		return ec._SearchRoutineTaskRecordEdge(ctx, sel, &obj)
+	case *gqlmodels.SearchRoutineTaskRecordEdge:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SearchRoutineTaskRecordEdge(ctx, sel, obj)
 	case gqlmodels.SearchRoutineTaskEdge:
 		return ec._SearchRoutineTaskEdge(ctx, sel, &obj)
 	case *gqlmodels.SearchRoutineTaskEdge:

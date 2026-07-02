@@ -40,15 +40,15 @@ import (
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalNRoutineTaskStatus2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐRoutineTaskStatus(ctx context.Context, v any) (enums.RoutineTaskStatus, error) {
+func (ec *executionContext) unmarshalNRoutineTaskRecordStatus2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐRoutineTaskRecordStatus(ctx context.Context, v any) (enums.RoutineTaskRecordStatus, error) {
 	tmp, err := graphql.UnmarshalString(v)
-	res := unmarshalNRoutineTaskStatus2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐRoutineTaskStatus[tmp]
+	res := unmarshalNRoutineTaskRecordStatus2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐRoutineTaskRecordStatus[tmp]
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNRoutineTaskStatus2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐRoutineTaskStatus(ctx context.Context, sel ast.SelectionSet, v enums.RoutineTaskStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNRoutineTaskRecordStatus2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐRoutineTaskRecordStatus(ctx context.Context, sel ast.SelectionSet, v enums.RoutineTaskRecordStatus) graphql.Marshaler {
 	_ = sel
-	res := graphql.MarshalString(marshalNRoutineTaskStatus2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐRoutineTaskStatus[v])
+	res := graphql.MarshalString(marshalNRoutineTaskRecordStatus2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐRoutineTaskRecordStatus[v])
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -58,17 +58,17 @@ func (ec *executionContext) marshalNRoutineTaskStatus2githubᚗcomᚋHiIamJeff67
 }
 
 var (
-	unmarshalNRoutineTaskStatus2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐRoutineTaskStatus = map[string]enums.RoutineTaskStatus{
-		"RoutineTaskStatus_Idle":    enums.RoutineTaskStatus_Idle,
-		"RoutineTaskStatus_Waiting": enums.RoutineTaskStatus_Waiting,
-		"RoutineTaskStatus_Running": enums.RoutineTaskStatus_Running,
-		"RoutineTaskStatus_Pause":   enums.RoutineTaskStatus_Pause,
+	unmarshalNRoutineTaskRecordStatus2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐRoutineTaskRecordStatus = map[string]enums.RoutineTaskRecordStatus{
+		"RoutineTaskRecordStatus_Running": enums.RoutineTaskRecordStatus_Running,
+		"RoutineTaskRecordStatus_Success": enums.RoutineTaskRecordStatus_Success,
+		"RoutineTaskRecordStatus_Failed":  enums.RoutineTaskRecordStatus_Failed,
+		"RoutineTaskRecordStatus_Cancel":  enums.RoutineTaskRecordStatus_Cancel,
 	}
-	marshalNRoutineTaskStatus2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐRoutineTaskStatus = map[enums.RoutineTaskStatus]string{
-		enums.RoutineTaskStatus_Idle:    "RoutineTaskStatus_Idle",
-		enums.RoutineTaskStatus_Waiting: "RoutineTaskStatus_Waiting",
-		enums.RoutineTaskStatus_Running: "RoutineTaskStatus_Running",
-		enums.RoutineTaskStatus_Pause:   "RoutineTaskStatus_Pause",
+	marshalNRoutineTaskRecordStatus2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋmodelsᚋschemasᚋenumsᚐRoutineTaskRecordStatus = map[enums.RoutineTaskRecordStatus]string{
+		enums.RoutineTaskRecordStatus_Running: "RoutineTaskRecordStatus_Running",
+		enums.RoutineTaskRecordStatus_Success: "RoutineTaskRecordStatus_Success",
+		enums.RoutineTaskRecordStatus_Failed:  "RoutineTaskRecordStatus_Failed",
+		enums.RoutineTaskRecordStatus_Cancel:  "RoutineTaskRecordStatus_Cancel",
 	}
 )
 

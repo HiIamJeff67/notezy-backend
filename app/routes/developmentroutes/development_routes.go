@@ -33,6 +33,7 @@ func ConfigureDevelopmentRoutes() {
 	configureDevelopmentRoutineRoutes()
 	configureDevelopmentRoutineTagRoutes()
 	configureDevelopmentRoutineTaskRoutes()
+	configureDevelopmentRoutineTaskRecordRoutes()
 	configureDevelopmentRootShelfRoutes()
 	configureDevelopmentSubShelfRoutes()
 	configureDevelopmentMaterialRoutes()

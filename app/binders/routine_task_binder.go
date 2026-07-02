@@ -22,6 +22,8 @@ type RoutineTaskBinderInterface interface {
 	BindGetAllMyRoutineTasks(controllerFunc types.ControllerFunc[*dtos.GetAllMyRoutineTasksReqDto]) gin.HandlerFunc
 	BindCreateRoutineTaskByStationId(controllerFunc types.ControllerFunc[*dtos.CreateRoutineTaskByStationIdReqDto]) gin.HandlerFunc
 	BindUpdateMyRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.UpdateMyRoutineTaskByIdReqDto]) gin.HandlerFunc
+	BindPauseMyRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.PauseMyRoutineTaskByIdReqDto]) gin.HandlerFunc
+	BindResumeMyRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.ResumeMyRoutineTaskByIdReqDto]) gin.HandlerFunc
 	BindHardDeleteMyRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.HardDeleteMyRoutineTaskByIdReqDto]) gin.HandlerFunc
 	BindHardDeleteMyRoutineTasksByIds(controllerFunc types.ControllerFunc[*dtos.HardDeleteMyRoutineTasksByIdsReqDto]) gin.HandlerFunc
 	BindVisualizeMyRoutineTaskStatusCount(controllerFunc types.ControllerFunc[*dtos.VisualizeMyRoutineTaskStatusCountReqDto]) gin.HandlerFunc
@@ -169,6 +171,52 @@ func (b *RoutineTaskBinder) BindCreateRoutineTaskByStationId(controllerFunc type
 func (b *RoutineTaskBinder) BindUpdateMyRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.UpdateMyRoutineTaskByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.UpdateMyRoutineTaskByIdReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exception := exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RoutineTaskBinder) BindPauseMyRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.PauseMyRoutineTaskByIdReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.PauseMyRoutineTaskByIdReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exception := exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+			exception.SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RoutineTaskBinder) BindResumeMyRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.ResumeMyRoutineTaskByIdReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.ResumeMyRoutineTaskByIdReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 

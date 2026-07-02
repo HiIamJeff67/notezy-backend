@@ -187,6 +187,38 @@ func configureDevelopmentRoutineTaskRoutes() {
 				),
 			)...,
 		)
+		routineTaskRoutes.PUT(
+			"/pauseMyRoutineTaskById",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "pauseMyRoutineTaskById"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RoutineTask.PauseMyRoutineTaskById,
+					),
+				},
+				defaultMiddlewares,
+				routineTaskModule.Binder.BindPauseMyRoutineTaskById(
+					routineTaskModule.Controller.PauseMyRoutineTaskById,
+				),
+			)...,
+		)
+		routineTaskRoutes.PUT(
+			"/resumeMyRoutineTaskById",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "resumeMyRoutineTaskById"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.RoutineTask.ResumeMyRoutineTaskById,
+					),
+				},
+				defaultMiddlewares,
+				routineTaskModule.Binder.BindResumeMyRoutineTaskById(
+					routineTaskModule.Controller.ResumeMyRoutineTaskById,
+				),
+			)...,
+		)
 		routineTaskRoutes.DELETE(
 			"/hardDeleteMyRoutineTaskById",
 			middlewares.RepositionMiddleware(

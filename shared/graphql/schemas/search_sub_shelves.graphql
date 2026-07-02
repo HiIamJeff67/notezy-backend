@@ -24,7 +24,7 @@ input SearchSubShelfInput {
 
 input SearchSubShelfCursorFields {
   id: UUID!
-  # environmentAttributes: SearchSubShelfEnvironmentAttributes 
+  # environmentAttributes: SearchSubShelfEnvironmentAttributes
 }
 
 # =============== Search Edge & Connection =============== #

@@ -72,12 +72,12 @@ func (e *Engine) IsHealthy() bool {
 }
 
 func (e *Engine) runOnce(ctx context.Context) {
-	routineTasks, exception := e.claimer.Claim(ctx)
+	routineTasks, taskIdToOwnerId, exception := e.claimer.Claim(ctx)
 	if exception != nil {
 		atomic.StoreInt32(&e.isHealthy, 0)
 		return
 	}
-	if exception = e.handlerManager.Manage(ctx, routineTasks); exception != nil {
+	if exception = e.handlerManager.Manage(ctx, routineTasks, taskIdToOwnerId); exception != nil {
 		atomic.StoreInt32(&e.isHealthy, 0)
 		return
 	}

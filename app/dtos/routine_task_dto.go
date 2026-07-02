@@ -105,6 +105,36 @@ type UpdateMyRoutineTaskByIdReqDto struct {
 	]
 }
 
+type PauseMyRoutineTaskByIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		struct {
+			RoutineTaskId uuid.UUID `json:"routineTaskId" validate:"required"`
+		},
+		any,
+	]
+}
+
+type ResumeMyRoutineTaskByIdReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID
+		},
+		struct {
+			RoutineTaskId uuid.UUID `json:"routineTaskId" validate:"required"`
+		},
+		any,
+	]
+}
+
 type HardDeleteMyRoutineTaskByIdReqDto struct {
 	NotezyRequest[
 		struct {
@@ -266,6 +296,14 @@ type CreateRoutineTaskByStationIdResDto struct {
 }
 
 type UpdateMyRoutineTaskByIdResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type PauseMyRoutineTaskByIdResDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type ResumeMyRoutineTaskByIdResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 

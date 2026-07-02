@@ -1,0 +1,6 @@
+enum RoutineTaskRecordStatus {
+  RoutineTaskRecordStatus_Running
+  RoutineTaskRecordStatus_Success
+  RoutineTaskRecordStatus_Failed
+  RoutineTaskRecordStatus_Cancel
+}

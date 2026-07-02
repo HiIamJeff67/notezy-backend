@@ -31,6 +31,8 @@ type RoutineTaskServiceInterface interface {
 	GetAllMyRoutineTasks(ctx context.Context, reqDto *dtos.GetAllMyRoutineTasksReqDto) (*dtos.GetAllMyRoutineTasksResDto, *exceptions.Exception)
 	CreateRoutineTaskByStationId(ctx context.Context, reqDto *dtos.CreateRoutineTaskByStationIdReqDto) (*dtos.CreateRoutineTaskByStationIdResDto, *exceptions.Exception)
 	UpdateMyRoutineTaskById(ctx context.Context, reqDto *dtos.UpdateMyRoutineTaskByIdReqDto) (*dtos.UpdateMyRoutineTaskByIdResDto, *exceptions.Exception)
+	PauseMyRoutineTaskById(ctx context.Context, reqDto *dtos.PauseMyRoutineTaskByIdReqDto) (*dtos.PauseMyRoutineTaskByIdResDto, *exceptions.Exception)
+	ResumeMyRoutineTaskById(ctx context.Context, reqDto *dtos.ResumeMyRoutineTaskByIdReqDto) (*dtos.ResumeMyRoutineTaskByIdResDto, *exceptions.Exception)
 	HardDeleteMyRoutineTaskById(ctx context.Context, reqDto *dtos.HardDeleteMyRoutineTaskByIdReqDto) (*dtos.HardDeleteMyRoutineTaskByIdResDto, *exceptions.Exception)
 	HardDeleteMyRoutineTasksByIds(ctx context.Context, reqDto *dtos.HardDeleteMyRoutineTasksByIdsReqDto) (*dtos.HardDeleteMyRoutineTasksByIdsResDto, *exceptions.Exception)
 	VisualizeMyRoutineTaskStatusCount(ctx context.Context, reqDto *dtos.VisualizeMyRoutineTaskStatusCountReqDto) (*dtos.VisualizeMyRoutineTaskStatusCountResDto, *exceptions.Exception)
@@ -413,6 +415,114 @@ func (s *RoutineTaskService) UpdateMyRoutineTaskById(
 	}, nil
 }
 
+func (s *RoutineTaskService) PauseMyRoutineTaskById(
+	ctx context.Context, reqDto *dtos.PauseMyRoutineTaskByIdReqDto,
+) (*dtos.PauseMyRoutineTaskByIdResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+	}
+
+	tx := s.db.WithContext(ctx).Begin()
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+	routineTask, exception := s.routineTaskRepository.CheckPermissionAndGetOneById(
+		reqDto.Body.RoutineTaskId,
+		reqDto.ContextFields.UserId,
+		nil,
+		allowedPermissions,
+		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+	if routineTask.Status != enums.RoutineTaskStatus_Idle {
+		tx.Rollback()
+		return nil, exceptions.RoutineTask.InvalidInput("only idle routine tasks can be paused")
+	}
+
+	now := time.Now()
+	result := tx.Model(&schemas.RoutineTask{}).
+		Where("id = ? AND status = ?", reqDto.Body.RoutineTaskId, enums.RoutineTaskStatus_Idle).
+		Updates(map[string]any{
+			"status":     enums.RoutineTaskStatus_Pause,
+			"updated_at": now,
+		})
+	if result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.RoutineTask.FailedToUpdate().WithOrigin(result.Error)
+	}
+	if result.RowsAffected == 0 {
+		tx.Rollback()
+		return nil, exceptions.RoutineTask.NoChanges()
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, exceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+	}
+
+	return &dtos.PauseMyRoutineTaskByIdResDto{UpdatedAt: now}, nil
+}
+
+func (s *RoutineTaskService) ResumeMyRoutineTaskById(
+	ctx context.Context, reqDto *dtos.ResumeMyRoutineTaskByIdReqDto,
+) (*dtos.ResumeMyRoutineTaskByIdResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+	}
+
+	tx := s.db.WithContext(ctx).Begin()
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
+	routineTask, exception := s.routineTaskRepository.CheckPermissionAndGetOneById(
+		reqDto.Body.RoutineTaskId,
+		reqDto.ContextFields.UserId,
+		nil,
+		allowedPermissions,
+		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+	if routineTask.Status != enums.RoutineTaskStatus_Pause {
+		tx.Rollback()
+		return nil, exceptions.RoutineTask.InvalidInput("only paused routine tasks can be resumed")
+	}
+
+	now := time.Now()
+	result := tx.Model(&schemas.RoutineTask{}).
+		Where("id = ? AND status = ?", reqDto.Body.RoutineTaskId, enums.RoutineTaskStatus_Pause).
+		Updates(map[string]any{
+			"status":     enums.RoutineTaskStatus_Idle,
+			"updated_at": now,
+		})
+	if result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.RoutineTask.FailedToUpdate().WithOrigin(result.Error)
+	}
+	if result.RowsAffected == 0 {
+		tx.Rollback()
+		return nil, exceptions.RoutineTask.NoChanges()
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, exceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+	}
+
+	return &dtos.ResumeMyRoutineTaskByIdResDto{UpdatedAt: now}, nil
+}
+
 func (s *RoutineTaskService) HardDeleteMyRoutineTaskById(
 	ctx context.Context, reqDto *dtos.HardDeleteMyRoutineTaskByIdReqDto,
 ) (*dtos.HardDeleteMyRoutineTaskByIdResDto, *exceptions.Exception) {
@@ -470,127 +580,43 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskStatusCount(
 
 	db := s.db.WithContext(ctx)
 
-	var counts struct {
-		IdleCount    int64 `gorm:"column:idle_count;"`
-		WaitingCount int64 `gorm:"column:waiting_count;"`
-		RunningCount int64 `gorm:"column:running_count;"`
-		PauseCount   int64 `gorm:"column:pause_count;"`
-		CancelCount  int64 `gorm:"column:cancel_count;"`
-		SuccessCount int64 `gorm:"column:success_count;"`
-		FailCount    int64 `gorm:"column:fail_count;"`
+	var rows []struct {
+		Status           enums.RoutineTaskStatus `gorm:"column:status;"`
+		RoutineTaskCount int64                   `gorm:"column:routine_task_count;"`
 	}
 	result := db.Model(&schemas.RoutineTask{}).
-		Select(`
-			COUNT(*) FILTER (WHERE status = ?) as idle_count,
-			COUNT(*) FILTER (WHERE status = ?) as waiting_count,
-			COUNT(*) FILTER (WHERE status = ?) as running_count,
-			COUNT(*) FILTER (WHERE status = ?) as pause_count,
-			COUNT(*) FILTER (WHERE status = ?) as cancel_count,
-			COUNT(*) FILTER (WHERE status = ?) as success_count,
-			COUNT(*) FILTER (WHERE status = ?) as fail_count
-		`,
-			enums.RoutineTaskStatus_Idle,
-			enums.RoutineTaskStatus_Waiting,
-			enums.RoutineTaskStatus_Running,
-			enums.RoutineTaskStatus_Pause,
-			enums.RoutineTaskStatus_Cancel,
-			enums.RoutineTaskStatus_Success,
-			enums.RoutineTaskStatus_Fail,
-		).
+		Select(`"RoutineTaskTable".status AS status, COUNT(*) AS routine_task_count`).
 		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = "RoutineTaskTable".station_id`).
 		Where("uts.user_id = ? AND uts.permission = ?", reqDto.ContextFields.UserId, reqDto.Param.Permission).
-		Scan(&counts)
+		Group(`"RoutineTaskTable".status`).
+		Scan(&rows)
 	if err := result.Error; err != nil {
 		return nil, exceptions.RoutineTask.NotFound().WithOrigin(err)
 	}
 
-	idleRoutineTaskMetadata := map[string]string{"status": "idle"}
-	idleRoutineTaskMeta, err := json.Marshal(idleRoutineTaskMetadata)
-	if err != nil {
-		return nil, exceptions.Routine.FailedToMarshalData(idleRoutineTaskMetadata)
+	counts := make(map[enums.RoutineTaskStatus]int64, len(rows))
+	for _, row := range rows {
+		counts[row.Status] = row.RoutineTaskCount
 	}
 
-	waitingRoutineTaskMetadata := map[string]string{"status": "waiting"}
-	waitingRoutineTaskMeta, err := json.Marshal(waitingRoutineTaskMetadata)
-	if err != nil {
-		return nil, exceptions.Routine.FailedToMarshalData(waitingRoutineTaskMetadata)
-	}
+	data := make([]dtos.TwoDimensionalDatum[int64], len(enums.AllRoutineTaskStatuses))
+	for index, status := range enums.AllRoutineTaskStatuses {
+		metadata := map[string]string{"status": status.String()}
+		meta, err := json.Marshal(metadata)
+		if err != nil {
+			return nil, exceptions.Routine.FailedToMarshalData(metadata)
+		}
 
-	runningRoutineTaskMetadata := map[string]string{"status": "running"}
-	runningRoutineTaskMeta, err := json.Marshal(runningRoutineTaskMetadata)
-	if err != nil {
-		return nil, exceptions.Routine.FailedToMarshalData(runningRoutineTaskMetadata)
-	}
-
-	pauseRoutineTaskMetadata := map[string]string{"status": "pause"}
-	pauseRoutineTaskMeta, err := json.Marshal(pauseRoutineTaskMetadata)
-	if err != nil {
-		return nil, exceptions.Routine.FailedToMarshalData(pauseRoutineTaskMetadata)
-	}
-
-	cancelRoutineTaskMetadata := map[string]string{"status": "cancel"}
-	cancelRoutineTaskMeta, err := json.Marshal(cancelRoutineTaskMetadata)
-	if err != nil {
-		return nil, exceptions.Routine.FailedToMarshalData(cancelRoutineTaskMetadata)
-	}
-
-	successRoutineTaskMetadata := map[string]string{"status": "success"}
-	successRoutineTaskMeta, err := json.Marshal(successRoutineTaskMetadata)
-	if err != nil {
-		return nil, exceptions.Routine.FailedToMarshalData(successRoutineTaskMetadata)
-	}
-
-	failRoutineTaskMetadata := map[string]string{"status": "fail"}
-	failRoutineTaskMeta, err := json.Marshal(failRoutineTaskMetadata)
-	if err != nil {
-		return nil, exceptions.Routine.FailedToMarshalData(failRoutineTaskMetadata)
+		data[index] = dtos.TwoDimensionalDatum[int64]{
+			Id:    status.String() + "-routine-task-count",
+			X:     status.String() + " Routine Task Count",
+			Value: counts[status],
+			Meta:  meta,
+		}
 	}
 
 	return &dtos.VisualizeMyRoutineTaskStatusCountResDto{
-		Data: []dtos.TwoDimensionalDatum[int64]{
-			dtos.TwoDimensionalDatum[int64]{
-				Id:    "idle-routine-task-count",
-				X:     "Idle Routine Task Count",
-				Value: counts.IdleCount,
-				Meta:  idleRoutineTaskMeta,
-			},
-			dtos.TwoDimensionalDatum[int64]{
-				Id:    "waiting-routine-task-count",
-				X:     "Waiting Routine Task Count",
-				Value: counts.WaitingCount,
-				Meta:  waitingRoutineTaskMeta,
-			},
-			dtos.TwoDimensionalDatum[int64]{
-				Id:    "running-routine-task-count",
-				X:     "Running Routine Task Count",
-				Value: counts.RunningCount,
-				Meta:  runningRoutineTaskMeta,
-			},
-			dtos.TwoDimensionalDatum[int64]{
-				Id:    "pause-routine-task-count",
-				X:     "Pause Routine Task Count",
-				Value: counts.PauseCount,
-				Meta:  pauseRoutineTaskMeta,
-			},
-			dtos.TwoDimensionalDatum[int64]{
-				Id:    "cancel-routine-task-count",
-				X:     "Cancel Routine Task Count",
-				Value: counts.CancelCount,
-				Meta:  cancelRoutineTaskMeta,
-			},
-			dtos.TwoDimensionalDatum[int64]{
-				Id:    "success-routine-task-count",
-				X:     "Success Routine Task Count",
-				Value: counts.SuccessCount,
-				Meta:  successRoutineTaskMeta,
-			},
-			dtos.TwoDimensionalDatum[int64]{
-				Id:    "fail-routine-task-count",
-				X:     "Fail Routine Task Count",
-				Value: counts.FailCount,
-				Meta:  failRoutineTaskMeta,
-			},
-		},
+		Data: data,
 	}, nil
 }
 

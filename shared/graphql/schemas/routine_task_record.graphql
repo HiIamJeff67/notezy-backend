@@ -1,0 +1,15 @@
+type PrivateRoutineTaskRecord {
+  id: UUID!
+  routineTaskId: UUID!
+  purpose: RoutineTaskPurpose!
+  status: RoutineTaskRecordStatus!
+  errorCode: RoutineTaskRecordErrorCode
+  errorReason: String
+  costUnit: Int64!
+  totalAttempts: Int64!
+  scheduledAt: Time!
+  actualStartedAt: Time
+  actualEndedAt: Time
+  updatedAt: Time!
+  createdAt: Time!
+}
