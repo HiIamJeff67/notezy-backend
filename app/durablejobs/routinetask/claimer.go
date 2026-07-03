@@ -76,10 +76,21 @@ func (c *Claimer) Claim(
 			"attempts": gorm.Expr("attempts + 1"),
 			"scheduled_at": gorm.Expr(
 				`CASE period
-					WHEN ? THEN scheduled_at + INTERVAL '1 day'
-					WHEN ? THEN scheduled_at + INTERVAL '7 days'
-					WHEN ? THEN scheduled_at + INTERVAL '30 days'
-					ELSE scheduled_at
+					WHEN ? THEN GREATEST(scheduled_at, next_scheduled_at) + INTERVAL '1 day'
+					WHEN ? THEN GREATEST(scheduled_at, next_scheduled_at) + INTERVAL '7 days'
+					WHEN ? THEN GREATEST(scheduled_at, next_scheduled_at) + INTERVAL '30 days'
+					ELSE GREATEST(scheduled_at, next_scheduled_at)
+				END`,
+				enums.RoutinePeriod_Daily,
+				enums.RoutinePeriod_Weekly,
+				enums.RoutinePeriod_Monthly,
+			),
+			"next_scheduled_at": gorm.Expr(
+				`CASE period
+					WHEN ? THEN GREATEST(scheduled_at, next_scheduled_at) + INTERVAL '1 day'
+					WHEN ? THEN GREATEST(scheduled_at, next_scheduled_at) + INTERVAL '7 days'
+					WHEN ? THEN GREATEST(scheduled_at, next_scheduled_at) + INTERVAL '30 days'
+					ELSE GREATEST(scheduled_at, next_scheduled_at)
 				END`,
 				enums.RoutinePeriod_Daily,
 				enums.RoutinePeriod_Weekly,

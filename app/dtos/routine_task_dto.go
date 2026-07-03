@@ -67,14 +67,14 @@ type CreateRoutineTaskByStationIdReqDto struct {
 			UserId uuid.UUID
 		},
 		struct {
-			StationId   uuid.UUID                `json:"stationId" validate:"required"`
-			Title       string                   `json:"title" validate:"required,min=1,max=128"`
-			Purpose     enums.RoutineTaskPurpose `json:"purpose" validate:"required,isroutinetaskpurpose"`
-			Payload     datatypes.JSON           `json:"payload" validate:"omitempty,max=16777216"`
-			Priority    int32                    `json:"priority" validate:"omitempty,min=0,max=100"`
-			MaxAttempts int32                    `json:"maxAttempts" validate:"omitempty,min=1,max=20"`
-			Period      *enums.RoutinePeriod     `json:"period" validate:"omitnil,isroutineperiod"`
-			ScheduledAt time.Time                `json:"scheduledAt" validate:"required"`
+			StationId       uuid.UUID                `json:"stationId" validate:"required"`
+			Title           string                   `json:"title" validate:"required,min=1,max=128"`
+			Purpose         enums.RoutineTaskPurpose `json:"purpose" validate:"required,isroutinetaskpurpose"`
+			Payload         datatypes.JSON           `json:"payload" validate:"omitempty,max=16777216"`
+			Priority        int32                    `json:"priority" validate:"omitempty,min=0,max=100"`
+			MaxAttempts     int32                    `json:"maxAttempts" validate:"omitempty,min=1,max=20"`
+			Period          *enums.RoutinePeriod     `json:"period" validate:"omitnil,isroutineperiod"`
+			NextScheduledAt time.Time                `json:"nextScheduledAt" validate:"required"`
 		},
 		any,
 	]
@@ -91,14 +91,14 @@ type UpdateMyRoutineTaskByIdReqDto struct {
 		struct {
 			RoutineTaskId uuid.UUID `json:"routineTaskId" validate:"required"`
 			PartialUpdateDto[struct {
-				StationId   *uuid.UUID                `json:"stationId" validate:"omitnil"`
-				Title       *string                   `json:"title" validate:"omitnil,min=1,max=128"`
-				Purpose     *enums.RoutineTaskPurpose `json:"purpose" validate:"omitnil,isroutinetaskpurpose"`
-				Payload     *datatypes.JSON           `json:"payload" validate:"omitnil,max=16777216"`
-				Priority    *int32                    `json:"priority" validate:"omitnil,min=0,max=100"`
-				MaxAttempts *int32                    `json:"maxAttempts" validate:"omitnil,min=1,max=20"`
-				Period      *enums.RoutinePeriod      `json:"period" validate:"omitnil,isroutineperiod"`
-				ScheduledAt *time.Time                `json:"scheduledAt" validate:"omitnil"`
+				StationId       *uuid.UUID                `json:"stationId" validate:"omitnil"`
+				Title           *string                   `json:"title" validate:"omitnil,min=1,max=128"`
+				Purpose         *enums.RoutineTaskPurpose `json:"purpose" validate:"omitnil,isroutinetaskpurpose"`
+				Payload         *datatypes.JSON           `json:"payload" validate:"omitnil,max=16777216"`
+				Priority        *int32                    `json:"priority" validate:"omitnil,min=0,max=100"`
+				MaxAttempts     *int32                    `json:"maxAttempts" validate:"omitnil,min=1,max=20"`
+				Period          *enums.RoutinePeriod      `json:"period" validate:"omitnil,isroutineperiod"`
+				NextScheduledAt *time.Time                `json:"nextScheduledAt" validate:"omitnil"`
 			}]
 		},
 		any,
@@ -263,6 +263,7 @@ type GetMyRoutineTaskByIdResDto struct {
 	Attempts        int32                    `json:"attempts"`
 	MaxAttempts     int32                    `json:"maxAttempts"`
 	Period          *enums.RoutinePeriod     `json:"period"`
+	NextScheduledAt time.Time                `json:"nextScheduledAt"`
 	ScheduledAt     time.Time                `json:"scheduledAt"`
 	ActualStartedAt *time.Time               `json:"actualStartedAt"`
 	ActualEndedAt   *time.Time               `json:"actualEndedAt"`
@@ -281,6 +282,7 @@ type GetAllMyRoutineTasksByStationIdsResDto = []struct {
 	Attempts        int32                    `json:"attempts"`
 	MaxAttempts     int32                    `json:"maxAttempts"`
 	Period          *enums.RoutinePeriod     `json:"period"`
+	NextScheduledAt time.Time                `json:"nextScheduledAt"`
 	ScheduledAt     time.Time                `json:"scheduledAt"`
 	ActualStartedAt *time.Time               `json:"actualStartedAt"`
 	ActualEndedAt   *time.Time               `json:"actualEndedAt"`

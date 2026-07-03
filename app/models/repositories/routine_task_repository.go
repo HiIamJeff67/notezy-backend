@@ -226,13 +226,19 @@ func (r *RoutineTaskRepository) CreateOneByStationId(
 		return nil, exceptions.RoutineTask.NoPermission("create a routine task under this station")
 	}
 
+	if input.NextScheduledAt.IsZero() {
+		parsedOptions.DB.Rollback()
+		return nil, exceptions.RoutineTask.InvalidInput().WithOrigin(fmt.Errorf("nextScheduledAt is required"))
+	}
+
 	newRoutineTask := schemas.RoutineTask{}
 	if err := copier.Copy(&newRoutineTask, &input); err != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exceptions.RoutineTask.InvalidInput().WithOrigin(err)
 	}
 	newRoutineTask.StationId = stationId
-	newRoutineTask.ScheduledAt = input.ScheduledAt.Truncate(time.Minute)
+	newRoutineTask.NextScheduledAt = input.NextScheduledAt.Truncate(time.Minute)
+	newRoutineTask.ScheduledAt = newRoutineTask.NextScheduledAt
 
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTask{}).
@@ -300,9 +306,9 @@ func (r *RoutineTaskRepository) CreateManyByStationIds(
 		if !isStationValid[in.StationId] {
 			continue
 		}
-		if in.ScheduledAt.IsZero() {
+		if in.NextScheduledAt.IsZero() {
 			parsedOptions.DB.Rollback()
-			return nil, exceptions.RoutineTask.InvalidInput().WithOrigin(fmt.Errorf("scheduledAt is required"))
+			return nil, exceptions.RoutineTask.InvalidInput().WithOrigin(fmt.Errorf("nextScheduledAt is required"))
 		}
 		newRoutineTask := schemas.RoutineTask{
 			Id:        uuid.New(),
@@ -313,7 +319,8 @@ func (r *RoutineTaskRepository) CreateManyByStationIds(
 			return nil, exceptions.RoutineTask.InvalidInput().WithOrigin(err)
 		}
 		newRoutineTask.StationId = in.StationId
-		newRoutineTask.ScheduledAt = in.ScheduledAt.Truncate(time.Minute)
+		newRoutineTask.NextScheduledAt = in.NextScheduledAt.Truncate(time.Minute)
+		newRoutineTask.ScheduledAt = newRoutineTask.NextScheduledAt
 		newRoutineTasks = append(newRoutineTasks, newRoutineTask)
 	}
 
@@ -379,9 +386,25 @@ func (r *RoutineTaskRepository) UpdateOneById(
 			return nil, exceptions.RoutineTask.NoPermission("move a routine task to this station")
 		}
 	}
-	if input.Values.ScheduledAt != nil {
+	if input.Values.NextScheduledAt != nil {
+		truncatedNextScheduledAt := input.Values.NextScheduledAt.Truncate(time.Minute)
+		input.Values.NextScheduledAt = &truncatedNextScheduledAt
+		scheduledAt := existingRoutineTask.ScheduledAt
+		if truncatedNextScheduledAt.After(scheduledAt) {
+			scheduledAt = truncatedNextScheduledAt
+		}
+		input.Values.ScheduledAt = &scheduledAt
+	} else if input.Values.ScheduledAt != nil {
 		truncatedScheduledAt := input.Values.ScheduledAt.Truncate(time.Minute)
 		input.Values.ScheduledAt = &truncatedScheduledAt
+	}
+	if input.SetNull != nil {
+		for fieldName := range *input.SetNull {
+			normalizedFieldName := strings.ToLower(strings.ReplaceAll(fieldName, "_", ""))
+			if normalizedFieldName == "scheduledat" || normalizedFieldName == "nextscheduledat" {
+				delete(*input.SetNull, fieldName)
+			}
+		}
 	}
 
 	updates, err := util.PartialUpdatePreprocess(input.Values, input.SetNull, *existingRoutineTask)
@@ -480,13 +503,19 @@ func (r *RoutineTaskRepository) UpdateManyByIds(
 
 		setPeriodNull := util.CheckSetNull(in.PartialUpdateInput.SetNull, "Period")
 
+		nextScheduledAt := in.PartialUpdateInput.Values.NextScheduledAt
+		if nextScheduledAt != nil {
+			truncatedNextScheduledAt := nextScheduledAt.Truncate(time.Minute)
+			nextScheduledAt = &truncatedNextScheduledAt
+		}
+
 		scheduledAt := in.PartialUpdateInput.Values.ScheduledAt
 		if scheduledAt != nil {
 			truncatedScheduledAt := scheduledAt.Truncate(time.Minute)
 			scheduledAt = &truncatedScheduledAt
 		}
 
-		valuePlaceholders = append(valuePlaceholders, `(?::uuid, ?::uuid, ?::text, ?::"RoutineTaskPurpose", ?::jsonb, ?::integer, ?::integer, ?::"RoutinePeriod", ?::timestamptz, ?::boolean)`)
+		valuePlaceholders = append(valuePlaceholders, `(?::uuid, ?::uuid, ?::text, ?::"RoutineTaskPurpose", ?::jsonb, ?::integer, ?::integer, ?::"RoutinePeriod", ?::timestamptz, ?::timestamptz, ?::boolean)`)
 		valueArgs = append(valueArgs,
 			in.Id,
 			in.PartialUpdateInput.Values.StationId,
@@ -496,6 +525,7 @@ func (r *RoutineTaskRepository) UpdateManyByIds(
 			in.PartialUpdateInput.Values.Priority,
 			in.PartialUpdateInput.Values.MaxAttempts,
 			in.PartialUpdateInput.Values.Period,
+			nextScheduledAt,
 			scheduledAt,
 			setPeriodNull,
 		)
@@ -519,9 +549,14 @@ func (r *RoutineTaskRepository) UpdateManyByIds(
 				WHEN v.set_period_null::boolean THEN NULL
 				ELSE COALESCE(v.period::"RoutinePeriod", rt.period)
 			END,
-			scheduled_at = COALESCE(v.scheduled_at::timestamptz, rt.scheduled_at),
+			next_scheduled_at = COALESCE(v.next_scheduled_at::timestamptz, rt.next_scheduled_at),
+			scheduled_at = CASE
+				WHEN v.scheduled_at IS NOT NULL THEN v.scheduled_at::timestamptz
+				WHEN v.next_scheduled_at IS NOT NULL THEN GREATEST(rt.scheduled_at, v.next_scheduled_at::timestamptz)
+				ELSE rt.scheduled_at
+			END,
 			updated_at = NOW()
-		FROM (VALUES %s) AS v(id, station_id, title, purpose, payload, priority, max_attempts, period, scheduled_at, set_period_null)
+		FROM (VALUES %s) AS v(id, station_id, title, purpose, payload, priority, max_attempts, period, next_scheduled_at, scheduled_at, set_period_null)
 		WHERE rt.id = v.id::uuid
 	`, strings.Join(valuePlaceholders, ","))
 	result := parsedOptions.DB.Exec(sql, valueArgs...)

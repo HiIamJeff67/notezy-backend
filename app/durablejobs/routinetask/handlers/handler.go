@@ -48,6 +48,12 @@ func flattenArborizedBlock(
 	blocks := make([]schemas.Block, len(rawFlattenedBlocks))
 	blockIds := make([]uuid.UUID, len(rawFlattenedBlocks))
 	for index, rawFlattenedBlock := range rawFlattenedBlocks {
+		blockType := rawFlattenedBlock.Type
+		if rawFlattenedBlock.Id == uuid.Nil || !blockType.IsValidEnum() {
+			return nil, nil, 0, exceptions.RoutineTask.InvalidDto().
+				WithOrigin(fmt.Errorf("invalid arborizedEditableBlock at flattened index %d", index))
+		}
+
 		blockIds[index] = rawFlattenedBlock.Id
 		blocks[index] = schemas.Block{
 			Id:            rawFlattenedBlock.Id,

@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
+	matchers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/matchers"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
@@ -17,6 +18,7 @@ import (
 
 type RootShelfHandler struct {
 	db                  *gorm.DB
+	namePatternMatcher  matchers.NamePatternMatcherInterface
 	rootShelfRepository repositories.RootShelfRepositoryInterface
 	subShelfRepository  repositories.SubShelfRepositoryInterface
 }
@@ -28,6 +30,7 @@ func NewRootShelfHandler(
 ) RootShelfHandler {
 	return RootShelfHandler{
 		db:                  db,
+		namePatternMatcher:  matchers.NewNamePatternMatcher(),
 		rootShelfRepository: rootShelfRepository,
 		subShelfRepository:  subShelfRepository,
 	}
@@ -52,10 +55,14 @@ func (h RootShelfHandler) HandleCreateRootShelf(
 		if exception != nil {
 			continue
 		}
+		name, exception := h.namePatternMatcher.Match(payload.Name, payload.NamePattern, task)
+		if exception != nil {
+			continue
+		}
 		bulkInputs = append(bulkInputs, inputs.BulkCreateRootShelfInput{
 			UserId: ownerId,
 			Id:     payload.Id,
-			Name:   payload.Name,
+			Name:   name,
 		})
 		taskIndexes = append(taskIndexes, taskIndex)
 	}
@@ -102,12 +109,20 @@ func (h RootShelfHandler) HandleUpdateRootShelf(
 		if payload.Name == nil {
 			continue
 		}
+		name := *payload.Name
+		if payload.NamePattern != nil {
+			matchedName, exception := h.namePatternMatcher.Match(name, *payload.NamePattern, task)
+			if exception != nil {
+				continue
+			}
+			name = matchedName
+		}
 		bulkInputs = append(bulkInputs, inputs.BulkUpdateRootShelfInput{
 			UserId: ownerId,
 			Id:     payload.RootShelfId,
 			PartialUpdateInput: inputs.PartialUpdateRootShelfInput{
 				Values: inputs.UpdateRootShelfInput{
-					Name: payload.Name,
+					Name: &name,
 				},
 			},
 		})

@@ -6,8 +6,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 	"gorm.io/gorm"
+
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 type Engine struct {
@@ -28,6 +29,19 @@ func NewEngine(db *gorm.DB, maxWorkers ...int) Engine {
 		ticker:         time.NewTicker(time.Minute),
 		isHealthy:      1,
 	}
+}
+
+func (e *Engine) runOnce(ctx context.Context) {
+	routineTasks, taskIdToOwnerId, exception := e.claimer.Claim(ctx)
+	if exception != nil {
+		atomic.StoreInt32(&e.isHealthy, 0)
+		return
+	}
+	if exception = e.handlerManager.Manage(ctx, routineTasks, taskIdToOwnerId); exception != nil {
+		atomic.StoreInt32(&e.isHealthy, 0)
+		return
+	}
+	atomic.StoreInt32(&e.isHealthy, 1)
 }
 
 func (e *Engine) Start(ctx context.Context) func() {
@@ -69,17 +83,4 @@ func (e *Engine) Stop() {
 
 func (e *Engine) IsHealthy() bool {
 	return atomic.LoadInt32(&e.isHealthy) == 1
-}
-
-func (e *Engine) runOnce(ctx context.Context) {
-	routineTasks, taskIdToOwnerId, exception := e.claimer.Claim(ctx)
-	if exception != nil {
-		atomic.StoreInt32(&e.isHealthy, 0)
-		return
-	}
-	if exception = e.handlerManager.Manage(ctx, routineTasks, taskIdToOwnerId); exception != nil {
-		atomic.StoreInt32(&e.isHealthy, 0)
-		return
-	}
-	atomic.StoreInt32(&e.isHealthy, 1)
 }

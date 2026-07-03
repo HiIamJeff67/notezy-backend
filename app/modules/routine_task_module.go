@@ -16,12 +16,14 @@ type RoutineTaskModule struct {
 }
 
 func NewRoutineTaskModule() *RoutineTaskModule {
-	routineTaskRepository := repositories.NewRoutineTaskRepository(scopes.NewRoutineTaskScope())
+	routineTaskScope := scopes.NewRoutineTaskScope()
+	routineTaskRepository := repositories.NewRoutineTaskRepository(routineTaskScope)
 	editableBlockAdapter := adapters.NewEditableBlockAdapter()
 	routineTaskPayloadAdapter := adapters.NewRoutineTaskPayloadAdapter(editableBlockAdapter)
 
 	routineTaskService := services.NewRoutineTaskService(
 		models.NotezyDB,
+		routineTaskScope,
 		routineTaskRepository,
 		routineTaskPayloadAdapter,
 	)

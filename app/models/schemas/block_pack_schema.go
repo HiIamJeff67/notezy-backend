@@ -11,9 +11,9 @@ import (
 
 type BlockPack struct {
 	Id                  uuid.UUID            `json:"id" gorm:"column:id; type:uuid; primaryKey; not null; default:gen_random_uuid();"`
-	ParentSubShelfId    uuid.UUID            `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id; type:uuid; not null; uniqueIndex:block_pack_idx_parent_sub_shelf_id_name,where:deleted_at IS NULL;"`
+	ParentSubShelfId    uuid.UUID            `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id; type:uuid; not null;"` // Previous unique-name constraint: uniqueIndex:block_pack_idx_parent_sub_shelf_id_name,where:deleted_at IS NULL
 	FinalBlockGroupId   *uuid.UUID           `json:"finalBlockGroupId" gorm:"column:final_block_group_id; type:uuid; default:null;"`
-	Name                string               `json:"name" gorm:"column:name; size:128; not null; default:'undefined'; uniqueIndex:block_pack_idx_parent_sub_shelf_id_name,where:deleted_at IS NULL;"`
+	Name                string               `json:"name" gorm:"column:name; size:128; not null; default:'undefined';"` // Previous unique-name constraint: uniqueIndex:block_pack_idx_parent_sub_shelf_id_name,where:deleted_at IS NULL
 	Icon                *enums.SupportedIcon `json:"icon" gorm:"column:icon; type:\"SupportedIcon\"; default:null;"`
 	HeaderBackgroundURL *string              `json:"headerBackgroundURL" gorm:"column:header_background_url; default:null;"`
 	BlockCount          int64                `json:"blockCount" gorm:"column:block_count; type:bigint; not null; default:0; check:block_pack_check_max_block_count,block_count <= 1000;"`

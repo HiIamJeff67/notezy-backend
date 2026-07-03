@@ -982,6 +982,10 @@ func (r *BlockRepository) BulkCreateMany(
 		if !successes[index] {
 			continue
 		}
+		if len(in.Blocks) == 0 {
+			successes[index] = false
+			continue
+		}
 		for _, inputBlock := range in.Blocks {
 			newBlocks = append(newBlocks, schemas.Block{
 				Id:            inputBlock.Id,

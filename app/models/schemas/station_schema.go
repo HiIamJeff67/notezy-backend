@@ -13,7 +13,7 @@ import (
 type Station struct {
 	Id                  uuid.UUID            `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid();"`
 	OwnerId             uuid.UUID            `json:"ownerId" gorm:"column:owner_id; type:uuid; not null;"`
-	Name                string               `json:"name" gorm:"column:name; size:128; unique; not null; default:'undefined';"`
+	Name                string               `json:"name" gorm:"column:name; size:128; not null; default:'undefined';"` // Previous unique-name constraint: unique
 	Description         string               `json:"description" gorm:"column:description; size:1024; not null; default:'';"`
 	Icon                *enums.SupportedIcon `json:"icon" gorm:"column:icon; type:\"SupportedIcon\"; default:null;"`
 	HeaderBackgroundURL *string              `json:"headerBackgroundURL" gorm:"column:header_background_url; default:null;"`

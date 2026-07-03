@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
+	matchers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/matchers"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
@@ -16,14 +17,16 @@ import (
 )
 
 type RoutineHandler struct {
-	db                *gorm.DB
-	routineRepository repositories.RoutineRepositoryInterface
+	db                 *gorm.DB
+	namePatternMatcher matchers.NamePatternMatcherInterface
+	routineRepository  repositories.RoutineRepositoryInterface
 }
 
 func NewRoutineHandler(db *gorm.DB, routineRepository repositories.RoutineRepositoryInterface) RoutineHandler {
 	return RoutineHandler{
-		db:                db,
-		routineRepository: routineRepository,
+		db:                 db,
+		namePatternMatcher: matchers.NewNamePatternMatcher(),
+		routineRepository:  routineRepository,
 	}
 }
 
@@ -46,11 +49,15 @@ func (h RoutineHandler) HandleCreateRoutine(
 		if exception != nil {
 			continue
 		}
+		title, exception := h.namePatternMatcher.Match(payload.Title, payload.TitlePattern, task)
+		if exception != nil {
+			continue
+		}
 		bulkInputs = append(bulkInputs, inputs.BulkCreateRoutineInput{
 			UserId:           ownerId,
 			Id:               payload.Id,
 			StationId:        payload.StationId,
-			Title:            payload.Title,
+			Title:            title,
 			Description:      payload.Description,
 			Status:           payload.Status,
 			IsPinned:         payload.IsPinned,
@@ -101,12 +108,20 @@ func (h RoutineHandler) HandleUpdateRoutine(
 		if exception != nil {
 			continue
 		}
+		title := payload.Title
+		if title != nil && payload.TitlePattern != nil {
+			matchedTitle, exception := h.namePatternMatcher.Match(*title, *payload.TitlePattern, task)
+			if exception != nil {
+				continue
+			}
+			title = &matchedTitle
+		}
 		bulkInputs = append(bulkInputs, inputs.BulkUpdateRoutineInput{
 			UserId: ownerId,
 			Id:     payload.RoutineId,
 			PartialUpdateInput: inputs.PartialUpdateRoutineInput{
 				Values: inputs.UpdateRoutineInput{
-					Title:            payload.Title,
+					Title:            title,
 					Description:      payload.Description,
 					Status:           payload.Status,
 					IsPinned:         payload.IsPinned,

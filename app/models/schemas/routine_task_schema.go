@@ -24,6 +24,7 @@ type RoutineTask struct {
 	Attempts          int32                    `json:"attempts" gorm:"column:attempts; type:integer; not null; default:0; check:routine_task_check_attempts_non_negative,attempts >= 0;"`
 	MaxAttempts       int32                    `json:"maxAttempts" gorm:"column:max_attempts; type:integer; not null; default:1; check:routine_task_check_max_attempts_non_negative,max_attempts > 0;"`
 	Period            *enums.RoutinePeriod     `json:"period" gorm:"column:period; type:\"RoutinePeriod\"; default:null;"`
+	NextScheduledAt   time.Time                `json:"nextScheduledAt" gorm:"column:next_scheduled_at; type:timestamptz; not null; default:NOW();"`
 	ScheduledAt       time.Time                `json:"scheduledAt" gorm:"column:scheduled_at; type:timestamptz; not null; default:NOW();"`
 	ActualStartedAt   *time.Time               `json:"actualStartedAt" gorm:"column:actual_started_at; type:timestamptz; default:null;"`
 	ActualEndedAt     *time.Time               `json:"actualEndedAt" gorm:"column:actual_ended_at; type:timestamptz; default:null;"`
@@ -55,6 +56,11 @@ const (
 /* ============================== Relative Type Conversion ============================== */
 
 func (rt *RoutineTask) ToPrivateRoutineTask() *gqlmodels.PrivateRoutineTask {
+	routineIds := make([]uuid.UUID, 0, len(rt.RoutinesToTasks))
+	for _, routineToTask := range rt.RoutinesToTasks {
+		routineIds = append(routineIds, routineToTask.RoutineId)
+	}
+
 	return &gqlmodels.PrivateRoutineTask{
 		ID:              rt.Id,
 		StationID:       rt.StationId,
@@ -67,10 +73,12 @@ func (rt *RoutineTask) ToPrivateRoutineTask() *gqlmodels.PrivateRoutineTask {
 		Attempts:        rt.Attempts,
 		MaxAttempts:     rt.MaxAttempts,
 		Period:          rt.Period,
+		NextScheduledAt: rt.NextScheduledAt,
 		ScheduledAt:     rt.ScheduledAt,
 		ActualStartedAt: rt.ActualStartedAt,
 		ActualEndedAt:   rt.ActualEndedAt,
 		UpdatedAt:       rt.UpdatedAt,
 		CreatedAt:       rt.CreatedAt,
+		RoutineIds:      routineIds,
 	}
 }

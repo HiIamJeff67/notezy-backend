@@ -18,6 +18,7 @@ import (
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	util "github.com/HiIamJeff67/notezy-backend/app/util"
 	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
@@ -46,23 +47,29 @@ type RoutineTaskServiceInterface interface {
 
 type RoutineTaskService struct {
 	db                        *gorm.DB
+	routineTaskScope          scopes.RoutineTaskScopeInterface
 	routineTaskRepository     repositories.RoutineTaskRepositoryInterface
 	routineTaskPayloadAdapter adapters.RoutineTaskPayloadAdapterInterface
 }
 
 func NewRoutineTaskService(
 	db *gorm.DB,
+	routineTaskScope scopes.RoutineTaskScopeInterface,
 	routineTaskRepository repositories.RoutineTaskRepositoryInterface,
 	routineTaskPayloadAdapter adapters.RoutineTaskPayloadAdapterInterface,
 ) RoutineTaskServiceInterface {
 	if db == nil {
 		db = models.NotezyDB
 	}
+	if routineTaskScope == nil {
+		routineTaskScope = scopes.NewRoutineTaskScope()
+	}
 	if routineTaskPayloadAdapter == nil {
 		routineTaskPayloadAdapter = adapters.NewRoutineTaskPayloadAdapter(nil)
 	}
 	return &RoutineTaskService{
 		db:                        db,
+		routineTaskScope:          routineTaskScope,
 		routineTaskRepository:     routineTaskRepository,
 		routineTaskPayloadAdapter: routineTaskPayloadAdapter,
 	}
@@ -189,6 +196,7 @@ func (s *RoutineTaskService) GetMyRoutineTaskById(
 		Attempts:        routineTask.Attempts,
 		MaxAttempts:     routineTask.MaxAttempts,
 		Period:          routineTask.Period,
+		NextScheduledAt: routineTask.NextScheduledAt,
 		ScheduledAt:     routineTask.ScheduledAt,
 		ActualStartedAt: routineTask.ActualStartedAt,
 		ActualEndedAt:   routineTask.ActualEndedAt,
@@ -233,6 +241,7 @@ func (s *RoutineTaskService) GetAllMyRoutineTasksByStationIds(
 			Attempts        int32                    "json:\"attempts\""
 			MaxAttempts     int32                    "json:\"maxAttempts\""
 			Period          *enums.RoutinePeriod     "json:\"period\""
+			NextScheduledAt time.Time                "json:\"nextScheduledAt\""
 			ScheduledAt     time.Time                "json:\"scheduledAt\""
 			ActualStartedAt *time.Time               "json:\"actualStartedAt\""
 			ActualEndedAt   *time.Time               "json:\"actualEndedAt\""
@@ -249,6 +258,7 @@ func (s *RoutineTaskService) GetAllMyRoutineTasksByStationIds(
 			Attempts:        routineTask.Attempts,
 			MaxAttempts:     routineTask.MaxAttempts,
 			Period:          routineTask.Period,
+			NextScheduledAt: routineTask.NextScheduledAt,
 			ScheduledAt:     routineTask.ScheduledAt,
 			ActualStartedAt: routineTask.ActualStartedAt,
 			ActualEndedAt:   routineTask.ActualEndedAt,
@@ -308,6 +318,7 @@ func (s *RoutineTaskService) GetAllMyRoutineTasks(
 			Attempts:        routineTask.Attempts,
 			MaxAttempts:     routineTask.MaxAttempts,
 			Period:          routineTask.Period,
+			NextScheduledAt: routineTask.NextScheduledAt,
 			ScheduledAt:     routineTask.ScheduledAt,
 			ActualStartedAt: routineTask.ActualStartedAt,
 			ActualEndedAt:   routineTask.ActualEndedAt,
@@ -335,13 +346,13 @@ func (s *RoutineTaskService) CreateRoutineTaskByStationId(
 		reqDto.Body.StationId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateRoutineTaskInput{
-			Title:       reqDto.Body.Title,
-			Purpose:     reqDto.Body.Purpose,
-			Payload:     reqDto.Body.Payload,
-			Priority:    reqDto.Body.Priority,
-			MaxAttempts: reqDto.Body.MaxAttempts,
-			Period:      reqDto.Body.Period,
-			ScheduledAt: reqDto.Body.ScheduledAt,
+			Title:           reqDto.Body.Title,
+			Purpose:         reqDto.Body.Purpose,
+			Payload:         reqDto.Body.Payload,
+			Priority:        reqDto.Body.Priority,
+			MaxAttempts:     reqDto.Body.MaxAttempts,
+			Period:          reqDto.Body.Period,
+			NextScheduledAt: reqDto.Body.NextScheduledAt,
 		},
 		options.WithDB(db),
 	)
@@ -393,14 +404,14 @@ func (s *RoutineTaskService) UpdateMyRoutineTaskById(
 		reqDto.ContextFields.UserId,
 		inputs.PartialUpdateRoutineTaskInput{
 			Values: inputs.UpdateRoutineTaskInput{
-				StationId:   reqDto.Body.Values.StationId,
-				Title:       reqDto.Body.Values.Title,
-				Purpose:     reqDto.Body.Values.Purpose,
-				Payload:     reqDto.Body.Values.Payload,
-				Priority:    reqDto.Body.Values.Priority,
-				MaxAttempts: reqDto.Body.Values.MaxAttempts,
-				Period:      reqDto.Body.Values.Period,
-				ScheduledAt: reqDto.Body.Values.ScheduledAt,
+				StationId:       reqDto.Body.Values.StationId,
+				Title:           reqDto.Body.Values.Title,
+				Purpose:         reqDto.Body.Values.Purpose,
+				Payload:         reqDto.Body.Values.Payload,
+				Priority:        reqDto.Body.Values.Priority,
+				MaxAttempts:     reqDto.Body.Values.MaxAttempts,
+				Period:          reqDto.Body.Values.Period,
+				NextScheduledAt: reqDto.Body.Values.NextScheduledAt,
 			},
 			SetNull: reqDto.Body.SetNull,
 		},
@@ -899,7 +910,11 @@ func (s *RoutineTaskService) SearchPrivateRoutineTasks(
 	query = query.Limit(limit + 1)
 
 	var routineTasks []PrivateRoutineTask
-	if err := query.Find(&routineTasks).Error; err != nil {
+	if err := query.Scopes(s.routineTaskScope.IncludePreloads(
+		[]schemas.RoutineTaskRelation{
+			schemas.RoutineTaskRelation_RoutinesToTasks,
+		},
+	)).Find(&routineTasks).Error; err != nil {
 		return nil, exceptions.RoutineTask.NotFound().WithOrigin(err)
 	}
 

@@ -115,10 +115,12 @@ type ComplexityRoot struct {
 		CreatedAt       func(childComplexity int) int
 		ID              func(childComplexity int) int
 		MaxAttempts     func(childComplexity int) int
+		NextScheduledAt func(childComplexity int) int
 		Payload         func(childComplexity int) int
 		Period          func(childComplexity int) int
 		Priority        func(childComplexity int) int
 		Purpose         func(childComplexity int) int
+		RoutineIds      func(childComplexity int) int
 		ScheduledAt     func(childComplexity int) int
 		StationID       func(childComplexity int) int
 		Status          func(childComplexity int) int
@@ -840,6 +842,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateRoutineTask.MaxAttempts(childComplexity), true
 
+	case "PrivateRoutineTask.nextScheduledAt":
+		if e.complexity.PrivateRoutineTask.NextScheduledAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTask.NextScheduledAt(childComplexity), true
+
 	case "PrivateRoutineTask.payload":
 		if e.complexity.PrivateRoutineTask.Payload == nil {
 			break
@@ -867,6 +876,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateRoutineTask.Purpose(childComplexity), true
+
+	case "PrivateRoutineTask.routineIds":
+		if e.complexity.PrivateRoutineTask.RoutineIds == nil {
+			break
+		}
+
+		return e.complexity.PrivateRoutineTask.RoutineIds(childComplexity), true
 
 	case "PrivateRoutineTask.scheduledAt":
 		if e.complexity.PrivateRoutineTask.ScheduledAt == nil {
@@ -2674,11 +2690,15 @@ type PrivateSearchableRoutine {
   attempts: Int32!
   maxAttempts: Int32!
   period: RoutinePeriod
+  nextScheduledAt: Time!
   scheduledAt: Time!
   actualStartedAt: Time
   actualEndedAt: Time
   updatedAt: Time!
   createdAt: Time!
+
+  # relations
+  routineIds: [UUID!]!
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/routine_task_record.graphql", Input: `type PrivateRoutineTaskRecord {

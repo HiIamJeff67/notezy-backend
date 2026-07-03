@@ -494,11 +494,20 @@ func (s *StationService) VisualizeMyTotalCount(
 
 	if reqDto.Param.Permission == enums.AccessControlPermission_Owner {
 		result := db.Model(&schemas.UserAccount{}).
-			Select("station_count, routine_count, routine_task_count, routine_tag_count").
+			Select("station_count, routine_count, routine_tag_count").
 			Where(`user_id = ?`, reqDto.ContextFields.UserId).
 			Scan(&totals)
 		if result.Error != nil {
 			return nil, exceptions.Station.NotFound().WithOrigin(result.Error)
+		}
+
+		result = db.Model(&schemas.RoutineTask{}).
+			Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = "RoutineTaskTable".station_id`).
+			Joins(`INNER JOIN "StationTable" station ON station.id = "RoutineTaskTable".station_id AND station.deleted_at IS NULL`).
+			Where("uts.user_id = ? AND uts.permission = ?", reqDto.ContextFields.UserId, reqDto.Param.Permission).
+			Count(&totals.RoutineTaskCount)
+		if result.Error != nil {
+			return nil, exceptions.RoutineTask.NotFound().WithOrigin(result.Error)
 		}
 
 		return &dtos.VisualizeMyTotalCountResDto{
@@ -530,8 +539,7 @@ func (s *StationService) VisualizeMyTotalCount(
 	result := db.Model(&schemas.Station{}).
 		Select(`
 			COUNT(DISTINCT "StationTable".id) AS station_count,
-			COALESCE(SUM("StationTable".routine_count), 0) AS routine_count,
-			COALESCE(SUM("StationTable".routine_task_count), 0) AS routine_task_count
+			COALESCE(SUM("StationTable".routine_count), 0) AS routine_count
 		`).
 		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = "StationTable".id`).
 		Where("uts.user_id = ? AND uts.permission = ?", reqDto.ContextFields.UserId, reqDto.Param.Permission).
@@ -539,6 +547,15 @@ func (s *StationService) VisualizeMyTotalCount(
 		Scan(&totals)
 	if result.Error != nil {
 		return nil, exceptions.Station.NotFound().WithOrigin(result.Error)
+	}
+
+	result = db.Model(&schemas.RoutineTask{}).
+		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = "RoutineTaskTable".station_id`).
+		Joins(`INNER JOIN "StationTable" station ON station.id = "RoutineTaskTable".station_id AND station.deleted_at IS NULL`).
+		Where("uts.user_id = ? AND uts.permission = ?", reqDto.ContextFields.UserId, reqDto.Param.Permission).
+		Count(&totals.RoutineTaskCount)
+	if result.Error != nil {
+		return nil, exceptions.RoutineTask.NotFound().WithOrigin(result.Error)
 	}
 
 	result = db.Model(&schemas.UsersToRoutineTags{}).

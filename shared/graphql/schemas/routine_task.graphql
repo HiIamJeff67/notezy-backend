@@ -10,9 +10,13 @@ type PrivateRoutineTask {
   attempts: Int32!
   maxAttempts: Int32!
   period: RoutinePeriod
+  nextScheduledAt: Time!
   scheduledAt: Time!
   actualStartedAt: Time
   actualEndedAt: Time
   updatedAt: Time!
   createdAt: Time!
+
+  # relations
+  routineIds: [UUID!]!
 }

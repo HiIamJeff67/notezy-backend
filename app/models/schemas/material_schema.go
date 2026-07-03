@@ -11,8 +11,8 @@ import (
 
 type Material struct {
 	Id               uuid.UUID                 `json:"id" gorm:"column:id; type:uuid; primaryKey; not null;"`
-	ParentSubShelfId uuid.UUID                 `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id; type:uuid; not null; uniqueIndex:material_idx_parent_sub_shelf_id_name,where:deleted_at IS NULL;"`
-	Name             string                    `json:"name" gorm:"column:name; size:128; not null; default:'undefined'; uniqueIndex:material_idx_parent_sub_shelf_id_name,where:deleted_at IS NULL;"`
+	ParentSubShelfId uuid.UUID                 `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id; type:uuid; not null;"` // Previous unique-name constraint: uniqueIndex:material_idx_parent_sub_shelf_id_name,where:deleted_at IS NULL
+	Name             string                    `json:"name" gorm:"column:name; size:128; not null; default:'undefined';"`        // Previous unique-name constraint: uniqueIndex:material_idx_parent_sub_shelf_id_name,where:deleted_at IS NULL
 	Size             int64                     `json:"size" gorm:"column:size; type:bigint; not null; default:0;"`
 	ContentKey       string                    `json:"contentKey" gorm:"column:content_key; unique; not null;"`
 	ContentType      enums.MaterialContentType `json:"contentType" gorm:"column:content_type; type:\"MaterialContentType\"; not null; default:'none';"`
@@ -26,8 +26,7 @@ type Material struct {
 }
 
 // Constraints:
-// Material.ParentSubShelfId + Material.Name as the unique constraints (That means the material name should be unique in the current sub shelf layer)
-// 	  Also add the DeletedAt as a part of the constraints, since the user may create couple files with the same name, and delete it, and then create it again and again...
+// Duplicate names are allowed. Previously, Material.ParentSubShelfId + Material.Name was unique while DeletedAt was NULL.
 
 // Material Table Name
 func (Material) TableName() string {

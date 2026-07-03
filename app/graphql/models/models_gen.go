@@ -106,11 +106,13 @@ type PrivateRoutineTask struct {
 	Attempts        int32                    `json:"attempts"`
 	MaxAttempts     int32                    `json:"maxAttempts"`
 	Period          *enums.RoutinePeriod     `json:"period,omitempty"`
+	NextScheduledAt time.Time                `json:"nextScheduledAt"`
 	ScheduledAt     time.Time                `json:"scheduledAt"`
 	ActualStartedAt *time.Time               `json:"actualStartedAt,omitempty"`
 	ActualEndedAt   *time.Time               `json:"actualEndedAt,omitempty"`
 	UpdatedAt       time.Time                `json:"updatedAt"`
 	CreatedAt       time.Time                `json:"createdAt"`
+	RoutineIds      []uuid.UUID              `json:"routineIds"`
 }
 
 type PrivateRoutineTaskRecord struct {

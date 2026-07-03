@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
+	matchers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/matchers"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
@@ -17,6 +18,7 @@ import (
 
 type SubShelfHandler struct {
 	db                  *gorm.DB
+	namePatternMatcher  matchers.NamePatternMatcherInterface
 	subShelfRepository  repositories.SubShelfRepositoryInterface
 	materialRepository  repositories.MaterialRepositoryInterface
 	blockPackRepository repositories.BlockPackRepositoryInterface
@@ -30,6 +32,7 @@ func NewSubShelfHandler(
 ) SubShelfHandler {
 	return SubShelfHandler{
 		db:                  db,
+		namePatternMatcher:  matchers.NewNamePatternMatcher(),
 		subShelfRepository:  subShelfRepository,
 		materialRepository:  materialRepository,
 		blockPackRepository: blockPackRepository,
@@ -55,12 +58,16 @@ func (h SubShelfHandler) HandleCreateSubShelf(
 		if exception != nil {
 			continue
 		}
+		name, exception := h.namePatternMatcher.Match(payload.Name, payload.NamePattern, task)
+		if exception != nil {
+			continue
+		}
 		bulkInputs = append(bulkInputs, inputs.BulkCreateSubShelfInput{
 			UserId:         ownerId,
 			Id:             payload.Id,
 			RootShelfId:    payload.RootShelfId,
 			PrevSubShelfId: payload.PrevSubShelfId,
-			Name:           payload.Name,
+			Name:           name,
 		})
 		taskIndexes = append(taskIndexes, taskIndex)
 	}
@@ -107,12 +114,20 @@ func (h SubShelfHandler) HandleUpdateSubShelf(
 		if payload.Name == nil {
 			continue
 		}
+		name := *payload.Name
+		if payload.NamePattern != nil {
+			matchedName, exception := h.namePatternMatcher.Match(name, *payload.NamePattern, task)
+			if exception != nil {
+				continue
+			}
+			name = matchedName
+		}
 		bulkInputs = append(bulkInputs, inputs.BulkUpdateSubShelfInput{
 			UserId: ownerId,
 			Id:     payload.SubShelfId,
 			PartialUpdateInput: inputs.PartialUpdateSubShelfInput{
 				Values: inputs.UpdateSubShelfInput{
-					Name: payload.Name,
+					Name: &name,
 				},
 			},
 		})

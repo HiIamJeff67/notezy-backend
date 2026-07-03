@@ -11,6 +11,7 @@ import (
 
 	adapters "github.com/HiIamJeff67/notezy-backend/app/adapters"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
+	matchers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/matchers"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
@@ -23,6 +24,7 @@ import (
 type BlockPackHandler struct {
 	db                   *gorm.DB
 	editableBlockAdapter adapters.EditableBlockAdapterInterface
+	namePatternMatcher   matchers.NamePatternMatcherInterface
 	blockPackRepository  repositories.BlockPackRepositoryInterface
 	blockGroupRepository repositories.BlockGroupRepositoryInterface
 	blockRepository      repositories.BlockRepositoryInterface
@@ -41,6 +43,7 @@ func NewBlockPackHandler(
 	return BlockPackHandler{
 		db:                   db,
 		editableBlockAdapter: editableBlockAdapter,
+		namePatternMatcher:   matchers.NewNamePatternMatcher(),
 		blockPackRepository:  blockPackRepository,
 		blockGroupRepository: blockGroupRepository,
 		blockRepository:      blockRepository,
@@ -133,12 +136,16 @@ func (h BlockPackHandler) HandleCreateBlockPack(
 		if !isTaskValid {
 			continue
 		}
+		name, exception := h.namePatternMatcher.Match(payload.Template.Name, payload.Template.NamePattern, task)
+		if exception != nil {
+			continue
+		}
 
 		blockPackInputs = append(blockPackInputs, inputs.BulkCreateBlockPackInput{
 			UserId:              ownerId,
 			Id:                  &blockPackId,
 			ParentSubShelfId:    payload.TargetSubShelfId,
-			Name:                payload.Template.Name,
+			Name:                name,
 			Icon:                payload.Template.Icon,
 			HeaderBackgroundURL: payload.Template.HeaderBackgroundURL,
 		})

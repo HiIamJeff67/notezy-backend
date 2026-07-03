@@ -326,6 +326,8 @@ func (ec *executionContext) fieldContext_SearchRoutineTaskEdge_node(_ context.Co
 				return ec.fieldContext_PrivateRoutineTask_maxAttempts(ctx, field)
 			case "period":
 				return ec.fieldContext_PrivateRoutineTask_period(ctx, field)
+			case "nextScheduledAt":
+				return ec.fieldContext_PrivateRoutineTask_nextScheduledAt(ctx, field)
 			case "scheduledAt":
 				return ec.fieldContext_PrivateRoutineTask_scheduledAt(ctx, field)
 			case "actualStartedAt":
@@ -336,6 +338,8 @@ func (ec *executionContext) fieldContext_SearchRoutineTaskEdge_node(_ context.Co
 				return ec.fieldContext_PrivateRoutineTask_updatedAt(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_PrivateRoutineTask_createdAt(ctx, field)
+			case "routineIds":
+				return ec.fieldContext_PrivateRoutineTask_routineIds(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PrivateRoutineTask", field.Name)
 		},
