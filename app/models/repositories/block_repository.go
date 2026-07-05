@@ -27,9 +27,9 @@ type BlockRepositoryInterface interface {
 	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) (*schemas.Block, *exceptions.Exception)
 	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.BlockRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.Block, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockRelation, opts ...options.RepositoryOptions) (*schemas.Block, *exceptions.Exception)
-	CreateOneByBlockGroupId(blockGroupId uuid.UUID, userId uuid.UUID, input inputs.CreateBlockInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
-	CreateManyByBlockGroupId(blockGroupId uuid.UUID, userId uuid.UUID, input []inputs.CreateBlockInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
-	CreateManyByBlockGroupIds(userId uuid.UUID, input []inputs.CreateBlockGroupContentInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
+	CreateOneByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, input inputs.CreateBlockInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
+	CreateManyByBlockPackId(blockPackId uuid.UUID, userId uuid.UUID, input []inputs.CreateBlockInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
+	CreateManyByBlockPackIds(userId uuid.UUID, input []inputs.CreateBlockPackContentInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateBlockInput, opts ...options.RepositoryOptions) (*schemas.Block, *exceptions.Exception)
 	UpdateManyByIds(userId uuid.UUID, input []inputs.UpdateBlockByIdInput, opts ...options.RepositoryOptions) *exceptions.Exception
 	RestoreSoftDeletedOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.Block, *exceptions.Exception)
@@ -42,7 +42,7 @@ type BlockRepositoryInterface interface {
 	/* ============================== System Only Method ============================== */
 
 	BulkCheckPermissionsAndGetManyByIds(inputs []inputs.BulkCheckBlockPermissionInput, preloads []schemas.BlockRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]bool, []schemas.Block, *exceptions.Exception)
-	BulkCreateMany(inputs []inputs.BulkCreateBlockGroupContentInput, opts ...options.RepositoryOptions) ([]bool, *exceptions.Exception)
+	BulkCreateMany(inputs []inputs.BulkCreateBlockPackContentInput, opts ...options.RepositoryOptions) ([]bool, *exceptions.Exception)
 	BulkUpdateMany(inputs []inputs.BulkUpdateBlockInput, opts ...options.RepositoryOptions) ([]bool, *exceptions.Exception)
 	BulkDeleteMany(inputs []inputs.BulkDeleteBlockInput, opts ...options.RepositoryOptions) ([]bool, *exceptions.Exception)
 }
@@ -183,12 +183,16 @@ func (r *BlockRepository) GetOneById(
 	)
 }
 
-func (r *BlockRepository) CreateOneByBlockGroupId(
-	blockGroupId uuid.UUID,
+func (r *BlockRepository) CreateOneByBlockPackId(
+	blockPackId uuid.UUID,
 	userId uuid.UUID,
 	input inputs.CreateBlockInput,
 	opts ...options.RepositoryOptions,
 ) (*uuid.UUID, *exceptions.Exception) {
+	if blockPackId == uuid.Nil {
+		return nil, exceptions.Block.InvalidInput()
+	}
+
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
@@ -206,16 +210,16 @@ func (r *BlockRepository) CreateOneByBlockGroupId(
 			enums.AccessControlPermission_Write,
 		}
 
-		blockGroupRepository := NewBlockGroupRepository(scopes.NewBlockGroupScope())
+		blockPackRepository := NewBlockPackRepository(scopes.NewBlockPackScope())
 
-		if !blockGroupRepository.HasPermission(
-			blockGroupId,
+		if !blockPackRepository.HasPermission(
+			blockPackId,
 			userId,
 			allowedPermissions,
 			opts...,
 		) {
 			parsedOptions.DB.Rollback()
-			return nil, exceptions.Block.NoPermission("get owner's block group")
+			return nil, exceptions.Block.NoPermission("get owner's block pack")
 		}
 	}
 
@@ -224,18 +228,9 @@ func (r *BlockRepository) CreateOneByBlockGroupId(
 		parsedOptions.DB.Rollback()
 		return nil, exceptions.Block.InvalidInput().WithOrigin(err)
 	}
-	newBlock.BlockGroupId = blockGroupId
+	newBlock.BlockPackId = blockPackId
 
-	result := parsedOptions.DB.Model(&schemas.Block{}).
-		Clauses(
-			clause.OnConflict{
-				Columns: []clause.Column{{Name: "id"}},
-				DoUpdates: clause.AssignmentColumns([]string{
-					"block_group_id", "parent_block_id", "type", "props", "content", "updated_at",
-				}),
-			},
-		).
-		Create(&newBlock)
+	result := parsedOptions.DB.Model(&schemas.Block{}).Create(&newBlock)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Block.FailedToCreate().WithOrigin(result.Error)},
 		{First: newBlock.Id == uuid.Nil, Second: exceptions.Block.FailedToCreate()},
@@ -255,14 +250,17 @@ func (r *BlockRepository) CreateOneByBlockGroupId(
 	return &newBlock.Id, nil
 }
 
-func (r *BlockRepository) CreateManyByBlockGroupId(
-	blockGroupId uuid.UUID,
+func (r *BlockRepository) CreateManyByBlockPackId(
+	blockPackId uuid.UUID,
 	userId uuid.UUID,
 	input []inputs.CreateBlockInput,
 	opts ...options.RepositoryOptions,
 ) ([]uuid.UUID, *exceptions.Exception) {
+	if blockPackId == uuid.Nil {
+		return nil, exceptions.Block.InvalidInput()
+	}
 	if len(input) == 0 {
-		return nil, exceptions.BlockGroup.NoChanges()
+		return nil, exceptions.Block.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
@@ -282,16 +280,16 @@ func (r *BlockRepository) CreateManyByBlockGroupId(
 			enums.AccessControlPermission_Write,
 		}
 
-		blockGroupRepository := NewBlockGroupRepository(scopes.NewBlockGroupScope())
+		blockPackRepository := NewBlockPackRepository(scopes.NewBlockPackScope())
 
-		if !blockGroupRepository.HasPermission(
-			blockGroupId,
+		if !blockPackRepository.HasPermission(
+			blockPackId,
 			userId,
 			allowedPermissions,
 			opts...,
 		) {
 			parsedOptions.DB.Rollback()
-			return nil, exceptions.Block.NoPermission("get owner's block group")
+			return nil, exceptions.Block.NoPermission("get owner's block pack")
 		}
 	}
 
@@ -302,20 +300,11 @@ func (r *BlockRepository) CreateManyByBlockGroupId(
 			parsedOptions.DB.Rollback()
 			return nil, exceptions.Block.InvalidInput().WithOrigin(err)
 		}
-		newBlock.BlockGroupId = blockGroupId
+		newBlock.BlockPackId = blockPackId
 		newBlocks[index] = newBlock
 	}
 
-	result := parsedOptions.DB.Model(&schemas.Block{}).
-		Clauses(
-			clause.OnConflict{
-				Columns: []clause.Column{{Name: "id"}},
-				DoUpdates: clause.AssignmentColumns([]string{
-					"block_group_id", "parent_block_id", "type", "props", "content", "updated_at",
-				}),
-			},
-		).
-		CreateInBatches(&newBlocks, parsedOptions.BatchSize)
+	result := parsedOptions.DB.Model(&schemas.Block{}).CreateInBatches(&newBlocks, parsedOptions.BatchSize)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.Block.FailedToCreate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.Block.NoChanges()},
@@ -339,13 +328,18 @@ func (r *BlockRepository) CreateManyByBlockGroupId(
 	return newBlockIds, nil
 }
 
-func (r *BlockRepository) CreateManyByBlockGroupIds(
+func (r *BlockRepository) CreateManyByBlockPackIds(
 	userId uuid.UUID,
-	input []inputs.CreateBlockGroupContentInput,
+	input []inputs.CreateBlockPackContentInput,
 	opts ...options.RepositoryOptions,
 ) ([]uuid.UUID, *exceptions.Exception) {
 	if len(input) == 0 {
-		return nil, exceptions.BlockGroup.NoChanges()
+		return nil, exceptions.Block.NoChanges()
+	}
+	for _, in := range input {
+		if in.BlockPackId == uuid.Nil {
+			return nil, exceptions.Block.InvalidInput()
+		}
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
@@ -365,16 +359,17 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 			enums.AccessControlPermission_Write,
 		}
 
-		blockGroupRepository := NewBlockGroupRepository(scopes.NewBlockGroupScope())
+		blockPackRepository := NewBlockPackRepository(scopes.NewBlockPackScope())
 
-		blockGroupIds := make([]uuid.UUID, len(input))
+		blockPackIds := make([]uuid.UUID, len(input))
 		for index, in := range input {
-			blockGroupIds[index] = in.BlockGroupId
+			blockPackIds[index] = in.BlockPackId
 		}
 
-		validIds, exception := blockGroupRepository.CheckPermissionAndGetValidIds(
-			blockGroupIds,
+		blockPacks, exception := blockPackRepository.CheckPermissionsAndGetManyByIds(
+			blockPackIds,
 			userId,
+			nil,
 			allowedPermissions,
 			opts...,
 		)
@@ -384,20 +379,20 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 		}
 
 		validIdMap := make(map[uuid.UUID]bool)
-		for _, validId := range validIds {
-			validIdMap[validId] = true
+		for _, blockPack := range blockPacks {
+			validIdMap[blockPack.Id] = true
 		}
 
 		var newBlocks []schemas.Block
 		for _, in := range input {
-			if validIdMap[in.BlockGroupId] {
+			if validIdMap[in.BlockPackId] {
 				for _, inputBlock := range in.Blocks {
 					var newBlock schemas.Block
 					if err := copier.Copy(&newBlock, &inputBlock); err != nil {
 						parsedOptions.DB.Rollback()
 						return nil, exceptions.Block.InvalidInput().WithOrigin(err)
 					}
-					newBlock.BlockGroupId = in.BlockGroupId
+					newBlock.BlockPackId = in.BlockPackId
 					newBlocks = append(newBlocks, newBlock)
 				}
 			}
@@ -406,12 +401,6 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 		result := parsedOptions.DB.Model(&schemas.Block{}).
 			Clauses(
 				clause.Returning{Columns: []clause.Column{{Name: "id"}}},
-				clause.OnConflict{
-					Columns: []clause.Column{{Name: "id"}},
-					DoUpdates: clause.AssignmentColumns([]string{
-						"block_group_id", "parent_block_id", "type", "props", "content", "updated_at",
-					}),
-				},
 			).
 			CreateInBatches(&newBlocks, parsedOptions.BatchSize)
 		if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
@@ -445,7 +434,7 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 				parsedOptions.DB.Rollback()
 				return nil, exceptions.Block.InvalidInput().WithOrigin(err)
 			}
-			newBlock.BlockGroupId = in.BlockGroupId
+			newBlock.BlockPackId = in.BlockPackId
 			newBlocks = append(newBlocks, newBlock)
 		}
 	}
@@ -453,12 +442,6 @@ func (r *BlockRepository) CreateManyByBlockGroupIds(
 	result := parsedOptions.DB.Model(&schemas.Block{}).
 		Clauses(
 			clause.Returning{Columns: []clause.Column{{Name: "id"}}},
-			clause.OnConflict{
-				Columns: []clause.Column{{Name: "id"}},
-				DoUpdates: clause.AssignmentColumns([]string{
-					"block_group_id", "parent_block_id", "type", "props", "content", "updated_at",
-				}),
-			},
 		).
 		CreateInBatches(&newBlocks, parsedOptions.BatchSize)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
@@ -594,17 +577,27 @@ func (r *BlockRepository) UpdateManyByIds(
 		if !parsedOptions.SkipPermissionCheck && !isBlockValid[in.Id] {
 			continue
 		}
+		if in.PartialUpdateInput.Values.BlockPackId != nil && *in.PartialUpdateInput.Values.BlockPackId == uuid.Nil {
+			parsedOptions.DB.Rollback()
+			return exceptions.Block.InvalidInput()
+		}
 
 		setParentBlockIdNull := util.CheckSetNull(in.PartialUpdateInput.SetNull, "ParentBlockId")
-		valuePlaceholders = append(valuePlaceholders, `(?::uuid, ?::"BlockType", ?::jsonb, ?::jsonb, ?::uuid, ?::uuid, ?::boolean)`)
+		setPrevBlockIdNull := util.CheckSetNull(in.PartialUpdateInput.SetNull, "PrevBlockId")
+		setNextBlockIdNull := util.CheckSetNull(in.PartialUpdateInput.SetNull, "NextBlockId")
+		valuePlaceholders = append(valuePlaceholders, `(?::uuid, ?::"BlockType", ?::jsonb, ?::jsonb, ?::uuid, ?::uuid, ?::uuid, ?::uuid, ?::boolean, ?::boolean, ?::boolean)`)
 		valueArgs = append(valueArgs,
 			in.Id,
 			in.PartialUpdateInput.Values.Type,
 			in.PartialUpdateInput.Values.Props,
 			in.PartialUpdateInput.Values.Content,
-			in.PartialUpdateInput.Values.BlockGroupId,
+			in.PartialUpdateInput.Values.BlockPackId,
 			in.PartialUpdateInput.Values.ParentBlockId,
+			in.PartialUpdateInput.Values.PrevBlockId,
+			in.PartialUpdateInput.Values.NextBlockId,
 			setParentBlockIdNull,
+			setPrevBlockIdNull,
+			setNextBlockIdNull,
 		)
 		ids = append(ids, in.Id)
 	}
@@ -615,13 +608,21 @@ func (r *BlockRepository) UpdateManyByIds(
 			type = COALESCE(v.type::"BlockType", b.type),
 			props = COALESCE(v.props::jsonb, b.props),
 			content = COALESCE(v.content::jsonb, b.content),
-			block_group_id = COALESCE(v.block_group_id::uuid, b.block_group_id),
+			block_pack_id = COALESCE(v.block_pack_id::uuid, b.block_pack_id),
 			parent_block_id = CASE 
 				WHEN v.set_parent_block_id_null::boolean THEN NULL 
 				ELSE COALESCE(v.parent_block_id::uuid, b.parent_block_id)
 			END,
+			prev_block_id = CASE 
+				WHEN v.set_prev_block_id_null::boolean THEN NULL 
+				ELSE COALESCE(v.prev_block_id::uuid, b.prev_block_id)
+			END,
+			next_block_id = CASE 
+				WHEN v.set_next_block_id_null::boolean THEN NULL 
+				ELSE COALESCE(v.next_block_id::uuid, b.next_block_id)
+			END,
 			updated_at = NOW()
-		FROM (VALUES %s) AS v(id, type, props, content, block_group_id, parent_block_id, set_parent_block_id_null)
+		FROM (VALUES %s) AS v(id, type, props, content, block_pack_id, parent_block_id, prev_block_id, next_block_id, set_parent_block_id_null, set_prev_block_id_null, set_next_block_id_null)
 		WHERE b.id = v.id::uuid AND b.deleted_at IS NULL
 	`, strings.Join(valuePlaceholders, ","))
 	result := parsedOptions.DB.Exec(sql, valueArgs...)
@@ -683,7 +684,7 @@ func (r *BlockRepository) RestoreSoftDeletedManyByIds(
 	opts ...options.RepositoryOptions,
 ) ([]schemas.Block, *exceptions.Exception) {
 	if len(ids) == 0 {
-		return []schemas.Block{}, exceptions.BlockGroup.NoChanges()
+		return []schemas.Block{}, exceptions.Block.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
@@ -755,7 +756,7 @@ func (r *BlockRepository) SoftDeleteManyByIds(
 	opts ...options.RepositoryOptions,
 ) ([]schemas.Block, *exceptions.Exception) {
 	if len(ids) == 0 {
-		return nil, exceptions.BlockGroup.NoChanges()
+		return nil, exceptions.Block.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
@@ -825,7 +826,7 @@ func (r *BlockRepository) HardDeleteManyByIds(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(ids) == 0 {
-		return exceptions.BlockGroup.NoChanges()
+		return exceptions.Block.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
@@ -883,8 +884,7 @@ func (r *BlockRepository) BulkCheckPermissionsAndGetManyByIds(
 	}
 	result := parsedOptions.DB.Model(&schemas.Block{}).
 		Select(`"BlockTable".id, uts.user_id`).
-		Joins(`INNER JOIN "BlockGroupTable" AS bg ON bg.id = "BlockTable".block_group_id`).
-		Joins(`INNER JOIN "BlockPackTable" AS bp ON bp.id = bg.block_pack_id`).
+		Joins(`INNER JOIN "BlockPackTable" AS bp ON bp.id = "BlockTable".block_pack_id`).
 		Joins(`INNER JOIN "SubShelfTable" AS ss ON ss.id = bp.parent_sub_shelf_id`).
 		Joins(`INNER JOIN "UsersToShelvesTable" AS uts ON uts.root_shelf_id = ss.root_shelf_id`).
 		Where(`"BlockTable".id IN ?`, ids).
@@ -940,7 +940,7 @@ func (r *BlockRepository) BulkCheckPermissionsAndGetManyByIds(
 }
 
 func (r *BlockRepository) BulkCreateMany(
-	bulkInputs []inputs.BulkCreateBlockGroupContentInput,
+	bulkInputs []inputs.BulkCreateBlockPackContentInput,
 	opts ...options.RepositoryOptions,
 ) ([]bool, *exceptions.Exception) {
 	if len(bulkInputs) == 0 {
@@ -960,18 +960,21 @@ func (r *BlockRepository) BulkCreateMany(
 		enums.AccessControlPermission_Write,
 	}
 
-	checkInputs := make([]inputs.BulkCheckBlockGroupPermissionInput, len(bulkInputs))
+	checkInputs := make([]inputs.BulkCheckBlockPackPermissionInput, len(bulkInputs))
 	for index, in := range bulkInputs {
-		checkInputs[index] = inputs.BulkCheckBlockGroupPermissionInput{
+		if in.BlockPackId == uuid.Nil {
+			continue
+		}
+		checkInputs[index] = inputs.BulkCheckBlockPackPermissionInput{
 			UserId: in.UserId,
-			Id:     in.BlockGroupId,
+			Id:     in.BlockPackId,
 		}
 	}
-	blockGroupRepository := NewBlockGroupRepository(scopes.NewBlockGroupScope())
+	blockPackRepository := NewBlockPackRepository(scopes.NewBlockPackScope())
 	checkOptions := append(opts, options.WithTransactionDB(parsedOptions.DB))
 	checkOptions = append(checkOptions, options.WithOnlyDeleted(types.Ternary_Negative))
 	checkOptions = append(checkOptions, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
-	successes, _, exception := blockGroupRepository.BulkCheckPermissionsAndGetManyByIds(checkInputs, nil, allowedPermissions, checkOptions...)
+	successes, _, exception := blockPackRepository.BulkCheckPermissionsAndGetManyByIds(checkInputs, nil, allowedPermissions, checkOptions...)
 	if exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -979,6 +982,10 @@ func (r *BlockRepository) BulkCreateMany(
 
 	newBlocks := make([]schemas.Block, 0)
 	for index, in := range bulkInputs {
+		if in.BlockPackId == uuid.Nil {
+			successes[index] = false
+			continue
+		}
 		if !successes[index] {
 			continue
 		}
@@ -989,8 +996,10 @@ func (r *BlockRepository) BulkCreateMany(
 		for _, inputBlock := range in.Blocks {
 			newBlocks = append(newBlocks, schemas.Block{
 				Id:            inputBlock.Id,
+				BlockPackId:   in.BlockPackId,
 				ParentBlockId: inputBlock.ParentBlockId,
-				BlockGroupId:  in.BlockGroupId,
+				PrevBlockId:   inputBlock.PrevBlockId,
+				NextBlockId:   inputBlock.NextBlockId,
 				Type:          inputBlock.Type,
 				Props:         inputBlock.Props,
 				Content:       inputBlock.Content,
@@ -1007,12 +1016,6 @@ func (r *BlockRepository) BulkCreateMany(
 	result := parsedOptions.DB.Model(&schemas.Block{}).
 		Clauses(
 			clause.Returning{Columns: []clause.Column{{Name: "id"}}},
-			clause.OnConflict{
-				Columns: []clause.Column{{Name: "id"}},
-				DoUpdates: clause.AssignmentColumns([]string{
-					"block_group_id", "parent_block_id", "type", "props", "content", "updated_at",
-				}),
-			},
 		).
 		CreateInBatches(&newBlocks, parsedOptions.BatchSize)
 	if result.Error != nil {
@@ -1073,18 +1076,28 @@ func (r *BlockRepository) BulkUpdateMany(
 		if !successes[index] {
 			continue
 		}
+		if in.PartialUpdateInput.Values.BlockPackId != nil && *in.PartialUpdateInput.Values.BlockPackId == uuid.Nil {
+			successes[index] = false
+			continue
+		}
 
 		setParentBlockIdNull := util.CheckSetNull(in.PartialUpdateInput.SetNull, "ParentBlockId")
-		valuePlaceholders = append(valuePlaceholders, `(?::int, ?::uuid, ?::"BlockType", ?::jsonb, ?::jsonb, ?::uuid, ?::uuid, ?::boolean)`)
+		setPrevBlockIdNull := util.CheckSetNull(in.PartialUpdateInput.SetNull, "PrevBlockId")
+		setNextBlockIdNull := util.CheckSetNull(in.PartialUpdateInput.SetNull, "NextBlockId")
+		valuePlaceholders = append(valuePlaceholders, `(?::int, ?::uuid, ?::"BlockType", ?::jsonb, ?::jsonb, ?::uuid, ?::uuid, ?::uuid, ?::uuid, ?::boolean, ?::boolean, ?::boolean)`)
 		valueArgs = append(valueArgs,
 			index,
 			in.Id,
 			in.PartialUpdateInput.Values.Type,
 			in.PartialUpdateInput.Values.Props,
 			in.PartialUpdateInput.Values.Content,
-			in.PartialUpdateInput.Values.BlockGroupId,
+			in.PartialUpdateInput.Values.BlockPackId,
 			in.PartialUpdateInput.Values.ParentBlockId,
+			in.PartialUpdateInput.Values.PrevBlockId,
+			in.PartialUpdateInput.Values.NextBlockId,
 			setParentBlockIdNull,
+			setPrevBlockIdNull,
+			setNextBlockIdNull,
 		)
 	}
 	if len(valuePlaceholders) == 0 {
@@ -1095,7 +1108,7 @@ func (r *BlockRepository) BulkUpdateMany(
 	}
 
 	sql := fmt.Sprintf(`
-		WITH payload(idx, id, type, props, content, block_group_id, parent_block_id, set_parent_block_id_null) AS (
+		WITH payload(idx, id, type, props, content, block_pack_id, parent_block_id, prev_block_id, next_block_id, set_parent_block_id_null, set_prev_block_id_null, set_next_block_id_null) AS (
 			VALUES %s
 		),
 		updated AS (
@@ -1104,10 +1117,18 @@ func (r *BlockRepository) BulkUpdateMany(
 				type = COALESCE(v.type::"BlockType", b.type),
 				props = COALESCE(v.props::jsonb, b.props),
 				content = COALESCE(v.content::jsonb, b.content),
-				block_group_id = COALESCE(v.block_group_id::uuid, b.block_group_id),
+				block_pack_id = COALESCE(v.block_pack_id::uuid, b.block_pack_id),
 				parent_block_id = CASE
 					WHEN v.set_parent_block_id_null::boolean THEN NULL
 					ELSE COALESCE(v.parent_block_id::uuid, b.parent_block_id)
+				END,
+				prev_block_id = CASE
+					WHEN v.set_prev_block_id_null::boolean THEN NULL
+					ELSE COALESCE(v.prev_block_id::uuid, b.prev_block_id)
+				END,
+				next_block_id = CASE
+					WHEN v.set_next_block_id_null::boolean THEN NULL
+					ELSE COALESCE(v.next_block_id::uuid, b.next_block_id)
 				END,
 				updated_at = NOW()
 			FROM payload AS v

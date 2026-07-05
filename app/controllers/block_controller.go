@@ -12,8 +12,6 @@ import (
 type BlockControllerInterface interface {
 	GetMyBlockById(ctx *gin.Context, reqDto *dtos.GetMyBlockByIdReqDto)
 	GetMyBlocksByIds(ctx *gin.Context, reqDto *dtos.GetMyBlocksByIdsReqDto)
-	GetMyBlocksByBlockGroupId(ctx *gin.Context, reqDto *dtos.GetMyBlocksByBlockGroupIdReqDto)
-	GetMyBlocksByBlockGroupIds(ctx *gin.Context, reqDto *dtos.GetMyBlocksByBlockGroupIdsReqDto)
 	GetMyBlocksByBlockPackId(ctx *gin.Context, reqDto *dtos.GetMyBlocksByBlockPackIdReqDto)
 	GetAllMyBlocks(ctx *gin.Context, reqDto *dtos.GetAllMyBlocksReqDto)
 	AppendBlock(ctx *gin.Context, reqDto *dtos.AppendBlockReqDto)
@@ -54,34 +52,6 @@ func (c *BlockController) GetMyBlockById(ctx *gin.Context, reqDto *dtos.GetMyBlo
 
 func (c *BlockController) GetMyBlocksByIds(ctx *gin.Context, reqDto *dtos.GetMyBlocksByIdsReqDto) {
 	resDto, exception := c.blockService.GetMyBlocksByIds(ctx.Request.Context(), reqDto)
-	if exception != nil {
-		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      resDto,
-		"exception": nil,
-	})
-}
-
-func (c *BlockController) GetMyBlocksByBlockGroupId(ctx *gin.Context, reqDto *dtos.GetMyBlocksByBlockGroupIdReqDto) {
-	resDto, exception := c.blockService.GetMyBlocksByBlockGroupId(ctx.Request.Context(), reqDto)
-	if exception != nil {
-		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      resDto,
-		"exception": nil,
-	})
-}
-
-func (c *BlockController) GetMyBlocksByBlockGroupIds(ctx *gin.Context, reqDto *dtos.GetMyBlocksByBlockGroupIdsReqDto) {
-	resDto, exception := c.blockService.GetMyBlocksByBlockGroupIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return

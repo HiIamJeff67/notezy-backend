@@ -17,22 +17,18 @@ type BlockModule struct {
 
 func NewBlockModule() *BlockModule {
 	blockScope := scopes.NewBlockScope()
-	blockGroupScope := scopes.NewBlockGroupScope()
 	blockPackScope := scopes.NewBlockPackScope()
 	subShelfScope := scopes.NewSubShelfScope()
 	blockPackRepository := repositories.NewBlockPackRepository(blockPackScope)
-	blockGroupRepository := repositories.NewBlockGroupRepository(blockGroupScope)
 	blockRepository := repositories.NewBlockRepository(blockScope)
 	editableBlockAdapter := adapters.NewEditableBlockAdapter()
 
 	blockService := services.NewBlockService(
 		models.NotezyDB,
 		blockScope,
-		blockGroupScope,
 		blockPackScope,
 		subShelfScope,
 		blockPackRepository,
-		blockGroupRepository,
 		blockRepository,
 		editableBlockAdapter,
 	)

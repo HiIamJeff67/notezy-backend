@@ -36,8 +36,6 @@ type User struct {
 	Themes              []Theme               `json:"themes" gorm:"foreignKey:AuthorId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UsersToBadges       []UsersToBadges       `json:"usersToBadges" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UsersToShelves      []UsersToShelves      `json:"usersToShelves" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	BlockGroups         []BlockGroup          `json:"blockGroups" gorm:"foreignKey:OwnerId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	SyncBlockGroups     []SyncBlockGroup      `json:"syncBlockGroups" gorm:"foreignKey:OwnerId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UsersToStations     []UsersToStations     `json:"usersToStations" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UsersToRoutineTags  []UsersToRoutineTags  `json:"usersToRoutineTags" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	Stations            []Station             `json:"stations" gorm:"foreignKey:OwnerId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
@@ -60,8 +58,6 @@ const (
 	UserRelation_Themes              UserRelation = "Themes"
 	UserRelation_UsersToBadges       UserRelation = "UsersToBadges"
 	UserRelation_UsersToShelves      UserRelation = "UsersToShelves"
-	UserRelation_BlockGroups         UserRelation = "BlockGroups"
-	UserRelation_SyncBlockGroups     UserRelation = "SyncBlockGroups"
 	UserRelation_UsersToStations     UserRelation = "UsersToStations"
 	UserRelation_UsersToRoutineTags  UserRelation = "UsersToRoutineTags"
 	UserRelation_Stations            UserRelation = "Stations"

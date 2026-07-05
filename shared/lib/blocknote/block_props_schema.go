@@ -48,7 +48,7 @@ func (clip *CheckListItemProps) Validate() error { return blockNoteValidator.Str
 
 type FileBlockProps struct {
 	BaseProps
-	Url          string `json:"url" validate:"omitempty,isurl"`
+	Url          string `json:"url" validate:"omitempty,url"`
 	Caption      string `json:"caption,omitempty" validate:"omitempty,isfileblockcaption"`
 	Name         string `json:"name,omitempty" validate:"omitempty,isfileblockname"`
 	Size         int64  `json:"size,omitempty" validate:"omitempty,min=0"`

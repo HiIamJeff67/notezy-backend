@@ -50,7 +50,6 @@ func NewHandlerManager(maxWorkers int, db *gorm.DB) HandlerManager {
 	subShelfRepository := repositories.NewSubShelfRepository(scopes.NewSubShelfScope())
 	materialRepository := repositories.NewMaterialRepository(scopes.NewMaterialScope())
 	blockPackRepository := repositories.NewBlockPackRepository(scopes.NewBlockPackScope())
-	blockGroupRepository := repositories.NewBlockGroupRepository(scopes.NewBlockGroupScope())
 	blockRepository := repositories.NewBlockRepository(scopes.NewBlockScope())
 	routineRepository := repositories.NewRoutineRepository(scopes.NewRoutineScope())
 
@@ -58,14 +57,12 @@ func NewHandlerManager(maxWorkers int, db *gorm.DB) HandlerManager {
 		db,
 		nil,
 		blockPackRepository,
-		blockGroupRepository,
 		blockRepository,
 	)
 	blockHandler := handlers.NewBlockHandler(
 		db,
 		nil,
 		blockPackRepository,
-		blockGroupRepository,
 		blockRepository,
 	)
 	rootShelfHandler := handlers.NewRootShelfHandler(db, rootShelfRepository, subShelfRepository)

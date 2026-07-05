@@ -9,20 +9,25 @@ import (
 
 type CreateBlockInput struct {
 	Id            uuid.UUID       `json:"id" gorm:"column:id;"`
+	BlockPackId   uuid.UUID       `json:"blockPackId" gorm:"column:block_pack_id;"`
 	ParentBlockId *uuid.UUID      `json:"parentBlockId" gorm:"column:parent_block_id;"`
+	PrevBlockId   *uuid.UUID      `json:"prevBlockId" gorm:"column:prev_block_id;"`
+	NextBlockId   *uuid.UUID      `json:"nextBlockId" gorm:"column:next_block_id;"`
 	Type          enums.BlockType `json:"type" gorm:"column:type;"`
 	Props         datatypes.JSON  `json:"props" gorm:"column:props;"`
 	Content       datatypes.JSON  `json:"content" gorm:"column:content;"`
 }
 
-type CreateBlockGroupContentInput struct {
-	BlockGroupId uuid.UUID `json:"blockGroupId"`
-	Blocks       []CreateBlockInput
+type CreateBlockPackContentInput struct {
+	BlockPackId uuid.UUID `json:"blockPackId"`
+	Blocks      []CreateBlockInput
 }
 
 type UpdateBlockInput struct {
+	BlockPackId   *uuid.UUID       `json:"blockPackId" gorm:"column:block_pack_id;"`
 	ParentBlockId *uuid.UUID       `json:"parentBlockId" gorm:"column:parent_block_id;"`
-	BlockGroupId  *uuid.UUID       `json:"blockGroupId" gorm:"column:block_group_id;"`
+	PrevBlockId   *uuid.UUID       `json:"prevBlockId" gorm:"column:prev_block_id;"`
+	NextBlockId   *uuid.UUID       `json:"nextBlockId" gorm:"column:next_block_id;"`
 	Type          *enums.BlockType `json:"type" gorm:"column:type;"`
 	Props         *datatypes.JSON  `json:"props" gorm:"column:props;"`
 	Content       *datatypes.JSON  `json:"content" gorm:"column:content;"`
@@ -42,10 +47,10 @@ type BulkCheckBlockPermissionInput struct {
 	Id     uuid.UUID `json:"id" gorm:"column:id;"`
 }
 
-type BulkCreateBlockGroupContentInput struct {
-	UserId       uuid.UUID `json:"userId" gorm:"column:user_id;"`
-	BlockGroupId uuid.UUID `json:"blockGroupId" gorm:"column:block_group_id;"`
-	Blocks       []CreateBlockInput
+type BulkCreateBlockPackContentInput struct {
+	UserId      uuid.UUID `json:"userId" gorm:"column:user_id;"`
+	BlockPackId uuid.UUID `json:"blockPackId" gorm:"column:block_pack_id;"`
+	Blocks      []CreateBlockInput
 }
 
 type BulkUpdateBlockInput struct {

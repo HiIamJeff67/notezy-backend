@@ -22,7 +22,7 @@ import (
 //	ex.
 //	type CreateBlockReqDto {
 //		ArborizedEditableBlock ArborizedEditableBlock `json:"arborizedEditableBlock"`
-//	    BlockGroupId uuid.UUID `json:"blockGroupId"`
+//	    BlockPackId uuid.UUID `json:"blockPackId"`
 //		ParentBlockId *uuid.UUID `json:"parentBlockId"`
 //	}
 type ArborizedEditableBlock struct {
@@ -113,6 +113,8 @@ type RawArborizedEditableBlock struct {
 type FlattenedEditableBlock struct {
 	Id            uuid.UUID              `json:"id" validate:"required"`
 	ParentBlockId *uuid.UUID             `json:"parentBlockId" validate:"omitempty"`
+	PrevBlockId   *uuid.UUID             `json:"prevBlockId" validate:"omitempty"`
+	NextBlockId   *uuid.UUID             `json:"nextBlockId" validate:"omitempty"`
 	Type          enums.BlockType        `json:"type" validate:"required,isblocktype"`
 	Props         blocknote.BlockProps   `json:"-"` // the validate is in the below `UnmarshalJSON` methods
 	Content       blocknote.BlockContent `json:"-"` // the validate is in the below `UnmarshalJSON` methods
@@ -182,6 +184,8 @@ func (feb FlattenedEditableBlock) MarshalJSON() ([]byte, error) {
 type RawFlattenedEditableBlock struct {
 	Id            uuid.UUID       `json:"id"`
 	ParentBlockId *uuid.UUID      `json:"parentBlockId"`
+	PrevBlockId   *uuid.UUID      `json:"prevBlockId"`
+	NextBlockId   *uuid.UUID      `json:"nextBlockId"`
 	Type          enums.BlockType `json:"type"`
 	Props         datatypes.JSON  `json:"props"`
 	Content       datatypes.JSON  `json:"content"`

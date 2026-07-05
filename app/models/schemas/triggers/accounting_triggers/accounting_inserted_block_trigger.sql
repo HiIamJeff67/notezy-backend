@@ -11,18 +11,20 @@ BEGIN
     FOR r IN -- batch account the user block count, if all the mutated blocks belong to one user, then this will only execute once
         WITH new_blocks_agg AS (
             SELECT 
-                block_group_id, 
+                block_pack_id, 
                 count(*) as count_delta
             FROM new_table
-            GROUP BY block_group_id
+            GROUP BY block_pack_id
         ),
         owner_deltas AS (
             SELECT 
-                bg.owner_id,
+                owner_uts.user_id AS owner_id,
                 sum(nba.count_delta) as total_delta
             FROM new_blocks_agg nba
-            JOIN "BlockGroupTable" bg ON nba.block_group_id = bg.id
-            GROUP BY bg.owner_id
+            JOIN "BlockPackTable" bp ON nba.block_pack_id = bp.id
+            JOIN "SubShelfTable" ss ON bp.parent_sub_shelf_id = ss.id
+            JOIN "UsersToShelvesTable" owner_uts ON ss.root_shelf_id = owner_uts.root_shelf_id AND owner_uts.permission = 'Owner'
+            GROUP BY owner_uts.user_id
         ),
         updated_accounts AS (
             UPDATE "UserAccountTable" ua
@@ -50,18 +52,17 @@ BEGIN
     FOR r IN
         WITH new_blocks_agg AS (
             SELECT 
-                block_group_id, 
+                block_pack_id, 
                 count(*) as count_delta
             FROM new_table
-            GROUP BY block_group_id
+            GROUP BY block_pack_id
         ),
         bp_deltas AS (
             SELECT 
-                bg.block_pack_id, 
+                nba.block_pack_id, 
                 sum(nba.count_delta) as total_delta
             FROM new_blocks_agg nba
-            JOIN "BlockGroupTable" bg ON nba.block_group_id = bg.id
-            GROUP BY bg.block_pack_id
+            GROUP BY nba.block_pack_id
         ),
         updated_packs AS (
             UPDATE "BlockPackTable" bp
@@ -76,8 +77,10 @@ BEGIN
         SELECT DISTINCT ON (up.id)
             up.id, up.block_count, pl.max_block_count_per_block_pack, u.plan
         FROM updated_packs up
-        JOIN "BlockGroupTable" bg ON bg.block_pack_id = up.id
-        JOIN "UserTable" u ON bg.owner_id = u.id
+        JOIN "BlockPackTable" bp ON bp.id = up.id
+        JOIN "SubShelfTable" ss ON bp.parent_sub_shelf_id = ss.id
+        JOIN "UsersToShelvesTable" owner_uts ON ss.root_shelf_id = owner_uts.root_shelf_id AND owner_uts.permission = 'Owner'
+        JOIN "UserTable" u ON owner_uts.user_id = u.id
         JOIN "PlanLimitationTable" pl ON u.plan = pl.key
         WHERE up.block_count > pl.max_block_count_per_block_pack
     LOOP

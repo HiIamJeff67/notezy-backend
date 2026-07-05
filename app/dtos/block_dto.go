@@ -42,36 +42,6 @@ type GetMyBlocksByIdsReqDto struct {
 	]
 }
 
-type GetMyBlocksByBlockGroupIdReqDto struct {
-	NotezyRequest[
-		struct {
-			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
-		},
-		struct {
-			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
-		},
-		any,
-		struct {
-			BlockGroupId uuid.UUID `form:"blockGroupId" validate:"required"`
-		},
-	]
-}
-
-type GetMyBlocksByBlockGroupIdsReqDto struct {
-	NotezyRequest[
-		struct {
-			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
-		},
-		struct {
-			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
-		},
-		any,
-		struct {
-			BlockGroupIds []uuid.UUID `form:"blockGroupIds" validate:"required"`
-		},
-	]
-}
-
 type GetMyBlocksByBlockPackIdReqDto struct {
 	NotezyRequest[
 		struct {
@@ -109,8 +79,9 @@ type InsertBlockReqDto struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
 		struct {
-			ParentBlockId          *uuid.UUID             `json:"parentBlockId" validate:"required"`
-			BlockGroupId           uuid.UUID              `json:"blockGroupId" validate:"required"`
+			BlockPackId            uuid.UUID              `json:"blockPackId" validate:"required"`
+			ParentBlockId          *uuid.UUID             `json:"parentBlockId" validate:"omitnil"`
+			PrevBlockId            *uuid.UUID             `json:"prevBlockId" validate:"omitnil"`
 			ArborizedEditableBlock ArborizedEditableBlock `json:"arborizedEditableBlock" validate:"required"`
 		},
 		any,
@@ -161,8 +132,9 @@ type InsertBlocksReqDto struct {
 		},
 		struct {
 			InsertedBlocks []struct {
-				ParentBlockId          *uuid.UUID             `json:"parentBlockId" validate:"required"`
-				BlockGroupId           uuid.UUID              `json:"blockGroupId" validate:"required"`
+				BlockPackId            uuid.UUID              `json:"blockPackId" validate:"required"`
+				ParentBlockId          *uuid.UUID             `json:"parentBlockId" validate:"omitnil"`
+				PrevBlockId            *uuid.UUID             `json:"prevBlockId" validate:"omitnil"`
 				ArborizedEditableBlock ArborizedEditableBlock `json:"arborizedEditableBlock" validate:"required"`
 			} `json:"insertedBlocks" validate:"required"`
 		},
@@ -181,8 +153,10 @@ type UpdateMyBlockByIdReqDto struct {
 		struct {
 			BlockId uuid.UUID `json:"blockId" validate:"required"`
 			PartialUpdateDto[struct {
+				BlockPackId   *uuid.UUID       `json:"blockPackId" validate:"omitnil"`
 				ParentBlockId *uuid.UUID       `json:"parentBlockId" validate:"omitnil"`
-				BlockGroupId  *uuid.UUID       `json:"blockGroupId" validate:"omitnil"`
+				PrevBlockId   *uuid.UUID       `json:"prevBlockId" validate:"omitnil"`
+				NextBlockId   *uuid.UUID       `json:"nextBlockId" validate:"omitnil"`
 				Type          *enums.BlockType `json:"type" validate:"omitnil,isblocktype"`
 				Props         *json.RawMessage `json:"props"`
 				Content       *json.RawMessage `json:"content"`
@@ -204,8 +178,10 @@ type UpdateMyBlocksByIdsReqDto struct {
 			UpdatedBlocks []struct {
 				BlockId uuid.UUID `json:"blockId" validate:"required"`
 				PartialUpdateDto[struct {
+					BlockPackId   *uuid.UUID       `json:"blockPackId" validate:"omitnil"`
 					ParentBlockId *uuid.UUID       `json:"parentBlockId" validate:"omitnil"`
-					BlockGroupId  *uuid.UUID       `json:"blockGroupId" validate:"omitnil"`
+					PrevBlockId   *uuid.UUID       `json:"prevBlockId" validate:"omitnil"`
+					NextBlockId   *uuid.UUID       `json:"nextBlockId" validate:"omitnil"`
 					Type          *enums.BlockType `json:"type" validate:"omitnil,isblocktype"`
 					Props         *json.RawMessage `json:"props"`
 					Content       *json.RawMessage `json:"content"`
@@ -226,8 +202,9 @@ type MoveMyBlockByIdReqDto struct {
 		},
 		struct {
 			Id            uuid.UUID  `json:"id" validate:"required"`
-			BlockGroupId  uuid.UUID  `json:"blockGroupId" validate:"required"`
+			BlockPackId   uuid.UUID  `json:"blockPackId" validate:"required"`
 			ParentBlockId *uuid.UUID `json:"parentBlockId" validate:"omitnil"`
+			PrevBlockId   *uuid.UUID `json:"prevBlockId" validate:"omitnil"`
 		},
 		any,
 	]
@@ -297,8 +274,10 @@ type DeleteMyBlocksByIdsReqDto struct {
 
 type GetMyBlockByIdResDto struct {
 	Id            uuid.UUID       `json:"id"`
+	BlockPackId   uuid.UUID       `json:"blockPackId"`
 	ParentBlockId *uuid.UUID      `json:"parentBlockId"`
-	BlockGroupId  uuid.UUID       `json:"blockGroupId"`
+	PrevBlockId   *uuid.UUID      `json:"prevBlockId"`
+	NextBlockId   *uuid.UUID      `json:"nextBlockId"`
 	Type          enums.BlockType `json:"type"`
 	Props         datatypes.JSON  `json:"props"`
 	Content       datatypes.JSON  `json:"content"`
@@ -309,12 +288,6 @@ type GetMyBlockByIdResDto struct {
 
 type GetMyBlocksByIdsResDto = []GetMyBlockByIdResDto
 
-type GetMyBlocksByBlockGroupIdResDto struct {
-	RawArborizedEditableBlock RawArborizedEditableBlock `json:"rawArborizedEditableBlock"`
-}
-
-type GetMyBlocksByBlockGroupIdsResDto = []GetMyBlocksByBlockGroupIdResDto
-
 type GetMyBlocksByBlockPackIdResDto = []GetMyBlockByIdResDto
 
 type GetAllMyBlocksResDto = []GetMyBlockByIdResDto
@@ -324,10 +297,9 @@ type InsertBlockResDto struct {
 }
 
 type AppendBlockResDto struct {
-	BlockPackId  uuid.UUID   `json:"blockPackId"`
-	BlockGroupId uuid.UUID   `json:"blockGroupId"`
-	BlockIds     []uuid.UUID `json:"blockIds"`
-	CreatedAt    time.Time   `json:"createdAt"`
+	BlockPackId uuid.UUID   `json:"blockPackId"`
+	BlockIds    []uuid.UUID `json:"blockIds"`
+	CreatedAt   time.Time   `json:"createdAt"`
 }
 
 type AppendBlocksResDto struct {
@@ -335,21 +307,20 @@ type AppendBlocksResDto struct {
 	FailedIndexes               []int `json:"failedIndexes"`
 	SuccessIndexes              []int `json:"successIndexes"`
 	SuccessBlockPackAppendItems []struct {
-		BlockPackId  uuid.UUID   `json:"blockPackId"`
-		BlockGroupId uuid.UUID   `json:"blockGroupId"`
-		BlockIds     []uuid.UUID `json:"blockIds"`
+		BlockPackId uuid.UUID   `json:"blockPackId"`
+		BlockIds    []uuid.UUID `json:"blockIds"`
 	} `json:"successBlockPackAppendItems"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
 type InsertBlocksResDto struct {
-	IsAllSuccess                 bool  `json:"isAllSuccess"`
-	FailedIndexes                []int `json:"failedIndexes"`
-	SuccessIndexes               []int `json:"successIndexes"`
-	SuccessBlockGroupAndBlockIds []struct {
-		BlockGroupId uuid.UUID   `json:"blockGroupId"`
-		BlockIds     []uuid.UUID `json:"blockIds"`
-	} `json:"successBlockGroupAndBlockIds"`
+	IsAllSuccess                bool  `json:"isAllSuccess"`
+	FailedIndexes               []int `json:"failedIndexes"`
+	SuccessIndexes              []int `json:"successIndexes"`
+	SuccessBlockPackAndBlockIds []struct {
+		BlockPackId uuid.UUID   `json:"blockPackId"`
+		BlockIds    []uuid.UUID `json:"blockIds"`
+	} `json:"successBlockPackAndBlockIds"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
@@ -358,13 +329,13 @@ type UpdateMyBlockByIdResDto struct {
 }
 
 type UpdateMyBlocksByIdsResDto struct {
-	IsAllSuccess                 bool  `json:"isAllSuccess"`
-	FailedIndexes                []int `json:"failedIndexes"`
-	SuccessIndexes               []int `json:"successIndexes"`
-	SuccessBlockGroupAndBlockIds []struct {
-		BlockGroupId uuid.UUID   `json:"blockGroupId"`
-		BlockIds     []uuid.UUID `json:"blockIds"`
-	} `json:"successBlockGroupAndBlockIds"`
+	IsAllSuccess                bool  `json:"isAllSuccess"`
+	FailedIndexes               []int `json:"failedIndexes"`
+	SuccessIndexes              []int `json:"successIndexes"`
+	SuccessBlockPackAndBlockIds []struct {
+		BlockPackId uuid.UUID   `json:"blockPackId"`
+		BlockIds    []uuid.UUID `json:"blockIds"`
+	} `json:"successBlockPackAndBlockIds"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
@@ -374,8 +345,10 @@ type MoveMyBlockByIdResDto struct {
 
 type RestoreMyBlockByIdResDto struct {
 	Id            uuid.UUID       `json:"id"`
+	BlockPackId   uuid.UUID       `json:"blockPackId"`
 	ParentBlockId *uuid.UUID      `json:"parentBlockId"`
-	BlockGroupId  uuid.UUID       `json:"blockGroupId"`
+	PrevBlockId   *uuid.UUID      `json:"prevBlockId"`
+	NextBlockId   *uuid.UUID      `json:"nextBlockId"`
 	Type          enums.BlockType `json:"type"`
 	Props         datatypes.JSON  `json:"props"`
 	Content       datatypes.JSON  `json:"content"`

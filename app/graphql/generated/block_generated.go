@@ -75,6 +75,50 @@ func (ec *executionContext) fieldContext_PrivateBlock_id(_ context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _PrivateBlock_blockPackId(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateBlock) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateBlock_blockPackId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BlockPackID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uuid.UUID)
+	fc.Result = res
+	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PrivateBlock_blockPackId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PrivateBlock",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PrivateBlock_parentBlockId(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateBlock) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PrivateBlock_parentBlockId(ctx, field)
 	if err != nil {
@@ -116,8 +160,8 @@ func (ec *executionContext) fieldContext_PrivateBlock_parentBlockId(_ context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateBlock_blockGroupId(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateBlock) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateBlock_blockGroupId(ctx, field)
+func (ec *executionContext) _PrivateBlock_prevBlockId(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateBlock) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateBlock_prevBlockId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -130,24 +174,62 @@ func (ec *executionContext) _PrivateBlock_blockGroupId(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.BlockGroupID, nil
+		return obj.PrevBlockID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(uuid.UUID)
+	res := resTmp.(*uuid.UUID)
 	fc.Result = res
-	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+	return ec.marshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PrivateBlock_blockGroupId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PrivateBlock_prevBlockId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PrivateBlock",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UUID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PrivateBlock_nextBlockId(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateBlock) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateBlock_nextBlockId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NextBlockID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*uuid.UUID)
+	fc.Result = res
+	return ec.marshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PrivateBlock_nextBlockId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PrivateBlock",
 		Field:      field,
@@ -493,13 +575,17 @@ func (ec *executionContext) _PrivateBlock(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "parentBlockId":
-			out.Values[i] = ec._PrivateBlock_parentBlockId(ctx, field, obj)
-		case "blockGroupId":
-			out.Values[i] = ec._PrivateBlock_blockGroupId(ctx, field, obj)
+		case "blockPackId":
+			out.Values[i] = ec._PrivateBlock_blockPackId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "parentBlockId":
+			out.Values[i] = ec._PrivateBlock_parentBlockId(ctx, field, obj)
+		case "prevBlockId":
+			out.Values[i] = ec._PrivateBlock_prevBlockId(ctx, field, obj)
+		case "nextBlockId":
+			out.Values[i] = ec._PrivateBlock_nextBlockId(ctx, field, obj)
 		case "type":
 			out.Values[i] = ec._PrivateBlock_type(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

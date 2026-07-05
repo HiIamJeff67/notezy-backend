@@ -14,7 +14,6 @@ type PlanLimitation struct {
 	MaxRootShelfCount            int32          `json:"maxRootShelfCount" gorm:"column:max_root_shelf_count; type:integer; not null;"`
 	MaxBlockPackCount            int32          `json:"maxBlockPackCount" gorm:"column:max_block_pack_count; type:integer; not null;"`
 	MaxBlockCount                int32          `json:"maxBlockCount" gorm:"column:max_block_count; type:integer; not null;"`
-	MaxSyncBlockCount            int32          `json:"maxSyncBlockCount" gorm:"column:max_sync_block_count; type:integer; not null;"`
 	MaxMaterialCount             int32          `json:"maxMaterialCount" gorm:"column:max_material_count; type:integer; not null;"`
 	MaxWorkflowCount             int32          `json:"maxWorkflowCount" gorm:"column:max_work_flow_count; type:integer; not null;"`
 	MaxAdditionalItemCount       int32          `json:"maxAdditionalItemCount" gorm:"column:max_additional_item_count; type:integer; not null;"`

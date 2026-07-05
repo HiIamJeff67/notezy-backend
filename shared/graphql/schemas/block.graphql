@@ -1,7 +1,9 @@
 type PrivateBlock {
     id: UUID!
+    blockPackId: UUID!
     parentBlockId: UUID
-    blockGroupId: UUID!
+    prevBlockId: UUID
+    nextBlockId: UUID
     type: BlockType!
     props: DatatypeJSON!
     content: DatatypeJSON!

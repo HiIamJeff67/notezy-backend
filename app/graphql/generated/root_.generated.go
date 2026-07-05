@@ -41,13 +41,15 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	PrivateBlock struct {
-		BlockGroupID  func(childComplexity int) int
+		BlockPackID   func(childComplexity int) int
 		ChildrenIds   func(childComplexity int) int
 		Content       func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		DeletedAt     func(childComplexity int) int
 		ID            func(childComplexity int) int
+		NextBlockID   func(childComplexity int) int
 		ParentBlockID func(childComplexity int) int
+		PrevBlockID   func(childComplexity int) int
 		Props         func(childComplexity int) int
 		Type          func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
@@ -429,12 +431,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	_ = ec
 	switch typeName + "." + field {
 
-	case "PrivateBlock.blockGroupId":
-		if e.complexity.PrivateBlock.BlockGroupID == nil {
+	case "PrivateBlock.blockPackId":
+		if e.complexity.PrivateBlock.BlockPackID == nil {
 			break
 		}
 
-		return e.complexity.PrivateBlock.BlockGroupID(childComplexity), true
+		return e.complexity.PrivateBlock.BlockPackID(childComplexity), true
 
 	case "PrivateBlock.childrenIds":
 		if e.complexity.PrivateBlock.ChildrenIds == nil {
@@ -471,12 +473,26 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateBlock.ID(childComplexity), true
 
+	case "PrivateBlock.nextBlockId":
+		if e.complexity.PrivateBlock.NextBlockID == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlock.NextBlockID(childComplexity), true
+
 	case "PrivateBlock.parentBlockId":
 		if e.complexity.PrivateBlock.ParentBlockID == nil {
 			break
 		}
 
 		return e.complexity.PrivateBlock.ParentBlockID(childComplexity), true
+
+	case "PrivateBlock.prevBlockId":
+		if e.complexity.PrivateBlock.PrevBlockID == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlock.PrevBlockID(childComplexity), true
 
 	case "PrivateBlock.props":
 		if e.complexity.PrivateBlock.Props == nil {
@@ -2519,8 +2535,10 @@ var sources = []*ast.Source{
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/block.graphql", Input: `type PrivateBlock {
     id: UUID!
+    blockPackId: UUID!
     parentBlockId: UUID
-    blockGroupId: UUID!
+    prevBlockId: UUID
+    nextBlockId: UUID
     type: BlockType!
     props: DatatypeJSON!
     content: DatatypeJSON!

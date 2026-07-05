@@ -55,7 +55,7 @@ func NewStyledText(text string, styles Styles) *StyledText {
 
 type Link struct {
 	Type    InlineContentType `json:"type" validate:"required,eq=link"`
-	Href    string            `json:"href" validate:"required,isurl"`
+	Href    string            `json:"href" validate:"required,url"`
 	Content []StyledText      `json:"content" validate:"omitempty,dive"` // use dive to validate recursively
 }
 

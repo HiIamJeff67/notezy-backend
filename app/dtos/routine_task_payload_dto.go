@@ -9,13 +9,13 @@ import (
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 )
 
-type RoutineTaskNamePattern map[string]RoutineTaskNamePatternBinding
-
-type RoutineTaskNamePatternBinding struct {
+type RoutineTaskNamePatternValue struct {
 	Source   string  `json:"source" validate:"required,oneof=scheduledAt recordId shortRecordId routineTaskId"`
 	Format   *string `json:"format" validate:"omitnil,max=64"`
 	Timezone *string `json:"timezone" validate:"omitnil,max=64,istimezone"`
 }
+
+type RoutineTaskNamePattern map[string]RoutineTaskNamePatternValue
 
 /* ============================== Root Shelf Routine Task Payload ============================== */
 
@@ -58,16 +58,15 @@ type ResetSubShelfRoutineTaskPayload struct {
 /* ============================== Block Pack Routine Task Payload ============================== */
 
 type CreateBlockPackRoutineTaskTemplate struct {
-	Name                    string                 `json:"name" validate:"required,min=1,max=128"`
-	NamePattern             RoutineTaskNamePattern `json:"namePattern" validate:"omitempty,dive"`
-	Icon                    *enums.SupportedIcon   `json:"icon" validate:"omitnil,issupportedicon"`
-	HeaderBackgroundURL     *string                `json:"headerBackgroundURL" validate:"omitnil"`
-	FinalBlockGroupClientId *string                `json:"finalBlockGroupClientId" validate:"omitnil"`
-	BlockGroups             []struct {
+	Name                string                 `json:"name" validate:"required,min=1,max=128"`
+	NamePattern         RoutineTaskNamePattern `json:"namePattern" validate:"omitempty,dive"`
+	Icon                *enums.SupportedIcon   `json:"icon" validate:"omitnil,issupportedicon"`
+	HeaderBackgroundURL *string                `json:"headerBackgroundURL" validate:"omitnil"`
+	Blocks              []struct {
 		ClientId               string                 `json:"clientId" validate:"required"`
 		PrevClientId           *string                `json:"prevClientId" validate:"omitnil"`
 		ArborizedEditableBlock ArborizedEditableBlock `json:"arborizedEditableBlock" validate:"required"`
-	} `json:"blockGroups" validate:"required,min=1"`
+	} `json:"blocks" validate:"required,min=1"`
 }
 
 type CreateBlockPackRoutineTaskPayload struct {

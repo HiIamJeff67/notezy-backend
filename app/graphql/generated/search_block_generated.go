@@ -306,10 +306,14 @@ func (ec *executionContext) fieldContext_SearchBlockEdge_node(_ context.Context,
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_PrivateBlock_id(ctx, field)
+			case "blockPackId":
+				return ec.fieldContext_PrivateBlock_blockPackId(ctx, field)
 			case "parentBlockId":
 				return ec.fieldContext_PrivateBlock_parentBlockId(ctx, field)
-			case "blockGroupId":
-				return ec.fieldContext_PrivateBlock_blockGroupId(ctx, field)
+			case "prevBlockId":
+				return ec.fieldContext_PrivateBlock_prevBlockId(ctx, field)
+			case "nextBlockId":
+				return ec.fieldContext_PrivateBlock_nextBlockId(ctx, field)
 			case "type":
 				return ec.fieldContext_PrivateBlock_type(ctx, field)
 			case "props":

@@ -42,13 +42,13 @@ var BlockPack = &BlockPackExceptionDomain{
 	},
 }
 
-func (d *BlockPackExceptionDomain) NoRootBlockGroupInBlockPack(blockPackId uuid.UUID) *Exception {
+func (d *BlockPackExceptionDomain) NoRootBlockInBlockPack(blockPackId uuid.UUID) *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 1,
 		Prefix:         d.Prefix,
-		Reason:         "NoRootBlockGroupInBlockPack",
+		Reason:         "NoRootBlockInBlockPack",
 		IsInternal:     true,
-		Message:        fmt.Sprintf("No root block groups in the block pack of %s", blockPackId),
+		Message:        fmt.Sprintf("No root block in the block pack of %s", blockPackId),
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastTrace:      traces.GetTrace(1),
 	}

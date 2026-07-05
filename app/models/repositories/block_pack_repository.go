@@ -685,7 +685,7 @@ func (r *BlockPackRepository) RestoreSoftDeletedManyByIds(
 	opts ...options.RepositoryOptions,
 ) ([]schemas.BlockPack, *exceptions.Exception) {
 	if len(ids) == 0 {
-		return nil, exceptions.BlockGroup.NoChanges()
+		return nil, exceptions.BlockPack.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
@@ -754,7 +754,7 @@ func (r *BlockPackRepository) SoftDeleteManyByIds(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(ids) == 0 {
-		return exceptions.BlockGroup.NoChanges()
+		return exceptions.BlockPack.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
@@ -821,7 +821,7 @@ func (r *BlockPackRepository) HardDeleteManyByIds(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	if len(ids) == 0 {
-		return exceptions.BlockGroup.NoChanges()
+		return exceptions.BlockPack.NoChanges()
 	}
 
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))

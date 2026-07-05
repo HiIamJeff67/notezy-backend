@@ -1,7 +1,9 @@
 fragment FragmentedBasicPrivateBlock on PrivateBlock {
     id
+    blockPackId
     parentBlockId
-    blockGroupId
+    prevBlockId
+    nextBlockId
     type
     props
     content

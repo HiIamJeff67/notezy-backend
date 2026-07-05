@@ -58,10 +58,24 @@ func (ebca *EditableBlockAdapter) Flatten(
 		}
 		visited[current.Id] = true
 
-		for _, child := range current.Children {
+		for index, child := range current.Children {
+			var prevBlockId *uuid.UUID
+			if index > 0 {
+				prev := current.Children[index-1].Id
+				prevBlockId = &prev
+			}
+
+			var nextBlockId *uuid.UUID
+			if index+1 < len(current.Children) {
+				next := current.Children[index+1].Id
+				nextBlockId = &next
+			}
+
 			resultBlocks = append(resultBlocks, dtos.FlattenedEditableBlock{
 				Id:            child.Id,
 				ParentBlockId: &current.Id,
+				PrevBlockId:   prevBlockId,
+				NextBlockId:   nextBlockId,
 				Type:          child.Type,
 				Props:         child.Props,
 				Content:       child.Content,
@@ -114,20 +128,35 @@ func (ebca *EditableBlockAdapter) FlattenToRaw(
 		}
 		visited[current.Id] = true
 
-		for _, child := range current.Children {
+		for index, child := range current.Children {
 			props, err := json.Marshal(child.Props)
 			if err != nil {
-				return nil, 0, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
+				return nil, 0, exceptions.Block.InvalidDto().WithOrigin(err)
 			}
 			content, err := json.Marshal(child.Content)
 			if err != nil {
-				return nil, 0, exceptions.BlockGroup.InvalidDto().WithOrigin(err)
+				return nil, 0, exceptions.Block.InvalidDto().WithOrigin(err)
 			}
 
 			totalSize += int64(len(props) + len(content))
+
+			var prevBlockId *uuid.UUID
+			if index > 0 {
+				prev := current.Children[index-1].Id
+				prevBlockId = &prev
+			}
+
+			var nextBlockId *uuid.UUID
+			if index+1 < len(current.Children) {
+				next := current.Children[index+1].Id
+				nextBlockId = &next
+			}
+
 			resultBlocks = append(resultBlocks, dtos.RawFlattenedEditableBlock{
 				Id:            child.Id,
 				ParentBlockId: &current.Id,
+				PrevBlockId:   prevBlockId,
+				NextBlockId:   nextBlockId,
 				Type:          child.Type,
 				Props:         datatypes.JSON(props),
 				Content:       datatypes.JSON(content),
@@ -171,11 +200,26 @@ func (ebca *EditableBlockAdapter) FlattenRawToRaw(
 		}
 		visited[current.Id] = true
 
-		for _, child := range current.Children {
+		for index, child := range current.Children {
 			totalSize += int64(len(child.Props) + len(child.Content))
+
+			var prevBlockId *uuid.UUID
+			if index > 0 {
+				prev := current.Children[index-1].Id
+				prevBlockId = &prev
+			}
+
+			var nextBlockId *uuid.UUID
+			if index+1 < len(current.Children) {
+				next := current.Children[index+1].Id
+				nextBlockId = &next
+			}
+
 			resultBlocks = append(resultBlocks, dtos.RawFlattenedEditableBlock{
 				Id:            child.Id,
 				ParentBlockId: &current.Id,
+				PrevBlockId:   prevBlockId,
+				NextBlockId:   nextBlockId,
 				Type:          child.Type,
 				Props:         child.Props,
 				Content:       child.Content,

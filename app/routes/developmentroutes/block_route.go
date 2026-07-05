@@ -60,38 +60,6 @@ func configureDevelopmentBlockRoutes() {
 			)...,
 		)
 		blockRoutes.GET(
-			"/getMyBlocksByBlockGroupId",
-			middlewares.RepositionMiddleware(
-				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyBlocksByBlockGroupId"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Block.GetMyBlocksByBlockGroupId,
-					),
-				},
-				defaultMiddlewares,
-				blockModule.Binder.BindGetMyBlocksByBlockGroupId(
-					blockModule.Controller.GetMyBlocksByBlockGroupId,
-				),
-			)...,
-		)
-		blockRoutes.GET(
-			"/getMyBlocksByBlockGroupIds",
-			middlewares.RepositionMiddleware(
-				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyBlocksByBlockGroupIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Block.GetMyBlocksByBlockGroupIds,
-					),
-				},
-				defaultMiddlewares,
-				blockModule.Binder.BindGetMyBlocksByBlockGroupIds(
-					blockModule.Controller.GetMyBlocksByBlockGroupIds,
-				),
-			)...,
-		)
-		blockRoutes.GET(
 			"/getMyBlocksByBlockPackId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{

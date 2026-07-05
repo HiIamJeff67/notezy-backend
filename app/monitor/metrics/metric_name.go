@@ -182,46 +182,21 @@ type metricNameBlockPack struct {
 	DeleteMyBlockPacksByIds             string
 }
 
-type metricNameBlockGroup struct {
-	GetMyBlockGroupById                                    string
-	GetMyBlockGroupAndItsBlocksById                        string
-	GetMyBlockGroupsAndTheirBlocksByIds                    string
-	GetMyBlockGroupsAndTheirBlocksByBlockPackId            string
-	GetMyBlockGroupsByPrevBlockGroupId                     string
-	GetAllMyBlockGroupsByBlockPackId                       string
-	InsertBlockGroupByBlockPackId                          string
-	InsertBlockGroupsByBlockPackId                         string
-	InsertBlockGroupsByBlockPackIds                        string
-	InsertBlockGroupAndItsBlocksByBlockPackId              string
-	InsertBlockGroupsAndTheirBlocksByBlockPackId           string
-	InsertBlockGroupsAndTheirBlocksByBlockPackIds          string
-	InsertSequentialBlockGroupsAndTheirBlocksByBlockPackId string
-	MoveMyBlockGroupById                                   string
-	MoveMyBlockGroupsByBlockPackId                         string
-	MoveMyBlockGroupsByBlockPackIds                        string
-	RestoreMyBlockGroupById                                string
-	RestoreMyBlockGroupsByIds                              string
-	DeleteMyBlockGroupById                                 string
-	DeleteMyBlockGroupsByIds                               string
-}
-
 type metricNameBlock struct {
-	GetMyBlockById             string
-	GetMyBlocksByIds           string
-	GetMyBlocksByBlockGroupId  string
-	GetMyBlocksByBlockGroupIds string
-	GetMyBlocksByBlockPackId   string
-	GetAllMyBlocks             string
-	AppendBlock                string
-	AppendBlocks               string
-	InsertBlock                string
-	InsertBlocks               string
-	UpdateMyBlockById          string
-	UpdateMyBlocksByIds        string
-	RestoreMyBlockById         string
-	RestoreMyBlocksByIds       string
-	DeleteMyBlockById          string
-	DeleteMyBlocksByIds        string
+	GetMyBlockById           string
+	GetMyBlocksByIds         string
+	GetMyBlocksByBlockPackId string
+	GetAllMyBlocks           string
+	AppendBlock              string
+	AppendBlocks             string
+	InsertBlock              string
+	InsertBlocks             string
+	UpdateMyBlockById        string
+	UpdateMyBlocksByIds      string
+	RestoreMyBlockById       string
+	RestoreMyBlocksByIds     string
+	DeleteMyBlockById        string
+	DeleteMyBlocksByIds      string
 }
 
 type MetricNameRequests struct {
@@ -240,7 +215,6 @@ type MetricNameRequests struct {
 	SubShelf          metricNameSubShelf
 	Material          metricNameMaterial
 	BlockPack         metricNameBlockPack
-	BlockGroup        metricNameBlockGroup
 	Block             metricNameBlock
 }
 
@@ -440,45 +414,21 @@ var MetricNames = struct {
 				DeleteMyBlockPackById:               "server.requests.blockPack.deleteMyBlockPackById",
 				DeleteMyBlockPacksByIds:             "server.requests.blockPack.deleteMyBlockPacksByIds",
 			},
-			BlockGroup: metricNameBlockGroup{
-				GetMyBlockGroupById:                                    "server.requests.blockGroup.getMyBlockGroupById",
-				GetMyBlockGroupAndItsBlocksById:                        "server.requests.blockGroup.getMyBlockGroupAndItsBlocksById",
-				GetMyBlockGroupsAndTheirBlocksByIds:                    "server.requests.blockGroup.getMyBlockGroupsAndTheirBlocksByIds",
-				GetMyBlockGroupsAndTheirBlocksByBlockPackId:            "server.requests.blockGroup.getMyBlockGroupsAndTheirBlocksByBlockPackId",
-				GetMyBlockGroupsByPrevBlockGroupId:                     "server.requests.blockGroup.getMyBlockGroupsByPrevBlockGroupId",
-				GetAllMyBlockGroupsByBlockPackId:                       "server.requests.blockGroup.getAllMyBlockGroupsByBlockPackId",
-				InsertBlockGroupByBlockPackId:                          "server.requests.blockGroup.insertBlockGroupByBlockPackId",
-				InsertBlockGroupsByBlockPackId:                         "server.requests.blockGroup.insertBlockGroupsByBlockPackId",
-				InsertBlockGroupsByBlockPackIds:                        "server.requests.blockGroup.insertBlockGroupsByBlockPackIds",
-				InsertBlockGroupAndItsBlocksByBlockPackId:              "server.requests.blockGroup.insertBlockGroupAndItsBlocksByBlockPackId",
-				InsertBlockGroupsAndTheirBlocksByBlockPackId:           "server.requests.blockGroup.insertBlockGroupsAndTheirBlocksByBlockPackId",
-				InsertBlockGroupsAndTheirBlocksByBlockPackIds:          "server.requests.blockGroup.insertBlockGroupsAndTheirBlocksByBlockPackIds",
-				InsertSequentialBlockGroupsAndTheirBlocksByBlockPackId: "server.requests.blockGroup.insertSequentialBlockGroupsAndTheirBlocksByBlockPackId",
-				MoveMyBlockGroupById:                                   "server.requests.moveMyBlockGroupById",
-				MoveMyBlockGroupsByBlockPackId:                         "server.requests.blockGroup.moveMyBlockGroupsByBlockPackId",
-				MoveMyBlockGroupsByBlockPackIds:                        "server.requests.blockGroup.moveMyBlockGroupsByBlockPackIds",
-				RestoreMyBlockGroupById:                                "server.requests.blockGroup.restoreMyBlockGroupById",
-				RestoreMyBlockGroupsByIds:                              "server.requests.blockGroup.restoreMyBlockGroupsByIds",
-				DeleteMyBlockGroupById:                                 "server.requests.blockGroup.deleteMyBlockGroupById",
-				DeleteMyBlockGroupsByIds:                               "server.requests.blockGroup.deleteMyBlockGroupsByIds",
-			},
 			Block: metricNameBlock{
-				GetMyBlockById:             "server.requests.block.getMyBlockById",
-				GetMyBlocksByIds:           "server.requests.block.getMyBlocksByIds",
-				GetMyBlocksByBlockGroupId:  "server.requests.block.getMyBlocksByBlockGroupId",
-				GetMyBlocksByBlockGroupIds: "server.requests.block.getMyBlocksByBlockGroupIds",
-				GetMyBlocksByBlockPackId:   "server.requests.block.getMyBlocksByBlockPackId",
-				GetAllMyBlocks:             "server.requests.block.getAllMyBlocks",
-				AppendBlock:                "server.requests.block.appendBlock",
-				AppendBlocks:               "server.requests.block.appendBlocks",
-				InsertBlock:                "server.requests.block.insertBlock",
-				InsertBlocks:               "server.requests.block.insertBlocks",
-				UpdateMyBlockById:          "server.requests.block.updateMyBlockById",
-				UpdateMyBlocksByIds:        "server.requests.block.updateMyBlocksByIds",
-				RestoreMyBlockById:         "server.requests.block.restoreMyBlockById",
-				RestoreMyBlocksByIds:       "server.requests.block.restoreMyBlocksByIds",
-				DeleteMyBlockById:          "server.requests.block.deleteMyBlockById",
-				DeleteMyBlocksByIds:        "server.requests.block.deleteMyBlocksByIds",
+				GetMyBlockById:           "server.requests.block.getMyBlockById",
+				GetMyBlocksByIds:         "server.requests.block.getMyBlocksByIds",
+				GetMyBlocksByBlockPackId: "server.requests.block.getMyBlocksByBlockPackId",
+				GetAllMyBlocks:           "server.requests.block.getAllMyBlocks",
+				AppendBlock:              "server.requests.block.appendBlock",
+				AppendBlocks:             "server.requests.block.appendBlocks",
+				InsertBlock:              "server.requests.block.insertBlock",
+				InsertBlocks:             "server.requests.block.insertBlocks",
+				UpdateMyBlockById:        "server.requests.block.updateMyBlockById",
+				UpdateMyBlocksByIds:      "server.requests.block.updateMyBlocksByIds",
+				RestoreMyBlockById:       "server.requests.block.restoreMyBlockById",
+				RestoreMyBlocksByIds:     "server.requests.block.restoreMyBlocksByIds",
+				DeleteMyBlockById:        "server.requests.block.deleteMyBlockById",
+				DeleteMyBlocksByIds:      "server.requests.block.deleteMyBlocksByIds",
 			},
 		},
 		Responses: MetricNameResponse{

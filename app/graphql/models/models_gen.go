@@ -29,8 +29,10 @@ type SearchEdge interface {
 
 type PrivateBlock struct {
 	ID            uuid.UUID       `json:"id"`
+	BlockPackID   uuid.UUID       `json:"blockPackId"`
 	ParentBlockID *uuid.UUID      `json:"parentBlockId,omitempty"`
-	BlockGroupID  uuid.UUID       `json:"blockGroupId"`
+	PrevBlockID   *uuid.UUID      `json:"prevBlockId,omitempty"`
+	NextBlockID   *uuid.UUID      `json:"nextBlockId,omitempty"`
 	Type          enums.BlockType `json:"type"`
 	Props         datatypes.JSON  `json:"props"`
 	Content       datatypes.JSON  `json:"content"`

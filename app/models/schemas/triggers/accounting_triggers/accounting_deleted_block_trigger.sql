@@ -10,18 +10,20 @@ BEGIN
 
     WITH old_blocks_agg AS (
         SELECT 
-            block_group_id, 
+            block_pack_id, 
             count(*) as count_delta
         FROM old_table
-        GROUP BY block_group_id
+        GROUP BY block_pack_id
     ),
     owner_deltas AS (
         SELECT 
-            bg.owner_id,
+            owner_uts.user_id AS owner_id,
             sum(oba.count_delta) as total_delta
         FROM old_blocks_agg oba
-        JOIN "BlockGroupTable" bg ON oba.block_group_id = bg.id
-        GROUP BY bg.owner_id
+        JOIN "BlockPackTable" bp ON oba.block_pack_id = bp.id
+        JOIN "SubShelfTable" ss ON bp.parent_sub_shelf_id = ss.id
+        JOIN "UsersToShelvesTable" owner_uts ON ss.root_shelf_id = owner_uts.root_shelf_id AND owner_uts.permission = 'Owner'
+        GROUP BY owner_uts.user_id
     )
     UPDATE "UserAccountTable" ua
     SET 
@@ -32,18 +34,17 @@ BEGIN
 
     WITH old_blocks_agg AS (
         SELECT 
-            block_group_id, 
+            block_pack_id, 
             count(*) as count_delta
         FROM old_table
-        GROUP BY block_group_id
+        GROUP BY block_pack_id
     ),
     bp_updates AS (
         SELECT 
-            bg.block_pack_id, 
+            oba.block_pack_id, 
             sum(oba.count_delta) as total_delta
         FROM old_blocks_agg oba
-        JOIN "BlockGroupTable" bg ON oba.block_group_id = bg.id
-        GROUP BY bg.block_pack_id
+        GROUP BY oba.block_pack_id
     )
     UPDATE "BlockPackTable" bp
     SET 

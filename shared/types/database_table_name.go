@@ -19,10 +19,7 @@ const (
 	TableName_SubShelfTable       TableName = "SubShelfTable"
 	TableName_MaterialTable       TableName = "MaterialTable"
 	TableName_BlockPackTable      TableName = "BlockPackTable"
-	TableName_BlockGroupTable     TableName = "BlockGroupTable"
 	TableName_BlockTable          TableName = "BlockTable"
-	TableName_SyncBlockGroupTable TableName = "SyncBlockGroupTable"
-	TableName_SyncBlockTable      TableName = "SyncBlockTable"
 	TableName_ItemTable           TableName = "ItemTable"
 
 	TableName_RoutinesToItemsTable    TableName = "RoutinesToItemsTable"
@@ -61,10 +58,7 @@ var _validTableNames = map[string]TableName{
 	"SubShelfTable":       TableName_SubShelfTable,
 	"MaterialTable":       TableName_MaterialTable,
 	"BlockPackTable":      TableName_BlockPackTable,
-	"BlockGroupTable":     TableName_BlockGroupTable,
 	"BlockTable":          TableName_BlockTable,
-	"SyncBlockGroupTable": TableName_SyncBlockGroupTable,
-	"SyncBlockTable":      TableName_SyncBlockTable,
 	"ItemTable":           TableName_ItemTable,
 
 	"RoutinesToItemsTable":    TableName_RoutinesToItemsTable,

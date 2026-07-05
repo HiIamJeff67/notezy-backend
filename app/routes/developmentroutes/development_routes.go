@@ -38,7 +38,6 @@ func ConfigureDevelopmentRoutes() {
 	configureDevelopmentSubShelfRoutes()
 	configureDevelopmentMaterialRoutes()
 	configureDevelopmentBlockPackRoutes()
-	configureDevelopmentBlockGroupRoutes()
 	configureDevelopmentBlockRoutes()
 	configureDevelopmentGraphQLRoutes()
 

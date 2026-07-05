@@ -115,9 +115,9 @@ func (a *RoutineTaskPayloadAdapter) Parse(
 			return exceptions.RoutineTask.InvalidDto().WithOrigin(err)
 		}
 
-		validateBlockDto := make([]dtos.ArborizedEditableBlock, len(parsedPayload.Template.BlockGroups))
-		for index, blockGroup := range parsedPayload.Template.BlockGroups {
-			validateBlockDto[index] = blockGroup.ArborizedEditableBlock
+		validateBlockDto := make([]dtos.ArborizedEditableBlock, len(parsedPayload.Template.Blocks))
+		for index, block := range parsedPayload.Template.Blocks {
+			validateBlockDto[index] = block.ArborizedEditableBlock
 		}
 
 		validateBlockFunc := func(validateDto dtos.ArborizedEditableBlock) (bool, error) {
@@ -137,7 +137,7 @@ func (a *RoutineTaskPayloadAdapter) Parse(
 			if validateBlockResult.Err != nil {
 				return exceptions.RoutineTask.InvalidDto().
 					WithOrigin(fmt.Errorf(
-						"invalid template.blockGroups[%d].arborizedEditableBlock: %w",
+						"invalid template.blocks[%d].arborizedEditableBlock: %w",
 						validateBlockResult.Index,
 						validateBlockResult.Err,
 					))

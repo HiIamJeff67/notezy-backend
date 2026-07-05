@@ -18,10 +18,7 @@ var MigratingTables = []any{
 	&SubShelf{},
 	&Material{},
 	&BlockPack{},
-	&BlockGroup{},
 	&Block{},
-	&SyncBlockGroup{},
-	&SyncBlock{},
 	&Item{},
 
 	&RoutinesToItems{},

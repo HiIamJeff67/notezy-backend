@@ -33,9 +33,13 @@ func decodePayload[T any](task schemas.RoutineTask) (*T, *exceptions.Exception) 
 
 func flattenArborizedBlock(
 	editableBlockAdapter adapters.EditableBlockAdapterInterface,
-	blockGroupId uuid.UUID,
+	blockPackId uuid.UUID,
 	arborizedEditableBlock *dtos.ArborizedEditableBlock,
 ) ([]schemas.Block, []uuid.UUID, int64, *exceptions.Exception) {
+	if blockPackId == uuid.Nil {
+		return nil, nil, 0, exceptions.RoutineTask.InvalidDto().
+			WithOrigin(fmt.Errorf("blockPackId is required"))
+	}
 	rawFlattenedBlocks, totalSize, exception := editableBlockAdapter.FlattenToRaw(arborizedEditableBlock)
 	if exception != nil {
 		return nil, nil, 0, exception
@@ -57,8 +61,10 @@ func flattenArborizedBlock(
 		blockIds[index] = rawFlattenedBlock.Id
 		blocks[index] = schemas.Block{
 			Id:            rawFlattenedBlock.Id,
+			BlockPackId:   blockPackId,
 			ParentBlockId: rawFlattenedBlock.ParentBlockId,
-			BlockGroupId:  blockGroupId,
+			PrevBlockId:   rawFlattenedBlock.PrevBlockId,
+			NextBlockId:   rawFlattenedBlock.NextBlockId,
 			Type:          rawFlattenedBlock.Type,
 			Props:         rawFlattenedBlock.Props,
 			Content:       rawFlattenedBlock.Content,

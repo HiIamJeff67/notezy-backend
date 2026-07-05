@@ -15,8 +15,6 @@ import (
 type BlockBinderInterface interface {
 	BindGetMyBlockById(controllerFunc types.ControllerFunc[*dtos.GetMyBlockByIdReqDto]) gin.HandlerFunc
 	BindGetMyBlocksByIds(controllerFunc types.ControllerFunc[*dtos.GetMyBlocksByIdsReqDto]) gin.HandlerFunc
-	BindGetMyBlocksByBlockGroupId(controllerFunc types.ControllerFunc[*dtos.GetMyBlocksByBlockGroupIdReqDto]) gin.HandlerFunc
-	BindGetMyBlocksByBlockGroupIds(controllerFunc types.ControllerFunc[*dtos.GetMyBlocksByBlockGroupIdsReqDto]) gin.HandlerFunc
 	BindGetMyBlocksByBlockPackId(controllerFunc types.ControllerFunc[*dtos.GetMyBlocksByBlockPackIdReqDto]) gin.HandlerFunc
 	BindGetAllMyBlocks(controllerFunc types.ControllerFunc[*dtos.GetAllMyBlocksReqDto]) gin.HandlerFunc
 	BindAppendBlock(controllerFunc types.ControllerFunc[*dtos.AppendBlockReqDto]) gin.HandlerFunc
@@ -69,57 +67,6 @@ func (b *BlockBinder) BindGetMyBlockById(controllerFunc types.ControllerFunc[*dt
 func (b *BlockBinder) BindGetMyBlocksByIds(controllerFunc types.ControllerFunc[*dtos.GetMyBlocksByIdsReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.GetMyBlocksByIdsReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserId = *userId
-
-		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
-			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
-func (b *BlockBinder) BindGetMyBlocksByBlockGroupId(controllerFunc types.ControllerFunc[*dtos.GetMyBlocksByBlockGroupIdReqDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.GetMyBlocksByBlockGroupIdReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserId = *userId
-
-		blockGroupIdString := ctx.Query("blockGroupId")
-		if blockGroupIdString == "" {
-			exceptions.Shelf.InvalidDto().WithOrigin(fmt.Errorf("blockGroupId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		blockGroupId, err := uuid.Parse(blockGroupIdString)
-		if err != nil {
-			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.Param.BlockGroupId = blockGroupId
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
-func (b *BlockBinder) BindGetMyBlocksByBlockGroupIds(controllerFunc types.ControllerFunc[*dtos.GetMyBlocksByBlockGroupIdsReqDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.GetMyBlocksByBlockGroupIdsReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 

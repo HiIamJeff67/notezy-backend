@@ -30,8 +30,7 @@ func (sc *BlockScope) PassPermissionCheck(id uuid.UUID, userId uuid.UUID, permis
 			Select("1").
 			Joins("INNER JOIN \"SubShelfTable\" ss ON ss.root_shelf_id = \"UsersToShelvesTable\".root_shelf_id").
 			Joins("INNER JOIN \"BlockPackTable\" bp ON bp.parent_sub_shelf_id = ss.id").
-			Joins("INNER JOIN \"BlockGroupTable\" bg ON bg.block_pack_id = bp.id").
-			Where("bg.id = \"BlockTable\".block_group_id").
+			Where("bp.id = \"BlockTable\".block_pack_id").
 			Where("user_id = ? AND permission IN ?", userId, permissions)
 		return db.Where("\"BlockTable\".id = ? AND EXISTS (?)", id, subQuery)
 	}
@@ -45,8 +44,7 @@ func (sc *BlockScope) PassPermissionChecks(ids []uuid.UUID, userId uuid.UUID, pe
 			Select("1").
 			Joins("INNER JOIN \"SubShelfTable\" ss ON ss.root_shelf_id = \"UsersToShelvesTable\".root_shelf_id").
 			Joins("INNER JOIN \"BlockPackTable\" bp ON bp.parent_sub_shelf_id = ss.id").
-			Joins("INNER JOIN \"BlockGroupTable\" bg ON bg.block_pack_id = bp.id").
-			Where("bg.id = \"BlockTable\".block_group_id").
+			Where("bp.id = \"BlockTable\".block_pack_id").
 			Where("user_id = ? AND permission IN ?", userId, permissions)
 		return db.Where("\"BlockTable\".id IN ? AND EXISTS (?)", ids, subQuery)
 	}
