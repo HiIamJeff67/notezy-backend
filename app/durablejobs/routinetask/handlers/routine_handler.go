@@ -8,6 +8,7 @@ import (
 
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	matchers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/matchers"
+	resolvers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/resolvers"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
@@ -17,16 +18,29 @@ import (
 )
 
 type RoutineHandler struct {
-	db                 *gorm.DB
-	namePatternMatcher matchers.NamePatternMatcherInterface
-	routineRepository  repositories.RoutineRepositoryInterface
+	db                   *gorm.DB
+	patternResolver      resolvers.PatternResolverInterface
+	templateBlockMatcher matchers.TemplateBlockMatcherInterface
+	routineRepository    repositories.RoutineRepositoryInterface
 }
 
-func NewRoutineHandler(db *gorm.DB, routineRepository repositories.RoutineRepositoryInterface) RoutineHandler {
+func NewRoutineHandler(
+	db *gorm.DB,
+	patternResolver resolvers.PatternResolverInterface,
+	templateBlockMatcher matchers.TemplateBlockMatcherInterface,
+	routineRepository repositories.RoutineRepositoryInterface,
+) RoutineHandler {
+	if patternResolver == nil {
+		patternResolver = resolvers.NewPatternResolver(db, nil, nil)
+	}
+	if templateBlockMatcher == nil {
+		templateBlockMatcher = matchers.NewTemplateBlockMatcher()
+	}
 	return RoutineHandler{
-		db:                 db,
-		namePatternMatcher: matchers.NewNamePatternMatcher(),
-		routineRepository:  routineRepository,
+		db:                   db,
+		patternResolver:      patternResolver,
+		templateBlockMatcher: templateBlockMatcher,
+		routineRepository:    routineRepository,
 	}
 }
 
@@ -49,16 +63,18 @@ func (h RoutineHandler) HandleCreateRoutine(
 		if exception != nil {
 			continue
 		}
-		title, exception := h.namePatternMatcher.Match(payload.Title, payload.TitlePattern, task)
+		patternValues, exception := h.patternResolver.Resolve(ctx, task, ownerId, payload.Pattern)
 		if exception != nil {
 			continue
 		}
+		title := h.templateBlockMatcher.MatchString(payload.Title, patternValues)
+		description := h.templateBlockMatcher.MatchString(payload.Description, patternValues)
 		bulkInputs = append(bulkInputs, inputs.BulkCreateRoutineInput{
 			UserId:           ownerId,
 			Id:               payload.Id,
 			StationId:        payload.StationId,
 			Title:            title,
-			Description:      payload.Description,
+			Description:      description,
 			Status:           payload.Status,
 			IsPinned:         payload.IsPinned,
 			ScheduledStartAt: payload.ScheduledStartAt,
@@ -108,13 +124,19 @@ func (h RoutineHandler) HandleUpdateRoutine(
 		if exception != nil {
 			continue
 		}
+		patternValues, exception := h.patternResolver.Resolve(ctx, task, ownerId, payload.Pattern)
+		if exception != nil {
+			continue
+		}
 		title := payload.Title
-		if title != nil && payload.TitlePattern != nil {
-			matchedTitle, exception := h.namePatternMatcher.Match(*title, *payload.TitlePattern, task)
-			if exception != nil {
-				continue
-			}
+		if title != nil {
+			matchedTitle := h.templateBlockMatcher.MatchString(*title, patternValues)
 			title = &matchedTitle
+		}
+		description := payload.Description
+		if description != nil {
+			matchedDescription := h.templateBlockMatcher.MatchString(*description, patternValues)
+			description = &matchedDescription
 		}
 		bulkInputs = append(bulkInputs, inputs.BulkUpdateRoutineInput{
 			UserId: ownerId,
@@ -122,7 +144,7 @@ func (h RoutineHandler) HandleUpdateRoutine(
 			PartialUpdateInput: inputs.PartialUpdateRoutineInput{
 				Values: inputs.UpdateRoutineInput{
 					Title:            title,
-					Description:      payload.Description,
+					Description:      description,
 					Status:           payload.Status,
 					IsPinned:         payload.IsPinned,
 					ScheduledStartAt: payload.ScheduledStartAt,

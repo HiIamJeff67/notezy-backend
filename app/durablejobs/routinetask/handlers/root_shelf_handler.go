@@ -8,6 +8,7 @@ import (
 
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	matchers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/matchers"
+	resolvers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/resolvers"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
@@ -17,22 +18,32 @@ import (
 )
 
 type RootShelfHandler struct {
-	db                  *gorm.DB
-	namePatternMatcher  matchers.NamePatternMatcherInterface
-	rootShelfRepository repositories.RootShelfRepositoryInterface
-	subShelfRepository  repositories.SubShelfRepositoryInterface
+	db                   *gorm.DB
+	patternResolver      resolvers.PatternResolverInterface
+	templateBlockMatcher matchers.TemplateBlockMatcherInterface
+	rootShelfRepository  repositories.RootShelfRepositoryInterface
+	subShelfRepository   repositories.SubShelfRepositoryInterface
 }
 
 func NewRootShelfHandler(
 	db *gorm.DB,
+	patternResolver resolvers.PatternResolverInterface,
+	templateBlockMatcher matchers.TemplateBlockMatcherInterface,
 	rootShelfRepository repositories.RootShelfRepositoryInterface,
 	subShelfRepository repositories.SubShelfRepositoryInterface,
 ) RootShelfHandler {
+	if patternResolver == nil {
+		patternResolver = resolvers.NewPatternResolver(db, nil, nil)
+	}
+	if templateBlockMatcher == nil {
+		templateBlockMatcher = matchers.NewTemplateBlockMatcher()
+	}
 	return RootShelfHandler{
-		db:                  db,
-		namePatternMatcher:  matchers.NewNamePatternMatcher(),
-		rootShelfRepository: rootShelfRepository,
-		subShelfRepository:  subShelfRepository,
+		db:                   db,
+		patternResolver:      patternResolver,
+		templateBlockMatcher: templateBlockMatcher,
+		rootShelfRepository:  rootShelfRepository,
+		subShelfRepository:   subShelfRepository,
 	}
 }
 
@@ -55,10 +66,11 @@ func (h RootShelfHandler) HandleCreateRootShelf(
 		if exception != nil {
 			continue
 		}
-		name, exception := h.namePatternMatcher.Match(payload.Name, payload.NamePattern, task)
+		patternValues, exception := h.patternResolver.Resolve(ctx, task, ownerId, payload.Pattern)
 		if exception != nil {
 			continue
 		}
+		name := h.templateBlockMatcher.MatchString(payload.Name, patternValues)
 		bulkInputs = append(bulkInputs, inputs.BulkCreateRootShelfInput{
 			UserId: ownerId,
 			Id:     payload.Id,
@@ -109,14 +121,11 @@ func (h RootShelfHandler) HandleUpdateRootShelf(
 		if payload.Name == nil {
 			continue
 		}
-		name := *payload.Name
-		if payload.NamePattern != nil {
-			matchedName, exception := h.namePatternMatcher.Match(name, *payload.NamePattern, task)
-			if exception != nil {
-				continue
-			}
-			name = matchedName
+		patternValues, exception := h.patternResolver.Resolve(ctx, task, ownerId, payload.Pattern)
+		if exception != nil {
+			continue
 		}
+		name := h.templateBlockMatcher.MatchString(*payload.Name, patternValues)
 		bulkInputs = append(bulkInputs, inputs.BulkUpdateRootShelfInput{
 			UserId: ownerId,
 			Id:     payload.RootShelfId,

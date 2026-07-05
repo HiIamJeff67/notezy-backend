@@ -9,6 +9,8 @@ import (
 
 	adapters "github.com/HiIamJeff67/notezy-backend/app/adapters"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
+	matchers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/matchers"
+	resolvers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/resolvers"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
@@ -21,6 +23,8 @@ import (
 type BlockHandler struct {
 	db                   *gorm.DB
 	editableBlockAdapter adapters.EditableBlockAdapterInterface
+	patternResolver      resolvers.PatternResolverInterface
+	templateBlockMatcher matchers.TemplateBlockMatcherInterface
 	blockPackRepository  repositories.BlockPackRepositoryInterface
 	blockRepository      repositories.BlockRepositoryInterface
 }
@@ -28,15 +32,25 @@ type BlockHandler struct {
 func NewBlockHandler(
 	db *gorm.DB,
 	editableBlockAdapter adapters.EditableBlockAdapterInterface,
+	patternResolver resolvers.PatternResolverInterface,
+	templateBlockMatcher matchers.TemplateBlockMatcherInterface,
 	blockPackRepository repositories.BlockPackRepositoryInterface,
 	blockRepository repositories.BlockRepositoryInterface,
 ) BlockHandler {
 	if editableBlockAdapter == nil {
 		editableBlockAdapter = adapters.NewEditableBlockAdapter()
 	}
+	if patternResolver == nil {
+		patternResolver = resolvers.NewPatternResolver(db, blockRepository, blockPackRepository)
+	}
+	if templateBlockMatcher == nil {
+		templateBlockMatcher = matchers.NewTemplateBlockMatcher()
+	}
 	return BlockHandler{
 		db:                   db,
 		editableBlockAdapter: editableBlockAdapter,
+		patternResolver:      patternResolver,
+		templateBlockMatcher: templateBlockMatcher,
 		blockPackRepository:  blockPackRepository,
 		blockRepository:      blockRepository,
 	}
@@ -44,6 +58,7 @@ func NewBlockHandler(
 
 func (h BlockHandler) HandleAppendBlock(ctx context.Context, tasks []schemas.RoutineTask, taskIdToOwnerId map[uuid.UUID]uuid.UUID) ([]bool, *exceptions.Exception) {
 	successes := make([]bool, len(tasks))
+
 	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
 		if !exists {
@@ -53,12 +68,27 @@ func (h BlockHandler) HandleAppendBlock(ctx context.Context, tasks []schemas.Rou
 		if exception != nil {
 			continue
 		}
-		blocks, _, _, exception := flattenArborizedBlock(h.editableBlockAdapter, payload.BlockPackId, &payload.ArborizedEditableBlock)
+		patternValues, exception := h.patternResolver.Resolve(ctx, task, ownerId, payload.Pattern)
 		if exception != nil {
 			continue
 		}
+		matchedBlock, exception := h.templateBlockMatcher.MatchArborizedEditableBlock(payload.ArborizedEditableBlock, patternValues)
+		if exception != nil {
+			continue
+		}
+		blocks, _, _, exception := flattenArborizedBlock(h.editableBlockAdapter, payload.BlockPackId, &matchedBlock)
+		if exception != nil {
+			continue
+		}
+
+		allowedPermissions := []enums.AccessControlPermission{
+			enums.AccessControlPermission_Owner,
+			enums.AccessControlPermission_Admin,
+			enums.AccessControlPermission_Write,
+		}
+
 		tx := h.db.WithContext(ctx).Begin()
-		if !h.blockPackRepository.HasPermission(payload.BlockPackId, ownerId, writePermissionsForJobs(), options.WithTransactionDB(tx), options.WithOnlyDeleted(types.Ternary_Negative)) {
+		if !h.blockPackRepository.HasPermission(payload.BlockPackId, ownerId, allowedPermissions, options.WithTransactionDB(tx), options.WithOnlyDeleted(types.Ternary_Negative)) {
 			tx.Rollback()
 			continue
 		}
@@ -84,6 +114,7 @@ func (h BlockHandler) HandleAppendBlock(ctx context.Context, tasks []schemas.Rou
 		}
 		successes[taskIndex] = true
 	}
+
 	return successes, nil
 }
 
@@ -91,6 +122,7 @@ func (h BlockHandler) HandleUpdateBlock(ctx context.Context, tasks []schemas.Rou
 	successes := make([]bool, len(tasks))
 	bulkInputs := make([]inputs.BulkUpdateBlockInput, 0, len(tasks))
 	taskIndexes := make([]int, 0, len(tasks))
+
 	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
 		if !exists {
@@ -100,7 +132,18 @@ func (h BlockHandler) HandleUpdateBlock(ctx context.Context, tasks []schemas.Rou
 		if exception != nil {
 			continue
 		}
-		rawBlocks, _, exception := h.editableBlockAdapter.FlattenToRaw(payload.ArborizedEditableBlock)
+		if payload.ArborizedEditableBlock == nil {
+			continue
+		}
+		patternValues, exception := h.patternResolver.Resolve(ctx, task, ownerId, payload.Pattern)
+		if exception != nil {
+			continue
+		}
+		matchedBlock, exception := h.templateBlockMatcher.MatchArborizedEditableBlock(*payload.ArborizedEditableBlock, patternValues)
+		if exception != nil {
+			continue
+		}
+		rawBlocks, _, exception := h.editableBlockAdapter.FlattenToRaw(&matchedBlock)
 		if exception != nil || len(rawBlocks) != 1 {
 			continue
 		}
@@ -121,6 +164,7 @@ func (h BlockHandler) HandleUpdateBlock(ctx context.Context, tasks []schemas.Rou
 	if len(bulkInputs) == 0 {
 		return successes, nil
 	}
+
 	bulkSuccesses, exception := h.blockRepository.BulkUpdateMany(bulkInputs, options.WithDB(h.db.WithContext(ctx)), options.WithOnlyDeleted(types.Ternary_Negative))
 	if exception != nil {
 		return successes, exception
@@ -128,6 +172,7 @@ func (h BlockHandler) HandleUpdateBlock(ctx context.Context, tasks []schemas.Rou
 	for index, success := range bulkSuccesses {
 		successes[taskIndexes[index]] = success
 	}
+
 	return successes, nil
 }
 
@@ -136,6 +181,7 @@ func (h BlockHandler) HandleResetBlock(ctx context.Context, tasks []schemas.Rout
 	blockType := enums.BlockType_Paragraph
 	props := datatypes.JSON([]byte("{}"))
 	content := datatypes.JSON([]byte("[]"))
+
 	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
 		if !exists {
@@ -150,13 +196,6 @@ func (h BlockHandler) HandleResetBlock(ctx context.Context, tasks []schemas.Rout
 		}, options.WithDB(h.db.WithContext(ctx)), options.WithOnlyDeleted(types.Ternary_Negative))
 		successes[taskIndex] = exception == nil
 	}
-	return successes, nil
-}
 
-func writePermissionsForJobs() []enums.AccessControlPermission {
-	return []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
+	return successes, nil
 }

@@ -12,6 +12,8 @@ import (
 	"gorm.io/gorm"
 
 	handlers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers"
+	matchers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/matchers"
+	resolvers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/resolvers"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
@@ -52,22 +54,28 @@ func NewHandlerManager(maxWorkers int, db *gorm.DB) HandlerManager {
 	blockPackRepository := repositories.NewBlockPackRepository(scopes.NewBlockPackScope())
 	blockRepository := repositories.NewBlockRepository(scopes.NewBlockScope())
 	routineRepository := repositories.NewRoutineRepository(scopes.NewRoutineScope())
+	patternResolver := resolvers.NewPatternResolver(db, blockRepository, blockPackRepository)
+	templateBlockMatcher := matchers.NewTemplateBlockMatcher()
 
 	blockPackHandler := handlers.NewBlockPackHandler(
 		db,
 		nil,
+		patternResolver,
+		templateBlockMatcher,
 		blockPackRepository,
 		blockRepository,
 	)
 	blockHandler := handlers.NewBlockHandler(
 		db,
 		nil,
+		patternResolver,
+		templateBlockMatcher,
 		blockPackRepository,
 		blockRepository,
 	)
-	rootShelfHandler := handlers.NewRootShelfHandler(db, rootShelfRepository, subShelfRepository)
-	subShelfHandler := handlers.NewSubShelfHandler(db, subShelfRepository, materialRepository, blockPackRepository)
-	routineHandler := handlers.NewRoutineHandler(db, routineRepository)
+	rootShelfHandler := handlers.NewRootShelfHandler(db, patternResolver, templateBlockMatcher, rootShelfRepository, subShelfRepository)
+	subShelfHandler := handlers.NewSubShelfHandler(db, patternResolver, templateBlockMatcher, subShelfRepository, materialRepository, blockPackRepository)
+	routineHandler := handlers.NewRoutineHandler(db, patternResolver, templateBlockMatcher, routineRepository)
 
 	return HandlerManager{
 		maxWorkers:    maxWorkers,

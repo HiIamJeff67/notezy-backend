@@ -15,6 +15,7 @@ type BaseProps struct {
 	TextColor       string `json:"textColor,omitempty" validate:"omitempty,iscolororhexcode"`
 	BackgroundColor string `json:"backgroundColor,omitempty" validate:"omitempty,iscolororhexcode"`
 	TextAlignment   string `json:"textAlignment,omitempty" validate:"omitempty,istextalignment"`
+	Template        bool   `json:"template,omitempty" validate:"omitempty"`
 }
 
 func (bp *BaseProps) IsBlockProps() bool { return true }

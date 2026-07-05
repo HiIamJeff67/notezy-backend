@@ -1,7 +1,6 @@
 package dtos
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
@@ -9,26 +8,29 @@ import (
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 )
 
-type RoutineTaskNamePatternValue struct {
-	Source   string  `json:"source" validate:"required,oneof=scheduledAt recordId shortRecordId routineTaskId"`
-	Format   *string `json:"format" validate:"omitnil,max=64"`
-	Timezone *string `json:"timezone" validate:"omitnil,max=64,istimezone"`
+type RoutineTaskPatternBinding struct {
+	Source      string     `json:"source" validate:"required,oneof=scheduledAt recordId shortRecordId routineTaskId blockText blockCheckboxCount"`
+	BlockId     *uuid.UUID `json:"blockId" validate:"omitnil"`
+	BlockPackId *uuid.UUID `json:"blockPackId" validate:"omitnil"`
+	Checked     *bool      `json:"checked" validate:"omitnil"`
+	Format      *string    `json:"format" validate:"omitnil,max=64"`
+	Timezone    *string    `json:"timezone" validate:"omitnil,max=64,istimezone"`
 }
 
-type RoutineTaskNamePattern map[string]RoutineTaskNamePatternValue
+type RoutineTaskPattern map[string]RoutineTaskPatternBinding
 
 /* ============================== Root Shelf Routine Task Payload ============================== */
 
 type CreateRootShelfRoutineTaskPayload struct {
-	Id          *uuid.UUID             `json:"id" validate:"omitnil"`
-	Name        string                 `json:"name" validate:"required,min=1,max=128,isshelfname"`
-	NamePattern RoutineTaskNamePattern `json:"namePattern" validate:"omitempty,dive"`
+	Id      *uuid.UUID         `json:"id" validate:"omitnil"`
+	Name    string             `json:"name" validate:"required,min=1,max=128,isshelfname"`
+	Pattern RoutineTaskPattern `json:"pattern" validate:"omitempty,dive"`
 }
 
 type UpdateRootShelfRoutineTaskPayload struct {
-	RootShelfId uuid.UUID               `json:"rootShelfId" validate:"required"`
-	Name        *string                 `json:"name" validate:"omitnil,min=1,max=128,isshelfname"`
-	NamePattern *RoutineTaskNamePattern `json:"namePattern" validate:"omitnil,dive"`
+	RootShelfId uuid.UUID          `json:"rootShelfId" validate:"required"`
+	Name        *string            `json:"name" validate:"omitnil,min=1,max=128,isshelfname"`
+	Pattern     RoutineTaskPattern `json:"pattern" validate:"omitempty,dive"`
 }
 
 type ResetRootShelfRoutineTaskPayload struct {
@@ -38,17 +40,17 @@ type ResetRootShelfRoutineTaskPayload struct {
 /* ============================== Sub Shelf Routine Task Payload ============================== */
 
 type CreateSubShelfRoutineTaskPayload struct {
-	Id             *uuid.UUID             `json:"id" validate:"omitnil"`
-	RootShelfId    uuid.UUID              `json:"rootShelfId" validate:"required"`
-	PrevSubShelfId *uuid.UUID             `json:"prevSubShelfId" validate:"omitnil"`
-	Name           string                 `json:"name" validate:"required,min=1,max=128,isshelfname"`
-	NamePattern    RoutineTaskNamePattern `json:"namePattern" validate:"omitempty,dive"`
+	Id             *uuid.UUID         `json:"id" validate:"omitnil"`
+	RootShelfId    uuid.UUID          `json:"rootShelfId" validate:"required"`
+	PrevSubShelfId *uuid.UUID         `json:"prevSubShelfId" validate:"omitnil"`
+	Name           string             `json:"name" validate:"required,min=1,max=128,isshelfname"`
+	Pattern        RoutineTaskPattern `json:"pattern" validate:"omitempty,dive"`
 }
 
 type UpdateSubShelfRoutineTaskPayload struct {
-	SubShelfId  uuid.UUID               `json:"subShelfId" validate:"required"`
-	Name        *string                 `json:"name" validate:"omitnil,min=1,max=128,isshelfname"`
-	NamePattern *RoutineTaskNamePattern `json:"namePattern" validate:"omitnil,dive"`
+	SubShelfId uuid.UUID          `json:"subShelfId" validate:"required"`
+	Name       *string            `json:"name" validate:"omitnil,min=1,max=128,isshelfname"`
+	Pattern    RoutineTaskPattern `json:"pattern" validate:"omitempty,dive"`
 }
 
 type ResetSubShelfRoutineTaskPayload struct {
@@ -58,10 +60,9 @@ type ResetSubShelfRoutineTaskPayload struct {
 /* ============================== Block Pack Routine Task Payload ============================== */
 
 type CreateBlockPackRoutineTaskTemplate struct {
-	Name                string                 `json:"name" validate:"required,min=1,max=128"`
-	NamePattern         RoutineTaskNamePattern `json:"namePattern" validate:"omitempty,dive"`
-	Icon                *enums.SupportedIcon   `json:"icon" validate:"omitnil,issupportedicon"`
-	HeaderBackgroundURL *string                `json:"headerBackgroundURL" validate:"omitnil"`
+	Name                string               `json:"name" validate:"required,min=1,max=128"`
+	Icon                *enums.SupportedIcon `json:"icon" validate:"omitnil,issupportedicon"`
+	HeaderBackgroundURL *string              `json:"headerBackgroundURL" validate:"omitnil"`
 	Blocks              []struct {
 		ClientId               string                 `json:"clientId" validate:"required"`
 		PrevClientId           *string                `json:"prevClientId" validate:"omitnil"`
@@ -72,11 +73,12 @@ type CreateBlockPackRoutineTaskTemplate struct {
 type CreateBlockPackRoutineTaskPayload struct {
 	TargetSubShelfId uuid.UUID                          `json:"targetSubShelfId" validate:"required"`
 	Template         CreateBlockPackRoutineTaskTemplate `json:"template" validate:"required"`
-	Pattern          map[string]json.RawMessage         `json:"pattern" validate:"required"`
+	Pattern          RoutineTaskPattern                 `json:"pattern" validate:"omitempty,dive"`
 }
 
 type UpdateBlockPackRoutineTaskPayload struct {
-	BlockPackId   uuid.UUID `json:"blockPackId" validate:"required"`
+	BlockPackId   uuid.UUID          `json:"blockPackId" validate:"required"`
+	Pattern       RoutineTaskPattern `json:"pattern" validate:"omitempty,dive"`
 	UpdatedBlocks []struct {
 		BlockId                uuid.UUID               `json:"blockId" validate:"required"`
 		ArborizedEditableBlock *ArborizedEditableBlock `json:"arborizedEditableBlock" validate:"required"`
@@ -91,11 +93,13 @@ type ResetBlockPackRoutineTaskPayload struct {
 
 type AppendBlockRoutineTaskPayload struct {
 	BlockPackId            uuid.UUID              `json:"blockPackId" validate:"required"`
+	Pattern                RoutineTaskPattern     `json:"pattern" validate:"omitempty,dive"`
 	ArborizedEditableBlock ArborizedEditableBlock `json:"arborizedEditableBlock" validate:"required"`
 }
 
 type UpdateBlockRoutineTaskPayload struct {
 	BlockId                uuid.UUID               `json:"blockId" validate:"required"`
+	Pattern                RoutineTaskPattern      `json:"pattern" validate:"omitempty,dive"`
 	ArborizedEditableBlock *ArborizedEditableBlock `json:"arborizedEditableBlock" validate:"required"`
 }
 
@@ -106,28 +110,28 @@ type ResetBlockRoutineTaskPayload struct {
 /* ============================== Routine Routine Task Payload ============================== */
 
 type CreateRoutineRoutineTaskPayload struct {
-	Id               *uuid.UUID             `json:"id" validate:"omitnil"`
-	StationId        uuid.UUID              `json:"stationId" validate:"required"`
-	Title            string                 `json:"title" validate:"required,min=1,max=128"`
-	TitlePattern     RoutineTaskNamePattern `json:"titlePattern" validate:"omitempty,dive"`
-	Description      string                 `json:"description" validate:"max=1024"`
-	Status           *enums.RoutineStatus   `json:"status" validate:"omitnil,isroutinestatus"`
-	IsPinned         *bool                  `json:"isPinned" validate:"omitnil"`
-	ScheduledStartAt *time.Time             `json:"scheduledStartAt" validate:"omitnil"`
-	ScheduledEndAt   *time.Time             `json:"scheduledEndAt" validate:"omitnil"`
-	Period           *enums.RoutinePeriod   `json:"period" validate:"omitnil,isroutineperiod"`
-	Timezone         *string                `json:"timezone" validate:"omitnil,max=64,istimezone"`
+	Id               *uuid.UUID           `json:"id" validate:"omitnil"`
+	StationId        uuid.UUID            `json:"stationId" validate:"required"`
+	Title            string               `json:"title" validate:"required,min=1,max=128"`
+	Pattern          RoutineTaskPattern   `json:"pattern" validate:"omitempty,dive"`
+	Description      string               `json:"description" validate:"max=1024"`
+	Status           *enums.RoutineStatus `json:"status" validate:"omitnil,isroutinestatus"`
+	IsPinned         *bool                `json:"isPinned" validate:"omitnil"`
+	ScheduledStartAt *time.Time           `json:"scheduledStartAt" validate:"omitnil"`
+	ScheduledEndAt   *time.Time           `json:"scheduledEndAt" validate:"omitnil"`
+	Period           *enums.RoutinePeriod `json:"period" validate:"omitnil,isroutineperiod"`
+	Timezone         *string              `json:"timezone" validate:"omitnil,max=64,istimezone"`
 }
 
 type UpdateRoutineRoutineTaskPayload struct {
-	RoutineId        uuid.UUID               `json:"routineId" validate:"required"`
-	Title            *string                 `json:"title" validate:"omitnil,min=1,max=128"`
-	TitlePattern     *RoutineTaskNamePattern `json:"titlePattern" validate:"omitnil,dive"`
-	Description      *string                 `json:"description" validate:"omitnil,max=1024"`
-	Status           *enums.RoutineStatus    `json:"status" validate:"omitnil,isroutinestatus"`
-	IsPinned         *bool                   `json:"isPinned" validate:"omitnil"`
-	ScheduledStartAt *time.Time              `json:"scheduledStartAt" validate:"omitnil"`
-	ScheduledEndAt   *time.Time              `json:"scheduledEndAt" validate:"omitnil"`
-	Period           *enums.RoutinePeriod    `json:"period" validate:"omitnil,isroutineperiod"`
-	Timezone         *string                 `json:"timezone" validate:"omitnil,max=64,istimezone"`
+	RoutineId        uuid.UUID            `json:"routineId" validate:"required"`
+	Title            *string              `json:"title" validate:"omitnil,min=1,max=128"`
+	Pattern          RoutineTaskPattern   `json:"pattern" validate:"omitempty,dive"`
+	Description      *string              `json:"description" validate:"omitnil,max=1024"`
+	Status           *enums.RoutineStatus `json:"status" validate:"omitnil,isroutinestatus"`
+	IsPinned         *bool                `json:"isPinned" validate:"omitnil"`
+	ScheduledStartAt *time.Time           `json:"scheduledStartAt" validate:"omitnil"`
+	ScheduledEndAt   *time.Time           `json:"scheduledEndAt" validate:"omitnil"`
+	Period           *enums.RoutinePeriod `json:"period" validate:"omitnil,isroutineperiod"`
+	Timezone         *string              `json:"timezone" validate:"omitnil,max=64,istimezone"`
 }

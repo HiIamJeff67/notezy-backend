@@ -13,10 +13,12 @@ import (
 	adapters "github.com/HiIamJeff67/notezy-backend/app/adapters"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	matchers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/matchers"
+	resolvers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/resolvers"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	"github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
@@ -24,7 +26,8 @@ import (
 type BlockPackHandler struct {
 	db                   *gorm.DB
 	editableBlockAdapter adapters.EditableBlockAdapterInterface
-	namePatternMatcher   matchers.NamePatternMatcherInterface
+	patternResolver      resolvers.PatternResolverInterface
+	templateBlockMatcher matchers.TemplateBlockMatcherInterface
 	blockPackRepository  repositories.BlockPackRepositoryInterface
 	blockRepository      repositories.BlockRepositoryInterface
 }
@@ -32,16 +35,25 @@ type BlockPackHandler struct {
 func NewBlockPackHandler(
 	db *gorm.DB,
 	editableBlockAdapter adapters.EditableBlockAdapterInterface,
+	patternResolver resolvers.PatternResolverInterface,
+	templateBlockMatcher matchers.TemplateBlockMatcherInterface,
 	blockPackRepository repositories.BlockPackRepositoryInterface,
 	blockRepository repositories.BlockRepositoryInterface,
 ) BlockPackHandler {
 	if editableBlockAdapter == nil {
 		editableBlockAdapter = adapters.NewEditableBlockAdapter()
 	}
+	if patternResolver == nil {
+		patternResolver = resolvers.NewPatternResolver(db, blockRepository, blockPackRepository)
+	}
+	if templateBlockMatcher == nil {
+		templateBlockMatcher = matchers.NewTemplateBlockMatcher()
+	}
 	return BlockPackHandler{
 		db:                   db,
 		editableBlockAdapter: editableBlockAdapter,
-		namePatternMatcher:   matchers.NewNamePatternMatcher(),
+		patternResolver:      patternResolver,
+		templateBlockMatcher: templateBlockMatcher,
 		blockPackRepository:  blockPackRepository,
 		blockRepository:      blockRepository,
 	}
@@ -58,13 +70,14 @@ func (h BlockPackHandler) HandleCreateBlockPack(ctx context.Context, tasks []sch
 		if exception != nil {
 			continue
 		}
-		name, exception := h.namePatternMatcher.Match(payload.Template.Name, payload.Template.NamePattern, task)
+		patternValues, exception := h.patternResolver.Resolve(ctx, task, ownerId, payload.Pattern)
 		if exception != nil {
 			continue
 		}
+		name := h.templateBlockMatcher.MatchString(payload.Template.Name, patternValues)
 		blockPackId := uuid.New()
 		tx := h.db.WithContext(ctx).Begin()
-		blockPackSuccesses, exception := h.blockPackRepository.BulkCreateMany([]inputs.BulkCreateBlockPackInput{{
+		validBlockPacks, exception := h.blockPackRepository.BulkCreateMany([]inputs.BulkCreateBlockPackInput{{
 			UserId:              ownerId,
 			Id:                  &blockPackId,
 			ParentSubShelfId:    payload.TargetSubShelfId,
@@ -72,14 +85,20 @@ func (h BlockPackHandler) HandleCreateBlockPack(ctx context.Context, tasks []sch
 			Icon:                payload.Template.Icon,
 			HeaderBackgroundURL: payload.Template.HeaderBackgroundURL,
 		}}, options.WithTransactionDB(tx), options.WithOnlyDeleted(types.Ternary_Negative))
-		if exception != nil || len(blockPackSuccesses) == 0 || !blockPackSuccesses[0] {
+		if exception != nil || len(validBlockPacks) == 0 || !validBlockPacks[0] {
 			tx.Rollback()
 			continue
 		}
 		var prevRootId *uuid.UUID
 		taskFailed := false
 		for _, block := range payload.Template.Blocks {
-			blocks, _, _, exception := flattenArborizedBlock(h.editableBlockAdapter, blockPackId, &block.ArborizedEditableBlock)
+			matchedBlock, exception := h.templateBlockMatcher.MatchArborizedEditableBlock(block.ArborizedEditableBlock, patternValues)
+			if exception != nil {
+				tx.Rollback()
+				taskFailed = true
+				break
+			}
+			blocks, _, _, exception := flattenArborizedBlock(h.editableBlockAdapter, blockPackId, &matchedBlock)
 			if exception != nil || len(blocks) == 0 {
 				tx.Rollback()
 				taskFailed = true
@@ -127,8 +146,19 @@ func (h BlockPackHandler) HandleUpdateBlockPack(ctx context.Context, tasks []sch
 		if exception != nil {
 			continue
 		}
+		patternValues, exception := h.patternResolver.Resolve(ctx, task, ownerId, payload.Pattern)
+		if exception != nil {
+			continue
+		}
 		for _, block := range payload.UpdatedBlocks {
-			flattenedBlocks, _, _, exception := flattenArborizedBlock(h.editableBlockAdapter, payload.BlockPackId, block.ArborizedEditableBlock)
+			if block.ArborizedEditableBlock == nil {
+				continue
+			}
+			matchedBlock, exception := h.templateBlockMatcher.MatchArborizedEditableBlock(*block.ArborizedEditableBlock, patternValues)
+			if exception != nil {
+				continue
+			}
+			flattenedBlocks, _, _, exception := flattenArborizedBlock(h.editableBlockAdapter, payload.BlockPackId, &matchedBlock)
 			if exception != nil || len(flattenedBlocks) != 1 {
 				continue
 			}
@@ -202,7 +232,14 @@ func (h BlockPackHandler) HandleResetBlockPack(ctx context.Context, tasks []sche
 		if exception != nil {
 			continue
 		}
-		if !h.blockPackRepository.HasPermission(payload.BlockPackId, ownerId, writePermissionsForJobs(), options.WithDB(h.db.WithContext(ctx)), options.WithOnlyDeleted(types.Ternary_Negative)) {
+
+		allowedPermissions := []enums.AccessControlPermission{
+			enums.AccessControlPermission_Owner,
+			enums.AccessControlPermission_Admin,
+			enums.AccessControlPermission_Write,
+		}
+
+		if !h.blockPackRepository.HasPermission(payload.BlockPackId, ownerId, allowedPermissions, options.WithDB(h.db.WithContext(ctx)), options.WithOnlyDeleted(types.Ternary_Negative)) {
 			continue
 		}
 		if err := h.db.WithContext(ctx).Model(&schemas.Block{}).
