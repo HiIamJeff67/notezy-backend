@@ -98,7 +98,7 @@ type PrivateRoutineTag struct {
 
 type PrivateRoutineTask struct {
 	ID              uuid.UUID                `json:"id"`
-	StationID       uuid.UUID                `json:"stationId"`
+	RoutineID       uuid.UUID                `json:"routineId"`
 	Title           string                   `json:"title"`
 	Purpose         enums.RoutineTaskPurpose `json:"purpose"`
 	Payload         json.RawMessage          `json:"payload"`
@@ -114,7 +114,6 @@ type PrivateRoutineTask struct {
 	ActualEndedAt   *time.Time               `json:"actualEndedAt,omitempty"`
 	UpdatedAt       time.Time                `json:"updatedAt"`
 	CreatedAt       time.Time                `json:"createdAt"`
-	RoutineIds      []uuid.UUID              `json:"routineIds"`
 }
 
 type PrivateRoutineTaskRecord struct {
@@ -158,7 +157,6 @@ type PrivateSearchableStation struct {
 	Icon                *enums.SupportedIcon          `json:"icon,omitempty"`
 	HeaderBackgroundURL *string                       `json:"headerBackgroundURL,omitempty"`
 	RoutineCount        int64                         `json:"routineCount"`
-	RoutineTaskCount    int64                         `json:"routineTaskCount"`
 	DeletedAt           *time.Time                    `json:"deletedAt,omitempty"`
 	CreatedAt           time.Time                     `json:"createdAt"`
 	UpdatedAt           time.Time                     `json:"updatedAt"`
@@ -172,7 +170,6 @@ type PrivateStation struct {
 	Icon                *enums.SupportedIcon          `json:"icon,omitempty"`
 	HeaderBackgroundURL *string                       `json:"headerBackgroundURL,omitempty"`
 	RoutineCount        int64                         `json:"routineCount"`
-	RoutineTaskCount    int64                         `json:"routineTaskCount"`
 	DeletedAt           *time.Time                    `json:"deletedAt,omitempty"`
 	CreatedAt           time.Time                     `json:"createdAt"`
 	UpdatedAt           time.Time                     `json:"updatedAt"`
@@ -473,12 +470,12 @@ func (SearchRoutineTaskEdge) IsSearchEdge()                       {}
 func (this SearchRoutineTaskEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
 
 type SearchRoutineTaskInput struct {
-	StationID *uuid.UUID               `json:"stationId,omitempty"`
-	Query     string                   `json:"query"`
-	After     *string                  `json:"after,omitempty"`
-	First     *int32                   `json:"first,omitempty"`
-	SortBy    *SearchRoutineTaskSortBy `json:"sortBy,omitempty"`
-	SortOrder *SearchSortOrder         `json:"sortOrder,omitempty"`
+	RoutineIds []uuid.UUID              `json:"routineIds"`
+	Query      string                   `json:"query"`
+	After      *string                  `json:"after,omitempty"`
+	First      *int32                   `json:"first,omitempty"`
+	SortBy     *SearchRoutineTaskSortBy `json:"sortBy,omitempty"`
+	SortOrder  *SearchSortOrder         `json:"sortOrder,omitempty"`
 }
 
 type SearchRoutineTaskRecordConnection struct {

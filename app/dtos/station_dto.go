@@ -240,7 +240,6 @@ type GetMyStationByIdResDto struct {
 	HeaderBackgroundURL *string                       `json:"headerBackgroundURL"`
 	Permission          enums.AccessControlPermission `json:"permission"`
 	RoutineCount        int64                         `json:"routineCount"`
-	RoutineTaskCount    int64                         `json:"routineTaskCount"`
 	DeletedAt           *time.Time                    `json:"deletedAt"`
 	UpdatedAt           time.Time                     `json:"updatedAt"`
 	CreatedAt           time.Time                     `json:"createdAt"`
@@ -253,7 +252,6 @@ type GetAllMyStationsResDto = []struct {
 	HeaderBackgroundURL *string                       `json:"headerBackgroundURL"`
 	Permission          enums.AccessControlPermission `json:"permission"`
 	RoutineCount        int64                         `json:"routineCount"`
-	RoutineTaskCount    int64                         `json:"routineTaskCount"`
 	DeletedAt           *time.Time                    `json:"deletedAt"`
 	UpdatedAt           time.Time                     `json:"updatedAt"`
 	CreatedAt           time.Time                     `json:"createdAt"`
@@ -285,7 +283,6 @@ type RestoreMyStationByIdResDto struct {
 	HeaderBackgroundURL *string                       `json:"headerBackgroundURL"`
 	Permission          enums.AccessControlPermission `json:"permission"`
 	RoutineCount        int64                         `json:"routineCount"`
-	RoutineTaskCount    int64                         `json:"routineTaskCount"`
 	DeletedAt           *time.Time                    `json:"deletedAt"`
 	UpdatedAt           time.Time                     `json:"updatedAt"`
 	CreatedAt           time.Time                     `json:"createdAt"`

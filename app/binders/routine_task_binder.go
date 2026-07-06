@@ -18,9 +18,9 @@ import (
 
 type RoutineTaskBinderInterface interface {
 	BindGetMyRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.GetMyRoutineTaskByIdReqDto]) gin.HandlerFunc
-	BindGetAllMyRoutineTasksByStationIds(controllerFunc types.ControllerFunc[*dtos.GetAllMyRoutineTasksByStationIdsReqDto]) gin.HandlerFunc
+	BindGetAllMyRoutineTasksByRoutineIds(controllerFunc types.ControllerFunc[*dtos.GetAllMyRoutineTasksByRoutineIdsReqDto]) gin.HandlerFunc
 	BindGetAllMyRoutineTasks(controllerFunc types.ControllerFunc[*dtos.GetAllMyRoutineTasksReqDto]) gin.HandlerFunc
-	BindCreateRoutineTaskByStationId(controllerFunc types.ControllerFunc[*dtos.CreateRoutineTaskByStationIdReqDto]) gin.HandlerFunc
+	BindCreateRoutineTaskByRoutineId(controllerFunc types.ControllerFunc[*dtos.CreateRoutineTaskByRoutineIdReqDto]) gin.HandlerFunc
 	BindUpdateMyRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.UpdateMyRoutineTaskByIdReqDto]) gin.HandlerFunc
 	BindPauseMyRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.PauseMyRoutineTaskByIdReqDto]) gin.HandlerFunc
 	BindResumeMyRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.ResumeMyRoutineTaskByIdReqDto]) gin.HandlerFunc
@@ -78,11 +78,11 @@ func (b *RoutineTaskBinder) BindGetMyRoutineTaskById(controllerFunc types.Contro
 	}
 }
 
-func (b *RoutineTaskBinder) BindGetAllMyRoutineTasksByStationIds(
-	controllerFunc types.ControllerFunc[*dtos.GetAllMyRoutineTasksByStationIdsReqDto],
+func (b *RoutineTaskBinder) BindGetAllMyRoutineTasksByRoutineIds(
+	controllerFunc types.ControllerFunc[*dtos.GetAllMyRoutineTasksByRoutineIdsReqDto],
 ) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.GetAllMyRoutineTasksByStationIdsReqDto
+		var reqDto dtos.GetAllMyRoutineTasksByRoutineIdsReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -103,14 +103,14 @@ func (b *RoutineTaskBinder) BindGetAllMyRoutineTasksByStationIds(
 			reqDto.Param.AreDeleted = &areDeleted
 		}
 
-		for _, stationIdsValue := range ctx.QueryArray("stationIds") {
-			for _, stationIdValue := range strings.Split(stationIdsValue, ",") {
-				stationId, err := uuid.Parse(strings.TrimSpace(stationIdValue))
+		for _, routineIdsValue := range ctx.QueryArray("routineIds") {
+			for _, routineIdValue := range strings.Split(routineIdsValue, ",") {
+				routineId, err := uuid.Parse(strings.TrimSpace(routineIdValue))
 				if err != nil {
 					exceptions.RoutineTask.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
 					return
 				}
-				reqDto.Param.StationIds = append(reqDto.Param.StationIds, stationId)
+				reqDto.Param.RoutineIds = append(reqDto.Param.RoutineIds, routineId)
 			}
 		}
 
@@ -145,9 +145,9 @@ func (b *RoutineTaskBinder) BindGetAllMyRoutineTasks(controllerFunc types.Contro
 	}
 }
 
-func (b *RoutineTaskBinder) BindCreateRoutineTaskByStationId(controllerFunc types.ControllerFunc[*dtos.CreateRoutineTaskByStationIdReqDto]) gin.HandlerFunc {
+func (b *RoutineTaskBinder) BindCreateRoutineTaskByRoutineId(controllerFunc types.ControllerFunc[*dtos.CreateRoutineTaskByRoutineIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.CreateRoutineTaskByStationIdReqDto
+		var reqDto dtos.CreateRoutineTaskByRoutineIdReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 

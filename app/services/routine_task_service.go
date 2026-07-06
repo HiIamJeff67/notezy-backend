@@ -28,9 +28,9 @@ import (
 
 type RoutineTaskServiceInterface interface {
 	GetMyRoutineTaskById(ctx context.Context, reqDto *dtos.GetMyRoutineTaskByIdReqDto) (*dtos.GetMyRoutineTaskByIdResDto, *exceptions.Exception)
-	GetAllMyRoutineTasksByStationIds(ctx context.Context, reqDto *dtos.GetAllMyRoutineTasksByStationIdsReqDto) (*dtos.GetAllMyRoutineTasksByStationIdsResDto, *exceptions.Exception)
+	GetAllMyRoutineTasksByRoutineIds(ctx context.Context, reqDto *dtos.GetAllMyRoutineTasksByRoutineIdsReqDto) (*dtos.GetAllMyRoutineTasksByRoutineIdsResDto, *exceptions.Exception)
 	GetAllMyRoutineTasks(ctx context.Context, reqDto *dtos.GetAllMyRoutineTasksReqDto) (*dtos.GetAllMyRoutineTasksResDto, *exceptions.Exception)
-	CreateRoutineTaskByStationId(ctx context.Context, reqDto *dtos.CreateRoutineTaskByStationIdReqDto) (*dtos.CreateRoutineTaskByStationIdResDto, *exceptions.Exception)
+	CreateRoutineTaskByRoutineId(ctx context.Context, reqDto *dtos.CreateRoutineTaskByRoutineIdReqDto) (*dtos.CreateRoutineTaskByRoutineIdResDto, *exceptions.Exception)
 	UpdateMyRoutineTaskById(ctx context.Context, reqDto *dtos.UpdateMyRoutineTaskByIdReqDto) (*dtos.UpdateMyRoutineTaskByIdResDto, *exceptions.Exception)
 	PauseMyRoutineTaskById(ctx context.Context, reqDto *dtos.PauseMyRoutineTaskByIdReqDto) (*dtos.PauseMyRoutineTaskByIdResDto, *exceptions.Exception)
 	ResumeMyRoutineTaskById(ctx context.Context, reqDto *dtos.ResumeMyRoutineTaskByIdReqDto) (*dtos.ResumeMyRoutineTaskByIdResDto, *exceptions.Exception)
@@ -116,8 +116,13 @@ func (s *RoutineTaskService) visualizeMyRoutineTaskTimeCount(
 			timeHourUnit,
 		).
 		Joins(
+			`LEFT JOIN "RoutineTable" routine
+				ON routine.id = routine_task.routine_id
+				AND routine.deleted_at IS NULL`,
+		).
+		Joins(
 			`LEFT JOIN "UsersToStationsTable" uts
-				ON uts.station_id = routine_task.station_id
+				ON uts.station_id = routine.station_id
 				AND uts.user_id = ?
 				AND uts.permission = ?`,
 			userId,
@@ -186,7 +191,7 @@ func (s *RoutineTaskService) GetMyRoutineTaskById(
 
 	return &dtos.GetMyRoutineTaskByIdResDto{
 		Id:              routineTask.Id,
-		StationId:       routineTask.StationId,
+		RoutineId:       routineTask.RoutineId,
 		Title:           routineTask.Title,
 		Purpose:         routineTask.Purpose,
 		Payload:         routineTask.Payload,
@@ -205,21 +210,21 @@ func (s *RoutineTaskService) GetMyRoutineTaskById(
 	}, nil
 }
 
-func (s *RoutineTaskService) GetAllMyRoutineTasksByStationIds(
-	ctx context.Context, reqDto *dtos.GetAllMyRoutineTasksByStationIdsReqDto,
-) (*dtos.GetAllMyRoutineTasksByStationIdsResDto, *exceptions.Exception) {
+func (s *RoutineTaskService) GetAllMyRoutineTasksByRoutineIds(
+	ctx context.Context, reqDto *dtos.GetAllMyRoutineTasksByRoutineIdsReqDto,
+) (*dtos.GetAllMyRoutineTasksByRoutineIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 	if reqDto.Param.AreDeleted != nil && *reqDto.Param.AreDeleted {
-		resDto := dtos.GetAllMyRoutineTasksByStationIdsResDto{}
+		resDto := dtos.GetAllMyRoutineTasksByRoutineIdsResDto{}
 		return &resDto, nil
 	}
 
 	db := s.db.WithContext(ctx)
 
-	routineTasks, exception := s.routineTaskRepository.GetAllByStationIds(
-		reqDto.Param.StationIds,
+	routineTasks, exception := s.routineTaskRepository.GetAllByRoutineIds(
+		reqDto.Param.RoutineIds,
 		reqDto.ContextFields.UserId,
 		nil,
 		options.WithDB(db),
@@ -228,11 +233,11 @@ func (s *RoutineTaskService) GetAllMyRoutineTasksByStationIds(
 		return nil, exception
 	}
 
-	resDto := make(dtos.GetAllMyRoutineTasksByStationIdsResDto, len(routineTasks))
+	resDto := make(dtos.GetAllMyRoutineTasksByRoutineIdsResDto, len(routineTasks))
 	for index, routineTask := range routineTasks {
 		resDto[index] = struct {
 			Id              uuid.UUID                "json:\"id\""
-			StationId       uuid.UUID                "json:\"stationId\""
+			RoutineId       uuid.UUID                "json:\"routineId\""
 			Title           string                   "json:\"title\""
 			Purpose         enums.RoutineTaskPurpose "json:\"purpose\""
 			CostUnit        int64                    "json:\"costUnit\""
@@ -249,7 +254,7 @@ func (s *RoutineTaskService) GetAllMyRoutineTasksByStationIds(
 			CreatedAt       time.Time                "json:\"createdAt\""
 		}{
 			Id:              routineTask.Id,
-			StationId:       routineTask.StationId,
+			RoutineId:       routineTask.RoutineId,
 			Title:           routineTask.Title,
 			Purpose:         routineTask.Purpose,
 			CostUnit:        routineTask.CostUnit,
@@ -283,32 +288,20 @@ func (s *RoutineTaskService) GetAllMyRoutineTasks(
 
 	db := s.db.WithContext(ctx)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
-	}
-
-	var routineTasks []schemas.RoutineTask
-	result := db.Model(&schemas.RoutineTask{}).
-		Select(`"RoutineTaskTable".*`).
-		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = "RoutineTaskTable".station_id`).
-		Joins(`INNER JOIN "StationTable" station ON station.id = "RoutineTaskTable".station_id AND station.deleted_at IS NULL`).
-		Where("uts.user_id = ? AND uts.permission IN ?", reqDto.ContextFields.UserId, allowedPermissions).
-		Order(`"RoutineTaskTable".scheduled_at ASC`).
-		Order(`"RoutineTaskTable".priority DESC`).
-		Order(`"RoutineTaskTable".id ASC`).
-		Find(&routineTasks)
-	if result.Error != nil {
-		return nil, exceptions.RoutineTask.NotFound().WithOrigin(result.Error)
+	routineTasks, exception := s.routineTaskRepository.GetAllByUserId(
+		reqDto.ContextFields.UserId,
+		nil,
+		options.WithDB(db),
+	)
+	if exception != nil {
+		return nil, exception
 	}
 
 	resDto := make(dtos.GetAllMyRoutineTasksResDto, len(routineTasks))
 	for index, routineTask := range routineTasks {
 		resDto[index] = dtos.GetMyRoutineTaskByIdResDto{
 			Id:              routineTask.Id,
-			StationId:       routineTask.StationId,
+			RoutineId:       routineTask.RoutineId,
 			Title:           routineTask.Title,
 			Purpose:         routineTask.Purpose,
 			Payload:         routineTask.Payload,
@@ -330,9 +323,9 @@ func (s *RoutineTaskService) GetAllMyRoutineTasks(
 	return &resDto, nil
 }
 
-func (s *RoutineTaskService) CreateRoutineTaskByStationId(
-	ctx context.Context, reqDto *dtos.CreateRoutineTaskByStationIdReqDto,
-) (*dtos.CreateRoutineTaskByStationIdResDto, *exceptions.Exception) {
+func (s *RoutineTaskService) CreateRoutineTaskByRoutineId(
+	ctx context.Context, reqDto *dtos.CreateRoutineTaskByRoutineIdReqDto,
+) (*dtos.CreateRoutineTaskByRoutineIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
@@ -342,8 +335,8 @@ func (s *RoutineTaskService) CreateRoutineTaskByStationId(
 
 	db := s.db.WithContext(ctx)
 
-	newRoutineTaskId, exception := s.routineTaskRepository.CreateOneByStationId(
-		reqDto.Body.StationId,
+	newRoutineTaskId, exception := s.routineTaskRepository.CreateOneByRoutineId(
+		reqDto.Body.RoutineId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateRoutineTaskInput{
 			Title:           reqDto.Body.Title,
@@ -360,7 +353,7 @@ func (s *RoutineTaskService) CreateRoutineTaskByStationId(
 		return nil, exception
 	}
 
-	return &dtos.CreateRoutineTaskByStationIdResDto{
+	return &dtos.CreateRoutineTaskByRoutineIdResDto{
 		Id:        *newRoutineTaskId,
 		CreatedAt: time.Now(),
 	}, nil
@@ -404,7 +397,7 @@ func (s *RoutineTaskService) UpdateMyRoutineTaskById(
 		reqDto.ContextFields.UserId,
 		inputs.PartialUpdateRoutineTaskInput{
 			Values: inputs.UpdateRoutineTaskInput{
-				StationId:       reqDto.Body.Values.StationId,
+				RoutineId:       reqDto.Body.Values.RoutineId,
 				Title:           reqDto.Body.Values.Title,
 				Purpose:         reqDto.Body.Values.Purpose,
 				Payload:         reqDto.Body.Values.Payload,
@@ -597,7 +590,8 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskStatusCount(
 	}
 	result := db.Model(&schemas.RoutineTask{}).
 		Select(`"RoutineTaskTable".status AS status, COUNT(*) AS routine_task_count`).
-		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = "RoutineTaskTable".station_id`).
+		Joins(`INNER JOIN "RoutineTable" routine ON routine.id = "RoutineTaskTable".routine_id AND routine.deleted_at IS NULL`).
+		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine.station_id`).
 		Where("uts.user_id = ? AND uts.permission = ?", reqDto.ContextFields.UserId, reqDto.Param.Permission).
 		Group(`"RoutineTaskTable".status`).
 		Scan(&rows)
@@ -646,7 +640,8 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskPurposeCount(
 	}
 	result := db.Model(&schemas.RoutineTask{}).
 		Select(`"RoutineTaskTable".purpose AS purpose, COUNT(*) AS routine_task_count`).
-		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = "RoutineTaskTable".station_id`).
+		Joins(`INNER JOIN "RoutineTable" routine ON routine.id = "RoutineTaskTable".routine_id AND routine.deleted_at IS NULL`).
+		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine.station_id`).
 		Where("uts.user_id = ? AND uts.permission = ?", reqDto.ContextFields.UserId, reqDto.Param.Permission).
 		Group(`"RoutineTaskTable".purpose`).
 		Scan(&rows)
@@ -798,13 +793,14 @@ func (s *RoutineTaskService) SearchPrivateRoutineTasks(
 
 	query := db.Model(&schemas.RoutineTask{}).
 		Select(`"RoutineTaskTable".*, uts.permission AS permission`).
-		Joins(`LEFT JOIN "UsersToStationsTable" uts ON "RoutineTaskTable".station_id = uts.station_id`).
+		Joins(`INNER JOIN "RoutineTable" routine ON routine.id = "RoutineTaskTable".routine_id AND routine.deleted_at IS NULL`).
+		Joins(`LEFT JOIN "UsersToStationsTable" uts ON routine.station_id = uts.station_id`).
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions)
 
-	if gqlInput.StationID != nil {
+	if len(gqlInput.RoutineIds) > 0 {
 		query = query.Where(
-			`"RoutineTaskTable".station_id = ?`,
-			*gqlInput.StationID,
+			`"RoutineTaskTable".routine_id IN ?`,
+			gqlInput.RoutineIds,
 		)
 	}
 
@@ -911,9 +907,7 @@ func (s *RoutineTaskService) SearchPrivateRoutineTasks(
 
 	var routineTasks []PrivateRoutineTask
 	if err := query.Scopes(s.routineTaskScope.IncludePreloads(
-		[]schemas.RoutineTaskRelation{
-			schemas.RoutineTaskRelation_RoutinesToTasks,
-		},
+		nil,
 	)).Find(&routineTasks).Error; err != nil {
 		return nil, exceptions.RoutineTask.NotFound().WithOrigin(err)
 	}

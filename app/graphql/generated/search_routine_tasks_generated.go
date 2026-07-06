@@ -306,8 +306,8 @@ func (ec *executionContext) fieldContext_SearchRoutineTaskEdge_node(_ context.Co
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_PrivateRoutineTask_id(ctx, field)
-			case "stationId":
-				return ec.fieldContext_PrivateRoutineTask_stationId(ctx, field)
+			case "routineId":
+				return ec.fieldContext_PrivateRoutineTask_routineId(ctx, field)
 			case "title":
 				return ec.fieldContext_PrivateRoutineTask_title(ctx, field)
 			case "purpose":
@@ -338,8 +338,6 @@ func (ec *executionContext) fieldContext_SearchRoutineTaskEdge_node(_ context.Co
 				return ec.fieldContext_PrivateRoutineTask_updatedAt(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_PrivateRoutineTask_createdAt(ctx, field)
-			case "routineIds":
-				return ec.fieldContext_PrivateRoutineTask_routineIds(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PrivateRoutineTask", field.Name)
 		},
@@ -395,20 +393,20 @@ func (ec *executionContext) unmarshalInputSearchRoutineTaskInput(ctx context.Con
 		asMap["sortOrder"] = "DESC"
 	}
 
-	fieldsInOrder := [...]string{"stationId", "query", "after", "first", "sortBy", "sortOrder"}
+	fieldsInOrder := [...]string{"routineIds", "query", "after", "first", "sortBy", "sortOrder"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "stationId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stationId"))
-			data, err := ec.unmarshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+		case "routineIds":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("routineIds"))
+			data, err := ec.unmarshalNUUID2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.StationID = data
+			it.RoutineIds = data
 		case "query":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
 			data, err := ec.unmarshalNString2string(ctx, v)

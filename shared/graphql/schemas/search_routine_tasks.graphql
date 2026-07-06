@@ -16,7 +16,7 @@ enum SearchRoutineTaskSortBy {
 }
 
 input SearchRoutineTaskInput {
-  stationId: UUID
+  routineIds: [UUID!]!
   query: String!
   after: String
   first: Int = 10

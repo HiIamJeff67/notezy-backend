@@ -27,7 +27,7 @@ type GetMyRoutineTaskByIdReqDto struct {
 	]
 }
 
-type GetAllMyRoutineTasksByStationIdsReqDto struct {
+type GetAllMyRoutineTasksByRoutineIdsReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -37,7 +37,7 @@ type GetAllMyRoutineTasksByStationIdsReqDto struct {
 		},
 		any,
 		struct {
-			StationIds []uuid.UUID `form:"stationIds" validate:"required,min=1,max=1024"`
+			RoutineIds []uuid.UUID `form:"routineIds" validate:"required,min=1,max=1024"`
 			AreDeleted *bool       `form:"areDeleted" validate:"omitnil"`
 		},
 	]
@@ -58,7 +58,7 @@ type GetAllMyRoutineTasksReqDto struct {
 	]
 }
 
-type CreateRoutineTaskByStationIdReqDto struct {
+type CreateRoutineTaskByRoutineIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -67,7 +67,7 @@ type CreateRoutineTaskByStationIdReqDto struct {
 			UserId uuid.UUID
 		},
 		struct {
-			StationId       uuid.UUID                `json:"stationId" validate:"required"`
+			RoutineId       uuid.UUID                `json:"routineId" validate:"required"`
 			Title           string                   `json:"title" validate:"required,min=1,max=128"`
 			Purpose         enums.RoutineTaskPurpose `json:"purpose" validate:"required,isroutinetaskpurpose"`
 			Payload         datatypes.JSON           `json:"payload" validate:"omitempty,max=16777216"`
@@ -91,7 +91,7 @@ type UpdateMyRoutineTaskByIdReqDto struct {
 		struct {
 			RoutineTaskId uuid.UUID `json:"routineTaskId" validate:"required"`
 			PartialUpdateDto[struct {
-				StationId       *uuid.UUID                `json:"stationId" validate:"omitnil"`
+				RoutineId       *uuid.UUID                `json:"routineId" validate:"omitnil"`
 				Title           *string                   `json:"title" validate:"omitnil,min=1,max=128"`
 				Purpose         *enums.RoutineTaskPurpose `json:"purpose" validate:"omitnil,isroutinetaskpurpose"`
 				Payload         *datatypes.JSON           `json:"payload" validate:"omitnil,max=16777216"`
@@ -253,7 +253,7 @@ type VisualizeMyRoutineTaskActualEndedAtCountReqDto struct {
 
 type GetMyRoutineTaskByIdResDto struct {
 	Id              uuid.UUID                `json:"id"`
-	StationId       uuid.UUID                `json:"stationId"`
+	RoutineId       uuid.UUID                `json:"routineId"`
 	Title           string                   `json:"title"`
 	Purpose         enums.RoutineTaskPurpose `json:"purpose"`
 	Payload         datatypes.JSON           `json:"payload"`
@@ -271,9 +271,9 @@ type GetMyRoutineTaskByIdResDto struct {
 	CreatedAt       time.Time                `json:"createdAt"`
 }
 
-type GetAllMyRoutineTasksByStationIdsResDto = []struct {
+type GetAllMyRoutineTasksByRoutineIdsResDto = []struct {
 	Id              uuid.UUID                `json:"id"`
-	StationId       uuid.UUID                `json:"stationId"`
+	RoutineId       uuid.UUID                `json:"routineId"`
 	Title           string                   `json:"title"`
 	Purpose         enums.RoutineTaskPurpose `json:"purpose"`
 	CostUnit        int64                    `json:"costUnit"`
@@ -292,7 +292,7 @@ type GetAllMyRoutineTasksByStationIdsResDto = []struct {
 
 type GetAllMyRoutineTasksResDto = []GetMyRoutineTaskByIdResDto
 
-type CreateRoutineTaskByStationIdResDto struct {
+type CreateRoutineTaskByRoutineIdResDto struct {
 	Id        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
 }

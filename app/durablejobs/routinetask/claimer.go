@@ -115,15 +115,15 @@ func (c *Claimer) Claim(
 	}
 
 	routineTaskRecords := make([]schemas.RoutineTaskRecord, len(claimedTasks))
-	stationIds := make([]uuid.UUID, 0, len(claimedTasks))
-	stationIdSet := make(map[uuid.UUID]bool, len(claimedTasks))
+	routineIds := make([]uuid.UUID, 0, len(claimedTasks))
+	routineIdSet := make(map[uuid.UUID]bool, len(claimedTasks))
 	for index, claimedTask := range claimedTasks {
 		recordScheduledAt := recordScheduledAtByTaskId[claimedTask.Id]
 		claimedTasks[index].RecordScheduledAt = recordScheduledAt
 		claimedTasks[index].RecordId = uuid.New()
-		if !stationIdSet[claimedTask.StationId] {
-			stationIdSet[claimedTask.StationId] = true
-			stationIds = append(stationIds, claimedTask.StationId)
+		if !routineIdSet[claimedTask.RoutineId] {
+			routineIdSet[claimedTask.RoutineId] = true
+			routineIds = append(routineIds, claimedTask.RoutineId)
 		}
 		routineTaskRecords[index] = schemas.RoutineTaskRecord{
 			Id:              claimedTasks[index].RecordId,
@@ -163,26 +163,27 @@ func (c *Claimer) Claim(
 		return nil, nil, exceptions.RoutineTask.FailedToClaim("routine task records")
 	}
 
-	var stations []struct {
-		Id      uuid.UUID `gorm:"column:id;"`
-		OwnerId uuid.UUID `gorm:"column:owner_id;"`
+	var routines []struct {
+		RoutineId uuid.UUID `gorm:"column:routine_id;"`
+		OwnerId   uuid.UUID `gorm:"column:owner_id;"`
 	}
 	result = tx.
-		Model(&schemas.Station{}).
-		Select("id, owner_id").
-		Where("id IN ? AND deleted_at IS NULL", stationIds).
-		Find(&stations)
+		Model(&schemas.Routine{}).
+		Select(`"RoutineTable".id AS routine_id, station.owner_id AS owner_id`).
+		Joins(`INNER JOIN "StationTable" station ON station.id = "RoutineTable".station_id AND station.deleted_at IS NULL`).
+		Where(`"RoutineTable".id IN ? AND "RoutineTable".deleted_at IS NULL`, routineIds).
+		Find(&routines)
 	if result.Error != nil {
 		tx.Rollback()
 		return nil, nil, exceptions.RoutineTask.FailedToClaim("routine task owners").WithOrigin(result.Error)
 	}
 
-	ownerIdByStationId := make(map[uuid.UUID]uuid.UUID, len(stations))
-	for _, station := range stations {
-		ownerIdByStationId[station.Id] = station.OwnerId
+	ownerIdByRoutineId := make(map[uuid.UUID]uuid.UUID, len(routines))
+	for _, routine := range routines {
+		ownerIdByRoutineId[routine.RoutineId] = routine.OwnerId
 	}
 	for _, claimedTask := range claimedTasks {
-		ownerId, exists := ownerIdByStationId[claimedTask.StationId]
+		ownerId, exists := ownerIdByRoutineId[claimedTask.RoutineId]
 		if exists {
 			taskIdToOwnerId[claimedTask.Id] = ownerId
 		}

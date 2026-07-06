@@ -159,7 +159,8 @@ func (r *RoutineTaskRecordRepository) GetAllByRoutineTaskId(
 		Model(&schemas.RoutineTaskRecord{}).
 		Select(`"RoutineTaskRecordTable".*`).
 		Joins(`INNER JOIN "RoutineTaskTable" routine_task ON routine_task.id = "RoutineTaskRecordTable".routine_task_id`).
-		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine_task.station_id`).
+		Joins(`INNER JOIN "RoutineTable" routine ON routine.id = routine_task.routine_id AND routine.deleted_at IS NULL`).
+		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine.station_id`).
 		Where(`"RoutineTaskRecordTable".routine_task_id = ?`, routineTaskId).
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
 		Scopes(r.routineTaskRecordScope.IncludePreloads(preloads)).

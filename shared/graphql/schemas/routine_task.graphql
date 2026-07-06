@@ -1,6 +1,6 @@
 type PrivateRoutineTask {
   id: UUID!
-  stationId: UUID!
+  routineId: UUID!
   title: String!
   purpose: RoutineTaskPurpose!
   payload: RawJSON!
@@ -16,7 +16,4 @@ type PrivateRoutineTask {
   actualEndedAt: Time
   updatedAt: Time!
   createdAt: Time!
-
-  # relations
-  routineIds: [UUID!]!
 }

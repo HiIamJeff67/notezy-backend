@@ -20,8 +20,8 @@ type CreateRoutineTaskInput struct {
 	ScheduledAt     time.Time                `json:"scheduledAt" gorm:"column:scheduled_at;"`
 }
 
-type CreateRoutineTaskByStationIdInput struct {
-	StationId       uuid.UUID                `json:"stationId" gorm:"column:station_id;"`
+type CreateRoutineTaskByRoutineIdInput struct {
+	RoutineId       uuid.UUID                `json:"routineId" gorm:"column:routine_id;"`
 	Title           string                   `json:"title" gorm:"column:title;"`
 	Purpose         enums.RoutineTaskPurpose `json:"purpose" gorm:"column:purpose;"`
 	Payload         datatypes.JSON           `json:"payload" gorm:"column:payload;"`
@@ -33,7 +33,7 @@ type CreateRoutineTaskByStationIdInput struct {
 }
 
 type UpdateRoutineTaskInput struct {
-	StationId       *uuid.UUID                `json:"stationId" gorm:"column:station_id;"`
+	RoutineId       *uuid.UUID                `json:"routineId" gorm:"column:routine_id;"`
 	Title           *string                   `json:"title" gorm:"column:title;"`
 	Purpose         *enums.RoutineTaskPurpose `json:"purpose" gorm:"column:purpose;"`
 	Payload         *datatypes.JSON           `json:"payload" gorm:"column:payload;"`

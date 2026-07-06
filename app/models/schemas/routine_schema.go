@@ -28,7 +28,7 @@ type Routine struct {
 	// relations
 	Station         Station           `json:"station" gorm:"foreignKey:StationId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	RoutinesToTags  []RoutinesToTags  `json:"routinesToTags" gorm:"foreignKey:RoutineId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	RoutinesToTasks []RoutinesToTasks `json:"routine" gorm:"foreignKey:RoutineId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	RoutineTasks    []RoutineTask     `json:"routineTasks" gorm:"foreignKey:RoutineId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	RoutinesToItems []RoutinesToItems `json:"routinesToItems" gorm:"foreignKey:RoutineId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
 
@@ -43,7 +43,7 @@ type RoutineRelation types.RelationName
 const (
 	RoutineRelation_Station         RoutineRelation = "Station"
 	RoutineRelation_RoutinesToTags  RoutineRelation = "RoutinesToTags"
-	RoutineRelation_RoutinesToTasks RoutineRelation = "RoutinesToTasks"
+	RoutineRelation_RoutineTasks    RoutineRelation = "RoutineTasks"
 	RoutineRelation_RoutinesToItems RoutineRelation = "RoutinesToItems"
 )
 
@@ -55,9 +55,9 @@ func (r *Routine) ToPrivateRoutine() *gqlmodels.PrivateRoutine {
 		tagIds = append(tagIds, routineToTag.TagId)
 	}
 
-	taskIds := make([]uuid.UUID, 0, len(r.RoutinesToTasks))
-	for _, routineToTask := range r.RoutinesToTasks {
-		taskIds = append(taskIds, routineToTask.TaskId)
+	taskIds := make([]uuid.UUID, 0, len(r.RoutineTasks))
+	for _, routineTask := range r.RoutineTasks {
+		taskIds = append(taskIds, routineTask.Id)
 	}
 
 	itemIds := make([]uuid.UUID, 0, len(r.RoutinesToItems))
@@ -91,9 +91,9 @@ func (r *Routine) ToPrivateSearchableRoutine() *gqlmodels.PrivateSearchableRouti
 		tagIds = append(tagIds, routineToTag.TagId)
 	}
 
-	taskIds := make([]uuid.UUID, 0, len(r.RoutinesToTasks))
-	for _, routineToTask := range r.RoutinesToTasks {
-		taskIds = append(taskIds, routineToTask.TaskId)
+	taskIds := make([]uuid.UUID, 0, len(r.RoutineTasks))
+	for _, routineTask := range r.RoutineTasks {
+		taskIds = append(taskIds, routineTask.Id)
 	}
 
 	itemIds := make([]uuid.UUID, 0, len(r.RoutinesToItems))

@@ -1,6 +1,6 @@
 fragment FragmentedBasicPrivateRoutineTask on PrivateRoutineTask {
   id
-  stationId
+  routineId
   title
   purpose
   costUnit

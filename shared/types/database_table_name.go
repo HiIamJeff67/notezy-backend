@@ -30,7 +30,6 @@ const (
 	TableName_RoutineDependencyTable  TableName = "RoutineDependencyTable"
 	TableName_RoutineTaskTable        TableName = "RoutineTaskTable"
 	TableName_RoutineTaskRecordTable  TableName = "RoutineTaskRecordTable"
-	TableName_RoutinesToTasksTable    TableName = "RoutinesToTasksTable"
 	TableName_RoutineTagTable         TableName = "RoutineTagTable"
 	TableName_RoutinesToTagsTable     TableName = "RoutinesToTagsTable"
 
@@ -69,7 +68,6 @@ var _validTableNames = map[string]TableName{
 	"RoutineDependencyTable":  TableName_RoutineDependencyTable,
 	"RoutineTaskTable":        TableName_RoutineTaskTable,
 	"RoutineTaskRecordTable":  TableName_RoutineTaskRecordTable,
-	"RoutinesToTasksTable":    TableName_RoutinesToTasksTable,
 	"RoutineTagTable":         TableName_RoutineTagTable,
 	"RoutinesToTagsTable":     TableName_RoutinesToTagsTable,
 

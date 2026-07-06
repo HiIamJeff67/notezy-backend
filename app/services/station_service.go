@@ -103,7 +103,6 @@ func (s *StationService) GetMyStationById(
 		HeaderBackgroundURL: station.HeaderBackgroundURL,
 		Permission:          permission,
 		RoutineCount:        station.RoutineCount,
-		RoutineTaskCount:    station.RoutineTaskCount,
 		DeletedAt:           station.DeletedAt,
 		UpdatedAt:           station.UpdatedAt,
 		CreatedAt:           station.CreatedAt,
@@ -148,7 +147,6 @@ func (s *StationService) GetAllMyStations(
 			HeaderBackgroundURL *string                       "json:\"headerBackgroundURL\""
 			Permission          enums.AccessControlPermission "json:\"permission\""
 			RoutineCount        int64                         "json:\"routineCount\""
-			RoutineTaskCount    int64                         "json:\"routineTaskCount\""
 			DeletedAt           *time.Time                    "json:\"deletedAt\""
 			UpdatedAt           time.Time                     "json:\"updatedAt\""
 			CreatedAt           time.Time                     "json:\"createdAt\""
@@ -159,7 +157,6 @@ func (s *StationService) GetAllMyStations(
 			HeaderBackgroundURL: station.HeaderBackgroundURL,
 			Permission:          permissions[index],
 			RoutineCount:        station.RoutineCount,
-			RoutineTaskCount:    station.RoutineTaskCount,
 			DeletedAt:           station.DeletedAt,
 			UpdatedAt:           station.UpdatedAt,
 			CreatedAt:           station.CreatedAt,
@@ -333,7 +330,6 @@ func (s *StationService) RestoreMyStationById(
 		Icon:                restoredStation.Icon,
 		HeaderBackgroundURL: restoredStation.HeaderBackgroundURL,
 		RoutineCount:        restoredStation.RoutineCount,
-		RoutineTaskCount:    restoredStation.RoutineTaskCount,
 		DeletedAt:           restoredStation.DeletedAt,
 		UpdatedAt:           restoredStation.UpdatedAt,
 		CreatedAt:           restoredStation.CreatedAt,
@@ -368,7 +364,6 @@ func (s *StationService) RestoreMyStationsByIds(
 			Icon:                restoredStation.Icon,
 			HeaderBackgroundURL: restoredStation.HeaderBackgroundURL,
 			RoutineCount:        restoredStation.RoutineCount,
-			RoutineTaskCount:    restoredStation.RoutineTaskCount,
 			DeletedAt:           restoredStation.DeletedAt,
 			UpdatedAt:           restoredStation.UpdatedAt,
 			CreatedAt:           restoredStation.CreatedAt,
@@ -502,8 +497,9 @@ func (s *StationService) VisualizeMyTotalCount(
 		}
 
 		result = db.Model(&schemas.RoutineTask{}).
-			Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = "RoutineTaskTable".station_id`).
-			Joins(`INNER JOIN "StationTable" station ON station.id = "RoutineTaskTable".station_id AND station.deleted_at IS NULL`).
+			Joins(`INNER JOIN "RoutineTable" routine ON routine.id = "RoutineTaskTable".routine_id`).
+			Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine.station_id`).
+			Joins(`INNER JOIN "StationTable" station ON station.id = routine.station_id AND station.deleted_at IS NULL`).
 			Where("uts.user_id = ? AND uts.permission = ?", reqDto.ContextFields.UserId, reqDto.Param.Permission).
 			Count(&totals.RoutineTaskCount)
 		if result.Error != nil {
@@ -550,8 +546,9 @@ func (s *StationService) VisualizeMyTotalCount(
 	}
 
 	result = db.Model(&schemas.RoutineTask{}).
-		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = "RoutineTaskTable".station_id`).
-		Joins(`INNER JOIN "StationTable" station ON station.id = "RoutineTaskTable".station_id AND station.deleted_at IS NULL`).
+		Joins(`INNER JOIN "RoutineTable" routine ON routine.id = "RoutineTaskTable".routine_id`).
+		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine.station_id`).
+		Joins(`INNER JOIN "StationTable" station ON station.id = routine.station_id AND station.deleted_at IS NULL`).
 		Where("uts.user_id = ? AND uts.permission = ?", reqDto.ContextFields.UserId, reqDto.Param.Permission).
 		Count(&totals.RoutineTaskCount)
 	if result.Error != nil {

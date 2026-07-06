@@ -25,9 +25,10 @@ type RoutineTaskRepositoryInterface interface {
 	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineTaskRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) (*schemas.RoutineTask, *exceptions.Exception)
 	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineTaskRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.RoutineTask, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineTaskRelation, opts ...options.RepositoryOptions) (*schemas.RoutineTask, *exceptions.Exception)
-	GetAllByStationIds(stationIds []uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineTaskRelation, opts ...options.RepositoryOptions) ([]schemas.RoutineTask, *exceptions.Exception)
-	CreateOneByStationId(stationId uuid.UUID, userId uuid.UUID, input inputs.CreateRoutineTaskInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
-	CreateManyByStationIds(userId uuid.UUID, input []inputs.CreateRoutineTaskByStationIdInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
+	GetAllByUserId(userId uuid.UUID, preloads []schemas.RoutineTaskRelation, opts ...options.RepositoryOptions) ([]schemas.RoutineTask, *exceptions.Exception)
+	GetAllByRoutineIds(routineIds []uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineTaskRelation, opts ...options.RepositoryOptions) ([]schemas.RoutineTask, *exceptions.Exception)
+	CreateOneByRoutineId(routineId uuid.UUID, userId uuid.UUID, input inputs.CreateRoutineTaskInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
+	CreateManyByRoutineIds(userId uuid.UUID, input []inputs.CreateRoutineTaskByRoutineIdInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateRoutineTaskInput, opts ...options.RepositoryOptions) (*schemas.RoutineTask, *exceptions.Exception)
 	UpdateManyByIds(userId uuid.UUID, input []inputs.UpdateRoutineTaskByIdInput, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
@@ -157,13 +158,43 @@ func (r *RoutineTaskRepository) GetOneById(
 	return r.CheckPermissionAndGetOneById(id, userId, preloads, allowedPermissions, opts...)
 }
 
-func (r *RoutineTaskRepository) GetAllByStationIds(
-	stationIds []uuid.UUID,
+func (r *RoutineTaskRepository) GetAllByUserId(
 	userId uuid.UUID,
 	preloads []schemas.RoutineTaskRelation,
 	opts ...options.RepositoryOptions,
 ) ([]schemas.RoutineTask, *exceptions.Exception) {
-	if len(stationIds) == 0 {
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+
+	var routineTasks []schemas.RoutineTask
+	result := parsedOptions.DB.
+		Model(&schemas.RoutineTask{}).
+		Select(`"RoutineTaskTable".*`).
+		Joins(`INNER JOIN "RoutineTable" routine ON routine.id = "RoutineTaskTable".routine_id AND routine.deleted_at IS NULL`).
+		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine.station_id`).
+		Joins(`INNER JOIN "StationTable" station ON station.id = routine.station_id AND station.deleted_at IS NULL`).
+		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
+		Scopes(r.routineTaskScope.IncludePreloads(preloads)).
+		Find(&routineTasks)
+	if result.Error != nil {
+		return nil, exceptions.RoutineTask.NotFound().WithOrigin(result.Error)
+	}
+
+	return routineTasks, nil
+}
+
+func (r *RoutineTaskRepository) GetAllByRoutineIds(
+	routineIds []uuid.UUID,
+	userId uuid.UUID,
+	preloads []schemas.RoutineTaskRelation,
+	opts ...options.RepositoryOptions,
+) ([]schemas.RoutineTask, *exceptions.Exception) {
+	if len(routineIds) == 0 {
 		return []schemas.RoutineTask{}, nil
 	}
 
@@ -179,14 +210,12 @@ func (r *RoutineTaskRepository) GetAllByStationIds(
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTask{}).
 		Select(`"RoutineTaskTable".*`).
-		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = "RoutineTaskTable".station_id`).
-		Joins(`INNER JOIN "StationTable" station ON station.id = "RoutineTaskTable".station_id AND station.deleted_at IS NULL`).
-		Where(`"RoutineTaskTable".station_id IN ?`, stationIds).
+		Joins(`INNER JOIN "RoutineTable" routine ON routine.id = "RoutineTaskTable".routine_id AND routine.deleted_at IS NULL`).
+		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine.station_id`).
+		Joins(`INNER JOIN "StationTable" station ON station.id = routine.station_id AND station.deleted_at IS NULL`).
+		Where(`"RoutineTaskTable".routine_id IN ?`, routineIds).
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
 		Scopes(r.routineTaskScope.IncludePreloads(preloads)).
-		Order(`"RoutineTaskTable".scheduled_at ASC`).
-		Order(`"RoutineTaskTable".priority DESC`).
-		Order(`"RoutineTaskTable".id ASC`).
 		Find(&routineTasks)
 	if result.Error != nil {
 		return nil, exceptions.RoutineTask.NotFound().WithOrigin(result.Error)
@@ -195,8 +224,8 @@ func (r *RoutineTaskRepository) GetAllByStationIds(
 	return routineTasks, nil
 }
 
-func (r *RoutineTaskRepository) CreateOneByStationId(
-	stationId uuid.UUID,
+func (r *RoutineTaskRepository) CreateOneByRoutineId(
+	routineId uuid.UUID,
 	userId uuid.UUID,
 	input inputs.CreateRoutineTaskInput,
 	opts ...options.RepositoryOptions,
@@ -215,15 +244,15 @@ func (r *RoutineTaskRepository) CreateOneByStationId(
 		enums.AccessControlPermission_Admin,
 		enums.AccessControlPermission_Write,
 	}
-	stationRepository := NewStationRepository(scopes.NewStationScope())
-	if !stationRepository.HasPermission(
-		stationId,
+	routineRepository := NewRoutineRepository(scopes.NewRoutineScope())
+	if !routineRepository.HasPermission(
+		routineId,
 		userId,
 		allowedPermissions,
 		opts...,
 	) {
 		parsedOptions.DB.Rollback()
-		return nil, exceptions.RoutineTask.NoPermission("create a routine task under this station")
+		return nil, exceptions.RoutineTask.NoPermission("create a routine task under this routine")
 	}
 
 	if input.NextScheduledAt.IsZero() {
@@ -236,7 +265,7 @@ func (r *RoutineTaskRepository) CreateOneByStationId(
 		parsedOptions.DB.Rollback()
 		return nil, exceptions.RoutineTask.InvalidInput().WithOrigin(err)
 	}
-	newRoutineTask.StationId = stationId
+	newRoutineTask.RoutineId = routineId
 	newRoutineTask.NextScheduledAt = input.NextScheduledAt.Truncate(time.Minute)
 	newRoutineTask.ScheduledAt = newRoutineTask.NextScheduledAt
 
@@ -261,9 +290,9 @@ func (r *RoutineTaskRepository) CreateOneByStationId(
 	return &newRoutineTask.Id, nil
 }
 
-func (r *RoutineTaskRepository) CreateManyByStationIds(
+func (r *RoutineTaskRepository) CreateManyByRoutineIds(
 	userId uuid.UUID,
-	input []inputs.CreateRoutineTaskByStationIdInput,
+	input []inputs.CreateRoutineTaskByRoutineIdInput,
 	opts ...options.RepositoryOptions,
 ) ([]uuid.UUID, *exceptions.Exception) {
 	if len(input) == 0 {
@@ -284,26 +313,26 @@ func (r *RoutineTaskRepository) CreateManyByStationIds(
 		enums.AccessControlPermission_Admin,
 		enums.AccessControlPermission_Write,
 	}
-	stationIds := make([]uuid.UUID, len(input))
+	routineIds := make([]uuid.UUID, len(input))
 	for index, in := range input {
-		stationIds[index] = in.StationId
+		routineIds[index] = in.RoutineId
 	}
 
-	stationRepository := NewStationRepository(scopes.NewStationScope())
-	validStations, _, exception := stationRepository.CheckPermissionsAndGetManyByIds(stationIds, userId, nil, allowedPermissions, opts...)
+	routineRepository := NewRoutineRepository(scopes.NewRoutineScope())
+	validRoutines, exception := routineRepository.CheckPermissionsAndGetManyByIds(routineIds, userId, nil, allowedPermissions, opts...)
 	if exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 
-	isStationValid := make(map[uuid.UUID]bool, len(validStations))
-	for _, validStation := range validStations {
-		isStationValid[validStation.Id] = true
+	isRoutineValid := make(map[uuid.UUID]bool, len(validRoutines))
+	for _, validRoutine := range validRoutines {
+		isRoutineValid[validRoutine.Id] = true
 	}
 
 	newRoutineTasks := make([]schemas.RoutineTask, 0, len(input))
 	for _, in := range input {
-		if !isStationValid[in.StationId] {
+		if !isRoutineValid[in.RoutineId] {
 			continue
 		}
 		if in.NextScheduledAt.IsZero() {
@@ -312,13 +341,13 @@ func (r *RoutineTaskRepository) CreateManyByStationIds(
 		}
 		newRoutineTask := schemas.RoutineTask{
 			Id:        uuid.New(),
-			StationId: in.StationId,
+			RoutineId: in.RoutineId,
 		}
 		if err := copier.Copy(&newRoutineTask, &in); err != nil {
 			parsedOptions.DB.Rollback()
 			return nil, exceptions.RoutineTask.InvalidInput().WithOrigin(err)
 		}
-		newRoutineTask.StationId = in.StationId
+		newRoutineTask.RoutineId = in.RoutineId
 		newRoutineTask.NextScheduledAt = in.NextScheduledAt.Truncate(time.Minute)
 		newRoutineTask.ScheduledAt = newRoutineTask.NextScheduledAt
 		newRoutineTasks = append(newRoutineTasks, newRoutineTask)
@@ -379,11 +408,11 @@ func (r *RoutineTaskRepository) UpdateOneById(
 		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
-	if input.Values.StationId != nil && !util.CheckSetNull(input.SetNull, "StationId") {
-		stationRepository := NewStationRepository(scopes.NewStationScope())
-		if !stationRepository.HasPermission(*input.Values.StationId, userId, allowedPermissions, opts...) {
+	if input.Values.RoutineId != nil && !util.CheckSetNull(input.SetNull, "RoutineId") {
+		routineRepository := NewRoutineRepository(scopes.NewRoutineScope())
+		if !routineRepository.HasPermission(*input.Values.RoutineId, userId, allowedPermissions, opts...) {
 			parsedOptions.DB.Rollback()
-			return nil, exceptions.RoutineTask.NoPermission("move a routine task to this station")
+			return nil, exceptions.RoutineTask.NoPermission("move a routine task to this routine")
 		}
 	}
 	if input.Values.NextScheduledAt != nil {
@@ -474,23 +503,23 @@ func (r *RoutineTaskRepository) UpdateManyByIds(
 		isRoutineTaskValid[validRoutineTask.Id] = true
 	}
 
-	targetStationIdSet := make(map[uuid.UUID]bool)
+	targetRoutineIdSet := make(map[uuid.UUID]bool)
 	for _, in := range input {
-		if in.PartialUpdateInput.Values.StationId == nil ||
-			util.CheckSetNull(in.PartialUpdateInput.SetNull, "StationId") {
+		if in.PartialUpdateInput.Values.RoutineId == nil ||
+			util.CheckSetNull(in.PartialUpdateInput.SetNull, "RoutineId") {
 			continue
 		}
-		targetStationIdSet[*in.PartialUpdateInput.Values.StationId] = true
+		targetRoutineIdSet[*in.PartialUpdateInput.Values.RoutineId] = true
 	}
-	if len(targetStationIdSet) > 0 {
-		targetStationIds := make([]uuid.UUID, 0, len(targetStationIdSet))
-		for targetStationId := range targetStationIdSet {
-			targetStationIds = append(targetStationIds, targetStationId)
+	if len(targetRoutineIdSet) > 0 {
+		targetRoutineIds := make([]uuid.UUID, 0, len(targetRoutineIdSet))
+		for targetRoutineId := range targetRoutineIdSet {
+			targetRoutineIds = append(targetRoutineIds, targetRoutineId)
 		}
-		stationRepository := NewStationRepository(scopes.NewStationScope())
-		if !stationRepository.HavePermissions(targetStationIds, userId, allowedPermissions, opts...) {
+		routineRepository := NewRoutineRepository(scopes.NewRoutineScope())
+		if !routineRepository.HavePermissions(targetRoutineIds, userId, allowedPermissions, opts...) {
 			parsedOptions.DB.Rollback()
-			return exceptions.RoutineTask.NoPermission("move these routine tasks to the given stations")
+			return exceptions.RoutineTask.NoPermission("move these routine tasks to the given routines")
 		}
 	}
 
@@ -518,7 +547,7 @@ func (r *RoutineTaskRepository) UpdateManyByIds(
 		valuePlaceholders = append(valuePlaceholders, `(?::uuid, ?::uuid, ?::text, ?::"RoutineTaskPurpose", ?::jsonb, ?::integer, ?::integer, ?::"RoutinePeriod", ?::timestamptz, ?::timestamptz, ?::boolean)`)
 		valueArgs = append(valueArgs,
 			in.Id,
-			in.PartialUpdateInput.Values.StationId,
+			in.PartialUpdateInput.Values.RoutineId,
 			in.PartialUpdateInput.Values.Title,
 			in.PartialUpdateInput.Values.Purpose,
 			in.PartialUpdateInput.Values.Payload,
@@ -539,7 +568,7 @@ func (r *RoutineTaskRepository) UpdateManyByIds(
 	sql := fmt.Sprintf(`
 		UPDATE "RoutineTaskTable" AS rt
 		SET
-			station_id = COALESCE(v.station_id::uuid, rt.station_id),
+			routine_id = COALESCE(v.routine_id::uuid, rt.routine_id),
 			title = COALESCE(v.title::text, rt.title),
 			purpose = COALESCE(v.purpose::"RoutineTaskPurpose", rt.purpose),
 			payload = COALESCE(v.payload::jsonb, rt.payload),
@@ -556,7 +585,7 @@ func (r *RoutineTaskRepository) UpdateManyByIds(
 				ELSE rt.scheduled_at
 			END,
 			updated_at = NOW()
-		FROM (VALUES %s) AS v(id, station_id, title, purpose, payload, priority, max_attempts, period, next_scheduled_at, scheduled_at, set_period_null)
+		FROM (VALUES %s) AS v(id, routine_id, title, purpose, payload, priority, max_attempts, period, next_scheduled_at, scheduled_at, set_period_null)
 		WHERE rt.id = v.id::uuid
 	`, strings.Join(valuePlaceholders, ","))
 	result := parsedOptions.DB.Exec(sql, valueArgs...)

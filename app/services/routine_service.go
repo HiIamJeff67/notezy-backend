@@ -37,8 +37,6 @@ type RoutineServiceInterface interface {
 	UpdateMyRoutinesByIds(ctx context.Context, reqDto *dtos.UpdateMyRoutinesByIdsReqDto) (*dtos.UpdateMyRoutinesByIdsResDto, *exceptions.Exception)
 	LinkRoutineTagById(ctx context.Context, reqDto *dtos.LinkRoutineTagByIdReqDto) (*dtos.LinkRoutineTagByIdResDto, *exceptions.Exception)
 	LinkRoutineTagsByIds(ctx context.Context, reqDto *dtos.LinkRoutineTagsByIdsReqDto) (*dtos.LinkRoutineTagsByIdsResDto, *exceptions.Exception)
-	LinkRoutineTaskById(ctx context.Context, reqDto *dtos.LinkRoutineTaskByIdReqDto) (*dtos.LinkRoutineTaskByIdResDto, *exceptions.Exception)
-	LinkRoutineTasksByIds(ctx context.Context, reqDto *dtos.LinkRoutineTasksByIdsReqDto) (*dtos.LinkRoutineTasksByIdsResDto, *exceptions.Exception)
 	LinkRoutineItemById(ctx context.Context, reqDto *dtos.LinkRoutineItemByIdReqDto) (*dtos.LinkRoutineItemByIdResDto, *exceptions.Exception)
 	LinkRoutineItemsByIds(ctx context.Context, reqDto *dtos.LinkRoutineItemsByIdsReqDto) (*dtos.LinkRoutineItemsByIdsResDto, *exceptions.Exception)
 	RestoreMyRoutineById(ctx context.Context, reqDto *dtos.RestoreMyRoutineByIdReqDto) (*dtos.RestoreMyRoutineByIdResDto, *exceptions.Exception)
@@ -198,7 +196,7 @@ func (s *RoutineService) GetMyRoutineById(
 		reqDto.ContextFields.UserId,
 		[]schemas.RoutineRelation{
 			schemas.RoutineRelation_RoutinesToTags,
-			schemas.RoutineRelation_RoutinesToTasks,
+			schemas.RoutineRelation_RoutineTasks,
 			schemas.RoutineRelation_RoutinesToItems,
 		},
 		options.WithDB(db),
@@ -212,9 +210,9 @@ func (s *RoutineService) GetMyRoutineById(
 	for index, routineToTag := range routine.RoutinesToTags {
 		tagIds[index] = routineToTag.TagId
 	}
-	taskIds := make([]uuid.UUID, len(routine.RoutinesToTasks))
-	for index, routineToTask := range routine.RoutinesToTasks {
-		taskIds[index] = routineToTask.TaskId
+	taskIds := make([]uuid.UUID, len(routine.RoutineTasks))
+	for index, routineTask := range routine.RoutineTasks {
+		taskIds[index] = routineTask.Id
 	}
 	itemIds := make([]uuid.UUID, len(routine.RoutinesToItems))
 	for index, routineToItem := range routine.RoutinesToItems {
@@ -276,7 +274,7 @@ func (s *RoutineService) GetMyRoutinesByStationId(
 		Scopes(s.routineScope.IncludePreloads(
 			[]schemas.RoutineRelation{
 				schemas.RoutineRelation_RoutinesToTags,
-				schemas.RoutineRelation_RoutinesToTasks,
+				schemas.RoutineRelation_RoutineTasks,
 				schemas.RoutineRelation_RoutinesToItems,
 			},
 		))
@@ -297,9 +295,9 @@ func (s *RoutineService) GetMyRoutinesByStationId(
 		for index, routineToTag := range routine.RoutinesToTags {
 			tagIds[index] = routineToTag.TagId
 		}
-		taskIds := make([]uuid.UUID, len(routine.RoutinesToTasks))
-		for index, routineToTask := range routine.RoutinesToTasks {
-			taskIds[index] = routineToTask.TaskId
+		taskIds := make([]uuid.UUID, len(routine.RoutineTasks))
+		for index, routineTask := range routine.RoutineTasks {
+			taskIds[index] = routineTask.Id
 		}
 		itemIds := make([]uuid.UUID, len(routine.RoutinesToItems))
 		for index, routineToItem := range routine.RoutinesToItems {
@@ -374,7 +372,7 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 		reqDto.ContextFields.UserId,
 		[]schemas.RoutineRelation{
 			schemas.RoutineRelation_RoutinesToTags,
-			schemas.RoutineRelation_RoutinesToTasks,
+			schemas.RoutineRelation_RoutineTasks,
 			schemas.RoutineRelation_RoutinesToItems,
 		},
 		options.WithDB(db),
@@ -390,9 +388,9 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 		for index, routineToTag := range routine.RoutinesToTags {
 			tagIds[index] = routineToTag.TagId
 		}
-		taskIds := make([]uuid.UUID, len(routine.RoutinesToTasks))
-		for index, routineToTask := range routine.RoutinesToTasks {
-			taskIds[index] = routineToTask.TaskId
+		taskIds := make([]uuid.UUID, len(routine.RoutineTasks))
+		for index, routineTask := range routine.RoutineTasks {
+			taskIds[index] = routineTask.Id
 		}
 		itemIds := make([]uuid.UUID, len(routine.RoutinesToItems))
 		for index, routineToItem := range routine.RoutinesToItems {
@@ -770,190 +768,6 @@ func (s *RoutineService) LinkRoutineTagsByIds(
 	}
 
 	return &dtos.LinkRoutineTagsByIdsResDto{
-		UpdatedAt: time.Now(),
-	}, nil
-}
-
-func (s *RoutineService) LinkRoutineTaskById(
-	ctx context.Context, reqDto *dtos.LinkRoutineTaskByIdReqDto,
-) (*dtos.LinkRoutineTaskByIdResDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
-	}
-
-	tx := s.db.WithContext(ctx).Begin()
-
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
-
-	if !s.routineRepository.HasPermission(
-		reqDto.Body.RoutineId,
-		reqDto.ContextFields.UserId,
-		allowedPermissions,
-		options.WithTransactionDB(tx),
-		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
-		options.WithOnlyDeleted(types.Ternary_Negative),
-	) {
-		tx.Rollback()
-		return nil, exceptions.Routine.NoPermission("get the routine")
-	}
-
-	if !s.routineTaskRepository.HasPermission(
-		reqDto.Body.RoutineTaskId,
-		reqDto.ContextFields.UserId,
-		allowedPermissions,
-		options.WithTransactionDB(tx),
-		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
-		options.WithOnlyDeleted(types.Ternary_Negative),
-	) {
-		tx.Rollback()
-		return nil, exceptions.RoutineTask.NoPermission("get the routine task")
-	}
-
-	var newRoutinesToTasks schemas.RoutinesToTasks
-	newRoutinesToTasks.RoutineId = reqDto.Body.RoutineId
-	newRoutinesToTasks.TaskId = reqDto.Body.RoutineTaskId
-
-	var result *gorm.DB
-	if reqDto.Body.IsUnlink {
-		result = tx.Model(&schemas.RoutinesToTasks{}).
-			Where("routine_id = ? AND task_id = ?", newRoutinesToTasks.RoutineId, newRoutinesToTasks.TaskId).
-			Delete(&schemas.RoutinesToTasks{})
-	} else {
-		result = tx.Model(&schemas.RoutinesToTasks{}).
-			Create(&newRoutinesToTasks)
-	}
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Routine.FailedToLinkRoutineTasks().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: exceptions.Routine.NoChanges()},
-	}); exception != nil {
-		tx.Rollback()
-		return nil, exception
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		tx.Rollback()
-		return nil, exceptions.Routine.FailedToCommitTransaction().WithOrigin(err)
-	}
-
-	return &dtos.LinkRoutineTaskByIdResDto{
-		UpdatedAt: time.Now(),
-	}, nil
-}
-
-func (s *RoutineService) LinkRoutineTasksByIds(
-	ctx context.Context, reqDto *dtos.LinkRoutineTasksByIdsReqDto,
-) (*dtos.LinkRoutineTasksByIdsResDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
-	}
-
-	tx := s.db.WithContext(ctx).Begin()
-
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
-
-	isRoutineExist := make(map[uuid.UUID]bool)
-	isRoutineTaskExist := make(map[uuid.UUID]bool)
-	var routineIds []uuid.UUID
-	var routineTaskIds []uuid.UUID
-	for _, linkedRoutineAndTask := range reqDto.Body.LinkedRoutinesAndTasks {
-		if !isRoutineExist[linkedRoutineAndTask.RoutineId] {
-			isRoutineExist[linkedRoutineAndTask.RoutineId] = true
-			routineIds = append(routineIds, linkedRoutineAndTask.RoutineId)
-		}
-		if !isRoutineTaskExist[linkedRoutineAndTask.RoutineTaskId] {
-			isRoutineTaskExist[linkedRoutineAndTask.RoutineTaskId] = true
-			routineTaskIds = append(routineTaskIds, linkedRoutineAndTask.RoutineTaskId)
-		}
-	}
-
-	isRoutineValid := make(map[uuid.UUID]bool)
-	validRoutines, exception := s.routineRepository.CheckPermissionsAndGetManyByIds(
-		routineIds,
-		reqDto.ContextFields.UserId,
-		nil,
-		allowedPermissions,
-		options.WithTransactionDB(tx),
-		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
-		options.WithOnlyDeleted(types.Ternary_Negative),
-	)
-	if exception != nil {
-		tx.Rollback()
-		return nil, exception
-	}
-	for _, validRoutine := range validRoutines {
-		isRoutineValid[validRoutine.Id] = true
-	}
-
-	isRoutineTaskValid := make(map[uuid.UUID]bool)
-	validRoutineTasks, exception := s.routineTaskRepository.CheckPermissionsAndGetManyByIds(
-		routineTaskIds,
-		reqDto.ContextFields.UserId,
-		nil,
-		allowedPermissions,
-		options.WithTransactionDB(tx),
-		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
-		options.WithOnlyDeleted(types.Ternary_Negative),
-	)
-	if exception != nil {
-		tx.Rollback()
-		return nil, exception
-	}
-	for _, validRoutineTag := range validRoutineTasks {
-		isRoutineTaskValid[validRoutineTag.Id] = true
-	}
-
-	var newRoutinesToTasks []schemas.RoutinesToTasks
-	for _, linkedRoutineAndTask := range reqDto.Body.LinkedRoutinesAndTasks {
-		if !isRoutineValid[linkedRoutineAndTask.RoutineId] ||
-			!isRoutineTaskValid[linkedRoutineAndTask.RoutineTaskId] {
-			continue
-		}
-		newRoutinesToTasks = append(newRoutinesToTasks, schemas.RoutinesToTasks{
-			RoutineId: linkedRoutineAndTask.RoutineId,
-			TaskId:    linkedRoutineAndTask.RoutineTaskId,
-		})
-	}
-	if len(newRoutinesToTasks) == 0 {
-		tx.Rollback()
-		return nil, exceptions.Routine.NoChanges()
-	}
-
-	values := make([][]any, len(newRoutinesToTasks))
-	for index, newRoutineToTask := range newRoutinesToTasks {
-		values[index] = []any{newRoutineToTask.RoutineId, newRoutineToTask.TaskId}
-	}
-
-	var result *gorm.DB
-	if reqDto.Body.IsUnlink {
-		result = tx.Model(&schemas.RoutinesToTasks{}).
-			Where("(routine_id, task_id) IN ?", values).
-			Delete(&schemas.RoutinesToTasks{})
-	} else {
-		result = tx.Model(&schemas.RoutinesToTasks{}).
-			Create(&newRoutinesToTasks)
-	}
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.Routine.FailedToLinkRoutineTasks().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: exceptions.Routine.NoChanges()},
-	}); exception != nil {
-		tx.Rollback()
-		return nil, exception
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		tx.Rollback()
-		return nil, exceptions.Routine.FailedToCommitTransaction().WithOrigin(err)
-	}
-
-	return &dtos.LinkRoutineTasksByIdsResDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
@@ -1680,7 +1494,7 @@ func (s *RoutineService) SearchPrivateRoutines(
 	if err := query.Scopes(s.routineScope.IncludePreloads(
 		[]schemas.RoutineRelation{
 			schemas.RoutineRelation_RoutinesToTags,
-			schemas.RoutineRelation_RoutinesToTasks,
+			schemas.RoutineRelation_RoutineTasks,
 			schemas.RoutineRelation_RoutinesToItems,
 		},
 	)).Find(&routines).Error; err != nil {

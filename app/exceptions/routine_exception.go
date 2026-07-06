@@ -79,18 +79,6 @@ func (d *RoutineExceptionDomain) FailedToLinkRoutineTags() *Exception {
 	}
 }
 
-func (d *RoutineExceptionDomain) FailedToLinkRoutineTasks() *Exception {
-	return &Exception{
-		Code:           d.BaseCode + 22,
-		Prefix:         d.Prefix,
-		Reason:         "FailedToLinkRoutineTasks",
-		IsInternal:     false,
-		Message:        "Cannot link the given routine tasks to the target routine",
-		HTTPStatusCode: http.StatusBadRequest,
-		LastTrace:      traces.GetTrace(1),
-	}
-}
-
 func (d *RoutineExceptionDomain) FailedToLinkItems() *Exception {
 	return &Exception{
 		Code:           d.BaseCode + 23,

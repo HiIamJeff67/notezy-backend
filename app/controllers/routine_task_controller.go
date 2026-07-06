@@ -11,9 +11,9 @@ import (
 
 type RoutineTaskControllerInterface interface {
 	GetMyRoutineTaskById(ctx *gin.Context, reqDto *dtos.GetMyRoutineTaskByIdReqDto)
-	GetAllMyRoutineTasksByStationIds(ctx *gin.Context, reqDto *dtos.GetAllMyRoutineTasksByStationIdsReqDto)
+	GetAllMyRoutineTasksByRoutineIds(ctx *gin.Context, reqDto *dtos.GetAllMyRoutineTasksByRoutineIdsReqDto)
 	GetAllMyRoutineTasks(ctx *gin.Context, reqDto *dtos.GetAllMyRoutineTasksReqDto)
-	CreateRoutineTaskByStationId(ctx *gin.Context, reqDto *dtos.CreateRoutineTaskByStationIdReqDto)
+	CreateRoutineTaskByRoutineId(ctx *gin.Context, reqDto *dtos.CreateRoutineTaskByRoutineIdReqDto)
 	UpdateMyRoutineTaskById(ctx *gin.Context, reqDto *dtos.UpdateMyRoutineTaskByIdReqDto)
 	PauseMyRoutineTaskById(ctx *gin.Context, reqDto *dtos.PauseMyRoutineTaskByIdReqDto)
 	ResumeMyRoutineTaskById(ctx *gin.Context, reqDto *dtos.ResumeMyRoutineTaskByIdReqDto)
@@ -50,11 +50,11 @@ func (c *RoutineTaskController) GetMyRoutineTaskById(ctx *gin.Context, reqDto *d
 	})
 }
 
-func (c *RoutineTaskController) GetAllMyRoutineTasksByStationIds(
+func (c *RoutineTaskController) GetAllMyRoutineTasksByRoutineIds(
 	ctx *gin.Context,
-	reqDto *dtos.GetAllMyRoutineTasksByStationIdsReqDto,
+	reqDto *dtos.GetAllMyRoutineTasksByRoutineIdsReqDto,
 ) {
-	resDto, exception := c.routineTaskService.GetAllMyRoutineTasksByStationIds(ctx.Request.Context(), reqDto)
+	resDto, exception := c.routineTaskService.GetAllMyRoutineTasksByRoutineIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
@@ -81,8 +81,8 @@ func (c *RoutineTaskController) GetAllMyRoutineTasks(ctx *gin.Context, reqDto *d
 	})
 }
 
-func (c *RoutineTaskController) CreateRoutineTaskByStationId(ctx *gin.Context, reqDto *dtos.CreateRoutineTaskByStationIdReqDto) {
-	resDto, exception := c.routineTaskService.CreateRoutineTaskByStationId(ctx.Request.Context(), reqDto)
+func (c *RoutineTaskController) CreateRoutineTaskByRoutineId(ctx *gin.Context, reqDto *dtos.CreateRoutineTaskByRoutineIdReqDto) {
+	resDto, exception := c.routineTaskService.CreateRoutineTaskByRoutineId(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return

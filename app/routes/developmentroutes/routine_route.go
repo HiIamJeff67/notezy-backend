@@ -236,38 +236,6 @@ func configureDevelopmentRoutineRoutes() {
 			)...,
 		)
 		routineRoutes.POST(
-			"/linkRoutineTaskById",
-			middlewares.RepositionMiddleware(
-				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "linkRoutineTaskById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Routine.LinkRoutineTaskById,
-					),
-				},
-				defaultMiddlewares,
-				routineModule.Binder.BindLinkRoutineTaskById(
-					routineModule.Controller.LinkRoutineTaskById,
-				),
-			)...,
-		)
-		routineRoutes.POST(
-			"/linkRoutineTasksByIds",
-			middlewares.RepositionMiddleware(
-				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "linkRoutineTasksByIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Routine.LinkRoutineTasksByIds,
-					),
-				},
-				defaultMiddlewares,
-				routineModule.Binder.BindLinkRoutineTasksByIds(
-					routineModule.Controller.LinkRoutineTasksByIds,
-				),
-			)...,
-		)
-		routineRoutes.POST(
 			"/linkRoutineItemById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{

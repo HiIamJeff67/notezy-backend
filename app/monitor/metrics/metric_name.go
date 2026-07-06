@@ -64,8 +64,6 @@ type metricNameRoutine struct {
 	UpdateMyRoutinesByIds                   string
 	LinkRoutineTagById                      string
 	LinkRoutineTagsByIds                    string
-	LinkRoutineTaskById                     string
-	LinkRoutineTasksByIds                   string
 	LinkRoutineItemById                     string
 	LinkRoutineItemsByIds                   string
 	RestoreMyRoutineById                    string
@@ -93,9 +91,9 @@ type metricNameRoutineTag struct {
 
 type metricNameRoutineTask struct {
 	GetMyRoutineTaskById                       string
-	GetAllMyRoutineTasksByStationIds           string
+	GetAllMyRoutineTasksByRoutineIds           string
 	GetAllMyRoutineTasks                       string
-	CreateRoutineTaskByStationId               string
+	CreateRoutineTaskByRoutineId               string
 	UpdateMyRoutineTaskById                    string
 	PauseMyRoutineTaskById                     string
 	ResumeMyRoutineTaskById                    string
@@ -304,8 +302,6 @@ var MetricNames = struct {
 				UpdateMyRoutinesByIds:                   "server.requests.routine.updateMyRoutinesByIds",
 				LinkRoutineTagById:                      "server.requests.routine.linkRoutineTagById",
 				LinkRoutineTagsByIds:                    "server.requests.routine.linkRoutineTagsByIds",
-				LinkRoutineTaskById:                     "server.requests.routine.linkRoutineTaskById",
-				LinkRoutineTasksByIds:                   "server.requests.routine.linkRoutineTasksByIds",
 				LinkRoutineItemById:                     "server.requests.routine.linkRoutineItemById",
 				LinkRoutineItemsByIds:                   "server.requests.routine.linkRoutineItemsByIds",
 				RestoreMyRoutineById:                    "server.requests.routine.restoreMyRoutineById",
@@ -331,9 +327,9 @@ var MetricNames = struct {
 			},
 			RoutineTask: metricNameRoutineTask{
 				GetMyRoutineTaskById:                       "server.requests.routineTask.getMyRoutineTaskById",
-				GetAllMyRoutineTasksByStationIds:           "server.requests.routineTask.getAllMyRoutineTasksByStationIds",
+				GetAllMyRoutineTasksByRoutineIds:           "server.requests.routineTask.getAllMyRoutineTasksByRoutineIds",
 				GetAllMyRoutineTasks:                       "server.requests.routineTask.getAllMyRoutineTasks",
-				CreateRoutineTaskByStationId:               "server.requests.routineTask.createRoutineTaskByStationId",
+				CreateRoutineTaskByRoutineId:               "server.requests.routineTask.createRoutineTaskByRoutineId",
 				UpdateMyRoutineTaskById:                    "server.requests.routineTask.updateMyRoutineTaskById",
 				PauseMyRoutineTaskById:                     "server.requests.routineTask.pauseMyRoutineTaskById",
 				ResumeMyRoutineTaskById:                    "server.requests.routineTask.resumeMyRoutineTaskById",

@@ -6,7 +6,6 @@ type PrivateStation {
   icon: SupportedIcon
   headerBackgroundURL: String
   routineCount: Int64!
-  routineTaskCount: Int64!
   deletedAt: Time
   createdAt: Time!
   updatedAt: Time!
@@ -19,7 +18,6 @@ type PrivateSearchableStation {
   icon: SupportedIcon
   headerBackgroundURL: String
   routineCount: Int64!
-  routineTaskCount: Int64!
   deletedAt: Time
   createdAt: Time!
   updatedAt: Time!

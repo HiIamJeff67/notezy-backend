@@ -100,9 +100,10 @@ func (s *RoutineTaskRecordService) visualizeMyRoutineTaskRecordTimeCount(
 		`).
 		Joins(recordJoin, recordJoinArgs...).
 		Joins(`LEFT JOIN "RoutineTaskTable" routine_task ON routine_task.id = routine_task_record.routine_task_id`).
+		Joins(`LEFT JOIN "RoutineTable" routine ON routine.id = routine_task.routine_id AND routine.deleted_at IS NULL`).
 		Joins(
 			`LEFT JOIN "UsersToStationsTable" uts
-				ON uts.station_id = routine_task.station_id
+				ON uts.station_id = routine.station_id
 				AND uts.user_id = ?
 				AND uts.permission = ?`,
 			userId,
@@ -217,7 +218,8 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordStatusCount(
 	query := db.Model(&schemas.RoutineTaskRecord{}).
 		Select(`"RoutineTaskRecordTable".status AS status, COUNT(*) AS routine_task_record_count`).
 		Joins(`INNER JOIN "RoutineTaskTable" routine_task ON routine_task.id = "RoutineTaskRecordTable".routine_task_id`).
-		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine_task.station_id`).
+		Joins(`INNER JOIN "RoutineTable" routine ON routine.id = routine_task.routine_id AND routine.deleted_at IS NULL`).
+		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine.station_id`).
 		Where("uts.user_id = ? AND uts.permission = ?", reqDto.ContextFields.UserId, reqDto.Param.Permission)
 	if len(reqDto.Param.RoutineTaskIds) > 0 {
 		query = query.Where(`"RoutineTaskRecordTable".routine_task_id IN ?`, reqDto.Param.RoutineTaskIds)
@@ -268,7 +270,8 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordPurposeCount(
 	query := db.Model(&schemas.RoutineTaskRecord{}).
 		Select(`"RoutineTaskRecordTable".purpose AS purpose, COUNT(*) AS routine_task_record_count`).
 		Joins(`INNER JOIN "RoutineTaskTable" routine_task ON routine_task.id = "RoutineTaskRecordTable".routine_task_id`).
-		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine_task.station_id`).
+		Joins(`INNER JOIN "RoutineTable" routine ON routine.id = routine_task.routine_id AND routine.deleted_at IS NULL`).
+		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine.station_id`).
 		Where("uts.user_id = ? AND uts.permission = ?", reqDto.ContextFields.UserId, reqDto.Param.Permission)
 	if len(reqDto.Param.RoutineTaskIds) > 0 {
 		query = query.Where(`"RoutineTaskRecordTable".routine_task_id IN ?`, reqDto.Param.RoutineTaskIds)
@@ -417,7 +420,8 @@ func (s *RoutineTaskRecordService) SearchPrivateRoutineTaskRecords(
 	query := db.Model(&schemas.RoutineTaskRecord{}).
 		Select(`"RoutineTaskRecordTable".*, uts.permission AS permission`).
 		Joins(`INNER JOIN "RoutineTaskTable" routine_task ON routine_task.id = "RoutineTaskRecordTable".routine_task_id`).
-		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine_task.station_id`).
+		Joins(`INNER JOIN "RoutineTable" routine ON routine.id = routine_task.routine_id AND routine.deleted_at IS NULL`).
+		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine.station_id`).
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions)
 
 	if len(gqlInput.RoutineTaskIds) > 0 {

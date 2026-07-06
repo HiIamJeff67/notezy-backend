@@ -24,13 +24,8 @@ BEGIN
     FROM "StationTable" s
     JOIN "UserTable" u ON u.id = s.owner_id
     JOIN "PlanLimitationTable" pl ON pl.key = u.plan
-    WHERE s.id = NEW.station_id;
-
-    UPDATE "StationTable"
-    SET
-        routine_task_count = routine_task_count + 1,
-        updated_at = NOW()
-    WHERE id = NEW.station_id;
+    JOIN "RoutineTable" r ON r.station_id = s.id
+    WHERE r.id = NEW.routine_id;
 
     UPDATE "UserAccountTable"
     SET

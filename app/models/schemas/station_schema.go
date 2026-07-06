@@ -18,7 +18,6 @@ type Station struct {
 	Icon                *enums.SupportedIcon `json:"icon" gorm:"column:icon; type:\"SupportedIcon\"; default:null;"`
 	HeaderBackgroundURL *string              `json:"headerBackgroundURL" gorm:"column:header_background_url; default:null;"`
 	RoutineCount        int64                `json:"routineCount" gorm:"column:routine_count; type:bigint; not null; default:0; check:station_check_max_routine_count,routine_count <= 500;"`
-	RoutineTaskCount    int64                `json:"routineTaskCount" gorm:"column:routine_task_count; type:bigint; not null; default:0; check:station_check_max_routine_task_count,routine_task_count <= 100;"`
 	DeletedAt           *time.Time           `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz; default:null;"`
 	UpdatedAt           time.Time            `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt           time.Time            `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
@@ -27,7 +26,6 @@ type Station struct {
 	Owner           User              `json:"owner" gorm:"foreignKey:OwnerId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UsersToStations []UsersToStations `json:"usersToStations" gorm:"foreignKey:StationId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	Routines        []Routine         `json:"routines" gorm:"foreignKey:StationId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	RoutineTasks    []RoutineTask     `json:"routineTasks" gorm:"foreignKey:StationId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
 
 // Station Table Name
@@ -42,7 +40,6 @@ const (
 	StationRelation_Owner           StationRelation = "Owner"
 	StationRelation_UsersToStations StationRelation = "UsersToStations"
 	StationRelation_Routines        StationRelation = "Routines"
-	StationRelation_RoutineTasks    StationRelation = "RoutineTasks"
 )
 
 /* ============================== Relative Type Conversion ============================== */
@@ -56,7 +53,6 @@ func (s *Station) ToPrivateStation(permission enums.AccessControlPermission) *gq
 		Icon:                s.Icon,
 		HeaderBackgroundURL: s.HeaderBackgroundURL,
 		RoutineCount:        s.RoutineCount,
-		RoutineTaskCount:    s.RoutineTaskCount,
 		DeletedAt:           s.DeletedAt,
 		UpdatedAt:           s.UpdatedAt,
 		CreatedAt:           s.CreatedAt,
@@ -71,7 +67,6 @@ func (s *Station) ToPrivateSearchableStation(permission enums.AccessControlPermi
 		Icon:                s.Icon,
 		HeaderBackgroundURL: s.HeaderBackgroundURL,
 		RoutineCount:        s.RoutineCount,
-		RoutineTaskCount:    s.RoutineTaskCount,
 		DeletedAt:           s.DeletedAt,
 		UpdatedAt:           s.UpdatedAt,
 		CreatedAt:           s.CreatedAt,

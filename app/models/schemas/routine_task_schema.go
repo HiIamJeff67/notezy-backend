@@ -14,7 +14,7 @@ import (
 
 type RoutineTask struct {
 	Id                uuid.UUID                `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid();"`
-	StationId         uuid.UUID                `json:"stationId" gorm:"column:station_id; type:uuid; not null;"`
+	RoutineId         uuid.UUID                `json:"routineId" gorm:"column:routine_id; type:uuid; not null;"`
 	Title             string                   `json:"title" gorm:"column:title; size:128; not null; default:'undefined';"`
 	Purpose           enums.RoutineTaskPurpose `json:"purpose" gorm:"column:purpose; type:\"RoutineTaskPurpose\"; not null; default:'CreateBlockPack';"`
 	Payload           datatypes.JSON           `json:"payload" gorm:"column:payload; type:jsonb; not null; default:'{}'; check:routine_task_check_payload_size,octet_length(payload::text) <= 16777216;"`
@@ -34,9 +34,8 @@ type RoutineTask struct {
 	RecordId          uuid.UUID                `json:"-" gorm:"column:record_id;->;-:migration"`           // to store the latest routine task record id created by the claimer
 
 	// relations
-	Station         Station             `json:"station" gorm:"foreignKey:StationId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	RoutinesToTasks []RoutinesToTasks   `json:"routinesToTasks" gorm:"foreignKey:TaskId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	Records         []RoutineTaskRecord `json:"records" gorm:"foreignKey:RoutineTaskId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	Routine Routine             `json:"routine" gorm:"foreignKey:RoutineId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	Records []RoutineTaskRecord `json:"records" gorm:"foreignKey:RoutineTaskId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
 
 // RoutineTask Table Name
@@ -48,22 +47,16 @@ func (RoutineTask) TableName() string {
 type RoutineTaskRelation types.RelationName
 
 const (
-	RoutineTaskRelation_Station         RoutineTaskRelation = "Station"
-	RoutineTaskRelation_RoutinesToTasks RoutineTaskRelation = "RoutinesToTasks"
-	RoutineTaskRelation_Records         RoutineTaskRelation = "Records"
+	RoutineTaskRelation_Routine RoutineTaskRelation = "Routine"
+	RoutineTaskRelation_Records RoutineTaskRelation = "Records"
 )
 
 /* ============================== Relative Type Conversion ============================== */
 
 func (rt *RoutineTask) ToPrivateRoutineTask() *gqlmodels.PrivateRoutineTask {
-	routineIds := make([]uuid.UUID, 0, len(rt.RoutinesToTasks))
-	for _, routineToTask := range rt.RoutinesToTasks {
-		routineIds = append(routineIds, routineToTask.RoutineId)
-	}
-
 	return &gqlmodels.PrivateRoutineTask{
 		ID:              rt.Id,
-		StationID:       rt.StationId,
+		RoutineID:       rt.RoutineId,
 		Title:           rt.Title,
 		Purpose:         rt.Purpose,
 		Payload:         json.RawMessage(rt.Payload),
@@ -79,6 +72,5 @@ func (rt *RoutineTask) ToPrivateRoutineTask() *gqlmodels.PrivateRoutineTask {
 		ActualEndedAt:   rt.ActualEndedAt,
 		UpdatedAt:       rt.UpdatedAt,
 		CreatedAt:       rt.CreatedAt,
-		RoutineIds:      routineIds,
 	}
 }

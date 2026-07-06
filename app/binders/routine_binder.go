@@ -26,8 +26,6 @@ type RoutineBinderInterface interface {
 	BindUpdateMyRoutinesByIds(controllerFunc types.ControllerFunc[*dtos.UpdateMyRoutinesByIdsReqDto]) gin.HandlerFunc
 	BindLinkRoutineTagById(controllerFunc types.ControllerFunc[*dtos.LinkRoutineTagByIdReqDto]) gin.HandlerFunc
 	BindLinkRoutineTagsByIds(controllerFunc types.ControllerFunc[*dtos.LinkRoutineTagsByIdsReqDto]) gin.HandlerFunc
-	BindLinkRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.LinkRoutineTaskByIdReqDto]) gin.HandlerFunc
-	BindLinkRoutineTasksByIds(controllerFunc types.ControllerFunc[*dtos.LinkRoutineTasksByIdsReqDto]) gin.HandlerFunc
 	BindLinkRoutineItemById(controllerFunc types.ControllerFunc[*dtos.LinkRoutineItemByIdReqDto]) gin.HandlerFunc
 	BindLinkRoutineItemsByIds(controllerFunc types.ControllerFunc[*dtos.LinkRoutineItemsByIdsReqDto]) gin.HandlerFunc
 	BindRestoreMyRoutineById(controllerFunc types.ControllerFunc[*dtos.RestoreMyRoutineByIdReqDto]) gin.HandlerFunc
@@ -295,52 +293,6 @@ func (b *RoutineBinder) BindLinkRoutineTagById(controllerFunc types.ControllerFu
 func (b *RoutineBinder) BindLinkRoutineTagsByIds(controllerFunc types.ControllerFunc[*dtos.LinkRoutineTagsByIdsReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.LinkRoutineTagsByIdsReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserId = *userId
-
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Routine.InvalidDto().WithOrigin(err)
-			exception.SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
-func (b *RoutineBinder) BindLinkRoutineTaskById(controllerFunc types.ControllerFunc[*dtos.LinkRoutineTaskByIdReqDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.LinkRoutineTaskByIdReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserId = *userId
-
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exception := exceptions.Routine.InvalidDto().WithOrigin(err)
-			exception.SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
-func (b *RoutineBinder) BindLinkRoutineTasksByIds(controllerFunc types.ControllerFunc[*dtos.LinkRoutineTasksByIdsReqDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.LinkRoutineTasksByIdsReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 

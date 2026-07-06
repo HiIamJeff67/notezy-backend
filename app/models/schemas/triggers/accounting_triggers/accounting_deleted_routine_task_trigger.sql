@@ -10,14 +10,9 @@ BEGIN
 
     SELECT owner_id
     INTO station_owner_id
-    FROM "StationTable"
-    WHERE id = OLD.station_id;
-
-    UPDATE "StationTable"
-    SET
-        routine_task_count = GREATEST(0, routine_task_count - 1),
-        updated_at = NOW()
-    WHERE id = OLD.station_id;
+    FROM "StationTable" s
+    JOIN "RoutineTable" r ON r.station_id = s.id
+    WHERE r.id = OLD.routine_id;
 
     UPDATE "UserAccountTable" ua
     SET

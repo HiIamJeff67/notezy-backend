@@ -122,9 +122,8 @@ type ComplexityRoot struct {
 		Period          func(childComplexity int) int
 		Priority        func(childComplexity int) int
 		Purpose         func(childComplexity int) int
-		RoutineIds      func(childComplexity int) int
+		RoutineID       func(childComplexity int) int
 		ScheduledAt     func(childComplexity int) int
-		StationID       func(childComplexity int) int
 		Status          func(childComplexity int) int
 		Title           func(childComplexity int) int
 		UpdatedAt       func(childComplexity int) int
@@ -173,7 +172,6 @@ type ComplexityRoot struct {
 		Name                func(childComplexity int) int
 		Permission          func(childComplexity int) int
 		RoutineCount        func(childComplexity int) int
-		RoutineTaskCount    func(childComplexity int) int
 		UpdatedAt           func(childComplexity int) int
 	}
 
@@ -187,7 +185,6 @@ type ComplexityRoot struct {
 		Name                func(childComplexity int) int
 		Permission          func(childComplexity int) int
 		RoutineCount        func(childComplexity int) int
-		RoutineTaskCount    func(childComplexity int) int
 		UpdatedAt           func(childComplexity int) int
 	}
 
@@ -893,12 +890,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateRoutineTask.Purpose(childComplexity), true
 
-	case "PrivateRoutineTask.routineIds":
-		if e.complexity.PrivateRoutineTask.RoutineIds == nil {
+	case "PrivateRoutineTask.routineId":
+		if e.complexity.PrivateRoutineTask.RoutineID == nil {
 			break
 		}
 
-		return e.complexity.PrivateRoutineTask.RoutineIds(childComplexity), true
+		return e.complexity.PrivateRoutineTask.RoutineID(childComplexity), true
 
 	case "PrivateRoutineTask.scheduledAt":
 		if e.complexity.PrivateRoutineTask.ScheduledAt == nil {
@@ -906,13 +903,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateRoutineTask.ScheduledAt(childComplexity), true
-
-	case "PrivateRoutineTask.stationId":
-		if e.complexity.PrivateRoutineTask.StationID == nil {
-			break
-		}
-
-		return e.complexity.PrivateRoutineTask.StationID(childComplexity), true
 
 	case "PrivateRoutineTask.status":
 		if e.complexity.PrivateRoutineTask.Status == nil {
@@ -1187,13 +1177,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateSearchableStation.RoutineCount(childComplexity), true
 
-	case "PrivateSearchableStation.routineTaskCount":
-		if e.complexity.PrivateSearchableStation.RoutineTaskCount == nil {
-			break
-		}
-
-		return e.complexity.PrivateSearchableStation.RoutineTaskCount(childComplexity), true
-
 	case "PrivateSearchableStation.updatedAt":
 		if e.complexity.PrivateSearchableStation.UpdatedAt == nil {
 			break
@@ -1263,13 +1246,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateStation.RoutineCount(childComplexity), true
-
-	case "PrivateStation.routineTaskCount":
-		if e.complexity.PrivateStation.RoutineTaskCount == nil {
-			break
-		}
-
-		return e.complexity.PrivateStation.RoutineTaskCount(childComplexity), true
 
 	case "PrivateStation.updatedAt":
 		if e.complexity.PrivateStation.UpdatedAt == nil {
@@ -2698,7 +2674,7 @@ type PrivateSearchableRoutine {
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/routine_task.graphql", Input: `type PrivateRoutineTask {
   id: UUID!
-  stationId: UUID!
+  routineId: UUID!
   title: String!
   purpose: RoutineTaskPurpose!
   payload: RawJSON!
@@ -2714,9 +2690,6 @@ type PrivateSearchableRoutine {
   actualEndedAt: Time
   updatedAt: Time!
   createdAt: Time!
-
-  # relations
-  routineIds: [UUID!]!
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/routine_task_record.graphql", Input: `type PrivateRoutineTaskRecord {
@@ -3001,7 +2974,7 @@ enum SearchRoutineTaskSortBy {
 }
 
 input SearchRoutineTaskInput {
-  stationId: UUID
+  routineIds: [UUID!]!
   query: String!
   after: String
   first: Int = 10
@@ -3261,7 +3234,6 @@ type SearchUserConnection implements SearchConnection {
   icon: SupportedIcon
   headerBackgroundURL: String
   routineCount: Int64!
-  routineTaskCount: Int64!
   deletedAt: Time
   createdAt: Time!
   updatedAt: Time!
@@ -3274,7 +3246,6 @@ type PrivateSearchableStation {
   icon: SupportedIcon
   headerBackgroundURL: String
   routineCount: Int64!
-  routineTaskCount: Int64!
   deletedAt: Time
   createdAt: Time!
   updatedAt: Time!

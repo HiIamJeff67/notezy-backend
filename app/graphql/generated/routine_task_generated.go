@@ -75,8 +75,8 @@ func (ec *executionContext) fieldContext_PrivateRoutineTask_id(_ context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateRoutineTask_stationId(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRoutineTask) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateRoutineTask_stationId(ctx, field)
+func (ec *executionContext) _PrivateRoutineTask_routineId(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRoutineTask) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateRoutineTask_routineId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -89,7 +89,7 @@ func (ec *executionContext) _PrivateRoutineTask_stationId(ctx context.Context, f
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.StationID, nil
+		return obj.RoutineID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -106,7 +106,7 @@ func (ec *executionContext) _PrivateRoutineTask_stationId(ctx context.Context, f
 	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PrivateRoutineTask_stationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PrivateRoutineTask_routineId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PrivateRoutineTask",
 		Field:      field,
@@ -770,50 +770,6 @@ func (ec *executionContext) fieldContext_PrivateRoutineTask_createdAt(_ context.
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateRoutineTask_routineIds(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRoutineTask) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateRoutineTask_routineIds(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.RoutineIds, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]uuid.UUID)
-	fc.Result = res
-	return ec.marshalNUUID2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PrivateRoutineTask_routineIds(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PrivateRoutineTask",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type UUID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 // endregion **************************** field.gotpl *****************************
 
 // region    **************************** input.gotpl *****************************
@@ -842,8 +798,8 @@ func (ec *executionContext) _PrivateRoutineTask(ctx context.Context, sel ast.Sel
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "stationId":
-			out.Values[i] = ec._PrivateRoutineTask_stationId(ctx, field, obj)
+		case "routineId":
+			out.Values[i] = ec._PrivateRoutineTask_routineId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -910,11 +866,6 @@ func (ec *executionContext) _PrivateRoutineTask(ctx context.Context, sel ast.Sel
 			}
 		case "createdAt":
 			out.Values[i] = ec._PrivateRoutineTask_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "routineIds":
-			out.Values[i] = ec._PrivateRoutineTask_routineIds(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

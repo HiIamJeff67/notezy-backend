@@ -44,18 +44,18 @@ func configureDevelopmentRoutineTaskRoutes() {
 			)...,
 		)
 		routineTaskRoutes.GET(
-			"/getAllMyRoutineTasksByStationIds",
+			"/getAllMyRoutineTasksByRoutineIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getAllMyRoutineTasksByStationIds"),
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getAllMyRoutineTasksByRoutineIds"),
 					middlewares.ApplyMeterMiddleware(
 						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RoutineTask.GetAllMyRoutineTasksByStationIds,
+						metrics.MetricNames.Server.Requests.RoutineTask.GetAllMyRoutineTasksByRoutineIds,
 					),
 				},
 				defaultMiddlewares,
-				routineTaskModule.Binder.BindGetAllMyRoutineTasksByStationIds(
-					routineTaskModule.Controller.GetAllMyRoutineTasksByStationIds,
+				routineTaskModule.Binder.BindGetAllMyRoutineTasksByRoutineIds(
+					routineTaskModule.Controller.GetAllMyRoutineTasksByRoutineIds,
 				),
 			)...,
 		)
@@ -156,18 +156,18 @@ func configureDevelopmentRoutineTaskRoutes() {
 			)...,
 		)
 		routineTaskRoutes.POST(
-			"/createRoutineTaskByStationId",
+			"/createRoutineTaskByRoutineId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createRoutineTaskByStationId"),
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createRoutineTaskByRoutineId"),
 					middlewares.ApplyMeterMiddleware(
 						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RoutineTask.CreateRoutineTaskByStationId,
+						metrics.MetricNames.Server.Requests.RoutineTask.CreateRoutineTaskByRoutineId,
 					),
 				},
 				defaultMiddlewares,
-				routineTaskModule.Binder.BindCreateRoutineTaskByStationId(
-					routineTaskModule.Controller.CreateRoutineTaskByStationId,
+				routineTaskModule.Binder.BindCreateRoutineTaskByRoutineId(
+					routineTaskModule.Controller.CreateRoutineTaskByRoutineId,
 				),
 			)...,
 		)

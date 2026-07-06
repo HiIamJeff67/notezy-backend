@@ -288,50 +288,6 @@ func (ec *executionContext) fieldContext_PrivateSearchableStation_routineCount(_
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateSearchableStation_routineTaskCount(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateSearchableStation) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateSearchableStation_routineTaskCount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.RoutineTaskCount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int64)
-	fc.Result = res
-	return ec.marshalNInt642int64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PrivateSearchableStation_routineTaskCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PrivateSearchableStation",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int64 does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _PrivateSearchableStation_deletedAt(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateSearchableStation) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PrivateSearchableStation_deletedAt(ctx, field)
 	if err != nil {
@@ -763,50 +719,6 @@ func (ec *executionContext) fieldContext_PrivateStation_routineCount(_ context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateStation_routineTaskCount(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateStation) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateStation_routineTaskCount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.RoutineTaskCount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int64)
-	fc.Result = res
-	return ec.marshalNInt642int64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_PrivateStation_routineTaskCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "PrivateStation",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int64 does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _PrivateStation_deletedAt(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateStation) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PrivateStation_deletedAt(ctx, field)
 	if err != nil {
@@ -983,11 +895,6 @@ func (ec *executionContext) _PrivateSearchableStation(ctx context.Context, sel a
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "routineTaskCount":
-			out.Values[i] = ec._PrivateSearchableStation_routineTaskCount(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "deletedAt":
 			out.Values[i] = ec._PrivateSearchableStation_deletedAt(ctx, field, obj)
 		case "createdAt":
@@ -1060,11 +967,6 @@ func (ec *executionContext) _PrivateStation(ctx context.Context, sel ast.Selecti
 			out.Values[i] = ec._PrivateStation_headerBackgroundURL(ctx, field, obj)
 		case "routineCount":
 			out.Values[i] = ec._PrivateStation_routineCount(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "routineTaskCount":
-			out.Values[i] = ec._PrivateStation_routineTaskCount(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

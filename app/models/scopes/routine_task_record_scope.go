@@ -29,7 +29,8 @@ func (sc *RoutineTaskRecordScope) PassPermissionCheck(
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
 			Model(&schemas.RoutineTask{}).
 			Select("1").
-			Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = "RoutineTaskTable".station_id`).
+			Joins(`INNER JOIN "RoutineTable" routine ON routine.id = "RoutineTaskTable".routine_id AND routine.deleted_at IS NULL`).
+			Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine.station_id`).
 			Where(`"RoutineTaskTable".id = "RoutineTaskRecordTable".routine_task_id`).
 			Where("uts.user_id = ? AND uts.permission IN ?", userId, permissions)
 		return db.Where(`"RoutineTaskRecordTable".id = ? AND EXISTS (?)`, id, subQuery)
@@ -45,7 +46,8 @@ func (sc *RoutineTaskRecordScope) PassPermissionChecks(
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
 			Model(&schemas.RoutineTask{}).
 			Select("1").
-			Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = "RoutineTaskTable".station_id`).
+			Joins(`INNER JOIN "RoutineTable" routine ON routine.id = "RoutineTaskTable".routine_id AND routine.deleted_at IS NULL`).
+			Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine.station_id`).
 			Where(`"RoutineTaskTable".id = "RoutineTaskRecordTable".routine_task_id`).
 			Where("uts.user_id = ? AND uts.permission IN ?", userId, permissions)
 		return db.Where(`"RoutineTaskRecordTable".id IN ? AND EXISTS (?)`, ids, subQuery)

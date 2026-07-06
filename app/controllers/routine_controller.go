@@ -19,8 +19,6 @@ type RoutineControllerInterface interface {
 	UpdateMyRoutinesByIds(ctx *gin.Context, reqDto *dtos.UpdateMyRoutinesByIdsReqDto)
 	LinkRoutineTagById(ctx *gin.Context, reqDto *dtos.LinkRoutineTagByIdReqDto)
 	LinkRoutineTagsByIds(ctx *gin.Context, reqDto *dtos.LinkRoutineTagsByIdsReqDto)
-	LinkRoutineTaskById(ctx *gin.Context, reqDto *dtos.LinkRoutineTaskByIdReqDto)
-	LinkRoutineTasksByIds(ctx *gin.Context, reqDto *dtos.LinkRoutineTasksByIdsReqDto)
 	LinkRoutineItemById(ctx *gin.Context, reqDto *dtos.LinkRoutineItemByIdReqDto)
 	LinkRoutineItemsByIds(ctx *gin.Context, reqDto *dtos.LinkRoutineItemsByIdsReqDto)
 	RestoreMyRoutineById(ctx *gin.Context, reqDto *dtos.RestoreMyRoutineByIdReqDto)
@@ -162,34 +160,6 @@ func (c *RoutineController) LinkRoutineTagById(ctx *gin.Context, reqDto *dtos.Li
 
 func (c *RoutineController) LinkRoutineTagsByIds(ctx *gin.Context, reqDto *dtos.LinkRoutineTagsByIdsReqDto) {
 	resDto, exception := c.routineService.LinkRoutineTagsByIds(ctx.Request.Context(), reqDto)
-	if exception != nil {
-		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      resDto,
-		"exception": nil,
-	})
-}
-
-func (c *RoutineController) LinkRoutineTaskById(ctx *gin.Context, reqDto *dtos.LinkRoutineTaskByIdReqDto) {
-	resDto, exception := c.routineService.LinkRoutineTaskById(ctx.Request.Context(), reqDto)
-	if exception != nil {
-		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      resDto,
-		"exception": nil,
-	})
-}
-
-func (c *RoutineController) LinkRoutineTasksByIds(ctx *gin.Context, reqDto *dtos.LinkRoutineTasksByIdsReqDto) {
-	resDto, exception := c.routineService.LinkRoutineTasksByIds(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return

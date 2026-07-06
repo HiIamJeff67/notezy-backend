@@ -24,9 +24,12 @@ func (sc *RoutineTaskScope) PassPermissionCheck(id uuid.UUID, userId uuid.UUID, 
 	return func(db *gorm.DB) *gorm.DB {
 		// Use gorm.DB.Session to build a fresh statement for the subquery to avoid inheriting outer query clauses (especially in UPDATE/DELETE).
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
-			Model(&schemas.UsersToStations{}).
+			Table(`"RoutineTable" routine`).
 			Select("1").
-			Where("station_id = \"RoutineTaskTable\".station_id AND user_id = ? AND permission IN ?", userId, permissions)
+			Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine.station_id`).
+			Where(`routine.id = "RoutineTaskTable".routine_id`).
+			Where(`routine.deleted_at IS NULL`).
+			Where("uts.user_id = ? AND uts.permission IN ?", userId, permissions)
 		return db.Where("\"RoutineTaskTable\".id = ? AND EXISTS (?)", id, subQuery)
 	}
 }
@@ -35,9 +38,12 @@ func (sc *RoutineTaskScope) PassPermissionChecks(ids []uuid.UUID, userId uuid.UU
 	return func(db *gorm.DB) *gorm.DB {
 		// Use gorm.DB.Session to build a fresh statement for the subquery to avoid inheriting outer query clauses (especially in UPDATE/DELETE).
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
-			Model(&schemas.UsersToStations{}).
+			Table(`"RoutineTable" routine`).
 			Select("1").
-			Where("station_id = \"RoutineTaskTable\".station_id AND user_id = ? AND permission IN ?", userId, permissions)
+			Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine.station_id`).
+			Where(`routine.id = "RoutineTaskTable".routine_id`).
+			Where(`routine.deleted_at IS NULL`).
+			Where("uts.user_id = ? AND uts.permission IN ?", userId, permissions)
 		return db.Where("\"RoutineTaskTable\".id IN ? AND EXISTS (?)", ids, subQuery)
 	}
 }
