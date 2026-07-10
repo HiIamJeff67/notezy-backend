@@ -21,6 +21,7 @@ import (
 
 type BlockPatternResolverInterface interface {
 	Resolve(ctx context.Context, ownerId uuid.UUID, pattern dtos.RoutineTaskPattern) (map[string]string, *exceptions.Exception)
+	ResolveMany(ctx context.Context, ownerIds []uuid.UUID, patterns []dtos.RoutineTaskPattern) ([]map[string]string, []bool, *exceptions.Exception)
 }
 
 type BlockPatternResolver struct {
@@ -40,31 +41,65 @@ func (r BlockPatternResolver) Resolve(
 	ownerId uuid.UUID,
 	pattern dtos.RoutineTaskPattern,
 ) (map[string]string, *exceptions.Exception) {
-	values := map[string]string{}
-	checkInputs := make([]inputs.BulkCheckBlockPermissionInput, 0)
-	keysByBlockId := map[uuid.UUID][]string{}
-
-	for key, binding := range pattern {
-		if binding.Source != PatternSourceBlockText {
-			continue
-		}
-		if binding.BlockId == nil || *binding.BlockId == uuid.Nil {
-			return nil, exceptions.RoutineTask.InvalidDto().
-				WithOrigin(fmt.Errorf("pattern.%s.blockId is required", key))
-		}
-		keysByBlockId[*binding.BlockId] = append(keysByBlockId[*binding.BlockId], key)
+	values, successes, exception := r.ResolveMany(ctx, []uuid.UUID{ownerId}, []dtos.RoutineTaskPattern{pattern})
+	if exception != nil {
+		return nil, exception
 	}
-	for blockId := range keysByBlockId {
-		checkInputs = append(checkInputs, inputs.BulkCheckBlockPermissionInput{
-			UserId: ownerId,
-			Id:     blockId,
-		})
+	if len(successes) == 0 || !successes[0] {
+		return nil, exceptions.RoutineTask.InvalidDto()
+	}
+	return values[0], nil
+}
+
+func (r BlockPatternResolver) ResolveMany(
+	ctx context.Context,
+	ownerIds []uuid.UUID,
+	patterns []dtos.RoutineTaskPattern,
+) ([]map[string]string, []bool, *exceptions.Exception) {
+	values := make([]map[string]string, len(patterns))
+	taskSuccesses := make([]bool, len(patterns))
+	for index := range patterns {
+		values[index] = map[string]string{}
+		taskSuccesses[index] = true
+	}
+	if len(ownerIds) != len(patterns) {
+		return nil, nil, exceptions.RoutineTask.InvalidDto().
+			WithOrigin(fmt.Errorf("ownerIds and patterns length mismatch"))
+	}
+
+	checkInputs := make([]inputs.BulkCheckBlockPermissionInput, 0)
+	keysByUserAndBlockId := map[[2]uuid.UUID][]struct {
+		taskIndex int
+		key       string
+	}{}
+
+	for patternIndex, pattern := range patterns {
+		for key, binding := range pattern {
+			if binding.Source != PatternSourceBlockText {
+				continue
+			}
+			if binding.BlockId == nil || *binding.BlockId == uuid.Nil {
+				taskSuccesses[patternIndex] = false
+				continue
+			}
+			mapKey := [2]uuid.UUID{ownerIds[patternIndex], *binding.BlockId}
+			if _, exists := keysByUserAndBlockId[mapKey]; !exists {
+				checkInputs = append(checkInputs, inputs.BulkCheckBlockPermissionInput{
+					UserId: ownerIds[patternIndex],
+					Id:     *binding.BlockId,
+				})
+			}
+			keysByUserAndBlockId[mapKey] = append(keysByUserAndBlockId[mapKey], struct {
+				taskIndex int
+				key       string
+			}{taskIndex: patternIndex, key: key})
+		}
 	}
 	if len(checkInputs) == 0 {
-		return values, nil
+		return values, taskSuccesses, nil
 	}
 	if r.db == nil || r.blockRepository == nil {
-		return nil, exceptions.RoutineTask.InvalidDto().
+		return nil, nil, exceptions.RoutineTask.InvalidDto().
 			WithOrigin(fmt.Errorf("block pattern source is not available"))
 	}
 
@@ -75,7 +110,7 @@ func (r BlockPatternResolver) Resolve(
 		enums.AccessControlPermission_Read,
 	}
 
-	successes, blocks, exception := r.blockRepository.BulkCheckPermissionsAndGetManyByIds(
+	permissionSuccesses, blocks, exception := r.blockRepository.BulkCheckPermissionsAndGetManyByIds(
 		checkInputs,
 		nil,
 		allowedPermissions,
@@ -83,21 +118,24 @@ func (r BlockPatternResolver) Resolve(
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
-		return nil, exception
+		return nil, nil, exception
 	}
 
 	blocksById := make(map[uuid.UUID]schemas.Block, len(blocks))
 	for _, block := range blocks {
 		blocksById[block.Id] = block
 	}
-	for index, success := range successes {
+	for index, success := range permissionSuccesses {
 		if !success {
-			return nil, exceptions.Block.NoPermission("read pattern source block")
+			for _, request := range keysByUserAndBlockId[[2]uuid.UUID{checkInputs[index].UserId, checkInputs[index].Id}] {
+				taskSuccesses[request.taskIndex] = false
+			}
+			continue
 		}
 		block := blocksById[checkInputs[index].Id]
 		var content any
 		if err := json.Unmarshal(block.Content, &content); err != nil {
-			return nil, exceptions.RoutineTask.InvalidDto().WithOrigin(err)
+			return nil, nil, exceptions.RoutineTask.InvalidDto().WithOrigin(err)
 		}
 		parts := make([]string, 0)
 		var walk func(any)
@@ -118,10 +156,10 @@ func (r BlockPatternResolver) Resolve(
 		}
 		walk(content)
 		text := strings.Join(parts, "")
-		for _, key := range keysByBlockId[block.Id] {
-			values[key] = text
+		for _, request := range keysByUserAndBlockId[[2]uuid.UUID{checkInputs[index].UserId, block.Id}] {
+			values[request.taskIndex][request.key] = text
 		}
 	}
 
-	return values, nil
+	return values, taskSuccesses, nil
 }

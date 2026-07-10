@@ -20,6 +20,7 @@ import (
 
 type BlockPackPatternResolverInterface interface {
 	Resolve(ctx context.Context, ownerId uuid.UUID, pattern dtos.RoutineTaskPattern) (map[string]string, *exceptions.Exception)
+	ResolveMany(ctx context.Context, ownerIds []uuid.UUID, patterns []dtos.RoutineTaskPattern) ([]map[string]string, []bool, *exceptions.Exception)
 }
 
 type BlockPackPatternResolver struct {
@@ -39,31 +40,65 @@ func (r BlockPackPatternResolver) Resolve(
 	ownerId uuid.UUID,
 	pattern dtos.RoutineTaskPattern,
 ) (map[string]string, *exceptions.Exception) {
-	values := map[string]string{}
-	checkInputs := make([]inputs.BulkCheckBlockPackPermissionInput, 0)
-	keysByBlockPackId := map[uuid.UUID][]string{}
-
-	for key, binding := range pattern {
-		if binding.Source != PatternSourceBlockCheckboxCount {
-			continue
-		}
-		if binding.BlockPackId == nil || *binding.BlockPackId == uuid.Nil {
-			return nil, exceptions.RoutineTask.InvalidDto().
-				WithOrigin(fmt.Errorf("pattern.%s.blockPackId is required", key))
-		}
-		keysByBlockPackId[*binding.BlockPackId] = append(keysByBlockPackId[*binding.BlockPackId], key)
+	values, successes, exception := r.ResolveMany(ctx, []uuid.UUID{ownerId}, []dtos.RoutineTaskPattern{pattern})
+	if exception != nil {
+		return nil, exception
 	}
-	for blockPackId := range keysByBlockPackId {
-		checkInputs = append(checkInputs, inputs.BulkCheckBlockPackPermissionInput{
-			UserId: ownerId,
-			Id:     blockPackId,
-		})
+	if len(successes) == 0 || !successes[0] {
+		return nil, exceptions.RoutineTask.InvalidDto()
+	}
+	return values[0], nil
+}
+
+func (r BlockPackPatternResolver) ResolveMany(
+	ctx context.Context,
+	ownerIds []uuid.UUID,
+	patterns []dtos.RoutineTaskPattern,
+) ([]map[string]string, []bool, *exceptions.Exception) {
+	values := make([]map[string]string, len(patterns))
+	taskSuccesses := make([]bool, len(patterns))
+	for index := range patterns {
+		values[index] = map[string]string{}
+		taskSuccesses[index] = true
+	}
+	if len(ownerIds) != len(patterns) {
+		return nil, nil, exceptions.RoutineTask.InvalidDto().
+			WithOrigin(fmt.Errorf("ownerIds and patterns length mismatch"))
+	}
+
+	checkInputs := make([]inputs.BulkCheckBlockPackPermissionInput, 0)
+	keysByUserAndBlockPackId := map[[2]uuid.UUID][]struct {
+		taskIndex int
+		key       string
+	}{}
+
+	for patternIndex, pattern := range patterns {
+		for key, binding := range pattern {
+			if binding.Source != PatternSourceBlockCheckboxCount {
+				continue
+			}
+			if binding.BlockPackId == nil || *binding.BlockPackId == uuid.Nil {
+				taskSuccesses[patternIndex] = false
+				continue
+			}
+			mapKey := [2]uuid.UUID{ownerIds[patternIndex], *binding.BlockPackId}
+			if _, exists := keysByUserAndBlockPackId[mapKey]; !exists {
+				checkInputs = append(checkInputs, inputs.BulkCheckBlockPackPermissionInput{
+					UserId: ownerIds[patternIndex],
+					Id:     *binding.BlockPackId,
+				})
+			}
+			keysByUserAndBlockPackId[mapKey] = append(keysByUserAndBlockPackId[mapKey], struct {
+				taskIndex int
+				key       string
+			}{taskIndex: patternIndex, key: key})
+		}
 	}
 	if len(checkInputs) == 0 {
-		return values, nil
+		return values, taskSuccesses, nil
 	}
 	if r.db == nil || r.blockPackRepository == nil {
-		return nil, exceptions.RoutineTask.InvalidDto().
+		return nil, nil, exceptions.RoutineTask.InvalidDto().
 			WithOrigin(fmt.Errorf("block pack pattern source is not available"))
 	}
 
@@ -74,7 +109,7 @@ func (r BlockPackPatternResolver) Resolve(
 		enums.AccessControlPermission_Read,
 	}
 
-	successes, _, exception := r.blockPackRepository.BulkCheckPermissionsAndGetManyByIds(
+	permissionSuccesses, _, exception := r.blockPackRepository.BulkCheckPermissionsAndGetManyByIds(
 		checkInputs,
 		nil,
 		allowedPermissions,
@@ -82,21 +117,24 @@ func (r BlockPackPatternResolver) Resolve(
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
-		return nil, exception
+		return nil, nil, exception
 	}
 
 	validBlockPackIds := make([]uuid.UUID, 0, len(checkInputs))
 	validBlockPackIdSet := map[uuid.UUID]bool{}
-	for index, success := range successes {
+	for index, success := range permissionSuccesses {
 		if !success {
-			return nil, exceptions.BlockPack.NoPermission("read pattern source block pack")
+			for _, request := range keysByUserAndBlockPackId[[2]uuid.UUID{checkInputs[index].UserId, checkInputs[index].Id}] {
+				taskSuccesses[request.taskIndex] = false
+			}
+			continue
 		}
 		blockPackId := checkInputs[index].Id
 		validBlockPackIds = append(validBlockPackIds, blockPackId)
 		validBlockPackIdSet[blockPackId] = true
 	}
 	if len(validBlockPackIds) == 0 {
-		return values, nil
+		return values, taskSuccesses, nil
 	}
 
 	var rows []struct {
@@ -108,7 +146,7 @@ func (r BlockPackPatternResolver) Resolve(
 		Select(`block_pack_id, COALESCE((props->>'checked')::boolean, false) AS checked`).
 		Where("block_pack_id IN ? AND type = ? AND deleted_at IS NULL", validBlockPackIds, enums.BlockType_CheckListItem).
 		Find(&rows).Error; err != nil {
-		return nil, exceptions.Block.NotFound().WithOrigin(err)
+		return nil, nil, exceptions.Block.NotFound().WithOrigin(err)
 	}
 
 	totalByBlockPackId := map[uuid.UUID]int{}
@@ -123,25 +161,27 @@ func (r BlockPackPatternResolver) Resolve(
 		}
 	}
 
-	for key, binding := range pattern {
-		if binding.Source != PatternSourceBlockCheckboxCount || binding.BlockPackId == nil {
-			continue
-		}
-		blockPackId := *binding.BlockPackId
-		if !validBlockPackIdSet[blockPackId] {
-			continue
-		}
-
-		count := totalByBlockPackId[blockPackId]
-		if binding.Checked != nil {
-			if *binding.Checked {
-				count = checkedByBlockPackId[blockPackId]
-			} else {
-				count = uncheckedByBlockPackId[blockPackId]
+	for patternIndex, pattern := range patterns {
+		for key, binding := range pattern {
+			if binding.Source != PatternSourceBlockCheckboxCount || binding.BlockPackId == nil {
+				continue
 			}
+			blockPackId := *binding.BlockPackId
+			if !validBlockPackIdSet[blockPackId] {
+				continue
+			}
+
+			count := totalByBlockPackId[blockPackId]
+			if binding.Checked != nil {
+				if *binding.Checked {
+					count = checkedByBlockPackId[blockPackId]
+				} else {
+					count = uncheckedByBlockPackId[blockPackId]
+				}
+			}
+			values[patternIndex][key] = strconv.Itoa(count)
 		}
-		values[key] = strconv.Itoa(count)
 	}
 
-	return values, nil
+	return values, taskSuccesses, nil
 }

@@ -56,8 +56,11 @@ func (h SubShelfHandler) HandleCreateSubShelf(
 	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
 ) ([]bool, *exceptions.Exception) {
 	successes := make([]bool, len(tasks))
-	bulkInputs := make([]inputs.BulkCreateSubShelfInput, 0, len(tasks))
-	taskIndexes := make([]int, 0, len(tasks))
+	candidateTaskIndexes := make([]int, 0, len(tasks))
+	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
+	candidateOwnerIds := make([]uuid.UUID, 0, len(tasks))
+	candidatePayloads := make([]dtos.CreateSubShelfRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]dtos.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
@@ -69,24 +72,42 @@ func (h SubShelfHandler) HandleCreateSubShelf(
 		if exception != nil {
 			continue
 		}
-		patternValues, exception := h.patternResolver.Resolve(ctx, task, ownerId, payload.Pattern)
-		if exception != nil {
+		candidateTaskIndexes = append(candidateTaskIndexes, taskIndex)
+		candidateTasks = append(candidateTasks, task)
+		candidateOwnerIds = append(candidateOwnerIds, ownerId)
+		candidatePayloads = append(candidatePayloads, *payload)
+		candidatePatterns = append(candidatePatterns, payload.Pattern)
+	}
+	if len(candidateTasks) == 0 {
+		return successes, nil
+	}
+
+	patternValuesByCandidate, patternSuccesses, exception := h.patternResolver.ResolveMany(ctx, candidateTasks, candidateOwnerIds, candidatePatterns)
+	if exception != nil {
+		return successes, exception
+	}
+
+	bulkInputs := make([]inputs.BulkCreateSubShelfInput, 0, len(candidateTasks))
+	taskIndexes := make([]int, 0, len(candidateTasks))
+	for candidateIndex, payload := range candidatePayloads {
+		if !patternSuccesses[candidateIndex] {
 			continue
 		}
+		patternValues := patternValuesByCandidate[candidateIndex]
 		name := h.templateBlockMatcher.MatchString(payload.Name, patternValues)
 		bulkInputs = append(bulkInputs, inputs.BulkCreateSubShelfInput{
-			UserId:         ownerId,
+			UserId:         candidateOwnerIds[candidateIndex],
 			Id:             payload.Id,
 			RootShelfId:    payload.RootShelfId,
 			PrevSubShelfId: payload.PrevSubShelfId,
 			Name:           name,
 		})
-		taskIndexes = append(taskIndexes, taskIndex)
+		taskIndexes = append(taskIndexes, candidateTaskIndexes[candidateIndex])
 	}
-
 	if len(bulkInputs) == 0 {
 		return successes, nil
 	}
+
 	bulkSuccesses, exception := h.subShelfRepository.BulkCreateMany(
 		bulkInputs,
 		options.WithDB(h.db.WithContext(ctx)),
@@ -110,8 +131,11 @@ func (h SubShelfHandler) HandleUpdateSubShelf(
 	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
 ) ([]bool, *exceptions.Exception) {
 	successes := make([]bool, len(tasks))
-	bulkInputs := make([]inputs.BulkUpdateSubShelfInput, 0, len(tasks))
-	taskIndexes := make([]int, 0, len(tasks))
+	candidateTaskIndexes := make([]int, 0, len(tasks))
+	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
+	candidateOwnerIds := make([]uuid.UUID, 0, len(tasks))
+	candidatePayloads := make([]dtos.UpdateSubShelfRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]dtos.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
@@ -126,13 +150,31 @@ func (h SubShelfHandler) HandleUpdateSubShelf(
 		if payload.Name == nil {
 			continue
 		}
-		patternValues, exception := h.patternResolver.Resolve(ctx, task, ownerId, payload.Pattern)
-		if exception != nil {
+		candidateTaskIndexes = append(candidateTaskIndexes, taskIndex)
+		candidateTasks = append(candidateTasks, task)
+		candidateOwnerIds = append(candidateOwnerIds, ownerId)
+		candidatePayloads = append(candidatePayloads, *payload)
+		candidatePatterns = append(candidatePatterns, payload.Pattern)
+	}
+	if len(candidateTasks) == 0 {
+		return successes, nil
+	}
+
+	patternValuesByCandidate, patternSuccesses, exception := h.patternResolver.ResolveMany(ctx, candidateTasks, candidateOwnerIds, candidatePatterns)
+	if exception != nil {
+		return successes, exception
+	}
+
+	bulkInputs := make([]inputs.BulkUpdateSubShelfInput, 0, len(candidateTasks))
+	taskIndexes := make([]int, 0, len(candidateTasks))
+	for candidateIndex, payload := range candidatePayloads {
+		if !patternSuccesses[candidateIndex] || payload.Name == nil {
 			continue
 		}
+		patternValues := patternValuesByCandidate[candidateIndex]
 		name := h.templateBlockMatcher.MatchString(*payload.Name, patternValues)
 		bulkInputs = append(bulkInputs, inputs.BulkUpdateSubShelfInput{
-			UserId: ownerId,
+			UserId: candidateOwnerIds[candidateIndex],
 			Id:     payload.SubShelfId,
 			PartialUpdateInput: inputs.PartialUpdateSubShelfInput{
 				Values: inputs.UpdateSubShelfInput{
@@ -140,7 +182,7 @@ func (h SubShelfHandler) HandleUpdateSubShelf(
 				},
 			},
 		})
-		taskIndexes = append(taskIndexes, taskIndex)
+		taskIndexes = append(taskIndexes, candidateTaskIndexes[candidateIndex])
 	}
 
 	if len(bulkInputs) == 0 {
@@ -192,12 +234,13 @@ func (h SubShelfHandler) HandleResetSubShelf(
 		return successes, nil
 	}
 
-	db := h.db.WithContext(ctx)
+	tx := h.db.WithContext(ctx).Begin()
+
 	var childSubShelves []struct {
 		Id             uuid.UUID `gorm:"column:id"`
 		PrevSubShelfId uuid.UUID `gorm:"column:prev_sub_shelf_id"`
 	}
-	if err := db.Model(&schemas.SubShelf{}).
+	if err := tx.Model(&schemas.SubShelf{}).
 		Select("id, prev_sub_shelf_id").
 		Where("prev_sub_shelf_id IN ? AND deleted_at IS NULL", subShelfIds).
 		Find(&childSubShelves).Error; err != nil {
@@ -208,7 +251,7 @@ func (h SubShelfHandler) HandleResetSubShelf(
 		Id               uuid.UUID `gorm:"column:id"`
 		ParentSubShelfId uuid.UUID `gorm:"column:parent_sub_shelf_id"`
 	}
-	if err := db.Model(&schemas.BlockPack{}).
+	if err := tx.Model(&schemas.BlockPack{}).
 		Select("id, parent_sub_shelf_id").
 		Where("parent_sub_shelf_id IN ? AND deleted_at IS NULL", subShelfIds).
 		Find(&blockPacks).Error; err != nil {
@@ -219,7 +262,7 @@ func (h SubShelfHandler) HandleResetSubShelf(
 		Id               uuid.UUID `gorm:"column:id"`
 		ParentSubShelfId uuid.UUID `gorm:"column:parent_sub_shelf_id"`
 	}
-	if err := db.Model(&schemas.Material{}).
+	if err := tx.Model(&schemas.Material{}).
 		Select("id, parent_sub_shelf_id").
 		Where("parent_sub_shelf_id IN ? AND deleted_at IS NULL", subShelfIds).
 		Find(&materials).Error; err != nil {
@@ -231,8 +274,6 @@ func (h SubShelfHandler) HandleResetSubShelf(
 			successes[taskIndex] = true
 		}
 	}
-
-	tx := db.Begin()
 
 	if len(childSubShelves) > 0 {
 		bulkInputs := make([]inputs.BulkDeleteSubShelfInput, 0, len(childSubShelves))

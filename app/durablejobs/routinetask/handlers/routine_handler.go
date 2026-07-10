@@ -50,8 +50,11 @@ func (h RoutineHandler) HandleCreateRoutine(
 	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
 ) ([]bool, *exceptions.Exception) {
 	successes := make([]bool, len(tasks))
-	bulkInputs := make([]inputs.BulkCreateRoutineInput, 0, len(tasks))
-	taskIndexes := make([]int, 0, len(tasks))
+	candidateTaskIndexes := make([]int, 0, len(tasks))
+	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
+	candidateOwnerIds := make([]uuid.UUID, 0, len(tasks))
+	candidatePayloads := make([]dtos.CreateRoutineRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]dtos.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
@@ -63,14 +66,32 @@ func (h RoutineHandler) HandleCreateRoutine(
 		if exception != nil {
 			continue
 		}
-		patternValues, exception := h.patternResolver.Resolve(ctx, task, ownerId, payload.Pattern)
-		if exception != nil {
+		candidateTaskIndexes = append(candidateTaskIndexes, taskIndex)
+		candidateTasks = append(candidateTasks, task)
+		candidateOwnerIds = append(candidateOwnerIds, ownerId)
+		candidatePayloads = append(candidatePayloads, *payload)
+		candidatePatterns = append(candidatePatterns, payload.Pattern)
+	}
+	if len(candidateTasks) == 0 {
+		return successes, nil
+	}
+
+	patternValuesByCandidate, patternSuccesses, exception := h.patternResolver.ResolveMany(ctx, candidateTasks, candidateOwnerIds, candidatePatterns)
+	if exception != nil {
+		return successes, exception
+	}
+
+	bulkInputs := make([]inputs.BulkCreateRoutineInput, 0, len(candidateTasks))
+	taskIndexes := make([]int, 0, len(candidateTasks))
+	for candidateIndex, payload := range candidatePayloads {
+		if !patternSuccesses[candidateIndex] {
 			continue
 		}
+		patternValues := patternValuesByCandidate[candidateIndex]
 		title := h.templateBlockMatcher.MatchString(payload.Title, patternValues)
 		description := h.templateBlockMatcher.MatchString(payload.Description, patternValues)
 		bulkInputs = append(bulkInputs, inputs.BulkCreateRoutineInput{
-			UserId:           ownerId,
+			UserId:           candidateOwnerIds[candidateIndex],
 			Id:               payload.Id,
 			StationId:        payload.StationId,
 			Title:            title,
@@ -82,7 +103,7 @@ func (h RoutineHandler) HandleCreateRoutine(
 			Period:           payload.Period,
 			Timezone:         payload.Timezone,
 		})
-		taskIndexes = append(taskIndexes, taskIndex)
+		taskIndexes = append(taskIndexes, candidateTaskIndexes[candidateIndex])
 	}
 
 	if len(bulkInputs) == 0 {
@@ -111,8 +132,11 @@ func (h RoutineHandler) HandleUpdateRoutine(
 	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
 ) ([]bool, *exceptions.Exception) {
 	successes := make([]bool, len(tasks))
-	bulkInputs := make([]inputs.BulkUpdateRoutineInput, 0, len(tasks))
-	taskIndexes := make([]int, 0, len(tasks))
+	candidateTaskIndexes := make([]int, 0, len(tasks))
+	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
+	candidateOwnerIds := make([]uuid.UUID, 0, len(tasks))
+	candidatePayloads := make([]dtos.UpdateRoutineRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]dtos.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
@@ -124,10 +148,28 @@ func (h RoutineHandler) HandleUpdateRoutine(
 		if exception != nil {
 			continue
 		}
-		patternValues, exception := h.patternResolver.Resolve(ctx, task, ownerId, payload.Pattern)
-		if exception != nil {
+		candidateTaskIndexes = append(candidateTaskIndexes, taskIndex)
+		candidateTasks = append(candidateTasks, task)
+		candidateOwnerIds = append(candidateOwnerIds, ownerId)
+		candidatePayloads = append(candidatePayloads, *payload)
+		candidatePatterns = append(candidatePatterns, payload.Pattern)
+	}
+	if len(candidateTasks) == 0 {
+		return successes, nil
+	}
+
+	patternValuesByCandidate, patternSuccesses, exception := h.patternResolver.ResolveMany(ctx, candidateTasks, candidateOwnerIds, candidatePatterns)
+	if exception != nil {
+		return successes, exception
+	}
+
+	bulkInputs := make([]inputs.BulkUpdateRoutineInput, 0, len(candidateTasks))
+	taskIndexes := make([]int, 0, len(candidateTasks))
+	for candidateIndex, payload := range candidatePayloads {
+		if !patternSuccesses[candidateIndex] {
 			continue
 		}
+		patternValues := patternValuesByCandidate[candidateIndex]
 		title := payload.Title
 		if title != nil {
 			matchedTitle := h.templateBlockMatcher.MatchString(*title, patternValues)
@@ -139,7 +181,7 @@ func (h RoutineHandler) HandleUpdateRoutine(
 			description = &matchedDescription
 		}
 		bulkInputs = append(bulkInputs, inputs.BulkUpdateRoutineInput{
-			UserId: ownerId,
+			UserId: candidateOwnerIds[candidateIndex],
 			Id:     payload.RoutineId,
 			PartialUpdateInput: inputs.PartialUpdateRoutineInput{
 				Values: inputs.UpdateRoutineInput{
@@ -154,7 +196,7 @@ func (h RoutineHandler) HandleUpdateRoutine(
 				},
 			},
 		})
-		taskIndexes = append(taskIndexes, taskIndex)
+		taskIndexes = append(taskIndexes, candidateTaskIndexes[candidateIndex])
 	}
 
 	if len(bulkInputs) == 0 {

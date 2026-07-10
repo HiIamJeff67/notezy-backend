@@ -58,6 +58,11 @@ func NewBlockHandler(
 
 func (h BlockHandler) HandleAppendBlock(ctx context.Context, tasks []schemas.RoutineTask, taskIdToOwnerId map[uuid.UUID]uuid.UUID) ([]bool, *exceptions.Exception) {
 	successes := make([]bool, len(tasks))
+	candidateTaskIndexes := make([]int, 0, len(tasks))
+	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
+	candidateOwnerIds := make([]uuid.UUID, 0, len(tasks))
+	candidatePayloads := make([]dtos.AppendBlockRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]dtos.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
@@ -68,10 +73,27 @@ func (h BlockHandler) HandleAppendBlock(ctx context.Context, tasks []schemas.Rou
 		if exception != nil {
 			continue
 		}
-		patternValues, exception := h.patternResolver.Resolve(ctx, task, ownerId, payload.Pattern)
-		if exception != nil {
+		candidateTaskIndexes = append(candidateTaskIndexes, taskIndex)
+		candidateTasks = append(candidateTasks, task)
+		candidateOwnerIds = append(candidateOwnerIds, ownerId)
+		candidatePayloads = append(candidatePayloads, *payload)
+		candidatePatterns = append(candidatePatterns, payload.Pattern)
+	}
+	if len(candidateTasks) == 0 {
+		return successes, nil
+	}
+
+	patternValuesByCandidate, patternSuccesses, exception := h.patternResolver.ResolveMany(ctx, candidateTasks, candidateOwnerIds, candidatePatterns)
+	if exception != nil {
+		return successes, exception
+	}
+
+	for candidateIndex, payload := range candidatePayloads {
+		if !patternSuccesses[candidateIndex] {
 			continue
 		}
+		ownerId := candidateOwnerIds[candidateIndex]
+		patternValues := patternValuesByCandidate[candidateIndex]
 		matchedBlock, exception := h.templateBlockMatcher.MatchArborizedEditableBlock(payload.ArborizedEditableBlock, patternValues)
 		if exception != nil {
 			continue
@@ -112,7 +134,7 @@ func (h BlockHandler) HandleAppendBlock(ctx context.Context, tasks []schemas.Rou
 			tx.Rollback()
 			continue
 		}
-		successes[taskIndex] = true
+		successes[candidateTaskIndexes[candidateIndex]] = true
 	}
 
 	return successes, nil
@@ -120,8 +142,11 @@ func (h BlockHandler) HandleAppendBlock(ctx context.Context, tasks []schemas.Rou
 
 func (h BlockHandler) HandleUpdateBlock(ctx context.Context, tasks []schemas.RoutineTask, taskIdToOwnerId map[uuid.UUID]uuid.UUID) ([]bool, *exceptions.Exception) {
 	successes := make([]bool, len(tasks))
-	bulkInputs := make([]inputs.BulkUpdateBlockInput, 0, len(tasks))
-	taskIndexes := make([]int, 0, len(tasks))
+	candidateTaskIndexes := make([]int, 0, len(tasks))
+	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
+	candidateOwnerIds := make([]uuid.UUID, 0, len(tasks))
+	candidatePayloads := make([]dtos.UpdateBlockRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]dtos.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
@@ -135,10 +160,28 @@ func (h BlockHandler) HandleUpdateBlock(ctx context.Context, tasks []schemas.Rou
 		if payload.ArborizedEditableBlock == nil {
 			continue
 		}
-		patternValues, exception := h.patternResolver.Resolve(ctx, task, ownerId, payload.Pattern)
-		if exception != nil {
+		candidateTaskIndexes = append(candidateTaskIndexes, taskIndex)
+		candidateTasks = append(candidateTasks, task)
+		candidateOwnerIds = append(candidateOwnerIds, ownerId)
+		candidatePayloads = append(candidatePayloads, *payload)
+		candidatePatterns = append(candidatePatterns, payload.Pattern)
+	}
+	if len(candidateTasks) == 0 {
+		return successes, nil
+	}
+
+	patternValuesByCandidate, patternSuccesses, exception := h.patternResolver.ResolveMany(ctx, candidateTasks, candidateOwnerIds, candidatePatterns)
+	if exception != nil {
+		return successes, exception
+	}
+
+	bulkInputs := make([]inputs.BulkUpdateBlockInput, 0, len(candidateTasks))
+	taskIndexes := make([]int, 0, len(candidateTasks))
+	for candidateIndex, payload := range candidatePayloads {
+		if !patternSuccesses[candidateIndex] || payload.ArborizedEditableBlock == nil {
 			continue
 		}
+		patternValues := patternValuesByCandidate[candidateIndex]
 		matchedBlock, exception := h.templateBlockMatcher.MatchArborizedEditableBlock(*payload.ArborizedEditableBlock, patternValues)
 		if exception != nil {
 			continue
@@ -151,7 +194,7 @@ func (h BlockHandler) HandleUpdateBlock(ctx context.Context, tasks []schemas.Rou
 		props := datatypes.JSON(rawBlocks[0].Props)
 		content := datatypes.JSON(rawBlocks[0].Content)
 		bulkInputs = append(bulkInputs, inputs.BulkUpdateBlockInput{
-			UserId: ownerId,
+			UserId: candidateOwnerIds[candidateIndex],
 			Id:     payload.BlockId,
 			PartialUpdateInput: inputs.PartialUpdateBlockInput{Values: inputs.UpdateBlockInput{
 				Type:    &blockType,
@@ -159,7 +202,7 @@ func (h BlockHandler) HandleUpdateBlock(ctx context.Context, tasks []schemas.Rou
 				Content: &content,
 			}},
 		})
-		taskIndexes = append(taskIndexes, taskIndex)
+		taskIndexes = append(taskIndexes, candidateTaskIndexes[candidateIndex])
 	}
 	if len(bulkInputs) == 0 {
 		return successes, nil
@@ -181,6 +224,8 @@ func (h BlockHandler) HandleResetBlock(ctx context.Context, tasks []schemas.Rout
 	blockType := enums.BlockType_Paragraph
 	props := datatypes.JSON([]byte("{}"))
 	content := datatypes.JSON([]byte("[]"))
+	bulkInputs := make([]inputs.BulkUpdateBlockInput, 0, len(tasks))
+	taskIndexes := make([]int, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
@@ -191,10 +236,29 @@ func (h BlockHandler) HandleResetBlock(ctx context.Context, tasks []schemas.Rout
 		if exception != nil {
 			continue
 		}
-		_, exception = h.blockRepository.UpdateOneById(payload.BlockId, ownerId, inputs.PartialUpdateBlockInput{
-			Values: inputs.UpdateBlockInput{Type: &blockType, Props: &props, Content: &content},
-		}, options.WithDB(h.db.WithContext(ctx)), options.WithOnlyDeleted(types.Ternary_Negative))
-		successes[taskIndex] = exception == nil
+		bulkInputs = append(bulkInputs, inputs.BulkUpdateBlockInput{
+			UserId: ownerId,
+			Id:     payload.BlockId,
+			PartialUpdateInput: inputs.PartialUpdateBlockInput{
+				Values: inputs.UpdateBlockInput{Type: &blockType, Props: &props, Content: &content},
+			},
+		})
+		taskIndexes = append(taskIndexes, taskIndex)
+	}
+	if len(bulkInputs) == 0 {
+		return successes, nil
+	}
+
+	bulkSuccesses, exception := h.blockRepository.BulkUpdateMany(
+		bulkInputs,
+		options.WithDB(h.db.WithContext(ctx)),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return successes, exception
+	}
+	for index, success := range bulkSuccesses {
+		successes[taskIndexes[index]] = success
 	}
 
 	return successes, nil

@@ -53,8 +53,11 @@ func (h RootShelfHandler) HandleCreateRootShelf(
 	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
 ) ([]bool, *exceptions.Exception) {
 	successes := make([]bool, len(tasks))
-	bulkInputs := make([]inputs.BulkCreateRootShelfInput, 0, len(tasks))
-	taskIndexes := make([]int, 0, len(tasks))
+	candidateTaskIndexes := make([]int, 0, len(tasks))
+	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
+	candidateOwnerIds := make([]uuid.UUID, 0, len(tasks))
+	candidatePayloads := make([]dtos.CreateRootShelfRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]dtos.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
@@ -66,17 +69,35 @@ func (h RootShelfHandler) HandleCreateRootShelf(
 		if exception != nil {
 			continue
 		}
-		patternValues, exception := h.patternResolver.Resolve(ctx, task, ownerId, payload.Pattern)
-		if exception != nil {
+		candidateTaskIndexes = append(candidateTaskIndexes, taskIndex)
+		candidateTasks = append(candidateTasks, task)
+		candidateOwnerIds = append(candidateOwnerIds, ownerId)
+		candidatePayloads = append(candidatePayloads, *payload)
+		candidatePatterns = append(candidatePatterns, payload.Pattern)
+	}
+	if len(candidateTasks) == 0 {
+		return successes, nil
+	}
+
+	patternValuesByCandidate, patternSuccesses, exception := h.patternResolver.ResolveMany(ctx, candidateTasks, candidateOwnerIds, candidatePatterns)
+	if exception != nil {
+		return successes, exception
+	}
+
+	bulkInputs := make([]inputs.BulkCreateRootShelfInput, 0, len(candidateTasks))
+	taskIndexes := make([]int, 0, len(candidateTasks))
+	for candidateIndex, payload := range candidatePayloads {
+		if !patternSuccesses[candidateIndex] {
 			continue
 		}
+		patternValues := patternValuesByCandidate[candidateIndex]
 		name := h.templateBlockMatcher.MatchString(payload.Name, patternValues)
 		bulkInputs = append(bulkInputs, inputs.BulkCreateRootShelfInput{
-			UserId: ownerId,
+			UserId: candidateOwnerIds[candidateIndex],
 			Id:     payload.Id,
 			Name:   name,
 		})
-		taskIndexes = append(taskIndexes, taskIndex)
+		taskIndexes = append(taskIndexes, candidateTaskIndexes[candidateIndex])
 	}
 
 	if len(bulkInputs) == 0 {
@@ -105,8 +126,11 @@ func (h RootShelfHandler) HandleUpdateRootShelf(
 	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
 ) ([]bool, *exceptions.Exception) {
 	successes := make([]bool, len(tasks))
-	bulkInputs := make([]inputs.BulkUpdateRootShelfInput, 0, len(tasks))
-	taskIndexes := make([]int, 0, len(tasks))
+	candidateTaskIndexes := make([]int, 0, len(tasks))
+	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
+	candidateOwnerIds := make([]uuid.UUID, 0, len(tasks))
+	candidatePayloads := make([]dtos.UpdateRootShelfRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]dtos.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		ownerId, exists := taskIdToOwnerId[task.Id]
@@ -121,13 +145,31 @@ func (h RootShelfHandler) HandleUpdateRootShelf(
 		if payload.Name == nil {
 			continue
 		}
-		patternValues, exception := h.patternResolver.Resolve(ctx, task, ownerId, payload.Pattern)
-		if exception != nil {
+		candidateTaskIndexes = append(candidateTaskIndexes, taskIndex)
+		candidateTasks = append(candidateTasks, task)
+		candidateOwnerIds = append(candidateOwnerIds, ownerId)
+		candidatePayloads = append(candidatePayloads, *payload)
+		candidatePatterns = append(candidatePatterns, payload.Pattern)
+	}
+	if len(candidateTasks) == 0 {
+		return successes, nil
+	}
+
+	patternValuesByCandidate, patternSuccesses, exception := h.patternResolver.ResolveMany(ctx, candidateTasks, candidateOwnerIds, candidatePatterns)
+	if exception != nil {
+		return successes, exception
+	}
+
+	bulkInputs := make([]inputs.BulkUpdateRootShelfInput, 0, len(candidateTasks))
+	taskIndexes := make([]int, 0, len(candidateTasks))
+	for candidateIndex, payload := range candidatePayloads {
+		if !patternSuccesses[candidateIndex] || payload.Name == nil {
 			continue
 		}
+		patternValues := patternValuesByCandidate[candidateIndex]
 		name := h.templateBlockMatcher.MatchString(*payload.Name, patternValues)
 		bulkInputs = append(bulkInputs, inputs.BulkUpdateRootShelfInput{
-			UserId: ownerId,
+			UserId: candidateOwnerIds[candidateIndex],
 			Id:     payload.RootShelfId,
 			PartialUpdateInput: inputs.PartialUpdateRootShelfInput{
 				Values: inputs.UpdateRootShelfInput{
@@ -135,7 +177,7 @@ func (h RootShelfHandler) HandleUpdateRootShelf(
 				},
 			},
 		})
-		taskIndexes = append(taskIndexes, taskIndex)
+		taskIndexes = append(taskIndexes, candidateTaskIndexes[candidateIndex])
 	}
 
 	if len(bulkInputs) == 0 {

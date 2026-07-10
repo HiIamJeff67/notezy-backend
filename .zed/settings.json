@@ -1,0 +1,59 @@
+{
+  "languages": {
+    "Go": {
+      "hard_tabs": true,
+      "tab_size": 4,
+      "format_on_save": "on"
+    },
+    "GraphQL": {
+      "tab_size": 2,
+      "format_on_save": "on"
+    },
+    "JSON": {
+      "tab_size": 2,
+      "format_on_save": "on"
+    },
+    "YAML": {
+      "tab_size": 2,
+      "format_on_save": "on"
+    },
+    "Lua": {
+      "tab_size": 2,
+      "format_on_save": "on"
+    },
+    "HTML": {
+      "tab_size": 2,
+      "format_on_save": "on"
+    },
+    "Dockerfile": {
+      "tab_size": 2,
+      "format_on_save": "on"
+    },
+    "Markdown": {
+      "soft_wrap": "prefer_line",
+      "preferred_line_length": 100
+    },
+    "Make": {
+      "hard_tabs": true
+    }
+  },
+  "lsp": {
+    "codebook": {
+      "initialization_options": {
+        "configPath": ".zed/codebook.toml"
+      }
+    },
+    "yaml-language-server": {
+      "settings": {
+        "yaml": {
+          "schemas": {
+            "https://raw.githubusercontent.com/srikanthccv/otelcol-jsonschema/main/schema.json": [
+              "infra/monitor/otel-collector-config.dev.yaml",
+              "infra/monitor/otel-collector-config.yaml"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
