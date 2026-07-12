@@ -146,10 +146,10 @@ func (s *inMemoryStorage) DeleteObjectByKey(ctx context.Context, key string) *ex
 
 // [not implemented] For Testing：return fake URL
 func (s *inMemoryStorage) PresignPutObjectByKey(ctx context.Context, key string, option *PresignOptions) (string, *exceptions.Exception) {
-	return "http://localhost:" + "/" + constants.DevelopmentBaseURL + "/" + "storage/mock://put/" + key, nil
+	return "http://localhost:" + "/" + constants.APIDevelopmentBaseURL + "/" + "storage/mock://put/" + key, nil
 }
 
 // For Testing：return localhost URL, give the frontend ability to visit
 func (s *inMemoryStorage) PresignGetObjectByKey(ctx context.Context, key string, option *PresignOptions) (string, *exceptions.Exception) {
-	return "http://localhost:" + "/" + constants.DevelopmentBaseURL + "/" + "storage/mock/files/" + key, nil
+	return "http://localhost:" + "/" + constants.APIDevelopmentBaseURL + "/" + "storage/mock/files/" + key, nil
 }

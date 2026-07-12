@@ -11,8 +11,12 @@ import (
 	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 )
 
-func configureStaticRoutes() {
-	staticGroup := DevelopmentRouterGroup.Group("/static")
+func configureStaticRoutes(router *gin.RouterGroup) {
+	if router == nil {
+		router = DevelopmentAPIRouterGroup
+	}
+
+	staticGroup := router.Group("/static")
 	{
 		globalImagesGroup := staticGroup.Group("/globalImages")
 		globalImagesGroup.Use(

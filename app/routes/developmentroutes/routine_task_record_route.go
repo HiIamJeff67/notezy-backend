@@ -13,10 +13,14 @@ import (
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
-func configureDevelopmentRoutineTaskRecordRoutes() {
+func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup) {
+	if router == nil {
+		router = DevelopmentAPIRouterGroup
+	}
+
 	routineTaskRecordModule := modules.NewRoutineTaskRecordModule()
 
-	routineTaskRecordRoutes := DevelopmentRouterGroup.Group("/routineTaskRecord")
+	routineTaskRecordRoutes := router.Group("/routineTaskRecord")
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(3 * time.Second),

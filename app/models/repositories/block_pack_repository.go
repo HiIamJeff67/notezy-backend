@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -905,6 +906,9 @@ func (r *BlockPackRepository) BulkCheckPermissionsAndGetManyByIds(
 	for validId := range validIdSet {
 		validIds = append(validIds, validId)
 	}
+	sort.Slice(validIds, func(left int, right int) bool {
+		return validIds[left].String() < validIds[right].String()
+	})
 	if len(validIds) == 0 {
 		return successes, []schemas.BlockPack{}, nil
 	}
@@ -915,6 +919,7 @@ func (r *BlockPackRepository) BulkCheckPermissionsAndGetManyByIds(
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockPackScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
+		Order(`"BlockPackTable".id ASC`).
 		Find(&blockPacks)
 	if result.Error != nil {
 		return nil, nil, exceptions.BlockPack.NotFound().WithOrigin(result.Error)

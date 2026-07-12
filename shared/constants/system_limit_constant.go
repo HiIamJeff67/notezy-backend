@@ -6,6 +6,25 @@ import (
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
+/* ============================== Realtime Gateway limitations ============================== */
+
+const (
+	RealtimeConnectionTicketExpiresIn time.Duration = 5 * time.Minute
+	RealtimeBlockPackTicketExpiresIn  time.Duration = 5 * time.Minute
+	RealtimeProtocolVersion           int           = 1
+	RealtimeWorkerProtocolVersion     int           = 1
+	RealtimeMaxMessageSize            int64         = 1 << 20
+	RealtimeMaxChannelsPerConnection  int           = 64
+	RealtimePongWait                  time.Duration = 60 * time.Second
+	RealtimePingInterval              time.Duration = 25 * time.Second
+	RealtimeControlWriteTimeout       time.Duration = 10 * time.Second
+)
+
+const (
+	RealtimeBinaryFrameHeaderSize   int = 6
+	RealtimeInternalFrameHeaderSize int = 39
+)
+
 /* ============================== Routine Task limitations ============================== */
 
 const (

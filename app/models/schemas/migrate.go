@@ -18,6 +18,8 @@ var MigratingTables = []any{
 	&SubShelf{},
 	&Material{},
 	&BlockPack{},
+	&BlockPackYjsDocument{},
+	&BlockPackYjsUpdate{},
 	&Block{},
 	&Item{},
 

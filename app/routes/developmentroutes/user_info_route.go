@@ -13,10 +13,14 @@ import (
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
-func configureDevelopmentUserInfoRoutes() {
+func configureDevelopmentUserInfoRoutes(router *gin.RouterGroup) {
+	if router == nil {
+		router = DevelopmentAPIRouterGroup
+	}
+
 	userInfoModule := modules.NewUserInfoModule()
 
-	userInfoRoutes := DevelopmentRouterGroup.Group("/userInfo")
+	userInfoRoutes := router.Group("/userInfo")
 	defaultsMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(1 * time.Second),

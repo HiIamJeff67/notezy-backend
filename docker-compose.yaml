@@ -60,6 +60,7 @@ services:
       GIN_TRUSTED_PROXIES: ${GIN_TRUSTED_PROXIES}
       JWT_ACCESS_TOKEN_SECRET_KEY: ${JWT_ACCESS_TOKEN_SECRET_KEY}
       JWT_REFRESH_TOKEN_SECRET_KEY: ${JWT_REFRESH_TOKEN_SECRET_KEY}
+      REALTIME_TICKET_PRIVATE_KEY_BASE64: ${REALTIME_TICKET_PRIVATE_KEY_BASE64}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       NOTEZY_OFFICIAL_NAME: ${NOTEZY_OFFICIAL_NAME}
@@ -75,6 +76,20 @@ services:
     depends_on:
       notezy-db:
         condition: service_healthy
+
+  notezy-yjs-worker:
+    image: ${DOCKER_YJS_WORKER_SERVICE_NAME}:latest
+    build:
+      context: ./yjs-worker
+      dockerfile: Dockerfile # this is based on the build/context of ./yjs-worker
+    environment:
+      NODE_ENV: development
+      YJS_WORKER_HOST: 0.0.0.0
+      YJS_WORKER_PORT: ${DOCKER_YJS_WORKER_PORT}
+    networks:
+      - notezy-backend-net
+    expose:
+      - "${DOCKER_YJS_WORKER_PORT}"
 
   notezy-nginx:
     image: nginx:1.27-alpine

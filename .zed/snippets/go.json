@@ -1,6 +1,64 @@
 {
+  "Generate a Controller Layer Function": {
+    "prefix": "controller",
+    "body": ["func ${1:_Controller_Function_Name_} (ctx *gin.Context) {}"],
+    "description": "Create a starter controller-layer function"
+  },
+  "Generate a Service Layer Function": {
+    "prefix": "service",
+    "body": ["func ${1:_Service_Function_Name_} (reqDto *dtos.${1}ReqDto) (*dtos.${1}ResDto, *exceptions.Exception) {}"],
+    "description": "Create a starter service-layer function"
+  },
+  "Generate Go GORM Database Table Schema": {
+    "prefix": "gschema",
+    "body": [
+      "package schemas",
+      "import (",
+      "\tshared \"github.com/HiIamJeff67/notezy-backend/shared\"",
+      "\t\"time\"",
+      "\t\"github.com/google/uuid\"",
+      ")",
+      "type ${1:_TableName_} struct {",
+      "\tId        uuid.UUID  `json:\"id\" gorm:\"column:id; type:uuid; primaryKey; default:gen_random_uuid();\"`",
+      "\tCreatedAt time.Time  `json:\"createdAt\" gorm:\"column:created_at; type:timestamptz; not null; autoCreateTime:true;\"`",
+      "\tUpdatedAt time.Time  `json:\"updatedAt\" gorm:\"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;\"`",
+      "}",
+      "",
+      "func (${1:_TableName_}) TableName() string {",
+      "\treturn shared.TableName_${1:_TableName_}Table.String()",
+      "}"
+    ],
+    "description": "Create an advanced GORM model with UUID, enum, timestamps, and table name"
+  },
+  "Generate Go GORM Enum Schema": {
+    "prefix": "gnum",
+    "body": [
+      "package enums",
+      "type ${1:_EnumName_} string",
+      "const (",
+      "\t${1:_EnumName_}_ ${1:_EnumName_} = \"\"",
+      ")",
+      "var All${1:_EnumName_}s = []${1:_EnumName_}{",
+      "\t${1:_EnumName_}_,",
+      "}",
+      "var All${1:_EnumName_}Strings = []string{",
+      "\tstring(${1:_EnumName_}_),",
+      "}"
+    ],
+    "description": "Create an advanced GORM enum with lists of enum values and strings"
+  },
+  "Generate a String for Describing JSON and GORM Attributes": {
+    "prefix": "jga",
+    "body": ["`json:\"${1:_JsonName_}\" gorm:\"column:; type:; not null; default:;\"`"],
+    "description": "Create JSON and GORM attributes for a table field"
+  },
+  "Generate a SQL Separator Comment": {
+    "prefix": "sqlseparator",
+    "body": ["-- ============================== SQL Separator =============================="],
+    "description": "Create a SQL separator for multiple statements in one file"
+  },
   "Generate a Customized Exception Sub Domain and Its Related Initial Constants": {
-    "prefix": ["exceptionSubDomain", "excepSubDom", "xsd"],
+    "prefix": "exceptionSubDomain",
     "body": [
       "package exceptions",
       "const (",
@@ -23,7 +81,7 @@
     ]
   },
   "Generate a Customized Database Exception Sub Domain and Its Related Initial Constants": {
-    "prefix": ["databaseExcpetionSubDomain", "dbExcepSubDom", "dxsd"],
+    "prefix": "databaseExcpetionSubDomain",
     "body": [
       "package exceptions",
       "const (",
@@ -45,13 +103,13 @@
       "\tPrefix: ExceptionPrefix_${1:_DomainName_},",
       "\tDatabaseExceptionDomain: DatabaseExceptionDomain{",
       "\t\t_BaseCode: _ExceptionBaseCode_${1:_DomainName_},",
-      "\t\t_Prefix: ExceptionPrefix_${1:_DomainName_}, ",
+      "\t\t_Prefix: ExceptionPrefix_${1:_DomainName_},",
       "\t},",
       "}"
     ]
   },
   "Generate a Customized API Exception Sub Domain and Its Related Initial Constants": {
-    "prefix": ["apiExceptionSubDomain", "apiExcepSubDom", "axsd"],
+    "prefix": "apiExceptionSubDomain",
     "body": [
       "package exceptions",
       "const (",
@@ -73,7 +131,7 @@
       "\tPrefix: ExceptionPrefix_${1:_DomainName_},",
       "\tAPIExceptionDomain: APIExceptionDomain{",
       "\t\t_BaseCode: _ExceptionBaseCode_${1:_DomainName_},",
-      "\t\t_Prefix: ExceptionPrefix_${1:_DomainName_}, ",
+      "\t\t_Prefix: ExceptionPrefix_${1:_DomainName_},",
       "\t},",
       "}"
     ]

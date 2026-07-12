@@ -12,8 +12,12 @@ import (
 	storages "github.com/HiIamJeff67/notezy-backend/app/storages"
 )
 
-func configureStorageRoutes() {
-	storageRoute := DevelopmentRouterGroup.Group("/storage")
+func configureStorageRoutes(router *gin.RouterGroup) {
+	if router == nil {
+		router = DevelopmentAPIRouterGroup
+	}
+
+	storageRoute := router.Group("/storage")
 	storageRoute.Use(
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(5*time.Second),

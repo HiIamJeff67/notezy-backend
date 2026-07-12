@@ -19,12 +19,17 @@ type TokenExceptionDomain struct {
 	BaseCode ExceptionCode
 	Prefix   ExceptionPrefix
 	APIExceptionDomain
+	TypeExceptionDomain
 }
 
 var Token = &TokenExceptionDomain{
 	BaseCode: ExceptionBaseCode_Token,
 	Prefix:   ExceptionPrefix_Token,
 	APIExceptionDomain: APIExceptionDomain{
+		_BaseCode: _ExceptionBaseCode_Token,
+		_Prefix:   ExceptionPrefix_Token,
+	},
+	TypeExceptionDomain: TypeExceptionDomain{
 		_BaseCode: _ExceptionBaseCode_Token,
 		_Prefix:   ExceptionPrefix_Token,
 	},
@@ -68,6 +73,30 @@ func (d *TokenExceptionDomain) CSRFTokenSecretKeyNotFound() *Exception {
 	}
 }
 
+func (d *TokenExceptionDomain) RealtimeTicketPrivateKeyNotFound() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 4,
+		Prefix:         d.Prefix,
+		Reason:         "RealtimeTicketPrivateKeyNotFound",
+		IsInternal:     true,
+		Message:        "The environment variable of realtime ticket private key is not found",
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastTrace:      traces.GetTrace(1),
+	}
+}
+
+func (d *TokenExceptionDomain) InvalidRealtimeTicketPrivateKey() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 5,
+		Prefix:         d.Prefix,
+		Reason:         "InvalidRealtimeTicketPrivateKey",
+		IsInternal:     true,
+		Message:        "The realtime ticket private key is invalid",
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastTrace:      traces.GetTrace(1),
+	}
+}
+
 /* ============================== Handling Generate Token Error ============================== */
 
 func (d *TokenExceptionDomain) FailedToGenerateAccessToken() *Exception {
@@ -101,6 +130,18 @@ func (d *TokenExceptionDomain) FailedToGenerateCSRFToken() *Exception {
 		Reason:         "FailedToGenerateCSRFToken",
 		IsInternal:     true,
 		Message:        "Failed to generate the csrf token",
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastTrace:      traces.GetTrace(1),
+	}
+}
+
+func (d *TokenExceptionDomain) FailedToGenerateRealtimeTicket() *Exception {
+	return &Exception{
+		Code:           d.BaseCode + 104,
+		Prefix:         d.Prefix,
+		Reason:         "FailedToGenerateRealtimeTicket",
+		IsInternal:     true,
+		Message:        "Failed to generate the realtime ticket",
 		HTTPStatusCode: http.StatusInternalServerError,
 		LastTrace:      traces.GetTrace(1),
 	}

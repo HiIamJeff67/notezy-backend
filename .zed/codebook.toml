@@ -85,6 +85,8 @@ words = [
     "durablejobs",
     "matchers",
     "arborized",
+    "yjs",
+    "realtimetypes",
 ]
 
 ignore_paths = [

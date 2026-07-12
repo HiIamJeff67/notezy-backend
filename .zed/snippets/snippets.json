@@ -1,0 +1,52 @@
+{
+  "Generate a Pair of Context Separators with Size of 5": {
+    "prefix": "sep5",
+    "body": ["/* ===== ${1:_Title_} ===== */"],
+    "description": "Create a context separator"
+  },
+  "Generate a Pair of Context Separators with Size of 10": {
+    "prefix": "sep10",
+    "body": ["/* ========== ${1:_Title_} ========== */"],
+    "description": "Create a context separator"
+  },
+  "Generate a Pair of Context Separators with Size of 15": {
+    "prefix": "sep15",
+    "body": ["/* =============== ${1:_Title_} =============== */"],
+    "description": "Create a context separator"
+  },
+  "Generate a Pair of Context Separators with Size of 20": {
+    "prefix": "sep20",
+    "body": ["/* ==================== ${1:_Title_} ==================== */"],
+    "description": "Create a context separator"
+  },
+  "Generate a Pair of Context Separators with Size of 25": {
+    "prefix": "sep25",
+    "body": ["/* ========================= ${1:_Title_} ========================= */"],
+    "description": "Create a context separator"
+  },
+  "Generate a Pair of Context Separators with Size of 30": {
+    "prefix": "sep30",
+    "body": ["/* ============================== ${1:_Title_} ============================== */"],
+    "description": "Create a context separator"
+  },
+  "Generate a Pair of Context Separators with Size of 10 for Text File": {
+    "prefix": "tsep10",
+    "body": ["# ========== ${1:_Title_} ========== #"],
+    "description": "Create a text-file context separator"
+  },
+  "Generate a Pair of Context Separators with Size of 15 for Text File": {
+    "prefix": "tsep15",
+    "body": ["# =============== ${1:_Title_} =============== #"],
+    "description": "Create a text-file context separator"
+  },
+  "Generate a Pair of Context Separators with Size of 20 for Text File": {
+    "prefix": "tsep20",
+    "body": ["# ==================== ${1:_Title_} ==================== #"],
+    "description": "Create a text-file context separator"
+  },
+  "Generate a Pair of Context Separators with Size of 30 for Text File": {
+    "prefix": "tsep30",
+    "body": ["# ============================== ${1:_Title_} ============================== #"],
+    "description": "Create a text-file context separator"
+  }
+}

@@ -197,6 +197,11 @@ type metricNameBlock struct {
 	DeleteMyBlocksByIds      string
 }
 
+type metricNameRealtime struct {
+	CreateMyRealtimeConnectionTicket string
+	CreateMyBlockPackChannelTicket   string
+}
+
 type MetricNameRequests struct {
 	Total             string
 	Auth              metricNameAuth
@@ -214,6 +219,7 @@ type MetricNameRequests struct {
 	Material          metricNameMaterial
 	BlockPack         metricNameBlockPack
 	Block             metricNameBlock
+	Realtime          metricNameRealtime
 }
 
 /* ============================== responses fields ============================== */
@@ -425,6 +431,10 @@ var MetricNames = struct {
 				RestoreMyBlocksByIds:     "server.requests.block.restoreMyBlocksByIds",
 				DeleteMyBlockById:        "server.requests.block.deleteMyBlockById",
 				DeleteMyBlocksByIds:      "server.requests.block.deleteMyBlocksByIds",
+			},
+			Realtime: metricNameRealtime{
+				CreateMyRealtimeConnectionTicket: "server.requests.realtime.createMyRealtimeConnectionTicket",
+				CreateMyBlockPackChannelTicket:   "server.requests.realtime.createMyBlockPackChannelTicket",
 			},
 		},
 		Responses: MetricNameResponse{

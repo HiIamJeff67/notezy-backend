@@ -13,10 +13,14 @@ import (
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
-func configureDevelopmentSubShelfRoutes() {
+func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
+	if router == nil {
+		router = DevelopmentAPIRouterGroup
+	}
+
 	subShelfModule := modules.NewSubShelfModule()
 
-	subShelfRoutes := DevelopmentRouterGroup.Group("/subShelf")
+	subShelfRoutes := router.Group("/subShelf")
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(1 * time.Second),

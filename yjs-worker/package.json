@@ -1,0 +1,36 @@
+{
+  "name": "yjs-worker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Notezy internal Yjs collaboration worker",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "test": "tsx --test test/internal_frame.test.ts"
+  },
+  "packageManager": "pnpm@11.7.0",
+  "engines": {
+    "node": ">=22.13.0 <23"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "11.7.0",
+      "onFail": "error"
+    }
+  },
+  "type": "module",
+  "dependencies": {
+    "pg": "^8.16.3",
+    "ws": "^8.18.3",
+    "yjs": "^13.6.27"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}

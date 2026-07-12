@@ -1,0 +1,66 @@
+package developmentroutes
+
+import (
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel"
+
+	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
+	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
+	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
+	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+)
+
+func configureDevelopmentRealtimeAPIRoutes(router *gin.RouterGroup) {
+	if router == nil {
+		router = DevelopmentAPIRouterGroup
+	}
+
+	realtimeModule := modules.NewRealtimeModule()
+	realtimeRoutes := router.Group("/realtime")
+	defaultMiddlewares := []gin.HandlerFunc{
+		middlewares.UnauthorizedRateLimitMiddleware(),
+		middlewares.TimeoutMiddleware(3 * time.Second),
+		middlewares.AuthMiddleware(),
+		interceptors.ShareableResponseWriterInterceptor(
+			interceptors.RefreshTokenInterceptor,
+			interceptors.EmbeddedInterceptor,
+		),
+	}
+	{
+		realtimeRoutes.POST(
+			"/createMyRealtimeConnectionTicket",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createMyRealtimeConnectionTicket"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.Realtime.CreateMyRealtimeConnectionTicket,
+					),
+				},
+				defaultMiddlewares,
+				realtimeModule.Binder.BindCreateMyRealtimeConnectionTicket(
+					realtimeModule.Controller.CreateMyRealtimeConnectionTicket,
+				),
+			)...,
+		)
+		realtimeRoutes.POST(
+			"/createMyBlockPackChannelTicket",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createMyBlockPackChannelTicket"),
+					middlewares.ApplyMeterMiddleware(
+						otel.Meter(constants.ServiceName),
+						metrics.MetricNames.Server.Requests.Realtime.CreateMyBlockPackChannelTicket,
+					),
+				},
+				defaultMiddlewares,
+				realtimeModule.Binder.BindCreateMyBlockPackChannelTicket(
+					realtimeModule.Controller.CreateMyBlockPackChannelTicket,
+				),
+			)...,
+		)
+	}
+}

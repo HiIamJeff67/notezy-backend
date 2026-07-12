@@ -14,13 +14,15 @@ const (
 
 	TableName_ThemeTable TableName = "ThemeTable"
 
-	TableName_UsersToShelvesTable TableName = "UsersToShelvesTable"
-	TableName_RootShelfTable      TableName = "RootShelfTable"
-	TableName_SubShelfTable       TableName = "SubShelfTable"
-	TableName_MaterialTable       TableName = "MaterialTable"
-	TableName_BlockPackTable      TableName = "BlockPackTable"
-	TableName_BlockTable          TableName = "BlockTable"
-	TableName_ItemTable           TableName = "ItemTable"
+	TableName_UsersToShelvesTable       TableName = "UsersToShelvesTable"
+	TableName_RootShelfTable            TableName = "RootShelfTable"
+	TableName_SubShelfTable             TableName = "SubShelfTable"
+	TableName_MaterialTable             TableName = "MaterialTable"
+	TableName_BlockPackTable            TableName = "BlockPackTable"
+	TableName_BlockPackYjsDocumentTable TableName = "BlockPackYjsDocumentTable"
+	TableName_BlockPackYjsUpdateTable   TableName = "BlockPackYjsUpdateTable"
+	TableName_BlockTable                TableName = "BlockTable"
+	TableName_ItemTable                 TableName = "ItemTable"
 
 	TableName_RoutinesToItemsTable    TableName = "RoutinesToItemsTable"
 	TableName_UsersToStationsTable    TableName = "UsersToStationsTable"
@@ -52,13 +54,15 @@ var _validTableNames = map[string]TableName{
 
 	"ThemeTable": TableName_ThemeTable,
 
-	"UsersToShelvesTable": TableName_UsersToShelvesTable,
-	"RootShelfTable":      TableName_RootShelfTable,
-	"SubShelfTable":       TableName_SubShelfTable,
-	"MaterialTable":       TableName_MaterialTable,
-	"BlockPackTable":      TableName_BlockPackTable,
-	"BlockTable":          TableName_BlockTable,
-	"ItemTable":           TableName_ItemTable,
+	"UsersToShelvesTable":       TableName_UsersToShelvesTable,
+	"RootShelfTable":            TableName_RootShelfTable,
+	"SubShelfTable":             TableName_SubShelfTable,
+	"MaterialTable":             TableName_MaterialTable,
+	"BlockPackTable":            TableName_BlockPackTable,
+	"BlockPackYjsDocumentTable": TableName_BlockPackYjsDocumentTable,
+	"BlockPackYjsUpdateTable":   TableName_BlockPackYjsUpdateTable,
+	"BlockTable":                TableName_BlockTable,
+	"ItemTable":                 TableName_ItemTable,
 
 	"RoutinesToItemsTable":    TableName_RoutinesToItemsTable,
 	"UsersToStationsTable":    TableName_UsersToStationsTable,

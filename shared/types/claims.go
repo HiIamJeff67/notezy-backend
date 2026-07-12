@@ -18,3 +18,19 @@ type CSRFClaims struct {
 	ExpiresAt time.Time `json:"expiresAt"`
 	IssuedAt  time.Time `json:"issuedAt"`
 }
+
+type RealtimeConnectionTicketClaims struct {
+	UserAgentHash           string `json:"userAgentHash" validate:"required"`
+	RealtimeProtocolVersion int    `json:"realtimeProtocolVersion" validate:"required"`
+	jwt.RegisteredClaims
+}
+
+type RealtimeBlockPackTicketClaims struct {
+	UserAgentHash           string `json:"userAgentHash" validate:"required"`
+	ChannelType             string `json:"channelType" validate:"required"`
+	ChannelId               string `json:"channelId" validate:"required,uuid4"`
+	Permission              string `json:"permission" validate:"required,oneof=read write"`
+	RealtimeProtocolVersion int    `json:"realtimeProtocolVersion" validate:"required"`
+	SchemaVersion           int    `json:"schemaVersion" validate:"required"`
+	jwt.RegisteredClaims
+}

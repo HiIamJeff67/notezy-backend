@@ -5,6 +5,7 @@ temp/**.*
 tmp/**.*
 
 .gocache/
+.pnpm-store/
 
 backup-codes-thenotezy.*
 docs/general_designs/

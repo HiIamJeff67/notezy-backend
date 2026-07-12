@@ -21,8 +21,10 @@ type BlockPack struct {
 	CreatedAt           time.Time            `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 
 	// relations
-	ParentSubShelf SubShelf `json:"parentSubShelf" gorm:"foreignKey:ParentSubShelfId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	Blocks         []Block  `json:"blocks" gorm:"foreignKey:BlockPackId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	ParentSubShelf SubShelf              `json:"parentSubShelf" gorm:"foreignKey:ParentSubShelfId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	Blocks         []Block               `json:"blocks" gorm:"foreignKey:BlockPackId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	YjsDocument    *BlockPackYjsDocument `json:"yjsDocument" gorm:"foreignKey:BlockPackId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	YjsUpdates     []BlockPackYjsUpdate  `json:"yjsUpdates" gorm:"foreignKey:BlockPackId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
 
 // BlockPack Table Name
@@ -36,4 +38,6 @@ type BlockPackRelation types.RelationName
 const (
 	BlockPackRelation_ParentSubShelf BlockPackRelation = "ParentSubShelf"
 	BlockPackRelation_Blocks         BlockPackRelation = "Blocks"
+	BlockPackRelation_YjsDocument    BlockPackRelation = "YjsDocument"
+	BlockPackRelation_YjsUpdates     BlockPackRelation = "YjsUpdates"
 )

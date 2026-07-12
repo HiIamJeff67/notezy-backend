@@ -14,10 +14,14 @@ import (
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
-func configureDevelopmentMaterialRoutes() {
+func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
+	if router == nil {
+		router = DevelopmentAPIRouterGroup
+	}
+
 	materialModule := modules.NewMaterialModule()
 
-	materialRoutes := DevelopmentRouterGroup.Group("/material")
+	materialRoutes := router.Group("/material")
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(3 * time.Second),

@@ -3,6 +3,7 @@ package developmentroutes
 import (
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/otel"
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
@@ -13,10 +14,14 @@ import (
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
-func configureDevelopmentAuthRoutes() {
+func configureDevelopmentAuthRoutes(router *gin.RouterGroup) {
+	if router == nil {
+		router = DevelopmentAPIRouterGroup
+	}
+
 	authModule := modules.NewAuthModule()
 
-	authRoutes := DevelopmentRouterGroup.Group("/auth")
+	authRoutes := router.Group("/auth")
 	{
 		authRoutes.POST(
 			"/register",

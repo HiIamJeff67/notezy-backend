@@ -10,8 +10,12 @@ import (
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
 )
 
-func configureDevelopmentGraphQLRoutes() {
-	graphqlRoutes := DevelopmentRouterGroup.Group("/graphql")
+func configureDevelopmentGraphQLRoutes(router *gin.RouterGroup) {
+	if router == nil {
+		router = DevelopmentAPIRouterGroup
+	}
+
+	graphqlRoutes := router.Group("/graphql")
 
 	graphqlRoutes.Use(
 		middlewares.UnauthorizedRateLimitMiddleware(),

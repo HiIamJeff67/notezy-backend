@@ -13,14 +13,19 @@ const (
 )
 
 const (
-	APIGroupBase       = "api"                                                                // the basic api route name space
-	DevelopmentBaseURL = APIGroupBase + "/" + DevelopmentNamespace + "/" + DevelopmentVersion // the current development version of api
-	ProductionBaseURL  = APIGroupBase + "/" + ProductionNamespace + "/" + ProductionVersion
-	TestBaseURL        = APIGroupBase + "/" + TestNamespace + "/" + TestVersion
+	APIGroupBase          = "api"                                                                // the basic api route name space
+	APIDevelopmentBaseURL = APIGroupBase + "/" + DevelopmentNamespace + "/" + DevelopmentVersion // the current development version of api
+	APIProductionBaseURL  = APIGroupBase + "/" + ProductionNamespace + "/" + ProductionVersion
+	APITestBaseURL        = APIGroupBase + "/" + TestNamespace + "/" + TestVersion
 )
 
 const (
-	CurrentBaseURL = DevelopmentBaseURL // use in the entire project apis
+	RealtimeGroupBase          = "realtime"
+	RealtimeDevelopmentBaseURL = RealtimeGroupBase + "/" + DevelopmentNamespace + "/" + DevelopmentVersion
+)
+
+const (
+	CurrentAPIBaseURL = APIDevelopmentBaseURL // use in the entire project apis
 )
 
 var URLWhiteList = []string{
