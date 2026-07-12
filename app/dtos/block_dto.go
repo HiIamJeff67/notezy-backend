@@ -281,7 +281,6 @@ type GetMyBlockByIdResDto struct {
 	Type          enums.BlockType `json:"type"`
 	Props         datatypes.JSON  `json:"props"`
 	Content       datatypes.JSON  `json:"content"`
-	DeletedAt     *time.Time      `json:"deletedAt"`
 	UpdatedAt     time.Time       `json:"updatedAt"`
 	CreatedAt     time.Time       `json:"createdAt"`
 }

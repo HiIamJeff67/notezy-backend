@@ -244,7 +244,10 @@ func (s *BlockPackService) CreateBlockPack(
 		return nil, exceptions.BlockPack.InvalidDto().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, exceptions.BlockPack.FailedToCreate().WithOrigin(tx.Error)
+	}
 
 	newBlockPackId, exception := s.blockPackRepository.CreateOneBySubShelfId(
 		reqDto.Body.ParentSubShelfId,
@@ -255,10 +258,26 @@ func (s *BlockPackService) CreateBlockPack(
 			Icon:                reqDto.Body.Icon,
 			HeaderBackgroundURL: reqDto.Body.HeaderBackgroundURL,
 		},
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
+		tx.Rollback()
+
 		return nil, exception
+	}
+
+	document := schemas.BlockPackYjsDocument{BlockPackId: *newBlockPackId}
+	if err := tx.Create(&document).Error; err != nil {
+		tx.Rollback()
+
+		return nil, exceptions.BlockPack.FailedToCreate().WithOrigin(err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+
+		return nil, exceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.CreateBlockPackResDto{
@@ -274,7 +293,10 @@ func (s *BlockPackService) CreateBlockPacks(
 		return nil, exceptions.BlockPack.InvalidDto().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, exceptions.BlockPack.FailedToCreate().WithOrigin(tx.Error)
+	}
 
 	input := make([]inputs.CreateBlockPackBySubShelfIdInput, len(reqDto.Body.CreatedBlockPacks))
 	for index, createdBlockPack := range reqDto.Body.CreatedBlockPacks {
@@ -289,10 +311,29 @@ func (s *BlockPackService) CreateBlockPacks(
 	newBlockPackIds, exception := s.blockPackRepository.CreateManyBySubShelfIds(
 		reqDto.ContextFields.UserId,
 		input,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
+		tx.Rollback()
+
 		return nil, exception
+	}
+
+	documents := make([]schemas.BlockPackYjsDocument, len(newBlockPackIds))
+	for index, newBlockPackId := range newBlockPackIds {
+		documents[index] = schemas.BlockPackYjsDocument{BlockPackId: newBlockPackId}
+	}
+	if err := tx.CreateInBatches(&documents, constants.MaxBatchCreateBlockSize).Error; err != nil {
+		tx.Rollback()
+
+		return nil, exceptions.BlockPack.FailedToCreate().WithOrigin(err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+
+		return nil, exceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.CreateBlockPacksResDto{

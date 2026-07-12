@@ -1,9 +1,7 @@
-import {
-  InternalChannelType,
-  internalFrameHeaderSize,
-  InternalFrameType,
-} from "./types.js";
-import { convertBytesToUUIDString, convertUUIDToBytes } from "./util.js";
+import { InternalFrameType } from "./internal_frame_type.js";
+import { InternalFrameHeaderSize } from "../constants/header_size.js";
+import { InternalChannelType } from "../types/internal_channel_type.js";
+import { convertBytesToUUIDString, convertUUIDToBytes } from "../util/uuid.js";
 
 export type InternalFrame = {
   version: number;
@@ -16,7 +14,7 @@ export type InternalFrame = {
 
 export function parseInternalFrame(payload: Buffer): InternalFrame | null {
   // [version:1][type:1][channelType:1][connectionId:16][connectorChannelId:4][channelId:16][raw payload:n]
-  if (payload.length < internalFrameHeaderSize) {
+  if (payload.length < InternalFrameHeaderSize) {
     return null;
   }
   if (payload[2] !== InternalChannelType.InternalChannelType_BlockPack) {
@@ -45,7 +43,7 @@ export function parseInternalFrame(payload: Buffer): InternalFrame | null {
     connectionId,
     connectorChannelId,
     blockPackId,
-    payload: payload.subarray(internalFrameHeaderSize),
+    payload: payload.subarray(InternalFrameHeaderSize),
   };
 }
 
@@ -56,7 +54,7 @@ export function createInternalFrame(
   blockPackId: string,
   payload: Buffer = Buffer.alloc(0),
 ): Buffer {
-  const frame = Buffer.alloc(internalFrameHeaderSize + payload.length);
+  const frame = Buffer.alloc(InternalFrameHeaderSize + payload.length);
 
   frame[0] = 1;
   frame[1] = type;
@@ -64,7 +62,7 @@ export function createInternalFrame(
   convertUUIDToBytes(connectionId).copy(frame, 3);
   frame.writeUInt32BE(connectorChannelId, 19);
   convertUUIDToBytes(blockPackId).copy(frame, 23);
-  payload.copy(frame, internalFrameHeaderSize);
+  payload.copy(frame, InternalFrameHeaderSize);
 
   return frame;
 }

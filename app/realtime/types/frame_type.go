@@ -25,6 +25,7 @@ const (
 	ErrorCode_BinaryChannelNotReady          ErrorCode = "binary_channel_not_ready"
 	ErrorCode_ChannelLimitExceeded           ErrorCode = "channel_limit_exceeded"
 	ErrorCode_ChannelNotFound                ErrorCode = "channel_not_found"
+	ErrorCode_ChannelPermissionDenied        ErrorCode = "channel_permission_denied"
 	ErrorCode_InvalidAcknowledgement         ErrorCode = "invalid_acknowledgement"
 	ErrorCode_InvalidBinaryFrame             ErrorCode = "invalid_binary_frame"
 	ErrorCode_InvalidChannelId               ErrorCode = "invalid_channel_id"
@@ -52,12 +53,20 @@ const (
 type InternalFrameType byte
 
 const (
-	InternalFrameType_Attach            InternalFrameType = 1
-	InternalFrameType_Detach            InternalFrameType = 2
-	InternalFrameType_YjsDocument       InternalFrameType = 3
-	InternalFrameType_Awareness         InternalFrameType = 4
-	InternalFrameType_ResyncRequired    InternalFrameType = 5
-	InternalFrameType_PermissionRevoked InternalFrameType = 6
+	InternalFrameType_Attach                 InternalFrameType = 1
+	InternalFrameType_Detach                 InternalFrameType = 2
+	InternalFrameType_YjsDocument            InternalFrameType = 3
+	InternalFrameType_Awareness              InternalFrameType = 4
+	InternalFrameType_ResyncRequired         InternalFrameType = 5
+	InternalFrameType_PermissionRevoked      InternalFrameType = 6
+	InternalFrameType_LoadYjsDocument        InternalFrameType = 7
+	InternalFrameType_YjsDocumentLoaded      InternalFrameType = 8
+	InternalFrameType_AppendYjsUpdate        InternalFrameType = 9
+	InternalFrameType_YjsUpdatePersisted     InternalFrameType = 10
+	InternalFrameType_YjsPersistenceFailed   InternalFrameType = 11
+	InternalFrameType_ApplyBlockProjection   InternalFrameType = 12
+	InternalFrameType_BlockProjectionApplied InternalFrameType = 13
+	InternalFrameType_BlockProjectionFailed  InternalFrameType = 14
 )
 
 type InternalChannelType byte

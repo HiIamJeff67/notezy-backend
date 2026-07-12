@@ -1,0 +1,16 @@
+export enum InternalFrameType {
+  InternalFrameType_Attach = 1,
+  InternalFrameType_Detach = 2,
+  InternalFrameType_YjsDocument = 3,
+  InternalFrameType_Awareness = 4,
+  InternalFrameType_ResyncRequired = 5,
+  InternalFrameType_PermissionRevoked = 6,
+  InternalFrameType_LoadYjsDocument = 7,
+  InternalFrameType_YjsDocumentLoaded = 8,
+  InternalFrameType_AppendYjsUpdate = 9,
+  InternalFrameType_YjsUpdatePersisted = 10,
+  InternalFrameType_YjsPersistenceFailed = 11,
+  InternalFrameType_ApplyBlockProjection = 12,
+  InternalFrameType_BlockProjectionApplied = 13,
+  InternalFrameType_BlockProjectionFailed = 14,
+}

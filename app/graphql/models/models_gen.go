@@ -36,7 +36,6 @@ type PrivateBlock struct {
 	Type          enums.BlockType `json:"type"`
 	Props         datatypes.JSON  `json:"props"`
 	Content       datatypes.JSON  `json:"content"`
-	DeletedAt     *time.Time      `json:"deletedAt,omitempty"`
 	UpdatedAt     time.Time       `json:"updatedAt"`
 	CreatedAt     time.Time       `json:"createdAt"`
 	ChildrenIds   []uuid.UUID     `json:"childrenIds"`

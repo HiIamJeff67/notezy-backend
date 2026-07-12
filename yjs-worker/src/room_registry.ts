@@ -1,7 +1,6 @@
-import * as Y from "yjs";
 import type WebSocket from "ws";
 
-import type { Room } from "./room.js";
+import type { Room } from "./types/room.js";
 
 export class RoomRegistry {
   private readonly rooms = new Map<string, Room>();
@@ -15,10 +14,18 @@ export class RoomRegistry {
     }
 
     const room: Room = {
-      document: new Y.Doc(),
+      document: null,
       dirtyUpdateCount: 0,
       lastActiveAt: new Date(),
       subscribers: new Map(),
+      isLoading: false,
+      lastUpdateSequence: 0,
+      compactedUntilSequence: 0,
+      projectedUntilSequence: -1,
+      pendingYjsUpdates: [],
+      inFlightYjsUpdate: null,
+      projectionTimer: null,
+      inFlightProjection: null,
     };
     this.rooms.set(blockPackId, room);
 
@@ -51,14 +58,25 @@ export class RoomRegistry {
     room.lastActiveAt = new Date();
   }
 
-  detachAll(webSocket: WebSocket): void {
-    for (const room of this.rooms.values()) {
+  detachAll(webSocket: WebSocket): Array<{ blockPackId: string; room: Room }> {
+    const roomsWithPendingUpdates: Array<{ blockPackId: string; room: Room }> = [];
+
+    for (const [blockPackId, room] of this.rooms) {
       for (const [key, subscriber] of room.subscribers) {
         if (subscriber.webSocket === webSocket) {
           room.subscribers.delete(key);
         }
       }
+
+      if (
+        room.inFlightYjsUpdate?.webSocket === webSocket ||
+        room.pendingYjsUpdates.some((pendingYjsUpdate) => pendingYjsUpdate.webSocket === webSocket)
+      ) {
+        roomsWithPendingUpdates.push({ blockPackId, room });
+      }
     }
+
+    return roomsWithPendingUpdates;
   }
 
   getSubscriber(
@@ -74,6 +92,10 @@ export class RoomRegistry {
     room.lastActiveAt = new Date();
 
     return room;
+  }
+
+  get(blockPackId: string): Room | undefined {
+    return this.rooms.get(blockPackId);
   }
 
   private getSubscriberKey(connectionId: string, connectorChannelId: number): string {

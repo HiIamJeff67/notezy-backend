@@ -20,7 +20,6 @@ type Block struct {
 	Type          enums.BlockType `json:"type" gorm:"column:type; type:\"BlockType\"; not null; default:'paragraph';"`
 	Props         datatypes.JSON  `json:"props" gorm:"column:props; type:jsonb; not null; default:'{}'; check:block_check_props_size,octet_length(props::text) <= 4096;"`
 	Content       datatypes.JSON  `json:"content" gorm:"column:content; type:jsonb; default:'{}'; check:block_check_content_size,octet_length(content::text) <= 16384;"`
-	DeletedAt     *time.Time      `json:"deletedAt" gorm:"column:deleted_at; type:timestamptz; default:null;"`
 	UpdatedAt     time.Time       `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt     time.Time       `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
 
@@ -65,7 +64,6 @@ func (b *Block) ToPrivateBlock() *gqlmodels.PrivateBlock {
 		Type:          b.Type,
 		Props:         b.Props,
 		Content:       b.Content,
-		DeletedAt:     b.DeletedAt,
 		UpdatedAt:     b.UpdatedAt,
 		CreatedAt:     b.CreatedAt,
 		ChildrenIds:   childrenIds,

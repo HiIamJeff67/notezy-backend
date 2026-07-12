@@ -38,7 +38,6 @@ func ConfigureAPIRoutes() {
 	configureDevelopmentSubShelfRoutes(DevelopmentAPIRouterGroup)
 	configureDevelopmentMaterialRoutes(DevelopmentAPIRouterGroup)
 	configureDevelopmentBlockPackRoutes(DevelopmentAPIRouterGroup)
-	configureDevelopmentBlockRoutes(DevelopmentAPIRouterGroup)
 	configureDevelopmentRealtimeAPIRoutes(DevelopmentAPIRouterGroup)
 	configureDevelopmentGraphQLRoutes(DevelopmentAPIRouterGroup)
 

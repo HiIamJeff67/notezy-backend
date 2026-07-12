@@ -17,6 +17,7 @@ import (
 type EditableBlockAdapterInterface interface {
 	Flatten(root *dtos.ArborizedEditableBlock) ([]dtos.FlattenedEditableBlock, *exceptions.Exception)
 	FlattenToRaw(root *dtos.ArborizedEditableBlock) ([]dtos.RawFlattenedEditableBlock, int64, *exceptions.Exception)
+	FlattenManyToRaw(roots []dtos.ArborizedEditableBlock) ([]dtos.RawFlattenedEditableBlock, int64, *exceptions.Exception)
 	FlattenRawToRaw(root *dtos.RawArborizedEditableBlock) ([]dtos.RawFlattenedEditableBlock, int64, *exceptions.Exception)
 	Arborize(root *dtos.FlattenedEditableBlock, childrenMap map[uuid.UUID][]dtos.FlattenedEditableBlock) (*dtos.ArborizedEditableBlock, *exceptions.Exception)
 	ArborizeRawToRaw(root *dtos.RawFlattenedEditableBlock, childrenMap map[uuid.UUID][]dtos.RawFlattenedEditableBlock) (*dtos.RawArborizedEditableBlock, int64, *exceptions.Exception)
@@ -163,6 +164,100 @@ func (ebca *EditableBlockAdapter) FlattenToRaw(
 			})
 
 			q.Enqueue(&child)
+		}
+	}
+
+	return resultBlocks, totalSize, nil
+}
+
+func (ebca *EditableBlockAdapter) FlattenManyToRaw(
+	roots []dtos.ArborizedEditableBlock,
+) ([]dtos.RawFlattenedEditableBlock, int64, *exceptions.Exception) {
+	if len(roots) == 0 {
+		return []dtos.RawFlattenedEditableBlock{}, 0, nil
+	}
+
+	type flattenItem struct {
+		Block         *dtos.ArborizedEditableBlock
+		ParentBlockId *uuid.UUID
+		PrevBlockId   *uuid.UUID
+		NextBlockId   *uuid.UUID
+	}
+
+	resultBlocks := make([]dtos.RawFlattenedEditableBlock, 0, len(roots))
+	q := queue.NewQueue[flattenItem](constants.MAX_INT)
+	for index := range roots {
+		var prevBlockId *uuid.UUID
+		if index > 0 {
+			prev := roots[index-1].Id
+			prevBlockId = &prev
+		}
+
+		var nextBlockId *uuid.UUID
+		if index+1 < len(roots) {
+			next := roots[index+1].Id
+			nextBlockId = &next
+		}
+
+		q.Enqueue(flattenItem{
+			Block:       &roots[index],
+			PrevBlockId: prevBlockId,
+			NextBlockId: nextBlockId,
+		})
+	}
+
+	visited := make(map[uuid.UUID]bool)
+	var totalSize int64
+	for !q.IsEmpty() {
+		current, err := q.Dequeue()
+		if err != nil {
+			return nil, 0, exceptions.DataStructureLib.FailedToManipulateQueue().WithOrigin(err)
+		}
+		if current.Block == nil || current.Block.Id == uuid.Nil || visited[current.Block.Id] {
+			return nil, 0, exceptions.Block.InvalidDto()
+		}
+		visited[current.Block.Id] = true
+
+		props, err := json.Marshal(current.Block.Props)
+		if err != nil {
+			return nil, 0, exceptions.Block.InvalidDto().WithOrigin(err)
+		}
+		content, err := json.Marshal(current.Block.Content)
+		if err != nil {
+			return nil, 0, exceptions.Block.InvalidDto().WithOrigin(err)
+		}
+		totalSize += int64(len(props) + len(content))
+
+		resultBlocks = append(resultBlocks, dtos.RawFlattenedEditableBlock{
+			Id:            current.Block.Id,
+			ParentBlockId: current.ParentBlockId,
+			PrevBlockId:   current.PrevBlockId,
+			NextBlockId:   current.NextBlockId,
+			Type:          current.Block.Type,
+			Props:         datatypes.JSON(props),
+			Content:       datatypes.JSON(content),
+		})
+
+		for index := range current.Block.Children {
+			var prevBlockId *uuid.UUID
+			if index > 0 {
+				prev := current.Block.Children[index-1].Id
+				prevBlockId = &prev
+			}
+
+			var nextBlockId *uuid.UUID
+			if index+1 < len(current.Block.Children) {
+				next := current.Block.Children[index+1].Id
+				nextBlockId = &next
+			}
+
+			parentBlockId := current.Block.Id
+			q.Enqueue(flattenItem{
+				Block:         &current.Block.Children[index],
+				ParentBlockId: &parentBlockId,
+				PrevBlockId:   prevBlockId,
+				NextBlockId:   nextBlockId,
+			})
 		}
 	}
 

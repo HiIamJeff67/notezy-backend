@@ -27,6 +27,8 @@ schema version `1` 的 block type manifest 與目前後端 `BlockType` 對齊：
 
 前端必須以單一 `BlockNoteSchema` factory 建立 editor、Yjs import/export 與 server-side projector 使用的 schema。Node worker 使用相同的 block/inline/style manifest；Go 不解析 Yjs tree，也不自行重建 BlockNote document。
 
+Node projector 使用 `@blocknote/core/yjs` 的 `yXmlFragmentToBlocks`，並明確讀取 `document-store` fragment。它的 schema 排除 `divider`，因為目前後端 `BlockType` 未支援此 block type；前端 schema 也不得建立 `divider`。
+
 新增、刪除或變更 block props、inline content、style schema 都是 schema migration，不是一般 feature flag。
 
 ## Version Policy
@@ -45,18 +47,24 @@ schema version `1` 的 block type manifest 與目前後端 `BlockType` 對齊：
 
 ## Persistence And Sequence
 
-durable Yjs truth 是 `BlockPackYjsDocument.Snapshot` 加上尚未 compact 的 `BlockPackYjsUpdate` tail。Snapshot 是 Yjs encoded state update，`StateVector` 是同一個 snapshot 的 encoded state vector。
+durable Yjs truth 是 `BlockPackYjsDocument.Snapshot` 加上尚未 compact 的 `BlockPackYjsUpdate` tail。Snapshot 是 Yjs encoded state update，`StateVector` 是同一個 snapshot 的 encoded state vector；active `Y.Doc` 只是這份 durable truth 的 memory materialization。
+
+每個 BlockPack 必須在建立它的同一筆 transaction 內建立唯一的 `BlockPackYjsDocument`；讀取、append 與 projection 路徑不得 lazy create document。
+
+`BlockTable` 是 Yjs document 的 materialized projection，Block 不支援 soft delete。projection 對不再存在於 document 的 block 使用實體 `DELETE`；BlockPack soft delete 時則保留它的 Blocks，還原 BlockPack 後可直接重用既有 projection。
 
 | 欄位 | 語意 |
 | --- | --- |
 | `UpdateSequence` | 單一 BlockPack 內 append-only 的 update 序號，從 `1` 起，永不重用。 |
 | `LastUpdateSequence` | 該 BlockPack 已接受的最高 update sequence；不得回退。 |
 | `CompactedUntilSequence` | 已被目前 Snapshot 吸收的最高 sequence；不得回退。 |
-| projection target sequence | Node projector 要求 Go apply 的最高 sequence；由 `NOT-13` 在實作 anti-regression transaction 時決定是否需要 document-level persistence，且不得回退。 |
+| `ProjectedUntilSequence` | BlockTable 已成功投影的最高 sequence；document-level checkpoint，初始為 `-1`，且不得回退。 |
 
-不變條件：`0 <= CompactedUntilSequence <= LastUpdateSequence`。空 document 的兩個 sequence 都是 `0`。
+不變條件：`0 <= CompactedUntilSequence <= LastUpdateSequence`、`-1 <= ProjectedUntilSequence <= LastUpdateSequence`。空 document 的 durable update/compaction sequence 都是 `0`，未投影時 `ProjectedUntilSequence` 是 `-1`。
 
 compaction 在 Node worker 重建完整 Y.Doc 後執行：它讀取 snapshot 與 update tail、合併到 runtime Y.Doc、寫入新的 Snapshot/StateVector，最後將 `CompactedUntilSequence` 推進到被吸收的最高 sequence。Go 不執行 CRDT merge。
+
+room cold start 固定依序執行：建立空 `Y.Doc`、套用非空 Snapshot、再套用 `CompactedUntilSequence < update_sequence <= LastUpdateSequence` 的 tail。`LastUpdateSequence` 是最新 accepted update，不是 snapshot tail 的查詢起點。
 
 ## Public Connection And Capability
 
@@ -84,7 +92,7 @@ ticket claims 的最小集合：
 
 public WebSocket 的 JSON control frame 與 binary frame header 定義在 `realtime-protocol-contract.md`。Go-to-worker internal binary frame 一律帶有 `connectionId`、`connectorChannelId`、`channelType`、`channelId`；raw Yjs update 不得 Base64 或改寫成 JSON block event。
 
-internal attach/detach 是 idempotent。worker reconnect 後，Gateway 為其所屬 active channels replay attach；worker 會回傳目前記憶體 room 的 complete encoded state。尚未完成 NOT-8 durable persistence 前，worker process restart 會失去未持久化 room state，因此不得將其視為可用於正式資料保存的 collaboration service。
+internal attach/detach 是 idempotent。worker reconnect 後，Gateway 為其所屬 active channels replay attach；worker 會先向 Go cold-load snapshot + tail，materialize `Y.Doc` 後才回傳 complete encoded state。每一個 Yjs update 都先由 worker 套用並送交 Go append；只有收到 persistence ACK 後才 broadcast。append 失敗時 worker 對 room 所有 subscriber 發出 `resync_required`，不能 broadcast 未持久化 update。
 
 ## Projection Contract
 
@@ -94,14 +102,15 @@ projection payload 最小欄位：
 
 ```json
 {
-  "type": "block-pack-projection",
-  "blockPackId": "UUID",
+  "schemaId": "notezy.blocknote",
   "schemaVersion": 1,
   "projectedSequence": 42,
   "blocks": []
 }
 ```
 
-Go 僅在 payload 的 `schemaVersion` 受支援、target sequence 不回退，且所屬 BlockPack 有效時寫入 Block projection。`NOT-13` 定義 `blocks` 的 projection apply、anti-regression transaction、index 與 accounting semantics；不新增 per-block ordering/search/hash metadata，除非實際 read requirement 證明需要。
+projection 使用 private Go-to-worker internal frame `apply-block-projection`；BlockPack identity 取自 frame header 的 `channelId`，不是 payload。Go 僅在 payload 的 `schemaId`/`schemaVersion` 受支援、target sequence 不回退，且所屬 BlockPack 有效時寫入 Block projection，成功時回覆 `block-projection-applied`，否則回覆 `block-projection-failed`。`NOT-13` 定義 `blocks` 的 bulk apply、anti-regression transaction 與 accounting semantics；不新增 per-block ordering/search/hash metadata，除非實際 read requirement 證明需要。
+
+worker 僅在 room 沒有尚未持久化的 update 時，將目前 `LastUpdateSequence` 的 document 投影。它對更新 burst 做 debounce，且每個 room 同時最多一筆 projection；只有收到 `block-projection-applied` 後才推進 in-memory `ProjectedUntilSequence`。失敗不會前進 checkpoint，並以 retry delay 重試。
 
 前端不讀取 `BlockPackYjsDocument` 或 `BlockPackYjsUpdate` rows，也不自行合併 update tail；加入 room 時由 Node worker 從 snapshot + tail 恢復 Y.Doc，再以標準 Yjs sync protocol 完成同步。

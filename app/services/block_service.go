@@ -99,7 +99,6 @@ func (s *BlockService) GetMyBlockById(
 		Type:          block.Type,
 		Props:         block.Props,
 		Content:       block.Content,
-		DeletedAt:     block.DeletedAt,
 		UpdatedAt:     block.UpdatedAt,
 		CreatedAt:     block.CreatedAt,
 	}
@@ -142,7 +141,6 @@ func (s *BlockService) GetMyBlocksByIds(
 			Type:          block.Type,
 			Props:         block.Props,
 			Content:       block.Content,
-			DeletedAt:     block.DeletedAt,
 			UpdatedAt:     block.UpdatedAt,
 			CreatedAt:     block.CreatedAt,
 		}
@@ -178,7 +176,6 @@ func (s *BlockService) GetMyBlocksByBlockPackId(
 	var blocks []schemas.Block
 	if err := db.Model(&schemas.Block{}).
 		Where("block_pack_id = ?", reqDto.Param.BlockPackId).
-		Scopes(s.blockScope.FilterOnlyDeleted(types.Ternary_Negative)).
 		Order("created_at ASC").
 		Find(&blocks).Error; err != nil {
 		return nil, exceptions.Block.NotFound().WithOrigin(err)
@@ -195,7 +192,6 @@ func (s *BlockService) GetMyBlocksByBlockPackId(
 			Type:          block.Type,
 			Props:         block.Props,
 			Content:       block.Content,
-			DeletedAt:     block.DeletedAt,
 			UpdatedAt:     block.UpdatedAt,
 			CreatedAt:     block.CreatedAt,
 		}
@@ -223,7 +219,6 @@ func (s *BlockService) GetAllMyBlocks(
 			enums.AccessControlPermission_Write,
 			enums.AccessControlPermission_Read,
 		}).
-		Scopes(s.blockScope.FilterOnlyDeleted(types.Ternary_Negative)).
 		Find(&blocks).Error; err != nil {
 		return nil, exceptions.Block.NotFound().WithOrigin(err)
 	}
@@ -239,7 +234,6 @@ func (s *BlockService) GetAllMyBlocks(
 			Type:          block.Type,
 			Props:         block.Props,
 			Content:       block.Content,
-			DeletedAt:     block.DeletedAt,
 			UpdatedAt:     block.UpdatedAt,
 			CreatedAt:     block.CreatedAt,
 		}
@@ -302,7 +296,6 @@ func (s *BlockService) AppendBlock(
 	rawBlocks[0].PrevBlockId = prevBlockId
 	rawBlocks[0].NextBlockId = nil
 
-	deletedAt := time.Now()
 	newBlocks := make([]schemas.Block, len(rawBlocks))
 	blockIds := make([]uuid.UUID, len(rawBlocks))
 	for index, rawBlock := range rawBlocks {
@@ -316,7 +309,6 @@ func (s *BlockService) AppendBlock(
 			Type:          rawBlock.Type,
 			Props:         rawBlock.Props,
 			Content:       rawBlock.Content,
-			DeletedAt:     &deletedAt,
 		}
 	}
 
@@ -332,13 +324,6 @@ func (s *BlockService) AppendBlock(
 			tx.Rollback()
 			return nil, exceptions.Block.FailedToUpdate().WithOrigin(err)
 		}
-	}
-
-	if err := tx.Model(&schemas.Block{}).
-		Where("id IN ?", blockIds).
-		Update("deleted_at", nil).Error; err != nil {
-		tx.Rollback()
-		return nil, exceptions.Block.FailedToUpdate().WithOrigin(err)
 	}
 
 	if err := tx.Commit().Error; err != nil {
@@ -439,7 +424,6 @@ func (s *BlockService) AppendBlocks(
 		tailByBlockPackId[tail.BlockPackId] = &tailId
 	}
 
-	deletedAt := time.Now()
 	newBlocks := make([]schemas.Block, 0)
 	neighborUpdates := make(map[uuid.UUID]uuid.UUID)
 	successItems := make([]preparedAppendBlock, 0, len(preparedBlocks))
@@ -469,7 +453,6 @@ func (s *BlockService) AppendBlocks(
 				Type:          rawBlock.Type,
 				Props:         rawBlock.Props,
 				Content:       rawBlock.Content,
-				DeletedAt:     &deletedAt,
 			})
 		}
 		successItems = append(successItems, preparedBlock)
@@ -507,12 +490,6 @@ func (s *BlockService) AppendBlocks(
 	}
 
 	if len(newBlockIds) > 0 {
-		if err := tx.Model(&schemas.Block{}).
-			Where("id IN ?", newBlockIds).
-			Update("deleted_at", nil).Error; err != nil {
-			tx.Rollback()
-			return nil, exceptions.Block.FailedToUpdate().WithOrigin(err)
-		}
 	}
 
 	if err := tx.Commit().Error; err != nil {
@@ -803,7 +780,6 @@ func (s *BlockService) InsertBlocks(
 		nextBlockById[nextBlock.Id] = nextBlock
 	}
 
-	deletedAt := time.Now()
 	newBlocks := make([]schemas.Block, 0)
 	prevNeighborUpdates := make(map[uuid.UUID]uuid.UUID)
 	nextNeighborUpdates := make(map[uuid.UUID]uuid.UUID)
@@ -929,7 +905,6 @@ func (s *BlockService) InsertBlocks(
 				Type:          rawBlock.Type,
 				Props:         rawBlock.Props,
 				Content:       rawBlock.Content,
-				DeletedAt:     &deletedAt,
 			})
 		}
 		insertedRootBlockById[rootId] = insertedRootBlock{
@@ -992,12 +967,6 @@ func (s *BlockService) InsertBlocks(
 	}
 
 	if len(newBlockIds) > 0 {
-		if err := tx.Model(&schemas.Block{}).
-			Where("id IN ?", newBlockIds).
-			Update("deleted_at", nil).Error; err != nil {
-			tx.Rollback()
-			return nil, exceptions.Block.FailedToUpdate().WithOrigin(err)
-		}
 	}
 
 	if err := tx.Commit().Error; err != nil {
@@ -1033,7 +1002,6 @@ func (s *BlockService) UpdateMyBlockById(
 			enums.AccessControlPermission_Admin,
 			enums.AccessControlPermission_Write,
 		})).
-		Scopes(s.blockScope.FilterOnlyDeleted(types.Ternary_Negative)).
 		First(&block).Error; err != nil {
 		tx.Rollback()
 		return nil, exceptions.Block.NotFound().WithOrigin(err)
@@ -1457,7 +1425,6 @@ func (s *BlockService) UpdateMyBlocksByIds(
 	var candidateBlocks []schemas.Block
 	if err := tx.Model(&schemas.Block{}).
 		Scopes(s.blockScope.PassPermissionChecks(candidateBlockIds, reqDto.ContextFields.UserId, allowedPermissions)).
-		Scopes(s.blockScope.FilterOnlyDeleted(types.Ternary_Negative)).
 		Find(&candidateBlocks).Error; err != nil {
 		tx.Rollback()
 		return nil, exceptions.Block.NotFound().WithOrigin(err)
@@ -1506,7 +1473,6 @@ func (s *BlockService) UpdateMyBlocksByIds(
 	var permittedBlocks []schemas.Block
 	if err := tx.Model(&schemas.Block{}).
 		Scopes(s.blockScope.PassPermissionChecks(candidateBlockIds, reqDto.ContextFields.UserId, allowedPermissions)).
-		Scopes(s.blockScope.FilterOnlyDeleted(types.Ternary_Negative)).
 		Scopes(scopes.Locking(&lockingStrength)).
 		Find(&permittedBlocks).Error; err != nil {
 		tx.Rollback()
@@ -1966,7 +1932,6 @@ func (s *BlockService) RestoreMyBlockById(
 			enums.AccessControlPermission_Admin,
 			enums.AccessControlPermission_Write,
 		})).
-		Scopes(s.blockScope.FilterOnlyDeleted(types.Ternary_Positive)).
 		First(&block).Error; err != nil {
 		tx.Rollback()
 		return nil, exceptions.Block.NotFound().WithOrigin(err)
@@ -2077,7 +2042,6 @@ func (s *BlockService) RestoreMyBlockById(
 		Type:          block.Type,
 		Props:         block.Props,
 		Content:       block.Content,
-		DeletedAt:     block.DeletedAt,
 		UpdatedAt:     block.UpdatedAt,
 		CreatedAt:     block.CreatedAt,
 	}
@@ -2249,7 +2213,6 @@ func (s *BlockService) RestoreMyBlocksByIds(
 			Type:          block.Type,
 			Props:         block.Props,
 			Content:       block.Content,
-			DeletedAt:     block.DeletedAt,
 			UpdatedAt:     block.UpdatedAt,
 			CreatedAt:     block.CreatedAt,
 		}
@@ -2274,7 +2237,6 @@ func (s *BlockService) DeleteMyBlockById(
 			enums.AccessControlPermission_Admin,
 			enums.AccessControlPermission_Write,
 		})).
-		Scopes(s.blockScope.FilterOnlyDeleted(types.Ternary_Negative)).
 		First(&block).Error; err != nil {
 		tx.Rollback()
 		return nil, exceptions.Block.NotFound().WithOrigin(err)
@@ -2686,7 +2648,6 @@ func (s *BlockService) SearchPrivateBlocks(
 			enums.AccessControlPermission_Write,
 			enums.AccessControlPermission_Read,
 		}).
-		Scopes(s.blockScope.FilterOnlyDeleted(types.Ternary_Negative)).
 		Scopes(s.blockPackScope.FilterOnlyDeleted(types.Ternary_Negative)).
 		Scopes(s.subShelfScope.FilterOnlyDeleted(types.Ternary_Negative)).
 		Scopes(s.blockScope.IncludePreloads([]schemas.BlockRelation{schemas.BlockRelation_Children}))

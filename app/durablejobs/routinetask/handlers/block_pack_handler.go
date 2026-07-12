@@ -20,6 +20,7 @@ import (
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
@@ -182,6 +183,15 @@ func (h BlockPackHandler) HandleCreateBlockPack(ctx context.Context, tasks []sch
 	if len(successfulBlockContentInputs) == 0 {
 		tx.Rollback()
 		return successes, nil
+	}
+
+	documents := make([]schemas.BlockPackYjsDocument, len(successfulBlockContentInputs))
+	for index, successfulBlockContentInput := range successfulBlockContentInputs {
+		documents[index] = schemas.BlockPackYjsDocument{BlockPackId: successfulBlockContentInput.BlockPackId}
+	}
+	if err := tx.CreateInBatches(&documents, constants.MaxBatchCreateBlockSize).Error; err != nil {
+		tx.Rollback()
+		return successes, exceptions.BlockPack.FailedToCreate().WithOrigin(err)
 	}
 
 	blockSuccesses, exception := h.blockRepository.BulkCreateMany(

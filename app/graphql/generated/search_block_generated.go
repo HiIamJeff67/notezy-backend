@@ -320,8 +320,6 @@ func (ec *executionContext) fieldContext_SearchBlockEdge_node(_ context.Context,
 				return ec.fieldContext_PrivateBlock_props(ctx, field)
 			case "content":
 				return ec.fieldContext_PrivateBlock_content(ctx, field)
-			case "deletedAt":
-				return ec.fieldContext_PrivateBlock_deletedAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_PrivateBlock_updatedAt(ctx, field)
 			case "createdAt":

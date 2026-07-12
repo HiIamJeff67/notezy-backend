@@ -73,7 +73,6 @@ func (r *BlockRepository) HasPermission(
 		Model(&schemas.Block{}).
 		Select("1").
 		Scopes(r.blockScope.PassPermissionCheck(id, userId, allowedPermissions)).
-		Scopes(r.blockScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Limit(1).
 		Scan(&marker)
@@ -97,7 +96,6 @@ func (r *BlockRepository) HavePermissions(
 		Model(&schemas.Block{}).
 		Select(`DISTINCT "BlockTable".id`).
 		Scopes(r.blockScope.PassPermissionChecks(ids, userId, allowedPermissions)).
-		Scopes(r.blockScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&permittedIds)
 	if err := result.Error; err != nil {
@@ -120,7 +118,6 @@ func (r *BlockRepository) CheckPermissionAndGetOneById(
 	result := parsedOptions.DB.
 		Model(&schemas.Block{}).
 		Scopes(r.blockScope.PassPermissionCheck(id, userId, allowedPermissions)).
-		Scopes(r.blockScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&block)
@@ -147,7 +144,6 @@ func (r *BlockRepository) CheckPermissionsAndGetManyByIds(
 	result := parsedOptions.DB.
 		Model(&schemas.Block{}).
 		Scopes(r.blockScope.PassPermissionChecks(ids, userId, allowedPermissions)).
-		Scopes(r.blockScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&blocks)
@@ -653,8 +649,7 @@ func (r *BlockRepository) RestoreSoftDeletedOneById(
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	var restoredBlock schemas.Block
-	query := parsedOptions.DB.Model(&restoredBlock).
-		Scopes(r.blockScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted))
+	query := parsedOptions.DB.Model(&restoredBlock)
 	if !parsedOptions.SkipPermissionCheck {
 		allowedPermissions := []enums.AccessControlPermission{
 			enums.AccessControlPermission_Owner,
@@ -691,8 +686,7 @@ func (r *BlockRepository) RestoreSoftDeletedManyByIds(
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	var restoredBlocks []schemas.Block
-	query := parsedOptions.DB.Model(&restoredBlocks).
-		Scopes(r.blockScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted))
+	query := parsedOptions.DB.Model(&restoredBlocks)
 	if !parsedOptions.SkipPermissionCheck {
 		allowedPermissions := []enums.AccessControlPermission{
 			enums.AccessControlPermission_Owner,
@@ -725,8 +719,7 @@ func (r *BlockRepository) SoftDeleteOneById(
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	var deletedBlock schemas.Block
-	query := parsedOptions.DB.Model(&deletedBlock).
-		Scopes(r.blockScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted))
+	query := parsedOptions.DB.Model(&deletedBlock)
 	if !parsedOptions.SkipPermissionCheck {
 		allowedPermissions := []enums.AccessControlPermission{
 			enums.AccessControlPermission_Owner,
@@ -763,8 +756,7 @@ func (r *BlockRepository) SoftDeleteManyByIds(
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	var deletedBlocks []schemas.Block
-	query := parsedOptions.DB.Model(&deletedBlocks).
-		Scopes(r.blockScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted))
+	query := parsedOptions.DB.Model(&deletedBlocks)
 	if !parsedOptions.SkipPermissionCheck {
 		allowedPermissions := []enums.AccessControlPermission{
 			enums.AccessControlPermission_Owner,
@@ -796,8 +788,7 @@ func (r *BlockRepository) HardDeleteOneById(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	query := parsedOptions.DB.Model(&schemas.Block{}).
-		Scopes(r.blockScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted))
+	query := parsedOptions.DB.Model(&schemas.Block{})
 	if !parsedOptions.SkipPermissionCheck {
 		allowedPermissions := []enums.AccessControlPermission{
 			enums.AccessControlPermission_Owner,
@@ -832,8 +823,7 @@ func (r *BlockRepository) HardDeleteManyByIds(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	query := parsedOptions.DB.Model(&schemas.Block{}).
-		Scopes(r.blockScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted))
+	query := parsedOptions.DB.Model(&schemas.Block{})
 	if !parsedOptions.SkipPermissionCheck {
 		allowedPermissions := []enums.AccessControlPermission{
 			enums.AccessControlPermission_Owner,
@@ -889,7 +879,6 @@ func (r *BlockRepository) BulkCheckPermissionsAndGetManyByIds(
 		Joins(`INNER JOIN "UsersToShelvesTable" AS uts ON uts.root_shelf_id = ss.root_shelf_id`).
 		Where(`"BlockTable".id IN ?`, ids).
 		Where("uts.user_id IN ? AND uts.permission IN ?", userIds, allowedPermissions).
-		Scopes(r.blockScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scan(&validTargets)
 	if result.Error != nil {
 		return nil, nil, exceptions.Block.NotFound().WithOrigin(result.Error)
@@ -918,7 +907,6 @@ func (r *BlockRepository) BulkCheckPermissionsAndGetManyByIds(
 	var blocks []schemas.Block
 	result = parsedOptions.DB.Model(&schemas.Block{}).
 		Where(`"BlockTable".id IN ?`, validIds).
-		Scopes(r.blockScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&blocks)

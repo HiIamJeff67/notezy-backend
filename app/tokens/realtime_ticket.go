@@ -173,6 +173,10 @@ func ParseRealtimeBlockPackTicket(
 	if _, err := uuid.Parse(claims.ChannelId); err != nil {
 		return nil, fmt.Errorf("invalid realtime block pack ticket channel id: %w", err)
 	}
+	if claims.Permission != string(realtimetypes.ChannelPermission_Read) &&
+		claims.Permission != string(realtimetypes.ChannelPermission_Write) {
+		return nil, fmt.Errorf("invalid realtime block pack ticket permission")
+	}
 
 	return &claims, nil
 }

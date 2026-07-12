@@ -7,7 +7,6 @@ type PrivateBlock {
     type: BlockType!
     props: DatatypeJSON!
     content: DatatypeJSON!
-    deletedAt: Time
     updatedAt: Time!
     createdAt: Time!
 

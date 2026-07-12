@@ -6,13 +6,11 @@ import (
 
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type BlockScopeInterface interface {
 	PassPermissionCheck(id uuid.UUID, userId uuid.UUID, permissions []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB
 	PassPermissionChecks(ids []uuid.UUID, userId uuid.UUID, permissions []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB
-	FilterOnlyDeleted(onlyDeleted types.Ternary) func(db *gorm.DB) *gorm.DB
 	IncludePreloads(preloads []schemas.BlockRelation) func(db *gorm.DB) *gorm.DB
 }
 
@@ -31,6 +29,7 @@ func (sc *BlockScope) PassPermissionCheck(id uuid.UUID, userId uuid.UUID, permis
 			Joins("INNER JOIN \"SubShelfTable\" ss ON ss.root_shelf_id = \"UsersToShelvesTable\".root_shelf_id").
 			Joins("INNER JOIN \"BlockPackTable\" bp ON bp.parent_sub_shelf_id = ss.id").
 			Where("bp.id = \"BlockTable\".block_pack_id").
+			Where("bp.deleted_at IS NULL").
 			Where("user_id = ? AND permission IN ?", userId, permissions)
 		return db.Where("\"BlockTable\".id = ? AND EXISTS (?)", id, subQuery)
 	}
@@ -45,21 +44,9 @@ func (sc *BlockScope) PassPermissionChecks(ids []uuid.UUID, userId uuid.UUID, pe
 			Joins("INNER JOIN \"SubShelfTable\" ss ON ss.root_shelf_id = \"UsersToShelvesTable\".root_shelf_id").
 			Joins("INNER JOIN \"BlockPackTable\" bp ON bp.parent_sub_shelf_id = ss.id").
 			Where("bp.id = \"BlockTable\".block_pack_id").
+			Where("bp.deleted_at IS NULL").
 			Where("user_id = ? AND permission IN ?", userId, permissions)
 		return db.Where("\"BlockTable\".id IN ? AND EXISTS (?)", ids, subQuery)
-	}
-}
-
-func (sc *BlockScope) FilterOnlyDeleted(onlyDeleted types.Ternary) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		switch onlyDeleted {
-		case types.Ternary_Positive:
-			return db.Where("\"BlockTable\".deleted_at IS NOT NULL")
-		case types.Ternary_Negative:
-			return db.Where("\"BlockTable\".deleted_at IS NULL")
-		default:
-			return db
-		}
 	}
 }
 

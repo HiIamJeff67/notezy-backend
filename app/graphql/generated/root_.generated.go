@@ -45,7 +45,6 @@ type ComplexityRoot struct {
 		ChildrenIds   func(childComplexity int) int
 		Content       func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
-		DeletedAt     func(childComplexity int) int
 		ID            func(childComplexity int) int
 		NextBlockID   func(childComplexity int) int
 		ParentBlockID func(childComplexity int) int
@@ -455,13 +454,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateBlock.CreatedAt(childComplexity), true
-
-	case "PrivateBlock.deletedAt":
-		if e.complexity.PrivateBlock.DeletedAt == nil {
-			break
-		}
-
-		return e.complexity.PrivateBlock.DeletedAt(childComplexity), true
 
 	case "PrivateBlock.id":
 		if e.complexity.PrivateBlock.ID == nil {
@@ -2518,7 +2510,6 @@ var sources = []*ast.Source{
     type: BlockType!
     props: DatatypeJSON!
     content: DatatypeJSON!
-    deletedAt: Time
     updatedAt: Time!
     createdAt: Time!
 

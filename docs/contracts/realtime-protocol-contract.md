@@ -89,7 +89,7 @@ Binary frames never Base64-encode Yjs data and never use JSON block events. Thei
 
 The `connectorChannelId` maps the payload to its subscribed `channelType + channelId`; a public binary frame therefore does not repeat the resource identity. Unknown, unsubscribed, malformed, or unsupported binary frames receive an error JSON frame and are never forwarded.
 
-NOT-7 將 subscribed Yjs/awareness frame 原樣轉送至已分派的 worker。`yjs-document` payload 是 `Y.encodeStateAsUpdate` 產生的 raw encoded update；它不包裝 y-websocket protocol header。attach 成功時 worker 對該 channel 回傳當前 room 的完整 encoded state，後續每個有效 update 都會套用至 room 的 `Y.Doc` 並轉送給同一 BlockPack 的所有 subscriber。Yjs update 可重複套用，因此 sender 收到自己的 relay 不影響正確性。awareness payload 在 room 內原樣 relay，不寫入 `Y.Doc`。
+Gateway 僅將 subscribed Yjs/awareness frame 轉送至已分派的 worker。`yjs-document` 是 mutation，channel ticket 必須具有 `permission: "write"`；read channel 收到 `channel_permission_denied`，且 payload 不會送入 worker。awareness payload 可由 read/write channel 在 room 內原樣 relay，不寫入 `Y.Doc`。`yjs-document` payload 是 `Y.encodeStateAsUpdate` 產生的 raw encoded update；它不包裝 y-websocket protocol header。attach 成功時 worker cold-load 當前 room、materialize `Y.Doc`，再回傳完整 encoded state。後續每個有效 update 都先套用到 memory `Y.Doc`、append 至 durable update log，收到 append ACK 後才轉送給同一 BlockPack 的所有 subscriber。Yjs update 可重複套用，因此 sender 收到自己的 relay 不影響正確性。
 
 ## Errors And Future Lifecycle
 
@@ -99,7 +99,7 @@ All gateway errors are JSON:
 { "version": 1, "type": "error", "requestId": "sub-1", "connectorChannelId": 1, "code": "channel_not_found", "message": "connectorChannelId is not subscribed on this connection" }
 ```
 
-Stable error codes are `authentication_managed_by_upgrade`, `binary_channel_not_ready`, `channel_limit_exceeded`, `channel_not_found`, `invalid_acknowledgement`, `invalid_binary_frame`, `invalid_channel_id`, `invalid_channel_ticket`, `invalid_channel_type`, `invalid_connector_channel_id`, `invalid_control_frame`, `permission_revoked`, `resubscribe_required`, `unsupported_binary_type`, `unsupported_channel_type`, `unsupported_control_type`, `unsupported_message_type`, `unsupported_protocol_version`, and `worker_unavailable`.
+Stable error codes are `authentication_managed_by_upgrade`, `binary_channel_not_ready`, `channel_limit_exceeded`, `channel_not_found`, `channel_permission_denied`, `invalid_acknowledgement`, `invalid_binary_frame`, `invalid_channel_id`, `invalid_channel_ticket`, `invalid_channel_type`, `invalid_connector_channel_id`, `invalid_control_frame`, `permission_revoked`, `resubscribe_required`, `unsupported_binary_type`, `unsupported_channel_type`, `unsupported_control_type`, `unsupported_message_type`, `unsupported_protocol_version`, and `worker_unavailable`.
 
 The gateway caps a connection at 64 active channels. Released IDs are not reused during that connection. Public writes are serialized without an unbounded queue; a failed read or a write that cannot complete within 10 seconds closes the physical socket. Go-to-worker multiplexing uses `YJS_WORKER_URLS`, a comma-separated internal endpoint list. Each `blockPackId` maps consistently to one endpoint; each endpoint has one long-lived internal WebSocket and a bounded outbound queue. An unavailable worker or a full queue rejects the affected channel payload with `worker_unavailable`.
 
@@ -117,6 +117,12 @@ The future Go-to-worker transport is a small pool of long-lived multiplex WebSoc
 | `23` | 16 bytes | raw UUID `channelId` |
 | `39` | remaining | raw Yjs/awareness payload, or empty for attach/detach |
 
-Internal types are `1` `attach`, `2` `detach`, `3` `yjs-document`, `4` `awareness`, `5` `resync-required`, and `6` `permission-revoked`. `attach` and `detach` are idempotent. On an internal worker reconnect, Go replays `attach` for every active channel assigned to that worker before it forwards a client payload. When replay cannot be completed, Go emits `resync_required` to that public channel and waits for the client to resubscribe; it never silently drops an accepted Yjs payload.
+Internal types are `1` `attach`, `2` `detach`, `3` `yjs-document`, `4` `awareness`, `5` `resync-required`, `6` `permission-revoked`, `7` `load-yjs-document`, `8` `yjs-document-loaded`, `9` `append-yjs-update`, `10` `yjs-update-persisted`, `11` `yjs-persistence-failed`, `12` `apply-block-projection`, `13` `block-projection-applied`, and `14` `block-projection-failed`.
+
+`attach` and `detach` are idempotent. A first attach asks Go for a binary cold-load payload: `lastUpdateSequence(int64)`, `compactedUntilSequence(int64)`, `projectedUntilSequence(int64)`, snapshot length/state-vector length/update count (`uint32` each), snapshot bytes, state-vector bytes, then ordered update entries of `updateSequence(int64)`, payload length (`uint32`), raw update bytes. The worker materializes the document before it sends the public initial state.
+
+`append-yjs-update` carries the raw Yjs update in the existing frame payload. Go appends it transactionally and returns `yjs-update-persisted` with its `updateSequence(int64)` payload. The worker serializes append requests per BlockPack and broadcasts only after this ACK. On an internal worker reconnect, Go replays `attach` for every active channel assigned to that worker before it forwards a client payload. When replay cannot be completed, Go emits `resync_required` to that public channel and waits for the client to resubscribe; it never silently drops an accepted Yjs payload.
+
+`apply-block-projection` carries UTF-8 JSON `{ schemaId, schemaVersion, projectedSequence, blocks }`; the BlockPack id is the internal frame `channelId`. This request is accepted only over Go-established private worker connections, not through public WebSocket or REST routes. Go validates the schema and durable sequence, bulk applies the BlockTable projection, and returns JSON `{ applied, projectedUntilSequence }` with `block-projection-applied`; malformed, stale-invalid, or failed requests receive `block-projection-failed`.
 
 The internal implementation uses a bounded outbound queue per worker. Queue exhaustion or a dead worker closes affected logical channels with `worker_unavailable`; public sockets may remain open for their unrelated channels. Those execution details belong to `NOT-7`, while the envelope and recovery semantics above are the Phase 0 contract.

@@ -109,11 +109,8 @@ func (s *RealtimeService) CreateMyBlockPackChannelTicket(
 		return nil, exception
 	}
 
-	lastUpdateSequence := int64(0)
-	compactedUntilSequence := int64(0)
-	if blockPack.YjsDocument != nil {
-		lastUpdateSequence = blockPack.YjsDocument.LastUpdateSequence
-		compactedUntilSequence = blockPack.YjsDocument.CompactedUntilSequence
+	if blockPack.YjsDocument == nil {
+		return nil, exceptions.BlockPack.NotFound("block pack yjs document is missing")
 	}
 
 	return &dtos.CreateMyBlockPackChannelTicketResDto{
@@ -127,7 +124,7 @@ func (s *RealtimeService) CreateMyBlockPackChannelTicket(
 		SchemaId:                constants.YjsBlockPackSchemaId,
 		SchemaVersion:           constants.YjsBlockPackSchemaVersion,
 		RealtimeProtocolVersion: constants.RealtimeProtocolVersion,
-		LastUpdateSequence:      lastUpdateSequence,
-		CompactedUntilSequence:  compactedUntilSequence,
+		LastUpdateSequence:      blockPack.YjsDocument.LastUpdateSequence,
+		CompactedUntilSequence:  blockPack.YjsDocument.CompactedUntilSequence,
 	}, nil
 }

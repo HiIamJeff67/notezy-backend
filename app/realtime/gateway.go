@@ -1,6 +1,7 @@
 package realtime
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"sync"
@@ -10,24 +11,31 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 
+	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
+	models "github.com/HiIamJeff67/notezy-backend/app/models"
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/app/realtime/types"
 	workers "github.com/HiIamJeff67/notezy-backend/app/realtime/workers"
+	services "github.com/HiIamJeff67/notezy-backend/app/services"
 	tokens "github.com/HiIamJeff67/notezy-backend/app/tokens"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 type Gateway struct {
-	upgrader       websocket.Upgrader
-	workerManager  workers.WorkerManagerInterface
-	connectors     map[uuid.UUID]*Connector
-	connectorMutex sync.RWMutex
+	upgrader               websocket.Upgrader
+	workerManager          workers.WorkerManagerInterface
+	yjsPersistenceService  services.YjsPersistenceServiceInterface
+	blockProjectionService services.BlockProjectionServiceInterface
+	connectors             map[uuid.UUID]*Connector
+	connectorMutex         sync.RWMutex
 }
 
 func NewGateway() *Gateway {
 	workerManager := workers.NewWorkerManager()
 	gateway := &Gateway{
-		workerManager: workerManager,
-		connectors:    make(map[uuid.UUID]*Connector),
+		workerManager:          workerManager,
+		yjsPersistenceService:  services.NewYjsPersistenceService(models.NotezyDB),
+		blockProjectionService: services.NewBlockProjectionService(models.NotezyDB, nil),
+		connectors:             make(map[uuid.UUID]*Connector),
 	}
 	gateway.upgrader = websocket.Upgrader{
 		CheckOrigin: func(req *http.Request) bool {
@@ -40,6 +48,7 @@ func NewGateway() *Gateway {
 }
 
 func (g *Gateway) Handle(ctx *gin.Context) {
+	// extract and validate the ticket which is in Sec-WebSocket-Protocol header
 	connectionTicket := websocket.Subprotocols(ctx.Request)
 	if len(connectionTicket) != 1 {
 		ctx.AbortWithStatus(http.StatusUnauthorized)
@@ -207,6 +216,18 @@ func (g *Gateway) handleBinaryFrame(connector *Connector, payload []byte) bool {
 			Message:            "binary frame type is not enabled",
 		})
 	}
+	if frame.Type == realtimetypes.BinaryFrameType_YjsDocument &&
+		channel.Permission != realtimetypes.ChannelPermission_Write {
+		return connector.writeError(realtimetypes.ErrorFrame{
+			Version:            constants.RealtimeProtocolVersion,
+			Type:               realtimetypes.FrameType_Error,
+			ChannelType:        channel.Type,
+			ChannelId:          &channel.Id,
+			ConnectorChannelId: frame.ConnectorChannelId,
+			Code:               realtimetypes.ErrorCode_ChannelPermissionDenied,
+			Message:            "channel permission does not allow yjs document updates",
+		})
+	}
 
 	internalFrameType := realtimetypes.InternalFrameType_YjsDocument
 	if frame.Type == realtimetypes.BinaryFrameType_Awareness {
@@ -307,26 +328,28 @@ func (g *Gateway) handleControlFrame(connector *Connector, payload []byte) bool 
 			})
 		}
 
-		channel := realtimetypes.Channel{
-			Type: subscribeFrame.ChannelType,
-			Id:   subscribeFrame.ChannelId,
-		}
-
 		channelClaims, err := tokens.ParseRealtimeBlockPackTicket(
 			subscribeFrame.ChannelTicket,
 			connector.UserAgent,
 		)
 		if err != nil || channelClaims.Subject != connector.UserPublicId.String() ||
-			channelClaims.ChannelType != string(channel.Type) || channelClaims.ChannelId != channel.Id.String() {
+			channelClaims.ChannelType != string(subscribeFrame.ChannelType) ||
+			channelClaims.ChannelId != subscribeFrame.ChannelId.String() {
 			return connector.writeError(realtimetypes.ErrorFrame{
 				Version:     constants.RealtimeProtocolVersion,
 				Type:        realtimetypes.FrameType_Error,
 				RequestId:   subscribeFrame.RequestId,
-				ChannelType: channel.Type,
-				ChannelId:   &channel.Id,
+				ChannelType: subscribeFrame.ChannelType,
+				ChannelId:   &subscribeFrame.ChannelId,
 				Code:        realtimetypes.ErrorCode_InvalidChannelTicket,
 				Message:     "channel ticket is invalid",
 			})
+		}
+
+		channel := realtimetypes.Channel{
+			Type:       subscribeFrame.ChannelType,
+			Id:         subscribeFrame.ChannelId,
+			Permission: realtimetypes.ChannelPermission(channelClaims.Permission),
 		}
 		connectorChannelId, existing := connector.subscribe(channel)
 		if connectorChannelId == 0 {
@@ -499,6 +522,134 @@ func (g *Gateway) handleControlFrame(connector *Connector, payload []byte) bool 
 }
 
 func (g *Gateway) handleInternalFrame(frame realtimetypes.InternalFrame) {
+	switch frame.Type {
+	case realtimetypes.InternalFrameType_LoadYjsDocument:
+		state, err := g.yjsPersistenceService.LoadDocument(context.Background(), frame.ChannelId)
+		if err != nil {
+			g.workerManager.Forward(realtimetypes.InternalFrame{
+				Version:            byte(constants.RealtimeWorkerProtocolVersion),
+				Type:               realtimetypes.InternalFrameType_YjsPersistenceFailed,
+				ChannelType:        frame.ChannelType,
+				ConnectionId:       frame.ConnectionId,
+				ConnectorChannelId: frame.ConnectorChannelId,
+				ChannelId:          frame.ChannelId,
+			})
+
+			return
+		}
+
+		payload, err := state.MarshalBytes()
+		if err != nil {
+			g.workerManager.Forward(realtimetypes.InternalFrame{
+				Version:            byte(constants.RealtimeWorkerProtocolVersion),
+				Type:               realtimetypes.InternalFrameType_YjsPersistenceFailed,
+				ChannelType:        frame.ChannelType,
+				ConnectionId:       frame.ConnectionId,
+				ConnectorChannelId: frame.ConnectorChannelId,
+				ChannelId:          frame.ChannelId,
+			})
+
+			return
+		}
+
+		g.workerManager.Forward(realtimetypes.InternalFrame{
+			Version:            byte(constants.RealtimeWorkerProtocolVersion),
+			Type:               realtimetypes.InternalFrameType_YjsDocumentLoaded,
+			ChannelType:        frame.ChannelType,
+			ConnectionId:       frame.ConnectionId,
+			ConnectorChannelId: frame.ConnectorChannelId,
+			ChannelId:          frame.ChannelId,
+			Payload:            payload,
+		})
+
+		return
+	case realtimetypes.InternalFrameType_AppendYjsUpdate:
+		updateSequence, err := g.yjsPersistenceService.AppendUpdate(
+			context.Background(),
+			frame.ChannelId,
+			frame.ConnectionId,
+			frame.Payload,
+		)
+		if err != nil {
+			g.workerManager.Forward(realtimetypes.InternalFrame{
+				Version:            byte(constants.RealtimeWorkerProtocolVersion),
+				Type:               realtimetypes.InternalFrameType_YjsPersistenceFailed,
+				ChannelType:        frame.ChannelType,
+				ConnectionId:       frame.ConnectionId,
+				ConnectorChannelId: frame.ConnectorChannelId,
+				ChannelId:          frame.ChannelId,
+			})
+
+			return
+		}
+
+		g.workerManager.Forward(realtimetypes.InternalFrame{
+			Version:            byte(constants.RealtimeWorkerProtocolVersion),
+			Type:               realtimetypes.InternalFrameType_YjsUpdatePersisted,
+			ChannelType:        frame.ChannelType,
+			ConnectionId:       frame.ConnectionId,
+			ConnectorChannelId: frame.ConnectorChannelId,
+			ChannelId:          frame.ChannelId,
+			Payload:            realtimetypes.MarshalYjsUpdateSequence(updateSequence),
+		})
+
+		return
+	case realtimetypes.InternalFrameType_ApplyBlockProjection:
+		var input dtos.ApplyBlockProjectionInput
+		if err := json.Unmarshal(frame.Payload, &input); err != nil {
+			g.workerManager.Forward(realtimetypes.InternalFrame{
+				Version:            byte(constants.RealtimeWorkerProtocolVersion),
+				Type:               realtimetypes.InternalFrameType_BlockProjectionFailed,
+				ChannelType:        frame.ChannelType,
+				ConnectionId:       frame.ConnectionId,
+				ConnectorChannelId: frame.ConnectorChannelId,
+				ChannelId:          frame.ChannelId,
+			})
+
+			return
+		}
+
+		result, err := g.blockProjectionService.Apply(context.Background(), frame.ChannelId, input)
+		if err != nil {
+			g.workerManager.Forward(realtimetypes.InternalFrame{
+				Version:            byte(constants.RealtimeWorkerProtocolVersion),
+				Type:               realtimetypes.InternalFrameType_BlockProjectionFailed,
+				ChannelType:        frame.ChannelType,
+				ConnectionId:       frame.ConnectionId,
+				ConnectorChannelId: frame.ConnectorChannelId,
+				ChannelId:          frame.ChannelId,
+			})
+
+			return
+		}
+
+		payload, err := json.Marshal(result)
+		if err != nil {
+			g.workerManager.Forward(realtimetypes.InternalFrame{
+				Version:            byte(constants.RealtimeWorkerProtocolVersion),
+				Type:               realtimetypes.InternalFrameType_BlockProjectionFailed,
+				ChannelType:        frame.ChannelType,
+				ConnectionId:       frame.ConnectionId,
+				ConnectorChannelId: frame.ConnectorChannelId,
+				ChannelId:          frame.ChannelId,
+			})
+
+			return
+		}
+
+		g.workerManager.Forward(realtimetypes.InternalFrame{
+			Version:            byte(constants.RealtimeWorkerProtocolVersion),
+			Type:               realtimetypes.InternalFrameType_BlockProjectionApplied,
+			ChannelType:        frame.ChannelType,
+			ConnectionId:       frame.ConnectionId,
+			ConnectorChannelId: frame.ConnectorChannelId,
+			ChannelId:          frame.ChannelId,
+			Payload:            payload,
+		})
+
+		return
+	}
+
 	g.connectorMutex.RLock()
 	connector, exists := g.connectors[frame.ConnectionId]
 	g.connectorMutex.RUnlock()
