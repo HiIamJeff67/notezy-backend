@@ -11,21 +11,18 @@ import (
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
-type Channel struct {
-	Type                 realtimetypes.ChannelType
-	Id                   uuid.UUID
-	acknowledgedSequence int64
-}
-
 type Connector struct {
+	Id            uuid.UUID
+	UserPublicId  uuid.UUID
+	UserAgent     string
 	connection    *websocket.Conn
-	channels      map[uint32]Channel
+	channels      map[uint32]realtimetypes.Channel
 	nextChannelId uint32
 	channelMutex  sync.RWMutex
 	writeMutex    sync.Mutex
 }
 
-func (c *Connector) get(connectorChannelId uint32) (Channel, bool) {
+func (c *Connector) get(connectorChannelId uint32) (realtimetypes.Channel, bool) {
 	c.channelMutex.RLock()
 	defer c.channelMutex.RUnlock()
 
@@ -34,7 +31,7 @@ func (c *Connector) get(connectorChannelId uint32) (Channel, bool) {
 	return channel, exists
 }
 
-func (c *Connector) append(channel Channel) (uint32, bool) {
+func (c *Connector) subscribe(channel realtimetypes.Channel) (uint32, bool) {
 	c.channelMutex.Lock()
 	defer c.channelMutex.Unlock()
 
@@ -43,7 +40,7 @@ func (c *Connector) append(channel Channel) (uint32, bool) {
 			return connectorChannelId, true
 		}
 	}
-	if len(c.channels) >= constants.RealtimeMaxChannelsPerConnection || c.nextChannelId == ^uint32(0) {
+	if len(c.channels) >= constants.RealtimeMaxChannelsPerConnection || c.nextChannelId == constants.MAX_UINT32 {
 		return 0, false
 	}
 
@@ -53,7 +50,7 @@ func (c *Connector) append(channel Channel) (uint32, bool) {
 	return c.nextChannelId, false
 }
 
-func (c *Connector) remove(connectorChannelId uint32) (Channel, bool) {
+func (c *Connector) unsubscribe(connectorChannelId uint32) (realtimetypes.Channel, bool) {
 	c.channelMutex.Lock()
 	defer c.channelMutex.Unlock()
 
@@ -73,11 +70,11 @@ func (c *Connector) acknowledge(connectorChannelId uint32, sequence int64) (bool
 	if !exists {
 		return false, false
 	}
-	if sequence < channel.acknowledgedSequence {
+	if sequence < channel.AcknowledgedSequence {
 		return true, false
 	}
 
-	channel.acknowledgedSequence = sequence
+	channel.AcknowledgedSequence = sequence
 	c.channels[connectorChannelId] = channel
 
 	return true, true
@@ -107,4 +104,15 @@ func (c *Connector) writeControl(messageType int, payload []byte) error {
 		payload,
 		time.Now().Add(constants.RealtimeControlWriteTimeout),
 	)
+}
+
+func (c *Connector) writeBinary(payload []byte) error {
+	c.writeMutex.Lock()
+	defer c.writeMutex.Unlock()
+
+	if err := c.connection.SetWriteDeadline(time.Now().Add(constants.RealtimeControlWriteTimeout)); err != nil {
+		return err
+	}
+
+	return c.connection.WriteMessage(websocket.BinaryMessage, payload)
 }

@@ -3,6 +3,7 @@ package realtime
 import (
 	"encoding/json"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -10,34 +11,96 @@ import (
 	"github.com/gorilla/websocket"
 
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/app/realtime/types"
+	workers "github.com/HiIamJeff67/notezy-backend/app/realtime/workers"
+	tokens "github.com/HiIamJeff67/notezy-backend/app/tokens"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 type Gateway struct {
-	upgrader websocket.Upgrader
+	upgrader       websocket.Upgrader
+	workerManager  workers.WorkerManagerInterface
+	connectors     map[uuid.UUID]*Connector
+	connectorMutex sync.RWMutex
 }
 
 func NewGateway() *Gateway {
-	return &Gateway{
-		upgrader: websocket.Upgrader{
-			CheckOrigin: func(req *http.Request) bool {
-				return req.Header.Get("Origin") != ""
-			},
+	workerManager := workers.NewWorkerManager()
+	gateway := &Gateway{
+		workerManager: workerManager,
+		connectors:    make(map[uuid.UUID]*Connector),
+	}
+	gateway.upgrader = websocket.Upgrader{
+		CheckOrigin: func(req *http.Request) bool {
+			return req.Header.Get("Origin") != ""
 		},
 	}
+	workerManager.SetFrameHandler(gateway.handleInternalFrame)
+
+	return gateway
 }
 
 func (g *Gateway) Handle(ctx *gin.Context) {
-	websocketConnection, err := g.upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
+	connectionTicket := websocket.Subprotocols(ctx.Request)
+	if len(connectionTicket) != 1 {
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	connectionClaims, err := tokens.ParseRealtimeConnectionTicket(
+		connectionTicket[0],
+		ctx.GetHeader("User-Agent"),
+	)
+	if err != nil {
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	userPublicId, err := uuid.Parse(connectionClaims.Subject)
+	if err != nil {
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	websocketConnection, err := g.upgrader.Upgrade(
+		ctx.Writer,
+		ctx.Request,
+		http.Header{"Sec-WebSocket-Protocol": []string{connectionTicket[0]}},
+	)
 	if err != nil {
 		return
 	}
 	defer websocketConnection.Close()
 
 	connector := Connector{
-		connection: websocketConnection,
-		channels:   make(map[uint32]Channel),
+		Id:           uuid.New(),
+		UserPublicId: userPublicId,
+		UserAgent:    ctx.GetHeader("User-Agent"),
+		connection:   websocketConnection,
+		channels:     make(map[uint32]realtimetypes.Channel),
 	}
+	g.connectorMutex.Lock()
+	g.connectors[connector.Id] = &connector
+	g.connectorMutex.Unlock()
+
+	defer func() {
+		g.connectorMutex.Lock()
+		delete(g.connectors, connector.Id)
+		g.connectorMutex.Unlock()
+	}()
+	defer func() {
+		connector.channelMutex.Lock()
+		defer connector.channelMutex.Unlock()
+		for connectorChannelId, channel := range connector.channels {
+			g.workerManager.Detach(realtimetypes.InternalFrame{
+				Version:            byte(constants.RealtimeWorkerProtocolVersion),
+				Type:               realtimetypes.InternalFrameType_Detach,
+				ChannelType:        channel.Type,
+				ConnectionId:       connector.Id,
+				ConnectorChannelId: connectorChannelId,
+				ChannelId:          channel.Id,
+			})
+		}
+	}()
 
 	websocketConnection.SetReadLimit(constants.RealtimeMaxMessageSize)
 	websocketConnection.SetReadDeadline(time.Now().Add(constants.RealtimePongWait))
@@ -48,7 +111,7 @@ func (g *Gateway) Handle(ctx *gin.Context) {
 	if err := connector.writeJSON(realtimetypes.ReadyFrame{
 		Version:             constants.RealtimeProtocolVersion,
 		Type:                realtimetypes.FrameType_Ready,
-		ConnectionId:        uuid.NewString(),
+		ConnectionId:        connector.Id.String(),
 		ResubscribeRequired: true,
 	}); err != nil {
 		return
@@ -145,15 +208,32 @@ func (g *Gateway) handleBinaryFrame(connector *Connector, payload []byte) bool {
 		})
 	}
 
-	return connector.writeError(realtimetypes.ErrorFrame{
-		Version:            constants.RealtimeProtocolVersion,
-		Type:               realtimetypes.FrameType_Error,
+	internalFrameType := realtimetypes.InternalFrameType_YjsDocument
+	if frame.Type == realtimetypes.BinaryFrameType_Awareness {
+		internalFrameType = realtimetypes.InternalFrameType_Awareness
+	}
+
+	if !g.workerManager.Forward(realtimetypes.InternalFrame{
+		Version:            byte(constants.RealtimeWorkerProtocolVersion),
+		Type:               internalFrameType,
 		ChannelType:        channel.Type,
-		ChannelId:          &channel.Id,
+		ConnectionId:       connector.Id,
 		ConnectorChannelId: frame.ConnectorChannelId,
-		Code:               realtimetypes.ErrorCode_BinaryChannelNotReady,
-		Message:            "the yjs worker channel is not enabled yet",
-	})
+		ChannelId:          channel.Id,
+		Payload:            frame.Payload,
+	}) {
+		return connector.writeError(realtimetypes.ErrorFrame{
+			Version:            constants.RealtimeProtocolVersion,
+			Type:               realtimetypes.FrameType_Error,
+			ChannelType:        channel.Type,
+			ChannelId:          &channel.Id,
+			ConnectorChannelId: frame.ConnectorChannelId,
+			Code:               realtimetypes.ErrorCode_WorkerUnavailable,
+			Message:            "the yjs worker is unavailable",
+		})
+	}
+
+	return true
 }
 
 func (g *Gateway) handleControlFrame(connector *Connector, payload []byte) bool {
@@ -227,11 +307,28 @@ func (g *Gateway) handleControlFrame(connector *Connector, payload []byte) bool 
 			})
 		}
 
-		channel := Channel{
+		channel := realtimetypes.Channel{
 			Type: subscribeFrame.ChannelType,
 			Id:   subscribeFrame.ChannelId,
 		}
-		connectorChannelId, existing := connector.append(channel)
+
+		channelClaims, err := tokens.ParseRealtimeBlockPackTicket(
+			subscribeFrame.ChannelTicket,
+			connector.UserAgent,
+		)
+		if err != nil || channelClaims.Subject != connector.UserPublicId.String() ||
+			channelClaims.ChannelType != string(channel.Type) || channelClaims.ChannelId != channel.Id.String() {
+			return connector.writeError(realtimetypes.ErrorFrame{
+				Version:     constants.RealtimeProtocolVersion,
+				Type:        realtimetypes.FrameType_Error,
+				RequestId:   subscribeFrame.RequestId,
+				ChannelType: channel.Type,
+				ChannelId:   &channel.Id,
+				Code:        realtimetypes.ErrorCode_InvalidChannelTicket,
+				Message:     "channel ticket is invalid",
+			})
+		}
+		connectorChannelId, existing := connector.subscribe(channel)
 		if connectorChannelId == 0 {
 			return connector.writeError(realtimetypes.ErrorFrame{
 				Version:     constants.RealtimeProtocolVersion,
@@ -241,6 +338,40 @@ func (g *Gateway) handleControlFrame(connector *Connector, payload []byte) bool 
 				ChannelId:   &subscribeFrame.ChannelId,
 				Code:        realtimetypes.ErrorCode_ChannelLimitExceeded,
 				Message:     "the connection cannot subscribe to more channels",
+			})
+		}
+
+		if existing {
+			return connector.writeJSON(realtimetypes.SubscribedFrame{
+				Version:            constants.RealtimeProtocolVersion,
+				Type:               realtimetypes.FrameType_Subscribed,
+				RequestId:          subscribeFrame.RequestId,
+				ChannelType:        subscribeFrame.ChannelType,
+				ChannelId:          subscribeFrame.ChannelId,
+				ConnectorChannelId: connectorChannelId,
+				Existing:           true,
+			}) == nil
+		}
+
+		if !g.workerManager.Attach(realtimetypes.InternalFrame{
+			Version:            byte(constants.RealtimeWorkerProtocolVersion),
+			Type:               realtimetypes.InternalFrameType_Attach,
+			ChannelType:        channel.Type,
+			ConnectionId:       connector.Id,
+			ConnectorChannelId: connectorChannelId,
+			ChannelId:          channel.Id,
+		}) {
+			connector.unsubscribe(connectorChannelId)
+
+			return connector.writeError(realtimetypes.ErrorFrame{
+				Version:            constants.RealtimeProtocolVersion,
+				Type:               realtimetypes.FrameType_Error,
+				RequestId:          subscribeFrame.RequestId,
+				ChannelType:        channel.Type,
+				ChannelId:          &channel.Id,
+				ConnectorChannelId: connectorChannelId,
+				Code:               realtimetypes.ErrorCode_WorkerUnavailable,
+				Message:            "the yjs worker is unavailable",
 			})
 		}
 
@@ -265,7 +396,7 @@ func (g *Gateway) handleControlFrame(connector *Connector, payload []byte) bool 
 			})
 		}
 
-		channel, exists := connector.remove(unsubscribeFrame.ConnectorChannelId)
+		channel, exists := connector.unsubscribe(unsubscribeFrame.ConnectorChannelId)
 
 		if !exists {
 			return connector.writeError(realtimetypes.ErrorFrame{
@@ -277,6 +408,15 @@ func (g *Gateway) handleControlFrame(connector *Connector, payload []byte) bool 
 				Message:            "connectorChannelId is not subscribed on this connection",
 			})
 		}
+
+		g.workerManager.Detach(realtimetypes.InternalFrame{
+			Version:            byte(constants.RealtimeWorkerProtocolVersion),
+			Type:               realtimetypes.InternalFrameType_Detach,
+			ChannelType:        channel.Type,
+			ConnectionId:       connector.Id,
+			ConnectorChannelId: unsubscribeFrame.ConnectorChannelId,
+			ChannelId:          channel.Id,
+		})
 
 		return connector.writeJSON(realtimetypes.UnsubscribedFrame{
 			Version:            constants.RealtimeProtocolVersion,
@@ -356,4 +496,70 @@ func (g *Gateway) handleControlFrame(connector *Connector, payload []byte) bool 
 			Message:   "control frame type is not enabled",
 		})
 	}
+}
+
+func (g *Gateway) handleInternalFrame(frame realtimetypes.InternalFrame) {
+	g.connectorMutex.RLock()
+	connector, exists := g.connectors[frame.ConnectionId]
+	g.connectorMutex.RUnlock()
+
+	if !exists {
+		return
+	}
+
+	channel, exists := connector.get(frame.ConnectorChannelId)
+	if !exists || channel.Type != frame.ChannelType || channel.Id != frame.ChannelId {
+		return
+	}
+
+	if frame.Type == realtimetypes.InternalFrameType_ResyncRequired ||
+		frame.Type == realtimetypes.InternalFrameType_PermissionRevoked {
+		connector.unsubscribe(frame.ConnectorChannelId)
+		g.workerManager.Detach(realtimetypes.InternalFrame{
+			Version:            byte(constants.RealtimeWorkerProtocolVersion),
+			Type:               realtimetypes.InternalFrameType_Detach,
+			ChannelType:        channel.Type,
+			ConnectionId:       connector.Id,
+			ConnectorChannelId: frame.ConnectorChannelId,
+			ChannelId:          channel.Id,
+		})
+
+		code := realtimetypes.ErrorCode_ResubscribeRequired
+		message := "the yjs worker requires this channel to resubscribe"
+		if frame.Type == realtimetypes.InternalFrameType_PermissionRevoked {
+			code = realtimetypes.ErrorCode_PermissionRevoked
+			message = "permission for this channel has been revoked"
+		}
+
+		connector.writeError(realtimetypes.ErrorFrame{
+			Version:            constants.RealtimeProtocolVersion,
+			Type:               realtimetypes.FrameType_Error,
+			ChannelType:        channel.Type,
+			ChannelId:          &channel.Id,
+			ConnectorChannelId: frame.ConnectorChannelId,
+			Code:               code,
+			Message:            message,
+		})
+
+		return
+	}
+
+	binaryFrameType := realtimetypes.BinaryFrameType_YjsDocument
+	if frame.Type == realtimetypes.InternalFrameType_Awareness {
+		binaryFrameType = realtimetypes.BinaryFrameType_Awareness
+	} else if frame.Type != realtimetypes.InternalFrameType_YjsDocument {
+		return
+	}
+
+	payload, err := realtimetypes.BinaryFrame{
+		Version:            byte(constants.RealtimeProtocolVersion),
+		Type:               binaryFrameType,
+		ConnectorChannelId: frame.ConnectorChannelId,
+		Payload:            frame.Payload,
+	}.MarshalBytes()
+	if err != nil {
+		return
+	}
+
+	connector.writeBinary(payload)
 }

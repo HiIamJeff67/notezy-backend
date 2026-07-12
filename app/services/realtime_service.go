@@ -48,7 +48,7 @@ func (s *RealtimeService) CreateMyRealtimeConnectionTicket(
 	}
 
 	connectionTicket, expiresAt, exception := tokens.GenerateRealtimeConnectionTicket(
-		reqDto.ContextFields.UserId,
+		reqDto.ContextFields.UserPublicId,
 		reqDto.Header.UserAgent,
 	)
 	if exception != nil {
@@ -100,7 +100,7 @@ func (s *RealtimeService) CreateMyBlockPackChannelTicket(
 	}
 
 	channelTicket, expiresAt, exception := tokens.GenerateRealtimeBlockPackTicket(
-		reqDto.ContextFields.UserId,
+		reqDto.ContextFields.UserPublicId,
 		reqDto.Header.UserAgent,
 		blockPack.Id,
 		reqDto.Body.Permission,

@@ -13,8 +13,6 @@ func ConfigureRealtimeRoutes() {
 		"/"+constants.RealtimeDevelopmentBaseURL,
 		middlewares.DomainWhiteListMiddleware(),
 		middlewares.UnauthorizedRateLimitMiddleware(),
-		middlewares.AuthMiddleware(),
-		middlewares.AuthorizedRateLimitMiddleware(),
 		gateway.Handle,
 	)
 }

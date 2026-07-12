@@ -8,7 +8,7 @@
     "build": "tsc",
     "dev": "tsx watch src/main.ts",
     "start": "node dist/main.js",
-    "test": "tsx --test test/internal_frame.test.ts"
+    "test": "tsx --test test/*.test.ts"
   },
   "packageManager": "pnpm@11.7.0",
   "engines": {

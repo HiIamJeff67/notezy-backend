@@ -28,12 +28,12 @@ func (b *RealtimeBinder) BindCreateMyRealtimeConnectionTicket(
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		userPublicId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_PublicId)
 		if exception != nil {
 			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
-		reqDto.ContextFields.UserId = *userId
+		reqDto.ContextFields.UserPublicId = *userPublicId
 
 		controllerFunc(ctx, &reqDto)
 	}
@@ -53,6 +53,13 @@ func (b *RealtimeBinder) BindCreateMyBlockPackChannelTicket(
 			return
 		}
 		reqDto.ContextFields.UserId = *userId
+
+		userPublicId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_PublicId)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserPublicId = *userPublicId
 
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exceptions.BlockPack.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)

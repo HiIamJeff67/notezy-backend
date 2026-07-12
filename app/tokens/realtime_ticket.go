@@ -19,7 +19,7 @@ import (
 )
 
 func GenerateRealtimeConnectionTicket(
-	userId uuid.UUID,
+	userPublicId uuid.UUID,
 	userAgent string,
 ) (*string, time.Time, *exceptions.Exception) {
 	privateKey, exception := getRealtimeTicketPrivateKey()
@@ -39,7 +39,7 @@ func GenerateRealtimeConnectionTicket(
 			ID:        uuid.NewString(),
 			IssuedAt:  jwt.NewNumericDate(now),
 			Issuer:    constants.ServiceName,
-			Subject:   userId.String(),
+			Subject:   userPublicId.String(),
 		},
 	}
 
@@ -52,7 +52,7 @@ func GenerateRealtimeConnectionTicket(
 }
 
 func GenerateRealtimeBlockPackTicket(
-	userId uuid.UUID,
+	userPublicId uuid.UUID,
 	userAgent string,
 	blockPackId uuid.UUID,
 	permission realtimetypes.ChannelPermission,
@@ -78,7 +78,7 @@ func GenerateRealtimeBlockPackTicket(
 			ID:        uuid.NewString(),
 			IssuedAt:  jwt.NewNumericDate(now),
 			Issuer:    constants.ServiceName,
-			Subject:   userId.String(),
+			Subject:   userPublicId.String(),
 		},
 	}
 
@@ -88,6 +88,93 @@ func GenerateRealtimeBlockPackTicket(
 	}
 
 	return &ticket, expiresAt, nil
+}
+
+func ParseRealtimeConnectionTicket(
+	ticketString string, userAgent string,
+) (*types.RealtimeConnectionTicketClaims, error) {
+	privateKey, exception := getRealtimeTicketPrivateKey()
+	if exception != nil {
+		return nil, fmt.Errorf("%s", exception.Message)
+	}
+
+	claims := types.RealtimeConnectionTicketClaims{}
+	ticket, err := jwt.ParseWithClaims(
+		ticketString,
+		&claims,
+		func(ticket *jwt.Token) (any, error) {
+			if ticket.Method != jwt.SigningMethodEdDSA {
+				return nil, fmt.Errorf("invalid realtime ticket signing method")
+			}
+
+			return privateKey.Public(), nil
+		},
+		jwt.WithAudience(types.RealtimeTicketAudience_Connection.String()),
+		jwt.WithIssuer(constants.ServiceName),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("invalid realtime connection ticket: %w", err)
+	}
+	if !ticket.Valid {
+		return nil, fmt.Errorf("invalid realtime connection ticket")
+	}
+
+	userAgentHash := sha256.Sum256([]byte(userAgent))
+	if claims.UserAgentHash != fmt.Sprintf("%x", userAgentHash) ||
+		claims.RealtimeProtocolVersion != constants.RealtimeProtocolVersion {
+		return nil, fmt.Errorf("invalid realtime connection ticket claims")
+	}
+	if _, err := uuid.Parse(claims.Subject); err != nil {
+		return nil, fmt.Errorf("invalid realtime connection ticket user public id: %w", err)
+	}
+
+	return &claims, nil
+}
+
+func ParseRealtimeBlockPackTicket(
+	ticketString string, userAgent string,
+) (*types.RealtimeBlockPackTicketClaims, error) {
+	privateKey, exception := getRealtimeTicketPrivateKey()
+	if exception != nil {
+		return nil, fmt.Errorf("%s", exception.Message)
+	}
+
+	claims := types.RealtimeBlockPackTicketClaims{}
+	ticket, err := jwt.ParseWithClaims(
+		ticketString,
+		&claims,
+		func(ticket *jwt.Token) (any, error) {
+			if ticket.Method != jwt.SigningMethodEdDSA {
+				return nil, fmt.Errorf("invalid realtime ticket signing method")
+			}
+
+			return privateKey.Public(), nil
+		},
+		jwt.WithAudience(types.RealtimeTicketAudience_BlockPack.String()),
+		jwt.WithIssuer(constants.ServiceName),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("invalid realtime block pack ticket: %w", err)
+	}
+	if !ticket.Valid {
+		return nil, fmt.Errorf("invalid realtime block pack ticket")
+	}
+
+	userAgentHash := sha256.Sum256([]byte(userAgent))
+	if claims.UserAgentHash != fmt.Sprintf("%x", userAgentHash) ||
+		claims.ChannelType != string(realtimetypes.ChannelType_BlockPack) ||
+		claims.RealtimeProtocolVersion != constants.RealtimeProtocolVersion ||
+		claims.SchemaVersion != constants.YjsBlockPackSchemaVersion {
+		return nil, fmt.Errorf("invalid realtime block pack ticket claims")
+	}
+	if _, err := uuid.Parse(claims.Subject); err != nil {
+		return nil, fmt.Errorf("invalid realtime block pack ticket user public id: %w", err)
+	}
+	if _, err := uuid.Parse(claims.ChannelId); err != nil {
+		return nil, fmt.Errorf("invalid realtime block pack ticket channel id: %w", err)
+	}
+
+	return &claims, nil
 }
 
 func getRealtimeTicketPrivateKey() (ed25519.PrivateKey, *exceptions.Exception) {

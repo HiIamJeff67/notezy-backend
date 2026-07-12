@@ -18,6 +18,8 @@ const (
 	RealtimePongWait                  time.Duration = 60 * time.Second
 	RealtimePingInterval              time.Duration = 25 * time.Second
 	RealtimeControlWriteTimeout       time.Duration = 10 * time.Second
+	RealtimeWorkerReconnectDelay      time.Duration = 2 * time.Second
+	RealtimeWorkerQueueSize           int           = 1024
 )
 
 const (

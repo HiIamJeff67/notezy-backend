@@ -1,9 +1,14 @@
 package realtime
 
 import (
+	"crypto/ed25519"
+	"crypto/rand"
+	"crypto/x509"
+	"encoding/base64"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -11,30 +16,82 @@ import (
 	"github.com/gorilla/websocket"
 
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/app/realtime/types"
+	tokens "github.com/HiIamJeff67/notezy-backend/app/tokens"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
+
+type fakeWorkerManager struct {
+	frameHandler func(realtimetypes.InternalFrame)
+	frames       []realtimetypes.InternalFrame
+	mutex        sync.Mutex
+}
+
+func (m *fakeWorkerManager) Attach(frame realtimetypes.InternalFrame) bool {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	m.frames = append(m.frames, frame)
+
+	return true
+}
+
+func (m *fakeWorkerManager) Detach(frame realtimetypes.InternalFrame) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	m.frames = append(m.frames, frame)
+}
+
+func (m *fakeWorkerManager) Forward(frame realtimetypes.InternalFrame) bool {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	m.frames = append(m.frames, frame)
+	if m.frameHandler != nil {
+		m.frameHandler(frame)
+	}
+
+	return true
+}
+
+func (m *fakeWorkerManager) SetFrameHandler(handler func(realtimetypes.InternalFrame)) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	m.frameHandler = handler
+}
 
 func TestGatewaySendsReadyAndPong(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
+	userAgent := "notezy-realtime-test"
+	userPublicId := uuid.New()
+	configureRealtimeTicketPrivateKey(t)
+	connectionTicket, _, exception := tokens.GenerateRealtimeConnectionTicket(userPublicId, userAgent)
+	if exception != nil {
+		t.Fatalf("failed to generate connection ticket: %v", exception)
+	}
+
+	workerManager := &fakeWorkerManager{}
+	gateway := &Gateway{
+		upgrader: websocket.Upgrader{
+			CheckOrigin: func(req *http.Request) bool {
+				return req.Header.Get("Origin") != ""
+			},
+		},
+		workerManager: workerManager,
+		connectors:    make(map[uuid.UUID]*Connector),
+	}
+	workerManager.SetFrameHandler(gateway.handleInternalFrame)
+
 	router := gin.New()
-	router.GET("/"+constants.RealtimeDevelopmentBaseURL, NewGateway().Handle)
+	router.GET("/"+constants.RealtimeDevelopmentBaseURL, gateway.Handle)
 
 	server := httptest.NewServer(router)
 	defer server.Close()
 
-	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/" + constants.RealtimeDevelopmentBaseURL
-	connection, response, err := websocket.DefaultDialer.Dial(
-		wsURL,
-		http.Header{"Origin": []string{server.URL}},
-	)
-	if err != nil {
-		t.Fatalf("failed to connect to gateway: %v", err)
-	}
+	connection := dialGateway(t, server.URL, userAgent, *connectionTicket)
 	defer connection.Close()
-	if response.StatusCode != http.StatusSwitchingProtocols {
-		t.Fatalf("expected status %d, got %d", http.StatusSwitchingProtocols, response.StatusCode)
-	}
 
 	var ready realtimetypes.ReadyFrame
 	if err := connection.ReadJSON(&ready); err != nil {
@@ -65,23 +122,36 @@ func TestGatewaySendsReadyAndPong(t *testing.T) {
 	}
 }
 
-func TestGatewayMultiplexesBlockPackChannels(t *testing.T) {
+func TestGatewayMultiplexesAndRelaysBlockPackChannels(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
+	userAgent := "notezy-realtime-test"
+	userPublicId := uuid.New()
+	configureRealtimeTicketPrivateKey(t)
+	connectionTicket, _, exception := tokens.GenerateRealtimeConnectionTicket(userPublicId, userAgent)
+	if exception != nil {
+		t.Fatalf("failed to generate connection ticket: %v", exception)
+	}
+
+	workerManager := &fakeWorkerManager{}
+	gateway := &Gateway{
+		upgrader: websocket.Upgrader{
+			CheckOrigin: func(req *http.Request) bool {
+				return req.Header.Get("Origin") != ""
+			},
+		},
+		workerManager: workerManager,
+		connectors:    make(map[uuid.UUID]*Connector),
+	}
+	workerManager.SetFrameHandler(gateway.handleInternalFrame)
+
 	router := gin.New()
-	router.GET("/"+constants.RealtimeDevelopmentBaseURL, NewGateway().Handle)
+	router.GET("/"+constants.RealtimeDevelopmentBaseURL, gateway.Handle)
 
 	server := httptest.NewServer(router)
 	defer server.Close()
 
-	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/" + constants.RealtimeDevelopmentBaseURL
-	connection, _, err := websocket.DefaultDialer.Dial(
-		wsURL,
-		http.Header{"Origin": []string{server.URL}},
-	)
-	if err != nil {
-		t.Fatalf("failed to connect to gateway: %v", err)
-	}
+	connection := dialGateway(t, server.URL, userAgent, *connectionTicket)
 	defer connection.Close()
 
 	var ready realtimetypes.ReadyFrame
@@ -115,20 +185,37 @@ func TestGatewayMultiplexesBlockPackChannels(t *testing.T) {
 
 	firstBlockPackId := uuid.New()
 	secondBlockPackId := uuid.New()
+	channelTickets := make(map[uuid.UUID]string, 2)
+	for _, blockPackId := range []uuid.UUID{firstBlockPackId, secondBlockPackId} {
+		channelTicket, _, exception := tokens.GenerateRealtimeBlockPackTicket(
+			userPublicId,
+			userAgent,
+			blockPackId,
+			realtimetypes.ChannelPermission_Write,
+		)
+		if exception != nil {
+			t.Fatalf("failed to generate channel ticket: %v", exception)
+		}
+
+		channelTickets[blockPackId] = *channelTicket
+	}
+
 	for _, subscribe := range []realtimetypes.SubscribeFrame{
 		{
-			Version:     constants.RealtimeProtocolVersion,
-			Type:        realtimetypes.FrameType_Subscribe,
-			RequestId:   "subscribe-first",
-			ChannelType: realtimetypes.ChannelType_BlockPack,
-			ChannelId:   firstBlockPackId,
+			Version:       constants.RealtimeProtocolVersion,
+			Type:          realtimetypes.FrameType_Subscribe,
+			RequestId:     "subscribe-first",
+			ChannelType:   realtimetypes.ChannelType_BlockPack,
+			ChannelId:     firstBlockPackId,
+			ChannelTicket: channelTickets[firstBlockPackId],
 		},
 		{
-			Version:     constants.RealtimeProtocolVersion,
-			Type:        realtimetypes.FrameType_Subscribe,
-			RequestId:   "subscribe-second",
-			ChannelType: realtimetypes.ChannelType_BlockPack,
-			ChannelId:   secondBlockPackId,
+			Version:       constants.RealtimeProtocolVersion,
+			Type:          realtimetypes.FrameType_Subscribe,
+			RequestId:     "subscribe-second",
+			ChannelType:   realtimetypes.ChannelType_BlockPack,
+			ChannelId:     secondBlockPackId,
+			ChannelTicket: channelTickets[secondBlockPackId],
 		},
 	} {
 		if err := connection.WriteJSON(subscribe); err != nil {
@@ -154,11 +241,12 @@ func TestGatewayMultiplexesBlockPackChannels(t *testing.T) {
 	}
 
 	if err := connection.WriteJSON(realtimetypes.SubscribeFrame{
-		Version:     constants.RealtimeProtocolVersion,
-		Type:        realtimetypes.FrameType_Subscribe,
-		RequestId:   "subscribe-first-again",
-		ChannelType: realtimetypes.ChannelType_BlockPack,
-		ChannelId:   firstBlockPackId,
+		Version:       constants.RealtimeProtocolVersion,
+		Type:          realtimetypes.FrameType_Subscribe,
+		RequestId:     "subscribe-first-again",
+		ChannelType:   realtimetypes.ChannelType_BlockPack,
+		ChannelId:     firstBlockPackId,
+		ChannelTicket: channelTickets[firstBlockPackId],
 	}); err != nil {
 		t.Fatalf("failed to repeat subscribe: %v", err)
 	}
@@ -169,24 +257,6 @@ func TestGatewayMultiplexesBlockPackChannels(t *testing.T) {
 	}
 	if !existingSubscribed.Existing || existingSubscribed.ConnectorChannelId != firstSubscribed.ConnectorChannelId {
 		t.Fatalf("expected idempotent subscription: %#v", existingSubscribed)
-	}
-
-	if err := connection.WriteJSON(realtimetypes.AcknowledgeFrame{
-		Version:            constants.RealtimeProtocolVersion,
-		Type:               realtimetypes.FrameType_Acknowledge,
-		RequestId:          "ack-second",
-		ConnectorChannelId: secondSubscribed.ConnectorChannelId,
-		Sequence:           7,
-	}); err != nil {
-		t.Fatalf("failed to acknowledge channel: %v", err)
-	}
-
-	var acknowledged realtimetypes.AcknowledgedFrame
-	if err := connection.ReadJSON(&acknowledged); err != nil {
-		t.Fatalf("failed to read acknowledged frame: %v", err)
-	}
-	if acknowledged.ConnectorChannelId != secondSubscribed.ConnectorChannelId || acknowledged.Sequence != 7 {
-		t.Fatalf("unexpected acknowledged frame: %#v", acknowledged)
 	}
 
 	binaryPayload, err := realtimetypes.BinaryFrame{
@@ -203,13 +273,22 @@ func TestGatewayMultiplexesBlockPackChannels(t *testing.T) {
 		t.Fatalf("failed to write binary frame: %v", err)
 	}
 
-	var binaryError realtimetypes.ErrorFrame
-	if err := connection.ReadJSON(&binaryError); err != nil {
-		t.Fatalf("failed to read binary frame error: %v", err)
+	messageType, relayedPayload, err := connection.ReadMessage()
+	if err != nil {
+		t.Fatalf("failed to read relayed binary frame: %v", err)
 	}
-	if binaryError.Code != realtimetypes.ErrorCode_BinaryChannelNotReady ||
-		binaryError.ConnectorChannelId != firstSubscribed.ConnectorChannelId {
-		t.Fatalf("unexpected binary frame error: %#v", binaryError)
+	if messageType != websocket.BinaryMessage {
+		t.Fatalf("expected relayed binary frame, got message type %d", messageType)
+	}
+
+	var relayedFrame realtimetypes.BinaryFrame
+	if err := relayedFrame.UnmarshalBytes(relayedPayload); err != nil {
+		t.Fatalf("failed to unmarshal relayed binary frame: %v", err)
+	}
+	if relayedFrame.Type != realtimetypes.BinaryFrameType_YjsDocument ||
+		relayedFrame.ConnectorChannelId != firstSubscribed.ConnectorChannelId ||
+		string(relayedFrame.Payload) != string([]byte{1, 2, 3}) {
+		t.Fatalf("unexpected relayed binary frame: %#v", relayedFrame)
 	}
 
 	if err := connection.WriteJSON(realtimetypes.UnsubscribeFrame{
@@ -218,7 +297,7 @@ func TestGatewayMultiplexesBlockPackChannels(t *testing.T) {
 		RequestId:          "unsubscribe-second",
 		ConnectorChannelId: secondSubscribed.ConnectorChannelId,
 	}); err != nil {
-		t.Fatalf("failed to unsubscribe channel: %v", err)
+		t.Fatalf("failed to unsubscribe: %v", err)
 	}
 
 	var unsubscribed realtimetypes.UnsubscribedFrame
@@ -230,4 +309,39 @@ func TestGatewayMultiplexesBlockPackChannels(t *testing.T) {
 		unsubscribed.ChannelId != secondBlockPackId {
 		t.Fatalf("unexpected unsubscribed frame: %#v", unsubscribed)
 	}
+}
+
+func dialGateway(t *testing.T, serverURL string, userAgent string, connectionTicket string) *websocket.Conn {
+	t.Helper()
+
+	wsURL := "ws" + strings.TrimPrefix(serverURL, "http") + "/" + constants.RealtimeDevelopmentBaseURL
+	connection, response, err := (&websocket.Dialer{
+		Subprotocols: []string{connectionTicket},
+	}).Dial(wsURL, http.Header{
+		"Origin":     []string{serverURL},
+		"User-Agent": []string{userAgent},
+	})
+	if err != nil {
+		t.Fatalf("failed to connect to gateway: %v", err)
+	}
+	if response.StatusCode != http.StatusSwitchingProtocols {
+		t.Fatalf("expected status %d, got %d", http.StatusSwitchingProtocols, response.StatusCode)
+	}
+
+	return connection
+}
+
+func configureRealtimeTicketPrivateKey(t *testing.T) {
+	t.Helper()
+
+	_, privateKey, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatalf("failed to generate realtime ticket private key: %v", err)
+	}
+	privateKeyBytes, err := x509.MarshalPKCS8PrivateKey(privateKey)
+	if err != nil {
+		t.Fatalf("failed to marshal realtime ticket private key: %v", err)
+	}
+
+	t.Setenv("REALTIME_TICKET_PRIVATE_KEY_BASE64", base64.StdEncoding.EncodeToString(privateKeyBytes))
 }

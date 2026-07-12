@@ -16,7 +16,7 @@ type CreateMyRealtimeConnectionTicketReqDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+			UserPublicId uuid.UUID // extracted from the AuthMiddleware()
 		},
 		any,
 		any,
@@ -29,7 +29,8 @@ type CreateMyBlockPackChannelTicketReqDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+			UserId       uuid.UUID // extracted from the access token of AuthMiddleware()
+			UserPublicId uuid.UUID // extracted from the AuthMiddleware()
 		},
 		struct {
 			BlockPackId uuid.UUID                       `json:"blockPackId" validate:"required"`

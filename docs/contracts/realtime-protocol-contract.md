@@ -24,19 +24,18 @@ The BlockPack response contains `channelTicket`, `expiresAt`, `channelType`, `ch
 
 `permission: "read"` is available to Read, Write, Admin, and Owner users. `permission: "write"` is available only to Write, Admin, and Owner users. Soft-deleted BlockPacks do not receive a ticket.
 
-Tickets are EdDSA JWTs signed by Go. Go receives `REALTIME_TICKET_PRIVATE_KEY_BASE64`, which is Base64-encoded PKCS#8 Ed25519 DER. The future Node worker receives the matching `REALTIME_TICKET_PUBLIC_KEY_BASE64`, which is Base64-encoded SPKI Ed25519 DER. Tickets contain `iss`, `aud`, `sub`, `jti`, `iat`, `exp`, a hash of the `User-Agent`, and the channel claims where applicable. Audiences are `notezy-realtime-connection` and `notezy-realtime-block-pack`.
+Tickets are EdDSA JWTs signed and verified by Go. Go receives `REALTIME_TICKET_PRIVATE_KEY_BASE64`, which is Base64-encoded PKCS#8 Ed25519 DER. Node worker 不接收 ticket key，也不驗證 public ticket；它只接受已由 Go Gateway 驗證後送出的 internal frame。Tickets contain `iss`, `aud`, `sub`, `jti`, `iat`, `exp`, a hash of the `User-Agent`, and the channel claims where applicable. Audiences are `notezy-realtime-connection` and `notezy-realtime-block-pack`.
 
 Generate the two deployment values once and store them in secret management, never in the repository:
 
 ```bash
 openssl genpkey -algorithm ED25519 -out realtime-ticket-private.pem
 REALTIME_TICKET_PRIVATE_KEY_BASE64="$(openssl pkcs8 -topk8 -nocrypt -in realtime-ticket-private.pem -outform DER | base64 | tr -d '\n')"
-REALTIME_TICKET_PUBLIC_KEY_BASE64="$(openssl pkey -in realtime-ticket-private.pem -pubout -outform DER | base64 | tr -d '\n')"
 ```
 
 Tickets are short-lived for five minutes and stateless. `jti` is a trace identifier; it is not a one-time-use guarantee. True replay prevention would require shared state and is intentionally not introduced in this phase.
 
-The existing Phase 0 gateway still authenticates the upgrade through its current middleware and does not yet validate tickets. `NOT-7` replaces that root-upgrade validation with the connection ticket sent through `Sec-WebSocket-Protocol`, validates the signed `User-Agent` hash against the upgrade request, then validates `channelTicket` on every subscribe request. This temporary state is only for completing the backend boundary without breaking the current frontend smoke client.
+`NOT-7` replaces root-upgrade access-token middleware validation with the connection ticket sent as the single `Sec-WebSocket-Protocol` value. Client 建立 socket 時傳入 `new WebSocket(realtimeEndpoint, [connectionTicket])`；server 驗證 signed `User-Agent` hash 後選擇同一 subprotocol。每一個 subscribe 都必須再帶入並驗證自己的 `channelTicket`。connection 與 channel ticket 的 `sub` 必須一致。
 
 ## Text Control Frames
 
@@ -90,7 +89,7 @@ Binary frames never Base64-encode Yjs data and never use JSON block events. Thei
 
 The `connectorChannelId` maps the payload to its subscribed `channelType + channelId`; a public binary frame therefore does not repeat the resource identity. Unknown, unsubscribed, malformed, or unsupported binary frames receive an error JSON frame and are never forwarded.
 
-Phase 0 validates the header and channel lifecycle only. It responds with `binary_channel_not_ready` after validating a subscribed Yjs/awareness frame because worker forwarding begins in `NOT-7`; no payload is persisted or broadcast yet.
+NOT-7 將 subscribed Yjs/awareness frame 原樣轉送至已分派的 worker。`yjs-document` payload 是 `Y.encodeStateAsUpdate` 產生的 raw encoded update；它不包裝 y-websocket protocol header。attach 成功時 worker 對該 channel 回傳當前 room 的完整 encoded state，後續每個有效 update 都會套用至 room 的 `Y.Doc` 並轉送給同一 BlockPack 的所有 subscriber。Yjs update 可重複套用，因此 sender 收到自己的 relay 不影響正確性。awareness payload 在 room 內原樣 relay，不寫入 `Y.Doc`。
 
 ## Errors And Future Lifecycle
 
@@ -100,9 +99,9 @@ All gateway errors are JSON:
 { "version": 1, "type": "error", "requestId": "sub-1", "connectorChannelId": 1, "code": "channel_not_found", "message": "connectorChannelId is not subscribed on this connection" }
 ```
 
-Stable Phase 0 error codes are `authentication_managed_by_upgrade`, `binary_channel_not_ready`, `channel_limit_exceeded`, `channel_not_found`, `invalid_acknowledgement`, `invalid_binary_frame`, `invalid_channel_id`, `invalid_channel_type`, `invalid_connector_channel_id`, `invalid_control_frame`, `permission_revoked`, `resubscribe_required`, `unsupported_binary_type`, `unsupported_channel_type`, `unsupported_control_type`, `unsupported_message_type`, `unsupported_protocol_version`, and `worker_unavailable`.
+Stable error codes are `authentication_managed_by_upgrade`, `binary_channel_not_ready`, `channel_limit_exceeded`, `channel_not_found`, `invalid_acknowledgement`, `invalid_binary_frame`, `invalid_channel_id`, `invalid_channel_ticket`, `invalid_channel_type`, `invalid_connector_channel_id`, `invalid_control_frame`, `permission_revoked`, `resubscribe_required`, `unsupported_binary_type`, `unsupported_channel_type`, `unsupported_control_type`, `unsupported_message_type`, `unsupported_protocol_version`, and `worker_unavailable`.
 
-The gateway caps a connection at 64 active channels. Released IDs are not reused during that connection. Public writes are serialized without an unbounded queue; a failed read or a write that cannot complete within 10 seconds closes the physical socket. `permission_revoked`, capability-ticket validation, Go-to-worker multiplexing, and worker forwarding are enabled by their follow-up issues; they must preserve this wire header and channel-ID ownership model.
+The gateway caps a connection at 64 active channels. Released IDs are not reused during that connection. Public writes are serialized without an unbounded queue; a failed read or a write that cannot complete within 10 seconds closes the physical socket. Go-to-worker multiplexing uses `YJS_WORKER_URLS`, a comma-separated internal endpoint list. Each `blockPackId` maps consistently to one endpoint; each endpoint has one long-lived internal WebSocket and a bounded outbound queue. An unavailable worker or a full queue rejects the affected channel payload with `worker_unavailable`.
 
 ## Internal Go Gateway To Yjs Worker Frames
 

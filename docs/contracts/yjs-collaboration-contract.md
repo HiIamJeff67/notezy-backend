@@ -60,13 +60,13 @@ compaction 在 Node worker 重建完整 Y.Doc 後執行：它讀取 snapshot 與
 
 ## Public Connection And Capability
 
-root WebSocket authentication 只驗證 user session；它不授權任何 BlockPack。`NOT-5` 已發出 capability ticket，`NOT-7` 會在每個 BlockPack subscribe 驗證後才建立 channel。
+root WebSocket authentication 以 connection ticket 取代 access-token middleware；它只識別 user，不授權任何 BlockPack。`NOT-5` 已發出 capability ticket，`NOT-7` 會在每個 BlockPack subscribe 驗證後才建立 channel。
 
 ticket claims 的最小集合：
 
 ```json
 {
-  "sub": "user UUID",
+  "sub": "user public UUID",
   "jti": "ticket trace UUID",
   "channelType": "BlockPack",
   "channelId": "blockPack UUID",
@@ -78,13 +78,13 @@ ticket claims 的最小集合：
 }
 ```
 
-`NOT-7` 的 Go Gateway 負責驗證 ticket 與 BlockPack permission；Node worker 只信任 Go 已驗證並轉送的 attach message。ticket 是短效 stateless capability，`jti` 不代表可在沒有共享 state 下強制一次性使用。permission 被撤銷時，Gateway 送出 `permission_revoked`，移除該 channel，並向 worker 轉送 detach。
+`NOT-7` 的 Go Gateway 負責驗證 connection/channel ticket，以及兩者的 user、channel type 與 BlockPack id 是否相符；Node worker 只信任 Go 已驗證並轉送的 attach message。ticket 是短效 stateless capability，`jti` 不代表可在沒有共享 state 下強制一次性使用。permission 被撤銷時，Gateway 送出 `permission_revoked`，移除該 channel，並向 worker 轉送 detach。
 
 ## Cross-Service Frames
 
 public WebSocket 的 JSON control frame 與 binary frame header 定義在 `realtime-protocol-contract.md`。Go-to-worker internal binary frame 一律帶有 `connectionId`、`connectorChannelId`、`channelType`、`channelId`；raw Yjs update 不得 Base64 或改寫成 JSON block event。
 
-internal attach/detach 是 idempotent。worker reconnect 後，Gateway 必須為其所屬 active channels replay attach；無法恢復時回 `resync_required`，不得默默丟棄已接受的 update。
+internal attach/detach 是 idempotent。worker reconnect 後，Gateway 為其所屬 active channels replay attach；worker 會回傳目前記憶體 room 的 complete encoded state。尚未完成 NOT-8 durable persistence 前，worker process restart 會失去未持久化 room state，因此不得將其視為可用於正式資料保存的 collaboration service。
 
 ## Projection Contract
 

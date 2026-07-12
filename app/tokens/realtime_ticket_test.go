@@ -16,9 +16,9 @@ import (
 
 func TestGenerateRealtimeConnectionTicket(t *testing.T) {
 	publicKey := configureRealtimeTicketPrivateKey(t)
-	userId := uuid.New()
+	userPublicId := uuid.New()
 
-	ticket, expiresAt, exception := GenerateRealtimeConnectionTicket(userId, "test-user-agent")
+	ticket, expiresAt, exception := GenerateRealtimeConnectionTicket(userPublicId, "test-user-agent")
 	if exception != nil {
 		t.Fatalf("failed to generate connection ticket: %v", exception)
 	}
@@ -37,7 +37,7 @@ func TestGenerateRealtimeConnectionTicket(t *testing.T) {
 	if err != nil || !parsedTicket.Valid {
 		t.Fatalf("failed to verify connection ticket: %v", err)
 	}
-	if claims.Subject != userId.String() || claims.RealtimeProtocolVersion != constants.RealtimeProtocolVersion {
+	if claims.Subject != userPublicId.String() || claims.RealtimeProtocolVersion != constants.RealtimeProtocolVersion {
 		t.Fatalf("unexpected connection claims: %#v", claims)
 	}
 
@@ -45,11 +45,11 @@ func TestGenerateRealtimeConnectionTicket(t *testing.T) {
 
 func TestGenerateRealtimeBlockPackTicket(t *testing.T) {
 	publicKey := configureRealtimeTicketPrivateKey(t)
-	userId := uuid.New()
+	userPublicId := uuid.New()
 	blockPackId := uuid.New()
 
 	ticket, expiresAt, exception := GenerateRealtimeBlockPackTicket(
-		userId,
+		userPublicId,
 		"test-user-agent",
 		blockPackId,
 		realtimetypes.ChannelPermission_Write,
@@ -72,7 +72,7 @@ func TestGenerateRealtimeBlockPackTicket(t *testing.T) {
 	if err != nil || !parsedTicket.Valid {
 		t.Fatalf("failed to verify block pack ticket: %v", err)
 	}
-	if claims.Subject != userId.String() ||
+	if claims.Subject != userPublicId.String() ||
 		claims.ChannelId != blockPackId.String() ||
 		claims.ChannelType != string(realtimetypes.ChannelType_BlockPack) ||
 		claims.Permission != string(realtimetypes.ChannelPermission_Write) ||

@@ -28,6 +28,7 @@ const (
 	ErrorCode_InvalidAcknowledgement         ErrorCode = "invalid_acknowledgement"
 	ErrorCode_InvalidBinaryFrame             ErrorCode = "invalid_binary_frame"
 	ErrorCode_InvalidChannelId               ErrorCode = "invalid_channel_id"
+	ErrorCode_InvalidChannelTicket           ErrorCode = "invalid_channel_ticket"
 	ErrorCode_InvalidChannelType             ErrorCode = "invalid_channel_type"
 	ErrorCode_InvalidConnectorChannelId      ErrorCode = "invalid_connector_channel_id"
 	ErrorCode_InvalidControlFrame            ErrorCode = "invalid_control_frame"
