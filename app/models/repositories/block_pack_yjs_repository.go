@@ -12,7 +12,13 @@ import (
 
 type BlockPackYjsRepositoryInterface interface {
 	LoadDocumentAndUpdates(ctx context.Context, blockPackId uuid.UUID) (*schemas.BlockPackYjsDocument, []schemas.BlockPackYjsUpdate, error)
-	AppendUpdate(ctx context.Context, blockPackId uuid.UUID, originConnectionId uuid.UUID, payload []byte) (int64, error)
+	AppendUpdate(
+		ctx context.Context,
+		blockPackId uuid.UUID,
+		persistenceBatchId uuid.UUID,
+		originConnectionId *uuid.UUID,
+		payload []byte,
+	) (int64, error)
 }
 
 type BlockPackYjsRepository struct {
@@ -56,7 +62,11 @@ func (r *BlockPackYjsRepository) LoadDocumentAndUpdates(
 }
 
 func (r *BlockPackYjsRepository) AppendUpdate(
-	ctx context.Context, blockPackId uuid.UUID, originConnectionId uuid.UUID, payload []byte,
+	ctx context.Context,
+	blockPackId uuid.UUID,
+	persistenceBatchId uuid.UUID,
+	originConnectionId *uuid.UUID,
+	payload []byte,
 ) (int64, error) {
 	tx := r.db.WithContext(ctx).Begin()
 
@@ -82,13 +92,32 @@ func (r *BlockPackYjsRepository) AppendUpdate(
 		return 0, err
 	}
 
+	var existingUpdate schemas.BlockPackYjsUpdate
+	existingUpdateResult := tx.Model(&schemas.BlockPackYjsUpdate{}).
+		Select("update_sequence").
+		Where("block_pack_id = ? AND persistence_batch_id = ?", blockPackId, persistenceBatchId).
+		Limit(1).
+		Find(&existingUpdate)
+	if existingUpdateResult.Error != nil {
+		tx.Rollback()
+
+		return 0, existingUpdateResult.Error
+	}
+	if existingUpdateResult.RowsAffected > 0 {
+		if err := tx.Commit().Error; err != nil {
+			return 0, err
+		}
+
+		return existingUpdate.UpdateSequence, nil
+	}
+
 	nextUpdateSequence := document.LastUpdateSequence + 1
-	originConnectionIdCopy := originConnectionId
 	update := schemas.BlockPackYjsUpdate{
 		BlockPackId:        blockPackId,
 		UpdateSequence:     nextUpdateSequence,
+		PersistenceBatchId: persistenceBatchId,
 		Payload:            payload,
-		OriginConnectionId: &originConnectionIdCopy,
+		OriginConnectionId: originConnectionId,
 	}
 	if err := tx.Create(&update).Error; err != nil {
 		tx.Rollback()

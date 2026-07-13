@@ -3,13 +3,22 @@ import { createServer } from "node:http";
 import { WebSocket, WebSocketServer } from "ws";
 import * as Y from "yjs";
 
+import { BatchYjsHandler } from "./batch_yjs_handler.js";
 import { BlockNoteProjector } from "./blocknote_projector.js";
 import { config } from "./config.js";
-import  { type InternalFrame, createInternalFrame, parseInternalFrame } from "./types/internal_frame.js";
+import { YjsPersistenceBatchShutdownTimeoutMilliseconds } from "./constants/yjs_persistence_batch.js";
+import { RoomRegistry } from "./room_registry.js";
+import {
+  createInternalFrame,
+  type InternalFrame,
+  parseInternalFrame,
+} from "./types/internal_frame.js";
 import { InternalFrameType } from "./types/internal_frame_type.js";
 import type { Room } from "./types/room.js";
-import { parseYjsDocumentState, parseYjsUpdateSequence } from "./types/yjs_document_state.js";
-import { RoomRegistry } from "./room_registry.js";
+import {
+  parseYjsDocumentState,
+  parseYjsUpdateSequence,
+} from "./types/yjs_document_state.js";
 
 const roomRegistry = new RoomRegistry();
 const webSocketServer = new WebSocketServer({ noServer: true });
@@ -23,16 +32,24 @@ function broadcastInternalFrame(
   room: Room,
   type: InternalFrameType,
   blockPackId: string,
-  payload: Buffer,
+  payload: Buffer
 ): void {
   for (const subscriber of room.subscribers.values()) {
+    if (
+      !subscriber.isReady &&
+      (type === InternalFrameType.InternalFrameType_YjsDocument ||
+        type === InternalFrameType.InternalFrameType_Awareness)
+    ) {
+      continue;
+    }
+
     sendInternalFrame(
       subscriber.webSocket,
       type,
       subscriber.connectionId,
       subscriber.connectorChannelId,
       blockPackId,
-      payload,
+      payload
     );
   }
 }
@@ -43,14 +60,20 @@ function sendInternalFrame(
   connectionId: string,
   connectorChannelId: number,
   blockPackId: string,
-  payload: Buffer = Buffer.alloc(0),
+  payload: Buffer = Buffer.alloc(0)
 ): boolean {
   if (webSocket.readyState !== WebSocket.OPEN) {
     return false;
   }
 
   webSocket.send(
-    createInternalFrame(type, connectionId, connectorChannelId, blockPackId, payload),
+    createInternalFrame(
+      type,
+      connectionId,
+      connectorChannelId,
+      blockPackId,
+      payload
+    )
   );
 
   return true;
@@ -61,17 +84,39 @@ function sendRoomInitialState(room: Room, blockPackId: string): void {
     return;
   }
 
-  broadcastInternalFrame(
-    room,
-    InternalFrameType.InternalFrameType_YjsDocument,
-    blockPackId,
-    Buffer.from(Y.encodeStateAsUpdate(room.document)),
-  );
+  const payload = Buffer.from(Y.encodeStateAsUpdate(room.document));
+  for (const subscriber of room.subscribers.values()) {
+    if (subscriber.isReady) {
+      continue;
+    }
+
+    if (
+      sendInternalFrame(
+        subscriber.webSocket,
+        InternalFrameType.InternalFrameType_YjsDocument,
+        subscriber.connectionId,
+        subscriber.connectorChannelId,
+        blockPackId,
+        payload
+      )
+    ) {
+      subscriber.isReady = true;
+    }
+  }
 }
 
 function resyncRoom(room: Room, blockPackId: string): void {
   if (room.projectionTimer !== null) {
     clearTimeout(room.projectionTimer);
+  }
+  if (room.persistenceDebounceTimer !== null) {
+    clearTimeout(room.persistenceDebounceTimer);
+  }
+  if (room.persistenceMaximumWaitTimer !== null) {
+    clearTimeout(room.persistenceMaximumWaitTimer);
+  }
+  if (room.persistenceRetryTimer !== null) {
+    clearTimeout(room.persistenceRetryTimer);
   }
 
   room.document = null;
@@ -81,7 +126,12 @@ function resyncRoom(room: Room, blockPackId: string): void {
   room.compactedUntilSequence = 0;
   room.projectedUntilSequence = -1;
   room.pendingYjsUpdates = [];
-  room.inFlightYjsUpdate = null;
+  room.pendingPersistenceUpdates = [];
+  room.pendingPersistencePayloadBytes = 0;
+  room.persistenceDebounceTimer = null;
+  room.persistenceMaximumWaitTimer = null;
+  room.persistenceRetryTimer = null;
+  room.inFlightPersistenceBatch = null;
   room.projectionTimer = null;
   room.inFlightProjection = null;
 
@@ -89,79 +139,20 @@ function resyncRoom(room: Room, blockPackId: string): void {
     room,
     InternalFrameType.InternalFrameType_ResyncRequired,
     blockPackId,
-    Buffer.alloc(0),
+    Buffer.alloc(0)
   );
-}
-
-function requestRoomLoad(room: Room, frame: InternalFrame, webSocket: WebSocket): void {
-  if (room.isLoading) {
-    return;
-  }
-
-  room.isLoading = true;
-  if (sendInternalFrame(
-    webSocket,
-    InternalFrameType.InternalFrameType_LoadYjsDocument,
-    frame.connectionId,
-    frame.connectorChannelId,
-    frame.blockPackId,
-  )) {
-    return;
-  }
-
-  resyncRoom(room, frame.blockPackId);
-}
-
-function processNextYjsUpdate(room: Room): void {
-  if (room.document === null || room.inFlightYjsUpdate !== null) {
-    return;
-  }
-
-  const pendingYjsUpdate = room.pendingYjsUpdates.shift();
-  if (pendingYjsUpdate === undefined) {
-    return;
-  }
-
-  try {
-    Y.applyUpdate(room.document, pendingYjsUpdate.frame.payload);
-  } catch {
-    sendInternalFrame(
-      pendingYjsUpdate.webSocket,
-      InternalFrameType.InternalFrameType_ResyncRequired,
-      pendingYjsUpdate.frame.connectionId,
-      pendingYjsUpdate.frame.connectorChannelId,
-      pendingYjsUpdate.frame.blockPackId,
-    );
-
-    processNextYjsUpdate(room);
-
-    return;
-  }
-
-  room.inFlightYjsUpdate = pendingYjsUpdate;
-  if (sendInternalFrame(
-    pendingYjsUpdate.webSocket,
-    InternalFrameType.InternalFrameType_AppendYjsUpdate,
-    pendingYjsUpdate.frame.connectionId,
-    pendingYjsUpdate.frame.connectorChannelId,
-    pendingYjsUpdate.frame.blockPackId,
-    pendingYjsUpdate.frame.payload,
-  )) {
-    return;
-  }
-
-  resyncRoom(room, pendingYjsUpdate.frame.blockPackId);
 }
 
 function scheduleBlockProjection(
   room: Room,
   blockPackId: string,
-  delayMilliseconds: number = projectionDebounceMilliseconds,
+  delayMilliseconds: number = projectionDebounceMilliseconds
 ): void {
   if (
     room.document === null ||
-    room.inFlightYjsUpdate !== null ||
+    room.inFlightPersistenceBatch !== null ||
     room.pendingYjsUpdates.length > 0 ||
+    room.pendingPersistenceUpdates.length > 0 ||
     room.inFlightProjection !== null ||
     room.projectionTimer !== null ||
     room.lastUpdateSequence <= room.projectedUntilSequence ||
@@ -175,8 +166,9 @@ function scheduleBlockProjection(
 
     if (
       room.document === null ||
-      room.inFlightYjsUpdate !== null ||
+      room.inFlightPersistenceBatch !== null ||
       room.pendingYjsUpdates.length > 0 ||
+      room.pendingPersistenceUpdates.length > 0 ||
       room.inFlightProjection !== null ||
       room.lastUpdateSequence <= room.projectedUntilSequence
     ) {
@@ -191,12 +183,14 @@ function scheduleBlockProjection(
     const projectedSequence = room.lastUpdateSequence;
     let payload: Buffer;
     try {
-      payload = Buffer.from(JSON.stringify({
-        schemaId: "notezy.blocknote",
-        schemaVersion: 1,
-        projectedSequence,
-        blocks: blockNoteProjector.projectYjsDocument(room.document),
-      }));
+      payload = Buffer.from(
+        JSON.stringify({
+          schemaId: "notezy.blocknote",
+          schemaVersion: 1,
+          projectedSequence,
+          blocks: blockNoteProjector.projectYjsDocument(room.document),
+        })
+      );
     } catch (error) {
       console.error("failed to project Yjs document", {
         blockPackId,
@@ -212,14 +206,16 @@ function scheduleBlockProjection(
       connectorChannelId: subscriber.connectorChannelId,
       projectedSequence,
     };
-    if (sendInternalFrame(
-      subscriber.webSocket,
-      InternalFrameType.InternalFrameType_ApplyBlockProjection,
-      subscriber.connectionId,
-      subscriber.connectorChannelId,
-      blockPackId,
-      payload,
-    )) {
+    if (
+      sendInternalFrame(
+        subscriber.webSocket,
+        InternalFrameType.InternalFrameType_ApplyBlockProjection,
+        subscriber.connectionId,
+        subscriber.connectorChannelId,
+        blockPackId,
+        payload
+      )
+    ) {
       return;
     }
 
@@ -228,33 +224,22 @@ function scheduleBlockProjection(
   }, delayMilliseconds);
 }
 
-function parseProjectedUntilSequence(payload: Buffer): number | null {
-  try {
-    const value: unknown = JSON.parse(payload.toString("utf8"));
-    if (
-      value === null ||
-      typeof value !== "object" ||
-      !("projectedUntilSequence" in value) ||
-      typeof value.projectedUntilSequence !== "number" ||
-      !Number.isSafeInteger(value.projectedUntilSequence) ||
-      value.projectedUntilSequence < -1
-    ) {
-      return null;
-    }
+/* ============================== Batch handler ============================== */
 
-    return value.projectedUntilSequence;
-  } catch {
-    return null;
-  }
-}
+const batchYjsHandler = new BatchYjsHandler(sendInternalFrame, resyncRoom);
 
 /* ============================== HTTP server ============================== */
 
 const server = createServer((request, response) => {
-  const requestUrl = new URL(request.url ?? "/", `http://${request.headers.host ?? "localhost"}`);
+  const requestUrl = new URL(
+    request.url ?? "/",
+    `http://${request.headers.host ?? "localhost"}`
+  );
   if (request.method === "GET" && requestUrl.pathname === "/healthz") {
     response.writeHead(200, { "content-type": "application/json" });
-    response.end(JSON.stringify({ status: "ok", activeRoomCount: roomRegistry.size }));
+    response.end(
+      JSON.stringify({ status: "ok", activeRoomCount: roomRegistry.size })
+    );
 
     return;
   }
@@ -266,25 +251,26 @@ const server = createServer((request, response) => {
 /* ============================== WebSocket upgrade ============================== */
 
 server.on("upgrade", (request, socket, head) => {
-  const requestUrl = new URL(request.url ?? "/", `http://${request.headers.host ?? "localhost"}`);
+  const requestUrl = new URL(
+    request.url ?? "/",
+    `http://${request.headers.host ?? "localhost"}`
+  );
   if (requestUrl.pathname !== "/internal/realtime/v1") {
     socket.destroy();
 
     return;
   }
 
-  webSocketServer.handleUpgrade(request, socket, head, (webSocket) => {
+  webSocketServer.handleUpgrade(request, socket, head, webSocket => {
     webSocketServer.emit("connection", webSocket, request);
   });
 });
 
 /* ============================== WebSocket connection ============================== */
 
-webSocketServer.on("connection", (webSocket) => {
+webSocketServer.on("connection", webSocket => {
   webSocket.on("close", () => {
-    for (const { blockPackId, room } of roomRegistry.detachAll(webSocket)) {
-      resyncRoom(room, blockPackId);
-    }
+    roomRegistry.detachAll(webSocket);
   });
 
   webSocket.on("message", (payload, isBinary) => {
@@ -320,34 +306,77 @@ webSocketServer.on("connection", (webSocket) => {
           frame.blockPackId,
           webSocket,
           frame.connectionId,
-          frame.connectorChannelId,
+          frame.connectorChannelId
         );
         if (room.document !== null) {
-          sendInternalFrame(
-            webSocket,
-            InternalFrameType.InternalFrameType_YjsDocument,
-            frame.connectionId,
-            frame.connectorChannelId,
-            frame.blockPackId,
-            Buffer.from(Y.encodeStateAsUpdate(room.document)),
-          );
+          if (room.inFlightPersistenceBatch !== null) {
+            batchYjsHandler.retryInFlight(
+              room,
+              frame.blockPackId,
+              webSocket,
+              frame.connectionId,
+              frame.connectorChannelId
+            );
+
+            return;
+          }
+
+          if (room.pendingPersistenceUpdates.length > 0) {
+            batchYjsHandler.flush(
+              room,
+              frame.blockPackId,
+              webSocket,
+              frame.connectionId,
+              frame.connectorChannelId
+            );
+
+            return;
+          }
+
+          sendRoomInitialState(room, frame.blockPackId);
+          scheduleBlockProjection(room, frame.blockPackId);
 
           return;
         }
 
-        requestRoomLoad(room, frame, webSocket);
+        if (room.isLoading) {
+          return;
+        }
+
+        room.isLoading = true;
+        if (
+          sendInternalFrame(
+            webSocket,
+            InternalFrameType.InternalFrameType_LoadYjsDocument,
+            frame.connectionId,
+            frame.connectorChannelId,
+            frame.blockPackId
+          )
+        ) {
+          return;
+        }
+
+        resyncRoom(room, frame.blockPackId);
 
         return;
       }
-      case InternalFrameType.InternalFrameType_Detach:
-        roomRegistry.detach(frame.blockPackId, frame.connectionId, frame.connectorChannelId);
+      case InternalFrameType.InternalFrameType_Detach: {
+        const room = roomRegistry.detach(
+          frame.blockPackId,
+          frame.connectionId,
+          frame.connectorChannelId
+        );
+        if (room !== undefined && room.subscribers.size === 0) {
+          batchYjsHandler.flush(room, frame.blockPackId);
+        }
 
         return;
+      }
       case InternalFrameType.InternalFrameType_YjsDocument: {
         const room = roomRegistry.getSubscriber(
           frame.blockPackId,
           frame.connectionId,
-          frame.connectorChannelId,
+          frame.connectorChannelId
         );
         if (room === undefined) {
           sendInternalFrame(
@@ -355,14 +384,13 @@ webSocketServer.on("connection", (webSocket) => {
             InternalFrameType.InternalFrameType_ResyncRequired,
             frame.connectionId,
             frame.connectorChannelId,
-            frame.blockPackId,
+            frame.blockPackId
           );
 
           return;
         }
 
-        room.pendingYjsUpdates.push({ webSocket, frame });
-        processNextYjsUpdate(room);
+        batchYjsHandler.queueUpdate(room, { webSocket, frame });
 
         return;
       }
@@ -370,7 +398,7 @@ webSocketServer.on("connection", (webSocket) => {
         const room = roomRegistry.getSubscriber(
           frame.blockPackId,
           frame.connectionId,
-          frame.connectorChannelId,
+          frame.connectorChannelId
         );
         if (room === undefined) {
           sendInternalFrame(
@@ -378,13 +406,18 @@ webSocketServer.on("connection", (webSocket) => {
             InternalFrameType.InternalFrameType_ResyncRequired,
             frame.connectionId,
             frame.connectorChannelId,
-            frame.blockPackId,
+            frame.blockPackId
           );
 
           return;
         }
 
-        broadcastInternalFrame(room, frame.type, frame.blockPackId, frame.payload);
+        broadcastInternalFrame(
+          room,
+          frame.type,
+          frame.blockPackId,
+          frame.payload
+        );
 
         return;
       }
@@ -413,8 +446,13 @@ webSocketServer.on("connection", (webSocket) => {
           room.lastUpdateSequence = state.lastUpdateSequence;
           room.compactedUntilSequence = state.compactedUntilSequence;
           room.projectedUntilSequence = state.projectedUntilSequence;
-          sendRoomInitialState(room, frame.blockPackId);
-          processNextYjsUpdate(room);
+          batchYjsHandler.queueDeferredUpdates(room);
+          if (
+            room.inFlightPersistenceBatch === null &&
+            room.pendingPersistenceUpdates.length === 0
+          ) {
+            sendRoomInitialState(room, frame.blockPackId);
+          }
           scheduleBlockProjection(room, frame.blockPackId);
         } catch {
           resyncRoom(room, frame.blockPackId);
@@ -424,33 +462,29 @@ webSocketServer.on("connection", (webSocket) => {
       }
       case InternalFrameType.InternalFrameType_YjsUpdatePersisted: {
         const room = roomRegistry.get(frame.blockPackId);
-        const updateSequence = parseYjsUpdateSequence(frame.payload);
-        if (
-          room === undefined ||
-          updateSequence === null ||
-          room.inFlightYjsUpdate === null ||
-          room.inFlightYjsUpdate.frame.connectionId !== frame.connectionId ||
-          room.inFlightYjsUpdate.frame.connectorChannelId !== frame.connectorChannelId ||
-          updateSequence !== room.lastUpdateSequence + 1
-        ) {
-          if (room !== undefined) {
-            resyncRoom(room, frame.blockPackId);
-          }
-
+        if (room === undefined) {
           return;
         }
 
-        const inFlightYjsUpdate = room.inFlightYjsUpdate;
-        room.inFlightYjsUpdate = null;
-        room.lastUpdateSequence = updateSequence;
-        room.dirtyUpdateCount += 1;
+        const inFlightPersistenceBatch = batchYjsHandler.handlePersisted(
+          room,
+          frame.blockPackId,
+          frame.connectionId,
+          frame.connectorChannelId,
+          parseYjsUpdateSequence(frame.payload)
+        );
+        if (inFlightPersistenceBatch === null) {
+          return;
+        }
+
         broadcastInternalFrame(
           room,
           InternalFrameType.InternalFrameType_YjsDocument,
           frame.blockPackId,
-          inFlightYjsUpdate.frame.payload,
+          inFlightPersistenceBatch.payload
         );
-        processNextYjsUpdate(room);
+        sendRoomInitialState(room, frame.blockPackId);
+        batchYjsHandler.flush(room, frame.blockPackId);
         scheduleBlockProjection(room, frame.blockPackId);
 
         return;
@@ -458,20 +492,39 @@ webSocketServer.on("connection", (webSocket) => {
       case InternalFrameType.InternalFrameType_YjsPersistenceFailed: {
         const room = roomRegistry.get(frame.blockPackId);
         if (room !== undefined) {
-          resyncRoom(room, frame.blockPackId);
+          batchYjsHandler.handlePersistenceFailure(
+            room,
+            frame.blockPackId,
+            frame.payload
+          );
         }
 
         return;
       }
       case InternalFrameType.InternalFrameType_BlockProjectionApplied: {
         const room = roomRegistry.get(frame.blockPackId);
-        const projectedUntilSequence = parseProjectedUntilSequence(frame.payload);
+        let projectedUntilSequence: number | null = null;
+        try {
+          const value: unknown = JSON.parse(frame.payload.toString("utf8"));
+          if (
+            value !== null &&
+            typeof value === "object" &&
+            "projectedUntilSequence" in value &&
+            typeof value.projectedUntilSequence === "number" &&
+            Number.isSafeInteger(value.projectedUntilSequence) &&
+            value.projectedUntilSequence >= -1
+          ) {
+            projectedUntilSequence = value.projectedUntilSequence;
+          }
+        } catch {}
+
         if (
           room === undefined ||
           projectedUntilSequence === null ||
           room.inFlightProjection === null ||
           room.inFlightProjection.connectionId !== frame.connectionId ||
-          room.inFlightProjection.connectorChannelId !== frame.connectorChannelId ||
+          room.inFlightProjection.connectorChannelId !==
+            frame.connectorChannelId ||
           projectedUntilSequence < room.inFlightProjection.projectedSequence ||
           projectedUntilSequence > room.lastUpdateSequence
         ) {
@@ -494,13 +547,18 @@ webSocketServer.on("connection", (webSocket) => {
           room === undefined ||
           room.inFlightProjection === null ||
           room.inFlightProjection.connectionId !== frame.connectionId ||
-          room.inFlightProjection.connectorChannelId !== frame.connectorChannelId
+          room.inFlightProjection.connectorChannelId !==
+            frame.connectorChannelId
         ) {
           return;
         }
 
         room.inFlightProjection = null;
-        scheduleBlockProjection(room, frame.blockPackId, projectionRetryMilliseconds);
+        scheduleBlockProjection(
+          room,
+          frame.blockPackId,
+          projectionRetryMilliseconds
+        );
 
         return;
       }
@@ -519,14 +577,34 @@ server.listen(config.port, config.host, () => {
   console.info(`yjs worker listening on ${config.host}:${config.port}`);
 });
 
-function shutdown(signal: string): void {
+async function shutdown(signal: string): Promise<void> {
   console.info(`received ${signal}, stopping yjs worker`);
-  webSocketServer.clients.forEach((webSocket) => {
+
+  server.close();
+  for (const [blockPackId, room] of roomRegistry.entries()) {
+    batchYjsHandler.flush(room, blockPackId);
+  }
+
+  const shutdownDeadline =
+    Date.now() + YjsPersistenceBatchShutdownTimeoutMilliseconds;
+  while (
+    Date.now() < shutdownDeadline &&
+    [...roomRegistry.entries()].some(
+      ([, room]) =>
+        room.inFlightPersistenceBatch !== null ||
+        room.pendingPersistenceUpdates.length > 0
+    )
+  ) {
+    await new Promise(resolve => setTimeout(resolve, 25));
+  }
+
+  webSocketServer.clients.forEach(webSocket => {
     webSocket.close(1001, "server shutdown");
   });
+  webSocketServer.close();
 
-  server.close(() => process.exit(0));
+  process.exit(0);
 }
 
-process.once("SIGINT", () => shutdown("SIGINT"));
-process.once("SIGTERM", () => shutdown("SIGTERM"));
+process.once("SIGINT", () => void shutdown("SIGINT"));
+process.once("SIGTERM", () => void shutdown("SIGTERM"));

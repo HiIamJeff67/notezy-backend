@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   createInternalFrame,
   parseInternalFrame,
-} from "../src/util/internal_frame.js";
+} from "../src/types/internal_frame.js";
 import { InternalFrameType } from "../src/types/internal_frame_type.js";
 
 test("parses an attach frame", () => {
@@ -14,7 +14,7 @@ test("parses an attach frame", () => {
     InternalFrameType.InternalFrameType_Attach,
     connectionId,
     7,
-    blockPackId,
+    blockPackId
   );
 
   assert.deepEqual(parseInternalFrame(frame), {

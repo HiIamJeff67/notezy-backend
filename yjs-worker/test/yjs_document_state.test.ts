@@ -3,13 +3,18 @@ import test from "node:test";
 
 import * as Y from "yjs";
 
-import { parseYjsDocumentState, parseYjsUpdateSequence } from "../src/util/yjs_document_state.js";
+import {
+  parseYjsDocumentState,
+  parseYjsUpdateSequence,
+} from "../src/types/yjs_document_state.js";
 
 test("parses a snapshot and contiguous Yjs update tail", () => {
   const snapshot = Buffer.from([1, 2]);
   const stateVector = Buffer.from([3]);
   const update = Buffer.from([4, 5, 6]);
-  const payload = Buffer.alloc(36 + snapshot.length + stateVector.length + 12 + update.length);
+  const payload = Buffer.alloc(
+    36 + snapshot.length + stateVector.length + 12 + update.length
+  );
 
   payload.writeBigInt64BE(4n, 0);
   payload.writeBigInt64BE(3n, 8);
@@ -47,8 +52,12 @@ test("materializes the same Yjs document from a snapshot and update tail", () =>
   const stateVector = Buffer.from(Y.encodeStateVector(sourceDocument));
 
   sourceDocument.getMap("document-store").set("title", "After");
-  const update = Buffer.from(Y.encodeStateAsUpdate(sourceDocument, stateVector));
-  const payload = Buffer.alloc(36 + snapshot.length + stateVector.length + 12 + update.length);
+  const update = Buffer.from(
+    Y.encodeStateAsUpdate(sourceDocument, stateVector)
+  );
+  const payload = Buffer.alloc(
+    36 + snapshot.length + stateVector.length + 12 + update.length
+  );
 
   payload.writeBigInt64BE(1n, 0);
   payload.writeBigInt64BE(0n, 8);
@@ -59,7 +68,10 @@ test("materializes the same Yjs document from a snapshot and update tail", () =>
   snapshot.copy(payload, 36);
   stateVector.copy(payload, 36 + snapshot.length);
   payload.writeBigInt64BE(1n, 36 + snapshot.length + stateVector.length);
-  payload.writeUInt32BE(update.length, 44 + snapshot.length + stateVector.length);
+  payload.writeUInt32BE(
+    update.length,
+    44 + snapshot.length + stateVector.length
+  );
   update.copy(payload, 48 + snapshot.length + stateVector.length);
 
   const state = parseYjsDocumentState(payload);

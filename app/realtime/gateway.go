@@ -3,6 +3,7 @@ package realtime
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"sync"
 	"time"
@@ -10,9 +11,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"gorm.io/gorm"
 
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	models "github.com/HiIamJeff67/notezy-backend/app/models"
+	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
+	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/app/realtime/types"
 	workers "github.com/HiIamJeff67/notezy-backend/app/realtime/workers"
 	services "github.com/HiIamJeff67/notezy-backend/app/services"
@@ -51,6 +55,11 @@ func (g *Gateway) Handle(ctx *gin.Context) {
 	// extract and validate the ticket which is in Sec-WebSocket-Protocol header
 	connectionTicket := websocket.Subprotocols(ctx.Request)
 	if len(connectionTicket) != 1 {
+		logs.FWarn(
+			traces.GetTrace(0).FileLineString(),
+			"Rejected realtime connection: expected one connection ticket, got %d subprotocols",
+			len(connectionTicket),
+		)
 		ctx.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
@@ -60,12 +69,22 @@ func (g *Gateway) Handle(ctx *gin.Context) {
 		ctx.GetHeader("User-Agent"),
 	)
 	if err != nil {
+		logs.FWarn(
+			traces.GetTrace(0).FileLineString(),
+			"Rejected realtime connection: invalid connection ticket: %v",
+			err,
+		)
 		ctx.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
 	userPublicId, err := uuid.Parse(connectionClaims.Subject)
 	if err != nil {
+		logs.FWarn(
+			traces.GetTrace(0).FileLineString(),
+			"Rejected realtime connection: connection ticket subject is not a user public id: %v",
+			err,
+		)
 		ctx.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
@@ -526,6 +545,11 @@ func (g *Gateway) handleInternalFrame(frame realtimetypes.InternalFrame) {
 	case realtimetypes.InternalFrameType_LoadYjsDocument:
 		state, err := g.yjsPersistenceService.LoadDocument(context.Background(), frame.ChannelId)
 		if err != nil {
+			failureType := realtimetypes.YjsPersistenceFailureType_Retryable
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				failureType = realtimetypes.YjsPersistenceFailureType_Terminal
+			}
+
 			g.workerManager.Forward(realtimetypes.InternalFrame{
 				Version:            byte(constants.RealtimeWorkerProtocolVersion),
 				Type:               realtimetypes.InternalFrameType_YjsPersistenceFailed,
@@ -533,6 +557,7 @@ func (g *Gateway) handleInternalFrame(frame realtimetypes.InternalFrame) {
 				ConnectionId:       frame.ConnectionId,
 				ConnectorChannelId: frame.ConnectorChannelId,
 				ChannelId:          frame.ChannelId,
+				Payload:            []byte{byte(failureType)},
 			})
 
 			return
@@ -564,10 +589,12 @@ func (g *Gateway) handleInternalFrame(frame realtimetypes.InternalFrame) {
 
 		return
 	case realtimetypes.InternalFrameType_AppendYjsUpdate:
+		originConnectionId := frame.ConnectionId
 		updateSequence, err := g.yjsPersistenceService.AppendUpdate(
 			context.Background(),
 			frame.ChannelId,
-			frame.ConnectionId,
+			uuid.New(),
+			&originConnectionId,
 			frame.Payload,
 		)
 		if err != nil {
@@ -578,6 +605,59 @@ func (g *Gateway) handleInternalFrame(frame realtimetypes.InternalFrame) {
 				ConnectionId:       frame.ConnectionId,
 				ConnectorChannelId: frame.ConnectorChannelId,
 				ChannelId:          frame.ChannelId,
+			})
+
+			return
+		}
+
+		g.workerManager.Forward(realtimetypes.InternalFrame{
+			Version:            byte(constants.RealtimeWorkerProtocolVersion),
+			Type:               realtimetypes.InternalFrameType_YjsUpdatePersisted,
+			ChannelType:        frame.ChannelType,
+			ConnectionId:       frame.ConnectionId,
+			ConnectorChannelId: frame.ConnectorChannelId,
+			ChannelId:          frame.ChannelId,
+			Payload:            realtimetypes.MarshalYjsUpdateSequence(updateSequence),
+		})
+
+		return
+	case realtimetypes.InternalFrameType_AppendYjsUpdateBatch:
+		var batch realtimetypes.YjsPersistenceBatch
+		if err := batch.UnmarshalBytes(frame.Payload); err != nil {
+			g.workerManager.Forward(realtimetypes.InternalFrame{
+				Version:            byte(constants.RealtimeWorkerProtocolVersion),
+				Type:               realtimetypes.InternalFrameType_YjsPersistenceFailed,
+				ChannelType:        frame.ChannelType,
+				ConnectionId:       frame.ConnectionId,
+				ConnectorChannelId: frame.ConnectorChannelId,
+				ChannelId:          frame.ChannelId,
+				Payload:            []byte{byte(realtimetypes.YjsPersistenceFailureType_Terminal)},
+			})
+
+			return
+		}
+
+		updateSequence, err := g.yjsPersistenceService.AppendUpdate(
+			context.Background(),
+			frame.ChannelId,
+			batch.PersistenceBatchId,
+			batch.OriginConnectionId,
+			batch.Payload,
+		)
+		if err != nil {
+			failureType := realtimetypes.YjsPersistenceFailureType_Retryable
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				failureType = realtimetypes.YjsPersistenceFailureType_Terminal
+			}
+
+			g.workerManager.Forward(realtimetypes.InternalFrame{
+				Version:            byte(constants.RealtimeWorkerProtocolVersion),
+				Type:               realtimetypes.InternalFrameType_YjsPersistenceFailed,
+				ChannelType:        frame.ChannelType,
+				ConnectionId:       frame.ConnectionId,
+				ConnectorChannelId: frame.ConnectorChannelId,
+				ChannelId:          frame.ChannelId,
+				Payload:            []byte{byte(failureType)},
 			})
 
 			return

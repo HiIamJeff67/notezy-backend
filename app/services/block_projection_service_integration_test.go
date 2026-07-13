@@ -75,6 +75,14 @@ func TestBlockProjectionServiceAppliesCurrentDocumentState(t *testing.T) {
 			updated_at timestamptz NOT NULL DEFAULT now(),
 			created_at timestamptz NOT NULL DEFAULT now()
 		)`,
+		`ALTER TABLE "BlockTable"
+			ADD CONSTRAINT block_unique_sibling_prev
+			UNIQUE NULLS NOT DISTINCT (block_pack_id, parent_block_id, prev_block_id)
+			DEFERRABLE INITIALLY DEFERRED`,
+		`ALTER TABLE "BlockTable"
+			ADD CONSTRAINT block_unique_sibling_next
+			UNIQUE NULLS NOT DISTINCT (block_pack_id, parent_block_id, next_block_id)
+			DEFERRABLE INITIALLY DEFERRED`,
 		`CREATE TABLE "SubShelfTable" (
 			id uuid PRIMARY KEY,
 			root_shelf_id uuid NOT NULL
@@ -137,8 +145,8 @@ func TestBlockProjectionServiceAppliesCurrentDocumentState(t *testing.T) {
 		{`INSERT INTO "UserAccountTable" (user_id, block_count) VALUES (?, 10)`, []any{userId}},
 		{`INSERT INTO "PlanLimitationTable" (key, max_block_count, max_block_count_per_block_pack) VALUES ('Free', 100, 100)`, nil},
 		{`INSERT INTO "UsersToShelvesTable" (user_id, root_shelf_id, permission) VALUES (?, ?, 'Owner')`, []any{userId, rootShelfId}},
-		{`INSERT INTO "BlockTable" (id, block_pack_id, type, props, content) VALUES (?, ?, 'paragraph', '{}', '[]')`, []any{removedBlockId, blockPackId}},
-		{`INSERT INTO "BlockTable" (id, block_pack_id, type, props, content) VALUES (?, ?, 'paragraph', '{}', '[]')`, []any{restoredBlockId, blockPackId}},
+		{`INSERT INTO "BlockTable" (id, block_pack_id, next_block_id, type, props, content) VALUES (?, ?, ?, 'paragraph', '{}', '[]')`, []any{removedBlockId, blockPackId, restoredBlockId}},
+		{`INSERT INTO "BlockTable" (id, block_pack_id, prev_block_id, type, props, content) VALUES (?, ?, ?, 'paragraph', '{}', '[]')`, []any{restoredBlockId, blockPackId, removedBlockId}},
 	} {
 		if err := db.Exec(statement.SQL, statement.Args...).Error; err != nil {
 			t.Fatalf("failed to seed block projection integration database: %v", err)

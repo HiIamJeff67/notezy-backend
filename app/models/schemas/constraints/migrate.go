@@ -8,7 +8,7 @@ import (
 
 var MigratingConstraintSQLs = []string{
 	userstobillingplansconstraints.UserIdBillingPlanIdPartialStatusIndexSQL,
-	blockconstraints.BlockTreeRootIndexSQL,
+	blockconstraints.BlockSiblingPointerConstraintsSQL,
 	routineconstraints.RoutineScheduledTimeMinutePrecisionCheckSQL,
 	routineconstraints.RoutineScheduledTimeInPeriodCheckSQL,
 }

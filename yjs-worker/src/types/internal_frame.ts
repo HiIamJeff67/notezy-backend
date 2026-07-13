@@ -1,7 +1,7 @@
-import { InternalFrameType } from "./internal_frame_type.js";
 import { InternalFrameHeaderSize } from "../constants/header_size.js";
-import { InternalChannelType } from "../types/internal_channel_type.js";
 import { convertBytesToUUIDString, convertUUIDToBytes } from "../util/uuid.js";
+import { InternalChannelType } from "./internal_channel_type.js";
+import { InternalFrameType } from "./internal_frame_type.js";
 
 export type InternalFrame = {
   version: number;
@@ -52,7 +52,7 @@ export function createInternalFrame(
   connectionId: string,
   connectorChannelId: number,
   blockPackId: string,
-  payload: Buffer = Buffer.alloc(0),
+  payload: Buffer = Buffer.alloc(0)
 ): Buffer {
   const frame = Buffer.alloc(InternalFrameHeaderSize + payload.length);
 

@@ -23,7 +23,12 @@ export class RoomRegistry {
       compactedUntilSequence: 0,
       projectedUntilSequence: -1,
       pendingYjsUpdates: [],
-      inFlightYjsUpdate: null,
+      pendingPersistenceUpdates: [],
+      pendingPersistencePayloadBytes: 0,
+      persistenceDebounceTimer: null,
+      persistenceMaximumWaitTimer: null,
+      persistenceRetryTimer: null,
+      inFlightPersistenceBatch: null,
       projectionTimer: null,
       inFlightProjection: null,
     };
@@ -36,31 +41,41 @@ export class RoomRegistry {
     blockPackId: string,
     webSocket: WebSocket,
     connectionId: string,
-    connectorChannelId: number,
+    connectorChannelId: number
   ): Room {
     const room = this.getOrCreate(blockPackId);
-    room.subscribers.set(this.getSubscriberKey(connectionId, connectorChannelId), {
-      webSocket,
-      connectionId,
-      connectorChannelId,
-    });
+    room.subscribers.set(
+      this.getSubscriberKey(connectionId, connectorChannelId),
+      {
+        webSocket,
+        connectionId,
+        connectorChannelId,
+        isReady: false,
+      }
+    );
 
     return room;
   }
 
-  detach(blockPackId: string, connectionId: string, connectorChannelId: number): void {
+  detach(
+    blockPackId: string,
+    connectionId: string,
+    connectorChannelId: number
+  ): Room | undefined {
     const room = this.rooms.get(blockPackId);
     if (room === undefined) {
-      return;
+      return undefined;
     }
 
-    room.subscribers.delete(this.getSubscriberKey(connectionId, connectorChannelId));
+    room.subscribers.delete(
+      this.getSubscriberKey(connectionId, connectorChannelId)
+    );
     room.lastActiveAt = new Date();
+
+    return room;
   }
 
-  detachAll(webSocket: WebSocket): Array<{ blockPackId: string; room: Room }> {
-    const roomsWithPendingUpdates: Array<{ blockPackId: string; room: Room }> = [];
-
+  detachAll(webSocket: WebSocket): void {
     for (const [blockPackId, room] of this.rooms) {
       for (const [key, subscriber] of room.subscribers) {
         if (subscriber.webSocket === webSocket) {
@@ -68,24 +83,22 @@ export class RoomRegistry {
         }
       }
 
-      if (
-        room.inFlightYjsUpdate?.webSocket === webSocket ||
-        room.pendingYjsUpdates.some((pendingYjsUpdate) => pendingYjsUpdate.webSocket === webSocket)
-      ) {
-        roomsWithPendingUpdates.push({ blockPackId, room });
-      }
+      room.lastActiveAt = new Date();
     }
-
-    return roomsWithPendingUpdates;
   }
 
   getSubscriber(
     blockPackId: string,
     connectionId: string,
-    connectorChannelId: number,
+    connectorChannelId: number
   ): Room | undefined {
     const room = this.rooms.get(blockPackId);
-    if (room === undefined || !room.subscribers.has(this.getSubscriberKey(connectionId, connectorChannelId))) {
+    if (
+      room === undefined ||
+      !room.subscribers.has(
+        this.getSubscriberKey(connectionId, connectorChannelId)
+      )
+    ) {
       return undefined;
     }
 
@@ -98,11 +111,18 @@ export class RoomRegistry {
     return this.rooms.get(blockPackId);
   }
 
-  private getSubscriberKey(connectionId: string, connectorChannelId: number): string {
+  private getSubscriberKey(
+    connectionId: string,
+    connectorChannelId: number
+  ): string {
     return `${connectionId}:${connectorChannelId}`;
   }
 
   get size(): number {
     return this.rooms.size;
+  }
+
+  entries(): IterableIterator<[string, Room]> {
+    return this.rooms.entries();
   }
 }

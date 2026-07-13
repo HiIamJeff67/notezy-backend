@@ -6,13 +6,16 @@ import type { Block } from "@blocknote/core";
 import { blocksToYXmlFragment } from "@blocknote/core/yjs";
 import * as Y from "yjs";
 
-import { notezyBlockNoteEditor } from "../src/blocknote_schema.js";
 import { BlockNoteProjector } from "../src/blocknote_projector.js";
+import { notezyBlockNoteEditor } from "../src/blocknote_schema.js";
 
 const blockNoteProjector = new BlockNoteProjector();
 
 async function readFixture(name: string): Promise<Block[]> {
-  const fixture = await readFile(new URL(`../../tmp/${name}`, import.meta.url), "utf8");
+  const fixture = await readFile(
+    new URL(`../../tmp/${name}`, import.meta.url),
+    "utf8"
+  );
 
   return JSON.parse(fixture) as Block[];
 }
@@ -27,7 +30,7 @@ for (const fixtureName of [
     blocksToYXmlFragment(
       notezyBlockNoteEditor,
       sourceBlocks,
-      document.getXmlFragment("document-store"),
+      document.getXmlFragment("document-store")
     );
 
     const projectedBlocks = blockNoteProjector.projectYjsDocument(document);
@@ -35,10 +38,13 @@ for (const fixtureName of [
     blocksToYXmlFragment(
       notezyBlockNoteEditor,
       projectedBlocks,
-      rematerializedDocument.getXmlFragment("document-store"),
+      rematerializedDocument.getXmlFragment("document-store")
     );
 
-    assert.deepEqual(blockNoteProjector.projectYjsDocument(rematerializedDocument), projectedBlocks);
+    assert.deepEqual(
+      blockNoteProjector.projectYjsDocument(rematerializedDocument),
+      projectedBlocks
+    );
     assert.equal(projectedBlocks.length, sourceBlocks.length);
   });
 }

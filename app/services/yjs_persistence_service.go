@@ -12,7 +12,13 @@ import (
 
 type YjsPersistenceServiceInterface interface {
 	LoadDocument(ctx context.Context, blockPackId uuid.UUID) (*realtimetypes.YjsDocumentState, error)
-	AppendUpdate(ctx context.Context, blockPackId uuid.UUID, originConnectionId uuid.UUID, payload []byte) (int64, error)
+	AppendUpdate(
+		ctx context.Context,
+		blockPackId uuid.UUID,
+		persistenceBatchId uuid.UUID,
+		originConnectionId *uuid.UUID,
+		payload []byte,
+	) (int64, error)
 }
 
 type YjsPersistenceService struct {
@@ -52,7 +58,11 @@ func (s *YjsPersistenceService) LoadDocument(
 }
 
 func (s *YjsPersistenceService) AppendUpdate(
-	ctx context.Context, blockPackId uuid.UUID, originConnectionId uuid.UUID, payload []byte,
+	ctx context.Context,
+	blockPackId uuid.UUID,
+	persistenceBatchId uuid.UUID,
+	originConnectionId *uuid.UUID,
+	payload []byte,
 ) (int64, error) {
-	return s.blockPackYjsRepository.AppendUpdate(ctx, blockPackId, originConnectionId, payload)
+	return s.blockPackYjsRepository.AppendUpdate(ctx, blockPackId, persistenceBatchId, originConnectionId, payload)
 }

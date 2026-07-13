@@ -13,4 +13,5 @@ export enum InternalFrameType {
   InternalFrameType_ApplyBlockProjection = 12,
   InternalFrameType_BlockProjectionApplied = 13,
   InternalFrameType_BlockProjectionFailed = 14,
+  InternalFrameType_AppendYjsUpdateBatch = 15,
 }

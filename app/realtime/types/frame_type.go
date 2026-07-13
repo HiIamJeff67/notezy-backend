@@ -67,10 +67,18 @@ const (
 	InternalFrameType_ApplyBlockProjection   InternalFrameType = 12
 	InternalFrameType_BlockProjectionApplied InternalFrameType = 13
 	InternalFrameType_BlockProjectionFailed  InternalFrameType = 14
+	InternalFrameType_AppendYjsUpdateBatch   InternalFrameType = 15
 )
 
 type InternalChannelType byte
 
 const (
 	InternalChannelType_BlockPack InternalChannelType = 1
+)
+
+type YjsPersistenceFailureType byte
+
+const (
+	YjsPersistenceFailureType_Retryable YjsPersistenceFailureType = 1
+	YjsPersistenceFailureType_Terminal  YjsPersistenceFailureType = 2
 )

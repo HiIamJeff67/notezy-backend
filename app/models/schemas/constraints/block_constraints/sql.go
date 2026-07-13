@@ -5,6 +5,6 @@ import (
 )
 
 var (
-	//go:embed block_tree_root_idx.sql
-	BlockTreeRootIndexSQL string
+	//go:embed block_sibling_pointer_constraints.sql
+	BlockSiblingPointerConstraintsSQL string
 )

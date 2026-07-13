@@ -1,5 +1,5 @@
 export function convertBytesToUUIDString(bytes: Buffer): string | null {
-  if (bytes.length !== 16 || bytes.every((byte) => byte === 0)) {
+  if (bytes.length !== 16 || bytes.every(byte => byte === 0)) {
     return null;
   }
 
@@ -9,7 +9,11 @@ export function convertBytesToUUIDString(bytes: Buffer): string | null {
 }
 
 export function convertUUIDToBytes(uuidString: string): Buffer {
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uuidString)) {
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      uuidString
+    )
+  ) {
     throw new Error("invalid UUID");
   }
 

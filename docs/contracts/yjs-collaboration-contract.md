@@ -53,6 +53,8 @@ durable Yjs truth 是 `BlockPackYjsDocument.Snapshot` 加上尚未 compact 的 `
 
 `BlockTable` 是 Yjs document 的 materialized projection，Block 不支援 soft delete。projection 對不再存在於 document 的 block 使用實體 `DELETE`；BlockPack soft delete 時則保留它的 Blocks，還原 BlockPack 後可直接重用既有 projection。
 
+Block REST read endpoints 與 GraphQL `searchBlocks` 都只讀 `BlockTable` projection；它們不得用於建立或回填 active `Y.Doc`。BlockPack REST read response 會帶 `lastUpdateSequence`、`compactedUntilSequence`、`projectedUntilSequence` 與 `isProjectionCurrent`。前端可以用 `isProjectionCurrent = false` 顯示 read model 正在落後，但 editor 的協作狀態一律仍以 Yjs channel 為準。
+
 | 欄位 | 語意 |
 | --- | --- |
 | `UpdateSequence` | 單一 BlockPack 內 append-only 的 update 序號，從 `1` 起，永不重用。 |
@@ -92,7 +94,11 @@ ticket claims 的最小集合：
 
 public WebSocket 的 JSON control frame 與 binary frame header 定義在 `realtime-protocol-contract.md`。Go-to-worker internal binary frame 一律帶有 `connectionId`、`connectorChannelId`、`channelType`、`channelId`；raw Yjs update 不得 Base64 或改寫成 JSON block event。
 
-internal attach/detach 是 idempotent。worker reconnect 後，Gateway 為其所屬 active channels replay attach；worker 會先向 Go cold-load snapshot + tail，materialize `Y.Doc` 後才回傳 complete encoded state。每一個 Yjs update 都先由 worker 套用並送交 Go append；只有收到 persistence ACK 後才 broadcast。append 失敗時 worker 對 room 所有 subscriber 發出 `resync_required`，不能 broadcast 未持久化 update。
+internal attach/detach 是 idempotent。worker reconnect 後，Gateway 為其所屬 active channels replay attach；worker 會先向 Go cold-load snapshot + tail，materialize `Y.Doc` 後才回傳 complete encoded state。worker 會先套用收到的 raw Yjs updates，再以同一個 BlockPack room 為單位暫存並使用 `Y.mergeUpdates()` 合併為一筆 persistence batch；只有收到 persistence ACK 後才 broadcast merged raw Yjs update。
+
+每個 persistence batch 有只供 Go/worker 使用的 UUID idempotency key。Go 以 `(block_pack_id, persistence_batch_id)` 保證 internal WebSocket retry 不會建立重複 update row；同一 batch 的多個來源 connection 不可任意挑選其中一個寫入 `OriginConnectionId`，必須保留為 `NULL`。append terminal failure 時 worker 對 room 所有 subscriber 發出 `resync_required`，不能 broadcast 未持久化 update。
+
+batch flush 條件由 worker constants 控制：trailing debounce、maximum wait、raw update count、raw payload bytes、最後 subscriber detach 與 graceful worker shutdown。`LastUpdateSequence` 只會在 merged update transaction 成功後推進；每一筆 merged update 只消耗一個 sequence。
 
 ## Projection Contract
 

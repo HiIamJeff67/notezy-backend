@@ -20,7 +20,7 @@ A physical WebSocket belongs to one client app instance. Each new connection rec
 
 The connection response contains `realtimeEndpoint` (`/realtime/development/v1`), `realtimeProtocolVersion`, `connectionTicket`, and `expiresAt`.
 
-The BlockPack response contains `channelTicket`, `expiresAt`, `channelType`, `channelId`, `permission`, `roomName`, `fragmentName`, `schemaId`, `schemaVersion`, `realtimeProtocolVersion`, `lastUpdateSequence`, and `compactedUntilSequence`. When the Yjs document row is not created yet, both returned sequences are `0`.
+The BlockPack response contains `channelTicket`, `expiresAt`, `channelType`, `channelId`, `permission`, `roomName`, `fragmentName`, `schemaId`, `schemaVersion`, `realtimeProtocolVersion`, `lastUpdateSequence`, and `compactedUntilSequence`. A BlockPackYjsDocument row is created in the same transaction as its BlockPack; a missing row is a backend error, not an empty document state.
 
 `permission: "read"` is available to Read, Write, Admin, and Owner users. `permission: "write"` is available only to Write, Admin, and Owner users. Soft-deleted BlockPacks do not receive a ticket.
 
@@ -117,11 +117,11 @@ The future Go-to-worker transport is a small pool of long-lived multiplex WebSoc
 | `23` | 16 bytes | raw UUID `channelId` |
 | `39` | remaining | raw Yjs/awareness payload, or empty for attach/detach |
 
-Internal types are `1` `attach`, `2` `detach`, `3` `yjs-document`, `4` `awareness`, `5` `resync-required`, `6` `permission-revoked`, `7` `load-yjs-document`, `8` `yjs-document-loaded`, `9` `append-yjs-update`, `10` `yjs-update-persisted`, `11` `yjs-persistence-failed`, `12` `apply-block-projection`, `13` `block-projection-applied`, and `14` `block-projection-failed`.
+Internal types are `1` `attach`, `2` `detach`, `3` `yjs-document`, `4` `awareness`, `5` `resync-required`, `6` `permission-revoked`, `7` `load-yjs-document`, `8` `yjs-document-loaded`, `9` `append-yjs-update` (legacy single update), `10` `yjs-update-persisted`, `11` `yjs-persistence-failed`, `12` `apply-block-projection`, `13` `block-projection-applied`, `14` `block-projection-failed`, and `15` `append-yjs-update-batch`.
 
 `attach` and `detach` are idempotent. A first attach asks Go for a binary cold-load payload: `lastUpdateSequence(int64)`, `compactedUntilSequence(int64)`, `projectedUntilSequence(int64)`, snapshot length/state-vector length/update count (`uint32` each), snapshot bytes, state-vector bytes, then ordered update entries of `updateSequence(int64)`, payload length (`uint32`), raw update bytes. The worker materializes the document before it sends the public initial state.
 
-`append-yjs-update` carries the raw Yjs update in the existing frame payload. Go appends it transactionally and returns `yjs-update-persisted` with its `updateSequence(int64)` payload. The worker serializes append requests per BlockPack and broadcasts only after this ACK. On an internal worker reconnect, Go replays `attach` for every active channel assigned to that worker before it forwards a client payload. When replay cannot be completed, Go emits `resync_required` to that public channel and waits for the client to resubscribe; it never silently drops an accepted Yjs payload.
+`append-yjs-update-batch` carries `[persistenceBatchId:16][originConnectionId:16, zero UUID when mixed][merged raw Yjs update:n]`. Go appends it transactionally and returns `yjs-update-persisted` with its `updateSequence(int64)` payload. The worker serializes persistence batches per BlockPack and broadcasts only after this ACK. `persistenceBatchId` makes a retry idempotent when PostgreSQL committed but the ACK was lost. On an internal worker reconnect, Go replays `attach` for every active channel assigned to that worker before it forwards a client payload. When replay cannot be completed, Go emits `resync_required` to that public channel and waits for the client to resubscribe; it never silently broadcasts an unpersisted Yjs payload.
 
 `apply-block-projection` carries UTF-8 JSON `{ schemaId, schemaVersion, projectedSequence, blocks }`; the BlockPack id is the internal frame `channelId`. This request is accepted only over Go-established private worker connections, not through public WebSocket or REST routes. Go validates the schema and durable sequence, bulk applies the BlockTable projection, and returns JSON `{ applied, projectedUntilSequence }` with `block-projection-applied`; malformed, stale-invalid, or failed requests receive `block-projection-failed`.
 

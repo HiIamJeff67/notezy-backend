@@ -1,3 +1,7 @@
+ALTER TABLE "RoutineTable" DROP CONSTRAINT IF EXISTS routine_check_scheduled_time_in_period;
+
+-- ============================== SQL Separator ==============================
+
 ALTER TABLE "RoutineTable"
 ADD CONSTRAINT routine_check_scheduled_time_in_period
 CHECK (

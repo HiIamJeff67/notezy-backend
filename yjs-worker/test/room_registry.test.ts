@@ -10,12 +10,7 @@ test("RoomRegistry tracks subscribers before a Yjs document is materialized", ()
   const registry = new RoomRegistry();
   const blockPackId = "7bc6ae1a-b1b3-47a7-9fab-42f34f48f7ca";
   const connectionId = "a7577a40-a86d-4fa9-9233-49c0b3e80385";
-  const room = registry.attach(
-    blockPackId,
-    {} as WebSocket,
-    connectionId,
-    1,
-  );
+  const room = registry.attach(blockPackId, {} as WebSocket, connectionId, 1);
   assert.equal(registry.size, 1);
   assert.equal(room.subscribers.size, 1);
   assert.equal(room.document, null);

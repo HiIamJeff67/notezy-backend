@@ -1,25 +1,19 @@
-import type { Doc } from "yjs";
 import type WebSocket from "ws";
+import type { Doc } from "yjs";
 
-import type { InternalFrame } from "./internal_frame.js";
+import type { InFlightProjection } from "./projection.js";
+import type { InFlightYjsPersistenceBatch } from "./yjs_persistence_batch.js";
+import type { PendingYjsUpdate } from "./yjs_update.js";
 
+// RoomSubscriber identifies one Go Gateway channel currently attached to a worker room
 export type RoomSubscriber = {
   webSocket: WebSocket;
   connectionId: string;
   connectorChannelId: number;
+  isReady: boolean;
 };
 
-export type PendingYjsUpdate = {
-  webSocket: WebSocket;
-  frame: InternalFrame;
-};
-
-export type InFlightProjection = {
-  connectionId: string;
-  connectorChannelId: number;
-  projectedSequence: number;
-};
-
+// Room owns the active in-memory Y.Doc and all transient state for one BlockPack collaboration room.
 export type Room = {
   document: Doc | null;
   dirtyUpdateCount: number;
@@ -30,7 +24,12 @@ export type Room = {
   compactedUntilSequence: number;
   projectedUntilSequence: number;
   pendingYjsUpdates: PendingYjsUpdate[];
-  inFlightYjsUpdate: PendingYjsUpdate | null;
+  pendingPersistenceUpdates: PendingYjsUpdate[];
+  pendingPersistencePayloadBytes: number;
+  persistenceDebounceTimer: NodeJS.Timeout | null;
+  persistenceMaximumWaitTimer: NodeJS.Timeout | null;
+  persistenceRetryTimer: NodeJS.Timeout | null;
+  inFlightPersistenceBatch: InFlightYjsPersistenceBatch | null;
   projectionTimer: NodeJS.Timeout | null;
   inFlightProjection: InFlightProjection | null;
 };

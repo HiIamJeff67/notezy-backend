@@ -270,15 +270,19 @@ type DeleteMyBlockPacksByIdsReqDto struct {
 /* ============================== Response DTO ============================== */
 
 type GetMyBlockPackByIdResDto struct {
-	Id                  uuid.UUID            `json:"id" gorm:"column:id;"`
-	ParentSubShelfId    uuid.UUID            `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id;"`
-	Name                string               `json:"name" gorm:"column:name;"`
-	Icon                *enums.SupportedIcon `json:"icon" gorm:"column:icon;"`
-	HeaderBackgroundURL *string              `json:"headerBackgroundURL" gorm:"column:header_background_url;"`
-	BlockCount          int64                `json:"blockCount" gorm:"column:block_count;"`
-	DeletedAt           *time.Time           `json:"deletedAt" gorm:"column:deleted_at;"`
-	UpdatedAt           time.Time            `json:"updatedAt" gorm:"column:updated_at;"`
-	CreatedAt           time.Time            `json:"createdAt" gorm:"column:created_at;"`
+	Id                     uuid.UUID            `json:"id" gorm:"column:id;"`
+	ParentSubShelfId       uuid.UUID            `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id;"`
+	Name                   string               `json:"name" gorm:"column:name;"`
+	Icon                   *enums.SupportedIcon `json:"icon" gorm:"column:icon;"`
+	HeaderBackgroundURL    *string              `json:"headerBackgroundURL" gorm:"column:header_background_url;"`
+	BlockCount             int64                `json:"blockCount" gorm:"column:block_count;"`
+	LastUpdateSequence     int64                `json:"lastUpdateSequence" gorm:"column:last_update_sequence;"`
+	CompactedUntilSequence int64                `json:"compactedUntilSequence" gorm:"column:compacted_until_sequence;"`
+	ProjectedUntilSequence int64                `json:"projectedUntilSequence" gorm:"column:projected_until_sequence;"`
+	IsProjectionCurrent    bool                 `json:"isProjectionCurrent" gorm:"column:is_projection_current;"`
+	DeletedAt              *time.Time           `json:"deletedAt" gorm:"column:deleted_at;"`
+	UpdatedAt              time.Time            `json:"updatedAt" gorm:"column:updated_at;"`
+	CreatedAt              time.Time            `json:"createdAt" gorm:"column:created_at;"`
 }
 
 type GetMyBlockPackAndItsParentByIdResDto struct {
@@ -287,6 +291,10 @@ type GetMyBlockPackAndItsParentByIdResDto struct {
 	Icon                         *enums.SupportedIcon `json:"icon" gorm:"column:icon;"`
 	HeaderBackgroundURL          *string              `json:"headerBackgroundURL" gorm:"column:header_background_url;"`
 	BlockCount                   int64                `json:"blockCount" gorm:"column:block_count;"`
+	LastUpdateSequence           int64                `json:"lastUpdateSequence" gorm:"column:last_update_sequence;"`
+	CompactedUntilSequence       int64                `json:"compactedUntilSequence" gorm:"column:compacted_until_sequence;"`
+	ProjectedUntilSequence       int64                `json:"projectedUntilSequence" gorm:"column:projected_until_sequence;"`
+	IsProjectionCurrent          bool                 `json:"isProjectionCurrent" gorm:"column:is_projection_current;"`
 	DeletedAt                    *time.Time           `json:"deletedAt" gorm:"column:deleted_at;"`
 	UpdatedAt                    time.Time            `json:"updatedAt" gorm:"column:updated_at;"`
 	CreatedAt                    time.Time            `json:"createdAt" gorm:"column:created_at;"`

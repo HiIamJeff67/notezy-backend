@@ -9,7 +9,7 @@ export class BlockNoteProjector {
   projectYjsDocument(document: Y.Doc): Block[] {
     return yXmlFragmentToBlocks(
       notezyBlockNoteEditor,
-      document.getXmlFragment(YjsBlockPackFragmentName),
+      document.getXmlFragment(YjsBlockPackFragmentName)
     );
   }
 }

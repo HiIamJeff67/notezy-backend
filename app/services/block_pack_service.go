@@ -77,9 +77,16 @@ func (s *BlockPackService) GetMyBlockPackById(
 		}
 	}
 
-	blockPack, exception := s.blockPackRepository.GetOneById(
+	blockPack, exception := s.blockPackRepository.CheckPermissionAndGetOneById(
 		reqDto.Param.BlockPackId,
 		reqDto.ContextFields.UserId,
+		[]schemas.BlockPackRelation{schemas.BlockPackRelation_YjsDocument},
+		[]enums.AccessControlPermission{
+			enums.AccessControlPermission_Owner,
+			enums.AccessControlPermission_Admin,
+			enums.AccessControlPermission_Write,
+			enums.AccessControlPermission_Read,
+		},
 		options.WithDB(db),
 		options.WithOnlyDeleted(onlyDeleted),
 	)
@@ -87,7 +94,7 @@ func (s *BlockPackService) GetMyBlockPackById(
 		return nil, exception
 	}
 
-	return &dtos.GetMyBlockPackByIdResDto{
+	resDto := &dtos.GetMyBlockPackByIdResDto{
 		Id:                  blockPack.Id,
 		ParentSubShelfId:    blockPack.ParentSubShelfId,
 		Name:                blockPack.Name,
@@ -97,7 +104,15 @@ func (s *BlockPackService) GetMyBlockPackById(
 		DeletedAt:           blockPack.DeletedAt,
 		UpdatedAt:           blockPack.UpdatedAt,
 		CreatedAt:           blockPack.CreatedAt,
-	}, nil
+	}
+	if blockPack.YjsDocument != nil {
+		resDto.LastUpdateSequence = blockPack.YjsDocument.LastUpdateSequence
+		resDto.CompactedUntilSequence = blockPack.YjsDocument.CompactedUntilSequence
+		resDto.ProjectedUntilSequence = blockPack.YjsDocument.ProjectedUntilSequence
+		resDto.IsProjectionCurrent = blockPack.YjsDocument.ProjectedUntilSequence >= blockPack.YjsDocument.LastUpdateSequence
+	}
+
+	return resDto, nil
 }
 
 func (s *BlockPackService) GetMyBlockPackAndItsParentById(
@@ -134,6 +149,10 @@ func (s *BlockPackService) GetMyBlockPackAndItsParentById(
 			&resDto.Icon,
 			&resDto.HeaderBackgroundURL,
 			&resDto.BlockCount,
+			&resDto.LastUpdateSequence,
+			&resDto.CompactedUntilSequence,
+			&resDto.ProjectedUntilSequence,
+			&resDto.IsProjectionCurrent,
 			&resDto.DeletedAt,
 			&resDto.UpdatedAt,
 			&resDto.CreatedAt,
@@ -179,6 +198,14 @@ func (s *BlockPackService) GetMyBlockPacksByParentSubShelfId(
 
 	resDto := dtos.GetMyBlockPacksByParentSubShelfIdResDto{}
 	result := db.Model(&schemas.BlockPack{}).
+		Select(`
+			"BlockPackTable".*,
+			COALESCE(ydoc.last_update_sequence, 0) AS last_update_sequence,
+			COALESCE(ydoc.compacted_until_sequence, 0) AS compacted_until_sequence,
+			COALESCE(ydoc.projected_until_sequence, -1) AS projected_until_sequence,
+			COALESCE(ydoc.projected_until_sequence, -1) >= COALESCE(ydoc.last_update_sequence, 0) AS is_projection_current
+		`).
+		Joins(`LEFT JOIN "BlockPackYjsDocumentTable" ydoc ON ydoc.block_pack_id = "BlockPackTable".id AND ydoc.deleted_at IS NULL`).
 		Joins(`LEFT JOIN "SubShelfTable" ss ON "BlockPackTable".parent_sub_shelf_id = ss.id`).
 		Joins(`LEFT JOIN "UsersToShelvesTable" uts ON ss.root_shelf_id = uts.root_shelf_id`).
 		Where("ss.id = ? AND uts.user_id = ? AND uts.permission IN ?",
@@ -222,6 +249,14 @@ func (s *BlockPackService) GetAllMyBlockPacksByRootShelfId(
 
 	resDto := dtos.GetAllMyBlockPacksByRootShelfIdResDto{}
 	result := db.Model(&schemas.BlockPack{}).
+		Select(`
+			"BlockPackTable".*,
+			COALESCE(ydoc.last_update_sequence, 0) AS last_update_sequence,
+			COALESCE(ydoc.compacted_until_sequence, 0) AS compacted_until_sequence,
+			COALESCE(ydoc.projected_until_sequence, -1) AS projected_until_sequence,
+			COALESCE(ydoc.projected_until_sequence, -1) >= COALESCE(ydoc.last_update_sequence, 0) AS is_projection_current
+		`).
+		Joins(`LEFT JOIN "BlockPackYjsDocumentTable" ydoc ON ydoc.block_pack_id = "BlockPackTable".id AND ydoc.deleted_at IS NULL`).
 		Joins(`LEFT JOIN "SubShelfTable" ss ON "BlockPackTable".parent_sub_shelf_id = ss.id`).
 		Joins(`LEFT JOIN "UsersToShelvesTable" uts ON ss.root_shelf_id = uts.root_shelf_id`).
 		Where("ss.root_shelf_id = ? AND uts.user_id = ? AND uts.permission IN ?",

@@ -12,7 +12,9 @@ export type YjsDocumentState = {
   updates: YjsDocumentUpdate[];
 };
 
-export function parseYjsDocumentState(payload: Buffer): YjsDocumentState | null {
+export function parseYjsDocumentState(
+  payload: Buffer
+): YjsDocumentState | null {
   if (payload.length < 36) {
     return null;
   }
@@ -75,7 +77,10 @@ export function parseYjsDocumentState(payload: Buffer): YjsDocumentState | null 
     expectedUpdateSequence += 1;
   }
 
-  if (offset !== payload.length || expectedUpdateSequence - 1 !== lastUpdateSequence) {
+  if (
+    offset !== payload.length ||
+    expectedUpdateSequence - 1 !== lastUpdateSequence
+  ) {
     return null;
   }
 

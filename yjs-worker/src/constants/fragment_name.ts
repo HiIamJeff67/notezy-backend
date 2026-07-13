@@ -1,1 +1,1 @@
-export const YjsBlockPackFragmentName = "document-store"
+export const YjsBlockPackFragmentName = "document-store";

@@ -213,6 +213,7 @@ func (s *BlockService) GetAllMyBlocks(
 		Joins(`INNER JOIN "BlockPackTable" bp ON bp.id = "BlockTable".block_pack_id`).
 		Joins(`INNER JOIN "SubShelfTable" ss ON ss.id = bp.parent_sub_shelf_id`).
 		Joins(`INNER JOIN "UsersToShelvesTable" uts ON uts.root_shelf_id = ss.root_shelf_id`).
+		Where("bp.deleted_at IS NULL AND ss.deleted_at IS NULL").
 		Where("uts.user_id = ? AND uts.permission IN ?", reqDto.ContextFields.UserId, []enums.AccessControlPermission{
 			enums.AccessControlPermission_Owner,
 			enums.AccessControlPermission_Admin,

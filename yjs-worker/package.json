@@ -8,7 +8,9 @@
     "build": "tsc",
     "dev": "tsx watch src/main.ts",
     "start": "node dist/main.js",
-    "test": "tsx --test test/*.test.ts"
+    "test": "tsx --test test/*.test.ts",
+    "format:all": "biome check --write src test",
+    "format:check": "biome check src test"
   },
   "packageManager": "pnpm@11.7.0",
   "engines": {
@@ -28,6 +30,7 @@
     "yjs": "^13.6.27"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.4.12",
     "@types/node": "^22.15.30",
     "@types/ws": "^8.18.1",
     "tsx": "^4.20.3",
