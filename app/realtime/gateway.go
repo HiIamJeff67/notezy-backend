@@ -15,6 +15,8 @@ import (
 
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	models "github.com/HiIamJeff67/notezy-backend/app/models"
+	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
+	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
 	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/app/realtime/types"
@@ -28,18 +30,30 @@ type Gateway struct {
 	upgrader               websocket.Upgrader
 	workerManager          workers.WorkerManagerInterface
 	yjsPersistenceService  services.YjsPersistenceServiceInterface
-	blockProjectionService services.BlockProjectionServiceInterface
-	connectors             map[uuid.UUID]*Connector
-	connectorMutex         sync.RWMutex
+	blockProjectionService interface {
+		Apply(ctx context.Context, blockPackId uuid.UUID, input dtos.ApplyBlockProjectionInput) (*dtos.ApplyBlockProjectionResult, error)
+	}
+	connectors     map[uuid.UUID]*Connector
+	connectorMutex sync.RWMutex
 }
 
 func NewGateway() *Gateway {
 	workerManager := workers.NewWorkerManager()
+	blockScope := scopes.NewBlockScope()
+	blockPackScope := scopes.NewBlockPackScope()
+	subShelfScope := scopes.NewSubShelfScope()
 	gateway := &Gateway{
-		workerManager:          workerManager,
-		yjsPersistenceService:  services.NewYjsPersistenceService(models.NotezyDB),
-		blockProjectionService: services.NewBlockProjectionService(models.NotezyDB, nil),
-		connectors:             make(map[uuid.UUID]*Connector),
+		workerManager:         workerManager,
+		yjsPersistenceService: services.NewYjsPersistenceService(models.NotezyDB),
+		blockProjectionService: services.NewBlockService(
+			models.NotezyDB,
+			blockScope,
+			blockPackScope,
+			subShelfScope,
+			repositories.NewBlockPackRepository(blockPackScope),
+			repositories.NewBlockRepository(blockScope),
+		),
+		connectors: make(map[uuid.UUID]*Connector),
 	}
 	gateway.upgrader = websocket.Upgrader{
 		CheckOrigin: func(req *http.Request) bool {
@@ -365,6 +379,8 @@ func (g *Gateway) handleControlFrame(connector *Connector, payload []byte) bool 
 			})
 		}
 
+		// create the channel here, so if handleControlFrame of subscribe does not fire first
+		// the channel just will not be found by g.connectors.get() methods, and error will be thrown
 		channel := realtimetypes.Channel{
 			Type:       subscribeFrame.ChannelType,
 			Id:         subscribeFrame.ChannelId,
@@ -542,6 +558,90 @@ func (g *Gateway) handleControlFrame(connector *Connector, payload []byte) bool 
 
 func (g *Gateway) handleInternalFrame(frame realtimetypes.InternalFrame) {
 	switch frame.Type {
+	case realtimetypes.InternalFrameType_LoadCompactableYjsDocument:
+		input, err := g.yjsPersistenceService.GetCompactableYjsDocumentWithUpdates(
+			context.Background(), frame.ChannelId,
+		)
+		if err != nil || input == nil {
+			g.workerManager.Forward(realtimetypes.InternalFrame{
+				Version:            byte(constants.RealtimeWorkerProtocolVersion),
+				Type:               realtimetypes.InternalFrameType_YjsDocumentCompactionFailed,
+				ChannelType:        frame.ChannelType,
+				ConnectionId:       frame.ConnectionId,
+				ConnectorChannelId: frame.ConnectorChannelId,
+				ChannelId:          frame.ChannelId,
+			})
+
+			return
+		}
+
+		payload, err := input.MarshalBytes()
+		if err != nil {
+			g.workerManager.Forward(realtimetypes.InternalFrame{
+				Version:            byte(constants.RealtimeWorkerProtocolVersion),
+				Type:               realtimetypes.InternalFrameType_YjsDocumentCompactionFailed,
+				ChannelType:        frame.ChannelType,
+				ConnectionId:       frame.ConnectionId,
+				ConnectorChannelId: frame.ConnectorChannelId,
+				ChannelId:          frame.ChannelId,
+			})
+
+			return
+		}
+
+		g.workerManager.Forward(realtimetypes.InternalFrame{
+			Version:            byte(constants.RealtimeWorkerProtocolVersion),
+			Type:               realtimetypes.InternalFrameType_CompactableYjsDocumentLoaded,
+			ChannelType:        frame.ChannelType,
+			ConnectionId:       frame.ConnectionId,
+			ConnectorChannelId: frame.ConnectorChannelId,
+			ChannelId:          frame.ChannelId,
+			Payload:            payload,
+		})
+
+		return
+	case realtimetypes.InternalFrameType_ApplyCompactedYjsDocument:
+		var result realtimetypes.YjsCompactionResult
+		if err := result.UnmarshalBytes(frame.Payload); err != nil {
+			g.workerManager.Forward(realtimetypes.InternalFrame{
+				Version:            byte(constants.RealtimeWorkerProtocolVersion),
+				Type:               realtimetypes.InternalFrameType_YjsDocumentCompactionFailed,
+				ChannelType:        frame.ChannelType,
+				ConnectionId:       frame.ConnectionId,
+				ConnectorChannelId: frame.ConnectorChannelId,
+				ChannelId:          frame.ChannelId,
+			})
+
+			return
+		}
+
+		applied, err := g.yjsPersistenceService.ApplyCompactedYjsDocument(
+			context.Background(), frame.ChannelId, result,
+		)
+		if err != nil || !applied {
+			g.workerManager.Forward(realtimetypes.InternalFrame{
+				Version:            byte(constants.RealtimeWorkerProtocolVersion),
+				Type:               realtimetypes.InternalFrameType_YjsDocumentCompactionFailed,
+				ChannelType:        frame.ChannelType,
+				ConnectionId:       frame.ConnectionId,
+				ConnectorChannelId: frame.ConnectorChannelId,
+				ChannelId:          frame.ChannelId,
+			})
+
+			return
+		}
+
+		g.workerManager.Forward(realtimetypes.InternalFrame{
+			Version:            byte(constants.RealtimeWorkerProtocolVersion),
+			Type:               realtimetypes.InternalFrameType_YjsDocumentCompacted,
+			ChannelType:        frame.ChannelType,
+			ConnectionId:       frame.ConnectionId,
+			ConnectorChannelId: frame.ConnectorChannelId,
+			ChannelId:          frame.ChannelId,
+			Payload:            realtimetypes.MarshalYjsUpdateSequence(result.CutoffSequence),
+		})
+
+		return
 	case realtimetypes.InternalFrameType_LoadYjsDocument:
 		state, err := g.yjsPersistenceService.LoadDocument(context.Background(), frame.ChannelId)
 		if err != nil {

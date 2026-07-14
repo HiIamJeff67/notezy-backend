@@ -1,11 +1,10 @@
 import type { Block } from "@blocknote/core";
 import { yXmlFragmentToBlocks } from "@blocknote/core/yjs";
 import type * as Y from "yjs";
+import { YjsBlockPackFragmentName } from "../constants/fragment_name.js";
+import { notezyBlockNoteEditor } from "../types/blocknote_schema.js";
 
-import { notezyBlockNoteEditor } from "./blocknote_schema.js";
-import { YjsBlockPackFragmentName } from "./constants/fragment_name.js";
-
-export class BlockNoteProjector {
+export class BlockPackProjector {
   projectYjsDocument(document: Y.Doc): Block[] {
     return yXmlFragmentToBlocks(
       notezyBlockNoteEditor,

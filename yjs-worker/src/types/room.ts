@@ -26,10 +26,12 @@ export type Room = {
   pendingYjsUpdates: PendingYjsUpdate[];
   pendingPersistenceUpdates: PendingYjsUpdate[];
   pendingPersistencePayloadBytes: number;
+  idleEvictionTimer: NodeJS.Timeout | null;
   persistenceDebounceTimer: NodeJS.Timeout | null;
   persistenceMaximumWaitTimer: NodeJS.Timeout | null;
   persistenceRetryTimer: NodeJS.Timeout | null;
   inFlightPersistenceBatch: InFlightYjsPersistenceBatch | null;
+  isCompacting: boolean;
   projectionTimer: NodeJS.Timeout | null;
   inFlightProjection: InFlightProjection | null;
 };

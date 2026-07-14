@@ -184,17 +184,6 @@ type metricNameBlock struct {
 	GetMyBlockById           string
 	GetMyBlocksByIds         string
 	GetMyBlocksByBlockPackId string
-	GetAllMyBlocks           string
-	AppendBlock              string
-	AppendBlocks             string
-	InsertBlock              string
-	InsertBlocks             string
-	UpdateMyBlockById        string
-	UpdateMyBlocksByIds      string
-	RestoreMyBlockById       string
-	RestoreMyBlocksByIds     string
-	DeleteMyBlockById        string
-	DeleteMyBlocksByIds      string
 }
 
 type metricNameRealtime struct {
@@ -420,17 +409,6 @@ var MetricNames = struct {
 				GetMyBlockById:           "server.requests.block.getMyBlockById",
 				GetMyBlocksByIds:         "server.requests.block.getMyBlocksByIds",
 				GetMyBlocksByBlockPackId: "server.requests.block.getMyBlocksByBlockPackId",
-				GetAllMyBlocks:           "server.requests.block.getAllMyBlocks",
-				AppendBlock:              "server.requests.block.appendBlock",
-				AppendBlocks:             "server.requests.block.appendBlocks",
-				InsertBlock:              "server.requests.block.insertBlock",
-				InsertBlocks:             "server.requests.block.insertBlocks",
-				UpdateMyBlockById:        "server.requests.block.updateMyBlockById",
-				UpdateMyBlocksByIds:      "server.requests.block.updateMyBlocksByIds",
-				RestoreMyBlockById:       "server.requests.block.restoreMyBlockById",
-				RestoreMyBlocksByIds:     "server.requests.block.restoreMyBlocksByIds",
-				DeleteMyBlockById:        "server.requests.block.deleteMyBlockById",
-				DeleteMyBlocksByIds:      "server.requests.block.deleteMyBlocksByIds",
 			},
 			Realtime: metricNameRealtime{
 				CreateMyRealtimeConnectionTicket: "server.requests.realtime.createMyRealtimeConnectionTicket",

@@ -102,7 +102,7 @@ GET /api/development/v1/block/getMyBlocksByIds
 GET /api/development/v1/block/getMyBlocksByBlockPackId
 ```
 
-`getAllMyBlocks` 不屬於 public frontend contract。BlockPack REST read responses 會提供：
+沒有任何 public Block REST mutation endpoint。BlockPack REST read responses 會提供：
 
 ```json
 {

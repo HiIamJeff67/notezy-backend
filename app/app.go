@@ -21,6 +21,7 @@ import (
 	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
 	configs "github.com/HiIamJeff67/notezy-backend/app/configs"
 	"github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask"
+	"github.com/HiIamJeff67/notezy-backend/app/durablejobs/yjsmaintenance"
 	models "github.com/HiIamJeff67/notezy-backend/app/models"
 	developmentroutes "github.com/HiIamJeff67/notezy-backend/app/routes/developmentroutes"
 	util "github.com/HiIamJeff67/notezy-backend/app/util"
@@ -45,6 +46,10 @@ func StartApplication() {
 	routineTaskEngine := routinetask.NewEngine(models.NotezyDB)
 	shutdownRoutineTaskEngine := routineTaskEngine.Start(context.Background())
 	defer shutdownRoutineTaskEngine()
+
+	yjsMaintenanceEngine := yjsmaintenance.NewEngine(models.NotezyDB)
+	shutdownYjsMaintenanceEngine := yjsMaintenanceEngine.Start(context.Background())
+	defer shutdownYjsMaintenanceEngine()
 
 	developmentroutes.DevelopmentRouter = gin.Default()
 	proxies := strings.Split(util.GetEnv("GIN_TRUSTED_PROXIES", ""), ",")

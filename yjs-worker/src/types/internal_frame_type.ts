@@ -14,4 +14,9 @@ export enum InternalFrameType {
   InternalFrameType_BlockProjectionApplied = 13,
   InternalFrameType_BlockProjectionFailed = 14,
   InternalFrameType_AppendYjsUpdateBatch = 15,
+  InternalFrameType_LoadCompactableYjsDocument = 16,
+  InternalFrameType_CompactableYjsDocumentLoaded = 17,
+  InternalFrameType_ApplyCompactedYjsDocument = 18,
+  InternalFrameType_YjsDocumentCompacted = 19,
+  InternalFrameType_YjsDocumentCompactionFailed = 20,
 }

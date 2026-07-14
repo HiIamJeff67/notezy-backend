@@ -306,7 +306,7 @@ func (h BlockPackHandler) HandleUpdateBlockPack(ctx context.Context, tasks []sch
 		WITH pairs(block_id, block_pack_id) AS (VALUES %s)
 		SELECT p.block_id::uuid, p.block_pack_id::uuid
 		FROM pairs p
-		INNER JOIN "BlockTable" b ON b.id = p.block_id::uuid AND b.block_pack_id = p.block_pack_id::uuid AND b.deleted_at IS NULL
+		INNER JOIN "BlockTable" b ON b.id = p.block_id::uuid AND b.block_pack_id = p.block_pack_id::uuid
 	`, strings.Join(pairPlaceholders, ","))
 	if err := h.db.WithContext(ctx).Raw(sql, pairArgs...).Scan(&validRows).Error; err != nil {
 		return successes, exceptions.Block.NotFound().WithOrigin(err)

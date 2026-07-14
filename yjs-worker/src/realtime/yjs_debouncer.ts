@@ -9,19 +9,29 @@ import {
   YjsPersistenceBatchMaximumUpdateCount,
   YjsPersistenceBatchMaximumWaitMilliseconds,
   YjsPersistenceBatchRetryMilliseconds,
-} from "./constants/yjs_persistence_batch.js";
-import { InternalFrameType } from "./types/internal_frame_type.js";
-import type { Room } from "./types/room.js";
+} from "../constants/yjs_persistence_batch.js";
+import { InternalFrameType } from "../types/internal_frame_type.js";
+import type { Room } from "../types/room.js";
 import {
   createYjsPersistenceBatch,
   type InFlightYjsPersistenceBatch,
-} from "./types/yjs_persistence_batch.js";
-import { YjsPersistenceFailureType } from "./types/yjs_persistence_failure_type.js";
-import type { PendingYjsUpdate } from "./types/yjs_update.js";
+} from "../types/yjs_persistence_batch.js";
+import { YjsPersistenceFailureType } from "../types/yjs_persistence_failure_type.js";
+import type { PendingYjsUpdate } from "../types/yjs_update.js";
 
-export class BatchYjsHandler {
-  constructor(
-    private readonly sendInternalFrame: (
+export class YjsDebouncer {
+  private sendInternalFrame!: (
+    webSocket: WebSocket,
+    type: InternalFrameType,
+    connectionId: string,
+    connectorChannelId: number,
+    blockPackId: string,
+    payload?: Buffer
+  ) => boolean;
+  private resyncRoom!: (room: Room, blockPackId: string) => void;
+
+  bindCallbacks(
+    sendInternalFrame: (
       webSocket: WebSocket,
       type: InternalFrameType,
       connectionId: string,
@@ -29,8 +39,11 @@ export class BatchYjsHandler {
       blockPackId: string,
       payload?: Buffer
     ) => boolean,
-    private readonly resyncRoom: (room: Room, blockPackId: string) => void
-  ) {}
+    resyncRoom: (room: Room, blockPackId: string) => void
+  ): void {
+    this.sendInternalFrame = sendInternalFrame;
+    this.resyncRoom = resyncRoom;
+  }
 
   scheduleFlush(room: Room, blockPackId: string): void {
     if (room.document === null || room.pendingPersistenceUpdates.length === 0) {

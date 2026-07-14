@@ -62,7 +62,6 @@ func GraphQLHandler() gin.HandlerFunc {
 		subShelfScope,
 		blockPackRepository,
 		blockRepository,
-		editableBlockAdapter,
 	)
 	rootShelfService := services.NewRootShelfService(
 		models.NotezyDB,

@@ -6,10 +6,10 @@ import type { Block } from "@blocknote/core";
 import { blocksToYXmlFragment } from "@blocknote/core/yjs";
 import * as Y from "yjs";
 
-import { BlockNoteProjector } from "../src/blocknote_projector.js";
-import { notezyBlockNoteEditor } from "../src/blocknote_schema.js";
+import { BlockPackProjector } from "../src/realtime/block_pack_projector.js";
+import { notezyBlockNoteEditor } from "../src/types/blocknote_schema.js";
 
-const blockNoteProjector = new BlockNoteProjector();
+const blockPackProjector = new BlockPackProjector();
 
 async function readFixture(name: string): Promise<Block[]> {
   const fixture = await readFile(
@@ -33,7 +33,7 @@ for (const fixtureName of [
       document.getXmlFragment("document-store")
     );
 
-    const projectedBlocks = blockNoteProjector.projectYjsDocument(document);
+    const projectedBlocks = blockPackProjector.projectYjsDocument(document);
     const rematerializedDocument = new Y.Doc();
     blocksToYXmlFragment(
       notezyBlockNoteEditor,
@@ -42,7 +42,7 @@ for (const fixtureName of [
     );
 
     assert.deepEqual(
-      blockNoteProjector.projectYjsDocument(rematerializedDocument),
+      blockPackProjector.projectYjsDocument(rematerializedDocument),
       projectedBlocks
     );
     assert.equal(projectedBlocks.length, sourceBlocks.length);

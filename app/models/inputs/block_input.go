@@ -18,11 +18,6 @@ type CreateBlockInput struct {
 	Content       datatypes.JSON  `json:"content" gorm:"column:content;"`
 }
 
-type CreateBlockPackContentInput struct {
-	BlockPackId uuid.UUID `json:"blockPackId"`
-	Blocks      []CreateBlockInput
-}
-
 type UpdateBlockInput struct {
 	BlockPackId   *uuid.UUID       `json:"blockPackId" gorm:"column:block_pack_id;"`
 	ParentBlockId *uuid.UUID       `json:"parentBlockId" gorm:"column:parent_block_id;"`
@@ -34,11 +29,6 @@ type UpdateBlockInput struct {
 }
 
 type PartialUpdateBlockInput = PartialUpdateInput[UpdateBlockInput]
-
-type UpdateBlockByIdInput struct {
-	Id                 uuid.UUID                            `json:"id" gorm:"column:id;"`
-	PartialUpdateInput PartialUpdateInput[UpdateBlockInput] `json:"partialUpdateInput"`
-}
 
 /* ============================== System Only Input ============================== */
 
@@ -57,9 +47,4 @@ type BulkUpdateBlockInput struct {
 	UserId             uuid.UUID                            `json:"userId" gorm:"column:user_id;"`
 	Id                 uuid.UUID                            `json:"id" gorm:"column:id;"`
 	PartialUpdateInput PartialUpdateInput[UpdateBlockInput] `json:"partialUpdateInput"`
-}
-
-type BulkDeleteBlockInput struct {
-	UserId uuid.UUID `json:"userId" gorm:"column:user_id;"`
-	Id     uuid.UUID `json:"id" gorm:"column:id;"`
 }

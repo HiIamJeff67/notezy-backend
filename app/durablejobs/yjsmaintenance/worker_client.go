@@ -1,0 +1,140 @@
+package yjsmaintenance
+
+import (
+	"bytes"
+	"context"
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"io"
+	"math"
+	"net/http"
+	"os"
+
+	realtimetypes "github.com/HiIamJeff67/notezy-backend/app/realtime/types"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+)
+
+type WorkerClient struct {
+	endpoint string
+	client   *http.Client
+}
+
+func NewWorkerClient() WorkerClient {
+	return WorkerClient{
+		endpoint: os.Getenv("YJS_MAINTENANCE_WORKER_URL"),
+		client: &http.Client{
+			Timeout: constants.YjsMaintenanceWorkerRequestTimeout,
+		},
+	}
+}
+
+func (c WorkerClient) Compact(
+	ctx context.Context,
+	inputs []realtimetypes.YjsCompactionBatchInput,
+) ([]realtimetypes.YjsCompactionBatchResult, error) {
+	if len(inputs) == 0 {
+		return nil, nil
+	}
+	if c.endpoint == "" {
+		return nil, fmt.Errorf("YJS_MAINTENANCE_WORKER_URL is required")
+	}
+
+	payload := bytes.NewBuffer(make([]byte, 0))
+	if err := binary.Write(payload, binary.BigEndian, uint32(len(inputs))); err != nil {
+		return nil, err
+	}
+
+	blockPackIdSet := make(map[[16]byte]bool, len(inputs))
+	for _, input := range inputs {
+		if blockPackIdSet[input.BlockPackId] {
+			return nil, errors.New("duplicate yjs maintenance block pack id")
+		}
+		blockPackIdSet[input.BlockPackId] = true
+
+		inputPayload, err := input.MarshalBytes()
+		if err != nil {
+			return nil, err
+		}
+		if len(inputPayload) > math.MaxUint32 || payload.Len()+4+len(inputPayload) > constants.YjsMaintenanceWorkerMaxPayloadBytes {
+			return nil, fmt.Errorf("yjs maintenance batch exceeds the worker payload limit")
+		}
+
+		if err := binary.Write(payload, binary.BigEndian, uint32(len(inputPayload))); err != nil {
+			return nil, err
+		}
+		if _, err := payload.Write(inputPayload); err != nil {
+			return nil, err
+		}
+	}
+
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		c.endpoint,
+		bytes.NewReader(payload.Bytes()),
+	)
+	if err != nil {
+		return nil, err
+	}
+	request.Header.Set("Content-Type", "application/octet-stream")
+
+	response, err := c.client.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("yjs maintenance worker returned %s", response.Status)
+	}
+
+	responsePayload, err := io.ReadAll(io.LimitReader(response.Body, int64(constants.YjsMaintenanceWorkerMaxPayloadBytes)+1))
+	if err != nil {
+		return nil, err
+	}
+	if len(responsePayload) > constants.YjsMaintenanceWorkerMaxPayloadBytes {
+		return nil, fmt.Errorf("yjs maintenance worker response exceeds the payload limit")
+	}
+
+	if len(responsePayload) < 4 {
+		return nil, errors.New("invalid yjs maintenance worker response")
+	}
+
+	resultCount := binary.BigEndian.Uint32(responsePayload[0:4])
+	if resultCount != uint32(len(inputs)) {
+		return nil, errors.New("incomplete yjs maintenance worker response")
+	}
+
+	results := make([]realtimetypes.YjsCompactionBatchResult, 0, resultCount)
+	resultBlockPackIdSet := make(map[[16]byte]bool, resultCount)
+	offset := 4
+	for index := uint32(0); index < resultCount; index++ {
+		if len(responsePayload)-offset < 4 {
+			return nil, errors.New("invalid yjs maintenance worker response")
+		}
+
+		resultLength := binary.BigEndian.Uint32(responsePayload[offset : offset+4])
+		offset += 4
+		if uint64(resultLength) > uint64(len(responsePayload)-offset) {
+			return nil, errors.New("invalid yjs maintenance worker response")
+		}
+
+		var result realtimetypes.YjsCompactionBatchResult
+		if err := result.UnmarshalBytes(responsePayload[offset : offset+int(resultLength)]); err != nil {
+			return nil, err
+		}
+		if resultBlockPackIdSet[result.BlockPackId] {
+			return nil, errors.New("duplicate yjs maintenance worker result")
+		}
+		resultBlockPackIdSet[result.BlockPackId] = true
+		offset += int(resultLength)
+
+		results = append(results, result)
+	}
+	if offset != len(responsePayload) {
+		return nil, errors.New("invalid yjs maintenance worker response")
+	}
+
+	return results, nil
+}

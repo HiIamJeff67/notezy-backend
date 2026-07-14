@@ -280,9 +280,6 @@ func (s *BlockPackService) CreateBlockPack(
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
-	if tx.Error != nil {
-		return nil, exceptions.BlockPack.FailedToCreate().WithOrigin(tx.Error)
-	}
 
 	newBlockPackId, exception := s.blockPackRepository.CreateOneBySubShelfId(
 		reqDto.Body.ParentSubShelfId,
@@ -329,9 +326,6 @@ func (s *BlockPackService) CreateBlockPacks(
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
-	if tx.Error != nil {
-		return nil, exceptions.BlockPack.FailedToCreate().WithOrigin(tx.Error)
-	}
 
 	input := make([]inputs.CreateBlockPackBySubShelfIdInput, len(reqDto.Body.CreatedBlockPacks))
 	for index, createdBlockPack := range reqDto.Body.CreatedBlockPacks {

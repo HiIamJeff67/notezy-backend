@@ -88,6 +88,9 @@ words = [
     "arborized",
     "yjs",
     "realtimetypes",
+    "evictable",
+    "hono",
+    "debouncer",
 ]
 
 ignore_paths = [

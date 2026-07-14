@@ -16,17 +16,6 @@ type BlockBinderInterface interface {
 	BindGetMyBlockById(controllerFunc types.ControllerFunc[*dtos.GetMyBlockByIdReqDto]) gin.HandlerFunc
 	BindGetMyBlocksByIds(controllerFunc types.ControllerFunc[*dtos.GetMyBlocksByIdsReqDto]) gin.HandlerFunc
 	BindGetMyBlocksByBlockPackId(controllerFunc types.ControllerFunc[*dtos.GetMyBlocksByBlockPackIdReqDto]) gin.HandlerFunc
-	BindGetAllMyBlocks(controllerFunc types.ControllerFunc[*dtos.GetAllMyBlocksReqDto]) gin.HandlerFunc
-	BindAppendBlock(controllerFunc types.ControllerFunc[*dtos.AppendBlockReqDto]) gin.HandlerFunc
-	BindAppendBlocks(controllerFunc types.ControllerFunc[*dtos.AppendBlocksReqDto]) gin.HandlerFunc
-	BindInsertBlock(controllerFunc types.ControllerFunc[*dtos.InsertBlockReqDto]) gin.HandlerFunc
-	BindInsertBlocks(controllerFunc types.ControllerFunc[*dtos.InsertBlocksReqDto]) gin.HandlerFunc
-	BindUpdateMyBlockById(controllerFunc types.ControllerFunc[*dtos.UpdateMyBlockByIdReqDto]) gin.HandlerFunc
-	BindUpdateMyBlocksByIds(controllerFunc types.ControllerFunc[*dtos.UpdateMyBlocksByIdsReqDto]) gin.HandlerFunc
-	BindRestoreMyBlockById(controllerFunc types.ControllerFunc[*dtos.RestoreMyBlockByIdReqDto]) gin.HandlerFunc
-	BindRestoreMyBlocksByIds(controllerFunc types.ControllerFunc[*dtos.RestoreMyBlocksByIdsReqDto]) gin.HandlerFunc
-	BindDeleteMyBlockById(controllerFunc types.ControllerFunc[*dtos.DeleteMyBlockByIdReqDto]) gin.HandlerFunc
-	BindDeleteMyBlocksByIds(controllerFunc types.ControllerFunc[*dtos.DeleteMyBlocksByIdsReqDto]) gin.HandlerFunc
 }
 
 type BlockBinder struct{}
@@ -50,12 +39,12 @@ func (b *BlockBinder) BindGetMyBlockById(controllerFunc types.ControllerFunc[*dt
 
 		blockIdString := ctx.Query("blockId")
 		if blockIdString == "" {
-			exceptions.Shelf.InvalidDto().WithOrigin(fmt.Errorf("blockId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Block.InvalidDto().WithOrigin(fmt.Errorf("blockId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		blockId, err := uuid.Parse(blockIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Block.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.BlockId = blockId
@@ -78,7 +67,7 @@ func (b *BlockBinder) BindGetMyBlocksByIds(controllerFunc types.ControllerFunc[*
 		reqDto.ContextFields.UserId = *userId
 
 		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
-			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Block.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 
@@ -101,252 +90,15 @@ func (b *BlockBinder) BindGetMyBlocksByBlockPackId(controllerFunc types.Controll
 
 		blockPackIdString := ctx.Query("blockPackId")
 		if blockPackIdString == "" {
-			exceptions.Shelf.InvalidDto().WithOrigin(fmt.Errorf("blockPackId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Block.InvalidDto().WithOrigin(fmt.Errorf("blockPackId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		blockPackId, err := uuid.Parse(blockPackIdString)
 		if err != nil {
-			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			exceptions.Block.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.BlockPackId = blockPackId
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
-func (b *BlockBinder) BindGetAllMyBlocks(controllerFunc types.ControllerFunc[*dtos.GetAllMyBlocksReqDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.GetAllMyBlocksReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserId = *userId
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
-func (b *BlockBinder) BindAppendBlock(controllerFunc types.ControllerFunc[*dtos.AppendBlockReqDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.AppendBlockReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserId = *userId
-
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
-func (b *BlockBinder) BindAppendBlocks(controllerFunc types.ControllerFunc[*dtos.AppendBlocksReqDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.AppendBlocksReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserId = *userId
-
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
-func (b *BlockBinder) BindInsertBlock(controllerFunc types.ControllerFunc[*dtos.InsertBlockReqDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.InsertBlockReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserId = *userId
-
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
-func (b *BlockBinder) BindInsertBlocks(controllerFunc types.ControllerFunc[*dtos.InsertBlocksReqDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.InsertBlocksReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserId = *userId
-
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
-func (b *BlockBinder) BindUpdateMyBlockById(controllerFunc types.ControllerFunc[*dtos.UpdateMyBlockByIdReqDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.UpdateMyBlockByIdReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserId = *userId
-
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
-func (b *BlockBinder) BindUpdateMyBlocksByIds(controllerFunc types.ControllerFunc[*dtos.UpdateMyBlocksByIdsReqDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.UpdateMyBlocksByIdsReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserId = *userId
-
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
-func (b *BlockBinder) BindRestoreMyBlockById(controllerFunc types.ControllerFunc[*dtos.RestoreMyBlockByIdReqDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.RestoreMyBlockByIdReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserId = *userId
-
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
-func (b *BlockBinder) BindRestoreMyBlocksByIds(controllerFunc types.ControllerFunc[*dtos.RestoreMyBlocksByIdsReqDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.RestoreMyBlocksByIdsReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserId = *userId
-
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
-func (b *BlockBinder) BindDeleteMyBlockById(controllerFunc types.ControllerFunc[*dtos.DeleteMyBlockByIdReqDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.DeleteMyBlockByIdReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserId = *userId
-
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
-func (b *BlockBinder) BindDeleteMyBlocksByIds(controllerFunc types.ControllerFunc[*dtos.DeleteMyBlocksByIdsReqDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.DeleteMyBlocksByIdsReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserId = *userId
-
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
 
 		controllerFunc(ctx, &reqDto)
 	}
