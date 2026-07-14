@@ -62,6 +62,7 @@ words = [
     "omitnil",
     "istoggleable",
     "otelcol",
+    "grafana",
     "rowspan",
     "colspan",
     "parentblockid",

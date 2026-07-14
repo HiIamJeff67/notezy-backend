@@ -4,13 +4,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.opentelemetry.io/otel"
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
-	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 func configureDevelopmentUserInfoRoutes(router *gin.RouterGroup) {
@@ -35,11 +32,8 @@ func configureDevelopmentUserInfoRoutes(router *gin.RouterGroup) {
 			"/getMyInfo",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyInfo"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.UserInfo.GetMyInfo,
-					),
+					middlewares.ApplyTracerMiddleware("getMyInfo"),
+					middlewares.ApplyMeterMiddleware("server.requests.userInfo.getMyInfo"),
 				},
 				defaultsMiddlewares,
 				userInfoModule.Binder.BindGetMyInfo(
@@ -51,11 +45,8 @@ func configureDevelopmentUserInfoRoutes(router *gin.RouterGroup) {
 			"/updateMyInfo",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "updateMyInfo"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.UserInfo.UpdateMyInfo,
-					),
+					middlewares.ApplyTracerMiddleware("updateMyInfo"),
+					middlewares.ApplyMeterMiddleware("server.requests.userInfo.updateMyInfo"),
 				},
 				defaultsMiddlewares,
 				userInfoModule.Binder.BindUpdateMyInfo(

@@ -10,7 +10,6 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
-	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
 	tokens "github.com/HiIamJeff67/notezy-backend/app/tokens"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
@@ -119,19 +118,19 @@ func AuthMiddleware() gin.HandlerFunc {
 		// this means the old accessToken can no longer get any data of the user
 		refreshToken, exception := _extractRefreshToken(ctx)
 		if exception != nil { // if failed to extract the refreshToken
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx, metrics.MetricNames.Server.Responses.Failed.Unauthorized)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx, "server.responses.failed.unauthorized")
 			return
 		}
 
 		_user, exception := _validateRefreshToken(refreshToken)
 		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx, metrics.MetricNames.Server.Responses.Failed.Unauthorized)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx, "server.responses.failed.unauthorized")
 			return
 		}
 
 		// if we can't check the userAgent in accessToken, then we check it in our database
 		if currentUserAgent := ctx.GetHeader("User-Agent"); currentUserAgent != _user.UserAgent {
-			exceptions.Auth.WrongUserAgent().Log().SafelyAbortAndResponseWithJSON(ctx, metrics.MetricNames.Server.Responses.Failed.Unauthorized)
+			exceptions.Auth.WrongUserAgent().Log().SafelyAbortAndResponseWithJSON(ctx, "server.responses.failed.unauthorized")
 			return
 		}
 
@@ -139,13 +138,13 @@ func AuthMiddleware() gin.HandlerFunc {
 		// then we need to generate the new accessToken, and storing it in the cache, and regarding the entire validation as successful
 		newAccessToken, exception := tokens.GenerateAccessToken(_user.Name, _user.Email, _user.UserAgent)
 		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx, metrics.MetricNames.Server.Responses.Failed.Unauthorized)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx, "server.responses.failed.unauthorized")
 			return
 		}
 		// also generate a new CSRF token, and storing it in the cache
 		newCSRFToken, exception := tokens.GenerateCSRFToken()
 		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx, metrics.MetricNames.Server.Responses.Failed.Unauthorized)
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx, "server.responses.failed.unauthorized")
 			return
 		}
 
@@ -181,7 +180,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			}
 
 			if exception = caches.SetUserDataCache(_user.Name, newUserDataCache); exception != nil {
-				exception.Log().SafelyAbortAndResponseWithJSON(ctx, metrics.MetricNames.Server.Responses.Failed.Unauthorized)
+				exception.Log().SafelyAbortAndResponseWithJSON(ctx, "server.responses.failed.unauthorized")
 				return
 			}
 		} else {

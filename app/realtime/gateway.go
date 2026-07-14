@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -18,7 +19,7 @@ import (
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
-	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
+	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/app/realtime/types"
 	workers "github.com/HiIamJeff67/notezy-backend/app/realtime/workers"
 	services "github.com/HiIamJeff67/notezy-backend/app/services"
@@ -69,11 +70,7 @@ func (g *Gateway) Handle(ctx *gin.Context) {
 	// extract and validate the ticket which is in Sec-WebSocket-Protocol header
 	connectionTicket := websocket.Subprotocols(ctx.Request)
 	if len(connectionTicket) != 1 {
-		logs.FWarn(
-			traces.GetTrace(0).FileLineString(),
-			"Rejected realtime connection: expected one connection ticket, got %d subprotocols",
-			len(connectionTicket),
-		)
+		logs.NotezyLogger.Warn(ctx.Request.Context(), fmt.Sprintf("Rejected realtime connection: expected one connection ticket, got %d subprotocols", len(connectionTicket)))
 		ctx.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
@@ -83,22 +80,14 @@ func (g *Gateway) Handle(ctx *gin.Context) {
 		ctx.GetHeader("User-Agent"),
 	)
 	if err != nil {
-		logs.FWarn(
-			traces.GetTrace(0).FileLineString(),
-			"Rejected realtime connection: invalid connection ticket: %v",
-			err,
-		)
+		logs.NotezyLogger.Warn(ctx.Request.Context(), fmt.Sprintf("Rejected realtime connection: invalid connection ticket: %v", err))
 		ctx.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
 	userPublicId, err := uuid.Parse(connectionClaims.Subject)
 	if err != nil {
-		logs.FWarn(
-			traces.GetTrace(0).FileLineString(),
-			"Rejected realtime connection: connection ticket subject is not a user public id: %v",
-			err,
-		)
+		logs.NotezyLogger.Warn(ctx.Request.Context(), fmt.Sprintf("Rejected realtime connection: connection ticket subject is not a user public id: %v", err))
 		ctx.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
@@ -123,11 +112,13 @@ func (g *Gateway) Handle(ctx *gin.Context) {
 	g.connectorMutex.Lock()
 	g.connectors[connector.Id] = &connector
 	g.connectorMutex.Unlock()
+	metrics.NotezyMeter.UpDown(ctx.Request.Context(), "realtime.connector.count", 1)
 
 	defer func() {
 		g.connectorMutex.Lock()
 		delete(g.connectors, connector.Id)
 		g.connectorMutex.Unlock()
+		metrics.NotezyMeter.UpDown(ctx.Request.Context(), "realtime.connector.count", -1)
 	}()
 	defer func() {
 		connector.channelMutex.Lock()

@@ -1,4 +1,6 @@
+import { SpanStatusCode } from "@opentelemetry/api";
 import * as Y from "yjs";
+import { Telemetry } from "../telemetry.js";
 import type {
   YjsCompactionInput,
   YjsCompactionResult,
@@ -9,7 +11,15 @@ import {
 } from "../types/yjs_compaction_batch.js";
 
 export class YjsCompactionService {
+  private readonly telemetry: Telemetry;
+
+  constructor(telemetry: Telemetry) {
+    this.telemetry = telemetry;
+  }
+
   compact(input: YjsCompactionInput): YjsCompactionResult {
+    const startedAt = performance.now();
+    const span = this.telemetry.startSpan("compaction");
     const document = new Y.Doc();
     try {
       if (input.snapshot.length > 0) {
@@ -19,14 +29,34 @@ export class YjsCompactionService {
         Y.applyUpdate(document, update.payload);
       }
 
-      return {
+      const result = {
         baseCompactedUntilSequence: input.baseCompactedUntilSequence,
         cutoffSequence: input.cutoffSequence,
         snapshot: Buffer.from(Y.encodeStateAsUpdate(document)),
         stateVector: Buffer.from(Y.encodeStateVector(document)),
       };
+      this.telemetry.recordOperation({
+        operation: "compaction",
+        outcome: "success",
+        durationMilliseconds: performance.now() - startedAt,
+        payloadBytes: input.snapshot.length,
+      });
+
+      return result;
+    } catch (error) {
+      span.recordException(error as Error);
+      span.setStatus({ code: SpanStatusCode.ERROR });
+      this.telemetry.recordOperation({
+        operation: "compaction",
+        outcome: "error",
+        durationMilliseconds: performance.now() - startedAt,
+        error,
+      });
+
+      throw error;
     } finally {
       document.destroy();
+      span.end();
     }
   }
 

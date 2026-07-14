@@ -4,13 +4,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.opentelemetry.io/otel"
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
-	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 func configureDevelopmentRealtimeAPIRoutes(router *gin.RouterGroup) {
@@ -34,11 +31,8 @@ func configureDevelopmentRealtimeAPIRoutes(router *gin.RouterGroup) {
 			"/createMyRealtimeConnectionTicket",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createMyRealtimeConnectionTicket"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Realtime.CreateMyRealtimeConnectionTicket,
-					),
+					middlewares.ApplyTracerMiddleware("createMyRealtimeConnectionTicket"),
+					middlewares.ApplyMeterMiddleware("server.requests.realtime.createMyRealtimeConnectionTicket"),
 				},
 				defaultMiddlewares,
 				realtimeModule.Binder.BindCreateMyRealtimeConnectionTicket(
@@ -50,11 +44,8 @@ func configureDevelopmentRealtimeAPIRoutes(router *gin.RouterGroup) {
 			"/createMyBlockPackChannelTicket",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createMyBlockPackChannelTicket"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Realtime.CreateMyBlockPackChannelTicket,
-					),
+					middlewares.ApplyTracerMiddleware("createMyBlockPackChannelTicket"),
+					middlewares.ApplyMeterMiddleware("server.requests.realtime.createMyBlockPackChannelTicket"),
 				},
 				defaultMiddlewares,
 				realtimeModule.Binder.BindCreateMyBlockPackChannelTicket(

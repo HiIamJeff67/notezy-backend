@@ -4,13 +4,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.opentelemetry.io/otel"
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
-	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 func configureDevelopmentUserAccountRoutes(router *gin.RouterGroup) {
@@ -35,11 +32,8 @@ func configureDevelopmentUserAccountRoutes(router *gin.RouterGroup) {
 			"/getMyAccount",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyAccount"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.UserAccount.GetMyAccount,
-					),
+					middlewares.ApplyTracerMiddleware("getMyAccount"),
+					middlewares.ApplyMeterMiddleware("server.requests.userAccount.getMyAccount"),
 				},
 				defaultMiddlewares,
 				userAccountModule.Binder.BindGetMyAccount(
@@ -51,11 +45,8 @@ func configureDevelopmentUserAccountRoutes(router *gin.RouterGroup) {
 			"/updateMyAccount",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "updateMyAccount"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.UserAccount.UpdateMyAccount,
-					),
+					middlewares.ApplyTracerMiddleware("updateMyAccount"),
+					middlewares.ApplyMeterMiddleware("server.requests.userAccount.updateMyAccount"),
 					middlewares.CSRFMiddleware(),
 				},
 				defaultMiddlewares,
@@ -68,11 +59,8 @@ func configureDevelopmentUserAccountRoutes(router *gin.RouterGroup) {
 			"/bindGoogleAccount",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "bindGoogleAccount"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.UserAccount.BindGoogleAccount,
-					),
+					middlewares.ApplyTracerMiddleware("bindGoogleAccount"),
+					middlewares.ApplyMeterMiddleware("server.requests.userAccount.bindGoogleAccount"),
 				},
 				defaultMiddlewares,
 				userAccountModule.Binder.BindBindGoogleAccount(
@@ -84,11 +72,8 @@ func configureDevelopmentUserAccountRoutes(router *gin.RouterGroup) {
 			"/unbindGoogleAccount",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "unbindGoogleAccount"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.UserAccount.UnbindGoogleAccount,
-					),
+					middlewares.ApplyTracerMiddleware("unbindGoogleAccount"),
+					middlewares.ApplyMeterMiddleware("server.requests.userAccount.unbindGoogleAccount"),
 				},
 				defaultMiddlewares,
 				userAccountModule.Binder.BindUnbindGoogleAccount(

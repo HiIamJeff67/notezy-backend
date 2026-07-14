@@ -4,13 +4,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.opentelemetry.io/otel"
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
-	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 func configureUserSettingRoutes(router *gin.RouterGroup) {
@@ -35,11 +32,8 @@ func configureUserSettingRoutes(router *gin.RouterGroup) {
 			"/getMySetting",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMySetting"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.UserSetting.GetMySetting,
-					),
+					middlewares.ApplyTracerMiddleware("getMySetting"),
+					middlewares.ApplyMeterMiddleware("server.requests.userSetting.getMySetting"),
 				},
 				defaultMiddlewares,
 				userSettingModule.Binder.BindGetMySetting(

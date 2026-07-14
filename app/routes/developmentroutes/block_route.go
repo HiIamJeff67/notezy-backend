@@ -4,13 +4,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.opentelemetry.io/otel"
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
-	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 func configureDevelopmentBlockRoutes(router *gin.RouterGroup) {
@@ -34,11 +31,8 @@ func configureDevelopmentBlockRoutes(router *gin.RouterGroup) {
 		"/getMyBlockById",
 		middlewares.RepositionMiddleware(
 			[]gin.HandlerFunc{
-				middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyBlockById"),
-				middlewares.ApplyMeterMiddleware(
-					otel.Meter(constants.ServiceName),
-					metrics.MetricNames.Server.Requests.Block.GetMyBlockById,
-				),
+				middlewares.ApplyTracerMiddleware("getMyBlockById"),
+				middlewares.ApplyMeterMiddleware("server.requests.block.getMyBlockById"),
 			},
 			defaultMiddlewares,
 			blockModule.Binder.BindGetMyBlockById(
@@ -50,11 +44,8 @@ func configureDevelopmentBlockRoutes(router *gin.RouterGroup) {
 		"/getMyBlocksByIds",
 		middlewares.RepositionMiddleware(
 			[]gin.HandlerFunc{
-				middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyBlocksByIds"),
-				middlewares.ApplyMeterMiddleware(
-					otel.Meter(constants.ServiceName),
-					metrics.MetricNames.Server.Requests.Block.GetMyBlocksByIds,
-				),
+				middlewares.ApplyTracerMiddleware("getMyBlocksByIds"),
+				middlewares.ApplyMeterMiddleware("server.requests.block.getMyBlocksByIds"),
 			},
 			defaultMiddlewares,
 			blockModule.Binder.BindGetMyBlocksByIds(
@@ -66,11 +57,8 @@ func configureDevelopmentBlockRoutes(router *gin.RouterGroup) {
 		"/getMyBlocksByBlockPackId",
 		middlewares.RepositionMiddleware(
 			[]gin.HandlerFunc{
-				middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyBlocksByBlockPackId"),
-				middlewares.ApplyMeterMiddleware(
-					otel.Meter(constants.ServiceName),
-					metrics.MetricNames.Server.Requests.Block.GetMyBlocksByBlockPackId,
-				),
+				middlewares.ApplyTracerMiddleware("getMyBlocksByBlockPackId"),
+				middlewares.ApplyMeterMiddleware("server.requests.block.getMyBlocksByBlockPackId"),
 			},
 			defaultMiddlewares,
 			blockModule.Binder.BindGetMyBlocksByBlockPackId(

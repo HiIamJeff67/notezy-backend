@@ -4,14 +4,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.opentelemetry.io/otel"
 
 	adapters "github.com/HiIamJeff67/notezy-backend/app/adapters"
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
-	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
@@ -36,11 +33,8 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			"/getMyMaterialById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyMaterialById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Material.GetMyMaterialById,
-					),
+					middlewares.ApplyTracerMiddleware("getMyMaterialById"),
+					middlewares.ApplyMeterMiddleware("server.requests.material.getMyMaterialById"),
 				},
 				defaultMiddlewares,
 				materialModule.Binder.BindGetMyMaterialById(
@@ -52,11 +46,8 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			"/getMyMaterialAndItsParentById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyMaterialAndItsParentById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Material.GetMyMaterialAndItsParentById,
-					),
+					middlewares.ApplyTracerMiddleware("getMyMaterialAndItsParentById"),
+					middlewares.ApplyMeterMiddleware("server.requests.material.getMyMaterialAndItsParentById"),
 				},
 				defaultMiddlewares,
 				materialModule.Binder.BindGetMyMaterialAndItsParentById(
@@ -68,11 +59,8 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			"/getMyMaterialsByParentSubShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyMaterialsByParentSubShelfId"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Material.GetMyMaterialsByParentSubShelfId,
-					),
+					middlewares.ApplyTracerMiddleware("getMyMaterialsByParentSubShelfId"),
+					middlewares.ApplyMeterMiddleware("server.requests.material.getMyMaterialsByParentSubShelfId"),
 				},
 				defaultMiddlewares,
 				materialModule.Binder.BindGetMyMaterialsByParentSubShelfId(
@@ -84,11 +72,8 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			"/getAllMyMaterialsByRootShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getAllMyMaterialsByRootShelfId"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Material.GetAllMyMaterialsByRootShelfId,
-					),
+					middlewares.ApplyTracerMiddleware("getAllMyMaterialsByRootShelfId"),
+					middlewares.ApplyMeterMiddleware("server.requests.material.getAllMyMaterialsByRootShelfId"),
 				},
 				defaultMiddlewares,
 				materialModule.Binder.BindGetAllMyMaterialsByRootShelfId(
@@ -100,11 +85,8 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			"/createMyMaterial",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createMyMaterial"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Material.CreateMyMaterial,
-					),
+					middlewares.ApplyTracerMiddleware("createMyMaterial"),
+					middlewares.ApplyMeterMiddleware("server.requests.material.createMyMaterial"),
 				},
 				defaultMiddlewares,
 				materialModule.Binder.BindCreateMyMaterial(
@@ -116,11 +98,8 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			"/updateMyMaterialById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "updateMyMaterialById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Material.UpdateMyMaterialById,
-					),
+					middlewares.ApplyTracerMiddleware("updateMyMaterialById"),
+					middlewares.ApplyMeterMiddleware("server.requests.material.updateMyMaterialById"),
 				},
 				defaultMiddlewares,
 				materialModule.Binder.BindUpdateMyMaterialById(
@@ -132,11 +111,8 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			"/saveMyMaterialById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "saveMyMaterialById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Material.SaveMyMaterialById,
-					),
+					middlewares.ApplyTracerMiddleware("saveMyMaterialById"),
+					middlewares.ApplyMeterMiddleware("server.requests.material.saveMyMaterialById"),
 					adapters.MultipartAdapter(),
 				},
 				defaultMiddlewares,
@@ -149,11 +125,8 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			"/moveMyMaterialById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "moveMyMaterialById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Material.MoveMyMaterialById,
-					),
+					middlewares.ApplyTracerMiddleware("moveMyMaterialById"),
+					middlewares.ApplyMeterMiddleware("server.requests.material.moveMyMaterialById"),
 				},
 				defaultMiddlewares,
 				materialModule.Binder.BindMoveMyMaterialById(
@@ -165,11 +138,8 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			"/moveMyMaterialsByIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "moveMyMaterialsByIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Material.MoveMyMaterialsByIds,
-					),
+					middlewares.ApplyTracerMiddleware("moveMyMaterialsByIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.material.moveMyMaterialsByIds"),
 				},
 				defaultMiddlewares,
 				materialModule.Binder.BindMoveMyMaterialsByIds(
@@ -181,11 +151,8 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			"/restoreMyMaterialById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "restoreMyMaterialById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Material.RestoreMyMaterialById,
-					),
+					middlewares.ApplyTracerMiddleware("restoreMyMaterialById"),
+					middlewares.ApplyMeterMiddleware("server.requests.material.restoreMyMaterialById"),
 				},
 				defaultMiddlewares,
 				materialModule.Binder.BindRestoreMyMaterialById(
@@ -197,11 +164,8 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			"/restoreMyMaterialsByIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "restoreMyMaterialsByIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Material.RestoreMyMaterialsByIds,
-					),
+					middlewares.ApplyTracerMiddleware("restoreMyMaterialsByIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.material.restoreMyMaterialsByIds"),
 				},
 				defaultMiddlewares,
 				materialModule.Binder.BindRestoreMyMaterialsByIds(
@@ -213,11 +177,8 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			"/deleteMyMaterialById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "deleteMyMaterialById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Material.DeleteMyMaterialById,
-					),
+					middlewares.ApplyTracerMiddleware("deleteMyMaterialById"),
+					middlewares.ApplyMeterMiddleware("server.requests.material.deleteMyMaterialById"),
 				},
 				defaultMiddlewares,
 				materialModule.Binder.BindDeleteMyMaterialById(
@@ -229,11 +190,8 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			"/deleteMyMaterialsByIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "deleteMyMaterialsByIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Material.DeleteMyMaterialsByIds,
-					),
+					middlewares.ApplyTracerMiddleware("deleteMyMaterialsByIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.material.deleteMyMaterialsByIds"),
 				},
 				defaultMiddlewares,
 				materialModule.Binder.BindDeleteMyMaterialsByIds(

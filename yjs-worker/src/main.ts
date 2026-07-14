@@ -1,6 +1,8 @@
 import { YjsWorkerServer } from "./server.js";
+import { Telemetry } from "./telemetry.js";
 
-const yjsWorkerServer = new YjsWorkerServer();
+const telemetry = Telemetry.initialize();
+const yjsWorkerServer = new YjsWorkerServer(telemetry);
 let isShuttingDown = false;
 
 async function shutdown(signal: string): Promise<void> {
@@ -9,11 +11,14 @@ async function shutdown(signal: string): Promise<void> {
   }
   isShuttingDown = true;
 
-  console.info(`received ${signal}, stopping yjs worker`);
+  telemetry.log(SeverityNumber.INFO, "yjs_worker.shutdown_started", { signal });
   await yjsWorkerServer.shutdown();
+  await telemetry.shutdown();
 
   process.exit(0);
 }
 
 process.once("SIGINT", () => void shutdown("SIGINT"));
 process.once("SIGTERM", () => void shutdown("SIGTERM"));
+
+import { SeverityNumber } from "@opentelemetry/api-logs";

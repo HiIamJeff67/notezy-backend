@@ -3,6 +3,7 @@ import * as Y from "yjs";
 import { YjsCompactionUpdateThreshold } from "../constants/yjs_compaction.js";
 import { YjsPersistenceBatchShutdownTimeoutMilliseconds } from "../constants/yjs_persistence_batch.js";
 import { YjsCompactionService } from "../services/yjs_compaction_service.js";
+import { Telemetry } from "../telemetry.js";
 import {
   createInternalFrame,
   parseInternalFrame,
@@ -27,21 +28,29 @@ export class RealtimeGateway {
   private readonly yjsCompactionService: YjsCompactionService;
   private readonly webSockets = new Set<WebSocket>();
   private readonly yjsDebouncer: YjsDebouncer;
+  private readonly telemetry: Telemetry;
 
   constructor(
     roomRegistry: RoomRegistry,
     blockPackProjector: BlockPackProjector,
     yjsCompactionService: YjsCompactionService,
-    yjsDebouncer: YjsDebouncer
+    yjsDebouncer: YjsDebouncer,
+    telemetry: Telemetry
   ) {
     this.roomRegistry = roomRegistry;
     this.blockPackProjector = blockPackProjector;
     this.yjsCompactionService = yjsCompactionService;
     this.yjsDebouncer = yjsDebouncer;
+    this.telemetry = telemetry;
     this.yjsDebouncer.bindCallbacks(
       this.sendInternalFrame.bind(this),
       this.resyncRoom.bind(this)
     );
+    this.telemetry.setRoomStateProvider(() => ({
+      activeRooms: this.roomRegistry.size,
+      activeSubscribers: this.roomRegistry.subscriberCount,
+      internalSockets: this.webSockets.size,
+    }));
   }
 
   /* ============================== Internal frame delivery ============================== */
@@ -281,8 +290,11 @@ export class RealtimeGateway {
 
   handleConnection(webSocket: WebSocket): void {
     this.webSockets.add(webSocket);
+    this.telemetry.recordInternalSocket(1);
+
     webSocket.on("close", () => {
       this.webSockets.delete(webSocket);
+      this.telemetry.recordInternalSocket(-1);
       for (const [blockPackId, room] of this.roomRegistry.detachAll(
         webSocket
       )) {

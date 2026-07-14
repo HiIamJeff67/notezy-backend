@@ -1,23 +1,19 @@
 package commands
 
 import (
+	"context"
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 
-	app "github.com/HiIamJeff67/notezy-backend/app"
 	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
-	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 )
 
 var rootCommand = &cobra.Command{
 	Use:   "app",
 	Short: "This is the root command.",
 	Long:  "This is a longer description of the root command.",
-	Run: func(cmd *cobra.Command, args []string) {
-		logs.Info(traces.GetTrace(0).FileLineString(), "Welcome to the CLI.")
-		app.StartApplication()
-	},
 }
 
 func AddCommands(rootCommand *cobra.Command, addedCommands []*cobra.Command) {
@@ -28,6 +24,8 @@ func AddCommands(rootCommand *cobra.Command, addedCommands []*cobra.Command) {
 
 // the Execute() function is the start point of cobra
 func Execute() {
+	logs.NotezyLogger = logs.NewCommandLineInterfaceLogger()
+
 	// prepare the flags of database commands
 	PrepareDatabaseCommandsFlags()
 	// add the commands of database
@@ -43,7 +41,7 @@ func Execute() {
 	)
 
 	if err := rootCommand.Execute(); err != nil {
-		logs.FError(traces.GetTrace(0).FileLineString(), "Failed to init the CLI: %s", err)
+		logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprintf("Failed to init the CLI: %s", err))
 		os.Exit(1)
 	}
 }

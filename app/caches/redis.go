@@ -12,7 +12,6 @@ import (
 	configs "github.com/HiIamJeff67/notezy-backend/app/configs"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
-	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 	util "github.com/HiIamJeff67/notezy-backend/app/util"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
@@ -52,15 +51,15 @@ func ConnectToRedis(config configs.CacheManagerConfig) *redis.Client {
 	redisMapMutex.Lock()
 	defer redisMapMutex.Unlock()
 	if _, ok := RedisClientToConfig[redisClient]; !ok {
-		logs.FInfo(traces.GetTrace(0).FileLineString(), "Storing redis client server of %s into the RedisClientToConfig...", strconv.Itoa(config.DB))
+		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Storing redis client server of %s into the RedisClientToConfig...", strconv.Itoa(config.DB)))
 		RedisClientToConfig[redisClient] = config
 	}
 	if _, ok := RedisClientMap[config.DB]; !ok {
-		logs.FInfo(traces.GetTrace(0).FileLineString(), "Storing redis client server of %s into the RedisClientMap...", strconv.Itoa(config.DB))
+		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Storing redis client server of %s into the RedisClientMap...", strconv.Itoa(config.DB)))
 		RedisClientMap[config.DB] = redisClient
 	}
 
-	logs.FInfo(traces.GetTrace(0).FileLineString(), "Redis client server of %s connected\n", strconv.Itoa(config.DB))
+	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Redis client server of %s connected\n", strconv.Itoa(config.DB)))
 
 	return redisClient
 }
@@ -79,12 +78,12 @@ func DisconnectToRedis(redisClient *redis.Client) bool {
 
 	redisMapMutex.Lock()
 	defer redisMapMutex.Unlock()
-	logs.FInfo(traces.GetTrace(0).FileLineString(), "Deleting redis client server of %s into the RedisClientToConfig...", strconv.Itoa(config.DB))
+	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Deleting redis client server of %s into the RedisClientToConfig...", strconv.Itoa(config.DB)))
 	delete(RedisClientToConfig, redisClient)
-	logs.FInfo(traces.GetTrace(0).FileLineString(), "Deleting redis client server of %s into the RedisClientMap...", strconv.Itoa(config.DB))
+	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Deleting redis client server of %s into the RedisClientMap...", strconv.Itoa(config.DB)))
 	delete(RedisClientMap, config.DB)
 
-	logs.FInfo(traces.GetTrace(0).FileLineString(), "Redis client server of %s connected\n", strconv.Itoa(config.DB))
+	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Redis client server of %s connected\n", strconv.Itoa(config.DB)))
 
 	return true
 }
@@ -164,7 +163,7 @@ func FlushCacheLibraries() *exceptions.Exception {
 		}
 
 		redisClient.Do("FUNCTION", "FLUSH")
-		logs.FDebug(traces.GetTrace(0).FileLineString(), "Flushed all the functions across all libraries in server %s of %d", serverName, serverNumber)
+		logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Flushed all the functions across all libraries in server %s of %d", serverName, serverNumber))
 	}
 
 	return nil
@@ -183,11 +182,7 @@ func LoadRateLimitRecordCacheLibraries() *exceptions.Exception {
 				WithOrigin(err)
 		}
 
-		logs.FInfo(traces.GetTrace(0).FileLineString(), "Reloaded all the functions in library of %s from lua scripts in server %s of %d",
-			redislibraries.RateLimitRecordLibrary,
-			serverName,
-			serverNumber,
-		)
+		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Reloaded all the functions in library of %s from lua scripts in server %s of %d", redislibraries.RateLimitRecordLibrary, serverName, serverNumber))
 	}
 
 	return nil
@@ -206,10 +201,7 @@ func LoadUserQuotaCacheLibraries() *exceptions.Exception {
 				WithOrigin(err)
 		}
 
-		logs.FInfo(traces.GetTrace(0).FileLineString(), "Reloaded all the functions in library of %s from lua scripts in server number of %d",
-			redislibraries.UserQuotaLibrary,
-			serverNumber,
-		)
+		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Reloaded all the functions in library of %s from lua scripts in server number of %d", redislibraries.UserQuotaLibrary, serverNumber))
 	}
 
 	return nil

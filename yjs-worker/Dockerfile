@@ -21,7 +21,7 @@ FROM node:22.23.1-slim AS runtime
 
 WORKDIR /app
 
-ENV NODE_ENV=production
+ENV NODE_ENV=development
 ENV YJS_WORKER_HOST=0.0.0.0
 ENV YJS_WORKER_PORT=8787
 

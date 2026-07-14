@@ -4,13 +4,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.opentelemetry.io/otel"
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
-	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
@@ -35,11 +32,8 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			"/getMyStationById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyStationById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Station.GetMyStationById,
-					),
+					middlewares.ApplyTracerMiddleware("getMyStationById"),
+					middlewares.ApplyMeterMiddleware("server.requests.station.getMyStationById"),
 				},
 				defaultMiddlewares,
 				stationModule.Binder.BindGetMyStationById(
@@ -51,11 +45,8 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			"/getAllMyStations",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getAllMyStations"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Station.GetAllMyStations,
-					),
+					middlewares.ApplyTracerMiddleware("getAllMyStations"),
+					middlewares.ApplyMeterMiddleware("server.requests.station.getAllMyStations"),
 				},
 				defaultMiddlewares,
 				stationModule.Binder.BindGetAllMyStations(
@@ -67,11 +58,8 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			"/visualizeMyTotalCount",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "visualizeMyTotalCount"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Station.VisualizeMyTotalCount,
-					),
+					middlewares.ApplyTracerMiddleware("visualizeMyTotalCount"),
+					middlewares.ApplyMeterMiddleware("server.requests.station.visualizeMyTotalCount"),
 				},
 				defaultMiddlewares,
 				stationModule.Binder.BindVisualizeMyTotalCount(
@@ -83,11 +71,8 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			"/createStation",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createStation"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Station.CreateStation,
-					),
+					middlewares.ApplyTracerMiddleware("createStation"),
+					middlewares.ApplyMeterMiddleware("server.requests.station.createStation"),
 				},
 				defaultMiddlewares,
 				stationModule.Binder.BindCreateStation(
@@ -99,11 +84,8 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			"/createStations",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createStations"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Station.CreateStations,
-					),
+					middlewares.ApplyTracerMiddleware("createStations"),
+					middlewares.ApplyMeterMiddleware("server.requests.station.createStations"),
 				},
 				defaultMiddlewares,
 				stationModule.Binder.BindCreateStations(
@@ -115,11 +97,8 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			"/updateMyStationById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "updateMyStationById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Station.UpdateMyStationById,
-					),
+					middlewares.ApplyTracerMiddleware("updateMyStationById"),
+					middlewares.ApplyMeterMiddleware("server.requests.station.updateMyStationById"),
 				},
 				defaultMiddlewares,
 				stationModule.Binder.BindUpdateMyStationById(
@@ -131,11 +110,8 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			"/updateMyStationsByIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "updateMyStationsByIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Station.UpdateMyStationsByIds,
-					),
+					middlewares.ApplyTracerMiddleware("updateMyStationsByIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.station.updateMyStationsByIds"),
 				},
 				defaultMiddlewares,
 				stationModule.Binder.BindUpdateMyStationsByIds(
@@ -147,11 +123,8 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			"/restoreMyStationById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "restoreMyStationById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Station.RestoreMyStationById,
-					),
+					middlewares.ApplyTracerMiddleware("restoreMyStationById"),
+					middlewares.ApplyMeterMiddleware("server.requests.station.restoreMyStationById"),
 				},
 				defaultMiddlewares,
 				stationModule.Binder.BindRestoreMyStationById(
@@ -163,11 +136,8 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			"/restoreMyStationsByIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "restoreMyStationsByIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Station.RestoreMyStationsByIds,
-					),
+					middlewares.ApplyTracerMiddleware("restoreMyStationsByIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.station.restoreMyStationsByIds"),
 				},
 				defaultMiddlewares,
 				stationModule.Binder.BindRestoreMyStationsByIds(
@@ -179,11 +149,8 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			"/deleteMyStationById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "deleteMyStationById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Station.DeleteMyStationById,
-					),
+					middlewares.ApplyTracerMiddleware("deleteMyStationById"),
+					middlewares.ApplyMeterMiddleware("server.requests.station.deleteMyStationById"),
 				},
 				defaultMiddlewares,
 				stationModule.Binder.BindDeleteMyStationById(
@@ -195,11 +162,8 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			"/deleteMyStationsByIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "deleteMyStationsByIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Station.DeleteMyStationsByIds,
-					),
+					middlewares.ApplyTracerMiddleware("deleteMyStationsByIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.station.deleteMyStationsByIds"),
 				},
 				defaultMiddlewares,
 				stationModule.Binder.BindDeleteMyStationsByIds(
@@ -211,11 +175,8 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			"/hardDeleteMyStationById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "hardDeleteMyStationById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Station.HardDeleteMyStationById,
-					),
+					middlewares.ApplyTracerMiddleware("hardDeleteMyStationById"),
+					middlewares.ApplyMeterMiddleware("server.requests.station.hardDeleteMyStationById"),
 				},
 				defaultMiddlewares,
 				stationModule.Binder.BindHardDeleteMyStationById(
@@ -227,11 +188,8 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			"/hardDeleteMyStationsByIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "hardDeleteMyStationsByIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.Station.HardDeleteMyStationsByIds,
-					),
+					middlewares.ApplyTracerMiddleware("hardDeleteMyStationsByIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.station.hardDeleteMyStationsByIds"),
 				},
 				defaultMiddlewares,
 				stationModule.Binder.BindHardDeleteMyStationsByIds(

@@ -1,6 +1,7 @@
 package caches
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"hash/fnv"
@@ -12,7 +13,6 @@ import (
 	redislibraries "github.com/HiIamJeff67/notezy-backend/app/caches/libraries"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
-	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
@@ -123,7 +123,7 @@ func GetRateLimitRecordCacheByFingerprint(
 		return nil, exceptions.Cache.FailedToConvertJsonToStruct().WithOrigin(err)
 	}
 
-	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully get the cached rate limit in the server with server number of %d", serverNumber)
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully get the cached rate limit in the server with server number of %d", serverNumber))
 	return &rateLimitRecordCache, nil
 }
 
@@ -158,7 +158,7 @@ func SetRateLimitRecordCacheByFingerprint(
 		return exceptions.Cache.FailedToCreate(types.ValidCachePurpose_RateLimite.String()).WithOrigin(err)
 	}
 
-	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully set the cached rate limit record in the server with server number of %d", serverNumber)
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully set the cached rate limit record in the server with server number of %d", serverNumber))
 	return nil
 }
 
@@ -211,7 +211,7 @@ func UpdateSyncrhronizeRateLimitRecordCacheByFingerprint(
 		return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_RateLimite.String()).WithOrigin(err)
 	}
 
-	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully update the cached rate limit record in the server with server number of %d", serverNumber)
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully update the cached rate limit record in the server with server number of %d", serverNumber))
 	return nil
 }
 
@@ -234,7 +234,7 @@ func DeleteRateLimitRecordCacheByFingerprint(
 		return exceptions.Cache.FailedToDelete(types.ValidCachePurpose_RateLimite.String()).WithOrigin(err)
 	}
 
-	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully delete the cached rate limit record in the server with server number of %d", serverNumber)
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully delete the cached rate limit record in the server with server number of %d", serverNumber))
 	return nil
 }
 
@@ -280,7 +280,7 @@ func BatchSynchronizeRateLimitRecordCachesByFingerprints(
 		return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_RateLimite.String()).WithOrigin(err)
 	}
 
-	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully batch update cached rate limit records in the server with server number of %d", serverNumber)
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully batch update cached rate limit records in the server with server number of %d", serverNumber))
 	return nil
 }
 
@@ -317,7 +317,7 @@ func BatchDeleteRateLimiteCachesByFingerprints(
 		return exceptions.Cache.FailedToDelete(types.ValidCachePurpose_RateLimite.String()).WithOrigin(err)
 	}
 
-	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully batch delete cached rate limit records in the server with server number of %d", serverNumber)
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully batch delete cached rate limit records in the server with server number of %d", serverNumber))
 	return nil
 }
 
@@ -345,7 +345,7 @@ func GetRateLimitRecordCacheByUserId(userId uuid.UUID, backendServerName types.B
 		return nil, exceptions.Cache.FailedToConvertJsonToStruct().WithOrigin(err)
 	}
 
-	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully get the cached rate limit in the server with server number of %d", serverNumber)
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully get the cached rate limit in the server with server number of %d", serverNumber))
 	return &rateLimitRecordCache, nil
 }
 
@@ -376,7 +376,7 @@ func SetRateLimitRecordCacheByUserId(userId uuid.UUID, backendServerName types.B
 		return exceptions.Cache.FailedToCreate(types.ValidCachePurpose_RateLimite.String()).WithOrigin(err)
 	}
 
-	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully set the cached rate limit record in the server with server number of %d", serverNumber)
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully set the cached rate limit record in the server with server number of %d", serverNumber))
 	return nil
 }
 
@@ -425,7 +425,7 @@ func UpdateRateLimitRecordCacheByUserId(userId uuid.UUID, backendServerName type
 		return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_RateLimite.String()).WithOrigin(err)
 	}
 
-	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully update the cached rate limit record in the server with server number of %d", serverNumber)
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully update the cached rate limit record in the server with server number of %d", serverNumber))
 	return nil
 }
 
@@ -445,7 +445,7 @@ func DeleteRateLimitRecordCacheByUserId(userId uuid.UUID, backendServerName type
 		return exceptions.Cache.FailedToDelete(types.ValidCachePurpose_RateLimite.String()).WithOrigin(err)
 	}
 
-	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully delete the cached rate limit record in the server with server number of %d", serverNumber)
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully delete the cached rate limit record in the server with server number of %d", serverNumber))
 	return nil
 }
 
@@ -492,7 +492,7 @@ func BatchSynchronizeRateLimitRecordCachesByUserIds(
 		return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_RateLimite.String()).WithOrigin(err)
 	}
 
-	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully batch update cached rate limit records in the server with server number of %d", serverNumber)
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully batch update cached rate limit records in the server with server number of %d", serverNumber))
 	return nil
 }
 
@@ -529,6 +529,6 @@ func BatchDeleteRateLimiteCachesByUserIds(userIds []uuid.UUID, backendServerName
 		return exceptions.Cache.FailedToDelete(types.ValidCachePurpose_RateLimite.String()).WithOrigin(err)
 	}
 
-	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully delete cached rate limit records in the server with server number of %d", serverNumber)
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully delete cached rate limit records in the server with server number of %d", serverNumber))
 	return nil
 }

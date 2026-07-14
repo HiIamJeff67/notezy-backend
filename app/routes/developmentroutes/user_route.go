@@ -4,13 +4,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.opentelemetry.io/otel"
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
-	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 func configureDevelopmentUserRoutes(router *gin.RouterGroup) {
@@ -35,11 +32,8 @@ func configureDevelopmentUserRoutes(router *gin.RouterGroup) {
 			"/getUserData",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getUserData"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.User.GetUserData,
-					),
+					middlewares.ApplyTracerMiddleware("getUserData"),
+					middlewares.ApplyMeterMiddleware("server.requests.user.getUserData"),
 				},
 				defaultMiddlewares,
 				userModule.Binder.BindGetUserData(
@@ -51,11 +45,8 @@ func configureDevelopmentUserRoutes(router *gin.RouterGroup) {
 			"/getMe",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMe"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.User.GetMe,
-					),
+					middlewares.ApplyTracerMiddleware("getMe"),
+					middlewares.ApplyMeterMiddleware("server.requests.user.getMe"),
 				},
 				defaultMiddlewares,
 				userModule.Binder.BindGetMe(
@@ -67,11 +58,8 @@ func configureDevelopmentUserRoutes(router *gin.RouterGroup) {
 			"/updateMe",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "updateMe"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.User.UpdateMe,
-					),
+					middlewares.ApplyTracerMiddleware("updateMe"),
+					middlewares.ApplyMeterMiddleware("server.requests.user.updateMe"),
 				},
 				defaultMiddlewares,
 				userModule.Binder.BindUpdateMe(

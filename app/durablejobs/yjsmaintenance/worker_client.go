@@ -10,7 +10,15 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"time"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/propagation"
+
+	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
+	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
+	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/app/realtime/types"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
@@ -32,7 +40,27 @@ func NewWorkerClient() WorkerClient {
 func (c WorkerClient) Compact(
 	ctx context.Context,
 	inputs []realtimetypes.YjsCompactionBatchInput,
-) ([]realtimetypes.YjsCompactionBatchResult, error) {
+) (results []realtimetypes.YjsCompactionBatchResult, err error) {
+	start := time.Now()
+	ctx, span := traces.NotezyTracer.Start(ctx, "yjs.maintenance.worker.compact")
+	span.SetAttributes(attribute.Int("yjs.document_count", len(inputs)))
+	defer func() {
+		outcome := "success"
+		if err != nil {
+			outcome = "error"
+			logs.NotezyLogger.Error(ctx, err, "Yjs maintenance worker request failed", attribute.String("operation", "maintenance.worker.compact"))
+		}
+		metrics.NotezyMeter.Count(ctx, "yjs.operation.count", 1,
+			attribute.String("operation", "maintenance.worker.compact"),
+			attribute.String("outcome", outcome),
+		)
+		metrics.NotezyMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
+			attribute.String("operation", "maintenance.worker.compact"),
+			attribute.String("outcome", outcome),
+		)
+		traces.NotezyTracer.End(span, err)
+	}()
+
 	if len(inputs) == 0 {
 		return nil, nil
 	}
@@ -78,6 +106,7 @@ func (c WorkerClient) Compact(
 		return nil, err
 	}
 	request.Header.Set("Content-Type", "application/octet-stream")
+	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(request.Header))
 
 	response, err := c.client.Do(request)
 	if err != nil {
@@ -106,7 +135,7 @@ func (c WorkerClient) Compact(
 		return nil, errors.New("incomplete yjs maintenance worker response")
 	}
 
-	results := make([]realtimetypes.YjsCompactionBatchResult, 0, resultCount)
+	results = make([]realtimetypes.YjsCompactionBatchResult, 0, resultCount)
 	resultBlockPackIdSet := make(map[[16]byte]bool, resultCount)
 	offset := 4
 	for index := uint32(0); index < resultCount; index++ {

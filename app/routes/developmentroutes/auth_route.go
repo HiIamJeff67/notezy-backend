@@ -4,14 +4,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.opentelemetry.io/otel"
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
-	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 func configureDevelopmentAuthRoutes(router *gin.RouterGroup) {
@@ -25,11 +22,8 @@ func configureDevelopmentAuthRoutes(router *gin.RouterGroup) {
 	{
 		authRoutes.POST(
 			"/register",
-			middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "register"),
-			middlewares.ApplyMeterMiddleware(
-				otel.Meter(constants.ServiceName),
-				metrics.MetricNames.Server.Requests.Auth.Register,
-			),
+			middlewares.ApplyTracerMiddleware("register"),
+			middlewares.ApplyMeterMiddleware("server.requests.auth.register"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(5*time.Second),
 			authModule.Binder.BindRegister(
@@ -38,11 +32,8 @@ func configureDevelopmentAuthRoutes(router *gin.RouterGroup) {
 		)
 		authRoutes.POST(
 			"/registerViaGoogle",
-			middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "registerViaGoogle"),
-			middlewares.ApplyMeterMiddleware(
-				otel.Meter(constants.ServiceName),
-				metrics.MetricNames.Server.Requests.Auth.RegisterViaGoogle,
-			),
+			middlewares.ApplyTracerMiddleware("registerViaGoogle"),
+			middlewares.ApplyMeterMiddleware("server.requests.auth.registerViaGoogle"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(5*time.Second),
 			authModule.Binder.BindRegisterViaGoogle(
@@ -51,11 +42,8 @@ func configureDevelopmentAuthRoutes(router *gin.RouterGroup) {
 		)
 		authRoutes.POST(
 			"/login",
-			middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "login"),
-			middlewares.ApplyMeterMiddleware(
-				otel.Meter(constants.ServiceName),
-				metrics.MetricNames.Server.Requests.Auth.Login,
-			),
+			middlewares.ApplyTracerMiddleware("login"),
+			middlewares.ApplyMeterMiddleware("server.requests.auth.login"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(3*time.Second),
 			authModule.Binder.BindLogin(
@@ -64,11 +52,8 @@ func configureDevelopmentAuthRoutes(router *gin.RouterGroup) {
 		)
 		authRoutes.POST(
 			"/loginViaGoogle",
-			middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "loginViaGoogle"),
-			middlewares.ApplyMeterMiddleware(
-				otel.Meter(constants.ServiceName),
-				metrics.MetricNames.Server.Requests.Auth.LoginViaGoogle,
-			),
+			middlewares.ApplyTracerMiddleware("loginViaGoogle"),
+			middlewares.ApplyMeterMiddleware("server.requests.auth.loginViaGoogle"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(3*time.Second),
 			authModule.Binder.BindLoginViaGoogle(
@@ -77,11 +62,8 @@ func configureDevelopmentAuthRoutes(router *gin.RouterGroup) {
 		)
 		authRoutes.POST(
 			"/logout",
-			middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "logout"),
-			middlewares.ApplyMeterMiddleware(
-				otel.Meter(constants.ServiceName),
-				metrics.MetricNames.Server.Requests.Auth.Logout,
-			),
+			middlewares.ApplyTracerMiddleware("logout"),
+			middlewares.ApplyMeterMiddleware("server.requests.auth.logout"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(3*time.Second),
 			middlewares.AuthMiddleware(),
@@ -94,11 +76,8 @@ func configureDevelopmentAuthRoutes(router *gin.RouterGroup) {
 		)
 		authRoutes.POST(
 			"/sendAuthCode",
-			middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "sendAuthCode"),
-			middlewares.ApplyMeterMiddleware(
-				otel.Meter(constants.ServiceName),
-				metrics.MetricNames.Server.Requests.Auth.SendAuthCode,
-			),
+			middlewares.ApplyTracerMiddleware("sendAuthCode"),
+			middlewares.ApplyMeterMiddleware("server.requests.auth.sendAuthCode"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(3*time.Second),
 			authModule.Binder.BindSendAuthCode(
@@ -107,11 +86,8 @@ func configureDevelopmentAuthRoutes(router *gin.RouterGroup) {
 		)
 		authRoutes.PUT(
 			"/validateEmail",
-			middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "validateEmail"),
-			middlewares.ApplyMeterMiddleware(
-				otel.Meter(constants.ServiceName),
-				metrics.MetricNames.Server.Requests.Auth.ValidateEmail,
-			),
+			middlewares.ApplyTracerMiddleware("validateEmail"),
+			middlewares.ApplyMeterMiddleware("server.requests.auth.validateEmail"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(3*time.Second),
 			middlewares.AuthMiddleware(),
@@ -126,11 +102,8 @@ func configureDevelopmentAuthRoutes(router *gin.RouterGroup) {
 		)
 		authRoutes.PUT(
 			"/resetEmail",
-			middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "resetEmail"),
-			middlewares.ApplyMeterMiddleware(
-				otel.Meter(constants.ServiceName),
-				metrics.MetricNames.Server.Requests.Auth.ResetEmail,
-			),
+			middlewares.ApplyTracerMiddleware("resetEmail"),
+			middlewares.ApplyMeterMiddleware("server.requests.auth.resetEmail"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(3*time.Second),
 			middlewares.AuthMiddleware(),
@@ -146,11 +119,8 @@ func configureDevelopmentAuthRoutes(router *gin.RouterGroup) {
 		)
 		authRoutes.PUT(
 			"/forgetPassword",
-			middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "forgetPassword"),
-			middlewares.ApplyMeterMiddleware(
-				otel.Meter(constants.ServiceName),
-				metrics.MetricNames.Server.Requests.Auth.ForgetPassword,
-			),
+			middlewares.ApplyTracerMiddleware("forgetPassword"),
+			middlewares.ApplyMeterMiddleware("server.requests.auth.forgetPassword"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(3*time.Second),
 			authModule.Binder.BindForgetPassword(
@@ -159,11 +129,8 @@ func configureDevelopmentAuthRoutes(router *gin.RouterGroup) {
 		)
 		authRoutes.PUT(
 			"/resetMe",
-			middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "resetMe"),
-			middlewares.ApplyMeterMiddleware(
-				otel.Meter(constants.ServiceName),
-				metrics.MetricNames.Server.Requests.Auth.ResetMe,
-			),
+			middlewares.ApplyTracerMiddleware("resetMe"),
+			middlewares.ApplyMeterMiddleware("server.requests.auth.resetMe"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(3*time.Second),
 			middlewares.AuthMiddleware(),
@@ -178,11 +145,8 @@ func configureDevelopmentAuthRoutes(router *gin.RouterGroup) {
 		)
 		authRoutes.DELETE(
 			"/deleteMe",
-			middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "deleteMe"),
-			middlewares.ApplyMeterMiddleware(
-				otel.Meter(constants.ServiceName),
-				metrics.MetricNames.Server.Requests.Auth.DeleteMe,
-			),
+			middlewares.ApplyTracerMiddleware("deleteMe"),
+			middlewares.ApplyMeterMiddleware("server.requests.auth.deleteMe"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(5*time.Second),
 			middlewares.AuthMiddleware(),

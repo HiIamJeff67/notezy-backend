@@ -13,13 +13,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/gqlerror"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/metric"
 
 	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
 	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
 	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
@@ -110,26 +107,16 @@ type ExceptionCompareOption struct {
 	WithOrigin         bool
 }
 
-func (e *Exception) IncrementMeter(ctx *gin.Context, meter metric.Meter, names ...string) {
+func (e *Exception) IncrementMeter(ctx *gin.Context, names ...string) {
 	isTotalCounted := false
 	for _, name := range names {
-		if name == metrics.MetricNames.Server.Responses.Failed.Total {
+		if name == "server.responses.failed.total" {
 			isTotalCounted = true
 		}
-		requestCounter, err := meter.Int64Counter(name)
-		if err != nil {
-			Monitor.FailedToInitializeRequestCounter().Log()
-		} else {
-			requestCounter.Add(ctx, 1)
-		}
+		metrics.NotezyMeter.Count(ctx, name, 1)
 	}
 	if !isTotalCounted {
-		requestCounter, err := meter.Int64Counter(metrics.MetricNames.Server.Responses.Failed.Total)
-		if err != nil {
-			Monitor.FailedToInitializeRequestCounter().Log()
-		} else {
-			requestCounter.Add(ctx, 1)
-		}
+		metrics.NotezyMeter.Count(ctx, "server.responses.failed.total", 1)
 	}
 }
 
@@ -169,7 +156,10 @@ func (e *Exception) GetResponseJSONBytes() ([]byte, error) {
 }
 
 func (e *Exception) ResponseWithJSON(ctx *gin.Context, names ...string) {
-	e.IncrementMeter(ctx, otel.Meter(constants.ServiceName), names...)
+	e.IncrementMeter(ctx, names...)
+	if e.HTTPStatusCode >= http.StatusInternalServerError {
+		traces.NotezyTracer.RecordError(ctx, e.GetOrigin())
+	}
 
 	ctx.JSON(e.HTTPStatusCode, gin.H{
 		"success":   false,
@@ -179,10 +169,13 @@ func (e *Exception) ResponseWithJSON(ctx *gin.Context, names ...string) {
 }
 
 func (e *Exception) SafelyResponseWithJSON(ctx *gin.Context, names ...string) {
-	e.IncrementMeter(ctx, otel.Meter(constants.ServiceName), names...)
+	e.IncrementMeter(ctx, names...)
 
 	if e.IsInternal {
 		e = InternalServerWentWrong(e)
+	}
+	if e.HTTPStatusCode >= http.StatusInternalServerError {
+		traces.NotezyTracer.RecordError(ctx, e.GetOrigin())
 	}
 	ctx.JSON(e.HTTPStatusCode, gin.H{
 		"success":   false,
@@ -192,10 +185,13 @@ func (e *Exception) SafelyResponseWithJSON(ctx *gin.Context, names ...string) {
 }
 
 func (e *Exception) SafelyAbortAndResponseWithJSON(ctx *gin.Context, names ...string) {
-	e.IncrementMeter(ctx, otel.Meter(constants.ServiceName), names...)
+	e.IncrementMeter(ctx, names...)
 
 	if e.IsInternal {
 		e = InternalServerWentWrong(e)
+	}
+	if e.HTTPStatusCode >= http.StatusInternalServerError {
+		traces.NotezyTracer.RecordError(ctx, e.GetOrigin())
 	}
 	ctx.AbortWithStatusJSON(e.HTTPStatusCode, gin.H{
 		"success":   false,
@@ -229,7 +225,7 @@ func (e *Exception) WithNullableError(err error, fallBackConditionToErrorMessage
 }
 
 func (e *Exception) Log() *Exception {
-	logs.Error(traces.GetTrace(1).FileLineString(), e.String())
+	logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprint(e.String()))
 	return e
 }
 
@@ -237,7 +233,7 @@ func (e *Exception) LogTraceStack(maxTraceDepth int) *Exception {
 	if len(e.TraceStack) == 0 {
 		e.TraceStack = traces.GetTraces(1, maxTraceDepth)
 	}
-	logs.Trace(traces.GetTrace(1).FileLineString(), e.TraceStack)
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprint(e.TraceStack))
 	return e
 }
 

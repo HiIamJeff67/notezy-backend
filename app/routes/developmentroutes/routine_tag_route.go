@@ -4,13 +4,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.opentelemetry.io/otel"
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
-	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 func configureDevelopmentRoutineTagRoutes(router *gin.RouterGroup) {
@@ -35,11 +32,8 @@ func configureDevelopmentRoutineTagRoutes(router *gin.RouterGroup) {
 			"/getMyRoutineTagById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyRoutineTagById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RoutineTag.GetMyRoutineTagById,
-					),
+					middlewares.ApplyTracerMiddleware("getMyRoutineTagById"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTag.getMyRoutineTagById"),
 				},
 				defaultMiddlewares,
 				routineTagModule.Binder.BindGetMyRoutineTagById(
@@ -51,11 +45,8 @@ func configureDevelopmentRoutineTagRoutes(router *gin.RouterGroup) {
 			"/getAllMyRoutineTags",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getAllMyRoutineTags"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RoutineTag.GetAllMyRoutineTags,
-					),
+					middlewares.ApplyTracerMiddleware("getAllMyRoutineTags"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTag.getAllMyRoutineTags"),
 				},
 				defaultMiddlewares,
 				routineTagModule.Binder.BindGetAllMyRoutineTags(
@@ -67,11 +58,8 @@ func configureDevelopmentRoutineTagRoutes(router *gin.RouterGroup) {
 			"/createRoutineTag",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createRoutineTag"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RoutineTag.CreateRoutineTag,
-					),
+					middlewares.ApplyTracerMiddleware("createRoutineTag"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTag.createRoutineTag"),
 				},
 				defaultMiddlewares,
 				routineTagModule.Binder.BindCreateRoutineTag(
@@ -83,11 +71,8 @@ func configureDevelopmentRoutineTagRoutes(router *gin.RouterGroup) {
 			"/createRoutineTags",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createRoutineTags"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RoutineTag.CreateRoutineTags,
-					),
+					middlewares.ApplyTracerMiddleware("createRoutineTags"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTag.createRoutineTags"),
 				},
 				defaultMiddlewares,
 				routineTagModule.Binder.BindCreateRoutineTags(
@@ -99,11 +84,8 @@ func configureDevelopmentRoutineTagRoutes(router *gin.RouterGroup) {
 			"/updateMyRoutineTagById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "updateMyRoutineTagById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RoutineTag.UpdateMyRoutineTagById,
-					),
+					middlewares.ApplyTracerMiddleware("updateMyRoutineTagById"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTag.updateMyRoutineTagById"),
 				},
 				defaultMiddlewares,
 				routineTagModule.Binder.BindUpdateMyRoutineTagById(
@@ -115,11 +97,8 @@ func configureDevelopmentRoutineTagRoutes(router *gin.RouterGroup) {
 			"/updateMyRoutineTagsByIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "updateMyRoutineTagsByIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RoutineTag.UpdateMyRoutineTagsByIds,
-					),
+					middlewares.ApplyTracerMiddleware("updateMyRoutineTagsByIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTag.updateMyRoutineTagsByIds"),
 				},
 				defaultMiddlewares,
 				routineTagModule.Binder.BindUpdateMyRoutineTagsByIds(
@@ -131,11 +110,8 @@ func configureDevelopmentRoutineTagRoutes(router *gin.RouterGroup) {
 			"/hardDeleteMyRoutineTagById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "hardDeleteMyRoutineTagById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RoutineTag.HardDeleteMyRoutineTagById,
-					),
+					middlewares.ApplyTracerMiddleware("hardDeleteMyRoutineTagById"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTag.hardDeleteMyRoutineTagById"),
 				},
 				defaultMiddlewares,
 				routineTagModule.Binder.BindHardDeleteMyRoutineTagById(
@@ -147,11 +123,8 @@ func configureDevelopmentRoutineTagRoutes(router *gin.RouterGroup) {
 			"/hardDeleteMyRoutineTagsByIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "hardDeleteMyRoutineTagsByIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RoutineTag.HardDeleteMyRoutineTagsByIds,
-					),
+					middlewares.ApplyTracerMiddleware("hardDeleteMyRoutineTagsByIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTag.hardDeleteMyRoutineTagsByIds"),
 				},
 				defaultMiddlewares,
 				routineTagModule.Binder.BindHardDeleteMyRoutineTagsByIds(

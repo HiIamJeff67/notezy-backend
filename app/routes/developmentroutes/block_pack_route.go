@@ -4,13 +4,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.opentelemetry.io/otel"
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
-	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
@@ -35,11 +32,8 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			"/getMyBlockPackById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyBlockPackById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.BlockPack.GetMyBlockPackById,
-					),
+					middlewares.ApplyTracerMiddleware("getMyBlockPackById"),
+					middlewares.ApplyMeterMiddleware("server.requests.blockPack.getMyBlockPackById"),
 				},
 				defaultMiddlewares,
 				blockPackModule.Binder.BindGetMyBlockPackById(
@@ -51,11 +45,8 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			"/getMyBlockPackAndItsParentById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyBlockPackAndItsParentById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.BlockPack.GetMyBlockPackAndItsParentById,
-					),
+					middlewares.ApplyTracerMiddleware("getMyBlockPackAndItsParentById"),
+					middlewares.ApplyMeterMiddleware("server.requests.blockPack.getMyBlockPackAndItsParentById"),
 				},
 				defaultMiddlewares,
 				blockPackModule.Binder.BindGetMyBlockPackAndItsParentById(
@@ -67,11 +58,8 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			"/getMyBlockPacksByParentSubShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyBlockPacksByParentSubShelfId"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.BlockPack.GetMyBlockPacksByParentSubShelfId,
-					),
+					middlewares.ApplyTracerMiddleware("getMyBlockPacksByParentSubShelfId"),
+					middlewares.ApplyMeterMiddleware("server.requests.blockPack.getMyBlockPacksByParentSubShelfId"),
 				},
 				defaultMiddlewares,
 				blockPackModule.Binder.BindGetMyBlockPacksByParentSubShelfId(
@@ -83,11 +71,8 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			"/getAllMyBlockPacksByRootShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getAllMyBlockPacksByRootShelfId"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.BlockPack.GetAllMyBlockPacksByRootShelfId,
-					),
+					middlewares.ApplyTracerMiddleware("getAllMyBlockPacksByRootShelfId"),
+					middlewares.ApplyMeterMiddleware("server.requests.blockPack.getAllMyBlockPacksByRootShelfId"),
 				},
 				defaultMiddlewares,
 				blockPackModule.Binder.BindGetAllMyBlockPacksByRootShelfId(
@@ -99,11 +84,8 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			"/createBlockPack",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createBlockPack"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.BlockPack.CreateBlockPack,
-					),
+					middlewares.ApplyTracerMiddleware("createBlockPack"),
+					middlewares.ApplyMeterMiddleware("server.requests.blockPack.createBlockPack"),
 				},
 				defaultMiddlewares,
 				blockPackModule.Binder.BindCreateBlockPack(
@@ -115,11 +97,8 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			"/createBlockPacks",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createBlockPacks"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.BlockPack.CreateBlockPacks,
-					),
+					middlewares.ApplyTracerMiddleware("createBlockPacks"),
+					middlewares.ApplyMeterMiddleware("server.requests.blockPack.CreateBlockPacks"),
 				},
 				defaultMiddlewares,
 				blockPackModule.Binder.BindCreateBlockPacks(
@@ -131,11 +110,8 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			"/updateMyBlockPackById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "updateMyBlockPackById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.BlockPack.UpdateMyBlockPackById,
-					),
+					middlewares.ApplyTracerMiddleware("updateMyBlockPackById"),
+					middlewares.ApplyMeterMiddleware("server.requests.blockPack.updateMyBlockPackById"),
 				},
 				defaultMiddlewares,
 				blockPackModule.Binder.BindUpdateMyBlockPackById(
@@ -147,11 +123,8 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			"/updateMyBlockPacksByIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "updateMyBlockPacksByIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.BlockPack.UpdateMyBlockPacksByIds,
-					),
+					middlewares.ApplyTracerMiddleware("updateMyBlockPacksByIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.blockPack.UpdateMyBlockPacksByIds"),
 				},
 				defaultMiddlewares,
 				blockPackModule.Binder.BindUpdateMyBlockPacksByIds(
@@ -163,11 +136,8 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			"/moveMyBlockPackById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "moveMyBlockPackById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.BlockPack.MoveMyBlockPackById,
-					),
+					middlewares.ApplyTracerMiddleware("moveMyBlockPackById"),
+					middlewares.ApplyMeterMiddleware("server.requests.blockPack.moveMyBlockPackById"),
 				},
 				defaultMiddlewares,
 				blockPackModule.Binder.BindMoveMyBlockPackById(
@@ -179,11 +149,8 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			"/moveMyBlockPacksByParentSubShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "moveMyBlockPacksByParentSubShelfId"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.BlockPack.MoveMyBlockPacksByParentSubShelfId,
-					),
+					middlewares.ApplyTracerMiddleware("moveMyBlockPacksByParentSubShelfId"),
+					middlewares.ApplyMeterMiddleware("server.requests.blockPack.moveMyBlockPacksByParentSubShelfId"),
 				},
 				defaultMiddlewares,
 				blockPackModule.Binder.BindMoveMyBlockPacksByParentSubShelfId(
@@ -195,11 +162,8 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			"/moveMyBlockPacksByParentSubShelfIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "moveMyBlockPacksByParentSubShelfIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.BlockPack.MoveMyBlockPacksByParentSubShelfIds,
-					),
+					middlewares.ApplyTracerMiddleware("moveMyBlockPacksByParentSubShelfIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.blockPack.moveMyBlockPacksByParentSubShelfIds"),
 				},
 				defaultMiddlewares,
 				blockPackModule.Binder.BindMoveMyBlockPacksByParentSubShelfIds(
@@ -211,11 +175,8 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			"/restoreMyBlockPackById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "restoreMyBlockPackById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.BlockPack.RestoreMyBlockPackById,
-					),
+					middlewares.ApplyTracerMiddleware("restoreMyBlockPackById"),
+					middlewares.ApplyMeterMiddleware("server.requests.blockPack.restoreMyBlockPackById"),
 				},
 				defaultMiddlewares,
 				blockPackModule.Binder.BindRestoreMyBlockPackById(
@@ -227,11 +188,8 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			"/restoreMyBlockPacksByIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "restoreMyBlockPacksByIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.BlockPack.RestoreMyBlockPacksByIds,
-					),
+					middlewares.ApplyTracerMiddleware("restoreMyBlockPacksByIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.blockPack.restoreMyBlockPacksByIds"),
 				},
 				defaultMiddlewares,
 				blockPackModule.Binder.BindRestoreMyBlockPacksByIds(
@@ -243,11 +201,8 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			"/deleteMyBlockPackById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "deleteMyBlockPackById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.BlockPack.DeleteMyBlockPackById,
-					),
+					middlewares.ApplyTracerMiddleware("deleteMyBlockPackById"),
+					middlewares.ApplyMeterMiddleware("server.requests.blockPack.deleteMyBlockPackById"),
 				},
 				defaultMiddlewares,
 				blockPackModule.Binder.BindDeleteMyBlockPackById(
@@ -259,11 +214,8 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			"/deleteMyBlockPacksByIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "deleteMyBlockPacksByIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.BlockPack.DeleteMyBlockPacksByIds,
-					),
+					middlewares.ApplyTracerMiddleware("deleteMyBlockPacksByIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.blockPack.deleteMyBlockPacksByIds"),
 				},
 				defaultMiddlewares,
 				blockPackModule.Binder.BindDeleteMyBlockPacksByIds(

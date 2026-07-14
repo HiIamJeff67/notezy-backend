@@ -4,8 +4,15 @@ import test from "node:test";
 import * as Y from "yjs";
 
 import { YjsCompactionService } from "../src/services/yjs_compaction_service.js";
+import { Telemetry } from "../src/telemetry.js";
 import { parseYjsCompactionBatchResult } from "../src/types/yjs_compaction_batch.js";
 import { convertUUIDToBytes } from "../src/util/uuid.js";
+
+const telemetry = Telemetry.initialize();
+
+test.after(async () => {
+  await telemetry.shutdown();
+});
 
 test("YjsCompactionService compacts one binary batch without changing its document", () => {
   const sourceDocument = new Y.Doc();
@@ -49,7 +56,7 @@ test("YjsCompactionService compacts one binary batch without changing its docume
   batch.writeUInt32BE(batchItem.length, 4);
   batchItem.copy(batch, 8);
 
-  const response = new YjsCompactionService().compactBatch(batch);
+  const response = new YjsCompactionService(telemetry).compactBatch(batch);
   assert.equal(response.readUInt32BE(0), 1);
 
   const resultLength = response.readUInt32BE(4);

@@ -19,6 +19,7 @@ import (
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
+	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	tokens "github.com/HiIamJeff67/notezy-backend/app/tokens"
 	util "github.com/HiIamJeff67/notezy-backend/app/util"
@@ -126,6 +127,12 @@ func (s *AuthService) Register(
 	if exception != nil {
 		return nil, exception
 	}
+
+	logs.NotezyLogger.Info(ctx, "This is a info level log: Welcome to Notezy")
+	logs.NotezyLogger.Warn(ctx, "This is a warn level log: Welcome to Notezy")
+	logs.NotezyLogger.Alert(ctx, nil, "This is a alert level log: Welcome to Notezy")
+	logs.NotezyLogger.Error(ctx, nil, "This is a error level log: Welcome to Notezy")
+	logs.NotezyLogger.Debug(ctx, "This is a debug level log: Welcome to Notezy")
 
 	tx := s.db.WithContext(ctx).Begin()
 

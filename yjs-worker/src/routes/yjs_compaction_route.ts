@@ -1,12 +1,19 @@
+import {
+  context as otelContext,
+  propagation,
+  SpanStatusCode,
+} from "@opentelemetry/api";
 import type { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 
 import { YjsMaintenanceMaximumPayloadBytes } from "../constants/yjs_maintenance.js";
 import type { YjsCompactionService } from "../services/yjs_compaction_service.js";
+import { Telemetry } from "../telemetry.js";
 
 export function configureYjsCompactionRoutes(
   app: Hono,
-  yjsCompactionService: YjsCompactionService
+  yjsCompactionService: YjsCompactionService,
+  telemetry: Telemetry
 ): void {
   app.post(
     "/internal/yjs-compaction/v1",
@@ -15,6 +22,7 @@ export function configureYjsCompactionRoutes(
       onError: context => context.body(null, 413),
     }),
     async context => {
+      const startedAt = performance.now();
       const contentLength = Number(context.req.header("content-length") ?? 0);
       if (
         !Number.isSafeInteger(contentLength) ||
@@ -25,18 +33,45 @@ export function configureYjsCompactionRoutes(
       }
 
       const payload = Buffer.from(await context.req.arrayBuffer());
+      const parentContext = propagation.extract(
+        otelContext.active(),
+        context.req.raw.headers,
+        {
+          get: (headers, key) => headers.get(key) ?? undefined,
+          keys: headers => [...headers.keys()],
+        }
+      );
+      return otelContext.with(parentContext, () => {
+        const span = telemetry.startSpan("maintenance.compaction_batch");
+        span.setAttribute("yjs.payload_bytes", payload.length);
 
-      try {
-        return context.body(
-          Uint8Array.from(yjsCompactionService.compactBatch(payload)),
-          200,
-          {
+        try {
+          const result = yjsCompactionService.compactBatch(payload);
+          telemetry.recordOperation({
+            operation: "maintenance.compaction_batch",
+            outcome: "success",
+            durationMilliseconds: performance.now() - startedAt,
+            payloadBytes: payload.length,
+          });
+
+          return context.body(Uint8Array.from(result), 200, {
             "content-type": "application/octet-stream",
-          }
-        );
-      } catch {
-        return context.body(null, 422);
-      }
+          });
+        } catch (error) {
+          span.recordException(error as Error);
+          span.setStatus({ code: SpanStatusCode.ERROR });
+          telemetry.recordOperation({
+            operation: "maintenance.compaction_batch",
+            outcome: "error",
+            durationMilliseconds: performance.now() - startedAt,
+            payloadBytes: payload.length,
+            error,
+          });
+          return context.body(null, 422);
+        } finally {
+          span.end();
+        }
+      });
     }
   );
 }

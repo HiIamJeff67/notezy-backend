@@ -1,4 +1,5 @@
 import { serve } from "@hono/node-server";
+import { SeverityNumber } from "@opentelemetry/api-logs";
 import { Hono } from "hono";
 import { WebSocketServer } from "ws";
 
@@ -11,28 +12,31 @@ import { configureHealthRoutes } from "./routes/health_route.js";
 import { configureRealtimeRoutes } from "./routes/realtime_route.js";
 import { configureYjsCompactionRoutes } from "./routes/yjs_compaction_route.js";
 import { YjsCompactionService } from "./services/yjs_compaction_service.js";
+import { Telemetry } from "./telemetry.js";
 
 export class YjsWorkerServer {
   private readonly server: ReturnType<typeof serve>;
   private readonly webSocketServer: WebSocketServer;
   private readonly realtimeGateway: RealtimeGateway;
 
-  constructor() {
+  constructor(telemetry: Telemetry) {
     const app = new Hono();
-    const yjsCompactionService = new YjsCompactionService();
+    const yjsCompactionService = new YjsCompactionService(telemetry);
+    const roomRegistry = new RoomRegistry(telemetry);
     this.webSocketServer = new WebSocketServer({ noServer: true });
     this.realtimeGateway = new RealtimeGateway(
-      new RoomRegistry(),
+      roomRegistry,
       new BlockPackProjector(),
       yjsCompactionService,
-      new YjsDebouncer()
+      new YjsDebouncer(telemetry),
+      telemetry
     );
 
     configureHealthRoutes(
       app,
       this.realtimeGateway.getActiveRoomCount.bind(this.realtimeGateway)
     );
-    configureYjsCompactionRoutes(app, yjsCompactionService);
+    configureYjsCompactionRoutes(app, yjsCompactionService, telemetry);
     configureRealtimeRoutes(
       app,
       this.realtimeGateway.handleConnection.bind(this.realtimeGateway)
@@ -46,7 +50,10 @@ export class YjsWorkerServer {
         websocket: { server: this.webSocketServer },
       },
       () => {
-        console.info(`yjs worker listening on ${config.host}:${config.port}`);
+        telemetry.log(SeverityNumber.INFO, "yjs_worker.started", {
+          host: config.host,
+          port: config.port,
+        });
       }
     );
   }

@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -8,7 +9,6 @@ import (
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
-	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 	util "github.com/HiIamJeff67/notezy-backend/app/util"
 )
 
@@ -42,9 +42,9 @@ func DomainWhiteListMiddleware() gin.HandlerFunc {
 		origin := ctx.GetHeader("Origin")
 		if origin != "" {
 			if !isAllowedOrigin(origin, allowedDomains) {
-				logs.FAlert(traces.GetTrace(0).FileLineString(), "Blocked Origin: %s, allowed origins: ", origin)
+				logs.NotezyLogger.Alert(ctx.Request.Context(), nil, fmt.Sprintf("Blocked Origin: %s, allowed origins: ", origin))
 				for _, domain := range allowedDomains {
-					logs.Alert(traces.GetTrace(0).FileLineString(), domain)
+					logs.NotezyLogger.Alert(ctx.Request.Context(), nil, domain)
 				}
 				ctx.AbortWithStatusJSON(http.StatusForbidden,
 					exceptions.Auth.PermissionDeniedDueToInvalidRequestOriginDomain(origin).GetGinH())
@@ -55,7 +55,7 @@ func DomainWhiteListMiddleware() gin.HandlerFunc {
 		referer := ctx.GetHeader("Referer")
 		if referer != "" && origin == "" {
 			if !isAllowedReferer(referer, allowedDomains) {
-				logs.FAlert(traces.GetTrace(0).FileLineString(), "Blocked Referer: %s", referer)
+				logs.NotezyLogger.Alert(ctx.Request.Context(), nil, fmt.Sprintf("Blocked Referer: %s", referer))
 				ctx.AbortWithStatusJSON(http.StatusForbidden,
 					exceptions.Auth.PermissionDeniedDueToInvalidRequestOriginDomain(referer).GetGinH())
 				return

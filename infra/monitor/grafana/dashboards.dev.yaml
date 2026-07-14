@@ -1,0 +1,10 @@
+apiVersion: 1
+
+providers:
+  - name: notezy-yjs
+    folder: Notezy
+    type: file
+    disableDeletion: true
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

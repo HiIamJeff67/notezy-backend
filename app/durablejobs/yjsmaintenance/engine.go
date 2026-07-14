@@ -5,8 +5,12 @@ import (
 	"sync"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
 	"gorm.io/gorm"
 
+	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
+	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
+	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
@@ -55,13 +59,42 @@ func (e *Engine) Start(ctx context.Context) func() {
 }
 
 func (e *Engine) runOnce(ctx context.Context) {
+	start := time.Now()
+	ctx, span := traces.NotezyTracer.Start(ctx, "yjs.maintenance.run")
+	var finalErr error
+	defer func() { traces.NotezyTracer.End(span, finalErr) }()
+
+	outcome := "success"
 	inputs, err := e.claimer.Claim(ctx)
-	if err == nil && len(inputs) > 0 {
+	if err != nil {
+		outcome = "error"
+		finalErr = err
+		logs.NotezyLogger.Error(ctx, err, "failed to claim Yjs maintenance inputs", attribute.String("operation", "maintenance.claim"))
+	} else if len(inputs) > 0 {
 		results, err := e.workerClient.Compact(ctx, inputs)
-		if err == nil {
-			_, _ = e.handler.Handle(ctx, inputs, results)
+		if err != nil {
+			outcome = "error"
+			finalErr = err
+			logs.NotezyLogger.Error(ctx, err, "failed to compact Yjs maintenance inputs", attribute.String("operation", "maintenance.compact"))
+		} else if _, err := e.handler.Handle(ctx, inputs, results); err != nil {
+			outcome = "error"
+			finalErr = err
+			logs.NotezyLogger.Error(ctx, err, "failed to persist compacted Yjs documents", attribute.String("operation", "maintenance.apply"))
 		}
 	}
 
-	_ = e.handler.Cleanup(ctx)
+	if err := e.handler.Cleanup(ctx); err != nil {
+		outcome = "error"
+		finalErr = err
+		logs.NotezyLogger.Error(ctx, err, "failed to clean compacted Yjs updates", attribute.String("operation", "maintenance.cleanup"))
+	}
+
+	metrics.NotezyMeter.Count(ctx, "yjs.operation.count", 1,
+		attribute.String("operation", "maintenance.run"),
+		attribute.String("outcome", outcome),
+	)
+	metrics.NotezyMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
+		attribute.String("operation", "maintenance.run"),
+		attribute.String("outcome", outcome),
+	)
 }

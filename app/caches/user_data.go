@@ -1,6 +1,7 @@
 package caches
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"hash/fnv"
@@ -14,7 +15,6 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
-	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
@@ -273,7 +273,7 @@ func GetUserDataCache(identifier string) (*UserDataCache, *exceptions.Exception)
 		return nil, exceptions.Cache.FailedToConvertJsonToStruct().WithOrigin(err)
 	}
 
-	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully get the cached user data in the server with server number of %d", serverNumber)
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully get the cached user data in the server with server number of %d", serverNumber))
 	return &userDataCache, nil
 }
 
@@ -299,7 +299,7 @@ func SetUserDataCache(identifier string, userDataCache UserDataCache) *exception
 		return exceptions.Cache.FailedToCreate(types.ValidCachePurpose_UserData.String()).WithOrigin(err)
 	}
 
-	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully set the cached user data in the server with server number of %d", serverNumber)
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully set the cached user data in the server with server number of %d", serverNumber))
 	return nil
 }
 
@@ -329,7 +329,7 @@ func UpdateUserDataCache(identifier string, dto UpdateUserDataCacheDto) *excepti
 		return exceptions.Cache.FailedToUpdate(string(types.ValidCachePurpose_UserData)).WithOrigin(err)
 	}
 
-	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully update the cached user data in the server with server number of %d", serverNumber)
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully update the cached user data in the server with server number of %d", serverNumber))
 	return nil
 }
 
@@ -347,6 +347,6 @@ func DeleteUserDataCache(identifier string) *exceptions.Exception {
 		return exceptions.Cache.FailedToDelete(string(types.ValidCachePurpose_UserData)).WithOrigin(err)
 	}
 
-	logs.FDebug(traces.GetTrace(0).FileLineString(), "Successfully delete the cached user data in the server with server number of %d", serverNumber)
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully delete the cached user data in the server with server number of %d", serverNumber))
 	return nil
 }

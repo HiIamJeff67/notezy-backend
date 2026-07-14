@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -13,7 +14,6 @@ import (
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
-	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 	util "github.com/HiIamJeff67/notezy-backend/app/util"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
@@ -45,7 +45,7 @@ var InMemoryStorage = newInMemoryStorage()
 /* ============================== Helper Functions ============================== */
 
 func (s *inMemoryStorage) ListAllInTerminal() {
-	logs.Info(traces.GetTrace(0).FileLineString(), s.data)
+	logs.NotezyLogger.Info(context.Background(), fmt.Sprint(s.data))
 }
 
 func (s *inMemoryStorage) GetKey(ownerIndicator string, objectIndicator string) string {

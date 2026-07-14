@@ -4,13 +4,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.opentelemetry.io/otel"
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
-	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
@@ -35,11 +32,8 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			"/getMySubShelfById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMySubShelfById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.SubShelf.GetMySubShelfById,
-					),
+					middlewares.ApplyTracerMiddleware("getMySubShelfById"),
+					middlewares.ApplyMeterMiddleware("server.requests.subShelf.getMySubShelfById"),
 				},
 				defaultMiddlewares,
 				subShelfModule.Binder.BindGetMySubShelfById(
@@ -51,11 +45,8 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			"/getMySubShelvesByPrevSubShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMySubShelvesByPrevSubShelfId"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.SubShelf.GetMySubShelvesByPrevSubShelfId,
-					),
+					middlewares.ApplyTracerMiddleware("getMySubShelvesByPrevSubShelfId"),
+					middlewares.ApplyMeterMiddleware("server.requests.subShelf.getMySubShelvesByPrevSubShelfId"),
 				},
 				defaultMiddlewares,
 				subShelfModule.Binder.BindGetMySubShelvesByPrevSubShelfId(
@@ -67,11 +58,8 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			"/getAllMySubShelvesByRootShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getAllMySubShelvesByRootShelfId"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.SubShelf.GetAllMySubShelvesByRootShelfId,
-					),
+					middlewares.ApplyTracerMiddleware("getAllMySubShelvesByRootShelfId"),
+					middlewares.ApplyMeterMiddleware("server.requests.subShelf.getAllMySubShelvesByRootShelfId"),
 				},
 				defaultMiddlewares,
 				subShelfModule.Binder.BindGetAllMySubShelvesByRootShelfId(
@@ -83,11 +71,8 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			"/getMySubShelvesAndItemsByPrevSubShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMySubShelvesAndItemsByPrevSubShelfId"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.SubShelf.GetMySubShelvesAndItemsByPrevSubShelfId,
-					),
+					middlewares.ApplyTracerMiddleware("getMySubShelvesAndItemsByPrevSubShelfId"),
+					middlewares.ApplyMeterMiddleware("server.requests.subShelf.getMySubShelvesAndItemsByPrevSubShelfId"),
 				},
 				defaultMiddlewares,
 				subShelfModule.Binder.BindGetMySubShelvesAndItemsByPrevSubShelfId(
@@ -99,11 +84,8 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			"/createSubShelfByRootShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createSubShelfByRootShelfId"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.SubShelf.CreateSubShelfByRootShelfId,
-					),
+					middlewares.ApplyTracerMiddleware("createSubShelfByRootShelfId"),
+					middlewares.ApplyMeterMiddleware("server.requests.subShelf.createSubShelfByRootShelfId"),
 				},
 				defaultMiddlewares,
 				subShelfModule.Binder.BindCreateSubShelfByRootShelfId(
@@ -115,11 +97,8 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			"/createSubShelvesByRootShelfIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createSubShelvesByRootShelfIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.SubShelf.CreateSubShelvesByRootShelfIds,
-					),
+					middlewares.ApplyTracerMiddleware("createSubShelvesByRootShelfIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.subShelf.CreateSubShelvesByRootShelfIds"),
 				},
 				defaultMiddlewares,
 				subShelfModule.Binder.BindCreateSubShelvesByRootShelfIds(
@@ -131,11 +110,8 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			"/updateMySubShelfById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "updateMySubShelfById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.SubShelf.UpdateMySubShelfById,
-					),
+					middlewares.ApplyTracerMiddleware("updateMySubShelfById"),
+					middlewares.ApplyMeterMiddleware("server.requests.subShelf.updateMySubShelfById"),
 				},
 				defaultMiddlewares,
 				subShelfModule.Binder.BindUpdateMySubShelfById(
@@ -147,11 +123,8 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			"/updateMySubShelvesByIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "updateMySubShelvesByIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.SubShelf.UpdateMySubShelvesByIds,
-					),
+					middlewares.ApplyTracerMiddleware("updateMySubShelvesByIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.subShelf.UpdateMySubShelvesByIds"),
 				},
 				defaultMiddlewares,
 				subShelfModule.Binder.BindUpdateMySubShelvesByIds(
@@ -163,11 +136,8 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			"/moveMySubShelf",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "moveMySubShelf"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.SubShelf.MoveMySubShelf,
-					),
+					middlewares.ApplyTracerMiddleware("moveMySubShelf"),
+					middlewares.ApplyMeterMiddleware("server.requests.subShelf.moveMySubShelf"),
 				},
 				defaultMiddlewares,
 				subShelfModule.Binder.BindMoveMySubShelf(
@@ -179,11 +149,8 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			"/moveMySubShelvesByRootShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "moveMySubShelvesByRootShelfId"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.SubShelf.MoveMySubShelvesByRootShelfId,
-					),
+					middlewares.ApplyTracerMiddleware("moveMySubShelvesByRootShelfId"),
+					middlewares.ApplyMeterMiddleware("server.requests.subShelf.moveMySubShelvesByRootShelfId"),
 				},
 				defaultMiddlewares,
 				subShelfModule.Binder.BindMoveMySubShelvesByRootShelfId(
@@ -195,11 +162,8 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			"/moveMySubShelvesByRootShelfIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "moveMySubShelvesByRootShelfIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.SubShelf.MoveMySubShelvesByRootShelfIds,
-					),
+					middlewares.ApplyTracerMiddleware("moveMySubShelvesByRootShelfIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.subShelf.moveMySubShelvesByRootShelfIds"),
 				},
 				defaultMiddlewares,
 				subShelfModule.Binder.BindMoveMySubShelvesByRootShelfIds(
@@ -211,11 +175,8 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			"/restoreMySubShelfById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "restoreMySubShelfById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.SubShelf.RestoreMySubShelfById,
-					),
+					middlewares.ApplyTracerMiddleware("restoreMySubShelfById"),
+					middlewares.ApplyMeterMiddleware("server.requests.subShelf.restoreMySubShelfById"),
 				},
 				defaultMiddlewares,
 				subShelfModule.Binder.BindRestoreMySubShelfById(
@@ -227,11 +188,8 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			"/restoreMySubShelvesByIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "restoreMySubShelvesByIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.SubShelf.RestoreMySubShelvesByIds,
-					),
+					middlewares.ApplyTracerMiddleware("restoreMySubShelvesByIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.subShelf.restoreMySubShelvesByIds"),
 				},
 				defaultMiddlewares,
 				subShelfModule.Binder.BindRestoreMySubShelvesByIds(
@@ -243,11 +201,8 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			"/deleteMySubShelfById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "deleteMySubShelfById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.SubShelf.DeleteMySubShelfById,
-					),
+					middlewares.ApplyTracerMiddleware("deleteMySubShelfById"),
+					middlewares.ApplyMeterMiddleware("server.requests.subShelf.deleteMySubShelfById"),
 				},
 				defaultMiddlewares,
 				subShelfModule.Binder.BindDeleteMySubShelfById(
@@ -259,11 +214,8 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			"/deleteMySubShelvesByIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "deleteMySubShelvesByIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.SubShelf.DeleteMySubShelvesByIds,
-					),
+					middlewares.ApplyTracerMiddleware("deleteMySubShelvesByIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.subShelf.deleteMySubShelvesByIds"),
 				},
 				defaultMiddlewares,
 				subShelfModule.Binder.BindDeleteMySubShelvesByIds(

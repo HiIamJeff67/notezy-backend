@@ -10,6 +10,7 @@ import {
   YjsPersistenceBatchMaximumWaitMilliseconds,
   YjsPersistenceBatchRetryMilliseconds,
 } from "../constants/yjs_persistence_batch.js";
+import { Telemetry } from "../telemetry.js";
 import { InternalFrameType } from "../types/internal_frame_type.js";
 import type { Room } from "../types/room.js";
 import {
@@ -29,6 +30,11 @@ export class YjsDebouncer {
     payload?: Buffer
   ) => boolean;
   private resyncRoom!: (room: Room, blockPackId: string) => void;
+  private readonly telemetry: Telemetry;
+
+  constructor(telemetry: Telemetry) {
+    this.telemetry = telemetry;
+  }
 
   bindCallbacks(
     sendInternalFrame: (
@@ -75,6 +81,7 @@ export class YjsDebouncer {
     connectionId: string | null = null,
     connectorChannelId: number | null = null
   ): void {
+    const startedAt = performance.now();
     if (
       room.document === null ||
       room.inFlightPersistenceBatch !== null ||
@@ -104,6 +111,11 @@ export class YjsDebouncer {
         )
       );
     } catch {
+      this.telemetry.recordOperation({
+        operation: "persistence.merge",
+        outcome: "error",
+        durationMilliseconds: performance.now() - startedAt,
+      });
       this.resyncRoom(room, blockPackId);
 
       return;
@@ -125,6 +137,12 @@ export class YjsDebouncer {
         connectorChannelId ?? firstUpdate.frame.connectorChannelId,
       updateCount: pendingPersistenceUpdates.length,
     };
+    this.telemetry.recordOperation({
+      operation: "persistence.batch_created",
+      outcome: "success",
+      durationMilliseconds: performance.now() - startedAt,
+      payloadBytes: payload.length,
+    });
 
     if (!this.sendInFlight(room, blockPackId)) {
       this.scheduleRetry(room, blockPackId);
@@ -229,6 +247,12 @@ export class YjsDebouncer {
     }
     room.lastUpdateSequence = updateSequence;
     room.dirtyUpdateCount += inFlightPersistenceBatch.updateCount;
+    this.telemetry.recordOperation({
+      operation: "persistence.batch_persisted",
+      outcome: "success",
+      durationMilliseconds: 0,
+      payloadBytes: inFlightPersistenceBatch.payload.length,
+    });
 
     return inFlightPersistenceBatch;
   }
@@ -248,6 +272,11 @@ export class YjsDebouncer {
       payload[0] ===
       YjsPersistenceFailureType.YjsPersistenceFailureType_Retryable
     ) {
+      this.telemetry.recordOperation({
+        operation: "persistence.batch_persisted",
+        outcome: "error",
+        durationMilliseconds: 0,
+      });
       this.scheduleRetry(room, blockPackId);
 
       return;
@@ -257,6 +286,11 @@ export class YjsDebouncer {
       payload[0] ===
       YjsPersistenceFailureType.YjsPersistenceFailureType_Terminal
     ) {
+      this.telemetry.recordOperation({
+        operation: "persistence.batch_persisted",
+        outcome: "error",
+        durationMilliseconds: 0,
+      });
       this.resyncRoom(room, blockPackId);
     }
   }

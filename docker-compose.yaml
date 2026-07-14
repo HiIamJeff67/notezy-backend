@@ -63,6 +63,10 @@ services:
       REALTIME_TICKET_PRIVATE_KEY_BASE64: ${REALTIME_TICKET_PRIVATE_KEY_BASE64}
       YJS_WORKER_URLS: ${YJS_WORKER_URLS}
       YJS_MAINTENANCE_WORKER_URL: ${YJS_MAINTENANCE_WORKER_URL}
+      OTEL_SERVICE_NAME: notezy-api
+      OTEL_SERVICE_VERSION: ${OTEL_SERVICE_VERSION:-development}
+      OTEL_DEPLOYMENT_ENVIRONMENT: development
+      OTEL_EXPORTER_OTLP_GRPC_ENDPOINT: ${DOCKER_OTEL_COLLECTOR_SERVICE_NAME}:${DOCKER_OTEL_COLLECTOR_GRPC_PORT}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       NOTEZY_OFFICIAL_NAME: ${NOTEZY_OFFICIAL_NAME}
@@ -90,6 +94,10 @@ services:
       NODE_ENV: development
       YJS_WORKER_HOST: 0.0.0.0
       YJS_WORKER_PORT: ${DOCKER_YJS_WORKER_PORT}
+      OTEL_SERVICE_NAME: notezy-yjs-worker
+      OTEL_SERVICE_VERSION: ${OTEL_SERVICE_VERSION:-development}
+      OTEL_DEPLOYMENT_ENVIRONMENT: development
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://${DOCKER_OTEL_COLLECTOR_SERVICE_NAME}:${DOCKER_OTEL_COLLECTOR_HTTP_PORT}
     networks:
       - notezy-backend-net
     expose:
@@ -224,6 +232,8 @@ services:
         ipv4_address: 172.30.0.18
     volumes:
       - ./infra/monitor/grafana/datasources.dev.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ./infra/monitor/grafana/dashboards.dev.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
+      - ./infra/monitor/grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       - notezy-loki
       - notezy-tempo

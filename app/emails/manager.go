@@ -10,7 +10,6 @@ import (
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
-	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
@@ -70,10 +69,10 @@ func (ewm *EmailWorkerManager) processTask(task *EmailTask, workerId int) {
 				ewm.enqueueTask(task)
 			}()
 		} else {
-			logs.FDebug(traces.GetTrace(0).FileLineString(), "Worker %d gave up on task %s after %d of retries", workerId, task.ID, task.MaxRetries)
+			logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Worker %d gave up on task %s after %d of retries", workerId, task.ID, task.MaxRetries))
 		}
 	} else {
-		logs.FDebug(traces.GetTrace(0).FileLineString(), "Worker %d successfully sent email task Id is %s", workerId, task.ID)
+		logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Worker %d successfully sent email task Id is %s", workerId, task.ID))
 	}
 }
 
@@ -86,10 +85,10 @@ func (ewm *EmailWorkerManager) createWorker(task *EmailTask) {
 		defer func() {
 			atomic.AddInt32(&ewm.activeWorkers, -1)
 			ewm.workerPool.Done()
-			logs.FDebug(traces.GetTrace(0).FileLineString(), "Worker %d completed and stopped", workerId)
+			logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Worker %d completed and stopped", workerId))
 		}()
 
-		logs.FDebug(traces.GetTrace(0).FileLineString(), "Worker %d started for task: %s", workerId, task.ID)
+		logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Worker %d started for task: %s", workerId, task.ID))
 		ewm.processTask(task, workerId)
 	}()
 }
@@ -138,10 +137,10 @@ func (ewm *EmailWorkerManager) tryStartMonitoring() {
 	go func() {
 		defer func() {
 			atomic.StoreInt32(&ewm.isMonitoring, 0)
-			logs.FDebug(traces.GetTrace(0).FileLineString(), "Stopped queue monitoring")
+			logs.NotezyLogger.Debug(context.Background(), "Stopped queue monitoring")
 		}()
 
-		logs.FDebug(traces.GetTrace(0).FileLineString(), "Started queue monitoring")
+		logs.NotezyLogger.Debug(context.Background(), "Started queue monitoring")
 
 		for {
 			select {
@@ -168,8 +167,7 @@ func (ewm *EmailWorkerManager) enqueueTask(task *EmailTask) error {
 	bufferSize := ewm.buffer.Len()
 	ewm.bufferMutex.Unlock()
 
-	logs.FDebug(traces.GetTrace(0).FileLineString(), "Enqueued email task: ID=%s, Type=%s, Priority=%d, Queue size: %d",
-		task.ID, task.Type, task.Priority, bufferSize)
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Enqueued email task: ID=%s, Type=%s, Priority=%d, Queue size: %d", task.ID, task.Type, task.Priority, bufferSize))
 
 	ewm.tryStartMonitoring()
 
@@ -183,7 +181,7 @@ func (ewm *EmailWorkerManager) GetActiveWorkerCount() int {
 }
 
 func (ewm *EmailWorkerManager) Shutdown() {
-	logs.FDebug(traces.GetTrace(0).FileLineString(), "Shutting down email worker manager...")
+	logs.NotezyLogger.Debug(context.Background(), "Shutting down email worker manager...")
 
 	ewm.cancel()
 	if ewm.monitorTicker != nil {
@@ -191,7 +189,7 @@ func (ewm *EmailWorkerManager) Shutdown() {
 	}
 	ewm.workerPool.Wait()
 
-	logs.FDebug(traces.GetTrace(0).FileLineString(), "Email worker manager stopped")
+	logs.NotezyLogger.Debug(context.Background(), "Email worker manager stopped")
 }
 
 func (ewm *EmailWorkerManager) GetStatus() map[string]interface{} {

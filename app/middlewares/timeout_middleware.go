@@ -10,7 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
-	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
 	ratelimit "github.com/HiIamJeff67/notezy-backend/shared/lib/ratelimit"
 	responsewriter "github.com/HiIamJeff67/notezy-backend/shared/lib/responsewriter"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
@@ -105,7 +104,7 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 
 			return
 		case <-timeoutCtx.Done():
-			// logs.Alert(traces.GetTrace(0).FileLineString(), "Timeout (timeoutCtx.Done())")
+			// logs.NotezyLogger.Alert(context.Background(), nil, "Timeout (timeoutCtx.Done())")
 			writer.Mutex.Lock()
 			writer.IsTimeout = true
 			writer.FreeBuffer() // clear the buffer, this will destroy the context field stored by other middlewares
@@ -121,14 +120,14 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 				}
 				if _, err := writer.ResponseWriter.Write(timeoutResponseBody); err != nil {
 					exceptions.FatalPanic().WithOrigin(err).SafelyAbortAndResponseWithJSON(
-						ctx, metrics.MetricNames.Server.Responses.Failed.Timeout,
+						ctx, "server.responses.failed.timeout",
 					)
 				}
 			}
 
 			return
 		case <-time.After(timeout):
-			// logs.Alert(traces.GetTrace(0).FileLineString(), "Timeout (time.After)")
+			// logs.NotezyLogger.Alert(context.Background(), nil, "Timeout (time.After)")
 			writer.Mutex.Lock()
 			writer.IsTimeout = true
 			writer.FreeBuffer() // clear the buffer, this will destroy the context field stored by other middlewares
@@ -144,7 +143,7 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 				}
 				if _, err := writer.ResponseWriter.Write(timeoutResponseBody); err != nil {
 					exceptions.FatalPanic().WithOrigin(err).SafelyAbortAndResponseWithJSON(
-						ctx, metrics.MetricNames.Server.Responses.Failed.Timeout,
+						ctx, "server.responses.failed.timeout",
 					)
 				}
 			}

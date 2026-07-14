@@ -2,49 +2,40 @@ package middlewares
 
 import (
 	"github.com/gin-gonic/gin"
-	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/attribute"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
+	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 )
 
-func ApplyTracerMiddleware(tracer trace.Tracer, spanName string) gin.HandlerFunc {
+func ApplyTracerMiddleware(spanName string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		newCtx, span := tracer.Start(ctx.Request.Context(), spanName)
-		defer span.End()
+		newCtx, span := traces.NotezyTracer.Start(ctx.Request.Context(), "http."+spanName)
+		span.SetAttributes(
+			attribute.String("http.request.method", ctx.Request.Method),
+			attribute.String("http.route", ctx.FullPath()),
+		)
+		defer func() {
+			span.SetAttributes(attribute.Int("http.response.status_code", ctx.Writer.Status()))
+			traces.NotezyTracer.End(span, nil)
+		}()
+
 		ctx.Request = ctx.Request.WithContext(newCtx)
 		ctx.Next()
 	}
 }
 
-// The ApplyMeterMiddleware will accept a meter and the optional field of names,
-// then iterate all the names to get the corresponding request counter and increament them in int64.
-// The meter is a type of metric.Meter, which should be initialized by calling otel.Meter("service-name"),
-// the names is the names of the target request counter.
-// Note that the label of 'server.requests.total' will always going to increament once apply this middleware
-// even if its name is not passed.
-func ApplyMeterMiddleware(meter metric.Meter, names ...string) gin.HandlerFunc {
+func ApplyMeterMiddleware(names ...string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		isTotalCounted := false
 		for _, name := range names {
-			if name == metrics.MetricNames.Server.Requests.Total {
+			if name == "server.requests.total" {
 				isTotalCounted = true
 			}
-			requestCounter, err := meter.Int64Counter(name)
-			if err != nil {
-				exceptions.Monitor.FailedToInitializeRequestCounter().Log()
-			} else {
-				requestCounter.Add(ctx, 1)
-			}
+			metrics.NotezyMeter.Count(ctx, name, 1)
 		}
 		if !isTotalCounted {
-			requestCounter, err := meter.Int64Counter(metrics.MetricNames.Server.Requests.Total)
-			if err != nil {
-				exceptions.Monitor.FailedToInitializeRequestCounter().Log()
-			} else {
-				requestCounter.Add(ctx, 1)
-			}
+			metrics.NotezyMeter.Count(ctx, "server.requests.total", 1)
 		}
 		ctx.Next()
 	}

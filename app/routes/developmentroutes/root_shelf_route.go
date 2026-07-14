@@ -4,13 +4,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.opentelemetry.io/otel"
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
-	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
@@ -35,11 +32,8 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 			"/getMyRootShelfById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getMyRootShelfById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RootShelf.GetMyRootShelfById,
-					),
+					middlewares.ApplyTracerMiddleware("getMyRootShelfById"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.getMyRootShelfById"),
 				},
 				defaultMiddlewares,
 				rootShelfModule.Binder.BindGetMyRootShelfById(
@@ -51,11 +45,8 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 			"/searchRecentRootShelves",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "searchRecentRootShelves"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RootShelf.SearchRecentRootShelves,
-					),
+					middlewares.ApplyTracerMiddleware("searchRecentRootShelves"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.searchRecentRootShelves"),
 				},
 				defaultMiddlewares,
 				rootShelfModule.Binder.BindSearchRecentRootShelves(
@@ -67,11 +58,8 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 			"/createRootShelf",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createRootShelf"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RootShelf.CreateRootShelf,
-					),
+					middlewares.ApplyTracerMiddleware("createRootShelf"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.createRootShelf"),
 				},
 				defaultMiddlewares,
 				rootShelfModule.Binder.BindCreateRootShelf(
@@ -83,11 +71,8 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 			"/createRootShelves",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "createRootShelves"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RootShelf.CreateRootShelves,
-					),
+					middlewares.ApplyTracerMiddleware("createRootShelves"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.createRootShelves"),
 				},
 				defaultMiddlewares,
 				rootShelfModule.Binder.BindCreateRootShelves(
@@ -99,11 +84,8 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 			"/updateMyRootShelfById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "updateMyRootShelfById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RootShelf.UpdateMyRootShelfById,
-					),
+					middlewares.ApplyTracerMiddleware("updateMyRootShelfById"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.updateMyRootShelfById"),
 				},
 				defaultMiddlewares,
 				rootShelfModule.Binder.BindUpdateMyRootShelfById(
@@ -115,11 +97,8 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 			"/updateMyRootShelvesByIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "updateMyRootShelvesByIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RootShelf.UpdateMyRootShelvesByIds,
-					),
+					middlewares.ApplyTracerMiddleware("updateMyRootShelvesByIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.updateMyRootShelvesByIds"),
 				},
 				defaultMiddlewares,
 				rootShelfModule.Binder.BindUpdateMyRootShelvesByIds(
@@ -131,11 +110,8 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 			"/restoreMyRootShelfById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "restoreMyRootShelfById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RootShelf.RestoreMyRootShelfById,
-					),
+					middlewares.ApplyTracerMiddleware("restoreMyRootShelfById"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.restoreMyRootShelfById"),
 				},
 				defaultMiddlewares,
 				rootShelfModule.Binder.BindRestoreMyRootShelfById(
@@ -147,11 +123,8 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 			"/restoreMyRootShelvesByIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "restoreMyRootShelvesByIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RootShelf.RestoreMyRootShelvesByIds,
-					),
+					middlewares.ApplyTracerMiddleware("restoreMyRootShelvesByIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.restoreMyRootShelvesByIds"),
 				},
 				defaultMiddlewares,
 				rootShelfModule.Binder.BindRestoreMyRootShelvesByIds(
@@ -163,11 +136,8 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 			"/deleteMyRootShelfById",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "deleteMyRootShelfById"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RootShelf.DeleteMyRootShelfById,
-					),
+					middlewares.ApplyTracerMiddleware("deleteMyRootShelfById"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.deleteMyRootShelfById"),
 				},
 				defaultMiddlewares,
 				rootShelfModule.Binder.BindDeleteMyRootShelfById(
@@ -179,11 +149,8 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 			"/deleteMyRootShelvesByIds",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "deleteMyRootShelvesByIds"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RootShelf.DeleteMyRootShelvesByIds,
-					),
+					middlewares.ApplyTracerMiddleware("deleteMyRootShelvesByIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.deleteMyRootShelvesByIds"),
 				},
 				defaultMiddlewares,
 				rootShelfModule.Binder.BindDeleteMyRootShelvesByIds(

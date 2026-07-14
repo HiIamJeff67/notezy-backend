@@ -1,10 +1,16 @@
 import type WebSocket from "ws";
 
 import { YjsRoomIdleEvictionMilliseconds } from "../constants/eviction.js";
+import { Telemetry } from "../telemetry.js";
 import type { Room } from "../types/room.js";
 
 export class RoomRegistry {
   private readonly rooms = new Map<string, Room>();
+  private readonly telemetry: Telemetry;
+
+  constructor(telemetry: Telemetry) {
+    this.telemetry = telemetry;
+  }
 
   getOrCreate(blockPackId: string): Room {
     const existingRoom = this.rooms.get(blockPackId);
@@ -36,6 +42,11 @@ export class RoomRegistry {
       inFlightProjection: null,
     };
     this.rooms.set(blockPackId, room);
+    this.telemetry.recordOperation({
+      operation: "room.created",
+      outcome: "success",
+      durationMilliseconds: 0,
+    });
 
     return room;
   }
@@ -209,6 +220,11 @@ export class RoomRegistry {
     room.persistenceRetryTimer = null;
     room.projectionTimer = null;
     this.rooms.delete(blockPackId);
+    this.telemetry.recordOperation({
+      operation: "room.evicted",
+      outcome: "success",
+      durationMilliseconds: 0,
+    });
 
     return true;
   }
@@ -222,6 +238,15 @@ export class RoomRegistry {
 
   get size(): number {
     return this.rooms.size;
+  }
+
+  get subscriberCount(): number {
+    let count = 0;
+    for (const room of this.rooms.values()) {
+      count += room.subscribers.size;
+    }
+
+    return count;
   }
 
   entries(): IterableIterator<[string, Room]> {

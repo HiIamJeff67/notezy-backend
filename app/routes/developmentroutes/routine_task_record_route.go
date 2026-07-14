@@ -4,13 +4,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.opentelemetry.io/otel"
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
-	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup) {
@@ -35,11 +32,8 @@ func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup) {
 			"/getAllMyRoutineTaskRecordsByRoutineTaskId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "getAllMyRoutineTaskRecordsByRoutineTaskId"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RoutineTaskRecord.GetAllMyRoutineTaskRecordsByRoutineTaskId,
-					),
+					middlewares.ApplyTracerMiddleware("getAllMyRoutineTaskRecordsByRoutineTaskId"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTaskRecord.getAllMyRoutineTaskRecordsByRoutineTaskId"),
 				},
 				defaultMiddlewares,
 				routineTaskRecordModule.Binder.BindGetAllMyRoutineTaskRecordsByRoutineTaskId(
@@ -51,11 +45,8 @@ func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup) {
 			"/visualizeMyRoutineTaskRecordStatusCount",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "visualizeMyRoutineTaskRecordStatusCount"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RoutineTaskRecord.VisualizeMyRoutineTaskRecordStatusCount,
-					),
+					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskRecordStatusCount"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTaskRecord.visualizeMyRoutineTaskRecordStatusCount"),
 				},
 				defaultMiddlewares,
 				routineTaskRecordModule.Binder.BindVisualizeMyRoutineTaskRecordStatusCount(
@@ -67,11 +58,8 @@ func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup) {
 			"/visualizeMyRoutineTaskRecordPurposeCount",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "visualizeMyRoutineTaskRecordPurposeCount"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RoutineTaskRecord.VisualizeMyRoutineTaskRecordPurposeCount,
-					),
+					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskRecordPurposeCount"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTaskRecord.visualizeMyRoutineTaskRecordPurposeCount"),
 				},
 				defaultMiddlewares,
 				routineTaskRecordModule.Binder.BindVisualizeMyRoutineTaskRecordPurposeCount(
@@ -83,11 +71,8 @@ func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup) {
 			"/visualizeMyRoutineTaskRecordScheduledAtCount",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "visualizeMyRoutineTaskRecordScheduledAtCount"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RoutineTaskRecord.VisualizeMyRoutineTaskRecordScheduledAtCount,
-					),
+					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskRecordScheduledAtCount"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTaskRecord.visualizeMyRoutineTaskRecordScheduledAtCount"),
 				},
 				defaultMiddlewares,
 				routineTaskRecordModule.Binder.BindVisualizeMyRoutineTaskRecordScheduledAtCount(
@@ -99,11 +84,8 @@ func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup) {
 			"/visualizeMyRoutineTaskRecordActualStartedAtCount",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "visualizeMyRoutineTaskRecordActualStartedAtCount"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RoutineTaskRecord.VisualizeMyRoutineTaskRecordActualStartedAtCount,
-					),
+					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskRecordActualStartedAtCount"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTaskRecord.visualizeMyRoutineTaskRecordActualStartedAtCount"),
 				},
 				defaultMiddlewares,
 				routineTaskRecordModule.Binder.BindVisualizeMyRoutineTaskRecordActualStartedAtCount(
@@ -115,11 +97,8 @@ func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup) {
 			"/visualizeMyRoutineTaskRecordActualEndedAtCount",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware(otel.Tracer(constants.ServiceName), "visualizeMyRoutineTaskRecordActualEndedAtCount"),
-					middlewares.ApplyMeterMiddleware(
-						otel.Meter(constants.ServiceName),
-						metrics.MetricNames.Server.Requests.RoutineTaskRecord.VisualizeMyRoutineTaskRecordActualEndedAtCount,
-					),
+					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskRecordActualEndedAtCount"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTaskRecord.visualizeMyRoutineTaskRecordActualEndedAtCount"),
 				},
 				defaultMiddlewares,
 				routineTaskRecordModule.Binder.BindVisualizeMyRoutineTaskRecordActualEndedAtCount(

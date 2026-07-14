@@ -1,0 +1,17 @@
+groups:
+  - name: notezy-yjs
+    rules:
+      - alert: NotezyYjsWorkerEventLoopDelayHigh
+        expr: max_over_time(notezy_yjs_worker_event_loop_delay_milliseconds[5m]) > 200
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Yjs worker event loop delay is above 200 ms.
+      - alert: NotezyYjsPersistenceFailureRateHigh
+        expr: sum(rate(notezy_yjs_worker_operation_count_total{operation="persistence.batch_persisted",outcome="error"}[5m])) / clamp_min(sum(rate(notezy_yjs_worker_operation_count_total{operation="persistence.batch_persisted"}[5m])), 1) > 0.02
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: Yjs persistence failure rate is above 2%.

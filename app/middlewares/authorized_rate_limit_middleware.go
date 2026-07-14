@@ -1,6 +1,8 @@
 package middlewares
 
 import (
+	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -10,8 +12,6 @@ import (
 	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
-	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
-	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 	ratelimit "github.com/HiIamJeff67/notezy-backend/shared/lib/ratelimit"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
@@ -32,9 +32,7 @@ func InitAuthorizedRateLimiter(config configs.RateLimitConfig) {
 		true,
 	)
 
-	logs.FInfo(traces.GetTrace(0).FileLineString(),
-		"Authorized rate limiter initialized with rate: %v, burst: %d, user limit: %d, window: %v",
-		config.RateLimit, config.Burst, config.UserLimit, config.WindowDuration)
+	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Authorized rate limiter initialized with rate: %v, burst: %d, user limit: %d, window: %v", config.RateLimit, config.Burst, config.UserLimit, config.WindowDuration))
 }
 
 func AuthorizedRateLimitMiddleware(config ...configs.RateLimitConfig) gin.HandlerFunc {
@@ -60,8 +58,8 @@ func AuthorizedRateLimitMiddleware(config ...configs.RateLimitConfig) gin.Handle
 		allowed, remaining := authorizedRateLimiter.AllowByUserId(*userId)
 		if !allowed {
 			setRateLimitHeaders(ctx, remaining, authorizedRateLimiter)
-			logs.FDebug(traces.GetTrace(0).FileLineString(), "Rate limit exceeded for user: %s", userId.String())
-			exceptions.Auth.PermissionDeniedDueToTooManyRequests().Log().SafelyAbortAndResponseWithJSON(ctx, metrics.MetricNames.Server.Responses.Failed.RateLimit)
+			logs.NotezyLogger.Debug(ctx.Request.Context(), fmt.Sprintf("Rate limit exceeded for user: %s", userId.String()))
+			exceptions.Auth.PermissionDeniedDueToTooManyRequests().Log().SafelyAbortAndResponseWithJSON(ctx, "server.responses.failed.rateLimit")
 			return
 		}
 
@@ -86,6 +84,6 @@ func StopAuthorizedRateLimiter() {
 	if authorizedRateLimiter != nil {
 		authorizedRateLimiter.Stop()
 		authorizedRateLimiter = nil
-		logs.FInfo(traces.GetTrace(0).FileLineString(), "Authorized rate limiter stopped")
+		logs.NotezyLogger.Info(context.Background(), "Authorized rate limiter stopped")
 	}
 }

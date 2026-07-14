@@ -1,13 +1,13 @@
 package middlewares
 
 import (
+	"context"
+	"fmt"
 	"github.com/gin-gonic/gin"
 
 	configs "github.com/HiIamJeff67/notezy-backend/app/configs"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
-	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
-	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 	ratelimit "github.com/HiIamJeff67/notezy-backend/shared/lib/ratelimit"
 )
 
@@ -27,9 +27,7 @@ func InitUnauthorizedRateLimiter(config configs.RateLimitConfig) {
 		false,
 	)
 
-	logs.FInfo(traces.GetTrace(0).FileLineString(),
-		"Unauthorized rate limiter initialized with rate: %v, burst: %d, user limit: %d, window: %v",
-		config.RateLimit, config.Burst, config.UserLimit, config.WindowDuration)
+	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Unauthorized rate limiter initialized with rate: %v, burst: %d, user limit: %d, window: %v", config.RateLimit, config.Burst, config.UserLimit, config.WindowDuration))
 }
 
 func UnauthorizedRateLimitMiddleware(config ...configs.RateLimitConfig) gin.HandlerFunc {
@@ -48,8 +46,8 @@ func UnauthorizedRateLimitMiddleware(config ...configs.RateLimitConfig) gin.Hand
 		allowed, remaining := unauthorizedRateLimiter.AllowByFingerprint(fingerprint)
 		if !allowed {
 			setRateLimitHeaders(ctx, remaining, unauthorizedRateLimiter)
-			logs.FDebug(traces.GetTrace(0).FileLineString(), "Rate limit exceeded for fingerprint: %s", fingerprint)
-			exceptions.Auth.PermissionDeniedDueToTooManyRequests().Log().SafelyAbortAndResponseWithJSON(ctx, metrics.MetricNames.Server.Responses.Failed.RateLimit)
+			logs.NotezyLogger.Debug(ctx.Request.Context(), fmt.Sprintf("Rate limit exceeded for fingerprint: %s", fingerprint))
+			exceptions.Auth.PermissionDeniedDueToTooManyRequests().Log().SafelyAbortAndResponseWithJSON(ctx, "server.responses.failed.rateLimit")
 			return
 		}
 
@@ -68,6 +66,6 @@ func StopUnauthorizedRateLimiter() {
 	if unauthorizedRateLimiter != nil {
 		unauthorizedRateLimiter.Stop()
 		unauthorizedRateLimiter = nil
-		logs.FInfo(traces.GetTrace(0).FileLineString(), "Unauthorized rate limiter stopped")
+		logs.NotezyLogger.Info(context.Background(), "Unauthorized rate limiter stopped")
 	}
 }

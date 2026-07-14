@@ -8,7 +8,6 @@ import (
 
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
 	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
-	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 )
 
 func configureStaticRoutes(router *gin.RouterGroup) {
@@ -32,7 +31,7 @@ func configureStaticRoutes(router *gin.RouterGroup) {
 				if _, err := os.Stat(filePath); os.IsNotExist(err) {
 					filePath = "./global/images/avatars/userAvatar1.png"
 				}
-				logs.FInfo(traces.GetTrace(0).FileLineString(), "download file")
+				logs.NotezyLogger.Info(ctx.Request.Context(), "download file")
 
 				ctx.File(filePath)
 			})
