@@ -21,6 +21,7 @@ type BlockPackYjsRepositoryInterface interface {
 	DeleteCompactedUpdates(input inputs.DeleteCompactedBlockPackYjsUpdatesInput, opts ...options.RepositoryOptions) (int64, error)
 
 	BulkCheckPermissionsAndGetManyByIds(blockPackIds []uuid.UUID, opts ...options.RepositoryOptions) ([]bool, []BlockPackYjsDocumentWithUpdates, error)
+	BulkCheckProjectionDocumentsByIds(blockPackIds []uuid.UUID, opts ...options.RepositoryOptions) ([]BlockPackYjsDocumentWithUpdates, error)
 	BulkApplyCompactedYjsDocuments(inputs []inputs.BulkApplyCompactedBlockPackYjsDocumentInput, opts ...options.RepositoryOptions) ([]uuid.UUID, error)
 }
 
@@ -403,6 +404,85 @@ func (r *BlockPackYjsRepository) BulkCheckPermissionsAndGetManyByIds(
 	return validBlockPacks, pairs, nil
 }
 
+func (r *BlockPackYjsRepository) BulkCheckProjectionDocumentsByIds(
+	blockPackIds []uuid.UUID,
+	opts ...options.RepositoryOptions,
+) ([]BlockPackYjsDocumentWithUpdates, error) {
+	if len(blockPackIds) == 0 {
+		return []BlockPackYjsDocumentWithUpdates{}, nil
+	}
+
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+	db := parsedOptions.DB
+
+	var documents []schemas.BlockPackYjsDocument
+	if err := db.Model(&schemas.BlockPackYjsDocument{}).
+		Select(`"BlockPackYjsDocumentTable".*`).
+		Joins(`INNER JOIN "BlockPackTable" bp ON bp.id = "BlockPackYjsDocumentTable".block_pack_id AND bp.deleted_at IS NULL`).
+		Where(`"BlockPackYjsDocumentTable".block_pack_id IN ?`, blockPackIds).
+		Where(`"BlockPackYjsDocumentTable".deleted_at IS NULL`).
+		Where(`"BlockPackYjsDocumentTable".last_update_sequence > "BlockPackYjsDocumentTable".projected_until_sequence`).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
+		Find(&documents).Error; err != nil {
+		return nil, err
+	}
+	if len(documents) == 0 {
+		return []BlockPackYjsDocumentWithUpdates{}, nil
+	}
+
+	documentByBlockPackId := make(map[uuid.UUID]schemas.BlockPackYjsDocument, len(documents))
+	for _, document := range documents {
+		documentByBlockPackId[document.BlockPackId] = document
+	}
+
+	var updates []schemas.BlockPackYjsUpdate
+	if err := db.Model(&schemas.BlockPackYjsUpdate{}).
+		Joins(`INNER JOIN "BlockPackYjsDocumentTable" document ON document.block_pack_id = "BlockPackYjsUpdateTable".block_pack_id AND document.deleted_at IS NULL`).
+		Where(`"BlockPackYjsUpdateTable".block_pack_id IN ?`, blockPackIds).
+		Where(`"BlockPackYjsUpdateTable".update_sequence > document.compacted_until_sequence`).
+		Where(`"BlockPackYjsUpdateTable".update_sequence <= document.last_update_sequence`).
+		Order(`"BlockPackYjsUpdateTable".block_pack_id ASC`).
+		Order(`"BlockPackYjsUpdateTable".update_sequence ASC`).
+		Find(&updates).Error; err != nil {
+		return nil, err
+	}
+
+	updatesByBlockPackId := make(map[uuid.UUID][]schemas.BlockPackYjsUpdate, len(documents))
+	for _, update := range updates {
+		if _, exists := documentByBlockPackId[update.BlockPackId]; exists {
+			updatesByBlockPackId[update.BlockPackId] = append(updatesByBlockPackId[update.BlockPackId], update)
+		}
+	}
+
+	pairs := make([]BlockPackYjsDocumentWithUpdates, 0, len(documents))
+	for _, blockPackId := range blockPackIds {
+		document, exists := documentByBlockPackId[blockPackId]
+		if !exists {
+			continue
+		}
+
+		updates := updatesByBlockPackId[blockPackId]
+		expectedSequence := document.CompactedUntilSequence + 1
+		for _, update := range updates {
+			if update.UpdateSequence != expectedSequence {
+				updates = nil
+				break
+			}
+			expectedSequence++
+		}
+		if expectedSequence-1 != document.LastUpdateSequence {
+			continue
+		}
+
+		pairs = append(pairs, BlockPackYjsDocumentWithUpdates{
+			Document: document,
+			Updates:  updates,
+		})
+	}
+
+	return pairs, nil
+}
+
 func (r *BlockPackYjsRepository) BulkApplyCompactedYjsDocuments(
 	bulkInputs []inputs.BulkApplyCompactedBlockPackYjsDocumentInput,
 	opts ...options.RepositoryOptions,
@@ -421,7 +501,7 @@ func (r *BlockPackYjsRepository) BulkApplyCompactedYjsDocuments(
 			return nil, fmt.Errorf("invalid compacted yjs document input")
 		}
 
-		valueRows = append(valueRows, "(?::uuid, ?, ?, ?, ?)")
+		valueRows = append(valueRows, "(?::uuid, ?::bigint, ?::bigint, ?::bytea, ?::bytea)")
 		args = append(
 			args,
 			input.BlockPackId,
@@ -458,7 +538,8 @@ func (r *BlockPackYjsRepository) BulkApplyCompactedYjsDocuments(
 	}
 
 	var appliedDocuments []appliedDocument
-	if err := db.Raw(query, args...).Scan(&appliedDocuments).Error; err != nil {
+	result := db.Raw(query, args...).Scan(&appliedDocuments)
+	if err := result.Error; err != nil {
 		return nil, err
 	}
 
@@ -482,7 +563,7 @@ func (r *BlockPackYjsRepository) BulkApplyCompactedYjsDocuments(
 			continue
 		}
 
-		valueRows = append(valueRows, "(?::uuid, ?, ?)")
+		valueRows = append(valueRows, "(?::uuid, ?::bigint, ?::bigint)")
 		args = append(args, input.BlockPackId, input.BaseCompactedUntilSequence, input.CutoffSequence)
 	}
 	args = append(args, now)
@@ -497,7 +578,8 @@ func (r *BlockPackYjsRepository) BulkApplyCompactedYjsDocuments(
 			AND yjs_update.update_sequence > target.base_compacted_until_sequence
 			AND yjs_update.update_sequence <= target.cutoff_sequence
 			AND yjs_update.compacted_at IS NULL`
-	if err := db.Exec(query, args...).Error; err != nil {
+	result = db.Exec(query, args...)
+	if err := result.Error; err != nil {
 		return nil, err
 	}
 

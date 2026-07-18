@@ -7,16 +7,16 @@ import type { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 
 import { YjsMaintenanceMaximumPayloadBytes } from "../constants/yjs_maintenance.js";
-import type { YjsCompactionService } from "../services/yjs_compaction_service.js";
+import type { YjsProjectionService } from "../services/yjs_projection_service.js";
 import type { Telemetry } from "../telemetry.js";
 
-export function configureYjsCompactionRoutes(
+export function configureYjsProjectionRoutes(
   app: Hono,
-  yjsCompactionService: YjsCompactionService,
+  yjsProjectionService: YjsProjectionService,
   telemetry: Telemetry
 ): void {
   app.post(
-    "/internal/yjs-compaction/v1",
+    "/internal/yjs-projection/v1",
     bodyLimit({
       maxSize: YjsMaintenanceMaximumPayloadBytes,
       onError: context => context.body(null, 413),
@@ -42,13 +42,13 @@ export function configureYjsCompactionRoutes(
         }
       );
       return otelContext.with(parentContext, () => {
-        const span = telemetry.startSpan("maintenance.compaction_batch");
+        const span = telemetry.startSpan("maintenance.projection_batch");
         span.setAttribute("yjs.payload_bytes", payload.length);
 
         try {
-          const result = yjsCompactionService.compactBatch(payload);
+          const result = yjsProjectionService.projectBatch(payload);
           telemetry.recordOperation({
-            operation: "maintenance.compaction_batch",
+            operation: "maintenance.projection_batch",
             outcome: "success",
             durationMilliseconds: performance.now() - startedAt,
             payloadBytes: payload.length,
@@ -61,7 +61,7 @@ export function configureYjsCompactionRoutes(
           span.recordException(error as Error);
           span.setStatus({ code: SpanStatusCode.ERROR });
           telemetry.recordOperation({
-            operation: "maintenance.compaction_batch",
+            operation: "maintenance.projection_batch",
             outcome: "error",
             durationMilliseconds: performance.now() - startedAt,
             payloadBytes: payload.length,

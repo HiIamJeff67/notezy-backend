@@ -1,45 +1,48 @@
 import { SpanStatusCode } from "@opentelemetry/api";
 import * as Y from "yjs";
-import type { Telemetry } from "../telemetry.js";
-import type {
-  YjsCompactionInput,
-  YjsCompactionResult,
-} from "../types/yjs_compaction.js";
-import {
-  createYjsCompactionBatchResult,
-  parseYjsCompactionBatchInput,
-} from "../types/yjs_compaction_batch.js";
 
-export class YjsCompactionService {
+import type { BlockPackProjector } from "../realtime/block_pack_projector.js";
+import type { Telemetry } from "../telemetry.js";
+import {
+  createYjsProjectionBatchResult,
+  parseYjsProjectionBatchInput,
+  type YjsProjectionBatchInput,
+  type YjsProjectionBatchResult,
+} from "../types/yjs_projection_batch.js";
+
+export class YjsProjectionService {
+  private readonly blockPackProjector: BlockPackProjector;
   private readonly telemetry: Telemetry;
 
-  constructor(telemetry: Telemetry) {
+  constructor(blockPackProjector: BlockPackProjector, telemetry: Telemetry) {
+    this.blockPackProjector = blockPackProjector;
     this.telemetry = telemetry;
   }
 
-  compact(input: YjsCompactionInput): YjsCompactionResult {
+  project(input: YjsProjectionBatchInput): YjsProjectionBatchResult {
     const startedAt = performance.now();
-    const span = this.telemetry.startSpan("compaction");
+    const span = this.telemetry.startSpan("projection");
     const document = new Y.Doc();
     try {
-      if (input.snapshot.length > 0) {
-        Y.applyUpdate(document, input.snapshot);
+      if (input.state.snapshot.length > 0) {
+        Y.applyUpdate(document, input.state.snapshot);
       }
-      for (const update of input.updates) {
+      for (const update of input.state.updates) {
         Y.applyUpdate(document, update.payload);
       }
 
-      const result = {
-        baseCompactedUntilSequence: input.baseCompactedUntilSequence,
-        cutoffSequence: input.cutoffSequence,
-        snapshot: Buffer.from(Y.encodeStateAsUpdate(document)),
-        stateVector: Buffer.from(Y.encodeStateVector(document)),
+      const result: YjsProjectionBatchResult = {
+        blockPackId: input.blockPackId,
+        schemaId: "notezy.blocknote",
+        schemaVersion: 1,
+        projectedSequence: input.state.lastUpdateSequence,
+        blocks: this.blockPackProjector.projectYjsDocument(document),
       };
       this.telemetry.recordOperation({
-        operation: "compaction",
+        operation: "projection",
         outcome: "success",
         durationMilliseconds: performance.now() - startedAt,
-        payloadBytes: input.snapshot.length,
+        payloadBytes: input.state.snapshot.length,
       });
 
       return result;
@@ -47,7 +50,7 @@ export class YjsCompactionService {
       span.recordException(error as Error);
       span.setStatus({ code: SpanStatusCode.ERROR });
       this.telemetry.recordOperation({
-        operation: "compaction",
+        operation: "projection",
         outcome: "error",
         durationMilliseconds: performance.now() - startedAt,
         error,
@@ -60,14 +63,14 @@ export class YjsCompactionService {
     }
   }
 
-  compactBatch(payload: Buffer): Buffer {
+  projectBatch(payload: Buffer): Buffer {
     if (payload.length < 4) {
-      throw new Error("invalid yjs compaction batch");
+      throw new Error("invalid yjs projection batch");
     }
 
     const inputCount = payload.readUInt32BE(0);
     if (inputCount === 0) {
-      throw new Error("empty yjs compaction batch");
+      throw new Error("empty yjs projection batch");
     }
 
     const outputPayloads: Buffer[] = [];
@@ -75,36 +78,28 @@ export class YjsCompactionService {
     let offset = 4;
     for (let index = 0; index < inputCount; index += 1) {
       if (payload.length - offset < 4) {
-        throw new Error("invalid yjs compaction batch");
+        throw new Error("invalid yjs projection batch");
       }
 
       const inputLength = payload.readUInt32BE(offset);
       offset += 4;
       if (inputLength > payload.length - offset) {
-        throw new Error("invalid yjs compaction batch");
+        throw new Error("invalid yjs projection batch");
       }
 
-      const batchInput = parseYjsCompactionBatchInput(
+      const input = parseYjsProjectionBatchInput(
         payload.subarray(offset, offset + inputLength)
       );
-      if (batchInput === null || blockPackIds.has(batchInput.blockPackId)) {
-        throw new Error("invalid yjs compaction batch");
+      if (input === null || blockPackIds.has(input.blockPackId)) {
+        throw new Error("invalid yjs projection batch");
       }
-      blockPackIds.add(batchInput.blockPackId);
+      blockPackIds.add(input.blockPackId);
       offset += inputLength;
 
-      const result = this.compact(batchInput.input);
-      outputPayloads.push(
-        createYjsCompactionBatchResult(
-          batchInput.blockPackId,
-          batchInput.input,
-          result.snapshot,
-          result.stateVector
-        )
-      );
+      outputPayloads.push(createYjsProjectionBatchResult(this.project(input)));
     }
     if (offset !== payload.length) {
-      throw new Error("invalid yjs compaction batch");
+      throw new Error("invalid yjs projection batch");
     }
 
     const result = Buffer.alloc(

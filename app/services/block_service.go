@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -30,6 +31,7 @@ type BlockServiceInterface interface {
 	GetMyBlocksByIds(ctx context.Context, reqDto *dtos.GetMyBlocksByIdsReqDto) (*dtos.GetMyBlocksByIdsResDto, *exceptions.Exception)
 	GetMyBlocksByBlockPackId(ctx context.Context, reqDto *dtos.GetMyBlocksByBlockPackIdReqDto) (*dtos.GetMyBlocksByBlockPackIdResDto, *exceptions.Exception)
 	Apply(ctx context.Context, blockPackId uuid.UUID, input dtos.ApplyBlockProjectionInput) (*dtos.ApplyBlockProjectionResult, error)
+	ApplyMany(ctx context.Context, inputs []dtos.ApplyBlockProjectionDocumentInput) (dtos.ApplyBlockProjectionDocumentResult, error)
 
 	SearchPrivateBlocks(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchBlockInput) (*gqlmodels.SearchBlockConnection, *exceptions.Exception)
 }
@@ -61,6 +63,21 @@ func NewBlockService(
 		blockRepository:      blockRepository,
 		editableBlockAdapter: adapters.NewEditableBlockAdapter(),
 	}
+}
+
+func NewBlockProjectionService(db *gorm.DB) BlockServiceInterface {
+	blockScope := scopes.NewBlockScope()
+	blockPackScope := scopes.NewBlockPackScope()
+	subShelfScope := scopes.NewSubShelfScope()
+
+	return NewBlockService(
+		db,
+		blockScope,
+		blockPackScope,
+		subShelfScope,
+		repositories.NewBlockPackRepository(blockPackScope),
+		repositories.NewBlockRepository(blockScope),
+	)
 }
 
 func (s *BlockService) GetMyBlockById(
@@ -351,6 +368,256 @@ func (s *BlockService) Apply(
 		Applied:                true,
 		ProjectedUntilSequence: input.ProjectedSequence,
 	}, nil
+}
+
+func (s *BlockService) ApplyMany(
+	ctx context.Context,
+	inputs []dtos.ApplyBlockProjectionDocumentInput,
+) (dtos.ApplyBlockProjectionDocumentResult, error) {
+	if len(inputs) == 0 {
+		return dtos.ApplyBlockProjectionDocumentResult{}, nil
+	}
+
+	type preparedProjection struct {
+		blockPackId  uuid.UUID
+		projectedSeq int64
+		blocks       []schemas.Block
+		blockIds     []uuid.UUID
+	}
+
+	preparedProjections := make([]preparedProjection, 0, len(inputs))
+	blockPackIdSet := make(map[uuid.UUID]bool, len(inputs))
+	blockIdSet := make(map[uuid.UUID]bool)
+	for _, input := range inputs {
+		if input.BlockPackId == uuid.Nil {
+			return nil, fmt.Errorf("block projection requires a block pack id")
+		}
+		if input.Projection.SchemaId != constants.YjsBlockPackSchemaId ||
+			input.Projection.SchemaVersion != constants.YjsBlockPackSchemaVersion {
+			return nil, fmt.Errorf("block projection source schema is not supported")
+		}
+		if input.Projection.ProjectedSequence < 0 {
+			return nil, fmt.Errorf("block projection target update sequence must not be negative")
+		}
+		if blockPackIdSet[input.BlockPackId] {
+			return nil, fmt.Errorf("duplicate block projection block pack id")
+		}
+		blockPackIdSet[input.BlockPackId] = true
+
+		flattenedBlocks, _, exception := s.editableBlockAdapter.FlattenManyToRaw(input.Projection.Blocks)
+		if exception != nil {
+			return nil, fmt.Errorf("failed to flatten block projection: %w", exception)
+		}
+
+		blocks := make([]schemas.Block, len(flattenedBlocks))
+		blockIds := make([]uuid.UUID, len(flattenedBlocks))
+		for index, flattenedBlock := range flattenedBlocks {
+			if blockIdSet[flattenedBlock.Id] {
+				return nil, fmt.Errorf("duplicate block id in projection batch")
+			}
+			blockIdSet[flattenedBlock.Id] = true
+			blockIds[index] = flattenedBlock.Id
+			blocks[index] = schemas.Block{
+				Id:            flattenedBlock.Id,
+				BlockPackId:   input.BlockPackId,
+				ParentBlockId: flattenedBlock.ParentBlockId,
+				PrevBlockId:   flattenedBlock.PrevBlockId,
+				NextBlockId:   flattenedBlock.NextBlockId,
+				Type:          flattenedBlock.Type,
+				Props:         flattenedBlock.Props,
+				Content:       flattenedBlock.Content,
+			}
+		}
+
+		preparedProjections = append(preparedProjections, preparedProjection{
+			blockPackId:  input.BlockPackId,
+			projectedSeq: input.Projection.ProjectedSequence,
+			blocks:       blocks,
+			blockIds:     blockIds,
+		})
+	}
+
+	blockPackIds := make([]uuid.UUID, 0, len(blockPackIdSet))
+	for blockPackId := range blockPackIdSet {
+		blockPackIds = append(blockPackIds, blockPackId)
+	}
+	sort.Slice(blockPackIds, func(left, right int) bool {
+		return string(blockPackIds[left][:]) < string(blockPackIds[right][:])
+	})
+
+	tx := s.db.WithContext(ctx).Begin()
+
+	lockingStrength := options.LockingStrengthUpdate
+	var blockPacks []schemas.BlockPack
+	if err := tx.Model(&schemas.BlockPack{}).
+		Select("id").
+		Where("id IN ? AND deleted_at IS NULL", blockPackIds).
+		Scopes(scopes.Locking(&lockingStrength)).
+		Order("id ASC").
+		Find(&blockPacks).Error; err != nil {
+		tx.Rollback()
+
+		return nil, fmt.Errorf("failed to lock block packs for projection: %w", err)
+	}
+
+	activeBlockPackIdSet := make(map[uuid.UUID]bool, len(blockPacks))
+	for _, blockPack := range blockPacks {
+		activeBlockPackIdSet[blockPack.Id] = true
+	}
+
+	var documents []schemas.BlockPackYjsDocument
+	if err := tx.Model(&schemas.BlockPackYjsDocument{}).
+		Where("block_pack_id IN ? AND deleted_at IS NULL", blockPackIds).
+		Scopes(scopes.Locking(&lockingStrength)).
+		Order("block_pack_id ASC").
+		Find(&documents).Error; err != nil {
+		tx.Rollback()
+
+		return nil, fmt.Errorf("failed to lock yjs documents for projection: %w", err)
+	}
+
+	documentByBlockPackId := make(map[uuid.UUID]schemas.BlockPackYjsDocument, len(documents))
+	for _, document := range documents {
+		documentByBlockPackId[document.BlockPackId] = document
+	}
+
+	applicableProjections := make([]preparedProjection, 0, len(preparedProjections))
+	for _, projection := range preparedProjections {
+		if !activeBlockPackIdSet[projection.blockPackId] {
+			continue
+		}
+		document, exists := documentByBlockPackId[projection.blockPackId]
+		if !exists {
+			continue
+		}
+		if projection.projectedSeq > document.LastUpdateSequence {
+			tx.Rollback()
+
+			return nil, fmt.Errorf("block projection target update sequence exceeds durable yjs state")
+		}
+		if projection.projectedSeq <= document.ProjectedUntilSequence {
+			continue
+		}
+		applicableProjections = append(applicableProjections, projection)
+	}
+	if len(applicableProjections) == 0 {
+		if err := tx.Commit().Error; err != nil {
+			return nil, fmt.Errorf("failed to commit stale block projections: %w", err)
+		}
+
+		return dtos.ApplyBlockProjectionDocumentResult{}, nil
+	}
+
+	projectedBlockIds := make([]uuid.UUID, 0)
+	allProjectedBlocks := make([]schemas.Block, 0)
+	applicableBlockPackIds := make([]uuid.UUID, 0, len(applicableProjections))
+	for _, projection := range applicableProjections {
+		applicableBlockPackIds = append(applicableBlockPackIds, projection.blockPackId)
+		projectedBlockIds = append(projectedBlockIds, projection.blockIds...)
+		allProjectedBlocks = append(allProjectedBlocks, projection.blocks...)
+	}
+
+	type existingBlock struct {
+		Id          uuid.UUID `gorm:"column:id"`
+		BlockPackId uuid.UUID `gorm:"column:block_pack_id"`
+	}
+	var existingBlocks []existingBlock
+	if len(projectedBlockIds) > 0 {
+		if err := tx.Model(&schemas.Block{}).
+			Select("id, block_pack_id").
+			Where("id IN ?", projectedBlockIds).
+			Scopes(scopes.Locking(&lockingStrength)).
+			Find(&existingBlocks).Error; err != nil {
+			tx.Rollback()
+
+			return nil, fmt.Errorf("failed to lock projected blocks: %w", err)
+		}
+	}
+
+	projectedBlockPackIdById := make(map[uuid.UUID]uuid.UUID, len(allProjectedBlocks))
+	for _, block := range allProjectedBlocks {
+		projectedBlockPackIdById[block.Id] = block.BlockPackId
+	}
+	for _, existingBlock := range existingBlocks {
+		if projectedBlockPackIdById[existingBlock.Id] != existingBlock.BlockPackId {
+			tx.Rollback()
+
+			return nil, fmt.Errorf("block projection contains an id owned by another block pack")
+		}
+	}
+
+	deleteQuery := tx.Where("block_pack_id IN ?", applicableBlockPackIds)
+	if len(projectedBlockIds) > 0 {
+		deleteQuery = deleteQuery.Where("id NOT IN ?", projectedBlockIds)
+	}
+	result := deleteQuery.Delete(&schemas.Block{})
+	if err := result.Error; err != nil {
+		tx.Rollback()
+
+		return nil, fmt.Errorf("failed to delete removed projected blocks: %w", err)
+	}
+
+	now := time.Now()
+	if len(allProjectedBlocks) > 0 {
+		if err := tx.Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "id"}},
+			DoUpdates: clause.Assignments(map[string]any{
+				"block_pack_id":   gorm.Expr("EXCLUDED.block_pack_id"),
+				"parent_block_id": gorm.Expr("EXCLUDED.parent_block_id"),
+				"prev_block_id":   gorm.Expr("EXCLUDED.prev_block_id"),
+				"next_block_id":   gorm.Expr("EXCLUDED.next_block_id"),
+				"type":            gorm.Expr("EXCLUDED.type"),
+				"props":           gorm.Expr("EXCLUDED.props"),
+				"content":         gorm.Expr("EXCLUDED.content"),
+				"updated_at":      now,
+			}),
+		}).CreateInBatches(&allProjectedBlocks, constants.MaxBatchCreateBlockSize).Error; err != nil {
+			tx.Rollback()
+
+			return nil, fmt.Errorf("failed to bulk upsert block projections: %w", err)
+		}
+	}
+
+	valueRows := make([]string, 0, len(applicableProjections))
+	args := make([]any, 0, len(applicableProjections)*2)
+	for _, projection := range applicableProjections {
+		valueRows = append(valueRows, "(?::uuid, ?::bigint)")
+		args = append(args, projection.blockPackId, projection.projectedSeq)
+	}
+	args = append(args, now)
+	updateQuery := `
+		WITH target(block_pack_id, projected_until_sequence) AS (
+			VALUES ` + strings.Join(valueRows, ",") + `
+		)
+		UPDATE "BlockPackYjsDocumentTable" AS document
+		SET projected_until_sequence = target.projected_until_sequence, updated_at = ?
+		FROM target
+		WHERE document.block_pack_id = target.block_pack_id
+			AND document.deleted_at IS NULL
+			AND document.projected_until_sequence < target.projected_until_sequence
+			AND document.last_update_sequence >= target.projected_until_sequence
+		RETURNING document.block_pack_id`
+
+	var appliedDocuments []struct {
+		BlockPackId uuid.UUID `gorm:"column:block_pack_id"`
+	}
+	result = tx.Raw(updateQuery, args...).Scan(&appliedDocuments)
+	if err := result.Error; err != nil {
+		tx.Rollback()
+
+		return nil, fmt.Errorf("failed to update block projection checkpoints: %w", err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, fmt.Errorf("failed to commit block projections: %w", err)
+	}
+
+	appliedBlockPackIds := make([]uuid.UUID, len(appliedDocuments))
+	for index, document := range appliedDocuments {
+		appliedBlockPackIds[index] = document.BlockPackId
+	}
+
+	return dtos.ApplyBlockProjectionDocumentResult(appliedBlockPackIds), nil
 }
 
 func (s *BlockService) SearchPrivateBlocks(

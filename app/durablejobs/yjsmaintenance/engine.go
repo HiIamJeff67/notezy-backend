@@ -11,6 +11,7 @@ import (
 	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
 	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
 	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
+	services "github.com/HiIamJeff67/notezy-backend/app/services"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
@@ -22,10 +23,12 @@ type Engine struct {
 }
 
 func NewEngine(db *gorm.DB) *Engine {
+	blockProjectionService := services.NewBlockProjectionService(db)
+
 	return &Engine{
 		ticker:       time.NewTicker(constants.YjsMaintenanceScanInterval),
 		claimer:      NewClaimer(db),
-		handler:      NewHandler(db),
+		handler:      NewHandler(db, blockProjectionService),
 		workerClient: NewWorkerClient(),
 	}
 }
@@ -65,7 +68,7 @@ func (e *Engine) runOnce(ctx context.Context) {
 	defer func() { traces.NotezyTracer.End(span, finalErr) }()
 
 	outcome := "success"
-	inputs, err := e.claimer.Claim(ctx)
+	inputs, err := e.claimer.ClaimCompactions(ctx)
 	if err != nil {
 		outcome = "error"
 		finalErr = err
@@ -76,7 +79,7 @@ func (e *Engine) runOnce(ctx context.Context) {
 			outcome = "error"
 			finalErr = err
 			logs.NotezyLogger.Error(ctx, err, "failed to compact Yjs maintenance inputs", attribute.String("operation", "maintenance.compact"))
-		} else if _, err := e.handler.Handle(ctx, inputs, results); err != nil {
+		} else if _, err := e.handler.HandleCompactions(ctx, inputs, results); err != nil {
 			outcome = "error"
 			finalErr = err
 			logs.NotezyLogger.Error(ctx, err, "failed to persist compacted Yjs documents", attribute.String("operation", "maintenance.apply"))
@@ -87,6 +90,24 @@ func (e *Engine) runOnce(ctx context.Context) {
 		outcome = "error"
 		finalErr = err
 		logs.NotezyLogger.Error(ctx, err, "failed to clean compacted Yjs updates", attribute.String("operation", "maintenance.cleanup"))
+	}
+
+	projectionInputs, err := e.claimer.ClaimProjections(ctx)
+	if err != nil {
+		outcome = "error"
+		finalErr = err
+		logs.NotezyLogger.Error(ctx, err, "failed to claim Yjs projection inputs", attribute.String("operation", "maintenance.projection.claim"))
+	} else if len(projectionInputs) > 0 {
+		projectionResults, err := e.workerClient.Project(ctx, projectionInputs)
+		if err != nil {
+			outcome = "error"
+			finalErr = err
+			logs.NotezyLogger.Error(ctx, err, "failed to project Yjs documents", attribute.String("operation", "maintenance.projection.project"))
+		} else if _, err := e.handler.HandleProjections(ctx, projectionInputs, projectionResults); err != nil {
+			outcome = "error"
+			finalErr = err
+			logs.NotezyLogger.Error(ctx, err, "failed to persist projected blocks", attribute.String("operation", "maintenance.projection.apply"))
+		}
 	}
 
 	metrics.NotezyMeter.Count(ctx, "yjs.operation.count", 1,

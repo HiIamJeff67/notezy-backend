@@ -2,8 +2,8 @@ import { WebSocket } from "ws";
 import * as Y from "yjs";
 import { YjsCompactionUpdateThreshold } from "../constants/yjs_compaction.js";
 import { YjsPersistenceBatchShutdownTimeoutMilliseconds } from "../constants/yjs_persistence_batch.js";
-import { YjsCompactionService } from "../services/yjs_compaction_service.js";
-import { Telemetry } from "../telemetry.js";
+import type { YjsCompactionService } from "../services/yjs_compaction_service.js";
+import type { Telemetry } from "../telemetry.js";
 import {
   createInternalFrame,
   parseInternalFrame,
@@ -19,7 +19,7 @@ import {
   parseYjsUpdateSequence,
 } from "../types/yjs_document_state.js";
 import { BlockPackProjector } from "./block_pack_projector.js";
-import { RoomRegistry } from "./room_registry.js";
+import type { RoomRegistry } from "./room_registry.js";
 import { YjsDebouncer } from "./yjs_debouncer.js";
 
 export class RealtimeGateway {
@@ -32,20 +32,14 @@ export class RealtimeGateway {
 
   constructor(
     roomRegistry: RoomRegistry,
-    blockPackProjector: BlockPackProjector,
     yjsCompactionService: YjsCompactionService,
-    yjsDebouncer: YjsDebouncer,
     telemetry: Telemetry
   ) {
     this.roomRegistry = roomRegistry;
-    this.blockPackProjector = blockPackProjector;
+    this.blockPackProjector = new BlockPackProjector();
     this.yjsCompactionService = yjsCompactionService;
-    this.yjsDebouncer = yjsDebouncer;
+    this.yjsDebouncer = new YjsDebouncer(telemetry, this.resyncRoom.bind(this));
     this.telemetry = telemetry;
-    this.yjsDebouncer.bindCallbacks(
-      this.sendInternalFrame.bind(this),
-      this.resyncRoom.bind(this)
-    );
     this.telemetry.setRoomStateProvider(() => ({
       activeRooms: this.roomRegistry.size,
       activeSubscribers: this.roomRegistry.subscriberCount,
@@ -55,7 +49,7 @@ export class RealtimeGateway {
 
   /* ============================== Internal frame delivery ============================== */
 
-  private broadcastInternalFrame(
+  private static broadcastInternalFrame(
     room: Room,
     type: InternalFrameType,
     blockPackId: string,
@@ -70,40 +64,18 @@ export class RealtimeGateway {
         continue;
       }
 
-      this.sendInternalFrame(
-        subscriber.webSocket,
-        type,
-        subscriber.connectionId,
-        subscriber.connectorChannelId,
-        blockPackId,
-        payload
-      );
+      if (subscriber.webSocket.readyState === WebSocket.OPEN) {
+        subscriber.webSocket.send(
+          createInternalFrame(
+            type,
+            subscriber.connectionId,
+            subscriber.connectorChannelId,
+            blockPackId,
+            payload
+          )
+        );
+      }
     }
-  }
-
-  private sendInternalFrame(
-    webSocket: WebSocket,
-    type: InternalFrameType,
-    connectionId: string,
-    connectorChannelId: number,
-    blockPackId: string,
-    payload: Buffer = Buffer.alloc(0)
-  ): boolean {
-    if (webSocket.readyState !== WebSocket.OPEN) {
-      return false;
-    }
-
-    webSocket.send(
-      createInternalFrame(
-        type,
-        connectionId,
-        connectorChannelId,
-        blockPackId,
-        payload
-      )
-    );
-
-    return true;
   }
 
   private sendRoomInitialState(room: Room, blockPackId: string): void {
@@ -112,22 +84,36 @@ export class RealtimeGateway {
     }
 
     const payload = Buffer.from(Y.encodeStateAsUpdate(room.document));
+    const awarenessPayload = this.roomRegistry.getAwarenessSnapshot(room);
     for (const subscriber of room.subscribers.values()) {
       if (subscriber.isReady) {
         continue;
       }
 
-      if (
-        this.sendInternalFrame(
-          subscriber.webSocket,
+      if (subscriber.webSocket.readyState !== WebSocket.OPEN) {
+        continue;
+      }
+
+      subscriber.webSocket.send(
+        createInternalFrame(
           InternalFrameType.InternalFrameType_YjsDocument,
           subscriber.connectionId,
           subscriber.connectorChannelId,
           blockPackId,
           payload
         )
-      ) {
-        subscriber.isReady = true;
+      );
+      subscriber.isReady = true;
+      if (awarenessPayload !== null) {
+        subscriber.webSocket.send(
+          createInternalFrame(
+            InternalFrameType.InternalFrameType_Awareness,
+            subscriber.connectionId,
+            subscriber.connectorChannelId,
+            blockPackId,
+            awarenessPayload
+          )
+        );
       }
     }
   }
@@ -144,6 +130,16 @@ export class RealtimeGateway {
     }
     if (room.persistenceRetryTimer !== null) {
       clearTimeout(room.persistenceRetryTimer);
+    }
+
+    const awarenessPayload = this.roomRegistry.clearAwareness(room);
+    if (awarenessPayload !== null) {
+      RealtimeGateway.broadcastInternalFrame(
+        room,
+        InternalFrameType.InternalFrameType_Awareness,
+        blockPackId,
+        awarenessPayload
+      );
     }
 
     room.document?.destroy();
@@ -163,7 +159,7 @@ export class RealtimeGateway {
     room.projectionTimer = null;
     room.inFlightProjection = null;
 
-    this.broadcastInternalFrame(
+    RealtimeGateway.broadcastInternalFrame(
       room,
       InternalFrameType.InternalFrameType_ResyncRequired,
       blockPackId,
@@ -236,16 +232,17 @@ export class RealtimeGateway {
         connectorChannelId: subscriber.connectorChannelId,
         projectedSequence,
       };
-      if (
-        this.sendInternalFrame(
-          subscriber.webSocket,
-          InternalFrameType.InternalFrameType_ApplyBlockProjection,
-          subscriber.connectionId,
-          subscriber.connectorChannelId,
-          blockPackId,
-          payload
-        )
-      ) {
+      if (subscriber.webSocket.readyState === WebSocket.OPEN) {
+        subscriber.webSocket.send(
+          createInternalFrame(
+            InternalFrameType.InternalFrameType_ApplyBlockProjection,
+            subscriber.connectionId,
+            subscriber.connectorChannelId,
+            blockPackId,
+            payload
+          )
+        );
+
         return;
       }
 
@@ -277,13 +274,19 @@ export class RealtimeGateway {
       return;
     }
 
-    room.isCompacting = this.sendInternalFrame(
-      webSocket,
-      InternalFrameType.InternalFrameType_LoadCompactableYjsDocument,
-      connectionId,
-      connectorChannelId,
-      blockPackId
+    if (webSocket.readyState !== WebSocket.OPEN) {
+      return;
+    }
+
+    webSocket.send(
+      createInternalFrame(
+        InternalFrameType.InternalFrameType_LoadCompactableYjsDocument,
+        connectionId,
+        connectorChannelId,
+        blockPackId
+      )
     );
+    room.isCompacting = true;
   }
 
   /* ============================== WebSocket connection ============================== */
@@ -295,9 +298,16 @@ export class RealtimeGateway {
     webSocket.on("close", () => {
       this.webSockets.delete(webSocket);
       this.telemetry.recordInternalSocket(-1);
-      for (const [blockPackId, room] of this.roomRegistry.detachAll(
-        webSocket
-      )) {
+      for (const detachedRoom of this.roomRegistry.detachAll(webSocket)) {
+        const { awarenessPayload, blockPackId, room } = detachedRoom;
+        if (awarenessPayload !== null) {
+          RealtimeGateway.broadcastInternalFrame(
+            room,
+            InternalFrameType.InternalFrameType_Awareness,
+            blockPackId,
+            awarenessPayload
+          );
+        }
         if (room.subscribers.size === 0) {
           this.yjsDebouncer.flush(room, blockPackId);
           this.roomRegistry.scheduleRoomEviction(blockPackId);
@@ -376,15 +386,16 @@ export class RealtimeGateway {
           }
 
           room.isLoading = true;
-          if (
-            this.sendInternalFrame(
-              webSocket,
-              InternalFrameType.InternalFrameType_LoadYjsDocument,
-              frame.connectionId,
-              frame.connectorChannelId,
-              frame.blockPackId
-            )
-          ) {
+          if (webSocket.readyState === WebSocket.OPEN) {
+            webSocket.send(
+              createInternalFrame(
+                InternalFrameType.InternalFrameType_LoadYjsDocument,
+                frame.connectionId,
+                frame.connectorChannelId,
+                frame.blockPackId
+              )
+            );
+
             return;
           }
 
@@ -393,12 +404,25 @@ export class RealtimeGateway {
           return;
         }
         case InternalFrameType.InternalFrameType_Detach: {
-          const room = this.roomRegistry.detach(
+          const detachedRoom = this.roomRegistry.detach(
             frame.blockPackId,
             frame.connectionId,
             frame.connectorChannelId
           );
-          if (room !== undefined && room.subscribers.size === 0) {
+          if (detachedRoom === undefined) {
+            return;
+          }
+
+          const { awarenessPayload, room } = detachedRoom;
+          if (awarenessPayload !== null) {
+            RealtimeGateway.broadcastInternalFrame(
+              room,
+              InternalFrameType.InternalFrameType_Awareness,
+              frame.blockPackId,
+              awarenessPayload
+            );
+          }
+          if (room.subscribers.size === 0) {
             this.yjsDebouncer.flush(room, frame.blockPackId);
             this.requestYjsCompaction(
               room,
@@ -419,13 +443,16 @@ export class RealtimeGateway {
             frame.connectorChannelId
           );
           if (room === undefined) {
-            this.sendInternalFrame(
-              webSocket,
-              InternalFrameType.InternalFrameType_ResyncRequired,
-              frame.connectionId,
-              frame.connectorChannelId,
-              frame.blockPackId
-            );
+            if (webSocket.readyState === WebSocket.OPEN) {
+              webSocket.send(
+                createInternalFrame(
+                  InternalFrameType.InternalFrameType_ResyncRequired,
+                  frame.connectionId,
+                  frame.connectorChannelId,
+                  frame.blockPackId
+                )
+              );
+            }
 
             return;
           }
@@ -441,22 +468,46 @@ export class RealtimeGateway {
             frame.connectorChannelId
           );
           if (room === undefined) {
-            this.sendInternalFrame(
-              webSocket,
-              InternalFrameType.InternalFrameType_ResyncRequired,
-              frame.connectionId,
-              frame.connectorChannelId,
-              frame.blockPackId
-            );
+            if (webSocket.readyState === WebSocket.OPEN) {
+              webSocket.send(
+                createInternalFrame(
+                  InternalFrameType.InternalFrameType_ResyncRequired,
+                  frame.connectionId,
+                  frame.connectorChannelId,
+                  frame.blockPackId
+                )
+              );
+            }
 
             return;
           }
 
-          this.broadcastInternalFrame(
+          const awarenessPayload = this.roomRegistry.applyClientAwarenessUpdate(
+            room,
+            frame.connectionId,
+            frame.connectorChannelId,
+            frame.payload
+          );
+          if (awarenessPayload === null) {
+            if (webSocket.readyState === WebSocket.OPEN) {
+              webSocket.send(
+                createInternalFrame(
+                  InternalFrameType.InternalFrameType_ResyncRequired,
+                  frame.connectionId,
+                  frame.connectorChannelId,
+                  frame.blockPackId
+                )
+              );
+            }
+
+            return;
+          }
+
+          RealtimeGateway.broadcastInternalFrame(
             room,
             frame.type,
             frame.blockPackId,
-            frame.payload
+            awarenessPayload
           );
 
           return;
@@ -475,7 +526,7 @@ export class RealtimeGateway {
               Y.applyUpdate(document, update.payload);
             }
 
-            room.document = document;
+            this.roomRegistry.initializeAwareness(room, document);
             room.isLoading = false;
             room.lastUpdateSequence = state.lastUpdateSequence;
             room.compactedUntilSequence = state.compactedUntilSequence;
@@ -512,7 +563,7 @@ export class RealtimeGateway {
             return;
           }
 
-          this.broadcastInternalFrame(
+          RealtimeGateway.broadcastInternalFrame(
             room,
             InternalFrameType.InternalFrameType_YjsDocument,
             frame.blockPackId,
@@ -556,18 +607,21 @@ export class RealtimeGateway {
           try {
             const compacted = this.yjsCompactionService.compact(input);
 
-            this.sendInternalFrame(
-              webSocket,
-              InternalFrameType.InternalFrameType_ApplyCompactedYjsDocument,
-              frame.connectionId,
-              frame.connectorChannelId,
-              frame.blockPackId,
-              createYjsCompactionResult(
-                input,
-                compacted.snapshot,
-                compacted.stateVector
-              )
-            );
+            if (webSocket.readyState === WebSocket.OPEN) {
+              webSocket.send(
+                createInternalFrame(
+                  InternalFrameType.InternalFrameType_ApplyCompactedYjsDocument,
+                  frame.connectionId,
+                  frame.connectorChannelId,
+                  frame.blockPackId,
+                  createYjsCompactionResult(
+                    input,
+                    compacted.snapshot,
+                    compacted.stateVector
+                  )
+                )
+              );
+            }
           } catch {
             if (room !== undefined) room.isCompacting = false;
           }

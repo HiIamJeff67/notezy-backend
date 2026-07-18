@@ -86,7 +86,10 @@ const fragment = ydoc.getXmlFragment("document-store");
 - 收到該 `connectorChannelId` 的 `yjs-document` binary payload 時，以明確的 remote origin 呼叫 `Y.applyUpdate`。
 - 對本地 `Y.Doc` update，只有 origin 不是 remote origin 時才包裝為該 channel 的 binary frame 送出。
 - 對同一份 Yjs update 的 sender echo 可以安全忽略或套用；不得再次送出造成 feedback loop。
-- `permission: read` 時不得送 document update；UI 必須是 read-only。awareness 的可用範圍依 realtime protocol contract。
+- `permission: read` 時不得送 document update；UI 必須是 read-only。read/write channel 都可使用 awareness。
+- 建立 channel 後，為該 editor 建立 `Awareness`，接聽其 local `update` event，將 `encodeAwarenessUpdate(awareness, changedClientIds)` 包裝為 `awareness` binary frame。收到 remote `awareness` binary payload 時，呼叫 `applyAwarenessUpdate(awareness, payload, remoteOrigin)`；remote origin 不可重新送出。
+- `yjs-document` initial state 已送出後，worker 會補送 room 內當前 awareness state。每個 local `Awareness` client ID 在同一 connector channel lifetime 內只能由該 channel 宣告；不得重用或手動偽造其他 tab/device 的 client ID。
+- `unsubscribe`、socket close、`permission_revoked`、`resync_required` 時先呼叫 `awareness.setLocalState(null)`，停止 awareness listener，並銷毀該 editor 的 awareness instance。reconnect 後必須以新的 `Awareness` client ID 重新 announce local user/cursor/selection。
 - `permission_revoked` 時立即停止 editor、移除 channel state，並呈現不可再編輯/檢視狀態。
 - `resync_required` 時停止該 channel 的即時寫入並重新取得 channel ticket、subscribe；不可用 Block REST rows 補 document。local `Y.Doc` 不得先被銷毀：前端要先以 temporary `Y.Doc` 套用 server complete state、取得 server state vector，再將 local `Y.Doc` 相對於該 vector 缺少的 raw Yjs update 補送，最後才以 server/worker 的正常回應確認同步完成。
 

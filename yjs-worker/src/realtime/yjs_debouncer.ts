@@ -10,7 +10,8 @@ import {
   YjsPersistenceBatchMaximumWaitMilliseconds,
   YjsPersistenceBatchRetryMilliseconds,
 } from "../constants/yjs_persistence_batch.js";
-import { Telemetry } from "../telemetry.js";
+import type { Telemetry } from "../telemetry.js";
+import { createInternalFrame } from "../types/internal_frame.js";
 import { InternalFrameType } from "../types/internal_frame_type.js";
 import type { Room } from "../types/room.js";
 import {
@@ -21,33 +22,14 @@ import { YjsPersistenceFailureType } from "../types/yjs_persistence_failure_type
 import type { PendingYjsUpdate } from "../types/yjs_update.js";
 
 export class YjsDebouncer {
-  private sendInternalFrame!: (
-    webSocket: WebSocket,
-    type: InternalFrameType,
-    connectionId: string,
-    connectorChannelId: number,
-    blockPackId: string,
-    payload?: Buffer
-  ) => boolean;
   private resyncRoom!: (room: Room, blockPackId: string) => void;
   private readonly telemetry: Telemetry;
 
-  constructor(telemetry: Telemetry) {
-    this.telemetry = telemetry;
-  }
-
-  bindCallbacks(
-    sendInternalFrame: (
-      webSocket: WebSocket,
-      type: InternalFrameType,
-      connectionId: string,
-      connectorChannelId: number,
-      blockPackId: string,
-      payload?: Buffer
-    ) => boolean,
+  constructor(
+    telemetry: Telemetry,
     resyncRoom: (room: Room, blockPackId: string) => void
-  ): void {
-    this.sendInternalFrame = sendInternalFrame;
+  ) {
+    this.telemetry = telemetry;
     this.resyncRoom = resyncRoom;
   }
 
@@ -159,13 +141,16 @@ export class YjsDebouncer {
     try {
       Y.applyUpdate(room.document, pendingYjsUpdate.frame.payload);
     } catch {
-      this.sendInternalFrame(
-        pendingYjsUpdate.webSocket,
-        InternalFrameType.InternalFrameType_ResyncRequired,
-        pendingYjsUpdate.frame.connectionId,
-        pendingYjsUpdate.frame.connectorChannelId,
-        pendingYjsUpdate.frame.blockPackId
-      );
+      if (pendingYjsUpdate.webSocket.readyState === WebSocketState.OPEN) {
+        pendingYjsUpdate.webSocket.send(
+          createInternalFrame(
+            InternalFrameType.InternalFrameType_ResyncRequired,
+            pendingYjsUpdate.frame.connectionId,
+            pendingYjsUpdate.frame.connectorChannelId,
+            pendingYjsUpdate.frame.blockPackId
+          )
+        );
+      }
 
       return;
     }
@@ -301,18 +286,25 @@ export class YjsDebouncer {
       return false;
     }
 
-    return this.sendInternalFrame(
-      batch.webSocket,
-      InternalFrameType.InternalFrameType_AppendYjsUpdateBatch,
-      batch.connectionId,
-      batch.connectorChannelId,
-      blockPackId,
-      createYjsPersistenceBatch(
-        batch.persistenceBatchId,
-        batch.originConnectionId,
-        batch.payload
+    if (batch.webSocket.readyState !== WebSocketState.OPEN) {
+      return false;
+    }
+
+    batch.webSocket.send(
+      createInternalFrame(
+        InternalFrameType.InternalFrameType_AppendYjsUpdateBatch,
+        batch.connectionId,
+        batch.connectorChannelId,
+        blockPackId,
+        createYjsPersistenceBatch(
+          batch.persistenceBatchId,
+          batch.originConnectionId,
+          batch.payload
+        )
       )
     );
+
+    return true;
   }
 
   private scheduleRetry(room: Room, blockPackId: string): void {

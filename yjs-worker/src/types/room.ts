@@ -1,4 +1,5 @@
 import type WebSocket from "ws";
+import type { Awareness } from "y-protocols/awareness";
 import type { Doc } from "yjs";
 
 import type { InFlightProjection } from "./projection.js";
@@ -11,11 +12,14 @@ export type RoomSubscriber = {
   connectionId: string;
   connectorChannelId: number;
   isReady: boolean;
+  awarenessClientIds: Set<number>;
 };
 
 // Room owns the active in-memory Y.Doc and all transient state for one BlockPack collaboration room.
 export type Room = {
   document: Doc | null;
+  awareness: Awareness | null;
+  awarenessClientOwners: Map<number, string>;
   dirtyUpdateCount: number;
   lastActiveAt: Date;
   subscribers: Map<string, RoomSubscriber>;

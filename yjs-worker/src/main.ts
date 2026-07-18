@@ -1,3 +1,5 @@
+import { SeverityNumber } from "@opentelemetry/api-logs";
+
 import { YjsWorkerServer } from "./server.js";
 import { Telemetry } from "./telemetry.js";
 
@@ -20,5 +22,3 @@ async function shutdown(signal: string): Promise<void> {
 
 process.once("SIGINT", () => void shutdown("SIGINT"));
 process.once("SIGTERM", () => void shutdown("SIGTERM"));
-
-import { SeverityNumber } from "@opentelemetry/api-logs";

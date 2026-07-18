@@ -92,6 +92,7 @@ words = [
     "evictable",
     "hono",
     "debouncer",
+    "compactable",
 ]
 
 ignore_paths = [
