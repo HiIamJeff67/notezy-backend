@@ -13,10 +13,13 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/alicebob/miniredis/v2"
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 
+	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/app/realtime/types"
 	tokens "github.com/HiIamJeff67/notezy-backend/app/tokens"
@@ -32,6 +35,20 @@ type fakeWorkerManager struct {
 type fakeBlockProjectionService struct {
 	blockPackId uuid.UUID
 	input       dtos.ApplyBlockProjectionInput
+}
+
+type fakeRealtimeAdmissionService struct {
+	maximumSubscribers int32
+	err                error
+}
+
+func (s *fakeRealtimeAdmissionService) GetBlockPackChannelAdmission(
+	ctx context.Context,
+	userPublicId uuid.UUID,
+	blockPackId uuid.UUID,
+	permission realtimetypes.ChannelPermission,
+) (int32, error) {
+	return s.maximumSubscribers, s.err
 }
 
 func (s *fakeBlockProjectionService) Apply(
@@ -83,6 +100,23 @@ func (m *fakeWorkerManager) SetFrameHandler(handler func(realtimetypes.InternalF
 	m.frameHandler = handler
 }
 
+func newTestRealtimeLeaseStore(t *testing.T) *caches.RealtimeLeaseStore {
+	t.Helper()
+
+	server, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("failed to start test redis server: %v", err)
+	}
+	t.Cleanup(server.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: server.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	return caches.NewRealtimeLeaseStoreWithClient(redisClient)
+}
+
 func TestGatewaySendsReadyAndPong(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
@@ -101,8 +135,10 @@ func TestGatewaySendsReadyAndPong(t *testing.T) {
 				return req.Header.Get("Origin") != ""
 			},
 		},
-		workerManager: workerManager,
-		connectors:    make(map[uuid.UUID]*Connector),
+		workerManager:   workerManager,
+		realtimeService: &fakeRealtimeAdmissionService{maximumSubscribers: 10},
+		leaseStore:      newTestRealtimeLeaseStore(t),
+		connectors:      make(map[uuid.UUID]*Connector),
 	}
 	workerManager.SetFrameHandler(gateway.handleInternalFrame)
 
@@ -144,6 +180,263 @@ func TestGatewaySendsReadyAndPong(t *testing.T) {
 	}
 }
 
+func TestGatewayRejectsConnectionsOutsideRealtimeBetaAllowlist(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	userAgent := "notezy-realtime-test"
+	userPublicId := uuid.New()
+	configureRealtimeTicketPrivateKey(t)
+	connectionTicket, _, exception := tokens.GenerateRealtimeConnectionTicket(userPublicId, userAgent)
+	if exception != nil {
+		t.Fatalf("failed to generate connection ticket: %v", exception)
+	}
+
+	gateway := &Gateway{
+		upgrader: websocket.Upgrader{
+			CheckOrigin: func(req *http.Request) bool {
+				return req.Header.Get("Origin") != ""
+			},
+		},
+		realtimeBetaUserPublicIdSet: map[uuid.UUID]bool{uuid.New(): true},
+		leaseStore:                  newTestRealtimeLeaseStore(t),
+		connectors:                  make(map[uuid.UUID]*Connector),
+	}
+
+	router := gin.New()
+	router.GET("/"+constants.RealtimeDevelopmentBaseURL, gateway.Handle)
+
+	server := httptest.NewServer(router)
+	defer server.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/" + constants.RealtimeDevelopmentBaseURL
+	connection, response, err := (&websocket.Dialer{
+		Subprotocols: []string{*connectionTicket},
+	}).Dial(wsURL, http.Header{
+		"Origin":     []string{server.URL},
+		"User-Agent": []string{userAgent},
+	})
+	if connection != nil {
+		connection.Close()
+	}
+	if err == nil {
+		t.Fatal("expected realtime beta allowlist to reject the connection")
+	}
+	if response == nil || response.StatusCode != http.StatusServiceUnavailable {
+		t.Fatalf("expected status %d, got %#v", http.StatusServiceUnavailable, response)
+	}
+}
+
+func TestGatewayRejectsConnectionsWhenGatewayCapacityIsReached(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	userAgent := "notezy-realtime-test"
+	configureRealtimeTicketPrivateKey(t)
+
+	firstTicket, _, exception := tokens.GenerateRealtimeConnectionTicket(uuid.New(), userAgent)
+	if exception != nil {
+		t.Fatalf("failed to generate first connection ticket: %v", exception)
+	}
+	secondTicket, _, exception := tokens.GenerateRealtimeConnectionTicket(uuid.New(), userAgent)
+	if exception != nil {
+		t.Fatalf("failed to generate second connection ticket: %v", exception)
+	}
+
+	workerManager := &fakeWorkerManager{}
+	gateway := &Gateway{
+		upgrader: websocket.Upgrader{
+			CheckOrigin: func(req *http.Request) bool {
+				return req.Header.Get("Origin") != ""
+			},
+		},
+		workerManager:     workerManager,
+		leaseStore:        newTestRealtimeLeaseStore(t),
+		connectors:        make(map[uuid.UUID]*Connector),
+		maximumConnectors: 1,
+	}
+	workerManager.SetFrameHandler(gateway.handleInternalFrame)
+
+	router := gin.New()
+	router.GET("/"+constants.RealtimeDevelopmentBaseURL, gateway.Handle)
+
+	server := httptest.NewServer(router)
+	defer server.Close()
+
+	firstConnection := dialGateway(t, server.URL, userAgent, *firstTicket)
+	defer firstConnection.Close()
+
+	assertGatewayConnectionRejected(t, server.URL, userAgent, *secondTicket, http.StatusServiceUnavailable)
+}
+
+func TestGatewayRejectsConnectionsWhenUserCapacityIsReached(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	userAgent := "notezy-realtime-test"
+	userPublicId := uuid.New()
+	configureRealtimeTicketPrivateKey(t)
+	connectionTicket, _, exception := tokens.GenerateRealtimeConnectionTicket(userPublicId, userAgent)
+	if exception != nil {
+		t.Fatalf("failed to generate connection ticket: %v", exception)
+	}
+
+	workerManager := &fakeWorkerManager{}
+	gateway := &Gateway{
+		upgrader: websocket.Upgrader{
+			CheckOrigin: func(req *http.Request) bool {
+				return req.Header.Get("Origin") != ""
+			},
+		},
+		workerManager:             workerManager,
+		leaseStore:                newTestRealtimeLeaseStore(t),
+		connectors:                make(map[uuid.UUID]*Connector),
+		maximumConnectionsPerUser: 1,
+	}
+	workerManager.SetFrameHandler(gateway.handleInternalFrame)
+
+	router := gin.New()
+	router.GET("/"+constants.RealtimeDevelopmentBaseURL, gateway.Handle)
+
+	server := httptest.NewServer(router)
+	defer server.Close()
+
+	firstConnection := dialGateway(t, server.URL, userAgent, *connectionTicket)
+	defer firstConnection.Close()
+
+	assertGatewayConnectionRejected(t, server.URL, userAgent, *connectionTicket, http.StatusTooManyRequests)
+}
+
+func TestGatewayRejectsBlockPackSubscriptionWhenRoomCapacityIsReached(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	userAgent := "notezy-realtime-test"
+	firstUserPublicId := uuid.New()
+	secondUserPublicId := uuid.New()
+	blockPackId := uuid.New()
+	configureRealtimeTicketPrivateKey(t)
+
+	firstConnectionTicket, _, exception := tokens.GenerateRealtimeConnectionTicket(firstUserPublicId, userAgent)
+	if exception != nil {
+		t.Fatalf("failed to generate first connection ticket: %v", exception)
+	}
+	secondConnectionTicket, _, exception := tokens.GenerateRealtimeConnectionTicket(secondUserPublicId, userAgent)
+	if exception != nil {
+		t.Fatalf("failed to generate second connection ticket: %v", exception)
+	}
+	firstChannelTicket, _, exception := tokens.GenerateRealtimeBlockPackTicket(
+		firstUserPublicId,
+		userAgent,
+		blockPackId,
+		realtimetypes.ChannelPermission_Write,
+	)
+	if exception != nil {
+		t.Fatalf("failed to generate first channel ticket: %v", exception)
+	}
+	secondChannelTicket, _, exception := tokens.GenerateRealtimeBlockPackTicket(
+		secondUserPublicId,
+		userAgent,
+		blockPackId,
+		realtimetypes.ChannelPermission_Read,
+	)
+	if exception != nil {
+		t.Fatalf("failed to generate second channel ticket: %v", exception)
+	}
+
+	workerManager := &fakeWorkerManager{}
+	gateway := &Gateway{
+		upgrader: websocket.Upgrader{
+			CheckOrigin: func(req *http.Request) bool {
+				return req.Header.Get("Origin") != ""
+			},
+		},
+		workerManager:   workerManager,
+		realtimeService: &fakeRealtimeAdmissionService{maximumSubscribers: 1},
+		leaseStore:      newTestRealtimeLeaseStore(t),
+		connectors:      make(map[uuid.UUID]*Connector),
+	}
+	workerManager.SetFrameHandler(gateway.handleInternalFrame)
+
+	router := gin.New()
+	router.GET("/"+constants.RealtimeDevelopmentBaseURL, gateway.Handle)
+
+	server := httptest.NewServer(router)
+	defer server.Close()
+
+	firstConnection := dialGateway(t, server.URL, userAgent, *firstConnectionTicket)
+	defer firstConnection.Close()
+	secondConnection := dialGateway(t, server.URL, userAgent, *secondConnectionTicket)
+	defer secondConnection.Close()
+
+	for _, connection := range []*websocket.Conn{firstConnection, secondConnection} {
+		var ready realtimetypes.ReadyFrame
+		if err := connection.ReadJSON(&ready); err != nil {
+			t.Fatalf("failed to read ready frame: %v", err)
+		}
+	}
+
+	if err := firstConnection.WriteJSON(realtimetypes.SubscribeFrame{
+		Version:       constants.RealtimeProtocolVersion,
+		Type:          realtimetypes.FrameType_Subscribe,
+		RequestId:     "subscribe-first",
+		ChannelType:   realtimetypes.ChannelType_BlockPack,
+		ChannelId:     blockPackId,
+		ChannelTicket: *firstChannelTicket,
+	}); err != nil {
+		t.Fatalf("failed to subscribe first connection: %v", err)
+	}
+
+	var subscribed realtimetypes.SubscribedFrame
+	if err := firstConnection.ReadJSON(&subscribed); err != nil {
+		t.Fatalf("failed to read subscribed frame: %v", err)
+	}
+
+	if err := secondConnection.WriteJSON(realtimetypes.SubscribeFrame{
+		Version:       constants.RealtimeProtocolVersion,
+		Type:          realtimetypes.FrameType_Subscribe,
+		RequestId:     "subscribe-second",
+		ChannelType:   realtimetypes.ChannelType_BlockPack,
+		ChannelId:     blockPackId,
+		ChannelTicket: *secondChannelTicket,
+	}); err != nil {
+		t.Fatalf("failed to subscribe second connection: %v", err)
+	}
+
+	var errorFrame realtimetypes.ErrorFrame
+	if err := secondConnection.ReadJSON(&errorFrame); err != nil {
+		t.Fatalf("failed to read room capacity error frame: %v", err)
+	}
+	if errorFrame.Code != realtimetypes.ErrorCode_RoomConnectionLimitExceeded {
+		t.Fatalf("unexpected room capacity error frame: %#v", errorFrame)
+	}
+
+	if err := firstConnection.WriteJSON(realtimetypes.UnsubscribeFrame{
+		Version:            constants.RealtimeProtocolVersion,
+		Type:               realtimetypes.FrameType_Unsubscribe,
+		RequestId:          "unsubscribe-first",
+		ConnectorChannelId: subscribed.ConnectorChannelId,
+	}); err != nil {
+		t.Fatalf("failed to unsubscribe first connection: %v", err)
+	}
+
+	var unsubscribed realtimetypes.UnsubscribedFrame
+	if err := firstConnection.ReadJSON(&unsubscribed); err != nil {
+		t.Fatalf("failed to read unsubscribed frame: %v", err)
+	}
+
+	if err := secondConnection.WriteJSON(realtimetypes.SubscribeFrame{
+		Version:       constants.RealtimeProtocolVersion,
+		Type:          realtimetypes.FrameType_Subscribe,
+		RequestId:     "subscribe-second-after-release",
+		ChannelType:   realtimetypes.ChannelType_BlockPack,
+		ChannelId:     blockPackId,
+		ChannelTicket: *secondChannelTicket,
+	}); err != nil {
+		t.Fatalf("failed to resubscribe second connection: %v", err)
+	}
+
+	if err := secondConnection.ReadJSON(&subscribed); err != nil {
+		t.Fatalf("expected released room capacity to admit the second connection: %v", err)
+	}
+}
+
 func TestGatewayMultiplexesAndRelaysBlockPackChannels(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
@@ -162,8 +455,10 @@ func TestGatewayMultiplexesAndRelaysBlockPackChannels(t *testing.T) {
 				return req.Header.Get("Origin") != ""
 			},
 		},
-		workerManager: workerManager,
-		connectors:    make(map[uuid.UUID]*Connector),
+		workerManager:   workerManager,
+		realtimeService: &fakeRealtimeAdmissionService{maximumSubscribers: 10},
+		leaseStore:      newTestRealtimeLeaseStore(t),
+		connectors:      make(map[uuid.UUID]*Connector),
 	}
 	workerManager.SetFrameHandler(gateway.handleInternalFrame)
 
@@ -351,8 +646,10 @@ func TestGatewayRejectsYjsDocumentUpdatesOnReadOnlyChannels(t *testing.T) {
 				return req.Header.Get("Origin") != ""
 			},
 		},
-		workerManager: workerManager,
-		connectors:    make(map[uuid.UUID]*Connector),
+		workerManager:   workerManager,
+		realtimeService: &fakeRealtimeAdmissionService{maximumSubscribers: 10},
+		leaseStore:      newTestRealtimeLeaseStore(t),
+		connectors:      make(map[uuid.UUID]*Connector),
 	}
 	workerManager.SetFrameHandler(gateway.handleInternalFrame)
 
@@ -507,6 +804,33 @@ func dialGateway(t *testing.T, serverURL string, userAgent string, connectionTic
 	}
 
 	return connection
+}
+
+func assertGatewayConnectionRejected(
+	t *testing.T,
+	serverURL string,
+	userAgent string,
+	connectionTicket string,
+	expectedStatus int,
+) {
+	t.Helper()
+
+	wsURL := "ws" + strings.TrimPrefix(serverURL, "http") + "/" + constants.RealtimeDevelopmentBaseURL
+	connection, response, err := (&websocket.Dialer{
+		Subprotocols: []string{connectionTicket},
+	}).Dial(wsURL, http.Header{
+		"Origin":     []string{serverURL},
+		"User-Agent": []string{userAgent},
+	})
+	if connection != nil {
+		connection.Close()
+	}
+	if err == nil {
+		t.Fatal("expected realtime connection to be rejected")
+	}
+	if response == nil || response.StatusCode != expectedStatus {
+		t.Fatalf("expected status %d, got %#v", expectedStatus, response)
+	}
 }
 
 func configureRealtimeTicketPrivateKey(t *testing.T) {

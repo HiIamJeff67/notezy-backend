@@ -9,17 +9,23 @@ import (
 /* ============================== Realtime Gateway limitations ============================== */
 
 const (
-	RealtimeConnectionTicketExpiresIn time.Duration = 5 * time.Minute
-	RealtimeBlockPackTicketExpiresIn  time.Duration = 5 * time.Minute
-	RealtimeProtocolVersion           int           = 1
-	RealtimeWorkerProtocolVersion     int           = 1
-	RealtimeMaxMessageSize            int64         = 1 << 20
-	RealtimeMaxChannelsPerConnection  int           = 64
-	RealtimePongWait                  time.Duration = 60 * time.Second
-	RealtimePingInterval              time.Duration = 25 * time.Second
-	RealtimeControlWriteTimeout       time.Duration = 10 * time.Second
-	RealtimeWorkerReconnectDelay      time.Duration = 2 * time.Second
-	RealtimeWorkerQueueSize           int           = 1024
+	RealtimeConnectionTicketExpiresIn   time.Duration = 5 * time.Minute
+	RealtimeBlockPackTicketExpiresIn    time.Duration = 5 * time.Minute
+	RealtimeProtocolVersion             int           = 1
+	RealtimeWorkerProtocolVersion       int           = 1
+	RealtimeMaxMessageSize              int64         = 1 << 20
+	RealtimeMaxChannelsPerConnection    int           = 64
+	RealtimePongWait                    time.Duration = 90 * time.Second
+	RealtimePingInterval                time.Duration = 60 * time.Second
+	RealtimeLeaseTTL                    time.Duration = 3 * time.Minute
+	RealtimeControlWriteTimeout         time.Duration = 10 * time.Second
+	RealtimeWorkerReconnectDelay        time.Duration = 2 * time.Second
+	RealtimeWorkerQueueSize             int           = 1024
+	RealtimeMaxOutboundControlFrames    int           = 256
+	RealtimeMaxOutboundFramesPerChannel int           = 256
+	RealtimeMaxOutboundBytesPerChannel  int64         = 4 << 20
+	RealtimeMaxConnectorsPerGateway     int           = 10_000
+	RealtimeMaxConnectionsPerUser       int           = 8
 )
 
 const (

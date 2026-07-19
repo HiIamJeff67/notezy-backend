@@ -34,6 +34,27 @@ store_gateway:
     kvstore:
       store: memberlist
 
+ruler:
+  alertmanager_url: http://127.0.0.1:${DOCKER_MIMIR_PORT}/alertmanager
+
+ruler_storage:
+  backend: local
+  local:
+    directory: /etc/mimir/rules
+
+alertmanager:
+  data_dir: /data/mimir/alertmanager
+  fallback_config_file: /etc/mimir/alertmanager-fallback.yaml
+  sharding_ring:
+    replication_factor: 1
+    kvstore:
+      store: memberlist
+
+alertmanager_storage:
+  backend: local
+  local:
+    path: /data/mimir/alertmanager-configs
+
 limits:
   max_label_names_per_series: 30
   max_global_series_per_user: 1500000

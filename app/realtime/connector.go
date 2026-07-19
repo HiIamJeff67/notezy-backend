@@ -2,7 +2,6 @@ package realtime
 
 import (
 	"sync"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -19,7 +18,7 @@ type Connector struct {
 	channels      map[uint32]realtimetypes.Channel
 	nextChannelId uint32
 	channelMutex  sync.RWMutex
-	writeMutex    sync.Mutex
+	outbound      *outboundQueue
 }
 
 func (c *Connector) get(connectorChannelId uint32) (realtimetypes.Channel, bool) {
@@ -29,6 +28,22 @@ func (c *Connector) get(connectorChannelId uint32) (realtimetypes.Channel, bool)
 	channel, exists := c.channels[connectorChannelId]
 
 	return channel, exists
+}
+
+func (c *Connector) findChannel(
+	channelType realtimetypes.ChannelType,
+	channelId uuid.UUID,
+) (uint32, bool) {
+	c.channelMutex.RLock()
+	defer c.channelMutex.RUnlock()
+
+	for connectorChannelId, channel := range c.channels {
+		if channel.Type == channelType && channel.Id == channelId {
+			return connectorChannelId, true
+		}
+	}
+
+	return 0, false
 }
 
 func (c *Connector) subscribe(channel realtimetypes.Channel) (uint32, bool) {
@@ -52,11 +67,14 @@ func (c *Connector) subscribe(channel realtimetypes.Channel) (uint32, bool) {
 
 func (c *Connector) unsubscribe(connectorChannelId uint32) (realtimetypes.Channel, bool) {
 	c.channelMutex.Lock()
-	defer c.channelMutex.Unlock()
-
 	channel, exists := c.channels[connectorChannelId]
 	if exists {
 		delete(c.channels, connectorChannelId)
+	}
+	c.channelMutex.Unlock()
+
+	if exists {
+		c.outbound.clearChannel(connectorChannelId)
 	}
 
 	return channel, exists
@@ -84,35 +102,22 @@ func (c *Connector) writeError(frame realtimetypes.ErrorFrame) bool {
 	return c.writeJSON(frame) == nil
 }
 
+func (c *Connector) startWriter() {
+	c.outbound.startWriter()
+}
+
+func (c *Connector) stopWriter() {
+	c.outbound.stopWriter()
+}
+
 func (c *Connector) writeJSON(frame any) error {
-	c.writeMutex.Lock()
-	defer c.writeMutex.Unlock()
-
-	if err := c.connection.SetWriteDeadline(time.Now().Add(constants.RealtimeControlWriteTimeout)); err != nil {
-		return err
-	}
-
-	return c.connection.WriteJSON(frame)
+	return c.outbound.writeJSON(frame)
 }
 
 func (c *Connector) writeControl(messageType int, payload []byte) error {
-	c.writeMutex.Lock()
-	defer c.writeMutex.Unlock()
-
-	return c.connection.WriteControl(
-		messageType,
-		payload,
-		time.Now().Add(constants.RealtimeControlWriteTimeout),
-	)
+	return c.outbound.writeControl(messageType, payload)
 }
 
-func (c *Connector) writeBinary(payload []byte) error {
-	c.writeMutex.Lock()
-	defer c.writeMutex.Unlock()
-
-	if err := c.connection.SetWriteDeadline(time.Now().Add(constants.RealtimeControlWriteTimeout)); err != nil {
-		return err
-	}
-
-	return c.connection.WriteMessage(websocket.BinaryMessage, payload)
+func (c *Connector) writeBinary(frame realtimetypes.BinaryFrame) error {
+	return c.outbound.writeBinary(frame)
 }

@@ -47,6 +47,8 @@ var (
 	}
 )
 
+var RealtimeRange = types.Range[int, int]{Start: 8, Size: 1} // server number: 8
+
 /* ============================== Auxiliary Function ============================== */
 
 func formatRateLimitKeyByFingerprint(fingerprint string) string {

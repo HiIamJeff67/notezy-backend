@@ -5,16 +5,19 @@ type ValidCachePurpose string
 const (
 	ValidCachePurpose_UserData   ValidCachePurpose = "UserData"
 	ValidCachePurpose_RateLimite ValidCachePurpose = "RateLimit"
+	ValidCachePurpose_Realtime   ValidCachePurpose = "Realtime"
 )
 
 var AllValidCachePurposes = []ValidCachePurpose{
 	ValidCachePurpose_UserData,
 	ValidCachePurpose_RateLimite,
+	ValidCachePurpose_Realtime,
 }
 
 var _validCachePurposes = map[string]ValidCachePurpose{
 	"UserData":  ValidCachePurpose_UserData,
 	"RateLimit": ValidCachePurpose_RateLimite,
+	"Realtime":  ValidCachePurpose_Realtime,
 }
 
 func (cp ValidCachePurpose) String() string {

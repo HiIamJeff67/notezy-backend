@@ -3,6 +3,7 @@ package yjsmaintenance
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -10,6 +11,7 @@ import (
 
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/app/realtime/types"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
@@ -31,12 +33,13 @@ func (c Claimer) ClaimCompactions(ctx context.Context) ([]realtimetypes.YjsCompa
 	tx := c.db.WithContext(ctx).Begin()
 
 	type claimableDocument struct {
-		BlockPackId uuid.UUID `gorm:"column:block_pack_id"`
+		BlockPackId     uuid.UUID  `gorm:"column:block_pack_id"`
+		LastCompactedAt *time.Time `gorm:"column:last_compacted_at"`
 	}
 
 	var claimableDocuments []claimableDocument
 	if err := tx.Model(&schemas.BlockPackYjsDocument{}).
-		Select(`"BlockPackYjsDocumentTable".block_pack_id`).
+		Select(`"BlockPackYjsDocumentTable".block_pack_id, "BlockPackYjsDocumentTable".last_compacted_at`).
 		Joins(`INNER JOIN "BlockPackTable" bp ON bp.id = "BlockPackYjsDocumentTable".block_pack_id AND bp.deleted_at IS NULL`).
 		Where(`"BlockPackYjsDocumentTable".deleted_at IS NULL`).
 		Where(`"BlockPackYjsDocumentTable".last_update_sequence > "BlockPackYjsDocumentTable".compacted_until_sequence`).
@@ -65,6 +68,9 @@ func (c Claimer) ClaimCompactions(ctx context.Context) ([]realtimetypes.YjsCompa
 	blockPackIds := make([]uuid.UUID, len(claimableDocuments))
 	for index, document := range claimableDocuments {
 		blockPackIds[index] = document.BlockPackId
+		if document.LastCompactedAt != nil {
+			metrics.NotezyMeter.Duration(ctx, "yjs.compaction.age", time.Since(*document.LastCompactedAt))
+		}
 	}
 
 	_, pairs, err := c.blockPackYjsRepository.BulkCheckPermissionsAndGetManyByIds(

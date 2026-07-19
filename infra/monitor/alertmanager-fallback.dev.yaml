@@ -1,0 +1,5 @@
+route:
+  receiver: notezy-local
+
+receivers:
+  - name: notezy-local

@@ -31,6 +31,7 @@ var (
 	PurposeToServerNumberRange                                              = map[types.ValidCachePurpose]types.Range[int, int]{
 		types.ValidCachePurpose_UserData:   UserDataRange,  // server number: 0 - 3 (included)
 		types.ValidCachePurpose_RateLimite: RateLimitRange, // server number: 4 - 7 (included)
+		types.ValidCachePurpose_Realtime:   RealtimeRange,  // server number: 8
 	}
 	Ctx = context.Background()
 

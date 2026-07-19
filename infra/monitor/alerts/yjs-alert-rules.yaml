@@ -15,3 +15,17 @@ groups:
           severity: critical
         annotations:
           summary: Yjs persistence failure rate is above 2%.
+      - alert: NotezyRealtimeChannelBackpressureHigh
+        expr: sum(rate(notezy_realtime_channel_backpressure_count_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Realtime channel backpressure is repeatedly forcing clients to resubscribe.
+      - alert: NotezyYjsProjectionLagHigh
+        expr: histogram_quantile(0.95, sum by (le) (rate(notezy_yjs_projection_lag_bucket[5m]))) > 250
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: The Yjs-to-BlockTable projection lag p95 is above 250 updates.

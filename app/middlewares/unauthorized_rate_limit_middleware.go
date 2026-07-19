@@ -3,6 +3,9 @@ package middlewares
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/gin-gonic/gin"
 
 	configs "github.com/HiIamJeff67/notezy-backend/app/configs"
@@ -41,7 +44,7 @@ func UnauthorizedRateLimitMiddleware(config ...configs.RateLimitConfig) gin.Hand
 	}
 
 	return func(ctx *gin.Context) {
-		fingerprint := getClientFingerprint(ctx)
+		fingerprint := ctx.ClientIP()
 
 		allowed, remaining := unauthorizedRateLimiter.AllowByFingerprint(fingerprint)
 		if !allowed {
@@ -57,9 +60,15 @@ func UnauthorizedRateLimitMiddleware(config ...configs.RateLimitConfig) gin.Hand
 	}
 }
 
-func getClientFingerprint(c *gin.Context) string {
-	// TODO: use other complex stuff or algorithm or even the machine learning model to generate or get the fingerprint of each clients
-	return c.ClientIP()
+func setRateLimitHeaders(ctx *gin.Context, remaining int32, limiter *ratelimit.HybridRateLimiter) {
+	// standard information
+	ctx.Header("X-RateLimit-Limit", strconv.Itoa(int(limiter.UserLimit)))
+	ctx.Header("X-RateLimit-Remaining", strconv.Itoa(int(remaining)))
+	ctx.Header("X-RateLimit-Reset", strconv.FormatInt(time.Now().Add(limiter.WindowDuration).Unix(), 10))
+
+	// extra information
+	ctx.Header("X-RateLimit-Window", limiter.WindowDuration.String())
+	ctx.Header("X-RateLimit-Policy", "hybrid-token-bucket")
 }
 
 func StopUnauthorizedRateLimiter() {

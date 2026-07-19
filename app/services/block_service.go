@@ -19,6 +19,7 @@ import (
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
+	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
@@ -273,6 +274,7 @@ func (s *BlockService) Apply(
 
 		return nil, fmt.Errorf("failed to lock yjs document for projection: %w", err)
 	}
+	metrics.NotezyMeter.Value(ctx, "yjs.projection.lag", document.LastUpdateSequence-document.ProjectedUntilSequence)
 
 	if input.ProjectedSequence <= document.ProjectedUntilSequence {
 		if err := tx.Commit().Error; err != nil {
@@ -479,6 +481,7 @@ func (s *BlockService) ApplyMany(
 	documentByBlockPackId := make(map[uuid.UUID]schemas.BlockPackYjsDocument, len(documents))
 	for _, document := range documents {
 		documentByBlockPackId[document.BlockPackId] = document
+		metrics.NotezyMeter.Value(ctx, "yjs.projection.lag", document.LastUpdateSequence-document.ProjectedUntilSequence)
 	}
 
 	applicableProjections := make([]preparedProjection, 0, len(preparedProjections))

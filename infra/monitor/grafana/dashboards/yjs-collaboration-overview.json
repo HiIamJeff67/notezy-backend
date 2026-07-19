@@ -335,6 +335,171 @@
       ],
       "title": "Worker Process Memory",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 35
+      },
+      "id": 10,
+      "targets": [
+        {
+          "expr": "sum by (direction, frameType) (rate(notezy_realtime_frame_count_total[5m]))",
+          "legendFormat": "{{direction}} {{frameType}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (reason) (rate(notezy_realtime_connection_rejected_count_total[5m]))",
+          "legendFormat": "rejected {{reason}}",
+          "refId": "B"
+        }
+      ],
+      "title": "Gateway Frame and Rejection Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 35
+      },
+      "id": 11,
+      "targets": [
+        {
+          "expr": "sum by (direction, frameType) (rate(notezy_realtime_payload_bytes_total[5m]))",
+          "legendFormat": "{{direction}} {{frameType}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Gateway Payload Throughput",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 44
+      },
+      "id": 12,
+      "targets": [
+        {
+          "expr": "sum(notezy_realtime_channel_count)",
+          "legendFormat": "active channels",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (outcome) (rate(notezy_realtime_channel_subscription_count_total[5m]))",
+          "legendFormat": "{{outcome}}",
+          "refId": "B"
+        },
+        {
+          "expr": "sum by (channelType) (rate(notezy_realtime_channel_backpressure_count_total[5m]))",
+          "legendFormat": "backpressure {{channelType}}",
+          "refId": "C"
+        }
+      ],
+      "title": "Channel Lifecycle and Backpressure",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 44
+      },
+      "id": 13,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, queueType, frameType) (rate(notezy_realtime_outbound_queue_depth_bucket[5m])))",
+          "legendFormat": "{{queueType}} {{frameType}}",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, queueType, frameType) (rate(notezy_realtime_outbound_queue_bytes_bucket[5m])))",
+          "legendFormat": "{{queueType}} {{frameType}} bytes",
+          "refId": "B"
+        }
+      ],
+      "title": "Outbound Queue p95 Depth and Bytes",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 53
+      },
+      "id": 14,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(notezy_yjs_projection_lag_bucket[5m])))",
+          "legendFormat": "projection lag",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(notezy_yjs_compaction_age_seconds_bucket[5m])))",
+          "legendFormat": "compaction age seconds",
+          "refId": "B"
+        }
+      ],
+      "title": "Projection Lag and Compaction Age p95",
+      "type": "timeseries"
     }
   ],
   "schemaVersion": 41,

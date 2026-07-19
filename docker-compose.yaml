@@ -61,6 +61,8 @@ services:
       JWT_ACCESS_TOKEN_SECRET_KEY: ${JWT_ACCESS_TOKEN_SECRET_KEY}
       JWT_REFRESH_TOKEN_SECRET_KEY: ${JWT_REFRESH_TOKEN_SECRET_KEY}
       REALTIME_TICKET_PRIVATE_KEY_BASE64: ${REALTIME_TICKET_PRIVATE_KEY_BASE64}
+      REALTIME_ENABLED: ${REALTIME_ENABLED:-true}
+      REALTIME_BETA_USER_PUBLIC_IDS: ${REALTIME_BETA_USER_PUBLIC_IDS:-}
       YJS_WORKER_URLS: ${YJS_WORKER_URLS}
       YJS_MAINTENANCE_WORKER_URL: ${YJS_MAINTENANCE_WORKER_URL}
       YJS_PROJECTION_WORKER_URL: ${YJS_PROJECTION_WORKER_URL:-http://notezy-yjs-worker:${DOCKER_YJS_WORKER_PORT}/internal/yjs-projection/v1}
@@ -167,9 +169,11 @@ services:
     container_name: ${DOCKER_MIMIR_SERVICE_NAME}
     image: grafana/mimir:latest
     command:
-      ["-config.file=/etc/mimir.yaml", "-target=all", "-config.expand-env=true"]
+      ["-config.file=/etc/mimir.yaml", "-target=all,alertmanager", "-config.expand-env=true"]
     volumes:
       - ./infra/monitor/mimir-config.dev.yaml:/etc/mimir.yaml
+      - ./infra/monitor/alertmanager-fallback.dev.yaml:/etc/mimir/alertmanager-fallback.yaml:ro
+      - ./infra/monitor/alerts:/etc/mimir/rules/anonymous:ro
       - mimir-data:/data/mimir
     environment:
       DOCKER_MIMIR_PORT: ${DOCKER_MIMIR_PORT}

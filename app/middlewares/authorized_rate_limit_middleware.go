@@ -3,8 +3,6 @@ package middlewares
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -67,17 +65,6 @@ func AuthorizedRateLimitMiddleware(config ...configs.RateLimitConfig) gin.Handle
 
 		ctx.Next()
 	}
-}
-
-func setRateLimitHeaders(ctx *gin.Context, remaining int32, limiter *ratelimit.HybridRateLimiter) {
-	// standard information
-	ctx.Header("X-RateLimit-Limit", strconv.Itoa(int(limiter.UserLimit)))
-	ctx.Header("X-RateLimit-Remaining", strconv.Itoa(int(remaining)))
-	ctx.Header("X-RateLimit-Reset", strconv.FormatInt(time.Now().Add(limiter.WindowDuration).Unix(), 10))
-
-	// extra information
-	ctx.Header("X-RateLimit-Window", limiter.WindowDuration.String())
-	ctx.Header("X-RateLimit-Policy", "hybrid-token-bucket")
 }
 
 func StopAuthorizedRateLimiter() {

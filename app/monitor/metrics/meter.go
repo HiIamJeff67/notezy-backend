@@ -14,6 +14,7 @@ type MeterInterface interface {
 	Duration(ctx context.Context, name string, value time.Duration, attributes ...attribute.KeyValue)
 	Bytes(ctx context.Context, name string, value int64, attributes ...attribute.KeyValue)
 	UpDown(ctx context.Context, name string, value int64, attributes ...attribute.KeyValue)
+	Value(ctx context.Context, name string, value int64, attributes ...attribute.KeyValue)
 }
 
 type Meter struct {
@@ -22,6 +23,7 @@ type Meter struct {
 	counters           sync.Map
 	durationHistograms sync.Map
 	upDownCounters     sync.Map
+	valueHistograms    sync.Map
 }
 
 func NewMeter(meter metric.Meter) MeterInterface {
@@ -86,4 +88,18 @@ func (m *Meter) UpDown(ctx context.Context, name string, value int64, attributes
 	}
 
 	counter.(metric.Int64UpDownCounter).Add(ctx, value, metric.WithAttributes(attributes...))
+}
+
+func (m *Meter) Value(ctx context.Context, name string, value int64, attributes ...attribute.KeyValue) {
+	histogram, ok := m.valueHistograms.Load(name)
+	if !ok {
+		created, err := m.meter.Int64Histogram(name)
+		if err != nil {
+			return
+		}
+
+		histogram, _ = m.valueHistograms.LoadOrStore(name, created)
+	}
+
+	histogram.(metric.Int64Histogram).Record(ctx, value, metric.WithAttributes(attributes...))
 }

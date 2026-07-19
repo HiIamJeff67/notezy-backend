@@ -12,7 +12,7 @@ func ConfigureRealtimeRoutes() {
 	DevelopmentRouter.GET(
 		"/"+constants.RealtimeDevelopmentBaseURL,
 		middlewares.DomainWhiteListMiddleware(),
-		middlewares.UnauthorizedRateLimitMiddleware(),
+		middlewares.RealtimeUpgradeRateLimitMiddleware(),
 		gateway.Handle,
 	)
 }
