@@ -38,7 +38,8 @@ type Gateway struct {
 	workerManager         workers.WorkerManagerInterface
 	yjsPersistenceService services.YjsPersistenceServiceInterface
 	realtimeService       interface {
-		GetBlockPackChannelAdmission(ctx context.Context, userPublicId uuid.UUID, blockPackId uuid.UUID, permission realtimetypes.ChannelPermission) (int32, error)
+		GetBlockPackChannelPermission(ctx context.Context, userPublicId uuid.UUID, blockPackId uuid.UUID, permission realtimetypes.ChannelPermission) (int32, realtimetypes.ErrorCode, error)
+		ValidateBlockPackChannelPermission(ctx context.Context, userPublicId uuid.UUID, blockPackId uuid.UUID, permission realtimetypes.ChannelPermission) (realtimetypes.ErrorCode, error)
 	}
 	leaseStore             *caches.RealtimeLeaseStore
 	blockProjectionService interface {
@@ -46,8 +47,8 @@ type Gateway struct {
 	}
 	realtimeDisabled            bool
 	realtimeBetaUserPublicIdSet map[uuid.UUID]bool
-	connectors                  map[uuid.UUID]*Connector
 	connectorMutex              sync.RWMutex
+	connectors                  map[uuid.UUID]*Connector
 	pendingConnectorCount       int
 	maximumConnectors           int
 	maximumConnectionsPerUser   int
@@ -80,7 +81,7 @@ func NewGateway() *Gateway {
 		workerManager:         workerManager,
 		yjsPersistenceService: services.NewYjsPersistenceService(models.NotezyDB),
 		realtimeService:       services.NewRealtimeService(models.NotezyDB, blockPackRepository),
-		leaseStore:            caches.NewRealtimeLeaseStore(),
+		leaseStore:            caches.NewRealtimeLeaseStore(caches.RedisClientMap),
 		blockProjectionService: services.NewBlockService(
 			models.NotezyDB,
 			blockScope,
@@ -103,14 +104,6 @@ func NewGateway() *Gateway {
 	workerManager.SetFrameHandler(gateway.handleInternalFrame)
 
 	return gateway
-}
-
-func (g *Gateway) allowsRealtime(userPublicId uuid.UUID) bool {
-	if g.realtimeDisabled {
-		return false
-	}
-
-	return len(g.realtimeBetaUserPublicIdSet) == 0 || g.realtimeBetaUserPublicIdSet[userPublicId]
 }
 
 func (g *Gateway) Handle(ctx *gin.Context) {
@@ -147,7 +140,8 @@ func (g *Gateway) Handle(ctx *gin.Context) {
 		ctx.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
-	if !g.allowsRealtime(userPublicId) {
+	if g.realtimeDisabled ||
+		len(g.realtimeBetaUserPublicIdSet) > 0 && !g.realtimeBetaUserPublicIdSet[userPublicId] {
 		metrics.NotezyMeter.Count(ctx.Request.Context(), "realtime.connection.rejected.count", 1,
 			attribute.String("reason", "rollout_not_enabled"),
 		)
@@ -476,6 +470,62 @@ func (g *Gateway) handleBinaryFrame(ctx context.Context, connector *Connector, p
 			Message:            "channel permission does not allow yjs document updates",
 		})
 	}
+	if frame.Type == realtimetypes.BinaryFrameType_YjsDocument {
+		errorCode, err := g.realtimeService.ValidateBlockPackChannelPermission(
+			ctx,
+			connector.UserPublicId,
+			channel.Id,
+			channel.Permission,
+		)
+		if err != nil {
+			connector.unsubscribe(frame.ConnectorChannelId)
+			if errorCode == "" {
+				errorCode = realtimetypes.ErrorCode_PermissionRevoked
+			}
+
+			if releaseErr := g.leaseStore.ReleaseBlockPackSubscriber(
+				channel.Id,
+				fmt.Sprintf("%s:%d", connector.Id, frame.ConnectorChannelId),
+			); releaseErr != nil {
+				logs.NotezyLogger.Error(ctx, releaseErr, "Failed to release realtime BlockPack subscriber lease")
+			}
+
+			g.workerManager.Detach(realtimetypes.InternalFrame{
+				Version:            byte(constants.RealtimeWorkerProtocolVersion),
+				Type:               realtimetypes.InternalFrameType_Detach,
+				ChannelType:        channel.Type,
+				ConnectionId:       connector.Id,
+				ConnectorChannelId: frame.ConnectorChannelId,
+				ChannelId:          channel.Id,
+			})
+
+			outcome := "permission_revoked"
+			message := "permission for this channel has been revoked"
+			if errorCode == realtimetypes.ErrorCode_ResourceUnavailable {
+				outcome = "resource_unavailable"
+				message = "the block pack is no longer available"
+			}
+			metrics.NotezyMeter.Count(ctx, "realtime.channel.subscription.count", 1,
+				attribute.String("action", "detach"),
+				attribute.String("channelType", string(channel.Type)),
+				attribute.String("outcome", outcome),
+			)
+			metrics.NotezyMeter.UpDown(ctx, "realtime.channel.count", -1,
+				attribute.String("channelType", string(channel.Type)),
+				attribute.String("permission", string(channel.Permission)),
+			)
+
+			return connector.writeError(realtimetypes.ErrorFrame{
+				Version:            constants.RealtimeProtocolVersion,
+				Type:               realtimetypes.FrameType_Error,
+				ChannelType:        channel.Type,
+				ChannelId:          &channel.Id,
+				ConnectorChannelId: frame.ConnectorChannelId,
+				Code:               errorCode,
+				Message:            message,
+			})
+		}
+	}
 
 	internalFrameType := realtimetypes.InternalFrameType_YjsDocument
 	if frame.Type == realtimetypes.BinaryFrameType_Awareness {
@@ -686,7 +736,7 @@ func (g *Gateway) handleControlFrame(ctx context.Context, connector *Connector, 
 		}
 
 		// else if the channel is not exist yet, we have to create a channel by first check the maximum subscribers
-		maximumSubscribers, err := g.realtimeService.GetBlockPackChannelAdmission(
+		maximumSubscribers, errorCode, err := g.realtimeService.GetBlockPackChannelPermission(
 			ctx,
 			connector.UserPublicId,
 			channel.Id,
@@ -694,10 +744,21 @@ func (g *Gateway) handleControlFrame(ctx context.Context, connector *Connector, 
 		)
 		if err != nil {
 			connector.unsubscribe(connectorChannelId)
+			if errorCode == "" {
+				errorCode = realtimetypes.ErrorCode_PermissionRevoked
+			}
+
+			message := "permission for this channel has been revoked"
+			if errorCode == realtimetypes.ErrorCode_ResourceUnavailable {
+				message = "the block pack is no longer available"
+			} else if errorCode == realtimetypes.ErrorCode_RoomAdmissionUnavailable {
+				message = "room admission is temporarily unavailable"
+			}
+
 			metrics.NotezyMeter.Count(ctx, "realtime.channel.subscription.count", 1,
 				attribute.String("action", "subscribe"),
 				attribute.String("channelType", string(channel.Type)),
-				attribute.String("outcome", "permission_revoked"),
+				attribute.String("outcome", string(errorCode)),
 			)
 
 			return connector.writeError(realtimetypes.ErrorFrame{
@@ -707,8 +768,8 @@ func (g *Gateway) handleControlFrame(ctx context.Context, connector *Connector, 
 				ChannelType:        channel.Type,
 				ChannelId:          &channel.Id,
 				ConnectorChannelId: connectorChannelId,
-				Code:               realtimetypes.ErrorCode_PermissionRevoked,
-				Message:            "the channel is no longer available to this user",
+				Code:               errorCode,
+				Message:            message,
 			})
 		}
 
@@ -756,6 +817,14 @@ func (g *Gateway) handleControlFrame(ctx context.Context, connector *Connector, 
 				Code:               realtimetypes.ErrorCode_RoomConnectionLimitExceeded,
 				Message:            "the room has reached the active subscriber limit for its plan",
 			})
+		}
+		if err := g.leaseStore.SetBlockPackParticipant(
+			channel.Id,
+			leaseMember,
+			connector.UserPublicId,
+			string(channel.Permission),
+		); err != nil {
+			logs.NotezyLogger.Error(ctx, err, "Failed to record realtime BlockPack participant")
 		}
 
 		if !g.workerManager.Attach(realtimetypes.InternalFrame{

@@ -10,6 +10,7 @@ import (
 )
 
 type RealtimeBinderInterface interface {
+	BindGetMyBlockPackRealtimeParticipants(controllerFunc types.ControllerFunc[*dtos.GetMyBlockPackRealtimeParticipantsReqDto]) gin.HandlerFunc
 	BindCreateMyRealtimeConnectionTicket(controllerFunc types.ControllerFunc[*dtos.CreateMyRealtimeConnectionTicketReqDto]) gin.HandlerFunc
 	BindCreateMyBlockPackChannelTicket(controllerFunc types.ControllerFunc[*dtos.CreateMyBlockPackChannelTicketReqDto]) gin.HandlerFunc
 }
@@ -18,6 +19,30 @@ type RealtimeBinder struct{}
 
 func NewRealtimeBinder() RealtimeBinderInterface {
 	return &RealtimeBinder{}
+}
+
+func (b *RealtimeBinder) BindGetMyBlockPackRealtimeParticipants(
+	controllerFunc types.ControllerFunc[*dtos.GetMyBlockPackRealtimeParticipantsReqDto],
+) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.GetMyBlockPackRealtimeParticipantsReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindUri(&reqDto.Param); err != nil {
+			exceptions.BlockPack.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
 }
 
 func (b *RealtimeBinder) BindCreateMyRealtimeConnectionTicket(

@@ -17,6 +17,7 @@ const (
 	ErrorCode_InvalidConnectorChannelId      ErrorCode = "invalid_connector_channel_id"
 	ErrorCode_InvalidControlFrame            ErrorCode = "invalid_control_frame"
 	ErrorCode_PermissionRevoked              ErrorCode = "permission_revoked"
+	ErrorCode_ResourceUnavailable            ErrorCode = "resource_unavailable"
 	ErrorCode_RoomAdmissionUnavailable       ErrorCode = "room_admission_unavailable"
 	ErrorCode_RoomConnectionLimitExceeded    ErrorCode = "room_connection_limit_exceeded"
 	ErrorCode_ResubscribeRequired            ErrorCode = "resubscribe_required"

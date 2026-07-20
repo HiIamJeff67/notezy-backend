@@ -113,6 +113,44 @@ type UpdateMyRootShelvesByIdsReqDto struct {
 	]
 }
 
+type UpsertMyRootShelfPermissionReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			Permission enums.AccessControlPermission `json:"permission" validate:"required,isaccesscontrolpermission"`
+		},
+		struct {
+			RootShelfId  uuid.UUID `uri:"rootShelfId" validate:"required"`
+			UserPublicId uuid.UUID `uri:"userPublicId" validate:"required"`
+		},
+	]
+}
+
+type UpsertMyRootShelfPermissionsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			Permissions []struct {
+				UserPublicId uuid.UUID                     `json:"userPublicId" validate:"required"`
+				Permission   enums.AccessControlPermission `json:"permission" validate:"required,isaccesscontrolpermission"`
+			} `json:"permissions" validate:"required,min=1,max=1024,dive"`
+		},
+		struct {
+			RootShelfId uuid.UUID `uri:"rootShelfId" validate:"required"`
+		},
+	]
+}
+
 type RestoreMyRootShelfByIdReqDto struct {
 	NotezyRequest[
 		struct {
@@ -173,6 +211,39 @@ type DeleteMyRootShelvesByIdsReqDto struct {
 	]
 }
 
+type DeleteMyRootShelfPermissionReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		any,
+		struct {
+			RootShelfId  uuid.UUID `uri:"rootShelfId" validate:"required"`
+			UserPublicId uuid.UUID `uri:"userPublicId" validate:"required"`
+		},
+	]
+}
+
+type DeleteMyRootShelfPermissionsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			UserPublicIds []uuid.UUID `json:"userPublicIds" validate:"required,min=1,max=1024,dive,required"`
+		},
+		struct {
+			RootShelfId uuid.UUID `uri:"rootShelfId" validate:"required"`
+		},
+	]
+}
+
 /* ============================== Response DTO ============================== */
 
 type GetMyRootShelfByIdResDto struct {
@@ -207,6 +278,17 @@ type UpdateMyRootShelfByIdResDto struct {
 
 type UpdateMyRootShelvesByIdsResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type UpsertMyRootShelfPermissionResDto struct {
+	UserPublicId uuid.UUID                     `json:"userPublicId"`
+	Permission   enums.AccessControlPermission `json:"permission"`
+	UpdatedAt    time.Time                     `json:"updatedAt"`
+	CreatedAt    time.Time                     `json:"createdAt"`
+}
+
+type UpsertMyRootShelfPermissionsResDto struct {
+	Permissions []UpsertMyRootShelfPermissionResDto `json:"permissions"`
 }
 
 type RestoreMyRootShelfByIdResDto struct {

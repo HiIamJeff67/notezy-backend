@@ -8,9 +8,11 @@ import (
 	"strings"
 	"time"
 
-	uuid "github.com/google/uuid"
+	"github.com/go-redis/redis"
+	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 
+	cacheinputs "github.com/HiIamJeff67/notezy-backend/app/caches/inputs"
 	redislibraries "github.com/HiIamJeff67/notezy-backend/app/caches/libraries"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
@@ -19,140 +21,127 @@ import (
 )
 
 type UserDataCache struct {
-	Id                 uuid.UUID        `json:"id"`                 // !only here
-	PublicId           uuid.UUID        `json:"publicId"`           // user
-	Name               string           `json:"name"`               // user
-	DisplayName        string           `json:"displayName"`        // user
-	Email              string           `json:"email"`              // user
-	AccessToken        string           `json:"accessToken"`        // !only here: note that it may be expired, but it is the newest one
-	CSRFToken          string           `json:"csrfToken"`          // !only here: note that it may be expired, but it is the newest one
-	Role               enums.UserRole   `json:"role"`               // user
-	Plan               enums.UserPlan   `json:"plan"`               // user
-	Status             enums.UserStatus `json:"status"`             // user
-	AvatarURL          string           `json:"avatarURL"`          // user info
-	Language           enums.Language   `json:"language"`           // user setting
-	GeneralSettingCode int64            `json:"generalSettingCode"` // user setting
-	PrivacySettingCode int64            `json:"privacySettingCode"` // user setting
-	CreatedAt          time.Time        `json:"createdAt"`          // user
-	UpdatedAt          time.Time        `json:"updatedAt"`          // user
+	Id                 uuid.UUID        `json:"id"`
+	PublicId           uuid.UUID        `json:"publicId"`
+	Name               string           `json:"name"`
+	DisplayName        string           `json:"displayName"`
+	Email              string           `json:"email"`
+	AccessToken        string           `json:"accessToken"`
+	CSRFToken          string           `json:"csrfToken"`
+	Role               enums.UserRole   `json:"role"`
+	Plan               enums.UserPlan   `json:"plan"`
+	Status             enums.UserStatus `json:"status"`
+	AvatarURL          string           `json:"avatarURL"`
+	Language           enums.Language   `json:"language"`
+	GeneralSettingCode int64            `json:"generalSettingCode"`
+	PrivacySettingCode int64            `json:"privacySettingCode"`
+	CreatedAt          time.Time        `json:"createdAt"`
+	UpdatedAt          time.Time        `json:"updatedAt"`
 }
 
-type UpdateUserDataCacheDto struct {
-	// Id 				  *uuid.UUID
-	// PublicId           *string
-	// Name               *string
-	DisplayName        *string
-	Email              *string
-	AccessToken        *string
-	CSRFToken          *string
-	Role               *enums.UserRole
-	Plan               *enums.UserPlan
-	Status             *enums.UserStatus
-	AvatarURL          *string
-	Language           *enums.Language
-	GeneralSettingCode *int64
-	PrivacySettingCode *int64
+type UserDataCacheStore struct {
+	redisClientMap map[int]*redis.Client
+
+	Range           types.Range[int, int]
+	MaxServerNumber int
+
+	cacheExpiresIn                                       time.Duration
+	batchCheckAndUpdateQuotasByFormattedKeysArgvPerKey   int
+	batchCheckAndUpdateQuotasByFormattedKeyBaseNumOfArgv int
 }
 
-type CheckAndUpdateUserQuotaDto struct {
-	Field        types.UserQuotaField
-	ChangeAmount int32
-	MaxLimit     int32
-	ExpiresIn    time.Time
+/* ============================== Constructor ============================== */
+
+func NewUserDataCacheStore(redisClientMap map[int]*redis.Client) *UserDataCacheStore {
+	rangeValue := types.Range[int, int]{Start: 0, Size: 4}
+
+	return &UserDataCacheStore{
+		redisClientMap: redisClientMap,
+
+		Range:           rangeValue,
+		MaxServerNumber: rangeValue.Start + rangeValue.Size - 1,
+
+		cacheExpiresIn: time.Hour,
+		batchCheckAndUpdateQuotasByFormattedKeysArgvPerKey:   4,
+		batchCheckAndUpdateQuotasByFormattedKeyBaseNumOfArgv: 4,
+	}
 }
 
-const (
-	_userDataCacheExpiresIn = 1 * time.Hour
+/* ============================== Auxiliary Methods ============================== */
 
-	batchCheckAndUpdateUserQuotasByFormattedKeysArgvPerKey   = 4
-	batchCheckAndUpdateUserQuotasByFormattedKeyBaseNumOfArgv = 4
-)
+func (s *UserDataCacheStore) getRedisClient(identifier string) (*redis.Client, int, *exceptions.Exception) {
+	hash := s.hashIdentifier(identifier)
+	serverNumber := min(s.MaxServerNumber, s.Range.Start+hash)
+	redisClient, ok := s.redisClientMap[serverNumber]
+	if !ok || redisClient == nil {
+		return nil, 0, exceptions.Cache.ClientInstanceDoesNotExist()
+	}
 
-var (
-	UserDataRange           = types.Range[int, int]{Start: 0, Size: 4} // server number: 0 - 3 (included)
-	MaxUserDataServerNumber = UserDataRange.Start + UserDataRange.Size - 1
-)
+	return redisClient, serverNumber, nil
+}
 
-/* ========================= Auxiliary Function ========================= */
+func (s *UserDataCacheStore) hashIdentifier(identifier string) int {
+	hash := fnv.New32a()
+	_, _ = hash.Write([]byte(identifier))
 
-func hashUserDataIdentifier(identifier string) int {
-	h := fnv.New32a()
-	h.Write([]byte(identifier))
-	return int(h.Sum32()) % UserDataRange.Size
+	return int(hash.Sum32()) % s.Range.Size
 }
 
 func formatUserDataKey(identifier string) string {
 	return fmt.Sprintf("%s:%s", types.ValidCachePurpose_UserData.String(), identifier)
 }
 
-func isValidUserCacheData(userDataCache *UserDataCache) bool {
-	if userDataCache.PublicId == uuid.Nil ||
-		strings.ReplaceAll(userDataCache.Name, " ", "") == "" ||
-		strings.ReplaceAll(userDataCache.DisplayName, " ", "") == "" ||
-		strings.ReplaceAll(userDataCache.Email, " ", "") == "" ||
-		strings.ReplaceAll(userDataCache.AccessToken, " ", "") == "" ||
-		!userDataCache.Role.IsValidEnum() ||
-		!userDataCache.Plan.IsValidEnum() ||
-		!userDataCache.Status.IsValidEnum() {
-		return false
-	}
-	return true
+func isValidUserDataCache(userDataCache *UserDataCache) bool {
+	return userDataCache.PublicId != uuid.Nil &&
+		strings.TrimSpace(userDataCache.Name) != "" &&
+		strings.TrimSpace(userDataCache.DisplayName) != "" &&
+		strings.TrimSpace(userDataCache.Email) != "" &&
+		strings.TrimSpace(userDataCache.AccessToken) != "" &&
+		userDataCache.Role.IsValidEnum() &&
+		userDataCache.Plan.IsValidEnum() &&
+		userDataCache.Status.IsValidEnum()
 }
 
-/* ============================== Extend Cache TTL Operation ============================== */
+/* ============================== Extend Methods ============================== */
 
-func ExtendUserDataCacheTTL(identifier string) *exceptions.Exception {
-	hash := hashUserDataIdentifier(identifier)
-	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
-	redisClient, ok := RedisClientMap[serverNumber]
-	if !ok {
-		return exceptions.Cache.ClientInstanceDoesNotExist()
+func (s *UserDataCacheStore) Extend(identifier string) *exceptions.Exception {
+	redisClient, _, exception := s.getRedisClient(identifier)
+	if exception != nil {
+		return exception
 	}
 
-	formattedKey := formatUserDataKey(identifier)
-
-	updated, err := redisClient.Expire(formattedKey, _userDataCacheExpiresIn).Result()
+	updated, err := redisClient.Expire(formatUserDataKey(identifier), s.cacheExpiresIn).Result()
 	if err != nil {
 		return exceptions.Cache.FailedToUpdate("UserDataTTL").WithOrigin(err)
 	}
-
 	if !updated {
-		return exceptions.Cache.NotFound(string(types.ValidCachePurpose_UserData))
+		return exceptions.Cache.NotFound(types.ValidCachePurpose_UserData.String())
 	}
 
 	return nil
 }
 
-/* ============================== Automatic Operations for Accounting ============================== */
+/* ============================== Quota Method ============================== */
 
-func CheckAndUpdateUserQuotaByFormattedKey(
-	id uuid.UUID,
-	dto CheckAndUpdateUserQuotaDto,
+func (s *UserDataCacheStore) CheckAndUpdateQuota(
+	identifier string,
+	input cacheinputs.CheckAndUpdateUserQuotaInput,
 ) *exceptions.Exception {
-	hash := hashUserDataIdentifier(id.String())
-	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
-	redisClient, ok := RedisClientMap[serverNumber]
-	if !ok {
-		return exceptions.Cache.ClientInstanceDoesNotExist()
-	}
-
-	formattedKey := formatUserDataKey(id.String())
-
-	keys := []interface{}{formattedKey}
-	argv := []interface{}{
-		dto.Field,
-		dto.ChangeAmount,
-		dto.MaxLimit,
-		int(time.Until(dto.ExpiresIn).Seconds()),
+	redisClient, _, exception := s.getRedisClient(identifier)
+	if exception != nil {
+		return exception
 	}
 
 	arguments := []interface{}{
 		"FCALL",
 		redislibraries.CheckAndUpdateUserQuotaByFormattedKeyFunction,
-		len(keys),
+		1,
+		formatUserDataKey(identifier),
+		input.Field,
+		input.ChangeAmount,
+		input.MaxLimit,
+		int(time.Until(input.ExpiresIn).Seconds()),
 	}
-	arguments = append(arguments, keys...)
-	arguments = append(arguments, argv...)
 	if _, err := redisClient.Do(arguments...).Result(); err != nil {
 		return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_UserData.String()).WithOrigin(err)
 	}
@@ -160,193 +149,174 @@ func CheckAndUpdateUserQuotaByFormattedKey(
 	return nil
 }
 
-func BestEffortBatchCheckAndUpdateUserQuotasByFormattedKeys(
-	dtos []struct {
-		Id                uuid.UUID                  `json:"id"`
-		CheckAndUpdateDto CheckAndUpdateUserQuotaDto `json:"checkAndUpdateDto"`
-	},
+func (s *UserDataCacheStore) BestEffortBatchCheckAndUpdateQuotas(
+	inputs []cacheinputs.BatchCheckAndUpdateUserQuotaInput,
 ) *exceptions.Exception {
-	if len(dtos) == 0 {
+	if len(inputs) == 0 {
 		return nil
 	}
-	serverNumberToUserIdMap := make(map[int][]struct {
-		Id                uuid.UUID                  `json:"id"`
-		CheckAndUpdateDto CheckAndUpdateUserQuotaDto `json:"checkAndUpdateDto"`
-	})
 
-	for _, dto := range dtos {
-		hash := hashUserDataIdentifier(dto.Id.String())
-		serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
-		serverNumberToUserIdMap[serverNumber] = append(serverNumberToUserIdMap[serverNumber], dto)
+	inputsByServerNumber := make(map[int][]cacheinputs.BatchCheckAndUpdateUserQuotaInput)
+	for _, input := range inputs {
+		hash := s.hashIdentifier(input.Identifier)
+		serverNumber := min(s.MaxServerNumber, s.Range.Start+hash)
+		inputsByServerNumber[serverNumber] = append(inputsByServerNumber[serverNumber], input)
 	}
 
-	for serverNumber, dtos := range serverNumberToUserIdMap {
-		redisClient, exist := RedisClientMap[serverNumber]
-		if !exist {
-			continue // for the strategy of "Best Effort"
+	for serverNumber, groupedInputs := range inputsByServerNumber {
+		redisClient, ok := s.redisClientMap[serverNumber]
+		if !ok || redisClient == nil {
+			continue
 		}
 
-		keys := make([]interface{}, 0, len(dtos))
-		argv := make([]interface{}, 0, len(dtos)*batchCheckAndUpdateUserQuotasByFormattedKeysArgvPerKey)
-		for _, dto := range dtos {
-			keys = append(keys, dto.Id)
-			argv = append(argv, dto.CheckAndUpdateDto.Field)
-			argv = append(argv, dto.CheckAndUpdateDto.ChangeAmount)
-			argv = append(argv, dto.CheckAndUpdateDto.MaxLimit)
-			argv = append(argv, int(time.Until(dto.CheckAndUpdateDto.ExpiresIn).Seconds()))
+		keys := make([]interface{}, 0, len(groupedInputs))
+		arguments := make([]interface{}, 0, len(groupedInputs)*s.batchCheckAndUpdateQuotasByFormattedKeysArgvPerKey)
+		for _, input := range groupedInputs {
+			keys = append(keys, formatUserDataKey(input.Identifier))
+			arguments = append(arguments,
+				input.Input.Field,
+				input.Input.ChangeAmount,
+				input.Input.MaxLimit,
+				int(time.Until(input.Input.ExpiresIn).Seconds()),
+			)
 		}
 
-		arguments := []interface{}{
+		command := []interface{}{
 			"FCALL",
 			redislibraries.BestEffortBatchCheckAndUpdateUserQuotasByFormattedKeysFunction,
-			len(dtos),
+			len(keys),
 		}
-		arguments = append(arguments, keys...)
-		arguments = append(arguments, argv...)
-		if _, err := redisClient.Do(arguments...).Result(); err != nil {
-			return exceptions.Cache.FailedToDelete(types.ValidCachePurpose_UserData.String()).WithOrigin(err)
+		command = append(command, keys...)
+		command = append(command, arguments...)
+		if _, err := redisClient.Do(command...).Result(); err != nil {
+			return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_UserData.String()).WithOrigin(err)
 		}
 	}
 
 	return nil
 }
 
-func BestEffortBatchCheckAndUpdateUserQuotasByFormattedKey(
-	id uuid.UUID,
-	dtos []CheckAndUpdateUserQuotaDto,
+func (s *UserDataCacheStore) BestEffortBatchCheckAndUpdateQuotasByIdentifier(
+	identifier string,
+	inputs []cacheinputs.CheckAndUpdateUserQuotaInput,
 ) *exceptions.Exception {
-	if len(dtos) == 0 {
+	if len(inputs) == 0 {
 		return nil
 	}
 
-	hash := hashUserDataIdentifier(id.String())
-	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
-	redisClient, ok := RedisClientMap[serverNumber]
-	if !ok {
-		return exceptions.Cache.ClientInstanceDoesNotExist()
+	redisClient, _, exception := s.getRedisClient(identifier)
+	if exception != nil {
+		return exception
 	}
 
-	formattedKey := formatUserDataKey(id.String())
-
-	keys := []interface{}{formattedKey}
-	argv := make([]interface{}, 0, len(dtos)*batchCheckAndUpdateUserQuotasByFormattedKeyBaseNumOfArgv)
-	for _, dto := range dtos {
-		argv = append(argv, dto.Field)
-		argv = append(argv, dto.ChangeAmount)
-		argv = append(argv, dto.MaxLimit)
-		argv = append(argv, int(time.Until(dto.ExpiresIn).Seconds()))
+	arguments := make([]interface{}, 0, len(inputs)*s.batchCheckAndUpdateQuotasByFormattedKeyBaseNumOfArgv)
+	for _, input := range inputs {
+		arguments = append(arguments,
+			input.Field,
+			input.ChangeAmount,
+			input.MaxLimit,
+			int(time.Until(input.ExpiresIn).Seconds()),
+		)
 	}
 
-	arguments := []interface{}{
+	command := []interface{}{
 		"FCALL",
 		redislibraries.BestEffortBatchCheckAndUpdateUserQuotasByFormattedKeyFunction,
-		len(keys),
+		1,
+		formatUserDataKey(identifier),
 	}
-	arguments = append(arguments, keys...)
-	arguments = append(arguments, argv...)
-	if _, err := redisClient.Do(arguments...).Result(); err != nil {
+	command = append(command, arguments...)
+	if _, err := redisClient.Do(command...).Result(); err != nil {
 		return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_UserData.String()).WithOrigin(err)
 	}
 
 	return nil
 }
 
-/* ========================= CRUD Operations ========================= */
+/* ============================== CRUD Method ============================== */
 
-func GetUserDataCache(identifier string) (*UserDataCache, *exceptions.Exception) {
-	hash := hashUserDataIdentifier(identifier)
-	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
-	redisClient, ok := RedisClientMap[serverNumber]
-	if !ok {
-		return nil, exceptions.Cache.ClientInstanceDoesNotExist()
+func (s *UserDataCacheStore) Get(identifier string) (*UserDataCache, *exceptions.Exception) {
+	redisClient, serverNumber, exception := s.getRedisClient(identifier)
+	if exception != nil {
+		return nil, exception
 	}
 
-	formattedKey := formatUserDataKey(identifier)
-	cacheString, err := redisClient.Get(formattedKey).Result()
+	cacheString, err := redisClient.Get(formatUserDataKey(identifier)).Result()
 	if err != nil {
-		return nil, exceptions.Cache.NotFound(string(types.ValidCachePurpose_UserData)).WithOrigin(err)
+		return nil, exceptions.Cache.NotFound(types.ValidCachePurpose_UserData.String()).WithOrigin(err)
 	}
 
 	var userDataCache UserDataCache
 	if err := json.Unmarshal([]byte(cacheString), &userDataCache); err != nil {
-		// note that the json.Unmarshal() automatically return InvalidUnmarshalError if the userDataCache is nil
 		return nil, exceptions.Cache.FailedToConvertJsonToStruct().WithOrigin(err)
 	}
 
-	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully get the cached user data in the server with server number of %d", serverNumber))
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully got cached user data from server %d", serverNumber))
 	return &userDataCache, nil
 }
 
-func SetUserDataCache(identifier string, userDataCache UserDataCache) *exceptions.Exception {
-	if !isValidUserCacheData(&userDataCache) { // strictly check when setting the cache data
+func (s *UserDataCacheStore) Set(identifier string, userDataCache UserDataCache) *exceptions.Exception {
+	if !isValidUserDataCache(&userDataCache) {
 		return exceptions.Cache.InvalidCacheDataStruct(userDataCache)
 	}
 
-	hash := hashUserDataIdentifier(identifier)
-	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
-	redisClient, ok := RedisClientMap[serverNumber]
-	if !ok {
-		return exceptions.Cache.ClientInstanceDoesNotExist()
-	}
-
-	userDataJson, err := json.Marshal(userDataCache)
-	if err != nil {
-		return exceptions.Cache.FailedToConvertStructToJson().WithOrigin(err)
-	}
-
-	formattedKey := formatUserDataKey(identifier)
-	if err = redisClient.Set(formattedKey, string(userDataJson), _userDataCacheExpiresIn).Err(); err != nil {
-		return exceptions.Cache.FailedToCreate(types.ValidCachePurpose_UserData.String()).WithOrigin(err)
-	}
-
-	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully set the cached user data in the server with server number of %d", serverNumber))
-	return nil
-}
-
-func UpdateUserDataCache(identifier string, dto UpdateUserDataCacheDto) *exceptions.Exception {
-	hash := hashUserDataIdentifier(identifier)
-	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
-	redisClient, ok := RedisClientMap[serverNumber]
-	if !ok {
-		return exceptions.Cache.ClientInstanceDoesNotExist()
-	}
-
-	userDataCache, exception := GetUserDataCache(identifier)
+	redisClient, serverNumber, exception := s.getRedisClient(identifier)
 	if exception != nil {
 		return exception
 	}
-	userDataCache.UpdatedAt = time.Now()
-	if err := copier.Copy(&userDataCache, &dto); err != nil {
-		return exceptions.Cache.FailedToConvertStructToJson().WithOrigin(err)
-	}
-	userDataJson, err := json.Marshal(userDataCache)
+
+	value, err := json.Marshal(userDataCache)
 	if err != nil {
 		return exceptions.Cache.FailedToConvertStructToJson().WithOrigin(err)
 	}
 
-	formattedKey := formatUserDataKey(identifier)
-	if err = redisClient.Set(formattedKey, string(userDataJson), _userDataCacheExpiresIn).Err(); err != nil {
-		return exceptions.Cache.FailedToUpdate(string(types.ValidCachePurpose_UserData)).WithOrigin(err)
+	if err := redisClient.Set(formatUserDataKey(identifier), string(value), s.cacheExpiresIn).Err(); err != nil {
+		return exceptions.Cache.FailedToCreate(types.ValidCachePurpose_UserData.String()).WithOrigin(err)
 	}
 
-	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully update the cached user data in the server with server number of %d", serverNumber))
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully set cached user data in server %d", serverNumber))
 	return nil
 }
 
-func DeleteUserDataCache(identifier string) *exceptions.Exception {
-	hash := hashUserDataIdentifier(identifier)
-	serverNumber := min(MaxUserDataServerNumber, UserDataRange.Start+hash)
-	redisClient, ok := RedisClientMap[serverNumber]
-	if !ok {
-		return exceptions.Cache.ClientInstanceDoesNotExist()
+func (s *UserDataCacheStore) Update(identifier string, input cacheinputs.UpdateUserDataCacheInput) *exceptions.Exception {
+	userDataCache, exception := s.Get(identifier)
+	if exception != nil {
+		return exception
 	}
 
-	formattedKey := formatUserDataKey(identifier)
-	err := redisClient.Del(formattedKey).Err()
+	userDataCache.UpdatedAt = time.Now()
+	if err := copier.Copy(userDataCache, &input); err != nil {
+		return exceptions.Cache.FailedToConvertStructToJson().WithOrigin(err)
+	}
+
+	redisClient, serverNumber, exception := s.getRedisClient(identifier)
+	if exception != nil {
+		return exception
+	}
+
+	value, err := json.Marshal(userDataCache)
 	if err != nil {
-		return exceptions.Cache.FailedToDelete(string(types.ValidCachePurpose_UserData)).WithOrigin(err)
+		return exceptions.Cache.FailedToConvertStructToJson().WithOrigin(err)
 	}
 
-	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully delete the cached user data in the server with server number of %d", serverNumber))
+	if err := redisClient.Set(formatUserDataKey(identifier), string(value), s.cacheExpiresIn).Err(); err != nil {
+		return exceptions.Cache.FailedToUpdate(types.ValidCachePurpose_UserData.String()).WithOrigin(err)
+	}
+
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully updated cached user data in server %d", serverNumber))
+	return nil
+}
+
+func (s *UserDataCacheStore) Delete(identifier string) *exceptions.Exception {
+	redisClient, serverNumber, exception := s.getRedisClient(identifier)
+	if exception != nil {
+		return exception
+	}
+
+	if err := redisClient.Del(formatUserDataKey(identifier)).Err(); err != nil {
+		return exceptions.Cache.FailedToDelete(types.ValidCachePurpose_UserData.String()).WithOrigin(err)
+	}
+
+	logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Successfully deleted cached user data from server %d", serverNumber))
 	return nil
 }

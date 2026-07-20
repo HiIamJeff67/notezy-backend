@@ -10,6 +10,7 @@ import (
 )
 
 type RealtimeControllerInterface interface {
+	GetMyBlockPackRealtimeParticipants(ctx *gin.Context, reqDto *dtos.GetMyBlockPackRealtimeParticipantsReqDto)
 	CreateMyRealtimeConnectionTicket(ctx *gin.Context, reqDto *dtos.CreateMyRealtimeConnectionTicketReqDto)
 	CreateMyBlockPackChannelTicket(ctx *gin.Context, reqDto *dtos.CreateMyBlockPackChannelTicketReqDto)
 }
@@ -22,6 +23,22 @@ func NewRealtimeController(service services.RealtimeServiceInterface) RealtimeCo
 	return &RealtimeController{
 		realtimeService: service,
 	}
+}
+
+func (c *RealtimeController) GetMyBlockPackRealtimeParticipants(
+	ctx *gin.Context, reqDto *dtos.GetMyBlockPackRealtimeParticipantsReqDto,
+) {
+	resDto, exception := c.realtimeService.GetMyBlockPackRealtimeParticipants(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
 }
 
 func (c *RealtimeController) CreateMyRealtimeConnectionTicket(

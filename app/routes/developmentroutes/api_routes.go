@@ -39,7 +39,7 @@ func ConfigureAPIRoutes() {
 	configureDevelopmentMaterialRoutes(DevelopmentAPIRouterGroup)
 	configureDevelopmentBlockPackRoutes(DevelopmentAPIRouterGroup)
 	configureDevelopmentBlockRoutes(DevelopmentAPIRouterGroup)
-	configureDevelopmentRealtimeAPIRoutes(DevelopmentAPIRouterGroup)
+	configureDevelopmentRealtimeRoutes(DevelopmentAPIRouterGroup)
 	configureDevelopmentGraphQLRoutes(DevelopmentAPIRouterGroup)
 
 	// test

@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
+	cacheinputs "github.com/HiIamJeff67/notezy-backend/app/caches/inputs"
 	cookies "github.com/HiIamJeff67/notezy-backend/app/cookies"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
@@ -40,7 +41,7 @@ func _validateAccessTokenAndUserAgent(accessToken string) (*types.JWTClaims, *ca
 		return nil, nil, exception
 	}
 
-	userDataCache, exception := caches.GetUserDataCache(claims.Name)
+	userDataCache, exception := caches.UserDataStore.Get(claims.Name)
 	if exception != nil { // if there's no user cache storing its accessToken, in this way, we're impossible to validate its accessToken
 		return nil, nil, exception.Log()
 	}
@@ -104,7 +105,7 @@ func AuthMiddleware() gin.HandlerFunc {
 					ctx.Set(types.ContextFieldName_User_Role.String(), userDataCache.Role)
 					ctx.Set(types.ContextFieldName_User_Plan.String(), userDataCache.Plan)
 					// also extend the ttl of the user data cache
-					if exception := caches.ExtendUserDataCacheTTL(userDataCache.Name); exception != nil {
+					if exception := caches.UserDataStore.Extend(userDataCache.Name); exception != nil {
 						exception.Log()
 					}
 					ctx.Next()
@@ -149,9 +150,9 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		// at this stage, make sure we update the cache of the user data
-		exception = caches.UpdateUserDataCache(
+		exception = caches.UserDataStore.Update(
 			_user.Name,
-			caches.UpdateUserDataCacheDto{
+			cacheinputs.UpdateUserDataCacheInput{
 				AccessToken: newAccessToken,
 				CSRFToken:   newCSRFToken,
 			},
@@ -179,12 +180,12 @@ func AuthMiddleware() gin.HandlerFunc {
 				newUserDataCache.AvatarURL = *_user.UserInfo.AvatarURL
 			}
 
-			if exception = caches.SetUserDataCache(_user.Name, newUserDataCache); exception != nil {
+			if exception = caches.UserDataStore.Set(_user.Name, newUserDataCache); exception != nil {
 				exception.Log().SafelyAbortAndResponseWithJSON(ctx, "server.responses.failed.unauthorized")
 				return
 			}
 		} else {
-			if exception := caches.ExtendUserDataCacheTTL(_user.Name); exception != nil {
+			if exception := caches.UserDataStore.Extend(_user.Name); exception != nil {
 				exception.Log()
 			}
 		}

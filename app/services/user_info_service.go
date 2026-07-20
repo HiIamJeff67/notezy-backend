@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 
 	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
+	cacheinputs "github.com/HiIamJeff67/notezy-backend/app/caches/inputs"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
@@ -105,7 +106,7 @@ func (s *UserInfoService) UpdateMyInfo(
 		return nil, exception
 	}
 
-	exception = caches.UpdateUserDataCache(reqDto.ContextFields.UserName, caches.UpdateUserDataCacheDto{
+	exception = caches.UserDataStore.Update(reqDto.ContextFields.UserName, cacheinputs.UpdateUserDataCacheInput{
 		AvatarURL: reqDto.Body.Values.AvatarURL,
 	})
 	if exception != nil {

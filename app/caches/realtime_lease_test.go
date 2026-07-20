@@ -22,7 +22,7 @@ func TestRealtimeLeaseStoreLimitsConcurrentUserConnections(t *testing.T) {
 	redisClient := redis.NewClient(&redis.Options{Addr: server.Addr()})
 	defer redisClient.Close()
 
-	store := NewRealtimeLeaseStoreWithClient(redisClient)
+	store := NewRealtimeLeaseStore(map[int]*redis.Client{constants.RealtimeRedisServerNumber: redisClient})
 	userPublicId := uuid.New()
 
 	var acquiredCount atomic.Int32
@@ -62,8 +62,8 @@ func TestRealtimeLeaseStoreReclaimsExpiredUserConnectionLease(t *testing.T) {
 	secondRedisClient := redis.NewClient(&redis.Options{Addr: server.Addr()})
 	defer secondRedisClient.Close()
 
-	firstStore := NewRealtimeLeaseStoreWithClient(firstRedisClient)
-	secondStore := NewRealtimeLeaseStoreWithClient(secondRedisClient)
+	firstStore := NewRealtimeLeaseStore(map[int]*redis.Client{constants.RealtimeRedisServerNumber: firstRedisClient})
+	secondStore := NewRealtimeLeaseStore(map[int]*redis.Client{constants.RealtimeRedisServerNumber: secondRedisClient})
 	userPublicId := uuid.New()
 
 	acquired, _, err := firstStore.AcquireUserConnection(userPublicId, uuid.New(), 1)
@@ -97,7 +97,7 @@ func TestRealtimeLeaseStoreReleasesBlockPackSubscriber(t *testing.T) {
 	redisClient := redis.NewClient(&redis.Options{Addr: server.Addr()})
 	defer redisClient.Close()
 
-	store := NewRealtimeLeaseStoreWithClient(redisClient)
+	store := NewRealtimeLeaseStore(map[int]*redis.Client{constants.RealtimeRedisServerNumber: redisClient})
 	blockPackId := uuid.New()
 
 	acquired, _, err := store.AcquireBlockPackSubscriber(blockPackId, "connector-a:1", 1)
@@ -120,5 +120,50 @@ func TestRealtimeLeaseStoreReleasesBlockPackSubscriber(t *testing.T) {
 	acquired, _, err = store.AcquireBlockPackSubscriber(blockPackId, "connector-b:1", 1)
 	if err != nil || !acquired {
 		t.Fatalf("expected released BlockPack subscriber capacity to be reusable: %v", err)
+	}
+}
+
+func TestRealtimeLeaseStoreListsOnlyActiveBlockPackParticipants(t *testing.T) {
+	server, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("failed to start test redis server: %v", err)
+	}
+	defer server.Close()
+
+	redisClient := redis.NewClient(&redis.Options{Addr: server.Addr()})
+	defer redisClient.Close()
+
+	store := NewRealtimeLeaseStore(map[int]*redis.Client{constants.RealtimeRedisServerNumber: redisClient})
+	blockPackId := uuid.New()
+	userPublicId := uuid.New()
+	member := "connector-a:1"
+
+	acquired, _, err := store.AcquireBlockPackSubscriber(blockPackId, member, 1)
+	if err != nil || !acquired {
+		t.Fatalf("expected BlockPack subscriber lease to be acquired: %v", err)
+	}
+	if err := store.SetBlockPackParticipant(blockPackId, member, userPublicId, "write"); err != nil {
+		t.Fatalf("failed to record BlockPack participant: %v", err)
+	}
+
+	participants, err := store.GetBlockPackParticipants(blockPackId)
+	if err != nil {
+		t.Fatalf("failed to list BlockPack participants: %v", err)
+	}
+	if len(participants) != 1 || participants[0].UserPublicId != userPublicId.String() ||
+		participants[0].ChannelPermission != "write" {
+		t.Fatalf("unexpected BlockPack participants: %#v", participants)
+	}
+
+	if err := store.ReleaseBlockPackSubscriber(blockPackId, member); err != nil {
+		t.Fatalf("failed to release BlockPack subscriber lease: %v", err)
+	}
+
+	participants, err = store.GetBlockPackParticipants(blockPackId)
+	if err != nil {
+		t.Fatalf("failed to list BlockPack participants after release: %v", err)
+	}
+	if len(participants) != 0 {
+		t.Fatalf("expected no active BlockPack participants after release, got %#v", participants)
 	}
 }

@@ -88,7 +88,7 @@ ticket claims 的最小集合：
 }
 ```
 
-`NOT-7` 的 Go Gateway 負責驗證 connection/channel ticket，以及兩者的 user、channel type 與 BlockPack id 是否相符；Node worker 只信任 Go 已驗證並轉送的 attach message。ticket 是短效 stateless capability，`jti` 不代表可在沒有共享 state 下強制一次性使用。permission 被撤銷時，Gateway 送出 `permission_revoked`，移除該 channel，並向 worker 轉送 detach。
+`NOT-7` 的 Go Gateway 負責驗證 connection/channel ticket，以及兩者的 user、channel type 與 BlockPack id 是否相符；Node worker 只信任 Go 已驗證並轉送的 attach message。ticket 是短效 stateless capability，`jti` 不代表可在沒有共享 state 下強制一次性使用。Gateway 在 subscribe 與每個 document mutation 前重新驗證 BlockPack hierarchy 與 permission；失敗時送出 `permission_revoked` 或 `resource_unavailable`、移除該 channel，並向 worker 轉送 detach。跨 Gateway 的主動 lifecycle fanout 延後到 Kafka 架構。
 
 ## Cross-Service Frames
 

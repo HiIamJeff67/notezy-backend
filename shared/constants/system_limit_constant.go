@@ -26,6 +26,7 @@ const (
 	RealtimeMaxOutboundBytesPerChannel  int64         = 4 << 20
 	RealtimeMaxConnectorsPerGateway     int           = 10_000
 	RealtimeMaxConnectionsPerUser       int           = 8
+	RealtimeRedisServerNumber           int           = 8
 )
 
 const (

@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 
 	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
+	cacheinputs "github.com/HiIamJeff67/notezy-backend/app/caches/inputs"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	emails "github.com/HiIamJeff67/notezy-backend/app/emails"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
@@ -237,7 +238,7 @@ func (s *AuthService) Register(
 		return nil, exceptions.User.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	exception = caches.SetUserDataCache(
+	exception = caches.UserDataStore.Set(
 		newUser.Name,
 		caches.UserDataCache{
 			Id:                 *newUserId,
@@ -420,7 +421,7 @@ func (s *AuthService) RegisterViaGoogle(
 		return nil, exception
 	}
 
-	exception = caches.SetUserDataCache(
+	exception = caches.UserDataStore.Set(
 		newUser.Name,
 		caches.UserDataCache{
 			Id:                 *newUserId,
@@ -584,11 +585,11 @@ func (s *AuthService) Login(
 	}
 
 	// check if the user data cache exists
-	if _, exception := caches.GetUserDataCache(user.Name); exception == nil {
+	if _, exception := caches.UserDataStore.Get(user.Name); exception == nil {
 		// then just update the existing user data cache
-		if exception = caches.UpdateUserDataCache(
+		if exception = caches.UserDataStore.Update(
 			user.Name,
-			caches.UpdateUserDataCacheDto{
+			cacheinputs.UpdateUserDataCacheInput{
 				AccessToken: newAccessToken,
 				CSRFToken:   newCSRFToken,
 			},
@@ -659,7 +660,7 @@ func (s *AuthService) Login(
 		if output.AvatarURL != nil {
 			newUserDataCache.AvatarURL = *output.AvatarURL
 		}
-		exception := caches.SetUserDataCache(
+		exception := caches.UserDataStore.Set(
 			user.Name,
 			newUserDataCache,
 		)
@@ -810,11 +811,11 @@ func (s *AuthService) LoginViaGoogle(
 	}
 
 	// check if the user data cache exists
-	if _, exception := caches.GetUserDataCache(user.Name); exception == nil {
+	if _, exception := caches.UserDataStore.Get(user.Name); exception == nil {
 		// then just update the existing user data cache
-		if exception = caches.UpdateUserDataCache(
+		if exception = caches.UserDataStore.Update(
 			user.Name,
-			caches.UpdateUserDataCacheDto{
+			cacheinputs.UpdateUserDataCacheInput{
 				AccessToken: newAccessToken,
 				CSRFToken:   newCSRFToken,
 			},
@@ -885,7 +886,7 @@ func (s *AuthService) LoginViaGoogle(
 		if output.AvatarURL != nil {
 			newUserDataCache.AvatarURL = *output.AvatarURL
 		}
-		exception := caches.SetUserDataCache(
+		exception := caches.UserDataStore.Set(
 			user.Name,
 			newUserDataCache,
 		)
@@ -960,7 +961,7 @@ func (s *AuthService) Logout(
 		return nil, exception
 	}
 
-	exception = caches.DeleteUserDataCache(reqDto.ContextFields.UserName)
+	exception = caches.UserDataStore.Delete(reqDto.ContextFields.UserName)
 	if exception != nil {
 		return nil, exception
 	}
@@ -1141,11 +1142,11 @@ func (s *AuthService) ForgetPassword(
 	}
 
 	// update the access token of the user
-	exception = caches.UpdateUserDataCache(user.Name, caches.UpdateUserDataCacheDto{AccessToken: newAccessToken})
+	exception = caches.UserDataStore.Update(user.Name, cacheinputs.UpdateUserDataCacheInput{AccessToken: newAccessToken})
 	if exception != nil {
 		exception.Log() // if the cache does not exist the user, then just skip this update operation
 		// and also try to set the new user cache data
-		exception = caches.SetUserDataCache(user.Name, caches.UserDataCache{
+		exception = caches.UserDataStore.Set(user.Name, caches.UserDataCache{
 			Id:                 user.Id,
 			PublicId:           user.PublicId,
 			Name:               user.Name,
@@ -1308,7 +1309,7 @@ func (s *AuthService) DeleteMe(
 		return nil, exceptions.User.FailedToDelete().WithOrigin(err)
 	}
 
-	exception := caches.DeleteUserDataCache(reqDto.ContextFields.UserName)
+	exception := caches.UserDataStore.Delete(reqDto.ContextFields.UserName)
 	if exception != nil {
 		exception.Log()
 	}

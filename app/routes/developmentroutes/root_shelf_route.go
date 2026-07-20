@@ -106,6 +106,32 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 				),
 			)...,
 		)
+		rootShelfRoutes.PUT(
+			"/:rootShelfId/permissions/:userPublicId",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("upsertMyRootShelfPermission"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.upsertMyRootShelfPermission"),
+				},
+				defaultMiddlewares,
+				rootShelfModule.Binder.BindUpsertMyRootShelfPermission(
+					rootShelfModule.Controller.UpsertMyRootShelfPermission,
+				),
+			)...,
+		)
+		rootShelfRoutes.PUT(
+			"/:rootShelfId/permissions",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("upsertMyRootShelfPermissions"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.upsertMyRootShelfPermissions"),
+				},
+				defaultMiddlewares,
+				rootShelfModule.Binder.BindUpsertMyRootShelfPermissions(
+					rootShelfModule.Controller.UpsertMyRootShelfPermissions,
+				),
+			)...,
+		)
 		rootShelfRoutes.PATCH(
 			"/restoreMyRootShelfById",
 			middlewares.RepositionMiddleware(
@@ -155,6 +181,32 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 				defaultMiddlewares,
 				rootShelfModule.Binder.BindDeleteMyRootShelvesByIds(
 					rootShelfModule.Controller.DeleteMyRootShelvesByIds,
+				),
+			)...,
+		)
+		rootShelfRoutes.DELETE(
+			"/:rootShelfId/permissions/:userPublicId",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("deleteMyRootShelfPermission"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.deleteMyRootShelfPermission"),
+				},
+				defaultMiddlewares,
+				rootShelfModule.Binder.BindDeleteMyRootShelfPermission(
+					rootShelfModule.Controller.DeleteMyRootShelfPermission,
+				),
+			)...,
+		)
+		rootShelfRoutes.DELETE(
+			"/:rootShelfId/permissions",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("deleteMyRootShelfPermissions"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.deleteMyRootShelfPermissions"),
+				},
+				defaultMiddlewares,
+				rootShelfModule.Binder.BindDeleteMyRootShelfPermissions(
+					rootShelfModule.Controller.DeleteMyRootShelfPermissions,
 				),
 			)...,
 		)

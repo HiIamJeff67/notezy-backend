@@ -10,6 +10,7 @@ import (
 	rate "golang.org/x/time/rate"
 
 	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
+	cacheinputs "github.com/HiIamJeff67/notezy-backend/app/caches/inputs"
 	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
@@ -120,62 +121,22 @@ func (hrl *HybridRateLimiter) batchSync() {
 	hrl.pendingTasks = make(map[string]HybridRateLimitTask)
 	hrl.pendingTasksMutex.Unlock()
 
-	if hrl.IsAuthorizedLimiter {
-		userDtos := make([]struct {
-			UserId         uuid.UUID                                 `json:"userId"`
-			SynchronizeDto caches.SynchronizeRateLimitRecordCacheDto `json:"synchronizeDto"`
-		}, 0, len(fetchedPendingTasks))
+	inputs := make([]cacheinputs.BatchSynchronizeRateLimitRecordCacheInput, 0, len(fetchedPendingTasks))
+	for identifier, task := range fetchedPendingTasks {
+		inputs = append(inputs, cacheinputs.BatchSynchronizeRateLimitRecordCacheInput{
+			Identifier: identifier,
+			Input: cacheinputs.SynchronizeRateLimitRecordCacheInput{
+				NumOfChangingTokens: task.NumOfChangingTokens,
+				IsAccumulated:       task.IsAccumulated,
+			},
+		})
+	}
 
-		for userIdStr, task := range fetchedPendingTasks {
-			userId, err := uuid.Parse(userIdStr)
-			if err != nil {
-				logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprintf("Failed to parse user ID %s: %v", userIdStr, err))
-				continue
-			}
-
-			userDtos = append(userDtos, struct {
-				UserId         uuid.UUID                                 `json:"userId"`
-				SynchronizeDto caches.SynchronizeRateLimitRecordCacheDto `json:"synchronizeDto"`
-			}{
-				UserId: userId,
-				SynchronizeDto: caches.SynchronizeRateLimitRecordCacheDto{
-					NumOfChangingTokens: task.NumOfChangingTokens,
-					IsAccumulated:       task.IsAccumulated,
-				},
-			})
-		}
-
-		if err := caches.BatchSynchronizeRateLimitRecordCachesByUserIds(userDtos, hrl.BackendServerName); err != nil {
-			logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprintf("Failed to batch sync user rate limits to Redis: %v", err))
-			hrl.reappendPendingTasks(fetchedPendingTasks)
-		} else if len(userDtos) > 0 {
-			logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Batch synced %d user rate limits to Redis", len(userDtos)))
-		}
-	} else {
-		clientDtos := make([]struct {
-			Fingerprint    string                                    `json:"fingerprint"`
-			SynchronizeDto caches.SynchronizeRateLimitRecordCacheDto `json:"synchronizeDto"`
-		}, 0, len(fetchedPendingTasks))
-
-		for fingerprint, task := range fetchedPendingTasks {
-			clientDtos = append(clientDtos, struct {
-				Fingerprint    string                                    `json:"fingerprint"`
-				SynchronizeDto caches.SynchronizeRateLimitRecordCacheDto `json:"synchronizeDto"`
-			}{
-				Fingerprint: fingerprint,
-				SynchronizeDto: caches.SynchronizeRateLimitRecordCacheDto{
-					NumOfChangingTokens: task.NumOfChangingTokens,
-					IsAccumulated:       task.IsAccumulated,
-				},
-			})
-		}
-
-		if err := caches.BatchSynchronizeRateLimitRecordCachesByFingerprints(clientDtos, hrl.BackendServerName); err != nil {
-			logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprintf("Failed to batch sync client IP rate limits to Redis: %v", err))
-			hrl.reappendPendingTasks(fetchedPendingTasks)
-		} else if len(clientDtos) > 0 {
-			logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Batch synced %d client IP rate limits to Redis", len(clientDtos)))
-		}
+	if err := caches.RateLimitRecordStore.BatchSynchronize(inputs, hrl.BackendServerName); err != nil {
+		logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprintf("Failed to batch synchronize rate limits to Redis: %v", err))
+		hrl.reappendPendingTasks(fetchedPendingTasks)
+	} else if len(inputs) > 0 {
+		logs.NotezyLogger.Debug(context.Background(), fmt.Sprintf("Batch synchronized %d rate limits to Redis", len(inputs)))
 	}
 }
 
@@ -197,7 +158,7 @@ func (hrl *HybridRateLimiter) checkBucketLimitByFingerprint(fingerprint string, 
 	var totalTokensUsed int32 = 0
 
 	for _, backendServerName := range types.AllBackendServerNames {
-		rateLimitRecordCache, exception := caches.GetRateLimitRecordCacheByFingerprint(fingerprint, backendServerName)
+		rateLimitRecordCache, exception := caches.RateLimitRecordStore.Get(fingerprint, backendServerName)
 		if exception != nil {
 			continue
 		}
@@ -246,7 +207,7 @@ func (hrl *HybridRateLimiter) checkBucketLimitByUserId(userId uuid.UUID, n int32
 	var totalTokensUsed int32 = 0
 
 	for _, backendServerName := range types.AllBackendServerNames {
-		rateLimitRecordCache, exception := caches.GetRateLimitRecordCacheByUserId(userId, backendServerName)
+		rateLimitRecordCache, exception := caches.RateLimitRecordStore.Get(userId.String(), backendServerName)
 		if exception != nil {
 			continue
 		}

@@ -10,6 +10,21 @@ import (
 
 /* ============================== Request DTO ============================== */
 
+type GetMyBlockPackRealtimeParticipantsReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		any,
+		struct {
+			BlockPackId uuid.UUID `uri:"blockPackId" validate:"required"`
+		},
+	]
+}
+
 type CreateMyRealtimeConnectionTicketReqDto struct {
 	NotezyRequest[
 		struct {
@@ -41,6 +56,16 @@ type CreateMyBlockPackChannelTicketReqDto struct {
 }
 
 /* ============================== Response DTO ============================== */
+
+type RealtimeBlockPackParticipantResDto struct {
+	UserPublicId      uuid.UUID                       `json:"userPublicId"`
+	Name              string                          `json:"name"`
+	DisplayName       string                          `json:"displayName"`
+	ChannelPermission realtimetypes.ChannelPermission `json:"channelPermission"`
+	ConnectionCount   int                             `json:"connectionCount"`
+}
+
+type GetMyBlockPackRealtimeParticipantsResDto = []RealtimeBlockPackParticipantResDto
 
 type CreateMyRealtimeConnectionTicketResDto struct {
 	RealtimeEndpoint        string    `json:"realtimeEndpoint"`

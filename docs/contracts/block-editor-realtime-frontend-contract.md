@@ -89,8 +89,9 @@ const fragment = ydoc.getXmlFragment("document-store");
 - `permission: read` 時不得送 document update；UI 必須是 read-only。read/write channel 都可使用 awareness。
 - 建立 channel 後，為該 editor 建立 `Awareness`，接聽其 local `update` event，將 `encodeAwarenessUpdate(awareness, changedClientIds)` 包裝為 `awareness` binary frame。收到 remote `awareness` binary payload 時，呼叫 `applyAwarenessUpdate(awareness, payload, remoteOrigin)`；remote origin 不可重新送出。
 - `yjs-document` initial state 已送出後，worker 會補送 room 內當前 awareness state。每個 local `Awareness` client ID 在同一 connector channel lifetime 內只能由該 channel 宣告；不得重用或手動偽造其他 tab/device 的 client ID。
-- `unsubscribe`、socket close、`permission_revoked`、`resync_required` 時先呼叫 `awareness.setLocalState(null)`，停止 awareness listener，並銷毀該 editor 的 awareness instance。reconnect 後必須以新的 `Awareness` client ID 重新 announce local user/cursor/selection。
+- `unsubscribe`、socket close、`permission_revoked`、`resource_unavailable`、`resync_required` 時先呼叫 `awareness.setLocalState(null)`，停止 awareness listener，並銷毀該 editor 的 awareness instance。reconnect 後必須以新的 `Awareness` client ID 重新 announce local user/cursor/selection。
 - `permission_revoked` 時立即停止 editor、移除 channel state，並呈現不可再編輯/檢視狀態。
+- `resource_unavailable` 代表 BlockPack、其 Yjs document、父 SubShelf 或 RootShelf 已被刪除或不可用。前端必須離開 editor、移除 channel state，並重新查詢目前資料樹；不得用 `BlockTable` 嘗試恢復 editor。
 - `resync_required` 時停止該 channel 的即時寫入並重新取得 channel ticket、subscribe；不可用 Block REST rows 補 document。local `Y.Doc` 不得先被銷毀：前端要先以 temporary `Y.Doc` 套用 server complete state、取得 server state vector，再將 local `Y.Doc` 相對於該 vector 缺少的 raw Yjs update 補送，最後才以 server/worker 的正常回應確認同步完成。
 
 public binary header、frame type 與 connector channel routing 以 `realtime-protocol-contract.md` 為準；前端不可自行改寫 raw Yjs update 成 JSON 或 Base64。
@@ -126,7 +127,7 @@ GET /api/development/v1/block/getMyBlocksByBlockPackId
 - BlockPack channel ticket 可以 subscribe，取得 `connectorChannelId`，並接收完整 Yjs document state。
 - local Yjs update 寫入同一 channel，另一個 client 收到並套用。
 - read-only channel 無法送 Yjs document update。
-- reconnect 後重新取得 ticket、重新 subscribe；`permission_revoked` 與 `resync_required` 會正確 cleanup/recreate provider。
+- reconnect 後重新取得 ticket、重新 subscribe；`permission_revoked`、`resource_unavailable` 與 `resync_required` 會正確 cleanup/recreate provider。
 
 完整 protocol 以 `realtime-protocol-contract.md` 與 `yjs-collaboration-contract.md` 為準。
 

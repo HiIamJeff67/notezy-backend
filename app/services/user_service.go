@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 
 	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
+	cacheinputs "github.com/HiIamJeff67/notezy-backend/app/caches/inputs"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
@@ -60,7 +61,7 @@ func (s *UserService) GetUserData(
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
-	userDataCache, exception := caches.GetUserDataCache(reqDto.ContextFields.UserName)
+	userDataCache, exception := caches.UserDataStore.Get(reqDto.ContextFields.UserName)
 	if exception != nil {
 		return nil, exception
 	}
@@ -138,7 +139,7 @@ func (s *UserService) UpdateMe(
 	}
 
 	if reqDto.Body.Values.DisplayName != nil {
-		exception = caches.UpdateUserDataCache(reqDto.ContextFields.UserName, caches.UpdateUserDataCacheDto{
+		exception = caches.UserDataStore.Update(reqDto.ContextFields.UserName, cacheinputs.UpdateUserDataCacheInput{
 			DisplayName: reqDto.Body.Values.DisplayName,
 		})
 		if exception != nil {
@@ -146,7 +147,7 @@ func (s *UserService) UpdateMe(
 		}
 	}
 	if reqDto.Body.Values.Status != nil {
-		exception = caches.UpdateUserDataCache(reqDto.ContextFields.UserName, caches.UpdateUserDataCacheDto{
+		exception = caches.UserDataStore.Update(reqDto.ContextFields.UserName, cacheinputs.UpdateUserDataCacheInput{
 			Status: reqDto.Body.Values.Status,
 		})
 		if exception != nil {

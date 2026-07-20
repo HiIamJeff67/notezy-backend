@@ -93,6 +93,11 @@ words = [
     "hono",
     "debouncer",
     "compactable",
+    "upgrader",
+    "crdt",
+    "backpressure",
+    "fanout",
+
 ]
 
 ignore_paths = [

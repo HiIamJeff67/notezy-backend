@@ -22,7 +22,29 @@ The connection response contains `realtimeEndpoint` (`/realtime/development/v1`)
 
 The BlockPack response contains `channelTicket`, `expiresAt`, `channelType`, `channelId`, `permission`, `roomName`, `fragmentName`, `schemaId`, `schemaVersion`, `realtimeProtocolVersion`, `lastUpdateSequence`, and `compactedUntilSequence`. A BlockPackYjsDocument row is created in the same transaction as its BlockPack; a missing row is a backend error, not an empty document state.
 
-`permission: "read"` is available to Read, Write, Admin, and Owner users. `permission: "write"` is available only to Write, Admin, and Owner users. Soft-deleted BlockPacks do not receive a ticket.
+`permission: "read"` is available to Read, Write, Admin, and Owner users. `permission: "write"` is available only to Write, Admin, and Owner users. A BlockPack, its Yjs document, parent SubShelf, and RootShelf must all be active before a ticket is issued.
+
+## Realtime Participants
+
+Owners and Admins can inspect the currently active connections in one BlockPack room:
+
+```text
+GET /api/development/v1/realtime/blockPacks/:blockPackId/participants
+```
+
+The response body uses the normal `{ success, data, exception }` envelope. `data` is an array of:
+
+```json
+{
+  "userPublicId": "UUID",
+  "name": "string",
+  "displayName": "string",
+  "channelPermission": "read" | "write",
+  "connectionCount": 1
+}
+```
+
+Participants are derived from active Redis subscriber leases. They are ephemeral presence data, not an access-control source; an empty array means no active room connection was observed.
 
 Tickets are EdDSA JWTs signed and verified by Go. Go receives `REALTIME_TICKET_PRIVATE_KEY_BASE64`, which is Base64-encoded PKCS#8 Ed25519 DER. Node worker 不接收 ticket key，也不驗證 public ticket；它只接受已由 Go Gateway 驗證後送出的 internal frame。Tickets contain `iss`, `aud`, `sub`, `jti`, `iat`, `exp`, a hash of the `User-Agent`, and the channel claims where applicable. Audiences are `notezy-realtime-connection` and `notezy-realtime-block-pack`.
 
@@ -99,11 +121,15 @@ All gateway errors are JSON:
 { "version": 1, "type": "error", "requestId": "sub-1", "connectorChannelId": 1, "code": "channel_not_found", "message": "connectorChannelId is not subscribed on this connection" }
 ```
 
-Stable error codes are `authentication_managed_by_upgrade`, `binary_channel_not_ready`, `channel_backpressure`, `channel_limit_exceeded`, `channel_not_found`, `channel_permission_denied`, `invalid_acknowledgement`, `invalid_binary_frame`, `invalid_channel_id`, `invalid_channel_ticket`, `invalid_channel_type`, `invalid_connector_channel_id`, `invalid_control_frame`, `permission_revoked`, `room_admission_unavailable`, `room_connection_limit_exceeded`, `resubscribe_required`, `unsupported_binary_type`, `unsupported_channel_type`, `unsupported_control_type`, `unsupported_message_type`, `unsupported_protocol_version`, and `worker_unavailable`.
+Stable error codes are `authentication_managed_by_upgrade`, `binary_channel_not_ready`, `channel_backpressure`, `channel_limit_exceeded`, `channel_not_found`, `channel_permission_denied`, `invalid_acknowledgement`, `invalid_binary_frame`, `invalid_channel_id`, `invalid_channel_ticket`, `invalid_channel_type`, `invalid_connector_channel_id`, `invalid_control_frame`, `permission_revoked`, `resource_unavailable`, `room_admission_unavailable`, `room_connection_limit_exceeded`, `resubscribe_required`, `unsupported_binary_type`, `unsupported_channel_type`, `unsupported_control_type`, `unsupported_message_type`, `unsupported_protocol_version`, and `worker_unavailable`.
+
+`permission_revoked` means the user no longer has the requested channel permission. `resource_unavailable` means the BlockPack, Yjs document, SubShelf, or RootShelf is deleted or otherwise inactive. Both errors remove the logical channel; the client must stop its editor/provider and must not continue sending binary frames on that `connectorChannelId`.
 
 Before upgrading a public socket, Go applies an IP-based upgrade rate limit, its per-process connector cap, and a distributed per-user root-connection cap. A rejected upgrade returns HTTP `429` for the user cap or HTTP `503` for gateway/admission availability; the client must not retry in a tight loop. The distributed cap is represented by Redis TTL leases and is refreshed with the transport heartbeat, so an abnormal process exit is recovered automatically after the lease expires.
 
-Each BlockPack subscription is re-authorized at subscribe time and consumes one shared active-subscriber slot from the BlockPack owner's plan. Read and write subscriptions use the same room capacity. `room_connection_limit_exceeded` means the client should close or unsubscribe another active subscriber before retrying. A successful `unsubscribe`, connection close, permission revocation, and lease expiry all release the slot.
+Each BlockPack subscription is re-authorized at subscribe time and consumes one shared active-subscriber slot from the BlockPack owner's plan. Before a `yjs-document` mutation is forwarded, Go revalidates the active BlockPack hierarchy and the writer permission. A validation failure releases the lease, detaches the worker channel, and returns `permission_revoked` or `resource_unavailable`. Read and write subscriptions use the same room capacity. `room_connection_limit_exceeded` means the client should close or unsubscribe another active subscriber before retrying. A successful `unsubscribe`, connection close, permission revocation, and lease expiry all release the slot.
+
+This monolith phase does not yet fan out an external permission/delete event to every Gateway process. An idle channel can therefore remain open until it next subscribes or submits a document mutation. Kafka-backed lifecycle fanout is intentionally deferred to the microservice architecture project.
 
 The gateway caps a connection at 64 active channels. Released IDs are not reused during that connection. Public outbound data uses a bounded queue per `connectorChannelId`, with round-robin scheduling between channels. JSON control frames are always scheduled before binary data. Each channel allows at most 256 queued binary frames and 4 MiB of queued binary payload. Awareness is ephemeral: a queued awareness frame replaces the previous queued awareness frame for that channel. Yjs document updates are never silently dropped or coalesced by Go; if their channel queue is full, the gateway detaches only that channel and sends `channel_backpressure`, requiring a resubscribe/resync while unrelated channels remain active. A failed read or a write that cannot complete within 10 seconds closes the physical socket. Go-to-worker multiplexing uses `YJS_WORKER_URLS`, a comma-separated internal endpoint list. Each `blockPackId` maps consistently to one endpoint; each endpoint has one long-lived internal WebSocket and a bounded outbound queue. An unavailable worker or a full internal queue rejects the affected channel payload with `worker_unavailable`.
 

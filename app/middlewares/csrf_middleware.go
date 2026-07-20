@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
+	cacheinputs "github.com/HiIamJeff67/notezy-backend/app/caches/inputs"
 	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	tokens "github.com/HiIamJeff67/notezy-backend/app/tokens"
@@ -32,7 +33,7 @@ func CSRFMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		userDataCache, exception := caches.GetUserDataCache(*userName)
+		userDataCache, exception := caches.UserDataStore.Get(*userName)
 		if exception != nil {
 			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
@@ -47,10 +48,10 @@ func CSRFMiddleware() gin.HandlerFunc {
 		if tokens.IsCSRFTokenExpiringSoon(claims) {
 			newToken, exception := tokens.GenerateCSRFToken()
 			if exception == nil {
-				dto := caches.UpdateUserDataCacheDto{
+				input := cacheinputs.UpdateUserDataCacheInput{
 					CSRFToken: newToken,
 				}
-				caches.UpdateUserDataCache(*userName, dto)
+				caches.UserDataStore.Update(*userName, input)
 
 				ctx.Header("X-CSRF-Token", *newToken)
 

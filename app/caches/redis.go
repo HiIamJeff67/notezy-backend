@@ -13,6 +13,7 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
 	util "github.com/HiIamJeff67/notezy-backend/app/util"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
@@ -28,10 +29,12 @@ var (
 var (
 	RedisClientMap             map[int]*redis.Client                        = make(map[int]*redis.Client)
 	RedisClientToConfig        map[*redis.Client]configs.CacheManagerConfig = make(map[*redis.Client]configs.CacheManagerConfig)
+	UserDataStore                                                           = NewUserDataCacheStore(RedisClientMap)
+	RateLimitRecordStore                                                    = NewRateLimitRecordCacheStore(RedisClientMap)
 	PurposeToServerNumberRange                                              = map[types.ValidCachePurpose]types.Range[int, int]{
-		types.ValidCachePurpose_UserData:   UserDataRange,  // server number: 0 - 3 (included)
-		types.ValidCachePurpose_RateLimite: RateLimitRange, // server number: 4 - 7 (included)
-		types.ValidCachePurpose_Realtime:   RealtimeRange,  // server number: 8
+		types.ValidCachePurpose_UserData:   UserDataStore.Range,        // server number: 0 - 3 (included)
+		types.ValidCachePurpose_RateLimite: RateLimitRecordStore.Range, // server number: 4 - 7 (included)
+		types.ValidCachePurpose_Realtime:   types.Range[int, int]{Start: constants.RealtimeRedisServerNumber, Size: 1},
 	}
 	Ctx = context.Background()
 
@@ -157,7 +160,7 @@ func DisconnectToAllRedis() bool {
 }
 
 func FlushCacheLibraries() *exceptions.Exception {
-	for serverName, serverNumber := range BackendServerNameToRateLimitRedisIndex {
+	for serverName, serverNumber := range RateLimitRecordStore.backendServerNameToRedisIndex {
 		redisClient, exist := RedisClientMap[serverNumber]
 		if !exist {
 			continue
@@ -171,7 +174,7 @@ func FlushCacheLibraries() *exceptions.Exception {
 }
 
 func LoadRateLimitRecordCacheLibraries() *exceptions.Exception {
-	for serverName, serverNumber := range BackendServerNameToRateLimitRedisIndex {
+	for serverName, serverNumber := range RateLimitRecordStore.backendServerNameToRedisIndex {
 		redisClient, exist := RedisClientMap[serverNumber]
 		if !exist {
 			continue
@@ -190,7 +193,7 @@ func LoadRateLimitRecordCacheLibraries() *exceptions.Exception {
 }
 
 func LoadUserQuotaCacheLibraries() *exceptions.Exception {
-	for serverNumber := UserDataRange.Start; serverNumber < UserDataRange.Start+UserDataRange.Size; serverNumber++ {
+	for serverNumber := UserDataStore.Range.Start; serverNumber < UserDataStore.Range.Start+UserDataStore.Range.Size; serverNumber++ {
 		redisClient, exist := RedisClientMap[serverNumber]
 		if !exist {
 			continue
