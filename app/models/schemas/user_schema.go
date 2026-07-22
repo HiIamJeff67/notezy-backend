@@ -37,7 +37,7 @@ type User struct {
 	UsersToBadges       []UsersToBadges       `json:"usersToBadges" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UsersToShelves      []UsersToShelves      `json:"usersToShelves" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UsersToStations     []UsersToStations     `json:"usersToStations" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	UsersToRoutineTags  []UsersToRoutineTags  `json:"usersToRoutineTags" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	RoutineTags         []RoutineTag          `json:"routineTags" gorm:"foreignKey:OwnerId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	Stations            []Station             `json:"stations" gorm:"foreignKey:OwnerId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	PlanLimitation      PlanLimitation        `json:"planLimitation" gorm:"foreignKey:Plan; references:Key; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UsersToBillingPlans []UsersToBillingPlans `json:"usersToBillingPlans" gorm:"foreignKey:UserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
@@ -59,7 +59,7 @@ const (
 	UserRelation_UsersToBadges       UserRelation = "UsersToBadges"
 	UserRelation_UsersToShelves      UserRelation = "UsersToShelves"
 	UserRelation_UsersToStations     UserRelation = "UsersToStations"
-	UserRelation_UsersToRoutineTags  UserRelation = "UsersToRoutineTags"
+	UserRelation_RoutineTags         UserRelation = "RoutineTags"
 	UserRelation_Stations            UserRelation = "Stations"
 	UserRelation_PlanLimitation      UserRelation = "PlanLimitation"
 	UserRelation_UsersToBillingPlans UserRelation = "UsersToBillingPlans"

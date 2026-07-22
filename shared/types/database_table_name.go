@@ -26,7 +26,6 @@ const (
 
 	TableName_RoutinesToItemsTable    TableName = "RoutinesToItemsTable"
 	TableName_UsersToStationsTable    TableName = "UsersToStationsTable"
-	TableName_UsersToRoutineTagsTable TableName = "UsersToRoutineTagsTable"
 	TableName_StationTable            TableName = "StationTable"
 	TableName_RoutineTable            TableName = "RoutineTable"
 	TableName_RoutineDependencyTable  TableName = "RoutineDependencyTable"
@@ -66,7 +65,6 @@ var _validTableNames = map[string]TableName{
 
 	"RoutinesToItemsTable":    TableName_RoutinesToItemsTable,
 	"UsersToStationsTable":    TableName_UsersToStationsTable,
-	"UsersToRoutineTagsTable": TableName_UsersToRoutineTagsTable,
 	"StationTable":            TableName_StationTable,
 	"RoutineTable":            TableName_RoutineTable,
 	"RoutineDependencyTable":  TableName_RoutineDependencyTable,

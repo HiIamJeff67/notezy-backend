@@ -15,7 +15,6 @@ import (
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
@@ -313,25 +312,12 @@ func (s *RoutineTagService) HardDeleteMyRoutineTagsByIds(
 func (s *RoutineTagService) SearchPrivateRoutineTags(
 	ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRoutineTagInput,
 ) (*gqlmodels.SearchRoutineTagConnection, *exceptions.Exception) {
-	type PrivateRoutineTag struct {
-		schemas.RoutineTag
-		Permission enums.AccessControlPermission `gorm:"column:permission"`
-	}
-
 	startTime := time.Now()
 	db := s.db.WithContext(ctx)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
-	}
-
 	query := db.Model(&schemas.RoutineTag{}).
-		Select(`"RoutineTagTable".*, utrt.permission AS permission`).
-		Joins(`LEFT JOIN "UsersToRoutineTagsTable" utrt ON "RoutineTagTable".id = utrt.tag_id`).
-		Where("utrt.user_id = ? AND utrt.permission IN ?", userId, allowedPermissions)
+		Select(`"RoutineTagTable".*`).
+		Where(`"RoutineTagTable".owner_id = ?`, userId)
 
 	if len(strings.ReplaceAll(gqlInput.Query, " ", "")) > 0 {
 		query = query.Where(
@@ -381,7 +367,7 @@ func (s *RoutineTagService) SearchPrivateRoutineTags(
 	limit = min(limit, constants.MaxSearchLimit)
 	query = query.Limit(limit + 1)
 
-	var routineTags []PrivateRoutineTag
+	var routineTags []schemas.RoutineTag
 	if err := query.Find(&routineTags).Error; err != nil {
 		return nil, exceptions.RoutineTag.NotFound().WithOrigin(err)
 	}
@@ -405,7 +391,7 @@ func (s *RoutineTagService) SearchPrivateRoutineTags(
 
 		searchEdges[index] = &gqlmodels.SearchRoutineTagEdge{
 			EncodedSearchCursor: *encodedSearchCursor,
-			Node:                routineTag.RoutineTag.ToPrivateRoutineTag(),
+			Node:                routineTag.ToPrivateRoutineTag(),
 		}
 	}
 

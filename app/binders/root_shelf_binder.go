@@ -204,10 +204,20 @@ func (b *RootShelfBinder) BindUpsertMyRootShelfPermission(
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		if err := ctx.ShouldBindUri(&reqDto.Param); err != nil {
+		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		if err != nil {
 			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
+		reqDto.Param.RootShelfId = rootShelfId
+
+		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.UserPublicId = userPublicId
+
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
@@ -232,10 +242,13 @@ func (b *RootShelfBinder) BindUpsertMyRootShelfPermissions(
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		if err := ctx.ShouldBindUri(&reqDto.Param); err != nil {
+		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		if err != nil {
 			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
+		reqDto.Param.RootShelfId = rootShelfId
+
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
@@ -352,10 +365,19 @@ func (b *RootShelfBinder) BindDeleteMyRootShelfPermission(
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		if err := ctx.ShouldBindUri(&reqDto.Param); err != nil {
+		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		if err != nil {
 			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
+		reqDto.Param.RootShelfId = rootShelfId
+
+		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.UserPublicId = userPublicId
 
 		controllerFunc(ctx, &reqDto)
 	}
@@ -376,10 +398,13 @@ func (b *RootShelfBinder) BindDeleteMyRootShelfPermissions(
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		if err := ctx.ShouldBindUri(&reqDto.Param); err != nil {
+		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		if err != nil {
 			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
+		reqDto.Param.RootShelfId = rootShelfId
+
 		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
 			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return

@@ -15,7 +15,17 @@ import (
 
 // SearchUsers is the resolver for the searchUsers field.
 func (r *queryResolver) SearchUsers(ctx context.Context, input gqlmodels.SearchUserInput) (*gqlmodels.SearchUserConnection, error) {
-	result, exception := r.userService.SearchPublicUsers(ctx, input)
+	ginContext, exception := contexts.GetAndConvertContextToGinContext(ctx)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ginContext, types.ContextFieldName_User_Id)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	result, exception := r.userService.SearchPublicUsers(ctx, *userId, input)
 	if exception != nil {
 		return nil, exception.Log().ToGraphQLError(ctx)
 	}

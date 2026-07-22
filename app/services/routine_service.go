@@ -277,6 +277,7 @@ func (s *RoutineService) GetMyRoutinesByStationId(
 				schemas.RoutineRelation_RoutineTasks,
 				schemas.RoutineRelation_RoutinesToItems,
 			},
+			&reqDto.ContextFields.UserId,
 		))
 
 	query = query.Scopes(s.routineScope.FilterOnlyDeleted(onlyDeleted))
@@ -603,38 +604,47 @@ func (s *RoutineService) LinkRoutineTagById(
 		enums.AccessControlPermission_Write,
 	}
 
-	if !s.routineRepository.HasPermission(
+	routine, exception := s.routineRepository.CheckPermissionAndGetOneById(
 		reqDto.Body.RoutineId,
 		reqDto.ContextFields.UserId,
+		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
-	) {
+	)
+	if exception != nil {
 		tx.Rollback()
 		return nil, exceptions.Routine.NoPermission("get the routine")
 	}
 
-	if !s.routineTagRepository.HasPermission(
+	if _, exception := s.routineTagRepository.GetOneById(
 		reqDto.Body.RoutineTagId,
 		reqDto.ContextFields.UserId,
-		allowedPermissions,
+		nil,
 		options.WithTransactionDB(tx),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
-	) {
+	); exception != nil {
 		tx.Rollback()
-		return nil, exceptions.RoutineTag.NoPermission("get the routine tag")
+		return nil, exception
 	}
 
 	var newRoutinesToTags schemas.RoutinesToTags
 	newRoutinesToTags.RoutineId = reqDto.Body.RoutineId
 	newRoutinesToTags.TagId = reqDto.Body.RoutineTagId
+	newRoutinesToTags.UserId = reqDto.ContextFields.UserId
+	newRoutinesToTags.StationId = routine.StationId
 
 	var result *gorm.DB
 	if reqDto.Body.IsUnlink {
 		result = tx.Model(&schemas.RoutinesToTags{}).
-			Where("routine_id = ? AND tag_id = ?", newRoutinesToTags.RoutineId, newRoutinesToTags.TagId).
+			Where(
+				"routine_id = ? AND tag_id = ? AND user_id = ?",
+				newRoutinesToTags.RoutineId,
+				newRoutinesToTags.TagId,
+				newRoutinesToTags.UserId,
+			).
 			Delete(&schemas.RoutinesToTags{})
 	} else {
 		result = tx.Model(&schemas.RoutinesToTags{}).
@@ -688,7 +698,7 @@ func (s *RoutineService) LinkRoutineTagsByIds(
 		}
 	}
 
-	isRoutineValid := make(map[uuid.UUID]bool)
+	validRoutineStationIds := make(map[uuid.UUID]uuid.UUID)
 	validRoutines, exception := s.routineRepository.CheckPermissionsAndGetManyByIds(
 		routineIds,
 		reqDto.ContextFields.UserId,
@@ -703,15 +713,14 @@ func (s *RoutineService) LinkRoutineTagsByIds(
 		return nil, exception
 	}
 	for _, validRoutine := range validRoutines {
-		isRoutineValid[validRoutine.Id] = true
+		validRoutineStationIds[validRoutine.Id] = validRoutine.StationId
 	}
 
 	isRoutineTagValid := make(map[uuid.UUID]bool)
-	validRoutineTags, exception := s.routineTagRepository.CheckPermissionsAndGetManyByIds(
+	validRoutineTags, exception := s.routineTagRepository.GetManyByIds(
 		routineTagIds,
 		reqDto.ContextFields.UserId,
 		nil,
-		allowedPermissions,
 		options.WithTransactionDB(tx),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
@@ -726,13 +735,16 @@ func (s *RoutineService) LinkRoutineTagsByIds(
 
 	var newRoutinesToTags []schemas.RoutinesToTags
 	for _, linkedRoutineAndTag := range reqDto.Body.LinkedRoutinesAndTags {
-		if !isRoutineValid[linkedRoutineAndTag.RoutineId] ||
+		stationId, isRoutineValid := validRoutineStationIds[linkedRoutineAndTag.RoutineId]
+		if !isRoutineValid ||
 			!isRoutineTagValid[linkedRoutineAndTag.RoutineTagId] {
 			continue
 		}
 		newRoutinesToTags = append(newRoutinesToTags, schemas.RoutinesToTags{
 			RoutineId: linkedRoutineAndTag.RoutineId,
 			TagId:     linkedRoutineAndTag.RoutineTagId,
+			UserId:    reqDto.ContextFields.UserId,
+			StationId: stationId,
 		})
 	}
 	if len(newRoutinesToTags) == 0 {
@@ -742,13 +754,13 @@ func (s *RoutineService) LinkRoutineTagsByIds(
 
 	values := make([][]any, len(newRoutinesToTags))
 	for index, newRoutineToTag := range newRoutinesToTags {
-		values[index] = []any{newRoutineToTag.RoutineId, newRoutineToTag.TagId}
+		values[index] = []any{newRoutineToTag.RoutineId, newRoutineToTag.TagId, newRoutineToTag.UserId}
 	}
 
 	var result *gorm.DB
 	if reqDto.Body.IsUnlink {
 		result = tx.Model(&schemas.RoutinesToTags{}).
-			Where("(routine_id, tag_id) IN ?", values).
+			Where("(routine_id, tag_id, user_id) IN ?", values).
 			Delete(&schemas.RoutinesToTags{})
 	} else {
 		result = tx.Model(&schemas.RoutinesToTags{}).
@@ -1400,20 +1412,12 @@ func (s *RoutineService) SearchPrivateRoutines(
 	}
 
 	if len(gqlInput.TagIds) > 0 {
-		if !s.routineTagRepository.HavePermissions(
-			gqlInput.TagIds,
-			userId,
-			allowedPermissions,
-			options.WithDB(db),
-		) {
-			return nil, exceptions.RoutineTag.NoPermission("filter routines by these tags")
-		}
-
 		subQuery := db.
 			Session(&gorm.Session{NewDB: true}).
 			Model(&schemas.RoutinesToTags{}).
 			Select("1").
 			Where(`"RoutinesToTagsTable".routine_id = "RoutineTable".id`).
+			Where(`"RoutinesToTagsTable".user_id = ?`, userId).
 			Where(`"RoutinesToTagsTable".tag_id IN ?`, gqlInput.TagIds)
 
 		query = query.Where("EXISTS (?)", subQuery)
@@ -1497,6 +1501,7 @@ func (s *RoutineService) SearchPrivateRoutines(
 			schemas.RoutineRelation_RoutineTasks,
 			schemas.RoutineRelation_RoutinesToItems,
 		},
+		&userId,
 	)).Find(&routines).Error; err != nil {
 		return nil, exceptions.Routine.NotFound().WithOrigin(err)
 	}

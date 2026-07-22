@@ -141,7 +141,7 @@ func (s *RealtimeService) GetBlockPackChannelPermission(
 		return 0, errorCode, err
 	}
 
-	var ownerId uuid.UUID
+	var rootShelf schemas.RootShelf
 	result := db.
 		Model(&schemas.BlockPack{}).
 		Select(`"RootShelfTable".owner_id`).
@@ -151,11 +151,11 @@ func (s *RealtimeService) GetBlockPackChannelPermission(
 		Where(`"BlockPackTable".deleted_at IS NULL`).
 		Where(`"SubShelfTable".deleted_at IS NULL`).
 		Where(`"RootShelfTable".deleted_at IS NULL`).
-		Scan(&ownerId)
+		Scan(&rootShelf)
 	if result.Error != nil {
 		return 0, realtimetypes.ErrorCode_ResourceUnavailable, result.Error
 	}
-	if result.RowsAffected == 0 || ownerId == uuid.Nil {
+	if result.RowsAffected == 0 || rootShelf.OwnerId == uuid.Nil {
 		return 0, realtimetypes.ErrorCode_ResourceUnavailable, gorm.ErrRecordNotFound
 	}
 
@@ -164,7 +164,7 @@ func (s *RealtimeService) GetBlockPackChannelPermission(
 		Model(&schemas.User{}).
 		Select(`"PlanLimitationTable".max_realtime_room_subscriber_count`).
 		Joins(`INNER JOIN "PlanLimitationTable" ON "PlanLimitationTable".key = "UserTable".plan`).
-		Where(`"UserTable".id = ?`, ownerId).
+		Where(`"UserTable".id = ?`, rootShelf.OwnerId).
 		Scan(&maximumSubscribers)
 	if result.Error != nil {
 		return 0, realtimetypes.ErrorCode_RoomAdmissionUnavailable, result.Error
@@ -189,10 +189,10 @@ func (s *RealtimeService) ValidateBlockPackChannelPermission(
 		return realtimetypes.ErrorCode_PermissionRevoked, errors.New("invalid realtime channel permission")
 	}
 
-	var availableBlockPackId uuid.UUID
+	var exists int
 	result := db.
 		Model(&schemas.BlockPack{}).
-		Select(`"BlockPackTable".id`).
+		Select(`1`).
 		Joins(`INNER JOIN "BlockPackYjsDocumentTable" ON "BlockPackYjsDocumentTable".block_pack_id = "BlockPackTable".id`).
 		Joins(`INNER JOIN "SubShelfTable" ON "SubShelfTable".id = "BlockPackTable".parent_sub_shelf_id`).
 		Joins(`INNER JOIN "RootShelfTable" ON "RootShelfTable".id = "SubShelfTable".root_shelf_id`).
@@ -201,11 +201,12 @@ func (s *RealtimeService) ValidateBlockPackChannelPermission(
 		Where(`"BlockPackYjsDocumentTable".deleted_at IS NULL`).
 		Where(`"SubShelfTable".deleted_at IS NULL`).
 		Where(`"RootShelfTable".deleted_at IS NULL`).
-		Scan(&availableBlockPackId)
+		Limit(1).
+		Scan(&exists)
 	if result.Error != nil {
 		return realtimetypes.ErrorCode_ResourceUnavailable, result.Error
 	}
-	if result.RowsAffected == 0 || availableBlockPackId == uuid.Nil {
+	if result.RowsAffected == 0 {
 		return realtimetypes.ErrorCode_ResourceUnavailable, gorm.ErrRecordNotFound
 	}
 

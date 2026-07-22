@@ -165,6 +165,23 @@ services:
       notezy-mimir:
         condition: service_started
 
+  notezy-mimir-init:
+    image: busybox:1.37.0
+    command:
+      - sh
+      - -ec
+      - |
+        mkdir -p \
+          /data/mimir/blocks \
+          /data/mimir/tsdb \
+          /data/mimir/sync \
+          /data/mimir/compactor \
+          /data/mimir/alertmanager \
+          /data/mimir/alertmanager-configs
+    volumes:
+      - mimir-data:/data/mimir
+    restart: "no"
+
   notezy-mimir:
     container_name: ${DOCKER_MIMIR_SERVICE_NAME}
     image: grafana/mimir:latest
@@ -179,6 +196,9 @@ services:
       DOCKER_MIMIR_PORT: ${DOCKER_MIMIR_PORT}
     ports:
       - "${MIMIR_PORT}:${DOCKER_MIMIR_PORT}"
+    depends_on:
+      notezy-mimir-init:
+        condition: service_completed_successfully
     networks:
       notezy-backend-net:
         ipv4_address: 172.30.0.16

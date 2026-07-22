@@ -53,7 +53,6 @@ func ShareableResponseWriterInterceptor(interceptors ...func(string) gin.Handler
 			writer.ResponseWriter.WriteHeader(writer.Code)
 		}
 
-		writer.ResponseWriter.Header().Set("Content-Length", string(rune(writer.Body.Len())))
 		writer.ResponseWriter.Write(writer.Body.Bytes())
 	}
 }

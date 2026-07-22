@@ -652,12 +652,15 @@ type SearchUserFilters struct {
 }
 
 type SearchUserInput struct {
-	Query     string             `json:"query"`
-	After     *string            `json:"after,omitempty"`
-	First     *int32             `json:"first,omitempty"`
-	Filters   *SearchUserFilters `json:"filters,omitempty"`
-	SortBy    *SearchUserSortBy  `json:"sortBy,omitempty"`
-	SortOrder *SearchSortOrder   `json:"sortOrder,omitempty"`
+	Query          string             `json:"query"`
+	RootShelfIds   []uuid.UUID        `json:"rootShelfIds,omitempty"`
+	StationIds     []uuid.UUID        `json:"stationIds,omitempty"`
+	BadgePublicIds []uuid.UUID        `json:"badgePublicIds,omitempty"`
+	After          *string            `json:"after,omitempty"`
+	First          *int32             `json:"first,omitempty"`
+	Filters        *SearchUserFilters `json:"filters,omitempty"`
+	SortBy         *SearchUserSortBy  `json:"sortBy,omitempty"`
+	SortOrder      *SearchSortOrder   `json:"sortOrder,omitempty"`
 }
 
 type SearchBadgeSortBy string

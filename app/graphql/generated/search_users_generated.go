@@ -435,7 +435,7 @@ func (ec *executionContext) unmarshalInputSearchUserInput(ctx context.Context, o
 		asMap["sortOrder"] = "DESC"
 	}
 
-	fieldsInOrder := [...]string{"query", "after", "first", "filters", "sortBy", "sortOrder"}
+	fieldsInOrder := [...]string{"query", "rootShelfIds", "stationIds", "badgePublicIds", "after", "first", "filters", "sortBy", "sortOrder"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -449,6 +449,27 @@ func (ec *executionContext) unmarshalInputSearchUserInput(ctx context.Context, o
 				return it, err
 			}
 			it.Query = data
+		case "rootShelfIds":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rootShelfIds"))
+			data, err := ec.unmarshalOUUID2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RootShelfIds = data
+		case "stationIds":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stationIds"))
+			data, err := ec.unmarshalOUUID2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StationIds = data
+		case "badgePublicIds":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("badgePublicIds"))
+			data, err := ec.unmarshalOUUID2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BadgePublicIds = data
 		case "after":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)

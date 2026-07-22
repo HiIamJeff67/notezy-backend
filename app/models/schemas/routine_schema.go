@@ -11,8 +11,8 @@ import (
 )
 
 type Routine struct {
-	Id               uuid.UUID            `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid();"`
-	StationId        uuid.UUID            `json:"stationId" gorm:"column:station_id; type:uuid; not null;"`
+	Id               uuid.UUID            `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid(); uniqueIndex:routine_idx_id_station_id;"`
+	StationId        uuid.UUID            `json:"stationId" gorm:"column:station_id; type:uuid; not null; uniqueIndex:routine_idx_id_station_id;"`
 	Title            string               `json:"title" gorm:"column:title; size: 128; not null; default:'undefined';"`
 	Description      string               `json:"description" gorm:"column:description; size:1024; not null; default:'';"`
 	Status           enums.RoutineStatus  `json:"status" gorm:"column:status; type:\"RoutineStatus\"; not null; default:'Scheduled';"`
@@ -27,7 +27,7 @@ type Routine struct {
 
 	// relations
 	Station         Station           `json:"station" gorm:"foreignKey:StationId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	RoutinesToTags  []RoutinesToTags  `json:"routinesToTags" gorm:"foreignKey:RoutineId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	RoutinesToTags  []RoutinesToTags  `json:"routinesToTags" gorm:"foreignKey:RoutineId,StationId; references:Id,StationId; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	RoutineTasks    []RoutineTask     `json:"routineTasks" gorm:"foreignKey:RoutineId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	RoutinesToItems []RoutinesToItems `json:"routinesToItems" gorm:"foreignKey:RoutineId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }

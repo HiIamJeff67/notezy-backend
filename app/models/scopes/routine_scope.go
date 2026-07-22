@@ -13,7 +13,7 @@ type RoutineScopeInterface interface {
 	PassPermissionCheck(id uuid.UUID, userId uuid.UUID, permissions []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB
 	PassPermissionChecks(ids []uuid.UUID, userId uuid.UUID, permissions []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB
 	FilterOnlyDeleted(onlyDeleted types.Ternary) func(db *gorm.DB) *gorm.DB
-	IncludePreloads(preloads []schemas.RoutineRelation) func(db *gorm.DB) *gorm.DB
+	IncludePreloads(preloads []schemas.RoutineRelation, userId *uuid.UUID) func(db *gorm.DB) *gorm.DB
 }
 
 type RoutineScope struct{}
@@ -57,9 +57,13 @@ func (sc *RoutineScope) FilterOnlyDeleted(onlyDeleted types.Ternary) func(db *go
 	}
 }
 
-func (sc *RoutineScope) IncludePreloads(preloads []schemas.RoutineRelation) func(db *gorm.DB) *gorm.DB {
+func (sc *RoutineScope) IncludePreloads(preloads []schemas.RoutineRelation, userId *uuid.UUID) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		for _, preload := range preloads {
+			if preload == schemas.RoutineRelation_RoutinesToTags && userId != nil {
+				db = db.Preload(string(preload), "user_id = ?", *userId)
+				continue
+			}
 			db = db.Preload(string(preload))
 		}
 		return db

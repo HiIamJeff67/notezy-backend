@@ -10,20 +10,15 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	util "github.com/HiIamJeff67/notezy-backend/app/util"
-	array "github.com/HiIamJeff67/notezy-backend/shared/lib/array"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type RoutineTagRepositoryInterface interface {
-	HasPermission(id uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
-	HavePermissions(ids []uuid.UUID, userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
-	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineTagRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) (*schemas.RoutineTag, *exceptions.Exception)
-	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineTagRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.RoutineTag, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineTagRelation, opts ...options.RepositoryOptions) (*schemas.RoutineTag, *exceptions.Exception)
+	GetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineTagRelation, opts ...options.RepositoryOptions) ([]schemas.RoutineTag, *exceptions.Exception)
 	GetAllByUserId(userId uuid.UUID, preloads []schemas.RoutineTagRelation, opts ...options.RepositoryOptions) ([]schemas.RoutineTag, *exceptions.Exception)
 	CreateOne(userId uuid.UUID, input inputs.CreateRoutineTagInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
 	CreateMany(userId uuid.UUID, input []inputs.CreateRoutineTagInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
@@ -43,56 +38,10 @@ func NewRoutineTagRepository(routineTagScope scopes.RoutineTagScopeInterface) Ro
 	}
 }
 
-func (r *RoutineTagRepository) HasPermission(
-	id uuid.UUID,
-	userId uuid.UUID,
-	allowedPermissions []enums.AccessControlPermission,
-	opts ...options.RepositoryOptions,
-) bool {
-	parsedOptions := options.ParseRepositoryOptions(opts...)
-
-	var marker int
-	result := parsedOptions.DB.
-		Model(&schemas.RoutineTag{}).
-		Select("1").
-		Scopes(r.routineTagScope.PassPermissionCheck(id, userId, allowedPermissions)).
-		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
-		Limit(1).
-		Scan(&marker)
-	if err := result.Error; err != nil {
-		return false
-	}
-
-	return marker == 1
-}
-
-func (r *RoutineTagRepository) HavePermissions(
-	ids []uuid.UUID,
-	userId uuid.UUID,
-	allowedPermissions []enums.AccessControlPermission,
-	opts ...options.RepositoryOptions,
-) bool {
-	parsedOptions := options.ParseRepositoryOptions(opts...)
-
-	var permittedIds []uuid.UUID
-	result := parsedOptions.DB.
-		Model(&schemas.RoutineTag{}).
-		Select(`DISTINCT "RoutineTagTable".id`).
-		Scopes(r.routineTagScope.PassPermissionChecks(ids, userId, allowedPermissions)).
-		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
-		Find(&permittedIds)
-	if err := result.Error; err != nil {
-		return false
-	}
-
-	return array.GetDistinctCount(ids) == array.GetDistinctCount(permittedIds)
-}
-
-func (r *RoutineTagRepository) CheckPermissionAndGetOneById(
+func (r *RoutineTagRepository) GetOneById(
 	id uuid.UUID,
 	userId uuid.UUID,
 	preloads []schemas.RoutineTagRelation,
-	allowedPermissions []enums.AccessControlPermission,
 	opts ...options.RepositoryOptions,
 ) (*schemas.RoutineTag, *exceptions.Exception) {
 	parsedOptions := options.ParseRepositoryOptions(opts...)
@@ -100,7 +49,7 @@ func (r *RoutineTagRepository) CheckPermissionAndGetOneById(
 	var routineTag schemas.RoutineTag
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTag{}).
-		Scopes(r.routineTagScope.PassPermissionCheck(id, userId, allowedPermissions)).
+		Where(`"RoutineTagTable".id = ? AND "RoutineTagTable".owner_id = ?`, id, userId).
 		Scopes(r.routineTagScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&routineTag)
@@ -114,11 +63,10 @@ func (r *RoutineTagRepository) CheckPermissionAndGetOneById(
 	return &routineTag, nil
 }
 
-func (r *RoutineTagRepository) CheckPermissionsAndGetManyByIds(
+func (r *RoutineTagRepository) GetManyByIds(
 	ids []uuid.UUID,
 	userId uuid.UUID,
 	preloads []schemas.RoutineTagRelation,
-	allowedPermissions []enums.AccessControlPermission,
 	opts ...options.RepositoryOptions,
 ) ([]schemas.RoutineTag, *exceptions.Exception) {
 	parsedOptions := options.ParseRepositoryOptions(opts...)
@@ -126,7 +74,7 @@ func (r *RoutineTagRepository) CheckPermissionsAndGetManyByIds(
 	var routineTags []schemas.RoutineTag
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTag{}).
-		Scopes(r.routineTagScope.PassPermissionChecks(ids, userId, allowedPermissions)).
+		Where(`"RoutineTagTable".id IN ? AND "RoutineTagTable".owner_id = ?`, ids, userId).
 		Scopes(r.routineTagScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&routineTags)
@@ -140,22 +88,6 @@ func (r *RoutineTagRepository) CheckPermissionsAndGetManyByIds(
 	return routineTags, nil
 }
 
-func (r *RoutineTagRepository) GetOneById(
-	id uuid.UUID,
-	userId uuid.UUID,
-	preloads []schemas.RoutineTagRelation,
-	opts ...options.RepositoryOptions,
-) (*schemas.RoutineTag, *exceptions.Exception) {
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
-	}
-
-	return r.CheckPermissionAndGetOneById(id, userId, preloads, allowedPermissions, opts...)
-}
-
 func (r *RoutineTagRepository) GetAllByUserId(
 	userId uuid.UUID,
 	preloads []schemas.RoutineTagRelation,
@@ -163,18 +95,11 @@ func (r *RoutineTagRepository) GetAllByUserId(
 ) ([]schemas.RoutineTag, *exceptions.Exception) {
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
-	}
 	var routineTags []schemas.RoutineTag
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTag{}).
 		Select(`"RoutineTagTable".*`).
-		Joins(`INNER JOIN "UsersToRoutineTagsTable" utrt ON utrt.tag_id = "RoutineTagTable".id`).
-		Where("utrt.user_id = ? AND utrt.permission IN ?", userId, allowedPermissions).
+		Where(`"RoutineTagTable".owner_id = ?`, userId).
 		Scopes(r.routineTagScope.IncludePreloads(preloads)).
 		Order(`"RoutineTagTable".created_at ASC`).
 		Order(`"RoutineTagTable".id ASC`).
@@ -201,8 +126,9 @@ func (r *RoutineTagRepository) CreateOne(
 	}
 
 	newRoutineTag := schemas.RoutineTag{
-		Id:    uuid.New(),
-		Color: "#FFFFFF",
+		Id:      uuid.New(),
+		OwnerId: userId,
+		Color:   "#FFFFFF",
 	}
 	if err := copier.Copy(&newRoutineTag, &input); err != nil {
 		parsedOptions.DB.Rollback()
@@ -212,22 +138,6 @@ func (r *RoutineTagRepository) CreateOne(
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTag{}).
 		Create(&newRoutineTag)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.RoutineTag.FailedToCreate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: exceptions.RoutineTag.NoChanges()},
-	}); exception != nil {
-		parsedOptions.DB.Rollback()
-		return nil, exception
-	}
-
-	newUsersToRoutineTag := schemas.UsersToRoutineTags{
-		UserId:     userId,
-		TagId:      newRoutineTag.Id,
-		Permission: enums.AccessControlPermission_Owner,
-	}
-	result = parsedOptions.DB.
-		Model(&schemas.UsersToRoutineTags{}).
-		Create(&newUsersToRoutineTag)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.RoutineTag.FailedToCreate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: exceptions.RoutineTag.NoChanges()},
@@ -267,8 +177,9 @@ func (r *RoutineTagRepository) CreateMany(
 	newRoutineTags := make([]schemas.RoutineTag, 0, len(input))
 	for _, in := range input {
 		newRoutineTag := schemas.RoutineTag{
-			Id:    uuid.New(),
-			Color: "#FFFFFF",
+			Id:      uuid.New(),
+			OwnerId: userId,
+			Color:   "#FFFFFF",
 		}
 		if err := copier.Copy(&newRoutineTag, &in); err != nil {
 			parsedOptions.DB.Rollback()
@@ -299,25 +210,9 @@ func (r *RoutineTagRepository) CreateMany(
 		return nil, exception
 	}
 
-	newUsersToRoutineTags := make([]schemas.UsersToRoutineTags, len(newRoutineTags))
 	newRoutineTagIds := make([]uuid.UUID, len(newRoutineTags))
 	for index, newRoutineTag := range newRoutineTags {
 		newRoutineTagIds[index] = newRoutineTag.Id
-		newUsersToRoutineTags[index] = schemas.UsersToRoutineTags{
-			UserId:     userId,
-			TagId:      newRoutineTag.Id,
-			Permission: enums.AccessControlPermission_Owner,
-		}
-	}
-	result = parsedOptions.DB.
-		Model(&schemas.UsersToRoutineTags{}).
-		CreateInBatches(&newUsersToRoutineTags, parsedOptions.BatchSize)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-		{First: result.Error != nil, Second: exceptions.RoutineTag.FailedToCreate().WithOrigin(result.Error)},
-		{First: result.RowsAffected == 0, Second: exceptions.RoutineTag.NoChanges()},
-	}); exception != nil {
-		parsedOptions.DB.Rollback()
-		return nil, exception
 	}
 
 	if shouldStartTransaction {
@@ -345,12 +240,7 @@ func (r *RoutineTagRepository) UpdateOneById(
 		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
-	existingRoutineTag, exception := r.CheckPermissionAndGetOneById(id, userId, nil, allowedPermissions, opts...)
+	existingRoutineTag, exception := r.GetOneById(id, userId, nil, opts...)
 	if exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -402,19 +292,14 @@ func (r *RoutineTagRepository) UpdateManyByIds(
 		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
 	ids := make([]uuid.UUID, len(input))
 	for index, in := range input {
 		ids[index] = in.Id
 	}
-	validRoutineTags, exception := r.CheckPermissionsAndGetManyByIds(ids, userId, nil, allowedPermissions, opts...)
+	validRoutineTags, exception := r.GetManyByIds(ids, userId, nil, opts...)
 	if exception != nil {
 		parsedOptions.DB.Rollback()
-		return exceptions.RoutineTag.NoPermission("update these routine tags")
+		return exceptions.RoutineTag.NotFound()
 	}
 
 	isRoutineTagValid := make(map[uuid.UUID]bool, len(validRoutineTags))
@@ -485,14 +370,9 @@ func (r *RoutineTagRepository) HardDeleteOneById(
 ) *exceptions.Exception {
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTag{}).
-		Scopes(r.routineTagScope.PassPermissionCheck(id, userId, allowedPermissions)).
-		Where(`"RoutineTagTable".id = ?`, id).
+		Where(`"RoutineTagTable".id = ? AND "RoutineTagTable".owner_id = ?`, id, userId).
 		Delete(&schemas.RoutineTag{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.RoutineTag.FailedToDelete().WithOrigin(result.Error)},
@@ -515,14 +395,9 @@ func (r *RoutineTagRepository) HardDeleteManyByIds(
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTag{}).
-		Scopes(r.routineTagScope.PassPermissionChecks(ids, userId, allowedPermissions)).
-		Where(`"RoutineTagTable".id IN ?`, ids).
+		Where(`"RoutineTagTable".id IN ? AND "RoutineTagTable".owner_id = ?`, ids, userId).
 		Delete(&schemas.RoutineTag{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
 		{First: result.Error != nil, Second: exceptions.RoutineTag.FailedToDelete().WithOrigin(result.Error)},

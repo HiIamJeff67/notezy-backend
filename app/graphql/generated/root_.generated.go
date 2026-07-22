@@ -3183,6 +3183,9 @@ enum SearchUserSortBy {
 
 input SearchUserInput {
   query: String! # the input from the frontend
+  rootShelfIds: [UUID!] # match users who collaborate on any accessible RootShelf
+  stationIds: [UUID!] # match users who collaborate on any accessible Station
+  badgePublicIds: [UUID!] # match users who have any public Badge
   after: String # base64 encoded cursor
   first: Int = 10 # the number of data we want to extract
   filters: SearchUserFilters

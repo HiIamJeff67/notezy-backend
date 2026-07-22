@@ -555,13 +555,6 @@ func (s *StationService) VisualizeMyTotalCount(
 		return nil, exceptions.RoutineTask.NotFound().WithOrigin(result.Error)
 	}
 
-	result = db.Model(&schemas.UsersToRoutineTags{}).
-		Where("user_id = ? AND permission = ?", reqDto.ContextFields.UserId, reqDto.Param.Permission).
-		Count(&totals.RoutineTagCount)
-	if result.Error != nil {
-		return nil, exceptions.RoutineTag.NotFound().WithOrigin(result.Error)
-	}
-
 	return &dtos.VisualizeMyTotalCountResDto{
 		Data: []dtos.TwoDimensionalDatum[int64]{
 			dtos.TwoDimensionalDatum[int64]{

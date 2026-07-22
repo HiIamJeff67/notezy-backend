@@ -8,15 +8,13 @@ BEGIN
         USING ERRCODE = 'program_limit_exceeded';
     END IF;
 
-    -- Count only owned tags: permission = 'Owner'. Shared tags do not consume owner quota.
     FOR r IN
         WITH owner_tag_deltas AS (
             SELECT
-                user_id,
+                owner_id AS user_id,
                 count(*) as total_delta
             FROM new_table
-            WHERE permission = 'Owner'
-            GROUP BY user_id
+            GROUP BY owner_id
         ),
         updated_accounts AS (
             UPDATE "UserAccountTable" ua
@@ -50,13 +48,13 @@ $$ LANGUAGE plpgsql;
 
 -- ============================== SQL Separator ==============================
 
-DROP TRIGGER IF EXISTS trigger_accounting_inserted_routine_tag ON "UsersToRoutineTagsTable"
+DROP TRIGGER IF EXISTS trigger_accounting_inserted_routine_tag ON "RoutineTagTable"
 
 -- ============================== SQL Separator ==============================
 
 CREATE TRIGGER trigger_accounting_inserted_routine_tag
     AFTER INSERT
-    ON "UsersToRoutineTagsTable"
+    ON "RoutineTagTable"
     REFERENCING NEW TABLE AS new_table
     FOR EACH STATEMENT
     EXECUTE FUNCTION trigger_function_accounting_inserted_routine_tag();

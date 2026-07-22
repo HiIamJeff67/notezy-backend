@@ -31,7 +31,7 @@ type UserServiceInterface interface {
 	// services for graphql users
 	GetPublicUserByPublicId(ctx context.Context, publicId uuid.UUID) (*gqlmodels.PublicUser, *exceptions.Exception)
 	GetPublicAuthorByThemePublicIds(ctx context.Context, publicIds []uuid.UUID) ([]*gqlmodels.PublicUser, *exceptions.Exception)
-	SearchPublicUsers(ctx context.Context, gqlInput gqlmodels.SearchUserInput) (*gqlmodels.SearchUserConnection, *exceptions.Exception)
+	SearchPublicUsers(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchUserInput) (*gqlmodels.SearchUserConnection, *exceptions.Exception)
 }
 
 type UserService struct {
@@ -231,7 +231,7 @@ func (s *UserService) GetPublicAuthorByThemePublicIds(
 }
 
 func (s *UserService) SearchPublicUsers(
-	ctx context.Context, gqlInput gqlmodels.SearchUserInput,
+	ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchUserInput,
 ) (*gqlmodels.SearchUserConnection, *exceptions.Exception) {
 	startTime := time.Now()
 
@@ -245,13 +245,57 @@ func (s *UserService) SearchPublicUsers(
 			"%"+gqlInput.Query+"%", "%"+gqlInput.Query+"%", "%"+gqlInput.Query+"%",
 		)
 	}
+	if len(gqlInput.RootShelfIds) > 0 {
+		accessibleRootShelfIds := db.Session(&gorm.Session{NewDB: true}).
+			Model(&schemas.UsersToShelves{}).
+			Select(`"UsersToShelvesTable".root_shelf_id`).
+			Joins(`INNER JOIN "RootShelfTable" ON "RootShelfTable".id = "UsersToShelvesTable".root_shelf_id`).
+			Where(`"UsersToShelvesTable".user_id = ?`, userId).
+			Where(`"UsersToShelvesTable".root_shelf_id IN ?`, gqlInput.RootShelfIds).
+			Where(`"RootShelfTable".deleted_at IS NULL`)
+
+		usersWithAccessibleRootShelf := db.Session(&gorm.Session{NewDB: true}).
+			Model(&schemas.UsersToShelves{}).
+			Select("1").
+			Where(`"UsersToShelvesTable".user_id = "UserTable".id`).
+			Where(`"UsersToShelvesTable".root_shelf_id IN (?)`, accessibleRootShelfIds)
+
+		query = query.Where("EXISTS (?)", usersWithAccessibleRootShelf)
+	}
+	if len(gqlInput.StationIds) > 0 {
+		accessibleStationIds := db.Session(&gorm.Session{NewDB: true}).
+			Model(&schemas.UsersToStations{}).
+			Select(`"UsersToStationsTable".station_id`).
+			Joins(`INNER JOIN "StationTable" ON "StationTable".id = "UsersToStationsTable".station_id`).
+			Where(`"UsersToStationsTable".user_id = ?`, userId).
+			Where(`"UsersToStationsTable".station_id IN ?`, gqlInput.StationIds).
+			Where(`"StationTable".deleted_at IS NULL`)
+
+		usersWithAccessibleStation := db.Session(&gorm.Session{NewDB: true}).
+			Model(&schemas.UsersToStations{}).
+			Select("1").
+			Where(`"UsersToStationsTable".user_id = "UserTable".id`).
+			Where(`"UsersToStationsTable".station_id IN (?)`, accessibleStationIds)
+
+		query = query.Where("EXISTS (?)", usersWithAccessibleStation)
+	}
+	if len(gqlInput.BadgePublicIds) > 0 {
+		usersWithBadge := db.Session(&gorm.Session{NewDB: true}).
+			Model(&schemas.UsersToBadges{}).
+			Select("1").
+			Joins(`INNER JOIN "BadgeTable" ON "BadgeTable".id = "UsersToBadgesTable".badge_id`).
+			Where(`"UsersToBadgesTable".user_id = "UserTable".id`).
+			Where(`"BadgeTable".public_id IN ?`, gqlInput.BadgePublicIds)
+
+		query = query.Where("EXISTS (?)", usersWithBadge)
+	}
 	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
 		searchCursor, err := searchcursor.Decode[gqlmodels.SearchUserCursorFields](*gqlInput.After)
 		if err != nil {
 			return nil, exceptions.Search.FailedToDecode().WithOrigin(err)
 		}
 
-		query.Where("public_id > ?", searchCursor.Fields.PublicID)
+		query = query.Where("public_id > ?", searchCursor.Fields.PublicID)
 	}
 
 	if gqlInput.SortBy != nil && gqlInput.SortOrder != nil {

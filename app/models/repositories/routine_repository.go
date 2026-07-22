@@ -117,7 +117,7 @@ func (r *RoutineRepository) CheckPermissionAndGetOneById(
 		Model(&schemas.Routine{}).
 		Scopes(r.routineScope.PassPermissionCheck(id, userId, allowedPermissions)).
 		Scopes(r.routineScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Scopes(r.routineScope.IncludePreloads(preloads)).
+		Scopes(r.routineScope.IncludePreloads(preloads, &userId)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&routine)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
@@ -144,7 +144,7 @@ func (r *RoutineRepository) CheckPermissionsAndGetManyByIds(
 		Model(&schemas.Routine{}).
 		Scopes(r.routineScope.PassPermissionChecks(ids, userId, allowedPermissions)).
 		Scopes(r.routineScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Scopes(r.routineScope.IncludePreloads(preloads)).
+		Scopes(r.routineScope.IncludePreloads(preloads, &userId)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&routines)
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
@@ -282,7 +282,7 @@ func (r *RoutineRepository) GetAllByTimeRange(
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
 		Where(timeRangeCondition, sql.Named("query_from", from), sql.Named("query_to", to)).
 		Scopes(r.routineScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Scopes(r.routineScope.IncludePreloads(preloads)).
+		Scopes(r.routineScope.IncludePreloads(preloads, &userId)).
 		Order(`"RoutineTable".scheduled_start_at ASC`).
 		Order(`"RoutineTable".scheduled_end_at ASC`).
 		Order(`"RoutineTable".id ASC`).
@@ -905,7 +905,7 @@ func (r *RoutineRepository) BulkCheckPermissionsAndGetManyByIds(
 	result = parsedOptions.DB.Model(&schemas.Routine{}).
 		Where(`"RoutineTable".id IN ?`, validIds).
 		Scopes(r.routineScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Scopes(r.routineScope.IncludePreloads(preloads)).
+		Scopes(r.routineScope.IncludePreloads(preloads, nil)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&routines)
 	if result.Error != nil {

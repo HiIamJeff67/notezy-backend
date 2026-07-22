@@ -2,6 +2,7 @@ package binders
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
@@ -36,10 +37,12 @@ func (b *RealtimeBinder) BindGetMyBlockPackRealtimeParticipants(
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		if err := ctx.ShouldBindUri(&reqDto.Param); err != nil {
+		blockPackId, err := uuid.Parse(ctx.Param("blockPackId"))
+		if err != nil {
 			exceptions.BlockPack.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
+		reqDto.Param.BlockPackId = blockPackId
 
 		controllerFunc(ctx, &reqDto)
 	}
