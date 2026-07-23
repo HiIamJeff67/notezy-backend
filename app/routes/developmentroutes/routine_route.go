@@ -7,6 +7,7 @@ import (
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
 )
 
@@ -35,7 +36,10 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("getMyRoutineById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.getMyRoutineById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				routineModule.Binder.BindGetMyRoutineById(
 					routineModule.Controller.GetMyRoutineById,
 				),
@@ -48,7 +52,10 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("getMyRoutinesByStationId"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.getMyRoutinesByStationId"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				routineModule.Binder.BindGetMyRoutinesByStationId(
 					routineModule.Controller.GetMyRoutinesByStationId,
 				),
@@ -61,7 +68,10 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("getAllMyRoutinesByTimeRange"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.getAllMyRoutinesByTimeRange"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				routineModule.Binder.BindGetAllMyRoutinesByTimeRange(
 					routineModule.Controller.GetAllMyRoutinesByTimeRange,
 				),
@@ -74,7 +84,10 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutineStatusCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.visualizeMyRoutineStatusCount"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				routineModule.Binder.BindVisualizeMyRoutineStatusCount(
 					routineModule.Controller.VisualizeMyRoutineStatusCount,
 				),
@@ -87,7 +100,10 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutinePeriodCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.visualizeMyRoutinePeriodCount"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				routineModule.Binder.BindVisualizeMyRoutinePeriodCount(
 					routineModule.Controller.VisualizeMyRoutinePeriodCount,
 				),
@@ -100,7 +116,10 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutineScheduledStartAtCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.visualizeMyRoutineScheduledStartAtCount"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				routineModule.Binder.BindVisualizeMyRoutineScheduledStartAtCount(
 					routineModule.Controller.VisualizeMyRoutineScheduledStartAtCount,
 				),
@@ -113,7 +132,10 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutineScheduledEndAtCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.visualizeMyRoutineScheduledEndAtCount"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				routineModule.Binder.BindVisualizeMyRoutineScheduledEndAtCount(
 					routineModule.Controller.VisualizeMyRoutineScheduledEndAtCount,
 				),
@@ -126,7 +148,10 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("createRoutineByStationId"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.createRoutineByStationId"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				routineModule.Binder.BindCreateRoutineByStationId(
 					routineModule.Controller.CreateRoutineByStationId,
 				),
@@ -139,7 +164,10 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("createRoutinesByStationIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.createRoutinesByStationIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				routineModule.Binder.BindCreateRoutinesByStationIds(
 					routineModule.Controller.CreateRoutinesByStationIds,
 				),
@@ -152,7 +180,10 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("updateMyRoutineById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.updateMyRoutineById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				routineModule.Binder.BindUpdateMyRoutineById(
 					routineModule.Controller.UpdateMyRoutineById,
 				),
@@ -165,7 +196,10 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("updateMyRoutinesByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.updateMyRoutinesByIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				routineModule.Binder.BindUpdateMyRoutinesByIds(
 					routineModule.Controller.UpdateMyRoutinesByIds,
 				),
@@ -178,7 +212,10 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("linkRoutineTagById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.linkRoutineTagById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				routineModule.Binder.BindLinkRoutineTagById(
 					routineModule.Controller.LinkRoutineTagById,
 				),
@@ -191,7 +228,10 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("linkRoutineTagsByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.linkRoutineTagsByIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				routineModule.Binder.BindLinkRoutineTagsByIds(
 					routineModule.Controller.LinkRoutineTagsByIds,
 				),
@@ -204,7 +244,10 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("linkRoutineItemById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.linkRoutineItemById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				routineModule.Binder.BindLinkRoutineItemById(
 					routineModule.Controller.LinkRoutineItemById,
 				),
@@ -217,7 +260,10 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("linkRoutineItemsByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.linkRoutineItemsByIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				routineModule.Binder.BindLinkRoutineItemsByIds(
 					routineModule.Controller.LinkRoutineItemsByIds,
 				),
@@ -230,7 +276,10 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("restoreMyRoutineById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.restoreMyRoutineById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				routineModule.Binder.BindRestoreMyRoutineById(
 					routineModule.Controller.RestoreMyRoutineById,
 				),
@@ -243,7 +292,10 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("restoreMyRoutinesByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.restoreMyRoutinesByIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				routineModule.Binder.BindRestoreMyRoutinesByIds(
 					routineModule.Controller.RestoreMyRoutinesByIds,
 				),
@@ -256,7 +308,10 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("deleteMyRoutineById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.deleteMyRoutineById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				routineModule.Binder.BindDeleteMyRoutineById(
 					routineModule.Controller.DeleteMyRoutineById,
 				),
@@ -269,7 +324,10 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("deleteMyRoutinesByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.deleteMyRoutinesByIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				routineModule.Binder.BindDeleteMyRoutinesByIds(
 					routineModule.Controller.DeleteMyRoutinesByIds,
 				),
@@ -282,7 +340,10 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("hardDeleteMyRoutineById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.hardDeleteMyRoutineById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				routineModule.Binder.BindHardDeleteMyRoutineById(
 					routineModule.Controller.HardDeleteMyRoutineById,
 				),
@@ -295,7 +356,10 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("hardDeleteMyRoutinesByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.routine.hardDeleteMyRoutinesByIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				routineModule.Binder.BindHardDeleteMyRoutinesByIds(
 					routineModule.Controller.HardDeleteMyRoutinesByIds,
 				),

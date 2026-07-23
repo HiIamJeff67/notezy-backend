@@ -7,6 +7,7 @@ import (
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
 )
 
@@ -35,7 +36,10 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("getMySubShelfById"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.getMySubShelfById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				subShelfModule.Binder.BindGetMySubShelfById(
 					subShelfModule.Controller.GetMySubShelfById,
 				),
@@ -48,7 +52,10 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("getMySubShelvesByPrevSubShelfId"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.getMySubShelvesByPrevSubShelfId"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				subShelfModule.Binder.BindGetMySubShelvesByPrevSubShelfId(
 					subShelfModule.Controller.GetMySubShelvesByPrevSubShelfId,
 				),
@@ -61,7 +68,10 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("getAllMySubShelvesByRootShelfId"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.getAllMySubShelvesByRootShelfId"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				subShelfModule.Binder.BindGetAllMySubShelvesByRootShelfId(
 					subShelfModule.Controller.GetAllMySubShelvesByRootShelfId,
 				),
@@ -74,7 +84,10 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("getMySubShelvesAndItemsByPrevSubShelfId"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.getMySubShelvesAndItemsByPrevSubShelfId"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				subShelfModule.Binder.BindGetMySubShelvesAndItemsByPrevSubShelfId(
 					subShelfModule.Controller.GetMySubShelvesAndItemsByPrevSubShelfId,
 				),
@@ -87,7 +100,10 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("createSubShelfByRootShelfId"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.createSubShelfByRootShelfId"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
 				subShelfModule.Binder.BindCreateSubShelfByRootShelfId(
 					subShelfModule.Controller.CreateSubShelfByRootShelfId,
 				),
@@ -100,7 +116,10 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("createSubShelvesByRootShelfIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.CreateSubShelvesByRootShelfIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
 				subShelfModule.Binder.BindCreateSubShelvesByRootShelfIds(
 					subShelfModule.Controller.CreateSubShelvesByRootShelfIds,
 				),
@@ -113,7 +132,10 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("updateMySubShelfById"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.updateMySubShelfById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
 				subShelfModule.Binder.BindUpdateMySubShelfById(
 					subShelfModule.Controller.UpdateMySubShelfById,
 				),
@@ -126,7 +148,10 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("updateMySubShelvesByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.UpdateMySubShelvesByIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
 				subShelfModule.Binder.BindUpdateMySubShelvesByIds(
 					subShelfModule.Controller.UpdateMySubShelvesByIds,
 				),
@@ -139,7 +164,10 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("moveMySubShelf"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.moveMySubShelf"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
 				subShelfModule.Binder.BindMoveMySubShelf(
 					subShelfModule.Controller.MoveMySubShelf,
 				),
@@ -152,7 +180,10 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("moveMySubShelvesByRootShelfId"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.moveMySubShelvesByRootShelfId"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
 				subShelfModule.Binder.BindMoveMySubShelvesByRootShelfId(
 					subShelfModule.Controller.MoveMySubShelvesByRootShelfId,
 				),
@@ -165,7 +196,10 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("moveMySubShelvesByRootShelfIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.moveMySubShelvesByRootShelfIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
 				subShelfModule.Binder.BindMoveMySubShelvesByRootShelfIds(
 					subShelfModule.Controller.MoveMySubShelvesByRootShelfIds,
 				),
@@ -178,7 +212,10 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("restoreMySubShelfById"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.restoreMySubShelfById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
 				subShelfModule.Binder.BindRestoreMySubShelfById(
 					subShelfModule.Controller.RestoreMySubShelfById,
 				),
@@ -191,7 +228,10 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("restoreMySubShelvesByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.restoreMySubShelvesByIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
 				subShelfModule.Binder.BindRestoreMySubShelvesByIds(
 					subShelfModule.Controller.RestoreMySubShelvesByIds,
 				),
@@ -204,7 +244,10 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("deleteMySubShelfById"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.deleteMySubShelfById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
 				subShelfModule.Binder.BindDeleteMySubShelfById(
 					subShelfModule.Controller.DeleteMySubShelfById,
 				),
@@ -217,7 +260,10 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("deleteMySubShelvesByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.subShelf.deleteMySubShelvesByIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
 				subShelfModule.Binder.BindDeleteMySubShelvesByIds(
 					subShelfModule.Controller.DeleteMySubShelvesByIds,
 				),

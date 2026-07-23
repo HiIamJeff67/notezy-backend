@@ -10,6 +10,7 @@ import (
 	pg "github.com/lib/pq"
 	"gorm.io/gorm"
 
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
@@ -120,11 +121,9 @@ func (s *MaterialService) GetMyMaterialAndItsParentById(
 
 	db := s.db.WithContext(ctx)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
 
 	onlyDeleted := types.Ternary_Neutral
@@ -184,11 +183,9 @@ func (s *MaterialService) GetMyMaterialsByParentSubShelfId(
 
 	db := s.db.WithContext(ctx)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
 
 	onlyDeleted := types.Ternary_Neutral
@@ -248,11 +245,9 @@ func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
 
 	db := s.db.WithContext(ctx)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
 
 	onlyDeleted := types.Ternary_Neutral
@@ -453,10 +448,9 @@ func (s *MaterialService) MoveMyMaterialById(
 
 	db := s.db.WithContext(ctx)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
 
 	result := db.Exec(materialsql.MoveMyMaterialByIdSQL,
@@ -489,10 +483,9 @@ func (s *MaterialService) MoveMyMaterialsByIds(
 
 	db := s.db.WithContext(ctx)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
 
 	result := db.Exec(materialsql.MoveMyMaterialsByIdsSQL,

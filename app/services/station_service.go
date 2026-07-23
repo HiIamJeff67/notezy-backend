@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
@@ -381,15 +382,54 @@ func (s *StationService) DeleteMyStationById(
 		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
-
-	exception := s.stationRepository.SoftDeleteOneById(
-		reqDto.Body.StationId,
-		reqDto.ContextFields.UserId,
-		options.WithDB(db),
-	)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
 	if exception != nil {
 		return nil, exception
+	}
+
+	tx := s.db.WithContext(ctx).Begin()
+
+	station, permission, exception := s.stationRepository.CheckPermissionAndGetOneById(
+		reqDto.Body.StationId,
+		reqDto.ContextFields.UserId,
+		nil,
+		allowedPermissions,
+		options.WithDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	if permission == enums.AccessControlPermission_Owner {
+		result := tx.
+			Model(&schemas.Station{}).
+			Where("id = ?", station.Id).
+			Update("deleted_at", time.Now())
+		if result.Error != nil {
+			tx.Rollback()
+			return nil, exceptions.Station.FailedToUpdate().WithOrigin(result.Error)
+		}
+		if result.RowsAffected == 0 {
+			tx.Rollback()
+			return nil, exceptions.Station.NoChanges()
+		}
+	} else {
+		exception = s.stationRepository.DeletePermissionByStationIdAndUserId(
+			station.Id,
+			reqDto.ContextFields.UserId,
+			options.WithDB(tx),
+		)
+		if exception != nil {
+			tx.Rollback()
+			return nil, exception
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, exceptions.Station.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.DeleteMyStationByIdResDto{
@@ -594,17 +634,15 @@ func (s *StationService) SearchPrivateStations(
 	startTime := time.Now()
 	db := s.db.WithContext(ctx)
 
-	allowedPermisssions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
 
 	query := db.Model(&schemas.Station{}).
 		Select(`"StationTable".*, uts.permission AS permission`).
 		Joins(`LEFT JOIN "UsersToStationsTable" uts ON "StationTable".id = uts.station_id`).
-		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermisssions).
+		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
 		Scopes(s.stationScope.FilterOnlyDeleted(types.Ternary_Negative))
 
 	if len(strings.ReplaceAll(gqlInput.Query, " ", "")) > 0 {

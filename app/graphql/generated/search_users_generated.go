@@ -318,6 +318,8 @@ func (ec *executionContext) fieldContext_SearchUserEdge_node(_ context.Context, 
 				return ec.fieldContext_PublicUser_status(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_PublicUser_createdAt(ctx, field)
+			case "info":
+				return ec.fieldContext_PublicUser_info(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PublicUser", field.Name)
 		},

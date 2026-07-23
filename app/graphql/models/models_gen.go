@@ -53,18 +53,18 @@ type PrivateItem struct {
 }
 
 type PrivateRootShelf struct {
-	ID              uuid.UUID                     `json:"id"`
-	Name            string                        `json:"name"`
-	Permission      enums.AccessControlPermission `json:"permission"`
-	SubShelfCount   int64                         `json:"subShelfCount"`
-	ItemCount       int64                         `json:"itemCount"`
-	LastAnalyzedAt  time.Time                     `json:"lastAnalyzedAt"`
-	DeletedAt       *time.Time                    `json:"deletedAt,omitempty"`
-	UpdatedAt       time.Time                     `json:"updatedAt"`
-	CreatedAt       time.Time                     `json:"createdAt"`
-	OwnerPublicID   uuid.UUID                     `json:"ownerPublicId"`
-	SharerPublicIds []uuid.UUID                   `json:"sharerPublicIds"`
-	ItemIds         []uuid.UUID                   `json:"itemIds"`
+	ID             uuid.UUID                     `json:"id"`
+	Name           string                        `json:"name"`
+	Permission     enums.AccessControlPermission `json:"permission"`
+	SubShelfCount  int64                         `json:"subShelfCount"`
+	ItemCount      int64                         `json:"itemCount"`
+	LastAnalyzedAt time.Time                     `json:"lastAnalyzedAt"`
+	DeletedAt      *time.Time                    `json:"deletedAt,omitempty"`
+	UpdatedAt      time.Time                     `json:"updatedAt"`
+	CreatedAt      time.Time                     `json:"createdAt"`
+	Owner          *PublicUser                   `json:"owner"`
+	Sharers        []*PublicUser                 `json:"sharers"`
+	ItemIds        []uuid.UUID                   `json:"itemIds"`
 }
 
 type PrivateRoutine struct {
@@ -217,6 +217,7 @@ type PublicUser struct {
 	Plan        enums.UserPlan   `json:"plan"`
 	Status      enums.UserStatus `json:"status"`
 	CreatedAt   time.Time        `json:"createdAt"`
+	Info        *PublicUserInfo  `json:"info,omitempty"`
 }
 
 type PublicUserInfo struct {

@@ -33,6 +33,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	PublicUser() PublicUserResolver
 	Query() QueryResolver
 }
 
@@ -66,18 +67,18 @@ type ComplexityRoot struct {
 	}
 
 	PrivateRootShelf struct {
-		CreatedAt       func(childComplexity int) int
-		DeletedAt       func(childComplexity int) int
-		ID              func(childComplexity int) int
-		ItemCount       func(childComplexity int) int
-		ItemIds         func(childComplexity int) int
-		LastAnalyzedAt  func(childComplexity int) int
-		Name            func(childComplexity int) int
-		OwnerPublicID   func(childComplexity int) int
-		Permission      func(childComplexity int) int
-		SharerPublicIds func(childComplexity int) int
-		SubShelfCount   func(childComplexity int) int
-		UpdatedAt       func(childComplexity int) int
+		CreatedAt      func(childComplexity int) int
+		DeletedAt      func(childComplexity int) int
+		ID             func(childComplexity int) int
+		ItemCount      func(childComplexity int) int
+		ItemIds        func(childComplexity int) int
+		LastAnalyzedAt func(childComplexity int) int
+		Name           func(childComplexity int) int
+		Owner          func(childComplexity int) int
+		Permission     func(childComplexity int) int
+		Sharers        func(childComplexity int) int
+		SubShelfCount  func(childComplexity int) int
+		UpdatedAt      func(childComplexity int) int
 	}
 
 	PrivateRoutine struct {
@@ -225,6 +226,7 @@ type ComplexityRoot struct {
 	PublicUser struct {
 		CreatedAt   func(childComplexity int) int
 		DisplayName func(childComplexity int) int
+		Info        func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Plan        func(childComplexity int) int
 		PublicID    func(childComplexity int) int
@@ -609,12 +611,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateRootShelf.Name(childComplexity), true
 
-	case "PrivateRootShelf.ownerPublicId":
-		if e.complexity.PrivateRootShelf.OwnerPublicID == nil {
+	case "PrivateRootShelf.owner":
+		if e.complexity.PrivateRootShelf.Owner == nil {
 			break
 		}
 
-		return e.complexity.PrivateRootShelf.OwnerPublicID(childComplexity), true
+		return e.complexity.PrivateRootShelf.Owner(childComplexity), true
 
 	case "PrivateRootShelf.permission":
 		if e.complexity.PrivateRootShelf.Permission == nil {
@@ -623,12 +625,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateRootShelf.Permission(childComplexity), true
 
-	case "PrivateRootShelf.sharerPublicIds":
-		if e.complexity.PrivateRootShelf.SharerPublicIds == nil {
+	case "PrivateRootShelf.sharers":
+		if e.complexity.PrivateRootShelf.Sharers == nil {
 			break
 		}
 
-		return e.complexity.PrivateRootShelf.SharerPublicIds(childComplexity), true
+		return e.complexity.PrivateRootShelf.Sharers(childComplexity), true
 
 	case "PrivateRootShelf.subShelfCount":
 		if e.complexity.PrivateRootShelf.SubShelfCount == nil {
@@ -1441,6 +1443,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PublicUser.DisplayName(childComplexity), true
+
+	case "PublicUser.info":
+		if e.complexity.PublicUser.Info == nil {
+			break
+		}
+
+		return e.complexity.PublicUser.Info(childComplexity), true
 
 	case "PublicUser.name":
 		if e.complexity.PublicUser.Name == nil {
@@ -2609,8 +2618,8 @@ interface SearchConnection {
   createdAt: Time!
 
   # relations
-  ownerPublicId: UUID!
-  sharerPublicIds: [UUID!]!
+  owner: PublicUser!
+  sharers: [PublicUser!]!
   itemIds: [UUID!]!
 }
 `, BuiltIn: false},
@@ -3294,6 +3303,9 @@ type PublicUser {
   status: UserStatus!
   createdAt: Time!
   # updatedAt: Time!
+
+  # relations
+  info: PublicUserInfo
 }
 `, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/user_info.graphql", Input: `type PublicUserInfo {

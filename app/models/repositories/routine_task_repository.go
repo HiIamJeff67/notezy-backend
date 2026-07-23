@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
@@ -170,6 +171,10 @@ func (r *RoutineTaskRepository) GetAllByUserId(
 		enums.AccessControlPermission_Write,
 		enums.AccessControlPermission_Read,
 	}
+	allowedPermissions = contexts.IntersectAllowedPermissions(
+		parsedOptions.DB.Statement.Context,
+		allowedPermissions,
+	)
 
 	var routineTasks []schemas.RoutineTask
 	result := parsedOptions.DB.
@@ -205,6 +210,10 @@ func (r *RoutineTaskRepository) GetAllByRoutineIds(
 		enums.AccessControlPermission_Write,
 		enums.AccessControlPermission_Read,
 	}
+	allowedPermissions = contexts.IntersectAllowedPermissions(
+		parsedOptions.DB.Statement.Context,
+		allowedPermissions,
+	)
 
 	var routineTasks []schemas.RoutineTask
 	result := parsedOptions.DB.

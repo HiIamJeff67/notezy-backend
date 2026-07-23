@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	adapters "github.com/HiIamJeff67/notezy-backend/app/adapters"
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
@@ -784,11 +785,9 @@ func (s *RoutineTaskService) SearchPrivateRoutineTasks(
 	startTime := time.Now()
 	db := s.db.WithContext(ctx)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
 
 	query := db.Model(&schemas.RoutineTask{}).

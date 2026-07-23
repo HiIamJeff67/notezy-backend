@@ -44,7 +44,7 @@
 
 使用者開啟一個 BlockPack editor 時，`BlockEditorProvider` 必須：
 
-1. 依使用者對 RootShelf 的有效權限請求 `read` 或 `write` channel ticket：
+1. 先由 `GET /api/development/v1/blockPack/getMyBlockPackAndItsParentById` 回應的 `data.permission` 取得使用者對 RootShelf 的 effective permission；`Read` 請求 `read` channel ticket，`Write`/`Admin`/`Owner` 請求 `write` channel ticket：
 
    ```text
    POST /api/development/v1/realtime/createMyBlockPackChannelTicket

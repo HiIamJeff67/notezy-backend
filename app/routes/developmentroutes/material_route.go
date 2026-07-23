@@ -8,6 +8,7 @@ import (
 	adapters "github.com/HiIamJeff67/notezy-backend/app/adapters"
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
 )
 
@@ -36,7 +37,10 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("getMyMaterialById"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.getMyMaterialById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				materialModule.Binder.BindGetMyMaterialById(
 					materialModule.Controller.GetMyMaterialById,
 				),
@@ -49,7 +53,10 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("getMyMaterialAndItsParentById"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.getMyMaterialAndItsParentById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				materialModule.Binder.BindGetMyMaterialAndItsParentById(
 					materialModule.Controller.GetMyMaterialAndItsParentById,
 				),
@@ -62,7 +69,10 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("getMyMaterialsByParentSubShelfId"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.getMyMaterialsByParentSubShelfId"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				materialModule.Binder.BindGetMyMaterialsByParentSubShelfId(
 					materialModule.Controller.GetMyMaterialsByParentSubShelfId,
 				),
@@ -75,7 +85,10 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("getAllMyMaterialsByRootShelfId"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.getAllMyMaterialsByRootShelfId"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				materialModule.Binder.BindGetAllMyMaterialsByRootShelfId(
 					materialModule.Controller.GetAllMyMaterialsByRootShelfId,
 				),
@@ -88,7 +101,10 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("createMyMaterial"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.createMyMaterial"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				materialModule.Binder.BindCreateMyMaterial(
 					materialModule.Controller.CreateMyMaterial,
 				),
@@ -101,7 +117,10 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("updateMyMaterialById"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.updateMyMaterialById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				materialModule.Binder.BindUpdateMyMaterialById(
 					materialModule.Controller.UpdateMyMaterialById,
 				),
@@ -115,7 +134,10 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyMeterMiddleware("server.requests.material.saveMyMaterialById"),
 					adapters.MultipartAdapter(),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				materialModule.Binder.BindSaveMyMaterialById(
 					materialModule.Controller.SaveMyMaterialById,
 				),
@@ -128,7 +150,10 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("moveMyMaterialById"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.moveMyMaterialById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				materialModule.Binder.BindMoveMyMaterialById(
 					materialModule.Controller.MoveMyMaterialById,
 				),
@@ -141,7 +166,10 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("moveMyMaterialsByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.moveMyMaterialsByIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				materialModule.Binder.BindMoveMyMaterialsByIds(
 					materialModule.Controller.MoveMyMaterialsByIds,
 				),
@@ -154,7 +182,10 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("restoreMyMaterialById"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.restoreMyMaterialById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				materialModule.Binder.BindRestoreMyMaterialById(
 					materialModule.Controller.RestoreMyMaterialById,
 				),
@@ -167,7 +198,10 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("restoreMyMaterialsByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.restoreMyMaterialsByIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				materialModule.Binder.BindRestoreMyMaterialsByIds(
 					materialModule.Controller.RestoreMyMaterialsByIds,
 				),
@@ -180,7 +214,10 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("deleteMyMaterialById"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.deleteMyMaterialById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				materialModule.Binder.BindDeleteMyMaterialById(
 					materialModule.Controller.DeleteMyMaterialById,
 				),
@@ -193,7 +230,10 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("deleteMyMaterialsByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.deleteMyMaterialsByIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				materialModule.Binder.BindDeleteMyMaterialsByIds(
 					materialModule.Controller.DeleteMyMaterialsByIds,
 				),

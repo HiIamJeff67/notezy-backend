@@ -774,7 +774,7 @@ func (g *Gateway) handleControlFrame(ctx context.Context, connector *Connector, 
 		}
 
 		leaseMember := fmt.Sprintf("%s:%d", connector.Id, connectorChannelId)
-		acquired, _, err := g.leaseStore.AcquireBlockPackSubscriber(
+		acquired, activeSubscribers, err := g.leaseStore.AcquireBlockPackSubscriber(
 			channel.Id,
 			leaseMember,
 			int(maximumSubscribers),
@@ -801,6 +801,23 @@ func (g *Gateway) handleControlFrame(ctx context.Context, connector *Connector, 
 		}
 		if !acquired {
 			connector.unsubscribe(connectorChannelId)
+
+			leaseMembers := make([]string, 0)
+			leases, err := g.leaseStore.GetBlockPackSubscriberLeases(channel.Id)
+			if err != nil {
+				logs.NotezyLogger.Error(ctx, err, "Failed to inspect realtime BlockPack subscriber leases")
+			} else {
+				for _, lease := range leases {
+					leaseMembers = append(leaseMembers, fmt.Sprintf("%s expiresAt=%s", lease.Member, lease.ExpiresAt.UTC().Format(time.RFC3339Nano)))
+				}
+			}
+			logs.NotezyLogger.Warn(ctx, "Rejected realtime BlockPack subscription because subscriber limit was reached",
+				attribute.String("realtime.block_pack.id", channel.Id.String()),
+				attribute.Int("realtime.room.maximum_subscribers", int(maximumSubscribers)),
+				attribute.Int64("realtime.room.active_subscribers", activeSubscribers),
+				attribute.StringSlice("realtime.room.subscriber_leases", leaseMembers),
+			)
+
 			metrics.NotezyMeter.Count(ctx, "realtime.channel.subscription.count", 1,
 				attribute.String("action", "subscribe"),
 				attribute.String("channelType", string(channel.Type)),

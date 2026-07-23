@@ -7,6 +7,7 @@ import (
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
 )
 
@@ -35,7 +36,10 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("getMyRootShelfById"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.getMyRootShelfById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				rootShelfModule.Binder.BindGetMyRootShelfById(
 					rootShelfModule.Controller.GetMyRootShelfById,
 				),
@@ -48,7 +52,10 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("searchRecentRootShelves"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.searchRecentRootShelves"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				rootShelfModule.Binder.BindSearchRecentRootShelves(
 					rootShelfModule.Controller.SearchRecentRootShelves,
 				),
@@ -61,7 +68,10 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("createRootShelf"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.createRootShelf"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				rootShelfModule.Binder.BindCreateRootShelf(
 					rootShelfModule.Controller.CreateRootShelf,
 				),
@@ -74,7 +84,10 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("createRootShelves"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.createRootShelves"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				rootShelfModule.Binder.BindCreateRootShelves(
 					rootShelfModule.Controller.CreateRootShelves,
 				),
@@ -87,7 +100,10 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("updateMyRootShelfById"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.updateMyRootShelfById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
 				rootShelfModule.Binder.BindUpdateMyRootShelfById(
 					rootShelfModule.Controller.UpdateMyRootShelfById,
 				),
@@ -100,7 +116,10 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("updateMyRootShelvesByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.updateMyRootShelvesByIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
 				rootShelfModule.Binder.BindUpdateMyRootShelvesByIds(
 					rootShelfModule.Controller.UpdateMyRootShelvesByIds,
 				),
@@ -113,7 +132,10 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("upsertMyRootShelfPermission"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.upsertMyRootShelfPermission"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
 				rootShelfModule.Binder.BindUpsertMyRootShelfPermission(
 					rootShelfModule.Controller.UpsertMyRootShelfPermission,
 				),
@@ -126,7 +148,10 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("upsertMyRootShelfPermissions"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.upsertMyRootShelfPermissions"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
 				rootShelfModule.Binder.BindUpsertMyRootShelfPermissions(
 					rootShelfModule.Controller.UpsertMyRootShelfPermissions,
 				),
@@ -139,7 +164,10 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("restoreMyRootShelfById"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.restoreMyRootShelfById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Owner),
+				),
 				rootShelfModule.Binder.BindRestoreMyRootShelfById(
 					rootShelfModule.Controller.RestoreMyRootShelfById,
 				),
@@ -152,7 +180,10 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("restoreMyRootShelvesByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.restoreMyRootShelvesByIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Owner),
+				),
 				rootShelfModule.Binder.BindRestoreMyRootShelvesByIds(
 					rootShelfModule.Controller.RestoreMyRootShelvesByIds,
 				),
@@ -165,7 +196,10 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("deleteMyRootShelfById"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.deleteMyRootShelfById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				rootShelfModule.Binder.BindDeleteMyRootShelfById(
 					rootShelfModule.Controller.DeleteMyRootShelfById,
 				),
@@ -178,7 +212,10 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("deleteMyRootShelvesByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.deleteMyRootShelvesByIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Owner),
+				),
 				rootShelfModule.Binder.BindDeleteMyRootShelvesByIds(
 					rootShelfModule.Controller.DeleteMyRootShelvesByIds,
 				),
@@ -191,7 +228,10 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("deleteMyRootShelfPermission"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.deleteMyRootShelfPermission"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
 				rootShelfModule.Binder.BindDeleteMyRootShelfPermission(
 					rootShelfModule.Controller.DeleteMyRootShelfPermission,
 				),
@@ -204,7 +244,10 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("deleteMyRootShelfPermissions"),
 					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.deleteMyRootShelfPermissions"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
 				rootShelfModule.Binder.BindDeleteMyRootShelfPermissions(
 					rootShelfModule.Controller.DeleteMyRootShelfPermissions,
 				),

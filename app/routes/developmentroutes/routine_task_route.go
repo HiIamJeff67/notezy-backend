@@ -7,6 +7,7 @@ import (
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
 )
 
@@ -35,7 +36,10 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("getMyRoutineTaskById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTask.getMyRoutineTaskById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				routineTaskModule.Binder.BindGetMyRoutineTaskById(
 					routineTaskModule.Controller.GetMyRoutineTaskById,
 				),
@@ -48,7 +52,10 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("getAllMyRoutineTasksByRoutineIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTask.getAllMyRoutineTasksByRoutineIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				routineTaskModule.Binder.BindGetAllMyRoutineTasksByRoutineIds(
 					routineTaskModule.Controller.GetAllMyRoutineTasksByRoutineIds,
 				),
@@ -61,7 +68,10 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("getAllMyRoutineTasks"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTask.getAllMyRoutineTasks"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				routineTaskModule.Binder.BindGetAllMyRoutineTasks(
 					routineTaskModule.Controller.GetAllMyRoutineTasks,
 				),
@@ -74,7 +84,10 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskStatusCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTask.visualizeMyRoutineTaskStatusCount"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				routineTaskModule.Binder.BindVisualizeMyRoutineTaskStatusCount(
 					routineTaskModule.Controller.VisualizeMyRoutineTaskStatusCount,
 				),
@@ -87,7 +100,10 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskPurposeCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTask.visualizeMyRoutineTaskPurposeCount"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				routineTaskModule.Binder.BindVisualizeMyRoutineTaskPurposeCount(
 					routineTaskModule.Controller.VisualizeMyRoutineTaskPurposeCount,
 				),
@@ -100,7 +116,10 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskScheduledAtCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTask.visualizeMyRoutineTaskScheduledAtCount"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				routineTaskModule.Binder.BindVisualizeMyRoutineTaskScheduledAtCount(
 					routineTaskModule.Controller.VisualizeMyRoutineTaskScheduledAtCount,
 				),
@@ -113,7 +132,10 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskActualStartedAtCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTask.visualizeMyRoutineTaskActualStartedAtCount"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				routineTaskModule.Binder.BindVisualizeMyRoutineTaskActualStartedAtCount(
 					routineTaskModule.Controller.VisualizeMyRoutineTaskActualStartedAtCount,
 				),
@@ -126,7 +148,10 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskActualEndedAtCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTask.visualizeMyRoutineTaskActualEndedAtCount"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				routineTaskModule.Binder.BindVisualizeMyRoutineTaskActualEndedAtCount(
 					routineTaskModule.Controller.VisualizeMyRoutineTaskActualEndedAtCount,
 				),
@@ -139,7 +164,10 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("createRoutineTaskByRoutineId"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTask.createRoutineTaskByRoutineId"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				routineTaskModule.Binder.BindCreateRoutineTaskByRoutineId(
 					routineTaskModule.Controller.CreateRoutineTaskByRoutineId,
 				),
@@ -152,7 +180,10 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("updateMyRoutineTaskById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTask.updateMyRoutineTaskById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				routineTaskModule.Binder.BindUpdateMyRoutineTaskById(
 					routineTaskModule.Controller.UpdateMyRoutineTaskById,
 				),
@@ -165,7 +196,10 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("pauseMyRoutineTaskById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTask.pauseMyRoutineTaskById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				routineTaskModule.Binder.BindPauseMyRoutineTaskById(
 					routineTaskModule.Controller.PauseMyRoutineTaskById,
 				),
@@ -178,7 +212,10 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("resumeMyRoutineTaskById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTask.resumeMyRoutineTaskById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				routineTaskModule.Binder.BindResumeMyRoutineTaskById(
 					routineTaskModule.Controller.ResumeMyRoutineTaskById,
 				),
@@ -191,7 +228,10 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("hardDeleteMyRoutineTaskById"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTask.hardDeleteMyRoutineTaskById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				routineTaskModule.Binder.BindHardDeleteMyRoutineTaskById(
 					routineTaskModule.Controller.HardDeleteMyRoutineTaskById,
 				),
@@ -204,7 +244,10 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("hardDeleteMyRoutineTasksByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTask.hardDeleteMyRoutineTasksByIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
+				),
 				routineTaskModule.Binder.BindHardDeleteMyRoutineTasksByIds(
 					routineTaskModule.Controller.HardDeleteMyRoutineTasksByIds,
 				),

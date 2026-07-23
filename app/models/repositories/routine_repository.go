@@ -10,6 +10,7 @@ import (
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm/clause"
 
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
@@ -192,6 +193,10 @@ func (r *RoutineRepository) GetAllByTimeRange(
 		enums.AccessControlPermission_Write,
 		enums.AccessControlPermission_Read,
 	}
+	allowedPermissions = contexts.IntersectAllowedPermissions(
+		parsedOptions.DB.Statement.Context,
+		allowedPermissions,
+	)
 
 	var routines []schemas.Routine
 	timeRangeCondition := `

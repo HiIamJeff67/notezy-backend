@@ -123,6 +123,11 @@ autobind:
 # your liking
 
 models:
+  PublicUser:
+    fields:
+      info:
+        resolver: true
+
   Int:
     model: "github.com/99designs/gqlgen/graphql.Int32"
   Int32:

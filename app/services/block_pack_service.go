@@ -7,12 +7,12 @@ import (
 	pg "github.com/lib/pq"
 	"gorm.io/gorm"
 
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	blockpacksql "github.com/HiIamJeff67/notezy-backend/app/models/sqls/block_pack"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
@@ -68,6 +68,11 @@ func (s *BlockPackService) GetMyBlockPackById(
 
 	db := s.db.WithContext(ctx)
 
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
 	onlyDeleted := types.Ternary_Neutral
 	if reqDto.Param.IsDeleted != nil {
 		if *reqDto.Param.IsDeleted {
@@ -81,12 +86,7 @@ func (s *BlockPackService) GetMyBlockPackById(
 		reqDto.Param.BlockPackId,
 		reqDto.ContextFields.UserId,
 		[]schemas.BlockPackRelation{schemas.BlockPackRelation_YjsDocument},
-		[]enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-			enums.AccessControlPermission_Write,
-			enums.AccessControlPermission_Read,
-		},
+		allowedPermissions,
 		options.WithDB(db),
 		options.WithOnlyDeleted(onlyDeleted),
 	)
@@ -124,11 +124,9 @@ func (s *BlockPackService) GetMyBlockPackAndItsParentById(
 
 	db := s.db.WithContext(ctx)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
 
 	onlyDeleted := types.Ternary_Neutral
@@ -157,6 +155,7 @@ func (s *BlockPackService) GetMyBlockPackAndItsParentById(
 			&resDto.UpdatedAt,
 			&resDto.CreatedAt,
 			&resDto.RootShelfId,
+			&resDto.Permission,
 			&resDto.ParentSubShelfId,
 			&resDto.ParentSubShelfName,
 			&resDto.ParentSubShelfPrevSubShelfId,
@@ -180,6 +179,11 @@ func (s *BlockPackService) GetMyBlockPacksByParentSubShelfId(
 
 	db := s.db.WithContext(ctx)
 
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
 	onlyDeleted := types.Ternary_Neutral
 	if reqDto.Param.AreDeleted != nil {
 		if *reqDto.Param.AreDeleted {
@@ -187,13 +191,6 @@ func (s *BlockPackService) GetMyBlockPacksByParentSubShelfId(
 		} else {
 			onlyDeleted = types.Ternary_Negative
 		}
-	}
-
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
 	}
 
 	resDto := dtos.GetMyBlockPacksByParentSubShelfIdResDto{}
@@ -231,6 +228,12 @@ func (s *BlockPackService) GetAllMyBlockPacksByRootShelfId(
 	}
 
 	db := s.db.WithContext(ctx)
+
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
 	onlyDeleted := types.Ternary_Neutral
 	if reqDto.Param.AreDeleted != nil {
 		if *reqDto.Param.AreDeleted {
@@ -238,13 +241,6 @@ func (s *BlockPackService) GetAllMyBlockPacksByRootShelfId(
 		} else {
 			onlyDeleted = types.Ternary_Negative
 		}
-	}
-
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
 	}
 
 	resDto := dtos.GetAllMyBlockPacksByRootShelfIdResDto{}
@@ -295,20 +291,17 @@ func (s *BlockPackService) CreateBlockPack(
 	)
 	if exception != nil {
 		tx.Rollback()
-
 		return nil, exception
 	}
 
 	document := schemas.BlockPackYjsDocument{BlockPackId: *newBlockPackId}
 	if err := tx.Create(&document).Error; err != nil {
 		tx.Rollback()
-
 		return nil, exceptions.BlockPack.FailedToCreate().WithOrigin(err)
 	}
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-
 		return nil, exceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
 	}
 
@@ -345,7 +338,6 @@ func (s *BlockPackService) CreateBlockPacks(
 	)
 	if exception != nil {
 		tx.Rollback()
-
 		return nil, exception
 	}
 

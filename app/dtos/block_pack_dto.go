@@ -286,26 +286,27 @@ type GetMyBlockPackByIdResDto struct {
 }
 
 type GetMyBlockPackAndItsParentByIdResDto struct {
-	Id                           uuid.UUID            `json:"id" gorm:"column:id;"`
-	Name                         string               `json:"name" gorm:"column:name;"`
-	Icon                         *enums.SupportedIcon `json:"icon" gorm:"column:icon;"`
-	HeaderBackgroundURL          *string              `json:"headerBackgroundURL" gorm:"column:header_background_url;"`
-	BlockCount                   int64                `json:"blockCount" gorm:"column:block_count;"`
-	LastUpdateSequence           int64                `json:"lastUpdateSequence" gorm:"column:last_update_sequence;"`
-	CompactedUntilSequence       int64                `json:"compactedUntilSequence" gorm:"column:compacted_until_sequence;"`
-	ProjectedUntilSequence       int64                `json:"projectedUntilSequence" gorm:"column:projected_until_sequence;"`
-	IsProjectionCurrent          bool                 `json:"isProjectionCurrent" gorm:"column:is_projection_current;"`
-	DeletedAt                    *time.Time           `json:"deletedAt" gorm:"column:deleted_at;"`
-	UpdatedAt                    time.Time            `json:"updatedAt" gorm:"column:updated_at;"`
-	CreatedAt                    time.Time            `json:"createdAt" gorm:"column:created_at;"`
-	RootShelfId                  uuid.UUID            `json:"rootShelfId" gorm:"column:root_shelf_id;"`
-	ParentSubShelfId             uuid.UUID            `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id;"`
-	ParentSubShelfPrevSubShelfId *uuid.UUID           `json:"parentSubShelfPrevSubShelfId" gorm:"column:parent_sub_shelf_prev_sub_shelf_id;"`
-	ParentSubShelfName           string               `json:"parentSubShelfName" gorm:"column:parent_sub_shelf_name;"`
-	ParentSubShelfPath           types.UUIDArray      `json:"parentSubShelfPath" gorm:"column:parent_sub_shelf_path;"`
-	ParentSubShelfDeletedAt      *time.Time           `json:"parentSubShelfDeletedAt" gorm:"column:parent_sub_shelf_deleted_at;"`
-	ParentSubShelfUpdatedAt      time.Time            `json:"parentSubShelfUpdatedAt" gorm:"column:parent_sub_shelf_updated_at;"`
-	ParentSubShelfCreatedAt      time.Time            `json:"parentSubShelfCreatedAt" gorm:"column:parent_sub_shelf_created_at;"`
+	Id                           uuid.UUID                     `json:"id" gorm:"column:id;"`
+	Name                         string                        `json:"name" gorm:"column:name;"`
+	Icon                         *enums.SupportedIcon          `json:"icon" gorm:"column:icon;"`
+	HeaderBackgroundURL          *string                       `json:"headerBackgroundURL" gorm:"column:header_background_url;"`
+	BlockCount                   int64                         `json:"blockCount" gorm:"column:block_count;"`
+	LastUpdateSequence           int64                         `json:"lastUpdateSequence" gorm:"column:last_update_sequence;"`
+	CompactedUntilSequence       int64                         `json:"compactedUntilSequence" gorm:"column:compacted_until_sequence;"`
+	ProjectedUntilSequence       int64                         `json:"projectedUntilSequence" gorm:"column:projected_until_sequence;"`
+	IsProjectionCurrent          bool                          `json:"isProjectionCurrent" gorm:"column:is_projection_current;"`
+	DeletedAt                    *time.Time                    `json:"deletedAt" gorm:"column:deleted_at;"`
+	UpdatedAt                    time.Time                     `json:"updatedAt" gorm:"column:updated_at;"`
+	CreatedAt                    time.Time                     `json:"createdAt" gorm:"column:created_at;"`
+	RootShelfId                  uuid.UUID                     `json:"rootShelfId" gorm:"column:root_shelf_id;"`
+	Permission                   enums.AccessControlPermission `json:"permission" gorm:"column:permission;"`
+	ParentSubShelfId             uuid.UUID                     `json:"parentSubShelfId" gorm:"column:parent_sub_shelf_id;"`
+	ParentSubShelfPrevSubShelfId *uuid.UUID                    `json:"parentSubShelfPrevSubShelfId" gorm:"column:parent_sub_shelf_prev_sub_shelf_id;"`
+	ParentSubShelfName           string                        `json:"parentSubShelfName" gorm:"column:parent_sub_shelf_name;"`
+	ParentSubShelfPath           types.UUIDArray               `json:"parentSubShelfPath" gorm:"column:parent_sub_shelf_path;"`
+	ParentSubShelfDeletedAt      *time.Time                    `json:"parentSubShelfDeletedAt" gorm:"column:parent_sub_shelf_deleted_at;"`
+	ParentSubShelfUpdatedAt      time.Time                     `json:"parentSubShelfUpdatedAt" gorm:"column:parent_sub_shelf_updated_at;"`
+	ParentSubShelfCreatedAt      time.Time                     `json:"parentSubShelfCreatedAt" gorm:"column:parent_sub_shelf_created_at;"`
 }
 
 type GetMyBlockPacksByParentSubShelfIdResDto = []GetMyBlockPackByIdResDto

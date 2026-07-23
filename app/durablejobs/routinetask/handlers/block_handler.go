@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	adapters "github.com/HiIamJeff67/notezy-backend/app/adapters"
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	matchers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/matchers"
 	resolvers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/resolvers"
@@ -109,7 +110,8 @@ func (h BlockHandler) HandleAppendBlock(ctx context.Context, tasks []schemas.Rou
 			enums.AccessControlPermission_Write,
 		}
 
-		tx := h.db.WithContext(ctx).Begin()
+		jobCtx := contexts.WithAllowedPermissions(ctx, allowedPermissions)
+		tx := h.db.WithContext(jobCtx).Begin()
 		if !h.blockPackRepository.HasPermission(payload.BlockPackId, ownerId, allowedPermissions, options.WithTransactionDB(tx), options.WithOnlyDeleted(types.Ternary_Negative)) {
 			tx.Rollback()
 			continue

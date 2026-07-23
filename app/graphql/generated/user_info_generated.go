@@ -392,4 +392,11 @@ func (ec *executionContext) _PublicUserInfo(ctx context.Context, sel ast.Selecti
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) marshalOPublicUserInfo2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUserInfo(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.PublicUserInfo) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._PublicUserInfo(ctx, sel, v)
+}
+
 // endregion ***************************** type.gotpl *****************************

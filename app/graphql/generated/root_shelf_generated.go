@@ -5,6 +5,7 @@ package generated
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"sync/atomic"
 	"time"
@@ -423,8 +424,8 @@ func (ec *executionContext) fieldContext_PrivateRootShelf_createdAt(_ context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateRootShelf_ownerPublicId(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRootShelf) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateRootShelf_ownerPublicId(ctx, field)
+func (ec *executionContext) _PrivateRootShelf_owner(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRootShelf) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateRootShelf_owner(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -437,7 +438,7 @@ func (ec *executionContext) _PrivateRootShelf_ownerPublicId(ctx context.Context,
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.OwnerPublicID, nil
+		return obj.Owner, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -449,26 +450,44 @@ func (ec *executionContext) _PrivateRootShelf_ownerPublicId(ctx context.Context,
 		}
 		return graphql.Null
 	}
-	res := resTmp.(uuid.UUID)
+	res := resTmp.(*gqlmodels.PublicUser)
 	fc.Result = res
-	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
+	return ec.marshalNPublicUser2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUser(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PrivateRootShelf_ownerPublicId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PrivateRootShelf_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PrivateRootShelf",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type UUID does not have child fields")
+			switch field.Name {
+			case "publicId":
+				return ec.fieldContext_PublicUser_publicId(ctx, field)
+			case "name":
+				return ec.fieldContext_PublicUser_name(ctx, field)
+			case "displayName":
+				return ec.fieldContext_PublicUser_displayName(ctx, field)
+			case "role":
+				return ec.fieldContext_PublicUser_role(ctx, field)
+			case "plan":
+				return ec.fieldContext_PublicUser_plan(ctx, field)
+			case "status":
+				return ec.fieldContext_PublicUser_status(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PublicUser_createdAt(ctx, field)
+			case "info":
+				return ec.fieldContext_PublicUser_info(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PublicUser", field.Name)
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _PrivateRootShelf_sharerPublicIds(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRootShelf) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PrivateRootShelf_sharerPublicIds(ctx, field)
+func (ec *executionContext) _PrivateRootShelf_sharers(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.PrivateRootShelf) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PrivateRootShelf_sharers(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -481,7 +500,7 @@ func (ec *executionContext) _PrivateRootShelf_sharerPublicIds(ctx context.Contex
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.SharerPublicIds, nil
+		return obj.Sharers, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -493,19 +512,37 @@ func (ec *executionContext) _PrivateRootShelf_sharerPublicIds(ctx context.Contex
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]uuid.UUID)
+	res := resTmp.([]*gqlmodels.PublicUser)
 	fc.Result = res
-	return ec.marshalNUUID2ᚕgithubᚗcomᚋgoogleᚋuuidᚐUUIDᚄ(ctx, field.Selections, res)
+	return ec.marshalNPublicUser2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPublicUserᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PrivateRootShelf_sharerPublicIds(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PrivateRootShelf_sharers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PrivateRootShelf",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type UUID does not have child fields")
+			switch field.Name {
+			case "publicId":
+				return ec.fieldContext_PublicUser_publicId(ctx, field)
+			case "name":
+				return ec.fieldContext_PublicUser_name(ctx, field)
+			case "displayName":
+				return ec.fieldContext_PublicUser_displayName(ctx, field)
+			case "role":
+				return ec.fieldContext_PublicUser_role(ctx, field)
+			case "plan":
+				return ec.fieldContext_PublicUser_plan(ctx, field)
+			case "status":
+				return ec.fieldContext_PublicUser_status(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PublicUser_createdAt(ctx, field)
+			case "info":
+				return ec.fieldContext_PublicUser_info(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PublicUser", field.Name)
 		},
 	}
 	return fc, nil
@@ -620,13 +657,13 @@ func (ec *executionContext) _PrivateRootShelf(ctx context.Context, sel ast.Selec
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "ownerPublicId":
-			out.Values[i] = ec._PrivateRootShelf_ownerPublicId(ctx, field, obj)
+		case "owner":
+			out.Values[i] = ec._PrivateRootShelf_owner(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "sharerPublicIds":
-			out.Values[i] = ec._PrivateRootShelf_sharerPublicIds(ctx, field, obj)
+		case "sharers":
+			out.Values[i] = ec._PrivateRootShelf_sharers(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

@@ -7,6 +7,7 @@ import (
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
 	realtime "github.com/HiIamJeff67/notezy-backend/app/realtime"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
@@ -47,7 +48,10 @@ func configureDevelopmentRealtimeRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("getMyBlockPackRealtimeParticipants"),
 					middlewares.ApplyMeterMiddleware("server.requests.realtime.getMyBlockPackRealtimeParticipants"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				realtimeModule.Binder.BindGetMyBlockPackRealtimeParticipants(
 					realtimeModule.Controller.GetMyBlockPackRealtimeParticipants,
 				),
@@ -60,7 +64,10 @@ func configureDevelopmentRealtimeRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("createMyRealtimeConnectionTicket"),
 					middlewares.ApplyMeterMiddleware("server.requests.realtime.createMyRealtimeConnectionTicket"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				realtimeModule.Binder.BindCreateMyRealtimeConnectionTicket(
 					realtimeModule.Controller.CreateMyRealtimeConnectionTicket,
 				),
@@ -73,7 +80,10 @@ func configureDevelopmentRealtimeRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("createMyBlockPackChannelTicket"),
 					middlewares.ApplyMeterMiddleware("server.requests.realtime.createMyBlockPackChannelTicket"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				realtimeModule.Binder.BindCreateMyBlockPackChannelTicket(
 					realtimeModule.Controller.CreateMyBlockPackChannelTicket,
 				),

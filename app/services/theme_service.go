@@ -43,7 +43,7 @@ func (s *ThemeService) GetPublicThemeByPublicId(
 	db := s.db.WithContext(ctx)
 
 	theme := schemas.Theme{}
-	result := db.WithContext(ctx).
+	result := db.
 		Model(&schemas.Theme{}).
 		Where("public_id = ?", publicId).
 		First(&theme)

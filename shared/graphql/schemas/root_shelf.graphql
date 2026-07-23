@@ -10,7 +10,7 @@ type PrivateRootShelf {
   createdAt: Time!
 
   # relations
-  ownerPublicId: UUID!
-  sharerPublicIds: [UUID!]!
+  owner: PublicUser!
+  sharers: [PublicUser!]!
   itemIds: [UUID!]!
 }

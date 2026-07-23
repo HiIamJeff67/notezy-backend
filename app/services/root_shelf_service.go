@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
@@ -279,16 +280,18 @@ func (s *RootShelfService) UpsertMyRootShelfPermission(
 		return nil, exceptions.Shelf.NoPermission("transfer RootShelf ownership through an access control")
 	}
 
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
 	tx := s.db.WithContext(ctx).Begin()
 
 	rootShelf, actorPermission, exception := s.rootShelfRepository.CheckPermissionAndGetOneById(
 		reqDto.Param.RootShelfId,
 		reqDto.ContextFields.UserId,
 		nil,
-		[]enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-		},
+		allowedPermissions,
 		options.WithDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithLockingStrength(options.LockingStrengthUpdate),
@@ -373,16 +376,18 @@ func (s *RootShelfService) UpsertMyRootShelfPermissions(
 		permissionByPublicId[input.UserPublicId] = input.Permission
 	}
 
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
 	tx := s.db.WithContext(ctx).Begin()
 
 	rootShelf, actorPermission, exception := s.rootShelfRepository.CheckPermissionAndGetOneById(
 		reqDto.Param.RootShelfId,
 		reqDto.ContextFields.UserId,
 		nil,
-		[]enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-		},
+		allowedPermissions,
 		options.WithDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithLockingStrength(options.LockingStrengthUpdate),
@@ -560,15 +565,54 @@ func (s *RootShelfService) DeleteMyRootShelfById(
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
-
-	exception := s.rootShelfRepository.SoftDeleteOneById(
-		reqDto.Body.RootShelfId,
-		reqDto.ContextFields.UserId,
-		options.WithDB(db),
-	)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
 	if exception != nil {
 		return nil, exception
+	}
+
+	tx := s.db.WithContext(ctx).Begin()
+
+	rootShelf, permission, exception := s.rootShelfRepository.CheckPermissionAndGetOneById(
+		reqDto.Body.RootShelfId,
+		reqDto.ContextFields.UserId,
+		nil,
+		allowedPermissions,
+		options.WithDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	if permission == enums.AccessControlPermission_Owner {
+		result := tx.
+			Model(&schemas.RootShelf{}).
+			Where("id = ?", rootShelf.Id).
+			Update("deleted_at", time.Now())
+		if result.Error != nil {
+			tx.Rollback()
+			return nil, exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)
+		}
+		if result.RowsAffected == 0 {
+			tx.Rollback()
+			return nil, exceptions.Shelf.NoChanges()
+		}
+	} else {
+		exception = s.rootShelfRepository.DeletePermissionByRootShelfIdAndUserId(
+			rootShelf.Id,
+			reqDto.ContextFields.UserId,
+			options.WithDB(tx),
+		)
+		if exception != nil {
+			tx.Rollback()
+			return nil, exception
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &dtos.DeleteMyRootShelfByIdResDto{
@@ -606,16 +650,18 @@ func (s *RootShelfService) DeleteMyRootShelfPermission(
 		return exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return exception
+	}
+
 	tx := s.db.WithContext(ctx).Begin()
 
 	rootShelf, actorPermission, exception := s.rootShelfRepository.CheckPermissionAndGetOneById(
 		reqDto.Param.RootShelfId,
 		reqDto.ContextFields.UserId,
 		nil,
-		[]enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-		},
+		allowedPermissions,
 		options.WithDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithLockingStrength(options.LockingStrengthUpdate),
@@ -688,16 +734,18 @@ func (s *RootShelfService) DeleteMyRootShelfPermissions(
 		userPublicIdSet[userPublicId] = struct{}{}
 	}
 
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return exception
+	}
+
 	tx := s.db.WithContext(ctx).Begin()
 
 	rootShelf, actorPermission, exception := s.rootShelfRepository.CheckPermissionAndGetOneById(
 		reqDto.Param.RootShelfId,
 		reqDto.ContextFields.UserId,
 		nil,
-		[]enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-		},
+		allowedPermissions,
 		options.WithDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithLockingStrength(options.LockingStrengthUpdate),
@@ -789,11 +837,9 @@ func (s *RootShelfService) SearchPrivateRootShelves(
 	startTime := time.Now()
 	db := s.db.WithContext(ctx)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
 
 	query := db.Model(&schemas.RootShelf{}).
@@ -854,11 +900,42 @@ func (s *RootShelfService) SearchPrivateRootShelves(
 	if err := query.Scopes(s.rootShelfScope.IncludePreloads(
 		[]schemas.RootShelfRelation{
 			schemas.RootShelfRelation_UsersToShelves,
-			schemas.RootShelfRelation_UsersToShelves_User,
 			schemas.RootShelfRelation_Items,
 		},
 	)).Find(&shelves).Error; err != nil {
 		return nil, exceptions.Shelf.NotFound().WithOrigin(err)
+	}
+
+	userIds := make([]uuid.UUID, 0)
+	userIdsSeen := make(map[uuid.UUID]struct{})
+	for _, shelf := range shelves {
+		if _, exists := userIdsSeen[shelf.OwnerId]; !exists {
+			userIds = append(userIds, shelf.OwnerId)
+			userIdsSeen[shelf.OwnerId] = struct{}{}
+		}
+
+		for _, usersToShelf := range shelf.UsersToShelves {
+			if _, exists := userIdsSeen[usersToShelf.UserId]; exists {
+				continue
+			}
+
+			userIds = append(userIds, usersToShelf.UserId)
+			userIdsSeen[usersToShelf.UserId] = struct{}{}
+		}
+	}
+
+	users := make([]schemas.User, 0, len(userIds))
+	if len(userIds) > 0 {
+		if err := db.
+			Where("id IN ?", userIds).
+			Find(&users).Error; err != nil {
+			return nil, exceptions.User.NotFound().WithOrigin(err)
+		}
+	}
+
+	publicUsersById := make(map[uuid.UUID]*gqlmodels.PublicUser, len(users))
+	for _, user := range users {
+		publicUsersById[user.Id] = user.ToPublicUser()
 	}
 
 	hasNextPage := len(shelves) > limit
@@ -878,9 +955,29 @@ func (s *RootShelfService) SearchPrivateRootShelves(
 			return nil, exceptions.Search.FailedToUnmarshalSearchCursor()
 		}
 
+		privateRootShelf := shelf.RootShelf.ToPrivateRootShelf(shelf.Permission)
+		owner, exists := publicUsersById[shelf.OwnerId]
+		if !exists {
+			return nil, exceptions.User.NotFound()
+		}
+
+		privateRootShelf.Owner = owner
+		for _, usersToShelf := range shelf.UsersToShelves {
+			if usersToShelf.UserId == shelf.OwnerId {
+				continue
+			}
+
+			sharer, exists := publicUsersById[usersToShelf.UserId]
+			if !exists {
+				return nil, exceptions.User.NotFound()
+			}
+
+			privateRootShelf.Sharers = append(privateRootShelf.Sharers, sharer)
+		}
+
 		searchEdges[index] = &gqlmodels.SearchRootShelfEdge{
 			EncodedSearchCursor: *encodedSearchCursor,
-			Node:                shelf.RootShelf.ToPrivateRootShelf(shelf.Permission),
+			Node:                privateRootShelf,
 		}
 	}
 

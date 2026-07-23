@@ -12,6 +12,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	adapters "github.com/HiIamJeff67/notezy-backend/app/adapters"
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
@@ -630,17 +631,17 @@ func (s *BlockService) SearchPrivateBlocks(
 
 	db := s.db.WithContext(ctx)
 
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
 	query := db.Model(&schemas.Block{}).
 		Select(`"BlockTable".*`).
 		Joins(`INNER JOIN "BlockPackTable" ON "BlockPackTable".id = "BlockTable".block_pack_id`).
 		Joins(`INNER JOIN "SubShelfTable" ON "SubShelfTable".id = "BlockPackTable".parent_sub_shelf_id`).
 		Joins(`INNER JOIN "UsersToShelvesTable" uts ON uts.root_shelf_id = "SubShelfTable".root_shelf_id`).
-		Where("uts.user_id = ? AND uts.permission IN ?", userId, []enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-			enums.AccessControlPermission_Write,
-			enums.AccessControlPermission_Read,
-		}).
+		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
 		Scopes(s.blockPackScope.FilterOnlyDeleted(types.Ternary_Negative)).
 		Scopes(s.subShelfScope.FilterOnlyDeleted(types.Ternary_Negative)).
 		Scopes(s.blockScope.IncludePreloads([]schemas.BlockRelation{schemas.BlockRelation_Children}))

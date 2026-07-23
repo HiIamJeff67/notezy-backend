@@ -18,4 +18,7 @@ type PublicUser {
   status: UserStatus!
   createdAt: Time!
   # updatedAt: Time!
+
+  # relations
+  info: PublicUserInfo
 }

@@ -26,7 +26,7 @@ The BlockPack response contains `channelTicket`, `expiresAt`, `channelType`, `ch
 
 ## Realtime Participants
 
-Owners and Admins can inspect the currently active connections in one BlockPack room:
+Read, Write, Admin, and Owner users can inspect the currently active connections in one BlockPack room:
 
 ```text
 GET /api/development/v1/realtime/blockPacks/:blockPackId/participants

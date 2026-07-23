@@ -3,6 +3,7 @@ package repositories
 import (
 	"github.com/google/uuid"
 
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
@@ -149,6 +150,10 @@ func (r *RoutineTaskRecordRepository) GetAllByRoutineTaskId(
 		enums.AccessControlPermission_Write,
 		enums.AccessControlPermission_Read,
 	}
+	allowedPermissions = contexts.IntersectAllowedPermissions(
+		parsedOptions.DB.Statement.Context,
+		allowedPermissions,
+	)
 
 	if limit <= 0 {
 		limit = 100

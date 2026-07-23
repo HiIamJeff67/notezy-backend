@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
@@ -11,7 +12,7 @@ import (
 
 type UsersToStations struct {
 	UserId     uuid.UUID                     `json:"userId" gorm:"column:user_id; type:uuid; primaryKey;"`
-	StationId  uuid.UUID                     `json:"stationId" gorm:"column:station_id; type:uuid; primaryKey;"`
+	StationId  uuid.UUID                     `json:"stationId" gorm:"column:station_id; type:uuid; primaryKey; uniqueIndex:idx_station_owner,where:permission = 'Owner';"`
 	Permission enums.AccessControlPermission `json:"permission" gorm:"column:permission; type:\"AccessControlPermission\"; not null; default:'Read';"`
 	UpdatedAt  time.Time                     `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
 	CreatedAt  time.Time                     `json:"createdAt" gorm:"column:created_at; type:timestamptz; not null; autoCreateTime:true;"`
@@ -33,3 +34,15 @@ const (
 	UsersToStationsRelation_User    UsersToStationsRelation = "User"
 	UsersToStationsRelation_Station UsersToStationsRelation = "Station"
 )
+
+/* ============================== Trigger Hooks ============================== */
+
+func (uts *UsersToStations) AfterSave(tx *gorm.DB) error {
+	if uts.Permission != enums.AccessControlPermission_Owner {
+		return nil
+	}
+
+	return tx.
+		Model(&Station{Id: uts.StationId}).
+		Update("owner_id", uts.UserId).Error
+}

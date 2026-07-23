@@ -4,6 +4,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
@@ -24,20 +25,24 @@ func NewStationScope() StationScopeInterface {
 
 func (ss *StationScope) PassPermissionCheck(id uuid.UUID, userId uuid.UUID, permission []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
+		allowedPermissions := contexts.IntersectAllowedPermissions(db.Statement.Context, permission)
+
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
 			Model(&schemas.UsersToStations{}).
 			Select("1").
-			Where("station_id = \"StationTable\".id AND user_id = ? AND permission IN ?", userId, permission)
+			Where("station_id = \"StationTable\".id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
 		return db.Where("id = ? AND EXISTS (?)", id, subQuery)
 	}
 }
 
 func (ss *StationScope) PassPermissionChecks(ids []uuid.UUID, userId uuid.UUID, permission []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
+		allowedPermissions := contexts.IntersectAllowedPermissions(db.Statement.Context, permission)
+
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
 			Model(&schemas.UsersToStations{}).
 			Select("1").
-			Where("station_id = \"StationTable\".id AND user_id = ? AND permission IN ?", userId, permission)
+			Where("station_id = \"StationTable\".id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
 		return db.Where("\"StationTable\".id IN ? AND EXISTS (?)", ids, subQuery)
 	}
 }

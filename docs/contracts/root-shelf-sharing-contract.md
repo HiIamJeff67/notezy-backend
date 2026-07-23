@@ -93,7 +93,7 @@ Use the realtime participant endpoint for live presence, not for permission stat
 GET /api/development/v1/realtime/blockPacks/:blockPackId/participants
 ```
 
-Only the RootShelf Owner and Admin can call it. `connectionCount` is the number of active root WebSocket connections for the user in that BlockPack.
+Any user with Read, Write, Admin, or Owner permission for the RootShelf can call it. `connectionCount` is the number of active root WebSocket connections for the user in that BlockPack.
 
 ## Realtime Lifecycle
 

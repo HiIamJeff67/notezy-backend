@@ -7,6 +7,7 @@ import (
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
 )
 
@@ -35,7 +36,10 @@ func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("getAllMyRoutineTaskRecordsByRoutineTaskId"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTaskRecord.getAllMyRoutineTaskRecordsByRoutineTaskId"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				routineTaskRecordModule.Binder.BindGetAllMyRoutineTaskRecordsByRoutineTaskId(
 					routineTaskRecordModule.Controller.GetAllMyRoutineTaskRecordsByRoutineTaskId,
 				),
@@ -48,7 +52,10 @@ func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskRecordStatusCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTaskRecord.visualizeMyRoutineTaskRecordStatusCount"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				routineTaskRecordModule.Binder.BindVisualizeMyRoutineTaskRecordStatusCount(
 					routineTaskRecordModule.Controller.VisualizeMyRoutineTaskRecordStatusCount,
 				),
@@ -61,7 +68,10 @@ func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskRecordPurposeCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTaskRecord.visualizeMyRoutineTaskRecordPurposeCount"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				routineTaskRecordModule.Binder.BindVisualizeMyRoutineTaskRecordPurposeCount(
 					routineTaskRecordModule.Controller.VisualizeMyRoutineTaskRecordPurposeCount,
 				),
@@ -74,7 +84,10 @@ func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskRecordScheduledAtCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTaskRecord.visualizeMyRoutineTaskRecordScheduledAtCount"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				routineTaskRecordModule.Binder.BindVisualizeMyRoutineTaskRecordScheduledAtCount(
 					routineTaskRecordModule.Controller.VisualizeMyRoutineTaskRecordScheduledAtCount,
 				),
@@ -87,7 +100,10 @@ func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskRecordActualStartedAtCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTaskRecord.visualizeMyRoutineTaskRecordActualStartedAtCount"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				routineTaskRecordModule.Binder.BindVisualizeMyRoutineTaskRecordActualStartedAtCount(
 					routineTaskRecordModule.Controller.VisualizeMyRoutineTaskRecordActualStartedAtCount,
 				),
@@ -100,7 +116,10 @@ func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskRecordActualEndedAtCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.routineTaskRecord.visualizeMyRoutineTaskRecordActualEndedAtCount"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				routineTaskRecordModule.Binder.BindVisualizeMyRoutineTaskRecordActualEndedAtCount(
 					routineTaskRecordModule.Controller.VisualizeMyRoutineTaskRecordActualEndedAtCount,
 				),

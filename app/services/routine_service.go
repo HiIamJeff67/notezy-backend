@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
@@ -248,11 +249,9 @@ func (s *RoutineService) GetMyRoutinesByStationId(
 
 	db := s.db.WithContext(ctx)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
 
 	onlyDeleted := types.Ternary_Neutral
@@ -596,13 +595,12 @@ func (s *RoutineService) LinkRoutineTagById(
 		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
-	tx := s.db.WithContext(ctx).Begin()
-
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
+
+	tx := s.db.WithContext(ctx).Begin()
 
 	routine, exception := s.routineRepository.CheckPermissionAndGetOneById(
 		reqDto.Body.RoutineId,
@@ -675,13 +673,12 @@ func (s *RoutineService) LinkRoutineTagsByIds(
 		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
-	tx := s.db.WithContext(ctx).Begin()
-
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
+
+	tx := s.db.WithContext(ctx).Begin()
 
 	isRoutineExist := make(map[uuid.UUID]bool)
 	isRoutineTagExist := make(map[uuid.UUID]bool)
@@ -791,13 +788,12 @@ func (s *RoutineService) LinkRoutineItemById(
 		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
-	tx := s.db.WithContext(ctx).Begin()
-
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
+
+	tx := s.db.WithContext(ctx).Begin()
 
 	if !s.routineRepository.HasPermission(
 		reqDto.Body.RoutineId,
@@ -868,13 +864,12 @@ func (s *RoutineService) LinkRoutineItemsByIds(
 		return nil, exceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
-	tx := s.db.WithContext(ctx).Begin()
-
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
+
+	tx := s.db.WithContext(ctx).Begin()
 
 	isRoutineExist := make(map[uuid.UUID]bool)
 	isItemExist := make(map[types.Pair[uuid.UUID, enums.ItemType]]bool)
@@ -1391,11 +1386,9 @@ func (s *RoutineService) SearchPrivateRoutines(
 	startTime := time.Now()
 	db := s.db.WithContext(ctx)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
 
 	query := db.Model(&schemas.Routine{}).

@@ -8,6 +8,7 @@ import (
 	graphql "github.com/HiIamJeff67/notezy-backend/app/graphql"
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 )
 
 func configureDevelopmentGraphQLRoutes(router *gin.RouterGroup) {
@@ -21,6 +22,7 @@ func configureDevelopmentGraphQLRoutes(router *gin.RouterGroup) {
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(3*time.Second),
 		middlewares.AuthMiddleware(),
+		middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
 		interceptors.ShareableResponseWriterInterceptor(
 			interceptors.RefreshTokenInterceptor,
 			interceptors.EmbeddedInterceptor,

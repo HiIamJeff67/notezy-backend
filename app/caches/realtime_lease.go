@@ -16,17 +16,22 @@ import (
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
+type RealtimeBlockPackParticipant struct {
+	Member            string `json:"member"`
+	UserPublicId      string `json:"userPublicId"`
+	ChannelPermission string `json:"channelPermission"`
+}
+
+type RealtimeBlockPackSubscriberLease struct {
+	Member    string
+	ExpiresAt time.Time
+}
+
 type RealtimeLeaseStore struct {
 	redisClientMap map[int]*redis.Client
 
 	Range           types.Range[int, int]
 	MaxServerNumber int
-}
-
-type RealtimeBlockPackParticipant struct {
-	Member            string `json:"member"`
-	UserPublicId      string `json:"userPublicId"`
-	ChannelPermission string `json:"channelPermission"`
 }
 
 /* ============================== Constructor ============================== */
@@ -250,6 +255,39 @@ func (s *RealtimeLeaseStore) ReleaseBlockPackSubscriber(
 	}
 
 	return redisClient.HDel(s.blockPackParticipantKey(blockPackId), member).Err()
+}
+
+func (s *RealtimeLeaseStore) GetBlockPackSubscriberLeases(
+	blockPackId uuid.UUID,
+) ([]RealtimeBlockPackSubscriberLease, error) {
+	redisClient, err := s.getRedisClient(blockPackId.String())
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now().UnixMilli()
+	leases, err := redisClient.ZRangeByScoreWithScores(
+		fmt.Sprintf("Realtime:blockPack:%s:subscribers", blockPackId),
+		redis.ZRangeBy{Min: strconv.FormatInt(now+1, 10), Max: "+inf"},
+	).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]RealtimeBlockPackSubscriberLease, len(leases))
+	for index, lease := range leases {
+		member, ok := lease.Member.(string)
+		if !ok {
+			return nil, errors.New("realtime redis subscriber lease returned an invalid member")
+		}
+
+		result[index] = RealtimeBlockPackSubscriberLease{
+			Member:    member,
+			ExpiresAt: time.UnixMilli(int64(lease.Score)),
+		}
+	}
+
+	return result, nil
 }
 
 /* ============================== Block Pack Participant Methods ============================== */

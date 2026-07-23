@@ -4,6 +4,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redis"
@@ -113,8 +114,24 @@ func TestRealtimeLeaseStoreReleasesBlockPackSubscriber(t *testing.T) {
 		t.Fatal("expected BlockPack subscriber capacity to reject the second lease")
 	}
 
+	leases, err := store.GetBlockPackSubscriberLeases(blockPackId)
+	if err != nil {
+		t.Fatalf("failed to list BlockPack subscriber leases: %v", err)
+	}
+	if len(leases) != 1 || leases[0].Member != "connector-a:1" || !leases[0].ExpiresAt.After(time.Now()) {
+		t.Fatalf("unexpected BlockPack subscriber leases: %#v", leases)
+	}
+
 	if err := store.ReleaseBlockPackSubscriber(blockPackId, "connector-a:1"); err != nil {
 		t.Fatalf("failed to release BlockPack subscriber lease: %v", err)
+	}
+
+	leases, err = store.GetBlockPackSubscriberLeases(blockPackId)
+	if err != nil {
+		t.Fatalf("failed to list BlockPack subscriber leases after release: %v", err)
+	}
+	if len(leases) != 0 {
+		t.Fatalf("expected no BlockPack subscriber leases after release, got %#v", leases)
 	}
 
 	acquired, _, err = store.AcquireBlockPackSubscriber(blockPackId, "connector-b:1", 1)

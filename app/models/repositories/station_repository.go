@@ -9,6 +9,7 @@ import (
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm/clause"
 
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
@@ -27,6 +28,8 @@ type StationRepositoryInterface interface {
 	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.StationRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.Station, []enums.AccessControlPermission, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.StationRelation, opts ...options.RepositoryOptions) (*schemas.Station, enums.AccessControlPermission, *exceptions.Exception)
 	GetAllByUserId(userId uuid.UUID, preloads []schemas.StationRelation, opts ...options.RepositoryOptions) ([]schemas.Station, []enums.AccessControlPermission, *exceptions.Exception)
+	GetPermissionByStationIdAndUserId(stationId uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.UsersToStations, *exceptions.Exception)
+	DeletePermissionByStationIdAndUserId(stationId uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	CreateOne(ownerId uuid.UUID, input inputs.CreateStationInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
 	CreateMany(ownerId uuid.UUID, input []inputs.CreateStationInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateStationInput, opts ...options.RepositoryOptions) (*schemas.Station, *exceptions.Exception)
@@ -246,6 +249,10 @@ func (r *StationRepository) GetAllByUserId(
 		enums.AccessControlPermission_Write,
 		enums.AccessControlPermission_Read,
 	}
+	allowedPermissions = contexts.IntersectAllowedPermissions(
+		parsedOptions.DB.Statement.Context,
+		allowedPermissions,
+	)
 	type stationWithPermission struct {
 		schemas.Station
 		Permission enums.AccessControlPermission `gorm:"column:permission"`
@@ -274,6 +281,46 @@ func (r *StationRepository) GetAllByUserId(
 	}
 
 	return stations, permissions, nil
+}
+
+func (r *StationRepository) GetPermissionByStationIdAndUserId(
+	stationId uuid.UUID,
+	userId uuid.UUID,
+	opts ...options.RepositoryOptions,
+) (*schemas.UsersToStations, *exceptions.Exception) {
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	var usersToStation schemas.UsersToStations
+	result := parsedOptions.DB.
+		Model(&schemas.UsersToStations{}).
+		Where("station_id = ? AND user_id = ?", stationId, userId).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
+		First(&usersToStation)
+	if result.Error != nil {
+		return nil, exceptions.Station.NotFound().WithOrigin(result.Error)
+	}
+
+	return &usersToStation, nil
+}
+
+func (r *StationRepository) DeletePermissionByStationIdAndUserId(
+	stationId uuid.UUID,
+	userId uuid.UUID,
+	opts ...options.RepositoryOptions,
+) *exceptions.Exception {
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	result := parsedOptions.DB.
+		Where("station_id = ? AND user_id = ?", stationId, userId).
+		Delete(&schemas.UsersToStations{})
+	if result.Error != nil {
+		return exceptions.Station.FailedToDelete().WithOrigin(result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return exceptions.Station.NoChanges()
+	}
+
+	return nil
 }
 
 func (r *StationRepository) CreateOne(

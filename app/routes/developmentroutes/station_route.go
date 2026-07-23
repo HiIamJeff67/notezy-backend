@@ -7,6 +7,7 @@ import (
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
 )
 
@@ -35,7 +36,10 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("getMyStationById"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.getMyStationById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				stationModule.Binder.BindGetMyStationById(
 					stationModule.Controller.GetMyStationById,
 				),
@@ -48,7 +52,10 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("getAllMyStations"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.getAllMyStations"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				stationModule.Binder.BindGetAllMyStations(
 					stationModule.Controller.GetAllMyStations,
 				),
@@ -61,7 +68,10 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("visualizeMyTotalCount"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.visualizeMyTotalCount"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				stationModule.Binder.BindVisualizeMyTotalCount(
 					stationModule.Controller.VisualizeMyTotalCount,
 				),
@@ -74,7 +84,10 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("createStation"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.createStation"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				stationModule.Binder.BindCreateStation(
 					stationModule.Controller.CreateStation,
 				),
@@ -87,7 +100,10 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("createStations"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.createStations"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				stationModule.Binder.BindCreateStations(
 					stationModule.Controller.CreateStations,
 				),
@@ -100,7 +116,10 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("updateMyStationById"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.updateMyStationById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
 				stationModule.Binder.BindUpdateMyStationById(
 					stationModule.Controller.UpdateMyStationById,
 				),
@@ -113,7 +132,10 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("updateMyStationsByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.updateMyStationsByIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
 				stationModule.Binder.BindUpdateMyStationsByIds(
 					stationModule.Controller.UpdateMyStationsByIds,
 				),
@@ -126,7 +148,10 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("restoreMyStationById"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.restoreMyStationById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Owner),
+				),
 				stationModule.Binder.BindRestoreMyStationById(
 					stationModule.Controller.RestoreMyStationById,
 				),
@@ -139,7 +164,10 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("restoreMyStationsByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.restoreMyStationsByIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Owner),
+				),
 				stationModule.Binder.BindRestoreMyStationsByIds(
 					stationModule.Controller.RestoreMyStationsByIds,
 				),
@@ -152,7 +180,10 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("deleteMyStationById"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.deleteMyStationById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
 				stationModule.Binder.BindDeleteMyStationById(
 					stationModule.Controller.DeleteMyStationById,
 				),
@@ -165,7 +196,10 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("deleteMyStationsByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.deleteMyStationsByIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Owner),
+				),
 				stationModule.Binder.BindDeleteMyStationsByIds(
 					stationModule.Controller.DeleteMyStationsByIds,
 				),
@@ -178,7 +212,10 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("hardDeleteMyStationById"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.hardDeleteMyStationById"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Owner),
+				),
 				stationModule.Binder.BindHardDeleteMyStationById(
 					stationModule.Controller.HardDeleteMyStationById,
 				),
@@ -191,7 +228,10 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 					middlewares.ApplyTracerMiddleware("hardDeleteMyStationsByIds"),
 					middlewares.ApplyMeterMiddleware("server.requests.station.hardDeleteMyStationsByIds"),
 				},
-				defaultMiddlewares,
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Owner),
+				),
 				stationModule.Binder.BindHardDeleteMyStationsByIds(
 					stationModule.Controller.HardDeleteMyStationsByIds,
 				),

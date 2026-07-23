@@ -322,10 +322,10 @@ func (ec *executionContext) fieldContext_SearchRootShelfEdge_node(_ context.Cont
 				return ec.fieldContext_PrivateRootShelf_updatedAt(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_PrivateRootShelf_createdAt(ctx, field)
-			case "ownerPublicId":
-				return ec.fieldContext_PrivateRootShelf_ownerPublicId(ctx, field)
-			case "sharerPublicIds":
-				return ec.fieldContext_PrivateRootShelf_sharerPublicIds(ctx, field)
+			case "owner":
+				return ec.fieldContext_PrivateRootShelf_owner(ctx, field)
+			case "sharers":
+				return ec.fieldContext_PrivateRootShelf_sharers(ctx, field)
 			case "itemIds":
 				return ec.fieldContext_PrivateRootShelf_itemIds(ctx, field)
 			}

@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
@@ -168,6 +169,10 @@ func (r *BlockPackRepository) CheckPermissionAndGetOneWithOwnerIdById(
 	opts ...options.RepositoryOptions,
 ) (*uuid.UUID, *schemas.BlockPack, *exceptions.Exception) { // we should also return the owner id for the block groups and blocks
 	parsedOptions := options.ParseRepositoryOptions(opts...)
+	allowedPermissions = contexts.IntersectAllowedPermissions(
+		parsedOptions.DB.Statement.Context,
+		allowedPermissions,
+	)
 
 	subQuery := parsedOptions.DB.Session(&gorm.Session{NewDB: true}).
 		Model(&schemas.UsersToShelves{}).
@@ -209,6 +214,10 @@ func (r *BlockPackRepository) CheckPermissionsAndGetManyWithOwnerIdsByIds(
 	opts ...options.RepositoryOptions,
 ) ([]uuid.UUID, []schemas.BlockPack, *exceptions.Exception) { // we should also return the owner id for the block groups and blocks
 	parsedOptions := options.ParseRepositoryOptions(opts...)
+	allowedPermissions = contexts.IntersectAllowedPermissions(
+		parsedOptions.DB.Statement.Context,
+		allowedPermissions,
+	)
 
 	subQuery := parsedOptions.DB.Session(&gorm.Session{NewDB: true}).
 		Model(&schemas.UsersToShelves{}).

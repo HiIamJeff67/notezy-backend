@@ -10,6 +10,7 @@ import (
 	pg "github.com/lib/pq"
 	"gorm.io/gorm"
 
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
@@ -17,7 +18,6 @@ import (
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	storages "github.com/HiIamJeff67/notezy-backend/app/storages"
@@ -132,11 +132,9 @@ func (s *SubShelfService) GetMySubShelvesByPrevSubShelfId(
 
 	db := s.db.WithContext(ctx)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
 
 	onlyDeleted := types.Ternary_Neutral
@@ -154,7 +152,7 @@ func (s *SubShelfService) GetMySubShelvesByPrevSubShelfId(
 		Where(`root_shelf_id = "SubShelfTable".root_shelf_id AND user_id = ? AND permission IN ?`,
 			reqDto.ContextFields.UserId, allowedPermissions,
 		)
-	result := s.db.Model(&schemas.SubShelf{}).
+	result := db.Model(&schemas.SubShelf{}).
 		Where("prev_sub_shelf_id = ? AND EXISTS (?)",
 			reqDto.Param.PrevSubShelfId, subQuery,
 		).Scopes(scopes.NewSubShelfScope().FilterOnlyDeleted(onlyDeleted)).
@@ -177,11 +175,9 @@ func (s *SubShelfService) GetAllMySubShelvesByRootShelfId(
 
 	db := s.db.WithContext(ctx)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
 
 	onlyDeleted := types.Ternary_Neutral
@@ -199,7 +195,7 @@ func (s *SubShelfService) GetAllMySubShelvesByRootShelfId(
 		Where(`root_shelf_id = "SubShelfTable".root_shelf_id AND user_id = ? AND permission IN ?`,
 			reqDto.ContextFields.UserId, allowedPermissions,
 		)
-	result := s.db.Model(&schemas.SubShelf{}).
+	result := db.Model(&schemas.SubShelf{}).
 		Where("root_shelf_id = ? AND EXISTS (?)",
 			reqDto.Param.RootShelfId, subQuery,
 		).Scopes(scopes.NewSubShelfScope().FilterOnlyDeleted(onlyDeleted)).
@@ -222,11 +218,9 @@ func (s *SubShelfService) GetMySubShelvesAndItemsByPrevSubShelfId(
 
 	db := s.db.WithContext(ctx)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
 
 	onlyDeleted := types.Ternary_Neutral
@@ -445,13 +439,12 @@ func (s *SubShelfService) MoveMySubShelf(
 		return nil, exceptions.Shelf.NoChanges()
 	}
 
-	tx := s.db.WithContext(ctx).Begin()
-
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
+
+	tx := s.db.WithContext(ctx).Begin()
 
 	from, exception := s.subShelfRepository.CheckPermissionAndGetOneById(
 		reqDto.Body.SourceSubShelfId,
@@ -546,13 +539,12 @@ func (s *SubShelfService) MoveMySubShelvesByRootShelfId(
 		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
-	tx := s.db.WithContext(ctx).Begin()
-
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
+
+	tx := s.db.WithContext(ctx).Begin()
 
 	froms, exception := s.subShelfRepository.CheckPermissionsAndGetManyByIds(
 		reqDto.Body.SourceSubShelfIds,
@@ -674,13 +666,12 @@ func (s *SubShelfService) MoveMySubShelvesByRootShelfIds(
 		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
-	tx := s.db.WithContext(ctx).Begin()
-
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
+
+	tx := s.db.WithContext(ctx).Begin()
 
 	var destinationSubShelfIds []uuid.UUID
 	var sourceSubShelfIds []uuid.UUID
@@ -981,11 +972,9 @@ func (s *SubShelfService) SearchPrivateSubShelves(
 	startTime := time.Now()
 	db := s.db.WithContext(ctx)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
 
 	query := db.Model(&schemas.SubShelf{}).

@@ -7,6 +7,7 @@ import (
 
 	interceptors "github.com/HiIamJeff67/notezy-backend/app/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
 )
 
@@ -34,7 +35,10 @@ func configureDevelopmentBlockRoutes(router *gin.RouterGroup) {
 				middlewares.ApplyTracerMiddleware("getMyBlockById"),
 				middlewares.ApplyMeterMiddleware("server.requests.block.getMyBlockById"),
 			},
-			defaultMiddlewares,
+			append(
+				defaultMiddlewares,
+				middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+			),
 			blockModule.Binder.BindGetMyBlockById(
 				blockModule.Controller.GetMyBlockById,
 			),
@@ -47,7 +51,10 @@ func configureDevelopmentBlockRoutes(router *gin.RouterGroup) {
 				middlewares.ApplyTracerMiddleware("getMyBlocksByIds"),
 				middlewares.ApplyMeterMiddleware("server.requests.block.getMyBlocksByIds"),
 			},
-			defaultMiddlewares,
+			append(
+				defaultMiddlewares,
+				middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+			),
 			blockModule.Binder.BindGetMyBlocksByIds(
 				blockModule.Controller.GetMyBlocksByIds,
 			),
@@ -60,7 +67,10 @@ func configureDevelopmentBlockRoutes(router *gin.RouterGroup) {
 				middlewares.ApplyTracerMiddleware("getMyBlocksByBlockPackId"),
 				middlewares.ApplyMeterMiddleware("server.requests.block.getMyBlocksByBlockPackId"),
 			},
-			defaultMiddlewares,
+			append(
+				defaultMiddlewares,
+				middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+			),
 			blockModule.Binder.BindGetMyBlocksByBlockPackId(
 				blockModule.Controller.GetMyBlocksByBlockPackId,
 			),

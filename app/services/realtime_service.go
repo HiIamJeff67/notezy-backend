@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
+	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
@@ -64,6 +65,8 @@ func (s *RealtimeService) GetMyBlockPackRealtimeParticipants(
 		[]enums.AccessControlPermission{
 			enums.AccessControlPermission_Owner,
 			enums.AccessControlPermission_Admin,
+			enums.AccessControlPermission_Write,
+			enums.AccessControlPermission_Read,
 		},
 		options.WithDB(db),
 		options.WithOnlyDeleted(types.Ternary_Negative),
@@ -182,12 +185,27 @@ func (s *RealtimeService) ValidateBlockPackChannelPermission(
 	blockPackId uuid.UUID,
 	permission realtimetypes.ChannelPermission,
 ) (realtimetypes.ErrorCode, error) {
-	db := s.db.WithContext(ctx)
-
 	if permission != realtimetypes.ChannelPermission_Read &&
 		permission != realtimetypes.ChannelPermission_Write {
 		return realtimetypes.ErrorCode_PermissionRevoked, errors.New("invalid realtime channel permission")
 	}
+
+	allowedPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+	}
+	if permission == realtimetypes.ChannelPermission_Read {
+		allowedPermissions = append(
+			allowedPermissions,
+			enums.AccessControlPermission_Write,
+			enums.AccessControlPermission_Read,
+		)
+	} else {
+		allowedPermissions = append(allowedPermissions, enums.AccessControlPermission_Write)
+	}
+
+	ctx = contexts.WithAllowedPermissions(ctx, allowedPermissions)
+	db := s.db.WithContext(ctx)
 
 	var exists int
 	result := db.
@@ -216,20 +234,6 @@ func (s *RealtimeService) ValidateBlockPackChannelPermission(
 		Where("public_id = ?", userPublicId).
 		First(&user).Error; err != nil {
 		return realtimetypes.ErrorCode_PermissionRevoked, err
-	}
-
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
-	if permission == realtimetypes.ChannelPermission_Read {
-		allowedPermissions = append(
-			allowedPermissions,
-			enums.AccessControlPermission_Write,
-			enums.AccessControlPermission_Read,
-		)
-	} else if permission == realtimetypes.ChannelPermission_Write {
-		allowedPermissions = append(allowedPermissions, enums.AccessControlPermission_Write)
 	}
 
 	_, exception := s.blockPackRepository.CheckPermissionAndGetOneById(

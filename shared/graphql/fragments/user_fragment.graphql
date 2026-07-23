@@ -6,6 +6,9 @@ fragment FragmentedBasicPublicUser on PublicUser {
   plan
   status
   createdAt
+  info {
+    ...FragmentedPublicUserInfo
+  }
 }
 
 fragment FragmentedPublicUser on PublicUser {
