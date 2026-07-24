@@ -34,17 +34,12 @@ import (
 )
 
 type Gateway struct {
-	upgrader              websocket.Upgrader
-	workerManager         workers.WorkerManagerInterface
-	yjsPersistenceService services.YjsPersistenceServiceInterface
-	realtimeService       interface {
-		GetBlockPackChannelPermission(ctx context.Context, userPublicId uuid.UUID, blockPackId uuid.UUID, permission realtimetypes.ChannelPermission) (int32, realtimetypes.ErrorCode, error)
-		ValidateBlockPackChannelPermission(ctx context.Context, userPublicId uuid.UUID, blockPackId uuid.UUID, permission realtimetypes.ChannelPermission) (realtimetypes.ErrorCode, error)
-	}
-	leaseStore             *caches.RealtimeLeaseStore
-	blockProjectionService interface {
-		Apply(ctx context.Context, blockPackId uuid.UUID, input dtos.ApplyBlockProjectionInput) (*dtos.ApplyBlockProjectionResult, error)
-	}
+	upgrader                    websocket.Upgrader
+	workerManager               workers.WorkerManagerInterface
+	yjsPersistenceService       services.YjsPersistenceServiceInterface
+	realtimeService             services.RealtimeServiceInterface
+	leaseStore                  *caches.RealtimeLeaseStore
+	blockService                services.BlockServiceInterface
 	realtimeDisabled            bool
 	realtimeBetaUserPublicIdSet map[uuid.UUID]bool
 	connectorMutex              sync.RWMutex
@@ -82,7 +77,7 @@ func NewGateway() *Gateway {
 		yjsPersistenceService: services.NewYjsPersistenceService(models.NotezyDB),
 		realtimeService:       services.NewRealtimeService(models.NotezyDB, blockPackRepository),
 		leaseStore:            caches.NewRealtimeLeaseStore(caches.RedisClientMap),
-		blockProjectionService: services.NewBlockService(
+		blockService: services.NewBlockService(
 			models.NotezyDB,
 			blockScope,
 			blockPackScope,
@@ -1249,8 +1244,8 @@ func (g *Gateway) handleInternalFrame(frame realtimetypes.InternalFrame) {
 
 		return
 	case realtimetypes.InternalFrameType_ApplyBlockProjection:
-		var input dtos.ApplyBlockProjectionInput
-		if err := json.Unmarshal(frame.Payload, &input); err != nil {
+		var reqDto dtos.ApplyBlockProjectionReqDto
+		if err := json.Unmarshal(frame.Payload, &reqDto); err != nil {
 			g.workerManager.Forward(realtimetypes.InternalFrame{
 				Version:            byte(constants.RealtimeWorkerProtocolVersion),
 				Type:               realtimetypes.InternalFrameType_BlockProjectionFailed,
@@ -1263,7 +1258,7 @@ func (g *Gateway) handleInternalFrame(frame realtimetypes.InternalFrame) {
 			return
 		}
 
-		result, err := g.blockProjectionService.Apply(context.Background(), frame.ChannelId, input)
+		resDto, err := g.blockService.Apply(context.Background(), frame.ChannelId, reqDto)
 		if err != nil {
 			g.workerManager.Forward(realtimetypes.InternalFrame{
 				Version:            byte(constants.RealtimeWorkerProtocolVersion),
@@ -1277,7 +1272,7 @@ func (g *Gateway) handleInternalFrame(frame realtimetypes.InternalFrame) {
 			return
 		}
 
-		payload, err := json.Marshal(result)
+		payload, err := json.Marshal(resDto)
 		if err != nil {
 			g.workerManager.Forward(realtimetypes.InternalFrame{
 				Version:            byte(constants.RealtimeWorkerProtocolVersion),

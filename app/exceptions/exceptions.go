@@ -583,6 +583,23 @@ func (d *DatabaseExceptionDomain) FailedToCommitTransaction(optionalMessage ...s
 	}
 }
 
+func (d *DatabaseExceptionDomain) FailedToBeginTransaction(optionalMessage ...string) *Exception {
+	message := fmt.Sprintf("Failed to begin the transaction in %s", string(d._Prefix))
+	if len(optionalMessage) > 0 && len(strings.ReplaceAll(optionalMessage[0], " ", "")) > 0 {
+		message = optionalMessage[0]
+	}
+
+	return &Exception{
+		Code:           d._BaseCode + 7,
+		Prefix:         d._Prefix,
+		Reason:         "FailedToBeginTransaction",
+		IsInternal:     true,
+		Message:        message,
+		HTTPStatusCode: http.StatusInternalServerError,
+		LastTrace:      traces.GetTrace(1),
+	}
+}
+
 /* ============================== API Exception Domain Definition ============================== */
 
 type APIExceptionDomain struct {

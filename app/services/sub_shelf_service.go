@@ -36,7 +36,7 @@ type SubShelfServiceInterface interface {
 	CreateSubShelvesByRootShelfIds(ctx context.Context, reqDto *dtos.CreateSubShelvesByRootShelfIdsReqDto) (*dtos.CreateSubShelvesByRootShelfIdsResDto, *exceptions.Exception)
 	UpdateMySubShelfById(ctx context.Context, reqDto *dtos.UpdateMySubShelfByIdReqDto) (*dtos.UpdateMySubShelfByIdResDto, *exceptions.Exception)
 	UpdateMySubShelvesByIds(ctx context.Context, reqDto *dtos.UpdateMySubShelvesByIdsReqDto) (*dtos.UpdateMySubShelvesByIdsResDto, *exceptions.Exception)
-	MoveMySubShelf(ctx context.Context, reqDto *dtos.MoveMySubShelfReqDto) (*dtos.MoveMySubShelfResDto, *exceptions.Exception)
+	MoveMySubShelfByRootShelfId(ctx context.Context, reqDto *dtos.MoveMySubShelfByRootShelfIdReqDto) (*dtos.MoveMySubShelfByRootShelfIdResDto, *exceptions.Exception)
 	MoveMySubShelvesByRootShelfId(ctx context.Context, reqDto *dtos.MoveMySubShelvesByRootShelfIdReqDto) (*dtos.MoveMySubShelvesByRootShelfIdResDto, *exceptions.Exception)
 	MoveMySubShelvesByRootShelfIds(ctx context.Context, reqDto *dtos.MoveMySubShelvesByRootShelfIdsReqDto) (*dtos.MoveMySubShelvesByRootShelfIdsResDto, *exceptions.Exception)
 	RestoreMySubShelfById(ctx context.Context, reqDto *dtos.RestoreMySubShelfByIdReqDto) (*dtos.RestoreMySubShelfByIdResDto, *exceptions.Exception)
@@ -428,9 +428,9 @@ func (s *SubShelfService) UpdateMySubShelvesByIds(
 	}, nil
 }
 
-func (s *SubShelfService) MoveMySubShelf(
-	ctx context.Context, reqDto *dtos.MoveMySubShelfReqDto,
-) (*dtos.MoveMySubShelfResDto, *exceptions.Exception) {
+func (s *SubShelfService) MoveMySubShelfByRootShelfId(
+	ctx context.Context, reqDto *dtos.MoveMySubShelfByRootShelfIdReqDto,
+) (*dtos.MoveMySubShelfByRootShelfIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
@@ -499,8 +499,8 @@ func (s *SubShelfService) MoveMySubShelf(
 
 		to.Path = append(to.Path, to.Id)
 		result := tx.Exec(`
-			UPDATE "SubShelfTable" 
-			SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW() 
+			UPDATE "SubShelfTable"
+			SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW()
 			WHERE id = ? AND deleted_at IS NULL`,
 			reqDto.Body.DestinationRootShelfId, reqDto.Body.DestinationSubShelfId, pg.Array(to.Path),
 			reqDto.Body.SourceSubShelfId,
@@ -511,8 +511,8 @@ func (s *SubShelfService) MoveMySubShelf(
 		}
 	} else {
 		result := tx.Exec(`
-			UPDATE "SubShelfTable" 
-			SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW() 
+			UPDATE "SubShelfTable"
+			SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW()
 			WHERE id = ? AND deleted_at IS NULL`,
 			reqDto.Body.DestinationRootShelfId, nil, pg.Array([]uuid.UUID{}), reqDto.Body.SourceSubShelfId,
 		)
@@ -527,7 +527,7 @@ func (s *SubShelfService) MoveMySubShelf(
 		return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	return &dtos.MoveMySubShelfResDto{
+	return &dtos.MoveMySubShelfByRootShelfIdResDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
@@ -622,8 +622,8 @@ func (s *SubShelfService) MoveMySubShelvesByRootShelfId(
 
 		to.Path = append(to.Path, to.Id)
 		result := tx.Exec(`
-			UPDATE "SubShelfTable" 
-			SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW() 
+			UPDATE "SubShelfTable"
+			SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW()
 			WHERE id IN ? AND deleted_at IS NULL`,
 			reqDto.Body.DestinationRootShelfId, reqDto.Body.DestinationSubShelfId, pg.Array(to.Path), validSourceSubShelfIds,
 		)
@@ -638,8 +638,8 @@ func (s *SubShelfService) MoveMySubShelvesByRootShelfId(
 		}
 
 		result := tx.Exec(`
-			UPDATE "SubShelfTable" 
-			SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW() 
+			UPDATE "SubShelfTable"
+			SET "root_shelf_id" = ?, "prev_sub_shelf_id" = ?, "path" = ?, "updated_at" = NOW()
 			WHERE id IN ? AND deleted_at IS NULL`,
 			reqDto.Body.DestinationRootShelfId, nil, pg.Array([]uuid.UUID{}), validSourceSubShelfIds,
 		)

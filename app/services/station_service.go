@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
@@ -38,30 +39,210 @@ type StationServiceInterface interface {
 	DeleteMyStationsByIds(ctx context.Context, reqDto *dtos.DeleteMyStationsByIdsReqDto) (*dtos.DeleteMyStationsByIdsResDto, *exceptions.Exception)
 	HardDeleteMyStationById(ctx context.Context, reqDto *dtos.HardDeleteMyStationByIdReqDto) (*dtos.HardDeleteMyStationByIdResDto, *exceptions.Exception)
 	HardDeleteMyStationsByIds(ctx context.Context, reqDto *dtos.HardDeleteMyStationsByIdsReqDto) (*dtos.HardDeleteMyStationsByIdsResDto, *exceptions.Exception)
+
 	VisualizeMyTotalCount(ctx context.Context, reqDto *dtos.VisualizeMyTotalCountReqDto) (*dtos.VisualizeMyTotalCountResDto, *exceptions.Exception)
+
+	GetMyStationPermission(ctx context.Context, reqDto *dtos.GetMyStationPermissionReqDto) (*dtos.GetMyStationPermissionResDto, *exceptions.Exception)
+	CreateMyStationPermission(ctx context.Context, reqDto *dtos.CreateMyStationPermissionReqDto) (*dtos.CreateMyStationPermissionResDto, *exceptions.Exception)
+	UpsertMyStationPermission(ctx context.Context, reqDto *dtos.UpsertMyStationPermissionReqDto) (*dtos.UpsertMyStationPermissionResDto, *exceptions.Exception)
+	UpsertMyStationPermissions(ctx context.Context, reqDto *dtos.UpsertMyStationPermissionsReqDto) (*dtos.UpsertMyStationPermissionsResDto, *exceptions.Exception)
+	UpdateMyStationPermission(ctx context.Context, reqDto *dtos.UpdateMyStationPermissionReqDto) (*dtos.UpdateMyStationPermissionResDto, *exceptions.Exception)
+	TransferMyStationOwnership(ctx context.Context, reqDto *dtos.TransferMyStationOwnershipReqDto) (*dtos.TransferMyStationOwnershipResDto, *exceptions.Exception)
+	DeleteMyStationPermission(ctx context.Context, reqDto *dtos.DeleteMyStationPermissionReqDto) *exceptions.Exception
+	DeleteMyStationPermissions(ctx context.Context, reqDto *dtos.DeleteMyStationPermissionsReqDto) *exceptions.Exception
+	LeaveMyStation(ctx context.Context, reqDto *dtos.LeaveMyStationReqDto) *exceptions.Exception
+	LeaveMyStations(ctx context.Context, reqDto *dtos.LeaveMyStationsReqDto) *exceptions.Exception
 
 	SearchPrivateStations(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchStationInput) (*gqlmodels.SearchStationConnection, *exceptions.Exception)
 }
 
 type StationService struct {
-	db                *gorm.DB
-	stationScope      scopes.StationScopeInterface
-	stationRepository repositories.StationRepositoryInterface
+	db                        *gorm.DB
+	stationScope              scopes.StationScopeInterface
+	stationRepository         repositories.StationRepositoryInterface
+	usersToStationsRepository repositories.UsersToStationsRepositoryInterface
 }
 
 func NewStationService(
 	db *gorm.DB,
 	stationScope scopes.StationScopeInterface,
 	stationRepository repositories.StationRepositoryInterface,
+	usersToStationsRepository repositories.UsersToStationsRepositoryInterface,
 ) StationServiceInterface {
 	if db == nil {
 		db = models.NotezyDB
 	}
 	return &StationService{
-		db:                db,
-		stationScope:      stationScope,
-		stationRepository: stationRepository,
+		db:                        db,
+		stationScope:              stationScope,
+		stationRepository:         stationRepository,
+		usersToStationsRepository: usersToStationsRepository,
 	}
+}
+
+/* ============================== Auxiliary Functions ============================== */
+
+func (s *StationService) saveMyStationPermission(
+	ctx context.Context,
+	actorUserId uuid.UUID,
+	stationId uuid.UUID,
+	targetUserPublicId uuid.UUID,
+	permission enums.AccessControlPermission,
+	requireExisting *bool,
+) (*dtos.StationPermissionResDto, *exceptions.Exception) {
+	if permission == enums.AccessControlPermission_Owner {
+		return nil, exceptions.Station.NoPermission("transfer Station ownership through an access control")
+	}
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, exceptions.Station.FailedToBeginTransaction(
+			"Failed to begin Station permission transaction",
+		).WithOrigin(tx.Error)
+	}
+	station, actorPermission, exception := s.stationRepository.CheckPermissionAndGetOneById(
+		stationId,
+		actorUserId,
+		nil,
+		allowedPermissions,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+	var targetUser schemas.User
+	if result := tx.Where("public_id = ?", targetUserPublicId).First(&targetUser); result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.User.NotFound().WithOrigin(result.Error)
+	}
+	targetPermission, targetException := s.usersToStationsRepository.GetOne(
+		station.Id,
+		targetUser.Id,
+		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+	if targetException != nil && !errors.Is(targetException.Origin, gorm.ErrRecordNotFound) {
+		tx.Rollback()
+		return nil, targetException
+	}
+	if requireExisting != nil && *requireExisting != (targetPermission != nil) {
+		tx.Rollback()
+		if *requireExisting {
+			return nil, targetException
+		}
+		return nil, exceptions.Station.NoChanges()
+	}
+	if targetPermission != nil && targetPermission.Permission == enums.AccessControlPermission_Owner {
+		tx.Rollback()
+		return nil, exceptions.Station.NoPermission("modify the Station owner")
+	}
+	if actorPermission != enums.AccessControlPermission_Owner && (permission == enums.AccessControlPermission_Admin || targetPermission != nil && targetPermission.Permission == enums.AccessControlPermission_Admin) {
+		tx.Rollback()
+		return nil, exceptions.Station.NoPermission("manage Admin permissions")
+	}
+	var relation *schemas.UsersToStations
+	if targetPermission == nil {
+		relation, exception = s.usersToStationsRepository.CreateOne(
+			station.Id,
+			targetUser.Id,
+			permission,
+			options.WithTransactionDB(tx),
+		)
+	} else {
+		relation, exception = s.usersToStationsRepository.UpdatePermission(
+			station.Id,
+			targetUser.Id,
+			permission,
+			options.WithTransactionDB(tx),
+		)
+	}
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.Station.FailedToCommitTransaction().WithOrigin(err)
+	}
+	return &dtos.StationPermissionResDto{
+		UserPublicId: targetUser.PublicId,
+		Permission:   relation.Permission,
+		UpdatedAt:    relation.UpdatedAt,
+		CreatedAt:    relation.CreatedAt,
+	}, nil
+}
+
+func (s *StationService) leaveMyStation(
+	tx *gorm.DB,
+	actorUserId uuid.UUID,
+	stationId uuid.UUID,
+	targetUserPublicId *uuid.UUID,
+) *exceptions.Exception {
+	station, permission, exception := s.stationRepository.CheckPermissionAndGetOneById(
+		stationId,
+		actorUserId,
+		nil,
+		enums.AllAccessControlPermissions,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+	if exception != nil {
+		return exception
+	}
+	if permission != enums.AccessControlPermission_Owner {
+		return s.usersToStationsRepository.DeleteOne(station.Id, actorUserId, options.WithTransactionDB(tx))
+	}
+	if targetUserPublicId == nil {
+		return exceptions.Station.InvalidDto("targetUserPublicId is required when the Station owner leaves")
+	}
+
+	var targetUser schemas.User
+	if result := tx.Select("id").Where("public_id = ?", *targetUserPublicId).First(&targetUser); result.Error != nil {
+		return exceptions.User.NotFound().WithOrigin(result.Error)
+	}
+	if targetUser.Id == actorUserId {
+		return exceptions.Station.NoChanges()
+	}
+	if _, exception = s.usersToStationsRepository.GetOne(
+		station.Id,
+		targetUser.Id,
+		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	); exception != nil {
+		return exception
+	}
+	if _, exception = s.usersToStationsRepository.UpdatePermission(
+		station.Id,
+		actorUserId,
+		enums.AccessControlPermission_Admin,
+		options.WithTransactionDB(tx),
+	); exception != nil {
+		return exception
+	}
+	if _, exception = s.usersToStationsRepository.UpdatePermission(
+		station.Id,
+		targetUser.Id,
+		enums.AccessControlPermission_Owner,
+		options.WithTransactionDB(tx),
+	); exception != nil {
+		return exception
+	}
+	result := tx.Model(&schemas.Station{}).Where("id = ?", station.Id).Update("owner_id", targetUser.Id)
+	if result.Error != nil {
+		return exceptions.Station.FailedToUpdate().WithOrigin(result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return exceptions.Station.NotFound()
+	}
+
+	return s.usersToStationsRepository.DeleteOne(station.Id, actorUserId, options.WithTransactionDB(tx))
 }
 
 /* ============================== Service Methods for Station ============================== */
@@ -417,7 +598,7 @@ func (s *StationService) DeleteMyStationById(
 			return nil, exceptions.Station.NoChanges()
 		}
 	} else {
-		exception = s.stationRepository.DeletePermissionByStationIdAndUserId(
+		exception = s.usersToStationsRepository.DeleteOne(
 			station.Id,
 			reqDto.ContextFields.UserId,
 			options.WithDB(tx),
@@ -509,7 +690,7 @@ func (s *StationService) HardDeleteMyStationsByIds(
 	}, nil
 }
 
-/* ============================== Service Methods for Charts ============================== */
+/* ============================== Service Methods for Visualization ============================== */
 
 func (s *StationService) VisualizeMyTotalCount(
 	ctx context.Context, reqDto *dtos.VisualizeMyTotalCountReqDto,
@@ -619,6 +800,558 @@ func (s *StationService) VisualizeMyTotalCount(
 			},
 		},
 	}, nil
+}
+
+/* ============================== Service Methods for Station Permissions ============================== */
+
+func (s *StationService) GetMyStationPermission(
+	ctx context.Context, reqDto *dtos.GetMyStationPermissionReqDto,
+) (*dtos.GetMyStationPermissionResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
+	}
+
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
+	db := s.db.WithContext(ctx)
+	if _, _, exception = s.stationRepository.CheckPermissionAndGetOneById(reqDto.Param.StationId, reqDto.ContextFields.UserId, nil, allowedPermissions, options.WithDB(db), options.WithOnlyDeleted(types.Ternary_Negative)); exception != nil {
+		return nil, exception
+	}
+
+	var targetUser schemas.User
+	if result := db.Where("public_id = ?", reqDto.Param.UserPublicId).First(&targetUser); result.Error != nil {
+		return nil, exceptions.User.NotFound().WithOrigin(result.Error)
+	}
+	relation, exception := s.usersToStationsRepository.GetOne(reqDto.Param.StationId, targetUser.Id, options.WithDB(db))
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.GetMyStationPermissionResDto{UserPublicId: targetUser.PublicId, Permission: relation.Permission, UpdatedAt: relation.UpdatedAt, CreatedAt: relation.CreatedAt}, nil
+}
+
+func (s *StationService) CreateMyStationPermission(
+	ctx context.Context, reqDto *dtos.CreateMyStationPermissionReqDto,
+) (*dtos.CreateMyStationPermissionResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
+	}
+	requireExisting := false
+	return s.saveMyStationPermission(ctx, reqDto.ContextFields.UserId, reqDto.Param.StationId, reqDto.Param.UserPublicId, reqDto.Body.Permission, &requireExisting)
+}
+
+func (s *StationService) UpsertMyStationPermission(
+	ctx context.Context, reqDto *dtos.UpsertMyStationPermissionReqDto,
+) (*dtos.UpsertMyStationPermissionResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
+	}
+	return s.saveMyStationPermission(ctx, reqDto.ContextFields.UserId, reqDto.Param.StationId, reqDto.Param.UserPublicId, reqDto.Body.Permission, nil)
+}
+
+func (s *StationService) UpsertMyStationPermissions(
+	ctx context.Context, reqDto *dtos.UpsertMyStationPermissionsReqDto,
+) (*dtos.UpsertMyStationPermissionsResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
+	}
+
+	userPublicIds := make([]uuid.UUID, len(reqDto.Body.Permissions))
+	permissionByPublicId := make(map[uuid.UUID]enums.AccessControlPermission, len(reqDto.Body.Permissions))
+	for index, input := range reqDto.Body.Permissions {
+		if input.Permission == enums.AccessControlPermission_Owner {
+			return nil, exceptions.Station.NoPermission("transfer Station ownership through permissions")
+		}
+		if _, exists := permissionByPublicId[input.UserPublicId]; exists {
+			return nil, exceptions.Station.InvalidDto("permissions cannot contain duplicate userPublicIds")
+		}
+
+		userPublicIds[index] = input.UserPublicId
+		permissionByPublicId[input.UserPublicId] = input.Permission
+	}
+
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, exceptions.Station.FailedToBeginTransaction(
+			"Failed to begin Station permission transaction",
+		).WithOrigin(tx.Error)
+	}
+
+	station, actorPermission, exception := s.stationRepository.CheckPermissionAndGetOneById(
+		reqDto.Param.StationId,
+		reqDto.ContextFields.UserId,
+		nil,
+		allowedPermissions,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	var targetUsers []schemas.User
+	result := tx.
+		Model(&schemas.User{}).
+		Select("id, public_id").
+		Where("public_id IN ?", userPublicIds).
+		Find(&targetUsers)
+	if result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.User.NotFound().WithOrigin(result.Error)
+	}
+	if len(targetUsers) != len(userPublicIds) {
+		tx.Rollback()
+		return nil, exceptions.User.NotFound()
+	}
+
+	userByPublicId := make(map[uuid.UUID]schemas.User, len(targetUsers))
+	userById := make(map[uuid.UUID]schemas.User, len(targetUsers))
+	for _, user := range targetUsers {
+		userByPublicId[user.PublicId] = user
+		userById[user.Id] = user
+	}
+
+	userIds := make([]uuid.UUID, len(userPublicIds))
+	for index, userPublicId := range userPublicIds {
+		userIds[index] = userByPublicId[userPublicId].Id
+	}
+
+	existingPermissions, exception := s.stationRepository.GetPermissionsByStationIdAndUserIds(
+		station.Id,
+		userIds,
+		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	existingPermissionByUserId := make(map[uuid.UUID]enums.AccessControlPermission, len(existingPermissions))
+	for _, existingPermission := range existingPermissions {
+		existingPermissionByUserId[existingPermission.UserId] = existingPermission.Permission
+	}
+
+	permissions := make([]enums.AccessControlPermission, len(userIds))
+	for index, userId := range userIds {
+		user := userById[userId]
+		permission := permissionByPublicId[user.PublicId]
+		if existingPermissionByUserId[userId] == enums.AccessControlPermission_Owner {
+			tx.Rollback()
+			return nil, exceptions.Station.NoPermission("modify the Station owner")
+		}
+		if actorPermission != enums.AccessControlPermission_Owner &&
+			(permission == enums.AccessControlPermission_Admin ||
+				existingPermissionByUserId[userId] == enums.AccessControlPermission_Admin) {
+			tx.Rollback()
+			return nil, exceptions.Station.NoPermission("manage Admin permissions")
+		}
+
+		permissions[index] = permission
+	}
+
+	updatedPermissions, exception := s.stationRepository.UpsertPermissionsByUserIds(
+		station.Id,
+		userIds,
+		permissions,
+		options.WithTransactionDB(tx),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.Station.FailedToCommitTransaction().WithOrigin(err)
+	}
+
+	updatedPermissionByUserId := make(map[uuid.UUID]schemas.UsersToStations, len(updatedPermissions))
+	for _, updatedPermission := range updatedPermissions {
+		updatedPermissionByUserId[updatedPermission.UserId] = updatedPermission
+	}
+
+	resDto := make([]dtos.UpsertMyStationPermissionResDto, len(userIds))
+	for index, userId := range userIds {
+		user := userById[userId]
+		updatedPermission := updatedPermissionByUserId[userId]
+		resDto[index] = dtos.UpsertMyStationPermissionResDto{
+			UserPublicId: user.PublicId,
+			Permission:   updatedPermission.Permission,
+			UpdatedAt:    updatedPermission.UpdatedAt,
+			CreatedAt:    updatedPermission.CreatedAt,
+		}
+	}
+
+	return &dtos.UpsertMyStationPermissionsResDto{Permissions: resDto}, nil
+}
+
+func (s *StationService) UpdateMyStationPermission(
+	ctx context.Context, reqDto *dtos.UpdateMyStationPermissionReqDto,
+) (*dtos.UpdateMyStationPermissionResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
+	}
+	requireExisting := true
+	return s.saveMyStationPermission(ctx, reqDto.ContextFields.UserId, reqDto.Param.StationId, reqDto.Param.UserPublicId, reqDto.Body.Permission, &requireExisting)
+}
+
+func (s *StationService) TransferMyStationOwnership(
+	ctx context.Context,
+	reqDto *dtos.TransferMyStationOwnershipReqDto,
+) (*dtos.TransferMyStationOwnershipResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
+	}
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, exceptions.Station.FailedToBeginTransaction(
+			"Failed to begin Station ownership transfer transaction",
+		).WithOrigin(tx.Error)
+	}
+	station, permission, exception := s.stationRepository.CheckPermissionAndGetOneById(
+		reqDto.Param.StationId,
+		reqDto.ContextFields.UserId,
+		nil,
+		[]enums.AccessControlPermission{enums.AccessControlPermission_Owner},
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+	if permission != enums.AccessControlPermission_Owner {
+		tx.Rollback()
+		return nil, exceptions.Station.NoPermission("transfer Station ownership")
+	}
+
+	var actorUser schemas.User
+	if result := tx.Select("id, public_id").Where("id = ?", reqDto.ContextFields.UserId).First(&actorUser); result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.User.NotFound().WithOrigin(result.Error)
+	}
+	var targetUser schemas.User
+	if result := tx.Select("id, public_id").Where("public_id = ?", reqDto.Body.TargetUserPublicId).First(&targetUser); result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.User.NotFound().WithOrigin(result.Error)
+	}
+	if targetUser.Id == reqDto.ContextFields.UserId {
+		tx.Rollback()
+		return nil, exceptions.Station.NoChanges()
+	}
+
+	targetMembership, exception := s.usersToStationsRepository.GetOne(
+		station.Id,
+		targetUser.Id,
+		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+	if targetMembership.Permission == enums.AccessControlPermission_Owner {
+		tx.Rollback()
+		return nil, exceptions.Station.NoChanges()
+	}
+
+	if _, exception = s.usersToStationsRepository.UpdatePermission(
+		station.Id,
+		reqDto.ContextFields.UserId,
+		enums.AccessControlPermission_Admin,
+		options.WithTransactionDB(tx),
+	); exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+	newOwnerMembership, exception := s.usersToStationsRepository.UpdatePermission(
+		station.Id,
+		targetUser.Id,
+		enums.AccessControlPermission_Owner,
+		options.WithTransactionDB(tx),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+	result := tx.Model(&schemas.Station{}).
+		Where("id = ?", station.Id).
+		Update("owner_id", targetUser.Id)
+	if result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.Station.FailedToUpdate().WithOrigin(result.Error)
+	}
+	if result.RowsAffected == 0 {
+		tx.Rollback()
+		return nil, exceptions.Station.NotFound()
+	}
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.Station.FailedToCommitTransaction().WithOrigin(err)
+	}
+
+	return &dtos.TransferMyStationOwnershipResDto{
+		StationId:                 station.Id,
+		PreviousOwnerUserPublicId: actorUser.PublicId,
+		NewOwnerUserPublicId:      targetUser.PublicId,
+		UpdatedAt:                 newOwnerMembership.UpdatedAt,
+	}, nil
+}
+
+func (s *StationService) DeleteMyStationPermission(
+	ctx context.Context, reqDto *dtos.DeleteMyStationPermissionReqDto,
+) *exceptions.Exception {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return exceptions.Station.InvalidDto().WithOrigin(err)
+	}
+
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return exception
+	}
+
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return exceptions.Station.FailedToBeginTransaction(
+			"Failed to begin Station permission transaction",
+		).WithOrigin(tx.Error)
+	}
+
+	station, actorPermission, exception := s.stationRepository.CheckPermissionAndGetOneById(
+		reqDto.Param.StationId,
+		reqDto.ContextFields.UserId,
+		nil,
+		allowedPermissions,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return exception
+	}
+
+	var targetUser schemas.User
+	result := tx.
+		Model(&schemas.User{}).
+		Where("public_id = ?", reqDto.Param.UserPublicId).
+		First(&targetUser)
+	if result.Error != nil {
+		tx.Rollback()
+		return exceptions.User.NotFound().WithOrigin(result.Error)
+	}
+
+	targetPermission, exception := s.usersToStationsRepository.GetOne(
+		station.Id,
+		targetUser.Id,
+		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return exception
+	}
+	if targetPermission.Permission == enums.AccessControlPermission_Owner {
+		tx.Rollback()
+		return exceptions.Station.NoPermission("remove the Station owner")
+	}
+	if actorPermission != enums.AccessControlPermission_Owner &&
+		targetPermission.Permission == enums.AccessControlPermission_Admin {
+		tx.Rollback()
+		return exceptions.Station.NoPermission("revoke Admin access")
+	}
+
+	exception = s.usersToStationsRepository.DeleteOne(
+		station.Id,
+		targetUser.Id,
+		options.WithTransactionDB(tx),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return exception
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return exceptions.Station.FailedToCommitTransaction().WithOrigin(err)
+	}
+
+	return nil
+}
+
+func (s *StationService) DeleteMyStationPermissions(
+	ctx context.Context, reqDto *dtos.DeleteMyStationPermissionsReqDto,
+) *exceptions.Exception {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return exceptions.Station.InvalidDto().WithOrigin(err)
+	}
+
+	userPublicIdSet := make(map[uuid.UUID]struct{}, len(reqDto.Body.UserPublicIds))
+	for _, userPublicId := range reqDto.Body.UserPublicIds {
+		if _, exists := userPublicIdSet[userPublicId]; exists {
+			return exceptions.Station.InvalidDto("userPublicIds cannot contain duplicates")
+		}
+
+		userPublicIdSet[userPublicId] = struct{}{}
+	}
+
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return exception
+	}
+
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return exceptions.Station.FailedToBeginTransaction(
+			"Failed to begin Station permission transaction",
+		).WithOrigin(tx.Error)
+	}
+
+	station, actorPermission, exception := s.stationRepository.CheckPermissionAndGetOneById(
+		reqDto.Param.StationId,
+		reqDto.ContextFields.UserId,
+		nil,
+		allowedPermissions,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return exception
+	}
+
+	var targetUsers []schemas.User
+	result := tx.
+		Model(&schemas.User{}).
+		Select("id, public_id").
+		Where("public_id IN ?", reqDto.Body.UserPublicIds).
+		Find(&targetUsers)
+	if result.Error != nil {
+		tx.Rollback()
+		return exceptions.User.NotFound().WithOrigin(result.Error)
+	}
+	if len(targetUsers) != len(reqDto.Body.UserPublicIds) {
+		tx.Rollback()
+		return exceptions.User.NotFound()
+	}
+
+	userIdByPublicId := make(map[uuid.UUID]uuid.UUID, len(targetUsers))
+	for _, targetUser := range targetUsers {
+		userIdByPublicId[targetUser.PublicId] = targetUser.Id
+	}
+
+	userIds := make([]uuid.UUID, len(reqDto.Body.UserPublicIds))
+	for index, userPublicId := range reqDto.Body.UserPublicIds {
+		userIds[index] = userIdByPublicId[userPublicId]
+	}
+
+	targetPermissions, exception := s.stationRepository.GetPermissionsByStationIdAndUserIds(
+		station.Id,
+		userIds,
+		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return exception
+	}
+	if len(targetPermissions) != len(userIds) {
+		tx.Rollback()
+		return exceptions.Station.NotFound()
+	}
+
+	for _, targetPermission := range targetPermissions {
+		if targetPermission.Permission == enums.AccessControlPermission_Owner {
+			tx.Rollback()
+			return exceptions.Station.NoPermission("remove the Station owner")
+		}
+		if actorPermission != enums.AccessControlPermission_Owner &&
+			targetPermission.Permission == enums.AccessControlPermission_Admin {
+			tx.Rollback()
+			return exceptions.Station.NoPermission("revoke Admin access")
+		}
+	}
+
+	exception = s.stationRepository.DeletePermissionsByUserIds(
+		station.Id,
+		userIds,
+		options.WithTransactionDB(tx),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return exception
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return exceptions.Station.FailedToCommitTransaction().WithOrigin(err)
+	}
+
+	return nil
+}
+
+func (s *StationService) LeaveMyStation(
+	ctx context.Context, reqDto *dtos.LeaveMyStationReqDto,
+) *exceptions.Exception {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return exceptions.Station.InvalidDto().WithOrigin(err)
+	}
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return exceptions.Station.FailedToBeginTransaction("Failed to begin Station leave transaction").WithOrigin(tx.Error)
+	}
+	if exception := s.leaveMyStation(tx, reqDto.ContextFields.UserId, reqDto.Param.StationId, reqDto.Body.TargetUserPublicId); exception != nil {
+		tx.Rollback()
+		return exception
+	}
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return exceptions.Station.FailedToCommitTransaction().WithOrigin(err)
+	}
+	return nil
+}
+
+func (s *StationService) LeaveMyStations(
+	ctx context.Context, reqDto *dtos.LeaveMyStationsReqDto,
+) *exceptions.Exception {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return exceptions.Station.InvalidDto().WithOrigin(err)
+	}
+	stationIds := make(map[uuid.UUID]struct{}, len(reqDto.Body.Stations))
+	for _, stationReqDto := range reqDto.Body.Stations {
+		if _, exists := stationIds[stationReqDto.StationId]; exists {
+			return exceptions.Station.InvalidDto("stations cannot contain duplicate stationIds")
+		}
+		stationIds[stationReqDto.StationId] = struct{}{}
+	}
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return exceptions.Station.FailedToBeginTransaction("Failed to begin Station leave transaction").WithOrigin(tx.Error)
+	}
+	for _, stationReqDto := range reqDto.Body.Stations {
+		if exception := s.leaveMyStation(tx, reqDto.ContextFields.UserId, stationReqDto.StationId, stationReqDto.TargetUserPublicId); exception != nil {
+			tx.Rollback()
+			return exception
+		}
+	}
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return exceptions.Station.FailedToCommitTransaction().WithOrigin(err)
+	}
+	return nil
 }
 
 /* ============================== Service Methods for GraphQL Station ============================== */

@@ -168,8 +168,8 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 					defaultMiddlewares,
 					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Write),
 				),
-				blockPackModule.Binder.BindMoveMyBlockPackById(
-					blockPackModule.Controller.MoveMyBlockPackById,
+				blockPackModule.Binder.BindMoveMyBlockPackByParentSubShelfId(
+					blockPackModule.Controller.MoveMyBlockPackByParentSubShelfId,
 				),
 			)...,
 		)

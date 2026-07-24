@@ -20,14 +20,21 @@ type RootShelfBinderInterface interface {
 	BindCreateRootShelves(controllerFunc types.ControllerFunc[*dtos.CreateRootShelvesReqDto]) gin.HandlerFunc
 	BindUpdateMyRootShelfById(controllerFunc types.ControllerFunc[*dtos.UpdateMyRootShelfByIdReqDto]) gin.HandlerFunc
 	BindUpdateMyRootShelvesByIds(controllerFunc types.ControllerFunc[*dtos.UpdateMyRootShelvesByIdsReqDto]) gin.HandlerFunc
-	BindUpsertMyRootShelfPermission(controllerFunc types.ControllerFunc[*dtos.UpsertMyRootShelfPermissionReqDto]) gin.HandlerFunc
-	BindUpsertMyRootShelfPermissions(controllerFunc types.ControllerFunc[*dtos.UpsertMyRootShelfPermissionsReqDto]) gin.HandlerFunc
 	BindRestoreMyRootShelfById(controllerFunc types.ControllerFunc[*dtos.RestoreMyRootShelfByIdReqDto]) gin.HandlerFunc
 	BindRestoreMyRootShelvesByIds(controllerFunc types.ControllerFunc[*dtos.RestoreMyRootShelvesByIdsReqDto]) gin.HandlerFunc
 	BindDeleteMyRootShelfById(controllerFunc types.ControllerFunc[*dtos.DeleteMyRootShelfByIdReqDto]) gin.HandlerFunc
 	BindDeleteMyRootShelvesByIds(controllerFunc types.ControllerFunc[*dtos.DeleteMyRootShelvesByIdsReqDto]) gin.HandlerFunc
+
+	BindGetMyRootShelfPermission(controllerFunc types.ControllerFunc[*dtos.GetMyRootShelfPermissionReqDto]) gin.HandlerFunc
+	BindCreateMyRootShelfPermission(controllerFunc types.ControllerFunc[*dtos.CreateMyRootShelfPermissionReqDto]) gin.HandlerFunc
+	BindUpsertMyRootShelfPermission(controllerFunc types.ControllerFunc[*dtos.UpsertMyRootShelfPermissionReqDto]) gin.HandlerFunc
+	BindUpsertMyRootShelfPermissions(controllerFunc types.ControllerFunc[*dtos.UpsertMyRootShelfPermissionsReqDto]) gin.HandlerFunc
+	BindUpdateMyRootShelfPermission(controllerFunc types.ControllerFunc[*dtos.UpdateMyRootShelfPermissionReqDto]) gin.HandlerFunc
+	BindTransferMyRootShelfOwnership(controllerFunc types.ControllerFunc[*dtos.TransferMyRootShelfOwnershipReqDto]) gin.HandlerFunc
 	BindDeleteMyRootShelfPermission(controllerFunc types.ControllerFunc[*dtos.DeleteMyRootShelfPermissionReqDto]) gin.HandlerFunc
 	BindDeleteMyRootShelfPermissions(controllerFunc types.ControllerFunc[*dtos.DeleteMyRootShelfPermissionsReqDto]) gin.HandlerFunc
+	BindLeaveMyRootShelf(controllerFunc types.ControllerFunc[*dtos.LeaveMyRootShelfReqDto]) gin.HandlerFunc
+	BindLeaveMyRootShelves(controllerFunc types.ControllerFunc[*dtos.LeaveMyRootShelvesReqDto]) gin.HandlerFunc
 }
 
 type RootShelfBinder struct{}
@@ -189,75 +196,6 @@ func (b *RootShelfBinder) BindUpdateMyRootShelvesByIds(controllerFunc types.Cont
 	}
 }
 
-func (b *RootShelfBinder) BindUpsertMyRootShelfPermission(
-	controllerFunc types.ControllerFunc[*dtos.UpsertMyRootShelfPermissionReqDto],
-) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.UpsertMyRootShelfPermissionReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserId = *userId
-
-		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
-		if err != nil {
-			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.Param.RootShelfId = rootShelfId
-
-		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
-		if err != nil {
-			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.Param.UserPublicId = userPublicId
-
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
-func (b *RootShelfBinder) BindUpsertMyRootShelfPermissions(
-	controllerFunc types.ControllerFunc[*dtos.UpsertMyRootShelfPermissionsReqDto],
-) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.UpsertMyRootShelfPermissionsReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserId = *userId
-
-		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
-		if err != nil {
-			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.Param.RootShelfId = rootShelfId
-
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
 func (b *RootShelfBinder) BindRestoreMyRootShelfById(controllerFunc types.ControllerFunc[*dtos.RestoreMyRootShelfByIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.RestoreMyRootShelfByIdReqDto
@@ -350,6 +288,209 @@ func (b *RootShelfBinder) BindDeleteMyRootShelvesByIds(controllerFunc types.Cont
 	}
 }
 
+func (b *RootShelfBinder) BindGetMyRootShelfPermission(controllerFunc types.ControllerFunc[*dtos.GetMyRootShelfPermissionReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.GetMyRootShelfPermissionReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.RootShelfId = rootShelfId
+
+		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.UserPublicId = userPublicId
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RootShelfBinder) BindCreateMyRootShelfPermission(controllerFunc types.ControllerFunc[*dtos.CreateMyRootShelfPermissionReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.CreateMyRootShelfPermissionReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.RootShelfId = rootShelfId
+
+		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.UserPublicId = userPublicId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RootShelfBinder) BindUpsertMyRootShelfPermission(
+	controllerFunc types.ControllerFunc[*dtos.UpsertMyRootShelfPermissionReqDto],
+) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.UpsertMyRootShelfPermissionReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.RootShelfId = rootShelfId
+
+		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.UserPublicId = userPublicId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RootShelfBinder) BindUpsertMyRootShelfPermissions(
+	controllerFunc types.ControllerFunc[*dtos.UpsertMyRootShelfPermissionsReqDto],
+) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.UpsertMyRootShelfPermissionsReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.RootShelfId = rootShelfId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RootShelfBinder) BindUpdateMyRootShelfPermission(controllerFunc types.ControllerFunc[*dtos.UpdateMyRootShelfPermissionReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.UpdateMyRootShelfPermissionReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.RootShelfId = rootShelfId
+
+		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.UserPublicId = userPublicId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RootShelfBinder) BindTransferMyRootShelfOwnership(
+	controllerFunc types.ControllerFunc[*dtos.TransferMyRootShelfOwnershipReqDto],
+) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.TransferMyRootShelfOwnershipReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.RootShelfId = rootShelfId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
 func (b *RootShelfBinder) BindDeleteMyRootShelfPermission(
 	controllerFunc types.ControllerFunc[*dtos.DeleteMyRootShelfPermissionReqDto],
 ) gin.HandlerFunc {
@@ -410,6 +551,53 @@ func (b *RootShelfBinder) BindDeleteMyRootShelfPermissions(
 			return
 		}
 
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RootShelfBinder) BindLeaveMyRootShelf(controllerFunc types.ControllerFunc[*dtos.LeaveMyRootShelfReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.LeaveMyRootShelfReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.RootShelfId = rootShelfId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *RootShelfBinder) BindLeaveMyRootShelves(controllerFunc types.ControllerFunc[*dtos.LeaveMyRootShelvesReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.LeaveMyRootShelvesReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
 		controllerFunc(ctx, &reqDto)
 	}
 }

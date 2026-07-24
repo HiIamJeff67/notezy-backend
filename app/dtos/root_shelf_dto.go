@@ -131,6 +131,10 @@ type UpsertMyRootShelfPermissionReqDto struct {
 	]
 }
 
+type GetMyRootShelfPermissionReqDto = DeleteMyRootShelfPermissionReqDto
+type CreateMyRootShelfPermissionReqDto = UpsertMyRootShelfPermissionReqDto
+type UpdateMyRootShelfPermissionReqDto = UpsertMyRootShelfPermissionReqDto
+
 type UpsertMyRootShelfPermissionsReqDto struct {
 	NotezyRequest[
 		struct {
@@ -144,6 +148,23 @@ type UpsertMyRootShelfPermissionsReqDto struct {
 				UserPublicId uuid.UUID                     `json:"userPublicId" validate:"required"`
 				Permission   enums.AccessControlPermission `json:"permission" validate:"required,isaccesscontrolpermission"`
 			} `json:"permissions" validate:"required,min=1,max=1024,dive"`
+		},
+		struct {
+			RootShelfId uuid.UUID `uri:"rootShelfId" validate:"required"`
+		},
+	]
+}
+
+type TransferMyRootShelfOwnershipReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			TargetUserPublicId uuid.UUID `json:"targetUserPublicId" validate:"required"`
 		},
 		struct {
 			RootShelfId uuid.UUID `uri:"rootShelfId" validate:"required"`
@@ -244,6 +265,41 @@ type DeleteMyRootShelfPermissionsReqDto struct {
 	]
 }
 
+type LeaveMyRootShelfReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			TargetUserPublicId *uuid.UUID `json:"targetUserPublicId" validate:"omitnil"`
+		},
+		struct {
+			RootShelfId uuid.UUID `uri:"rootShelfId" validate:"required"`
+		},
+	]
+}
+
+type LeaveMyRootShelvesReqDto struct {
+	NotezyRequest[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
+		},
+		struct {
+			RootShelves []struct {
+				RootShelfId        uuid.UUID  `json:"rootShelfId" validate:"required"`
+				TargetUserPublicId *uuid.UUID `json:"targetUserPublicId" validate:"omitnil"`
+			} `json:"rootShelves" validate:"required,min=1,max=1024,dive"`
+		},
+		any,
+	]
+}
+
 /* ============================== Response DTO ============================== */
 
 type GetMyRootShelfByIdResDto struct {
@@ -287,8 +343,19 @@ type UpsertMyRootShelfPermissionResDto struct {
 	CreatedAt    time.Time                     `json:"createdAt"`
 }
 
+type GetMyRootShelfPermissionResDto = UpsertMyRootShelfPermissionResDto
+type CreateMyRootShelfPermissionResDto = UpsertMyRootShelfPermissionResDto
+type UpdateMyRootShelfPermissionResDto = UpsertMyRootShelfPermissionResDto
+
 type UpsertMyRootShelfPermissionsResDto struct {
 	Permissions []UpsertMyRootShelfPermissionResDto `json:"permissions"`
+}
+
+type TransferMyRootShelfOwnershipResDto struct {
+	RootShelfId               uuid.UUID `json:"rootShelfId"`
+	PreviousOwnerUserPublicId uuid.UUID `json:"previousOwnerUserPublicId"`
+	NewOwnerUserPublicId      uuid.UUID `json:"newOwnerUserPublicId"`
+	UpdatedAt                 time.Time `json:"updatedAt"`
 }
 
 type RestoreMyRootShelfByIdResDto struct {

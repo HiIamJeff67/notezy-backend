@@ -30,7 +30,7 @@ type BlockPackServiceInterface interface {
 	CreateBlockPacks(ctx context.Context, reqDto *dtos.CreateBlockPacksReqDto) (*dtos.CreateBlockPacksResDto, *exceptions.Exception)
 	UpdateMyBlockPackById(ctx context.Context, reqDto *dtos.UpdateMyBlockPackByIdReqDto) (*dtos.UpdateMyBlockPackByIdResDto, *exceptions.Exception)
 	UpdateMyBlockPacksByIds(ctx context.Context, reqDto *dtos.UpdateMyBlockPacksByIdsReqDto) (*dtos.UpdateMyBlockPacksByIdsResDto, *exceptions.Exception)
-	MoveMyBlockPackById(ctx context.Context, reqDto *dtos.MoveMyBlockPackByIdReqDto) (*dtos.MoveMyBlockPackByIdResDto, *exceptions.Exception)
+	MoveMyBlockPackByParentSubShelfId(ctx context.Context, reqDto *dtos.MoveMyBlockPackByParentSubShelfIdReqDto) (*dtos.MoveMyBlockPackByParentSubShelfIdResDto, *exceptions.Exception)
 	MoveMyBlockPacksByParentSubShelfId(ctx context.Context, reqDto *dtos.MoveMyBlockPacksByParentSubShelfIdReqDto) (*dtos.MoveMyBlockPacksByParentSubShelfIdResDto, *exceptions.Exception)
 	MoveMyBlockPacksByParentSubShelfIds(ctx context.Context, reqDto *dtos.MoveMyBlockPacksByParentSubShelfIdsReqDto) (*dtos.MoveMyBlockPacksByParentSubShelfIdsResDto, *exceptions.Exception)
 	RestoreMyBlockPackById(ctx context.Context, reqDto *dtos.RestoreMyBlockPackByIdReqDto) (*dtos.RestoreMyBlockPackByIdResDto, *exceptions.Exception)
@@ -56,8 +56,6 @@ func NewBlockPackService(
 		blockPackRepository: blockPackRepository,
 	}
 }
-
-/* ============================== Service Methods for BlockPack ============================== */
 
 func (s *BlockPackService) GetMyBlockPackById(
 	ctx context.Context, reqDto *dtos.GetMyBlockPackByIdReqDto,
@@ -430,9 +428,9 @@ func (s *BlockPackService) UpdateMyBlockPacksByIds(
 	}, nil
 }
 
-func (s *BlockPackService) MoveMyBlockPackById(
-	ctx context.Context, reqDto *dtos.MoveMyBlockPackByIdReqDto,
-) (*dtos.MoveMyBlockPackByIdResDto, *exceptions.Exception) {
+func (s *BlockPackService) MoveMyBlockPackByParentSubShelfId(
+	ctx context.Context, reqDto *dtos.MoveMyBlockPackByParentSubShelfIdReqDto,
+) (*dtos.MoveMyBlockPackByParentSubShelfIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.BlockPack.InvalidDto().WithOrigin(err)
 	}
@@ -454,7 +452,7 @@ func (s *BlockPackService) MoveMyBlockPackById(
 		return nil, exception
 	}
 
-	return &dtos.MoveMyBlockPackByIdResDto{
+	return &dtos.MoveMyBlockPackByParentSubShelfIdResDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }

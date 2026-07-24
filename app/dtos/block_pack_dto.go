@@ -157,7 +157,7 @@ type UpdateMyBlockPacksByIdsReqDto struct {
 	]
 }
 
-type MoveMyBlockPackByIdReqDto struct {
+type MoveMyBlockPackByParentSubShelfIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -331,7 +331,7 @@ type UpdateMyBlockPacksByIdsResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type MoveMyBlockPackByIdResDto struct {
+type MoveMyBlockPackByParentSubShelfIdResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 

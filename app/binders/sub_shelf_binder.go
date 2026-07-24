@@ -22,7 +22,7 @@ type SubShelfBinderInterface interface {
 	BindCreateSubShelvesByRootShelfIds(controllerFunc types.ControllerFunc[*dtos.CreateSubShelvesByRootShelfIdsReqDto]) gin.HandlerFunc
 	BindUpdateMySubShelfById(controllerFunc types.ControllerFunc[*dtos.UpdateMySubShelfByIdReqDto]) gin.HandlerFunc
 	BindUpdateMySubShelvesByIds(controllerFunc types.ControllerFunc[*dtos.UpdateMySubShelvesByIdsReqDto]) gin.HandlerFunc
-	BindMoveMySubShelf(controllerFunc types.ControllerFunc[*dtos.MoveMySubShelfReqDto]) gin.HandlerFunc
+	BindMoveMySubShelfByRootShelfId(controllerFunc types.ControllerFunc[*dtos.MoveMySubShelfByRootShelfIdReqDto]) gin.HandlerFunc
 	BindMoveMySubShelvesByRootShelfId(controllerFunc types.ControllerFunc[*dtos.MoveMySubShelvesByRootShelfIdReqDto]) gin.HandlerFunc
 	BindMoveMySubShelvesByRootShelfIds(controllerFunc types.ControllerFunc[*dtos.MoveMySubShelvesByRootShelfIdsReqDto]) gin.HandlerFunc
 	BindRestoreMySubShelfById(controllerFunc types.ControllerFunc[*dtos.RestoreMySubShelfByIdReqDto]) gin.HandlerFunc
@@ -285,9 +285,9 @@ func (b *SubShelfBinder) BindUpdateMySubShelvesByIds(controllerFunc types.Contro
 	}
 }
 
-func (b *SubShelfBinder) BindMoveMySubShelf(controllerFunc types.ControllerFunc[*dtos.MoveMySubShelfReqDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindMoveMySubShelfByRootShelfId(controllerFunc types.ControllerFunc[*dtos.MoveMySubShelfByRootShelfIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.MoveMySubShelfReqDto
+		var reqDto dtos.MoveMySubShelfByRootShelfIdReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 

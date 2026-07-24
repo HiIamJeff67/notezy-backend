@@ -125,38 +125,6 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 				),
 			)...,
 		)
-		rootShelfRoutes.PUT(
-			"/:rootShelfId/permissions/:userPublicId",
-			middlewares.RepositionMiddleware(
-				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware("upsertMyRootShelfPermission"),
-					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.upsertMyRootShelfPermission"),
-				},
-				append(
-					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
-				),
-				rootShelfModule.Binder.BindUpsertMyRootShelfPermission(
-					rootShelfModule.Controller.UpsertMyRootShelfPermission,
-				),
-			)...,
-		)
-		rootShelfRoutes.PUT(
-			"/:rootShelfId/permissions",
-			middlewares.RepositionMiddleware(
-				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware("upsertMyRootShelfPermissions"),
-					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.upsertMyRootShelfPermissions"),
-				},
-				append(
-					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
-				),
-				rootShelfModule.Binder.BindUpsertMyRootShelfPermissions(
-					rootShelfModule.Controller.UpsertMyRootShelfPermissions,
-				),
-			)...,
-		)
 		rootShelfRoutes.PATCH(
 			"/restoreMyRootShelfById",
 			middlewares.RepositionMiddleware(
@@ -221,6 +189,102 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 				),
 			)...,
 		)
+		rootShelfRoutes.GET(
+			"/:rootShelfId/permissions/:userPublicId",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("getMyRootShelfPermission"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.getMyRootShelfPermission"),
+				},
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
+				rootShelfModule.Binder.BindGetMyRootShelfPermission(
+					rootShelfModule.Controller.GetMyRootShelfPermission,
+				),
+			)...,
+		)
+		rootShelfRoutes.POST(
+			"/:rootShelfId/permissions/:userPublicId",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("createMyRootShelfPermission"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.createMyRootShelfPermission"),
+				},
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
+				rootShelfModule.Binder.BindCreateMyRootShelfPermission(
+					rootShelfModule.Controller.CreateMyRootShelfPermission,
+				),
+			)...,
+		)
+		rootShelfRoutes.PUT(
+			"/:rootShelfId/permissions/:userPublicId",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("upsertMyRootShelfPermission"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.upsertMyRootShelfPermission"),
+				},
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
+				rootShelfModule.Binder.BindUpsertMyRootShelfPermission(
+					rootShelfModule.Controller.UpsertMyRootShelfPermission,
+				),
+			)...,
+		)
+		rootShelfRoutes.PUT(
+			"/:rootShelfId/permissions",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("upsertMyRootShelfPermissions"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.upsertMyRootShelfPermissions"),
+				},
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
+				rootShelfModule.Binder.BindUpsertMyRootShelfPermissions(
+					rootShelfModule.Controller.UpsertMyRootShelfPermissions,
+				),
+			)...,
+		)
+		rootShelfRoutes.PATCH(
+			"/:rootShelfId/permissions/:userPublicId",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("updateMyRootShelfPermission"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.updateMyRootShelfPermission"),
+				},
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
+				),
+				rootShelfModule.Binder.BindUpdateMyRootShelfPermission(
+					rootShelfModule.Controller.UpdateMyRootShelfPermission,
+				),
+			)...,
+		)
+		rootShelfRoutes.POST(
+			"/:rootShelfId/ownership-transfer",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("transferMyRootShelfOwnership"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.transferMyRootShelfOwnership"),
+				},
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Owner),
+				),
+				rootShelfModule.Binder.BindTransferMyRootShelfOwnership(
+					rootShelfModule.Controller.TransferMyRootShelfOwnership,
+				),
+			)...,
+		)
 		rootShelfRoutes.DELETE(
 			"/:rootShelfId/permissions/:userPublicId",
 			middlewares.RepositionMiddleware(
@@ -250,6 +314,38 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 				),
 				rootShelfModule.Binder.BindDeleteMyRootShelfPermissions(
 					rootShelfModule.Controller.DeleteMyRootShelfPermissions,
+				),
+			)...,
+		)
+		rootShelfRoutes.DELETE(
+			"/:rootShelfId/leave",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("leaveMyRootShelf"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.leaveMyRootShelf"),
+				},
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
+				rootShelfModule.Binder.BindLeaveMyRootShelf(
+					rootShelfModule.Controller.LeaveMyRootShelf,
+				),
+			)...,
+		)
+		rootShelfRoutes.DELETE(
+			"/leave",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("leaveMyRootShelves"),
+					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.leaveMyRootShelves"),
+				},
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
+				rootShelfModule.Binder.BindLeaveMyRootShelves(
+					rootShelfModule.Controller.LeaveMyRootShelves,
 				),
 			)...,
 		)

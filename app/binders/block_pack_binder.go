@@ -22,7 +22,7 @@ type BlockPackBinderInterface interface {
 	BindCreateBlockPacks(controllerFunc types.ControllerFunc[*dtos.CreateBlockPacksReqDto]) gin.HandlerFunc
 	BindUpdateMyBlockPackById(controllerFunc types.ControllerFunc[*dtos.UpdateMyBlockPackByIdReqDto]) gin.HandlerFunc
 	BindUpdateMyBlockPacksByIds(controllerFunc types.ControllerFunc[*dtos.UpdateMyBlockPacksByIdsReqDto]) gin.HandlerFunc
-	BindMoveMyBlockPackById(controllerFunc types.ControllerFunc[*dtos.MoveMyBlockPackByIdReqDto]) gin.HandlerFunc
+	BindMoveMyBlockPackByParentSubShelfId(controllerFunc types.ControllerFunc[*dtos.MoveMyBlockPackByParentSubShelfIdReqDto]) gin.HandlerFunc
 	BindMoveMyBlockPacksByParentSubShelfId(controllerFunc types.ControllerFunc[*dtos.MoveMyBlockPacksByParentSubShelfIdReqDto]) gin.HandlerFunc
 	BindMoveMyBlockPacksByParentSubShelfIds(controllerFunc types.ControllerFunc[*dtos.MoveMyBlockPacksByParentSubShelfIdsReqDto]) gin.HandlerFunc
 	BindRestoreMyBlockPackById(controllerFunc types.ControllerFunc[*dtos.RestoreMyBlockPackByIdReqDto]) gin.HandlerFunc
@@ -285,9 +285,9 @@ func (b *BlockPackBinder) BindUpdateMyBlockPacksByIds(controllerFunc types.Contr
 	}
 }
 
-func (b *BlockPackBinder) BindMoveMyBlockPackById(controllerFunc types.ControllerFunc[*dtos.MoveMyBlockPackByIdReqDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindMoveMyBlockPackByParentSubShelfId(controllerFunc types.ControllerFunc[*dtos.MoveMyBlockPackByParentSubShelfIdReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var reqDto dtos.MoveMyBlockPackByIdReqDto
+		var reqDto dtos.MoveMyBlockPackByParentSubShelfIdReqDto
 
 		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 

@@ -17,6 +17,7 @@ import (
 
 type ThemeServiceInterface interface {
 	GetPublicThemeByPublicId(ctx context.Context, publicId uuid.UUID) (*gqlmodels.PublicTheme, *exceptions.Exception)
+
 	SearchPublicThemes(ctx context.Context, gqlInput gqlmodels.SearchThemeInput) (*gqlmodels.SearchThemeConnection, *exceptions.Exception)
 }
 

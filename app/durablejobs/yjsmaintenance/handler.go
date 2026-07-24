@@ -18,7 +18,7 @@ import (
 )
 
 type BlockProjectionService interface {
-	ApplyMany(ctx context.Context, inputs []dtos.ApplyBlockProjectionDocumentInput) (dtos.ApplyBlockProjectionDocumentResult, error)
+	ApplyMany(ctx context.Context, reqDtos []dtos.ApplyBlockProjectionDocumentReqDto) (dtos.ApplyBlockProjectionDocumentResDto, error)
 }
 
 type Handler struct {
@@ -95,9 +95,9 @@ func (h Handler) HandleProjections(
 	ctx context.Context,
 	inputs []realtimetypes.YjsProjectionBatchInput,
 	results []realtimetypes.YjsProjectionBatchResult,
-) (dtos.ApplyBlockProjectionDocumentResult, error) {
+) (dtos.ApplyBlockProjectionDocumentResDto, error) {
 	if len(inputs) == 0 && len(results) == 0 {
-		return dtos.ApplyBlockProjectionDocumentResult{}, nil
+		return dtos.ApplyBlockProjectionDocumentResDto{}, nil
 	}
 	if len(inputs) != len(results) {
 		return nil, fmt.Errorf("incomplete yjs projection batch result")
@@ -111,7 +111,7 @@ func (h Handler) HandleProjections(
 		inputByBlockPackId[input.BlockPackId] = input
 	}
 
-	projectionInputs := make([]dtos.ApplyBlockProjectionDocumentInput, 0, len(results))
+	projectionReqDtos := make([]dtos.ApplyBlockProjectionDocumentReqDto, 0, len(results))
 	resultBlockPackIdSet := make(map[uuid.UUID]bool, len(results))
 	for _, result := range results {
 		input, exists := inputByBlockPackId[result.BlockPackId]
@@ -119,25 +119,25 @@ func (h Handler) HandleProjections(
 			return nil, fmt.Errorf("invalid yjs projection batch result")
 		}
 
-		var projection dtos.ApplyBlockProjectionInput
-		if err := json.Unmarshal(result.Payload, &projection); err != nil {
+		var projectionReqDto dtos.ApplyBlockProjectionReqDto
+		if err := json.Unmarshal(result.Payload, &projectionReqDto); err != nil {
 			return nil, fmt.Errorf("failed to decode yjs projection result: %w", err)
 		}
-		if projection.ProjectedSequence != input.State.LastUpdateSequence {
+		if projectionReqDto.ProjectedSequence != input.State.LastUpdateSequence {
 			return nil, fmt.Errorf("yjs projection result sequence does not match the claimed document")
 		}
 
 		resultBlockPackIdSet[result.BlockPackId] = true
-		projectionInputs = append(projectionInputs, dtos.ApplyBlockProjectionDocumentInput{
+		projectionReqDtos = append(projectionReqDtos, dtos.ApplyBlockProjectionDocumentReqDto{
 			BlockPackId: result.BlockPackId,
-			Projection:  projection,
+			Projection:  projectionReqDto,
 		})
 	}
 	if len(resultBlockPackIdSet) != len(inputByBlockPackId) {
 		return nil, fmt.Errorf("incomplete yjs projection batch result")
 	}
 
-	return h.blockService.ApplyMany(ctx, projectionInputs)
+	return h.blockService.ApplyMany(ctx, projectionReqDtos)
 }
 
 func (h Handler) Cleanup(ctx context.Context) error {

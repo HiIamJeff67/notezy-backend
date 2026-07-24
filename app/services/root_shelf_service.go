@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
@@ -33,38 +34,235 @@ type RootShelfServiceInterface interface {
 	CreateRootShelves(ctx context.Context, reqDto *dtos.CreateRootShelvesReqDto) (*dtos.CreateRootShelvesResDto, *exceptions.Exception)
 	UpdateMyRootShelfById(ctx context.Context, reqDto *dtos.UpdateMyRootShelfByIdReqDto) (*dtos.UpdateMyRootShelfByIdResDto, *exceptions.Exception)
 	UpdateMyRootShelvesByIds(ctx context.Context, reqDto *dtos.UpdateMyRootShelvesByIdsReqDto) (*dtos.UpdateMyRootShelvesByIdsResDto, *exceptions.Exception)
-	UpsertMyRootShelfPermission(ctx context.Context, reqDto *dtos.UpsertMyRootShelfPermissionReqDto) (*dtos.UpsertMyRootShelfPermissionResDto, *exceptions.Exception)
-	UpsertMyRootShelfPermissions(ctx context.Context, reqDto *dtos.UpsertMyRootShelfPermissionsReqDto) (*dtos.UpsertMyRootShelfPermissionsResDto, *exceptions.Exception)
 	RestoreMyRootShelfById(ctx context.Context, reqDto *dtos.RestoreMyRootShelfByIdReqDto) (*dtos.RestoreMyRootShelfByIdResDto, *exceptions.Exception)
 	RestoreMyRootShelvesByIds(ctx context.Context, reqDto *dtos.RestoreMyRootShelvesByIdsReqDto) (*dtos.RestoreMyRootShelvesByIdsResDto, *exceptions.Exception)
 	DeleteMyRootShelfById(ctx context.Context, reqDto *dtos.DeleteMyRootShelfByIdReqDto) (*dtos.DeleteMyRootShelfByIdResDto, *exceptions.Exception)
 	DeleteMyRootShelvesByIds(ctx context.Context, reqDto *dtos.DeleteMyRootShelvesByIdsReqDto) (*dtos.DeleteMyRootShelvesByIdsResDto, *exceptions.Exception)
+
+	GetMyRootShelfPermission(ctx context.Context, reqDto *dtos.GetMyRootShelfPermissionReqDto) (*dtos.GetMyRootShelfPermissionResDto, *exceptions.Exception)
+	CreateMyRootShelfPermission(ctx context.Context, reqDto *dtos.CreateMyRootShelfPermissionReqDto) (*dtos.CreateMyRootShelfPermissionResDto, *exceptions.Exception)
+	UpsertMyRootShelfPermission(ctx context.Context, reqDto *dtos.UpsertMyRootShelfPermissionReqDto) (*dtos.UpsertMyRootShelfPermissionResDto, *exceptions.Exception)
+	UpsertMyRootShelfPermissions(ctx context.Context, reqDto *dtos.UpsertMyRootShelfPermissionsReqDto) (*dtos.UpsertMyRootShelfPermissionsResDto, *exceptions.Exception)
+	UpdateMyRootShelfPermission(ctx context.Context, reqDto *dtos.UpdateMyRootShelfPermissionReqDto) (*dtos.UpdateMyRootShelfPermissionResDto, *exceptions.Exception)
+	TransferMyRootShelfOwnership(ctx context.Context, reqDto *dtos.TransferMyRootShelfOwnershipReqDto) (*dtos.TransferMyRootShelfOwnershipResDto, *exceptions.Exception)
 	DeleteMyRootShelfPermission(ctx context.Context, reqDto *dtos.DeleteMyRootShelfPermissionReqDto) *exceptions.Exception
 	DeleteMyRootShelfPermissions(ctx context.Context, reqDto *dtos.DeleteMyRootShelfPermissionsReqDto) *exceptions.Exception
+	LeaveMyRootShelf(ctx context.Context, reqDto *dtos.LeaveMyRootShelfReqDto) *exceptions.Exception
+	LeaveMyRootShelves(ctx context.Context, reqDto *dtos.LeaveMyRootShelvesReqDto) *exceptions.Exception
 
 	SearchPrivateRootShelves(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRootShelfInput) (*gqlmodels.SearchRootShelfConnection, *exceptions.Exception)
 }
 
 type RootShelfService struct {
-	db                  *gorm.DB
-	rootShelfScope      scopes.RootShelfScopeInterface
-	rootShelfRepository repositories.RootShelfRepositoryInterface
+	db                       *gorm.DB
+	rootShelfScope           scopes.RootShelfScopeInterface
+	rootShelfRepository      repositories.RootShelfRepositoryInterface
+	usersToShelvesRepository repositories.UsersToShelvesRepositoryInterface
 }
 
 func NewRootShelfService(
 	db *gorm.DB,
 	rootShelfScope scopes.RootShelfScopeInterface,
 	rootShelfRepository repositories.RootShelfRepositoryInterface,
+	usersToShelvesRepository repositories.UsersToShelvesRepositoryInterface,
 ) RootShelfServiceInterface {
 	if db == nil {
 		db = models.NotezyDB
 	}
 	return &RootShelfService{
-		db:                  db,
-		rootShelfScope:      rootShelfScope,
-		rootShelfRepository: rootShelfRepository,
+		db:                       db,
+		rootShelfScope:           rootShelfScope,
+		rootShelfRepository:      rootShelfRepository,
+		usersToShelvesRepository: usersToShelvesRepository,
 	}
 }
+
+/* ============================== Auxiliary Functions ============================== */
+
+func (s *RootShelfService) saveMyRootShelfPermission(
+	ctx context.Context,
+	actorUserId uuid.UUID,
+	rootShelfId uuid.UUID,
+	targetUserPublicId uuid.UUID,
+	permission enums.AccessControlPermission,
+	requireExisting *bool,
+) (*dtos.UpsertMyRootShelfPermissionResDto, *exceptions.Exception) {
+	if permission == enums.AccessControlPermission_Owner {
+		return nil, exceptions.Shelf.NoPermission("transfer RootShelf ownership through an access control")
+	}
+
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, exceptions.Shelf.FailedToBeginTransaction(
+			"Failed to begin RootShelf permission transaction",
+		).WithOrigin(tx.Error)
+	}
+
+	rootShelf, actorPermission, exception := s.rootShelfRepository.CheckPermissionAndGetOneById(
+		rootShelfId,
+		actorUserId,
+		nil,
+		allowedPermissions,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
+	var targetUser schemas.User
+	if result := tx.Where("public_id = ?", targetUserPublicId).First(&targetUser); result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.User.NotFound().WithOrigin(result.Error)
+	}
+
+	targetPermission, targetException := s.usersToShelvesRepository.GetOne(
+		rootShelf.Id,
+		targetUser.Id,
+		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+	if targetException != nil && !errors.Is(targetException.Origin, gorm.ErrRecordNotFound) {
+		tx.Rollback()
+		return nil, targetException
+	}
+	if requireExisting != nil && *requireExisting != (targetPermission != nil) {
+		tx.Rollback()
+		if *requireExisting {
+			return nil, targetException
+		}
+		return nil, exceptions.Shelf.NoChanges()
+	}
+	if targetPermission != nil && targetPermission.Permission == enums.AccessControlPermission_Owner {
+		tx.Rollback()
+		return nil, exceptions.Shelf.NoPermission("modify the RootShelf owner")
+	}
+	if actorPermission != enums.AccessControlPermission_Owner && (permission == enums.AccessControlPermission_Admin || targetPermission != nil && targetPermission.Permission == enums.AccessControlPermission_Admin) {
+		tx.Rollback()
+		return nil, exceptions.Shelf.NoPermission("manage Admin permissions")
+	}
+
+	var relation *schemas.UsersToShelves
+	if targetPermission == nil {
+		relation, exception = s.usersToShelvesRepository.CreateOne(
+			rootShelf.Id,
+			targetUser.Id,
+			permission,
+			options.WithTransactionDB(tx),
+		)
+	} else {
+		relation, exception = s.usersToShelvesRepository.UpdatePermission(
+			rootShelf.Id,
+			targetUser.Id,
+			permission,
+			options.WithTransactionDB(tx),
+		)
+	}
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+	}
+
+	return &dtos.UpsertMyRootShelfPermissionResDto{
+		UserPublicId: targetUser.PublicId,
+		Permission:   relation.Permission,
+		UpdatedAt:    relation.UpdatedAt,
+		CreatedAt:    relation.CreatedAt,
+	}, nil
+}
+
+func (s *RootShelfService) leaveMyRootShelf(
+	tx *gorm.DB,
+	actorUserId uuid.UUID,
+	rootShelfId uuid.UUID,
+	targetUserPublicId *uuid.UUID,
+) *exceptions.Exception {
+	rootShelf, permission, exception := s.rootShelfRepository.CheckPermissionAndGetOneById(
+		rootShelfId,
+		actorUserId,
+		nil,
+		enums.AllAccessControlPermissions,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+	if exception != nil {
+		return exception
+	}
+	if permission != enums.AccessControlPermission_Owner {
+		return s.usersToShelvesRepository.DeleteOne(rootShelf.Id, actorUserId, options.WithTransactionDB(tx))
+	}
+	if targetUserPublicId == nil {
+		return exceptions.Shelf.InvalidDto("targetUserPublicId is required when the RootShelf owner leaves")
+	}
+
+	var targetUser schemas.User
+	if result := tx.Select("id").Where("public_id = ?", *targetUserPublicId).First(&targetUser); result.Error != nil {
+		return exceptions.User.NotFound().WithOrigin(result.Error)
+	}
+	if targetUser.Id == actorUserId {
+		return exceptions.Shelf.NoChanges()
+	}
+	if _, exception = s.usersToShelvesRepository.GetOne(
+		rootShelf.Id,
+		targetUser.Id,
+		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	); exception != nil {
+		return exception
+	}
+
+	var accounts []schemas.UserAccount
+	result := tx.
+		Clauses(clause.Locking{Strength: options.LockingStrengthUpdate}).
+		Where("user_id IN ?", []uuid.UUID{actorUserId, targetUser.Id}).
+		Order("user_id").
+		Find(&accounts)
+	if result.Error != nil {
+		return exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)
+	}
+	if len(accounts) != 2 {
+		return exceptions.User.NotFound()
+	}
+
+	if _, exception = s.usersToShelvesRepository.UpdatePermission(
+		rootShelf.Id,
+		actorUserId,
+		enums.AccessControlPermission_Admin,
+		options.WithTransactionDB(tx),
+	); exception != nil {
+		return exception
+	}
+	if _, exception = s.usersToShelvesRepository.UpdatePermission(
+		rootShelf.Id,
+		targetUser.Id,
+		enums.AccessControlPermission_Owner,
+		options.WithTransactionDB(tx),
+	); exception != nil {
+		return exception
+	}
+	result = tx.Model(&schemas.RootShelf{}).Where("id = ?", rootShelf.Id).Update("owner_id", targetUser.Id)
+	if result.Error != nil {
+		return exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return exceptions.Shelf.NotFound()
+	}
+
+	return s.usersToShelvesRepository.DeleteOne(rootShelf.Id, actorUserId, options.WithTransactionDB(tx))
+}
+
+/* ============================== Service Methods for RootShelf ============================== */
 
 func (s *RootShelfService) GetMyRootShelfById(
 	ctx context.Context, reqDto *dtos.GetMyRootShelfByIdReqDto,
@@ -270,14 +468,76 @@ func (s *RootShelfService) UpdateMyRootShelvesByIds(
 	}, nil
 }
 
-func (s *RootShelfService) UpsertMyRootShelfPermission(
-	ctx context.Context, reqDto *dtos.UpsertMyRootShelfPermissionReqDto,
-) (*dtos.UpsertMyRootShelfPermissionResDto, *exceptions.Exception) {
+func (s *RootShelfService) RestoreMyRootShelfById(
+	ctx context.Context, reqDto *dtos.RestoreMyRootShelfByIdReqDto,
+) (*dtos.RestoreMyRootShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
-	if reqDto.Body.Permission == enums.AccessControlPermission_Owner {
-		return nil, exceptions.Shelf.NoPermission("transfer RootShelf ownership through an access control")
+
+	db := s.db.WithContext(ctx)
+
+	restoredRootShelf, exception := s.rootShelfRepository.RestoreSoftDeletedOneById(
+		reqDto.Body.RootShelfId,
+		reqDto.ContextFields.UserId,
+		options.WithDB(db),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.RestoreMyRootShelfByIdResDto{
+		Id:             restoredRootShelf.Id,
+		Name:           restoredRootShelf.Name,
+		SubShelfCount:  restoredRootShelf.SubShelfCount,
+		ItemCount:      restoredRootShelf.ItemCount,
+		LastAnalyzedAt: restoredRootShelf.LastAnalyzedAt,
+		DeletedAt:      restoredRootShelf.DeletedAt,
+		UpdatedAt:      restoredRootShelf.UpdatedAt,
+		CreatedAt:      restoredRootShelf.CreatedAt,
+	}, nil
+}
+
+func (s *RootShelfService) RestoreMyRootShelvesByIds(
+	ctx context.Context, reqDto *dtos.RestoreMyRootShelvesByIdsReqDto,
+) (*dtos.RestoreMyRootShelvesByIdsResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	restoredRootShelves, exception := s.rootShelfRepository.RestoreSoftDeletedManyByIds(
+		reqDto.Body.RootShelfIds,
+		reqDto.ContextFields.UserId,
+		options.WithDB(db),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	resDto := dtos.RestoreMyRootShelvesByIdsResDto{}
+	for _, restoredRootShelf := range restoredRootShelves {
+		resDto = append(resDto, dtos.RestoreMyRootShelfByIdResDto{
+			Id:             restoredRootShelf.Id,
+			Name:           restoredRootShelf.Name,
+			SubShelfCount:  restoredRootShelf.SubShelfCount,
+			ItemCount:      restoredRootShelf.ItemCount,
+			LastAnalyzedAt: restoredRootShelf.LastAnalyzedAt,
+			DeletedAt:      restoredRootShelf.DeletedAt,
+			UpdatedAt:      restoredRootShelf.UpdatedAt,
+			CreatedAt:      restoredRootShelf.CreatedAt,
+		})
+	}
+
+	return &resDto, nil
+}
+
+func (s *RootShelfService) DeleteMyRootShelfById(
+	ctx context.Context, reqDto *dtos.DeleteMyRootShelfByIdReqDto,
+) (*dtos.DeleteMyRootShelfByIdResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
@@ -287,8 +547,8 @@ func (s *RootShelfService) UpsertMyRootShelfPermission(
 
 	tx := s.db.WithContext(ctx).Begin()
 
-	rootShelf, actorPermission, exception := s.rootShelfRepository.CheckPermissionAndGetOneById(
-		reqDto.Param.RootShelfId,
+	rootShelf, permission, exception := s.rootShelfRepository.CheckPermissionAndGetOneById(
+		reqDto.Body.RootShelfId,
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
@@ -301,58 +561,109 @@ func (s *RootShelfService) UpsertMyRootShelfPermission(
 		return nil, exception
 	}
 
-	var targetUser schemas.User
-	result := tx.
-		Model(&schemas.User{}).
-		Where("public_id = ?", reqDto.Param.UserPublicId).
-		First(&targetUser)
-	if result.Error != nil {
-		tx.Rollback()
-		return nil, exceptions.User.NotFound().WithOrigin(result.Error)
-	}
-
-	targetPermission, targetException := s.rootShelfRepository.GetPermissionByRootShelfIdAndUserId(
-		rootShelf.Id,
-		targetUser.Id,
-		options.WithDB(tx),
-		options.WithLockingStrength(options.LockingStrengthUpdate),
-	)
-	if targetException != nil && !errors.Is(targetException.Origin, gorm.ErrRecordNotFound) {
-		tx.Rollback()
-		return nil, targetException
-	}
-	if targetPermission != nil && targetPermission.Permission == enums.AccessControlPermission_Owner {
-		tx.Rollback()
-		return nil, exceptions.Shelf.NoPermission("modify the RootShelf owner")
-	}
-	if actorPermission != enums.AccessControlPermission_Owner &&
-		(reqDto.Body.Permission == enums.AccessControlPermission_Admin ||
-			targetPermission != nil && targetPermission.Permission == enums.AccessControlPermission_Admin) {
-		tx.Rollback()
-		return nil, exceptions.Shelf.NoPermission("grant Admin access")
-	}
-
-	permission, exception := s.rootShelfRepository.UpsertPermissionByUserId(
-		rootShelf.Id,
-		targetUser.Id,
-		reqDto.Body.Permission,
-		options.WithDB(tx),
-	)
-	if exception != nil {
-		tx.Rollback()
-		return nil, exception
+	if permission == enums.AccessControlPermission_Owner {
+		result := tx.
+			Model(&schemas.RootShelf{}).
+			Where("id = ?", rootShelf.Id).
+			Update("deleted_at", time.Now())
+		if result.Error != nil {
+			tx.Rollback()
+			return nil, exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)
+		}
+		if result.RowsAffected == 0 {
+			tx.Rollback()
+			return nil, exceptions.Shelf.NoChanges()
+		}
+	} else {
+		exception = s.usersToShelvesRepository.DeleteOne(
+			rootShelf.Id,
+			reqDto.ContextFields.UserId,
+			options.WithDB(tx),
+		)
+		if exception != nil {
+			tx.Rollback()
+			return nil, exception
+		}
 	}
 
 	if err := tx.Commit().Error; err != nil {
 		return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	return &dtos.UpsertMyRootShelfPermissionResDto{
-		UserPublicId: targetUser.PublicId,
-		Permission:   permission.Permission,
-		UpdatedAt:    permission.UpdatedAt,
-		CreatedAt:    permission.CreatedAt,
+	return &dtos.DeleteMyRootShelfByIdResDto{
+		DeletedAt: time.Now(),
 	}, nil
+}
+
+func (s *RootShelfService) DeleteMyRootShelvesByIds(
+	ctx context.Context, reqDto *dtos.DeleteMyRootShelvesByIdsReqDto,
+) (*dtos.DeleteMyRootShelvesByIdsResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+	}
+
+	db := s.db.WithContext(ctx)
+
+	exception := s.rootShelfRepository.SoftDeleteManyByIds(
+		reqDto.Body.RootShelfIds,
+		reqDto.ContextFields.UserId,
+		options.WithDB(db),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.DeleteMyRootShelvesByIdsResDto{
+		DeletedAt: time.Now(),
+	}, nil
+}
+
+func (s *RootShelfService) GetMyRootShelfPermission(
+	ctx context.Context, reqDto *dtos.GetMyRootShelfPermissionReqDto,
+) (*dtos.GetMyRootShelfPermissionResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
+	}
+
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
+	db := s.db.WithContext(ctx)
+	if _, _, exception = s.rootShelfRepository.CheckPermissionAndGetOneById(reqDto.Param.RootShelfId, reqDto.ContextFields.UserId, nil, allowedPermissions, options.WithDB(db), options.WithOnlyDeleted(types.Ternary_Negative)); exception != nil {
+		return nil, exception
+	}
+
+	var targetUser schemas.User
+	if result := db.Where("public_id = ?", reqDto.Param.UserPublicId).First(&targetUser); result.Error != nil {
+		return nil, exceptions.User.NotFound().WithOrigin(result.Error)
+	}
+	relation, exception := s.usersToShelvesRepository.GetOne(reqDto.Param.RootShelfId, targetUser.Id, options.WithDB(db))
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &dtos.GetMyRootShelfPermissionResDto{UserPublicId: targetUser.PublicId, Permission: relation.Permission, UpdatedAt: relation.UpdatedAt, CreatedAt: relation.CreatedAt}, nil
+}
+
+func (s *RootShelfService) CreateMyRootShelfPermission(
+	ctx context.Context, reqDto *dtos.CreateMyRootShelfPermissionReqDto,
+) (*dtos.CreateMyRootShelfPermissionResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
+	}
+	requireExisting := false
+	return s.saveMyRootShelfPermission(ctx, reqDto.ContextFields.UserId, reqDto.Param.RootShelfId, reqDto.Param.UserPublicId, reqDto.Body.Permission, &requireExisting)
+}
+
+func (s *RootShelfService) UpsertMyRootShelfPermission(
+	ctx context.Context, reqDto *dtos.UpsertMyRootShelfPermissionReqDto,
+) (*dtos.UpsertMyRootShelfPermissionResDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
+	}
+	return s.saveMyRootShelfPermission(ctx, reqDto.ContextFields.UserId, reqDto.Param.RootShelfId, reqDto.Param.UserPublicId, reqDto.Body.Permission, nil)
 }
 
 func (s *RootShelfService) UpsertMyRootShelfPermissions(
@@ -493,91 +804,35 @@ func (s *RootShelfService) UpsertMyRootShelfPermissions(
 	return &dtos.UpsertMyRootShelfPermissionsResDto{Permissions: resDto}, nil
 }
 
-func (s *RootShelfService) RestoreMyRootShelfById(
-	ctx context.Context, reqDto *dtos.RestoreMyRootShelfByIdReqDto,
-) (*dtos.RestoreMyRootShelfByIdResDto, *exceptions.Exception) {
+func (s *RootShelfService) UpdateMyRootShelfPermission(
+	ctx context.Context, reqDto *dtos.UpdateMyRootShelfPermissionReqDto,
+) (*dtos.UpdateMyRootShelfPermissionResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
-
-	db := s.db.WithContext(ctx)
-
-	restoredRootShelf, exception := s.rootShelfRepository.RestoreSoftDeletedOneById(
-		reqDto.Body.RootShelfId,
-		reqDto.ContextFields.UserId,
-		options.WithDB(db),
-	)
-	if exception != nil {
-		return nil, exception
-	}
-
-	return &dtos.RestoreMyRootShelfByIdResDto{
-		Id:             restoredRootShelf.Id,
-		Name:           restoredRootShelf.Name,
-		SubShelfCount:  restoredRootShelf.SubShelfCount,
-		ItemCount:      restoredRootShelf.ItemCount,
-		LastAnalyzedAt: restoredRootShelf.LastAnalyzedAt,
-		DeletedAt:      restoredRootShelf.DeletedAt,
-		UpdatedAt:      restoredRootShelf.UpdatedAt,
-		CreatedAt:      restoredRootShelf.CreatedAt,
-	}, nil
+	requireExisting := true
+	return s.saveMyRootShelfPermission(ctx, reqDto.ContextFields.UserId, reqDto.Param.RootShelfId, reqDto.Param.UserPublicId, reqDto.Body.Permission, &requireExisting)
 }
 
-func (s *RootShelfService) RestoreMyRootShelvesByIds(
-	ctx context.Context, reqDto *dtos.RestoreMyRootShelvesByIdsReqDto,
-) (*dtos.RestoreMyRootShelvesByIdsResDto, *exceptions.Exception) {
+func (s *RootShelfService) TransferMyRootShelfOwnership(
+	ctx context.Context,
+	reqDto *dtos.TransferMyRootShelfOwnershipReqDto,
+) (*dtos.TransferMyRootShelfOwnershipResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
-
-	db := s.db.WithContext(ctx)
-
-	restoredRootShelves, exception := s.rootShelfRepository.RestoreSoftDeletedManyByIds(
-		reqDto.Body.RootShelfIds,
-		reqDto.ContextFields.UserId,
-		options.WithDB(db),
-	)
-	if exception != nil {
-		return nil, exception
-	}
-
-	resDto := dtos.RestoreMyRootShelvesByIdsResDto{}
-	for _, restoredRootShelf := range restoredRootShelves {
-		resDto = append(resDto, dtos.RestoreMyRootShelfByIdResDto{
-			Id:             restoredRootShelf.Id,
-			Name:           restoredRootShelf.Name,
-			SubShelfCount:  restoredRootShelf.SubShelfCount,
-			ItemCount:      restoredRootShelf.ItemCount,
-			LastAnalyzedAt: restoredRootShelf.LastAnalyzedAt,
-			DeletedAt:      restoredRootShelf.DeletedAt,
-			UpdatedAt:      restoredRootShelf.UpdatedAt,
-			CreatedAt:      restoredRootShelf.CreatedAt,
-		})
-	}
-
-	return &resDto, nil
-}
-
-func (s *RootShelfService) DeleteMyRootShelfById(
-	ctx context.Context, reqDto *dtos.DeleteMyRootShelfByIdReqDto,
-) (*dtos.DeleteMyRootShelfByIdResDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
-	}
-
-	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
-	if exception != nil {
-		return nil, exception
-	}
-
 	tx := s.db.WithContext(ctx).Begin()
-
+	if tx.Error != nil {
+		return nil, exceptions.Shelf.FailedToBeginTransaction(
+			"Failed to begin RootShelf ownership transfer transaction",
+		).WithOrigin(tx.Error)
+	}
 	rootShelf, permission, exception := s.rootShelfRepository.CheckPermissionAndGetOneById(
-		reqDto.Body.RootShelfId,
+		reqDto.Param.RootShelfId,
 		reqDto.ContextFields.UserId,
 		nil,
-		allowedPermissions,
-		options.WithDB(tx),
+		[]enums.AccessControlPermission{enums.AccessControlPermission_Owner},
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithLockingStrength(options.LockingStrengthUpdate),
 	)
@@ -585,61 +840,96 @@ func (s *RootShelfService) DeleteMyRootShelfById(
 		tx.Rollback()
 		return nil, exception
 	}
-
-	if permission == enums.AccessControlPermission_Owner {
-		result := tx.
-			Model(&schemas.RootShelf{}).
-			Where("id = ?", rootShelf.Id).
-			Update("deleted_at", time.Now())
-		if result.Error != nil {
-			tx.Rollback()
-			return nil, exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)
-		}
-		if result.RowsAffected == 0 {
-			tx.Rollback()
-			return nil, exceptions.Shelf.NoChanges()
-		}
-	} else {
-		exception = s.rootShelfRepository.DeletePermissionByRootShelfIdAndUserId(
-			rootShelf.Id,
-			reqDto.ContextFields.UserId,
-			options.WithDB(tx),
-		)
-		if exception != nil {
-			tx.Rollback()
-			return nil, exception
-		}
+	if permission != enums.AccessControlPermission_Owner {
+		tx.Rollback()
+		return nil, exceptions.Shelf.NoPermission("transfer RootShelf ownership")
 	}
 
+	var actorUser schemas.User
+	if result := tx.Select("id, public_id").Where("id = ?", reqDto.ContextFields.UserId).First(&actorUser); result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.User.NotFound().WithOrigin(result.Error)
+	}
+	var targetUser schemas.User
+	if result := tx.Select("id, public_id").Where("public_id = ?", reqDto.Body.TargetUserPublicId).First(&targetUser); result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.User.NotFound().WithOrigin(result.Error)
+	}
+	if targetUser.Id == reqDto.ContextFields.UserId {
+		tx.Rollback()
+		return nil, exceptions.Shelf.NoChanges()
+	}
+
+	targetMembership, exception := s.usersToShelvesRepository.GetOne(
+		rootShelf.Id,
+		targetUser.Id,
+		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+	if targetMembership.Permission == enums.AccessControlPermission_Owner {
+		tx.Rollback()
+		return nil, exceptions.Shelf.NoChanges()
+	}
+
+	var accounts []schemas.UserAccount
+	result := tx.
+		Clauses(clause.Locking{Strength: options.LockingStrengthUpdate}).
+		Where("user_id IN ?", []uuid.UUID{reqDto.ContextFields.UserId, targetUser.Id}).
+		Order("user_id").
+		Find(&accounts)
+	if result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)
+	}
+	if len(accounts) != 2 {
+		tx.Rollback()
+		return nil, exceptions.User.NotFound()
+	}
+
+	if _, exception = s.usersToShelvesRepository.UpdatePermission(
+		rootShelf.Id,
+		reqDto.ContextFields.UserId,
+		enums.AccessControlPermission_Admin,
+		options.WithTransactionDB(tx),
+	); exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+	newOwnerMembership, exception := s.usersToShelvesRepository.UpdatePermission(
+		rootShelf.Id,
+		targetUser.Id,
+		enums.AccessControlPermission_Owner,
+		options.WithTransactionDB(tx),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+	result = tx.Model(&schemas.RootShelf{}).
+		Where("id = ?", rootShelf.Id).
+		Update("owner_id", targetUser.Id)
+	if result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)
+	}
+	if result.RowsAffected == 0 {
+		tx.Rollback()
+		return nil, exceptions.Shelf.NotFound()
+	}
 	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
 		return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	return &dtos.DeleteMyRootShelfByIdResDto{
-		DeletedAt: time.Now(),
-	}, nil
-}
-
-func (s *RootShelfService) DeleteMyRootShelvesByIds(
-	ctx context.Context, reqDto *dtos.DeleteMyRootShelvesByIdsReqDto,
-) (*dtos.DeleteMyRootShelvesByIdsResDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
-	}
-
-	db := s.db.WithContext(ctx)
-
-	exception := s.rootShelfRepository.SoftDeleteManyByIds(
-		reqDto.Body.RootShelfIds,
-		reqDto.ContextFields.UserId,
-		options.WithDB(db),
-	)
-	if exception != nil {
-		return nil, exception
-	}
-
-	return &dtos.DeleteMyRootShelvesByIdsResDto{
-		DeletedAt: time.Now(),
+	return &dtos.TransferMyRootShelfOwnershipResDto{
+		RootShelfId:               rootShelf.Id,
+		PreviousOwnerUserPublicId: actorUser.PublicId,
+		NewOwnerUserPublicId:      targetUser.PublicId,
+		UpdatedAt:                 newOwnerMembership.UpdatedAt,
 	}, nil
 }
 
@@ -681,7 +971,7 @@ func (s *RootShelfService) DeleteMyRootShelfPermission(
 		return exceptions.User.NotFound().WithOrigin(result.Error)
 	}
 
-	targetPermission, exception := s.rootShelfRepository.GetPermissionByRootShelfIdAndUserId(
+	targetPermission, exception := s.usersToShelvesRepository.GetOne(
 		rootShelf.Id,
 		targetUser.Id,
 		options.WithDB(tx),
@@ -701,7 +991,7 @@ func (s *RootShelfService) DeleteMyRootShelfPermission(
 		return exceptions.Shelf.NoPermission("revoke Admin access")
 	}
 
-	exception = s.rootShelfRepository.DeletePermissionByRootShelfIdAndUserId(
+	exception = s.usersToShelvesRepository.DeleteOne(
 		rootShelf.Id,
 		targetUser.Id,
 		options.WithDB(tx),
@@ -821,6 +1111,57 @@ func (s *RootShelfService) DeleteMyRootShelfPermissions(
 		return exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
 	}
 
+	return nil
+}
+
+func (s *RootShelfService) LeaveMyRootShelf(
+	ctx context.Context, reqDto *dtos.LeaveMyRootShelfReqDto,
+) *exceptions.Exception {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return exceptions.Shelf.InvalidDto().WithOrigin(err)
+	}
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return exceptions.Shelf.FailedToBeginTransaction("Failed to begin RootShelf leave transaction").WithOrigin(tx.Error)
+	}
+	if exception := s.leaveMyRootShelf(tx, reqDto.ContextFields.UserId, reqDto.Param.RootShelfId, reqDto.Body.TargetUserPublicId); exception != nil {
+		tx.Rollback()
+		return exception
+	}
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+	}
+	return nil
+}
+
+func (s *RootShelfService) LeaveMyRootShelves(
+	ctx context.Context, reqDto *dtos.LeaveMyRootShelvesReqDto,
+) *exceptions.Exception {
+	if err := validation.Validator.Struct(reqDto); err != nil {
+		return exceptions.Shelf.InvalidDto().WithOrigin(err)
+	}
+	rootShelfIds := make(map[uuid.UUID]struct{}, len(reqDto.Body.RootShelves))
+	for _, rootShelfReqDto := range reqDto.Body.RootShelves {
+		if _, exists := rootShelfIds[rootShelfReqDto.RootShelfId]; exists {
+			return exceptions.Shelf.InvalidDto("rootShelves cannot contain duplicate rootShelfIds")
+		}
+		rootShelfIds[rootShelfReqDto.RootShelfId] = struct{}{}
+	}
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return exceptions.Shelf.FailedToBeginTransaction("Failed to begin RootShelf leave transaction").WithOrigin(tx.Error)
+	}
+	for _, rootShelfReqDto := range reqDto.Body.RootShelves {
+		if exception := s.leaveMyRootShelf(tx, reqDto.ContextFields.UserId, rootShelfReqDto.RootShelfId, rootShelfReqDto.TargetUserPublicId); exception != nil {
+			tx.Rollback()
+			return exception
+		}
+	}
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+	}
 	return nil
 }
 

@@ -29,7 +29,10 @@ type StationRepositoryInterface interface {
 	GetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.StationRelation, opts ...options.RepositoryOptions) (*schemas.Station, enums.AccessControlPermission, *exceptions.Exception)
 	GetAllByUserId(userId uuid.UUID, preloads []schemas.StationRelation, opts ...options.RepositoryOptions) ([]schemas.Station, []enums.AccessControlPermission, *exceptions.Exception)
 	GetPermissionByStationIdAndUserId(stationId uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.UsersToStations, *exceptions.Exception)
+	GetPermissionsByStationIdAndUserIds(stationId uuid.UUID, userIds []uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.UsersToStations, *exceptions.Exception)
+	UpsertPermissionsByUserIds(stationId uuid.UUID, userIds []uuid.UUID, permissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.UsersToStations, *exceptions.Exception)
 	DeletePermissionByStationIdAndUserId(stationId uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
+	DeletePermissionsByUserIds(stationId uuid.UUID, userIds []uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	CreateOne(ownerId uuid.UUID, input inputs.CreateStationInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
 	CreateMany(ownerId uuid.UUID, input []inputs.CreateStationInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateStationInput, opts ...options.RepositoryOptions) (*schemas.Station, *exceptions.Exception)
@@ -303,6 +306,64 @@ func (r *StationRepository) GetPermissionByStationIdAndUserId(
 	return &usersToStation, nil
 }
 
+func (r *StationRepository) GetPermissionsByStationIdAndUserIds(
+	stationId uuid.UUID,
+	userIds []uuid.UUID,
+	opts ...options.RepositoryOptions,
+) ([]schemas.UsersToStations, *exceptions.Exception) {
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	var usersToStations []schemas.UsersToStations
+	result := parsedOptions.DB.
+		Model(&schemas.UsersToStations{}).
+		Where("station_id = ? AND user_id IN ?", stationId, userIds).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
+		Find(&usersToStations)
+	if result.Error != nil {
+		return nil, exceptions.Station.NotFound().WithOrigin(result.Error)
+	}
+
+	return usersToStations, nil
+}
+
+func (r *StationRepository) UpsertPermissionsByUserIds(
+	stationId uuid.UUID,
+	userIds []uuid.UUID,
+	permissions []enums.AccessControlPermission,
+	opts ...options.RepositoryOptions,
+) ([]schemas.UsersToStations, *exceptions.Exception) {
+	if len(userIds) != len(permissions) {
+		return nil, exceptions.Station.InvalidInput("userIds and permissions must have equal lengths")
+	}
+
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+	usersToStations := make([]schemas.UsersToStations, len(userIds))
+	for index, userId := range userIds {
+		usersToStations[index] = schemas.UsersToStations{
+			StationId:  stationId,
+			UserId:     userId,
+			Permission: permissions[index],
+		}
+	}
+
+	result := parsedOptions.DB.
+		Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "user_id"}, {Name: "station_id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"permission", "updated_at"}),
+		}).
+		CreateInBatches(&usersToStations, parsedOptions.BatchSize)
+	if result.Error != nil {
+		return nil, exceptions.Station.FailedToUpdate().WithOrigin(result.Error)
+	}
+
+	return r.GetPermissionsByStationIdAndUserIds(
+		stationId,
+		userIds,
+		options.WithDB(parsedOptions.DB),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+}
+
 func (r *StationRepository) DeletePermissionByStationIdAndUserId(
 	stationId uuid.UUID,
 	userId uuid.UUID,
@@ -318,6 +379,26 @@ func (r *StationRepository) DeletePermissionByStationIdAndUserId(
 	}
 	if result.RowsAffected == 0 {
 		return exceptions.Station.NoChanges()
+	}
+
+	return nil
+}
+
+func (r *StationRepository) DeletePermissionsByUserIds(
+	stationId uuid.UUID,
+	userIds []uuid.UUID,
+	opts ...options.RepositoryOptions,
+) *exceptions.Exception {
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	result := parsedOptions.DB.
+		Where("station_id = ? AND user_id IN ?", stationId, userIds).
+		Delete(&schemas.UsersToStations{})
+	if result.Error != nil {
+		return exceptions.Station.FailedToDelete().WithOrigin(result.Error)
+	}
+	if result.RowsAffected != int64(len(userIds)) {
+		return exceptions.Station.NotFound()
 	}
 
 	return nil

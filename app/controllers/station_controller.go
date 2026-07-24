@@ -23,6 +23,17 @@ type StationControllerInterface interface {
 	HardDeleteMyStationById(ctx *gin.Context, reqDto *dtos.HardDeleteMyStationByIdReqDto)
 	HardDeleteMyStationsByIds(ctx *gin.Context, reqDto *dtos.HardDeleteMyStationsByIdsReqDto)
 	VisualizeMyTotalCount(ctx *gin.Context, reqDto *dtos.VisualizeMyTotalCountReqDto)
+
+	GetMyStationPermission(ctx *gin.Context, reqDto *dtos.GetMyStationPermissionReqDto)
+	CreateMyStationPermission(ctx *gin.Context, reqDto *dtos.CreateMyStationPermissionReqDto)
+	UpsertMyStationPermission(ctx *gin.Context, reqDto *dtos.UpsertMyStationPermissionReqDto)
+	UpsertMyStationPermissions(ctx *gin.Context, reqDto *dtos.UpsertMyStationPermissionsReqDto)
+	UpdateMyStationPermission(ctx *gin.Context, reqDto *dtos.UpdateMyStationPermissionReqDto)
+	TransferMyStationOwnership(ctx *gin.Context, reqDto *dtos.TransferMyStationOwnershipReqDto)
+	DeleteMyStationPermission(ctx *gin.Context, reqDto *dtos.DeleteMyStationPermissionReqDto)
+	DeleteMyStationPermissions(ctx *gin.Context, reqDto *dtos.DeleteMyStationPermissionsReqDto)
+	LeaveMyStation(ctx *gin.Context, reqDto *dtos.LeaveMyStationReqDto)
+	LeaveMyStations(ctx *gin.Context, reqDto *dtos.LeaveMyStationsReqDto)
 }
 
 type StationController struct {
@@ -203,6 +214,8 @@ func (c *StationController) HardDeleteMyStationsByIds(ctx *gin.Context, reqDto *
 	})
 }
 
+/* ============================== Controller Methods for Visualization ============================== */
+
 func (c *StationController) VisualizeMyTotalCount(ctx *gin.Context, reqDto *dtos.VisualizeMyTotalCountReqDto) {
 	resDto, exception := c.stationService.VisualizeMyTotalCount(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -215,4 +228,138 @@ func (c *StationController) VisualizeMyTotalCount(ctx *gin.Context, reqDto *dtos
 		"data":      resDto,
 		"exception": nil,
 	})
+}
+
+/* ============================== Controller Methods for Station Permissions ============================== */
+
+func (c *StationController) GetMyStationPermission(ctx *gin.Context, reqDto *dtos.GetMyStationPermissionReqDto) {
+	resDto, exception := c.stationService.GetMyStationPermission(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *StationController) CreateMyStationPermission(ctx *gin.Context, reqDto *dtos.CreateMyStationPermissionReqDto) {
+	resDto, exception := c.stationService.CreateMyStationPermission(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *StationController) UpsertMyStationPermission(
+	ctx *gin.Context, reqDto *dtos.UpsertMyStationPermissionReqDto,
+) {
+	resDto, exception := c.stationService.UpsertMyStationPermission(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *StationController) UpsertMyStationPermissions(
+	ctx *gin.Context, reqDto *dtos.UpsertMyStationPermissionsReqDto,
+) {
+	resDto, exception := c.stationService.UpsertMyStationPermissions(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *StationController) UpdateMyStationPermission(ctx *gin.Context, reqDto *dtos.UpdateMyStationPermissionReqDto) {
+	resDto, exception := c.stationService.UpdateMyStationPermission(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *StationController) TransferMyStationOwnership(
+	ctx *gin.Context, reqDto *dtos.TransferMyStationOwnershipReqDto,
+) {
+	resDto, exception := c.stationService.TransferMyStationOwnership(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *StationController) DeleteMyStationPermission(ctx *gin.Context, reqDto *dtos.DeleteMyStationPermissionReqDto) {
+	if exception := c.stationService.DeleteMyStationPermission(ctx.Request.Context(), reqDto); exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      nil,
+		"exception": nil,
+	})
+}
+
+func (c *StationController) DeleteMyStationPermissions(
+	ctx *gin.Context, reqDto *dtos.DeleteMyStationPermissionsReqDto,
+) {
+	if exception := c.stationService.DeleteMyStationPermissions(ctx.Request.Context(), reqDto); exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
+}
+
+func (c *StationController) LeaveMyStation(ctx *gin.Context, reqDto *dtos.LeaveMyStationReqDto) {
+	if exception := c.stationService.LeaveMyStation(ctx.Request.Context(), reqDto); exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
+}
+
+func (c *StationController) LeaveMyStations(ctx *gin.Context, reqDto *dtos.LeaveMyStationsReqDto) {
+	if exception := c.stationService.LeaveMyStations(ctx.Request.Context(), reqDto); exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
 }

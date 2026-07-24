@@ -8,6 +8,14 @@ BEGIN
         USING ERRCODE = 'program_limit_exceeded';
     END IF;
 
+    PERFORM 1
+    FROM "RootShelfTable" rs
+    JOIN "SubShelfTable" ss ON ss.root_shelf_id = rs.id
+    JOIN "BlockPackTable" bp ON bp.parent_sub_shelf_id = ss.id
+    JOIN old_table ob ON ob.block_pack_id = bp.id
+    ORDER BY rs.id
+    FOR UPDATE OF rs;
+
     WITH old_blocks_agg AS (
         SELECT 
             block_pack_id, 

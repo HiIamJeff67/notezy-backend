@@ -16,14 +16,21 @@ type RootShelfControllerInterface interface {
 	CreateRootShelves(ctx *gin.Context, reqDto *dtos.CreateRootShelvesReqDto)
 	UpdateMyRootShelfById(ctx *gin.Context, reqDto *dtos.UpdateMyRootShelfByIdReqDto)
 	UpdateMyRootShelvesByIds(ctx *gin.Context, reqDto *dtos.UpdateMyRootShelvesByIdsReqDto)
-	UpsertMyRootShelfPermission(ctx *gin.Context, reqDto *dtos.UpsertMyRootShelfPermissionReqDto)
-	UpsertMyRootShelfPermissions(ctx *gin.Context, reqDto *dtos.UpsertMyRootShelfPermissionsReqDto)
 	RestoreMyRootShelfById(ctx *gin.Context, reqDto *dtos.RestoreMyRootShelfByIdReqDto)
 	RestoreMyRootShelvesByIds(ctx *gin.Context, reqDto *dtos.RestoreMyRootShelvesByIdsReqDto)
 	DeleteMyRootShelfById(ctx *gin.Context, reqDto *dtos.DeleteMyRootShelfByIdReqDto)
 	DeleteMyRootShelvesByIds(ctx *gin.Context, reqDto *dtos.DeleteMyRootShelvesByIdsReqDto)
+
+	GetMyRootShelfPermission(ctx *gin.Context, reqDto *dtos.GetMyRootShelfPermissionReqDto)
+	CreateMyRootShelfPermission(ctx *gin.Context, reqDto *dtos.CreateMyRootShelfPermissionReqDto)
+	UpsertMyRootShelfPermission(ctx *gin.Context, reqDto *dtos.UpsertMyRootShelfPermissionReqDto)
+	UpsertMyRootShelfPermissions(ctx *gin.Context, reqDto *dtos.UpsertMyRootShelfPermissionsReqDto)
+	UpdateMyRootShelfPermission(ctx *gin.Context, reqDto *dtos.UpdateMyRootShelfPermissionReqDto)
+	TransferMyRootShelfOwnership(ctx *gin.Context, reqDto *dtos.TransferMyRootShelfOwnershipReqDto)
 	DeleteMyRootShelfPermission(ctx *gin.Context, reqDto *dtos.DeleteMyRootShelfPermissionReqDto)
 	DeleteMyRootShelfPermissions(ctx *gin.Context, reqDto *dtos.DeleteMyRootShelfPermissionsReqDto)
+	LeaveMyRootShelf(ctx *gin.Context, reqDto *dtos.LeaveMyRootShelfReqDto)
+	LeaveMyRootShelves(ctx *gin.Context, reqDto *dtos.LeaveMyRootShelvesReqDto)
 }
 
 type RootShelfController struct {
@@ -120,38 +127,6 @@ func (c *RootShelfController) UpdateMyRootShelvesByIds(ctx *gin.Context, reqDto 
 	})
 }
 
-func (c *RootShelfController) UpsertMyRootShelfPermission(
-	ctx *gin.Context, reqDto *dtos.UpsertMyRootShelfPermissionReqDto,
-) {
-	resDto, exception := c.rootShelfService.UpsertMyRootShelfPermission(ctx.Request.Context(), reqDto)
-	if exception != nil {
-		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      resDto,
-		"exception": nil,
-	})
-}
-
-func (c *RootShelfController) UpsertMyRootShelfPermissions(
-	ctx *gin.Context, reqDto *dtos.UpsertMyRootShelfPermissionsReqDto,
-) {
-	resDto, exception := c.rootShelfService.UpsertMyRootShelfPermissions(ctx.Request.Context(), reqDto)
-	if exception != nil {
-		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      resDto,
-		"exception": nil,
-	})
-}
-
 func (c *RootShelfController) RestoreMyRootShelfById(ctx *gin.Context, reqDto *dtos.RestoreMyRootShelfByIdReqDto) {
 	resDto, exception := c.rootShelfService.RestoreMyRootShelfById(ctx.Request.Context(), reqDto)
 	if exception != nil {
@@ -208,6 +183,96 @@ func (c *RootShelfController) DeleteMyRootShelvesByIds(ctx *gin.Context, reqDto 
 	})
 }
 
+func (c *RootShelfController) GetMyRootShelfPermission(ctx *gin.Context, reqDto *dtos.GetMyRootShelfPermissionReqDto) {
+	resDto, exception := c.rootShelfService.GetMyRootShelfPermission(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RootShelfController) CreateMyRootShelfPermission(ctx *gin.Context, reqDto *dtos.CreateMyRootShelfPermissionReqDto) {
+	resDto, exception := c.rootShelfService.CreateMyRootShelfPermission(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RootShelfController) UpsertMyRootShelfPermission(
+	ctx *gin.Context, reqDto *dtos.UpsertMyRootShelfPermissionReqDto,
+) {
+	resDto, exception := c.rootShelfService.UpsertMyRootShelfPermission(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RootShelfController) UpsertMyRootShelfPermissions(
+	ctx *gin.Context, reqDto *dtos.UpsertMyRootShelfPermissionsReqDto,
+) {
+	resDto, exception := c.rootShelfService.UpsertMyRootShelfPermissions(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RootShelfController) UpdateMyRootShelfPermission(ctx *gin.Context, reqDto *dtos.UpdateMyRootShelfPermissionReqDto) {
+	resDto, exception := c.rootShelfService.UpdateMyRootShelfPermission(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
+func (c *RootShelfController) TransferMyRootShelfOwnership(
+	ctx *gin.Context, reqDto *dtos.TransferMyRootShelfOwnershipReqDto,
+) {
+	resDto, exception := c.rootShelfService.TransferMyRootShelfOwnership(ctx.Request.Context(), reqDto)
+	if exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success":   true,
+		"data":      resDto,
+		"exception": nil,
+	})
+}
+
 func (c *RootShelfController) DeleteMyRootShelfPermission(
 	ctx *gin.Context, reqDto *dtos.DeleteMyRootShelfPermissionReqDto,
 ) {
@@ -223,6 +288,24 @@ func (c *RootShelfController) DeleteMyRootShelfPermissions(
 	ctx *gin.Context, reqDto *dtos.DeleteMyRootShelfPermissionsReqDto,
 ) {
 	if exception := c.rootShelfService.DeleteMyRootShelfPermissions(ctx.Request.Context(), reqDto); exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
+}
+
+func (c *RootShelfController) LeaveMyRootShelf(ctx *gin.Context, reqDto *dtos.LeaveMyRootShelfReqDto) {
+	if exception := c.rootShelfService.LeaveMyRootShelf(ctx.Request.Context(), reqDto); exception != nil {
+		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
+}
+
+func (c *RootShelfController) LeaveMyRootShelves(ctx *gin.Context, reqDto *dtos.LeaveMyRootShelvesReqDto) {
+	if exception := c.rootShelfService.LeaveMyRootShelves(ctx.Request.Context(), reqDto); exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return
 	}

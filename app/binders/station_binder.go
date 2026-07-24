@@ -27,7 +27,19 @@ type StationBinderInterface interface {
 	BindDeleteMyStationsByIds(controllerFunc types.ControllerFunc[*dtos.DeleteMyStationsByIdsReqDto]) gin.HandlerFunc
 	BindHardDeleteMyStationById(controllerFunc types.ControllerFunc[*dtos.HardDeleteMyStationByIdReqDto]) gin.HandlerFunc
 	BindHardDeleteMyStationsByIds(controllerFunc types.ControllerFunc[*dtos.HardDeleteMyStationsByIdsReqDto]) gin.HandlerFunc
+
 	BindVisualizeMyTotalCount(controllerFunc types.ControllerFunc[*dtos.VisualizeMyTotalCountReqDto]) gin.HandlerFunc
+
+	BindGetMyStationPermission(controllerFunc types.ControllerFunc[*dtos.GetMyStationPermissionReqDto]) gin.HandlerFunc
+	BindCreateMyStationPermission(controllerFunc types.ControllerFunc[*dtos.CreateMyStationPermissionReqDto]) gin.HandlerFunc
+	BindUpsertMyStationPermission(controllerFunc types.ControllerFunc[*dtos.UpsertMyStationPermissionReqDto]) gin.HandlerFunc
+	BindUpsertMyStationPermissions(controllerFunc types.ControllerFunc[*dtos.UpsertMyStationPermissionsReqDto]) gin.HandlerFunc
+	BindUpdateMyStationPermission(controllerFunc types.ControllerFunc[*dtos.UpdateMyStationPermissionReqDto]) gin.HandlerFunc
+	BindTransferMyStationOwnership(controllerFunc types.ControllerFunc[*dtos.TransferMyStationOwnershipReqDto]) gin.HandlerFunc
+	BindDeleteMyStationPermission(controllerFunc types.ControllerFunc[*dtos.DeleteMyStationPermissionReqDto]) gin.HandlerFunc
+	BindDeleteMyStationPermissions(controllerFunc types.ControllerFunc[*dtos.DeleteMyStationPermissionsReqDto]) gin.HandlerFunc
+	BindLeaveMyStation(controllerFunc types.ControllerFunc[*dtos.LeaveMyStationReqDto]) gin.HandlerFunc
+	BindLeaveMyStations(controllerFunc types.ControllerFunc[*dtos.LeaveMyStationsReqDto]) gin.HandlerFunc
 }
 
 type StationBinder struct{}
@@ -332,6 +344,8 @@ func (b *StationBinder) BindHardDeleteMyStationsByIds(controllerFunc types.Contr
 	}
 }
 
+/* ============================== Binder Methods for Visualization ============================== */
+
 func (b *StationBinder) BindVisualizeMyTotalCount(controllerFunc types.ControllerFunc[*dtos.VisualizeMyTotalCountReqDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto dtos.VisualizeMyTotalCountReqDto
@@ -356,6 +370,321 @@ func (b *StationBinder) BindVisualizeMyTotalCount(controllerFunc types.Controlle
 			return
 		}
 		reqDto.Param.Permission = *permission
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+/* ============================== Binder Methods for Station Permissions ============================== */
+
+func (b *StationBinder) BindGetMyStationPermission(controllerFunc types.ControllerFunc[*dtos.GetMyStationPermissionReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.GetMyStationPermissionReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		if err != nil {
+			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.StationId = stationId
+
+		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
+		if err != nil {
+			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.UserPublicId = userPublicId
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *StationBinder) BindCreateMyStationPermission(controllerFunc types.ControllerFunc[*dtos.CreateMyStationPermissionReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.CreateMyStationPermissionReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		if err != nil {
+			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.StationId = stationId
+
+		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
+		if err != nil {
+			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.UserPublicId = userPublicId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exceptions.Station.InvalidDto().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *StationBinder) BindUpsertMyStationPermission(controllerFunc types.ControllerFunc[*dtos.UpsertMyStationPermissionReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.UpsertMyStationPermissionReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		if err != nil {
+			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.StationId = stationId
+
+		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
+		if err != nil {
+			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.UserPublicId = userPublicId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exceptions.Station.InvalidDto().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *StationBinder) BindUpsertMyStationPermissions(
+	controllerFunc types.ControllerFunc[*dtos.UpsertMyStationPermissionsReqDto],
+) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.UpsertMyStationPermissionsReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		if err != nil {
+			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.StationId = stationId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exceptions.Station.InvalidDto().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *StationBinder) BindUpdateMyStationPermission(controllerFunc types.ControllerFunc[*dtos.UpdateMyStationPermissionReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.UpdateMyStationPermissionReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		if err != nil {
+			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.StationId = stationId
+
+		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
+		if err != nil {
+			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.UserPublicId = userPublicId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exceptions.Station.InvalidDto().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *StationBinder) BindTransferMyStationOwnership(
+	controllerFunc types.ControllerFunc[*dtos.TransferMyStationOwnershipReqDto],
+) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.TransferMyStationOwnershipReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		if err != nil {
+			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.StationId = stationId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exceptions.Station.InvalidDto().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *StationBinder) BindDeleteMyStationPermission(controllerFunc types.ControllerFunc[*dtos.DeleteMyStationPermissionReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.DeleteMyStationPermissionReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		if err != nil {
+			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.StationId = stationId
+
+		userPublicId, err := uuid.Parse(ctx.Param("userPublicId"))
+		if err != nil {
+			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.UserPublicId = userPublicId
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *StationBinder) BindDeleteMyStationPermissions(
+	controllerFunc types.ControllerFunc[*dtos.DeleteMyStationPermissionsReqDto],
+) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.DeleteMyStationPermissionsReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		if err != nil {
+			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.StationId = stationId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exceptions.Station.InvalidDto().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *StationBinder) BindLeaveMyStation(controllerFunc types.ControllerFunc[*dtos.LeaveMyStationReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.LeaveMyStationReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+
+		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		if err != nil {
+			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Param.StationId = stationId
+
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exceptions.Station.InvalidDto().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
+		controllerFunc(ctx, &reqDto)
+	}
+}
+
+func (b *StationBinder) BindLeaveMyStations(controllerFunc types.ControllerFunc[*dtos.LeaveMyStationsReqDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var reqDto dtos.LeaveMyStationsReqDto
+
+		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		if exception != nil {
+			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.ContextFields.UserId = *userId
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exceptions.Station.InvalidDto().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
 
 		controllerFunc(ctx, &reqDto)
 	}

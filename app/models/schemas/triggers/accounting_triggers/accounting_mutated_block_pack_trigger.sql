@@ -26,7 +26,8 @@ BEGIN
         JOIN "RootShelfTable" rs ON ss.root_shelf_id = rs.id
         JOIN "UserTable" u ON rs.owner_id = u.id
         JOIN "PlanLimitationTable" pl ON u.plan = pl.key
-        WHERE ss.id = NEW.parent_sub_shelf_id;
+        WHERE ss.id = NEW.parent_sub_shelf_id
+        FOR UPDATE OF rs;
 
         IF NOT FOUND THEN
             RAISE EXCEPTION 'Data integrity: Cannot find owner for BlockPack (SubShelf ID: %). Possible orphan record.', NEW.parent_sub_shelf_id
@@ -62,6 +63,12 @@ BEGIN
         RETURN NEW;
     
     ELSIF (TG_OP = 'DELETE') THEN
+        PERFORM 1
+        FROM "SubShelfTable" ss
+        JOIN "RootShelfTable" rs ON ss.root_shelf_id = rs.id
+        WHERE ss.id = OLD.parent_sub_shelf_id
+        FOR UPDATE OF rs;
+
         UPDATE "UserAccountTable"
         SET
             block_pack_count = GREATEST(0, block_pack_count - 1),

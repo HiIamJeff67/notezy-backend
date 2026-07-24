@@ -150,7 +150,7 @@ type UpdateMySubShelvesByIdsReqDto struct {
 	]
 }
 
-type MoveMySubShelfReqDto struct {
+type MoveMySubShelfByRootShelfIdReqDto struct {
 	NotezyRequest[
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
@@ -307,7 +307,7 @@ type UpdateMySubShelvesByIdsResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type MoveMySubShelfResDto struct {
+type MoveMySubShelfByRootShelfIdResDto struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 

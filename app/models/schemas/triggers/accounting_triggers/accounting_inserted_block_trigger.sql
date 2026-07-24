@@ -8,6 +8,14 @@ BEGIN
         USING ERRCODE = 'program_limit_exceeded';
     END IF;
 
+    PERFORM 1
+    FROM "RootShelfTable" rs
+    JOIN "SubShelfTable" ss ON ss.root_shelf_id = rs.id
+    JOIN "BlockPackTable" bp ON bp.parent_sub_shelf_id = ss.id
+    JOIN new_table nb ON nb.block_pack_id = bp.id
+    ORDER BY rs.id
+    FOR UPDATE OF rs;
+
     FOR r IN -- batch account the user block count, if all the mutated blocks belong to one user, then this will only execute once
         WITH new_blocks_agg AS (
             SELECT 

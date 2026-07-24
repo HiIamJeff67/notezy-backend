@@ -17,11 +17,13 @@ type StationModule struct {
 func NewStationModule() *StationModule {
 	stationScope := scopes.NewStationScope()
 	stationRepository := repositories.NewStationRepository(stationScope)
+	usersToStationsRepository := repositories.NewUsersToStationsRepository()
 
 	stationService := services.NewStationService(
 		models.NotezyDB,
 		stationScope,
 		stationRepository,
+		usersToStationsRepository,
 	)
 
 	stationBinder := binders.NewStationBinder()

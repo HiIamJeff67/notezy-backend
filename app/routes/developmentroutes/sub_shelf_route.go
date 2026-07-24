@@ -168,8 +168,8 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 					defaultMiddlewares,
 					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Admin),
 				),
-				subShelfModule.Binder.BindMoveMySubShelf(
-					subShelfModule.Controller.MoveMySubShelf,
+				subShelfModule.Binder.BindMoveMySubShelfByRootShelfId(
+					subShelfModule.Controller.MoveMySubShelfByRootShelfId,
 				),
 			)...,
 		)

@@ -18,7 +18,7 @@ type BlockPackControllerInterface interface {
 	CreateBlockPacks(ctx *gin.Context, reqDto *dtos.CreateBlockPacksReqDto)
 	UpdateMyBlockPackById(ctx *gin.Context, reqDto *dtos.UpdateMyBlockPackByIdReqDto)
 	UpdateMyBlockPacksByIds(ctx *gin.Context, reqDto *dtos.UpdateMyBlockPacksByIdsReqDto)
-	MoveMyBlockPackById(ctx *gin.Context, reqDto *dtos.MoveMyBlockPackByIdReqDto)
+	MoveMyBlockPackByParentSubShelfId(ctx *gin.Context, reqDto *dtos.MoveMyBlockPackByParentSubShelfIdReqDto)
 	MoveMyBlockPacksByParentSubShelfId(ctx *gin.Context, reqDto *dtos.MoveMyBlockPacksByParentSubShelfIdReqDto)
 	MoveMyBlockPacksByParentSubShelfIds(ctx *gin.Context, reqDto *dtos.MoveMyBlockPacksByParentSubShelfIdsReqDto)
 	RestoreMyBlockPackById(ctx *gin.Context, reqDto *dtos.RestoreMyBlockPackByIdReqDto)
@@ -149,8 +149,8 @@ func (c *BlockPackController) UpdateMyBlockPacksByIds(ctx *gin.Context, reqDto *
 	})
 }
 
-func (c *BlockPackController) MoveMyBlockPackById(ctx *gin.Context, reqDto *dtos.MoveMyBlockPackByIdReqDto) {
-	resDto, exception := c.blockPackService.MoveMyBlockPackById(ctx.Request.Context(), reqDto)
+func (c *BlockPackController) MoveMyBlockPackByParentSubShelfId(ctx *gin.Context, reqDto *dtos.MoveMyBlockPackByParentSubShelfIdReqDto) {
+	resDto, exception := c.blockPackService.MoveMyBlockPackByParentSubShelfId(ctx.Request.Context(), reqDto)
 	if exception != nil {
 		exception.Log().SafelyAbortAndResponseWithJSON(ctx)
 		return

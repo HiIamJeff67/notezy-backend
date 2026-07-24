@@ -15,7 +15,8 @@ BEGIN
         FROM "RootShelfTable" rs
         JOIN "UserTable" u ON rs.owner_id = u.id
         JOIN "PlanLimitationTable" pl ON u.plan = pl.key
-        WHERE rs.id = NEW.root_shelf_id;
+        WHERE rs.id = NEW.root_shelf_id
+        FOR UPDATE OF rs;
 
         IF NOT FOUND THEN
             RAISE EXCEPTION 'Data integrity: Cannot find owner for SubShelf (RootShelf ID: %). Possible orphan record.', NEW.root_shelf_id

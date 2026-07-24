@@ -32,8 +32,9 @@ type BlockServiceInterface interface {
 	GetMyBlockById(ctx context.Context, reqDto *dtos.GetMyBlockByIdReqDto) (*dtos.GetMyBlockByIdResDto, *exceptions.Exception)
 	GetMyBlocksByIds(ctx context.Context, reqDto *dtos.GetMyBlocksByIdsReqDto) (*dtos.GetMyBlocksByIdsResDto, *exceptions.Exception)
 	GetMyBlocksByBlockPackId(ctx context.Context, reqDto *dtos.GetMyBlocksByBlockPackIdReqDto) (*dtos.GetMyBlocksByBlockPackIdResDto, *exceptions.Exception)
-	Apply(ctx context.Context, blockPackId uuid.UUID, input dtos.ApplyBlockProjectionInput) (*dtos.ApplyBlockProjectionResult, error)
-	ApplyMany(ctx context.Context, inputs []dtos.ApplyBlockProjectionDocumentInput) (dtos.ApplyBlockProjectionDocumentResult, error)
+
+	Apply(ctx context.Context, blockPackId uuid.UUID, reqDto dtos.ApplyBlockProjectionReqDto) (*dtos.ApplyBlockProjectionResDto, error)
+	ApplyMany(ctx context.Context, reqDtos []dtos.ApplyBlockProjectionDocumentReqDto) (dtos.ApplyBlockProjectionDocumentResDto, error)
 
 	SearchPrivateBlocks(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchBlockInput) (*gqlmodels.SearchBlockConnection, *exceptions.Exception)
 }
@@ -218,20 +219,20 @@ func (s *BlockService) GetMyBlocksByBlockPackId(
 func (s *BlockService) Apply(
 	ctx context.Context,
 	blockPackId uuid.UUID,
-	input dtos.ApplyBlockProjectionInput,
-) (*dtos.ApplyBlockProjectionResult, error) {
+	reqDto dtos.ApplyBlockProjectionReqDto,
+) (*dtos.ApplyBlockProjectionResDto, error) {
 	if blockPackId == uuid.Nil {
 		return nil, fmt.Errorf("block projection requires a block pack id")
 	}
-	if input.SchemaId != constants.YjsBlockPackSchemaId ||
-		input.SchemaVersion != constants.YjsBlockPackSchemaVersion {
+	if reqDto.SchemaId != constants.YjsBlockPackSchemaId ||
+		reqDto.SchemaVersion != constants.YjsBlockPackSchemaVersion {
 		return nil, fmt.Errorf("block projection source schema is not supported")
 	}
-	if input.ProjectedSequence < 0 {
+	if reqDto.ProjectedSequence < 0 {
 		return nil, fmt.Errorf("block projection target update sequence must not be negative")
 	}
 
-	flattenedBlocks, _, exception := s.editableBlockAdapter.FlattenManyToRaw(input.Blocks)
+	flattenedBlocks, _, exception := s.editableBlockAdapter.FlattenManyToRaw(reqDto.Blocks)
 	if exception != nil {
 		return nil, fmt.Errorf("failed to flatten block projection: %w", exception)
 	}
@@ -277,18 +278,18 @@ func (s *BlockService) Apply(
 	}
 	metrics.NotezyMeter.Value(ctx, "yjs.projection.lag", document.LastUpdateSequence-document.ProjectedUntilSequence)
 
-	if input.ProjectedSequence <= document.ProjectedUntilSequence {
+	if reqDto.ProjectedSequence <= document.ProjectedUntilSequence {
 		if err := tx.Commit().Error; err != nil {
 			return nil, fmt.Errorf("failed to commit stale block projection: %w", err)
 		}
 
-		return &dtos.ApplyBlockProjectionResult{
+		return &dtos.ApplyBlockProjectionResDto{
 			Applied:                false,
 			ProjectedUntilSequence: document.ProjectedUntilSequence,
 		}, nil
 	}
 
-	if input.ProjectedSequence > document.LastUpdateSequence {
+	if reqDto.ProjectedSequence > document.LastUpdateSequence {
 		tx.Rollback()
 
 		return nil, fmt.Errorf("block projection target update sequence exceeds durable yjs state")
@@ -355,7 +356,7 @@ func (s *BlockService) Apply(
 	if err := tx.Model(&schemas.BlockPackYjsDocument{}).
 		Where("id = ?", document.Id).
 		Updates(map[string]any{
-			"projected_until_sequence": input.ProjectedSequence,
+			"projected_until_sequence": reqDto.ProjectedSequence,
 			"updated_at":               now,
 		}).Error; err != nil {
 		tx.Rollback()
@@ -367,18 +368,18 @@ func (s *BlockService) Apply(
 		return nil, fmt.Errorf("failed to commit block projection: %w", err)
 	}
 
-	return &dtos.ApplyBlockProjectionResult{
+	return &dtos.ApplyBlockProjectionResDto{
 		Applied:                true,
-		ProjectedUntilSequence: input.ProjectedSequence,
+		ProjectedUntilSequence: reqDto.ProjectedSequence,
 	}, nil
 }
 
 func (s *BlockService) ApplyMany(
 	ctx context.Context,
-	inputs []dtos.ApplyBlockProjectionDocumentInput,
-) (dtos.ApplyBlockProjectionDocumentResult, error) {
-	if len(inputs) == 0 {
-		return dtos.ApplyBlockProjectionDocumentResult{}, nil
+	reqDtos []dtos.ApplyBlockProjectionDocumentReqDto,
+) (dtos.ApplyBlockProjectionDocumentResDto, error) {
+	if len(reqDtos) == 0 {
+		return dtos.ApplyBlockProjectionDocumentResDto{}, nil
 	}
 
 	type preparedProjection struct {
@@ -388,26 +389,26 @@ func (s *BlockService) ApplyMany(
 		blockIds     []uuid.UUID
 	}
 
-	preparedProjections := make([]preparedProjection, 0, len(inputs))
-	blockPackIdSet := make(map[uuid.UUID]bool, len(inputs))
+	preparedProjections := make([]preparedProjection, 0, len(reqDtos))
+	blockPackIdSet := make(map[uuid.UUID]bool, len(reqDtos))
 	blockIdSet := make(map[uuid.UUID]bool)
-	for _, input := range inputs {
-		if input.BlockPackId == uuid.Nil {
+	for _, reqDto := range reqDtos {
+		if reqDto.BlockPackId == uuid.Nil {
 			return nil, fmt.Errorf("block projection requires a block pack id")
 		}
-		if input.Projection.SchemaId != constants.YjsBlockPackSchemaId ||
-			input.Projection.SchemaVersion != constants.YjsBlockPackSchemaVersion {
+		if reqDto.Projection.SchemaId != constants.YjsBlockPackSchemaId ||
+			reqDto.Projection.SchemaVersion != constants.YjsBlockPackSchemaVersion {
 			return nil, fmt.Errorf("block projection source schema is not supported")
 		}
-		if input.Projection.ProjectedSequence < 0 {
+		if reqDto.Projection.ProjectedSequence < 0 {
 			return nil, fmt.Errorf("block projection target update sequence must not be negative")
 		}
-		if blockPackIdSet[input.BlockPackId] {
+		if blockPackIdSet[reqDto.BlockPackId] {
 			return nil, fmt.Errorf("duplicate block projection block pack id")
 		}
-		blockPackIdSet[input.BlockPackId] = true
+		blockPackIdSet[reqDto.BlockPackId] = true
 
-		flattenedBlocks, _, exception := s.editableBlockAdapter.FlattenManyToRaw(input.Projection.Blocks)
+		flattenedBlocks, _, exception := s.editableBlockAdapter.FlattenManyToRaw(reqDto.Projection.Blocks)
 		if exception != nil {
 			return nil, fmt.Errorf("failed to flatten block projection: %w", exception)
 		}
@@ -422,7 +423,7 @@ func (s *BlockService) ApplyMany(
 			blockIds[index] = flattenedBlock.Id
 			blocks[index] = schemas.Block{
 				Id:            flattenedBlock.Id,
-				BlockPackId:   input.BlockPackId,
+				BlockPackId:   reqDto.BlockPackId,
 				ParentBlockId: flattenedBlock.ParentBlockId,
 				PrevBlockId:   flattenedBlock.PrevBlockId,
 				NextBlockId:   flattenedBlock.NextBlockId,
@@ -433,8 +434,8 @@ func (s *BlockService) ApplyMany(
 		}
 
 		preparedProjections = append(preparedProjections, preparedProjection{
-			blockPackId:  input.BlockPackId,
-			projectedSeq: input.Projection.ProjectedSequence,
+			blockPackId:  reqDto.BlockPackId,
+			projectedSeq: reqDto.Projection.ProjectedSequence,
 			blocks:       blocks,
 			blockIds:     blockIds,
 		})
@@ -509,7 +510,7 @@ func (s *BlockService) ApplyMany(
 			return nil, fmt.Errorf("failed to commit stale block projections: %w", err)
 		}
 
-		return dtos.ApplyBlockProjectionDocumentResult{}, nil
+		return dtos.ApplyBlockProjectionDocumentResDto{}, nil
 	}
 
 	projectedBlockIds := make([]uuid.UUID, 0)
@@ -621,7 +622,7 @@ func (s *BlockService) ApplyMany(
 		appliedBlockPackIds[index] = document.BlockPackId
 	}
 
-	return dtos.ApplyBlockProjectionDocumentResult(appliedBlockPackIds), nil
+	return dtos.ApplyBlockProjectionDocumentResDto(appliedBlockPackIds), nil
 }
 
 func (s *BlockService) SearchPrivateBlocks(

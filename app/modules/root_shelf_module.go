@@ -17,11 +17,13 @@ type RootShelfModule struct {
 func NewRootShelfModule() *RootShelfModule {
 	rootShelfScope := scopes.NewRootShelfScope()
 	rootShelfRepository := repositories.NewRootShelfRepository(rootShelfScope)
+	usersToShelvesRepository := repositories.NewUsersToShelvesRepository()
 
 	rootShelfService := services.NewRootShelfService(
 		models.NotezyDB,
 		rootShelfScope,
 		rootShelfRepository,
+		usersToShelvesRepository,
 	)
 
 	rootShelfBinder := binders.NewRootShelfBinder()

@@ -32,6 +32,7 @@ type RoutineTaskRecordServiceInterface interface {
 	VisualizeMyRoutineTaskRecordScheduledAtCount(ctx context.Context, reqDto *dtos.VisualizeMyRoutineTaskRecordScheduledAtCountReqDto) (*dtos.VisualizeMyRoutineTaskRecordScheduledAtCountResDto, *exceptions.Exception)
 	VisualizeMyRoutineTaskRecordActualStartedAtCount(ctx context.Context, reqDto *dtos.VisualizeMyRoutineTaskRecordActualStartedAtCountReqDto) (*dtos.VisualizeMyRoutineTaskRecordActualStartedAtCountResDto, *exceptions.Exception)
 	VisualizeMyRoutineTaskRecordActualEndedAtCount(ctx context.Context, reqDto *dtos.VisualizeMyRoutineTaskRecordActualEndedAtCountReqDto) (*dtos.VisualizeMyRoutineTaskRecordActualEndedAtCountResDto, *exceptions.Exception)
+
 	SearchPrivateRoutineTaskRecords(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRoutineTaskRecordInput) (*gqlmodels.SearchRoutineTaskRecordConnection, *exceptions.Exception)
 }
 

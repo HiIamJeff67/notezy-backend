@@ -23,6 +23,7 @@ import (
 	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/app/realtime/types"
+	services "github.com/HiIamJeff67/notezy-backend/app/services"
 	tokens "github.com/HiIamJeff67/notezy-backend/app/tokens"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
@@ -34,11 +35,13 @@ type fakeWorkerManager struct {
 }
 
 type fakeBlockProjectionService struct {
+	services.BlockServiceInterface
 	blockPackId uuid.UUID
-	input       dtos.ApplyBlockProjectionInput
+	reqDto      dtos.ApplyBlockProjectionReqDto
 }
 
 type fakeRealtimeAdmissionService struct {
+	services.RealtimeServiceInterface
 	maximumSubscribers  int32
 	errorCode           realtimetypes.ErrorCode
 	err                 error
@@ -71,14 +74,14 @@ func (s *fakeRealtimeAdmissionService) ValidateBlockPackChannelPermission(
 func (s *fakeBlockProjectionService) Apply(
 	ctx context.Context,
 	blockPackId uuid.UUID,
-	input dtos.ApplyBlockProjectionInput,
-) (*dtos.ApplyBlockProjectionResult, error) {
+	reqDto dtos.ApplyBlockProjectionReqDto,
+) (*dtos.ApplyBlockProjectionResDto, error) {
 	s.blockPackId = blockPackId
-	s.input = input
+	s.reqDto = reqDto
 
-	return &dtos.ApplyBlockProjectionResult{
+	return &dtos.ApplyBlockProjectionResDto{
 		Applied:                true,
-		ProjectedUntilSequence: input.ProjectedSequence,
+		ProjectedUntilSequence: reqDto.ProjectedSequence,
 	}, nil
 }
 
@@ -920,23 +923,23 @@ func TestGatewayDetachesYjsWriteChannelWhenBlockPackBecomesUnavailable(t *testin
 
 func TestGatewayAppliesBlockProjectionInternalFrames(t *testing.T) {
 	workerManager := &fakeWorkerManager{}
-	blockProjectionService := &fakeBlockProjectionService{}
+	blockService := &fakeBlockProjectionService{}
 	gateway := &Gateway{
-		workerManager:          workerManager,
-		blockProjectionService: blockProjectionService,
-		connectors:             make(map[uuid.UUID]*Connector),
+		workerManager: workerManager,
+		blockService:  blockService,
+		connectors:    make(map[uuid.UUID]*Connector),
 	}
 	workerManager.SetFrameHandler(gateway.handleInternalFrame)
 
 	blockPackId := uuid.New()
 	connectionId := uuid.New()
-	input := dtos.ApplyBlockProjectionInput{
+	reqDto := dtos.ApplyBlockProjectionReqDto{
 		SchemaId:          "notezy.blocknote",
 		SchemaVersion:     1,
 		ProjectedSequence: 7,
 		Blocks:            []dtos.ArborizedEditableBlock{},
 	}
-	payload, err := json.Marshal(input)
+	payload, err := json.Marshal(reqDto)
 	if err != nil {
 		t.Fatalf("failed to marshal block projection input: %v", err)
 	}
@@ -951,9 +954,9 @@ func TestGatewayAppliesBlockProjectionInternalFrames(t *testing.T) {
 		Payload:            payload,
 	})
 
-	if blockProjectionService.blockPackId != blockPackId ||
-		blockProjectionService.input.ProjectedSequence != input.ProjectedSequence {
-		t.Fatalf("unexpected projection service invocation: %#v", blockProjectionService)
+	if blockService.blockPackId != blockPackId ||
+		blockService.reqDto.ProjectedSequence != reqDto.ProjectedSequence {
+		t.Fatalf("unexpected block service invocation: %#v", blockService)
 	}
 
 	workerManager.mutex.Lock()
@@ -968,12 +971,12 @@ func TestGatewayAppliesBlockProjectionInternalFrames(t *testing.T) {
 		t.Fatalf("unexpected projection response frame: %#v", frame)
 	}
 
-	var result dtos.ApplyBlockProjectionResult
-	if err := json.Unmarshal(frame.Payload, &result); err != nil {
+	var resDto dtos.ApplyBlockProjectionResDto
+	if err := json.Unmarshal(frame.Payload, &resDto); err != nil {
 		t.Fatalf("failed to unmarshal block projection response: %v", err)
 	}
-	if !result.Applied || result.ProjectedUntilSequence != input.ProjectedSequence {
-		t.Fatalf("unexpected block projection response: %#v", result)
+	if !resDto.Applied || resDto.ProjectedUntilSequence != reqDto.ProjectedSequence {
+		t.Fatalf("unexpected block projection response: %#v", resDto)
 	}
 }
 
