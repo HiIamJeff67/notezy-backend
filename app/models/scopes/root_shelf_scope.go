@@ -4,7 +4,6 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
@@ -25,26 +24,30 @@ func NewRootShelfScope() RootShelfScopeInterface {
 
 func (sc *RootShelfScope) PassPermissionCheck(id uuid.UUID, userId uuid.UUID, permissions []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		allowedPermissions := contexts.IntersectAllowedPermissions(db.Statement.Context, permissions)
+		if permissions == nil {
+			return db.Where("id = ?", id)
+		}
 
 		// Use gorm.DB.Session to build a fresh statement for the subquery to avoid inheriting outer query clauses (especially in UPDATE/DELETE).
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
 			Model(&schemas.UsersToShelves{}).
 			Select("1").
-			Where("root_shelf_id = \"RootShelfTable\".id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
+			Where("root_shelf_id = \"RootShelfTable\".id AND user_id = ? AND permission IN ?", userId, permissions)
 		return db.Where("id = ? AND EXISTS (?)", id, subQuery)
 	}
 }
 
 func (sc *RootShelfScope) PassPermissionChecks(ids []uuid.UUID, userId uuid.UUID, permissions []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		allowedPermissions := contexts.IntersectAllowedPermissions(db.Statement.Context, permissions)
+		if permissions == nil {
+			return db.Where(`"RootShelfTable".id IN ?`, ids)
+		}
 
 		// Use gorm.DB.Session to build a fresh statement for the subquery to avoid inheriting outer query clauses (especially in UPDATE/DELETE).
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
 			Model(&schemas.UsersToShelves{}).
 			Select("1").
-			Where("root_shelf_id = \"RootShelfTable\".id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
+			Where("root_shelf_id = \"RootShelfTable\".id AND user_id = ? AND permission IN ?", userId, permissions)
 		return db.Where("id IN ? AND EXISTS (?)", ids, subQuery)
 	}
 }

@@ -574,10 +574,6 @@ func (b *RootShelfBinder) BindLeaveMyRootShelf(controllerFunc types.ControllerFu
 		}
 		reqDto.Param.RootShelfId = rootShelfId
 
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Shelf.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
 		controllerFunc(ctx, &reqDto)
 	}
 }

@@ -116,10 +116,10 @@ func TestBindTransferMyRootShelfOwnershipParsesRequest(t *testing.T) {
 	}
 }
 
-func TestBindLeaveMyRootShelfParsesOwnerTransferTarget(t *testing.T) {
+func TestBindLeaveMyRootShelfUsesAuthenticatedUserAndRootShelf(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	userId, rootShelfId, targetUserPublicId := uuid.New(), uuid.New(), uuid.New()
+	userId, rootShelfId := uuid.New(), uuid.New()
 	var capturedReqDto *dtos.LeaveMyRootShelfReqDto
 
 	router := gin.New()
@@ -132,12 +132,11 @@ func TestBindLeaveMyRootShelfParsesOwnerTransferTarget(t *testing.T) {
 		ctx.Status(http.StatusNoContent)
 	}))
 
-	request := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/rootShelf/%s/leave", rootShelfId), strings.NewReader(fmt.Sprintf(`{"targetUserPublicId":"%s"}`, targetUserPublicId)))
-	request.Header.Set("Content-Type", "application/json")
+	request := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/rootShelf/%s/leave", rootShelfId), nil)
 	responseRecorder := httptest.NewRecorder()
 	router.ServeHTTP(responseRecorder, request)
 
-	if responseRecorder.Code != http.StatusNoContent || capturedReqDto == nil || capturedReqDto.ContextFields.UserId != userId || capturedReqDto.Param.RootShelfId != rootShelfId || capturedReqDto.Body.TargetUserPublicId == nil || *capturedReqDto.Body.TargetUserPublicId != targetUserPublicId {
-		t.Fatal("expected leave binder to populate the authenticated user, root shelf, and owner transfer target")
+	if responseRecorder.Code != http.StatusNoContent || capturedReqDto == nil || capturedReqDto.ContextFields.UserId != userId || capturedReqDto.Param.RootShelfId != rootShelfId {
+		t.Fatal("expected leave binder to populate the authenticated user and root shelf")
 	}
 }

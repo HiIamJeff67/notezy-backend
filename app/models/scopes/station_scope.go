@@ -4,7 +4,6 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
@@ -23,26 +22,30 @@ func NewStationScope() StationScopeInterface {
 	return &StationScope{}
 }
 
-func (ss *StationScope) PassPermissionCheck(id uuid.UUID, userId uuid.UUID, permission []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB {
+func (ss *StationScope) PassPermissionCheck(id uuid.UUID, userId uuid.UUID, permissions []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		allowedPermissions := contexts.IntersectAllowedPermissions(db.Statement.Context, permission)
+		if permissions == nil {
+			return db.Where("id = ?", id)
+		}
 
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
 			Model(&schemas.UsersToStations{}).
 			Select("1").
-			Where("station_id = \"StationTable\".id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
+			Where("station_id = \"StationTable\".id AND user_id = ? AND permission IN ?", userId, permissions)
 		return db.Where("id = ? AND EXISTS (?)", id, subQuery)
 	}
 }
 
-func (ss *StationScope) PassPermissionChecks(ids []uuid.UUID, userId uuid.UUID, permission []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB {
+func (ss *StationScope) PassPermissionChecks(ids []uuid.UUID, userId uuid.UUID, permissions []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		allowedPermissions := contexts.IntersectAllowedPermissions(db.Statement.Context, permission)
+		if permissions == nil {
+			return db.Where(`"StationTable".id IN ?`, ids)
+		}
 
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
 			Model(&schemas.UsersToStations{}).
 			Select("1").
-			Where("station_id = \"StationTable\".id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
+			Where("station_id = \"StationTable\".id AND user_id = ? AND permission IN ?", userId, permissions)
 		return db.Where("\"StationTable\".id IN ? AND EXISTS (?)", ids, subQuery)
 	}
 }

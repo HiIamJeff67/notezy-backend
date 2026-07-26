@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	adapters "github.com/HiIamJeff67/notezy-backend/app/adapters"
+	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
 	dataloaders "github.com/HiIamJeff67/notezy-backend/app/graphql/dataloaders"
 	generated "github.com/HiIamJeff67/notezy-backend/app/graphql/generated"
 	resolvers "github.com/HiIamJeff67/notezy-backend/app/graphql/resolvers"
@@ -70,6 +71,8 @@ func GraphQLHandler() gin.HandlerFunc {
 		rootShelfScope,
 		rootShelfRepository,
 		usersToShelvesRepository,
+		blockPackRepository,
+		caches.NewRealtimeLeaseStore(caches.RedisClientMap),
 	)
 	subShelfService := services.NewSubShelfService(
 		models.NotezyDB,
@@ -79,6 +82,7 @@ func GraphQLHandler() gin.HandlerFunc {
 		rootShelfRepository,
 		materialRepository,
 		blockPackRepository,
+		caches.NewRealtimeLeaseStore(caches.RedisClientMap),
 	)
 	stationService := services.NewStationService(
 		models.NotezyDB,

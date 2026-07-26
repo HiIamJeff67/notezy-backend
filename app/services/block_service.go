@@ -18,7 +18,6 @@ import (
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
@@ -91,12 +90,17 @@ func (s *BlockService) GetMyBlockById(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	block, exception := s.blockRepository.GetOneById(
 		reqDto.Param.BlockId,
 		reqDto.ContextFields.UserId,
 		nil,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -127,18 +131,18 @@ func (s *BlockService) GetMyBlocksByIds(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	blocks, exception := s.blockRepository.CheckPermissionsAndGetManyByIds(
 		reqDto.Param.BlockIds,
 		reqDto.ContextFields.UserId,
 		nil,
-		[]enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-			enums.AccessControlPermission_Write,
-			enums.AccessControlPermission_Read,
-		},
+		allowedPermissions,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -172,17 +176,17 @@ func (s *BlockService) GetMyBlocksByBlockPackId(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	if !s.blockPackRepository.HasPermission(
 		reqDto.Param.BlockPackId,
 		reqDto.ContextFields.UserId,
-		[]enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-			enums.AccessControlPermission_Write,
-			enums.AccessControlPermission_Read,
-		},
+		allowedPermissions,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	) {
 		return nil, exceptions.Block.NoPermission("get the block pack of blocks")

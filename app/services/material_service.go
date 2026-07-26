@@ -63,8 +63,6 @@ func NewMaterialService(
 	}
 }
 
-/* ============================== Service Methods for Material ============================== */
-
 func (s *MaterialService) GetMyMaterialById(
 	ctx context.Context, reqDto *dtos.GetMyMaterialByIdReqDto,
 ) (*dtos.GetMyMaterialByIdResDto, *exceptions.Exception) {
@@ -73,6 +71,10 @@ func (s *MaterialService) GetMyMaterialById(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	onlyDeleted := types.Ternary_Neutral
 	if reqDto.Param.IsDeleted != nil {
@@ -87,6 +89,7 @@ func (s *MaterialService) GetMyMaterialById(
 		reqDto.Param.MaterialId,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(onlyDeleted),
 	)
 	if exception != nil {
@@ -304,6 +307,10 @@ func (s *MaterialService) CreateMyMaterial(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	newMaterialId := uuid.New()
 	newContentKey := s.storage.GetKey(
@@ -311,7 +318,7 @@ func (s *MaterialService) CreateMyMaterial(
 		newMaterialId.String(),
 	)
 	zeroSize := int64(0)
-	_, exception := s.materialRepository.CreateOneBySubShelfId(
+	_, exception = s.materialRepository.CreateOneBySubShelfId(
 		reqDto.Body.ParentSubShelfId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateMaterialInput{
@@ -322,6 +329,7 @@ func (s *MaterialService) CreateMyMaterial(
 			ParseMediaType: "",
 		},
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -353,6 +361,10 @@ func (s *MaterialService) UpdateMyMaterialById(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	material, exception := s.materialRepository.UpdateOneById(
 		reqDto.Body.MaterialId,
@@ -364,6 +376,7 @@ func (s *MaterialService) UpdateMyMaterialById(
 			SetNull: reqDto.Body.SetNull,
 		},
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -386,6 +399,10 @@ func (s *MaterialService) SaveMyMaterialById(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	partialUpdate := inputs.PartialUpdateMaterialInput{
 		Values: inputs.UpdateMaterialInput{
@@ -423,6 +440,7 @@ func (s *MaterialService) SaveMyMaterialById(
 		reqDto.ContextFields.UserId,
 		partialUpdate,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -517,11 +535,16 @@ func (s *MaterialService) RestoreMyMaterialById(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	restoredMaterial, exception := s.materialRepository.RestoreSoftDeletedOneById(
 		reqDto.Body.MaterialId,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -554,11 +577,16 @@ func (s *MaterialService) RestoreMyMaterialsByIds(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	restoredMaterials, exception := s.materialRepository.RestoreSoftDeletedManyByIds(
 		reqDto.Body.MaterialIds,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -594,11 +622,16 @@ func (s *MaterialService) DeleteMyMaterialById(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
-	exception := s.materialRepository.SoftDeleteOneById(
+	exception = s.materialRepository.SoftDeleteOneById(
 		reqDto.Body.MaterialId,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -617,11 +650,16 @@ func (s *MaterialService) DeleteMyMaterialsByIds(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
-	exception := s.materialRepository.SoftDeleteManyByIds(
+	exception = s.materialRepository.SoftDeleteManyByIds(
 		reqDto.Body.MaterialIds,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception

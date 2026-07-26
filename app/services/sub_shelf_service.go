@@ -10,6 +10,7 @@ import (
 	pg "github.com/lib/pq"
 	"gorm.io/gorm"
 
+	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
 	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
@@ -19,6 +20,7 @@ import (
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
+	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	storages "github.com/HiIamJeff67/notezy-backend/app/storages"
 	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
@@ -55,6 +57,7 @@ type SubShelfService struct {
 	rootShelfRepository repositories.RootShelfRepositoryInterface
 	materialRepository  repositories.MaterialRepositoryInterface
 	blockPackRepository repositories.BlockPackRepositoryInterface
+	realtimeLeaseStore  *caches.RealtimeLeaseStore
 }
 
 func NewSubShelfService(
@@ -65,9 +68,13 @@ func NewSubShelfService(
 	rootShelfRepository repositories.RootShelfRepositoryInterface,
 	materialRepository repositories.MaterialRepositoryInterface,
 	blockPackRepository repositories.BlockPackRepositoryInterface,
+	realtimeLeaseStore *caches.RealtimeLeaseStore,
 ) SubShelfServiceInterface {
 	if db == nil {
 		db = models.NotezyDB
+	}
+	if realtimeLeaseStore == nil {
+		realtimeLeaseStore = caches.NewRealtimeLeaseStore(caches.RedisClientMap)
 	}
 	return &SubShelfService{
 		db:                  db,
@@ -77,6 +84,7 @@ func NewSubShelfService(
 		rootShelfRepository: rootShelfRepository,
 		materialRepository:  materialRepository,
 		blockPackRepository: blockPackRepository,
+		realtimeLeaseStore:  realtimeLeaseStore,
 	}
 }
 
@@ -90,6 +98,10 @@ func (s *SubShelfService) GetMySubShelfById(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	onlyDeleted := types.Ternary_Neutral
 	if reqDto.Param.IsDeleted != nil {
@@ -105,6 +117,7 @@ func (s *SubShelfService) GetMySubShelfById(
 		reqDto.ContextFields.UserId,
 		nil,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(onlyDeleted),
 	)
 	if exception != nil {
@@ -310,6 +323,10 @@ func (s *SubShelfService) CreateSubShelfByRootShelfId(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	newSubShelfId, exception := s.subShelfRepository.CreateOneByRootShelfId(
 		reqDto.Body.RootShelfId,
@@ -320,6 +337,7 @@ func (s *SubShelfService) CreateSubShelfByRootShelfId(
 			PrevSubShelfId: reqDto.Body.PrevSubShelfId,
 		},
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -339,6 +357,10 @@ func (s *SubShelfService) CreateSubShelvesByRootShelfIds(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	input := make([]inputs.CreateSubShelfByRootShelfIdInput, len(reqDto.Body.CreatedSubShelves))
 	for index, createdSubShelf := range reqDto.Body.CreatedSubShelves {
@@ -353,6 +375,7 @@ func (s *SubShelfService) CreateSubShelvesByRootShelfIds(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -372,6 +395,10 @@ func (s *SubShelfService) UpdateMySubShelfById(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	subShelf, exception := s.subShelfRepository.UpdateOneById(
 		reqDto.Body.SubShelfId,
@@ -383,6 +410,7 @@ func (s *SubShelfService) UpdateMySubShelfById(
 			SetNull: reqDto.Body.SetNull,
 		},
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -401,6 +429,10 @@ func (s *SubShelfService) UpdateMySubShelvesByIds(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	input := make([]inputs.UpdateSubShelfByIdInput, len(reqDto.Body.UpdatedSubShelves))
 	for index, updatedSubShelf := range reqDto.Body.UpdatedSubShelves {
@@ -414,10 +446,11 @@ func (s *SubShelfService) UpdateMySubShelvesByIds(
 			},
 		}
 	}
-	exception := s.subShelfRepository.UpdateManyByIds(
+	exception = s.subShelfRepository.UpdateManyByIds(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -452,6 +485,7 @@ func (s *SubShelfService) MoveMySubShelfByRootShelfId(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
@@ -469,6 +503,7 @@ func (s *SubShelfService) MoveMySubShelfByRootShelfId(
 			nil,
 			allowedPermissions,
 			options.WithTransactionDB(tx),
+			options.WithAllowedPermissions(allowedPermissions),
 			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 		)
@@ -552,6 +587,7 @@ func (s *SubShelfService) MoveMySubShelvesByRootShelfId(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
@@ -573,6 +609,7 @@ func (s *SubShelfService) MoveMySubShelvesByRootShelfId(
 			nil,
 			allowedPermissions,
 			options.WithTransactionDB(tx),
+			options.WithAllowedPermissions(allowedPermissions),
 			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 			options.WithOnlyDeleted(types.Ternary_Negative),
 		)
@@ -708,6 +745,7 @@ func (s *SubShelfService) MoveMySubShelvesByRootShelfIds(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
@@ -726,6 +764,7 @@ func (s *SubShelfService) MoveMySubShelvesByRootShelfIds(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
@@ -746,6 +785,7 @@ func (s *SubShelfService) MoveMySubShelvesByRootShelfIds(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
@@ -862,11 +902,16 @@ func (s *SubShelfService) RestoreMySubShelfById(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	restoredSubShelf, exception := s.subShelfRepository.RestoreSoftDeletedOneById(
 		reqDto.Body.SubShelfId,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -892,11 +937,16 @@ func (s *SubShelfService) RestoreMySubShelvesByIds(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	restoredSubShelves, exception := s.subShelfRepository.RestoreSoftDeletedManyByIds(
 		reqDto.Body.SubShelfIds,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -926,14 +976,30 @@ func (s *SubShelfService) DeleteMySubShelfById(
 	}
 
 	db := s.db.WithContext(ctx)
-
-	exception := s.subShelfRepository.SoftDeleteOneById(
-		reqDto.Body.SubShelfId,
-		reqDto.ContextFields.UserId,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+	blockPackIds, exception := s.blockPackRepository.GetIdsByParentSubShelfIds(
+		[]uuid.UUID{reqDto.Body.SubShelfId},
 		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
 		return nil, exception
+	}
+
+	exception = s.subShelfRepository.SoftDeleteOneById(
+		reqDto.Body.SubShelfId,
+		reqDto.ContextFields.UserId,
+		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+	if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(uuid.Nil, blockPackIds); err != nil {
+		logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
 	}
 
 	return &dtos.DeleteMySubShelfByIdResDto{
@@ -949,14 +1015,30 @@ func (s *SubShelfService) DeleteMySubShelvesByIds(
 	}
 
 	db := s.db.WithContext(ctx)
-
-	exception := s.subShelfRepository.SoftDeleteManyByIds(
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+	blockPackIds, exception := s.blockPackRepository.GetIdsByParentSubShelfIds(
 		reqDto.Body.SubShelfIds,
-		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
 		return nil, exception
+	}
+
+	exception = s.subShelfRepository.SoftDeleteManyByIds(
+		reqDto.Body.SubShelfIds,
+		reqDto.ContextFields.UserId,
+		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+	if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(uuid.Nil, blockPackIds); err != nil {
+		logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
 	}
 
 	return &dtos.DeleteMySubShelvesByIdsResDto{

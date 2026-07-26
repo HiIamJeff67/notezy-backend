@@ -273,9 +273,7 @@ type LeaveMyRootShelfReqDto struct {
 		struct {
 			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
 		},
-		struct {
-			TargetUserPublicId *uuid.UUID `json:"targetUserPublicId" validate:"omitnil"`
-		},
+		any,
 		struct {
 			RootShelfId uuid.UUID `uri:"rootShelfId" validate:"required"`
 		},
@@ -292,8 +290,7 @@ type LeaveMyRootShelvesReqDto struct {
 		},
 		struct {
 			RootShelves []struct {
-				RootShelfId        uuid.UUID  `json:"rootShelfId" validate:"required"`
-				TargetUserPublicId *uuid.UUID `json:"targetUserPublicId" validate:"omitnil"`
+				RootShelfId uuid.UUID `json:"rootShelfId" validate:"required"`
 			} `json:"rootShelves" validate:"required,min=1,max=1024,dive"`
 		},
 		any,

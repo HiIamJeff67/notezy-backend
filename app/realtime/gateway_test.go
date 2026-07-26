@@ -137,6 +137,47 @@ func newTestRealtimeLeaseStore(t *testing.T) *caches.RealtimeLeaseStore {
 	return caches.NewRealtimeLeaseStore(map[int]*redis.Client{constants.RealtimeRedisServerNumber: redisClient})
 }
 
+func TestGatewayRevokesMatchingBlockPackChannels(t *testing.T) {
+	workerManager := &fakeWorkerManager{}
+	leaseStore := newTestRealtimeLeaseStore(t)
+	userPublicId := uuid.New()
+	blockPackId := uuid.New()
+	connector := &Connector{
+		Id:           uuid.New(),
+		UserPublicId: userPublicId,
+		channels: map[uint32]realtimetypes.Channel{
+			1: {
+				Type:       realtimetypes.ChannelType_BlockPack,
+				Id:         blockPackId,
+				Permission: realtimetypes.ChannelPermission_Read,
+			},
+		},
+		outbound: newOutboundQueue(nil),
+	}
+	gateway := &Gateway{
+		workerManager: workerManager,
+		leaseStore:    leaseStore,
+		connectors: map[uuid.UUID]*Connector{
+			connector.Id: connector,
+		},
+	}
+
+	gateway.revokeBlockPackChannels(caches.RealtimeBlockPackChannelRevocation{
+		UserId:       userPublicId,
+		BlockPackIds: []uuid.UUID{blockPackId},
+	})
+
+	if _, exists := connector.get(1); exists {
+		t.Fatal("expected matching BlockPack channel to be detached")
+	}
+
+	workerManager.mutex.Lock()
+	defer workerManager.mutex.Unlock()
+	if len(workerManager.frames) != 1 || workerManager.frames[0].Type != realtimetypes.InternalFrameType_Detach {
+		t.Fatalf("expected one detach frame, got %#v", workerManager.frames)
+	}
+}
+
 func TestGatewaySendsReadyAndPong(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

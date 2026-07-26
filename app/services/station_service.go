@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
@@ -109,6 +110,7 @@ func (s *StationService) saveMyStationPermission(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithLockingStrength(options.LockingStrengthUpdate),
 	)
@@ -155,7 +157,7 @@ func (s *StationService) saveMyStationPermission(
 			options.WithTransactionDB(tx),
 		)
 	} else {
-		relation, exception = s.usersToStationsRepository.UpdatePermission(
+		relation, exception = s.usersToStationsRepository.UpdateOne(
 			station.Id,
 			targetUser.Id,
 			permission,
@@ -178,73 +180,6 @@ func (s *StationService) saveMyStationPermission(
 	}, nil
 }
 
-func (s *StationService) leaveMyStation(
-	tx *gorm.DB,
-	actorUserId uuid.UUID,
-	stationId uuid.UUID,
-	targetUserPublicId *uuid.UUID,
-) *exceptions.Exception {
-	station, permission, exception := s.stationRepository.CheckPermissionAndGetOneById(
-		stationId,
-		actorUserId,
-		nil,
-		enums.AllAccessControlPermissions,
-		options.WithTransactionDB(tx),
-		options.WithOnlyDeleted(types.Ternary_Negative),
-		options.WithLockingStrength(options.LockingStrengthUpdate),
-	)
-	if exception != nil {
-		return exception
-	}
-	if permission != enums.AccessControlPermission_Owner {
-		return s.usersToStationsRepository.DeleteOne(station.Id, actorUserId, options.WithTransactionDB(tx))
-	}
-	if targetUserPublicId == nil {
-		return exceptions.Station.InvalidDto("targetUserPublicId is required when the Station owner leaves")
-	}
-
-	var targetUser schemas.User
-	if result := tx.Select("id").Where("public_id = ?", *targetUserPublicId).First(&targetUser); result.Error != nil {
-		return exceptions.User.NotFound().WithOrigin(result.Error)
-	}
-	if targetUser.Id == actorUserId {
-		return exceptions.Station.NoChanges()
-	}
-	if _, exception = s.usersToStationsRepository.GetOne(
-		station.Id,
-		targetUser.Id,
-		options.WithTransactionDB(tx),
-		options.WithLockingStrength(options.LockingStrengthUpdate),
-	); exception != nil {
-		return exception
-	}
-	if _, exception = s.usersToStationsRepository.UpdatePermission(
-		station.Id,
-		actorUserId,
-		enums.AccessControlPermission_Admin,
-		options.WithTransactionDB(tx),
-	); exception != nil {
-		return exception
-	}
-	if _, exception = s.usersToStationsRepository.UpdatePermission(
-		station.Id,
-		targetUser.Id,
-		enums.AccessControlPermission_Owner,
-		options.WithTransactionDB(tx),
-	); exception != nil {
-		return exception
-	}
-	result := tx.Model(&schemas.Station{}).Where("id = ?", station.Id).Update("owner_id", targetUser.Id)
-	if result.Error != nil {
-		return exceptions.Station.FailedToUpdate().WithOrigin(result.Error)
-	}
-	if result.RowsAffected == 0 {
-		return exceptions.Station.NotFound()
-	}
-
-	return s.usersToStationsRepository.DeleteOne(station.Id, actorUserId, options.WithTransactionDB(tx))
-}
-
 /* ============================== Service Methods for Station ============================== */
 
 func (s *StationService) GetMyStationById(
@@ -253,6 +188,11 @@ func (s *StationService) GetMyStationById(
 ) (*dtos.GetMyStationByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
+	}
+
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
 
 	db := s.db.WithContext(ctx)
@@ -271,6 +211,7 @@ func (s *StationService) GetMyStationById(
 		reqDto.ContextFields.UserId,
 		nil,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(onlyDeleted),
 	)
 	if exception != nil {
@@ -299,6 +240,11 @@ func (s *StationService) GetAllMyStations(
 		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
 	}
 
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
 	db := s.db.WithContext(ctx)
 
 	onlyDeleted := types.Ternary_Neutral
@@ -314,6 +260,7 @@ func (s *StationService) GetAllMyStations(
 		reqDto.ContextFields.UserId,
 		nil,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(onlyDeleted),
 	)
 	if exception != nil {
@@ -422,6 +369,11 @@ func (s *StationService) UpdateMyStationById(
 		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
 	}
 
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
 	db := s.db.WithContext(ctx)
 
 	updatedStation, exception := s.stationRepository.UpdateOneById(
@@ -437,6 +389,7 @@ func (s *StationService) UpdateMyStationById(
 			SetNull: reqDto.Body.SetNull,
 		},
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -453,6 +406,11 @@ func (s *StationService) UpdateMyStationsByIds(
 ) (*dtos.UpdateMyStationsByIdsResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
+	}
+
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
 
 	db := s.db.WithContext(ctx)
@@ -472,10 +430,11 @@ func (s *StationService) UpdateMyStationsByIds(
 			},
 		}
 	}
-	exception := s.stationRepository.UpdateManyByIds(
+	exception = s.stationRepository.UpdateManyByIds(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -494,12 +453,18 @@ func (s *StationService) RestoreMyStationById(
 		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
 	}
 
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
 	db := s.db.WithContext(ctx)
 
 	restoredStation, exception := s.stationRepository.RestoreSoftDeletedOneById(
 		reqDto.Body.StationId,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -526,12 +491,18 @@ func (s *StationService) RestoreMyStationsByIds(
 		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
 	}
 
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
 	db := s.db.WithContext(ctx)
 
 	restoredStations, exception := s.stationRepository.RestoreSoftDeletedManyByIds(
 		reqDto.Body.StationIds,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -575,7 +546,8 @@ func (s *StationService) DeleteMyStationById(
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithLockingStrength(options.LockingStrengthUpdate),
 	)
@@ -601,7 +573,7 @@ func (s *StationService) DeleteMyStationById(
 		exception = s.usersToStationsRepository.DeleteOne(
 			station.Id,
 			reqDto.ContextFields.UserId,
-			options.WithDB(tx),
+			options.WithTransactionDB(tx),
 		)
 		if exception != nil {
 			tx.Rollback()
@@ -626,12 +598,18 @@ func (s *StationService) DeleteMyStationsByIds(
 		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
 	}
 
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
 	db := s.db.WithContext(ctx)
 
-	exception := s.stationRepository.SoftDeleteManyByIds(
+	exception = s.stationRepository.SoftDeleteManyByIds(
 		reqDto.Body.StationIds,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -650,12 +628,18 @@ func (s *StationService) HardDeleteMyStationById(
 		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
 	}
 
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
 	db := s.db.WithContext(ctx)
 
-	exception := s.stationRepository.HardDeleteOneById(
+	exception = s.stationRepository.HardDeleteOneById(
 		reqDto.Body.StationId,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -674,12 +658,18 @@ func (s *StationService) HardDeleteMyStationsByIds(
 		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
 	}
 
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
 	db := s.db.WithContext(ctx)
 
-	exception := s.stationRepository.HardDeleteManyByIds(
+	exception = s.stationRepository.HardDeleteManyByIds(
 		reqDto.Body.StationIds,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -817,7 +807,15 @@ func (s *StationService) GetMyStationPermission(
 	}
 
 	db := s.db.WithContext(ctx)
-	if _, _, exception = s.stationRepository.CheckPermissionAndGetOneById(reqDto.Param.StationId, reqDto.ContextFields.UserId, nil, allowedPermissions, options.WithDB(db), options.WithOnlyDeleted(types.Ternary_Negative)); exception != nil {
+	if _, _, exception = s.stationRepository.CheckPermissionAndGetOneById(
+		reqDto.Param.StationId,
+		reqDto.ContextFields.UserId,
+		nil,
+		allowedPermissions,
+		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	); exception != nil {
 		return nil, exception
 	}
 
@@ -825,7 +823,11 @@ func (s *StationService) GetMyStationPermission(
 	if result := db.Where("public_id = ?", reqDto.Param.UserPublicId).First(&targetUser); result.Error != nil {
 		return nil, exceptions.User.NotFound().WithOrigin(result.Error)
 	}
-	relation, exception := s.usersToStationsRepository.GetOne(reqDto.Param.StationId, targetUser.Id, options.WithDB(db))
+	relation, exception := s.usersToStationsRepository.GetOne(
+		reqDto.Param.StationId,
+		targetUser.Id,
+		options.WithDB(db),
+	)
 	if exception != nil {
 		return nil, exception
 	}
@@ -891,6 +893,7 @@ func (s *StationService) UpsertMyStationPermissions(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithLockingStrength(options.LockingStrengthUpdate),
 	)
@@ -926,7 +929,7 @@ func (s *StationService) UpsertMyStationPermissions(
 		userIds[index] = userByPublicId[userPublicId].Id
 	}
 
-	existingPermissions, exception := s.stationRepository.GetPermissionsByStationIdAndUserIds(
+	existingPermissions, exception := s.usersToStationsRepository.GetMany(
 		station.Id,
 		userIds,
 		options.WithTransactionDB(tx),
@@ -960,7 +963,7 @@ func (s *StationService) UpsertMyStationPermissions(
 		permissions[index] = permission
 	}
 
-	updatedPermissions, exception := s.stationRepository.UpsertPermissionsByUserIds(
+	updatedPermissions, exception := s.usersToStationsRepository.UpsertMany(
 		station.Id,
 		userIds,
 		permissions,
@@ -1013,6 +1016,10 @@ func (s *StationService) TransferMyStationOwnership(
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
 	}
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 	tx := s.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		return nil, exceptions.Station.FailedToBeginTransaction(
@@ -1023,8 +1030,9 @@ func (s *StationService) TransferMyStationOwnership(
 		reqDto.Param.StationId,
 		reqDto.ContextFields.UserId,
 		nil,
-		[]enums.AccessControlPermission{enums.AccessControlPermission_Owner},
+		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithLockingStrength(options.LockingStrengthUpdate),
 	)
@@ -1067,7 +1075,22 @@ func (s *StationService) TransferMyStationOwnership(
 		return nil, exceptions.Station.NoChanges()
 	}
 
-	if _, exception = s.usersToStationsRepository.UpdatePermission(
+	var accounts []schemas.UserAccount
+	result := tx.
+		Clauses(clause.Locking{Strength: options.LockingStrengthUpdate}).
+		Where("user_id IN ?", []uuid.UUID{reqDto.ContextFields.UserId, targetUser.Id}).
+		Order("user_id").
+		Find(&accounts)
+	if result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.Station.FailedToUpdate().WithOrigin(result.Error)
+	}
+	if len(accounts) != 2 {
+		tx.Rollback()
+		return nil, exceptions.User.NotFound()
+	}
+
+	if _, exception = s.usersToStationsRepository.UpdateOne(
 		station.Id,
 		reqDto.ContextFields.UserId,
 		enums.AccessControlPermission_Admin,
@@ -1076,7 +1099,7 @@ func (s *StationService) TransferMyStationOwnership(
 		tx.Rollback()
 		return nil, exception
 	}
-	newOwnerMembership, exception := s.usersToStationsRepository.UpdatePermission(
+	newOwnerMembership, exception := s.usersToStationsRepository.UpdateOne(
 		station.Id,
 		targetUser.Id,
 		enums.AccessControlPermission_Owner,
@@ -1086,7 +1109,7 @@ func (s *StationService) TransferMyStationOwnership(
 		tx.Rollback()
 		return nil, exception
 	}
-	result := tx.Model(&schemas.Station{}).
+	result = tx.Model(&schemas.Station{}).
 		Where("id = ?", station.Id).
 		Update("owner_id", targetUser.Id)
 	if result.Error != nil {
@@ -1135,6 +1158,7 @@ func (s *StationService) DeleteMyStationPermission(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithLockingStrength(options.LockingStrengthUpdate),
 	)
@@ -1225,6 +1249,7 @@ func (s *StationService) DeleteMyStationPermissions(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithLockingStrength(options.LockingStrengthUpdate),
 	)
@@ -1258,7 +1283,7 @@ func (s *StationService) DeleteMyStationPermissions(
 		userIds[index] = userIdByPublicId[userPublicId]
 	}
 
-	targetPermissions, exception := s.stationRepository.GetPermissionsByStationIdAndUserIds(
+	targetPermissions, exception := s.usersToStationsRepository.GetMany(
 		station.Id,
 		userIds,
 		options.WithTransactionDB(tx),
@@ -1285,7 +1310,7 @@ func (s *StationService) DeleteMyStationPermissions(
 		}
 	}
 
-	exception = s.stationRepository.DeletePermissionsByUserIds(
+	exception = s.usersToStationsRepository.DeleteMany(
 		station.Id,
 		userIds,
 		options.WithTransactionDB(tx),
@@ -1313,7 +1338,28 @@ func (s *StationService) LeaveMyStation(
 	if tx.Error != nil {
 		return exceptions.Station.FailedToBeginTransaction("Failed to begin Station leave transaction").WithOrigin(tx.Error)
 	}
-	if exception := s.leaveMyStation(tx, reqDto.ContextFields.UserId, reqDto.Param.StationId, reqDto.Body.TargetUserPublicId); exception != nil {
+	station, permission, exception := s.stationRepository.CheckPermissionAndGetOneById(
+		reqDto.Param.StationId,
+		reqDto.ContextFields.UserId,
+		nil,
+		nil,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return exception
+	}
+	if permission == enums.AccessControlPermission_Owner {
+		tx.Rollback()
+		return exceptions.Station.NoPermission("transfer Station ownership before leaving")
+	}
+	if exception = s.usersToStationsRepository.DeleteOne(
+		station.Id,
+		reqDto.ContextFields.UserId,
+		options.WithTransactionDB(tx),
+	); exception != nil {
 		tx.Rollback()
 		return exception
 	}
@@ -1330,22 +1376,47 @@ func (s *StationService) LeaveMyStations(
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return exceptions.Station.InvalidDto().WithOrigin(err)
 	}
-	stationIds := make(map[uuid.UUID]struct{}, len(reqDto.Body.Stations))
-	for _, stationReqDto := range reqDto.Body.Stations {
-		if _, exists := stationIds[stationReqDto.StationId]; exists {
+	stationIdSet := make(map[uuid.UUID]struct{}, len(reqDto.Body.Stations))
+	stationIds := make([]uuid.UUID, len(reqDto.Body.Stations))
+	for index, stationReqDto := range reqDto.Body.Stations {
+		if _, exists := stationIdSet[stationReqDto.StationId]; exists {
 			return exceptions.Station.InvalidDto("stations cannot contain duplicate stationIds")
 		}
-		stationIds[stationReqDto.StationId] = struct{}{}
+		stationIdSet[stationReqDto.StationId] = struct{}{}
+		stationIds[index] = stationReqDto.StationId
 	}
 	tx := s.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		return exceptions.Station.FailedToBeginTransaction("Failed to begin Station leave transaction").WithOrigin(tx.Error)
 	}
-	for _, stationReqDto := range reqDto.Body.Stations {
-		if exception := s.leaveMyStation(tx, reqDto.ContextFields.UserId, stationReqDto.StationId, stationReqDto.TargetUserPublicId); exception != nil {
+	relations, exception := s.usersToStationsRepository.GetManyByStationIdsAndUserId(
+		stationIds,
+		reqDto.ContextFields.UserId,
+		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return exception
+	}
+	if len(relations) != len(stationIds) {
+		tx.Rollback()
+		return exceptions.Station.NotFound()
+	}
+	for _, relation := range relations {
+		if relation.Permission == enums.AccessControlPermission_Owner {
 			tx.Rollback()
-			return exception
+			return exceptions.Station.NoPermission("transfer Station ownership before leaving")
 		}
+	}
+
+	if exception = s.usersToStationsRepository.DeleteManyByStationIdsAndUserId(
+		stationIds,
+		reqDto.ContextFields.UserId,
+		options.WithTransactionDB(tx),
+	); exception != nil {
+		tx.Rollback()
+		return exception
 	}
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()

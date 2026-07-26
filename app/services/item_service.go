@@ -131,11 +131,16 @@ func (s *ItemService) SearchPrivateItems(
 	query = query.Limit(limit + 1)
 
 	var items []PrivateItem
-	if err := query.Scopes(s.itemScope.IncludePreloads(
-		[]schemas.ItemRelation{
-			schemas.ItemRelation_RoutinesToItems,
+	if err := query.Preload(
+		string(schemas.ItemRelation_RoutinesToItems),
+		func(preloadDB *gorm.DB) *gorm.DB {
+			return preloadDB.
+				Joins(`INNER JOIN "RoutineTable" ON "RoutineTable".id = "RoutinesToItemsTable".routine_id`).
+				Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = "RoutineTable".station_id`).
+				Where(`"RoutineTable".deleted_at IS NULL`).
+				Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions)
 		},
-	)).Find(&items).Error; err != nil {
+	).Find(&items).Error; err != nil {
 		return nil, exceptions.Item.NotFound().WithOrigin(err)
 	}
 

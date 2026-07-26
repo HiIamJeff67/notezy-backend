@@ -179,12 +179,17 @@ func (s *RoutineTaskService) GetMyRoutineTaskById(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	routineTask, exception := s.routineTaskRepository.GetOneById(
 		reqDto.Param.RoutineTaskId,
 		reqDto.ContextFields.UserId,
 		nil,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -223,12 +228,17 @@ func (s *RoutineTaskService) GetAllMyRoutineTasksByRoutineIds(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	routineTasks, exception := s.routineTaskRepository.GetAllByRoutineIds(
 		reqDto.Param.RoutineIds,
 		reqDto.ContextFields.UserId,
 		nil,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -288,11 +298,16 @@ func (s *RoutineTaskService) GetAllMyRoutineTasks(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	routineTasks, exception := s.routineTaskRepository.GetAllByUserId(
 		reqDto.ContextFields.UserId,
 		nil,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -335,6 +350,10 @@ func (s *RoutineTaskService) CreateRoutineTaskByRoutineId(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	newRoutineTaskId, exception := s.routineTaskRepository.CreateOneByRoutineId(
 		reqDto.Body.RoutineId,
@@ -349,6 +368,7 @@ func (s *RoutineTaskService) CreateRoutineTaskByRoutineId(
 			NextScheduledAt: reqDto.Body.NextScheduledAt,
 		},
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -368,6 +388,10 @@ func (s *RoutineTaskService) UpdateMyRoutineTaskById(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 	if reqDto.Body.Values.Purpose != nil || reqDto.Body.Values.Payload != nil {
 		finalPurpose := reqDto.Body.Values.Purpose
 		finalPayload := reqDto.Body.Values.Payload
@@ -377,6 +401,7 @@ func (s *RoutineTaskService) UpdateMyRoutineTaskById(
 				reqDto.ContextFields.UserId,
 				nil,
 				options.WithDB(db),
+				options.WithAllowedPermissions(allowedPermissions),
 			)
 			if exception != nil {
 				return nil, exception
@@ -410,6 +435,7 @@ func (s *RoutineTaskService) UpdateMyRoutineTaskById(
 			SetNull: reqDto.Body.SetNull,
 		},
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -427,19 +453,19 @@ func (s *RoutineTaskService) PauseMyRoutineTaskById(
 		return nil, exceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 
-	tx := s.db.WithContext(ctx).Begin()
-
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
+
+	tx := s.db.WithContext(ctx).Begin()
 	routineTask, exception := s.routineTaskRepository.CheckPermissionAndGetOneById(
 		reqDto.Body.RoutineTaskId,
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
@@ -481,19 +507,19 @@ func (s *RoutineTaskService) ResumeMyRoutineTaskById(
 		return nil, exceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 
-	tx := s.db.WithContext(ctx).Begin()
-
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
+
+	tx := s.db.WithContext(ctx).Begin()
 	routineTask, exception := s.routineTaskRepository.CheckPermissionAndGetOneById(
 		reqDto.Body.RoutineTaskId,
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
@@ -536,11 +562,16 @@ func (s *RoutineTaskService) HardDeleteMyRoutineTaskById(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
-	exception := s.routineTaskRepository.HardDeleteOneById(
+	exception = s.routineTaskRepository.HardDeleteOneById(
 		reqDto.Body.RoutineTaskId,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -559,11 +590,16 @@ func (s *RoutineTaskService) HardDeleteMyRoutineTasksByIds(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
-	exception := s.routineTaskRepository.HardDeleteManyByIds(
+	exception = s.routineTaskRepository.HardDeleteManyByIds(
 		reqDto.Body.RoutineTaskIds,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception

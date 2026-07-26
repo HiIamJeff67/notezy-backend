@@ -43,10 +43,10 @@ func TestBindCreateMyStationPermissionParsesPermissionRoute(t *testing.T) {
 	}
 }
 
-func TestBindLeaveMyStationParsesOwnerTransferTarget(t *testing.T) {
+func TestBindLeaveMyStationUsesAuthenticatedUserAndStation(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	userId, stationId, targetUserPublicId := uuid.New(), uuid.New(), uuid.New()
+	userId, stationId := uuid.New(), uuid.New()
 	var capturedReqDto *dtos.LeaveMyStationReqDto
 
 	router := gin.New()
@@ -59,12 +59,11 @@ func TestBindLeaveMyStationParsesOwnerTransferTarget(t *testing.T) {
 		ctx.Status(http.StatusNoContent)
 	}))
 
-	request := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/station/%s/leave", stationId), strings.NewReader(fmt.Sprintf(`{"targetUserPublicId":"%s"}`, targetUserPublicId)))
-	request.Header.Set("Content-Type", "application/json")
+	request := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/station/%s/leave", stationId), nil)
 	responseRecorder := httptest.NewRecorder()
 	router.ServeHTTP(responseRecorder, request)
 
-	if responseRecorder.Code != http.StatusNoContent || capturedReqDto == nil || capturedReqDto.ContextFields.UserId != userId || capturedReqDto.Param.StationId != stationId || capturedReqDto.Body.TargetUserPublicId == nil || *capturedReqDto.Body.TargetUserPublicId != targetUserPublicId {
-		t.Fatal("expected leave binder to populate the authenticated user, station, and owner transfer target")
+	if responseRecorder.Code != http.StatusNoContent || capturedReqDto == nil || capturedReqDto.ContextFields.UserId != userId || capturedReqDto.Param.StationId != stationId {
+		t.Fatal("expected leave binder to populate the authenticated user and station")
 	}
 }

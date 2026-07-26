@@ -2,6 +2,7 @@ package modules
 
 import (
 	binders "github.com/HiIamJeff67/notezy-backend/app/binders"
+	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
 	controllers "github.com/HiIamJeff67/notezy-backend/app/controllers"
 	models "github.com/HiIamJeff67/notezy-backend/app/models"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
@@ -22,6 +23,7 @@ func NewBlockPackModule() *BlockPackModule {
 		models.NotezyDB,
 		subShelfRepository,
 		blockPackRepository,
+		caches.NewRealtimeLeaseStore(caches.RedisClientMap),
 	)
 
 	blockPackBinder := binders.NewBlockPackBinder()

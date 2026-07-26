@@ -15,7 +15,6 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/app/realtime/types"
 	tokens "github.com/HiIamJeff67/notezy-backend/app/tokens"
@@ -57,18 +56,18 @@ func (s *RealtimeService) GetMyBlockPackRealtimeParticipants(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
-	_, exception := s.blockPackRepository.CheckPermissionAndGetOneById(
+	_, exception = s.blockPackRepository.CheckPermissionAndGetOneById(
 		reqDto.Param.BlockPackId,
 		reqDto.ContextFields.UserId,
 		nil,
-		[]enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-			enums.AccessControlPermission_Write,
-			enums.AccessControlPermission_Read,
-		},
+		allowedPermissions,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -190,18 +189,9 @@ func (s *RealtimeService) ValidateBlockPackChannelPermission(
 		return realtimetypes.ErrorCode_PermissionRevoked, errors.New("invalid realtime channel permission")
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
-	if permission == realtimetypes.ChannelPermission_Read {
-		allowedPermissions = append(
-			allowedPermissions,
-			enums.AccessControlPermission_Write,
-			enums.AccessControlPermission_Read,
-		)
-	} else {
-		allowedPermissions = append(allowedPermissions, enums.AccessControlPermission_Write)
+	allowedPermissions := permission.AllowedAccessControlPermissions()
+	if len(allowedPermissions) == 0 {
+		return realtimetypes.ErrorCode_PermissionRevoked, errors.New("invalid realtime channel permission")
 	}
 
 	ctx = contexts.WithAllowedPermissions(ctx, allowedPermissions)
@@ -242,6 +232,7 @@ func (s *RealtimeService) ValidateBlockPackChannelPermission(
 		nil,
 		allowedPermissions,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -285,18 +276,9 @@ func (s *RealtimeService) CreateMyBlockPackChannelTicket(
 
 	db := s.db.WithContext(ctx)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
-	if reqDto.Body.Permission == realtimetypes.ChannelPermission_Read {
-		allowedPermissions = append(
-			allowedPermissions,
-			enums.AccessControlPermission_Write,
-			enums.AccessControlPermission_Read,
-		)
-	} else {
-		allowedPermissions = append(allowedPermissions, enums.AccessControlPermission_Write)
+	allowedPermissions := reqDto.Body.Permission.AllowedAccessControlPermissions()
+	if len(allowedPermissions) == 0 {
+		return nil, exceptions.BlockPack.InvalidDto("invalid realtime channel permission")
 	}
 
 	blockPack, exception := s.blockPackRepository.CheckPermissionAndGetOneById(
@@ -305,6 +287,7 @@ func (s *RealtimeService) CreateMyBlockPackChannelTicket(
 		nil,
 		allowedPermissions,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {

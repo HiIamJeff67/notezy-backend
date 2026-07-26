@@ -97,8 +97,56 @@ func NewGateway() *Gateway {
 		},
 	}
 	workerManager.SetFrameHandler(gateway.handleInternalFrame)
+	gateway.subscribeBlockPackChannelRevocations()
 
 	return gateway
+}
+
+func (g *Gateway) subscribeBlockPackChannelRevocations() {
+	if _, err := g.leaseStore.SubscribeBlockPackChannelRevocations(g.revokeBlockPackChannels); err != nil {
+		logs.NotezyLogger.Error(context.Background(), err, "Failed to subscribe to realtime BlockPack channel revocations")
+	}
+}
+
+func (g *Gateway) revokeBlockPackChannels(revocation caches.RealtimeBlockPackChannelRevocation) {
+	blockPackIdSet := make(map[uuid.UUID]struct{}, len(revocation.BlockPackIds))
+	for _, blockPackId := range revocation.BlockPackIds {
+		blockPackIdSet[blockPackId] = struct{}{}
+	}
+
+	g.connectorMutex.RLock()
+	connectors := make([]*Connector, 0, len(g.connectors))
+	for _, connector := range g.connectors {
+		if revocation.UserId == uuid.Nil || connector.UserPublicId == revocation.UserId {
+			connectors = append(connectors, connector)
+		}
+	}
+	g.connectorMutex.RUnlock()
+
+	for _, connector := range connectors {
+		connector.channelMutex.RLock()
+		blockPackIdByConnectorChannelId := make(map[uint32]uuid.UUID, len(connector.channels))
+		for connectorChannelId, channel := range connector.channels {
+			if channel.Type != realtimetypes.ChannelType_BlockPack {
+				continue
+			}
+			if _, exists := blockPackIdSet[channel.Id]; exists {
+				blockPackIdByConnectorChannelId[connectorChannelId] = channel.Id
+			}
+		}
+		connector.channelMutex.RUnlock()
+
+		for connectorChannelId, blockPackId := range blockPackIdByConnectorChannelId {
+			g.handleInternalFrame(realtimetypes.InternalFrame{
+				Version:            byte(constants.RealtimeWorkerProtocolVersion),
+				Type:               realtimetypes.InternalFrameType_PermissionRevoked,
+				ChannelType:        realtimetypes.ChannelType_BlockPack,
+				ConnectionId:       connector.Id,
+				ConnectorChannelId: connectorChannelId,
+				ChannelId:          blockPackId,
+			})
+		}
+	}
 }
 
 func (g *Gateway) Handle(ctx *gin.Context) {

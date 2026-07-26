@@ -3,7 +3,6 @@ package repositories
 import (
 	"github.com/google/uuid"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
@@ -90,9 +89,16 @@ func (r *RoutineTaskRecordRepository) CheckPermissionAndGetOneById(
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	var routineTaskRecord schemas.RoutineTaskRecord
-	result := parsedOptions.DB.
+	query := parsedOptions.DB.
 		Model(&schemas.RoutineTaskRecord{}).
-		Scopes(r.routineTaskRecordScope.PassPermissionCheck(id, userId, allowedPermissions)).
+		Where(`"RoutineTaskRecordTable".id = ?`, id)
+	if allowedPermissions != nil && len(allowedPermissions) > 0 {
+		query = query.Scopes(
+			r.routineTaskRecordScope.PassPermissionCheck(id, userId, allowedPermissions),
+		)
+	}
+
+	result := query.
 		Scopes(r.routineTaskRecordScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&routineTaskRecord)
@@ -144,17 +150,6 @@ func (r *RoutineTaskRecordRepository) GetAllByRoutineTaskId(
 	opts ...options.RepositoryOptions,
 ) ([]schemas.RoutineTaskRecord, *exceptions.Exception) {
 	parsedOptions := options.ParseRepositoryOptions(opts...)
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
-	}
-	allowedPermissions = contexts.IntersectAllowedPermissions(
-		parsedOptions.DB.Statement.Context,
-		allowedPermissions,
-	)
-
 	if limit <= 0 {
 		limit = 100
 	}
@@ -167,7 +162,7 @@ func (r *RoutineTaskRecordRepository) GetAllByRoutineTaskId(
 		Joins(`INNER JOIN "RoutineTable" routine ON routine.id = routine_task.routine_id AND routine.deleted_at IS NULL`).
 		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine.station_id`).
 		Where(`"RoutineTaskRecordTable".routine_task_id = ?`, routineTaskId).
-		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
+		Where("uts.user_id = ? AND uts.permission IN ?", userId, parsedOptions.AllowedPermissions).
 		Scopes(r.routineTaskRecordScope.IncludePreloads(preloads)).
 		Order(`"RoutineTaskRecordTable".created_at DESC`).
 		Limit(limit).
@@ -185,14 +180,9 @@ func (r *RoutineTaskRecordRepository) HardDeleteOneById(
 	opts ...options.RepositoryOptions,
 ) *exceptions.Exception {
 	parsedOptions := options.ParseRepositoryOptions(opts...)
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
-
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTaskRecord{}).
-		Scopes(r.routineTaskRecordScope.PassPermissionCheck(id, userId, allowedPermissions)).
+		Scopes(r.routineTaskRecordScope.PassPermissionCheck(id, userId, parsedOptions.AllowedPermissions)).
 		Where(`"RoutineTaskRecordTable".id = ?`, id).
 		Delete(&schemas.RoutineTaskRecord{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
@@ -215,14 +205,9 @@ func (r *RoutineTaskRecordRepository) HardDeleteManyByIds(
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
-
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTaskRecord{}).
-		Scopes(r.routineTaskRecordScope.PassPermissionChecks(ids, userId, allowedPermissions)).
+		Scopes(r.routineTaskRecordScope.PassPermissionChecks(ids, userId, parsedOptions.AllowedPermissions)).
 		Where(`"RoutineTaskRecordTable".id IN ?`, ids).
 		Delete(&schemas.RoutineTaskRecord{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{

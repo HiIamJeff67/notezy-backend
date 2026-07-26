@@ -4,7 +4,6 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
@@ -25,31 +24,34 @@ func NewItemScope() ItemScopeInterface {
 
 func (sc *ItemScope) PassPermissionCheck(id uuid.UUID, itemType enums.ItemType, userId uuid.UUID, permissions []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		allowedPermissions := contexts.IntersectAllowedPermissions(db.Statement.Context, permissions)
+		if permissions == nil {
+			return db.Where(`"ItemTable".id = ? AND "ItemTable".type = ?`, id, itemType)
+		}
 
 		// ItemTable is a projection with root_shelf_id, so permission can be checked without joining the concrete item tables.
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
 			Model(&schemas.UsersToShelves{}).
 			Select("1").
-			Where("root_shelf_id = \"ItemTable\".root_shelf_id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
+			Where("root_shelf_id = \"ItemTable\".root_shelf_id AND user_id = ? AND permission IN ?", userId, permissions)
 		return db.Where("\"ItemTable\".id = ? AND \"ItemTable\".type = ? AND EXISTS (?)", id, itemType, subQuery)
 	}
 }
 
 func (sc *ItemScope) PassPermissionChecks(itemIdentities []types.Pair[uuid.UUID, enums.ItemType], userId uuid.UUID, permissions []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		allowedPermissions := contexts.IntersectAllowedPermissions(db.Statement.Context, permissions)
-
 		// ItemTable is a projection with root_shelf_id, so permission can be checked without joining the concrete item tables.
 		values := make([][]any, len(itemIdentities))
 		for index, itemIdentity := range itemIdentities {
 			values[index] = []any{itemIdentity.First, itemIdentity.Second}
 		}
+		if permissions == nil {
+			return db.Where(`("ItemTable".id, "ItemTable".type) IN ?`, values)
+		}
 
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
 			Model(&schemas.UsersToShelves{}).
 			Select("1").
-			Where("root_shelf_id = \"ItemTable\".root_shelf_id AND user_id = ? AND permission IN ?", userId, allowedPermissions)
+			Where("root_shelf_id = \"ItemTable\".root_shelf_id AND user_id = ? AND permission IN ?", userId, permissions)
 		return db.Where("(\"ItemTable\".id, \"ItemTable\".type) IN ? AND EXISTS (?)", values, subQuery)
 	}
 }

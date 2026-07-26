@@ -157,12 +157,17 @@ func (s *RoutineTaskRecordService) GetAllMyRoutineTaskRecordsByRoutineTaskId(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 	routineTaskRecords, exception := s.routineTaskRecordRepository.GetAllByRoutineTaskId(
 		reqDto.Param.RoutineTaskId,
 		reqDto.ContextFields.UserId,
 		reqDto.Param.Limit,
 		nil,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception

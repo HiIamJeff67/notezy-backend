@@ -2,6 +2,7 @@ package modules
 
 import (
 	binders "github.com/HiIamJeff67/notezy-backend/app/binders"
+	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
 	controllers "github.com/HiIamJeff67/notezy-backend/app/controllers"
 	models "github.com/HiIamJeff67/notezy-backend/app/models"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
@@ -18,12 +19,15 @@ func NewRootShelfModule() *RootShelfModule {
 	rootShelfScope := scopes.NewRootShelfScope()
 	rootShelfRepository := repositories.NewRootShelfRepository(rootShelfScope)
 	usersToShelvesRepository := repositories.NewUsersToShelvesRepository()
+	blockPackRepository := repositories.NewBlockPackRepository(scopes.NewBlockPackScope())
 
 	rootShelfService := services.NewRootShelfService(
 		models.NotezyDB,
 		rootShelfScope,
 		rootShelfRepository,
 		usersToShelvesRepository,
+		blockPackRepository,
+		caches.NewRealtimeLeaseStore(caches.RedisClientMap),
 	)
 
 	rootShelfBinder := binders.NewRootShelfBinder()

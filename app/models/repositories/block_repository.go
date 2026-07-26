@@ -107,9 +107,16 @@ func (r *BlockRepository) CheckPermissionAndGetOneById(
 	}
 
 	var block schemas.Block
-	result := parsedOptions.DB.
+	query := parsedOptions.DB.
 		Model(&schemas.Block{}).
-		Scopes(r.blockScope.PassPermissionCheck(id, userId, allowedPermissions)).
+		Where(`"BlockTable".id = ?`, id)
+	if allowedPermissions != nil && len(allowedPermissions) > 0 {
+		query = query.Scopes(
+			r.blockScope.PassPermissionCheck(id, userId, allowedPermissions),
+		)
+	}
+
+	result := query.
 		Scopes(r.blockScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&block)
@@ -162,12 +169,7 @@ func (r *BlockRepository) GetOneById(
 		id,
 		userId,
 		preloads,
-		[]enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-			enums.AccessControlPermission_Write,
-			enums.AccessControlPermission_Read,
-		},
+		options.ParseRepositoryOptions(opts...).AllowedPermissions,
 		opts...,
 	)
 }
@@ -290,14 +292,11 @@ func (r *BlockRepository) BulkCreateMany(
 	checkOptions := append(opts, options.WithTransactionDB(parsedOptions.DB))
 	checkOptions = append(checkOptions, options.WithOnlyDeleted(types.Ternary_Negative))
 	checkOptions = append(checkOptions, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
+	checkOptions = append(checkOptions, options.WithAllowedPermissions(parsedOptions.AllowedPermissions))
 	successes, _, exception := blockPackRepository.BulkCheckPermissionsAndGetManyByIds(
 		checkInputs,
 		nil,
-		[]enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-			enums.AccessControlPermission_Write,
-		},
+		parsedOptions.AllowedPermissions,
 		checkOptions...,
 	)
 	if exception != nil {
@@ -385,11 +384,7 @@ func (r *BlockRepository) BulkUpdateMany(
 	successes, _, exception := r.BulkCheckPermissionsAndGetManyByIds(
 		checkInputs,
 		nil,
-		[]enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-			enums.AccessControlPermission_Write,
-		},
+		parsedOptions.AllowedPermissions,
 		checkOptions...,
 	)
 	if exception != nil {

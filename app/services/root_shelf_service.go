@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
+	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
 	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
@@ -20,6 +21,7 @@ import (
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
+	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
@@ -58,6 +60,8 @@ type RootShelfService struct {
 	rootShelfScope           scopes.RootShelfScopeInterface
 	rootShelfRepository      repositories.RootShelfRepositoryInterface
 	usersToShelvesRepository repositories.UsersToShelvesRepositoryInterface
+	blockPackRepository      repositories.BlockPackRepositoryInterface
+	realtimeLeaseStore       *caches.RealtimeLeaseStore
 }
 
 func NewRootShelfService(
@@ -65,15 +69,22 @@ func NewRootShelfService(
 	rootShelfScope scopes.RootShelfScopeInterface,
 	rootShelfRepository repositories.RootShelfRepositoryInterface,
 	usersToShelvesRepository repositories.UsersToShelvesRepositoryInterface,
+	blockPackRepository repositories.BlockPackRepositoryInterface,
+	realtimeLeaseStore *caches.RealtimeLeaseStore,
 ) RootShelfServiceInterface {
 	if db == nil {
 		db = models.NotezyDB
+	}
+	if realtimeLeaseStore == nil {
+		realtimeLeaseStore = caches.NewRealtimeLeaseStore(caches.RedisClientMap)
 	}
 	return &RootShelfService{
 		db:                       db,
 		rootShelfScope:           rootShelfScope,
 		rootShelfRepository:      rootShelfRepository,
 		usersToShelvesRepository: usersToShelvesRepository,
+		blockPackRepository:      blockPackRepository,
+		realtimeLeaseStore:       realtimeLeaseStore,
 	}
 }
 
@@ -108,6 +119,7 @@ func (s *RootShelfService) saveMyRootShelfPermission(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithLockingStrength(options.LockingStrengthUpdate),
 	)
@@ -157,7 +169,7 @@ func (s *RootShelfService) saveMyRootShelfPermission(
 			options.WithTransactionDB(tx),
 		)
 	} else {
-		relation, exception = s.usersToShelvesRepository.UpdatePermission(
+		relation, exception = s.usersToShelvesRepository.UpdateOne(
 			rootShelf.Id,
 			targetUser.Id,
 			permission,
@@ -168,9 +180,26 @@ func (s *RootShelfService) saveMyRootShelfPermission(
 		tx.Rollback()
 		return nil, exception
 	}
+
+	blockPacks, exception := s.blockPackRepository.GetManyByRootShelfIds(
+		[]uuid.UUID{rootShelf.Id},
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+	blockPackIds := make([]uuid.UUID, len(blockPacks))
+	for index, blockPack := range blockPacks {
+		blockPackIds[index] = blockPack.Id
+	}
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+	}
+	if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(targetUser.Id, blockPackIds); err != nil {
+		logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
 	}
 
 	return &dtos.UpsertMyRootShelfPermissionResDto{
@@ -181,87 +210,6 @@ func (s *RootShelfService) saveMyRootShelfPermission(
 	}, nil
 }
 
-func (s *RootShelfService) leaveMyRootShelf(
-	tx *gorm.DB,
-	actorUserId uuid.UUID,
-	rootShelfId uuid.UUID,
-	targetUserPublicId *uuid.UUID,
-) *exceptions.Exception {
-	rootShelf, permission, exception := s.rootShelfRepository.CheckPermissionAndGetOneById(
-		rootShelfId,
-		actorUserId,
-		nil,
-		enums.AllAccessControlPermissions,
-		options.WithTransactionDB(tx),
-		options.WithOnlyDeleted(types.Ternary_Negative),
-		options.WithLockingStrength(options.LockingStrengthUpdate),
-	)
-	if exception != nil {
-		return exception
-	}
-	if permission != enums.AccessControlPermission_Owner {
-		return s.usersToShelvesRepository.DeleteOne(rootShelf.Id, actorUserId, options.WithTransactionDB(tx))
-	}
-	if targetUserPublicId == nil {
-		return exceptions.Shelf.InvalidDto("targetUserPublicId is required when the RootShelf owner leaves")
-	}
-
-	var targetUser schemas.User
-	if result := tx.Select("id").Where("public_id = ?", *targetUserPublicId).First(&targetUser); result.Error != nil {
-		return exceptions.User.NotFound().WithOrigin(result.Error)
-	}
-	if targetUser.Id == actorUserId {
-		return exceptions.Shelf.NoChanges()
-	}
-	if _, exception = s.usersToShelvesRepository.GetOne(
-		rootShelf.Id,
-		targetUser.Id,
-		options.WithTransactionDB(tx),
-		options.WithLockingStrength(options.LockingStrengthUpdate),
-	); exception != nil {
-		return exception
-	}
-
-	var accounts []schemas.UserAccount
-	result := tx.
-		Clauses(clause.Locking{Strength: options.LockingStrengthUpdate}).
-		Where("user_id IN ?", []uuid.UUID{actorUserId, targetUser.Id}).
-		Order("user_id").
-		Find(&accounts)
-	if result.Error != nil {
-		return exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)
-	}
-	if len(accounts) != 2 {
-		return exceptions.User.NotFound()
-	}
-
-	if _, exception = s.usersToShelvesRepository.UpdatePermission(
-		rootShelf.Id,
-		actorUserId,
-		enums.AccessControlPermission_Admin,
-		options.WithTransactionDB(tx),
-	); exception != nil {
-		return exception
-	}
-	if _, exception = s.usersToShelvesRepository.UpdatePermission(
-		rootShelf.Id,
-		targetUser.Id,
-		enums.AccessControlPermission_Owner,
-		options.WithTransactionDB(tx),
-	); exception != nil {
-		return exception
-	}
-	result = tx.Model(&schemas.RootShelf{}).Where("id = ?", rootShelf.Id).Update("owner_id", targetUser.Id)
-	if result.Error != nil {
-		return exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)
-	}
-	if result.RowsAffected == 0 {
-		return exceptions.Shelf.NotFound()
-	}
-
-	return s.usersToShelvesRepository.DeleteOne(rootShelf.Id, actorUserId, options.WithTransactionDB(tx))
-}
-
 /* ============================== Service Methods for RootShelf ============================== */
 
 func (s *RootShelfService) GetMyRootShelfById(
@@ -269,6 +217,11 @@ func (s *RootShelfService) GetMyRootShelfById(
 ) (*dtos.GetMyRootShelfByIdResDto, *exceptions.Exception) {
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
+	}
+
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
 	}
 
 	db := s.db.WithContext(ctx)
@@ -287,6 +240,7 @@ func (s *RootShelfService) GetMyRootShelfById(
 		reqDto.ContextFields.UserId,
 		nil,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(onlyDeleted),
 	)
 	if exception != nil {
@@ -411,6 +365,11 @@ func (s *RootShelfService) UpdateMyRootShelfById(
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
 	db := s.db.WithContext(ctx)
 
 	rootShelf, exception := s.rootShelfRepository.UpdateOneById(
@@ -423,6 +382,7 @@ func (s *RootShelfService) UpdateMyRootShelfById(
 			SetNull: reqDto.Body.SetNull,
 		},
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -440,6 +400,11 @@ func (s *RootShelfService) UpdateMyRootShelvesByIds(
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
 	db := s.db.WithContext(ctx)
 
 	input := make([]inputs.UpdateRootShelfByIdInput, len(reqDto.Body.UpdatedRootShelves))
@@ -454,10 +419,11 @@ func (s *RootShelfService) UpdateMyRootShelvesByIds(
 			},
 		}
 	}
-	exception := s.rootShelfRepository.UpdateManyByIds(
+	exception = s.rootShelfRepository.UpdateManyByIds(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -475,12 +441,18 @@ func (s *RootShelfService) RestoreMyRootShelfById(
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
 	db := s.db.WithContext(ctx)
 
 	restoredRootShelf, exception := s.rootShelfRepository.RestoreSoftDeletedOneById(
 		reqDto.Body.RootShelfId,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -505,12 +477,18 @@ func (s *RootShelfService) RestoreMyRootShelvesByIds(
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
 	db := s.db.WithContext(ctx)
 
 	restoredRootShelves, exception := s.rootShelfRepository.RestoreSoftDeletedManyByIds(
 		reqDto.Body.RootShelfIds,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -552,13 +530,27 @@ func (s *RootShelfService) DeleteMyRootShelfById(
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithLockingStrength(options.LockingStrengthUpdate),
 	)
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
+	}
+	blockPacks, exception := s.blockPackRepository.GetManyByRootShelfIds(
+		[]uuid.UUID{rootShelf.Id},
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+	blockPackIds := make([]uuid.UUID, len(blockPacks))
+	for index, blockPack := range blockPacks {
+		blockPackIds[index] = blockPack.Id
 	}
 
 	if permission == enums.AccessControlPermission_Owner {
@@ -578,7 +570,7 @@ func (s *RootShelfService) DeleteMyRootShelfById(
 		exception = s.usersToShelvesRepository.DeleteOne(
 			rootShelf.Id,
 			reqDto.ContextFields.UserId,
-			options.WithDB(tx),
+			options.WithTransactionDB(tx),
 		)
 		if exception != nil {
 			tx.Rollback()
@@ -587,7 +579,17 @@ func (s *RootShelfService) DeleteMyRootShelfById(
 	}
 
 	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
 		return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+	}
+	if permission == enums.AccessControlPermission_Owner {
+		if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(uuid.Nil, blockPackIds); err != nil {
+			logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
+		}
+	} else {
+		if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(reqDto.ContextFields.UserId, blockPackIds); err != nil {
+			logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
+		}
 	}
 
 	return &dtos.DeleteMyRootShelfByIdResDto{
@@ -602,15 +604,36 @@ func (s *RootShelfService) DeleteMyRootShelvesByIds(
 		return nil, exceptions.User.InvalidDto().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
-	exception := s.rootShelfRepository.SoftDeleteManyByIds(
+	db := s.db.WithContext(ctx)
+	blockPacks, exception := s.blockPackRepository.GetManyByRootShelfIds(
 		reqDto.Body.RootShelfIds,
-		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
 		return nil, exception
+	}
+	blockPackIds := make([]uuid.UUID, len(blockPacks))
+	for index, blockPack := range blockPacks {
+		blockPackIds[index] = blockPack.Id
+	}
+
+	exception = s.rootShelfRepository.SoftDeleteManyByIds(
+		reqDto.Body.RootShelfIds,
+		reqDto.ContextFields.UserId,
+		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+	if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(uuid.Nil, blockPackIds); err != nil {
+		logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
 	}
 
 	return &dtos.DeleteMyRootShelvesByIdsResDto{
@@ -631,7 +654,15 @@ func (s *RootShelfService) GetMyRootShelfPermission(
 	}
 
 	db := s.db.WithContext(ctx)
-	if _, _, exception = s.rootShelfRepository.CheckPermissionAndGetOneById(reqDto.Param.RootShelfId, reqDto.ContextFields.UserId, nil, allowedPermissions, options.WithDB(db), options.WithOnlyDeleted(types.Ternary_Negative)); exception != nil {
+	if _, _, exception = s.rootShelfRepository.CheckPermissionAndGetOneById(
+		reqDto.Param.RootShelfId,
+		reqDto.ContextFields.UserId,
+		nil,
+		allowedPermissions,
+		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	); exception != nil {
 		return nil, exception
 	}
 
@@ -639,7 +670,11 @@ func (s *RootShelfService) GetMyRootShelfPermission(
 	if result := db.Where("public_id = ?", reqDto.Param.UserPublicId).First(&targetUser); result.Error != nil {
 		return nil, exceptions.User.NotFound().WithOrigin(result.Error)
 	}
-	relation, exception := s.usersToShelvesRepository.GetOne(reqDto.Param.RootShelfId, targetUser.Id, options.WithDB(db))
+	relation, exception := s.usersToShelvesRepository.GetOne(
+		reqDto.Param.RootShelfId,
+		targetUser.Id,
+		options.WithDB(db),
+	)
 	if exception != nil {
 		return nil, exception
 	}
@@ -699,7 +734,8 @@ func (s *RootShelfService) UpsertMyRootShelfPermissions(
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithLockingStrength(options.LockingStrengthUpdate),
 	)
@@ -735,10 +771,10 @@ func (s *RootShelfService) UpsertMyRootShelfPermissions(
 		userIds[index] = userByPublicId[userPublicId].Id
 	}
 
-	existingPermissions, exception := s.rootShelfRepository.GetPermissionsByRootShelfIdAndUserIds(
+	existingPermissions, exception := s.usersToShelvesRepository.GetMany(
 		rootShelf.Id,
 		userIds,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 		options.WithLockingStrength(options.LockingStrengthUpdate),
 	)
 	if exception != nil {
@@ -769,11 +805,11 @@ func (s *RootShelfService) UpsertMyRootShelfPermissions(
 		permissions[index] = permission
 	}
 
-	updatedPermissions, exception := s.rootShelfRepository.UpsertPermissionsByUserIds(
+	updatedPermissions, exception := s.usersToShelvesRepository.UpsertMany(
 		rootShelf.Id,
 		userIds,
 		permissions,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 	)
 	if exception != nil {
 		tx.Rollback()
@@ -821,6 +857,10 @@ func (s *RootShelfService) TransferMyRootShelfOwnership(
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return nil, exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 	tx := s.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		return nil, exceptions.Shelf.FailedToBeginTransaction(
@@ -831,8 +871,9 @@ func (s *RootShelfService) TransferMyRootShelfOwnership(
 		reqDto.Param.RootShelfId,
 		reqDto.ContextFields.UserId,
 		nil,
-		[]enums.AccessControlPermission{enums.AccessControlPermission_Owner},
+		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithLockingStrength(options.LockingStrengthUpdate),
 	)
@@ -890,7 +931,49 @@ func (s *RootShelfService) TransferMyRootShelfOwnership(
 		return nil, exceptions.User.NotFound()
 	}
 
-	if _, exception = s.usersToShelvesRepository.UpdatePermission(
+	var maximumSubscribers int32
+	result = tx.
+		Model(&schemas.User{}).
+		Select(`"PlanLimitationTable".max_realtime_room_subscriber_count`).
+		Joins(`INNER JOIN "PlanLimitationTable" ON "PlanLimitationTable".key = "UserTable".plan`).
+		Where(`"UserTable".id = ?`, targetUser.Id).
+		Scan(&maximumSubscribers)
+	if result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.Shelf.FailedToUpdate().WithOrigin(result.Error)
+	}
+	if result.RowsAffected == 0 || maximumSubscribers <= 0 {
+		tx.Rollback()
+		return nil, exceptions.Shelf.NoPermission("transfer RootShelf ownership to a plan without realtime room capacity")
+	}
+
+	var blockPackIds []uuid.UUID
+	result = tx.
+		Model(&schemas.BlockPack{}).
+		Select(`"BlockPackTable".id`).
+		Joins(`INNER JOIN "SubShelfTable" ON "SubShelfTable".id = "BlockPackTable".parent_sub_shelf_id`).
+		Where(`"SubShelfTable".root_shelf_id = ?`, rootShelf.Id).
+		Where(`"BlockPackTable".deleted_at IS NULL`).
+		Where(`"SubShelfTable".deleted_at IS NULL`).
+		Find(&blockPackIds)
+	if result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.BlockPack.NotFound().WithOrigin(result.Error)
+	}
+
+	subscriberCounts, err := s.realtimeLeaseStore.GetBlockPackSubscriberCounts(blockPackIds)
+	if err != nil {
+		tx.Rollback()
+		return nil, exceptions.Cache.FailedToUpdate("realtime block pack subscriber counts").WithOrigin(err)
+	}
+	for _, subscriberCount := range subscriberCounts {
+		if subscriberCount > int64(maximumSubscribers) {
+			tx.Rollback()
+			return nil, exceptions.Shelf.NoPermission("transfer RootShelf ownership to a plan with insufficient realtime room capacity")
+		}
+	}
+
+	if _, exception = s.usersToShelvesRepository.UpdateOne(
 		rootShelf.Id,
 		reqDto.ContextFields.UserId,
 		enums.AccessControlPermission_Admin,
@@ -899,7 +982,7 @@ func (s *RootShelfService) TransferMyRootShelfOwnership(
 		tx.Rollback()
 		return nil, exception
 	}
-	newOwnerMembership, exception := s.usersToShelvesRepository.UpdatePermission(
+	newOwnerMembership, exception := s.usersToShelvesRepository.UpdateOne(
 		rootShelf.Id,
 		targetUser.Id,
 		enums.AccessControlPermission_Owner,
@@ -952,7 +1035,8 @@ func (s *RootShelfService) DeleteMyRootShelfPermission(
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithLockingStrength(options.LockingStrengthUpdate),
 	)
@@ -974,7 +1058,7 @@ func (s *RootShelfService) DeleteMyRootShelfPermission(
 	targetPermission, exception := s.usersToShelvesRepository.GetOne(
 		rootShelf.Id,
 		targetUser.Id,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 		options.WithLockingStrength(options.LockingStrengthUpdate),
 	)
 	if exception != nil {
@@ -994,15 +1078,32 @@ func (s *RootShelfService) DeleteMyRootShelfPermission(
 	exception = s.usersToShelvesRepository.DeleteOne(
 		rootShelf.Id,
 		targetUser.Id,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 	)
 	if exception != nil {
 		tx.Rollback()
 		return exception
 	}
+	blockPacks, exception := s.blockPackRepository.GetManyByRootShelfIds(
+		[]uuid.UUID{rootShelf.Id},
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return exception
+	}
+	blockPackIds := make([]uuid.UUID, len(blockPacks))
+	for index, blockPack := range blockPacks {
+		blockPackIds[index] = blockPack.Id
+	}
 
 	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
 		return exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+	}
+	if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(targetUser.Id, blockPackIds); err != nil {
+		logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
 	}
 
 	return nil
@@ -1036,7 +1137,8 @@ func (s *RootShelfService) DeleteMyRootShelfPermissions(
 		reqDto.ContextFields.UserId,
 		nil,
 		allowedPermissions,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithLockingStrength(options.LockingStrengthUpdate),
 	)
@@ -1070,10 +1172,10 @@ func (s *RootShelfService) DeleteMyRootShelfPermissions(
 		userIds[index] = userIdByPublicId[userPublicId]
 	}
 
-	targetPermissions, exception := s.rootShelfRepository.GetPermissionsByRootShelfIdAndUserIds(
+	targetPermissions, exception := s.usersToShelvesRepository.GetMany(
 		rootShelf.Id,
 		userIds,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 		options.WithLockingStrength(options.LockingStrengthUpdate),
 	)
 	if exception != nil {
@@ -1097,18 +1199,37 @@ func (s *RootShelfService) DeleteMyRootShelfPermissions(
 		}
 	}
 
-	exception = s.rootShelfRepository.DeletePermissionsByUserIds(
+	exception = s.usersToShelvesRepository.DeleteMany(
 		rootShelf.Id,
 		userIds,
-		options.WithDB(tx),
+		options.WithTransactionDB(tx),
 	)
 	if exception != nil {
 		tx.Rollback()
 		return exception
 	}
+	blockPacks, exception := s.blockPackRepository.GetManyByRootShelfIds(
+		[]uuid.UUID{rootShelf.Id},
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return exception
+	}
+	blockPackIds := make([]uuid.UUID, len(blockPacks))
+	for index, blockPack := range blockPacks {
+		blockPackIds[index] = blockPack.Id
+	}
 
 	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
 		return exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+	}
+	for _, targetUser := range targetUsers {
+		if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(targetUser.Id, blockPackIds); err != nil {
+			logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
+		}
 	}
 
 	return nil
@@ -1120,11 +1241,46 @@ func (s *RootShelfService) LeaveMyRootShelf(
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
+
 	tx := s.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		return exceptions.Shelf.FailedToBeginTransaction("Failed to begin RootShelf leave transaction").WithOrigin(tx.Error)
 	}
-	if exception := s.leaveMyRootShelf(tx, reqDto.ContextFields.UserId, reqDto.Param.RootShelfId, reqDto.Body.TargetUserPublicId); exception != nil {
+	blockPacks, exception := s.blockPackRepository.GetManyByRootShelfIds(
+		[]uuid.UUID{reqDto.Param.RootShelfId},
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return exception
+	}
+	blockPackIds := make([]uuid.UUID, len(blockPacks))
+	for index, blockPack := range blockPacks {
+		blockPackIds[index] = blockPack.Id
+	}
+	rootShelf, permission, exception := s.rootShelfRepository.CheckPermissionAndGetOneById(
+		reqDto.Param.RootShelfId,
+		reqDto.ContextFields.UserId,
+		nil,
+		nil,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return exception
+	}
+	if permission == enums.AccessControlPermission_Owner {
+		tx.Rollback()
+		return exceptions.Shelf.NoPermission("transfer RootShelf ownership before leaving")
+	}
+	if exception = s.usersToShelvesRepository.DeleteOne(
+		rootShelf.Id,
+		reqDto.ContextFields.UserId,
+		options.WithTransactionDB(tx),
+	); exception != nil {
 		tx.Rollback()
 		return exception
 	}
@@ -1132,6 +1288,10 @@ func (s *RootShelfService) LeaveMyRootShelf(
 		tx.Rollback()
 		return exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
 	}
+	if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(reqDto.ContextFields.UserId, blockPackIds); err != nil {
+		logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
+	}
+
 	return nil
 }
 
@@ -1141,27 +1301,69 @@ func (s *RootShelfService) LeaveMyRootShelves(
 	if err := validation.Validator.Struct(reqDto); err != nil {
 		return exceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
-	rootShelfIds := make(map[uuid.UUID]struct{}, len(reqDto.Body.RootShelves))
-	for _, rootShelfReqDto := range reqDto.Body.RootShelves {
-		if _, exists := rootShelfIds[rootShelfReqDto.RootShelfId]; exists {
+	rootShelfIdSet := make(map[uuid.UUID]struct{}, len(reqDto.Body.RootShelves))
+	rootShelfIds := make([]uuid.UUID, len(reqDto.Body.RootShelves))
+	for index, rootShelfReqDto := range reqDto.Body.RootShelves {
+		if _, exists := rootShelfIdSet[rootShelfReqDto.RootShelfId]; exists {
 			return exceptions.Shelf.InvalidDto("rootShelves cannot contain duplicate rootShelfIds")
 		}
-		rootShelfIds[rootShelfReqDto.RootShelfId] = struct{}{}
+		rootShelfIdSet[rootShelfReqDto.RootShelfId] = struct{}{}
+		rootShelfIds[index] = rootShelfReqDto.RootShelfId
 	}
 	tx := s.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		return exceptions.Shelf.FailedToBeginTransaction("Failed to begin RootShelf leave transaction").WithOrigin(tx.Error)
 	}
-	for _, rootShelfReqDto := range reqDto.Body.RootShelves {
-		if exception := s.leaveMyRootShelf(tx, reqDto.ContextFields.UserId, rootShelfReqDto.RootShelfId, rootShelfReqDto.TargetUserPublicId); exception != nil {
+	blockPacks, exception := s.blockPackRepository.GetManyByRootShelfIds(
+		rootShelfIds,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return exception
+	}
+	blockPackIds := make([]uuid.UUID, len(blockPacks))
+	for index, blockPack := range blockPacks {
+		blockPackIds[index] = blockPack.Id
+	}
+	relations, exception := s.usersToShelvesRepository.GetManyByRootShelfIdsAndUserId(
+		rootShelfIds,
+		reqDto.ContextFields.UserId,
+		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthUpdate),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return exception
+	}
+	if len(relations) != len(rootShelfIds) {
+		tx.Rollback()
+		return exceptions.Shelf.NotFound()
+	}
+	for _, relation := range relations {
+		if relation.Permission == enums.AccessControlPermission_Owner {
 			tx.Rollback()
-			return exception
+			return exceptions.Shelf.NoPermission("transfer RootShelf ownership before leaving")
 		}
+	}
+
+	if exception = s.usersToShelvesRepository.DeleteManyByRootShelfIdsAndUserId(
+		rootShelfIds,
+		reqDto.ContextFields.UserId,
+		options.WithTransactionDB(tx),
+	); exception != nil {
+		tx.Rollback()
+		return exception
 	}
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
 	}
+	if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(reqDto.ContextFields.UserId, blockPackIds); err != nil {
+		logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
+	}
+
 	return nil
 }
 

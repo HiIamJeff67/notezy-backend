@@ -226,9 +226,7 @@ type LeaveMyStationReqDto struct {
 		struct {
 			UserId uuid.UUID
 		},
-		struct {
-			TargetUserPublicId *uuid.UUID `json:"targetUserPublicId" validate:"omitnil"`
-		},
+		any,
 		struct {
 			StationId uuid.UUID `uri:"stationId" validate:"required"`
 		},
@@ -245,8 +243,7 @@ type LeaveMyStationsReqDto struct {
 		},
 		struct {
 			Stations []struct {
-				StationId          uuid.UUID  `json:"stationId" validate:"required"`
-				TargetUserPublicId *uuid.UUID `json:"targetUserPublicId" validate:"omitnil"`
+				StationId uuid.UUID `json:"stationId" validate:"required"`
 			} `json:"stations" validate:"required,min=1,max=1024,dive"`
 		},
 		any,

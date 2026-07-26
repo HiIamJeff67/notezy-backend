@@ -89,6 +89,45 @@ func NewRoutineService(
 
 /* ============================== Helper Functions ============================== */
 
+func (s *RoutineService) filterReadableRoutineItems(
+	ctx context.Context,
+	userId uuid.UUID,
+	allowedPermissions []enums.AccessControlPermission,
+	routines []schemas.Routine,
+) (map[types.Pair[uuid.UUID, enums.ItemType]]struct{}, *exceptions.Exception) {
+	itemIdentitySet := make(map[types.Pair[uuid.UUID, enums.ItemType]]struct{})
+	for _, routine := range routines {
+		for _, routineToItem := range routine.RoutinesToItems {
+			itemIdentitySet[types.Pair[uuid.UUID, enums.ItemType]{
+				First:  routineToItem.ItemId,
+				Second: routineToItem.ItemType,
+			}] = struct{}{}
+		}
+	}
+
+	itemIdentities := make([]types.Pair[uuid.UUID, enums.ItemType], 0, len(itemIdentitySet))
+	for itemIdentity := range itemIdentitySet {
+		itemIdentities = append(itemIdentities, itemIdentity)
+	}
+	permittedItemIdentities, exception := s.itemRepository.GetPermittedIdentities(
+		itemIdentities,
+		userId,
+		allowedPermissions,
+		options.WithDB(s.db.WithContext(ctx)),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	permittedItemIdentitySet := make(map[types.Pair[uuid.UUID, enums.ItemType]]struct{}, len(permittedItemIdentities))
+	for _, itemIdentity := range permittedItemIdentities {
+		permittedItemIdentitySet[itemIdentity] = struct{}{}
+	}
+
+	return permittedItemIdentitySet, nil
+}
+
 func (s *RoutineService) visualizeMyRoutineTimeCount(
 	ctx context.Context,
 	userId uuid.UUID,
@@ -100,7 +139,6 @@ func (s *RoutineService) visualizeMyRoutineTimeCount(
 	fieldName string,
 ) ([]dtos.TwoDimensionalDatum[int64], *exceptions.Exception) {
 	db := s.db.WithContext(ctx)
-
 	var buckets []struct {
 		BucketStart  time.Time `gorm:"column:bucket_start;"`
 		RoutineCount int64     `gorm:"column:routine_count;"`
@@ -182,7 +220,10 @@ func (s *RoutineService) GetMyRoutineById(
 	}
 
 	db := s.db.WithContext(ctx)
-
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 	onlyDeleted := types.Ternary_Neutral
 	if reqDto.Param.IsDeleted != nil {
 		if *reqDto.Param.IsDeleted {
@@ -201,7 +242,17 @@ func (s *RoutineService) GetMyRoutineById(
 			schemas.RoutineRelation_RoutinesToItems,
 		},
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(onlyDeleted),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+	permittedItemIdentitySet, exception := s.filterReadableRoutineItems(
+		ctx,
+		reqDto.ContextFields.UserId,
+		allowedPermissions,
+		[]schemas.Routine{*routine},
 	)
 	if exception != nil {
 		return nil, exception
@@ -215,9 +266,14 @@ func (s *RoutineService) GetMyRoutineById(
 	for index, routineTask := range routine.RoutineTasks {
 		taskIds[index] = routineTask.Id
 	}
-	itemIds := make([]uuid.UUID, len(routine.RoutinesToItems))
-	for index, routineToItem := range routine.RoutinesToItems {
-		itemIds[index] = routineToItem.ItemId
+	itemIds := make([]uuid.UUID, 0, len(routine.RoutinesToItems))
+	for _, routineToItem := range routine.RoutinesToItems {
+		if _, exists := permittedItemIdentitySet[types.Pair[uuid.UUID, enums.ItemType]{
+			First:  routineToItem.ItemId,
+			Second: routineToItem.ItemType,
+		}]; exists {
+			itemIds = append(itemIds, routineToItem.ItemId)
+		}
 	}
 
 	return &dtos.GetMyRoutineByIdResDto{
@@ -248,7 +304,6 @@ func (s *RoutineService) GetMyRoutinesByStationId(
 	}
 
 	db := s.db.WithContext(ctx)
-
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
 	if exception != nil {
 		return nil, exception
@@ -288,6 +343,15 @@ func (s *RoutineService) GetMyRoutinesByStationId(
 	if result.Error != nil {
 		return nil, exceptions.Routine.NotFound().WithOrigin(result.Error)
 	}
+	permittedItemIdentitySet, exception := s.filterReadableRoutineItems(
+		ctx,
+		reqDto.ContextFields.UserId,
+		allowedPermissions,
+		routines,
+	)
+	if exception != nil {
+		return nil, exception
+	}
 
 	resDto := make(dtos.GetMyRoutinesByStationIdResDto, len(routines))
 	for index, routine := range routines {
@@ -299,9 +363,14 @@ func (s *RoutineService) GetMyRoutinesByStationId(
 		for index, routineTask := range routine.RoutineTasks {
 			taskIds[index] = routineTask.Id
 		}
-		itemIds := make([]uuid.UUID, len(routine.RoutinesToItems))
-		for index, routineToItem := range routine.RoutinesToItems {
-			itemIds[index] = routineToItem.ItemId
+		itemIds := make([]uuid.UUID, 0, len(routine.RoutinesToItems))
+		for _, routineToItem := range routine.RoutinesToItems {
+			if _, exists := permittedItemIdentitySet[types.Pair[uuid.UUID, enums.ItemType]{
+				First:  routineToItem.ItemId,
+				Second: routineToItem.ItemType,
+			}]; exists {
+				itemIds = append(itemIds, routineToItem.ItemId)
+			}
 		}
 		resDto[index] = struct {
 			Id               uuid.UUID            "json:\"id\""
@@ -355,7 +424,10 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 	}
 
 	db := s.db.WithContext(ctx)
-
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 	onlyDeleted := types.Ternary_Neutral
 	if reqDto.Param.AreDeleted != nil {
 		if *reqDto.Param.AreDeleted {
@@ -376,7 +448,17 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 			schemas.RoutineRelation_RoutinesToItems,
 		},
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(onlyDeleted),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+	permittedItemIdentitySet, exception := s.filterReadableRoutineItems(
+		ctx,
+		reqDto.ContextFields.UserId,
+		allowedPermissions,
+		routines,
 	)
 	if exception != nil {
 		return nil, exception
@@ -392,9 +474,14 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 		for index, routineTask := range routine.RoutineTasks {
 			taskIds[index] = routineTask.Id
 		}
-		itemIds := make([]uuid.UUID, len(routine.RoutinesToItems))
-		for index, routineToItem := range routine.RoutinesToItems {
-			itemIds[index] = routineToItem.ItemId
+		itemIds := make([]uuid.UUID, 0, len(routine.RoutinesToItems))
+		for _, routineToItem := range routine.RoutinesToItems {
+			if _, exists := permittedItemIdentitySet[types.Pair[uuid.UUID, enums.ItemType]{
+				First:  routineToItem.ItemId,
+				Second: routineToItem.ItemType,
+			}]; exists {
+				itemIds = append(itemIds, routineToItem.ItemId)
+			}
 		}
 		resDto[index] = struct {
 			Id               uuid.UUID            "json:\"id\""
@@ -442,6 +529,10 @@ func (s *RoutineService) CreateRoutineByStationId(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	newRoutineId, exception := s.routineRepository.CreateOneByStationId(
 		reqDto.Body.StationId,
@@ -458,6 +549,7 @@ func (s *RoutineService) CreateRoutineByStationId(
 			Timezone:         reqDto.Body.Timezone,
 		},
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -477,6 +569,10 @@ func (s *RoutineService) CreateRoutinesByStationIds(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	input := make([]inputs.CreateRoutineByStationIdInput, len(reqDto.Body.CreatedRoutines))
 	for index, createdRoutine := range reqDto.Body.CreatedRoutines {
@@ -497,6 +593,7 @@ func (s *RoutineService) CreateRoutinesByStationIds(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -516,6 +613,10 @@ func (s *RoutineService) UpdateMyRoutineById(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	updatedRoutine, exception := s.routineRepository.UpdateOneById(
 		reqDto.Body.RoutineId,
@@ -535,6 +636,7 @@ func (s *RoutineService) UpdateMyRoutineById(
 			SetNull: reqDto.Body.SetNull,
 		},
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -553,6 +655,10 @@ func (s *RoutineService) UpdateMyRoutinesByIds(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	input := make([]inputs.UpdateRoutineByIdInput, len(reqDto.Body.UpdatedRoutines))
 	for index, updatedRoutine := range reqDto.Body.UpdatedRoutines {
@@ -574,10 +680,11 @@ func (s *RoutineService) UpdateMyRoutinesByIds(
 			},
 		}
 	}
-	exception := s.routineRepository.UpdateManyByIds(
+	exception = s.routineRepository.UpdateManyByIds(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -608,6 +715,7 @@ func (s *RoutineService) LinkRoutineTagById(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
@@ -702,6 +810,7 @@ func (s *RoutineService) LinkRoutineTagsByIds(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
@@ -800,6 +909,7 @@ func (s *RoutineService) LinkRoutineItemById(
 		reqDto.ContextFields.UserId,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	) {
@@ -813,6 +923,7 @@ func (s *RoutineService) LinkRoutineItemById(
 		reqDto.ContextFields.UserId,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	) {
@@ -897,6 +1008,7 @@ func (s *RoutineService) LinkRoutineItemsByIds(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
@@ -915,6 +1027,7 @@ func (s *RoutineService) LinkRoutineItemsByIds(
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
@@ -990,11 +1103,16 @@ func (s *RoutineService) RestoreMyRoutineById(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	restoredRoutine, exception := s.routineRepository.RestoreSoftDeletedOneById(
 		reqDto.Body.RoutineId,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -1025,11 +1143,16 @@ func (s *RoutineService) RestoreMyRoutinesByIds(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	restoredRoutines, exception := s.routineRepository.RestoreSoftDeletedManyByIds(
 		reqDto.Body.RoutineIds,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -1065,11 +1188,16 @@ func (s *RoutineService) DeleteMyRoutineById(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
-	exception := s.routineRepository.SoftDeleteOneById(
+	exception = s.routineRepository.SoftDeleteOneById(
 		reqDto.Body.RoutineId,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -1088,11 +1216,16 @@ func (s *RoutineService) DeleteMyRoutinesByIds(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
-	exception := s.routineRepository.SoftDeleteManyByIds(
+	exception = s.routineRepository.SoftDeleteManyByIds(
 		reqDto.Body.RoutineIds,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -1111,11 +1244,16 @@ func (s *RoutineService) HardDeleteMyRoutineById(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
-	exception := s.routineRepository.HardDeleteOneById(
+	exception = s.routineRepository.HardDeleteOneById(
 		reqDto.Body.RoutineId,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -1134,11 +1272,16 @@ func (s *RoutineService) HardDeleteMyRoutinesByIds(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
-	exception := s.routineRepository.HardDeleteManyByIds(
+	exception = s.routineRepository.HardDeleteManyByIds(
 		reqDto.Body.RoutineIds,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -1497,6 +1640,28 @@ func (s *RoutineService) SearchPrivateRoutines(
 		&userId,
 	)).Find(&routines).Error; err != nil {
 		return nil, exceptions.Routine.NotFound().WithOrigin(err)
+	}
+	permittedItemIdentitySet, exception := s.filterReadableRoutineItems(
+		ctx,
+		userId,
+		allowedPermissions,
+		routines,
+	)
+	if exception != nil {
+		return nil, exception
+	}
+	for index := range routines {
+		filteredRoutineToItems := make([]schemas.RoutinesToItems, 0, len(routines[index].RoutinesToItems))
+		for _, routineToItem := range routines[index].RoutinesToItems {
+			if _, exists := permittedItemIdentitySet[types.Pair[uuid.UUID, enums.ItemType]{
+				First:  routineToItem.ItemId,
+				Second: routineToItem.ItemType,
+			}]; exists {
+				filteredRoutineToItems = append(filteredRoutineToItems, routineToItem)
+			}
+		}
+
+		routines[index].RoutinesToItems = filteredRoutineToItems
 	}
 
 	hasNextPage := len(routines) > limit

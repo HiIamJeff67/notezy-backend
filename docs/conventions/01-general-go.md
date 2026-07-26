@@ -14,6 +14,25 @@
   }, nil
   ```
 
+## Method call 參數格式
+
+- method/function call 的參數只在少量且簡單時保留一行。參數超過兩個、包含 nested expression、代表不同語意群組，或閱讀時需要橫向捲動/難以辨認各值角色時，必須展開為一個參數一行並保留 trailing comma。
+- repository call 特別嚴格：正常 domain arguments 與 `options.With...` 是不同語意群組；有兩個以上 options 時一律多行。即使只有一個 option，只要 call 本身已有多個 domain arguments，也應多行。
+- 不要把多個 `options.With...` 壓在同一行，也不要為了維持單行而省略命名清楚的 option。每個 option 佔一行，順序維持 DB/transaction、permission、soft-delete、locking、batch 等既有語意順序。
+
+```go
+station, permission, exception := s.stationRepository.CheckPermissionAndGetOneById(
+	reqDto.Body.StationId,
+	reqDto.ContextFields.UserId,
+	nil,
+	allowedPermissions,
+	options.WithTransactionDB(tx),
+	options.WithAllowedPermissions(allowedPermissions),
+	options.WithOnlyDeleted(types.Ternary_Negative),
+	options.WithLockingStrength(options.LockingStrengthUpdate),
+)
+```
+
 ## 命名與型別
 
 - exported type/function 使用 `PascalCase`；未匯出識別字使用 `camelCase`；縮寫沿用 Go 慣例，如 `Id`、`Url`、`Db` 的專案既有寫法，不在同一領域混用兩種拼法。
@@ -35,7 +54,9 @@ func (s *StationService) UpdateMyStationById(
 	reqDto *dtos.UpdateMyStationByIdReqDto,
 ) (*dtos.UpdateMyStationByIdResDto, *exceptions.Exception) {
 	input := inputs.PartialUpdateStationInput{
-		Values:  inputs.UpdateStationInput{Name: reqDto.Body.Values.Name},
+		Values: inputs.UpdateStationInput{
+			Name: reqDto.Body.Values.Name,
+		},
 		SetNull: reqDto.Body.SetNull,
 	}
 

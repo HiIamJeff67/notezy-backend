@@ -4,7 +4,6 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 )
@@ -27,7 +26,9 @@ func (sc *RoutineTaskRecordScope) PassPermissionCheck(
 	permissions []enums.AccessControlPermission,
 ) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		allowedPermissions := contexts.IntersectAllowedPermissions(db.Statement.Context, permissions)
+		if permissions == nil {
+			return db.Where(`"RoutineTaskRecordTable".id = ?`, id)
+		}
 
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
 			Model(&schemas.RoutineTask{}).
@@ -35,7 +36,7 @@ func (sc *RoutineTaskRecordScope) PassPermissionCheck(
 			Joins(`INNER JOIN "RoutineTable" routine ON routine.id = "RoutineTaskTable".routine_id AND routine.deleted_at IS NULL`).
 			Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine.station_id`).
 			Where(`"RoutineTaskTable".id = "RoutineTaskRecordTable".routine_task_id`).
-			Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions)
+			Where("uts.user_id = ? AND uts.permission IN ?", userId, permissions)
 		return db.Where(`"RoutineTaskRecordTable".id = ? AND EXISTS (?)`, id, subQuery)
 	}
 }
@@ -46,7 +47,9 @@ func (sc *RoutineTaskRecordScope) PassPermissionChecks(
 	permissions []enums.AccessControlPermission,
 ) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		allowedPermissions := contexts.IntersectAllowedPermissions(db.Statement.Context, permissions)
+		if permissions == nil {
+			return db.Where(`"RoutineTaskRecordTable".id IN ?`, ids)
+		}
 
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
 			Model(&schemas.RoutineTask{}).
@@ -54,7 +57,7 @@ func (sc *RoutineTaskRecordScope) PassPermissionChecks(
 			Joins(`INNER JOIN "RoutineTable" routine ON routine.id = "RoutineTaskTable".routine_id AND routine.deleted_at IS NULL`).
 			Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine.station_id`).
 			Where(`"RoutineTaskTable".id = "RoutineTaskRecordTable".routine_task_id`).
-			Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions)
+			Where("uts.user_id = ? AND uts.permission IN ?", userId, permissions)
 		return db.Where(`"RoutineTaskRecordTable".id IN ? AND EXISTS (?)`, ids, subQuery)
 	}
 }

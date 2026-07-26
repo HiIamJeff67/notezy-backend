@@ -4,9 +4,11 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
 	pg "github.com/lib/pq"
 	"gorm.io/gorm"
 
+	caches "github.com/HiIamJeff67/notezy-backend/app/caches"
 	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
@@ -15,6 +17,7 @@ import (
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	blockpacksql "github.com/HiIamJeff67/notezy-backend/app/models/sqls/block_pack"
+	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
@@ -43,17 +46,23 @@ type BlockPackService struct {
 	db                  *gorm.DB
 	subShelfRepository  repositories.SubShelfRepositoryInterface
 	blockPackRepository repositories.BlockPackRepositoryInterface
+	realtimeLeaseStore  *caches.RealtimeLeaseStore
 }
 
 func NewBlockPackService(
 	db *gorm.DB,
 	subShelfRepository repositories.SubShelfRepositoryInterface,
 	blockPackRepository repositories.BlockPackRepositoryInterface,
+	realtimeLeaseStore *caches.RealtimeLeaseStore,
 ) BlockPackServiceInterface {
+	if realtimeLeaseStore == nil {
+		realtimeLeaseStore = caches.NewRealtimeLeaseStore(caches.RedisClientMap)
+	}
 	return &BlockPackService{
 		db:                  db,
 		subShelfRepository:  subShelfRepository,
 		blockPackRepository: blockPackRepository,
+		realtimeLeaseStore:  realtimeLeaseStore,
 	}
 }
 
@@ -86,6 +95,7 @@ func (s *BlockPackService) GetMyBlockPackById(
 		[]schemas.BlockPackRelation{schemas.BlockPackRelation_YjsDocument},
 		allowedPermissions,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(onlyDeleted),
 	)
 	if exception != nil {
@@ -273,6 +283,11 @@ func (s *BlockPackService) CreateBlockPack(
 		return nil, exceptions.BlockPack.InvalidDto().WithOrigin(err)
 	}
 
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
 	tx := s.db.WithContext(ctx).Begin()
 
 	newBlockPackId, exception := s.blockPackRepository.CreateOneBySubShelfId(
@@ -285,6 +300,7 @@ func (s *BlockPackService) CreateBlockPack(
 			HeaderBackgroundURL: reqDto.Body.HeaderBackgroundURL,
 		},
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
@@ -316,6 +332,11 @@ func (s *BlockPackService) CreateBlockPacks(
 		return nil, exceptions.BlockPack.InvalidDto().WithOrigin(err)
 	}
 
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
 	tx := s.db.WithContext(ctx).Begin()
 
 	input := make([]inputs.CreateBlockPackBySubShelfIdInput, len(reqDto.Body.CreatedBlockPacks))
@@ -332,6 +353,7 @@ func (s *BlockPackService) CreateBlockPacks(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)
 	if exception != nil {
@@ -369,6 +391,10 @@ func (s *BlockPackService) UpdateMyBlockPackById(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	blockPack, exception := s.blockPackRepository.UpdateOneById(
 		reqDto.Body.BlockPackId,
@@ -382,6 +408,7 @@ func (s *BlockPackService) UpdateMyBlockPackById(
 			SetNull: reqDto.Body.SetNull,
 		},
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -400,6 +427,10 @@ func (s *BlockPackService) UpdateMyBlockPacksByIds(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	input := make([]inputs.UpdateBlockPackByIdInput, len(reqDto.Body.UpdatedBlockPacks))
 	for index, updatedBlockPack := range reqDto.Body.UpdatedBlockPacks {
@@ -414,10 +445,11 @@ func (s *BlockPackService) UpdateMyBlockPacksByIds(
 			},
 		}
 	}
-	exception := s.blockPackRepository.UpdateManyByIds(
+	exception = s.blockPackRepository.UpdateManyByIds(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -436,8 +468,12 @@ func (s *BlockPackService) MoveMyBlockPackByParentSubShelfId(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
-	_, exception := s.blockPackRepository.UpdateOneById(
+	_, exception = s.blockPackRepository.UpdateOneById(
 		reqDto.Body.BlockPackId,
 		reqDto.ContextFields.UserId,
 		inputs.PartialUpdateBlockPackInput{
@@ -447,6 +483,7 @@ func (s *BlockPackService) MoveMyBlockPackByParentSubShelfId(
 			SetNull: nil,
 		},
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -465,6 +502,10 @@ func (s *BlockPackService) MoveMyBlockPacksByParentSubShelfId(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	input := make([]inputs.UpdateBlockPackByIdInput, len(reqDto.Body.BlockPackIds))
 	for index, blockPackId := range reqDto.Body.BlockPackIds {
@@ -477,10 +518,11 @@ func (s *BlockPackService) MoveMyBlockPacksByParentSubShelfId(
 			},
 		}
 	}
-	exception := s.blockPackRepository.UpdateManyByIds(
+	exception = s.blockPackRepository.UpdateManyByIds(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -499,6 +541,10 @@ func (s *BlockPackService) MoveMyBlockPacksByParentSubShelfIds(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	input := make([]inputs.UpdateBlockPackByIdInput, 0)
 	for _, movedBlockPack := range reqDto.Body.MovedBlockPacks {
@@ -514,10 +560,11 @@ func (s *BlockPackService) MoveMyBlockPacksByParentSubShelfIds(
 		}
 	}
 
-	if exception := s.blockPackRepository.UpdateManyByIds(
+	if exception = s.blockPackRepository.UpdateManyByIds(
 		reqDto.ContextFields.UserId,
 		input,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	); exception != nil {
 		return nil, exception
 	}
@@ -535,11 +582,16 @@ func (s *BlockPackService) RestoreMyBlockPackById(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	restoredBlockPack, exception := s.blockPackRepository.RestoreSoftDeletedOneById(
 		reqDto.Body.BlockPackId,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -566,11 +618,16 @@ func (s *BlockPackService) RestoreMyBlockPacksByIds(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
 	restoredBlockPacks, exception := s.blockPackRepository.RestoreSoftDeletedManyByIds(
 		reqDto.Body.BlockPackIds,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
 		return nil, exception
@@ -602,13 +659,21 @@ func (s *BlockPackService) DeleteMyBlockPackById(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
-	if exception := s.blockPackRepository.SoftDeleteOneById(
+	if exception = s.blockPackRepository.SoftDeleteOneById(
 		reqDto.Body.BlockPackId,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	); exception != nil {
 		return nil, exception
+	}
+	if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(uuid.Nil, []uuid.UUID{reqDto.Body.BlockPackId}); err != nil {
+		logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
 	}
 
 	return &dtos.DeleteMyBlockPackByIdResDto{
@@ -624,13 +689,21 @@ func (s *BlockPackService) DeleteMyBlockPacksByIds(
 	}
 
 	db := s.db.WithContext(ctx)
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
-	if exception := s.blockPackRepository.SoftDeleteManyByIds(
+	if exception = s.blockPackRepository.SoftDeleteManyByIds(
 		reqDto.Body.BlockPackIds,
 		reqDto.ContextFields.UserId,
 		options.WithDB(db),
+		options.WithAllowedPermissions(allowedPermissions),
 	); exception != nil {
 		return nil, exception
+	}
+	if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(uuid.Nil, reqDto.Body.BlockPackIds); err != nil {
+		logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
 	}
 
 	return &dtos.DeleteMyBlockPacksByIdsResDto{

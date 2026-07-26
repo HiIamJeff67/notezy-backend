@@ -39,22 +39,3 @@ func GetAllowedPermissions(
 
 	return slices.Clone(allowedPermissions), nil
 }
-
-func IntersectAllowedPermissions(
-	ctx context.Context,
-	permissions []enums.AccessControlPermission,
-) []enums.AccessControlPermission {
-	allowedPermissions, exception := GetAllowedPermissions(ctx)
-	if exception != nil {
-		return nil
-	}
-
-	intersection := make([]enums.AccessControlPermission, 0, len(permissions))
-	for _, permission := range permissions {
-		if slices.Contains(allowedPermissions, permission) {
-			intersection = append(intersection, permission)
-		}
-	}
-
-	return intersection
-}

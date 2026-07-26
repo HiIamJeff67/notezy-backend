@@ -4,6 +4,7 @@ import (
 	"gorm.io/gorm"
 
 	models "github.com/HiIamJeff67/notezy-backend/app/models"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
@@ -16,10 +17,10 @@ const (
 type RepositoryOptionFields struct {
 	DB                   *gorm.DB
 	IsTransactionStarted bool
+	AllowedPermissions   []enums.AccessControlPermission
 	OnlyDeleted          types.Ternary
-	SkipPermissionCheck  bool
-	BatchSize            int
 	LockingStrength      *string
+	BatchSize            int
 }
 
 type RepositoryOptions func(*RepositoryOptionFields)
@@ -43,21 +44,15 @@ func WithTransactionDB(db *gorm.DB) RepositoryOptions {
 	}
 }
 
+func WithAllowedPermissions(allowedPermissions []enums.AccessControlPermission) RepositoryOptions {
+	return func(ros *RepositoryOptionFields) {
+		ros.AllowedPermissions = append([]enums.AccessControlPermission{}, allowedPermissions...)
+	}
+}
+
 func WithOnlyDeleted(onlyDeleted types.Ternary) RepositoryOptions {
 	return func(ros *RepositoryOptionFields) {
 		ros.OnlyDeleted = onlyDeleted
-	}
-}
-
-func WithSkipPermissionCheck() RepositoryOptions {
-	return func(ros *RepositoryOptionFields) {
-		ros.SkipPermissionCheck = true
-	}
-}
-
-func WithBatchSize(batchSize int) RepositoryOptions {
-	return func(ros *RepositoryOptionFields) {
-		ros.BatchSize = batchSize
 	}
 }
 
@@ -67,14 +62,24 @@ func WithLockingStrength(lockingStrength string) RepositoryOptions {
 	}
 }
 
+func WithBatchSize(batchSize int) RepositoryOptions {
+	return func(ros *RepositoryOptionFields) {
+		ros.BatchSize = batchSize
+	}
+}
+
+func (ros RepositoryOptionFields) HasAllowedPermissions() bool {
+	return ros.AllowedPermissions != nil
+}
+
 func GetDefaultOptions() RepositoryOptionFields {
 	return RepositoryOptionFields{
 		DB:                   models.NotezyDB,
-		OnlyDeleted:          types.Ternary_Neutral,
-		SkipPermissionCheck:  false,
-		BatchSize:            1000,
 		IsTransactionStarted: false,
+		AllowedPermissions:   nil,
+		OnlyDeleted:          types.Ternary_Neutral,
 		LockingStrength:      nil,
+		BatchSize:            1000,
 	}
 }
 

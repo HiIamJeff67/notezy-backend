@@ -112,7 +112,13 @@ func (h BlockHandler) HandleAppendBlock(ctx context.Context, tasks []schemas.Rou
 
 		jobCtx := contexts.WithAllowedPermissions(ctx, allowedPermissions)
 		tx := h.db.WithContext(jobCtx).Begin()
-		if !h.blockPackRepository.HasPermission(payload.BlockPackId, ownerId, allowedPermissions, options.WithTransactionDB(tx), options.WithOnlyDeleted(types.Ternary_Negative)) {
+		if !h.blockPackRepository.HasPermission(
+			payload.BlockPackId,
+			ownerId,
+			allowedPermissions,
+			options.WithTransactionDB(tx),
+			options.WithOnlyDeleted(types.Ternary_Negative),
+		) {
 			tx.Rollback()
 			continue
 		}

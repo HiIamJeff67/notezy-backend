@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
@@ -101,9 +100,16 @@ func (r *RoutineTaskRepository) CheckPermissionAndGetOneById(
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	var routineTask schemas.RoutineTask
-	result := parsedOptions.DB.
+	query := parsedOptions.DB.
 		Model(&schemas.RoutineTask{}).
-		Scopes(r.routineTaskScope.PassPermissionCheck(id, userId, allowedPermissions)).
+		Where(`"RoutineTaskTable".id = ?`, id)
+	if allowedPermissions != nil && len(allowedPermissions) > 0 {
+		query = query.Scopes(
+			r.routineTaskScope.PassPermissionCheck(id, userId, allowedPermissions),
+		)
+	}
+
+	result := query.
 		Scopes(r.routineTaskScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&routineTask)
@@ -149,14 +155,13 @@ func (r *RoutineTaskRepository) GetOneById(
 	preloads []schemas.RoutineTaskRelation,
 	opts ...options.RepositoryOptions,
 ) (*schemas.RoutineTask, *exceptions.Exception) {
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
-	}
-
-	return r.CheckPermissionAndGetOneById(id, userId, preloads, allowedPermissions, opts...)
+	return r.CheckPermissionAndGetOneById(
+		id,
+		userId,
+		preloads,
+		options.ParseRepositoryOptions(opts...).AllowedPermissions,
+		opts...,
+	)
 }
 
 func (r *RoutineTaskRepository) GetAllByUserId(
@@ -165,17 +170,6 @@ func (r *RoutineTaskRepository) GetAllByUserId(
 	opts ...options.RepositoryOptions,
 ) ([]schemas.RoutineTask, *exceptions.Exception) {
 	parsedOptions := options.ParseRepositoryOptions(opts...)
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
-	}
-	allowedPermissions = contexts.IntersectAllowedPermissions(
-		parsedOptions.DB.Statement.Context,
-		allowedPermissions,
-	)
-
 	var routineTasks []schemas.RoutineTask
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTask{}).
@@ -183,7 +177,7 @@ func (r *RoutineTaskRepository) GetAllByUserId(
 		Joins(`INNER JOIN "RoutineTable" routine ON routine.id = "RoutineTaskTable".routine_id AND routine.deleted_at IS NULL`).
 		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine.station_id`).
 		Joins(`INNER JOIN "StationTable" station ON station.id = routine.station_id AND station.deleted_at IS NULL`).
-		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
+		Where("uts.user_id = ? AND uts.permission IN ?", userId, parsedOptions.AllowedPermissions).
 		Scopes(r.routineTaskScope.IncludePreloads(preloads)).
 		Find(&routineTasks)
 	if result.Error != nil {
@@ -204,17 +198,6 @@ func (r *RoutineTaskRepository) GetAllByRoutineIds(
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
-	}
-	allowedPermissions = contexts.IntersectAllowedPermissions(
-		parsedOptions.DB.Statement.Context,
-		allowedPermissions,
-	)
-
 	var routineTasks []schemas.RoutineTask
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTask{}).
@@ -223,7 +206,7 @@ func (r *RoutineTaskRepository) GetAllByRoutineIds(
 		Joins(`INNER JOIN "UsersToStationsTable" uts ON uts.station_id = routine.station_id`).
 		Joins(`INNER JOIN "StationTable" station ON station.id = routine.station_id AND station.deleted_at IS NULL`).
 		Where(`"RoutineTaskTable".routine_id IN ?`, routineIds).
-		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
+		Where("uts.user_id = ? AND uts.permission IN ?", userId, parsedOptions.AllowedPermissions).
 		Scopes(r.routineTaskScope.IncludePreloads(preloads)).
 		Find(&routineTasks)
 	if result.Error != nil {
@@ -248,16 +231,11 @@ func (r *RoutineTaskRepository) CreateOneByRoutineId(
 		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
 	routineRepository := NewRoutineRepository(scopes.NewRoutineScope())
 	if !routineRepository.HasPermission(
 		routineId,
 		userId,
-		allowedPermissions,
+		parsedOptions.AllowedPermissions,
 		opts...,
 	) {
 		parsedOptions.DB.Rollback()
@@ -317,18 +295,13 @@ func (r *RoutineTaskRepository) CreateManyByRoutineIds(
 		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
 	routineIds := make([]uuid.UUID, len(input))
 	for index, in := range input {
 		routineIds[index] = in.RoutineId
 	}
 
 	routineRepository := NewRoutineRepository(scopes.NewRoutineScope())
-	validRoutines, exception := routineRepository.CheckPermissionsAndGetManyByIds(routineIds, userId, nil, allowedPermissions, opts...)
+	validRoutines, exception := routineRepository.CheckPermissionsAndGetManyByIds(routineIds, userId, nil, parsedOptions.AllowedPermissions, opts...)
 	if exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -407,19 +380,14 @@ func (r *RoutineTaskRepository) UpdateOneById(
 		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
-	existingRoutineTask, exception := r.CheckPermissionAndGetOneById(id, userId, nil, allowedPermissions, opts...)
+	existingRoutineTask, exception := r.CheckPermissionAndGetOneById(id, userId, nil, parsedOptions.AllowedPermissions, opts...)
 	if exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
 	}
 	if input.Values.RoutineId != nil && !util.CheckSetNull(input.SetNull, "RoutineId") {
 		routineRepository := NewRoutineRepository(scopes.NewRoutineScope())
-		if !routineRepository.HasPermission(*input.Values.RoutineId, userId, allowedPermissions, opts...) {
+		if !routineRepository.HasPermission(*input.Values.RoutineId, userId, parsedOptions.AllowedPermissions, opts...) {
 			parsedOptions.DB.Rollback()
 			return nil, exceptions.RoutineTask.NoPermission("move a routine task to this routine")
 		}
@@ -492,16 +460,11 @@ func (r *RoutineTaskRepository) UpdateManyByIds(
 		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
 	ids := make([]uuid.UUID, len(input))
 	for index, in := range input {
 		ids[index] = in.Id
 	}
-	validRoutineTasks, exception := r.CheckPermissionsAndGetManyByIds(ids, userId, nil, allowedPermissions, opts...)
+	validRoutineTasks, exception := r.CheckPermissionsAndGetManyByIds(ids, userId, nil, parsedOptions.AllowedPermissions, opts...)
 	if exception != nil {
 		parsedOptions.DB.Rollback()
 		return exceptions.RoutineTask.NoPermission("update these routine tasks")
@@ -526,7 +489,7 @@ func (r *RoutineTaskRepository) UpdateManyByIds(
 			targetRoutineIds = append(targetRoutineIds, targetRoutineId)
 		}
 		routineRepository := NewRoutineRepository(scopes.NewRoutineScope())
-		if !routineRepository.HavePermissions(targetRoutineIds, userId, allowedPermissions, opts...) {
+		if !routineRepository.HavePermissions(targetRoutineIds, userId, parsedOptions.AllowedPermissions, opts...) {
 			parsedOptions.DB.Rollback()
 			return exceptions.RoutineTask.NoPermission("move these routine tasks to the given routines")
 		}
@@ -623,13 +586,9 @@ func (r *RoutineTaskRepository) HardDeleteOneById(
 ) *exceptions.Exception {
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTask{}).
-		Scopes(r.routineTaskScope.PassPermissionCheck(id, userId, allowedPermissions)).
+		Scopes(r.routineTaskScope.PassPermissionCheck(id, userId, parsedOptions.AllowedPermissions)).
 		Where(`"RoutineTaskTable".id = ?`, id).
 		Delete(&schemas.RoutineTask{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
@@ -653,13 +612,9 @@ func (r *RoutineTaskRepository) HardDeleteManyByIds(
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTask{}).
-		Scopes(r.routineTaskScope.PassPermissionChecks(ids, userId, allowedPermissions)).
+		Scopes(r.routineTaskScope.PassPermissionChecks(ids, userId, parsedOptions.AllowedPermissions)).
 		Where(`"RoutineTaskTable".id IN ?`, ids).
 		Delete(&schemas.RoutineTask{})
 	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{

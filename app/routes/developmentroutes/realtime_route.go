@@ -9,20 +9,7 @@ import (
 	middlewares "github.com/HiIamJeff67/notezy-backend/app/middlewares"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	modules "github.com/HiIamJeff67/notezy-backend/app/modules"
-	realtime "github.com/HiIamJeff67/notezy-backend/app/realtime"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
-
-func ConfigureRealtimeRoutes() {
-	gateway := realtime.NewGateway()
-
-	DevelopmentRouter.GET(
-		"/"+constants.RealtimeDevelopmentBaseURL,
-		middlewares.DomainWhiteListMiddleware(),
-		middlewares.RealtimeUpgradeRateLimitMiddleware(),
-		gateway.Handle,
-	)
-}
 
 func configureDevelopmentRealtimeRoutes(router *gin.RouterGroup) {
 	if router == nil {

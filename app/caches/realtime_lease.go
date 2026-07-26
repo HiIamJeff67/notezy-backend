@@ -27,6 +27,11 @@ type RealtimeBlockPackSubscriberLease struct {
 	ExpiresAt time.Time
 }
 
+type RealtimeBlockPackChannelRevocation struct {
+	UserId       uuid.UUID   `json:"userId"`
+	BlockPackIds []uuid.UUID `json:"blockPackIds"`
+}
+
 type RealtimeLeaseStore struct {
 	redisClientMap map[int]*redis.Client
 
@@ -139,6 +144,10 @@ func (s *RealtimeLeaseStore) refresh(identifier string, key string, member strin
 
 func (s *RealtimeLeaseStore) blockPackParticipantKey(blockPackId uuid.UUID) string {
 	return fmt.Sprintf("Realtime:blockPack:%s:participants", blockPackId)
+}
+
+func (s *RealtimeLeaseStore) blockPackChannelRevocationKey() string {
+	return "Realtime:blockPack:channel-revocations"
 }
 
 func (s *RealtimeLeaseStore) release(identifier string, key string, member string) error {
@@ -288,6 +297,102 @@ func (s *RealtimeLeaseStore) GetBlockPackSubscriberLeases(
 	}
 
 	return result, nil
+}
+
+func (s *RealtimeLeaseStore) GetBlockPackSubscriberCounts(
+	blockPackIds []uuid.UUID,
+) (map[uuid.UUID]int64, error) {
+	counts := make(map[uuid.UUID]int64, len(blockPackIds))
+	if len(blockPackIds) == 0 {
+		return counts, nil
+	}
+
+	blockPackIdsByRedisClient := make(map[*redis.Client][]uuid.UUID)
+	for _, blockPackId := range blockPackIds {
+		redisClient, err := s.getRedisClient(blockPackId.String())
+		if err != nil {
+			return nil, err
+		}
+
+		blockPackIdsByRedisClient[redisClient] = append(blockPackIdsByRedisClient[redisClient], blockPackId)
+	}
+
+	now := strconv.FormatInt(time.Now().UnixMilli()+1, 10)
+	for redisClient, clientBlockPackIds := range blockPackIdsByRedisClient {
+		pipeline := redisClient.TxPipeline()
+		commands := make(map[uuid.UUID]*redis.IntCmd, len(clientBlockPackIds))
+		for _, blockPackId := range clientBlockPackIds {
+			commands[blockPackId] = pipeline.ZCount(
+				fmt.Sprintf("Realtime:blockPack:%s:subscribers", blockPackId),
+				now,
+				"+inf",
+			)
+		}
+		if _, err := pipeline.Exec(); err != nil {
+			return nil, err
+		}
+
+		for blockPackId, command := range commands {
+			count, err := command.Result()
+			if err != nil {
+				return nil, err
+			}
+
+			counts[blockPackId] = count
+		}
+	}
+
+	return counts, nil
+}
+
+func (s *RealtimeLeaseStore) PublishBlockPackChannelRevocation(
+	userId uuid.UUID,
+	blockPackIds []uuid.UUID,
+) error {
+	if len(blockPackIds) == 0 {
+		return nil
+	}
+
+	redisClient, err := s.getRedisClient(s.blockPackChannelRevocationKey())
+	if err != nil {
+		return err
+	}
+
+	payload, err := json.Marshal(RealtimeBlockPackChannelRevocation{
+		UserId:       userId,
+		BlockPackIds: blockPackIds,
+	})
+	if err != nil {
+		return err
+	}
+
+	return redisClient.Publish(s.blockPackChannelRevocationKey(), payload).Err()
+}
+
+func (s *RealtimeLeaseStore) SubscribeBlockPackChannelRevocations(
+	handler func(RealtimeBlockPackChannelRevocation),
+) (func(), error) {
+	redisClient, err := s.getRedisClient(s.blockPackChannelRevocationKey())
+	if err != nil {
+		return nil, err
+	}
+
+	pubsub := redisClient.Subscribe(s.blockPackChannelRevocationKey())
+
+	go func() {
+		for message := range pubsub.Channel() {
+			var revocation RealtimeBlockPackChannelRevocation
+			if err := json.Unmarshal([]byte(message.Payload), &revocation); err != nil {
+				continue
+			}
+
+			handler(revocation)
+		}
+	}()
+
+	return func() {
+		_ = pubsub.Close()
+	}, nil
 }
 
 /* ============================== Block Pack Participant Methods ============================== */

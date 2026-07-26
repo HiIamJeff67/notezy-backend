@@ -94,6 +94,7 @@ rootShelf, exception := s.rootShelfRepository.CheckPermissionAndGetOneById(
 	nil,
 	allowedPermissions,
 	options.WithTransactionDB(tx),
+	options.WithAllowedPermissions(allowedPermissions),
 	options.WithOnlyDeleted(types.Ternary_Negative),
 	options.WithLockingStrength(options.LockingStrengthUpdate),
 )
@@ -116,7 +117,7 @@ if err := tx.Commit().Error; err != nil {
 
 - repository 集中 GORM/raw SQL 的存取，公開方法以動作清楚命名，例如 `GetOneById`、`CreateMany`、`UpdateOneById`。
 - query 請使用 `schemas.Xxx` model 與既有 `scope` 封裝 permission、preload、soft-delete 和 locking；不要在 service/controller 重複手寫存取控制的 `Where` 條件。
-- repository option 透過 `options.WithDB`、`WithOnlyDeleted`、`WithLockingStrength` 等既有 option 傳入。只有確實的維護/內部需求才可使用 `WithSkipPermissionCheck()`，且呼叫處必須能說明為何安全。
+- repository option 透過 `options.WithDB`、`WithAllowedPermissions`、`WithOnlyDeleted`、`WithLockingStrength` 等既有 option 傳入。`WithAllowedPermissions` 存在時套用該 policy；未提供時 repository 直接操作，不另設 skip-permission flag。`HasPermission`、`HavePermissions` 與 `CheckPermission...` 類 methods 仍須以必要參數明確傳入 `allowedPermissions`，route policy 的 service call 並同步傳入 `options.WithAllowedPermissions(allowedPermissions)`。
 - 輸入資料使用 `models/inputs` 的 create/update/partial-update 型別。不要直接把 request DTO 餵給 GORM。
 - GORM result error 要轉為對應領域 exception 並保留 origin；`First`、`Find` 後也要處理空結果的領域語意，不能只看 `result.Error`。
 

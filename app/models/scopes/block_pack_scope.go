@@ -4,7 +4,6 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
@@ -25,7 +24,9 @@ func NewBlockPackScope() BlockPackScopeInterface {
 
 func (sc *BlockPackScope) PassPermissionCheck(id uuid.UUID, userId uuid.UUID, permissions []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		allowedPermissions := contexts.IntersectAllowedPermissions(db.Statement.Context, permissions)
+		if permissions == nil {
+			return db.Where(`"BlockPackTable".id = ?`, id)
+		}
 
 		// Use gorm.DB.Session to build a fresh statement for the subquery to avoid inheriting outer query clauses (especially in UPDATE/DELETE).
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
@@ -33,14 +34,16 @@ func (sc *BlockPackScope) PassPermissionCheck(id uuid.UUID, userId uuid.UUID, pe
 			Select("1").
 			Joins("INNER JOIN \"SubShelfTable\" ss ON ss.root_shelf_id = \"UsersToShelvesTable\".root_shelf_id").
 			Where("ss.id = \"BlockPackTable\".parent_sub_shelf_id").
-			Where("user_id = ? AND permission IN ?", userId, allowedPermissions)
+			Where("user_id = ? AND permission IN ?", userId, permissions)
 		return db.Where("\"BlockPackTable\".id = ? AND EXISTS (?)", id, subQuery)
 	}
 }
 
 func (sc *BlockPackScope) PassPermissionChecks(ids []uuid.UUID, userId uuid.UUID, permissions []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		allowedPermissions := contexts.IntersectAllowedPermissions(db.Statement.Context, permissions)
+		if permissions == nil {
+			return db.Where(`"BlockPackTable".id IN ?`, ids)
+		}
 
 		// Use gorm.DB.Session to build a fresh statement for the subquery to avoid inheriting outer query clauses (especially in UPDATE/DELETE).
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
@@ -48,7 +51,7 @@ func (sc *BlockPackScope) PassPermissionChecks(ids []uuid.UUID, userId uuid.UUID
 			Select("1").
 			Joins("INNER JOIN \"SubShelfTable\" ss ON ss.root_shelf_id = \"UsersToShelvesTable\".root_shelf_id").
 			Where("ss.id = \"BlockPackTable\".parent_sub_shelf_id").
-			Where("user_id = ? AND permission IN ?", userId, allowedPermissions)
+			Where("user_id = ? AND permission IN ?", userId, permissions)
 		return db.Where("\"BlockPackTable\".id IN ? AND EXISTS (?)", ids, subQuery)
 	}
 }

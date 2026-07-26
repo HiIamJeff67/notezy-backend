@@ -49,4 +49,7 @@ var (
 
 	//go:embed accounting_deleted_station_trigger.sql
 	AccountingDeletedStationTriggerSQL string
+
+	//go:embed accounting_mutated_station_trigger.sql
+	AccountingMutatedStationTriggerSQL string
 )

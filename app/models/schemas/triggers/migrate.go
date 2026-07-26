@@ -32,4 +32,5 @@ var MigratingTriggerSQLs = []string{
 	accountingtriggersql.AccountingDeletedRoutineTriggerSQL,
 	accountingtriggersql.AccountingInsertedStationTriggerSQL,
 	accountingtriggersql.AccountingDeletedStationTriggerSQL,
+	accountingtriggersql.AccountingMutatedStationTriggerSQL,
 }

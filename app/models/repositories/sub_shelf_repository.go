@@ -113,9 +113,16 @@ func (r *SubShelfRepository) CheckPermissionAndGetOneById(
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	subShelf := schemas.SubShelf{}
-	result := parsedOptions.DB.
+	query := parsedOptions.DB.
 		Model(&schemas.SubShelf{}).
-		Scopes(r.subShelfScope.PassPermissionCheck(id, userId, allowedPermissions)).
+		Where(`"SubShelfTable".id = ?`, id)
+	if allowedPermissions != nil && len(allowedPermissions) > 0 {
+		query = query.Scopes(
+			r.subShelfScope.PassPermissionCheck(id, userId, allowedPermissions),
+		)
+	}
+
+	result := query.
 		Scopes(r.subShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.subShelfScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
@@ -163,18 +170,11 @@ func (r *SubShelfRepository) GetOneById(
 	preloads []schemas.SubShelfRelation,
 	opts ...options.RepositoryOptions,
 ) (*schemas.SubShelf, *exceptions.Exception) {
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
-	}
-
 	return r.CheckPermissionAndGetOneById(
 		id,
 		userId,
 		preloads,
-		allowedPermissions,
+		options.ParseRepositoryOptions(opts...).AllowedPermissions,
 		opts...,
 	)
 }
@@ -188,22 +188,17 @@ func (r *SubShelfRepository) GetAllByRootShelfId(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Read,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Admin,
-	}
-
 	subShelves := []schemas.SubShelf{}
-
-	subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
-		Select("1").
-		Where(`root_shelf_id = "SubShelfTable".root_shelf_id AND user_id = ? AND permission IN ?`,
-			userId, allowedPermissions,
-		)
 	query := parsedOptions.DB.Model(&schemas.SubShelf{}).
-		Where("root_shelf_id = ? AND EXISTS (?)", rootShelfId, subQuery)
+		Where("root_shelf_id = ?", rootShelfId)
+	if parsedOptions.HasAllowedPermissions() {
+		subQuery := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
+			Select("1").
+			Where(`root_shelf_id = "SubShelfTable".root_shelf_id AND user_id = ? AND permission IN ?`,
+				userId, parsedOptions.AllowedPermissions,
+			)
+		query = query.Where("EXISTS (?)", subQuery)
+	}
 	if len(preloads) > 0 {
 		for _, preload := range preloads {
 			query = query.Preload(string(preload))
@@ -237,19 +232,13 @@ func (r *SubShelfRepository) CreateOneByRootShelfId(
 		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
-
 	var newSubShelf schemas.SubShelf
 	if input.PrevSubShelfId != nil {
 		prevSubShelf, exception := r.CheckPermissionAndGetOneById(
 			*input.PrevSubShelfId,
 			userId,
 			nil,
-			allowedPermissions,
+			parsedOptions.AllowedPermissions,
 			opts...,
 		)
 		if exception = exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
@@ -266,7 +255,7 @@ func (r *SubShelfRepository) CreateOneByRootShelfId(
 		if !rootShelfRepository.HasPermission(
 			rootShelfId,
 			userId,
-			allowedPermissions,
+			parsedOptions.AllowedPermissions,
 			opts...,
 		) {
 			parsedOptions.DB.Rollback()
@@ -323,12 +312,6 @@ func (r *SubShelfRepository) CreateManyByRootShelfIds(
 		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
-
 	isPrevSubShelfExist := make(map[uuid.UUID]bool)
 	isRootShelfExist := make(map[uuid.UUID]bool)
 	prevSubShelfIds := make([]uuid.UUID, len(input))
@@ -350,7 +333,8 @@ func (r *SubShelfRepository) CreateManyByRootShelfIds(
 		prevSubShelfIds,
 		userId,
 		nil,
-		allowedPermissions,
+		parsedOptions.AllowedPermissions,
+		opts...,
 	)
 	if exception != nil {
 		parsedOptions.DB.Rollback()
@@ -367,7 +351,8 @@ func (r *SubShelfRepository) CreateManyByRootShelfIds(
 		rootShelfIds,
 		userId,
 		nil,
-		allowedPermissions,
+		parsedOptions.AllowedPermissions,
+		opts...,
 	)
 	if exception != nil {
 		parsedOptions.DB.Rollback()
@@ -437,17 +422,11 @@ func (r *SubShelfRepository) UpdateOneById(
 		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
-
 	existingSubShelf, exception := r.CheckPermissionAndGetOneById(
 		id,
 		userId,
 		nil,
-		allowedPermissions,
+		parsedOptions.AllowedPermissions,
 		opts...,
 	)
 	if exception != nil {
@@ -499,12 +478,7 @@ func (r *SubShelfRepository) UpdateManyByIds(
 	}
 
 	isSubShelfValid := make(map[uuid.UUID]bool)
-	if !parsedOptions.SkipPermissionCheck {
-		allowedPermissions := []enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-			enums.AccessControlPermission_Write,
-		}
+	if parsedOptions.HasAllowedPermissions() {
 		subShelfIds := make([]uuid.UUID, len(input))
 		for index, in := range input {
 			subShelfIds[index] = in.Id
@@ -514,7 +488,7 @@ func (r *SubShelfRepository) UpdateManyByIds(
 			subShelfIds,
 			userId,
 			nil,
-			allowedPermissions,
+			parsedOptions.AllowedPermissions,
 			opts...,
 		)
 		if exception != nil {
@@ -530,7 +504,7 @@ func (r *SubShelfRepository) UpdateManyByIds(
 	var valuePlaceholders []string
 	var valueArgs []interface{}
 	for _, in := range input {
-		if !parsedOptions.SkipPermissionCheck && !isSubShelfValid[in.Id] {
+		if parsedOptions.HasAllowedPermissions() && !isSubShelfValid[in.Id] {
 			continue
 		}
 
@@ -575,14 +549,9 @@ func (r *SubShelfRepository) RestoreSoftDeletedOneById(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
-
 	var restoredSubShelf schemas.SubShelf
 	result := parsedOptions.DB.Model(&restoredSubShelf).
-		Scopes(r.subShelfScope.PassPermissionCheck(id, userId, allowedPermissions)).
+		Scopes(r.subShelfScope.PassPermissionCheck(id, userId, parsedOptions.AllowedPermissions)).
 		Scopes(r.subShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Clauses(clause.Returning{}).
 		Where(`"SubShelfTable".id = ?`, id).
@@ -610,14 +579,9 @@ func (r *SubShelfRepository) RestoreSoftDeletedManyByIds(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
-
 	var restoredSubShelves []schemas.SubShelf
 	result := parsedOptions.DB.Model(&restoredSubShelves).
-		Scopes(r.subShelfScope.PassPermissionChecks(ids, userId, allowedPermissions)).
+		Scopes(r.subShelfScope.PassPermissionChecks(ids, userId, parsedOptions.AllowedPermissions)).
 		Scopes(r.subShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Clauses(clause.Returning{}).
 		Where(`"SubShelfTable".id IN ?`, ids).
@@ -641,13 +605,8 @@ func (r *SubShelfRepository) SoftDeleteOneById(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
-
 	result := parsedOptions.DB.Model(&schemas.SubShelf{}).
-		Scopes(r.subShelfScope.PassPermissionCheck(id, userId, allowedPermissions)).
+		Scopes(r.subShelfScope.PassPermissionCheck(id, userId, parsedOptions.AllowedPermissions)).
 		Scopes(r.subShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Where(`"SubShelfTable".id = ?`, id).
 		Update("deleted_at", time.Now())
@@ -673,13 +632,8 @@ func (r *SubShelfRepository) SoftDeleteManyByIds(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
-
 	result := parsedOptions.DB.Model(&schemas.SubShelf{}).
-		Scopes(r.subShelfScope.PassPermissionChecks(ids, userId, allowedPermissions)).
+		Scopes(r.subShelfScope.PassPermissionChecks(ids, userId, parsedOptions.AllowedPermissions)).
 		Scopes(r.subShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Where(`"SubShelfTable".id IN ?`, ids).
 		Update("deleted_at", time.Now())
@@ -701,13 +655,8 @@ func (r *SubShelfRepository) HardDeleteOneById(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
-
 	result := parsedOptions.DB.Model(&schemas.SubShelf{}).
-		Scopes(r.subShelfScope.PassPermissionCheck(id, userId, allowedPermissions)).
+		Scopes(r.subShelfScope.PassPermissionCheck(id, userId, parsedOptions.AllowedPermissions)).
 		Scopes(r.subShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Where(`"SubShelfTable".id = ?`, id).
 		Delete(&schemas.SubShelf{})
@@ -733,13 +682,8 @@ func (r *SubShelfRepository) HardDeleteManyByIds(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
-
 	result := parsedOptions.DB.Model(&schemas.SubShelf{}).
-		Scopes(r.subShelfScope.PassPermissionChecks(ids, userId, allowedPermissions)).
+		Scopes(r.subShelfScope.PassPermissionChecks(ids, userId, parsedOptions.AllowedPermissions)).
 		Scopes(r.subShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Where(`"SubShelfTable".id IN ?`, ids).
 		Delete(&schemas.SubShelf{})
@@ -775,30 +719,41 @@ func (r *SubShelfRepository) BulkCheckPermissionsAndGetManyByIds(
 		userIds = append(userIds, in.UserId)
 	}
 
-	var validTargets []struct {
-		Id     uuid.UUID `gorm:"column:id"`
-		UserId uuid.UUID `gorm:"column:user_id"`
-	}
-	result := parsedOptions.DB.Model(&schemas.SubShelf{}).
-		Select(`"SubShelfTable".id, uts.user_id`).
-		Joins(`INNER JOIN "UsersToShelvesTable" AS uts ON uts.root_shelf_id = "SubShelfTable".root_shelf_id`).
-		Where(`"SubShelfTable".id IN ?`, ids).
-		Where("uts.user_id IN ? AND uts.permission IN ?", userIds, allowedPermissions).
-		Scopes(r.subShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Scan(&validTargets)
-	if result.Error != nil {
-		return nil, nil, exceptions.Shelf.NotFound().WithOrigin(result.Error)
-	}
+	validIdSet := make(map[uuid.UUID]bool, len(ids))
+	validTargetByUserId := make(map[[2]uuid.UUID]bool)
+	if allowedPermissions != nil {
+		var validTargets []struct {
+			Id     uuid.UUID `gorm:"column:id"`
+			UserId uuid.UUID `gorm:"column:user_id"`
+		}
+		result := parsedOptions.DB.Model(&schemas.SubShelf{}).
+			Select(`"SubShelfTable".id, uts.user_id`).
+			Joins(`INNER JOIN "UsersToShelvesTable" AS uts ON uts.root_shelf_id = "SubShelfTable".root_shelf_id`).
+			Where(`"SubShelfTable".id IN ?`, ids).
+			Where("uts.user_id IN ? AND uts.permission IN ?", userIds, allowedPermissions).
+			Scopes(r.subShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+			Scan(&validTargets)
+		if result.Error != nil {
+			return nil, nil, exceptions.Shelf.NotFound().WithOrigin(result.Error)
+		}
 
-	validTargetByUserId := make(map[[2]uuid.UUID]bool, len(validTargets))
-	for _, validTarget := range validTargets {
-		validTargetByUserId[[2]uuid.UUID{validTarget.Id, validTarget.UserId}] = true
-	}
+		for _, validTarget := range validTargets {
+			validTargetByUserId[[2]uuid.UUID{validTarget.Id, validTarget.UserId}] = true
+			validIdSet[validTarget.Id] = true
+		}
+	} else {
+		var validIds []uuid.UUID
+		result := parsedOptions.DB.Model(&schemas.SubShelf{}).
+			Select(`"SubShelfTable".id`).
+			Where(`"SubShelfTable".id IN ?`, ids).
+			Scopes(r.subShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+			Scan(&validIds)
+		if result.Error != nil {
+			return nil, nil, exceptions.Shelf.NotFound().WithOrigin(result.Error)
+		}
 
-	validIdSet := make(map[uuid.UUID]bool, len(validTargets))
-	for _, in := range inputs {
-		if validTargetByUserId[[2]uuid.UUID{in.Id, in.UserId}] {
-			validIdSet[in.Id] = true
+		for _, validId := range validIds {
+			validIdSet[validId] = true
 		}
 	}
 
@@ -811,7 +766,7 @@ func (r *SubShelfRepository) BulkCheckPermissionsAndGetManyByIds(
 	}
 
 	var subShelves []schemas.SubShelf
-	result = parsedOptions.DB.Model(&schemas.SubShelf{}).
+	result := parsedOptions.DB.Model(&schemas.SubShelf{}).
 		Where(`"SubShelfTable".id IN ?`, validIds).
 		Scopes(r.subShelfScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.subShelfScope.IncludePreloads(preloads)).
@@ -826,7 +781,9 @@ func (r *SubShelfRepository) BulkCheckPermissionsAndGetManyByIds(
 		foundIdSet[subShelf.Id] = true
 	}
 	for index, in := range inputs {
-		if validTargetByUserId[[2]uuid.UUID{in.Id, in.UserId}] && foundIdSet[in.Id] {
+		if validIdSet[in.Id] &&
+			foundIdSet[in.Id] &&
+			(allowedPermissions == nil || validTargetByUserId[[2]uuid.UUID{in.Id, in.UserId}]) {
 			successes[index] = true
 		}
 	}
@@ -849,12 +806,6 @@ func (r *SubShelfRepository) BulkCreateMany(
 		parsedOptions.DB = parsedOptions.DB.Begin()
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
-
 	successes := make([]bool, len(inputs))
 	rootShelfIds := make([]uuid.UUID, 0, len(inputs))
 	userIds := make([]uuid.UUID, 0, len(inputs))
@@ -869,7 +820,7 @@ func (r *SubShelfRepository) BulkCreateMany(
 
 	var usersToShelves []schemas.UsersToShelves
 	result := parsedOptions.DB.Model(&schemas.UsersToShelves{}).
-		Where("root_shelf_id IN ? AND user_id IN ? AND permission IN ?", rootShelfIds, userIds, allowedPermissions).
+		Where("root_shelf_id IN ? AND user_id IN ? AND permission IN ?", rootShelfIds, userIds, parsedOptions.AllowedPermissions).
 		Find(&usersToShelves)
 	if result.Error != nil {
 		parsedOptions.DB.Rollback()
@@ -971,12 +922,6 @@ func (r *SubShelfRepository) BulkUpdateMany(
 		parsedOptions.DB = parsedOptions.DB.Begin()
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
-
 	checkInputs := make([]inputs.BulkCheckSubShelfPermissionInput, len(bulkInputs))
 	for index, in := range bulkInputs {
 		checkInputs[index] = inputs.BulkCheckSubShelfPermissionInput{
@@ -987,7 +932,12 @@ func (r *SubShelfRepository) BulkUpdateMany(
 	checkOptions := append(opts, options.WithTransactionDB(parsedOptions.DB))
 	checkOptions = append(checkOptions, options.WithOnlyDeleted(types.Ternary_Negative))
 	checkOptions = append(checkOptions, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
-	successes, _, exception := r.BulkCheckPermissionsAndGetManyByIds(checkInputs, nil, allowedPermissions, checkOptions...)
+	successes, _, exception := r.BulkCheckPermissionsAndGetManyByIds(
+		checkInputs,
+		nil,
+		parsedOptions.AllowedPermissions,
+		checkOptions...,
+	)
 	if exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -1074,12 +1024,6 @@ func (r *SubShelfRepository) BulkDeleteMany(
 		parsedOptions.DB = parsedOptions.DB.Begin()
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
-
 	checkInputs := make([]inputs.BulkCheckSubShelfPermissionInput, len(bulkInputs))
 	for index, in := range bulkInputs {
 		checkInputs[index] = inputs.BulkCheckSubShelfPermissionInput{
@@ -1090,7 +1034,12 @@ func (r *SubShelfRepository) BulkDeleteMany(
 	checkOptions := append(opts, options.WithTransactionDB(parsedOptions.DB))
 	checkOptions = append(checkOptions, options.WithOnlyDeleted(types.Ternary_Negative))
 	checkOptions = append(checkOptions, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
-	successes, _, exception := r.BulkCheckPermissionsAndGetManyByIds(checkInputs, nil, allowedPermissions, checkOptions...)
+	successes, _, exception := r.BulkCheckPermissionsAndGetManyByIds(
+		checkInputs,
+		nil,
+		parsedOptions.AllowedPermissions,
+		checkOptions...,
+	)
 	if exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception

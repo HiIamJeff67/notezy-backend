@@ -17,6 +17,7 @@ type ItemRepositoryInterface interface {
 	HavePermissions(itemIdentities []types.Pair[uuid.UUID, enums.ItemType], userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) bool
 	CheckPermissionAndGetOneById(id uuid.UUID, itemType enums.ItemType, userId uuid.UUID, preloads []schemas.ItemRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) (*schemas.Item, *exceptions.Exception)
 	CheckPermissionsAndGetManyByIds(itemIdentities []types.Pair[uuid.UUID, enums.ItemType], userId uuid.UUID, preloads []schemas.ItemRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.Item, *exceptions.Exception)
+	GetPermittedIdentities(itemIdentities []types.Pair[uuid.UUID, enums.ItemType], userId uuid.UUID, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]types.Pair[uuid.UUID, enums.ItemType], *exceptions.Exception)
 }
 
 type ItemRepository struct {
@@ -98,9 +99,16 @@ func (r *ItemRepository) CheckPermissionAndGetOneById(
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	var item schemas.Item
-	result := parsedOptions.DB.
+	query := parsedOptions.DB.
 		Model(&schemas.Item{}).
-		Scopes(r.itemScope.PassPermissionCheck(id, itemType, userId, allowedPermissions)).
+		Where(`"ItemTable".id = ? AND "ItemTable".type = ?`, id, itemType)
+	if allowedPermissions != nil && len(allowedPermissions) > 0 {
+		query = query.Scopes(
+			r.itemScope.PassPermissionCheck(id, itemType, userId, allowedPermissions),
+		)
+	}
+
+	result := query.
 		Scopes(r.itemScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.itemScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
@@ -140,4 +148,38 @@ func (r *ItemRepository) CheckPermissionsAndGetManyByIds(
 	}
 
 	return items, nil
+}
+
+func (r *ItemRepository) GetPermittedIdentities(
+	itemIdentities []types.Pair[uuid.UUID, enums.ItemType],
+	userId uuid.UUID,
+	allowedPermissions []enums.AccessControlPermission,
+	opts ...options.RepositoryOptions,
+) ([]types.Pair[uuid.UUID, enums.ItemType], *exceptions.Exception) {
+	if len(itemIdentities) == 0 {
+		return []types.Pair[uuid.UUID, enums.ItemType]{}, nil
+	}
+
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	var permittedItems []schemas.Item
+	result := parsedOptions.DB.
+		Model(&schemas.Item{}).
+		Select(`DISTINCT "ItemTable".id, "ItemTable".type`).
+		Scopes(r.itemScope.PassPermissionChecks(itemIdentities, userId, allowedPermissions)).
+		Scopes(r.itemScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Find(&permittedItems)
+	if result.Error != nil {
+		return nil, exceptions.Item.NotFound().WithOrigin(result.Error)
+	}
+
+	permittedItemIdentities := make([]types.Pair[uuid.UUID, enums.ItemType], len(permittedItems))
+	for index, permittedItem := range permittedItems {
+		permittedItemIdentities[index] = types.Pair[uuid.UUID, enums.ItemType]{
+			First:  permittedItem.Id,
+			Second: permittedItem.Type,
+		}
+	}
+
+	return permittedItemIdentities, nil
 }

@@ -4,7 +4,6 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 )
@@ -23,7 +22,9 @@ func NewBlockScope() BlockScopeInterface {
 
 func (sc *BlockScope) PassPermissionCheck(id uuid.UUID, userId uuid.UUID, permissions []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		allowedPermissions := contexts.IntersectAllowedPermissions(db.Statement.Context, permissions)
+		if permissions == nil {
+			return db.Where(`"BlockTable".id = ?`, id)
+		}
 
 		// Use gorm.DB.Session to build a fresh statement for the subquery to avoid inheriting outer query clauses (especially in UPDATE/DELETE).
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
@@ -33,14 +34,16 @@ func (sc *BlockScope) PassPermissionCheck(id uuid.UUID, userId uuid.UUID, permis
 			Joins("INNER JOIN \"BlockPackTable\" bp ON bp.parent_sub_shelf_id = ss.id").
 			Where("bp.id = \"BlockTable\".block_pack_id").
 			Where("bp.deleted_at IS NULL").
-			Where("user_id = ? AND permission IN ?", userId, allowedPermissions)
+			Where("user_id = ? AND permission IN ?", userId, permissions)
 		return db.Where("\"BlockTable\".id = ? AND EXISTS (?)", id, subQuery)
 	}
 }
 
 func (sc *BlockScope) PassPermissionChecks(ids []uuid.UUID, userId uuid.UUID, permissions []enums.AccessControlPermission) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		allowedPermissions := contexts.IntersectAllowedPermissions(db.Statement.Context, permissions)
+		if permissions == nil {
+			return db.Where(`"BlockTable".id IN ?`, ids)
+		}
 
 		// Use gorm.DB.Session to build a fresh statement for the subquery to avoid inheriting outer query clauses (especially in UPDATE/DELETE).
 		subQuery := db.Session(&gorm.Session{NewDB: true}).
@@ -50,7 +53,7 @@ func (sc *BlockScope) PassPermissionChecks(ids []uuid.UUID, userId uuid.UUID, pe
 			Joins("INNER JOIN \"BlockPackTable\" bp ON bp.parent_sub_shelf_id = ss.id").
 			Where("bp.id = \"BlockTable\".block_pack_id").
 			Where("bp.deleted_at IS NULL").
-			Where("user_id = ? AND permission IN ?", userId, allowedPermissions)
+			Where("user_id = ? AND permission IN ?", userId, permissions)
 		return db.Where("\"BlockTable\".id IN ? AND EXISTS (?)", ids, subQuery)
 	}
 }

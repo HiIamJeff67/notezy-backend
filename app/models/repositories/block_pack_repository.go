@@ -11,7 +11,6 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
@@ -31,6 +30,8 @@ type BlockPackRepositoryInterface interface {
 	CheckPermissionAndGetOneWithOwnerIdById(id uuid.UUID, userId uuid.UUID, preloads []schemas.BlockPackRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) (*uuid.UUID, *schemas.BlockPack, *exceptions.Exception)
 	CheckPermissionsAndGetManyWithOwnerIdsByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.BlockPackRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]uuid.UUID, []schemas.BlockPack, *exceptions.Exception)
 	GetOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.BlockPack, *exceptions.Exception)
+	GetManyByRootShelfIds(rootShelfIds []uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.BlockPack, *exceptions.Exception)
+	GetIdsByParentSubShelfIds(parentSubShelfIds []uuid.UUID, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	CreateOneBySubShelfId(subShelfId uuid.UUID, userId uuid.UUID, input inputs.CreateBlockPackInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
 	CreateManyBySubShelfIds(userId uuid.UUID, input []inputs.CreateBlockPackBySubShelfIdInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateBlockPackInput, opts ...options.RepositoryOptions) (*schemas.BlockPack, *exceptions.Exception)
@@ -117,9 +118,16 @@ func (r *BlockPackRepository) CheckPermissionAndGetOneById(
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
 	var blockPack schemas.BlockPack
-	result := parsedOptions.DB.
+	query := parsedOptions.DB.
 		Model(&schemas.BlockPack{}).
-		Scopes(r.blockPackScope.PassPermissionCheck(id, userId, allowedPermissions)).
+		Where(`"BlockPackTable".id = ?`, id)
+	if allowedPermissions != nil && len(allowedPermissions) > 0 {
+		query = query.Scopes(
+			r.blockPackScope.PassPermissionCheck(id, userId, allowedPermissions),
+		)
+	}
+
+	result := query.
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockPackScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
@@ -169,16 +177,6 @@ func (r *BlockPackRepository) CheckPermissionAndGetOneWithOwnerIdById(
 	opts ...options.RepositoryOptions,
 ) (*uuid.UUID, *schemas.BlockPack, *exceptions.Exception) { // we should also return the owner id for the block groups and blocks
 	parsedOptions := options.ParseRepositoryOptions(opts...)
-	allowedPermissions = contexts.IntersectAllowedPermissions(
-		parsedOptions.DB.Statement.Context,
-		allowedPermissions,
-	)
-
-	subQuery := parsedOptions.DB.Session(&gorm.Session{NewDB: true}).
-		Model(&schemas.UsersToShelves{}).
-		Select("1").
-		Where("root_shelf_id = ss.root_shelf_id").
-		Where("user_id = ? AND permission IN ?", userId, allowedPermissions)
 	query := parsedOptions.DB.Model(&schemas.BlockPack{}).
 		Select(`"BlockPackTable".*, owner_uts.user_id AS owner_id`).
 		Joins(`INNER JOIN "SubShelfTable" ss ON parent_sub_shelf_id = ss.id`).
@@ -186,10 +184,18 @@ func (r *BlockPackRepository) CheckPermissionAndGetOneWithOwnerIdById(
 		// note that this should be attach AFTER we have join the SubShelfTable of ss
 		// so we can't use PassPermissionCheck scope
 		Joins(`INNER JOIN "UsersToShelvesTable" owner_uts ON ss.root_shelf_id = owner_uts.root_shelf_id AND owner_uts.permission = 'Owner'`).
-		Where(`"BlockPackTable".id = ? AND EXISTS (?)`, id, subQuery).
+		Where(`"BlockPackTable".id = ?`, id).
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockPackScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength))
+	if allowedPermissions != nil && len(allowedPermissions) > 0 {
+		subQuery := parsedOptions.DB.Session(&gorm.Session{NewDB: true}).
+			Model(&schemas.UsersToShelves{}).
+			Select("1").
+			Where("root_shelf_id = ss.root_shelf_id").
+			Where("user_id = ? AND permission IN ?", userId, allowedPermissions)
+		query = query.Where("EXISTS (?)", subQuery)
+	}
 
 	var blockPackWithOwnerId struct {
 		schemas.BlockPack
@@ -214,16 +220,6 @@ func (r *BlockPackRepository) CheckPermissionsAndGetManyWithOwnerIdsByIds(
 	opts ...options.RepositoryOptions,
 ) ([]uuid.UUID, []schemas.BlockPack, *exceptions.Exception) { // we should also return the owner id for the block groups and blocks
 	parsedOptions := options.ParseRepositoryOptions(opts...)
-	allowedPermissions = contexts.IntersectAllowedPermissions(
-		parsedOptions.DB.Statement.Context,
-		allowedPermissions,
-	)
-
-	subQuery := parsedOptions.DB.Session(&gorm.Session{NewDB: true}).
-		Model(&schemas.UsersToShelves{}).
-		Select("1").
-		Where("root_shelf_id = ss.root_shelf_id").
-		Where("user_id = ? AND permission IN ?", userId, allowedPermissions)
 	query := parsedOptions.DB.Model(&schemas.BlockPack{}).
 		Select(`"BlockPackTable".*, owner_uts.user_id AS owner_id`).
 		Joins(`INNER JOIN "SubShelfTable" ss ON parent_sub_shelf_id = ss.id`).
@@ -231,10 +227,18 @@ func (r *BlockPackRepository) CheckPermissionsAndGetManyWithOwnerIdsByIds(
 		// note that this should be attach AFTER we have join the SubShelfTable of ss
 		// so we can't use PassPermissionChecks scope
 		Joins(`INNER JOIN "UsersToShelvesTable" owner_uts ON ss.root_shelf_id = owner_uts.root_shelf_id AND owner_uts.permission = 'Owner'`).
-		Where(`"BlockPackTable".id IN ? AND EXISTS (?)`, ids, subQuery).
+		Where(`"BlockPackTable".id IN ?`, ids).
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockPackScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength))
+	if allowedPermissions != nil && len(allowedPermissions) > 0 {
+		subQuery := parsedOptions.DB.Session(&gorm.Session{NewDB: true}).
+			Model(&schemas.UsersToShelves{}).
+			Select("1").
+			Where("root_shelf_id = ss.root_shelf_id").
+			Where("user_id = ? AND permission IN ?", userId, allowedPermissions)
+		query = query.Where("EXISTS (?)", subQuery)
+	}
 
 	var blockPacksWithOwnerIds []struct {
 		schemas.BlockPack
@@ -263,20 +267,54 @@ func (r *BlockPackRepository) GetOneById(
 	userId uuid.UUID,
 	opts ...options.RepositoryOptions,
 ) (*schemas.BlockPack, *exceptions.Exception) {
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
-	}
-
 	return r.CheckPermissionAndGetOneById(
 		id,
 		userId,
 		nil,
-		allowedPermissions,
+		options.ParseRepositoryOptions(opts...).AllowedPermissions,
 		opts...,
 	)
+}
+
+func (r *BlockPackRepository) GetManyByRootShelfIds(
+	rootShelfIds []uuid.UUID,
+	opts ...options.RepositoryOptions,
+) ([]schemas.BlockPack, *exceptions.Exception) {
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	var blockPacks []schemas.BlockPack
+	result := parsedOptions.DB.
+		Model(&schemas.BlockPack{}).
+		Joins(`INNER JOIN "SubShelfTable" ON "SubShelfTable".id = "BlockPackTable".parent_sub_shelf_id`).
+		Where(`"SubShelfTable".root_shelf_id IN ?`, rootShelfIds).
+		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
+		Find(&blockPacks)
+	if result.Error != nil {
+		return nil, exceptions.BlockPack.NotFound().WithOrigin(result.Error)
+	}
+
+	return blockPacks, nil
+}
+
+func (r *BlockPackRepository) GetIdsByParentSubShelfIds(
+	parentSubShelfIds []uuid.UUID,
+	opts ...options.RepositoryOptions,
+) ([]uuid.UUID, *exceptions.Exception) {
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+
+	var blockPackIds []uuid.UUID
+	result := parsedOptions.DB.
+		Model(&schemas.BlockPack{}).
+		Select("id").
+		Where("parent_sub_shelf_id IN ?", parentSubShelfIds).
+		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Find(&blockPackIds)
+	if result.Error != nil {
+		return nil, exceptions.BlockPack.NotFound().WithOrigin(result.Error)
+	}
+
+	return blockPackIds, nil
 }
 
 func (r *BlockPackRepository) CreateOneBySubShelfId(
@@ -288,26 +326,20 @@ func (r *BlockPackRepository) CreateOneBySubShelfId(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	shouldStartTransaction := !parsedOptions.IsTransactionStarted && !parsedOptions.SkipPermissionCheck
+	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
 		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
 		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
-	if !parsedOptions.SkipPermissionCheck {
-		allowedPermissions := []enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-			enums.AccessControlPermission_Write,
-		}
-
+	if parsedOptions.HasAllowedPermissions() {
 		subShelfRepository := NewSubShelfRepository(scopes.NewSubShelfScope())
 
 		if !subShelfRepository.HasPermission(
 			subShelfId,
 			userId,
-			allowedPermissions,
+			parsedOptions.AllowedPermissions,
 			opts...,
 		) {
 			parsedOptions.DB.Rollback()
@@ -354,7 +386,7 @@ func (r *BlockPackRepository) CreateManyBySubShelfIds(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	shouldStartTransaction := !parsedOptions.IsTransactionStarted && !parsedOptions.SkipPermissionCheck
+	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
 		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
@@ -362,12 +394,7 @@ func (r *BlockPackRepository) CreateManyBySubShelfIds(
 	}
 
 	isParentSubShelfIdValid := make(map[uuid.UUID]bool)
-	if !parsedOptions.SkipPermissionCheck {
-		allowedPermissions := []enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-			enums.AccessControlPermission_Write,
-		}
+	if parsedOptions.HasAllowedPermissions() {
 		isParentSubShelfExist := make(map[uuid.UUID]bool)
 		var parentSubShelfIds []uuid.UUID
 		for _, in := range input {
@@ -383,7 +410,7 @@ func (r *BlockPackRepository) CreateManyBySubShelfIds(
 			parentSubShelfIds,
 			userId,
 			nil,
-			allowedPermissions,
+			parsedOptions.AllowedPermissions,
 			opts...,
 		)
 		if exception != nil {
@@ -398,7 +425,7 @@ func (r *BlockPackRepository) CreateManyBySubShelfIds(
 
 	var newBlockPacks []schemas.BlockPack
 	for _, in := range input {
-		if !parsedOptions.SkipPermissionCheck && !isParentSubShelfIdValid[in.ParentSubShelfId] {
+		if parsedOptions.HasAllowedPermissions() && !isParentSubShelfIdValid[in.ParentSubShelfId] {
 			continue
 		}
 		var newBlockPack schemas.BlockPack
@@ -453,17 +480,11 @@ func (r *BlockPackRepository) UpdateOneById(
 		opts = append(opts, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
-
 	existingBlockPack, exception := r.CheckPermissionAndGetOneById(
 		id,
 		userId,
 		nil,
-		allowedPermissions,
+		parsedOptions.AllowedPermissions,
 		opts...,
 	)
 	if exception != nil {
@@ -477,7 +498,7 @@ func (r *BlockPackRepository) UpdateOneById(
 		if !subShelfRepository.HasPermission(
 			*input.Values.ParentSubShelfId,
 			userId,
-			allowedPermissions,
+			parsedOptions.AllowedPermissions,
 			opts...,
 		) {
 			parsedOptions.DB.Rollback()
@@ -525,7 +546,7 @@ func (r *BlockPackRepository) UpdateManyByIds(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	shouldStartTransaction := !parsedOptions.IsTransactionStarted && !parsedOptions.SkipPermissionCheck
+	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
 		parsedOptions.DB = parsedOptions.DB.Begin()
 		opts = append(opts, options.WithTransactionDB(parsedOptions.DB))
@@ -534,12 +555,7 @@ func (r *BlockPackRepository) UpdateManyByIds(
 
 	isSubShelfValid := make(map[uuid.UUID]bool)
 	isBlockPackValid := make(map[uuid.UUID]bool)
-	if !parsedOptions.SkipPermissionCheck {
-		allowedPermissions := []enums.AccessControlPermission{
-			enums.AccessControlPermission_Owner,
-			enums.AccessControlPermission_Admin,
-			enums.AccessControlPermission_Write,
-		}
+	if parsedOptions.HasAllowedPermissions() {
 		blockPackIds := make([]uuid.UUID, len(input))
 		isParentSubShelfExist := make(map[uuid.UUID]bool)
 		var parentSubShelfIds []uuid.UUID
@@ -564,7 +580,7 @@ func (r *BlockPackRepository) UpdateManyByIds(
 			parentSubShelfIds,
 			userId,
 			nil,
-			allowedPermissions,
+			parsedOptions.AllowedPermissions,
 			opts...,
 		)
 		if exception != nil {
@@ -580,7 +596,7 @@ func (r *BlockPackRepository) UpdateManyByIds(
 			blockPackIds,
 			userId,
 			nil,
-			allowedPermissions,
+			parsedOptions.AllowedPermissions,
 			opts...,
 		)
 		if exception != nil {
@@ -596,7 +612,7 @@ func (r *BlockPackRepository) UpdateManyByIds(
 	var valuePlaceholders []string
 	var valueArgs []interface{}
 	for _, in := range input {
-		if !parsedOptions.SkipPermissionCheck && // if the permission check is required in this repository function
+		if parsedOptions.HasAllowedPermissions() &&
 			((in.PartialUpdateInput.Values.ParentSubShelfId != nil &&
 				!util.CheckSetNull(in.PartialUpdateInput.SetNull, "ParentSubShelfId") &&
 				!isSubShelfValid[*in.PartialUpdateInput.Values.ParentSubShelfId]) || // check if the updated sub shelf is valid when it is given
@@ -663,16 +679,11 @@ func (r *BlockPackRepository) RestoreSoftDeletedOneById(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
-
 	var restoredBlockPack schemas.BlockPack
 	query := parsedOptions.DB.Model(&restoredBlockPack).
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted))
-	if !parsedOptions.SkipPermissionCheck {
-		query = query.Scopes(r.blockPackScope.PassPermissionCheck(id, userId, allowedPermissions))
+	if parsedOptions.HasAllowedPermissions() {
+		query = query.Scopes(r.blockPackScope.PassPermissionCheck(id, userId, parsedOptions.AllowedPermissions))
 	}
 
 	result := query.
@@ -701,16 +712,11 @@ func (r *BlockPackRepository) RestoreSoftDeletedManyByIds(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
-
 	var restoredBlockPacks []schemas.BlockPack
 	query := parsedOptions.DB.Model(&restoredBlockPacks).
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted))
-	if !parsedOptions.SkipPermissionCheck {
-		query = query.Scopes(r.blockPackScope.PassPermissionChecks(ids, userId, allowedPermissions))
+	if parsedOptions.HasAllowedPermissions() {
+		query = query.Scopes(r.blockPackScope.PassPermissionChecks(ids, userId, parsedOptions.AllowedPermissions))
 	}
 
 	result := query.
@@ -734,15 +740,10 @@ func (r *BlockPackRepository) SoftDeleteOneById(
 ) *exceptions.Exception {
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
-
 	query := parsedOptions.DB.Model(&schemas.BlockPack{}).
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted))
-	if !parsedOptions.SkipPermissionCheck {
-		query = query.Scopes(r.blockPackScope.PassPermissionCheck(id, userId, allowedPermissions))
+	if parsedOptions.HasAllowedPermissions() {
+		query = query.Scopes(r.blockPackScope.PassPermissionCheck(id, userId, parsedOptions.AllowedPermissions))
 	}
 
 	result := query.
@@ -770,15 +771,10 @@ func (r *BlockPackRepository) SoftDeleteManyByIds(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Negative))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
-
 	query := parsedOptions.DB.Model(&schemas.BlockPack{}).
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted))
-	if !parsedOptions.SkipPermissionCheck {
-		query = query.Scopes(r.blockPackScope.PassPermissionChecks(ids, userId, allowedPermissions))
+	if parsedOptions.HasAllowedPermissions() {
+		query = query.Scopes(r.blockPackScope.PassPermissionChecks(ids, userId, parsedOptions.AllowedPermissions))
 	}
 
 	result := query.
@@ -801,15 +797,10 @@ func (r *BlockPackRepository) HardDeleteOneById(
 ) *exceptions.Exception {
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
-
 	query := parsedOptions.DB.Model(&schemas.BlockPack{}).
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted))
-	if !parsedOptions.SkipPermissionCheck {
-		query = query.Scopes(r.blockPackScope.PassPermissionCheck(id, userId, allowedPermissions))
+	if parsedOptions.HasAllowedPermissions() {
+		query = query.Scopes(r.blockPackScope.PassPermissionCheck(id, userId, parsedOptions.AllowedPermissions))
 	}
 
 	result := query.
@@ -837,15 +828,10 @@ func (r *BlockPackRepository) HardDeleteManyByIds(
 	opts = append(opts, options.WithOnlyDeleted(types.Ternary_Positive))
 	parsedOptions := options.ParseRepositoryOptions(opts...)
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-	}
-
 	query := parsedOptions.DB.Model(&schemas.BlockPack{}).
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted))
-	if !parsedOptions.SkipPermissionCheck {
-		query = query.Scopes(r.blockPackScope.PassPermissionChecks(ids, userId, allowedPermissions))
+	if parsedOptions.HasAllowedPermissions() {
+		query = query.Scopes(r.blockPackScope.PassPermissionChecks(ids, userId, parsedOptions.AllowedPermissions))
 	}
 
 	result := query.
@@ -883,31 +869,42 @@ func (r *BlockPackRepository) BulkCheckPermissionsAndGetManyByIds(
 		userIds = append(userIds, in.UserId)
 	}
 
-	var validTargets []struct {
-		Id     uuid.UUID `gorm:"column:id"`
-		UserId uuid.UUID `gorm:"column:user_id"`
-	}
-	result := parsedOptions.DB.Model(&schemas.BlockPack{}).
-		Select(`"BlockPackTable".id, uts.user_id`).
-		Joins(`INNER JOIN "SubShelfTable" AS ss ON ss.id = "BlockPackTable".parent_sub_shelf_id`).
-		Joins(`INNER JOIN "UsersToShelvesTable" AS uts ON uts.root_shelf_id = ss.root_shelf_id`).
-		Where(`"BlockPackTable".id IN ?`, ids).
-		Where("uts.user_id IN ? AND uts.permission IN ?", userIds, allowedPermissions).
-		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
-		Scan(&validTargets)
-	if result.Error != nil {
-		return nil, nil, exceptions.BlockPack.NotFound().WithOrigin(result.Error)
-	}
+	validIdSet := make(map[uuid.UUID]bool, len(ids))
+	validTargetByUserId := make(map[[2]uuid.UUID]bool)
+	if allowedPermissions != nil {
+		var validTargets []struct {
+			Id     uuid.UUID `gorm:"column:id"`
+			UserId uuid.UUID `gorm:"column:user_id"`
+		}
+		result := parsedOptions.DB.Model(&schemas.BlockPack{}).
+			Select(`"BlockPackTable".id, uts.user_id`).
+			Joins(`INNER JOIN "SubShelfTable" AS ss ON ss.id = "BlockPackTable".parent_sub_shelf_id`).
+			Joins(`INNER JOIN "UsersToShelvesTable" AS uts ON uts.root_shelf_id = ss.root_shelf_id`).
+			Where(`"BlockPackTable".id IN ?`, ids).
+			Where("uts.user_id IN ? AND uts.permission IN ?", userIds, allowedPermissions).
+			Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+			Scan(&validTargets)
+		if result.Error != nil {
+			return nil, nil, exceptions.BlockPack.NotFound().WithOrigin(result.Error)
+		}
 
-	validTargetByUserId := make(map[[2]uuid.UUID]bool, len(validTargets))
-	for _, validTarget := range validTargets {
-		validTargetByUserId[[2]uuid.UUID{validTarget.Id, validTarget.UserId}] = true
-	}
+		for _, validTarget := range validTargets {
+			validTargetByUserId[[2]uuid.UUID{validTarget.Id, validTarget.UserId}] = true
+			validIdSet[validTarget.Id] = true
+		}
+	} else {
+		var validIds []uuid.UUID
+		result := parsedOptions.DB.Model(&schemas.BlockPack{}).
+			Select(`"BlockPackTable".id`).
+			Where(`"BlockPackTable".id IN ?`, ids).
+			Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+			Scan(&validIds)
+		if result.Error != nil {
+			return nil, nil, exceptions.BlockPack.NotFound().WithOrigin(result.Error)
+		}
 
-	validIdSet := make(map[uuid.UUID]bool, len(validTargets))
-	for _, in := range inputs {
-		if validTargetByUserId[[2]uuid.UUID{in.Id, in.UserId}] {
-			validIdSet[in.Id] = true
+		for _, validId := range validIds {
+			validIdSet[validId] = true
 		}
 	}
 
@@ -923,7 +920,7 @@ func (r *BlockPackRepository) BulkCheckPermissionsAndGetManyByIds(
 	}
 
 	var blockPacks []schemas.BlockPack
-	result = parsedOptions.DB.Model(&schemas.BlockPack{}).
+	result := parsedOptions.DB.Model(&schemas.BlockPack{}).
 		Where(`"BlockPackTable".id IN ?`, validIds).
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(r.blockPackScope.IncludePreloads(preloads)).
@@ -939,7 +936,9 @@ func (r *BlockPackRepository) BulkCheckPermissionsAndGetManyByIds(
 		foundIdSet[blockPack.Id] = true
 	}
 	for index, in := range inputs {
-		if validTargetByUserId[[2]uuid.UUID{in.Id, in.UserId}] && foundIdSet[in.Id] {
+		if validIdSet[in.Id] &&
+			foundIdSet[in.Id] &&
+			(allowedPermissions == nil || validTargetByUserId[[2]uuid.UUID{in.Id, in.UserId}]) {
 			successes[index] = true
 		}
 	}
@@ -962,12 +961,6 @@ func (r *BlockPackRepository) BulkCreateMany(
 		parsedOptions.DB = parsedOptions.DB.Begin()
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
-
 	successes := make([]bool, len(inputs))
 	parentSubShelfIds := make([]uuid.UUID, 0, len(inputs))
 	userIds := make([]uuid.UUID, 0, len(inputs))
@@ -984,7 +977,7 @@ func (r *BlockPackRepository) BulkCreateMany(
 		Select(`"SubShelfTable".id, uts.user_id`).
 		Joins(`INNER JOIN "UsersToShelvesTable" AS uts ON uts.root_shelf_id = "SubShelfTable".root_shelf_id`).
 		Where(`"SubShelfTable".id IN ? AND "SubShelfTable".deleted_at IS NULL`, parentSubShelfIds).
-		Where("uts.user_id IN ? AND uts.permission IN ?", userIds, allowedPermissions).
+		Where("uts.user_id IN ? AND uts.permission IN ?", userIds, parsedOptions.AllowedPermissions).
 		Scan(&validTargets)
 	if result.Error != nil {
 		parsedOptions.DB.Rollback()
@@ -1061,12 +1054,6 @@ func (r *BlockPackRepository) BulkUpdateMany(
 		parsedOptions.DB = parsedOptions.DB.Begin()
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
-
 	checkInputs := make([]inputs.BulkCheckBlockPackPermissionInput, len(bulkInputs))
 	for index, in := range bulkInputs {
 		checkInputs[index] = inputs.BulkCheckBlockPackPermissionInput{
@@ -1077,7 +1064,12 @@ func (r *BlockPackRepository) BulkUpdateMany(
 	checkOptions := append(opts, options.WithTransactionDB(parsedOptions.DB))
 	checkOptions = append(checkOptions, options.WithOnlyDeleted(types.Ternary_Negative))
 	checkOptions = append(checkOptions, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
-	successes, _, exception := r.BulkCheckPermissionsAndGetManyByIds(checkInputs, nil, allowedPermissions, checkOptions...)
+	successes, _, exception := r.BulkCheckPermissionsAndGetManyByIds(
+		checkInputs,
+		nil,
+		parsedOptions.AllowedPermissions,
+		checkOptions...,
+	)
 	if exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception
@@ -1103,7 +1095,7 @@ func (r *BlockPackRepository) BulkUpdateMany(
 			Select(`"SubShelfTable".id, uts.user_id`).
 			Joins(`INNER JOIN "UsersToShelvesTable" AS uts ON uts.root_shelf_id = "SubShelfTable".root_shelf_id`).
 			Where(`"SubShelfTable".id IN ? AND "SubShelfTable".deleted_at IS NULL`, targetSubShelfIds).
-			Where("uts.user_id IN ? AND uts.permission IN ?", targetUserIds, allowedPermissions).
+			Where("uts.user_id IN ? AND uts.permission IN ?", targetUserIds, parsedOptions.AllowedPermissions).
 			Scan(&validTargets)
 		if result.Error != nil {
 			parsedOptions.DB.Rollback()
@@ -1224,12 +1216,6 @@ func (r *BlockPackRepository) BulkDeleteMany(
 		parsedOptions.DB = parsedOptions.DB.Begin()
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
-
 	checkInputs := make([]inputs.BulkCheckBlockPackPermissionInput, len(bulkInputs))
 	for index, in := range bulkInputs {
 		checkInputs[index] = inputs.BulkCheckBlockPackPermissionInput{
@@ -1240,7 +1226,12 @@ func (r *BlockPackRepository) BulkDeleteMany(
 	checkOptions := append(opts, options.WithTransactionDB(parsedOptions.DB))
 	checkOptions = append(checkOptions, options.WithOnlyDeleted(types.Ternary_Negative))
 	checkOptions = append(checkOptions, options.WithLockingStrength(options.LockingStrengthNoKeyUpdate))
-	successes, _, exception := r.BulkCheckPermissionsAndGetManyByIds(checkInputs, nil, allowedPermissions, checkOptions...)
+	successes, _, exception := r.BulkCheckPermissionsAndGetManyByIds(
+		checkInputs,
+		nil,
+		parsedOptions.AllowedPermissions,
+		checkOptions...,
+	)
 	if exception != nil {
 		parsedOptions.DB.Rollback()
 		return nil, exception

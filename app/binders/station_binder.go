@@ -404,6 +404,11 @@ func (b *StationBinder) BindGetMyStationPermission(controllerFunc types.Controll
 		}
 		reqDto.Param.UserPublicId = userPublicId
 
+		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
+			exceptions.Station.InvalidDto().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+
 		controllerFunc(ctx, &reqDto)
 	}
 }
@@ -501,11 +506,6 @@ func (b *StationBinder) BindUpsertMyStationPermissions(
 			return
 		}
 		reqDto.Param.StationId = stationId
-
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Station.InvalidDto().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
 
 		controllerFunc(ctx, &reqDto)
 	}
@@ -659,11 +659,6 @@ func (b *StationBinder) BindLeaveMyStation(controllerFunc types.ControllerFunc[*
 			return
 		}
 		reqDto.Param.StationId = stationId
-
-		if err := ctx.ShouldBindJSON(&reqDto.Body); err != nil {
-			exceptions.Station.InvalidDto().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
 
 		controllerFunc(ctx, &reqDto)
 	}
