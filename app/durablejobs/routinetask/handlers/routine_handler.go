@@ -13,6 +13,7 @@ import (
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
@@ -47,17 +48,18 @@ func NewRoutineHandler(
 func (h RoutineHandler) HandleCreateRoutine(
 	ctx context.Context,
 	tasks []schemas.RoutineTask,
-	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
+	taskIdToActorUserId map[uuid.UUID]uuid.UUID,
+	allowedPermissions []enums.AccessControlPermission,
 ) ([]bool, *exceptions.Exception) {
 	successes := make([]bool, len(tasks))
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
-	candidateOwnerIds := make([]uuid.UUID, 0, len(tasks))
+	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
 	candidatePayloads := make([]dtos.CreateRoutineRoutineTaskPayload, 0, len(tasks))
 	candidatePatterns := make([]dtos.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
-		ownerId, exists := taskIdToOwnerId[task.Id]
+		actorUserId, exists := taskIdToActorUserId[task.Id]
 		if !exists {
 			continue
 		}
@@ -68,7 +70,7 @@ func (h RoutineHandler) HandleCreateRoutine(
 		}
 		candidateTaskIndexes = append(candidateTaskIndexes, taskIndex)
 		candidateTasks = append(candidateTasks, task)
-		candidateOwnerIds = append(candidateOwnerIds, ownerId)
+		candidateActorUserIds = append(candidateActorUserIds, actorUserId)
 		candidatePayloads = append(candidatePayloads, *payload)
 		candidatePatterns = append(candidatePatterns, payload.Pattern)
 	}
@@ -76,7 +78,13 @@ func (h RoutineHandler) HandleCreateRoutine(
 		return successes, nil
 	}
 
-	patternValuesByCandidate, patternSuccesses, exception := h.patternResolver.ResolveMany(ctx, candidateTasks, candidateOwnerIds, candidatePatterns)
+	patternValuesByCandidate, patternSuccesses, exception := h.patternResolver.ResolveMany(
+		ctx,
+		candidateTasks,
+		candidateActorUserIds,
+		candidatePatterns,
+		allowedPermissions,
+	)
 	if exception != nil {
 		return successes, exception
 	}
@@ -91,7 +99,7 @@ func (h RoutineHandler) HandleCreateRoutine(
 		title := h.templateBlockMatcher.MatchString(payload.Title, patternValues)
 		description := h.templateBlockMatcher.MatchString(payload.Description, patternValues)
 		bulkInputs = append(bulkInputs, inputs.BulkCreateRoutineInput{
-			UserId:           candidateOwnerIds[candidateIndex],
+			UserId:           candidateActorUserIds[candidateIndex],
 			Id:               payload.Id,
 			StationId:        payload.StationId,
 			Title:            title,
@@ -112,6 +120,7 @@ func (h RoutineHandler) HandleCreateRoutine(
 	bulkSuccesses, exception := h.routineRepository.BulkCreateMany(
 		bulkInputs,
 		options.WithDB(h.db.WithContext(ctx)),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
@@ -129,17 +138,18 @@ func (h RoutineHandler) HandleCreateRoutine(
 func (h RoutineHandler) HandleUpdateRoutine(
 	ctx context.Context,
 	tasks []schemas.RoutineTask,
-	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
+	taskIdToActorUserId map[uuid.UUID]uuid.UUID,
+	allowedPermissions []enums.AccessControlPermission,
 ) ([]bool, *exceptions.Exception) {
 	successes := make([]bool, len(tasks))
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
-	candidateOwnerIds := make([]uuid.UUID, 0, len(tasks))
+	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
 	candidatePayloads := make([]dtos.UpdateRoutineRoutineTaskPayload, 0, len(tasks))
 	candidatePatterns := make([]dtos.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
-		ownerId, exists := taskIdToOwnerId[task.Id]
+		actorUserId, exists := taskIdToActorUserId[task.Id]
 		if !exists {
 			continue
 		}
@@ -150,7 +160,7 @@ func (h RoutineHandler) HandleUpdateRoutine(
 		}
 		candidateTaskIndexes = append(candidateTaskIndexes, taskIndex)
 		candidateTasks = append(candidateTasks, task)
-		candidateOwnerIds = append(candidateOwnerIds, ownerId)
+		candidateActorUserIds = append(candidateActorUserIds, actorUserId)
 		candidatePayloads = append(candidatePayloads, *payload)
 		candidatePatterns = append(candidatePatterns, payload.Pattern)
 	}
@@ -158,7 +168,13 @@ func (h RoutineHandler) HandleUpdateRoutine(
 		return successes, nil
 	}
 
-	patternValuesByCandidate, patternSuccesses, exception := h.patternResolver.ResolveMany(ctx, candidateTasks, candidateOwnerIds, candidatePatterns)
+	patternValuesByCandidate, patternSuccesses, exception := h.patternResolver.ResolveMany(
+		ctx,
+		candidateTasks,
+		candidateActorUserIds,
+		candidatePatterns,
+		allowedPermissions,
+	)
 	if exception != nil {
 		return successes, exception
 	}
@@ -181,7 +197,7 @@ func (h RoutineHandler) HandleUpdateRoutine(
 			description = &matchedDescription
 		}
 		bulkInputs = append(bulkInputs, inputs.BulkUpdateRoutineInput{
-			UserId: candidateOwnerIds[candidateIndex],
+			UserId: candidateActorUserIds[candidateIndex],
 			Id:     payload.RoutineId,
 			PartialUpdateInput: inputs.PartialUpdateRoutineInput{
 				Values: inputs.UpdateRoutineInput{
@@ -205,6 +221,7 @@ func (h RoutineHandler) HandleUpdateRoutine(
 	bulkSuccesses, exception := h.routineRepository.BulkUpdateMany(
 		bulkInputs,
 		options.WithDB(h.db.WithContext(ctx)),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)

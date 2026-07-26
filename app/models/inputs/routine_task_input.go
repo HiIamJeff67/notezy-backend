@@ -10,6 +10,7 @@ import (
 )
 
 type CreateRoutineTaskInput struct {
+	ActorUserId     uuid.UUID                `json:"actorUserId" gorm:"column:actor_user_id;"`
 	Title           string                   `json:"title" gorm:"column:title;"`
 	Purpose         enums.RoutineTaskPurpose `json:"purpose" gorm:"column:purpose;"`
 	Payload         datatypes.JSON           `json:"payload" gorm:"column:payload;"`
@@ -22,6 +23,7 @@ type CreateRoutineTaskInput struct {
 
 type CreateRoutineTaskByRoutineIdInput struct {
 	RoutineId       uuid.UUID                `json:"routineId" gorm:"column:routine_id;"`
+	ActorUserId     uuid.UUID                `json:"actorUserId" gorm:"column:actor_user_id;"`
 	Title           string                   `json:"title" gorm:"column:title;"`
 	Purpose         enums.RoutineTaskPurpose `json:"purpose" gorm:"column:purpose;"`
 	Payload         datatypes.JSON           `json:"payload" gorm:"column:payload;"`

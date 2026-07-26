@@ -223,6 +223,9 @@ func (r *RoutineTaskRepository) CreateOneByRoutineId(
 	opts ...options.RepositoryOptions,
 ) (*uuid.UUID, *exceptions.Exception) {
 	parsedOptions := options.ParseRepositoryOptions(opts...)
+	if input.ActorUserId == uuid.Nil || input.ActorUserId != userId {
+		return nil, exceptions.RoutineTask.InvalidInput().WithOrigin(fmt.Errorf("actorUserId must match userId"))
+	}
 
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
@@ -253,6 +256,7 @@ func (r *RoutineTaskRepository) CreateOneByRoutineId(
 		return nil, exceptions.RoutineTask.InvalidInput().WithOrigin(err)
 	}
 	newRoutineTask.RoutineId = routineId
+	newRoutineTask.ActorUserId = input.ActorUserId
 	newRoutineTask.NextScheduledAt = input.NextScheduledAt.Truncate(time.Minute)
 	newRoutineTask.ScheduledAt = newRoutineTask.NextScheduledAt
 
@@ -287,6 +291,11 @@ func (r *RoutineTaskRepository) CreateManyByRoutineIds(
 	}
 
 	parsedOptions := options.ParseRepositoryOptions(opts...)
+	for _, in := range input {
+		if in.ActorUserId == uuid.Nil || in.ActorUserId != userId {
+			return nil, exceptions.RoutineTask.InvalidInput().WithOrigin(fmt.Errorf("actorUserId must match userId"))
+		}
+	}
 
 	shouldStartTransaction := !parsedOptions.IsTransactionStarted
 	if shouldStartTransaction {
@@ -322,8 +331,9 @@ func (r *RoutineTaskRepository) CreateManyByRoutineIds(
 			return nil, exceptions.RoutineTask.InvalidInput().WithOrigin(fmt.Errorf("nextScheduledAt is required"))
 		}
 		newRoutineTask := schemas.RoutineTask{
-			Id:        uuid.New(),
-			RoutineId: in.RoutineId,
+			Id:          uuid.New(),
+			RoutineId:   in.RoutineId,
+			ActorUserId: in.ActorUserId,
 		}
 		if err := copier.Copy(&newRoutineTask, &in); err != nil {
 			parsedOptions.DB.Rollback()

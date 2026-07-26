@@ -11,13 +11,15 @@ import (
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
 )
 
 type PurposeHandlerFunc func(
 	ctx context.Context,
 	tasks []schemas.RoutineTask,
-	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
+	taskIdToActorUserId map[uuid.UUID]uuid.UUID,
+	allowedPermissions []enums.AccessControlPermission,
 ) ([]bool, *exceptions.Exception)
 
 func decodePayload[T any](task schemas.RoutineTask) (*T, *exceptions.Exception) {

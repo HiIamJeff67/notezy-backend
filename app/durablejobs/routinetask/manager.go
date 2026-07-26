@@ -15,23 +15,31 @@ import (
 	matchers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/matchers"
 	resolvers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/resolvers"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
+	options "github.com/HiIamJeff67/notezy-backend/app/options"
 )
 
 type HandlerManager struct {
-	maxWorkers    int
-	activeWorkers atomic.Int32
-	workerPool    sync.WaitGroup
-	sem           chan struct{}
-	failed        []routineTaskWithRecord
-	failedMutex   sync.Mutex
-	success       []routineTaskWithRecord
-	successMutex  sync.Mutex
-	db            *gorm.DB
-	registries    map[enums.RoutineTaskPurpose]handlers.PurposeHandlerFunc
+	maxWorkers        int
+	activeWorkers     atomic.Int32
+	workerPool        sync.WaitGroup
+	sem               chan struct{}
+	failed            []routineTaskWithRecord
+	failedMutex       sync.Mutex
+	success           []routineTaskWithRecord
+	successMutex      sync.Mutex
+	db                *gorm.DB
+	routineRepository repositories.RoutineRepositoryInterface
+	registries        map[enums.RoutineTaskPurpose]PurposeHandler
+}
+
+type PurposeHandler struct {
+	HandlerFunc        handlers.PurposeHandlerFunc
+	AllowedPermissions []enums.AccessControlPermission
 }
 
 type routineTaskWithRecord struct {
@@ -40,8 +48,9 @@ type routineTaskWithRecord struct {
 }
 
 type purposeTaskGroup struct {
-	handlerFunc handlers.PurposeHandlerFunc
-	tasks       []schemas.RoutineTask
+	handlerFunc        handlers.PurposeHandlerFunc
+	allowedPermissions []enums.AccessControlPermission
+	tasks              []schemas.RoutineTask
 }
 
 func NewHandlerManager(maxWorkers int, db *gorm.DB) HandlerManager {
@@ -76,27 +85,85 @@ func NewHandlerManager(maxWorkers int, db *gorm.DB) HandlerManager {
 	rootShelfHandler := handlers.NewRootShelfHandler(db, patternResolver, templateBlockMatcher, rootShelfRepository, subShelfRepository)
 	subShelfHandler := handlers.NewSubShelfHandler(db, patternResolver, templateBlockMatcher, subShelfRepository, materialRepository, blockPackRepository)
 	routineHandler := handlers.NewRoutineHandler(db, patternResolver, templateBlockMatcher, routineRepository)
+	readPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+		enums.AccessControlPermission_Read,
+	}
+	adminPermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+	}
+	writePermissions := []enums.AccessControlPermission{
+		enums.AccessControlPermission_Owner,
+		enums.AccessControlPermission_Admin,
+		enums.AccessControlPermission_Write,
+	}
 
 	return HandlerManager{
-		maxWorkers:    maxWorkers,
-		activeWorkers: atomic.Int32{},
-		sem:           make(chan struct{}, maxWorkers),
-		db:            db,
-		registries: map[enums.RoutineTaskPurpose]handlers.PurposeHandlerFunc{
-			enums.RoutineTaskPurpose_CreateRootShelf: rootShelfHandler.HandleCreateRootShelf,
-			enums.RoutineTaskPurpose_UpdateRootShelf: rootShelfHandler.HandleUpdateRootShelf,
-			enums.RoutineTaskPurpose_ResetRootShelf:  rootShelfHandler.HandleResetRootShelf,
-			enums.RoutineTaskPurpose_CreateSubShelf:  subShelfHandler.HandleCreateSubShelf,
-			enums.RoutineTaskPurpose_UpdateSubShelf:  subShelfHandler.HandleUpdateSubShelf,
-			enums.RoutineTaskPurpose_ResetSubShelf:   subShelfHandler.HandleResetSubShelf,
-			enums.RoutineTaskPurpose_CreateBlockPack: blockPackHandler.HandleCreateBlockPack,
-			enums.RoutineTaskPurpose_UpdateBlockPack: blockPackHandler.HandleUpdateBlockPack,
-			enums.RoutineTaskPurpose_ResetBlockPack:  blockPackHandler.HandleResetBlockPack,
-			enums.RoutineTaskPurpose_AppendBlock:     blockHandler.HandleAppendBlock,
-			enums.RoutineTaskPurpose_UpdateBlock:     blockHandler.HandleUpdateBlock,
-			enums.RoutineTaskPurpose_ResetBlock:      blockHandler.HandleResetBlock,
-			enums.RoutineTaskPurpose_CreateRoutine:   routineHandler.HandleCreateRoutine,
-			enums.RoutineTaskPurpose_UpdateRoutine:   routineHandler.HandleUpdateRoutine,
+		maxWorkers:        maxWorkers,
+		activeWorkers:     atomic.Int32{},
+		sem:               make(chan struct{}, maxWorkers),
+		db:                db,
+		routineRepository: routineRepository,
+		registries: map[enums.RoutineTaskPurpose]PurposeHandler{
+			enums.RoutineTaskPurpose_CreateRootShelf: {
+				HandlerFunc:        rootShelfHandler.HandleCreateRootShelf,
+				AllowedPermissions: readPermissions,
+			},
+			enums.RoutineTaskPurpose_UpdateRootShelf: {
+				HandlerFunc:        rootShelfHandler.HandleUpdateRootShelf,
+				AllowedPermissions: adminPermissions,
+			},
+			enums.RoutineTaskPurpose_ResetRootShelf: {
+				HandlerFunc:        rootShelfHandler.HandleResetRootShelf,
+				AllowedPermissions: adminPermissions,
+			},
+			enums.RoutineTaskPurpose_CreateSubShelf: {
+				HandlerFunc:        subShelfHandler.HandleCreateSubShelf,
+				AllowedPermissions: adminPermissions,
+			},
+			enums.RoutineTaskPurpose_UpdateSubShelf: {
+				HandlerFunc:        subShelfHandler.HandleUpdateSubShelf,
+				AllowedPermissions: adminPermissions,
+			},
+			enums.RoutineTaskPurpose_ResetSubShelf: {
+				HandlerFunc:        subShelfHandler.HandleResetSubShelf,
+				AllowedPermissions: adminPermissions,
+			},
+			enums.RoutineTaskPurpose_CreateBlockPack: {
+				HandlerFunc:        blockPackHandler.HandleCreateBlockPack,
+				AllowedPermissions: writePermissions,
+			},
+			enums.RoutineTaskPurpose_UpdateBlockPack: {
+				HandlerFunc:        blockPackHandler.HandleUpdateBlockPack,
+				AllowedPermissions: writePermissions,
+			},
+			enums.RoutineTaskPurpose_ResetBlockPack: {
+				HandlerFunc:        blockPackHandler.HandleResetBlockPack,
+				AllowedPermissions: writePermissions,
+			},
+			enums.RoutineTaskPurpose_AppendBlock: {
+				HandlerFunc:        blockHandler.HandleAppendBlock,
+				AllowedPermissions: writePermissions,
+			},
+			enums.RoutineTaskPurpose_UpdateBlock: {
+				HandlerFunc:        blockHandler.HandleUpdateBlock,
+				AllowedPermissions: writePermissions,
+			},
+			enums.RoutineTaskPurpose_ResetBlock: {
+				HandlerFunc:        blockHandler.HandleResetBlock,
+				AllowedPermissions: writePermissions,
+			},
+			enums.RoutineTaskPurpose_CreateRoutine: {
+				HandlerFunc:        routineHandler.HandleCreateRoutine,
+				AllowedPermissions: writePermissions,
+			},
+			enums.RoutineTaskPurpose_UpdateRoutine: {
+				HandlerFunc:        routineHandler.HandleUpdateRoutine,
+				AllowedPermissions: writePermissions,
+			},
 		},
 	}
 }
@@ -320,7 +387,6 @@ func (hm *HandlerManager) finalize(ctx context.Context) *exceptions.Exception {
 func (hm *HandlerManager) Manage(
 	ctx context.Context,
 	claimedTasks []schemas.RoutineTask,
-	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
 ) *exceptions.Exception {
 	if len(claimedTasks) == 0 {
 		return nil
@@ -328,12 +394,13 @@ func (hm *HandlerManager) Manage(
 
 	hm.resetRoutineTasksWithRecords(len(claimedTasks))
 
+	taskIdToActorUserId := make(map[uuid.UUID]uuid.UUID, len(claimedTasks))
 	groupsByPurpose := make(map[enums.RoutineTaskPurpose]purposeTaskGroup)
 	for _, task := range claimedTasks {
-		if _, exists := taskIdToOwnerId[task.Id]; !exists {
+		if task.ActorUserId == uuid.Nil {
 			endedAt := time.Now()
-			tempErrorCode := enums.RoutineTaskRecordErrorCode_TargetNotFound
-			tempErrorReason := "Routine task station owner was not found"
+			tempErrorCode := enums.RoutineTaskRecordErrorCode_PermissionDenied
+			tempErrorReason := "Routine task actor was not found"
 			hm.appendFailedRoutineTaskWithRecord(task, hm.newRecord(
 				task,
 				enums.RoutineTaskRecordStatus_Failed,
@@ -343,9 +410,10 @@ func (hm *HandlerManager) Manage(
 			))
 			continue
 		}
+		taskIdToActorUserId[task.Id] = task.ActorUserId
 
 		registry, exists := hm.registries[task.Purpose]
-		if !exists {
+		if !exists || registry.HandlerFunc == nil || len(registry.AllowedPermissions) == 0 {
 			endedAt := time.Now()
 			tempErrorCode := enums.RoutineTaskRecordErrorCode_HandlerFailed
 			tempErrorReason := "Routine task purpose handler was not found"
@@ -360,9 +428,60 @@ func (hm *HandlerManager) Manage(
 		}
 
 		group := groupsByPurpose[task.Purpose]
-		group.handlerFunc = registry
+		group.handlerFunc = registry.HandlerFunc
+		group.allowedPermissions = registry.AllowedPermissions
 		group.tasks = append(group.tasks, task)
 		groupsByPurpose[task.Purpose] = group
+	}
+	if len(groupsByPurpose) == 0 {
+		return hm.finalize(ctx)
+	}
+
+	for purpose, taskGroup := range groupsByPurpose {
+		checkInputs := make([]inputs.BulkCheckRoutinePermissionInput, len(taskGroup.tasks))
+		for index, task := range taskGroup.tasks {
+			checkInputs[index] = inputs.BulkCheckRoutinePermissionInput{
+				UserId: taskIdToActorUserId[task.Id],
+				Id:     task.RoutineId,
+			}
+		}
+
+		permissionSuccesses, _, exception := hm.routineRepository.BulkCheckPermissionsAndGetManyByIds(
+			checkInputs,
+			nil,
+			taskGroup.allowedPermissions,
+			options.WithDB(hm.db.WithContext(ctx)),
+			options.WithAllowedPermissions(taskGroup.allowedPermissions),
+		)
+		if exception != nil {
+			return exception
+		}
+
+		permittedTasks := make([]schemas.RoutineTask, 0, len(taskGroup.tasks))
+		for index, task := range taskGroup.tasks {
+			if permissionSuccesses[index] {
+				permittedTasks = append(permittedTasks, task)
+				continue
+			}
+
+			endedAt := time.Now()
+			errorCode := enums.RoutineTaskRecordErrorCode_PermissionDenied
+			errorReason := "Routine task actor no longer has the required routine permission"
+			hm.appendFailedRoutineTaskWithRecord(task, hm.newRecord(
+				task,
+				enums.RoutineTaskRecordStatus_Failed,
+				endedAt,
+				&errorCode,
+				&errorReason,
+			))
+		}
+		if len(permittedTasks) == 0 {
+			delete(groupsByPurpose, purpose)
+			continue
+		}
+
+		taskGroup.tasks = permittedTasks
+		groupsByPurpose[purpose] = taskGroup
 	}
 	if len(groupsByPurpose) == 0 {
 		return hm.finalize(ctx)
@@ -380,7 +499,12 @@ func (hm *HandlerManager) Manage(
 				hm.workerPool.Done()
 			}()
 
-			handlerResults, exception := group.handlerFunc(ctx, group.tasks, taskIdToOwnerId)
+			handlerResults, exception := group.handlerFunc(
+				ctx,
+				group.tasks,
+				taskIdToActorUserId,
+				group.allowedPermissions,
+			)
 			for index, task := range group.tasks {
 				endedAt := time.Now()
 				if exception != nil || index >= len(handlerResults) || !handlerResults[index] { // if the task was failed

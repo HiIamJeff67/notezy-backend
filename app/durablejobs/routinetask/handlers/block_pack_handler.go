@@ -60,16 +60,21 @@ func NewBlockPackHandler(
 	}
 }
 
-func (h BlockPackHandler) HandleCreateBlockPack(ctx context.Context, tasks []schemas.RoutineTask, taskIdToOwnerId map[uuid.UUID]uuid.UUID) ([]bool, *exceptions.Exception) {
+func (h BlockPackHandler) HandleCreateBlockPack(
+	ctx context.Context,
+	tasks []schemas.RoutineTask,
+	taskIdToActorUserId map[uuid.UUID]uuid.UUID,
+	allowedPermissions []enums.AccessControlPermission,
+) ([]bool, *exceptions.Exception) {
 	successes := make([]bool, len(tasks))
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
-	candidateOwnerIds := make([]uuid.UUID, 0, len(tasks))
+	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
 	candidatePayloads := make([]dtos.CreateBlockPackRoutineTaskPayload, 0, len(tasks))
 	candidatePatterns := make([]dtos.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
-		ownerId, exists := taskIdToOwnerId[task.Id]
+		actorUserId, exists := taskIdToActorUserId[task.Id]
 		if !exists {
 			continue
 		}
@@ -79,7 +84,7 @@ func (h BlockPackHandler) HandleCreateBlockPack(ctx context.Context, tasks []sch
 		}
 		candidateTaskIndexes = append(candidateTaskIndexes, taskIndex)
 		candidateTasks = append(candidateTasks, task)
-		candidateOwnerIds = append(candidateOwnerIds, ownerId)
+		candidateActorUserIds = append(candidateActorUserIds, actorUserId)
 		candidatePayloads = append(candidatePayloads, *payload)
 		candidatePatterns = append(candidatePatterns, payload.Pattern)
 	}
@@ -87,7 +92,13 @@ func (h BlockPackHandler) HandleCreateBlockPack(ctx context.Context, tasks []sch
 		return successes, nil
 	}
 
-	patternValuesByCandidate, patternSuccesses, exception := h.patternResolver.ResolveMany(ctx, candidateTasks, candidateOwnerIds, candidatePatterns)
+	patternValuesByCandidate, patternSuccesses, exception := h.patternResolver.ResolveMany(
+		ctx,
+		candidateTasks,
+		candidateActorUserIds,
+		candidatePatterns,
+		allowedPermissions,
+	)
 	if exception != nil {
 		return successes, exception
 	}
@@ -142,7 +153,7 @@ func (h BlockPackHandler) HandleCreateBlockPack(ctx context.Context, tasks []sch
 			continue
 		}
 		blockPackInputs = append(blockPackInputs, inputs.BulkCreateBlockPackInput{
-			UserId:              candidateOwnerIds[candidateIndex],
+			UserId:              candidateActorUserIds[candidateIndex],
 			Id:                  &blockPackId,
 			ParentSubShelfId:    payload.TargetSubShelfId,
 			Name:                name,
@@ -150,7 +161,7 @@ func (h BlockPackHandler) HandleCreateBlockPack(ctx context.Context, tasks []sch
 			HeaderBackgroundURL: payload.Template.HeaderBackgroundURL,
 		})
 		blockContentInputs = append(blockContentInputs, inputs.BulkCreateBlockPackContentInput{
-			UserId:      candidateOwnerIds[candidateIndex],
+			UserId:      candidateActorUserIds[candidateIndex],
 			BlockPackId: blockPackId,
 			Blocks:      taskBlocks,
 		})
@@ -165,6 +176,7 @@ func (h BlockPackHandler) HandleCreateBlockPack(ctx context.Context, tasks []sch
 	blockPackSuccesses, exception := h.blockPackRepository.BulkCreateMany(
 		blockPackInputs,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -197,6 +209,7 @@ func (h BlockPackHandler) HandleCreateBlockPack(ctx context.Context, tasks []sch
 	blockSuccesses, exception := h.blockRepository.BulkCreateMany(
 		successfulBlockContentInputs,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
@@ -222,16 +235,21 @@ func (h BlockPackHandler) HandleCreateBlockPack(ctx context.Context, tasks []sch
 	return successes, nil
 }
 
-func (h BlockPackHandler) HandleUpdateBlockPack(ctx context.Context, tasks []schemas.RoutineTask, taskIdToOwnerId map[uuid.UUID]uuid.UUID) ([]bool, *exceptions.Exception) {
+func (h BlockPackHandler) HandleUpdateBlockPack(
+	ctx context.Context,
+	tasks []schemas.RoutineTask,
+	taskIdToActorUserId map[uuid.UUID]uuid.UUID,
+	allowedPermissions []enums.AccessControlPermission,
+) ([]bool, *exceptions.Exception) {
 	successes := make([]bool, len(tasks))
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
-	candidateOwnerIds := make([]uuid.UUID, 0, len(tasks))
+	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
 	candidatePayloads := make([]dtos.UpdateBlockPackRoutineTaskPayload, 0, len(tasks))
 	candidatePatterns := make([]dtos.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
-		ownerId, exists := taskIdToOwnerId[task.Id]
+		actorUserId, exists := taskIdToActorUserId[task.Id]
 		if !exists {
 			continue
 		}
@@ -241,7 +259,7 @@ func (h BlockPackHandler) HandleUpdateBlockPack(ctx context.Context, tasks []sch
 		}
 		candidateTaskIndexes = append(candidateTaskIndexes, taskIndex)
 		candidateTasks = append(candidateTasks, task)
-		candidateOwnerIds = append(candidateOwnerIds, ownerId)
+		candidateActorUserIds = append(candidateActorUserIds, actorUserId)
 		candidatePayloads = append(candidatePayloads, *payload)
 		candidatePatterns = append(candidatePatterns, payload.Pattern)
 	}
@@ -249,7 +267,13 @@ func (h BlockPackHandler) HandleUpdateBlockPack(ctx context.Context, tasks []sch
 		return successes, nil
 	}
 
-	patternValuesByCandidate, patternSuccesses, exception := h.patternResolver.ResolveMany(ctx, candidateTasks, candidateOwnerIds, candidatePatterns)
+	patternValuesByCandidate, patternSuccesses, exception := h.patternResolver.ResolveMany(
+		ctx,
+		candidateTasks,
+		candidateActorUserIds,
+		candidatePatterns,
+		allowedPermissions,
+	)
 	if exception != nil {
 		return successes, exception
 	}
@@ -263,7 +287,7 @@ func (h BlockPackHandler) HandleUpdateBlockPack(ctx context.Context, tasks []sch
 		if !patternSuccesses[candidateIndex] {
 			continue
 		}
-		ownerId := candidateOwnerIds[candidateIndex]
+		actorUserId := candidateActorUserIds[candidateIndex]
 		patternValues := patternValuesByCandidate[candidateIndex]
 		for _, block := range payload.UpdatedBlocks {
 			if block.ArborizedEditableBlock == nil {
@@ -283,7 +307,7 @@ func (h BlockPackHandler) HandleUpdateBlockPack(ctx context.Context, tasks []sch
 			pairPlaceholders = append(pairPlaceholders, "(?::uuid, ?::uuid)")
 			pairArgs = append(pairArgs, block.BlockId, payload.BlockPackId)
 			preparedInputs = append(preparedInputs, inputs.BulkUpdateBlockInput{
-				UserId: ownerId,
+				UserId: actorUserId,
 				Id:     block.BlockId,
 				PartialUpdateInput: inputs.PartialUpdateBlockInput{Values: inputs.UpdateBlockInput{
 					Type:    &blockType,
@@ -328,7 +352,12 @@ func (h BlockPackHandler) HandleUpdateBlockPack(ctx context.Context, tasks []sch
 		return successes, nil
 	}
 
-	bulkSuccesses, exception := h.blockRepository.BulkUpdateMany(filteredInputs, options.WithDB(h.db.WithContext(ctx)), options.WithOnlyDeleted(types.Ternary_Negative))
+	bulkSuccesses, exception := h.blockRepository.BulkUpdateMany(
+		filteredInputs,
+		options.WithDB(h.db.WithContext(ctx)),
+		options.WithAllowedPermissions(allowedPermissions),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
 	if exception != nil {
 		return successes, exception
 	}
@@ -339,14 +368,19 @@ func (h BlockPackHandler) HandleUpdateBlockPack(ctx context.Context, tasks []sch
 	return successes, nil
 }
 
-func (h BlockPackHandler) HandleResetBlockPack(ctx context.Context, tasks []schemas.RoutineTask, taskIdToOwnerId map[uuid.UUID]uuid.UUID) ([]bool, *exceptions.Exception) {
+func (h BlockPackHandler) HandleResetBlockPack(
+	ctx context.Context,
+	tasks []schemas.RoutineTask,
+	taskIdToActorUserId map[uuid.UUID]uuid.UUID,
+	allowedPermissions []enums.AccessControlPermission,
+) ([]bool, *exceptions.Exception) {
 	successes := make([]bool, len(tasks))
 	checkInputs := make([]inputs.BulkCheckBlockPackPermissionInput, 0, len(tasks))
 	taskIndexes := make([]int, 0, len(tasks))
 	blockPackIds := make([]uuid.UUID, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
-		ownerId, exists := taskIdToOwnerId[task.Id]
+		actorUserId, exists := taskIdToActorUserId[task.Id]
 		if !exists {
 			continue
 		}
@@ -355,7 +389,7 @@ func (h BlockPackHandler) HandleResetBlockPack(ctx context.Context, tasks []sche
 			continue
 		}
 		checkInputs = append(checkInputs, inputs.BulkCheckBlockPackPermissionInput{
-			UserId: ownerId,
+			UserId: actorUserId,
 			Id:     payload.BlockPackId,
 		})
 		taskIndexes = append(taskIndexes, taskIndex)
@@ -365,12 +399,6 @@ func (h BlockPackHandler) HandleResetBlockPack(ctx context.Context, tasks []sche
 		return successes, nil
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-	}
-
 	tx := h.db.WithContext(ctx).Begin()
 
 	checkSuccesses, _, exception := h.blockPackRepository.BulkCheckPermissionsAndGetManyByIds(
@@ -378,6 +406,7 @@ func (h BlockPackHandler) HandleResetBlockPack(ctx context.Context, tasks []sche
 		nil,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 	)

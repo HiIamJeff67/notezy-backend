@@ -15,6 +15,7 @@ import (
 type RoutineTask struct {
 	Id                uuid.UUID                `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid();"`
 	RoutineId         uuid.UUID                `json:"routineId" gorm:"column:routine_id; type:uuid; not null;"`
+	ActorUserId       uuid.UUID                `json:"actorUserId" gorm:"column:actor_user_id; type:uuid; not null;"`
 	Title             string                   `json:"title" gorm:"column:title; size:128; not null; default:'undefined';"`
 	Purpose           enums.RoutineTaskPurpose `json:"purpose" gorm:"column:purpose; type:\"RoutineTaskPurpose\"; not null; default:'CreateBlockPack';"`
 	Payload           datatypes.JSON           `json:"payload" gorm:"column:payload; type:jsonb; not null; default:'{}'; check:routine_task_check_payload_size,octet_length(payload::text) <= 16777216;"`
@@ -34,8 +35,9 @@ type RoutineTask struct {
 	RecordId          uuid.UUID                `json:"-" gorm:"column:record_id;->;-:migration"`           // to store the latest routine task record id created by the claimer
 
 	// relations
-	Routine Routine             `json:"routine" gorm:"foreignKey:RoutineId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
-	Records []RoutineTaskRecord `json:"records" gorm:"foreignKey:RoutineTaskId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	Routine   Routine             `json:"routine" gorm:"foreignKey:RoutineId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	ActorUser User                `json:"actorUser" gorm:"foreignKey:ActorUserId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:RESTRICT;"`
+	Records   []RoutineTaskRecord `json:"records" gorm:"foreignKey:RoutineTaskId; references:Id; constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 }
 
 // RoutineTask Table Name
@@ -47,8 +49,9 @@ func (RoutineTask) TableName() string {
 type RoutineTaskRelation types.RelationName
 
 const (
-	RoutineTaskRelation_Routine RoutineTaskRelation = "Routine"
-	RoutineTaskRelation_Records RoutineTaskRelation = "Records"
+	RoutineTaskRelation_Routine   RoutineTaskRelation = "Routine"
+	RoutineTaskRelation_ActorUser RoutineTaskRelation = "ActorUser"
+	RoutineTaskRelation_Records   RoutineTaskRelation = "Records"
 )
 
 /* ============================== Relative Type Conversion ============================== */

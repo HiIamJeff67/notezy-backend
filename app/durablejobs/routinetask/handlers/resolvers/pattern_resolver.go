@@ -12,6 +12,7 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 )
 
 const (
@@ -24,8 +25,8 @@ const (
 )
 
 type PatternResolverInterface interface {
-	Resolve(ctx context.Context, task schemas.RoutineTask, ownerId uuid.UUID, pattern dtos.RoutineTaskPattern) (map[string]string, *exceptions.Exception)
-	ResolveMany(ctx context.Context, tasks []schemas.RoutineTask, ownerIds []uuid.UUID, patterns []dtos.RoutineTaskPattern) ([]map[string]string, []bool, *exceptions.Exception)
+	Resolve(ctx context.Context, task schemas.RoutineTask, actorUserId uuid.UUID, pattern dtos.RoutineTaskPattern, allowedPermissions []enums.AccessControlPermission) (map[string]string, *exceptions.Exception)
+	ResolveMany(ctx context.Context, tasks []schemas.RoutineTask, actorUserIds []uuid.UUID, patterns []dtos.RoutineTaskPattern, allowedPermissions []enums.AccessControlPermission) ([]map[string]string, []bool, *exceptions.Exception)
 }
 
 type PatternResolver struct {
@@ -47,10 +48,17 @@ func NewPatternResolver(
 func (r PatternResolver) Resolve(
 	ctx context.Context,
 	task schemas.RoutineTask,
-	ownerId uuid.UUID,
+	actorUserId uuid.UUID,
 	pattern dtos.RoutineTaskPattern,
+	allowedPermissions []enums.AccessControlPermission,
 ) (map[string]string, *exceptions.Exception) {
-	values, successes, exception := r.ResolveMany(ctx, []schemas.RoutineTask{task}, []uuid.UUID{ownerId}, []dtos.RoutineTaskPattern{pattern})
+	values, successes, exception := r.ResolveMany(
+		ctx,
+		[]schemas.RoutineTask{task},
+		[]uuid.UUID{actorUserId},
+		[]dtos.RoutineTaskPattern{pattern},
+		allowedPermissions,
+	)
 	if exception != nil {
 		return nil, exception
 	}
@@ -63,8 +71,9 @@ func (r PatternResolver) Resolve(
 func (r PatternResolver) ResolveMany(
 	ctx context.Context,
 	tasks []schemas.RoutineTask,
-	ownerIds []uuid.UUID,
+	actorUserIds []uuid.UUID,
 	patterns []dtos.RoutineTaskPattern,
+	allowedPermissions []enums.AccessControlPermission,
 ) ([]map[string]string, []bool, *exceptions.Exception) {
 	values := make([]map[string]string, len(patterns))
 	successes := make([]bool, len(patterns))
@@ -72,9 +81,9 @@ func (r PatternResolver) ResolveMany(
 		values[index] = make(map[string]string, len(patterns[index]))
 		successes[index] = true
 	}
-	if len(tasks) != len(patterns) || len(ownerIds) != len(patterns) {
+	if len(tasks) != len(patterns) || len(actorUserIds) != len(patterns) {
 		return nil, nil, exceptions.RoutineTask.InvalidDto().
-			WithOrigin(fmt.Errorf("tasks, ownerIds and patterns length mismatch"))
+			WithOrigin(fmt.Errorf("tasks, actorUserIds and patterns length mismatch"))
 	}
 
 	hasBlockPatternSource := false
@@ -91,7 +100,12 @@ func (r PatternResolver) ResolveMany(
 	}
 
 	if hasBlockPatternSource {
-		blockValues, blockSuccesses, exception := r.blockPatternResolver.ResolveMany(ctx, ownerIds, patterns)
+		blockValues, blockSuccesses, exception := r.blockPatternResolver.ResolveMany(
+			ctx,
+			actorUserIds,
+			patterns,
+			allowedPermissions,
+		)
 		if exception != nil {
 			return nil, nil, exception
 		}
@@ -106,7 +120,12 @@ func (r PatternResolver) ResolveMany(
 	}
 
 	if hasBlockPackPatternSource {
-		blockPackValues, blockPackSuccesses, exception := r.blockPackPatternResolver.ResolveMany(ctx, ownerIds, patterns)
+		blockPackValues, blockPackSuccesses, exception := r.blockPackPatternResolver.ResolveMany(
+			ctx,
+			actorUserIds,
+			patterns,
+			allowedPermissions,
+		)
 		if exception != nil {
 			return nil, nil, exception
 		}

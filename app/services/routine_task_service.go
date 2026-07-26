@@ -359,6 +359,7 @@ func (s *RoutineTaskService) CreateRoutineTaskByRoutineId(
 		reqDto.Body.RoutineId,
 		reqDto.ContextFields.UserId,
 		inputs.CreateRoutineTaskInput{
+			ActorUserId:     reqDto.ContextFields.UserId,
 			Title:           reqDto.Body.Title,
 			Purpose:         reqDto.Body.Purpose,
 			Payload:         reqDto.Body.Payload,

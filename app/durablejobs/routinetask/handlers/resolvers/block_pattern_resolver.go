@@ -20,8 +20,8 @@ import (
 )
 
 type BlockPatternResolverInterface interface {
-	Resolve(ctx context.Context, ownerId uuid.UUID, pattern dtos.RoutineTaskPattern) (map[string]string, *exceptions.Exception)
-	ResolveMany(ctx context.Context, ownerIds []uuid.UUID, patterns []dtos.RoutineTaskPattern) ([]map[string]string, []bool, *exceptions.Exception)
+	Resolve(ctx context.Context, actorUserId uuid.UUID, pattern dtos.RoutineTaskPattern, allowedPermissions []enums.AccessControlPermission) (map[string]string, *exceptions.Exception)
+	ResolveMany(ctx context.Context, actorUserIds []uuid.UUID, patterns []dtos.RoutineTaskPattern, allowedPermissions []enums.AccessControlPermission) ([]map[string]string, []bool, *exceptions.Exception)
 }
 
 type BlockPatternResolver struct {
@@ -38,10 +38,16 @@ func NewBlockPatternResolver(db *gorm.DB, blockRepository repositories.BlockRepo
 
 func (r BlockPatternResolver) Resolve(
 	ctx context.Context,
-	ownerId uuid.UUID,
+	actorUserId uuid.UUID,
 	pattern dtos.RoutineTaskPattern,
+	allowedPermissions []enums.AccessControlPermission,
 ) (map[string]string, *exceptions.Exception) {
-	values, successes, exception := r.ResolveMany(ctx, []uuid.UUID{ownerId}, []dtos.RoutineTaskPattern{pattern})
+	values, successes, exception := r.ResolveMany(
+		ctx,
+		[]uuid.UUID{actorUserId},
+		[]dtos.RoutineTaskPattern{pattern},
+		allowedPermissions,
+	)
 	if exception != nil {
 		return nil, exception
 	}
@@ -53,8 +59,9 @@ func (r BlockPatternResolver) Resolve(
 
 func (r BlockPatternResolver) ResolveMany(
 	ctx context.Context,
-	ownerIds []uuid.UUID,
+	actorUserIds []uuid.UUID,
 	patterns []dtos.RoutineTaskPattern,
+	allowedPermissions []enums.AccessControlPermission,
 ) ([]map[string]string, []bool, *exceptions.Exception) {
 	values := make([]map[string]string, len(patterns))
 	taskSuccesses := make([]bool, len(patterns))
@@ -62,9 +69,9 @@ func (r BlockPatternResolver) ResolveMany(
 		values[index] = map[string]string{}
 		taskSuccesses[index] = true
 	}
-	if len(ownerIds) != len(patterns) {
+	if len(actorUserIds) != len(patterns) {
 		return nil, nil, exceptions.RoutineTask.InvalidDto().
-			WithOrigin(fmt.Errorf("ownerIds and patterns length mismatch"))
+			WithOrigin(fmt.Errorf("actorUserIds and patterns length mismatch"))
 	}
 
 	checkInputs := make([]inputs.BulkCheckBlockPermissionInput, 0)
@@ -82,10 +89,10 @@ func (r BlockPatternResolver) ResolveMany(
 				taskSuccesses[patternIndex] = false
 				continue
 			}
-			mapKey := [2]uuid.UUID{ownerIds[patternIndex], *binding.BlockId}
+			mapKey := [2]uuid.UUID{actorUserIds[patternIndex], *binding.BlockId}
 			if _, exists := keysByUserAndBlockId[mapKey]; !exists {
 				checkInputs = append(checkInputs, inputs.BulkCheckBlockPermissionInput{
-					UserId: ownerIds[patternIndex],
+					UserId: actorUserIds[patternIndex],
 					Id:     *binding.BlockId,
 				})
 			}
@@ -103,18 +110,12 @@ func (r BlockPatternResolver) ResolveMany(
 			WithOrigin(fmt.Errorf("block pattern source is not available"))
 	}
 
-	allowedPermissions := []enums.AccessControlPermission{
-		enums.AccessControlPermission_Owner,
-		enums.AccessControlPermission_Admin,
-		enums.AccessControlPermission_Write,
-		enums.AccessControlPermission_Read,
-	}
-
 	permissionSuccesses, blocks, exception := r.blockRepository.BulkCheckPermissionsAndGetManyByIds(
 		checkInputs,
 		nil,
 		allowedPermissions,
 		options.WithDB(r.db.WithContext(ctx)),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {

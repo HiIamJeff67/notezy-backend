@@ -13,6 +13,7 @@ import (
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
@@ -50,17 +51,18 @@ func NewRootShelfHandler(
 func (h RootShelfHandler) HandleCreateRootShelf(
 	ctx context.Context,
 	tasks []schemas.RoutineTask,
-	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
+	taskIdToActorUserId map[uuid.UUID]uuid.UUID,
+	allowedPermissions []enums.AccessControlPermission,
 ) ([]bool, *exceptions.Exception) {
 	successes := make([]bool, len(tasks))
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
-	candidateOwnerIds := make([]uuid.UUID, 0, len(tasks))
+	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
 	candidatePayloads := make([]dtos.CreateRootShelfRoutineTaskPayload, 0, len(tasks))
 	candidatePatterns := make([]dtos.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
-		ownerId, exists := taskIdToOwnerId[task.Id]
+		actorUserId, exists := taskIdToActorUserId[task.Id]
 		if !exists {
 			continue
 		}
@@ -71,7 +73,7 @@ func (h RootShelfHandler) HandleCreateRootShelf(
 		}
 		candidateTaskIndexes = append(candidateTaskIndexes, taskIndex)
 		candidateTasks = append(candidateTasks, task)
-		candidateOwnerIds = append(candidateOwnerIds, ownerId)
+		candidateActorUserIds = append(candidateActorUserIds, actorUserId)
 		candidatePayloads = append(candidatePayloads, *payload)
 		candidatePatterns = append(candidatePatterns, payload.Pattern)
 	}
@@ -79,7 +81,13 @@ func (h RootShelfHandler) HandleCreateRootShelf(
 		return successes, nil
 	}
 
-	patternValuesByCandidate, patternSuccesses, exception := h.patternResolver.ResolveMany(ctx, candidateTasks, candidateOwnerIds, candidatePatterns)
+	patternValuesByCandidate, patternSuccesses, exception := h.patternResolver.ResolveMany(
+		ctx,
+		candidateTasks,
+		candidateActorUserIds,
+		candidatePatterns,
+		allowedPermissions,
+	)
 	if exception != nil {
 		return successes, exception
 	}
@@ -93,7 +101,7 @@ func (h RootShelfHandler) HandleCreateRootShelf(
 		patternValues := patternValuesByCandidate[candidateIndex]
 		name := h.templateBlockMatcher.MatchString(payload.Name, patternValues)
 		bulkInputs = append(bulkInputs, inputs.BulkCreateRootShelfInput{
-			UserId: candidateOwnerIds[candidateIndex],
+			UserId: candidateActorUserIds[candidateIndex],
 			Id:     payload.Id,
 			Name:   name,
 		})
@@ -106,6 +114,7 @@ func (h RootShelfHandler) HandleCreateRootShelf(
 	bulkSuccesses, exception := h.rootShelfRepository.BulkCreateMany(
 		bulkInputs,
 		options.WithDB(h.db.WithContext(ctx)),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
@@ -123,17 +132,18 @@ func (h RootShelfHandler) HandleCreateRootShelf(
 func (h RootShelfHandler) HandleUpdateRootShelf(
 	ctx context.Context,
 	tasks []schemas.RoutineTask,
-	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
+	taskIdToActorUserId map[uuid.UUID]uuid.UUID,
+	allowedPermissions []enums.AccessControlPermission,
 ) ([]bool, *exceptions.Exception) {
 	successes := make([]bool, len(tasks))
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
-	candidateOwnerIds := make([]uuid.UUID, 0, len(tasks))
+	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
 	candidatePayloads := make([]dtos.UpdateRootShelfRoutineTaskPayload, 0, len(tasks))
 	candidatePatterns := make([]dtos.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
-		ownerId, exists := taskIdToOwnerId[task.Id]
+		actorUserId, exists := taskIdToActorUserId[task.Id]
 		if !exists {
 			continue
 		}
@@ -147,7 +157,7 @@ func (h RootShelfHandler) HandleUpdateRootShelf(
 		}
 		candidateTaskIndexes = append(candidateTaskIndexes, taskIndex)
 		candidateTasks = append(candidateTasks, task)
-		candidateOwnerIds = append(candidateOwnerIds, ownerId)
+		candidateActorUserIds = append(candidateActorUserIds, actorUserId)
 		candidatePayloads = append(candidatePayloads, *payload)
 		candidatePatterns = append(candidatePatterns, payload.Pattern)
 	}
@@ -155,7 +165,13 @@ func (h RootShelfHandler) HandleUpdateRootShelf(
 		return successes, nil
 	}
 
-	patternValuesByCandidate, patternSuccesses, exception := h.patternResolver.ResolveMany(ctx, candidateTasks, candidateOwnerIds, candidatePatterns)
+	patternValuesByCandidate, patternSuccesses, exception := h.patternResolver.ResolveMany(
+		ctx,
+		candidateTasks,
+		candidateActorUserIds,
+		candidatePatterns,
+		allowedPermissions,
+	)
 	if exception != nil {
 		return successes, exception
 	}
@@ -169,7 +185,7 @@ func (h RootShelfHandler) HandleUpdateRootShelf(
 		patternValues := patternValuesByCandidate[candidateIndex]
 		name := h.templateBlockMatcher.MatchString(*payload.Name, patternValues)
 		bulkInputs = append(bulkInputs, inputs.BulkUpdateRootShelfInput{
-			UserId: candidateOwnerIds[candidateIndex],
+			UserId: candidateActorUserIds[candidateIndex],
 			Id:     payload.RootShelfId,
 			PartialUpdateInput: inputs.PartialUpdateRootShelfInput{
 				Values: inputs.UpdateRootShelfInput{
@@ -187,6 +203,7 @@ func (h RootShelfHandler) HandleUpdateRootShelf(
 	bulkSuccesses, exception := h.rootShelfRepository.BulkUpdateMany(
 		bulkInputs,
 		options.WithDB(h.db.WithContext(ctx)),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
@@ -204,15 +221,16 @@ func (h RootShelfHandler) HandleUpdateRootShelf(
 func (h RootShelfHandler) HandleResetRootShelf(
 	ctx context.Context,
 	tasks []schemas.RoutineTask,
-	taskIdToOwnerId map[uuid.UUID]uuid.UUID,
+	taskIdToActorUserId map[uuid.UUID]uuid.UUID,
+	allowedPermissions []enums.AccessControlPermission,
 ) ([]bool, *exceptions.Exception) {
 	successes := make([]bool, len(tasks))
 	rootShelfIds := make([]uuid.UUID, 0, len(tasks))
 	taskIndexesByRootShelfId := make(map[uuid.UUID][]int, len(tasks))
-	ownerIdByRootShelfId := make(map[uuid.UUID]uuid.UUID, len(tasks))
+	actorUserIdByRootShelfId := make(map[uuid.UUID]uuid.UUID, len(tasks))
 
 	for taskIndex, task := range tasks {
-		ownerId, exists := taskIdToOwnerId[task.Id]
+		actorUserId, exists := taskIdToActorUserId[task.Id]
 		if !exists {
 			continue
 		}
@@ -223,7 +241,7 @@ func (h RootShelfHandler) HandleResetRootShelf(
 		}
 		rootShelfIds = append(rootShelfIds, payload.RootShelfId)
 		taskIndexesByRootShelfId[payload.RootShelfId] = append(taskIndexesByRootShelfId[payload.RootShelfId], taskIndex)
-		ownerIdByRootShelfId[payload.RootShelfId] = ownerId
+		actorUserIdByRootShelfId[payload.RootShelfId] = actorUserId
 	}
 
 	if len(rootShelfIds) == 0 {
@@ -246,7 +264,7 @@ func (h RootShelfHandler) HandleResetRootShelf(
 	taskIndexes := make([][]int, 0, len(rows))
 	for _, row := range rows {
 		bulkInputs = append(bulkInputs, inputs.BulkDeleteSubShelfInput{
-			UserId: ownerIdByRootShelfId[row.RootShelfId],
+			UserId: actorUserIdByRootShelfId[row.RootShelfId],
 			Id:     row.Id,
 		})
 		taskIndexes = append(taskIndexes, taskIndexesByRootShelfId[row.RootShelfId])
@@ -263,6 +281,7 @@ func (h RootShelfHandler) HandleResetRootShelf(
 	bulkSuccesses, exception := h.subShelfRepository.BulkDeleteMany(
 		bulkInputs,
 		options.WithDB(h.db.WithContext(ctx)),
+		options.WithAllowedPermissions(allowedPermissions),
 		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)

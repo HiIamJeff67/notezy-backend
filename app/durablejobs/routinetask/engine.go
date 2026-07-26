@@ -32,12 +32,12 @@ func NewEngine(db *gorm.DB, maxWorkers ...int) Engine {
 }
 
 func (e *Engine) runOnce(ctx context.Context) {
-	routineTasks, taskIdToOwnerId, exception := e.claimer.Claim(ctx)
+	routineTasks, exception := e.claimer.Claim(ctx)
 	if exception != nil {
 		atomic.StoreInt32(&e.isHealthy, 0)
 		return
 	}
-	if exception = e.handlerManager.Manage(ctx, routineTasks, taskIdToOwnerId); exception != nil {
+	if exception = e.handlerManager.Manage(ctx, routineTasks); exception != nil {
 		atomic.StoreInt32(&e.isHealthy, 0)
 		return
 	}

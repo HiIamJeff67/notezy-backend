@@ -8,6 +8,8 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"gorm.io/gorm"
 
+	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
+	scopes "github.com/HiIamJeff67/notezy-backend/app/models/scopes"
 	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
 	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
 	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
@@ -23,12 +25,22 @@ type Engine struct {
 }
 
 func NewEngine(db *gorm.DB) *Engine {
-	blockProjectionService := services.NewBlockProjectionService(db)
+	blockScope := scopes.NewBlockScope()
+	blockPackScope := scopes.NewBlockPackScope()
+	subShelfScope := scopes.NewSubShelfScope()
+	blockService := services.NewBlockService(
+		db,
+		blockScope,
+		blockPackScope,
+		subShelfScope,
+		repositories.NewBlockPackRepository(blockPackScope),
+		repositories.NewBlockRepository(blockScope),
+	)
 
 	return &Engine{
 		ticker:       time.NewTicker(constants.YjsMaintenanceScanInterval),
 		claimer:      NewClaimer(db),
-		handler:      NewHandler(db, blockProjectionService),
+		handler:      NewHandler(db, blockService),
 		workerClient: NewWorkerClient(),
 	}
 }

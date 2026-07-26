@@ -14,20 +14,17 @@ import (
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/app/realtime/types"
+	services "github.com/HiIamJeff67/notezy-backend/app/services"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
-
-type BlockProjectionService interface {
-	ApplyMany(ctx context.Context, reqDtos []dtos.ApplyBlockProjectionDocumentReqDto) (dtos.ApplyBlockProjectionDocumentResDto, error)
-}
 
 type Handler struct {
 	db                     *gorm.DB
 	blockPackYjsRepository repositories.BlockPackYjsRepositoryInterface
-	blockService           BlockProjectionService
+	blockService           services.BlockServiceInterface
 }
 
-func NewHandler(db *gorm.DB, blockService BlockProjectionService) Handler {
+func NewHandler(db *gorm.DB, blockService services.BlockServiceInterface) Handler {
 	return Handler{
 		db:                     db,
 		blockPackYjsRepository: repositories.NewBlockPackYjsRepository(),

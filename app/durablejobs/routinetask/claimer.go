@@ -26,9 +26,8 @@ func NewClaimer(db *gorm.DB) Claimer {
 
 func (c *Claimer) Claim(
 	ctx context.Context,
-) ([]schemas.RoutineTask, map[uuid.UUID]uuid.UUID, *exceptions.Exception) {
+) ([]schemas.RoutineTask, *exceptions.Exception) {
 	var claimedTasks []schemas.RoutineTask
-	taskIdToOwnerId := make(map[uuid.UUID]uuid.UUID)
 
 	tx := c.db.WithContext(ctx).Begin()
 
@@ -51,14 +50,14 @@ func (c *Claimer) Claim(
 		Find(&claimableTasks)
 	if result.Error != nil {
 		tx.Rollback()
-		return nil, nil, exceptions.RoutineTask.FailedToClaim("routine tasks").WithOrigin(result.Error)
+		return nil, exceptions.RoutineTask.FailedToClaim("routine tasks").WithOrigin(result.Error)
 	}
 
 	if len(claimableTasks) == 0 {
 		if err := tx.Commit().Error; err != nil {
-			return nil, nil, exceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+			return nil, exceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
 		}
-		return claimedTasks, taskIdToOwnerId, nil
+		return claimedTasks, nil
 	}
 
 	claimedTaskIds := make([]uuid.UUID, len(claimableTasks))
@@ -102,7 +101,7 @@ func (c *Claimer) Claim(
 		})
 	if result.Error != nil {
 		tx.Rollback()
-		return nil, nil, exceptions.RoutineTask.FailedToClaim("routine tasks").WithOrigin(result.Error)
+		return nil, exceptions.RoutineTask.FailedToClaim("routine tasks").WithOrigin(result.Error)
 	}
 
 	result = tx.
@@ -111,20 +110,14 @@ func (c *Claimer) Claim(
 		Find(&claimedTasks)
 	if result.Error != nil {
 		tx.Rollback()
-		return nil, nil, exceptions.RoutineTask.FailedToClaim("routine tasks").WithOrigin(result.Error)
+		return nil, exceptions.RoutineTask.FailedToClaim("routine tasks").WithOrigin(result.Error)
 	}
 
 	routineTaskRecords := make([]schemas.RoutineTaskRecord, len(claimedTasks))
-	routineIds := make([]uuid.UUID, 0, len(claimedTasks))
-	routineIdSet := make(map[uuid.UUID]bool, len(claimedTasks))
 	for index, claimedTask := range claimedTasks {
 		recordScheduledAt := recordScheduledAtByTaskId[claimedTask.Id]
 		claimedTasks[index].RecordScheduledAt = recordScheduledAt
 		claimedTasks[index].RecordId = uuid.New()
-		if !routineIdSet[claimedTask.RoutineId] {
-			routineIdSet[claimedTask.RoutineId] = true
-			routineIds = append(routineIds, claimedTask.RoutineId)
-		}
 		routineTaskRecords[index] = schemas.RoutineTaskRecord{
 			Id:              claimedTasks[index].RecordId,
 			RoutineTaskId:   claimedTask.Id,
@@ -140,7 +133,7 @@ func (c *Claimer) Claim(
 	result = tx.CreateInBatches(&routineTaskRecords, constants.RoutineTaskClaimerMaxClaimableTasks)
 	if result.Error != nil {
 		tx.Rollback()
-		return nil, nil, exceptions.RoutineTask.FailedToClaim("routine task records").WithOrigin(result.Error)
+		return nil, exceptions.RoutineTask.FailedToClaim("routine task records").WithOrigin(result.Error)
 	}
 
 	recordIds := make([]uuid.UUID, len(routineTaskRecords))
@@ -155,43 +148,17 @@ func (c *Claimer) Claim(
 		Find(&fetchedRoutineTaskRecords)
 	if result.Error != nil {
 		tx.Rollback()
-		return nil, nil, exceptions.RoutineTask.FailedToClaim("routine task records").WithOrigin(result.Error)
+		return nil, exceptions.RoutineTask.FailedToClaim("routine task records").WithOrigin(result.Error)
 	}
 
 	if len(fetchedRoutineTaskRecords) != len(routineTaskRecords) {
 		tx.Rollback()
-		return nil, nil, exceptions.RoutineTask.FailedToClaim("routine task records")
-	}
-
-	var routines []struct {
-		RoutineId uuid.UUID `gorm:"column:routine_id;"`
-		OwnerId   uuid.UUID `gorm:"column:owner_id;"`
-	}
-	result = tx.
-		Model(&schemas.Routine{}).
-		Select(`"RoutineTable".id AS routine_id, station.owner_id AS owner_id`).
-		Joins(`INNER JOIN "StationTable" station ON station.id = "RoutineTable".station_id AND station.deleted_at IS NULL`).
-		Where(`"RoutineTable".id IN ? AND "RoutineTable".deleted_at IS NULL`, routineIds).
-		Find(&routines)
-	if result.Error != nil {
-		tx.Rollback()
-		return nil, nil, exceptions.RoutineTask.FailedToClaim("routine task owners").WithOrigin(result.Error)
-	}
-
-	ownerIdByRoutineId := make(map[uuid.UUID]uuid.UUID, len(routines))
-	for _, routine := range routines {
-		ownerIdByRoutineId[routine.RoutineId] = routine.OwnerId
-	}
-	for _, claimedTask := range claimedTasks {
-		ownerId, exists := ownerIdByRoutineId[claimedTask.RoutineId]
-		if exists {
-			taskIdToOwnerId[claimedTask.Id] = ownerId
-		}
+		return nil, exceptions.RoutineTask.FailedToClaim("routine task records")
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		return nil, nil, exceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+		return nil, exceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	return claimedTasks, taskIdToOwnerId, nil
+	return claimedTasks, nil
 }

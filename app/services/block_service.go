@@ -67,21 +67,6 @@ func NewBlockService(
 	}
 }
 
-func NewBlockProjectionService(db *gorm.DB) BlockServiceInterface {
-	blockScope := scopes.NewBlockScope()
-	blockPackScope := scopes.NewBlockPackScope()
-	subShelfScope := scopes.NewSubShelfScope()
-
-	return NewBlockService(
-		db,
-		blockScope,
-		blockPackScope,
-		subShelfScope,
-		repositories.NewBlockPackRepository(blockPackScope),
-		repositories.NewBlockRepository(blockScope),
-	)
-}
-
 func (s *BlockService) GetMyBlockById(
 	ctx context.Context, reqDto *dtos.GetMyBlockByIdReqDto,
 ) (*dtos.GetMyBlockByIdResDto, *exceptions.Exception) {
