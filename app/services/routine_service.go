@@ -46,6 +46,7 @@ type RoutineServiceInterface interface {
 	DeleteMyRoutinesByIds(ctx context.Context, reqDto *dtos.DeleteMyRoutinesByIdsReqDto) (*dtos.DeleteMyRoutinesByIdsResDto, *exceptions.Exception)
 	HardDeleteMyRoutineById(ctx context.Context, reqDto *dtos.HardDeleteMyRoutineByIdReqDto) (*dtos.HardDeleteMyRoutineByIdResDto, *exceptions.Exception)
 	HardDeleteMyRoutinesByIds(ctx context.Context, reqDto *dtos.HardDeleteMyRoutinesByIdsReqDto) (*dtos.HardDeleteMyRoutinesByIdsResDto, *exceptions.Exception)
+
 	VisualizeMyRoutineStatusCount(ctx context.Context, reqDto *dtos.VisualizeMyRoutineStatusCountReqDto) (*dtos.VisualizeMyRoutineStatusCountResDto, *exceptions.Exception)
 	VisualizeMyRoutinePeriodCount(ctx context.Context, reqDto *dtos.VisualizeMyRoutinePeriodCountReqDto) (*dtos.VisualizeMyRoutinePeriodCountResDto, *exceptions.Exception)
 	VisualizeMyRoutineScheduledStartAtCount(ctx context.Context, reqDto *dtos.VisualizeMyRoutineScheduledStartAtCountReqDto) (*dtos.VisualizeMyRoutineScheduledStartAtCountResDto, *exceptions.Exception)
@@ -1534,11 +1535,16 @@ func (s *RoutineService) SearchPrivateRoutines(
 		return nil, exception
 	}
 
+	onlyDeleted := types.Ternary_Negative
+	if gqlInput.IsDeletedAt != nil && *gqlInput.IsDeletedAt {
+		onlyDeleted = types.Ternary_Positive
+	}
+
 	query := db.Model(&schemas.Routine{}).
 		Select(`"RoutineTable".*, uts.permission AS permission`).
 		Joins(`LEFT JOIN "UsersToStationsTable" uts ON "RoutineTable".station_id = uts.station_id`).
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
-		Scopes(s.routineScope.FilterOnlyDeleted(types.Ternary_Negative))
+		Scopes(s.routineScope.FilterOnlyDeleted(onlyDeleted))
 
 	if len(gqlInput.StationIds) > 0 {
 		query = query.Where(

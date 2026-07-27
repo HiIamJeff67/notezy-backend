@@ -1385,11 +1385,16 @@ func (s *RootShelfService) SearchPrivateRootShelves(
 		return nil, exception
 	}
 
+	onlyDeleted := types.Ternary_Negative
+	if gqlInput.IsDeletedAt != nil && *gqlInput.IsDeletedAt {
+		onlyDeleted = types.Ternary_Positive
+	}
+
 	query := db.Model(&schemas.RootShelf{}).
 		Select(`"RootShelfTable".*, uts.permission AS permission`).
 		Joins(`LEFT JOIN "UsersToShelvesTable" uts ON "RootShelfTable".id = uts.root_shelf_id`).
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
-		Scopes(s.rootShelfScope.FilterOnlyDeleted(types.Ternary_Negative))
+		Scopes(s.rootShelfScope.FilterOnlyDeleted(onlyDeleted))
 
 	if len(strings.ReplaceAll(gqlInput.Query, " ", "")) > 0 {
 		query = query.Where(

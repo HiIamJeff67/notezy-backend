@@ -1,0 +1,16 @@
+fragment FragmentedBasicPrivateBlockPack on PrivateBlockPack {
+  id
+  parentSubShelfId
+  name
+  icon
+  headerBackgroundURL
+  blockCount
+  deletedAt
+  updatedAt
+  createdAt
+  blockIds
+}
+
+fragment FragmentedPrivateBlockPack on PrivateBlockPack {
+  ...FragmentedBasicPrivateBlockPack
+}

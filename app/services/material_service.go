@@ -13,6 +13,7 @@ import (
 	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
@@ -23,6 +24,7 @@ import (
 	storages "github.com/HiIamJeff67/notezy-backend/app/storages"
 	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
@@ -40,11 +42,14 @@ type MaterialServiceInterface interface {
 	RestoreMyMaterialsByIds(ctx context.Context, reqDto *dtos.RestoreMyMaterialsByIdsReqDto) (*dtos.RestoreMyMaterialsByIdsResDto, *exceptions.Exception)
 	DeleteMyMaterialById(ctx context.Context, reqDto *dtos.DeleteMyMaterialByIdReqDto) (*dtos.DeleteMyMaterialByIdResDto, *exceptions.Exception)
 	DeleteMyMaterialsByIds(ctx context.Context, reqDto *dtos.DeleteMyMaterialsByIdsReqDto) (*dtos.DeleteMyMaterialsByIdsResDto, *exceptions.Exception)
+
+	SearchPrivateMaterials(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchMaterialInput) (*gqlmodels.SearchMaterialConnection, *exceptions.Exception)
 }
 
 type MaterialService struct {
 	db                 *gorm.DB
 	storage            storages.StorageInterface
+	materialScope      scopes.MaterialScopeInterface
 	subShelfRepository repositories.SubShelfRepositoryInterface
 	materialRepository repositories.MaterialRepositoryInterface
 }
@@ -52,12 +57,14 @@ type MaterialService struct {
 func NewMaterialService(
 	db *gorm.DB,
 	storage storages.StorageInterface,
+	materialScope scopes.MaterialScopeInterface,
 	subShelfRepository repositories.SubShelfRepositoryInterface,
 	materialRepository repositories.MaterialRepositoryInterface,
 ) MaterialServiceInterface {
 	return &MaterialService{
 		db:                 db,
 		storage:            storage,
+		materialScope:      materialScope,
 		subShelfRepository: subShelfRepository,
 		materialRepository: materialRepository,
 	}
@@ -667,5 +674,149 @@ func (s *MaterialService) DeleteMyMaterialsByIds(
 
 	return &dtos.DeleteMyMaterialsByIdsResDto{
 		DeletedAt: time.Now(),
+	}, nil
+}
+
+/* ============================== Service Methods for GraphQL Material ============================== */
+
+func (s *MaterialService) SearchPrivateMaterials(
+	ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchMaterialInput,
+) (*gqlmodels.SearchMaterialConnection, *exceptions.Exception) {
+	startTime := time.Now()
+	db := s.db.WithContext(ctx)
+
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
+	onlyDeleted := types.Ternary_Negative
+	if gqlInput.IsDeletedAt != nil && *gqlInput.IsDeletedAt {
+		onlyDeleted = types.Ternary_Positive
+	}
+
+	query := db.Model(&schemas.Material{}).
+		Select(`"MaterialTable".*`).
+		Joins(`INNER JOIN "SubShelfTable" ss ON ss.id = "MaterialTable".parent_sub_shelf_id`).
+		Joins(`INNER JOIN "UsersToShelvesTable" uts ON uts.root_shelf_id = ss.root_shelf_id`).
+		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
+		Scopes(s.materialScope.FilterOnlyDeleted(onlyDeleted))
+
+	if gqlInput.ParentSubShelfID != nil {
+		query = query.Where(`"MaterialTable".parent_sub_shelf_id = ?`, *gqlInput.ParentSubShelfID)
+	}
+
+	if gqlInput.RootShelfID != nil {
+		query = query.Where("ss.root_shelf_id = ?", *gqlInput.RootShelfID)
+	}
+
+	if len(strings.ReplaceAll(gqlInput.Query, " ", "")) > 0 {
+		query = query.Where(
+			`"MaterialTable".name ILIKE ? OR "MaterialTable".content_type::text ILIKE ? OR "MaterialTable".parse_media_type ILIKE ?`,
+			"%"+gqlInput.Query+"%",
+			"%"+gqlInput.Query+"%",
+			"%"+gqlInput.Query+"%",
+		)
+	}
+	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
+		searchCursor, err := searchcursor.Decode[gqlmodels.SearchMaterialCursorFields](*gqlInput.After)
+		if err != nil {
+			return nil, exceptions.Search.FailedToDecode().WithOrigin(err)
+		}
+
+		query = query.Where(`"MaterialTable".id > ?`, searchCursor.Fields.ID)
+	}
+
+	if gqlInput.SortBy != nil && gqlInput.SortOrder != nil {
+		cending := gqlmodels.SearchSortOrderAsc.String()
+		if *gqlInput.SortOrder == gqlmodels.SearchSortOrderDesc {
+			cending = gqlmodels.SearchSortOrderDesc.String()
+		}
+
+		switch *gqlInput.SortBy {
+		case gqlmodels.SearchMaterialSortByName:
+			query = query.Order(`"MaterialTable".name ` + cending).
+				Order(`"MaterialTable".updated_at ` + cending).
+				Order(`"MaterialTable".created_at ` + cending)
+		case gqlmodels.SearchMaterialSortBySize:
+			query = query.Order(`"MaterialTable".size ` + cending).
+				Order(`"MaterialTable".name ` + cending).
+				Order(`"MaterialTable".updated_at ` + cending).
+				Order(`"MaterialTable".created_at ` + cending)
+		case gqlmodels.SearchMaterialSortByContentType:
+			query = query.Order(`"MaterialTable".content_type ` + cending).
+				Order(`"MaterialTable".name ` + cending).
+				Order(`"MaterialTable".updated_at ` + cending).
+				Order(`"MaterialTable".created_at ` + cending)
+		case gqlmodels.SearchMaterialSortByLastUpdate:
+			query = query.Order(`"MaterialTable".updated_at ` + cending).
+				Order(`"MaterialTable".name ` + cending).
+				Order(`"MaterialTable".created_at ` + cending)
+		case gqlmodels.SearchMaterialSortByCreatedAt:
+			query = query.Order(`"MaterialTable".created_at ` + cending).
+				Order(`"MaterialTable".name ` + cending).
+				Order(`"MaterialTable".updated_at ` + cending)
+		default:
+			query = query.Order(`"MaterialTable".name ` + cending).
+				Order(`"MaterialTable".updated_at ` + cending).
+				Order(`"MaterialTable".created_at ` + cending)
+		}
+	}
+
+	limit := constants.DefaultSearchLimit
+	if gqlInput.First != nil && *gqlInput.First > 0 {
+		limit = int(*gqlInput.First)
+	}
+	limit = min(limit, constants.MaxSearchLimit)
+	query = query.Limit(limit + 1)
+
+	var materials []schemas.Material
+	if err := query.Find(&materials).Error; err != nil {
+		return nil, exceptions.Material.NotFound().WithOrigin(err)
+	}
+
+	hasNextPage := len(materials) > limit
+	searchEdges := make([]*gqlmodels.SearchMaterialEdge, len(materials))
+
+	for index, material := range materials {
+		searchCursor := searchcursor.SearchCursor[gqlmodels.SearchMaterialCursorFields]{
+			Fields: gqlmodels.SearchMaterialCursorFields{
+				ID: material.Id,
+			},
+		}
+		encodedSearchCursor, err := searchCursor.Encode()
+		if err != nil {
+			return nil, exceptions.Search.FailedToEncode().WithOrigin(err)
+		}
+		if encodedSearchCursor == nil {
+			return nil, exceptions.Search.FailedToUnmarshalSearchCursor()
+		}
+
+		searchEdges[index] = &gqlmodels.SearchMaterialEdge{
+			EncodedSearchCursor: *encodedSearchCursor,
+			Node:                material.ToPrivateMaterial(),
+		}
+	}
+
+	searchPageInfo := &gqlmodels.SearchPageInfo{
+		HasNextPage:     hasNextPage,
+		HasPreviousPage: gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0,
+	}
+
+	if len(searchEdges) > 0 {
+		searchPageInfo.StartEncodedSearchCursor = &searchEdges[0].EncodedSearchCursor
+		searchPageInfo.EndEncodedSearchCursor = &searchEdges[len(searchEdges)-1].EncodedSearchCursor
+	}
+
+	searchTime := float64(time.Since(startTime).Nanoseconds()) / 1e6
+	if hasNextPage {
+		searchEdges = searchEdges[:limit]
+	}
+
+	return &gqlmodels.SearchMaterialConnection{
+		SearchEdges:    searchEdges,
+		SearchPageInfo: searchPageInfo,
+		TotalCount:     int32(len(searchEdges)),
+		SearchTime:     searchTime,
 	}, nil
 }

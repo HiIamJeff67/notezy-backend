@@ -29,6 +29,7 @@ func GraphQLHandler() gin.HandlerFunc {
 	stationScope := scopes.NewStationScope()
 	itemScope := scopes.NewItemScope()
 	blockScope := scopes.NewBlockScope()
+	materialScope := scopes.NewMaterialScope()
 	blockPackScope := scopes.NewBlockPackScope()
 	routineTaskScope := scopes.NewRoutineTaskScope()
 	subShelfScope := scopes.NewSubShelfScope()
@@ -42,7 +43,7 @@ func GraphQLHandler() gin.HandlerFunc {
 	routineTaskRepository := repositories.NewRoutineTaskRepository(routineTaskScope)
 	routineTaskRecordRepository := repositories.NewRoutineTaskRecordRepository(scopes.NewRoutineTaskRecordScope())
 	itemRepository := repositories.NewItemRepository(itemScope)
-	materialRepository := repositories.NewMaterialRepository(scopes.NewMaterialScope())
+	materialRepository := repositories.NewMaterialRepository(materialScope)
 	blockPackRepository := repositories.NewBlockPackRepository(blockPackScope)
 	blockRepository := repositories.NewBlockRepository(blockScope)
 	editableBlockAdapter := adapters.NewEditableBlockAdapter()
@@ -65,6 +66,20 @@ func GraphQLHandler() gin.HandlerFunc {
 		subShelfScope,
 		blockPackRepository,
 		blockRepository,
+	)
+	materialService := services.NewMaterialService(
+		models.NotezyDB,
+		storages.InMemoryStorage,
+		materialScope,
+		subShelfRepository,
+		materialRepository,
+	)
+	blockPackService := services.NewBlockPackService(
+		models.NotezyDB,
+		blockPackScope,
+		subShelfRepository,
+		blockPackRepository,
+		caches.NewRealtimeLeaseStore(caches.RedisClientMap),
 	)
 	rootShelfService := services.NewRootShelfService(
 		models.NotezyDB,
@@ -119,6 +134,8 @@ func GraphQLHandler() gin.HandlerFunc {
 		userServices,
 		themeService,
 		itemService,
+		materialService,
+		blockPackService,
 		blockService,
 		rootShelfService,
 		subShelfService,

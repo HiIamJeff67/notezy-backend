@@ -49,7 +49,7 @@ Node projector 使用 `@blocknote/core/yjs` 的 `yXmlFragmentToBlocks`，並明�
 
 durable Yjs truth 是 `BlockPackYjsDocument.Snapshot` 加上尚未 compact 的 `BlockPackYjsUpdate` tail。Snapshot 是 Yjs encoded state update，`StateVector` 是同一個 snapshot 的 encoded state vector；active `Y.Doc` 只是這份 durable truth 的 memory materialization。
 
-每個 BlockPack 必須在建立它的同一筆 transaction 內建立唯一的 `BlockPackYjsDocument`；讀取、append 與 projection 路徑不得 lazy create document。
+每個 BlockPack 必須在建立它的同一筆 transaction 內建立唯一的 `BlockPackYjsDocument`；讀取、append 與 projection 路徑不得 lazy create document。若建立來源已具有 BlockNote blocks（例如 RoutineTask 的 CreateBlockPack），Go 必須先要求 Node worker 以相同 schema 和 `document-store` fragment 產生 initial Snapshot/StateVector，並在同一筆 transaction 寫入 document 與 `BlockTable` projection。不得只寫入 `BlockTable` 而留下空的 Yjs document。
 
 `BlockTable` 是 Yjs document 的 materialized projection，Block 不支援 soft delete。projection 對不再存在於 document 的 block 使用實體 `DELETE`；BlockPack soft delete 時則保留它的 Blocks，還原 BlockPack 後可直接重用既有 projection。
 

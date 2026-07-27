@@ -55,6 +55,19 @@ type ComplexityRoot struct {
 		UpdatedAt     func(childComplexity int) int
 	}
 
+	PrivateBlockPack struct {
+		BlockCount          func(childComplexity int) int
+		BlockIds            func(childComplexity int) int
+		CreatedAt           func(childComplexity int) int
+		DeletedAt           func(childComplexity int) int
+		HeaderBackgroundURL func(childComplexity int) int
+		ID                  func(childComplexity int) int
+		Icon                func(childComplexity int) int
+		Name                func(childComplexity int) int
+		ParentSubShelfID    func(childComplexity int) int
+		UpdatedAt           func(childComplexity int) int
+	}
+
 	PrivateItem struct {
 		CreatedAt        func(childComplexity int) int
 		DeletedAt        func(childComplexity int) int
@@ -63,6 +76,18 @@ type ComplexityRoot struct {
 		RootShelfID      func(childComplexity int) int
 		RoutineIds       func(childComplexity int) int
 		Type             func(childComplexity int) int
+		UpdatedAt        func(childComplexity int) int
+	}
+
+	PrivateMaterial struct {
+		ContentType      func(childComplexity int) int
+		CreatedAt        func(childComplexity int) int
+		DeletedAt        func(childComplexity int) int
+		ID               func(childComplexity int) int
+		Name             func(childComplexity int) int
+		ParentSubShelfID func(childComplexity int) int
+		ParseMediaType   func(childComplexity int) int
+		Size             func(childComplexity int) int
 		UpdatedAt        func(childComplexity int) int
 	}
 
@@ -245,8 +270,10 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		SearchBlockPacks         func(childComplexity int, input gqlmodels.SearchBlockPackInput) int
 		SearchBlocks             func(childComplexity int, input gqlmodels.SearchBlockInput) int
 		SearchItems              func(childComplexity int, input gqlmodels.SearchItemInput) int
+		SearchMaterials          func(childComplexity int, input gqlmodels.SearchMaterialInput) int
 		SearchRootShelves        func(childComplexity int, input gqlmodels.SearchRootShelfInput) int
 		SearchRoutineTags        func(childComplexity int, input gqlmodels.SearchRoutineTagInput) int
 		SearchRoutineTaskRecords func(childComplexity int, input gqlmodels.SearchRoutineTaskRecordInput) int
@@ -282,6 +309,18 @@ type ComplexityRoot struct {
 		Node                func(childComplexity int) int
 	}
 
+	SearchBlockPackConnection struct {
+		SearchEdges    func(childComplexity int) int
+		SearchPageInfo func(childComplexity int) int
+		SearchTime     func(childComplexity int) int
+		TotalCount     func(childComplexity int) int
+	}
+
+	SearchBlockPackEdge struct {
+		EncodedSearchCursor func(childComplexity int) int
+		Node                func(childComplexity int) int
+	}
+
 	SearchItemConnection struct {
 		SearchEdges    func(childComplexity int) int
 		SearchPageInfo func(childComplexity int) int
@@ -290,6 +329,18 @@ type ComplexityRoot struct {
 	}
 
 	SearchItemEdge struct {
+		EncodedSearchCursor func(childComplexity int) int
+		Node                func(childComplexity int) int
+	}
+
+	SearchMaterialConnection struct {
+		SearchEdges    func(childComplexity int) int
+		SearchPageInfo func(childComplexity int) int
+		SearchTime     func(childComplexity int) int
+		TotalCount     func(childComplexity int) int
+	}
+
+	SearchMaterialEdge struct {
 		EncodedSearchCursor func(childComplexity int) int
 		Node                func(childComplexity int) int
 	}
@@ -506,6 +557,76 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PrivateBlock.UpdatedAt(childComplexity), true
 
+	case "PrivateBlockPack.blockCount":
+		if e.complexity.PrivateBlockPack.BlockCount == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlockPack.BlockCount(childComplexity), true
+
+	case "PrivateBlockPack.blockIds":
+		if e.complexity.PrivateBlockPack.BlockIds == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlockPack.BlockIds(childComplexity), true
+
+	case "PrivateBlockPack.createdAt":
+		if e.complexity.PrivateBlockPack.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlockPack.CreatedAt(childComplexity), true
+
+	case "PrivateBlockPack.deletedAt":
+		if e.complexity.PrivateBlockPack.DeletedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlockPack.DeletedAt(childComplexity), true
+
+	case "PrivateBlockPack.headerBackgroundURL":
+		if e.complexity.PrivateBlockPack.HeaderBackgroundURL == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlockPack.HeaderBackgroundURL(childComplexity), true
+
+	case "PrivateBlockPack.id":
+		if e.complexity.PrivateBlockPack.ID == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlockPack.ID(childComplexity), true
+
+	case "PrivateBlockPack.icon":
+		if e.complexity.PrivateBlockPack.Icon == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlockPack.Icon(childComplexity), true
+
+	case "PrivateBlockPack.name":
+		if e.complexity.PrivateBlockPack.Name == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlockPack.Name(childComplexity), true
+
+	case "PrivateBlockPack.parentSubShelfId":
+		if e.complexity.PrivateBlockPack.ParentSubShelfID == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlockPack.ParentSubShelfID(childComplexity), true
+
+	case "PrivateBlockPack.updatedAt":
+		if e.complexity.PrivateBlockPack.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateBlockPack.UpdatedAt(childComplexity), true
+
 	case "PrivateItem.createdAt":
 		if e.complexity.PrivateItem.CreatedAt == nil {
 			break
@@ -561,6 +682,69 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PrivateItem.UpdatedAt(childComplexity), true
+
+	case "PrivateMaterial.contentType":
+		if e.complexity.PrivateMaterial.ContentType == nil {
+			break
+		}
+
+		return e.complexity.PrivateMaterial.ContentType(childComplexity), true
+
+	case "PrivateMaterial.createdAt":
+		if e.complexity.PrivateMaterial.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateMaterial.CreatedAt(childComplexity), true
+
+	case "PrivateMaterial.deletedAt":
+		if e.complexity.PrivateMaterial.DeletedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateMaterial.DeletedAt(childComplexity), true
+
+	case "PrivateMaterial.id":
+		if e.complexity.PrivateMaterial.ID == nil {
+			break
+		}
+
+		return e.complexity.PrivateMaterial.ID(childComplexity), true
+
+	case "PrivateMaterial.name":
+		if e.complexity.PrivateMaterial.Name == nil {
+			break
+		}
+
+		return e.complexity.PrivateMaterial.Name(childComplexity), true
+
+	case "PrivateMaterial.parentSubShelfId":
+		if e.complexity.PrivateMaterial.ParentSubShelfID == nil {
+			break
+		}
+
+		return e.complexity.PrivateMaterial.ParentSubShelfID(childComplexity), true
+
+	case "PrivateMaterial.parseMediaType":
+		if e.complexity.PrivateMaterial.ParseMediaType == nil {
+			break
+		}
+
+		return e.complexity.PrivateMaterial.ParseMediaType(childComplexity), true
+
+	case "PrivateMaterial.size":
+		if e.complexity.PrivateMaterial.Size == nil {
+			break
+		}
+
+		return e.complexity.PrivateMaterial.Size(childComplexity), true
+
+	case "PrivateMaterial.updatedAt":
+		if e.complexity.PrivateMaterial.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.PrivateMaterial.UpdatedAt(childComplexity), true
 
 	case "PrivateRootShelf.createdAt":
 		if e.complexity.PrivateRootShelf.CreatedAt == nil {
@@ -1535,6 +1719,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PublicUserInfo.Introduction(childComplexity), true
 
+	case "Query.searchBlockPacks":
+		if e.complexity.Query.SearchBlockPacks == nil {
+			break
+		}
+
+		args, err := ec.field_Query_searchBlockPacks_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SearchBlockPacks(childComplexity, args["input"].(gqlmodels.SearchBlockPackInput)), true
+
 	case "Query.searchBlocks":
 		if e.complexity.Query.SearchBlocks == nil {
 			break
@@ -1558,6 +1754,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.SearchItems(childComplexity, args["input"].(gqlmodels.SearchItemInput)), true
+
+	case "Query.searchMaterials":
+		if e.complexity.Query.SearchMaterials == nil {
+			break
+		}
+
+		args, err := ec.field_Query_searchMaterials_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SearchMaterials(childComplexity, args["input"].(gqlmodels.SearchMaterialInput)), true
 
 	case "Query.searchRootShelves":
 		if e.complexity.Query.SearchRootShelves == nil {
@@ -1751,6 +1959,48 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.SearchBlockEdge.Node(childComplexity), true
 
+	case "SearchBlockPackConnection.searchEdges":
+		if e.complexity.SearchBlockPackConnection.SearchEdges == nil {
+			break
+		}
+
+		return e.complexity.SearchBlockPackConnection.SearchEdges(childComplexity), true
+
+	case "SearchBlockPackConnection.searchPageInfo":
+		if e.complexity.SearchBlockPackConnection.SearchPageInfo == nil {
+			break
+		}
+
+		return e.complexity.SearchBlockPackConnection.SearchPageInfo(childComplexity), true
+
+	case "SearchBlockPackConnection.searchTime":
+		if e.complexity.SearchBlockPackConnection.SearchTime == nil {
+			break
+		}
+
+		return e.complexity.SearchBlockPackConnection.SearchTime(childComplexity), true
+
+	case "SearchBlockPackConnection.totalCount":
+		if e.complexity.SearchBlockPackConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.SearchBlockPackConnection.TotalCount(childComplexity), true
+
+	case "SearchBlockPackEdge.encodedSearchCursor":
+		if e.complexity.SearchBlockPackEdge.EncodedSearchCursor == nil {
+			break
+		}
+
+		return e.complexity.SearchBlockPackEdge.EncodedSearchCursor(childComplexity), true
+
+	case "SearchBlockPackEdge.node":
+		if e.complexity.SearchBlockPackEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.SearchBlockPackEdge.Node(childComplexity), true
+
 	case "SearchItemConnection.searchEdges":
 		if e.complexity.SearchItemConnection.SearchEdges == nil {
 			break
@@ -1792,6 +2042,48 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.SearchItemEdge.Node(childComplexity), true
+
+	case "SearchMaterialConnection.searchEdges":
+		if e.complexity.SearchMaterialConnection.SearchEdges == nil {
+			break
+		}
+
+		return e.complexity.SearchMaterialConnection.SearchEdges(childComplexity), true
+
+	case "SearchMaterialConnection.searchPageInfo":
+		if e.complexity.SearchMaterialConnection.SearchPageInfo == nil {
+			break
+		}
+
+		return e.complexity.SearchMaterialConnection.SearchPageInfo(childComplexity), true
+
+	case "SearchMaterialConnection.searchTime":
+		if e.complexity.SearchMaterialConnection.SearchTime == nil {
+			break
+		}
+
+		return e.complexity.SearchMaterialConnection.SearchTime(childComplexity), true
+
+	case "SearchMaterialConnection.totalCount":
+		if e.complexity.SearchMaterialConnection.TotalCount == nil {
+			break
+		}
+
+		return e.complexity.SearchMaterialConnection.TotalCount(childComplexity), true
+
+	case "SearchMaterialEdge.encodedSearchCursor":
+		if e.complexity.SearchMaterialEdge.EncodedSearchCursor == nil {
+			break
+		}
+
+		return e.complexity.SearchMaterialEdge.EncodedSearchCursor(childComplexity), true
+
+	case "SearchMaterialEdge.node":
+		if e.complexity.SearchMaterialEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.SearchMaterialEdge.Node(childComplexity), true
 
 	case "SearchPageInfo.endEncodedSearchCursor":
 		if e.complexity.SearchPageInfo.EndEncodedSearchCursor == nil {
@@ -2212,8 +2504,12 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputSearchBadgeInput,
 		ec.unmarshalInputSearchBlockCursorFields,
 		ec.unmarshalInputSearchBlockInput,
+		ec.unmarshalInputSearchBlockPackCursorFields,
+		ec.unmarshalInputSearchBlockPackInput,
 		ec.unmarshalInputSearchItemCursorFields,
 		ec.unmarshalInputSearchItemInput,
+		ec.unmarshalInputSearchMaterialCursorFields,
+		ec.unmarshalInputSearchMaterialInput,
 		ec.unmarshalInputSearchRootShelfCursorFields,
 		ec.unmarshalInputSearchRootShelfInput,
 		ec.unmarshalInputSearchRoutineCursorFields,
@@ -2526,6 +2822,21 @@ var sources = []*ast.Source{
     childrenIds: [UUID!]!
 }
 `, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/block_pack.graphql", Input: `type PrivateBlockPack {
+  id: UUID!
+  parentSubShelfId: UUID!
+  name: String!
+  icon: SupportedIcon
+  headerBackgroundURL: String
+  blockCount: Int64!
+  deletedAt: Time
+  updatedAt: Time!
+  createdAt: Time!
+
+  # relations
+  blockIds: [UUID!]!
+}
+`, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/fields.graphql", Input: `# every schemas or graphql types which want to be searchable
 # are required to inheritence the structure (of cursor-based pagination) here
 
@@ -2588,12 +2899,26 @@ interface SearchConnection {
     routineIds: [UUID!]!
 }
 `, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/material.graphql", Input: `type PrivateMaterial {
+  id: UUID!
+  parentSubShelfId: UUID!
+  name: String!
+  size: Int64!
+  contentType: MaterialContentType!
+  parseMediaType: String!
+  deletedAt: Time
+  updatedAt: Time!
+  createdAt: Time!
+}
+`, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/query.graphql", Input: `type Query {
   searchUsers(input: SearchUserInput!): SearchUserConnection!
   searchThemes(input: SearchThemeInput!): SearchThemeConnection!
   searchRootShelves(input: SearchRootShelfInput!): SearchRootShelfConnection!
   searchSubShelves(input: SearchSubShelfInput!): SearchSubShelfConnection!
   searchItems(input: SearchItemInput!): SearchItemConnection!
+  searchMaterials(input: SearchMaterialInput!): SearchMaterialConnection!
+  searchBlockPacks(input: SearchBlockPackInput!): SearchBlockPackConnection!
   searchBlocks(input: SearchBlockInput!): SearchBlockConnection!
   searchStations(input: SearchStationInput!): SearchStationConnection!
   searchRoutines(input: SearchRoutineInput!): SearchRoutineConnection!
@@ -2796,6 +3121,47 @@ type SearchBlockConnection implements SearchConnection {
     totalCount: Int!
     searchTime: Float!
 }`, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/search_block_packs.graphql", Input: `# =============== Search SortBy & Input =============== #
+
+enum SearchBlockPackSortBy {
+  RELEVANCE
+  NAME
+  BLOCK_COUNT
+  LAST_UPDATE
+  CREATED_AT
+}
+
+input SearchBlockPackInput {
+  parentSubShelfId: UUID
+  rootShelfId: UUID
+  query: String!
+  isDeletedAt: Boolean
+  after: String
+  first: Int = 10
+  sortBy: SearchBlockPackSortBy = RELEVANCE
+  sortOrder: SearchSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+input SearchBlockPackCursorFields {
+  id: UUID!
+}
+
+# =============== Search Edge & Connection =============== #
+
+type SearchBlockPackEdge implements SearchEdge {
+  encodedSearchCursor: String!
+  node: PrivateBlockPack!
+}
+
+type SearchBlockPackConnection implements SearchConnection {
+  searchEdges: [SearchBlockPackEdge!]!
+  searchPageInfo: SearchPageInfo!
+  totalCount: Int!
+  searchTime: Float!
+}
+`, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/search_items.graphql", Input: `# =============== Search SortBy & Input =============== #
 
 enum SearchItemSortBy {
@@ -2809,6 +3175,7 @@ input SearchItemInput {
     parentSubShelfId: UUID
     rootShelfId: UUID
     query: String!
+    isDeletedAt: Boolean
     after: String
     first: Int = 10
     sortBy: SearchItemSortBy = RELEVANCE
@@ -2835,6 +3202,48 @@ type SearchItemConnection implements SearchConnection {
     searchTime: Float!
 }
 `, BuiltIn: false},
+	{Name: "../../../shared/graphql/schemas/search_materials.graphql", Input: `# =============== Search SortBy & Input =============== #
+
+enum SearchMaterialSortBy {
+  RELEVANCE
+  NAME
+  SIZE
+  CONTENT_TYPE
+  LAST_UPDATE
+  CREATED_AT
+}
+
+input SearchMaterialInput {
+  parentSubShelfId: UUID
+  rootShelfId: UUID
+  query: String!
+  isDeletedAt: Boolean
+  after: String
+  first: Int = 10
+  sortBy: SearchMaterialSortBy = RELEVANCE
+  sortOrder: SearchSortOrder = DESC
+}
+
+# =============== Search Cursor Fields =============== #
+
+input SearchMaterialCursorFields {
+  id: UUID!
+}
+
+# =============== Search Edge & Connection =============== #
+
+type SearchMaterialEdge implements SearchEdge {
+  encodedSearchCursor: String!
+  node: PrivateMaterial!
+}
+
+type SearchMaterialConnection implements SearchConnection {
+  searchEdges: [SearchMaterialEdge!]!
+  searchPageInfo: SearchPageInfo!
+  totalCount: Int!
+  searchTime: Float!
+}
+`, BuiltIn: false},
 	{Name: "../../../shared/graphql/schemas/search_root_shelves.graphql", Input: `# =============== Search SortBy & Input =============== #
 
 enum SearchRootShelfSortBy {
@@ -2846,6 +3255,7 @@ enum SearchRootShelfSortBy {
 
 input SearchRootShelfInput {
   query: String!
+  isDeletedAt: Boolean
   after: String
   first: Int = 10
   sortBy: SearchRootShelfSortBy = RELEVANCE
@@ -3019,6 +3429,7 @@ input SearchRoutineInput {
   stationIds: [UUID!]!
   tagIds: [UUID!]!
   query: String!
+  isDeletedAt: Boolean
   after: String
   first: Int = 10
   sortBy: SearchRoutineSortBy = RELEVANCE
@@ -3057,6 +3468,7 @@ enum SearchStationSortBy {
 
 input SearchStationInput {
   query: String!
+  isDeletedAt: Boolean
   after: String
   first: Int = 10
   sortBy: SearchStationSortBy = RELEVANCE
@@ -3097,6 +3509,7 @@ input SearchSubShelfInput {
   rootShelfId: UUID
   prevSubShelfId: UUID
   query: String!
+  isDeletedAt: Boolean
   after: String
   first: Int = 10
   sortBy: SearchSubShelfSortBy = RELEVANCE

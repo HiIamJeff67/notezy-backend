@@ -273,6 +273,13 @@ func (ec *executionContext) _SearchConnection(ctx context.Context, sel ast.Selec
 			return graphql.Null
 		}
 		return ec._SearchRootShelfConnection(ctx, sel, obj)
+	case gqlmodels.SearchMaterialConnection:
+		return ec._SearchMaterialConnection(ctx, sel, &obj)
+	case *gqlmodels.SearchMaterialConnection:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SearchMaterialConnection(ctx, sel, obj)
 	case gqlmodels.SearchItemConnection:
 		return ec._SearchItemConnection(ctx, sel, &obj)
 	case *gqlmodels.SearchItemConnection:
@@ -280,6 +287,13 @@ func (ec *executionContext) _SearchConnection(ctx context.Context, sel ast.Selec
 			return graphql.Null
 		}
 		return ec._SearchItemConnection(ctx, sel, obj)
+	case gqlmodels.SearchBlockPackConnection:
+		return ec._SearchBlockPackConnection(ctx, sel, &obj)
+	case *gqlmodels.SearchBlockPackConnection:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SearchBlockPackConnection(ctx, sel, obj)
 	case gqlmodels.SearchBlockConnection:
 		return ec._SearchBlockConnection(ctx, sel, &obj)
 	case *gqlmodels.SearchBlockConnection:
@@ -366,6 +380,13 @@ func (ec *executionContext) _SearchEdge(ctx context.Context, sel ast.SelectionSe
 			return graphql.Null
 		}
 		return ec._SearchRootShelfEdge(ctx, sel, obj)
+	case gqlmodels.SearchMaterialEdge:
+		return ec._SearchMaterialEdge(ctx, sel, &obj)
+	case *gqlmodels.SearchMaterialEdge:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SearchMaterialEdge(ctx, sel, obj)
 	case gqlmodels.SearchItemEdge:
 		return ec._SearchItemEdge(ctx, sel, &obj)
 	case *gqlmodels.SearchItemEdge:
@@ -373,6 +394,13 @@ func (ec *executionContext) _SearchEdge(ctx context.Context, sel ast.SelectionSe
 			return graphql.Null
 		}
 		return ec._SearchItemEdge(ctx, sel, obj)
+	case gqlmodels.SearchBlockPackEdge:
+		return ec._SearchBlockPackEdge(ctx, sel, &obj)
+	case *gqlmodels.SearchBlockPackEdge:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._SearchBlockPackEdge(ctx, sel, obj)
 	case gqlmodels.SearchBlockEdge:
 		return ec._SearchBlockEdge(ctx, sel, &obj)
 	case *gqlmodels.SearchBlockEdge:

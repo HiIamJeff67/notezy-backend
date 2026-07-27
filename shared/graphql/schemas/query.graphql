@@ -4,6 +4,8 @@ type Query {
   searchRootShelves(input: SearchRootShelfInput!): SearchRootShelfConnection!
   searchSubShelves(input: SearchSubShelfInput!): SearchSubShelfConnection!
   searchItems(input: SearchItemInput!): SearchItemConnection!
+  searchMaterials(input: SearchMaterialInput!): SearchMaterialConnection!
+  searchBlockPacks(input: SearchBlockPackInput!): SearchBlockPackConnection!
   searchBlocks(input: SearchBlockInput!): SearchBlockConnection!
   searchStations(input: SearchStationInput!): SearchStationConnection!
   searchRoutines(input: SearchRoutineInput!): SearchRoutineConnection!

@@ -1,0 +1,14 @@
+type PrivateBlockPack {
+  id: UUID!
+  parentSubShelfId: UUID!
+  name: String!
+  icon: SupportedIcon
+  headerBackgroundURL: String
+  blockCount: Int64!
+  deletedAt: Time
+  updatedAt: Time!
+  createdAt: Time!
+
+  # relations
+  blockIds: [UUID!]!
+}

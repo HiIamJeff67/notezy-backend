@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
@@ -39,3 +40,19 @@ type MaterialRelation types.RelationName
 const (
 	MaterialRelation_ParentSubShelf MaterialRelation = "ParentSubShelf"
 )
+
+/* ============================== Relative Type Conversion ============================== */
+
+func (m *Material) ToPrivateMaterial() *gqlmodels.PrivateMaterial {
+	return &gqlmodels.PrivateMaterial{
+		ID:               m.Id,
+		ParentSubShelfID: m.ParentSubShelfId,
+		Name:             m.Name,
+		Size:             m.Size,
+		ContentType:      m.ContentType,
+		ParseMediaType:   m.ParseMediaType,
+		DeletedAt:        m.DeletedAt,
+		UpdatedAt:        m.UpdatedAt,
+		CreatedAt:        m.CreatedAt,
+	}
+}

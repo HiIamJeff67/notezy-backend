@@ -9,6 +9,7 @@ enum SearchRootShelfSortBy {
 
 input SearchRootShelfInput {
   query: String!
+  isDeletedAt: Boolean
   after: String
   first: Int = 10
   sortBy: SearchRootShelfSortBy = RELEVANCE

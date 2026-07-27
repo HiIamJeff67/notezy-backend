@@ -103,6 +103,46 @@ func (r *queryResolver) SearchItems(ctx context.Context, input gqlmodels.SearchI
 	return result, nil
 }
 
+// SearchMaterials is the resolver for the searchMaterials field.
+func (r *queryResolver) SearchMaterials(ctx context.Context, input gqlmodels.SearchMaterialInput) (*gqlmodels.SearchMaterialConnection, error) {
+	ginContext, exception := contexts.GetAndConvertContextToGinContext(ctx)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ginContext, types.ContextFieldName_User_Id)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	result, exception := r.materialService.SearchPrivateMaterials(ctx, *userId, input)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	return result, nil
+}
+
+// SearchBlockPacks is the resolver for the searchBlockPacks field.
+func (r *queryResolver) SearchBlockPacks(ctx context.Context, input gqlmodels.SearchBlockPackInput) (*gqlmodels.SearchBlockPackConnection, error) {
+	ginContext, exception := contexts.GetAndConvertContextToGinContext(ctx)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	userId, exception := contexts.GetAndConvertContextFieldToUUID(ginContext, types.ContextFieldName_User_Id)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	result, exception := r.blockPackService.SearchPrivateBlockPacks(ctx, *userId, input)
+	if exception != nil {
+		return nil, exception.Log().ToGraphQLError(ctx)
+	}
+
+	return result, nil
+}
+
 // SearchBlocks is the resolver for the searchBlocks field.
 func (r *queryResolver) SearchBlocks(ctx context.Context, input gqlmodels.SearchBlockInput) (*gqlmodels.SearchBlockConnection, error) {
 	ginContext, exception := contexts.GetAndConvertContextToGinContext(ctx)

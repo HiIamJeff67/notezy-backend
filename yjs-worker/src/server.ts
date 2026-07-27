@@ -10,8 +10,10 @@ import { RoomRegistry } from "./realtime/room_registry.js";
 import { configureHealthRoutes } from "./routes/health_route.js";
 import { configureRealtimeRoutes } from "./routes/realtime_route.js";
 import { configureYjsCompactionRoutes } from "./routes/yjs_compaction_route.js";
+import { configureYjsDocumentInitializationRoutes } from "./routes/yjs_document_initialization_route.js";
 import { configureYjsProjectionRoutes } from "./routes/yjs_projection_route.js";
 import { YjsCompactionService } from "./services/yjs_compaction_service.js";
+import { YjsDocumentInitializationService } from "./services/yjs_document_initialization_service.js";
 import { YjsProjectionService } from "./services/yjs_projection_service.js";
 import type { Telemetry } from "./telemetry.js";
 
@@ -24,6 +26,8 @@ export class YjsWorkerServer {
     const app = new Hono();
     const blockPackProjector = new BlockPackProjector();
     const yjsCompactionService = new YjsCompactionService(telemetry);
+    const yjsDocumentInitializationService =
+      new YjsDocumentInitializationService();
     const yjsProjectionService = new YjsProjectionService(
       blockPackProjector,
       telemetry
@@ -45,6 +49,11 @@ export class YjsWorkerServer {
       this.realtimeGateway.handleConnection.bind(this.realtimeGateway)
     );
     configureYjsCompactionRoutes(app, yjsCompactionService, telemetry);
+    configureYjsDocumentInitializationRoutes(
+      app,
+      yjsDocumentInitializationService,
+      telemetry
+    );
     configureYjsProjectionRoutes(app, yjsProjectionService, telemetry);
 
     this.server = serve(

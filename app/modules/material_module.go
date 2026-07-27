@@ -16,12 +16,14 @@ type MaterialModule struct {
 }
 
 func NewMaterialModule() *MaterialModule {
+	materialScope := scopes.NewMaterialScope()
 	subShelfRepository := repositories.NewSubShelfRepository(scopes.NewSubShelfScope())
-	materialRepository := repositories.NewMaterialRepository(scopes.NewMaterialScope())
+	materialRepository := repositories.NewMaterialRepository(materialScope)
 
 	materialService := services.NewMaterialService(
 		models.NotezyDB,
 		storages.InMemoryStorage,
+		materialScope,
 		subShelfRepository,
 		materialRepository,
 	)

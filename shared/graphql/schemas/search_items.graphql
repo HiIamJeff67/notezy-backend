@@ -11,6 +11,7 @@ input SearchItemInput {
     parentSubShelfId: UUID
     rootShelfId: UUID
     query: String!
+    isDeletedAt: Boolean
     after: String
     first: Int = 10
     sortBy: SearchItemSortBy = RELEVANCE

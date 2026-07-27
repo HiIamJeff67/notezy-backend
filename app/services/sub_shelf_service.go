@@ -1059,11 +1059,16 @@ func (s *SubShelfService) SearchPrivateSubShelves(
 		return nil, exception
 	}
 
+	onlyDeleted := types.Ternary_Negative
+	if gqlInput.IsDeletedAt != nil && *gqlInput.IsDeletedAt {
+		onlyDeleted = types.Ternary_Positive
+	}
+
 	query := db.Model(&schemas.SubShelf{}).
 		Select(`"SubShelfTable".*`).
 		Joins(`INNER JOIN "UsersToShelvesTable" uts ON "SubShelfTable".root_shelf_id = uts.root_shelf_id`).
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
-		Scopes(s.subShelfScope.FilterOnlyDeleted(types.Ternary_Negative))
+		Scopes(s.subShelfScope.FilterOnlyDeleted(onlyDeleted))
 
 	if gqlInput.RootShelfID != nil {
 		query = query.Where(

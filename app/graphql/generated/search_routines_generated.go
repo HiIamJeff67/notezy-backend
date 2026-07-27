@@ -389,7 +389,7 @@ func (ec *executionContext) unmarshalInputSearchRoutineInput(ctx context.Context
 		asMap["sortOrder"] = "DESC"
 	}
 
-	fieldsInOrder := [...]string{"stationIds", "tagIds", "query", "after", "first", "sortBy", "sortOrder"}
+	fieldsInOrder := [...]string{"stationIds", "tagIds", "query", "isDeletedAt", "after", "first", "sortBy", "sortOrder"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -417,6 +417,13 @@ func (ec *executionContext) unmarshalInputSearchRoutineInput(ctx context.Context
 				return it, err
 			}
 			it.Query = data
+		case "isDeletedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isDeletedAt"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsDeletedAt = data
 		case "after":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)

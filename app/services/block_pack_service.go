@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,6 +13,7 @@ import (
 	contexts "github.com/HiIamJeff67/notezy-backend/app/contexts"
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/app/models/schemas"
@@ -21,6 +23,7 @@ import (
 	options "github.com/HiIamJeff67/notezy-backend/app/options"
 	validation "github.com/HiIamJeff67/notezy-backend/app/validation"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
@@ -40,10 +43,13 @@ type BlockPackServiceInterface interface {
 	RestoreMyBlockPacksByIds(ctx context.Context, reqDto *dtos.RestoreMyBlockPacksByIdsReqDto) (*dtos.RestoreMyBlockPacksByIdsResDto, *exceptions.Exception)
 	DeleteMyBlockPackById(ctx context.Context, reqDto *dtos.DeleteMyBlockPackByIdReqDto) (*dtos.DeleteMyBlockPackByIdResDto, *exceptions.Exception)
 	DeleteMyBlockPacksByIds(ctx context.Context, reqDto *dtos.DeleteMyBlockPacksByIdsReqDto) (*dtos.DeleteMyBlockPacksByIdsResDto, *exceptions.Exception)
+
+	SearchPrivateBlockPacks(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchBlockPackInput) (*gqlmodels.SearchBlockPackConnection, *exceptions.Exception)
 }
 
 type BlockPackService struct {
 	db                  *gorm.DB
+	blockPackScope      scopes.BlockPackScopeInterface
 	subShelfRepository  repositories.SubShelfRepositoryInterface
 	blockPackRepository repositories.BlockPackRepositoryInterface
 	realtimeLeaseStore  *caches.RealtimeLeaseStore
@@ -51,6 +57,7 @@ type BlockPackService struct {
 
 func NewBlockPackService(
 	db *gorm.DB,
+	blockPackScope scopes.BlockPackScopeInterface,
 	subShelfRepository repositories.SubShelfRepositoryInterface,
 	blockPackRepository repositories.BlockPackRepositoryInterface,
 	realtimeLeaseStore *caches.RealtimeLeaseStore,
@@ -60,6 +67,7 @@ func NewBlockPackService(
 	}
 	return &BlockPackService{
 		db:                  db,
+		blockPackScope:      blockPackScope,
 		subShelfRepository:  subShelfRepository,
 		blockPackRepository: blockPackRepository,
 		realtimeLeaseStore:  realtimeLeaseStore,
@@ -708,5 +716,146 @@ func (s *BlockPackService) DeleteMyBlockPacksByIds(
 
 	return &dtos.DeleteMyBlockPacksByIdsResDto{
 		DeletedAt: time.Now(),
+	}, nil
+}
+
+/* ============================== Service Methods for GraphQL BlockPack ============================== */
+
+func (s *BlockPackService) SearchPrivateBlockPacks(
+	ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchBlockPackInput,
+) (*gqlmodels.SearchBlockPackConnection, *exceptions.Exception) {
+	startTime := time.Now()
+	db := s.db.WithContext(ctx)
+
+	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
+	onlyDeleted := types.Ternary_Negative
+	if gqlInput.IsDeletedAt != nil && *gqlInput.IsDeletedAt {
+		onlyDeleted = types.Ternary_Positive
+	}
+
+	query := db.Model(&schemas.BlockPack{}).
+		Select(`"BlockPackTable".*`).
+		Joins(`INNER JOIN "SubShelfTable" ss ON ss.id = "BlockPackTable".parent_sub_shelf_id`).
+		Joins(`INNER JOIN "UsersToShelvesTable" uts ON uts.root_shelf_id = ss.root_shelf_id`).
+		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
+		Scopes(s.blockPackScope.FilterOnlyDeleted(onlyDeleted))
+
+	if gqlInput.ParentSubShelfID != nil {
+		query = query.Where(`"BlockPackTable".parent_sub_shelf_id = ?`, *gqlInput.ParentSubShelfID)
+	}
+
+	if gqlInput.RootShelfID != nil {
+		query = query.Where("ss.root_shelf_id = ?", *gqlInput.RootShelfID)
+	}
+
+	if len(strings.ReplaceAll(gqlInput.Query, " ", "")) > 0 {
+		query = query.Where(
+			`"BlockPackTable".name ILIKE ?`,
+			"%"+gqlInput.Query+"%",
+		)
+	}
+	if gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0 {
+		searchCursor, err := searchcursor.Decode[gqlmodels.SearchBlockPackCursorFields](*gqlInput.After)
+		if err != nil {
+			return nil, exceptions.Search.FailedToDecode().WithOrigin(err)
+		}
+
+		query = query.Where(`"BlockPackTable".id > ?`, searchCursor.Fields.ID)
+	}
+
+	if gqlInput.SortBy != nil && gqlInput.SortOrder != nil {
+		cending := gqlmodels.SearchSortOrderAsc.String()
+		if *gqlInput.SortOrder == gqlmodels.SearchSortOrderDesc {
+			cending = gqlmodels.SearchSortOrderDesc.String()
+		}
+
+		switch *gqlInput.SortBy {
+		case gqlmodels.SearchBlockPackSortByName:
+			query = query.Order(`"BlockPackTable".name ` + cending).
+				Order(`"BlockPackTable".updated_at ` + cending).
+				Order(`"BlockPackTable".created_at ` + cending)
+		case gqlmodels.SearchBlockPackSortByBlockCount:
+			query = query.Order(`"BlockPackTable".block_count ` + cending).
+				Order(`"BlockPackTable".name ` + cending).
+				Order(`"BlockPackTable".updated_at ` + cending).
+				Order(`"BlockPackTable".created_at ` + cending)
+		case gqlmodels.SearchBlockPackSortByLastUpdate:
+			query = query.Order(`"BlockPackTable".updated_at ` + cending).
+				Order(`"BlockPackTable".name ` + cending).
+				Order(`"BlockPackTable".created_at ` + cending)
+		case gqlmodels.SearchBlockPackSortByCreatedAt:
+			query = query.Order(`"BlockPackTable".created_at ` + cending).
+				Order(`"BlockPackTable".name ` + cending).
+				Order(`"BlockPackTable".updated_at ` + cending)
+		default:
+			query = query.Order(`"BlockPackTable".name ` + cending).
+				Order(`"BlockPackTable".updated_at ` + cending).
+				Order(`"BlockPackTable".created_at ` + cending)
+		}
+	}
+
+	limit := constants.DefaultSearchLimit
+	if gqlInput.First != nil && *gqlInput.First > 0 {
+		limit = int(*gqlInput.First)
+	}
+	limit = min(limit, constants.MaxSearchLimit)
+	query = query.Limit(limit + 1)
+
+	var blockPacks []schemas.BlockPack
+	if err := query.Scopes(s.blockPackScope.IncludePreloads(
+		[]schemas.BlockPackRelation{
+			schemas.BlockPackRelation_Blocks,
+		},
+	)).Find(&blockPacks).Error; err != nil {
+		return nil, exceptions.BlockPack.NotFound().WithOrigin(err)
+	}
+
+	hasNextPage := len(blockPacks) > limit
+	searchEdges := make([]*gqlmodels.SearchBlockPackEdge, len(blockPacks))
+
+	for index, blockPack := range blockPacks {
+		searchCursor := searchcursor.SearchCursor[gqlmodels.SearchBlockPackCursorFields]{
+			Fields: gqlmodels.SearchBlockPackCursorFields{
+				ID: blockPack.Id,
+			},
+		}
+		encodedSearchCursor, err := searchCursor.Encode()
+		if err != nil {
+			return nil, exceptions.Search.FailedToEncode().WithOrigin(err)
+		}
+		if encodedSearchCursor == nil {
+			return nil, exceptions.Search.FailedToUnmarshalSearchCursor()
+		}
+
+		searchEdges[index] = &gqlmodels.SearchBlockPackEdge{
+			EncodedSearchCursor: *encodedSearchCursor,
+			Node:                blockPack.ToPrivateBlockPack(),
+		}
+	}
+
+	searchPageInfo := &gqlmodels.SearchPageInfo{
+		HasNextPage:     hasNextPage,
+		HasPreviousPage: gqlInput.After != nil && len(strings.ReplaceAll(*gqlInput.After, " ", "")) > 0,
+	}
+
+	if len(searchEdges) > 0 {
+		searchPageInfo.StartEncodedSearchCursor = &searchEdges[0].EncodedSearchCursor
+		searchPageInfo.EndEncodedSearchCursor = &searchEdges[len(searchEdges)-1].EncodedSearchCursor
+	}
+
+	searchTime := float64(time.Since(startTime).Nanoseconds()) / 1e6
+	if hasNextPage {
+		searchEdges = searchEdges[:limit]
+	}
+
+	return &gqlmodels.SearchBlockPackConnection{
+		SearchEdges:    searchEdges,
+		SearchPageInfo: searchPageInfo,
+		TotalCount:     int32(len(searchEdges)),
+		SearchTime:     searchTime,
 	}, nil
 }

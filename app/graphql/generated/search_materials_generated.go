@@ -29,8 +29,8 @@ import (
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _SearchStationConnection_searchEdges(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchStationConnection) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchStationConnection_searchEdges(ctx, field)
+func (ec *executionContext) _SearchMaterialConnection_searchEdges(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchMaterialConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchMaterialConnection_searchEdges(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -55,32 +55,32 @@ func (ec *executionContext) _SearchStationConnection_searchEdges(ctx context.Con
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*gqlmodels.SearchStationEdge)
+	res := resTmp.([]*gqlmodels.SearchMaterialEdge)
 	fc.Result = res
-	return ec.marshalNSearchStationEdge2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchStationEdgeᚄ(ctx, field.Selections, res)
+	return ec.marshalNSearchMaterialEdge2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchMaterialEdgeᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchStationConnection_searchEdges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchMaterialConnection_searchEdges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "SearchStationConnection",
+		Object:     "SearchMaterialConnection",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "encodedSearchCursor":
-				return ec.fieldContext_SearchStationEdge_encodedSearchCursor(ctx, field)
+				return ec.fieldContext_SearchMaterialEdge_encodedSearchCursor(ctx, field)
 			case "node":
-				return ec.fieldContext_SearchStationEdge_node(ctx, field)
+				return ec.fieldContext_SearchMaterialEdge_node(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type SearchStationEdge", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type SearchMaterialEdge", field.Name)
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _SearchStationConnection_searchPageInfo(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchStationConnection) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchStationConnection_searchPageInfo(ctx, field)
+func (ec *executionContext) _SearchMaterialConnection_searchPageInfo(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchMaterialConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchMaterialConnection_searchPageInfo(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -110,9 +110,9 @@ func (ec *executionContext) _SearchStationConnection_searchPageInfo(ctx context.
 	return ec.marshalNSearchPageInfo2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchPageInfo(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchStationConnection_searchPageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchMaterialConnection_searchPageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "SearchStationConnection",
+		Object:     "SearchMaterialConnection",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -133,8 +133,8 @@ func (ec *executionContext) fieldContext_SearchStationConnection_searchPageInfo(
 	return fc, nil
 }
 
-func (ec *executionContext) _SearchStationConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchStationConnection) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchStationConnection_totalCount(ctx, field)
+func (ec *executionContext) _SearchMaterialConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchMaterialConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchMaterialConnection_totalCount(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -164,9 +164,9 @@ func (ec *executionContext) _SearchStationConnection_totalCount(ctx context.Cont
 	return ec.marshalNInt2int32(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchStationConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchMaterialConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "SearchStationConnection",
+		Object:     "SearchMaterialConnection",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -177,8 +177,8 @@ func (ec *executionContext) fieldContext_SearchStationConnection_totalCount(_ co
 	return fc, nil
 }
 
-func (ec *executionContext) _SearchStationConnection_searchTime(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchStationConnection) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchStationConnection_searchTime(ctx, field)
+func (ec *executionContext) _SearchMaterialConnection_searchTime(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchMaterialConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchMaterialConnection_searchTime(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -208,9 +208,9 @@ func (ec *executionContext) _SearchStationConnection_searchTime(ctx context.Cont
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchStationConnection_searchTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchMaterialConnection_searchTime(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "SearchStationConnection",
+		Object:     "SearchMaterialConnection",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -221,8 +221,8 @@ func (ec *executionContext) fieldContext_SearchStationConnection_searchTime(_ co
 	return fc, nil
 }
 
-func (ec *executionContext) _SearchStationEdge_encodedSearchCursor(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchStationEdge) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchStationEdge_encodedSearchCursor(ctx, field)
+func (ec *executionContext) _SearchMaterialEdge_encodedSearchCursor(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchMaterialEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchMaterialEdge_encodedSearchCursor(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -252,9 +252,9 @@ func (ec *executionContext) _SearchStationEdge_encodedSearchCursor(ctx context.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchStationEdge_encodedSearchCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchMaterialEdge_encodedSearchCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "SearchStationEdge",
+		Object:     "SearchMaterialEdge",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -265,8 +265,8 @@ func (ec *executionContext) fieldContext_SearchStationEdge_encodedSearchCursor(_
 	return fc, nil
 }
 
-func (ec *executionContext) _SearchStationEdge_node(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchStationEdge) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchStationEdge_node(ctx, field)
+func (ec *executionContext) _SearchMaterialEdge_node(ctx context.Context, field graphql.CollectedField, obj *gqlmodels.SearchMaterialEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchMaterialEdge_node(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -291,39 +291,39 @@ func (ec *executionContext) _SearchStationEdge_node(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*gqlmodels.PrivateSearchableStation)
+	res := resTmp.(*gqlmodels.PrivateMaterial)
 	fc.Result = res
-	return ec.marshalNPrivateSearchableStation2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateSearchableStation(ctx, field.Selections, res)
+	return ec.marshalNPrivateMaterial2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐPrivateMaterial(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchStationEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SearchMaterialEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "SearchStationEdge",
+		Object:     "SearchMaterialEdge",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_PrivateSearchableStation_id(ctx, field)
-			case "permission":
-				return ec.fieldContext_PrivateSearchableStation_permission(ctx, field)
+				return ec.fieldContext_PrivateMaterial_id(ctx, field)
+			case "parentSubShelfId":
+				return ec.fieldContext_PrivateMaterial_parentSubShelfId(ctx, field)
 			case "name":
-				return ec.fieldContext_PrivateSearchableStation_name(ctx, field)
-			case "icon":
-				return ec.fieldContext_PrivateSearchableStation_icon(ctx, field)
-			case "headerBackgroundURL":
-				return ec.fieldContext_PrivateSearchableStation_headerBackgroundURL(ctx, field)
-			case "routineCount":
-				return ec.fieldContext_PrivateSearchableStation_routineCount(ctx, field)
+				return ec.fieldContext_PrivateMaterial_name(ctx, field)
+			case "size":
+				return ec.fieldContext_PrivateMaterial_size(ctx, field)
+			case "contentType":
+				return ec.fieldContext_PrivateMaterial_contentType(ctx, field)
+			case "parseMediaType":
+				return ec.fieldContext_PrivateMaterial_parseMediaType(ctx, field)
 			case "deletedAt":
-				return ec.fieldContext_PrivateSearchableStation_deletedAt(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_PrivateSearchableStation_createdAt(ctx, field)
+				return ec.fieldContext_PrivateMaterial_deletedAt(ctx, field)
 			case "updatedAt":
-				return ec.fieldContext_PrivateSearchableStation_updatedAt(ctx, field)
+				return ec.fieldContext_PrivateMaterial_updatedAt(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_PrivateMaterial_createdAt(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type PrivateSearchableStation", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type PrivateMaterial", field.Name)
 		},
 	}
 	return fc, nil
@@ -333,8 +333,8 @@ func (ec *executionContext) fieldContext_SearchStationEdge_node(_ context.Contex
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputSearchStationCursorFields(ctx context.Context, obj any) (gqlmodels.SearchStationCursorFields, error) {
-	var it gqlmodels.SearchStationCursorFields
+func (ec *executionContext) unmarshalInputSearchMaterialCursorFields(ctx context.Context, obj any) (gqlmodels.SearchMaterialCursorFields, error) {
+	var it gqlmodels.SearchMaterialCursorFields
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -360,8 +360,8 @@ func (ec *executionContext) unmarshalInputSearchStationCursorFields(ctx context.
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputSearchStationInput(ctx context.Context, obj any) (gqlmodels.SearchStationInput, error) {
-	var it gqlmodels.SearchStationInput
+func (ec *executionContext) unmarshalInputSearchMaterialInput(ctx context.Context, obj any) (gqlmodels.SearchMaterialInput, error) {
+	var it gqlmodels.SearchMaterialInput
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -377,13 +377,27 @@ func (ec *executionContext) unmarshalInputSearchStationInput(ctx context.Context
 		asMap["sortOrder"] = "DESC"
 	}
 
-	fieldsInOrder := [...]string{"query", "isDeletedAt", "after", "first", "sortBy", "sortOrder"}
+	fieldsInOrder := [...]string{"parentSubShelfId", "rootShelfId", "query", "isDeletedAt", "after", "first", "sortBy", "sortOrder"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "parentSubShelfId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("parentSubShelfId"))
+			data, err := ec.unmarshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ParentSubShelfID = data
+		case "rootShelfId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rootShelfId"))
+			data, err := ec.unmarshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RootShelfID = data
 		case "query":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -414,7 +428,7 @@ func (ec *executionContext) unmarshalInputSearchStationInput(ctx context.Context
 			it.First = data
 		case "sortBy":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortBy"))
-			data, err := ec.unmarshalOSearchStationSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchStationSortBy(ctx, v)
+			data, err := ec.unmarshalOSearchMaterialSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchMaterialSortBy(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -440,34 +454,34 @@ func (ec *executionContext) unmarshalInputSearchStationInput(ctx context.Context
 
 // region    **************************** object.gotpl ****************************
 
-var searchStationConnectionImplementors = []string{"SearchStationConnection", "SearchConnection"}
+var searchMaterialConnectionImplementors = []string{"SearchMaterialConnection", "SearchConnection"}
 
-func (ec *executionContext) _SearchStationConnection(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.SearchStationConnection) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, searchStationConnectionImplementors)
+func (ec *executionContext) _SearchMaterialConnection(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.SearchMaterialConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, searchMaterialConnectionImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("SearchStationConnection")
+			out.Values[i] = graphql.MarshalString("SearchMaterialConnection")
 		case "searchEdges":
-			out.Values[i] = ec._SearchStationConnection_searchEdges(ctx, field, obj)
+			out.Values[i] = ec._SearchMaterialConnection_searchEdges(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "searchPageInfo":
-			out.Values[i] = ec._SearchStationConnection_searchPageInfo(ctx, field, obj)
+			out.Values[i] = ec._SearchMaterialConnection_searchPageInfo(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "totalCount":
-			out.Values[i] = ec._SearchStationConnection_totalCount(ctx, field, obj)
+			out.Values[i] = ec._SearchMaterialConnection_totalCount(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "searchTime":
-			out.Values[i] = ec._SearchStationConnection_searchTime(ctx, field, obj)
+			out.Values[i] = ec._SearchMaterialConnection_searchTime(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -494,24 +508,24 @@ func (ec *executionContext) _SearchStationConnection(ctx context.Context, sel as
 	return out
 }
 
-var searchStationEdgeImplementors = []string{"SearchStationEdge", "SearchEdge"}
+var searchMaterialEdgeImplementors = []string{"SearchMaterialEdge", "SearchEdge"}
 
-func (ec *executionContext) _SearchStationEdge(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.SearchStationEdge) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, searchStationEdgeImplementors)
+func (ec *executionContext) _SearchMaterialEdge(ctx context.Context, sel ast.SelectionSet, obj *gqlmodels.SearchMaterialEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, searchMaterialEdgeImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("SearchStationEdge")
+			out.Values[i] = graphql.MarshalString("SearchMaterialEdge")
 		case "encodedSearchCursor":
-			out.Values[i] = ec._SearchStationEdge_encodedSearchCursor(ctx, field, obj)
+			out.Values[i] = ec._SearchMaterialEdge_encodedSearchCursor(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "node":
-			out.Values[i] = ec._SearchStationEdge_node(ctx, field, obj)
+			out.Values[i] = ec._SearchMaterialEdge_node(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -542,21 +556,21 @@ func (ec *executionContext) _SearchStationEdge(ctx context.Context, sel ast.Sele
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNSearchStationConnection2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchStationConnection(ctx context.Context, sel ast.SelectionSet, v gqlmodels.SearchStationConnection) graphql.Marshaler {
-	return ec._SearchStationConnection(ctx, sel, &v)
+func (ec *executionContext) marshalNSearchMaterialConnection2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchMaterialConnection(ctx context.Context, sel ast.SelectionSet, v gqlmodels.SearchMaterialConnection) graphql.Marshaler {
+	return ec._SearchMaterialConnection(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSearchStationConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchStationConnection(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchStationConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchMaterialConnection2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchMaterialConnection(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchMaterialConnection) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._SearchStationConnection(ctx, sel, v)
+	return ec._SearchMaterialConnection(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSearchStationEdge2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchStationEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.SearchStationEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchMaterialEdge2ᚕᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchMaterialEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*gqlmodels.SearchMaterialEdge) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -580,7 +594,7 @@ func (ec *executionContext) marshalNSearchStationEdge2ᚕᚖgithubᚗcomᚋHiIam
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSearchStationEdge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchStationEdge(ctx, sel, v[i])
+			ret[i] = ec.marshalNSearchMaterialEdge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchMaterialEdge(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -600,31 +614,31 @@ func (ec *executionContext) marshalNSearchStationEdge2ᚕᚖgithubᚗcomᚋHiIam
 	return ret
 }
 
-func (ec *executionContext) marshalNSearchStationEdge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchStationEdge(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchStationEdge) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchMaterialEdge2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchMaterialEdge(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchMaterialEdge) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._SearchStationEdge(ctx, sel, v)
+	return ec._SearchMaterialEdge(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNSearchStationInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchStationInput(ctx context.Context, v any) (gqlmodels.SearchStationInput, error) {
-	res, err := ec.unmarshalInputSearchStationInput(ctx, v)
+func (ec *executionContext) unmarshalNSearchMaterialInput2githubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchMaterialInput(ctx context.Context, v any) (gqlmodels.SearchMaterialInput, error) {
+	res, err := ec.unmarshalInputSearchMaterialInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOSearchStationSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchStationSortBy(ctx context.Context, v any) (*gqlmodels.SearchStationSortBy, error) {
+func (ec *executionContext) unmarshalOSearchMaterialSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchMaterialSortBy(ctx context.Context, v any) (*gqlmodels.SearchMaterialSortBy, error) {
 	if v == nil {
 		return nil, nil
 	}
-	var res = new(gqlmodels.SearchStationSortBy)
+	var res = new(gqlmodels.SearchMaterialSortBy)
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOSearchStationSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchStationSortBy(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchStationSortBy) graphql.Marshaler {
+func (ec *executionContext) marshalOSearchMaterialSortBy2ᚖgithubᚗcomᚋHiIamJeff67ᚋnotezyᚑbackendᚋappᚋgraphqlᚋmodelsᚐSearchMaterialSortBy(ctx context.Context, sel ast.SelectionSet, v *gqlmodels.SearchMaterialSortBy) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

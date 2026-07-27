@@ -41,6 +41,19 @@ type PrivateBlock struct {
 	ChildrenIds   []uuid.UUID     `json:"childrenIds"`
 }
 
+type PrivateBlockPack struct {
+	ID                  uuid.UUID            `json:"id"`
+	ParentSubShelfID    uuid.UUID            `json:"parentSubShelfId"`
+	Name                string               `json:"name"`
+	Icon                *enums.SupportedIcon `json:"icon,omitempty"`
+	HeaderBackgroundURL *string              `json:"headerBackgroundURL,omitempty"`
+	BlockCount          int64                `json:"blockCount"`
+	DeletedAt           *time.Time           `json:"deletedAt,omitempty"`
+	UpdatedAt           time.Time            `json:"updatedAt"`
+	CreatedAt           time.Time            `json:"createdAt"`
+	BlockIds            []uuid.UUID          `json:"blockIds"`
+}
+
 type PrivateItem struct {
 	ID               uuid.UUID      `json:"id"`
 	ParentSubShelfID uuid.UUID      `json:"parentSubShelfId"`
@@ -50,6 +63,18 @@ type PrivateItem struct {
 	UpdatedAt        time.Time      `json:"updatedAt"`
 	CreatedAt        time.Time      `json:"createdAt"`
 	RoutineIds       []uuid.UUID    `json:"routineIds"`
+}
+
+type PrivateMaterial struct {
+	ID               uuid.UUID                 `json:"id"`
+	ParentSubShelfID uuid.UUID                 `json:"parentSubShelfId"`
+	Name             string                    `json:"name"`
+	Size             int64                     `json:"size"`
+	ContentType      enums.MaterialContentType `json:"contentType"`
+	ParseMediaType   string                    `json:"parseMediaType"`
+	DeletedAt        *time.Time                `json:"deletedAt,omitempty"`
+	UpdatedAt        time.Time                 `json:"updatedAt"`
+	CreatedAt        time.Time                 `json:"createdAt"`
 }
 
 type PrivateRootShelf struct {
@@ -302,6 +327,41 @@ type SearchBlockInput struct {
 	SortOrder *SearchSortOrder   `json:"sortOrder,omitempty"`
 }
 
+type SearchBlockPackConnection struct {
+	SearchEdges    []*SearchBlockPackEdge `json:"searchEdges"`
+	SearchPageInfo *SearchPageInfo        `json:"searchPageInfo"`
+	TotalCount     int32                  `json:"totalCount"`
+	SearchTime     float64                `json:"searchTime"`
+}
+
+func (SearchBlockPackConnection) IsSearchConnection()                     {}
+func (this SearchBlockPackConnection) GetSearchPageInfo() *SearchPageInfo { return this.SearchPageInfo }
+func (this SearchBlockPackConnection) GetTotalCount() int32               { return this.TotalCount }
+func (this SearchBlockPackConnection) GetSearchTime() float64             { return this.SearchTime }
+
+type SearchBlockPackCursorFields struct {
+	ID uuid.UUID `json:"id"`
+}
+
+type SearchBlockPackEdge struct {
+	EncodedSearchCursor string            `json:"encodedSearchCursor"`
+	Node                *PrivateBlockPack `json:"node"`
+}
+
+func (SearchBlockPackEdge) IsSearchEdge()                       {}
+func (this SearchBlockPackEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
+
+type SearchBlockPackInput struct {
+	ParentSubShelfID *uuid.UUID             `json:"parentSubShelfId,omitempty"`
+	RootShelfID      *uuid.UUID             `json:"rootShelfId,omitempty"`
+	Query            string                 `json:"query"`
+	IsDeletedAt      *bool                  `json:"isDeletedAt,omitempty"`
+	After            *string                `json:"after,omitempty"`
+	First            *int32                 `json:"first,omitempty"`
+	SortBy           *SearchBlockPackSortBy `json:"sortBy,omitempty"`
+	SortOrder        *SearchSortOrder       `json:"sortOrder,omitempty"`
+}
+
 type SearchItemConnection struct {
 	SearchEdges    []*SearchItemEdge `json:"searchEdges"`
 	SearchPageInfo *SearchPageInfo   `json:"searchPageInfo"`
@@ -330,10 +390,46 @@ type SearchItemInput struct {
 	ParentSubShelfID *uuid.UUID        `json:"parentSubShelfId,omitempty"`
 	RootShelfID      *uuid.UUID        `json:"rootShelfId,omitempty"`
 	Query            string            `json:"query"`
+	IsDeletedAt      *bool             `json:"isDeletedAt,omitempty"`
 	After            *string           `json:"after,omitempty"`
 	First            *int32            `json:"first,omitempty"`
 	SortBy           *SearchItemSortBy `json:"sortBy,omitempty"`
 	SortOrder        *SearchSortOrder  `json:"sortOrder,omitempty"`
+}
+
+type SearchMaterialConnection struct {
+	SearchEdges    []*SearchMaterialEdge `json:"searchEdges"`
+	SearchPageInfo *SearchPageInfo       `json:"searchPageInfo"`
+	TotalCount     int32                 `json:"totalCount"`
+	SearchTime     float64               `json:"searchTime"`
+}
+
+func (SearchMaterialConnection) IsSearchConnection()                     {}
+func (this SearchMaterialConnection) GetSearchPageInfo() *SearchPageInfo { return this.SearchPageInfo }
+func (this SearchMaterialConnection) GetTotalCount() int32               { return this.TotalCount }
+func (this SearchMaterialConnection) GetSearchTime() float64             { return this.SearchTime }
+
+type SearchMaterialCursorFields struct {
+	ID uuid.UUID `json:"id"`
+}
+
+type SearchMaterialEdge struct {
+	EncodedSearchCursor string           `json:"encodedSearchCursor"`
+	Node                *PrivateMaterial `json:"node"`
+}
+
+func (SearchMaterialEdge) IsSearchEdge()                       {}
+func (this SearchMaterialEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
+
+type SearchMaterialInput struct {
+	ParentSubShelfID *uuid.UUID            `json:"parentSubShelfId,omitempty"`
+	RootShelfID      *uuid.UUID            `json:"rootShelfId,omitempty"`
+	Query            string                `json:"query"`
+	IsDeletedAt      *bool                 `json:"isDeletedAt,omitempty"`
+	After            *string               `json:"after,omitempty"`
+	First            *int32                `json:"first,omitempty"`
+	SortBy           *SearchMaterialSortBy `json:"sortBy,omitempty"`
+	SortOrder        *SearchSortOrder      `json:"sortOrder,omitempty"`
 }
 
 type SearchPageInfo struct {
@@ -368,11 +464,12 @@ func (SearchRootShelfEdge) IsSearchEdge()                       {}
 func (this SearchRootShelfEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
 
 type SearchRootShelfInput struct {
-	Query     string                 `json:"query"`
-	After     *string                `json:"after,omitempty"`
-	First     *int32                 `json:"first,omitempty"`
-	SortBy    *SearchRootShelfSortBy `json:"sortBy,omitempty"`
-	SortOrder *SearchSortOrder       `json:"sortOrder,omitempty"`
+	Query       string                 `json:"query"`
+	IsDeletedAt *bool                  `json:"isDeletedAt,omitempty"`
+	After       *string                `json:"after,omitempty"`
+	First       *int32                 `json:"first,omitempty"`
+	SortBy      *SearchRootShelfSortBy `json:"sortBy,omitempty"`
+	SortOrder   *SearchSortOrder       `json:"sortOrder,omitempty"`
 }
 
 type SearchRoutineConnection struct {
@@ -400,13 +497,14 @@ func (SearchRoutineEdge) IsSearchEdge()                       {}
 func (this SearchRoutineEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
 
 type SearchRoutineInput struct {
-	StationIds []uuid.UUID          `json:"stationIds"`
-	TagIds     []uuid.UUID          `json:"tagIds"`
-	Query      string               `json:"query"`
-	After      *string              `json:"after,omitempty"`
-	First      *int32               `json:"first,omitempty"`
-	SortBy     *SearchRoutineSortBy `json:"sortBy,omitempty"`
-	SortOrder  *SearchSortOrder     `json:"sortOrder,omitempty"`
+	StationIds  []uuid.UUID          `json:"stationIds"`
+	TagIds      []uuid.UUID          `json:"tagIds"`
+	Query       string               `json:"query"`
+	IsDeletedAt *bool                `json:"isDeletedAt,omitempty"`
+	After       *string              `json:"after,omitempty"`
+	First       *int32               `json:"first,omitempty"`
+	SortBy      *SearchRoutineSortBy `json:"sortBy,omitempty"`
+	SortOrder   *SearchSortOrder     `json:"sortOrder,omitempty"`
 }
 
 type SearchRoutineTagConnection struct {
@@ -540,11 +638,12 @@ func (SearchStationEdge) IsSearchEdge()                       {}
 func (this SearchStationEdge) GetEncodedSearchCursor() string { return this.EncodedSearchCursor }
 
 type SearchStationInput struct {
-	Query     string               `json:"query"`
-	After     *string              `json:"after,omitempty"`
-	First     *int32               `json:"first,omitempty"`
-	SortBy    *SearchStationSortBy `json:"sortBy,omitempty"`
-	SortOrder *SearchSortOrder     `json:"sortOrder,omitempty"`
+	Query       string               `json:"query"`
+	IsDeletedAt *bool                `json:"isDeletedAt,omitempty"`
+	After       *string              `json:"after,omitempty"`
+	First       *int32               `json:"first,omitempty"`
+	SortBy      *SearchStationSortBy `json:"sortBy,omitempty"`
+	SortOrder   *SearchSortOrder     `json:"sortOrder,omitempty"`
 }
 
 type SearchSubShelfConnection struct {
@@ -575,6 +674,7 @@ type SearchSubShelfInput struct {
 	RootShelfID    *uuid.UUID            `json:"rootShelfId,omitempty"`
 	PrevSubShelfID *uuid.UUID            `json:"prevSubShelfId,omitempty"`
 	Query          string                `json:"query"`
+	IsDeletedAt    *bool                 `json:"isDeletedAt,omitempty"`
 	After          *string               `json:"after,omitempty"`
 	First          *int32                `json:"first,omitempty"`
 	SortBy         *SearchSubShelfSortBy `json:"sortBy,omitempty"`
@@ -721,6 +821,67 @@ func (e SearchBadgeSortBy) MarshalJSON() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+type SearchBlockPackSortBy string
+
+const (
+	SearchBlockPackSortByRelevance  SearchBlockPackSortBy = "RELEVANCE"
+	SearchBlockPackSortByName       SearchBlockPackSortBy = "NAME"
+	SearchBlockPackSortByBlockCount SearchBlockPackSortBy = "BLOCK_COUNT"
+	SearchBlockPackSortByLastUpdate SearchBlockPackSortBy = "LAST_UPDATE"
+	SearchBlockPackSortByCreatedAt  SearchBlockPackSortBy = "CREATED_AT"
+)
+
+var AllSearchBlockPackSortBy = []SearchBlockPackSortBy{
+	SearchBlockPackSortByRelevance,
+	SearchBlockPackSortByName,
+	SearchBlockPackSortByBlockCount,
+	SearchBlockPackSortByLastUpdate,
+	SearchBlockPackSortByCreatedAt,
+}
+
+func (e SearchBlockPackSortBy) IsValid() bool {
+	switch e {
+	case SearchBlockPackSortByRelevance, SearchBlockPackSortByName, SearchBlockPackSortByBlockCount, SearchBlockPackSortByLastUpdate, SearchBlockPackSortByCreatedAt:
+		return true
+	}
+	return false
+}
+
+func (e SearchBlockPackSortBy) String() string {
+	return string(e)
+}
+
+func (e *SearchBlockPackSortBy) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SearchBlockPackSortBy(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SearchBlockPackSortBy", str)
+	}
+	return nil
+}
+
+func (e SearchBlockPackSortBy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *SearchBlockPackSortBy) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e SearchBlockPackSortBy) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
 type SearchBlockSortBy string
 
 const (
@@ -834,6 +995,69 @@ func (e *SearchItemSortBy) UnmarshalJSON(b []byte) error {
 }
 
 func (e SearchItemSortBy) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type SearchMaterialSortBy string
+
+const (
+	SearchMaterialSortByRelevance   SearchMaterialSortBy = "RELEVANCE"
+	SearchMaterialSortByName        SearchMaterialSortBy = "NAME"
+	SearchMaterialSortBySize        SearchMaterialSortBy = "SIZE"
+	SearchMaterialSortByContentType SearchMaterialSortBy = "CONTENT_TYPE"
+	SearchMaterialSortByLastUpdate  SearchMaterialSortBy = "LAST_UPDATE"
+	SearchMaterialSortByCreatedAt   SearchMaterialSortBy = "CREATED_AT"
+)
+
+var AllSearchMaterialSortBy = []SearchMaterialSortBy{
+	SearchMaterialSortByRelevance,
+	SearchMaterialSortByName,
+	SearchMaterialSortBySize,
+	SearchMaterialSortByContentType,
+	SearchMaterialSortByLastUpdate,
+	SearchMaterialSortByCreatedAt,
+}
+
+func (e SearchMaterialSortBy) IsValid() bool {
+	switch e {
+	case SearchMaterialSortByRelevance, SearchMaterialSortByName, SearchMaterialSortBySize, SearchMaterialSortByContentType, SearchMaterialSortByLastUpdate, SearchMaterialSortByCreatedAt:
+		return true
+	}
+	return false
+}
+
+func (e SearchMaterialSortBy) String() string {
+	return string(e)
+}
+
+func (e *SearchMaterialSortBy) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SearchMaterialSortBy(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SearchMaterialSortBy", str)
+	}
+	return nil
+}
+
+func (e SearchMaterialSortBy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *SearchMaterialSortBy) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e SearchMaterialSortBy) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

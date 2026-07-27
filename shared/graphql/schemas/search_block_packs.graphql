@@ -1,42 +1,39 @@
 # =============== Search SortBy & Input =============== #
 
-enum SearchSubShelfSortBy {
+enum SearchBlockPackSortBy {
   RELEVANCE
   NAME
-  PATH_LENGTH
+  BLOCK_COUNT
   LAST_UPDATE
   CREATED_AT
 }
 
-input SearchSubShelfInput {
+input SearchBlockPackInput {
+  parentSubShelfId: UUID
   rootShelfId: UUID
-  prevSubShelfId: UUID
   query: String!
   isDeletedAt: Boolean
   after: String
   first: Int = 10
-  sortBy: SearchSubShelfSortBy = RELEVANCE
+  sortBy: SearchBlockPackSortBy = RELEVANCE
   sortOrder: SearchSortOrder = DESC
 }
 
 # =============== Search Cursor Fields =============== #
 
-# type SearchSubShelfEnvironmentAttributes {}
-
-input SearchSubShelfCursorFields {
+input SearchBlockPackCursorFields {
   id: UUID!
-  # environmentAttributes: SearchSubShelfEnvironmentAttributes
 }
 
 # =============== Search Edge & Connection =============== #
 
-type SearchSubShelfEdge implements SearchEdge {
+type SearchBlockPackEdge implements SearchEdge {
   encodedSearchCursor: String!
-  node: PrivateSubShelf!
+  node: PrivateBlockPack!
 }
 
-type SearchSubShelfConnection implements SearchConnection {
-  searchEdges: [SearchSubShelfEdge!]!
+type SearchBlockPackConnection implements SearchConnection {
+  searchEdges: [SearchBlockPackEdge!]!
   searchPageInfo: SearchPageInfo!
   totalCount: Int!
   searchTime: Float!

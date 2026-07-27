@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/app/graphql/models"
 	enums "github.com/HiIamJeff67/notezy-backend/app/models/schemas/enums"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
@@ -41,3 +42,25 @@ const (
 	BlockPackRelation_YjsDocument    BlockPackRelation = "YjsDocument"
 	BlockPackRelation_YjsUpdates     BlockPackRelation = "YjsUpdates"
 )
+
+/* ============================== Relative Type Conversion ============================== */
+
+func (bp *BlockPack) ToPrivateBlockPack() *gqlmodels.PrivateBlockPack {
+	blockIds := make([]uuid.UUID, 0, len(bp.Blocks))
+	for _, block := range bp.Blocks {
+		blockIds = append(blockIds, block.Id)
+	}
+
+	return &gqlmodels.PrivateBlockPack{
+		ID:                  bp.Id,
+		ParentSubShelfID:    bp.ParentSubShelfId,
+		Name:                bp.Name,
+		Icon:                bp.Icon,
+		HeaderBackgroundURL: bp.HeaderBackgroundURL,
+		BlockCount:          bp.BlockCount,
+		DeletedAt:           bp.DeletedAt,
+		UpdatedAt:           bp.UpdatedAt,
+		CreatedAt:           bp.CreatedAt,
+		BlockIds:            blockIds,
+	}
+}

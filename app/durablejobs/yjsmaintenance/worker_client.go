@@ -4,39 +4,143 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"math"
 	"net/http"
-	"os"
 	"time"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
 
+	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	logs "github.com/HiIamJeff67/notezy-backend/app/monitor/logs"
 	metrics "github.com/HiIamJeff67/notezy-backend/app/monitor/metrics"
 	traces "github.com/HiIamJeff67/notezy-backend/app/monitor/traces"
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/app/realtime/types"
+	"github.com/HiIamJeff67/notezy-backend/app/util"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 type WorkerClient struct {
-	compactionEndpoint string
-	projectionEndpoint string
-	client             *http.Client
+	compactionEndpoint             string
+	documentInitializationEndpoint string
+	projectionEndpoint             string
+	client                         *http.Client
 }
 
 func NewWorkerClient() WorkerClient {
 	return WorkerClient{
-		compactionEndpoint: os.Getenv("YJS_MAINTENANCE_WORKER_URL"),
-		projectionEndpoint: os.Getenv("YJS_PROJECTION_WORKER_URL"),
+		compactionEndpoint: util.GetEnv(
+			"YJS_MAINTENANCE_WORKER_URL",
+			"http://notezy-yjs-worker:8787/internal/yjs-compaction/v1",
+		),
+		documentInitializationEndpoint: util.GetEnv(
+			"YJS_DOCUMENT_INITIALIZATION_WORKER_URL",
+			"http://notezy-yjs-worker:8787/internal/yjs-document-initialization/v1",
+		),
+		projectionEndpoint: util.GetEnv(
+			"YJS_PROJECTION_WORKER_URL",
+			"http://notezy-yjs-worker:8787/internal/yjs-projection/v1",
+		),
 		client: &http.Client{
 			Timeout: constants.YjsMaintenanceWorkerRequestTimeout,
 		},
 	}
+}
+
+func (c WorkerClient) InitializeDocuments(
+	ctx context.Context,
+	reqDtos []dtos.InitializeBlockPackYjsDocumentReqDto,
+) (resDtos []dtos.InitializeBlockPackYjsDocumentResDto, err error) {
+	start := time.Now()
+	ctx, span := traces.NotezyTracer.Start(ctx, "yjs.maintenance.worker.initialize_documents")
+	span.SetAttributes(attribute.Int("yjs.document_count", len(reqDtos)))
+	defer func() {
+		outcome := "success"
+		if err != nil {
+			outcome = "error"
+			logs.NotezyLogger.Error(ctx, err, "Yjs document initialization worker request failed", attribute.String("operation", "maintenance.worker.initialize_documents"))
+		}
+		metrics.NotezyMeter.Count(ctx, "yjs.operation.count", 1,
+			attribute.String("operation", "maintenance.worker.initialize_documents"),
+			attribute.String("outcome", outcome),
+		)
+		metrics.NotezyMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
+			attribute.String("operation", "maintenance.worker.initialize_documents"),
+			attribute.String("outcome", outcome),
+		)
+		traces.NotezyTracer.End(span, err)
+	}()
+
+	if len(reqDtos) == 0 {
+		return []dtos.InitializeBlockPackYjsDocumentResDto{}, nil
+	}
+	if c.documentInitializationEndpoint == "" {
+		return nil, fmt.Errorf("YJS_DOCUMENT_INITIALIZATION_WORKER_URL is required")
+	}
+
+	payload, err := json.Marshal(struct {
+		Documents []dtos.InitializeBlockPackYjsDocumentReqDto `json:"documents"`
+	}{
+		Documents: reqDtos,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(payload) > constants.YjsMaintenanceWorkerMaxPayloadBytes {
+		return nil, fmt.Errorf("yjs document initialization batch exceeds the worker payload limit")
+	}
+
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		c.documentInitializationEndpoint,
+		bytes.NewReader(payload),
+	)
+	if err != nil {
+		return nil, err
+	}
+	request.Header.Set("Content-Type", "application/json")
+	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(request.Header))
+
+	response, err := c.client.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("yjs document initialization worker returned %s", response.Status)
+	}
+
+	responsePayload, err := io.ReadAll(io.LimitReader(response.Body, int64(constants.YjsMaintenanceWorkerMaxPayloadBytes)+1))
+	if err != nil {
+		return nil, err
+	}
+	if len(responsePayload) > constants.YjsMaintenanceWorkerMaxPayloadBytes {
+		return nil, fmt.Errorf("yjs document initialization worker response exceeds the payload limit")
+	}
+
+	var responseDto struct {
+		Documents []dtos.InitializeBlockPackYjsDocumentResDto `json:"documents"`
+	}
+	if err := json.Unmarshal(responsePayload, &responseDto); err != nil {
+		return nil, err
+	}
+	if len(responseDto.Documents) != len(reqDtos) {
+		return nil, errors.New("incomplete yjs document initialization worker response")
+	}
+	for _, document := range responseDto.Documents {
+		if len(document.Snapshot) == 0 || len(document.StateVector) == 0 {
+			return nil, errors.New("invalid yjs document initialization worker response")
+		}
+	}
+
+	return responseDto.Documents, nil
 }
 
 func (c WorkerClient) Compact(

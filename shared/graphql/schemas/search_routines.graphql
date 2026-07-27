@@ -15,6 +15,7 @@ input SearchRoutineInput {
   stationIds: [UUID!]!
   tagIds: [UUID!]!
   query: String!
+  isDeletedAt: Boolean
   after: String
   first: Int = 10
   sortBy: SearchRoutineSortBy = RELEVANCE

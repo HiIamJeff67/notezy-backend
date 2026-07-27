@@ -1,4 +1,5 @@
 import {
+  type Block,
   BlockNoteEditor,
   BlockNoteSchema,
   defaultBlockSpecs,
@@ -13,3 +14,9 @@ export const notezyBlockNoteSchema = BlockNoteSchema.create({
 export const notezyBlockNoteEditor = BlockNoteEditor.create({
   schema: notezyBlockNoteSchema,
 });
+
+export type NotezyBlock = Block<
+  typeof notezyBlockNoteSchema.blockSchema,
+  typeof notezyBlockNoteSchema.inlineContentSchema,
+  typeof notezyBlockNoteSchema.styleSchema
+>;

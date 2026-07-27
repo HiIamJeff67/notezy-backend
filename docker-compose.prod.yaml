@@ -48,6 +48,7 @@ services:
       REALTIME_BETA_USER_PUBLIC_IDS: ${REALTIME_BETA_USER_PUBLIC_IDS:-}
       YJS_WORKER_URLS: ws://notezy-yjs-worker:${DOCKER_YJS_WORKER_PORT:-8787}/internal/realtime/v1
       YJS_MAINTENANCE_WORKER_URL: http://notezy-yjs-worker:${DOCKER_YJS_WORKER_PORT:-8787}/internal/yjs-compaction/v1
+      YJS_DOCUMENT_INITIALIZATION_WORKER_URL: http://notezy-yjs-worker:${DOCKER_YJS_WORKER_PORT:-8787}/internal/yjs-document-initialization/v1
       YJS_PROJECTION_WORKER_URL: http://notezy-yjs-worker:${DOCKER_YJS_WORKER_PORT:-8787}/internal/yjs-projection/v1
       OTEL_SERVICE_NAME: notezy-api
       OTEL_SERVICE_VERSION: ${OTEL_SERVICE_VERSION:-unknown}

@@ -10,6 +10,7 @@ enum SearchStationSortBy {
 
 input SearchStationInput {
   query: String!
+  isDeletedAt: Boolean
   after: String
   first: Int = 10
   sortBy: SearchStationSortBy = RELEVANCE

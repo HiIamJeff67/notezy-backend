@@ -379,7 +379,7 @@ func (ec *executionContext) unmarshalInputSearchSubShelfInput(ctx context.Contex
 		asMap["sortOrder"] = "DESC"
 	}
 
-	fieldsInOrder := [...]string{"rootShelfId", "prevSubShelfId", "query", "after", "first", "sortBy", "sortOrder"}
+	fieldsInOrder := [...]string{"rootShelfId", "prevSubShelfId", "query", "isDeletedAt", "after", "first", "sortBy", "sortOrder"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -407,6 +407,13 @@ func (ec *executionContext) unmarshalInputSearchSubShelfInput(ctx context.Contex
 				return it, err
 			}
 			it.Query = data
+		case "isDeletedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isDeletedAt"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsDeletedAt = data
 		case "after":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)

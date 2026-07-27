@@ -93,6 +93,44 @@ query SearchItems($input: SearchItemInput!) {
   }
 }
 
+query SearchMaterials($input: SearchMaterialInput!) {
+  searchMaterials(input: $input) {
+    searchEdges {
+      node {
+        ...FragmentedPrivateMaterial
+      }
+      encodedSearchCursor
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}
+
+query SearchBlockPacks($input: SearchBlockPackInput!) {
+  searchBlockPacks(input: $input) {
+    searchEdges {
+      node {
+        ...FragmentedPrivateBlockPack
+      }
+      encodedSearchCursor
+    }
+    searchPageInfo {
+      hasNextPage
+      hasPreviousPage
+      startEncodedSearchCursor
+      endEncodedSearchCursor
+    }
+    totalCount
+    searchTime
+  }
+}
+
 query SearchBlocks($input: SearchBlockInput!) {
   searchBlocks(input: $input) {
     searchEdges {

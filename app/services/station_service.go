@@ -1443,11 +1443,16 @@ func (s *StationService) SearchPrivateStations(
 		return nil, exception
 	}
 
+	onlyDeleted := types.Ternary_Negative
+	if gqlInput.IsDeletedAt != nil && *gqlInput.IsDeletedAt {
+		onlyDeleted = types.Ternary_Positive
+	}
+
 	query := db.Model(&schemas.Station{}).
 		Select(`"StationTable".*, uts.permission AS permission`).
 		Joins(`LEFT JOIN "UsersToStationsTable" uts ON "StationTable".id = uts.station_id`).
 		Where("uts.user_id = ? AND uts.permission IN ?", userId, allowedPermissions).
-		Scopes(s.stationScope.FilterOnlyDeleted(types.Ternary_Negative))
+		Scopes(s.stationScope.FilterOnlyDeleted(onlyDeleted))
 
 	if len(strings.ReplaceAll(gqlInput.Query, " ", "")) > 0 {
 		query = query.Where(

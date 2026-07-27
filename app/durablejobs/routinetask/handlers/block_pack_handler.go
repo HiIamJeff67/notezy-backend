@@ -14,6 +14,7 @@ import (
 	dtos "github.com/HiIamJeff67/notezy-backend/app/dtos"
 	matchers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/matchers"
 	resolvers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/resolvers"
+	yjsmaintenance "github.com/HiIamJeff67/notezy-backend/app/durablejobs/yjsmaintenance"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
@@ -31,6 +32,7 @@ type BlockPackHandler struct {
 	templateBlockMatcher matchers.TemplateBlockMatcherInterface
 	blockPackRepository  repositories.BlockPackRepositoryInterface
 	blockRepository      repositories.BlockRepositoryInterface
+	yjsWorkerClient      yjsmaintenance.WorkerClient
 }
 
 func NewBlockPackHandler(
@@ -40,6 +42,7 @@ func NewBlockPackHandler(
 	templateBlockMatcher matchers.TemplateBlockMatcherInterface,
 	blockPackRepository repositories.BlockPackRepositoryInterface,
 	blockRepository repositories.BlockRepositoryInterface,
+	yjsWorkerClient yjsmaintenance.WorkerClient,
 ) BlockPackHandler {
 	if editableBlockAdapter == nil {
 		editableBlockAdapter = adapters.NewEditableBlockAdapter()
@@ -57,6 +60,7 @@ func NewBlockPackHandler(
 		templateBlockMatcher: templateBlockMatcher,
 		blockPackRepository:  blockPackRepository,
 		blockRepository:      blockRepository,
+		yjsWorkerClient:      yjsWorkerClient,
 	}
 }
 
@@ -105,6 +109,7 @@ func (h BlockPackHandler) HandleCreateBlockPack(
 
 	blockPackInputs := make([]inputs.BulkCreateBlockPackInput, 0, len(candidateTasks))
 	blockContentInputs := make([]inputs.BulkCreateBlockPackContentInput, 0, len(candidateTasks))
+	initializationReqDtos := make([]dtos.InitializeBlockPackYjsDocumentReqDto, 0, len(candidateTasks))
 	preparedTaskIndexes := make([]int, 0, len(candidateTasks))
 
 	for candidateIndex, payload := range candidatePayloads {
@@ -117,6 +122,7 @@ func (h BlockPackHandler) HandleCreateBlockPack(
 		var prevRootId *uuid.UUID
 		taskFailed := false
 		taskBlocks := make([]inputs.CreateBlockInput, 0)
+		matchedRootBlocks := make([]dtos.ArborizedEditableBlock, 0, len(payload.Template.Blocks))
 		prevRootInputIndex := -1
 		for _, block := range payload.Template.Blocks {
 			matchedBlock, exception := h.templateBlockMatcher.MatchArborizedEditableBlock(block.ArborizedEditableBlock, patternValues)
@@ -124,6 +130,7 @@ func (h BlockPackHandler) HandleCreateBlockPack(
 				taskFailed = true
 				break
 			}
+			matchedRootBlocks = append(matchedRootBlocks, matchedBlock)
 			blocks, _, _, exception := flattenArborizedBlock(h.editableBlockAdapter, blockPackId, &matchedBlock)
 			if exception != nil || len(blocks) == 0 {
 				taskFailed = true
@@ -165,10 +172,17 @@ func (h BlockPackHandler) HandleCreateBlockPack(
 			BlockPackId: blockPackId,
 			Blocks:      taskBlocks,
 		})
+		initializationReqDtos = append(initializationReqDtos, dtos.InitializeBlockPackYjsDocumentReqDto{
+			Blocks: matchedRootBlocks,
+		})
 		preparedTaskIndexes = append(preparedTaskIndexes, candidateTaskIndexes[candidateIndex])
 	}
 	if len(blockPackInputs) == 0 {
 		return successes, nil
+	}
+	initializationResDtos, err := h.yjsWorkerClient.InitializeDocuments(ctx, initializationReqDtos)
+	if err != nil {
+		return successes, exceptions.BlockPack.FailedToCreate().WithOrigin(err)
 	}
 
 	tx := h.db.WithContext(ctx).Begin()
@@ -185,10 +199,12 @@ func (h BlockPackHandler) HandleCreateBlockPack(
 	}
 
 	successfulBlockContentInputs := make([]inputs.BulkCreateBlockPackContentInput, 0, len(blockContentInputs))
+	successfulInitializationResDtos := make([]dtos.InitializeBlockPackYjsDocumentResDto, 0, len(initializationResDtos))
 	successfulTaskIndexes := make([]int, 0, len(preparedTaskIndexes))
 	for index, success := range blockPackSuccesses {
 		if success {
 			successfulBlockContentInputs = append(successfulBlockContentInputs, blockContentInputs[index])
+			successfulInitializationResDtos = append(successfulInitializationResDtos, initializationResDtos[index])
 			successfulTaskIndexes = append(successfulTaskIndexes, preparedTaskIndexes[index])
 		}
 	}
@@ -199,7 +215,12 @@ func (h BlockPackHandler) HandleCreateBlockPack(
 
 	documents := make([]schemas.BlockPackYjsDocument, len(successfulBlockContentInputs))
 	for index, successfulBlockContentInput := range successfulBlockContentInputs {
-		documents[index] = schemas.BlockPackYjsDocument{BlockPackId: successfulBlockContentInput.BlockPackId}
+		documents[index] = schemas.BlockPackYjsDocument{
+			BlockPackId:            successfulBlockContentInput.BlockPackId,
+			Snapshot:               successfulInitializationResDtos[index].Snapshot,
+			StateVector:            successfulInitializationResDtos[index].StateVector,
+			ProjectedUntilSequence: 0,
+		}
 	}
 	if err := tx.CreateInBatches(&documents, constants.MaxBatchCreateBlockSize).Error; err != nil {
 		tx.Rollback()

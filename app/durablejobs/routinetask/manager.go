@@ -14,6 +14,7 @@ import (
 	handlers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers"
 	matchers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/matchers"
 	resolvers "github.com/HiIamJeff67/notezy-backend/app/durablejobs/routinetask/handlers/resolvers"
+	yjsmaintenance "github.com/HiIamJeff67/notezy-backend/app/durablejobs/yjsmaintenance"
 	exceptions "github.com/HiIamJeff67/notezy-backend/app/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/app/models/inputs"
 	repositories "github.com/HiIamJeff67/notezy-backend/app/models/repositories"
@@ -65,6 +66,7 @@ func NewHandlerManager(maxWorkers int, db *gorm.DB) HandlerManager {
 	routineRepository := repositories.NewRoutineRepository(scopes.NewRoutineScope())
 	patternResolver := resolvers.NewPatternResolver(db, blockRepository, blockPackRepository)
 	templateBlockMatcher := matchers.NewTemplateBlockMatcher()
+	yjsWorkerClient := yjsmaintenance.NewWorkerClient()
 
 	blockPackHandler := handlers.NewBlockPackHandler(
 		db,
@@ -73,6 +75,7 @@ func NewHandlerManager(maxWorkers int, db *gorm.DB) HandlerManager {
 		templateBlockMatcher,
 		blockPackRepository,
 		blockRepository,
+		yjsWorkerClient,
 	)
 	blockHandler := handlers.NewBlockHandler(
 		db,

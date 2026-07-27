@@ -2,10 +2,10 @@ package workers
 
 import (
 	"hash/fnv"
-	"os"
 	"strings"
 
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/app/realtime/types"
+	"github.com/HiIamJeff67/notezy-backend/app/util"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
@@ -21,7 +21,7 @@ type WorkerManager struct {
 }
 
 func NewWorkerManager() *WorkerManager {
-	endpoints := strings.Split(os.Getenv("YJS_WORKER_URLS"), ",")
+	endpoints := strings.Split(util.GetEnv("YJS_WORKER_URLS", "ws://notezy-yjs-worker:8787/internal/realtime/v1"), ",")
 	workers := make([]*realtimeWorker, 0, len(endpoints))
 
 	for _, endpoint := range endpoints {

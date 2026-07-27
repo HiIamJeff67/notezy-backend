@@ -1,0 +1,11 @@
+type PrivateMaterial {
+  id: UUID!
+  parentSubShelfId: UUID!
+  name: String!
+  size: Int64!
+  contentType: MaterialContentType!
+  parseMediaType: String!
+  deletedAt: Time
+  updatedAt: Time!
+  createdAt: Time!
+}

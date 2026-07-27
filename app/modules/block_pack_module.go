@@ -16,11 +16,13 @@ type BlockPackModule struct {
 }
 
 func NewBlockPackModule() *BlockPackModule {
+	blockPackScope := scopes.NewBlockPackScope()
 	subShelfRepository := repositories.NewSubShelfRepository(scopes.NewSubShelfScope())
-	blockPackRepository := repositories.NewBlockPackRepository(scopes.NewBlockPackScope())
+	blockPackRepository := repositories.NewBlockPackRepository(blockPackScope)
 
 	blockPackService := services.NewBlockPackService(
 		models.NotezyDB,
+		blockPackScope,
 		subShelfRepository,
 		blockPackRepository,
 		caches.NewRealtimeLeaseStore(caches.RedisClientMap),
