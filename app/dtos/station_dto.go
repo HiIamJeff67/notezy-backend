@@ -20,7 +20,7 @@ type GetMyStationByIdReqDto struct {
 		},
 		any,
 		struct {
-			StationId uuid.UUID `form:"stationId" validate:"required"`
+			StationId uuid.UUID `uri:"stationId" validate:"required"`
 			IsDeleted *bool     `form:"isDeleted" validate:"omitnil"`
 		},
 	]

@@ -21,7 +21,7 @@ type GetMyBlockByIdReqDto struct {
 		},
 		any,
 		struct {
-			BlockId uuid.UUID `form:"blockId" validate:"required"`
+			BlockId uuid.UUID `uri:"blockId" validate:"required"`
 		},
 	]
 }
@@ -51,7 +51,7 @@ type GetMyBlocksByBlockPackIdReqDto struct {
 		},
 		any,
 		struct {
-			BlockPackId uuid.UUID `form:"blockPackId" validate:"required"`
+			BlockPackId uuid.UUID `uri:"blockPackId" validate:"required"`
 		},
 	]
 }

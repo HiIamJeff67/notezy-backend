@@ -18,7 +18,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 
 	rootShelfModule := modules.NewRootShelfModule()
 
-	rootShelfRoutes := router.Group("/rootShelf")
+	rootShelfRoutes := router.Group("/root-shelves")
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(1 * time.Second),
@@ -30,7 +30,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 	}
 	{
 		rootShelfRoutes.GET(
-			"/getMyRootShelfById",
+			"/:rootShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyRootShelfById"),
@@ -45,24 +45,8 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 				),
 			)...,
 		)
-		rootShelfRoutes.GET(
-			"/searchRecentRootShelves",
-			middlewares.RepositionMiddleware(
-				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware("searchRecentRootShelves"),
-					middlewares.ApplyMeterMiddleware("server.requests.rootShelf.searchRecentRootShelves"),
-				},
-				append(
-					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
-				),
-				rootShelfModule.Binder.BindSearchRecentRootShelves(
-					rootShelfModule.Controller.SearchRecentRootShelves,
-				),
-			)...,
-		)
 		rootShelfRoutes.POST(
-			"/createRootShelf",
+			"/",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createRootShelf"),
@@ -78,7 +62,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		rootShelfRoutes.POST(
-			"/createRootShelves",
+			"/batch",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createRootShelves"),
@@ -94,7 +78,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		rootShelfRoutes.PUT(
-			"/updateMyRootShelfById",
+			"/:rootShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyRootShelfById"),
@@ -110,7 +94,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		rootShelfRoutes.PUT(
-			"/updateMyRootShelvesByIds",
+			"/batch",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyRootShelvesByIds"),
@@ -126,7 +110,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		rootShelfRoutes.PATCH(
-			"/restoreMyRootShelfById",
+			"/:rootShelfId/restore",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyRootShelfById"),
@@ -142,7 +126,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		rootShelfRoutes.PATCH(
-			"/restoreMyRootShelvesByIds",
+			"/batch/restore",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyRootShelvesByIds"),
@@ -158,7 +142,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		rootShelfRoutes.DELETE(
-			"/deleteMyRootShelfById",
+			"/:rootShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyRootShelfById"),
@@ -174,7 +158,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		rootShelfRoutes.DELETE(
-			"/deleteMyRootShelvesByIds",
+			"/batch",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyRootShelvesByIds"),
@@ -270,7 +254,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		rootShelfRoutes.POST(
-			"/:rootShelfId/ownership-transfer",
+			"/:rootShelfId/ownership",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("transferMyRootShelfOwnership"),
@@ -318,7 +302,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		rootShelfRoutes.DELETE(
-			"/:rootShelfId/leave",
+			"/:rootShelfId/memberships/me",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("leaveMyRootShelf"),
@@ -334,7 +318,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		rootShelfRoutes.DELETE(
-			"/leave",
+			"/memberships/me",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("leaveMyRootShelves"),

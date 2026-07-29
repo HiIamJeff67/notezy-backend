@@ -18,7 +18,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 
 	routineTaskModule := modules.NewRoutineTaskModule()
 
-	routineTaskRoutes := router.Group("/routineTask")
+	routineTaskRoutes := router.Group("/routine-tasks")
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(3 * time.Second),
@@ -30,7 +30,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 	}
 	{
 		routineTaskRoutes.GET(
-			"/getMyRoutineTaskById",
+			"/:routineTaskId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyRoutineTaskById"),
@@ -46,7 +46,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineTaskRoutes.GET(
-			"/getAllMyRoutineTasksByRoutineIds",
+			"/routines",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getAllMyRoutineTasksByRoutineIds"),
@@ -62,7 +62,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineTaskRoutes.GET(
-			"/getAllMyRoutineTasks",
+			"/",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getAllMyRoutineTasks"),
@@ -77,88 +77,8 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 				),
 			)...,
 		)
-		routineTaskRoutes.GET(
-			"/visualizeMyRoutineTaskStatusCount",
-			middlewares.RepositionMiddleware(
-				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskStatusCount"),
-					middlewares.ApplyMeterMiddleware("server.requests.routineTask.visualizeMyRoutineTaskStatusCount"),
-				},
-				append(
-					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
-				),
-				routineTaskModule.Binder.BindVisualizeMyRoutineTaskStatusCount(
-					routineTaskModule.Controller.VisualizeMyRoutineTaskStatusCount,
-				),
-			)...,
-		)
-		routineTaskRoutes.GET(
-			"/visualizeMyRoutineTaskPurposeCount",
-			middlewares.RepositionMiddleware(
-				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskPurposeCount"),
-					middlewares.ApplyMeterMiddleware("server.requests.routineTask.visualizeMyRoutineTaskPurposeCount"),
-				},
-				append(
-					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
-				),
-				routineTaskModule.Binder.BindVisualizeMyRoutineTaskPurposeCount(
-					routineTaskModule.Controller.VisualizeMyRoutineTaskPurposeCount,
-				),
-			)...,
-		)
-		routineTaskRoutes.GET(
-			"/visualizeMyRoutineTaskScheduledAtCount",
-			middlewares.RepositionMiddleware(
-				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskScheduledAtCount"),
-					middlewares.ApplyMeterMiddleware("server.requests.routineTask.visualizeMyRoutineTaskScheduledAtCount"),
-				},
-				append(
-					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
-				),
-				routineTaskModule.Binder.BindVisualizeMyRoutineTaskScheduledAtCount(
-					routineTaskModule.Controller.VisualizeMyRoutineTaskScheduledAtCount,
-				),
-			)...,
-		)
-		routineTaskRoutes.GET(
-			"/visualizeMyRoutineTaskActualStartedAtCount",
-			middlewares.RepositionMiddleware(
-				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskActualStartedAtCount"),
-					middlewares.ApplyMeterMiddleware("server.requests.routineTask.visualizeMyRoutineTaskActualStartedAtCount"),
-				},
-				append(
-					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
-				),
-				routineTaskModule.Binder.BindVisualizeMyRoutineTaskActualStartedAtCount(
-					routineTaskModule.Controller.VisualizeMyRoutineTaskActualStartedAtCount,
-				),
-			)...,
-		)
-		routineTaskRoutes.GET(
-			"/visualizeMyRoutineTaskActualEndedAtCount",
-			middlewares.RepositionMiddleware(
-				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskActualEndedAtCount"),
-					middlewares.ApplyMeterMiddleware("server.requests.routineTask.visualizeMyRoutineTaskActualEndedAtCount"),
-				},
-				append(
-					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
-				),
-				routineTaskModule.Binder.BindVisualizeMyRoutineTaskActualEndedAtCount(
-					routineTaskModule.Controller.VisualizeMyRoutineTaskActualEndedAtCount,
-				),
-			)...,
-		)
 		routineTaskRoutes.POST(
-			"/createRoutineTaskByRoutineId",
+			"/routine/:routineId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createRoutineTaskByRoutineId"),
@@ -174,7 +94,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineTaskRoutes.PUT(
-			"/updateMyRoutineTaskById",
+			"/:routineTaskId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyRoutineTaskById"),
@@ -190,7 +110,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineTaskRoutes.PUT(
-			"/pauseMyRoutineTaskById",
+			"/:routineTaskId/suspension",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("pauseMyRoutineTaskById"),
@@ -205,8 +125,8 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 				),
 			)...,
 		)
-		routineTaskRoutes.PUT(
-			"/resumeMyRoutineTaskById",
+		routineTaskRoutes.DELETE(
+			"/:routineTaskId/suspension",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("resumeMyRoutineTaskById"),
@@ -222,7 +142,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineTaskRoutes.DELETE(
-			"/hardDeleteMyRoutineTaskById",
+			"/:routineTaskId/permanently",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("hardDeleteMyRoutineTaskById"),
@@ -238,7 +158,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineTaskRoutes.DELETE(
-			"/hardDeleteMyRoutineTasksByIds",
+			"/batch/permanently",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("hardDeleteMyRoutineTasksByIds"),
@@ -250,6 +170,101 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup) {
 				),
 				routineTaskModule.Binder.BindHardDeleteMyRoutineTasksByIds(
 					routineTaskModule.Controller.HardDeleteMyRoutineTasksByIds,
+				),
+			)...,
+		)
+	}
+
+	/* ============================== Routes for Visualization ============================== */
+
+	visualizationRoutes := router.Group("/routine-tasks/visualizations")
+	visualizationMiddlewares := []gin.HandlerFunc{
+		middlewares.UnauthorizedRateLimitMiddleware(),
+		middlewares.TimeoutMiddleware(3 * time.Second),
+		middlewares.AuthMiddleware(),
+		interceptors.ShareableResponseWriterInterceptor(
+			interceptors.RefreshTokenInterceptor,
+			interceptors.EmbeddedInterceptor,
+		),
+	}
+	{
+		visualizationRoutes.GET(
+			"/status-count",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskStatusCount"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTask.visualizeMyRoutineTaskStatusCount"),
+				},
+				append(
+					visualizationMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
+				routineTaskModule.Binder.BindVisualizeMyRoutineTaskStatusCount(
+					routineTaskModule.Controller.VisualizeMyRoutineTaskStatusCount,
+				),
+			)...,
+		)
+		visualizationRoutes.GET(
+			"/purpose-count",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskPurposeCount"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTask.visualizeMyRoutineTaskPurposeCount"),
+				},
+				append(
+					visualizationMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
+				routineTaskModule.Binder.BindVisualizeMyRoutineTaskPurposeCount(
+					routineTaskModule.Controller.VisualizeMyRoutineTaskPurposeCount,
+				),
+			)...,
+		)
+		visualizationRoutes.GET(
+			"/scheduled-at-count",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskScheduledAtCount"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTask.visualizeMyRoutineTaskScheduledAtCount"),
+				},
+				append(
+					visualizationMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
+				routineTaskModule.Binder.BindVisualizeMyRoutineTaskScheduledAtCount(
+					routineTaskModule.Controller.VisualizeMyRoutineTaskScheduledAtCount,
+				),
+			)...,
+		)
+		visualizationRoutes.GET(
+			"/actual-started-at-count",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskActualStartedAtCount"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTask.visualizeMyRoutineTaskActualStartedAtCount"),
+				},
+				append(
+					visualizationMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
+				routineTaskModule.Binder.BindVisualizeMyRoutineTaskActualStartedAtCount(
+					routineTaskModule.Controller.VisualizeMyRoutineTaskActualStartedAtCount,
+				),
+			)...,
+		)
+		visualizationRoutes.GET(
+			"/actual-ended-at-count",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskActualEndedAtCount"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTask.visualizeMyRoutineTaskActualEndedAtCount"),
+				},
+				append(
+					visualizationMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
+				routineTaskModule.Binder.BindVisualizeMyRoutineTaskActualEndedAtCount(
+					routineTaskModule.Controller.VisualizeMyRoutineTaskActualEndedAtCount,
 				),
 			)...,
 		)

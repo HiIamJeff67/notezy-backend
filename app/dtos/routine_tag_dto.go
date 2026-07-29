@@ -20,7 +20,7 @@ type GetMyRoutineTagByIdReqDto struct {
 		},
 		any,
 		struct {
-			RoutineTagId uuid.UUID `form:"routineTagId" validate:"required"`
+			RoutineTagId uuid.UUID `uri:"routineTagId" validate:"required"`
 			IsDeleted    *bool     `form:"isDeleted" validate:"omitnil"`
 		},
 	]

@@ -31,7 +31,6 @@ import (
 
 type RootShelfServiceInterface interface {
 	GetMyRootShelfById(ctx context.Context, reqDto *dtos.GetMyRootShelfByIdReqDto) (*dtos.GetMyRootShelfByIdResDto, *exceptions.Exception)
-	SearchRecentRootShelves(ctx context.Context, reqDto *dtos.SearchRecentRootShelvesReqDto) (*dtos.SearchRecentRootShelvesResDto, *exceptions.Exception)
 	CreateRootShelf(ctx context.Context, reqDto *dtos.CreateRootShelfReqDto) (*dtos.CreateRootShelfResDto, *exceptions.Exception)
 	CreateRootShelves(ctx context.Context, reqDto *dtos.CreateRootShelvesReqDto) (*dtos.CreateRootShelvesResDto, *exceptions.Exception)
 	UpdateMyRootShelfById(ctx context.Context, reqDto *dtos.UpdateMyRootShelfByIdReqDto) (*dtos.UpdateMyRootShelfByIdResDto, *exceptions.Exception)
@@ -258,40 +257,6 @@ func (s *RootShelfService) GetMyRootShelfById(
 		UpdatedAt:      shelf.UpdatedAt,
 		CreatedAt:      shelf.CreatedAt,
 	}, nil
-}
-
-func (s *RootShelfService) SearchRecentRootShelves(
-	ctx context.Context, reqDto *dtos.SearchRecentRootShelvesReqDto,
-) (*dtos.SearchRecentRootShelvesResDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.User.InvalidDto().WithOrigin(err)
-	}
-
-	db := s.db.WithContext(ctx)
-
-	resDto := dtos.SearchRecentRootShelvesResDto{}
-
-	query := db.Model(&schemas.RootShelf{}).
-		Where(`owner_id = ? AND "RootShelfTable".deleted_at IS NULL`,
-			reqDto.ContextFields.UserId,
-		)
-	if len(strings.ReplaceAll(reqDto.Param.Query, " ", "")) > 0 {
-		query = query.Where("name ILIKE ?", "%"+reqDto.Param.Query+"%")
-	}
-
-	result := query.Order("updated_at DESC").
-		Limit(int(reqDto.Param.Limit)).
-		Offset(int(reqDto.Param.Offset)).
-		Find(&resDto)
-	if err := result.Error; err != nil {
-		return nil, exceptions.Shelf.NotFound().WithOrigin(err)
-	}
-
-	for index := range resDto {
-		resDto[index].Permission = enums.AccessControlPermission_Owner
-	}
-
-	return &resDto, nil
 }
 
 func (s *RootShelfService) CreateRootShelf(

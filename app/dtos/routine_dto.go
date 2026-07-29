@@ -20,7 +20,7 @@ type GetMyRoutineByIdReqDto struct {
 		},
 		any,
 		struct {
-			RoutineId uuid.UUID `form:"routineId" validate:"required"`
+			RoutineId uuid.UUID `uri:"routineId" validate:"required"`
 			IsDeleted *bool     `form:"isDeleted" validate:"omitnil"`
 		},
 	]
@@ -36,7 +36,7 @@ type GetMyRoutinesByStationIdReqDto struct {
 		},
 		any,
 		struct {
-			StationId  uuid.UUID `form:"stationId" validate:"required"`
+			StationId  uuid.UUID `uri:"stationId" validate:"required"`
 			AreDeleted *bool     `form:"areDeleted" validate:"omitnil"`
 		},
 	]

@@ -21,7 +21,7 @@ type GetMyRoutineTaskByIdReqDto struct {
 		},
 		any,
 		struct {
-			RoutineTaskId uuid.UUID `form:"routineTaskId" validate:"required"`
+			RoutineTaskId uuid.UUID `uri:"routineTaskId" validate:"required"`
 			IsDeleted     *bool     `form:"isDeleted" validate:"omitnil"`
 		},
 	]

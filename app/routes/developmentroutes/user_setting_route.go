@@ -17,7 +17,7 @@ func configureUserSettingRoutes(router *gin.RouterGroup) {
 
 	userSettingModule := modules.NewUserSettingModule()
 
-	userSettingRoutes := router.Group("/userSetting")
+	userSettingRoutes := router.Group("/me/settings")
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(1 * time.Second),
@@ -29,7 +29,7 @@ func configureUserSettingRoutes(router *gin.RouterGroup) {
 	}
 	{
 		userSettingRoutes.GET(
-			"/getMySetting",
+			"/",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMySetting"),

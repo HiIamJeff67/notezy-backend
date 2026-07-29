@@ -20,23 +20,8 @@ type GetMyRootShelfByIdReqDto struct {
 		},
 		any,
 		struct {
-			RootShelfId uuid.UUID `form:"rootShelfId" validate:"required"`
+			RootShelfId uuid.UUID `uri:"rootShelfId" validate:"required"`
 			IsDeleted   *bool     `form:"isDeleted" validate:"omitnil"`
-		},
-	]
-}
-
-type SearchRecentRootShelvesReqDto struct {
-	NotezyRequest[
-		struct {
-			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
-		},
-		struct {
-			UserId uuid.UUID // extracted from the access token of AuthMiddleware()
-		},
-		any,
-		struct {
-			SimpleSearchDto
 		},
 	]
 }
@@ -310,8 +295,6 @@ type GetMyRootShelfByIdResDto struct {
 	UpdatedAt      time.Time                     `json:"updatedAt"`
 	CreatedAt      time.Time                     `json:"createdAt"`
 }
-
-type SearchRecentRootShelvesResDto = []GetMyRootShelfByIdResDto
 
 type CreateRootShelfResDto struct {
 	Id             uuid.UUID `json:"id"`

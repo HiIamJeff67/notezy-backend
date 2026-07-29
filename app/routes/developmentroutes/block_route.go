@@ -17,7 +17,7 @@ func configureDevelopmentBlockRoutes(router *gin.RouterGroup) {
 	}
 
 	blockModule := modules.NewBlockModule()
-	blockRoutes := router.Group("/block")
+	blockRoutes := router.Group("/blocks")
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(3 * time.Second),
@@ -29,7 +29,7 @@ func configureDevelopmentBlockRoutes(router *gin.RouterGroup) {
 	}
 
 	blockRoutes.GET(
-		"/getMyBlockById",
+		"/:blockId",
 		middlewares.RepositionMiddleware(
 			[]gin.HandlerFunc{
 				middlewares.ApplyTracerMiddleware("getMyBlockById"),
@@ -45,7 +45,7 @@ func configureDevelopmentBlockRoutes(router *gin.RouterGroup) {
 		)...,
 	)
 	blockRoutes.GET(
-		"/getMyBlocksByIds",
+		"/batch",
 		middlewares.RepositionMiddleware(
 			[]gin.HandlerFunc{
 				middlewares.ApplyTracerMiddleware("getMyBlocksByIds"),
@@ -61,7 +61,7 @@ func configureDevelopmentBlockRoutes(router *gin.RouterGroup) {
 		)...,
 	)
 	blockRoutes.GET(
-		"/getMyBlocksByBlockPackId",
+		"/block-pack/:blockPackId",
 		middlewares.RepositionMiddleware(
 			[]gin.HandlerFunc{
 				middlewares.ApplyTracerMiddleware("getMyBlocksByBlockPackId"),

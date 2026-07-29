@@ -17,7 +17,7 @@ func configureDevelopmentUserRoutes(router *gin.RouterGroup) {
 
 	userModule := modules.NewUserModule()
 
-	userRoutes := router.Group("/user")
+	userRoutes := router.Group("/users")
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(1 * time.Second),
@@ -29,7 +29,7 @@ func configureDevelopmentUserRoutes(router *gin.RouterGroup) {
 	}
 	{
 		userRoutes.GET(
-			"/getUserData",
+			"/data",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getUserData"),
@@ -42,7 +42,7 @@ func configureDevelopmentUserRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		userRoutes.GET(
-			"/getMe",
+			"/me",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMe"),
@@ -55,7 +55,7 @@ func configureDevelopmentUserRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		userRoutes.PUT(
-			"/updateMe",
+			"/me",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMe"),

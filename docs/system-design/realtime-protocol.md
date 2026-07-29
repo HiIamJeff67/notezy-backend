@@ -1,4 +1,12 @@
-# Realtime Protocol Contract
+# Realtime Protocol Design
+
+## Scope
+
+This document is the backend-owned specification for the public Realtime
+WebSocket protocol and the HTTP ticket APIs that authorize it. It defines the
+wire contract shared by the Gateway, Yjs worker, persistence path, and any
+protocol consumer. Resource-specific ticket behavior is documented in
+[Realtime Editor API Design](../api-route-design/realtime-editor-api.md).
 
 Phase 0 endpoint:
 
@@ -11,12 +19,14 @@ A physical WebSocket belongs to one client app instance. Each new connection rec
 
 ## Realtime Ticket APIs
 
-`NOT-5` adds two authenticated REST endpoints below the API base path. They use the normal access-token/cookie authentication pipeline and never accept an access token in the WebSocket URL.
+The authenticated REST endpoints below the API base path issue capabilities for
+the public socket. They use the normal access-token/cookie authentication
+pipeline and never accept an access token in the WebSocket URL.
 
 | Method | URL | Body | Purpose |
 | --- | --- | --- | --- |
-| `POST` | `/api/development/v1/realtime/createMyRealtimeConnectionTicket` | none | Issue a root connection ticket. |
-| `POST` | `/api/development/v1/realtime/createMyBlockPackChannelTicket` | `{ "blockPackId": "UUID", "permission": "read" \| "write" }` | Check the current user's non-deleted BlockPack permission and issue a capability for that one BlockPack. |
+| `POST` | `/api/development/v1/realtime/connection/ticket` | none | Issue a root connection ticket. |
+| `POST` | `/api/development/v1/realtime/channel/block-pack/ticket` | `{ "blockPackId": "UUID", "permission": "read" \| "write" }` | Check the current user's non-deleted BlockPack permission and issue a capability for that one BlockPack. |
 
 The connection response contains `realtimeEndpoint` (`/realtime/development/v1`), `realtimeProtocolVersion`, `connectionTicket`, and `expiresAt`.
 
@@ -29,7 +39,7 @@ The BlockPack response contains `channelTicket`, `expiresAt`, `channelType`, `ch
 Read, Write, Admin, and Owner users can inspect the currently active connections in one BlockPack room:
 
 ```text
-GET /api/development/v1/realtime/blockPacks/:blockPackId/participants
+GET /api/development/v1/realtime/block-pack/:blockPackId/participants
 ```
 
 The response body uses the normal `{ success, data, exception }` envelope. `data` is an array of:
@@ -57,7 +67,11 @@ REALTIME_TICKET_PRIVATE_KEY_BASE64="$(openssl pkcs8 -topk8 -nocrypt -in realtime
 
 Tickets are short-lived for five minutes and stateless. `jti` is a trace identifier; it is not a one-time-use guarantee. True replay prevention would require shared state and is intentionally not introduced in this phase.
 
-`NOT-7` replaces root-upgrade access-token middleware validation with the connection ticket sent as the single `Sec-WebSocket-Protocol` value. Client 建立 socket 時傳入 `new WebSocket(realtimeEndpoint, [connectionTicket])`；server 驗證 signed `User-Agent` hash 後選擇同一 subprotocol。每一個 subscribe 都必須再帶入並驗證自己的 `channelTicket`。connection 與 channel ticket 的 `sub` 必須一致。
+Root-upgrade authentication uses the connection ticket as the sole
+`Sec-WebSocket-Protocol` value. The Gateway validates the signed `User-Agent`
+hash and selects the same subprotocol. Every `subscribe` carries and validates
+its own `channelTicket`; connection and channel ticket `sub` claims must
+match.
 
 ## Text Control Frames
 
@@ -96,7 +110,9 @@ Phase 0 enables only `channelType: "BlockPack"`; other values receive `unsupport
 { "version": 1, "type": "ready", "connectionId": "d3eaa2e9-bb1a-4b6b-af5d-e4f102b27b62", "resubscribeRequired": true }
 ```
 
-`authenticate` is deliberately rejected with `authentication_managed_by_upgrade`; root connection authentication is not a channel operation. `channelTicket` is present in the subscribe envelope now and is enforced by `NOT-7`.
+`authenticate` is deliberately rejected with `authentication_managed_by_upgrade`;
+root connection authentication is not a channel operation. The subscribe
+envelope carries the mandatory `channelTicket`.
 
 ## Binary Frames
 
@@ -155,4 +171,7 @@ Internal types are `1` `attach`, `2` `detach`, `3` `yjs-document`, `4` `awarenes
 
 `apply-block-projection` carries UTF-8 JSON `{ schemaId, schemaVersion, projectedSequence, blocks }`; the BlockPack id is the internal frame `channelId`. This request is accepted only over Go-established private worker connections, not through public WebSocket or REST routes. Go validates the schema and durable sequence, bulk applies the BlockTable projection, and returns JSON `{ applied, projectedUntilSequence }` with `block-projection-applied`; malformed, stale-invalid, or failed requests receive `block-projection-failed`.
 
-The internal implementation uses a bounded outbound queue per worker. Queue exhaustion or a dead worker closes affected logical channels with `worker_unavailable`; public sockets may remain open for their unrelated channels. The public per-channel queue and backpressure behavior belongs to `NOT-22`; the envelope and recovery semantics above remain the protocol contract.
+The internal implementation uses a bounded outbound queue per worker. Queue
+exhaustion or a dead worker closes affected logical channels with
+`worker_unavailable`; public sockets may remain open for unrelated channels.
+The per-channel queue and backpressure rules above are part of this protocol.

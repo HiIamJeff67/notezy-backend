@@ -1,7 +1,6 @@
 package binders
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -53,12 +52,7 @@ func (b *RoutineTagBinder) BindGetMyRoutineTagById(controllerFunc types.Controll
 			reqDto.Param.IsDeleted = &isDeleted
 		}
 
-		routineTagIdString := ctx.Query("routineTagId")
-		if routineTagIdString == "" {
-			exceptions.RoutineTag.InvalidInput().WithOrigin(fmt.Errorf("routineTagId is required")).SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		routineTagId, err := uuid.Parse(routineTagIdString)
+		routineTagId, err := uuid.Parse(ctx.Param("routineTagId"))
 		if err != nil {
 			exceptions.RoutineTag.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
 			return
@@ -161,6 +155,13 @@ func (b *RoutineTagBinder) BindUpdateMyRoutineTagById(controllerFunc types.Contr
 			return
 		}
 
+		routineTagId, err := uuid.Parse(ctx.Param("routineTagId"))
+		if err != nil {
+			exceptions.RoutineTag.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.RoutineTagId = routineTagId
+
 		controllerFunc(ctx, &reqDto)
 	}
 }
@@ -206,6 +207,13 @@ func (b *RoutineTagBinder) BindHardDeleteMyRoutineTagById(controllerFunc types.C
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
+
+		routineTagId, err := uuid.Parse(ctx.Param("routineTagId"))
+		if err != nil {
+			exceptions.RoutineTag.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.RoutineTagId = routineTagId
 
 		controllerFunc(ctx, &reqDto)
 	}

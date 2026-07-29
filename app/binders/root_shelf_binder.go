@@ -1,7 +1,6 @@
 package binders
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +14,6 @@ import (
 
 type RootShelfBinderInterface interface {
 	BindGetMyRootShelfById(controllerFunc types.ControllerFunc[*dtos.GetMyRootShelfByIdReqDto]) gin.HandlerFunc
-	BindSearchRecentRootShelves(controllerFunc types.ControllerFunc[*dtos.SearchRecentRootShelvesReqDto]) gin.HandlerFunc
 	BindCreateRootShelf(controllerFunc types.ControllerFunc[*dtos.CreateRootShelfReqDto]) gin.HandlerFunc
 	BindCreateRootShelves(controllerFunc types.ControllerFunc[*dtos.CreateRootShelvesReqDto]) gin.HandlerFunc
 	BindUpdateMyRootShelfById(controllerFunc types.ControllerFunc[*dtos.UpdateMyRootShelfByIdReqDto]) gin.HandlerFunc
@@ -66,39 +64,12 @@ func (b *RootShelfBinder) BindGetMyRootShelfById(controllerFunc types.Controller
 			reqDto.Param.IsDeleted = &isDeleted
 		}
 
-		rootShelfIdString := ctx.Query("rootShelfId")
-		if rootShelfIdString == "" {
-			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("rootShelfId is required")).SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		rootShelfId, err := uuid.Parse(rootShelfIdString)
+		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
 		if err != nil {
 			exceptions.Shelf.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
 		reqDto.Param.RootShelfId = rootShelfId
-
-		controllerFunc(ctx, &reqDto)
-	}
-}
-
-func (b *RootShelfBinder) BindSearchRecentRootShelves(controllerFunc types.ControllerFunc[*dtos.SearchRecentRootShelvesReqDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var reqDto dtos.SearchRecentRootShelvesReqDto
-
-		reqDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
-		if exception != nil {
-			exception.Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		reqDto.ContextFields.UserId = *userId
-
-		if err := ctx.ShouldBindQuery(&reqDto.Param); err != nil {
-			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
 
 		controllerFunc(ctx, &reqDto)
 	}
@@ -169,6 +140,13 @@ func (b *RootShelfBinder) BindUpdateMyRootShelfById(controllerFunc types.Control
 			return
 		}
 
+		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.RootShelfId = rootShelfId
+
 		controllerFunc(ctx, &reqDto)
 	}
 }
@@ -215,6 +193,13 @@ func (b *RootShelfBinder) BindRestoreMyRootShelfById(controllerFunc types.Contro
 			return
 		}
 
+		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.RootShelfId = rootShelfId
+
 		controllerFunc(ctx, &reqDto)
 	}
 }
@@ -260,6 +245,13 @@ func (b *RootShelfBinder) BindDeleteMyRootShelfById(controllerFunc types.Control
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
+
+		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.RootShelfId = rootShelfId
 
 		controllerFunc(ctx, &reqDto)
 	}

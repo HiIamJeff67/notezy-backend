@@ -1,7 +1,6 @@
 package binders
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -60,12 +59,7 @@ func (b *BlockPackBinder) BindGetMyBlockPackById(controllerFunc types.Controller
 			reqDto.Param.IsDeleted = &isDeleted
 		}
 
-		blockPackIdString := ctx.Query("blockPackId")
-		if blockPackIdString == "" {
-			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("blockPackId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		blockPackId, err := uuid.Parse(blockPackIdString)
+		blockPackId, err := uuid.Parse(ctx.Param("blockPackId"))
 		if err != nil {
 			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
@@ -99,12 +93,7 @@ func (b *BlockPackBinder) BindGetMyBlockPackAndItsParentById(controllerFunc type
 			reqDto.Param.IsDeleted = &isDeleted
 		}
 
-		blockPackIdString := ctx.Query("blockPackId")
-		if blockPackIdString == "" {
-			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("blockPackId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		blockPackId, err := uuid.Parse(blockPackIdString)
+		blockPackId, err := uuid.Parse(ctx.Param("blockPackId"))
 		if err != nil {
 			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
@@ -138,12 +127,7 @@ func (b *BlockPackBinder) BindGetMyBlockPacksByParentSubShelfId(controllerFunc t
 			reqDto.Param.AreDeleted = &areDeleted
 		}
 
-		parentSubShelfIdString := ctx.Query("parentSubShelfId")
-		if parentSubShelfIdString == "" {
-			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("parentSubShelfId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		parentSubShelfId, err := uuid.Parse(parentSubShelfIdString)
+		parentSubShelfId, err := uuid.Parse(ctx.Param("parentSubShelfId"))
 		if err != nil {
 			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
@@ -177,12 +161,7 @@ func (b *BlockPackBinder) BindGetAllMyBlockPacksByRootShelfId(controllerFunc typ
 			reqDto.Param.AreDeleted = &areDeleted
 		}
 
-		rootShelfIdString := ctx.Query("rootShelfId")
-		if rootShelfIdString == "" {
-			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("rootShelfId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		rootShelfId, err := uuid.Parse(rootShelfIdString)
+		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
 		if err != nil {
 			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
@@ -211,6 +190,13 @@ func (b *BlockPackBinder) BindCreateBlockPack(controllerFunc types.ControllerFun
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
+
+		parentSubShelfId, err := uuid.Parse(ctx.Param("parentSubShelfId"))
+		if err != nil {
+			exceptions.BlockPack.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.ParentSubShelfId = parentSubShelfId
 
 		controllerFunc(ctx, &reqDto)
 	}
@@ -258,6 +244,13 @@ func (b *BlockPackBinder) BindUpdateMyBlockPackById(controllerFunc types.Control
 			return
 		}
 
+		blockPackId, err := uuid.Parse(ctx.Param("blockPackId"))
+		if err != nil {
+			exceptions.BlockPack.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.BlockPackId = blockPackId
+
 		controllerFunc(ctx, &reqDto)
 	}
 }
@@ -303,6 +296,13 @@ func (b *BlockPackBinder) BindMoveMyBlockPackByParentSubShelfId(controllerFunc t
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
+
+		blockPackId, err := uuid.Parse(ctx.Param("blockPackId"))
+		if err != nil {
+			exceptions.BlockPack.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.BlockPackId = blockPackId
 
 		controllerFunc(ctx, &reqDto)
 	}
@@ -373,6 +373,13 @@ func (b *BlockPackBinder) BindRestoreMyBlockPackById(controllerFunc types.Contro
 			return
 		}
 
+		blockPackId, err := uuid.Parse(ctx.Param("blockPackId"))
+		if err != nil {
+			exceptions.BlockPack.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.BlockPackId = blockPackId
+
 		controllerFunc(ctx, &reqDto)
 	}
 }
@@ -418,6 +425,13 @@ func (b *BlockPackBinder) BindDeleteMyBlockPackById(controllerFunc types.Control
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
+
+		blockPackId, err := uuid.Parse(ctx.Param("blockPackId"))
+		if err != nil {
+			exceptions.BlockPack.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.BlockPackId = blockPackId
 
 		controllerFunc(ctx, &reqDto)
 	}

@@ -46,12 +46,7 @@ func (b *RoutineTaskRecordBinder) BindGetAllMyRoutineTaskRecordsByRoutineTaskId(
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		routineTaskIdString := ctx.Query("routineTaskId")
-		if routineTaskIdString == "" {
-			exceptions.RoutineTask.InvalidInput().WithOrigin(fmt.Errorf("routineTaskId is required")).SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		routineTaskId, err := uuid.Parse(routineTaskIdString)
+		routineTaskId, err := uuid.Parse(ctx.Param("routineTaskId"))
 		if err != nil {
 			exceptions.RoutineTask.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
 			return

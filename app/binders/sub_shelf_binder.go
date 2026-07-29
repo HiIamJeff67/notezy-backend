@@ -1,7 +1,6 @@
 package binders
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -60,12 +59,7 @@ func (b *SubShelfBinder) BindGetMySubShelfById(controllerFunc types.ControllerFu
 			reqDto.Param.IsDeleted = &isDeleted
 		}
 
-		subShelfIdString := ctx.Query("subShelfId")
-		if subShelfIdString == "" {
-			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("subShelfId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		subShelfId, err := uuid.Parse(subShelfIdString)
+		subShelfId, err := uuid.Parse(ctx.Param("subShelfId"))
 		if err != nil {
 			exceptions.Shelf.InvalidInput().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
@@ -99,12 +93,7 @@ func (b *SubShelfBinder) BindGetMySubShelvesByPrevSubShelfId(controllerFunc type
 			reqDto.Param.AreDeleted = &areDeleted
 		}
 
-		prevSubShelfIdString := ctx.Query("prevSubShelfId")
-		if prevSubShelfIdString == "" {
-			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("prevSubShelfId is required")).SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		prevSubShelfId, err := uuid.Parse(prevSubShelfIdString)
+		prevSubShelfId, err := uuid.Parse(ctx.Param("prevSubShelfId"))
 		if err != nil {
 			exceptions.Shelf.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
 			return
@@ -138,12 +127,7 @@ func (b *SubShelfBinder) BindGetAllMySubShelvesByRootShelfId(controllerFunc type
 			reqDto.Param.AreDeleted = &areDeleted
 		}
 
-		rootShelfIdString := ctx.Query("rootShelfId")
-		if rootShelfIdString == "" {
-			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("rootShelfId is required")).SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		rootShelfId, err := uuid.Parse(rootShelfIdString)
+		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
 		if err != nil {
 			exceptions.Shelf.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
 			return
@@ -177,12 +161,7 @@ func (b *SubShelfBinder) BindGetMySubShelvesAndItemsByPrevSubShelfId(controllerF
 			reqDto.Param.AreDeleted = &areDeleted
 		}
 
-		prevSubShelfIdString := ctx.Query("prevSubShelfId")
-		if prevSubShelfIdString == "" {
-			exceptions.Shelf.InvalidInput().WithOrigin(fmt.Errorf("prevSubShelfId is required")).SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		prevSubShelfId, err := uuid.Parse(prevSubShelfIdString)
+		prevSubShelfId, err := uuid.Parse(ctx.Param("prevSubShelfId"))
 		if err != nil {
 			exceptions.Shelf.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
 			return
@@ -211,6 +190,13 @@ func (b *SubShelfBinder) BindCreateSubShelfByRootShelfId(controllerFunc types.Co
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
+
+		rootShelfId, err := uuid.Parse(ctx.Param("rootShelfId"))
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.RootShelfId = rootShelfId
 
 		controllerFunc(ctx, &reqDto)
 	}
@@ -258,6 +244,13 @@ func (b *SubShelfBinder) BindUpdateMySubShelfById(controllerFunc types.Controlle
 			return
 		}
 
+		subShelfId, err := uuid.Parse(ctx.Param("subShelfId"))
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.SubShelfId = subShelfId
+
 		controllerFunc(ctx, &reqDto)
 	}
 }
@@ -303,6 +296,13 @@ func (b *SubShelfBinder) BindMoveMySubShelfByRootShelfId(controllerFunc types.Co
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
+
+		subShelfId, err := uuid.Parse(ctx.Param("subShelfId"))
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.SourceSubShelfId = subShelfId
 
 		controllerFunc(ctx, &reqDto)
 	}
@@ -373,6 +373,13 @@ func (b *SubShelfBinder) BindRestoreMySubShelfById(controllerFunc types.Controll
 			return
 		}
 
+		subShelfId, err := uuid.Parse(ctx.Param("subShelfId"))
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.SubShelfId = subShelfId
+
 		controllerFunc(ctx, &reqDto)
 	}
 }
@@ -417,6 +424,13 @@ func (b *SubShelfBinder) BindDeleteMySubShelfById(controllerFunc types.Controlle
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
+
+		subShelfId, err := uuid.Parse(ctx.Param("subShelfId"))
+		if err != nil {
+			exceptions.Shelf.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.SubShelfId = subShelfId
 
 		controllerFunc(ctx, &reqDto)
 	}

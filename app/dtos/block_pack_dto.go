@@ -21,7 +21,7 @@ type GetMyBlockPackByIdReqDto struct {
 		},
 		any,
 		struct {
-			BlockPackId uuid.UUID `form:"blockPackId" validate:"required"`
+			BlockPackId uuid.UUID `uri:"blockPackId" validate:"required"`
 			IsDeleted   *bool     `form:"isDeleted" validate:"omitnil"`
 		},
 	]
@@ -37,7 +37,7 @@ type GetMyBlockPackAndItsParentByIdReqDto struct {
 		},
 		any,
 		struct {
-			BlockPackId uuid.UUID `form:"blockPackId" validate:"required"`
+			BlockPackId uuid.UUID `uri:"blockPackId" validate:"required"`
 			IsDeleted   *bool     `form:"isDeleted" validate:"omitnil"`
 		},
 	]
@@ -53,7 +53,7 @@ type GetMyBlockPacksByParentSubShelfIdReqDto struct {
 		},
 		any,
 		struct {
-			ParentSubShelfId uuid.UUID `form:"parentSubShelfId" validate:"required"`
+			ParentSubShelfId uuid.UUID `uri:"parentSubShelfId" validate:"required"`
 			AreDeleted       *bool     `form:"areDeleted" validate:"omitnil"`
 		},
 	]
@@ -69,7 +69,7 @@ type GetAllMyBlockPacksByRootShelfIdReqDto struct {
 		},
 		any,
 		struct {
-			RootShelfId uuid.UUID `form:"rootShelfId" validate:"required"`
+			RootShelfId uuid.UUID `uri:"rootShelfId" validate:"required"`
 			AreDeleted  *bool     `form:"areDeleted" validate:"omitnil"`
 		},
 	]

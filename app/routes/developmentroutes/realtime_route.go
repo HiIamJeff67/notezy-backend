@@ -29,7 +29,7 @@ func configureDevelopmentRealtimeRoutes(router *gin.RouterGroup) {
 	}
 	{
 		realtimeRoutes.GET(
-			"/blockPacks/:blockPackId/participants",
+			"/block-pack/:blockPackId/participants",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyBlockPackRealtimeParticipants"),
@@ -44,15 +44,28 @@ func configureDevelopmentRealtimeRoutes(router *gin.RouterGroup) {
 				),
 			)...,
 		)
-		realtimeRoutes.POST(
-			"/createMyRealtimeConnectionTicket",
+	}
+
+	connectionRouterGroup := realtimeRoutes.Group("/connection")
+	connectionMiddlewares := []gin.HandlerFunc{
+		middlewares.UnauthorizedRateLimitMiddleware(),
+		middlewares.TimeoutMiddleware(3 * time.Second),
+		middlewares.AuthMiddleware(),
+		interceptors.ShareableResponseWriterInterceptor(
+			interceptors.RefreshTokenInterceptor,
+			interceptors.EmbeddedInterceptor,
+		),
+	}
+	{
+		connectionRouterGroup.POST(
+			"/ticket",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createMyRealtimeConnectionTicket"),
 					middlewares.ApplyMeterMiddleware("server.requests.realtime.createMyRealtimeConnectionTicket"),
 				},
 				append(
-					defaultMiddlewares,
+					connectionMiddlewares,
 					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
 				),
 				realtimeModule.Binder.BindCreateMyRealtimeConnectionTicket(
@@ -60,15 +73,28 @@ func configureDevelopmentRealtimeRoutes(router *gin.RouterGroup) {
 				),
 			)...,
 		)
-		realtimeRoutes.POST(
-			"/createMyBlockPackChannelTicket",
+	}
+
+	channelRouterGroup := realtimeRoutes.Group("/channel")
+	channelMiddlewares := []gin.HandlerFunc{
+		middlewares.UnauthorizedRateLimitMiddleware(),
+		middlewares.TimeoutMiddleware(3 * time.Second),
+		middlewares.AuthMiddleware(),
+		interceptors.ShareableResponseWriterInterceptor(
+			interceptors.RefreshTokenInterceptor,
+			interceptors.EmbeddedInterceptor,
+		),
+	}
+	{
+		channelRouterGroup.POST(
+			"/block-pack/ticket",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createMyBlockPackChannelTicket"),
 					middlewares.ApplyMeterMiddleware("server.requests.realtime.createMyBlockPackChannelTicket"),
 				},
 				append(
-					defaultMiddlewares,
+					channelMiddlewares,
 					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
 				),
 				realtimeModule.Binder.BindCreateMyBlockPackChannelTicket(

@@ -165,4 +165,4 @@ result := parsedOptions.DB.Model(&schemas.Station{}).
 - table schema 放 `app/models/schemas`；enum、constraint、trigger、seed、raw SQL 放各自既有子目錄。
 - 新 table/enum/trigger/constraint 必須註冊至其對應的 `migrate.go`，否則 migration 不會套用。
 - soft-delete、ownership、projection/accounting 等資料庫不變量，優先延續現有 trigger/constraint/scope 模式；不可只依賴 controller 的檢查。
-- 修改 trigger 或 raw SQL 時，確認引用到的表名、欄位與 migration 註冊都同步；資料庫契約改動也要更新相關 `docs/contracts`。
+- 修改 trigger 或 raw SQL 時，確認引用到的表名、欄位與 migration 註冊都同步；資料庫公開語意改動也要更新對應的 `docs/codebase-design/`、`docs/api-route-design/` 或 `docs/system-design/` 文件。

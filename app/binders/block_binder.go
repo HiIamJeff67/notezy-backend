@@ -1,8 +1,6 @@
 package binders
 
 import (
-	"fmt"
-
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
@@ -37,12 +35,7 @@ func (b *BlockBinder) BindGetMyBlockById(controllerFunc types.ControllerFunc[*dt
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		blockIdString := ctx.Query("blockId")
-		if blockIdString == "" {
-			exceptions.Block.InvalidDto().WithOrigin(fmt.Errorf("blockId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		blockId, err := uuid.Parse(blockIdString)
+		blockId, err := uuid.Parse(ctx.Param("blockId"))
 		if err != nil {
 			exceptions.Block.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return
@@ -88,12 +81,7 @@ func (b *BlockBinder) BindGetMyBlocksByBlockPackId(controllerFunc types.Controll
 		}
 		reqDto.ContextFields.UserId = *userId
 
-		blockPackIdString := ctx.Query("blockPackId")
-		if blockPackIdString == "" {
-			exceptions.Block.InvalidDto().WithOrigin(fmt.Errorf("blockPackId is required")).Log().SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		blockPackId, err := uuid.Parse(blockPackIdString)
+		blockPackId, err := uuid.Parse(ctx.Param("blockPackId"))
 		if err != nil {
 			exceptions.Block.InvalidDto().WithOrigin(err).Log().SafelyAbortAndResponseWithJSON(ctx)
 			return

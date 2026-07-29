@@ -17,7 +17,7 @@ func configureDevelopmentUserAccountRoutes(router *gin.RouterGroup) {
 
 	userAccountModule := modules.NewUserAccountModule()
 
-	userAccountRoutes := router.Group("/userAccount")
+	userAccountRoutes := router.Group("/me/account")
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(3 * time.Second),
@@ -29,7 +29,7 @@ func configureDevelopmentUserAccountRoutes(router *gin.RouterGroup) {
 	}
 	{
 		userAccountRoutes.GET(
-			"/getMyAccount",
+			"/",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyAccount"),
@@ -42,7 +42,7 @@ func configureDevelopmentUserAccountRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		userAccountRoutes.PUT(
-			"/updateMyAccount",
+			"/",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyAccount"),
@@ -56,7 +56,7 @@ func configureDevelopmentUserAccountRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		userAccountRoutes.PUT(
-			"/bindGoogleAccount",
+			"/google",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("bindGoogleAccount"),
@@ -68,8 +68,8 @@ func configureDevelopmentUserAccountRoutes(router *gin.RouterGroup) {
 				),
 			)...,
 		)
-		userAccountRoutes.PUT(
-			"/unbindGoogleAccount",
+		userAccountRoutes.DELETE(
+			"/google",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("unbindGoogleAccount"),

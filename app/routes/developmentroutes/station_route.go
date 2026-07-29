@@ -18,7 +18,7 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 
 	stationModule := modules.NewStationModule()
 
-	stationRoutes := router.Group("/station")
+	stationRoutes := router.Group("/stations")
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(3 * time.Second),
@@ -30,7 +30,7 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 	}
 	{
 		stationRoutes.GET(
-			"/getMyStationById",
+			"/:stationId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyStationById"),
@@ -46,7 +46,7 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		stationRoutes.GET(
-			"/getAllMyStations",
+			"/",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getAllMyStations"),
@@ -62,7 +62,7 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		stationRoutes.POST(
-			"/createStation",
+			"/",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createStation"),
@@ -78,7 +78,7 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		stationRoutes.POST(
-			"/createStations",
+			"/batch",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createStations"),
@@ -94,7 +94,7 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		stationRoutes.PUT(
-			"/updateMyStationById",
+			"/:stationId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyStationById"),
@@ -110,7 +110,7 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		stationRoutes.PUT(
-			"/updateMyStationsByIds",
+			"/batch",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyStationsByIds"),
@@ -126,7 +126,7 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		stationRoutes.PATCH(
-			"/restoreMyStationById",
+			"/:stationId/restore",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyStationById"),
@@ -142,7 +142,7 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		stationRoutes.PATCH(
-			"/restoreMyStationsByIds",
+			"/batch/restore",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyStationsByIds"),
@@ -158,7 +158,7 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		stationRoutes.DELETE(
-			"/deleteMyStationById",
+			"/:stationId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyStationById"),
@@ -174,7 +174,7 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		stationRoutes.DELETE(
-			"/deleteMyStationsByIds",
+			"/batch",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyStationsByIds"),
@@ -190,7 +190,7 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		stationRoutes.DELETE(
-			"/hardDeleteMyStationById",
+			"/:stationId/permanently",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("hardDeleteMyStationById"),
@@ -206,7 +206,7 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		stationRoutes.DELETE(
-			"/hardDeleteMyStationsByIds",
+			"/batch/permanently",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("hardDeleteMyStationsByIds"),
@@ -218,24 +218,6 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 				),
 				stationModule.Binder.BindHardDeleteMyStationsByIds(
 					stationModule.Controller.HardDeleteMyStationsByIds,
-				),
-			)...,
-		)
-		/* ============================== Routes for Visualization ============================== */
-
-		stationRoutes.GET(
-			"/visualizeMyTotalCount",
-			middlewares.RepositionMiddleware(
-				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware("visualizeMyTotalCount"),
-					middlewares.ApplyMeterMiddleware("server.requests.station.visualizeMyTotalCount"),
-				},
-				append(
-					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
-				),
-				stationModule.Binder.BindVisualizeMyTotalCount(
-					stationModule.Controller.VisualizeMyTotalCount,
 				),
 			)...,
 		)
@@ -322,7 +304,7 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		stationRoutes.POST(
-			"/:stationId/ownership-transfer",
+			"/:stationId/ownership",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("transferMyStationOwnership"),
@@ -370,7 +352,7 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		stationRoutes.DELETE(
-			"/:stationId/leave",
+			"/:stationId/memberships/me",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("leaveMyStation"),
@@ -386,7 +368,7 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		stationRoutes.DELETE(
-			"/leave",
+			"/memberships/me",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("leaveMyStations"),
@@ -398,6 +380,37 @@ func configureDevelopmentStationRoutes(router *gin.RouterGroup) {
 				),
 				stationModule.Binder.BindLeaveMyStations(
 					stationModule.Controller.LeaveMyStations,
+				),
+			)...,
+		)
+	}
+
+	/* ============================== Routes for Visualization ============================== */
+
+	visualizationRoutes := router.Group("/stations/visualizations")
+	visualizationMiddlewares := []gin.HandlerFunc{
+		middlewares.UnauthorizedRateLimitMiddleware(),
+		middlewares.TimeoutMiddleware(3 * time.Second),
+		middlewares.AuthMiddleware(),
+		interceptors.ShareableResponseWriterInterceptor(
+			interceptors.RefreshTokenInterceptor,
+			interceptors.EmbeddedInterceptor,
+		),
+	}
+	{
+		visualizationRoutes.GET(
+			"/total-count",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("visualizeMyTotalCount"),
+					middlewares.ApplyMeterMiddleware("server.requests.station.visualizeMyTotalCount"),
+				},
+				append(
+					visualizationMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
+				stationModule.Binder.BindVisualizeMyTotalCount(
+					stationModule.Controller.VisualizeMyTotalCount,
 				),
 			)...,
 		)

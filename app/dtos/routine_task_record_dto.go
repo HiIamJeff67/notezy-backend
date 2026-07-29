@@ -20,7 +20,7 @@ type GetAllMyRoutineTaskRecordsByRoutineTaskIdReqDto struct {
 		},
 		any,
 		struct {
-			RoutineTaskId uuid.UUID `form:"routineTaskId" validate:"required"`
+			RoutineTaskId uuid.UUID `uri:"routineTaskId" validate:"required"`
 			Limit         int       `form:"limit" validate:"omitempty,min=1,max=500"`
 		},
 	]

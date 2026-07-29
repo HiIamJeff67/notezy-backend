@@ -71,12 +71,7 @@ func (b *StationBinder) BindGetMyStationById(controllerFunc types.ControllerFunc
 			reqDto.Param.IsDeleted = &isDeleted
 		}
 
-		stationIdString := ctx.Query("stationId")
-		if stationIdString == "" {
-			exceptions.Station.InvalidInput().WithOrigin(fmt.Errorf("stationId is required")).SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		stationId, err := uuid.Parse(stationIdString)
+		stationId, err := uuid.Parse(ctx.Param("stationId"))
 		if err != nil {
 			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
 			return
@@ -179,6 +174,13 @@ func (b *StationBinder) BindUpdateMyStationById(controllerFunc types.ControllerF
 			return
 		}
 
+		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		if err != nil {
+			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.StationId = stationId
+
 		controllerFunc(ctx, &reqDto)
 	}
 }
@@ -224,6 +226,13 @@ func (b *StationBinder) BindRestoreMyStationById(controllerFunc types.Controller
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
+
+		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		if err != nil {
+			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.StationId = stationId
 
 		controllerFunc(ctx, &reqDto)
 	}
@@ -271,6 +280,13 @@ func (b *StationBinder) BindDeleteMyStationById(controllerFunc types.ControllerF
 			return
 		}
 
+		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		if err != nil {
+			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.StationId = stationId
+
 		controllerFunc(ctx, &reqDto)
 	}
 }
@@ -316,6 +332,13 @@ func (b *StationBinder) BindHardDeleteMyStationById(controllerFunc types.Control
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
+
+		stationId, err := uuid.Parse(ctx.Param("stationId"))
+		if err != nil {
+			exceptions.Station.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.StationId = stationId
 
 		controllerFunc(ctx, &reqDto)
 	}

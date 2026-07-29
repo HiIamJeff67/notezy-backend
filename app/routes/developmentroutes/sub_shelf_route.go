@@ -18,7 +18,7 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 
 	subShelfModule := modules.NewSubShelfModule()
 
-	subShelfRoutes := router.Group("/subShelf")
+	subShelfRoutes := router.Group("/sub-shelves")
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(1 * time.Second),
@@ -30,7 +30,7 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 	}
 	{
 		subShelfRoutes.GET(
-			"/getMySubShelfById",
+			"/:subShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMySubShelfById"),
@@ -46,7 +46,7 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		subShelfRoutes.GET(
-			"/getMySubShelvesByPrevSubShelfId",
+			"/prev-sub-shelf/:prevSubShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMySubShelvesByPrevSubShelfId"),
@@ -62,7 +62,7 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		subShelfRoutes.GET(
-			"/getAllMySubShelvesByRootShelfId",
+			"/root-shelf/:rootShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getAllMySubShelvesByRootShelfId"),
@@ -78,7 +78,7 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		subShelfRoutes.GET(
-			"/getMySubShelvesAndItemsByPrevSubShelfId",
+			"/prev-sub-shelf/:prevSubShelfId/items",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMySubShelvesAndItemsByPrevSubShelfId"),
@@ -94,7 +94,7 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		subShelfRoutes.POST(
-			"/createSubShelfByRootShelfId",
+			"/root-shelf/:rootShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createSubShelfByRootShelfId"),
@@ -110,7 +110,7 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		subShelfRoutes.POST(
-			"/createSubShelvesByRootShelfIds",
+			"/batch",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createSubShelvesByRootShelfIds"),
@@ -126,7 +126,7 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		subShelfRoutes.PUT(
-			"/updateMySubShelfById",
+			"/:subShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMySubShelfById"),
@@ -142,7 +142,7 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		subShelfRoutes.PUT(
-			"/updateMySubShelvesByIds",
+			"/batch",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMySubShelvesByIds"),
@@ -158,7 +158,7 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		subShelfRoutes.PUT(
-			"/moveMySubShelf",
+			"/:subShelfId/position",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("moveMySubShelf"),
@@ -174,7 +174,7 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		subShelfRoutes.PUT(
-			"/moveMySubShelvesByRootShelfId",
+			"/position",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("moveMySubShelvesByRootShelfId"),
@@ -190,7 +190,7 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		subShelfRoutes.PUT(
-			"/moveMySubShelvesByRootShelfIds",
+			"/batch/position",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("moveMySubShelvesByRootShelfIds"),
@@ -206,7 +206,7 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		subShelfRoutes.PATCH(
-			"/restoreMySubShelfById",
+			"/:subShelfId/restore",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMySubShelfById"),
@@ -222,7 +222,7 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		subShelfRoutes.PATCH(
-			"/restoreMySubShelvesByIds",
+			"/batch/restore",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMySubShelvesByIds"),
@@ -238,7 +238,7 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		subShelfRoutes.DELETE(
-			"/deleteMySubShelfById",
+			"/:subShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMySubShelfById"),
@@ -254,7 +254,7 @@ func configureDevelopmentSubShelfRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		subShelfRoutes.DELETE(
-			"/deleteMySubShelvesByIds",
+			"/batch",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMySubShelvesByIds"),

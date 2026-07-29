@@ -17,7 +17,7 @@ func configureDevelopmentRoutineTagRoutes(router *gin.RouterGroup) {
 
 	routineTagModule := modules.NewRoutineTagModule()
 
-	routineTagRoutes := router.Group("/routineTag")
+	routineTagRoutes := router.Group("/routine-tags")
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(3 * time.Second),
@@ -29,7 +29,7 @@ func configureDevelopmentRoutineTagRoutes(router *gin.RouterGroup) {
 	}
 	{
 		routineTagRoutes.GET(
-			"/getMyRoutineTagById",
+			"/:routineTagId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyRoutineTagById"),
@@ -42,7 +42,7 @@ func configureDevelopmentRoutineTagRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineTagRoutes.GET(
-			"/getAllMyRoutineTags",
+			"/",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getAllMyRoutineTags"),
@@ -55,7 +55,7 @@ func configureDevelopmentRoutineTagRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineTagRoutes.POST(
-			"/createRoutineTag",
+			"/",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createRoutineTag"),
@@ -68,7 +68,7 @@ func configureDevelopmentRoutineTagRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineTagRoutes.POST(
-			"/createRoutineTags",
+			"/batch",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createRoutineTags"),
@@ -81,7 +81,7 @@ func configureDevelopmentRoutineTagRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineTagRoutes.PUT(
-			"/updateMyRoutineTagById",
+			"/:routineTagId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyRoutineTagById"),
@@ -94,7 +94,7 @@ func configureDevelopmentRoutineTagRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineTagRoutes.PUT(
-			"/updateMyRoutineTagsByIds",
+			"/batch",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyRoutineTagsByIds"),
@@ -107,7 +107,7 @@ func configureDevelopmentRoutineTagRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineTagRoutes.DELETE(
-			"/hardDeleteMyRoutineTagById",
+			"/:routineTagId/permanently",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("hardDeleteMyRoutineTagById"),
@@ -120,7 +120,7 @@ func configureDevelopmentRoutineTagRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineTagRoutes.DELETE(
-			"/hardDeleteMyRoutineTagsByIds",
+			"/batch/permanently",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("hardDeleteMyRoutineTagsByIds"),

@@ -62,12 +62,7 @@ func (b *RoutineTaskBinder) BindGetMyRoutineTaskById(controllerFunc types.Contro
 			reqDto.Param.IsDeleted = &isDeleted
 		}
 
-		routineTaskIdString := ctx.Query("routineTaskId")
-		if routineTaskIdString == "" {
-			exceptions.RoutineTask.InvalidInput().WithOrigin(fmt.Errorf("routineTaskId is required")).SafelyAbortAndResponseWithJSON(ctx)
-			return
-		}
-		routineTaskId, err := uuid.Parse(routineTaskIdString)
+		routineTaskId, err := uuid.Parse(ctx.Param("routineTaskId"))
 		if err != nil {
 			exceptions.RoutineTask.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
 			return
@@ -164,6 +159,13 @@ func (b *RoutineTaskBinder) BindCreateRoutineTaskByRoutineId(controllerFunc type
 			return
 		}
 
+		routineId, err := uuid.Parse(ctx.Param("routineId"))
+		if err != nil {
+			exceptions.RoutineTask.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.RoutineId = routineId
+
 		controllerFunc(ctx, &reqDto)
 	}
 }
@@ -186,6 +188,13 @@ func (b *RoutineTaskBinder) BindUpdateMyRoutineTaskById(controllerFunc types.Con
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
+
+		routineTaskId, err := uuid.Parse(ctx.Param("routineTaskId"))
+		if err != nil {
+			exceptions.RoutineTask.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.RoutineTaskId = routineTaskId
 
 		controllerFunc(ctx, &reqDto)
 	}
@@ -210,6 +219,13 @@ func (b *RoutineTaskBinder) BindPauseMyRoutineTaskById(controllerFunc types.Cont
 			return
 		}
 
+		routineTaskId, err := uuid.Parse(ctx.Param("routineTaskId"))
+		if err != nil {
+			exceptions.RoutineTask.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.RoutineTaskId = routineTaskId
+
 		controllerFunc(ctx, &reqDto)
 	}
 }
@@ -233,6 +249,13 @@ func (b *RoutineTaskBinder) BindResumeMyRoutineTaskById(controllerFunc types.Con
 			return
 		}
 
+		routineTaskId, err := uuid.Parse(ctx.Param("routineTaskId"))
+		if err != nil {
+			exceptions.RoutineTask.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.RoutineTaskId = routineTaskId
+
 		controllerFunc(ctx, &reqDto)
 	}
 }
@@ -255,6 +278,13 @@ func (b *RoutineTaskBinder) BindHardDeleteMyRoutineTaskById(controllerFunc types
 			exception.SafelyAbortAndResponseWithJSON(ctx)
 			return
 		}
+
+		routineTaskId, err := uuid.Parse(ctx.Param("routineTaskId"))
+		if err != nil {
+			exceptions.RoutineTask.InvalidInput().WithOrigin(err).SafelyAbortAndResponseWithJSON(ctx)
+			return
+		}
+		reqDto.Body.RoutineTaskId = routineTaskId
 
 		controllerFunc(ctx, &reqDto)
 	}

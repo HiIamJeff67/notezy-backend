@@ -20,7 +20,7 @@ type GetMySubShelfByIdReqDto struct {
 		},
 		any,
 		struct {
-			SubShelfId uuid.UUID `form:"subShelfId" validate:"required"`
+			SubShelfId uuid.UUID `uri:"subShelfId" validate:"required"`
 			IsDeleted  *bool     `form:"isDeleted" validate:"omitnil"`
 		},
 	]
@@ -36,7 +36,7 @@ type GetMySubShelvesByPrevSubShelfIdReqDto struct {
 		},
 		any,
 		struct {
-			PrevSubShelfId uuid.UUID `form:"prevSubShelfId" validate:"required"`
+			PrevSubShelfId uuid.UUID `uri:"subShelfId" validate:"required"`
 			AreDeleted     *bool     `form:"areDeleted" validate:"omitnil"`
 		},
 	]
@@ -52,7 +52,7 @@ type GetAllMySubShelvesByRootShelfIdReqDto struct {
 		},
 		any,
 		struct {
-			RootShelfId uuid.UUID `form:"rootShelfId" validate:"required"`
+			RootShelfId uuid.UUID `uri:"rootShelfId" validate:"required"`
 			AreDeleted  *bool     `form:"areDeleted" validate:"omitnil"`
 		},
 	]
@@ -68,7 +68,7 @@ type GetMySubShelvesAndItemsByPrevSubShelfIdReqDto struct {
 		},
 		any,
 		struct {
-			PrevSubShelfId uuid.UUID `form:"prevSubShelfId" validate:"required"`
+			PrevSubShelfId uuid.UUID `uri:"subShelfId" validate:"required"`
 			AreDeleted     *bool     `form:"areDeleted" validate:"omitnil"`
 		},
 	]

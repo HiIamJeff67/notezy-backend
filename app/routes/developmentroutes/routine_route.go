@@ -18,7 +18,7 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 
 	routineModule := modules.NewRoutineModule()
 
-	routineRoutes := router.Group("/routine")
+	routineRoutes := router.Group("/routines")
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(3 * time.Second),
@@ -30,7 +30,7 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 	}
 	{
 		routineRoutes.GET(
-			"/getMyRoutineById",
+			"/:routineId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyRoutineById"),
@@ -46,7 +46,7 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineRoutes.GET(
-			"getMyRoutinesByStationId",
+			"/station/:stationId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyRoutinesByStationId"),
@@ -62,7 +62,7 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineRoutes.GET(
-			"/getAllMyRoutinesByTimeRange",
+			"/",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getAllMyRoutinesByTimeRange"),
@@ -77,72 +77,8 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 				),
 			)...,
 		)
-		routineRoutes.GET(
-			"/visualizeMyRoutineStatusCount",
-			middlewares.RepositionMiddleware(
-				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware("visualizeMyRoutineStatusCount"),
-					middlewares.ApplyMeterMiddleware("server.requests.routine.visualizeMyRoutineStatusCount"),
-				},
-				append(
-					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
-				),
-				routineModule.Binder.BindVisualizeMyRoutineStatusCount(
-					routineModule.Controller.VisualizeMyRoutineStatusCount,
-				),
-			)...,
-		)
-		routineRoutes.GET(
-			"/visualizeMyRoutinePeriodCount",
-			middlewares.RepositionMiddleware(
-				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware("visualizeMyRoutinePeriodCount"),
-					middlewares.ApplyMeterMiddleware("server.requests.routine.visualizeMyRoutinePeriodCount"),
-				},
-				append(
-					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
-				),
-				routineModule.Binder.BindVisualizeMyRoutinePeriodCount(
-					routineModule.Controller.VisualizeMyRoutinePeriodCount,
-				),
-			)...,
-		)
-		routineRoutes.GET(
-			"/visualizeMyRoutineScheduledStartAtCount",
-			middlewares.RepositionMiddleware(
-				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware("visualizeMyRoutineScheduledStartAtCount"),
-					middlewares.ApplyMeterMiddleware("server.requests.routine.visualizeMyRoutineScheduledStartAtCount"),
-				},
-				append(
-					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
-				),
-				routineModule.Binder.BindVisualizeMyRoutineScheduledStartAtCount(
-					routineModule.Controller.VisualizeMyRoutineScheduledStartAtCount,
-				),
-			)...,
-		)
-		routineRoutes.GET(
-			"/visualizeMyRoutineScheduledEndAtCount",
-			middlewares.RepositionMiddleware(
-				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware("visualizeMyRoutineScheduledEndAtCount"),
-					middlewares.ApplyMeterMiddleware("server.requests.routine.visualizeMyRoutineScheduledEndAtCount"),
-				},
-				append(
-					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
-				),
-				routineModule.Binder.BindVisualizeMyRoutineScheduledEndAtCount(
-					routineModule.Controller.VisualizeMyRoutineScheduledEndAtCount,
-				),
-			)...,
-		)
 		routineRoutes.POST(
-			"/createRoutineByStationId",
+			"/station/:stationId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createRoutineByStationId"),
@@ -158,7 +94,7 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineRoutes.POST(
-			"/createRoutinesByStationIds",
+			"/batch",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createRoutinesByStationIds"),
@@ -174,7 +110,7 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineRoutes.PUT(
-			"/updateMyRoutineById",
+			"/:routineId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyRoutineById"),
@@ -190,7 +126,7 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineRoutes.PUT(
-			"/updateMyRoutinesByIds",
+			"/batch",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyRoutinesByIds"),
@@ -206,7 +142,7 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineRoutes.POST(
-			"/linkRoutineTagById",
+			"/:routineId/tags/:routineTagId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("linkRoutineTagById"),
@@ -222,7 +158,7 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineRoutes.POST(
-			"/linkRoutineTagsByIds",
+			"/tags",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("linkRoutineTagsByIds"),
@@ -238,7 +174,7 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineRoutes.POST(
-			"/linkRoutineItemById",
+			"/:routineId/items/:itemId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("linkRoutineItemById"),
@@ -254,7 +190,7 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineRoutes.POST(
-			"/linkRoutineItemsByIds",
+			"/items",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("linkRoutineItemsByIds"),
@@ -270,7 +206,7 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineRoutes.PATCH(
-			"/restoreMyRoutineById",
+			"/:routineId/restore",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyRoutineById"),
@@ -286,7 +222,7 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineRoutes.PATCH(
-			"/restoreMyRoutinesByIds",
+			"/batch/restore",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyRoutinesByIds"),
@@ -302,7 +238,7 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineRoutes.DELETE(
-			"/deleteMyRoutineById",
+			"/:routineId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyRoutineById"),
@@ -318,7 +254,7 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineRoutes.DELETE(
-			"/deleteMyRoutinesByIds",
+			"/batch",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyRoutinesByIds"),
@@ -334,7 +270,7 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineRoutes.DELETE(
-			"/hardDeleteMyRoutineById",
+			"/:routineId/permanently",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("hardDeleteMyRoutineById"),
@@ -350,7 +286,7 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		routineRoutes.DELETE(
-			"/hardDeleteMyRoutinesByIds",
+			"/batch/permanently",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("hardDeleteMyRoutinesByIds"),
@@ -362,6 +298,85 @@ func configureDevelopmentRoutineRoutes(router *gin.RouterGroup) {
 				),
 				routineModule.Binder.BindHardDeleteMyRoutinesByIds(
 					routineModule.Controller.HardDeleteMyRoutinesByIds,
+				),
+			)...,
+		)
+	}
+
+	/* ============================== Routes for Visualization ============================== */
+
+	visualizationRoutes := router.Group("/routines/visualizations")
+	visualizationMiddlewares := []gin.HandlerFunc{
+		middlewares.UnauthorizedRateLimitMiddleware(),
+		middlewares.TimeoutMiddleware(3 * time.Second),
+		middlewares.AuthMiddleware(),
+		interceptors.ShareableResponseWriterInterceptor(
+			interceptors.RefreshTokenInterceptor,
+			interceptors.EmbeddedInterceptor,
+		),
+	}
+	{
+		visualizationRoutes.GET(
+			"/status-count",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("visualizeMyRoutineStatusCount"),
+					middlewares.ApplyMeterMiddleware("server.requests.routine.visualizeMyRoutineStatusCount"),
+				},
+				append(
+					visualizationMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
+				routineModule.Binder.BindVisualizeMyRoutineStatusCount(
+					routineModule.Controller.VisualizeMyRoutineStatusCount,
+				),
+			)...,
+		)
+		visualizationRoutes.GET(
+			"/period-count",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("visualizeMyRoutinePeriodCount"),
+					middlewares.ApplyMeterMiddleware("server.requests.routine.visualizeMyRoutinePeriodCount"),
+				},
+				append(
+					visualizationMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
+				routineModule.Binder.BindVisualizeMyRoutinePeriodCount(
+					routineModule.Controller.VisualizeMyRoutinePeriodCount,
+				),
+			)...,
+		)
+		visualizationRoutes.GET(
+			"/scheduled-start-at-count",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("visualizeMyRoutineScheduledStartAtCount"),
+					middlewares.ApplyMeterMiddleware("server.requests.routine.visualizeMyRoutineScheduledStartAtCount"),
+				},
+				append(
+					visualizationMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
+				routineModule.Binder.BindVisualizeMyRoutineScheduledStartAtCount(
+					routineModule.Controller.VisualizeMyRoutineScheduledStartAtCount,
+				),
+			)...,
+		)
+		visualizationRoutes.GET(
+			"/scheduled-end-at-count",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("visualizeMyRoutineScheduledEndAtCount"),
+					middlewares.ApplyMeterMiddleware("server.requests.routine.visualizeMyRoutineScheduledEndAtCount"),
+				},
+				append(
+					visualizationMiddlewares,
+					middlewares.AllowedPermissionsAbove(enums.AccessControlPermission_Read),
+				),
+				routineModule.Binder.BindVisualizeMyRoutineScheduledEndAtCount(
+					routineModule.Controller.VisualizeMyRoutineScheduledEndAtCount,
 				),
 			)...,
 		)

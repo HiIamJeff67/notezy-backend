@@ -18,7 +18,7 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 
 	blockPackModule := modules.NewBlockPackModule()
 
-	blockPackRoutes := router.Group("/blockPack")
+	blockPackRoutes := router.Group("/block-packs")
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(3 * time.Second),
@@ -30,7 +30,7 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 	}
 	{
 		blockPackRoutes.GET(
-			"/getMyBlockPackById",
+			"/:blockPackId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyBlockPackById"),
@@ -46,7 +46,7 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		blockPackRoutes.GET(
-			"/getMyBlockPackAndItsParentById",
+			"/:blockPackId/parent",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyBlockPackAndItsParentById"),
@@ -62,7 +62,7 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		blockPackRoutes.GET(
-			"/getMyBlockPacksByParentSubShelfId",
+			"/sub-shelf/:parentSubShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyBlockPacksByParentSubShelfId"),
@@ -78,7 +78,7 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		blockPackRoutes.GET(
-			"/getAllMyBlockPacksByRootShelfId",
+			"/root-shelf/:rootShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getAllMyBlockPacksByRootShelfId"),
@@ -94,7 +94,7 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		blockPackRoutes.POST(
-			"/createBlockPack",
+			"/sub-shelf/:parentSubShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createBlockPack"),
@@ -110,7 +110,7 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		blockPackRoutes.POST(
-			"/createBlockPacks",
+			"/batch",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createBlockPacks"),
@@ -126,7 +126,7 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		blockPackRoutes.PUT(
-			"/updateMyBlockPackById",
+			"/:blockPackId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyBlockPackById"),
@@ -142,7 +142,7 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		blockPackRoutes.PUT(
-			"/updateMyBlockPacksByIds",
+			"/batch",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyBlockPacksByIds"),
@@ -158,7 +158,7 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		blockPackRoutes.PUT(
-			"/moveMyBlockPackById",
+			"/:blockPackId/position",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("moveMyBlockPackById"),
@@ -174,7 +174,7 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		blockPackRoutes.PUT(
-			"/moveMyBlockPacksByParentSubShelfId",
+			"/position",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("moveMyBlockPacksByParentSubShelfId"),
@@ -190,7 +190,7 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		blockPackRoutes.PUT(
-			"/moveMyBlockPacksByParentSubShelfIds",
+			"/batch/position",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("moveMyBlockPacksByParentSubShelfIds"),
@@ -206,7 +206,7 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		blockPackRoutes.PATCH(
-			"/restoreMyBlockPackById",
+			"/:blockPackId/restore",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyBlockPackById"),
@@ -222,7 +222,7 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		blockPackRoutes.PATCH(
-			"/restoreMyBlockPacksByIds",
+			"/batch/restore",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyBlockPacksByIds"),
@@ -238,7 +238,7 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		blockPackRoutes.DELETE(
-			"/deleteMyBlockPackById",
+			"/:blockPackId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyBlockPackById"),
@@ -254,7 +254,7 @@ func configureDevelopmentBlockPackRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		blockPackRoutes.DELETE(
-			"/deleteMyBlockPacksByIds",
+			"/batch",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyBlockPacksByIds"),

@@ -1,6 +1,17 @@
-# Yjs Collaboration Contract
+# Yjs Collaboration and Persistence Design
 
-本文件定義 Notezy 的 BlockPack collaboration document contract。它是前端 BlockNote、public Realtime gateway、Node Yjs worker、Go persistence 與 Block projection 的共同邊界；任何一方不得自行改變 room、fragment、schema 或 sequence 語意。
+## Scope
+
+This document defines the backend-owned BlockPack collaboration model:
+document identity, schema evolution, durable persistence, projection, and the
+Gateway-to-worker boundary. Public connection framing is specified by
+[Realtime Protocol Design](realtime-protocol.md); HTTP ticket behavior is
+specified by [Realtime Editor API Design](../api-route-design/realtime-editor-api.md).
+
+Notezy's BlockPack collaboration document is shared by BlockNote, the public
+Realtime Gateway, the Node Yjs worker, Go persistence, and Block projection.
+No implementation may independently change room, fragment, schema, or sequence
+semantics.
 
 ## Document Identity
 
@@ -17,7 +28,7 @@ Go constants: `YjsBlockPackRoomPrefix`、`YjsBlockPackFragmentName`、`YjsBlockP
 
 `document-store` 必須顯式傳給 BlockNote collaboration configuration，例如 `doc.getXmlFragment("document-store")`。不得依賴 BlockNote Yjs utility 的預設 fragment name。
 
-一個 BlockPack 對應一份 logical Yjs document。`Y.Doc` 是 Node worker 在 active room 的記憶體 runtime object；它不是資料庫 entity，也不會直接傳給前端或 Go service。
+一個 BlockPack 對應一份 logical Yjs document。`Y.Doc` 是 Node worker 在 active room 的記憶體 runtime object；它不是資料庫 entity，也不會直接提供給外部 editor 或 Go service。
 
 ## BlockNote Schema
 
@@ -25,9 +36,9 @@ schema version `1` 的 block type manifest 與目前後端 `BlockType` 對齊：
 
 `paragraph`、`heading`、`quote`、`bulletListItem`、`numberedListItem`、`checkListItem`、`toggleListItem`、`image`、`video`、`audio`、`file`、`table`、`codeBlock`。
 
-前端必須以單一 `BlockNoteSchema` factory 建立 editor、Yjs import/export 與 server-side projector 使用的 schema。Node worker 使用相同的 block/inline/style manifest；Go 不解析 Yjs tree，也不自行重建 BlockNote document。
+所有 editor runtime 必須以單一 `BlockNoteSchema` factory 建立 editor、Yjs import/export 與 server-side projector 使用的 schema。Node worker 使用相同的 block/inline/style manifest；Go 不解析 Yjs tree，也不自行重建 BlockNote document。
 
-Node projector 使用 `@blocknote/core/yjs` 的 `yXmlFragmentToBlocks`，並明確讀取 `document-store` fragment。它的 schema 排除 `divider`，因為目前後端 `BlockType` 未支援此 block type；前端 schema 也不得建立 `divider`。
+Node projector 使用 `@blocknote/core/yjs` 的 `yXmlFragmentToBlocks`，並明確讀取 `document-store` fragment。它的 schema 排除 `divider`，因為目前後端 `BlockType` 未支援此 block type；editor schema 也不得建立 `divider`。
 
 新增、刪除或變更 block props、inline content、style schema 都是 schema migration，不是一般 feature flag。
 
@@ -53,7 +64,7 @@ durable Yjs truth 是 `BlockPackYjsDocument.Snapshot` 加上尚未 compact 的 `
 
 `BlockTable` 是 Yjs document 的 materialized projection，Block 不支援 soft delete。projection 對不再存在於 document 的 block 使用實體 `DELETE`；BlockPack soft delete 時則保留它的 Blocks，還原 BlockPack 後可直接重用既有 projection。
 
-Block REST read endpoints 與 GraphQL `searchBlocks` 都只讀 `BlockTable` projection；它們不得用於建立或回填 active `Y.Doc`。BlockPack REST read response 會帶 `lastUpdateSequence`、`compactedUntilSequence`、`projectedUntilSequence` 與 `isProjectionCurrent`。前端可以用 `isProjectionCurrent = false` 顯示 read model 正在落後，但 editor 的協作狀態一律仍以 Yjs channel 為準。
+Block REST read endpoints 與 GraphQL `searchBlocks` 都只讀 `BlockTable` projection；它們不得用於建立或回填 active `Y.Doc`。BlockPack REST read response 會帶 `lastUpdateSequence`、`compactedUntilSequence`、`projectedUntilSequence` 與 `isProjectionCurrent`。`isProjectionCurrent = false` 表示 read model 落後 durable document，協作狀態一律仍以 Yjs channel 為準。
 
 | 欄位 | 語意 |
 | --- | --- |
@@ -70,7 +81,7 @@ room cold start 固定依序執行：建立空 `Y.Doc`、套用非空 Snapshot�
 
 ## Public Connection And Capability
 
-root WebSocket authentication 以 connection ticket 取代 access-token middleware；它只識別 user，不授權任何 BlockPack。`NOT-5` 已發出 capability ticket，`NOT-7` 會在每個 BlockPack subscribe 驗證後才建立 channel。
+root WebSocket authentication 以 connection ticket 取代 access-token middleware；它只識別 user，不授權任何 BlockPack。每個 BlockPack channel 都在 subscribe 驗證 capability ticket 後才建立。
 
 ticket claims 的最小集合：
 
@@ -88,11 +99,15 @@ ticket claims 的最小集合：
 }
 ```
 
-`NOT-7` 的 Go Gateway 負責驗證 connection/channel ticket，以及兩者的 user、channel type 與 BlockPack id 是否相符；Node worker 只信任 Go 已驗證並轉送的 attach message。ticket 是短效 stateless capability，`jti` 不代表可在沒有共享 state 下強制一次性使用。Gateway 在 subscribe 與每個 document mutation 前重新驗證 BlockPack hierarchy 與 permission；失敗時送出 `permission_revoked` 或 `resource_unavailable`、移除該 channel，並向 worker 轉送 detach。跨 Gateway 的主動 lifecycle fanout 延後到 Kafka 架構。
+Go Gateway 負責驗證 connection/channel ticket，以及兩者的 user、channel type 與 BlockPack id 是否相符；Node worker 只信任 Go 已驗證並轉送的 attach message。ticket 是短效 stateless capability，`jti` 不代表可在沒有共享 state 下強制一次性使用。Gateway 在 subscribe 與每個 document mutation 前重新驗證 BlockPack hierarchy 與 permission；失敗時送出 `permission_revoked` 或 `resource_unavailable`、移除該 channel，並向 worker 轉送 detach。跨 Gateway 的主動 lifecycle fanout 延後到 Kafka 架構。
 
 ## Cross-Service Frames
 
-public WebSocket 的 JSON control frame 與 binary frame header 定義在 `realtime-protocol-contract.md`。Go-to-worker internal binary frame 一律帶有 `connectionId`、`connectorChannelId`、`channelType`、`channelId`；raw Yjs update 不得 Base64 或改寫成 JSON block event。
+Public WebSocket JSON control frames and binary headers are defined in
+[Realtime Protocol Design](realtime-protocol.md). Go-to-worker internal binary
+frames always include `connectionId`, `connectorChannelId`, `channelType`, and
+`channelId`; raw Yjs updates are never Base64-encoded or rewritten as JSON
+block events.
 
 internal attach/detach 是 idempotent。worker reconnect 後，Gateway 為其所屬 active channels replay attach；worker 會先向 Go cold-load snapshot + tail，materialize `Y.Doc` 後才回傳 complete encoded state。worker 會先套用收到的 raw Yjs updates，再以同一個 BlockPack room 為單位暫存並使用 `Y.mergeUpdates()` 合併為一筆 persistence batch；只有收到 persistence ACK 後才 broadcast merged raw Yjs update。
 
@@ -100,7 +115,7 @@ internal attach/detach 是 idempotent。worker reconnect 後，Gateway 為其所
 
 batch flush 條件由 worker constants 控制：trailing debounce、maximum wait、raw update count、raw payload bytes、最後 subscriber detach 與 graceful worker shutdown。`LastUpdateSequence` 只會在 merged update transaction 成功後推進；每一筆 merged update 只消耗一個 sequence。
 
-## Projection Contract
+## Projection
 
 Node worker 是唯一的 Yjs CRDT merge owner，也是 Y.Doc -> BlockNote blocks conversion owner。它以 current `schemaVersion` 將 active Y.Doc 轉換為 canonical BlockNote block tree，再送出 projection payload 給 Go。
 
@@ -115,8 +130,8 @@ projection payload 最小欄位：
 }
 ```
 
-projection 使用 private Go-to-worker internal frame `apply-block-projection`；BlockPack identity 取自 frame header 的 `channelId`，不是 payload。Go 僅在 payload 的 `schemaId`/`schemaVersion` 受支援、target sequence 不回退，且所屬 BlockPack 有效時寫入 Block projection，成功時回覆 `block-projection-applied`，否則回覆 `block-projection-failed`。`NOT-13` 定義 `blocks` 的 bulk apply、anti-regression transaction 與 accounting semantics；不新增 per-block ordering/search/hash metadata，除非實際 read requirement 證明需要。
+projection 使用 private Go-to-worker internal frame `apply-block-projection`；BlockPack identity 取自 frame header 的 `channelId`，不是 payload。Go 僅在 payload 的 `schemaId`/`schemaVersion` 受支援、target sequence 不回退，且所屬 BlockPack 有效時寫入 Block projection，成功時回覆 `block-projection-applied`，否則回覆 `block-projection-failed`。bulk apply、anti-regression transaction 與 accounting 以 document-level sequence 為準；不新增 per-block ordering/search/hash metadata，除非實際 read requirement 證明需要。
 
 worker 僅在 room 沒有尚未持久化的 update 時，將目前 `LastUpdateSequence` 的 document 投影。它對更新 burst 做 debounce，且每個 room 同時最多一筆 projection；只有收到 `block-projection-applied` 後才推進 in-memory `ProjectedUntilSequence`。失敗不會前進 checkpoint，並以 retry delay 重試。
 
-前端不讀取 `BlockPackYjsDocument` 或 `BlockPackYjsUpdate` rows，也不自行合併 update tail；加入 room 時由 Node worker 從 snapshot + tail 恢復 Y.Doc，再以標準 Yjs sync protocol 完成同步。
+外部 editor 不讀取 `BlockPackYjsDocument` 或 `BlockPackYjsUpdate` rows，也不自行合併 update tail；加入 room 時由 Node worker 從 snapshot + tail 恢復 Y.Doc，再以標準 Yjs sync protocol 完成同步。

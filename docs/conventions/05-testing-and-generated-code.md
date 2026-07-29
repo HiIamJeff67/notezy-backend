@@ -11,7 +11,7 @@
 ## Generated code 與契約
 
 - `app/graphql/generated` 與 `app/graphql/models/models_gen.go` 是 GraphQL 產生物；修改 GraphQL schema 後以 `make gql-generate` 或 `make gql-regenerate` 更新，絕不手動編輯生成碼。
-- API、GraphQL、realtime protocol、資料庫行為等跨端約定放 `docs/contracts/`。改變這些公開語意時，同一變更需更新 contract 和相關測試。
+- API route 公開語意放 `docs/api-route-design/`；程式碼與資料模型設計放 `docs/codebase-design/`；Realtime、Yjs 與跨 runtime 協定放 `docs/system-design/`。改變任何公開語意時，同一變更必須更新對應設計文件與相關測試。
 - `infra/` 是部署/監控設定，變更後檢查 Docker Compose、Nginx、OTEL/Grafana 設定是否仍彼此一致。
 
 ## 每次變更的最小驗證

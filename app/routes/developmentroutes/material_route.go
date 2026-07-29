@@ -19,7 +19,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 
 	materialModule := modules.NewMaterialModule()
 
-	materialRoutes := router.Group("/material")
+	materialRoutes := router.Group("/materials")
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(3 * time.Second),
@@ -31,7 +31,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 	}
 	{
 		materialRoutes.GET(
-			"/getMyMaterialById",
+			"/:materialId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyMaterialById"),
@@ -47,7 +47,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		materialRoutes.GET(
-			"/getMyMaterialAndItsParentById",
+			"/:materialId/parent",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyMaterialAndItsParentById"),
@@ -63,7 +63,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		materialRoutes.GET(
-			"/getMyMaterialsByParentSubShelfId",
+			"/sub-shelf/:parentSubShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getMyMaterialsByParentSubShelfId"),
@@ -79,7 +79,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		materialRoutes.GET(
-			"/getAllMyMaterialsByRootShelfId",
+			"/root-shelf/:rootShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("getAllMyMaterialsByRootShelfId"),
@@ -95,7 +95,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		materialRoutes.POST(
-			"/createMyMaterial",
+			"/sub-shelf/:parentSubShelfId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("createMyMaterial"),
@@ -111,7 +111,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		materialRoutes.PUT(
-			"/updateMyMaterialById",
+			"/:materialId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyMaterialById"),
@@ -127,7 +127,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		materialRoutes.PUT(
-			"/saveMyMaterialById",
+			"/:materialId/content",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("saveMyMaterialById"),
@@ -144,7 +144,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		materialRoutes.PUT(
-			"/moveMyMaterialById",
+			"/:materialId/parent",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("moveMyMaterialById"),
@@ -160,7 +160,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		materialRoutes.PUT(
-			"/moveMyMaterialsByIds",
+			"/batch/parent",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("moveMyMaterialsByIds"),
@@ -176,7 +176,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		materialRoutes.PATCH(
-			"/restoreMyMaterialById",
+			"/:materialId/restore",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyMaterialById"),
@@ -192,7 +192,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		materialRoutes.PATCH(
-			"/restoreMyMaterialsByIds",
+			"/batch/restore",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("restoreMyMaterialsByIds"),
@@ -208,7 +208,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		materialRoutes.DELETE(
-			"/deleteMyMaterialById",
+			"/:materialId",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyMaterialById"),
@@ -224,7 +224,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup) {
 			)...,
 		)
 		materialRoutes.DELETE(
-			"/deleteMyMaterialsByIds",
+			"/batch",
 			middlewares.RepositionMiddleware(
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("deleteMyMaterialsByIds"),

@@ -41,7 +41,7 @@ func configureStorageRoutes(router *gin.RouterGroup) {
 		)
 		// only on test environment
 		storageRoute.GET(
-			"/listAllInTerminal",
+			"/all",
 			func(ctx *gin.Context) {
 				storages.InMemoryStorage.ListAllInTerminal()
 				ctx.JSON(http.StatusOK, gin.H{"success": true})

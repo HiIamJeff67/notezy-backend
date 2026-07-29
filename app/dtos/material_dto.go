@@ -22,7 +22,7 @@ type GetMyMaterialByIdReqDto struct {
 		},
 		any,
 		struct {
-			MaterialId uuid.UUID `form:"materialId" validate:"required"`
+			MaterialId uuid.UUID `uri:"materialId" validate:"required"`
 			IsDeleted  *bool     `form:"isDeleted" validate:"omitnil"`
 		},
 	]
@@ -38,7 +38,7 @@ type GetMyMaterialAndItsParentByIdReqDto struct {
 		},
 		any,
 		struct {
-			MaterialId uuid.UUID `form:"materialId" validate:"required"`
+			MaterialId uuid.UUID `uri:"materialId" validate:"required"`
 			IsDeleted  *bool     `form:"isDeleted" validate:"omitnil"`
 		},
 	]
@@ -54,7 +54,7 @@ type GetMyMaterialsByParentSubShelfIdReqDto struct {
 		},
 		any,
 		struct {
-			ParentSubShelfId uuid.UUID `form:"parentSubShelfId" validate:"required"`
+			ParentSubShelfId uuid.UUID `uri:"parentSubShelfId" validate:"required"`
 			AreDeleted       *bool     `form:"areDeleted" validate:"omitnil"`
 		},
 	]
@@ -70,7 +70,7 @@ type GetAllMyMaterialsByRootShelfIdReqDto struct {
 		},
 		any,
 		struct {
-			RootShelfId uuid.UUID `form:"rootShelfId" validate:"required"`
+			RootShelfId uuid.UUID `uri:"rootShelfId" validate:"required"`
 			AreDeleted  *bool     `form:"areDeleted" validate:"omitnil"`
 		},
 	]
