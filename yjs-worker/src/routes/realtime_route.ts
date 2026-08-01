@@ -7,7 +7,7 @@ export function configureRealtimeRoutes(
   handleConnection: (webSocket: WebSocket) => void
 ): void {
   app.get(
-    "/internal/realtime/v1",
+    "/core/realtime/v1",
     upgradeWebSocket(() => ({
       onOpen(_event, webSocket) {
         handleConnection(webSocket.raw as WebSocket);

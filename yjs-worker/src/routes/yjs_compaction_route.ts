@@ -16,7 +16,7 @@ export function configureYjsCompactionRoutes(
   telemetry: Telemetry
 ): void {
   app.post(
-    "/internal/yjs-compaction/v1",
+    "/core/yjs-compaction/v1",
     bodyLimit({
       maxSize: YjsMaintenanceMaximumPayloadBytes,
       onError: context => context.body(null, 413),

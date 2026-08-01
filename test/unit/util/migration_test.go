@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	util "github.com/HiIamJeff67/notezy-backend/app/util"
+	util "github.com/HiIamJeff67/notezy-backend/internal/util"
 	test "github.com/HiIamJeff67/notezy-backend/test"
 )
 

@@ -9,7 +9,9 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o server .
+RUN CGO_ENABLED=0 GOOS=linux go build -o api ./cmd/api \
+	&& CGO_ENABLED=0 GOOS=linux go build -o durablejob ./cmd/durablejob \
+	&& CGO_ENABLED=0 GOOS=linux go build -o email ./cmd/email
 
 FROM alpine:latest
 
@@ -17,8 +19,10 @@ WORKDIR /app
 
 RUN apk --no-cache add ca-certificates
 
-COPY --from=builder /app/server .
+COPY --from=builder /app/api .
+COPY --from=builder /app/durablejob .
+COPY --from=builder /app/email .
 
 EXPOSE 7777
 
-CMD ["./server"]
+CMD ["./api"]

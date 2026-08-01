@@ -1,0 +1,247 @@
+package developmentroutes
+
+import (
+	"time"
+
+	"github.com/gin-gonic/gin"
+
+	binders "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/binders"
+	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
+	interceptors "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/interceptors"
+	middlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
+	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
+	sharedtypes "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+)
+
+func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup, coreClient *coreadapters.CoreClient) {
+	if router == nil {
+		router = DevelopmentAPIRouterGroup
+	}
+
+	routineTaskBinder := binders.NewRoutineTaskBinder()
+	routineTaskController := controllers.NewRoutineTaskController(coreClient)
+
+	routineTaskRoutes := router.Group("/routine-tasks")
+	defaultMiddlewares := []gin.HandlerFunc{
+		middlewares.UnauthorizedRateLimitMiddleware(),
+		middlewares.TimeoutMiddleware(3 * time.Second),
+		middlewares.AuthMiddleware(),
+		interceptors.ShareableResponseWriterInterceptor(
+			interceptors.RefreshTokenInterceptor,
+			interceptors.EmbeddedInterceptor,
+		),
+	}
+	{
+		routineTaskRoutes.GET(
+			"/:routineTaskId",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("getMyRoutineTaskById"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTask.getMyRoutineTaskById"),
+				},
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+				),
+				routineTaskBinder.BindGetMyRoutineTaskById(routineTaskController.GetMyRoutineTaskById),
+			)...,
+		)
+		routineTaskRoutes.GET(
+			"/routines",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("getAllMyRoutineTasksByRoutineIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTask.getAllMyRoutineTasksByRoutineIds"),
+				},
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+				),
+				routineTaskBinder.BindGetAllMyRoutineTasksByRoutineIds(routineTaskController.GetAllMyRoutineTasksByRoutineIds),
+			)...,
+		)
+		routineTaskRoutes.GET(
+			"/",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("getAllMyRoutineTasks"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTask.getAllMyRoutineTasks"),
+				},
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+				),
+				routineTaskBinder.BindGetAllMyRoutineTasks(routineTaskController.GetAllMyRoutineTasks),
+			)...,
+		)
+		routineTaskRoutes.POST(
+			"/routine/:routineId",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("createRoutineTaskByRoutineId"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTask.createRoutineTaskByRoutineId"),
+				},
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Write),
+				),
+				routineTaskBinder.BindCreateRoutineTaskByRoutineId(routineTaskController.CreateRoutineTaskByRoutineId),
+			)...,
+		)
+		routineTaskRoutes.PUT(
+			"/:routineTaskId",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("updateMyRoutineTaskById"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTask.updateMyRoutineTaskById"),
+				},
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Write),
+				),
+				routineTaskBinder.BindUpdateMyRoutineTaskById(routineTaskController.UpdateMyRoutineTaskById),
+			)...,
+		)
+		routineTaskRoutes.PUT(
+			"/:routineTaskId/suspension",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("pauseMyRoutineTaskById"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTask.pauseMyRoutineTaskById"),
+				},
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Write),
+				),
+				routineTaskBinder.BindPauseMyRoutineTaskById(routineTaskController.PauseMyRoutineTaskById),
+			)...,
+		)
+		routineTaskRoutes.DELETE(
+			"/:routineTaskId/suspension",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("resumeMyRoutineTaskById"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTask.resumeMyRoutineTaskById"),
+				},
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Write),
+				),
+				routineTaskBinder.BindResumeMyRoutineTaskById(routineTaskController.ResumeMyRoutineTaskById),
+			)...,
+		)
+		routineTaskRoutes.DELETE(
+			"/:routineTaskId/permanently",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("hardDeleteMyRoutineTaskById"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTask.hardDeleteMyRoutineTaskById"),
+				},
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Write),
+				),
+				routineTaskBinder.BindHardDeleteMyRoutineTaskById(routineTaskController.HardDeleteMyRoutineTaskById),
+			)...,
+		)
+		routineTaskRoutes.DELETE(
+			"/batch/permanently",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("hardDeleteMyRoutineTasksByIds"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTask.hardDeleteMyRoutineTasksByIds"),
+				},
+				append(
+					defaultMiddlewares,
+					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Write),
+				),
+				routineTaskBinder.BindHardDeleteMyRoutineTasksByIds(routineTaskController.HardDeleteMyRoutineTasksByIds),
+			)...,
+		)
+	}
+
+	/* ============================== Routes for Visualization ============================== */
+
+	visualizationRoutes := router.Group("/routine-tasks/visualizations")
+	visualizationMiddlewares := []gin.HandlerFunc{
+		middlewares.UnauthorizedRateLimitMiddleware(),
+		middlewares.TimeoutMiddleware(3 * time.Second),
+		middlewares.AuthMiddleware(),
+		interceptors.ShareableResponseWriterInterceptor(
+			interceptors.RefreshTokenInterceptor,
+			interceptors.EmbeddedInterceptor,
+		),
+	}
+	{
+		visualizationRoutes.GET(
+			"/status-count",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskStatusCount"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTask.visualizeMyRoutineTaskStatusCount"),
+				},
+				append(
+					visualizationMiddlewares,
+					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+				),
+				routineTaskBinder.BindVisualizeMyRoutineTaskStatusCount(routineTaskController.VisualizeMyRoutineTaskStatusCount),
+			)...,
+		)
+		visualizationRoutes.GET(
+			"/purpose-count",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskPurposeCount"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTask.visualizeMyRoutineTaskPurposeCount"),
+				},
+				append(
+					visualizationMiddlewares,
+					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+				),
+				routineTaskBinder.BindVisualizeMyRoutineTaskPurposeCount(routineTaskController.VisualizeMyRoutineTaskPurposeCount),
+			)...,
+		)
+		visualizationRoutes.GET(
+			"/scheduled-at-count",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskScheduledAtCount"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTask.visualizeMyRoutineTaskScheduledAtCount"),
+				},
+				append(
+					visualizationMiddlewares,
+					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+				),
+				routineTaskBinder.BindVisualizeMyRoutineTaskScheduledAtCount(routineTaskController.VisualizeMyRoutineTaskScheduledAtCount),
+			)...,
+		)
+		visualizationRoutes.GET(
+			"/actual-started-at-count",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskActualStartedAtCount"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTask.visualizeMyRoutineTaskActualStartedAtCount"),
+				},
+				append(
+					visualizationMiddlewares,
+					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+				),
+				routineTaskBinder.BindVisualizeMyRoutineTaskActualStartedAtCount(routineTaskController.VisualizeMyRoutineTaskActualStartedAtCount),
+			)...,
+		)
+		visualizationRoutes.GET(
+			"/actual-ended-at-count",
+			middlewares.RepositionMiddleware(
+				[]gin.HandlerFunc{
+					middlewares.ApplyTracerMiddleware("visualizeMyRoutineTaskActualEndedAtCount"),
+					middlewares.ApplyMeterMiddleware("server.requests.routineTask.visualizeMyRoutineTaskActualEndedAtCount"),
+				},
+				append(
+					visualizationMiddlewares,
+					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+				),
+				routineTaskBinder.BindVisualizeMyRoutineTaskActualEndedAtCount(routineTaskController.VisualizeMyRoutineTaskActualEndedAtCount),
+			)...,
+		)
+	}
+}

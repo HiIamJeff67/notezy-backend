@@ -2,7 +2,7 @@
 
 ## Service
 
-- service 是商業 workflow 與 transaction boundary。每個公開 HTTP workflow 先用 `validation.Validator.Struct(reqDto)` 驗證，再用 `s.db.WithContext(ctx)` 取得 request-scoped DB。
+- service 是商業 workflow 與 transaction boundary。每個公開 workflow 先用 `validation.Validator.Struct(request)` 驗證，再用 `s.db.WithContext(ctx)` 取得 request-scoped DB。
 - service 回傳 response DTO 或必要領域資料與 `*exceptions.Exception`，不回傳 `gin.Context`、HTTP status 或 `gin.H`。
 - cache、email、token、storage 和 realtime 操作應在 service 的 workflow 中明確排序。失敗補償與可重試語意要與資料庫提交關係一致。
 
@@ -24,21 +24,21 @@
 
 ## Service validation 與 DB query 格式
 
-每個接收 request DTO 的 service method 一開始先驗證 DTO，並將 validator error 轉成該領域的 exception。接著才建立 request-scoped DB；兩者是不同階段，所以維持上下空白行。
+每個接收 request 的 service method 一開始先驗證 request，並將 validator error 轉成該領域的 exception。接著才建立 request-scoped DB；兩者是不同階段，所以維持上下空白行。
 
 ```go
 func (s *StationService) CreateStation(
 	ctx context.Context,
-	reqDto *dtos.CreateStationReqDto,
-) (*dtos.CreateStationResDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(reqDto); err != nil {
-		return nil, exceptions.Station.InvalidDto().WithOrigin(err)
+	request *CreateStationRequest,
+) (*CreateStationResponse, *exceptions.Exception) {
+	if err := validation.Validator.Struct(request); err != nil {
+		return nil, apiexceptions.Station.InvalidDto().WithOrigin(err)
 	}
 
 	db := s.db.WithContext(ctx)
 
 	newStationId, exception := s.stationRepository.CreateOne(
-		reqDto.ContextFields.UserId,
+		request.ContextFields.UserId,
 		input,
 		options.WithDB(db),
 	)
@@ -46,7 +46,7 @@ func (s *StationService) CreateStation(
 		return nil, exception
 	}
 
-	return &dtos.CreateStationResDto{
+	return &CreateStationResponse{
 		Id: *newStationId, 
 	}, nil
 }
@@ -57,11 +57,11 @@ GORM chain 超過一個操作時換行書寫；receiver 的 `.` 留在行尾，�
 ```go
 var blocks []schemas.Block
 if err := db.Model(&schemas.Block{}).
-	Where("block_pack_id = ?", reqDto.Param.BlockPackId).
+	Where("block_pack_id = ?", request.Param.BlockPackId).
 	Order("created_at ASC").
 	Order("id ASC").
 	Find(&blocks).Error; err != nil {
-	return nil, exceptions.Block.NotFound().WithOrigin(err)
+	return nil, apiexceptions.Block.NotFound().WithOrigin(err)
 }
 
 result := tx.
@@ -70,7 +70,7 @@ result := tx.
 	Update("deleted_at", time.Now())
 if result.Error != nil {
 	tx.Rollback()
-	return nil, exceptions.Station.FailedToUpdate().WithOrigin(result.Error)
+	return nil, apiexceptions.Station.FailedToUpdate().WithOrigin(result.Error)
 }
 ```
 
@@ -85,12 +85,12 @@ if result.Error != nil {
 ```go
 tx := s.db.WithContext(ctx).Begin()
 if err := tx.Error; err != nil {
-	return nil, exceptions.Shelf.FailedToCommitTransaction("failed to begin transaction").WithOrigin(err)
+	return nil, apiexceptions.Shelf.FailedToCommitTransaction("failed to begin transaction").WithOrigin(err)
 }
 
 rootShelf, exception := s.rootShelfRepository.CheckPermissionAndGetOneById(
-	reqDto.Body.RootShelfId,
-	reqDto.ContextFields.UserId,
+	request.Body.RootShelfId,
+	request.ContextFields.UserId,
 	nil,
 	allowedPermissions,
 	options.WithTransactionDB(tx),
@@ -107,7 +107,7 @@ if exception != nil {
 
 if err := tx.Commit().Error; err != nil {
 	tx.Rollback()
-	return nil, exceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
+	return nil, apiexceptions.Shelf.FailedToCommitTransaction().WithOrigin(err)
 }
 ```
 
@@ -117,16 +117,16 @@ if err := tx.Commit().Error; err != nil {
 
 - repository 集中 GORM/raw SQL 的存取，公開方法以動作清楚命名，例如 `GetOneById`、`CreateMany`、`UpdateOneById`。
 - query 請使用 `schemas.Xxx` model 與既有 `scope` 封裝 permission、preload、soft-delete 和 locking；不要在 service/controller 重複手寫存取控制的 `Where` 條件。
-- repository option 透過 `options.WithDB`、`WithAllowedPermissions`、`WithOnlyDeleted`、`WithLockingStrength` 等既有 option 傳入。`WithAllowedPermissions` 存在時套用該 policy；未提供時 repository 直接操作，不另設 skip-permission flag。`HasPermission`、`HavePermissions` 與 `CheckPermission...` 類 methods 仍須以必要參數明確傳入 `allowedPermissions`，route policy 的 service call 並同步傳入 `options.WithAllowedPermissions(allowedPermissions)`。
-- 輸入資料使用 `models/inputs` 的 create/update/partial-update 型別。不要直接把 request DTO 餵給 GORM。
+- repository option 透過 `options.WithDB`、`WithAllowedPermissions`、`WithOnlyDeleted`、`WithLockingStrength` 等既有 option 傳入。`WithAllowedPermissions` 存在時套用已驗證的 Gateway route policy；未提供時 repository 直接操作，不另設 skip-permission flag。`HasPermission`、`HavePermissions` 與 `CheckPermission...` 類 methods 仍須以必要參數明確傳入 `allowedPermissions`，service call 並同步傳入 `options.WithAllowedPermissions(allowedPermissions)`。
+- 輸入資料使用 service data `inputs` 的 create/update/partial-update 型別。不要直接把 request 餵給 GORM。
 - GORM result error 要轉為對應領域 exception 並保留 origin；`First`、`Find` 後也要處理空結果的領域語意，不能只看 `result.Error`。
 
 ## Repository partial update
 
-需要支援只更新部分欄位或明確設為 `NULL` 時，使用既有的 partial update flow；不要自行以 map 拼接欄位，也不要把 request DTO 直接交給 `Updates`。
+需要支援只更新部分欄位或明確設為 `NULL` 時，使用既有的 partial update flow；不要自行以 map 拼接欄位，也不要把 request 直接交給 `Updates`。
 
-1. 在該領域的 `app/models/inputs/<domain>_input.go` 定義 `UpdateXxxInput`，欄位使用 pointer 表示「本次有提供值」，保留正確的 `json` 與 `gorm:"column:..."` tag。
-2. 將 input 接到 [partial_update_input.go](../../app/models/inputs/partial_update_input.go)：`type PartialUpdateXxxInput = PartialUpdateInput[UpdateXxxInput]`。`Values` 載有要覆寫的值，`SetNull` 表示需要設為 `NULL` 的欄位。
+1. 在 owning service 的 `data/.../inputs/<domain>_input.go` 定義 `UpdateXxxInput`，欄位使用 pointer 表示「本次有提供值」，保留正確的 `json` 與 `gorm:"column:..."` tag。
+2. 將 input 接到同一 data ownership 的 `partial_update_input.go`：`type PartialUpdateXxxInput = PartialUpdateInput[UpdateXxxInput]`。`Values` 載有要覆寫的值，`SetNull` 表示需要設為 `NULL` 的欄位。
 3. repository 在同一筆 transaction 中先取得已存在且已通過 permission check 的 schema，完成任何關聯資源/ownership 驗證後，呼叫 `util.PartialUpdatePreprocess(input.Values, input.SetNull, *existing)`。
 4. 將合併結果用 `Select("*").Updates(&updates)` 寫回；因 processor 已把未提供的欄位保留為既有值，`Select("*")` 才能正確寫入明確要求的零值或 `NULL`。
 
@@ -143,10 +143,13 @@ type PartialUpdateStationInput = PartialUpdateInput[UpdateStationInput]
 updates, err := util.PartialUpdatePreprocess(input.Values, input.SetNull, *existingStation)
 if err != nil {
 	parsedOptions.DB.Rollback()
-	return nil, exceptions.Util.FailedToPreprocessPartialUpdate(
-		input.Values,
-		input.SetNull,
-		*existingStation,
+	return nil, exceptions.New(
+		"FailedToPreprocessPartialUpdate",
+		"Repository",
+		"Update",
+		"Failed to preprocess partial update",
+		http.StatusInternalServerError,
+		true,
 	).WithOrigin(err)
 }
 
@@ -162,7 +165,7 @@ result := parsedOptions.DB.Model(&schemas.Station{}).
 
 ## Schema、migration 與 SQL
 
-- table schema 放 `app/models/schemas`；enum、constraint、trigger、seed、raw SQL 放各自既有子目錄。
+- table schema、enum、constraint、trigger、seed、raw SQL 與 migration 放在 owning service 的 `internal/services/<service>/data/postgres/`。遷移過程中的 legacy 路徑只在其 owner 尚未搬遷時保留。
 - 新 table/enum/trigger/constraint 必須註冊至其對應的 `migrate.go`，否則 migration 不會套用。
 - soft-delete、ownership、projection/accounting 等資料庫不變量，優先延續現有 trigger/constraint/scope 模式；不可只依賴 controller 的檢查。
 - 修改 trigger 或 raw SQL 時，確認引用到的表名、欄位與 migration 註冊都同步；資料庫公開語意改動也要更新對應的 `docs/codebase-design/`、`docs/api-route-design/` 或 `docs/system-design/` 文件。

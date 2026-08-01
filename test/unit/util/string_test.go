@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	util "github.com/HiIamJeff67/notezy-backend/app/util"
+	stringutil "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/stringutil"
 	test "github.com/HiIamJeff67/notezy-backend/test"
 )
 
@@ -25,7 +25,7 @@ func TestJoinValues(t *testing.T) {
 		t, "testdata/string_testdata/join_values_testdata.json",
 	)
 	for _, c := range cases {
-		got := util.JoinValues(c.Args.Values)
+		got := stringutil.JoinValues(c.Args.Values)
 		assert.Equal(t, c.Returns, got)
 	}
 }
@@ -46,7 +46,7 @@ func TestConvertCamelCaseToSentenceCase(t *testing.T) {
 		t, "testdata/string_testdata/convert_camel_case_to_sentence_case_testdata.json",
 	)
 	for _, c := range cases {
-		got := util.ConvertCamelCaseToSentenceCase(c.Args.Input)
+		got := stringutil.ConvertCamelCaseToSentenceCase(c.Args.Input)
 		assert.Equal(t, c.Returns, got)
 	}
 }
@@ -68,7 +68,7 @@ func TestIsStringIn(t *testing.T) {
 		t, "testdata/string_testdata/is_string_in_testdata.json",
 	)
 	for _, c := range cases {
-		got := util.IsStringIn(c.Args.S, c.Args.Strs)
+		got := stringutil.IsStringIn(c.Args.S, c.Args.Strs)
 		assert.Equal(t, c.Returns, got)
 	}
 }
@@ -89,7 +89,7 @@ func TestIsEmailString(t *testing.T) {
 		t, "testdata/string_testdata/is_email_string_testdata.json",
 	)
 	for _, c := range cases {
-		got := util.IsEmailString(c.Args.S)
+		got := stringutil.IsEmailString(c.Args.S)
 		assert.Equal(t, c.Returns, got)
 	}
 }
@@ -109,7 +109,7 @@ func TestIsAlphaNumberString(t *testing.T) {
 		t, "testdata/string_testdata/is_alpha_number_string_testdata.json",
 	)
 	for _, c := range cases {
-		got := util.IsAlphaOrNumberString(c.Args.S)
+		got := stringutil.IsAlphaOrNumberString(c.Args.S)
 		assert.Equal(t, c.Returns, got)
 	}
 }

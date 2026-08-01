@@ -3,13 +3,13 @@
 ## 格式與檔案
 
 - 所有 Go 程式碼必須可被 `gofmt` 格式化；工作區已設定 Go formatter 於存檔時執行。
-- 檔名採 `snake_case.go`，並依功能命名，例如 `root_shelf_service.go`、`root_shelf_binder_test.go`。
+- 檔名採 `snake_case.go`，並依功能命名，例如 `root_shelf_service.go`、`root_shelf_controller_test.go`。
 - package 名稱維持小寫單數或既有複數慣例；不要為單一用途建立新 package。
-- import 由 `gofmt` 排序，標準函式庫、第三方、專案內 import 以空行分組。專案內 package 保留既有明確別名，例如 `dtos`、`schemas`、`exceptions`、`types`。
+- import 由 `gofmt` 排序，標準函式庫、第三方、專案內 import 以空行分組。所有專案內 import 都必須使用顯式且準確的 package alias，例如 `dtos`、`schemas`、`exceptions`、`types`、`apitransport`、`coreadapters`；不得依賴 import path 最後一段的隱式名稱。
 - 所有非空 struct literal 一律展開為多行，每個 field 各佔一行並保留 trailing comma；不可將 DTO、response 或任何只有一個 field 的 struct literal 寫在一行。這也適用於 `return` 的 struct literal 與巢狀 struct literal。
 
   ```go
-  return &dtos.UpdateMyStationByIdResDto{
+  return &UpdateMyStationByIdResponse{
   	UpdatedAt: station.UpdatedAt,
   }, nil
   ```
@@ -22,8 +22,8 @@
 
 ```go
 station, permission, exception := s.stationRepository.CheckPermissionAndGetOneById(
-	reqDto.Body.StationId,
-	reqDto.ContextFields.UserId,
+	request.Body.StationId,
+	request.ContextFields.UserId,
 	nil,
 	allowedPermissions,
 	options.WithTransactionDB(tx),
@@ -36,40 +36,40 @@ station, permission, exception := s.stationRepository.CheckPermissionAndGetOneBy
 ## 命名與型別
 
 - exported type/function 使用 `PascalCase`；未匯出識別字使用 `camelCase`；縮寫沿用 Go 慣例，如 `Id`、`Url`、`Db` 的專案既有寫法，不在同一領域混用兩種拼法。
-- 與外部 API 對應的 request/response 使用 `XxxReqDto`、`XxxResDto`；資料庫寫入資料使用 `XxxInput`；資料庫 table 使用 `schemas.Xxx`。
-- 新功能以領域名對齊檔案、module、binder、controller、service、repository、scope，例如 `station_*`。
+- 版本化 transport DTO 使用完整 `XxxRequestDto`、`XxxResponseDto`；資料庫寫入資料使用 `XxxInput`；資料庫 table 使用 `schemas.Xxx`。`core.Request[Dto]` 與 `core.Response[Dto]` 是 Gateway 與 Core service 的 transport envelope，DTO 才是操作資料單位。
+- 新功能以領域名對齊檔案、transport controller、adapter、service、repository、scope，例如 `station_*`。
 - interface 僅在呼叫端需要替換實作、邊界已存在或測試確有必要時建立。新 interface 以 `XxxInterface` 對齊現有程式；不要為單一 struct 預先抽象。
 
 ## Service DTO 與 repository input 的邊界
 
-- `app/models/inputs` 的 `XxxInput` 是 repository persistence contract：描述 create、update、partial update 或 bulk SQL 所需的資料，只能作為 repository method 的 input。service、controller、binder 或 gateway 不得把它當成外部 request/response contract。
-- service method 若參數很多、代表同一個完整意圖，或由 HTTP/realtime gateway 接收後要輸出到外部，就使用 `*dtos.XxxReqDto` 作為單一 request parameter。HTTP request 沿用 `reqDto` 命名，並以 `*dtos.XxxResDto` / `resDto` 作為回傳資料。
-- service-only 或 gateway-only workflow 也可使用具體的 `XxxReqDto` / `XxxResDto` 封裝相關資料、context 與輸出，而不是用長串零散 parameters 或 anonymous struct；DTO 名稱必須描述操作，不可使用泛用的 `Data`、`Params` 或 `Payload`。
+- `internal/services/<service>/data/.../inputs` 的 `XxxInput` 是 repository persistence contract：描述 create、update、partial update 或 bulk SQL 所需的資料，只能作為 repository method 的 input。service、controller 或 gateway 不得把它當成 transport request/response contract。
+- service method 若參數很多、代表同一個完整意圖，或由 Gateway 接收後要輸出到外部，就使用 `*XxxRequestDto` 作為單一 request parameter，並以 `*XxxResponseDto` 回傳資料。request / response 變數命名為 `request` / `response`；不新增不清楚的 `req`、`res` 縮寫。
+- service-only 或 gateway-only workflow 也可使用具體的 `XxxRequestDto` / `XxxResponseDto` 封裝相關資料、context 與輸出，而不是用長串零散 parameters 或 anonymous struct；名稱必須描述操作，不可使用泛用的 `Data`、`Params` 或 `Payload`。
 - 參數少且語意清楚時保留直接參數，不為了套用 DTO 強行包裝。只有 parameter 數量、共同 lifecycle 或呼叫邊界確實使 DTO 提高可讀性時才建立。
-- service 是兩種 contract 的轉換邊界：將 `reqDto` 的已驗證資料映射為 `inputs.CreateXxxInput`、`inputs.PartialUpdateXxxInput` 或 bulk input，再呼叫 repository；repository 不得 import 或依賴 `dtos`。
+- service 是兩種 contract 的轉換邊界：將已驗證的 `request` 映射為 `inputs.CreateXxxInput`、`inputs.PartialUpdateXxxInput` 或 bulk input，再呼叫 repository；repository 不得 import 或依賴 transport request/response。
 
 ```go
 func (s *StationService) UpdateMyStationById(
 	ctx context.Context,
-	reqDto *dtos.UpdateMyStationByIdReqDto,
-) (*dtos.UpdateMyStationByIdResDto, *exceptions.Exception) {
+	request *UpdateMyStationByIdRequestDto,
+) (*UpdateMyStationByIdResponseDto, *exceptions.Exception) {
 	input := inputs.PartialUpdateStationInput{
 		Values: inputs.UpdateStationInput{
-			Name: reqDto.Body.Values.Name,
+			Name: request.Body.Values.Name,
 		},
-		SetNull: reqDto.Body.SetNull,
+		SetNull: request.Body.SetNull,
 	}
 
 	station, exception := s.stationRepository.UpdateOneById(
-		reqDto.Body.StationId,
-		reqDto.ContextFields.UserId,
+		request.Body.StationId,
+		request.ContextFields.UserId,
 		input,
 	)
 	if exception != nil {
 		return nil, exception
 	}
 
-	return &dtos.UpdateMyStationByIdResDto{
+	return &UpdateMyStationByIdResponseDto{
 		UpdatedAt: station.UpdatedAt,
 	}, nil
 }
@@ -78,7 +78,7 @@ func (s *StationService) UpdateMyStationById(
 ## 實作原則
 
 - 先延續同一領域相鄰檔案的模式，再寫新 helper；可用既有 repository、scope、option、validator 或 exception 時不要重做。
-- 函式只負責一個層級的工作。HTTP parsing 留在 binder，HTTP response 留在 controller，流程與交易留在 service，查詢與權限 SQL 留在 repository/scope。
+- 函式只負責一個層級的工作。public HTTP parsing/validation 與 HTTP response 留在 Gateway controller，流程與交易留在 service，查詢與權限 SQL 留在 repository/scope。
 - 使用 `context.Context` 往下傳遞：HTTP service 從 `ctx.Request.Context()` 取得，DB 以 `db.WithContext(ctx)` 建立本次操作的 session。
 - 不要吞掉 error。預期的業務/基礎設施錯誤轉為 `*exceptions.Exception`，並附 `WithOrigin(err)` 保留原因。
 - 優先寫直接可讀的程式，不以泛型、反射、全域狀態或新依賴解決單一功能問題。
@@ -121,9 +121,9 @@ result := tx.Exec(sql, valueArgs...)
 
 ## 共用函式庫
 
-- 新增 helper 前，先檢查 [shared/lib](../../shared/lib/) 是否已有可直接使用的函式庫；已有相同責任的實作時必須重用，不能在 service/repository 複製一份。
-- 依問題選用既有 package：去重/set 使用 `shared/lib/array`，游標分頁使用 `shared/lib/searchcursor`，併發工作使用 `shared/lib/concurrency`，佇列與堆疊使用 `shared/lib/queue`、`shared/lib/stack`，以及其他已存在的 blocknote、rate-limit、response writer 函式庫。
-- `shared/lib` 僅放跨領域、可重用且與 application layer 無關的邏輯。僅由單一領域使用的商業規則留在該領域，不要為了「可能重用」移入 shared。
+- 新增 helper 前，先檢查 [internal/shared/lib](../../internal/shared/lib/) 是否已有可直接使用的函式庫。已有相同責任的實作時必須重用，不能在 service/repository 複製一份。
+- 依問題選用既有 package：去重/set 使用 `internal/shared/lib/array`，游標分頁使用 `internal/shared/lib/searchcursor`，併發工作使用 `internal/shared/lib/concurrency`，佇列與堆疊使用 `internal/shared/lib/queue`、`internal/shared/lib/stack`，以及其他已存在的 blocknote、editableblock 函式庫。rate limit 與 response writer 是 Gateway 責任，使用 `internal/gateway/ratelimit` 與 `internal/gateway/responsewriter`。
+- `internal/shared/lib` 僅放跨領域、可重用且與 application layer 無關的邏輯。它不可 import Notezy project code；必要的第三方 library 可以使用。僅由單一領域使用的商業規則留在該領域，不要為了「可能重用」移入 shared。
 - 若既有 library 接近但不完全符合需求，優先在該 library 補最小且通用的能力；若需求只屬於單一領域，使用領域內的小 helper，避免為一次性需求建立新的 shared package。
 
 ## 變更範圍

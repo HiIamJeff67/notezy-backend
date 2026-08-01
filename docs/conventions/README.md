@@ -12,12 +12,12 @@
 
 | 文件 | 適用範圍 |
 | --- | --- |
-| [01-general-go.md](01-general-go.md) | Go 格式、命名、依賴與變更範圍 |
-| [02-architecture.md](02-architecture.md) | 模組分層、HTTP request flow、GraphQL 與背景工作 |
-| [03-http-api.md](03-http-api.md) | routes、binders、DTO、controllers、例外與可觀測性 |
+| [01-general-go.md](01-general-go.md) | Go 格式、命名、dependency direction 與變更範圍 |
+| [02-architecture.md](02-architecture.md) | Gateway/API/worker ownership、HTTP request flow、GraphQL 與背景工作 |
+| [03-http-api.md](03-http-api.md) | routes、controllers、adapters、request/response contract、例外與可觀測性 |
 | [04-persistence.md](04-persistence.md) | services、repositories、scopes、schema、交易與 SQL |
 | [05-testing-and-generated-code.md](05-testing-and-generated-code.md) | 測試、測試資料、GraphQL 產生碼與驗證清單 |
-| [06-exceptions.md](06-exceptions.md) | exception domain、error origin 與 `exceptions.Cover()` |
+| [06-exceptions.md](06-exceptions.md) | base/service exception domain、error origin 與 `exceptions.Cover()` |
 
 ## 優先順序
 
@@ -27,3 +27,6 @@
 4. Go 慣例與最小、可讀、可測的實作。
 
 不要為「未來可能需要」新增抽象層、介面或依賴；需求出現且現有模式無法支援時再加入。
+
+目標 workspace 與 staged migration 的 ownership 以
+[microservice-architecture.md](../codebase-design/microservice-architecture.md) 為準。程式碼尚未遷移到該路徑時，不得為了符合目錄圖建立空 package 或 temporary wrapper。

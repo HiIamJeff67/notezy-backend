@@ -1,0 +1,26 @@
+package routinesdto
+
+const (
+	GetMyRoutineByIdOperation                        = "routine.get-by-id"
+	GetMyRoutinesByStationIdOperation                = "routine.get-by-station-id"
+	GetAllMyRoutinesByTimeRangeOperation             = "routine.get-all-by-time-range"
+	CreateRoutineByStationIdOperation                = "routine.create-by-station-id"
+	CreateRoutinesByStationIdsOperation              = "routine.create-many-by-station-ids"
+	UpdateMyRoutineByIdOperation                     = "routine.update"
+	UpdateMyRoutinesByIdsOperation                   = "routine.update-many"
+	LinkRoutineTagByIdOperation                      = "routine.link-tag"
+	LinkRoutineTagsByIdsOperation                    = "routine.link-tags"
+	LinkRoutineItemByIdOperation                     = "routine.link-item"
+	LinkRoutineItemsByIdsOperation                   = "routine.link-items"
+	RestoreMyRoutineByIdOperation                    = "routine.restore"
+	RestoreMyRoutinesByIdsOperation                  = "routine.restore-many"
+	DeleteMyRoutineByIdOperation                     = "routine.delete"
+	DeleteMyRoutinesByIdsOperation                   = "routine.delete-many"
+	HardDeleteMyRoutineByIdOperation                 = "routine.hard-delete"
+	HardDeleteMyRoutinesByIdsOperation               = "routine.hard-delete-many"
+	VisualizeMyRoutineStatusCountOperation           = "routine.visualize-status-count"
+	VisualizeMyRoutinePeriodCountOperation           = "routine.visualize-period-count"
+	VisualizeMyRoutineScheduledStartAtCountOperation = "routine.visualize-scheduled-start-at-count"
+	VisualizeMyRoutineScheduledEndAtCountOperation   = "routine.visualize-scheduled-end-at-count"
+	SearchRoutinesOperation                          = "graphql.search-routines"
+)

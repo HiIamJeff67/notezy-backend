@@ -1,0 +1,28 @@
+package stationsdto
+
+const (
+	GetMyStationByIdOperation           = "station.get-my-station-by-id"
+	GetAllMyStationsOperation           = "station.get-all-my-stations"
+	CreateStationOperation              = "station.create"
+	CreateStationsOperation             = "station.create-many"
+	UpdateMyStationByIdOperation        = "station.update"
+	UpdateMyStationsByIdsOperation      = "station.update-many"
+	RestoreMyStationByIdOperation       = "station.restore"
+	RestoreMyStationsByIdsOperation     = "station.restore-many"
+	DeleteMyStationByIdOperation        = "station.delete"
+	DeleteMyStationsByIdsOperation      = "station.delete-many"
+	HardDeleteMyStationByIdOperation    = "station.hard-delete"
+	HardDeleteMyStationsByIdsOperation  = "station.hard-delete-many"
+	VisualizeMyTotalCountOperation      = "station.visualize-total-count"
+	GetMyStationPermissionOperation     = "station.permission.get"
+	CreateMyStationPermissionOperation  = "station.permission.create"
+	UpsertMyStationPermissionOperation  = "station.permission.upsert"
+	UpsertMyStationPermissionsOperation = "station.permission.upsert-many"
+	UpdateMyStationPermissionOperation  = "station.permission.update"
+	TransferMyStationOwnershipOperation = "station.ownership.transfer"
+	DeleteMyStationPermissionOperation  = "station.permission.delete"
+	DeleteMyStationPermissionsOperation = "station.permission.delete-many"
+	LeaveMyStationOperation             = "station.membership.leave"
+	LeaveMyStationsOperation            = "station.membership.leave-many"
+	SearchStationsOperation             = "graphql.search-stations"
+)

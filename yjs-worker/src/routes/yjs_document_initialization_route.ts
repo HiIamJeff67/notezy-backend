@@ -17,7 +17,7 @@ export function configureYjsDocumentInitializationRoutes(
   telemetry: Telemetry
 ): void {
   app.post(
-    "/internal/yjs-document-initialization/v1",
+    "/core/yjs-document-initialization/v1",
     bodyLimit({
       maxSize: YjsMaintenanceMaximumPayloadBytes,
       onError: context => context.body(null, 413),

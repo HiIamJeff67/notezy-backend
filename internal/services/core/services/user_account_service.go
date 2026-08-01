@@ -1,0 +1,281 @@
+package services
+
+import (
+	"context"
+	"net/http"
+	"time"
+
+	"gorm.io/gorm"
+
+	useraccountsdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/user-accounts"
+	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
+	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
+	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data"
+	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/inputs"
+	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/options"
+	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/repositories"
+	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas/enums"
+	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
+)
+
+type UserAccountServiceInterface interface {
+	GetMyAccount(ctx context.Context, requestDto *useraccountsdto.GetMyAccountRequestDto) (*useraccountsdto.GetMyAccountResponseDto, *exceptions.Exception)
+	UpdateMyAccount(ctx context.Context, requestDto *useraccountsdto.UpdateMyAccountRequestDto) (*useraccountsdto.UpdateMyAccountResponseDto, *exceptions.Exception)
+	BindGoogleAccount(ctx context.Context, requestDto *useraccountsdto.BindGoogleAccountRequestDto) (*useraccountsdto.BindGoogleAccountResponseDto, *exceptions.Exception)
+	UnbindGoogleAccount(ctx context.Context, requestDto *useraccountsdto.UnbindGoogleAccountRequestDto) (*useraccountsdto.UnbindGoogleAccountResponseDto, *exceptions.Exception)
+}
+
+type UserAccountService struct {
+	db                    *gorm.DB
+	userRepository        repositories.UserRepositoryInterface
+	userAccountRepository repositories.UserAccountRepositoryInterface
+	oauthService          OAuthServiceInterface
+}
+
+func NewUserAccountService(
+	db *gorm.DB,
+	userRepository repositories.UserRepositoryInterface,
+	userAccountRepository repositories.UserAccountRepositoryInterface,
+	oauthService OAuthServiceInterface,
+) UserAccountServiceInterface {
+	if db == nil {
+		db = data.NotezyDB
+	}
+	return &UserAccountService{
+		db:                    db,
+		userRepository:        userRepository,
+		userAccountRepository: userAccountRepository,
+		oauthService:          oauthService,
+	}
+}
+
+/* ============================== Service Methods for UserAccount ============================== */
+
+func (s *UserAccountService) GetMyAccount(
+	ctx context.Context, requestDto *useraccountsdto.GetMyAccountRequestDto,
+) (*useraccountsdto.GetMyAccountResponseDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(requestDto); err != nil {
+		return nil, exceptions.New(
+			"InvalidRequest",
+			"UserAccount",
+			"GetMyAccount",
+			"User account request is invalid",
+			http.StatusBadRequest,
+		).WithOrigin(err)
+	}
+	actorUserId, exception := contexts.GetActorUserId(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
+	db := s.db.WithContext(ctx)
+
+	userAccount, exception := s.userAccountRepository.GetOneByUserId(actorUserId, options.WithDB(db))
+	if exception != nil {
+		return nil, exception
+	}
+
+	var countryCode *string
+	if userAccount.CountryCode != nil {
+		countryCodeString := userAccount.CountryCode.String()
+		countryCode = &countryCodeString
+	}
+	return &useraccountsdto.GetMyAccountResponseDto{
+		CountryCode:              countryCode,
+		PhoneNumber:              userAccount.PhoneNumber,
+		GoogleCredential:         userAccount.GoogleCredential,
+		DiscordCredential:        userAccount.DiscordCredential,
+		RootShelfCount:           userAccount.RootShelfCount,
+		BlockPackCount:           userAccount.BlockPackCount,
+		BlockCount:               userAccount.BlockCount,
+		MaterialCount:            userAccount.MaterialCount,
+		WorkflowCount:            userAccount.WorkflowCount,
+		AdditionalItemCount:      userAccount.AdditionalItemCount,
+		StationCount:             userAccount.StationCount,
+		RoutineCount:             userAccount.RoutineCount,
+		RoutineTaskCostUnitCount: userAccount.RoutineTaskCostUnitCount,
+		RoutineTagCount:          userAccount.RoutineTagCount,
+		UpdatedAt:                userAccount.UpdatedAt,
+	}, nil
+}
+
+func (s *UserAccountService) UpdateMyAccount(
+	ctx context.Context, requestDto *useraccountsdto.UpdateMyAccountRequestDto,
+) (*useraccountsdto.UpdateMyAccountResponseDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(requestDto); err != nil {
+		return nil, exceptions.New(
+			"InvalidRequest",
+			"UserAccount",
+			"UpdateMyAccount",
+			"User account request is invalid",
+			http.StatusBadRequest,
+		).WithOrigin(err)
+	}
+	actorUserId, exception := contexts.GetActorUserId(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+	var countryCode *enums.CountryCode
+	if requestDto.Body.Values.CountryCode != nil {
+		parsedCountryCode, err := enums.ConvertStringToCountryCode(*requestDto.Body.Values.CountryCode)
+		if err != nil {
+			return nil, exceptions.InvalidInput("UserAccount").WithOrigin(err)
+		}
+		countryCode = parsedCountryCode
+	}
+
+	db := s.db.WithContext(ctx)
+
+	result := db.Model(&schemas.UserAccount{}).
+		Where("user_id = ? AND auth_code = ?", actorUserId, requestDto.Body.AuthCode).
+		First(&schemas.UserAccount{})
+	if err := result.Error; err != nil {
+		return nil, exceptions.New(
+			"NotFound",
+			"UserAccount",
+			"UpdateMyAccount",
+			"User account was not found",
+			http.StatusNotFound,
+		).WithOrigin(err)
+	}
+
+	_, exception = s.userAccountRepository.UpdateOneByUserId(
+		actorUserId,
+		inputs.PartialUpdateUserAccountInput{
+			Values: inputs.UpdateUserAccountInput{
+				BackupEmail: requestDto.Body.Values.BackupEmail,
+				CountryCode: countryCode,
+				PhoneNumber: requestDto.Body.Values.PhoneNumber,
+			},
+			SetNull: requestDto.Body.SetNull,
+		},
+		options.WithDB(db),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &useraccountsdto.UpdateMyAccountResponseDto{
+		UpdatedAt: time.Now(),
+	}, nil
+}
+
+/* ============================== Service Methods for Binding Accounts ============================== */
+
+func (s *UserAccountService) BindGoogleAccount(
+	ctx context.Context, requestDto *useraccountsdto.BindGoogleAccountRequestDto,
+) (*useraccountsdto.BindGoogleAccountResponseDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(requestDto); err != nil {
+		return nil, exceptions.New(
+			"InvalidRequest",
+			"UserAccount",
+			"BindGoogleAccount",
+			"Google account binding request is invalid",
+			http.StatusBadRequest,
+		).WithOrigin(err)
+	}
+	actorUserId, exception := contexts.GetActorUserId(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
+	// Start transaction
+	db := s.db.WithContext(ctx)
+
+	userInfo, exception := s.oauthService.GetGoogleUserInfo(ctx, requestDto.Body.AuthorizationCode)
+	if exception != nil {
+		return nil, exception
+	}
+
+	user, exception := s.userRepository.GetOneById(
+		actorUserId,
+		[]schemas.UserRelation{schemas.UserRelation_UserAccount},
+		options.WithDB(db),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	if user.UserAccount.GoogleCredential != nil {
+		return nil, exceptions.New(
+			"GoogleCredentialAlreadyBound",
+			"UserAccount",
+			"BindGoogleAccount",
+			"Google credential is already bound",
+			http.StatusInternalServerError,
+		)
+	}
+
+	_, exception = s.userAccountRepository.UpdateOneByUserId(
+		actorUserId,
+		inputs.PartialUpdateUserAccountInput{
+			Values: inputs.UpdateUserAccountInput{
+				GoogleCredential: &userInfo.Id,
+			},
+			SetNull: nil,
+		},
+		options.WithDB(db),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &useraccountsdto.BindGoogleAccountResponseDto{
+		UpdatedAt: time.Now(),
+	}, nil
+}
+
+func (s *UserAccountService) UnbindGoogleAccount(
+	ctx context.Context, requestDto *useraccountsdto.UnbindGoogleAccountRequestDto,
+) (*useraccountsdto.UnbindGoogleAccountResponseDto, *exceptions.Exception) {
+	if err := validation.Validator.Struct(requestDto); err != nil {
+		return nil, exceptions.New(
+			"InvalidRequest",
+			"UserAccount",
+			"UnbindGoogleAccount",
+			"Google account unbinding request is invalid",
+			http.StatusBadRequest,
+		).WithOrigin(err)
+	}
+	actorUserId, exception := contexts.GetActorUserId(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+
+	// Start transaction
+	db := s.db.WithContext(ctx)
+
+	result := db.Model(&schemas.UserAccount{}).
+		Where("user_id = ? AND auth_code = ?", actorUserId, requestDto.Body.AuthCode).
+		First(&schemas.UserAccount{})
+	if err := result.Error; err != nil {
+		return nil, exceptions.New(
+			"NotFound",
+			"UserAccount",
+			"UnbindGoogleAccount",
+			"User account was not found",
+			http.StatusNotFound,
+		).WithOrigin(err)
+	}
+
+	_, exception = s.userAccountRepository.UpdateOneByUserId(
+		actorUserId,
+		inputs.PartialUpdateUserAccountInput{
+			Values: inputs.UpdateUserAccountInput{
+				GoogleCredential: nil,
+			},
+			SetNull: &map[string]bool{
+				"GoogleCredential": true,
+			},
+		},
+		options.WithDB(db),
+	)
+	if exception != nil {
+		return nil, exception
+	}
+
+	return &useraccountsdto.UnbindGoogleAccountResponseDto{
+		UpdatedAt: time.Now(),
+	}, nil
+}

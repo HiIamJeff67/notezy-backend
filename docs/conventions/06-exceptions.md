@@ -1,47 +1,115 @@
 # Exception Conventions
 
-## 基本原則
+## Ownership and envelope
 
-- 所有可預期的 application、validation、permission、persistence 與外部依賴失敗，使用 `app/exceptions` 的既有 domain factory；不要在 request flow 中自行建立另一種 JSON error 格式。
-- 選擇最接近資源/操作的 domain，例如 shelf、station、routine；底層 Go error 以 `WithOrigin(err)` 附加，保留 log 與 trace 所需的實際原因。
-- binder 負責將 bind/parse 失敗轉為 `InvalidInput()` 或 `InvalidDto()`；service 驗證 request DTO 時使用其領域的 `InvalidDto()`；repository 將 GORM/raw SQL 結果轉為該資料領域的 `NotFound()`、`FailedToCreate()`、`FailedToUpdate()`、`NoChanges()` 等 exception。
-- exception 往上回傳，不在 service/repository 私自轉成 HTTP response。只有 controller、binder 或 middleware 使用安全 JSON response 方法；internal exception 不能直接暴露給 client。
-- 產生 exception 與緊接的 return/rollback 是同一錯誤處理區塊，保持相鄰，除非中間確實有必要的補償動作。
+- `internal/exceptions` is a pure application envelope. It may use the standard
+  library and `internal/shared`, but must not import Gateway, a microservice,
+  platform observability, Gin, GORM, or generated GraphQL code.
+- `internal/exceptions` creates the shared envelope with `exceptions.New()`.
+  Its optional final `isInternal ...bool` accepts only the first value and
+  cannot be changed after construction. It must not own a domain factory or a
+  numeric code registry.
+- Gateway and each microservice may define a local factory in their own
+  `exceptions/` package when two or more callers share the same domain error
+  semantics. Examples are `internal/gateway/exceptions/` and
+  `internal/services/core/exceptions/`. A component with its own operational
+  failure semantics may do the same beneath the component, such as
+  `internal/shared/storage/exceptions/`.
+- A local factory returns `*exceptions.Exception`, contains no numeric code
+  registry, and is never imported across a Gateway/service boundary. Gateway
+  never imports an API local factory, and one service never imports another
+  service's factory. One-off errors, including generic utility failures, use
+  `exceptions.New()` at the call site.
+- Set `Reason`, `Domain`, and `Operation` explicitly. They are stable,
+  machine-readable application properties; `Message` is the human-readable
+  explanation. Use `WithOrigin(err)` for the underlying Go error and
+  `WithDetails()` only for in-process diagnostics.
+- `Exception` never imports observability and has no `Log()` method. At an
+  owning runtime boundary, use `logs.NotezyLogger.JSON(ctx, slog.LevelError,
+  exception.String(), exception)` to serialize and record the exception. The
+  logger accepts `any`, owns JSON marshaling, and returns its marshal error;
+  callers that can safely continue may explicitly discard that logging error.
+  `Exception.String()` is diagnostic-only and may contain origin/details; it
+  must never be sent to a client.
+- Root `ExceptionCode`, `ExceptionPrefix`, generic domain helpers, and domain
+  factories do not exist. Domain factories are local to their owning runtime
+  or component; callers must not recreate a root compatibility layer.
+
+```go
+exception := exceptions.New(
+	"NotFound",
+	"RootShelf",
+	"GetMyRootShelfById",
+	"Root shelf was not found",
+	http.StatusNotFound,
+)
+
+exception := exceptions.New(
+	"DatabaseFailure",
+	"API",
+	"CreateRootShelf",
+	"Failed to persist the root shelf",
+	http.StatusInternalServerError,
+	true,
+).WithOrigin(result.Error)
+```
+
+## Public safety boundary
+
+- Only `internal/gateway/responsewriter.ToPublic()` may convert an exception
+  into a browser-facing exception. It records the original internal exception
+  before conversion and removes `Origin`, `Details`, numeric compatibility
+  codes, and all implementation diagnostics.
+- An internal exception becomes the safe, generic `InternalServerError` unless
+  the owner explicitly provides an approved fallback with
+  `WithPublicFallback()`. A fallback may expose only a safe reason, domain,
+  operation, message, HTTP status, and retryability.
+- Gateway REST and GraphQL response paths must use the response writer. Do not
+  construct an exception JSON body directly and do not pass `Origin.Error()` to
+  a response or GraphQL extension.
+- Gateway records the original exception through the platform logger before
+  calling `ToPublic()`. Internal service transport responses carry the same
+  safe `reason`, `domain`, `operation`, `message`, and `retryable` fields; a
+  Gateway adapter reconstructs that envelope without domain-specific mapping.
+- `ToPublic()` is idempotent: calling it for an already public exception keeps
+  its safe fields and still drops diagnostics.
+
+```go
+exception := exceptions.New(
+	"StorageFailure",
+	"API",
+	"UploadMaterial",
+	"storage provider returned an internal response",
+	http.StatusInternalServerError,
+	true,
+).WithPublicFallback(exceptions.PublicFallback{
+	Reason:         "ServiceUnavailable",
+	Domain:         "Storage",
+	Operation:      "UploadMaterial",
+	Message:        "Storage is temporarily unavailable",
+	HTTPStatusCode: http.StatusServiceUnavailable,
+	Retryable:      true,
+})
+```
+
+## Context ownership
+
+- `internal/shared/contexts` contains only generic `context.Context` value
+  helpers; it never imports exceptions or framework code.
+- `internal/gateway/contexts` owns Gin/request-context parsing and the
+  route-declared permission set used to construct an outbound delegation.
+- `internal/services/core/contexts` owns verified API-service context values,
+  including permissions reconstructed from the verified delegation credential.
+  Core services must not trust client DTO fields for actor identity or route
+  permission policy.
 
 ## `exceptions.Cover()`
 
-`exceptions.Cover(existing, fallbacks)` 只在 `existing == nil` 時依序取第一個成立的 fallback；已有 exception 時原樣回傳。因此它適合把「同一個操作可能失敗的多個條件」集中為一個 guard，減少重複的 `if`、rollback 和 return。
+`exceptions.Cover(existing, fallbacks)` is kept for a single operation with two
+or more alternative failure conditions. It returns `existing` unchanged, or the
+first satisfied fallback when `existing` is nil. Put an underlying result error
+before empty-result and invariant fallbacks so the diagnostic cause is retained.
 
-- 兩個以上彼此替代的結果條件時使用，例如 GORM `Error`、查無資料、`RowsAffected == 0`，或 repository exception 之後的領域不變量驗證。
-- fallback 順序就是優先順序。先列出帶有 `WithOrigin(result.Error)` 的底層錯誤，再列空結果、無變更或領域條件，避免丟失較具體的原因。
-- 只有一個清楚條件時直接寫普通 `if`；不要為單一 guard 或無關的錯誤流程強行使用 `Cover()`。
-- `Cover()` 只挑選 exception，不會執行 rollback、log 或 response；在取得非 nil exception 後，立刻走該 scope 的既有錯誤收尾。
-
-```go
-result := parsedOptions.DB.Model(&schemas.Station{}).
-	Where("id = ? AND deleted_at IS NULL", id).
-	Select("*").
-	Updates(&updates)
-if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
-	{First: result.Error != nil, Second: exceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
-	{First: result.RowsAffected == 0, Second: exceptions.Station.NoChanges()},
-}); exception != nil {
-	parsedOptions.DB.Rollback()
-	return nil, exception
-}
-```
-
-當前面呼叫已經回傳 exception，而後面還要補資源關係、ownership 或上限等不變量時，將既有 exception 作為第一個參數。若 repository 已失敗，fallback 不會覆寫它；若 repository 成功，才檢查後續條件。
-
-```go
-station, exception := r.CheckPermissionAndGetOneById(id, userId, opts...)
-if exception = exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
-	{First: station.OwnerId != expectedOwnerId, Second: exceptions.Station.NotFound()},
-	{First: station.ArchivedAt != nil, Second: exceptions.Station.NotFound()},
-}); exception != nil {
-	parsedOptions.DB.Rollback()
-	return nil, exception
-}
-```
-
-`Cover()` 的條件應是安全可求值的：若前一步可能回傳 nil resource，先讓 repository exception 在前面被處理，或確保 fallback 不會解參考 nil pointer。
+Use a direct `if` for one clear condition. `Cover()` does not log, roll back, or
+write a response; return or finish transaction handling immediately after it
+selects an exception.

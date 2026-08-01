@@ -1,28 +1,100 @@
 # HTTP API Conventions
 
-## Routes 與 middleware
+## Gateway routes and middleware
 
-- 主 API route 放在 `app/routes/developmentroutes`；僅測試需要的 route 放在 `app/routes/testroutes`。
-- route 以該領域的 `NewXxxModule()` 組裝，並將 binder 包住 controller method。
-- 延續該 route 既有的 middleware 順序與 `RepositionMiddleware` 用法。每個新增 endpoint 必須有對應的 trace operation 名稱與 `server.requests.<domain>.<operation>` metric 名稱。
-- 權限由 middleware 與 repository scope 共同保護。route 使用 `AllowedPermissionsAbove` 設定入口門檻；資料讀寫仍必須透過帶 permission check 的 repository/scope，避免繞過保護。
-- 維持既有 URL 與 payload 命名的 camelCase。新 API 的 method、path 與 response 形狀需要與前端 contract 一起決定；不要在無相容方案下改舊欄位。
+- Browser/client-facing HTTP routes live under
+  `internal/gateway/transports/api/routes`. Its cookies, middlewares, and
+  interceptors are client transport concerns. Test-only routes stay in this
+  client transport.
+- Routes register URL, middleware, trace operation, metric name, and the
+  allowed-permission policy. They do not parse input or call repositories.
+- Collection paths use plural kebab-case resource names. Route changes update
+  `docs/api-route-design/` in the same change.
+- Gateway middleware is the only source of route permission semantics. It
+  writes allowed permissions into the trusted Gateway request context; the
+  Gateway adapter passes them in the delegation credential.
+- Middleware order, trace/metric naming, CORS, CSRF, rate-limit, and auth
+  behaviour remain explicit in the route group. Do not hide them in a helper
+  router group used once.
 
-## DTO 與 binder
+## Request and response contracts
 
-- request DTO 定義在 `app/dtos`，嵌入 `NotezyRequest[Header, ContextFields, Body, Param]`；只使用該 endpoint 需要的四個部分，沒有資料時用 `any`。
-- JSON 使用 `json` tag，query 使用 `form` tag，path 參數使用 `uri` tag，並以 `validate` tag 表達輸入限制。
-- binder 負責 `ShouldBindJSON`、`ShouldBindQuery`、`ctx.Param`、`ctx.Query` 與 auth context 轉型；轉型/綁定失敗要回傳此領域的 `InvalidInput()` 或 `InvalidDto()` exception。
-- DTO 只能描述 transport contract；不要把 GORM model、DB handle、Gin context 或商業邏輯放入 DTO。
+- Public and internal operation payloads use `XxxRequestDto` and
+  `XxxResponseDto`. `core.Request[Dto]` and `core.Response[Dto]`
+  carry version, operation, metadata, and the DTO; do not add a nested DTO body
+  solely to repeat the envelope.
+- `contracts/api/v1.RequestDto[Header, Body, Param, Query]` is the common
+  composable request shape. Domain request DTOs embed it with anonymous
+  concrete struct types directly at the declaration; do not create one-off
+  `HeaderDto`, `BodyDto`, `ParamDto`, or `QueryDto` types. The client and Core
+  envelopes remain outside these DTOs, so a response never becomes `data.data`.
+- A request DTO contains only the needed public header, body, URI, and query
+  fields. It never contains actor/context fields, GORM model, DB handle, Gin
+  context, or business logic. Trusted actor, permissions, and Core user identity
+  are established from delegation and Core middleware, not deserialized from the
+  DTO.
+- JSON uses `json`, query uses `form`, and URI uses `uri` tags. Validation is
+  expressed with `validate` tags and executed at the trust boundary.
+- The Gateway `AuthMiddleware` for Core-bound routes only extracts and
+  cryptographically parses browser access/refresh tokens. It does not query
+  Redis or Core database data. Browser cookies remain on the request and are
+  forwarded through the internal client to Core.
+- The Core gateway authentication middleware validates the forwarded token,
+  matches its public subject with the delegation subject, and resolves the
+  Core-owned internal user identity before invoking a secure endpoint.
+- Core-owned user role and plan authorization middleware lives beside Core
+  authentication middleware; Gateway retains only client-transport concerns
+  such as rate limits, sanitization, CORS, and response interception.
+- When access authentication falls back to a valid refresh token, Core rotates
+  access and CSRF tokens and returns them through the private response headers
+  `X-Core-Set-Access-Token` and `X-Core-Set-CSRF-Token`, guarded by
+  `X-Core-Auth-Refreshed: true`. The Gateway adapter copies them into its
+  request context; the client response interceptor sets the access cookie and
+  `X-CSRF-Token` response header.
+- The Gateway binder binds and validates all public HTTP data. A
+  binding/validation failure is mapped to a client-safe Gateway exception
+  response; it does not reach a controller or Core service.
+- Core service requests are versioned contracts. They contain serializable
+  fields only. The calling component (`actor`), optional authenticated public
+  user subject (`userSubject`), and allowed permissions come from the verified
+  delegation credential rather than an untrusted client field. Use the Core
+  `DelegationMiddleware` when a user subject is not required and
+  `DelegationAuthenticatedMiddleware` when it is required.
 
-## Controller 與 response
+## Controllers and adapters
 
-- controller 只取得 `ctx.Request.Context()`、呼叫 service、處理 `*exceptions.Exception`，最後回傳成功 response。
-- 成功格式保持 `{ "success": true, "data": ..., "exception": null }`；失敗一律使用 exception 的安全 response 方法，保持 `{ "success": false, "data": null, "exception": ... }`。
-- 不要在 controller 中判斷 ownership、組 GORM query、做交易或直接讀取 request body。
+- A Gateway controller receives a validated request DTO, obtains
+  `ctx.Request.Context()`, calls its adapter, and renders a success or safe
+  exception response.
+- A controller does not bind public HTTP input, query GORM, create a
+  transaction, decide ownership, or call a repository directly.
+- A Gateway-to-Core adapter lives under
+  `internal/gateway/transports/core/adapters`. It uses its injected
+  long-lived client, context propagation, configured timeout, and versioned
+  Request/Response mapping. It may be used by REST, GraphQL, and WebSocket.
+- Core Gateway endpoints validate the delegation credential and map the internal
+  request to a Core service request. They do not invoke a second local adapter;
+  their sibling routers only register endpoint method/path pairs.
+- Write retry is allowed only for an idempotent operation or one carrying an
+  idempotency key. Do not silently retry a general mutation.
 
-## Exception、log 與觀測性
+## Response, exception, and observability
 
-- 使用 `app/exceptions` 的領域 exception factory；不要自行建立臨時 HTTP error 格式或直接暴露 internal error。
-- DB、cache、parser 等底層 error 以 `WithOrigin(err)` 保留，並用 `Log()` / 安全 response 走既有統一流程。internal exception 不得直接回傳給客戶端。
-- 新 endpoint 對應 trace/metric；重大背景流程也應沿用 `app/monitor` 的 logger、meter、tracer，而非另建 logging framework。
+- Public success remains `{ "success": true, "data": ..., "exception": null }`.
+  Public failure remains `{ "success": false, "data": null, "exception": ... }`.
+- Gateway owns HTTP exception rendering. Services and repositories return
+  service exception or Go error according to their boundary; they never render
+  Gin responses.
+- Preserve lower-level origin with `WithOrigin(err)` when mapping an expected
+  application failure. Never expose internal origin details to the client.
+- Every route has a trace operation and metric name. Internal adapter calls
+  propagate trace/request identity; do not create a second logging framework.
+
+## Contract change checklist
+
+1. Update the route design document and public/internal Request/Response.
+2. Update affected Gateway controller/adapter and Core Gateway endpoint/router/service in the
+   same public-operation order.
+3. Regenerate artifacts when the contract is generated code input.
+4. Verify response shape, status, permission policy, trace/metric name, and
+   affected tests.

@@ -60,6 +60,9 @@ services:
       GIN_TRUSTED_PROXIES: ${GIN_TRUSTED_PROXIES}
       JWT_ACCESS_TOKEN_SECRET_KEY: ${JWT_ACCESS_TOKEN_SECRET_KEY}
       JWT_REFRESH_TOKEN_SECRET_KEY: ${JWT_REFRESH_TOKEN_SECRET_KEY}
+      CORE_DELEGATION_SECRET: ${CORE_DELEGATION_SECRET}
+      CORE_DELEGATION_AUDIENCE: ${CORE_DELEGATION_AUDIENCE}
+      CORE_DELEGATION_ISSUER: ${CORE_DELEGATION_ISSUER}
       REALTIME_TICKET_PRIVATE_KEY_BASE64: ${REALTIME_TICKET_PRIVATE_KEY_BASE64}
       REALTIME_ENABLED: ${REALTIME_ENABLED:-true}
       REALTIME_BETA_USER_PUBLIC_IDS: ${REALTIME_BETA_USER_PUBLIC_IDS:-}
@@ -81,6 +84,7 @@ services:
       OAUTH_GOOGLE_CLIENT_ID: ${OAUTH_GOOGLE_CLIENT_ID}
       OAUTH_GOOGLE_CLIENT_SECRET: ${OAUTH_GOOGLE_CLIENT_SECRET}
       OAUTH_GOOGLE_REDIRECT_URL: ${OAUTH_GOOGLE_REDIRECT_URL}
+      EMAIL_SERVICE_BASE_URL: ${EMAIL_SERVICE_BASE_URL:-http://notezy-email:8081}
     expose:
       - "${GIN_PORT}"
     depends_on:
@@ -88,6 +92,67 @@ services:
         condition: service_healthy
       notezy-yjs-worker:
         condition: service_healthy
+
+  notezy-durablejob:
+    container_name: ${DOCKER_DURABLEJOB_SERVICE_NAME:-notezy-durablejob}
+    image: ${DOCKER_API_SERVICE_NAME}:latest
+    command: ["go", "run", "./cmd/durablejob"]
+    networks:
+      notezy-backend-net:
+        ipv4_address: 172.30.0.18
+    volumes:
+      - .:/notezy-backend
+      - /notezy-backend/tmp
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: ${DOCKER_DB_PORT}
+      CORE_BASE_URL: ${CORE_BASE_URL:-http://notezy-api:7778}
+      CORE_DELEGATION_SECRET: ${CORE_DELEGATION_SECRET}
+      CORE_DELEGATION_AUDIENCE: ${CORE_DELEGATION_AUDIENCE}
+      CORE_DELEGATION_ISSUER: ${CORE_DELEGATION_ISSUER}
+      YJS_MAINTENANCE_WORKER_URL: ${YJS_MAINTENANCE_WORKER_URL}
+      YJS_DOCUMENT_INITIALIZATION_WORKER_URL: ${YJS_DOCUMENT_INITIALIZATION_WORKER_URL:-http://notezy-yjs-worker:${DOCKER_YJS_WORKER_PORT}/internal/yjs-document-initialization/v1}
+      YJS_PROJECTION_WORKER_URL: ${YJS_PROJECTION_WORKER_URL:-http://notezy-yjs-worker:${DOCKER_YJS_WORKER_PORT}/internal/yjs-projection/v1}
+      OTEL_SERVICE_NAME: notezy-durablejob
+      OTEL_SERVICE_VERSION: ${OTEL_SERVICE_VERSION:-development}
+      OTEL_DEPLOYMENT_ENVIRONMENT: development
+      OTEL_EXPORTER_OTLP_GRPC_ENDPOINT: ${DOCKER_OTEL_COLLECTOR_SERVICE_NAME}:${DOCKER_OTEL_COLLECTOR_GRPC_PORT}
+    depends_on:
+      notezy-db:
+        condition: service_healthy
+      notezy-yjs-worker:
+        condition: service_started
+
+  notezy-email:
+    container_name: ${DOCKER_EMAIL_SERVICE_NAME:-notezy-email}
+    image: ${DOCKER_API_SERVICE_NAME}:latest
+    command: ["go", "run", "./cmd/email"]
+    networks:
+      notezy-backend-net:
+        ipv4_address: 172.30.0.19
+    volumes:
+      - .:/notezy-backend
+      - /notezy-backend/tmp
+    environment:
+      EMAIL_LISTEN_ADDRESS: 0.0.0.0:8081
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      NOTEZY_OFFICIAL_NAME: ${NOTEZY_OFFICIAL_NAME}
+      NOTEZY_OFFICIAL_GMAIL: ${NOTEZY_OFFICIAL_GMAIL}
+      NOTEZY_OFFICIAL_GOOGLE_PASSWORD: ${NOTEZY_OFFICIAL_GOOGLE_PASSWORD}
+      NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD: ${NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD}
+      OTEL_SERVICE_NAME: notezy-email
+      OTEL_SERVICE_VERSION: ${OTEL_SERVICE_VERSION:-development}
+      OTEL_DEPLOYMENT_ENVIRONMENT: development
+      OTEL_EXPORTER_OTLP_GRPC_ENDPOINT: ${DOCKER_OTEL_COLLECTOR_SERVICE_NAME}:${DOCKER_OTEL_COLLECTOR_GRPC_PORT}
+    expose:
+      - "8081"
+    depends_on:
+      notezy-otel-collector:
+        condition: service_started
 
   notezy-yjs-worker:
     image: ${DOCKER_YJS_WORKER_SERVICE_NAME}:latest

@@ -3,7 +3,7 @@
 ### 架構
 
 - 在位於 test/unit/util 底下
-- 建立多個 test_some_util.go 每個對應到 app/util/ 內的一個 go 檔案
+- 建立多個 test_some_util.go 每個對應到 internal/util/ 內的一個 go 檔案
 - 將所有測試資料放到 test/unit/util/testdata/ 底下
 - 建立一個通用的 TestCase (已建立在 shared/type/test_case.go) :
 
@@ -17,8 +17,8 @@ type TestCase [ArgType any, ReturnType any]struct {
 
 ### 實作步驟
 
-- 首先先在 test/unit/util/ 底下先撰寫一個對應 app/util/ 底下的 Go 檔案
-  - 假設現在在 app/util/some_util_function.go，那我們就要建立一個 test/unit/util/some_util_function_test.go，並在此撰寫測試相關的程式碼，其中該檔案包含 :
+- 首先先在 test/unit/util/ 底下先撰寫一個對應 internal/util/ 底下的 Go 檔案
+  - 假設現在在 internal/util/some_util_function.go，那我們就要建立一個 test/unit/util/some_util_function_test.go，並在此撰寫測試相關的程式碼，其中該檔案包含 :
     - 以 Util 的 Function 名稱 + ArgType 作為被測試函式的參數型態，依照上面的範例就是 SomeUtilFunctionArgType
     - 以 Util 的 Function 名稱 + ReturnType 作為被測試函式的參數型態，依照上面的範例就是 SomeUtilFunctionReturnType
     - 以 Util 的 Function 名稱 + TestCase 作為被測試函式的 Input/Output 資料架構，依照上面的範例就是 SomeUtilFunctionTestCase，且使用剛剛建立的 SomeUtilFunctionArgType 以及 SomeUtilFunctionReturnType 指定他的 ArgStruct 以及 ReturnType，做出來的結果類似底下程式碼範例 :
@@ -55,4 +55,4 @@ type SomeUtilFunctionTestCase  = TestCase[SomeUtilFunctionArgs, SomeUtilFunction
         - f3_testdata.json
 ```
 
-- 請依照上面要求，完成對應所有 app/util/ 的所有 Go 檔案的測試項目
+- 請依照上面要求，完成對應所有 internal/util/ 的所有 Go 檔案的測試項目

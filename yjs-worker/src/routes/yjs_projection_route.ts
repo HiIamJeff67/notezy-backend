@@ -16,7 +16,7 @@ export function configureYjsProjectionRoutes(
   telemetry: Telemetry
 ): void {
   app.post(
-    "/internal/yjs-projection/v1",
+    "/core/yjs-projection/v1",
     bodyLimit({
       maxSize: YjsMaintenanceMaximumPayloadBytes,
       onError: context => context.body(null, 413),

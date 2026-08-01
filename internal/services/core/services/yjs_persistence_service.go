@@ -1,0 +1,247 @@
+package services
+
+import (
+	"context"
+	"time"
+
+	"github.com/google/uuid"
+	"go.opentelemetry.io/otel/attribute"
+	"gorm.io/gorm"
+
+	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
+	metrics "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/metrics"
+	traces "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/traces"
+	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/inputs"
+	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/options"
+	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/repositories"
+	sharedtypes "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+)
+
+type YjsPersistenceServiceInterface interface {
+	LoadDocument(ctx context.Context, blockPackId uuid.UUID) (*sharedtypes.YjsDocumentState, error)
+	AppendUpdate(ctx context.Context, blockPackId uuid.UUID, persistenceBatchId uuid.UUID, originConnectionId *uuid.UUID, payload []byte) (int64, error)
+	GetCompactableYjsDocumentWithUpdates(ctx context.Context, blockPackId uuid.UUID) (*sharedtypes.YjsCompactionInput, error)
+	ApplyCompactedYjsDocument(ctx context.Context, blockPackId uuid.UUID, result sharedtypes.YjsCompactionResult) (bool, error)
+}
+
+type YjsPersistenceService struct {
+	db                     *gorm.DB
+	blockPackYjsRepository repositories.BlockPackYjsRepositoryInterface
+}
+
+func NewYjsPersistenceService(db *gorm.DB) YjsPersistenceServiceInterface {
+	return &YjsPersistenceService{
+		db:                     db,
+		blockPackYjsRepository: repositories.NewBlockPackYjsRepository(),
+	}
+}
+
+func (s *YjsPersistenceService) LoadDocument(
+	ctx context.Context, blockPackId uuid.UUID,
+) (state *sharedtypes.YjsDocumentState, err error) {
+	start := time.Now()
+	ctx, span := traces.NotezyTracer.Start(ctx, "yjs.document.load")
+	defer func() { traces.NotezyTracer.End(span, err) }()
+
+	db := s.db.WithContext(ctx)
+
+	document, updates, err := s.blockPackYjsRepository.LoadDocumentAndUpdates(
+		blockPackId,
+		options.WithDB(db),
+	)
+	if err != nil {
+		metrics.NotezyMeter.Count(ctx, "yjs.operation.count", 1,
+			attribute.String("operation", "document.load"),
+			attribute.String("outcome", "error"),
+		)
+		metrics.NotezyMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
+			attribute.String("operation", "document.load"),
+			attribute.String("outcome", "error"),
+		)
+		logs.NotezyLogger.Error(ctx, err, "failed to load Yjs document", attribute.String("operation", "document.load"))
+
+		return nil, err
+	}
+
+	state = &sharedtypes.YjsDocumentState{
+		Snapshot:               document.Snapshot,
+		StateVector:            document.StateVector,
+		LastUpdateSequence:     document.LastUpdateSequence,
+		CompactedUntilSequence: document.CompactedUntilSequence,
+		ProjectedUntilSequence: document.ProjectedUntilSequence,
+		Updates:                make([]sharedtypes.YjsDocumentUpdate, len(updates)),
+	}
+	for index, update := range updates {
+		state.Updates[index] = sharedtypes.YjsDocumentUpdate{
+			UpdateSequence: update.UpdateSequence,
+			Payload:        update.Payload,
+		}
+	}
+
+	span.SetAttributes(attribute.Int("yjs.update_count", len(updates)))
+	metrics.NotezyMeter.Count(ctx, "yjs.operation.count", 1,
+		attribute.String("operation", "document.load"),
+		attribute.String("outcome", "success"),
+	)
+	metrics.NotezyMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
+		attribute.String("operation", "document.load"),
+		attribute.String("outcome", "success"),
+	)
+
+	return state, nil
+}
+
+func (s *YjsPersistenceService) AppendUpdate(
+	ctx context.Context,
+	blockPackId uuid.UUID,
+	persistenceBatchId uuid.UUID,
+	originConnectionId *uuid.UUID,
+	payload []byte,
+) (updateSequence int64, err error) {
+	start := time.Now()
+	ctx, span := traces.NotezyTracer.Start(ctx, "yjs.update.append")
+	defer func() { traces.NotezyTracer.End(span, err) }()
+
+	db := s.db.WithContext(ctx)
+
+	updateSequence, err = s.blockPackYjsRepository.AppendUpdate(
+		blockPackId,
+		inputs.AppendBlockPackYjsUpdateInput{
+			PersistenceBatchId: persistenceBatchId,
+			OriginConnectionId: originConnectionId,
+			Payload:            payload,
+		},
+		options.WithDB(db),
+	)
+	if err != nil {
+		metrics.NotezyMeter.Count(ctx, "yjs.operation.count", 1,
+			attribute.String("operation", "update.append"),
+			attribute.String("outcome", "error"),
+		)
+		metrics.NotezyMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
+			attribute.String("operation", "update.append"),
+			attribute.String("outcome", "error"),
+		)
+		metrics.NotezyMeter.Bytes(ctx, "yjs.payload.bytes", int64(len(payload)), attribute.String("operation", "update.append"))
+		logs.NotezyLogger.Error(ctx, err, "failed to append Yjs update", attribute.String("operation", "update.append"))
+
+		return 0, err
+	}
+
+	span.SetAttributes(attribute.Int("yjs.payload_bytes", len(payload)))
+	metrics.NotezyMeter.Count(ctx, "yjs.operation.count", 1,
+		attribute.String("operation", "update.append"),
+		attribute.String("outcome", "success"),
+	)
+	metrics.NotezyMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
+		attribute.String("operation", "update.append"),
+		attribute.String("outcome", "success"),
+	)
+	metrics.NotezyMeter.Bytes(ctx, "yjs.payload.bytes", int64(len(payload)), attribute.String("operation", "update.append"))
+
+	return updateSequence, nil
+}
+
+func (s *YjsPersistenceService) GetCompactableYjsDocumentWithUpdates(
+	ctx context.Context, blockPackId uuid.UUID,
+) (input *sharedtypes.YjsCompactionInput, err error) {
+	start := time.Now()
+	ctx, span := traces.NotezyTracer.Start(ctx, "yjs.compaction.load")
+	defer func() { traces.NotezyTracer.End(span, err) }()
+
+	db := s.db.WithContext(ctx)
+
+	document, updates, err := s.blockPackYjsRepository.GetCompactableYjsDocumentWithUpdates(
+		blockPackId,
+		options.WithDB(db),
+	)
+	if err != nil || document == nil {
+		if err != nil {
+			logs.NotezyLogger.Error(ctx, err, "failed to load compactable Yjs document", attribute.String("operation", "compaction.load"))
+		}
+		metrics.NotezyMeter.Count(ctx, "yjs.operation.count", 1,
+			attribute.String("operation", "compaction.load"),
+			attribute.String("outcome", "error"),
+		)
+		metrics.NotezyMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
+			attribute.String("operation", "compaction.load"),
+			attribute.String("outcome", "error"),
+		)
+
+		return nil, err
+	}
+
+	input = &sharedtypes.YjsCompactionInput{
+		Snapshot:                   document.Snapshot,
+		StateVector:                document.StateVector,
+		BaseCompactedUntilSequence: document.CompactedUntilSequence,
+		CutoffSequence:             document.LastUpdateSequence,
+		Updates:                    make([]sharedtypes.YjsDocumentUpdate, len(updates)),
+	}
+	for index, update := range updates {
+		input.Updates[index] = sharedtypes.YjsDocumentUpdate{
+			UpdateSequence: update.UpdateSequence,
+			Payload:        update.Payload,
+		}
+	}
+
+	span.SetAttributes(attribute.Int("yjs.update_count", len(updates)))
+	metrics.NotezyMeter.Count(ctx, "yjs.operation.count", 1,
+		attribute.String("operation", "compaction.load"),
+		attribute.String("outcome", "success"),
+	)
+	metrics.NotezyMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
+		attribute.String("operation", "compaction.load"),
+		attribute.String("outcome", "success"),
+	)
+
+	return input, nil
+}
+
+func (s *YjsPersistenceService) ApplyCompactedYjsDocument(
+	ctx context.Context, blockPackId uuid.UUID, result sharedtypes.YjsCompactionResult,
+) (applied bool, err error) {
+	start := time.Now()
+	ctx, span := traces.NotezyTracer.Start(ctx, "yjs.compaction.apply")
+	defer func() { traces.NotezyTracer.End(span, err) }()
+
+	db := s.db.WithContext(ctx)
+
+	applied, err = s.blockPackYjsRepository.ApplyCompactedYjsDocument(
+		blockPackId,
+		inputs.ApplyCompactedBlockPackYjsDocumentInput{
+			BaseCompactedUntilSequence: result.BaseCompactedUntilSequence,
+			CutoffSequence:             result.CutoffSequence,
+			Snapshot:                   result.Snapshot,
+			StateVector:                result.StateVector,
+		},
+		options.WithDB(db),
+	)
+	if err != nil {
+		metrics.NotezyMeter.Count(ctx, "yjs.operation.count", 1,
+			attribute.String("operation", "compaction.apply"),
+			attribute.String("outcome", "error"),
+		)
+		metrics.NotezyMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
+			attribute.String("operation", "compaction.apply"),
+			attribute.String("outcome", "error"),
+		)
+		metrics.NotezyMeter.Bytes(ctx, "yjs.payload.bytes", int64(len(result.Snapshot)), attribute.String("operation", "compaction.apply"))
+		logs.NotezyLogger.Error(ctx, err, "failed to apply compacted Yjs document", attribute.String("operation", "compaction.apply"))
+
+		return false, err
+	}
+
+	span.SetAttributes(attribute.Bool("yjs.applied", applied))
+	metrics.NotezyMeter.Count(ctx, "yjs.operation.count", 1,
+		attribute.String("operation", "compaction.apply"),
+		attribute.String("outcome", "success"),
+	)
+	metrics.NotezyMeter.Duration(ctx, "yjs.operation.duration", time.Since(start),
+		attribute.String("operation", "compaction.apply"),
+		attribute.String("outcome", "success"),
+	)
+	metrics.NotezyMeter.Bytes(ctx, "yjs.payload.bytes", int64(len(result.Snapshot)), attribute.String("operation", "compaction.apply"))
+
+	return applied, nil
+}

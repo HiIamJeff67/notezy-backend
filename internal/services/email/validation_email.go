@@ -1,0 +1,55 @@
+package email
+
+import (
+	"time"
+
+	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
+	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+)
+
+const (
+	ValidationEmailSubject = "Verify Your Identity - Notezy Authentication Code"
+)
+
+var _validationEmailRenderer = &HTMLEmailRenderer{
+	TemplatePath: "internal/services/email/templates/validation_email_template.html",
+	DataMap:      map[string]any{},
+}
+
+func AsyncSendValidationEmail(
+	to string,
+	userName string,
+	authCode string,
+	userAgent string,
+	expiredAt time.Time,
+) *exceptions.Exception {
+	remainingMinutes := int(time.Until(expiredAt).Minutes())
+
+	_validationEmailRenderer.DataMap = map[string]any{
+		"UserName":      userName,
+		"Email":         to,
+		"AuthCode":      authCode,
+		"UserAgent":     userAgent,
+		"ExpiryMinutes": remainingMinutes,
+		"RequestTime":   time.Now().Format("2006-01-02 15:04:05 MST"),
+	}
+
+	body, exception := _validationEmailRenderer.Render()
+	if exception != nil {
+		return exception
+	}
+
+	emailObject := EmailObject{
+		To:               to,
+		Subject:          ValidationEmailSubject,
+		Body:             body,
+		EmailContentType: types.EmailContentType_HTML,
+	}
+
+	exception = NotezyEmailWorkerManager.Enqueue(emailObject, EmailTaskType_Validation, 3, 2)
+	if exception != nil {
+		return exception
+	}
+
+	return nil
+}

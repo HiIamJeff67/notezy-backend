@@ -7,14 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	configs "github.com/HiIamJeff67/notezy-backend/app/configs"
-	models "github.com/HiIamJeff67/notezy-backend/app/models"
-	testroutes "github.com/HiIamJeff67/notezy-backend/app/routes/testroutes"
+	testroutes "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/routes/testroutes"
+	configs "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
+	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
 	test "github.com/HiIamJeff67/notezy-backend/test"
 )
 
 const (
-	testTargetPath         = "github.com/HiIamJeff67/notezy-backend/app/routes/test_routes/auth_route.go"
+	testTargetPath         = "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/routes/testroutes/auth_route.go"
 	testAuthRouteNamespace = "/testRoute/auth"
 )
 
@@ -25,7 +25,12 @@ type testAuthFeatureProcedure struct {
 }
 
 func (p *testAuthFeatureProcedure) BeforeAll(t *testing.T) {
-	p.testDB = models.ConnectToDatabase(configs.PostgresDatabaseConfig)
+	db, err := platformdatabase.Connect(configs.PostgresDatabaseConfig)
+	if err != nil {
+		t.Skipf("auth E2E test requires an available database: %v", err)
+	}
+
+	p.testDB = db
 	gin.SetMode(gin.TestMode)
 	p.testRouter = gin.New()
 	p.testRouterGroup = p.testRouter.Group(testAuthRouteNamespace)
@@ -37,7 +42,9 @@ func (p *testAuthFeatureProcedure) BeforeEach(t *testing.T) { /* Do Nothing */ }
 func (p *testAuthFeatureProcedure) AfterEach(t *testing.T) { /* Do Nothing */ }
 
 func (p *testAuthFeatureProcedure) AfterAll(t *testing.T) {
-	models.DisconnectToDatabase(p.testDB)
+	if p.testDB != nil {
+		_ = platformdatabase.Disconnect(p.testDB)
+	}
 }
 
 func (p *testAuthFeatureProcedure) Main(t *testing.T) {

@@ -1,0 +1,24 @@
+# the complete user structure: internal/services/core/data/schemas/user_schema.go
+# this schema file is only use for go graphql to improve better user experience
+
+type PublicUser {
+  # id: UUID!
+  publicId: UUID! # the encoded of this field is the identifier of the PublicUser
+  name: String!
+  displayName: String!
+  # email: String!
+  # password: String!
+  # refreshToken: String!
+  # loginCount: Int
+  # blockLoginUtil: Time!
+  # userAgent: String!
+  role: UserRole!
+  plan: UserPlan!
+  # prevStatus: UserStatus!
+  status: UserStatus!
+  createdAt: Time!
+  # updatedAt: Time!
+
+  # relations
+  info: PublicUserInfo
+}
