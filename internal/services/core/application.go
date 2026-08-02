@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"net"
 	"net/http"
 	"time"
@@ -12,30 +11,24 @@ import (
 	"github.com/gin-gonic/gin"
 
 	adapters "github.com/HiIamJeff67/notezy-backend/internal/adapters"
-	caches "github.com/HiIamJeff67/notezy-backend/internal/caches"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	config "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
 	observability "github.com/HiIamJeff67/notezy-backend/internal/platform/observability"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	platformredis "github.com/HiIamJeff67/notezy-backend/internal/platform/redis"
-	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/repositories"
-	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/scopes"
+	userdata "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/cache/userdata"
+	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
+	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
+	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/scopes"
+	storage "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/storage"
 	services "github.com/HiIamJeff67/notezy-backend/internal/services/core/services"
 	durablejobrouters "github.com/HiIamJeff67/notezy-backend/internal/services/core/transports/durablejob/routers"
 	emailtransport "github.com/HiIamJeff67/notezy-backend/internal/services/core/transports/email"
 	coremiddlewares "github.com/HiIamJeff67/notezy-backend/internal/services/core/transports/gateway/middlewares"
 	gatewayrouters "github.com/HiIamJeff67/notezy-backend/internal/services/core/transports/gateway/routers"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
-	storages "github.com/HiIamJeff67/notezy-backend/internal/shared/storage"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	websocketrouters "github.com/HiIamJeff67/notezy-backend/internal/services/core/transports/websocket/routers"
+	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/shared/realtimelease"
 )
-
-var ready = make(chan struct{})
-
-func WaitUntilReady() {
-	<-ready
-}
 
 func NewCoreTransportRouter() *gin.Engine {
 	rootShelfScope := scopes.NewRootShelfScope()
@@ -67,10 +60,11 @@ func NewCoreTransportRouter() *gin.Engine {
 	routineTaskRepository := repositories.NewRoutineTaskRepository(routineTaskScope)
 	routineTaskRecordRepository := repositories.NewRoutineTaskRecordRepository(routineTaskRecordScope)
 	itemRepository := repositories.NewItemRepository(itemScope)
+	inMemoryStorage := storage.NewInMemoryStorage()
 
 	oauthService := services.NewOAuthService(config.OAuthGoogleConfig)
 	emailClient := emailtransport.NewClient()
-	realtimeLeaseStore := caches.NewRealtimeLeaseStore(caches.RedisClientMap)
+	realtimeLeaseStore := realtimelease.NewRealtimeLeaseStore()
 	editableBlockAdapter := adapters.NewEditableBlockAdapter()
 	routineTaskPayloadAdapter := adapters.NewRoutineTaskPayloadAdapter(editableBlockAdapter)
 
@@ -128,6 +122,7 @@ func NewCoreTransportRouter() *gin.Engine {
 		data.NotezyDB,
 		blockPackRepository,
 	)
+	yjsPersistenceService := services.NewYjsPersistenceService(data.NotezyDB)
 	routineTagService := services.NewRoutineTagService(
 		data.NotezyDB,
 		routineTagRepository,
@@ -138,7 +133,7 @@ func NewCoreTransportRouter() *gin.Engine {
 	)
 	subShelfService := services.NewSubShelfService(
 		data.NotezyDB,
-		storages.InMemoryStorage,
+		inMemoryStorage,
 		subShelfScope,
 		subShelfRepository,
 		rootShelfRepository,
@@ -155,7 +150,7 @@ func NewCoreTransportRouter() *gin.Engine {
 	)
 	materialService := services.NewMaterialService(
 		data.NotezyDB,
-		storages.InMemoryStorage,
+		inMemoryStorage,
 		materialScope,
 		subShelfRepository,
 		materialRepository,
@@ -203,22 +198,28 @@ func NewCoreTransportRouter() *gin.Engine {
 		badgeService,
 	)
 	durablejobrouters.ConfigureBlockProjectionRoutes(router, blockService)
+	websocketrouters.ConfigureRoutes(
+		router,
+		realtimeService,
+		yjsPersistenceService,
+		blockService,
+	)
+	router.GET("/healthz", func(ctx *gin.Context) {
+		ctx.Status(http.StatusOK)
+	})
+	router.GET("/readyz", func(ctx *gin.Context) {
+		ctx.Status(http.StatusOK)
+	})
 
 	return router
 }
 
-func Start() {
+func Start() func() {
 	shutdownObservability := observability.Initialize(context.Background())
-	defer shutdownObservability()
 
 	data.NotezyDB = data.ConnectToDatabase(config.PostgresDatabaseConfig)
-	defer data.DisconnectToDatabase(data.NotezyDB)
 
-	if err := platformredis.DefaultClientManager.ConnectAll(
-		caches.UserDataStore.Range,
-		caches.RateLimitRecordStore.Range,
-		types.Range[int, int]{Start: constants.RealtimeRedisServerNumber, Size: 1},
-	); err != nil {
+	if err := userdata.Register(context.Background(), platformredis.DefaultClientManager); err != nil {
 		exception := exceptions.New(
 			"ConnectionFailed",
 			"Cache",
@@ -234,9 +235,55 @@ func Start() {
 				exception.String(),
 			)
 		}
+		_ = platformredis.DefaultClientManager.DisconnectAll()
+		shutdownObservability()
 		panic(exception)
 	}
-	defer func() {
+	if err := realtimelease.Register(context.Background(), platformredis.DefaultClientManager); err != nil {
+		exception := exceptions.New(
+			"ConnectionFailed",
+			"Cache",
+			"Start",
+			"Failed to connect to realtime cache server",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+		if logs.NotezyLogger != nil {
+			logs.NotezyLogger.Error(
+				context.Background(),
+				exception.Origin(),
+				exception.String(),
+			)
+		}
+		_ = platformredis.DefaultClientManager.DisconnectAll()
+		shutdownObservability()
+		panic(exception)
+	}
+
+	coreTransportListener, err := net.Listen("tcp", config.CoreListenAddress())
+	if err != nil {
+		fmt.Println("Failed to listen for Core service transport: ", err)
+		_ = platformredis.DefaultClientManager.DisconnectAll()
+		_ = data.DisconnectToDatabase(data.NotezyDB)
+		shutdownObservability()
+		panic(err)
+	}
+	coreTransportServer := &http.Server{
+		Handler: NewCoreTransportRouter(),
+	}
+
+	go func() {
+		if err := coreTransportServer.Serve(coreTransportListener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			panic(err)
+		}
+	}()
+
+	return func() {
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := coreTransportServer.Shutdown(shutdownCtx); err != nil {
+			fmt.Println("Failed to shutdown Core service transport: ", err)
+		}
 		if err := platformredis.DefaultClientManager.DisconnectAll(); err != nil {
 			exception := exceptions.New(
 				"DisconnectionFailed",
@@ -254,45 +301,7 @@ func Start() {
 				)
 			}
 		}
-	}()
-	reloadRedisLibraries()
-
-	coreTransportListener, err := net.Listen("tcp", config.CoreListenAddress())
-	if err != nil {
-		fmt.Println("Failed to listen for Core service transport: ", err)
-		return
+		_ = data.DisconnectToDatabase(data.NotezyDB)
+		shutdownObservability()
 	}
-	coreTransportServer := &http.Server{
-		Handler: NewCoreTransportRouter(),
-	}
-	defer func() {
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-
-		if err := coreTransportServer.Shutdown(shutdownCtx); err != nil {
-			fmt.Println("Failed to shutdown Core service transport: ", err)
-		}
-	}()
-	go func() {
-		if err := coreTransportServer.Serve(coreTransportListener); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			fmt.Println("Failed to serve Core service transport: ", err)
-		}
-	}()
-
-	close(ready)
-
-	select {}
-}
-
-func reloadRedisLibraries() {
-	if exception := caches.FlushCacheLibraries(); exception != nil {
-		_ = logs.NotezyLogger.JSON(context.Background(), slog.LevelError, exception.String(), exception)
-	}
-	if exception := caches.LoadRateLimitRecordCacheLibraries(); exception != nil {
-		_ = logs.NotezyLogger.JSON(context.Background(), slog.LevelError, exception.String(), exception)
-	}
-	if exception := caches.LoadUserQuotaCacheLibraries(); exception != nil {
-		_ = logs.NotezyLogger.JSON(context.Background(), slog.LevelError, exception.String(), exception)
-	}
-	// reload other more redis libraries here...
 }

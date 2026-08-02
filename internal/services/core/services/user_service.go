@@ -9,19 +9,19 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/users"
-	caches "github.com/HiIamJeff67/notezy-backend/internal/caches"
-	cacheinputs "github.com/HiIamJeff67/notezy-backend/internal/caches/inputs"
+	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/users"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/internal/platform/graphql/models"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
-	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data"
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas/enums"
+	userdata "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/cache/userdata"
+	cacheinputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/cache/userdata/inputs"
+	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
+	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
 	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
 	searchcursor "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/searchcursor"
@@ -79,7 +79,7 @@ func (s *UserService) GetUserData(
 		return nil, exceptions.New("NotFound", "User", "ResolveUser", "User was not found", http.StatusNotFound).WithOrigin(result.Error)
 	}
 
-	userDataCache, exception := caches.UserDataStore.Get(user.Name)
+	userDataCache, exception := userdata.NewUserDataCacheClient().Get(user.Name)
 	if exception != nil {
 		return nil, exception
 	}
@@ -185,7 +185,7 @@ func (s *UserService) UpdateMe(
 	}
 
 	if requestDto.Body.Values.DisplayName != nil {
-		exception = caches.UserDataStore.Update(user.Name, cacheinputs.UpdateUserDataCacheInput{
+		exception = userdata.NewUserDataCacheClient().Update(user.Name, cacheinputs.UpdateUserDataCacheInput{
 			DisplayName: requestDto.Body.Values.DisplayName,
 		})
 		if exception != nil && logs.NotezyLogger != nil {
@@ -197,7 +197,7 @@ func (s *UserService) UpdateMe(
 		}
 	}
 	if requestDto.Body.Values.Status != nil {
-		exception = caches.UserDataStore.Update(user.Name, cacheinputs.UpdateUserDataCacheInput{
+		exception = userdata.NewUserDataCacheClient().Update(user.Name, cacheinputs.UpdateUserDataCacheInput{
 			Status: status,
 		})
 		if exception != nil && logs.NotezyLogger != nil {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/blocks"
+	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/blocks"
 	adapters "github.com/HiIamJeff67/notezy-backend/internal/adapters"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas"

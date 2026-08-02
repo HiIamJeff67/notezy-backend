@@ -11,23 +11,23 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	rootshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/root-shelves"
-	caches "github.com/HiIamJeff67/notezy-backend/internal/caches"
+	rootshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/root-shelves"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/internal/platform/graphql/models"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
-	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data"
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas/enums"
-	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/scopes"
+	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
+	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
+	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/scopes"
 	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/core/exceptions"
 	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
 	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
 	searchcursor "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/searchcursor"
+	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/shared/realtimelease"
 	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
 )
 
@@ -62,7 +62,7 @@ type RootShelfService struct {
 	rootShelfRepository      repositories.RootShelfRepositoryInterface
 	usersToShelvesRepository repositories.UsersToShelvesRepositoryInterface
 	blockPackRepository      repositories.BlockPackRepositoryInterface
-	realtimeLeaseStore       *caches.RealtimeLeaseStore
+	realtimeLeaseStore       *realtimelease.RealtimeLeaseStore
 }
 
 func NewRootShelfService(
@@ -71,13 +71,13 @@ func NewRootShelfService(
 	rootShelfRepository repositories.RootShelfRepositoryInterface,
 	usersToShelvesRepository repositories.UsersToShelvesRepositoryInterface,
 	blockPackRepository repositories.BlockPackRepositoryInterface,
-	realtimeLeaseStore *caches.RealtimeLeaseStore,
+	realtimeLeaseStore *realtimelease.RealtimeLeaseStore,
 ) RootShelfServiceInterface {
 	if db == nil {
 		db = data.NotezyDB
 	}
 	if realtimeLeaseStore == nil {
-		realtimeLeaseStore = caches.NewRealtimeLeaseStore(caches.RedisClientMap)
+		realtimeLeaseStore = realtimelease.NewRealtimeLeaseStore()
 	}
 	return &RootShelfService{
 		db:                       db,
@@ -1192,31 +1192,6 @@ func (s *RootShelfService) TransferMyRootShelfOwnership(
 			http.StatusInternalServerError,
 			true,
 		).WithOrigin(result.Error)
-	}
-
-	subscriberCounts, err := s.realtimeLeaseStore.GetBlockPackSubscriberCounts(blockPackIds)
-	if err != nil {
-		tx.Rollback()
-		return nil, exceptions.New(
-			"ReadFailed",
-			"Cache",
-			"LeaveMyRootShelf",
-			"Failed to retrieve realtime block pack subscriber counts",
-			http.StatusInternalServerError,
-			true,
-		).WithOrigin(err)
-	}
-	for _, subscriberCount := range subscriberCounts {
-		if subscriberCount > int64(maximumSubscribers) {
-			tx.Rollback()
-			return nil, exceptions.New(
-				"PermissionDenied",
-				"RootShelf",
-				"ManagePermission",
-				"You do not have permission to manage this root shelf",
-				http.StatusBadRequest,
-			)
-		}
 	}
 
 	if _, exception = s.usersToShelvesRepository.UpdateOne(

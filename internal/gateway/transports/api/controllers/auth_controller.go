@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	authdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/auth"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/gateway/responsewriter"
+	authdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/auth"
+	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
 	cookies "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/cookies"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
 )

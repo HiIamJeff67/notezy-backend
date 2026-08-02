@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	authdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/auth"
 	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
+	authdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/auth"
 	services "github.com/HiIamJeff67/notezy-backend/internal/services/core/services"
 )
 

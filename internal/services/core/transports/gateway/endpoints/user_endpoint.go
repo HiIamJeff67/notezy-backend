@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/users"
 	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
+	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/users"
 	services "github.com/HiIamJeff67/notezy-backend/internal/services/core/services"
 	"github.com/gin-gonic/gin"
 )

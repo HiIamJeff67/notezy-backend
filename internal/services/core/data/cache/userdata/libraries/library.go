@@ -1,0 +1,28 @@
+package libraries
+
+import _ "embed"
+
+const (
+	UserQuotaLibrary = "user_quota_library"
+
+	CheckAndUpdateUserQuotaByFormattedKeyFunction                    = "check_and_update_user_quota_by_formatted_key"
+	BestEffortBatchCheckAndUpdateUserQuotasByFormattedKeysFunction   = "best_effort_batch_check_and_update_user_quotas_by_formatted_keys"
+	AllOrNothingBatchCheckAndUpdateUserQuotasByFormattedKeysFunction = "all_or_nothing_batch_check_and_update_user_quotas_by_formatted_keys"
+	BestEffortBatchCheckAndUpdateUserQuotasByFormattedKeyFunction    = "best_effort_batch_check_and_update_user_quotas_by_formatted_key"
+	AllOrNothingBatchCheckAndUpdateUserQuotasByFormattedKeyFunction  = "all_or_nothing_batch_check_and_update_user_quotas_by_formatted_key"
+)
+
+//go:embed check_and_update_user_quota_by_formatted_key.lua
+var CheckAndUpdateUserQuotaByFormattedKeyContent string
+
+//go:embed best_effort_batch_check_and_update_user_quotas_by_formatted_keys.lua
+var BestEffortBatchCheckAndUpdateUserQuotasByFormattedKeysContent string
+
+//go:embed all_or_nothing_batch_check_and_update_user_quotas_by_formatted_keys.lua
+var AllOrNothingBatchCheckAndUpdateUserQuotasByFormattedKeysContent string
+
+//go:embed best_effort_batch_check_and_update_user_quotas_by_formatted_key.lua
+var BestEffortBatchCheckAndUpdateUserQuotasByFormattedKeyContent string
+
+//go:embed all_or_nothing_batch_check_and_update_user_quotas_by_formatted_key.lua
+var AllOrNothingBatchCheckAndUpdateUserQuotasByFormattedKeyContent string

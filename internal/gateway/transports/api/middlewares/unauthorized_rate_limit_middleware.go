@@ -11,7 +11,7 @@ import (
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/gateway/ratelimit"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/gateway/responsewriter"
+	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
 	configs "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 )

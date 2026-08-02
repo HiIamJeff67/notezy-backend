@@ -1,4 +1,4 @@
-package core
+package corecontract
 
 import (
 	"time"
@@ -8,10 +8,16 @@ import (
 
 const Version = "v1"
 
+type Header string
+
+func (h Header) String() string {
+	return string(h)
+}
+
 const (
-	AuthRefreshedHeader  = "X-Core-Auth-Refreshed"
-	SetAccessTokenHeader = "X-Core-Set-Access-Token"
-	SetCSRFTokenHeader   = "X-Core-Set-CSRF-Token"
+	AuthRefreshed  Header = "X-Core-Auth-Refreshed"
+	SetAccessToken Header = "X-Core-Set-Access-Token"
+	SetCSRFToken   Header = "X-Core-Set-CSRF-Token"
 )
 
 type RequestEnvelope interface {

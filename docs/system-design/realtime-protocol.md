@@ -54,9 +54,14 @@ The response body uses the normal `{ success, data, exception }` envelope. `data
 }
 ```
 
-Participants are derived from active Redis subscriber leases. They are ephemeral presence data, not an access-control source; an empty array means no active room connection was observed.
+RealtimeGateway derives participants from its active Redis subscriber leases. It sends
+the resulting bounded public-ID, permission, and connection-count collection to
+Core only for authenticated request validation, RootShelf membership filtering,
+and name/display-name enrichment. Core never reads RealtimeGateway Redis participant
+state. Participants are ephemeral presence data, not an access-control source;
+an empty array means no active room connection was observed.
 
-Tickets are EdDSA JWTs signed and verified by Go. Go receives `REALTIME_TICKET_PRIVATE_KEY_BASE64`, which is Base64-encoded PKCS#8 Ed25519 DER. Node worker 不接收 ticket key，也不驗證 public ticket；它只接受已由 Go Gateway 驗證後送出的 internal frame。Tickets contain `iss`, `aud`, `sub`, `jti`, `iat`, `exp`, a hash of the `User-Agent`, and the channel claims where applicable. Audiences are `notezy-realtime-connection` and `notezy-realtime-block-pack`.
+Tickets are EdDSA JWTs signed by Core and verified by RealtimeGateway. Go receives `REALTIME_TICKET_PRIVATE_KEY_BASE64`, which is Base64-encoded PKCS#8 Ed25519 DER. Node worker 不接收 ticket key，也不驗證 public ticket；它只接受已由 RealtimeGateway 驗證後送出的 internal frame。Tickets contain `iss`, `aud`, `sub`, `jti`, `iat`, `exp`, a hash of the `User-Agent`, and the channel claims where applicable. Audiences are `notezy-realtime-connection` and `notezy-realtime-block-pack`.
 
 Generate the two deployment values once and store them in secret management, never in the repository:
 
@@ -65,10 +70,14 @@ openssl genpkey -algorithm ED25519 -out realtime-ticket-private.pem
 REALTIME_TICKET_PRIVATE_KEY_BASE64="$(openssl pkcs8 -topk8 -nocrypt -in realtime-ticket-private.pem -outform DER | base64 | tr -d '\n')"
 ```
 
-Tickets are short-lived for five minutes and stateless. `jti` is a trace identifier; it is not a one-time-use guarantee. True replay prevention would require shared state and is intentionally not introduced in this phase.
+Tickets are short-lived for five minutes and single-use. After signature and
+claim validation, RealtimeGateway atomically consumes the `jti` with Redis
+`SET NX` and a TTL ending at `exp`; a second use is rejected. This shared state
+works across all RealtimeGateway instances. A failed connection or subscription
+must request a newly issued ticket from Core.
 
 Root-upgrade authentication uses the connection ticket as the sole
-`Sec-WebSocket-Protocol` value. The Gateway validates the signed `User-Agent`
+`Sec-WebSocket-Protocol` value. RealtimeGateway validates the signed `User-Agent`
 hash and selects the same subprotocol. Every `subscribe` carries and validates
 its own `channelTicket`; connection and channel ticket `sub` claims must
 match.
@@ -86,8 +95,21 @@ All control frames are UTF-8 JSON and begin with `version`, `type`, and an optio
 Phase 0 enables only `channelType: "BlockPack"`; other values receive `unsupported_channel_type`. Adding a new channel type requires one explicit `subscribe` branch, an internal channel-type code, and its own capability/worker handling.
 
 ```json
-{ "version": 1, "type": "subscribed", "requestId": "sub-1", "channelType": "BlockPack", "channelId": "4b49c1fc-8c68-40da-84b5-c5808201504a", "connectorChannelId": 1, "existing": false }
+{ "version": 1, "type": "subscribed", "requestId": "sub-1", "channelType": "BlockPack", "channelId": "4b49c1fc-8c68-40da-84b5-c5808201504a", "connectorChannelId": 1, "existing": false, "participants": [{ "userPublicId": "UUID", "channelPermission": "read", "connectionCount": 1 }] }
 ```
+
+`subscribed.participants` is the room presence snapshot at admission time. It
+contains only public user IDs, current channel permission, and active connection
+count; it never contains internal IDs, cookies, delegation data, or user profile
+fields. A repeated subscription returns the same snapshot with `existing: true`.
+
+After subscription, a client may receive these unsolicited room-scoped deltas:
+`presence-joined`, `presence-left`, and `presence-updated`. Each has
+`channelType`, `channelId`, and one `participant` with the same three safe
+fields. `presence-updated` covers a second connection for the same user and a
+channel-permission change. A `presence-left` participant has `connectionCount:
+0`. Clients must apply deltas idempotently because leave/revoke cleanup can race
+with lease expiry or reconnection.
 
 ```json
 { "version": 1, "type": "unsubscribe", "requestId": "unsub-1", "connectorChannelId": 1 }
@@ -143,7 +165,7 @@ Stable error codes are `authentication_managed_by_upgrade`, `binary_channel_not_
 
 Before upgrading a public socket, Go applies an IP-based upgrade rate limit, its per-process connector cap, and a distributed per-user root-connection cap. A rejected upgrade returns HTTP `429` for the user cap or HTTP `503` for gateway/admission availability; the client must not retry in a tight loop. The distributed cap is represented by Redis TTL leases and is refreshed with the transport heartbeat, so an abnormal process exit is recovered automatically after the lease expires.
 
-Each BlockPack subscription is re-authorized at subscribe time and consumes one shared active-subscriber slot from the BlockPack owner's plan. Before a `yjs-document` mutation is forwarded, Go revalidates the active BlockPack hierarchy and the writer permission. A validation failure releases the lease, detaches the worker channel, and returns `permission_revoked` or `resource_unavailable`. Read and write subscriptions use the same room capacity. `room_connection_limit_exceeded` means the client should close or unsubscribe another active subscriber before retrying. A successful `unsubscribe`, connection close, permission revocation, and lease expiry all release the slot.
+Core issues a BlockPack channel ticket containing the short-lived, signed room-admission policy snapshot, including `maximumSubscribers`. At subscribe time Gateway re-authorizes the user with Core, then atomically acquires one shared active-subscriber lease using the verified ticket claim. Before a `yjs-document` mutation is forwarded, Go revalidates the active BlockPack hierarchy and writer permission. A validation failure releases the lease, detaches the worker channel, and returns `permission_revoked` or `resource_unavailable`. Read and write subscriptions use the same room capacity. `room_connection_limit_exceeded` means the client should close or unsubscribe another active subscriber before retrying. A successful `unsubscribe`, connection close, permission revocation, and lease expiry all release the slot. Core does not synchronously query active subscriber counts during ownership or plan mutations; future Core lifecycle events revoke affected Gateway channels asynchronously.
 
 This monolith phase does not yet fan out an external permission/delete event to every Gateway process. An idle channel can therefore remain open until it next subscribes or submits a document mutation. Kafka-backed lifecycle fanout is intentionally deferred to the microservice architecture project.
 

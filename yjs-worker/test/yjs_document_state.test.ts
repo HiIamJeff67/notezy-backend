@@ -6,7 +6,7 @@ import * as Y from "yjs";
 import {
   parseYjsDocumentState,
   parseYjsUpdateSequence,
-} from "../src/types/yjs_document_state.js";
+} from "../types/yjs_document_state.js";
 
 test("parses a snapshot and contiguous Yjs update tail", () => {
   const snapshot = Buffer.from([1, 2]);

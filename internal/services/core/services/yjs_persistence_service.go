@@ -11,9 +11,9 @@ import (
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	metrics "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/metrics"
 	traces "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/traces"
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/repositories"
+	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
 	sharedtypes "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
 )
 

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/blocks"
+	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/blocks"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 )
 

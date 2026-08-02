@@ -3,8 +3,8 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	authdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/auth"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas/enums"
+	authdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/auth"
+	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/services/core/transports/gateway/endpoints"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/services/core/transports/gateway/middlewares"
 )

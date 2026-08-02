@@ -6,32 +6,32 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	rootshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/root-shelves"
+	rootshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/root-shelves"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/gateway/responsewriter"
-	apitransport "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api"
+	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
+	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
 )
 
 type RootShelfBinderInterface interface {
-	BindGetMyRootShelfById(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.GetMyRootShelfByIdRequestDto]) gin.HandlerFunc
-	BindCreateRootShelf(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.CreateRootShelfRequestDto]) gin.HandlerFunc
-	BindCreateRootShelves(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.CreateRootShelvesRequestDto]) gin.HandlerFunc
-	BindUpdateMyRootShelfById(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.UpdateMyRootShelfByIdRequestDto]) gin.HandlerFunc
-	BindUpdateMyRootShelvesByIds(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.UpdateMyRootShelvesByIdsRequestDto]) gin.HandlerFunc
-	BindRestoreMyRootShelfById(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.RestoreMyRootShelfByIdRequestDto]) gin.HandlerFunc
-	BindRestoreMyRootShelvesByIds(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.RestoreMyRootShelvesByIdsRequestDto]) gin.HandlerFunc
-	BindDeleteMyRootShelfById(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.DeleteMyRootShelfByIdRequestDto]) gin.HandlerFunc
-	BindDeleteMyRootShelvesByIds(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.DeleteMyRootShelvesByIdsRequestDto]) gin.HandlerFunc
-	BindGetMyRootShelfPermission(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.GetMyRootShelfPermissionRequestDto]) gin.HandlerFunc
-	BindCreateMyRootShelfPermission(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.CreateMyRootShelfPermissionRequestDto]) gin.HandlerFunc
-	BindUpsertMyRootShelfPermission(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.UpsertMyRootShelfPermissionRequestDto]) gin.HandlerFunc
-	BindUpsertMyRootShelfPermissions(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.UpsertMyRootShelfPermissionsRequestDto]) gin.HandlerFunc
-	BindUpdateMyRootShelfPermission(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.UpdateMyRootShelfPermissionRequestDto]) gin.HandlerFunc
-	BindTransferMyRootShelfOwnership(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.TransferMyRootShelfOwnershipRequestDto]) gin.HandlerFunc
-	BindDeleteMyRootShelfPermission(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.DeleteMyRootShelfPermissionRequestDto]) gin.HandlerFunc
-	BindDeleteMyRootShelfPermissions(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.DeleteMyRootShelfPermissionsRequestDto]) gin.HandlerFunc
-	BindLeaveMyRootShelf(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.LeaveMyRootShelfRequestDto]) gin.HandlerFunc
-	BindLeaveMyRootShelves(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.LeaveMyRootShelvesRequestDto]) gin.HandlerFunc
+	BindGetMyRootShelfById(controllerFunc controllers.Func[*rootshelvesdto.GetMyRootShelfByIdRequestDto]) gin.HandlerFunc
+	BindCreateRootShelf(controllerFunc controllers.Func[*rootshelvesdto.CreateRootShelfRequestDto]) gin.HandlerFunc
+	BindCreateRootShelves(controllerFunc controllers.Func[*rootshelvesdto.CreateRootShelvesRequestDto]) gin.HandlerFunc
+	BindUpdateMyRootShelfById(controllerFunc controllers.Func[*rootshelvesdto.UpdateMyRootShelfByIdRequestDto]) gin.HandlerFunc
+	BindUpdateMyRootShelvesByIds(controllerFunc controllers.Func[*rootshelvesdto.UpdateMyRootShelvesByIdsRequestDto]) gin.HandlerFunc
+	BindRestoreMyRootShelfById(controllerFunc controllers.Func[*rootshelvesdto.RestoreMyRootShelfByIdRequestDto]) gin.HandlerFunc
+	BindRestoreMyRootShelvesByIds(controllerFunc controllers.Func[*rootshelvesdto.RestoreMyRootShelvesByIdsRequestDto]) gin.HandlerFunc
+	BindDeleteMyRootShelfById(controllerFunc controllers.Func[*rootshelvesdto.DeleteMyRootShelfByIdRequestDto]) gin.HandlerFunc
+	BindDeleteMyRootShelvesByIds(controllerFunc controllers.Func[*rootshelvesdto.DeleteMyRootShelvesByIdsRequestDto]) gin.HandlerFunc
+	BindGetMyRootShelfPermission(controllerFunc controllers.Func[*rootshelvesdto.GetMyRootShelfPermissionRequestDto]) gin.HandlerFunc
+	BindCreateMyRootShelfPermission(controllerFunc controllers.Func[*rootshelvesdto.CreateMyRootShelfPermissionRequestDto]) gin.HandlerFunc
+	BindUpsertMyRootShelfPermission(controllerFunc controllers.Func[*rootshelvesdto.UpsertMyRootShelfPermissionRequestDto]) gin.HandlerFunc
+	BindUpsertMyRootShelfPermissions(controllerFunc controllers.Func[*rootshelvesdto.UpsertMyRootShelfPermissionsRequestDto]) gin.HandlerFunc
+	BindUpdateMyRootShelfPermission(controllerFunc controllers.Func[*rootshelvesdto.UpdateMyRootShelfPermissionRequestDto]) gin.HandlerFunc
+	BindTransferMyRootShelfOwnership(controllerFunc controllers.Func[*rootshelvesdto.TransferMyRootShelfOwnershipRequestDto]) gin.HandlerFunc
+	BindDeleteMyRootShelfPermission(controllerFunc controllers.Func[*rootshelvesdto.DeleteMyRootShelfPermissionRequestDto]) gin.HandlerFunc
+	BindDeleteMyRootShelfPermissions(controllerFunc controllers.Func[*rootshelvesdto.DeleteMyRootShelfPermissionsRequestDto]) gin.HandlerFunc
+	BindLeaveMyRootShelf(controllerFunc controllers.Func[*rootshelvesdto.LeaveMyRootShelfRequestDto]) gin.HandlerFunc
+	BindLeaveMyRootShelves(controllerFunc controllers.Func[*rootshelvesdto.LeaveMyRootShelvesRequestDto]) gin.HandlerFunc
 }
 
 type RootShelfBinder struct{}
@@ -40,7 +40,7 @@ func NewRootShelfBinder() RootShelfBinderInterface {
 	return &RootShelfBinder{}
 }
 
-func (b *RootShelfBinder) BindGetMyRootShelfById(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.GetMyRootShelfByIdRequestDto]) gin.HandlerFunc {
+func (b *RootShelfBinder) BindGetMyRootShelfById(controllerFunc controllers.Func[*rootshelvesdto.GetMyRootShelfByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		request := &rootshelvesdto.GetMyRootShelfByIdRequestDto{}
 		request.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -66,7 +66,7 @@ func (b *RootShelfBinder) BindGetMyRootShelfById(controllerFunc apitransport.Con
 	}
 }
 
-func (b *RootShelfBinder) BindCreateRootShelf(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.CreateRootShelfRequestDto]) gin.HandlerFunc {
+func (b *RootShelfBinder) BindCreateRootShelf(controllerFunc controllers.Func[*rootshelvesdto.CreateRootShelfRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		request := &rootshelvesdto.CreateRootShelfRequestDto{}
 		request.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -80,7 +80,7 @@ func (b *RootShelfBinder) BindCreateRootShelf(controllerFunc apitransport.Contro
 	}
 }
 
-func (b *RootShelfBinder) BindCreateRootShelves(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.CreateRootShelvesRequestDto]) gin.HandlerFunc {
+func (b *RootShelfBinder) BindCreateRootShelves(controllerFunc controllers.Func[*rootshelvesdto.CreateRootShelvesRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		request := &rootshelvesdto.CreateRootShelvesRequestDto{}
 		request.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -94,7 +94,7 @@ func (b *RootShelfBinder) BindCreateRootShelves(controllerFunc apitransport.Cont
 	}
 }
 
-func (b *RootShelfBinder) BindUpdateMyRootShelfById(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.UpdateMyRootShelfByIdRequestDto]) gin.HandlerFunc {
+func (b *RootShelfBinder) BindUpdateMyRootShelfById(controllerFunc controllers.Func[*rootshelvesdto.UpdateMyRootShelfByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		request := &rootshelvesdto.UpdateMyRootShelfByIdRequestDto{}
 		request.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -115,7 +115,7 @@ func (b *RootShelfBinder) BindUpdateMyRootShelfById(controllerFunc apitransport.
 	}
 }
 
-func (b *RootShelfBinder) BindUpdateMyRootShelvesByIds(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.UpdateMyRootShelvesByIdsRequestDto]) gin.HandlerFunc {
+func (b *RootShelfBinder) BindUpdateMyRootShelvesByIds(controllerFunc controllers.Func[*rootshelvesdto.UpdateMyRootShelvesByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto rootshelvesdto.UpdateMyRootShelvesByIdsRequestDto
 
@@ -131,7 +131,7 @@ func (b *RootShelfBinder) BindUpdateMyRootShelvesByIds(controllerFunc apitranspo
 	}
 }
 
-func (b *RootShelfBinder) BindRestoreMyRootShelfById(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.RestoreMyRootShelfByIdRequestDto]) gin.HandlerFunc {
+func (b *RootShelfBinder) BindRestoreMyRootShelfById(controllerFunc controllers.Func[*rootshelvesdto.RestoreMyRootShelfByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto rootshelvesdto.RestoreMyRootShelfByIdRequestDto
 
@@ -154,7 +154,7 @@ func (b *RootShelfBinder) BindRestoreMyRootShelfById(controllerFunc apitransport
 	}
 }
 
-func (b *RootShelfBinder) BindRestoreMyRootShelvesByIds(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.RestoreMyRootShelvesByIdsRequestDto]) gin.HandlerFunc {
+func (b *RootShelfBinder) BindRestoreMyRootShelvesByIds(controllerFunc controllers.Func[*rootshelvesdto.RestoreMyRootShelvesByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto rootshelvesdto.RestoreMyRootShelvesByIdsRequestDto
 
@@ -170,7 +170,7 @@ func (b *RootShelfBinder) BindRestoreMyRootShelvesByIds(controllerFunc apitransp
 	}
 }
 
-func (b *RootShelfBinder) BindDeleteMyRootShelfById(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.DeleteMyRootShelfByIdRequestDto]) gin.HandlerFunc {
+func (b *RootShelfBinder) BindDeleteMyRootShelfById(controllerFunc controllers.Func[*rootshelvesdto.DeleteMyRootShelfByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto rootshelvesdto.DeleteMyRootShelfByIdRequestDto
 
@@ -193,7 +193,7 @@ func (b *RootShelfBinder) BindDeleteMyRootShelfById(controllerFunc apitransport.
 	}
 }
 
-func (b *RootShelfBinder) BindDeleteMyRootShelvesByIds(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.DeleteMyRootShelvesByIdsRequestDto]) gin.HandlerFunc {
+func (b *RootShelfBinder) BindDeleteMyRootShelvesByIds(controllerFunc controllers.Func[*rootshelvesdto.DeleteMyRootShelvesByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var reqDto rootshelvesdto.DeleteMyRootShelvesByIdsRequestDto
 
@@ -209,7 +209,7 @@ func (b *RootShelfBinder) BindDeleteMyRootShelvesByIds(controllerFunc apitranspo
 	}
 }
 
-func (b *RootShelfBinder) BindGetMyRootShelfPermission(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.GetMyRootShelfPermissionRequestDto]) gin.HandlerFunc {
+func (b *RootShelfBinder) BindGetMyRootShelfPermission(controllerFunc controllers.Func[*rootshelvesdto.GetMyRootShelfPermissionRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &rootshelvesdto.GetMyRootShelfPermissionRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -232,7 +232,7 @@ func (b *RootShelfBinder) BindGetMyRootShelfPermission(controllerFunc apitranspo
 	}
 }
 
-func (b *RootShelfBinder) BindCreateMyRootShelfPermission(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.CreateMyRootShelfPermissionRequestDto]) gin.HandlerFunc {
+func (b *RootShelfBinder) BindCreateMyRootShelfPermission(controllerFunc controllers.Func[*rootshelvesdto.CreateMyRootShelfPermissionRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &rootshelvesdto.CreateMyRootShelfPermissionRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -260,7 +260,7 @@ func (b *RootShelfBinder) BindCreateMyRootShelfPermission(controllerFunc apitran
 	}
 }
 
-func (b *RootShelfBinder) BindUpsertMyRootShelfPermission(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.UpsertMyRootShelfPermissionRequestDto]) gin.HandlerFunc {
+func (b *RootShelfBinder) BindUpsertMyRootShelfPermission(controllerFunc controllers.Func[*rootshelvesdto.UpsertMyRootShelfPermissionRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &rootshelvesdto.UpsertMyRootShelfPermissionRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -288,7 +288,7 @@ func (b *RootShelfBinder) BindUpsertMyRootShelfPermission(controllerFunc apitran
 	}
 }
 
-func (b *RootShelfBinder) BindUpsertMyRootShelfPermissions(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.UpsertMyRootShelfPermissionsRequestDto]) gin.HandlerFunc {
+func (b *RootShelfBinder) BindUpsertMyRootShelfPermissions(controllerFunc controllers.Func[*rootshelvesdto.UpsertMyRootShelfPermissionsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &rootshelvesdto.UpsertMyRootShelfPermissionsRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -309,7 +309,7 @@ func (b *RootShelfBinder) BindUpsertMyRootShelfPermissions(controllerFunc apitra
 	}
 }
 
-func (b *RootShelfBinder) BindUpdateMyRootShelfPermission(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.UpdateMyRootShelfPermissionRequestDto]) gin.HandlerFunc {
+func (b *RootShelfBinder) BindUpdateMyRootShelfPermission(controllerFunc controllers.Func[*rootshelvesdto.UpdateMyRootShelfPermissionRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &rootshelvesdto.UpdateMyRootShelfPermissionRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -337,7 +337,7 @@ func (b *RootShelfBinder) BindUpdateMyRootShelfPermission(controllerFunc apitran
 	}
 }
 
-func (b *RootShelfBinder) BindTransferMyRootShelfOwnership(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.TransferMyRootShelfOwnershipRequestDto]) gin.HandlerFunc {
+func (b *RootShelfBinder) BindTransferMyRootShelfOwnership(controllerFunc controllers.Func[*rootshelvesdto.TransferMyRootShelfOwnershipRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &rootshelvesdto.TransferMyRootShelfOwnershipRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -358,7 +358,7 @@ func (b *RootShelfBinder) BindTransferMyRootShelfOwnership(controllerFunc apitra
 	}
 }
 
-func (b *RootShelfBinder) BindDeleteMyRootShelfPermission(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.DeleteMyRootShelfPermissionRequestDto]) gin.HandlerFunc {
+func (b *RootShelfBinder) BindDeleteMyRootShelfPermission(controllerFunc controllers.Func[*rootshelvesdto.DeleteMyRootShelfPermissionRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &rootshelvesdto.DeleteMyRootShelfPermissionRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -381,7 +381,7 @@ func (b *RootShelfBinder) BindDeleteMyRootShelfPermission(controllerFunc apitran
 	}
 }
 
-func (b *RootShelfBinder) BindDeleteMyRootShelfPermissions(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.DeleteMyRootShelfPermissionsRequestDto]) gin.HandlerFunc {
+func (b *RootShelfBinder) BindDeleteMyRootShelfPermissions(controllerFunc controllers.Func[*rootshelvesdto.DeleteMyRootShelfPermissionsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &rootshelvesdto.DeleteMyRootShelfPermissionsRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -402,7 +402,7 @@ func (b *RootShelfBinder) BindDeleteMyRootShelfPermissions(controllerFunc apitra
 	}
 }
 
-func (b *RootShelfBinder) BindLeaveMyRootShelf(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.LeaveMyRootShelfRequestDto]) gin.HandlerFunc {
+func (b *RootShelfBinder) BindLeaveMyRootShelf(controllerFunc controllers.Func[*rootshelvesdto.LeaveMyRootShelfRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &rootshelvesdto.LeaveMyRootShelfRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -418,7 +418,7 @@ func (b *RootShelfBinder) BindLeaveMyRootShelf(controllerFunc apitransport.Contr
 	}
 }
 
-func (b *RootShelfBinder) BindLeaveMyRootShelves(controllerFunc apitransport.ControllerFunc[*rootshelvesdto.LeaveMyRootShelvesRequestDto]) gin.HandlerFunc {
+func (b *RootShelfBinder) BindLeaveMyRootShelves(controllerFunc controllers.Func[*rootshelvesdto.LeaveMyRootShelvesRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &rootshelvesdto.LeaveMyRootShelvesRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")

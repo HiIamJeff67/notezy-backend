@@ -6,28 +6,28 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	subshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/sub-shelves"
+	subshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/sub-shelves"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/gateway/responsewriter"
-	apitransport "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api"
+	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
+	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
 )
 
 type SubShelfBinderInterface interface {
-	BindGetMySubShelfById(controllerFunc apitransport.ControllerFunc[*subshelvesdto.GetMySubShelfByIdRequestDto]) gin.HandlerFunc
-	BindGetMySubShelvesByPrevSubShelfId(controllerFunc apitransport.ControllerFunc[*subshelvesdto.GetMySubShelvesByPrevSubShelfIdRequestDto]) gin.HandlerFunc
-	BindGetAllMySubShelvesByRootShelfId(controllerFunc apitransport.ControllerFunc[*subshelvesdto.GetAllMySubShelvesByRootShelfIdRequestDto]) gin.HandlerFunc
-	BindGetMySubShelvesAndItemsByPrevSubShelfId(controllerFunc apitransport.ControllerFunc[*subshelvesdto.GetMySubShelvesAndItemsByPrevSubShelfIdRequestDto]) gin.HandlerFunc
-	BindCreateSubShelfByRootShelfId(controllerFunc apitransport.ControllerFunc[*subshelvesdto.CreateSubShelfByRootShelfIdRequestDto]) gin.HandlerFunc
-	BindCreateSubShelvesByRootShelfIds(controllerFunc apitransport.ControllerFunc[*subshelvesdto.CreateSubShelvesByRootShelfIdsRequestDto]) gin.HandlerFunc
-	BindUpdateMySubShelfById(controllerFunc apitransport.ControllerFunc[*subshelvesdto.UpdateMySubShelfByIdRequestDto]) gin.HandlerFunc
-	BindUpdateMySubShelvesByIds(controllerFunc apitransport.ControllerFunc[*subshelvesdto.UpdateMySubShelvesByIdsRequestDto]) gin.HandlerFunc
-	BindMoveMySubShelfByRootShelfId(controllerFunc apitransport.ControllerFunc[*subshelvesdto.MoveMySubShelfByRootShelfIdRequestDto]) gin.HandlerFunc
-	BindMoveMySubShelvesByRootShelfId(controllerFunc apitransport.ControllerFunc[*subshelvesdto.MoveMySubShelvesByRootShelfIdRequestDto]) gin.HandlerFunc
-	BindMoveMySubShelvesByRootShelfIds(controllerFunc apitransport.ControllerFunc[*subshelvesdto.MoveMySubShelvesByRootShelfIdsRequestDto]) gin.HandlerFunc
-	BindRestoreMySubShelfById(controllerFunc apitransport.ControllerFunc[*subshelvesdto.RestoreMySubShelfByIdRequestDto]) gin.HandlerFunc
-	BindRestoreMySubShelvesByIds(controllerFunc apitransport.ControllerFunc[*subshelvesdto.RestoreMySubShelvesByIdsRequestDto]) gin.HandlerFunc
-	BindDeleteMySubShelfById(controllerFunc apitransport.ControllerFunc[*subshelvesdto.DeleteMySubShelfByIdRequestDto]) gin.HandlerFunc
-	BindDeleteMySubShelvesByIds(controllerFunc apitransport.ControllerFunc[*subshelvesdto.DeleteMySubShelvesByIdsRequestDto]) gin.HandlerFunc
+	BindGetMySubShelfById(controllerFunc controllers.Func[*subshelvesdto.GetMySubShelfByIdRequestDto]) gin.HandlerFunc
+	BindGetMySubShelvesByPrevSubShelfId(controllerFunc controllers.Func[*subshelvesdto.GetMySubShelvesByPrevSubShelfIdRequestDto]) gin.HandlerFunc
+	BindGetAllMySubShelvesByRootShelfId(controllerFunc controllers.Func[*subshelvesdto.GetAllMySubShelvesByRootShelfIdRequestDto]) gin.HandlerFunc
+	BindGetMySubShelvesAndItemsByPrevSubShelfId(controllerFunc controllers.Func[*subshelvesdto.GetMySubShelvesAndItemsByPrevSubShelfIdRequestDto]) gin.HandlerFunc
+	BindCreateSubShelfByRootShelfId(controllerFunc controllers.Func[*subshelvesdto.CreateSubShelfByRootShelfIdRequestDto]) gin.HandlerFunc
+	BindCreateSubShelvesByRootShelfIds(controllerFunc controllers.Func[*subshelvesdto.CreateSubShelvesByRootShelfIdsRequestDto]) gin.HandlerFunc
+	BindUpdateMySubShelfById(controllerFunc controllers.Func[*subshelvesdto.UpdateMySubShelfByIdRequestDto]) gin.HandlerFunc
+	BindUpdateMySubShelvesByIds(controllerFunc controllers.Func[*subshelvesdto.UpdateMySubShelvesByIdsRequestDto]) gin.HandlerFunc
+	BindMoveMySubShelfByRootShelfId(controllerFunc controllers.Func[*subshelvesdto.MoveMySubShelfByRootShelfIdRequestDto]) gin.HandlerFunc
+	BindMoveMySubShelvesByRootShelfId(controllerFunc controllers.Func[*subshelvesdto.MoveMySubShelvesByRootShelfIdRequestDto]) gin.HandlerFunc
+	BindMoveMySubShelvesByRootShelfIds(controllerFunc controllers.Func[*subshelvesdto.MoveMySubShelvesByRootShelfIdsRequestDto]) gin.HandlerFunc
+	BindRestoreMySubShelfById(controllerFunc controllers.Func[*subshelvesdto.RestoreMySubShelfByIdRequestDto]) gin.HandlerFunc
+	BindRestoreMySubShelvesByIds(controllerFunc controllers.Func[*subshelvesdto.RestoreMySubShelvesByIdsRequestDto]) gin.HandlerFunc
+	BindDeleteMySubShelfById(controllerFunc controllers.Func[*subshelvesdto.DeleteMySubShelfByIdRequestDto]) gin.HandlerFunc
+	BindDeleteMySubShelvesByIds(controllerFunc controllers.Func[*subshelvesdto.DeleteMySubShelvesByIdsRequestDto]) gin.HandlerFunc
 }
 
 type SubShelfBinder struct{}
@@ -36,7 +36,7 @@ func NewSubShelfBinder() SubShelfBinderInterface {
 	return &SubShelfBinder{}
 }
 
-func (b *SubShelfBinder) BindGetMySubShelfById(controllerFunc apitransport.ControllerFunc[*subshelvesdto.GetMySubShelfByIdRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindGetMySubShelfById(controllerFunc controllers.Func[*subshelvesdto.GetMySubShelfByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto subshelvesdto.GetMySubShelfByIdRequestDto
 
@@ -63,7 +63,7 @@ func (b *SubShelfBinder) BindGetMySubShelfById(controllerFunc apitransport.Contr
 	}
 }
 
-func (b *SubShelfBinder) BindGetMySubShelvesByPrevSubShelfId(controllerFunc apitransport.ControllerFunc[*subshelvesdto.GetMySubShelvesByPrevSubShelfIdRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindGetMySubShelvesByPrevSubShelfId(controllerFunc controllers.Func[*subshelvesdto.GetMySubShelvesByPrevSubShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto subshelvesdto.GetMySubShelvesByPrevSubShelfIdRequestDto
 
@@ -90,7 +90,7 @@ func (b *SubShelfBinder) BindGetMySubShelvesByPrevSubShelfId(controllerFunc apit
 	}
 }
 
-func (b *SubShelfBinder) BindGetAllMySubShelvesByRootShelfId(controllerFunc apitransport.ControllerFunc[*subshelvesdto.GetAllMySubShelvesByRootShelfIdRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindGetAllMySubShelvesByRootShelfId(controllerFunc controllers.Func[*subshelvesdto.GetAllMySubShelvesByRootShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto subshelvesdto.GetAllMySubShelvesByRootShelfIdRequestDto
 
@@ -117,7 +117,7 @@ func (b *SubShelfBinder) BindGetAllMySubShelvesByRootShelfId(controllerFunc apit
 	}
 }
 
-func (b *SubShelfBinder) BindGetMySubShelvesAndItemsByPrevSubShelfId(controllerFunc apitransport.ControllerFunc[*subshelvesdto.GetMySubShelvesAndItemsByPrevSubShelfIdRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindGetMySubShelvesAndItemsByPrevSubShelfId(controllerFunc controllers.Func[*subshelvesdto.GetMySubShelvesAndItemsByPrevSubShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto subshelvesdto.GetMySubShelvesAndItemsByPrevSubShelfIdRequestDto
 
@@ -144,7 +144,7 @@ func (b *SubShelfBinder) BindGetMySubShelvesAndItemsByPrevSubShelfId(controllerF
 	}
 }
 
-func (b *SubShelfBinder) BindCreateSubShelfByRootShelfId(controllerFunc apitransport.ControllerFunc[*subshelvesdto.CreateSubShelfByRootShelfIdRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindCreateSubShelfByRootShelfId(controllerFunc controllers.Func[*subshelvesdto.CreateSubShelfByRootShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto subshelvesdto.CreateSubShelfByRootShelfIdRequestDto
 
@@ -167,7 +167,7 @@ func (b *SubShelfBinder) BindCreateSubShelfByRootShelfId(controllerFunc apitrans
 	}
 }
 
-func (b *SubShelfBinder) BindCreateSubShelvesByRootShelfIds(controllerFunc apitransport.ControllerFunc[*subshelvesdto.CreateSubShelvesByRootShelfIdsRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindCreateSubShelvesByRootShelfIds(controllerFunc controllers.Func[*subshelvesdto.CreateSubShelvesByRootShelfIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto subshelvesdto.CreateSubShelvesByRootShelfIdsRequestDto
 
@@ -183,7 +183,7 @@ func (b *SubShelfBinder) BindCreateSubShelvesByRootShelfIds(controllerFunc apitr
 	}
 }
 
-func (b *SubShelfBinder) BindUpdateMySubShelfById(controllerFunc apitransport.ControllerFunc[*subshelvesdto.UpdateMySubShelfByIdRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindUpdateMySubShelfById(controllerFunc controllers.Func[*subshelvesdto.UpdateMySubShelfByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto subshelvesdto.UpdateMySubShelfByIdRequestDto
 
@@ -206,7 +206,7 @@ func (b *SubShelfBinder) BindUpdateMySubShelfById(controllerFunc apitransport.Co
 	}
 }
 
-func (b *SubShelfBinder) BindUpdateMySubShelvesByIds(controllerFunc apitransport.ControllerFunc[*subshelvesdto.UpdateMySubShelvesByIdsRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindUpdateMySubShelvesByIds(controllerFunc controllers.Func[*subshelvesdto.UpdateMySubShelvesByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto subshelvesdto.UpdateMySubShelvesByIdsRequestDto
 
@@ -222,7 +222,7 @@ func (b *SubShelfBinder) BindUpdateMySubShelvesByIds(controllerFunc apitransport
 	}
 }
 
-func (b *SubShelfBinder) BindMoveMySubShelfByRootShelfId(controllerFunc apitransport.ControllerFunc[*subshelvesdto.MoveMySubShelfByRootShelfIdRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindMoveMySubShelfByRootShelfId(controllerFunc controllers.Func[*subshelvesdto.MoveMySubShelfByRootShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto subshelvesdto.MoveMySubShelfByRootShelfIdRequestDto
 
@@ -239,7 +239,7 @@ func (b *SubShelfBinder) BindMoveMySubShelfByRootShelfId(controllerFunc apitrans
 	}
 }
 
-func (b *SubShelfBinder) BindMoveMySubShelvesByRootShelfId(controllerFunc apitransport.ControllerFunc[*subshelvesdto.MoveMySubShelvesByRootShelfIdRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindMoveMySubShelvesByRootShelfId(controllerFunc controllers.Func[*subshelvesdto.MoveMySubShelvesByRootShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto subshelvesdto.MoveMySubShelvesByRootShelfIdRequestDto
 
@@ -255,7 +255,7 @@ func (b *SubShelfBinder) BindMoveMySubShelvesByRootShelfId(controllerFunc apitra
 	}
 }
 
-func (b *SubShelfBinder) BindMoveMySubShelvesByRootShelfIds(controllerFunc apitransport.ControllerFunc[*subshelvesdto.MoveMySubShelvesByRootShelfIdsRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindMoveMySubShelvesByRootShelfIds(controllerFunc controllers.Func[*subshelvesdto.MoveMySubShelvesByRootShelfIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto subshelvesdto.MoveMySubShelvesByRootShelfIdsRequestDto
 
@@ -271,7 +271,7 @@ func (b *SubShelfBinder) BindMoveMySubShelvesByRootShelfIds(controllerFunc apitr
 	}
 }
 
-func (b *SubShelfBinder) BindRestoreMySubShelfById(controllerFunc apitransport.ControllerFunc[*subshelvesdto.RestoreMySubShelfByIdRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindRestoreMySubShelfById(controllerFunc controllers.Func[*subshelvesdto.RestoreMySubShelfByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto subshelvesdto.RestoreMySubShelfByIdRequestDto
 
@@ -288,7 +288,7 @@ func (b *SubShelfBinder) BindRestoreMySubShelfById(controllerFunc apitransport.C
 	}
 }
 
-func (b *SubShelfBinder) BindRestoreMySubShelvesByIds(controllerFunc apitransport.ControllerFunc[*subshelvesdto.RestoreMySubShelvesByIdsRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindRestoreMySubShelvesByIds(controllerFunc controllers.Func[*subshelvesdto.RestoreMySubShelvesByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto subshelvesdto.RestoreMySubShelvesByIdsRequestDto
 
@@ -304,7 +304,7 @@ func (b *SubShelfBinder) BindRestoreMySubShelvesByIds(controllerFunc apitranspor
 	}
 }
 
-func (b *SubShelfBinder) BindDeleteMySubShelfById(controllerFunc apitransport.ControllerFunc[*subshelvesdto.DeleteMySubShelfByIdRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindDeleteMySubShelfById(controllerFunc controllers.Func[*subshelvesdto.DeleteMySubShelfByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto subshelvesdto.DeleteMySubShelfByIdRequestDto
 
@@ -321,7 +321,7 @@ func (b *SubShelfBinder) BindDeleteMySubShelfById(controllerFunc apitransport.Co
 	}
 }
 
-func (b *SubShelfBinder) BindDeleteMySubShelvesByIds(controllerFunc apitransport.ControllerFunc[*subshelvesdto.DeleteMySubShelvesByIdsRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindDeleteMySubShelvesByIds(controllerFunc controllers.Func[*subshelvesdto.DeleteMySubShelvesByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto subshelvesdto.DeleteMySubShelvesByIdsRequestDto
 

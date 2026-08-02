@@ -6,8 +6,8 @@ import type { Block } from "@blocknote/core";
 import { blocksToYXmlFragment } from "@blocknote/core/yjs";
 import * as Y from "yjs";
 
-import { BlockPackProjector } from "../src/realtime/block_pack_projector.js";
-import { notezyBlockNoteEditor } from "../src/types/blocknote_schema.js";
+import { BlockPackProjector } from "../realtime/block_pack_projector.js";
+import { notezyBlockNoteEditor } from "../types/blocknote_schema.js";
 
 const blockPackProjector = new BlockPackProjector();
 

@@ -5,9 +5,9 @@ import (
 
 	"gorm.io/datatypes"
 
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/blocks"
+	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/blocks"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas/enums"
+	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	editableblock "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/editableblock"
 )
 

@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	useraccountsdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/user-accounts"
 	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
+	useraccountsdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/user-accounts"
 	services "github.com/HiIamJeff67/notezy-backend/internal/services/core/services"
 )
 

@@ -34,7 +34,7 @@ func (p *testAuthFeatureProcedure) BeforeAll(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	p.testRouter = gin.New()
 	p.testRouterGroup = p.testRouter.Group(testAuthRouteNamespace)
-	testroutes.ConfigureTestAuthRoutes(p.testDB, p.testRouterGroup)
+	testroutes.ConfigureTestAuthRoutes(p.testRouterGroup)
 }
 
 func (p *testAuthFeatureProcedure) BeforeEach(t *testing.T) { /* Do Nothing */ }

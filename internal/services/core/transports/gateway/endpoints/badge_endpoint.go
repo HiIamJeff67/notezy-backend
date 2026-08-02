@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	badgesdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/badges"
 	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
+	badgesdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/badges"
 	services "github.com/HiIamJeff67/notezy-backend/internal/services/core/services"
 )
 

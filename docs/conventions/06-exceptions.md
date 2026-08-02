@@ -56,7 +56,7 @@ exception := exceptions.New(
 
 ## Public safety boundary
 
-- Only `internal/gateway/responsewriter.ToPublic()` may convert an exception
+- Only `internal/shared/responsewriter.ToPublic()` may convert an exception
   into a browser-facing exception. It records the original internal exception
   before conversion and removes `Origin`, `Details`, numeric compatibility
   codes, and all implementation diagnostics.

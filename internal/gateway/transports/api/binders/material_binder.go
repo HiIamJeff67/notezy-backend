@@ -7,26 +7,26 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	materialsdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/materials"
+	materialsdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/materials"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/gateway/responsewriter"
-	apitransport "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api"
+	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
+	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
 )
 
 type MaterialBinderInterface interface {
-	BindGetMyMaterialById(controllerFunc apitransport.ControllerFunc[*materialsdto.GetMyMaterialByIdRequestDto]) gin.HandlerFunc
-	BindGetMyMaterialAndItsParentById(controllerFunc apitransport.ControllerFunc[*materialsdto.GetMyMaterialAndItsParentByIdRequestDto]) gin.HandlerFunc
-	BindGetMyMaterialsByParentSubShelfId(controllerFunc apitransport.ControllerFunc[*materialsdto.GetMyMaterialsByParentSubShelfIdRequestDto]) gin.HandlerFunc
-	BindGetAllMyMaterialsByRootShelfId(controllerFunc apitransport.ControllerFunc[*materialsdto.GetAllMyMaterialsByRootShelfIdRequestDto]) gin.HandlerFunc
-	BindCreateMyMaterial(controllerFunc apitransport.ControllerFunc[*materialsdto.CreateMyMaterialRequestDto]) gin.HandlerFunc
-	BindUpdateMyMaterialById(controllerFunc apitransport.ControllerFunc[*materialsdto.UpdateMyMaterialByIdRequestDto]) gin.HandlerFunc
-	BindSaveMyMaterialById(controllerFunc apitransport.ControllerFunc[*materialsdto.SaveMyMaterialByIdRequestDto]) gin.HandlerFunc
-	BindMoveMyMaterialById(controllerFunc apitransport.ControllerFunc[*materialsdto.MoveMyMaterialByIdRequestDto]) gin.HandlerFunc
-	BindMoveMyMaterialsByIds(controllerFunc apitransport.ControllerFunc[*materialsdto.MoveMyMaterialsByIdsRequestDto]) gin.HandlerFunc
-	BindRestoreMyMaterialById(controllerFunc apitransport.ControllerFunc[*materialsdto.RestoreMyMaterialByIdRequestDto]) gin.HandlerFunc
-	BindRestoreMyMaterialsByIds(controllerFunc apitransport.ControllerFunc[*materialsdto.RestoreMyMaterialsByIdsRequestDto]) gin.HandlerFunc
-	BindDeleteMyMaterialById(controllerFunc apitransport.ControllerFunc[*materialsdto.DeleteMyMaterialByIdRequestDto]) gin.HandlerFunc
-	BindDeleteMyMaterialsByIds(controllerFunc apitransport.ControllerFunc[*materialsdto.DeleteMyMaterialsByIdsRequestDto]) gin.HandlerFunc
+	BindGetMyMaterialById(controllerFunc controllers.Func[*materialsdto.GetMyMaterialByIdRequestDto]) gin.HandlerFunc
+	BindGetMyMaterialAndItsParentById(controllerFunc controllers.Func[*materialsdto.GetMyMaterialAndItsParentByIdRequestDto]) gin.HandlerFunc
+	BindGetMyMaterialsByParentSubShelfId(controllerFunc controllers.Func[*materialsdto.GetMyMaterialsByParentSubShelfIdRequestDto]) gin.HandlerFunc
+	BindGetAllMyMaterialsByRootShelfId(controllerFunc controllers.Func[*materialsdto.GetAllMyMaterialsByRootShelfIdRequestDto]) gin.HandlerFunc
+	BindCreateMyMaterial(controllerFunc controllers.Func[*materialsdto.CreateMyMaterialRequestDto]) gin.HandlerFunc
+	BindUpdateMyMaterialById(controllerFunc controllers.Func[*materialsdto.UpdateMyMaterialByIdRequestDto]) gin.HandlerFunc
+	BindSaveMyMaterialById(controllerFunc controllers.Func[*materialsdto.SaveMyMaterialByIdRequestDto]) gin.HandlerFunc
+	BindMoveMyMaterialById(controllerFunc controllers.Func[*materialsdto.MoveMyMaterialByIdRequestDto]) gin.HandlerFunc
+	BindMoveMyMaterialsByIds(controllerFunc controllers.Func[*materialsdto.MoveMyMaterialsByIdsRequestDto]) gin.HandlerFunc
+	BindRestoreMyMaterialById(controllerFunc controllers.Func[*materialsdto.RestoreMyMaterialByIdRequestDto]) gin.HandlerFunc
+	BindRestoreMyMaterialsByIds(controllerFunc controllers.Func[*materialsdto.RestoreMyMaterialsByIdsRequestDto]) gin.HandlerFunc
+	BindDeleteMyMaterialById(controllerFunc controllers.Func[*materialsdto.DeleteMyMaterialByIdRequestDto]) gin.HandlerFunc
+	BindDeleteMyMaterialsByIds(controllerFunc controllers.Func[*materialsdto.DeleteMyMaterialsByIdsRequestDto]) gin.HandlerFunc
 }
 
 type MaterialBinder struct{}
@@ -35,7 +35,7 @@ func NewMaterialBinder() MaterialBinderInterface {
 	return &MaterialBinder{}
 }
 
-func (b *MaterialBinder) BindGetMyMaterialById(controllerFunc apitransport.ControllerFunc[*materialsdto.GetMyMaterialByIdRequestDto]) gin.HandlerFunc {
+func (b *MaterialBinder) BindGetMyMaterialById(controllerFunc controllers.Func[*materialsdto.GetMyMaterialByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto materialsdto.GetMyMaterialByIdRequestDto
 
@@ -62,7 +62,7 @@ func (b *MaterialBinder) BindGetMyMaterialById(controllerFunc apitransport.Contr
 	}
 }
 
-func (b *MaterialBinder) BindGetMyMaterialAndItsParentById(controllerFunc apitransport.ControllerFunc[*materialsdto.GetMyMaterialAndItsParentByIdRequestDto]) gin.HandlerFunc {
+func (b *MaterialBinder) BindGetMyMaterialAndItsParentById(controllerFunc controllers.Func[*materialsdto.GetMyMaterialAndItsParentByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto materialsdto.GetMyMaterialAndItsParentByIdRequestDto
 
@@ -89,7 +89,7 @@ func (b *MaterialBinder) BindGetMyMaterialAndItsParentById(controllerFunc apitra
 	}
 }
 
-func (b *MaterialBinder) BindGetMyMaterialsByParentSubShelfId(controllerFunc apitransport.ControllerFunc[*materialsdto.GetMyMaterialsByParentSubShelfIdRequestDto]) gin.HandlerFunc {
+func (b *MaterialBinder) BindGetMyMaterialsByParentSubShelfId(controllerFunc controllers.Func[*materialsdto.GetMyMaterialsByParentSubShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto materialsdto.GetMyMaterialsByParentSubShelfIdRequestDto
 
@@ -116,7 +116,7 @@ func (b *MaterialBinder) BindGetMyMaterialsByParentSubShelfId(controllerFunc api
 	}
 }
 
-func (b *MaterialBinder) BindGetAllMyMaterialsByRootShelfId(controllerFunc apitransport.ControllerFunc[*materialsdto.GetAllMyMaterialsByRootShelfIdRequestDto]) gin.HandlerFunc {
+func (b *MaterialBinder) BindGetAllMyMaterialsByRootShelfId(controllerFunc controllers.Func[*materialsdto.GetAllMyMaterialsByRootShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto materialsdto.GetAllMyMaterialsByRootShelfIdRequestDto
 
@@ -143,7 +143,7 @@ func (b *MaterialBinder) BindGetAllMyMaterialsByRootShelfId(controllerFunc apitr
 	}
 }
 
-func (b *MaterialBinder) BindCreateMyMaterial(controllerFunc apitransport.ControllerFunc[*materialsdto.CreateMyMaterialRequestDto]) gin.HandlerFunc {
+func (b *MaterialBinder) BindCreateMyMaterial(controllerFunc controllers.Func[*materialsdto.CreateMyMaterialRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto materialsdto.CreateMyMaterialRequestDto
 
@@ -165,7 +165,7 @@ func (b *MaterialBinder) BindCreateMyMaterial(controllerFunc apitransport.Contro
 	}
 }
 
-func (b *MaterialBinder) BindUpdateMyMaterialById(controllerFunc apitransport.ControllerFunc[*materialsdto.UpdateMyMaterialByIdRequestDto]) gin.HandlerFunc {
+func (b *MaterialBinder) BindUpdateMyMaterialById(controllerFunc controllers.Func[*materialsdto.UpdateMyMaterialByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto materialsdto.UpdateMyMaterialByIdRequestDto
 
@@ -187,7 +187,7 @@ func (b *MaterialBinder) BindUpdateMyMaterialById(controllerFunc apitransport.Co
 	}
 }
 
-func (b *MaterialBinder) BindSaveMyMaterialById(controllerFunc apitransport.ControllerFunc[*materialsdto.SaveMyMaterialByIdRequestDto]) gin.HandlerFunc {
+func (b *MaterialBinder) BindSaveMyMaterialById(controllerFunc controllers.Func[*materialsdto.SaveMyMaterialByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto materialsdto.SaveMyMaterialByIdRequestDto
 
@@ -223,7 +223,7 @@ func (b *MaterialBinder) BindSaveMyMaterialById(controllerFunc apitransport.Cont
 	}
 }
 
-func (b *MaterialBinder) BindMoveMyMaterialById(controllerFunc apitransport.ControllerFunc[*materialsdto.MoveMyMaterialByIdRequestDto]) gin.HandlerFunc {
+func (b *MaterialBinder) BindMoveMyMaterialById(controllerFunc controllers.Func[*materialsdto.MoveMyMaterialByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto materialsdto.MoveMyMaterialByIdRequestDto
 
@@ -238,7 +238,7 @@ func (b *MaterialBinder) BindMoveMyMaterialById(controllerFunc apitransport.Cont
 	}
 }
 
-func (b *MaterialBinder) BindMoveMyMaterialsByIds(controllerFunc apitransport.ControllerFunc[*materialsdto.MoveMyMaterialsByIdsRequestDto]) gin.HandlerFunc {
+func (b *MaterialBinder) BindMoveMyMaterialsByIds(controllerFunc controllers.Func[*materialsdto.MoveMyMaterialsByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto materialsdto.MoveMyMaterialsByIdsRequestDto
 
@@ -253,7 +253,7 @@ func (b *MaterialBinder) BindMoveMyMaterialsByIds(controllerFunc apitransport.Co
 	}
 }
 
-func (b *MaterialBinder) BindRestoreMyMaterialById(controllerFunc apitransport.ControllerFunc[*materialsdto.RestoreMyMaterialByIdRequestDto]) gin.HandlerFunc {
+func (b *MaterialBinder) BindRestoreMyMaterialById(controllerFunc controllers.Func[*materialsdto.RestoreMyMaterialByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto materialsdto.RestoreMyMaterialByIdRequestDto
 
@@ -270,7 +270,7 @@ func (b *MaterialBinder) BindRestoreMyMaterialById(controllerFunc apitransport.C
 	}
 }
 
-func (b *MaterialBinder) BindRestoreMyMaterialsByIds(controllerFunc apitransport.ControllerFunc[*materialsdto.RestoreMyMaterialsByIdsRequestDto]) gin.HandlerFunc {
+func (b *MaterialBinder) BindRestoreMyMaterialsByIds(controllerFunc controllers.Func[*materialsdto.RestoreMyMaterialsByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto materialsdto.RestoreMyMaterialsByIdsRequestDto
 
@@ -285,7 +285,7 @@ func (b *MaterialBinder) BindRestoreMyMaterialsByIds(controllerFunc apitransport
 	}
 }
 
-func (b *MaterialBinder) BindDeleteMyMaterialById(controllerFunc apitransport.ControllerFunc[*materialsdto.DeleteMyMaterialByIdRequestDto]) gin.HandlerFunc {
+func (b *MaterialBinder) BindDeleteMyMaterialById(controllerFunc controllers.Func[*materialsdto.DeleteMyMaterialByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto materialsdto.DeleteMyMaterialByIdRequestDto
 
@@ -302,7 +302,7 @@ func (b *MaterialBinder) BindDeleteMyMaterialById(controllerFunc apitransport.Co
 	}
 }
 
-func (b *MaterialBinder) BindDeleteMyMaterialsByIds(controllerFunc apitransport.ControllerFunc[*materialsdto.DeleteMyMaterialsByIdsRequestDto]) gin.HandlerFunc {
+func (b *MaterialBinder) BindDeleteMyMaterialsByIds(controllerFunc controllers.Func[*materialsdto.DeleteMyMaterialsByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto materialsdto.DeleteMyMaterialsByIdsRequestDto
 

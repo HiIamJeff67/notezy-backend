@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	rootshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/root-shelves"
 	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
+	rootshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/root-shelves"
 	services "github.com/HiIamJeff67/notezy-backend/internal/services/core/services"
 )
 

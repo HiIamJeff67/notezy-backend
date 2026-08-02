@@ -6,11 +6,11 @@ import (
 
 	"gorm.io/datatypes"
 
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/blocks"
-	payloads "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/payloads"
+	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/blocks"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas/enums"
+	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
+	payloads "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/payloads"
 	concurrency "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/concurrency"
 	jsonpayload "github.com/HiIamJeff67/notezy-backend/internal/shared/parsers/jsonpayload"
 )

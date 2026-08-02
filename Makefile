@@ -50,11 +50,11 @@ gql-generate: # update before generate
 
 gql-clean:
 ifeq ($(OS),Windows_NT)
-	@if exist internal\platform\graphql\generated\*.* del /q /s internal\platform\graphql\generated\*.*
-	@if exist internal\platform\graphql\models\*.* del /q /s internal\platform\graphql\models\*.*
+	@if exist contracts\graphql\generated\*.* del /q /s contracts\graphql\generated\*.*
+	@if exist contracts\graphql\models\*.* del /q /s contracts\graphql\models\*.*
 else
-	rm -rf internal/platform/graphql/generated/*
-	rm -rf internal/platform/graphql/models/*
+	rm -rf contracts/graphql/generated/*
+	rm -rf contracts/graphql/models/*
 endif
 
 gql-regenerate:

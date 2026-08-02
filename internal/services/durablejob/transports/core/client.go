@@ -12,9 +12,9 @@ import (
 
 	"github.com/google/uuid"
 
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/blocks"
 	corecontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
 	durablejobdto "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
+	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/blocks"
 	sharedtokens "github.com/HiIamJeff67/notezy-backend/internal/shared/tokens"
 )
 

@@ -16,19 +16,19 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
-	authdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/auth"
 	emaildto "github.com/HiIamJeff67/notezy-backend/contracts/email/v1"
-	caches "github.com/HiIamJeff67/notezy-backend/internal/caches"
-	cacheinputs "github.com/HiIamJeff67/notezy-backend/internal/caches/inputs"
+	authdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/auth"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
-	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data"
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas/enums"
+	userdata "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/cache/userdata"
+	cacheinputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/cache/userdata/inputs"
+	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
+	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/core/exceptions"
 	emailtransport "github.com/HiIamJeff67/notezy-backend/internal/services/core/transports/email"
 	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
@@ -37,9 +37,9 @@ import (
 	stringutil "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/stringutil"
 	sharedtokens "github.com/HiIamJeff67/notezy-backend/internal/shared/tokens"
 
-	authsql "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/sqls/auth"
-	badgesql "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/sqls/badge"
-	usersql "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/sqls/user"
+	authsql "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/sqls/auth"
+	badgesql "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/sqls/badge"
+	usersql "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/sqls/user"
 )
 
 type AuthServiceInterface interface {
@@ -371,9 +371,9 @@ func (s *AuthService) Register(
 		return nil, apiexceptions.User.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	exception = caches.UserDataStore.Set(
+	exception = userdata.NewUserDataCacheClient().Set(
 		newUser.Name,
-		caches.UserDataCache{
+		userdata.UserDataCache{
 			Id:                 *newUserId,
 			PublicId:           newUser.PublicId,
 			Name:               newUser.Name,
@@ -565,9 +565,9 @@ func (s *AuthService) RegisterViaGoogle(
 		return nil, exception
 	}
 
-	exception = caches.UserDataStore.Set(
+	exception = userdata.NewUserDataCacheClient().Set(
 		newUser.Name,
-		caches.UserDataCache{
+		userdata.UserDataCache{
 			Id:                 *newUserId,
 			PublicId:           newUser.PublicId,
 			Name:               newUser.Name,
@@ -729,9 +729,9 @@ func (s *AuthService) Login(
 	}
 
 	// check if the user data cache exists
-	if _, exception := caches.UserDataStore.Get(user.Name); exception == nil {
+	if _, exception := userdata.NewUserDataCacheClient().Get(user.Name); exception == nil {
 		// then just update the existing user data cache
-		if exception = caches.UserDataStore.Update(
+		if exception = userdata.NewUserDataCacheClient().Update(
 			user.Name,
 			cacheinputs.UpdateUserDataCacheInput{
 				AccessToken: newAccessToken,
@@ -783,7 +783,7 @@ func (s *AuthService) Login(
 			return nil, apiexceptions.User.NotFound().WithOrigin(err)
 		}
 
-		newUserDataCache := caches.UserDataCache{
+		newUserDataCache := userdata.UserDataCache{
 			Id:                 user.Id,
 			PublicId:           output.PublicId,
 			Name:               output.Name,
@@ -804,7 +804,7 @@ func (s *AuthService) Login(
 		if output.AvatarURL != nil {
 			newUserDataCache.AvatarURL = *output.AvatarURL
 		}
-		exception := caches.UserDataStore.Set(
+		exception := userdata.NewUserDataCacheClient().Set(
 			user.Name,
 			newUserDataCache,
 		)
@@ -955,9 +955,9 @@ func (s *AuthService) LoginViaGoogle(
 	}
 
 	// check if the user data cache exists
-	if _, exception := caches.UserDataStore.Get(user.Name); exception == nil {
+	if _, exception := userdata.NewUserDataCacheClient().Get(user.Name); exception == nil {
 		// then just update the existing user data cache
-		if exception = caches.UserDataStore.Update(
+		if exception = userdata.NewUserDataCacheClient().Update(
 			user.Name,
 			cacheinputs.UpdateUserDataCacheInput{
 				AccessToken: newAccessToken,
@@ -1009,7 +1009,7 @@ func (s *AuthService) LoginViaGoogle(
 			return nil, apiexceptions.User.NotFound().WithOrigin(err)
 		}
 
-		newUserDataCache := caches.UserDataCache{
+		newUserDataCache := userdata.UserDataCache{
 			Id:                 user.Id,
 			PublicId:           output.PublicId,
 			Name:               output.Name,
@@ -1030,7 +1030,7 @@ func (s *AuthService) LoginViaGoogle(
 		if output.AvatarURL != nil {
 			newUserDataCache.AvatarURL = *output.AvatarURL
 		}
-		exception := caches.UserDataStore.Set(
+		exception := userdata.NewUserDataCacheClient().Set(
 			user.Name,
 			newUserDataCache,
 		)
@@ -1113,7 +1113,7 @@ func (s *AuthService) Logout(
 		return nil, exception
 	}
 
-	exception = caches.UserDataStore.Delete(actorUserName)
+	exception = userdata.NewUserDataCacheClient().Delete(actorUserName)
 	if exception != nil {
 		return nil, exception
 	}
@@ -1302,11 +1302,11 @@ func (s *AuthService) ForgetPassword(
 	}
 
 	// update the access token of the user
-	exception = caches.UserDataStore.Update(user.Name, cacheinputs.UpdateUserDataCacheInput{AccessToken: newAccessToken})
+	exception = userdata.NewUserDataCacheClient().Update(user.Name, cacheinputs.UpdateUserDataCacheInput{AccessToken: newAccessToken})
 	if exception != nil {
 		_ = logs.NotezyLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
 		// and also try to set the new user cache data
-		exception = caches.UserDataStore.Set(user.Name, caches.UserDataCache{
+		exception = userdata.NewUserDataCacheClient().Set(user.Name, userdata.UserDataCache{
 			Id:                 user.Id,
 			PublicId:           user.PublicId,
 			Name:               user.Name,
@@ -1481,7 +1481,7 @@ func (s *AuthService) DeleteMe(
 		return nil, apiexceptions.User.FailedToDelete().WithOrigin(err)
 	}
 
-	exception = caches.UserDataStore.Delete(actorUserName)
+	exception = userdata.NewUserDataCacheClient().Delete(actorUserName)
 	if exception != nil {
 		_ = logs.NotezyLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
 	}

@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	subshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/sub-shelves"
 	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
+	subshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/sub-shelves"
 	services "github.com/HiIamJeff67/notezy-backend/internal/services/core/services"
 )
 

@@ -5,8 +5,8 @@ import {
   createYjsCompactionBatchResult,
   parseYjsCompactionBatchInput,
   parseYjsCompactionBatchResult,
-} from "../src/types/yjs_compaction_batch.js";
-import { convertUUIDToBytes } from "../src/util/uuid.js";
+} from "../types/yjs_compaction_batch.js";
+import { convertUUIDToBytes } from "../util/uuid.js";
 
 function createCompactionInputPayload(
   baseCompactedUntilSequence: number,

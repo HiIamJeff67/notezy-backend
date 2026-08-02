@@ -8,7 +8,6 @@ require (
 	github.com/alicebob/miniredis/v2 v2.37.0
 	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/comail/colog v0.0.0-20160416085026-fba8e7b1f46c
-	github.com/fvbock/endless v0.0.0-20170109170031-447134032cb6
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/golang-jwt/jwt/v5 v5.2.2

@@ -1,0 +1,24 @@
+package schemas
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+
+	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
+	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+)
+
+type UserSetting struct {
+	Id                 uuid.UUID      `json:"id" gorm:"column:id; type:uuid; primaryKey; default:gen_random_uuid();"`
+	UserId             uuid.UUID      `json:"userId" gorm:"column:user_id; type:uuid; not null; unique;"`
+	Language           enums.Language `json:"language" gorm:"column:language; type:\"Language\"; not null; default:'English';"`         // validate:"omitnil,islanguage"
+	GeneralSettingCode int64          `json:"generalSettingCode" gorm:"column:general_setting_code; type:bigint; not null; default:0;"` // validate:"omitnil,min=0,max=999999999"
+	PrivacySettingCode int64          `json:"privacySettingCode" gorm:"column:privacy_setting_code; type:bigint; not null; default:0;"` // validate:"omitnil,min=0,max=999999999"
+	UpdatedAt          time.Time      `json:"updatedAt" gorm:"column:updated_at; type:timestamptz; not null; autoUpdateTime:true;"`
+}
+
+// User Setting Table Name
+func (UserSetting) TableName() string {
+	return types.TableName_UserSettingTable.String()
+}

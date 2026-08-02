@@ -3,24 +3,24 @@ package binders
 import (
 	"github.com/gin-gonic/gin"
 
-	authdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/auth"
+	authdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/auth"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/gateway/responsewriter"
-	apitransport "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api"
+	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
+	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
 )
 
 type AuthBinderInterface interface {
-	BindRegister(controllerFunc apitransport.ControllerFunc[*authdto.RegisterRequestDto]) gin.HandlerFunc
-	BindRegisterViaGoogle(controllerFunc apitransport.ControllerFunc[*authdto.RegisterViaGoogleRequestDto]) gin.HandlerFunc
-	BindLogin(controllerFunc apitransport.ControllerFunc[*authdto.LoginRequestDto]) gin.HandlerFunc
-	BindLoginViaGoogle(controllerFunc apitransport.ControllerFunc[*authdto.LoginViaGoogleRequestDto]) gin.HandlerFunc
-	BindLogout(controllerFunc apitransport.ControllerFunc[*authdto.LogoutRequestDto]) gin.HandlerFunc
-	BindSendAuthCode(controllerFunc apitransport.ControllerFunc[*authdto.SendAuthCodeRequestDto]) gin.HandlerFunc
-	BindValidateEmail(controllerFunc apitransport.ControllerFunc[*authdto.ValidateEmailRequestDto]) gin.HandlerFunc
-	BindResetEmail(controllerFunc apitransport.ControllerFunc[*authdto.ResetEmailRequestDto]) gin.HandlerFunc
-	BindForgetPassword(controllerFunc apitransport.ControllerFunc[*authdto.ForgetPasswordRequestDto]) gin.HandlerFunc
-	BindResetMe(controllerFunc apitransport.ControllerFunc[*authdto.ResetMeRequestDto]) gin.HandlerFunc
-	BindDeleteMe(controllerFunc apitransport.ControllerFunc[*authdto.DeleteMeRequestDto]) gin.HandlerFunc
+	BindRegister(controllerFunc controllers.Func[*authdto.RegisterRequestDto]) gin.HandlerFunc
+	BindRegisterViaGoogle(controllerFunc controllers.Func[*authdto.RegisterViaGoogleRequestDto]) gin.HandlerFunc
+	BindLogin(controllerFunc controllers.Func[*authdto.LoginRequestDto]) gin.HandlerFunc
+	BindLoginViaGoogle(controllerFunc controllers.Func[*authdto.LoginViaGoogleRequestDto]) gin.HandlerFunc
+	BindLogout(controllerFunc controllers.Func[*authdto.LogoutRequestDto]) gin.HandlerFunc
+	BindSendAuthCode(controllerFunc controllers.Func[*authdto.SendAuthCodeRequestDto]) gin.HandlerFunc
+	BindValidateEmail(controllerFunc controllers.Func[*authdto.ValidateEmailRequestDto]) gin.HandlerFunc
+	BindResetEmail(controllerFunc controllers.Func[*authdto.ResetEmailRequestDto]) gin.HandlerFunc
+	BindForgetPassword(controllerFunc controllers.Func[*authdto.ForgetPasswordRequestDto]) gin.HandlerFunc
+	BindResetMe(controllerFunc controllers.Func[*authdto.ResetMeRequestDto]) gin.HandlerFunc
+	BindDeleteMe(controllerFunc controllers.Func[*authdto.DeleteMeRequestDto]) gin.HandlerFunc
 }
 
 type AuthBinder struct{}
@@ -29,7 +29,7 @@ func NewAuthBinder() AuthBinderInterface {
 	return &AuthBinder{}
 }
 
-func (b *AuthBinder) BindRegister(controllerFunc apitransport.ControllerFunc[*authdto.RegisterRequestDto]) gin.HandlerFunc {
+func (b *AuthBinder) BindRegister(controllerFunc controllers.Func[*authdto.RegisterRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &authdto.RegisterRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -42,7 +42,7 @@ func (b *AuthBinder) BindRegister(controllerFunc apitransport.ControllerFunc[*au
 	}
 }
 
-func (b *AuthBinder) BindRegisterViaGoogle(controllerFunc apitransport.ControllerFunc[*authdto.RegisterViaGoogleRequestDto]) gin.HandlerFunc {
+func (b *AuthBinder) BindRegisterViaGoogle(controllerFunc controllers.Func[*authdto.RegisterViaGoogleRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &authdto.RegisterViaGoogleRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -55,7 +55,7 @@ func (b *AuthBinder) BindRegisterViaGoogle(controllerFunc apitransport.Controlle
 	}
 }
 
-func (b *AuthBinder) BindLogin(controllerFunc apitransport.ControllerFunc[*authdto.LoginRequestDto]) gin.HandlerFunc {
+func (b *AuthBinder) BindLogin(controllerFunc controllers.Func[*authdto.LoginRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &authdto.LoginRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -68,7 +68,7 @@ func (b *AuthBinder) BindLogin(controllerFunc apitransport.ControllerFunc[*authd
 	}
 }
 
-func (b *AuthBinder) BindLoginViaGoogle(controllerFunc apitransport.ControllerFunc[*authdto.LoginViaGoogleRequestDto]) gin.HandlerFunc {
+func (b *AuthBinder) BindLoginViaGoogle(controllerFunc controllers.Func[*authdto.LoginViaGoogleRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &authdto.LoginViaGoogleRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -81,7 +81,7 @@ func (b *AuthBinder) BindLoginViaGoogle(controllerFunc apitransport.ControllerFu
 	}
 }
 
-func (b *AuthBinder) BindLogout(controllerFunc apitransport.ControllerFunc[*authdto.LogoutRequestDto]) gin.HandlerFunc {
+func (b *AuthBinder) BindLogout(controllerFunc controllers.Func[*authdto.LogoutRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &authdto.LogoutRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -90,7 +90,7 @@ func (b *AuthBinder) BindLogout(controllerFunc apitransport.ControllerFunc[*auth
 	}
 }
 
-func (b *AuthBinder) BindSendAuthCode(controllerFunc apitransport.ControllerFunc[*authdto.SendAuthCodeRequestDto]) gin.HandlerFunc {
+func (b *AuthBinder) BindSendAuthCode(controllerFunc controllers.Func[*authdto.SendAuthCodeRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &authdto.SendAuthCodeRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -103,7 +103,7 @@ func (b *AuthBinder) BindSendAuthCode(controllerFunc apitransport.ControllerFunc
 	}
 }
 
-func (b *AuthBinder) BindValidateEmail(controllerFunc apitransport.ControllerFunc[*authdto.ValidateEmailRequestDto]) gin.HandlerFunc {
+func (b *AuthBinder) BindValidateEmail(controllerFunc controllers.Func[*authdto.ValidateEmailRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &authdto.ValidateEmailRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -116,7 +116,7 @@ func (b *AuthBinder) BindValidateEmail(controllerFunc apitransport.ControllerFun
 	}
 }
 
-func (b *AuthBinder) BindResetEmail(controllerFunc apitransport.ControllerFunc[*authdto.ResetEmailRequestDto]) gin.HandlerFunc {
+func (b *AuthBinder) BindResetEmail(controllerFunc controllers.Func[*authdto.ResetEmailRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &authdto.ResetEmailRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -129,7 +129,7 @@ func (b *AuthBinder) BindResetEmail(controllerFunc apitransport.ControllerFunc[*
 	}
 }
 
-func (b *AuthBinder) BindForgetPassword(controllerFunc apitransport.ControllerFunc[*authdto.ForgetPasswordRequestDto]) gin.HandlerFunc {
+func (b *AuthBinder) BindForgetPassword(controllerFunc controllers.Func[*authdto.ForgetPasswordRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &authdto.ForgetPasswordRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -142,7 +142,7 @@ func (b *AuthBinder) BindForgetPassword(controllerFunc apitransport.ControllerFu
 	}
 }
 
-func (b *AuthBinder) BindResetMe(controllerFunc apitransport.ControllerFunc[*authdto.ResetMeRequestDto]) gin.HandlerFunc {
+func (b *AuthBinder) BindResetMe(controllerFunc controllers.Func[*authdto.ResetMeRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &authdto.ResetMeRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -155,7 +155,7 @@ func (b *AuthBinder) BindResetMe(controllerFunc apitransport.ControllerFunc[*aut
 	}
 }
 
-func (b *AuthBinder) BindDeleteMe(controllerFunc apitransport.ControllerFunc[*authdto.DeleteMeRequestDto]) gin.HandlerFunc {
+func (b *AuthBinder) BindDeleteMe(controllerFunc controllers.Func[*authdto.DeleteMeRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &authdto.DeleteMeRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")

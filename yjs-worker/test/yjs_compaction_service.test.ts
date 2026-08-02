@@ -3,10 +3,10 @@ import test from "node:test";
 
 import * as Y from "yjs";
 
-import { YjsCompactionService } from "../src/services/yjs_compaction_service.js";
-import { Telemetry } from "../src/telemetry.js";
-import { parseYjsCompactionBatchResult } from "../src/types/yjs_compaction_batch.js";
-import { convertUUIDToBytes } from "../src/util/uuid.js";
+import { YjsCompactionService } from "../services/yjs_compaction_service.js";
+import { Telemetry } from "../telemetry.js";
+import { parseYjsCompactionBatchResult } from "../types/yjs_compaction_batch.js";
+import { convertUUIDToBytes } from "../util/uuid.js";
 
 const telemetry = Telemetry.initialize();
 

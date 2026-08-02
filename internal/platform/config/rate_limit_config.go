@@ -32,7 +32,7 @@ var DefaultUnauthorizedRateLimitConfig = RateLimitConfig{
 	BackendServerName: types.BackendServerName_EastAsia, // the current server
 }
 
-var DefaultRealtimeUpgradeRateLimitConfig = RateLimitConfig{
+var DefaultRealtimeGatewayUpgradeRateLimitConfig = RateLimitConfig{
 	RateLimit:         rate.Limit(5),                    // 5 upgrade requests/second
 	Burst:             10,                               // allowed 10 additional upgrade requests for burst
 	UserLimit:         60,                               // 60 upgrade requests/minute for each client IP

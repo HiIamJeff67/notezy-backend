@@ -29,7 +29,7 @@ response envelope. Routes are rooted at `/api/development/v1`.
 | --- | --- | --- |
 | `POST` | `/realtime/connection/ticket` | Issue a short-lived capability for one root WebSocket connection. |
 | `POST` | `/realtime/channel/block-pack/ticket` | Issue a BlockPack-scoped read or write channel capability. |
-| `GET` | `/realtime/block-pack/:blockPackId/participants` | Return ephemeral active-presence data for a BlockPack. |
+| `GET` | `/realtime/block-pack/:blockPackId/participants` | Return Gateway-owned ephemeral active presence enriched by Core after permission and membership filtering. |
 
 ### Connection ticket
 

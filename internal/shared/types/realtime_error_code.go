@@ -21,6 +21,7 @@ const (
 	ErrorCode_RoomAdmissionUnavailable       ErrorCode = "room_admission_unavailable"
 	ErrorCode_RoomConnectionLimitExceeded    ErrorCode = "room_connection_limit_exceeded"
 	ErrorCode_ResubscribeRequired            ErrorCode = "resubscribe_required"
+	ErrorCode_TicketAlreadyUsed              ErrorCode = "ticket_already_used"
 	ErrorCode_UnsupportedBinaryType          ErrorCode = "unsupported_binary_type"
 	ErrorCode_UnsupportedChannelType         ErrorCode = "unsupported_channel_type"
 	ErrorCode_UnsupportedControlType         ErrorCode = "unsupported_control_type"

@@ -6,21 +6,21 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	routinetagsdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/routine-tags"
+	routinetagsdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/routine-tags"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/gateway/responsewriter"
-	apitransport "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api"
+	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
+	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
 )
 
 type RoutineTagBinderInterface interface {
-	BindGetMyRoutineTagById(controllerFunc apitransport.ControllerFunc[*routinetagsdto.GetMyRoutineTagByIdRequestDto]) gin.HandlerFunc
-	BindGetAllMyRoutineTags(controllerFunc apitransport.ControllerFunc[*routinetagsdto.GetAllMyRoutineTagsRequestDto]) gin.HandlerFunc
-	BindCreateRoutineTag(controllerFunc apitransport.ControllerFunc[*routinetagsdto.CreateRoutineTagRequestDto]) gin.HandlerFunc
-	BindCreateRoutineTags(controllerFunc apitransport.ControllerFunc[*routinetagsdto.CreateRoutineTagsRequestDto]) gin.HandlerFunc
-	BindUpdateMyRoutineTagById(controllerFunc apitransport.ControllerFunc[*routinetagsdto.UpdateMyRoutineTagByIdRequestDto]) gin.HandlerFunc
-	BindUpdateMyRoutineTagsByIds(controllerFunc apitransport.ControllerFunc[*routinetagsdto.UpdateMyRoutineTagsByIdsRequestDto]) gin.HandlerFunc
-	BindHardDeleteMyRoutineTagById(controllerFunc apitransport.ControllerFunc[*routinetagsdto.HardDeleteMyRoutineTagByIdRequestDto]) gin.HandlerFunc
-	BindHardDeleteMyRoutineTagsByIds(controllerFunc apitransport.ControllerFunc[*routinetagsdto.HardDeleteMyRoutineTagsByIdsRequestDto]) gin.HandlerFunc
+	BindGetMyRoutineTagById(controllerFunc controllers.Func[*routinetagsdto.GetMyRoutineTagByIdRequestDto]) gin.HandlerFunc
+	BindGetAllMyRoutineTags(controllerFunc controllers.Func[*routinetagsdto.GetAllMyRoutineTagsRequestDto]) gin.HandlerFunc
+	BindCreateRoutineTag(controllerFunc controllers.Func[*routinetagsdto.CreateRoutineTagRequestDto]) gin.HandlerFunc
+	BindCreateRoutineTags(controllerFunc controllers.Func[*routinetagsdto.CreateRoutineTagsRequestDto]) gin.HandlerFunc
+	BindUpdateMyRoutineTagById(controllerFunc controllers.Func[*routinetagsdto.UpdateMyRoutineTagByIdRequestDto]) gin.HandlerFunc
+	BindUpdateMyRoutineTagsByIds(controllerFunc controllers.Func[*routinetagsdto.UpdateMyRoutineTagsByIdsRequestDto]) gin.HandlerFunc
+	BindHardDeleteMyRoutineTagById(controllerFunc controllers.Func[*routinetagsdto.HardDeleteMyRoutineTagByIdRequestDto]) gin.HandlerFunc
+	BindHardDeleteMyRoutineTagsByIds(controllerFunc controllers.Func[*routinetagsdto.HardDeleteMyRoutineTagsByIdsRequestDto]) gin.HandlerFunc
 }
 
 type RoutineTagBinder struct{}
@@ -29,7 +29,7 @@ func NewRoutineTagBinder() RoutineTagBinderInterface {
 	return &RoutineTagBinder{}
 }
 
-func (b *RoutineTagBinder) BindGetMyRoutineTagById(controllerFunc apitransport.ControllerFunc[*routinetagsdto.GetMyRoutineTagByIdRequestDto]) gin.HandlerFunc {
+func (b *RoutineTagBinder) BindGetMyRoutineTagById(controllerFunc controllers.Func[*routinetagsdto.GetMyRoutineTagByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinetagsdto.GetMyRoutineTagByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -55,7 +55,7 @@ func (b *RoutineTagBinder) BindGetMyRoutineTagById(controllerFunc apitransport.C
 	}
 }
 
-func (b *RoutineTagBinder) BindGetAllMyRoutineTags(controllerFunc apitransport.ControllerFunc[*routinetagsdto.GetAllMyRoutineTagsRequestDto]) gin.HandlerFunc {
+func (b *RoutineTagBinder) BindGetAllMyRoutineTags(controllerFunc controllers.Func[*routinetagsdto.GetAllMyRoutineTagsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinetagsdto.GetAllMyRoutineTagsRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -74,7 +74,7 @@ func (b *RoutineTagBinder) BindGetAllMyRoutineTags(controllerFunc apitransport.C
 	}
 }
 
-func (b *RoutineTagBinder) BindCreateRoutineTag(controllerFunc apitransport.ControllerFunc[*routinetagsdto.CreateRoutineTagRequestDto]) gin.HandlerFunc {
+func (b *RoutineTagBinder) BindCreateRoutineTag(controllerFunc controllers.Func[*routinetagsdto.CreateRoutineTagRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinetagsdto.CreateRoutineTagRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -88,7 +88,7 @@ func (b *RoutineTagBinder) BindCreateRoutineTag(controllerFunc apitransport.Cont
 	}
 }
 
-func (b *RoutineTagBinder) BindCreateRoutineTags(controllerFunc apitransport.ControllerFunc[*routinetagsdto.CreateRoutineTagsRequestDto]) gin.HandlerFunc {
+func (b *RoutineTagBinder) BindCreateRoutineTags(controllerFunc controllers.Func[*routinetagsdto.CreateRoutineTagsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinetagsdto.CreateRoutineTagsRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -102,7 +102,7 @@ func (b *RoutineTagBinder) BindCreateRoutineTags(controllerFunc apitransport.Con
 	}
 }
 
-func (b *RoutineTagBinder) BindUpdateMyRoutineTagById(controllerFunc apitransport.ControllerFunc[*routinetagsdto.UpdateMyRoutineTagByIdRequestDto]) gin.HandlerFunc {
+func (b *RoutineTagBinder) BindUpdateMyRoutineTagById(controllerFunc controllers.Func[*routinetagsdto.UpdateMyRoutineTagByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinetagsdto.UpdateMyRoutineTagByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -123,7 +123,7 @@ func (b *RoutineTagBinder) BindUpdateMyRoutineTagById(controllerFunc apitranspor
 	}
 }
 
-func (b *RoutineTagBinder) BindUpdateMyRoutineTagsByIds(controllerFunc apitransport.ControllerFunc[*routinetagsdto.UpdateMyRoutineTagsByIdsRequestDto]) gin.HandlerFunc {
+func (b *RoutineTagBinder) BindUpdateMyRoutineTagsByIds(controllerFunc controllers.Func[*routinetagsdto.UpdateMyRoutineTagsByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinetagsdto.UpdateMyRoutineTagsByIdsRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -137,7 +137,7 @@ func (b *RoutineTagBinder) BindUpdateMyRoutineTagsByIds(controllerFunc apitransp
 	}
 }
 
-func (b *RoutineTagBinder) BindHardDeleteMyRoutineTagById(controllerFunc apitransport.ControllerFunc[*routinetagsdto.HardDeleteMyRoutineTagByIdRequestDto]) gin.HandlerFunc {
+func (b *RoutineTagBinder) BindHardDeleteMyRoutineTagById(controllerFunc controllers.Func[*routinetagsdto.HardDeleteMyRoutineTagByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinetagsdto.HardDeleteMyRoutineTagByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -153,7 +153,7 @@ func (b *RoutineTagBinder) BindHardDeleteMyRoutineTagById(controllerFunc apitran
 	}
 }
 
-func (b *RoutineTagBinder) BindHardDeleteMyRoutineTagsByIds(controllerFunc apitransport.ControllerFunc[*routinetagsdto.HardDeleteMyRoutineTagsByIdsRequestDto]) gin.HandlerFunc {
+func (b *RoutineTagBinder) BindHardDeleteMyRoutineTagsByIds(controllerFunc controllers.Func[*routinetagsdto.HardDeleteMyRoutineTagsByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinetagsdto.HardDeleteMyRoutineTagsByIdsRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")

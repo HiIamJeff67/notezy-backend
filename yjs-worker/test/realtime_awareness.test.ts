@@ -10,15 +10,15 @@ import {
 } from "y-protocols/awareness";
 import * as Y from "yjs";
 
-import { RealtimeGateway } from "../src/realtime/gateway.js";
-import { RoomRegistry } from "../src/realtime/room_registry.js";
-import { YjsCompactionService } from "../src/services/yjs_compaction_service.js";
-import { Telemetry } from "../src/telemetry.js";
+import { RealtimeGateway } from "../realtime/gateway.js";
+import { RoomRegistry } from "../realtime/room_registry.js";
+import { YjsCompactionService } from "../services/yjs_compaction_service.js";
+import { Telemetry } from "../telemetry.js";
 import {
   createInternalFrame,
   parseInternalFrame,
-} from "../src/types/internal_frame.js";
-import { InternalFrameType } from "../src/types/internal_frame_type.js";
+} from "../types/internal_frame.js";
+import { InternalFrameType } from "../types/internal_frame_type.js";
 
 class TestWebSocket extends EventEmitter {
   readonly sentFrames: Buffer[] = [];

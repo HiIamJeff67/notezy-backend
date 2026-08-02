@@ -1,7 +1,16 @@
 package main
 
-import email "github.com/HiIamJeff67/notezy-backend/internal/services/email"
+import (
+	"os"
+
+	email "github.com/HiIamJeff67/notezy-backend/internal/services/email"
+)
 
 func main() {
-	email.Start()
+	if len(os.Args) == 1 {
+		shutdown := email.Start()
+		defer shutdown()
+	}
+
+	Execute()
 }

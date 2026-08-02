@@ -74,17 +74,17 @@
 #### Layer Breakdown
 
 - **Models Layer**
-  - `internal/services/core/data/schemas`: table schemas.
-  - `internal/services/core/data/schemas/enums`: enum definitions and migration mappings.
-  - `internal/services/core/data/schemas/triggers`: SQL triggers (cascading, projection, accounting, maintenance).
-  - `internal/services/core/data/schemas/constraints`: SQL constraints/indexes.
-  - `internal/services/core/data/seeds`: seed SQL sets for billing and plan limitations.
-  - `internal/services/core/data/inputs`: create/update input contracts.
+  - `internal/services/core/data/database/schemas`: table schemas.
+  - `internal/services/core/data/database/schemas/enums`: enum definitions and migration mappings.
+  - `internal/services/core/data/database/schemas/triggers`: SQL triggers (cascading, projection, accounting, maintenance).
+  - `internal/services/core/data/database/schemas/constraints`: SQL constraints/indexes.
+  - `internal/services/core/data/database/seeds`: seed SQL sets for billing and plan limitations.
+  - `internal/services/core/data/database/inputs`: create/update input contracts.
 - **Repository Layer**
-  - `internal/services/core/data/repositories`: persistence APIs.
-  - `internal/services/core/data/scopes`: permission, preload, soft-delete filtering logic.
-  - `internal/services/core/data/sqls`: raw SQL units for targeted operations.
-  - `internal/services/core/data/options/repository_option.go`: DB/session/transaction behavior control.
+  - `internal/services/core/data/database/repositories`: persistence APIs.
+  - `internal/services/core/data/database/scopes`: permission, preload, soft-delete filtering logic.
+  - `internal/services/core/data/database/sqls`: raw SQL units for targeted operations.
+  - `internal/services/core/data/database/options/repository_option.go`: DB/session/transaction behavior control.
 - **Service Layer**
   - `internal/services/core/services`: business orchestration and workflow composition.
   - Integrates DTOs, cache operations, token ops, and async email dispatch.
@@ -141,7 +141,7 @@
 - **GraphQL Artifacts**
   - Schemas: `contracts/graphql/schemas/**/*.graphql`.
   - Generator config: `infra/graphql/gqlgen.yaml`.
-  - Generated outputs: `internal/platform/graphql/generated/*_generated.go`, `internal/platform/graphql/models/models_gen.go`.
+  - Generated outputs: `contracts/graphql/generated/*_generated.go`, `contracts/graphql/models/models_gen.go`.
 - **Observability (LGTM + OTEL)**
   - Collector: `infra/monitor/otel-collector-config.dev.yaml`.
   - Loki/Tempo/Mimir configs: `infra/monitor/*.yaml`.
@@ -170,8 +170,9 @@
   - Permission checks are scope-driven, not ad hoc in controllers.
 - Response lifecycle is extensible:
   - Interceptor strategy supports token refresh embedding and response augmentation.
-- Redis partitioning strategy exists for differentiated purposes:
-  - user-data cache vs rate-limit records mapped to different Redis DB ranges.
+- Redis cache ownership follows runtime boundaries:
+  - Core owns user-data and quota cache stores; Gateway owns rate-limit records.
+  - `internal/platform/redis` only owns Redis client lifecycle and cache-store registration.
 - Current testing profile:
   - e2e tests are focused on auth flows.
   - unit tests target utility-level behavior and helpers.

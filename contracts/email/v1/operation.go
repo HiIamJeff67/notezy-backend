@@ -1,4 +1,4 @@
-package email
+package emailcontract
 
 const (
 	SendWelcomeEmailOperation       = "email.send-welcome"

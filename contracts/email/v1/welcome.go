@@ -1,4 +1,4 @@
-package email
+package emailcontract
 
 type SendWelcomeEmailRequestDto struct {
 	To       string `json:"to" validate:"required,email"`

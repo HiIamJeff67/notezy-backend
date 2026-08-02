@@ -23,7 +23,8 @@
   `XxxResponseDto`. `core.Request[Dto]` and `core.Response[Dto]`
   carry version, operation, metadata, and the DTO; do not add a nested DTO body
   solely to repeat the envelope.
-- `contracts/api/v1.RequestDto[Header, Body, Param, Query]` is the common
+- `contracts/gateway/v1/api` package `apicontract` exports the common
+  `RequestDto[Header, Body, Param, Query]`.
   composable request shape. Domain request DTOs embed it with anonymous
   concrete struct types directly at the declaration; do not create one-off
   `HeaderDto`, `BodyDto`, `ParamDto`, or `QueryDto` types. The client and Core

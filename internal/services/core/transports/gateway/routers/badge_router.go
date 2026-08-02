@@ -3,7 +3,7 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	badgesdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/badges"
+	badgesdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/badges"
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/services/core/transports/gateway/endpoints"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/services/core/transports/gateway/middlewares"
 )

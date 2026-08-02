@@ -69,9 +69,9 @@ method.
 - `cmd/*` may import `internal/*`.
 - Gateway client/API and Core-adapter transport code may import contracts, shared,
   platform, and its own code; it must not query Core data or import repositories/
-  GORM schemas. The WebSocket runtime is a temporary direct-DI composition point:
-  it may construct the complete Core services it needs, but handlers must use those
-  services rather than query Core data themselves.
+  GORM schemas. The WebSocket runtime calls Core only through its versioned
+  contract and Core client; it must not construct Core services or query Core
+  data directly.
 - A service may import contracts, shared, platform, and its own data. A service
   must not import another service source package.
 - `internal/shared` never imports exceptions or an application/framework package.
@@ -87,8 +87,8 @@ Do not introduce an application `modules/` package merely to wrap service
 construction. The owning composition root constructs its scope -> repository ->
 service dependencies directly, then passes each concrete service to the router or
 runtime that uses it. Core's `NewCoreTransportRouter` is the composition root for
-its Gateway-facing endpoints; the WebSocket runtime constructs only the Core
-services it directly needs.
+its inbound endpoints; the WebSocket runtime constructs only its own Gateway,
+Core client, Redis lease store, and YjsWorker manager.
 
 Router construction may instantiate endpoint objects from the services it
 receives, but it must not recreate the services or conceal their dependencies in a
@@ -148,10 +148,11 @@ optional GraphQL/system-only methods
 ## GraphQL and background runtimes
 
 GraphQL uses Scheme A: Gateway owns the executor, resolvers, and dataloaders.
-GraphQL source SDL/fragments/documents live in `contracts/graphql`; generated Go
-code, scalars, and generated models live in `internal/platform/graphql`. Generated
-files are regenerated from source and never edited directly. GraphQL business
-RequestDto/ResponseDto live in the same `contracts/api/v1/<route-domain>/search.go`
+GraphQL source SDL/fragments/documents, generated Go code, scalars, and generated
+models live in `contracts/graphql`. Generated files are regenerated from source and
+never edited directly. GraphQL business
+RequestDto/ResponseDto live in the same
+`contracts/gateway/v1/api/<route-domain>/search.go`
 as their owning Core service. Core exposes each GraphQL operation from that
 service's endpoint and router; never create a shared GraphQLEndpoint or a central
 Core GraphQL router.

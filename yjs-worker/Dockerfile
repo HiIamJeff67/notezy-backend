@@ -14,7 +14,7 @@ FROM base AS build
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json ./
 RUN pnpm install --frozen-lockfile
 
-COPY src ./src
+COPY . .
 RUN pnpm build
 
 FROM node:22.23.1-slim AS runtime

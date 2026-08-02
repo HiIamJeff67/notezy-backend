@@ -9,9 +9,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	rootshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/root-shelves"
-	stationsdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/stations"
 	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
+	rootshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/root-shelves"
+	stationsdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/stations"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
 	sharedtokens "github.com/HiIamJeff67/notezy-backend/internal/shared/tokens"
 )

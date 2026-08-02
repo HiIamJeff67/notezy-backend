@@ -6,28 +6,28 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/block-packs"
+	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/block-packs"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/gateway/responsewriter"
-	apitransport "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api"
+	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
+	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
 )
 
 type BlockPackBinderInterface interface {
-	BindGetMyBlockPackById(controllerFunc apitransport.ControllerFunc[*blockpacksdto.GetMyBlockPackByIdRequestDto]) gin.HandlerFunc
-	BindGetMyBlockPackAndItsParentById(controllerFunc apitransport.ControllerFunc[*blockpacksdto.GetMyBlockPackAndItsParentByIdRequestDto]) gin.HandlerFunc
-	BindGetMyBlockPacksByParentSubShelfId(controllerFunc apitransport.ControllerFunc[*blockpacksdto.GetMyBlockPacksByParentSubShelfIdRequestDto]) gin.HandlerFunc
-	BindGetAllMyBlockPacksByRootShelfId(controllerFunc apitransport.ControllerFunc[*blockpacksdto.GetAllMyBlockPacksByRootShelfIdRequestDto]) gin.HandlerFunc
-	BindCreateBlockPack(controllerFunc apitransport.ControllerFunc[*blockpacksdto.CreateBlockPackRequestDto]) gin.HandlerFunc
-	BindCreateBlockPacks(controllerFunc apitransport.ControllerFunc[*blockpacksdto.CreateBlockPacksRequestDto]) gin.HandlerFunc
-	BindUpdateMyBlockPackById(controllerFunc apitransport.ControllerFunc[*blockpacksdto.UpdateMyBlockPackByIdRequestDto]) gin.HandlerFunc
-	BindUpdateMyBlockPacksByIds(controllerFunc apitransport.ControllerFunc[*blockpacksdto.UpdateMyBlockPacksByIdsRequestDto]) gin.HandlerFunc
-	BindMoveMyBlockPackByParentSubShelfId(controllerFunc apitransport.ControllerFunc[*blockpacksdto.MoveMyBlockPackByParentSubShelfIdRequestDto]) gin.HandlerFunc
-	BindMoveMyBlockPacksByParentSubShelfId(controllerFunc apitransport.ControllerFunc[*blockpacksdto.MoveMyBlockPacksByParentSubShelfIdRequestDto]) gin.HandlerFunc
-	BindMoveMyBlockPacksByParentSubShelfIds(controllerFunc apitransport.ControllerFunc[*blockpacksdto.MoveMyBlockPacksByParentSubShelfIdsRequestDto]) gin.HandlerFunc
-	BindRestoreMyBlockPackById(controllerFunc apitransport.ControllerFunc[*blockpacksdto.RestoreMyBlockPackByIdRequestDto]) gin.HandlerFunc
-	BindRestoreMyBlockPacksByIds(controllerFunc apitransport.ControllerFunc[*blockpacksdto.RestoreMyBlockPacksByIdsRequestDto]) gin.HandlerFunc
-	BindDeleteMyBlockPackById(controllerFunc apitransport.ControllerFunc[*blockpacksdto.DeleteMyBlockPackByIdRequestDto]) gin.HandlerFunc
-	BindDeleteMyBlockPacksByIds(controllerFunc apitransport.ControllerFunc[*blockpacksdto.DeleteMyBlockPacksByIdsRequestDto]) gin.HandlerFunc
+	BindGetMyBlockPackById(controllerFunc controllers.Func[*blockpacksdto.GetMyBlockPackByIdRequestDto]) gin.HandlerFunc
+	BindGetMyBlockPackAndItsParentById(controllerFunc controllers.Func[*blockpacksdto.GetMyBlockPackAndItsParentByIdRequestDto]) gin.HandlerFunc
+	BindGetMyBlockPacksByParentSubShelfId(controllerFunc controllers.Func[*blockpacksdto.GetMyBlockPacksByParentSubShelfIdRequestDto]) gin.HandlerFunc
+	BindGetAllMyBlockPacksByRootShelfId(controllerFunc controllers.Func[*blockpacksdto.GetAllMyBlockPacksByRootShelfIdRequestDto]) gin.HandlerFunc
+	BindCreateBlockPack(controllerFunc controllers.Func[*blockpacksdto.CreateBlockPackRequestDto]) gin.HandlerFunc
+	BindCreateBlockPacks(controllerFunc controllers.Func[*blockpacksdto.CreateBlockPacksRequestDto]) gin.HandlerFunc
+	BindUpdateMyBlockPackById(controllerFunc controllers.Func[*blockpacksdto.UpdateMyBlockPackByIdRequestDto]) gin.HandlerFunc
+	BindUpdateMyBlockPacksByIds(controllerFunc controllers.Func[*blockpacksdto.UpdateMyBlockPacksByIdsRequestDto]) gin.HandlerFunc
+	BindMoveMyBlockPackByParentSubShelfId(controllerFunc controllers.Func[*blockpacksdto.MoveMyBlockPackByParentSubShelfIdRequestDto]) gin.HandlerFunc
+	BindMoveMyBlockPacksByParentSubShelfId(controllerFunc controllers.Func[*blockpacksdto.MoveMyBlockPacksByParentSubShelfIdRequestDto]) gin.HandlerFunc
+	BindMoveMyBlockPacksByParentSubShelfIds(controllerFunc controllers.Func[*blockpacksdto.MoveMyBlockPacksByParentSubShelfIdsRequestDto]) gin.HandlerFunc
+	BindRestoreMyBlockPackById(controllerFunc controllers.Func[*blockpacksdto.RestoreMyBlockPackByIdRequestDto]) gin.HandlerFunc
+	BindRestoreMyBlockPacksByIds(controllerFunc controllers.Func[*blockpacksdto.RestoreMyBlockPacksByIdsRequestDto]) gin.HandlerFunc
+	BindDeleteMyBlockPackById(controllerFunc controllers.Func[*blockpacksdto.DeleteMyBlockPackByIdRequestDto]) gin.HandlerFunc
+	BindDeleteMyBlockPacksByIds(controllerFunc controllers.Func[*blockpacksdto.DeleteMyBlockPacksByIdsRequestDto]) gin.HandlerFunc
 }
 
 type BlockPackBinder struct{}
@@ -36,7 +36,7 @@ func NewBlockPackBinder() BlockPackBinderInterface {
 	return &BlockPackBinder{}
 }
 
-func (b *BlockPackBinder) BindGetMyBlockPackById(controllerFunc apitransport.ControllerFunc[*blockpacksdto.GetMyBlockPackByIdRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindGetMyBlockPackById(controllerFunc controllers.Func[*blockpacksdto.GetMyBlockPackByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto blockpacksdto.GetMyBlockPackByIdRequestDto
 
@@ -63,7 +63,7 @@ func (b *BlockPackBinder) BindGetMyBlockPackById(controllerFunc apitransport.Con
 	}
 }
 
-func (b *BlockPackBinder) BindGetMyBlockPackAndItsParentById(controllerFunc apitransport.ControllerFunc[*blockpacksdto.GetMyBlockPackAndItsParentByIdRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindGetMyBlockPackAndItsParentById(controllerFunc controllers.Func[*blockpacksdto.GetMyBlockPackAndItsParentByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto blockpacksdto.GetMyBlockPackAndItsParentByIdRequestDto
 
@@ -90,7 +90,7 @@ func (b *BlockPackBinder) BindGetMyBlockPackAndItsParentById(controllerFunc apit
 	}
 }
 
-func (b *BlockPackBinder) BindGetMyBlockPacksByParentSubShelfId(controllerFunc apitransport.ControllerFunc[*blockpacksdto.GetMyBlockPacksByParentSubShelfIdRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindGetMyBlockPacksByParentSubShelfId(controllerFunc controllers.Func[*blockpacksdto.GetMyBlockPacksByParentSubShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto blockpacksdto.GetMyBlockPacksByParentSubShelfIdRequestDto
 
@@ -117,7 +117,7 @@ func (b *BlockPackBinder) BindGetMyBlockPacksByParentSubShelfId(controllerFunc a
 	}
 }
 
-func (b *BlockPackBinder) BindGetAllMyBlockPacksByRootShelfId(controllerFunc apitransport.ControllerFunc[*blockpacksdto.GetAllMyBlockPacksByRootShelfIdRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindGetAllMyBlockPacksByRootShelfId(controllerFunc controllers.Func[*blockpacksdto.GetAllMyBlockPacksByRootShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto blockpacksdto.GetAllMyBlockPacksByRootShelfIdRequestDto
 
@@ -144,7 +144,7 @@ func (b *BlockPackBinder) BindGetAllMyBlockPacksByRootShelfId(controllerFunc api
 	}
 }
 
-func (b *BlockPackBinder) BindCreateBlockPack(controllerFunc apitransport.ControllerFunc[*blockpacksdto.CreateBlockPackRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindCreateBlockPack(controllerFunc controllers.Func[*blockpacksdto.CreateBlockPackRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto blockpacksdto.CreateBlockPackRequestDto
 
@@ -167,7 +167,7 @@ func (b *BlockPackBinder) BindCreateBlockPack(controllerFunc apitransport.Contro
 	}
 }
 
-func (b *BlockPackBinder) BindCreateBlockPacks(controllerFunc apitransport.ControllerFunc[*blockpacksdto.CreateBlockPacksRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindCreateBlockPacks(controllerFunc controllers.Func[*blockpacksdto.CreateBlockPacksRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto blockpacksdto.CreateBlockPacksRequestDto
 
@@ -183,7 +183,7 @@ func (b *BlockPackBinder) BindCreateBlockPacks(controllerFunc apitransport.Contr
 	}
 }
 
-func (b *BlockPackBinder) BindUpdateMyBlockPackById(controllerFunc apitransport.ControllerFunc[*blockpacksdto.UpdateMyBlockPackByIdRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindUpdateMyBlockPackById(controllerFunc controllers.Func[*blockpacksdto.UpdateMyBlockPackByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto blockpacksdto.UpdateMyBlockPackByIdRequestDto
 
@@ -206,7 +206,7 @@ func (b *BlockPackBinder) BindUpdateMyBlockPackById(controllerFunc apitransport.
 	}
 }
 
-func (b *BlockPackBinder) BindUpdateMyBlockPacksByIds(controllerFunc apitransport.ControllerFunc[*blockpacksdto.UpdateMyBlockPacksByIdsRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindUpdateMyBlockPacksByIds(controllerFunc controllers.Func[*blockpacksdto.UpdateMyBlockPacksByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto blockpacksdto.UpdateMyBlockPacksByIdsRequestDto
 
@@ -222,7 +222,7 @@ func (b *BlockPackBinder) BindUpdateMyBlockPacksByIds(controllerFunc apitranspor
 	}
 }
 
-func (b *BlockPackBinder) BindMoveMyBlockPackByParentSubShelfId(controllerFunc apitransport.ControllerFunc[*blockpacksdto.MoveMyBlockPackByParentSubShelfIdRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindMoveMyBlockPackByParentSubShelfId(controllerFunc controllers.Func[*blockpacksdto.MoveMyBlockPackByParentSubShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto blockpacksdto.MoveMyBlockPackByParentSubShelfIdRequestDto
 
@@ -245,7 +245,7 @@ func (b *BlockPackBinder) BindMoveMyBlockPackByParentSubShelfId(controllerFunc a
 	}
 }
 
-func (b *BlockPackBinder) BindMoveMyBlockPacksByParentSubShelfId(controllerFunc apitransport.ControllerFunc[*blockpacksdto.MoveMyBlockPacksByParentSubShelfIdRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindMoveMyBlockPacksByParentSubShelfId(controllerFunc controllers.Func[*blockpacksdto.MoveMyBlockPacksByParentSubShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto blockpacksdto.MoveMyBlockPacksByParentSubShelfIdRequestDto
 
@@ -261,7 +261,7 @@ func (b *BlockPackBinder) BindMoveMyBlockPacksByParentSubShelfId(controllerFunc 
 	}
 }
 
-func (b *BlockPackBinder) BindMoveMyBlockPacksByParentSubShelfIds(controllerFunc apitransport.ControllerFunc[*blockpacksdto.MoveMyBlockPacksByParentSubShelfIdsRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindMoveMyBlockPacksByParentSubShelfIds(controllerFunc controllers.Func[*blockpacksdto.MoveMyBlockPacksByParentSubShelfIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto blockpacksdto.MoveMyBlockPacksByParentSubShelfIdsRequestDto
 
@@ -277,7 +277,7 @@ func (b *BlockPackBinder) BindMoveMyBlockPacksByParentSubShelfIds(controllerFunc
 	}
 }
 
-func (b *BlockPackBinder) BindRestoreMyBlockPackById(controllerFunc apitransport.ControllerFunc[*blockpacksdto.RestoreMyBlockPackByIdRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindRestoreMyBlockPackById(controllerFunc controllers.Func[*blockpacksdto.RestoreMyBlockPackByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto blockpacksdto.RestoreMyBlockPackByIdRequestDto
 
@@ -294,7 +294,7 @@ func (b *BlockPackBinder) BindRestoreMyBlockPackById(controllerFunc apitransport
 	}
 }
 
-func (b *BlockPackBinder) BindRestoreMyBlockPacksByIds(controllerFunc apitransport.ControllerFunc[*blockpacksdto.RestoreMyBlockPacksByIdsRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindRestoreMyBlockPacksByIds(controllerFunc controllers.Func[*blockpacksdto.RestoreMyBlockPacksByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto blockpacksdto.RestoreMyBlockPacksByIdsRequestDto
 
@@ -310,7 +310,7 @@ func (b *BlockPackBinder) BindRestoreMyBlockPacksByIds(controllerFunc apitranspo
 	}
 }
 
-func (b *BlockPackBinder) BindDeleteMyBlockPackById(controllerFunc apitransport.ControllerFunc[*blockpacksdto.DeleteMyBlockPackByIdRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindDeleteMyBlockPackById(controllerFunc controllers.Func[*blockpacksdto.DeleteMyBlockPackByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto blockpacksdto.DeleteMyBlockPackByIdRequestDto
 
@@ -327,7 +327,7 @@ func (b *BlockPackBinder) BindDeleteMyBlockPackById(controllerFunc apitransport.
 	}
 }
 
-func (b *BlockPackBinder) BindDeleteMyBlockPacksByIds(controllerFunc apitransport.ControllerFunc[*blockpacksdto.DeleteMyBlockPacksByIdsRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindDeleteMyBlockPacksByIds(controllerFunc controllers.Func[*blockpacksdto.DeleteMyBlockPacksByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var requestDto blockpacksdto.DeleteMyBlockPacksByIdsRequestDto
 

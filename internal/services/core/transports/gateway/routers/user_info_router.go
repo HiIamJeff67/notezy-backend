@@ -3,7 +3,7 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	userinfosdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/user-infos"
+	userinfosdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/user-infos"
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/services/core/transports/gateway/endpoints"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/services/core/transports/gateway/middlewares"
 )

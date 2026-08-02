@@ -11,7 +11,7 @@ import (
 	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas/enums"
+	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	sharedtokens "github.com/HiIamJeff67/notezy-backend/internal/shared/tokens"
 	"github.com/gin-gonic/gin"
 )

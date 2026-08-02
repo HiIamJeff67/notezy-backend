@@ -11,9 +11,9 @@ import (
 	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
-	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data"
-	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/repositories"
+	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
+	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
 	sharedtokens "github.com/HiIamJeff67/notezy-backend/internal/shared/tokens"
 	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
 )
@@ -169,9 +169,9 @@ func AuthMiddleware(userRepository repositories.UserRepositoryInterface) gin.Han
 			return
 		}
 
-		ctx.Header(core.AuthRefreshedHeader, "true")
-		ctx.Header(core.SetAccessTokenHeader, *newAccessToken)
-		ctx.Header(core.SetCSRFTokenHeader, *newCSRFToken)
+		ctx.Header(core.AuthRefreshed.String(), "true")
+		ctx.Header(core.SetAccessToken.String(), *newAccessToken)
+		ctx.Header(core.SetCSRFToken.String(), *newCSRFToken)
 		if !setActorUserId(ctx, userRepository, userPublicId) {
 			return
 		}

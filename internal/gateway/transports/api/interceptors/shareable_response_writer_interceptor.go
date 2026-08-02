@@ -5,7 +5,7 @@ import (
 	"github.com/google/uuid"
 
 	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/gateway/ratelimit"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/gateway/responsewriter"
+	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
 )
 
 // use the reusable buffer pool for interceptors which required multiple response writers

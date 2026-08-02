@@ -6,10 +6,11 @@ This directory owns GraphQL source shared with client code generation:
 - `fragments/` and `queries/` contain reusable client operation source.
 - `operations.go` contains private Gateway-to-Core operation names. GraphQL
   RequestDto/ResponseDto are owned by the matching
-  `contracts/api/v1/<route-domain>/search.go` package.
+  `contracts/gateway/v1/api/<route-domain>/search.go` package.
 
 The Go server generated artifacts, generated models, and scalar implementation
-belong to `internal/platform/graphql/`. Gateway GraphQL execution, resolvers, and
+belong to `contracts/graphql/generated/`, `contracts/graphql/models/`, and
+`contracts/graphql/scalars/`. Gateway GraphQL execution, resolvers, and
 dataloaders belong to `internal/gateway/transports/api/graphql/`; they access Core
 only through `internal/gateway/transports/core/adapters/CoreClient`. Each Core
 domain endpoint/router owns its own GraphQL operation; a shared GraphQLEndpoint

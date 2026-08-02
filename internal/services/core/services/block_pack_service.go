@@ -9,22 +9,22 @@ import (
 	pg "github.com/lib/pq"
 	"gorm.io/gorm"
 
-	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/block-packs"
-	caches "github.com/HiIamJeff67/notezy-backend/internal/caches"
+	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/block-packs"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/internal/platform/graphql/models"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas"
-	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/scopes"
-	blockpacksql "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/sqls/block_pack"
+	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
+	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/scopes"
+	blockpacksql "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/sqls/block_pack"
 	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/core/exceptions"
 	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
 	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
 	searchcursor "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/searchcursor"
+	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/shared/realtimelease"
 	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
 )
 
@@ -53,7 +53,7 @@ type BlockPackService struct {
 	blockPackScope      scopes.BlockPackScopeInterface
 	subShelfRepository  repositories.SubShelfRepositoryInterface
 	blockPackRepository repositories.BlockPackRepositoryInterface
-	realtimeLeaseStore  *caches.RealtimeLeaseStore
+	realtimeLeaseStore  *realtimelease.RealtimeLeaseStore
 }
 
 func NewBlockPackService(
@@ -61,10 +61,10 @@ func NewBlockPackService(
 	blockPackScope scopes.BlockPackScopeInterface,
 	subShelfRepository repositories.SubShelfRepositoryInterface,
 	blockPackRepository repositories.BlockPackRepositoryInterface,
-	realtimeLeaseStore *caches.RealtimeLeaseStore,
+	realtimeLeaseStore *realtimelease.RealtimeLeaseStore,
 ) BlockPackServiceInterface {
 	if realtimeLeaseStore == nil {
-		realtimeLeaseStore = caches.NewRealtimeLeaseStore(caches.RedisClientMap)
+		realtimeLeaseStore = realtimelease.NewRealtimeLeaseStore()
 	}
 	return &BlockPackService{
 		db:                  db,

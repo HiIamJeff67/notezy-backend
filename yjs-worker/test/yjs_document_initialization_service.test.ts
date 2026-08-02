@@ -3,9 +3,9 @@ import test from "node:test";
 
 import * as Y from "yjs";
 
-import { BlockPackProjector } from "../src/realtime/block_pack_projector.js";
-import { YjsDocumentInitializationService } from "../src/services/yjs_document_initialization_service.js";
-import type { NotezyBlock } from "../src/types/blocknote_schema.js";
+import { BlockPackProjector } from "../realtime/block_pack_projector.js";
+import { YjsDocumentInitializationService } from "../services/yjs_document_initialization_service.js";
+import type { NotezyBlock } from "../types/blocknote_schema.js";
 
 test("YjsDocumentInitializationService preserves initial BlockNote content", () => {
   const blocks: NotezyBlock[] = [

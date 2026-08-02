@@ -38,6 +38,15 @@ func (m *ClientManager) Clients() map[int]*redisclient.Client {
 	return m.clients
 }
 
+func (m *ClientManager) Client(databaseNumber int) (*redisclient.Client, bool) {
+	m.clientMapMutex.Lock()
+	defer m.clientMapMutex.Unlock()
+
+	client, exists := m.clients[databaseNumber]
+
+	return client, exists
+}
+
 /* ============================== Connection Methods ============================== */
 
 func (m *ClientManager) ConnectAll(serverRanges ...types.Range[int, int]) error {

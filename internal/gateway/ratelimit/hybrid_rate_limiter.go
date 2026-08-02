@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	rate "golang.org/x/time/rate"
 
-	caches "github.com/HiIamJeff67/notezy-backend/internal/caches"
-	cacheinputs "github.com/HiIamJeff67/notezy-backend/internal/caches/inputs"
+	ratelimitrecord "github.com/HiIamJeff67/notezy-backend/internal/gateway/data/cache/ratelimitrecord"
+	cacheinputs "github.com/HiIamJeff67/notezy-backend/internal/gateway/data/cache/ratelimitrecord/inputs"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
 	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
@@ -37,6 +37,7 @@ type HybridRateLimiter struct {
 
 	BackendServerName   types.BackendServerName
 	IsAuthorizedLimiter bool
+	cacheClient         *ratelimitrecord.RateLimitRecordCacheClient
 }
 
 func NewHybridRateLimiter(
@@ -60,6 +61,7 @@ func NewHybridRateLimiter(
 		stopChan:            make(chan struct{}),
 		BackendServerName:   backendServerName,
 		IsAuthorizedLimiter: isAuthorizedLimiter,
+		cacheClient:         ratelimitrecord.NewRateLimitRecordCacheClient(),
 	}
 
 	// initially calling syncLoop() to start syncing periodically
@@ -132,7 +134,7 @@ func (hrl *HybridRateLimiter) batchSync() {
 		})
 	}
 
-	if err := caches.RateLimitRecordStore.BatchSynchronize(inputs, hrl.BackendServerName); err != nil {
+	if err := hrl.cacheClient.BatchSynchronize(inputs, hrl.BackendServerName); err != nil {
 		logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprintf("Failed to batch synchronize rate limits to Redis: %v", err))
 		hrl.reappendPendingTasks(fetchedPendingTasks)
 	} else if len(inputs) > 0 {
@@ -158,7 +160,7 @@ func (hrl *HybridRateLimiter) checkBucketLimitByFingerprint(fingerprint string, 
 	var totalTokensUsed int32 = 0
 
 	for _, backendServerName := range types.AllBackendServerNames {
-		rateLimitRecordCache, exception := caches.RateLimitRecordStore.Get(fingerprint, backendServerName)
+		rateLimitRecordCache, exception := hrl.cacheClient.Get(fingerprint, backendServerName)
 		if exception != nil {
 			continue
 		}
@@ -207,7 +209,7 @@ func (hrl *HybridRateLimiter) checkBucketLimitByUserId(userId uuid.UUID, n int32
 	var totalTokensUsed int32 = 0
 
 	for _, backendServerName := range types.AllBackendServerNames {
-		rateLimitRecordCache, exception := caches.RateLimitRecordStore.Get(userId.String(), backendServerName)
+		rateLimitRecordCache, exception := hrl.cacheClient.Get(userId.String(), backendServerName)
 		if exception != nil {
 			continue
 		}

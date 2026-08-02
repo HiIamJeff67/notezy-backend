@@ -5,18 +5,14 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	observability "github.com/HiIamJeff67/notezy-backend/internal/platform/observability"
 	coretransport "github.com/HiIamJeff67/notezy-backend/internal/services/email/transports/core"
 )
 
-func Start() {
+func Start() func() {
 	shutdownObservability := observability.Initialize(context.Background())
-	defer shutdownObservability()
-	defer NotezyEmailWorkerManager.Shutdown()
 
 	listenAddress := os.Getenv("EMAIL_LISTEN_ADDRESS")
 	if listenAddress == "" {
@@ -24,6 +20,7 @@ func Start() {
 	}
 	listener, err := net.Listen("tcp", listenAddress)
 	if err != nil {
+		shutdownObservability()
 		panic(err)
 	}
 
@@ -34,28 +31,19 @@ func Start() {
 			SendSecurityAlertEmail: AsyncSendSecurityAlertEmail,
 		}),
 	}
-	ctx, stop := signal.NotifyContext(
-		context.Background(),
-		os.Interrupt,
-		syscall.SIGTERM,
-	)
-	defer stop()
-
-	serverErr := make(chan error, 1)
 	go func() {
-		serverErr <- server.Serve(listener)
+		if err := server.Serve(listener); err != nil && err != http.ErrServerClosed {
+			panic(err)
+		}
 	}()
 
-	select {
-	case <-ctx.Done():
+	return func() {
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			panic(err)
 		}
-	case err := <-serverErr:
-		if err != nil && err != http.ErrServerClosed {
-			panic(err)
-		}
+		NotezyEmailWorkerManager.Shutdown()
+		shutdownObservability()
 	}
 }

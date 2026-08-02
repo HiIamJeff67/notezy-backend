@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/blocks"
+	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/blocks"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas/enums"
 )
 

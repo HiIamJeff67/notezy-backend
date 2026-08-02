@@ -48,7 +48,6 @@ func configureDevelopmentUserAccountRoutes(router *gin.RouterGroup, coreClient *
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("updateMyAccount"),
 					middlewares.ApplyMeterMiddleware("server.requests.userAccount.updateMyAccount"),
-					middlewares.CSRFMiddleware(),
 				},
 				defaultMiddlewares,
 				userAccountBinder.BindUpdateMyAccount(userAccountController.UpdateMyAccount),

@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/block-packs"
 	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
+	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/block-packs"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
 )
 

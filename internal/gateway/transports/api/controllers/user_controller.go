@@ -4,8 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 
-	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/users"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/gateway/responsewriter"
+	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/users"
+	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
 )
 

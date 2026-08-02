@@ -9,8 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ConfigureTestGraphQLRoutes() {
-	graphqlRoutes := TestRouterGroup.Group("/graphql")
+func ConfigureTestGraphQLRoutes(routerGroup *gin.RouterGroup) {
+	graphqlRoutes := routerGroup.Group("/graphql")
 
 	graphqlRoutes.Use(
 		middlewares.AuthMiddleware(),

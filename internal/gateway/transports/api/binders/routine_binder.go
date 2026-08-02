@@ -8,45 +8,45 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	routinesdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/routines"
+	routinesdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/routines"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/gateway/responsewriter"
-	apitransport "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas/enums"
+	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
+	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
+	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	sharedtypes "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
 )
 
 type RoutineBinderInterface interface {
-	BindGetMyRoutineById(controllerFunc apitransport.ControllerFunc[*routinesdto.GetMyRoutineByIdRequestDto]) gin.HandlerFunc
-	BindGetMyRoutinesByStationId(controllerFunc apitransport.ControllerFunc[*routinesdto.GetMyRoutinesByStationIdRequestDto]) gin.HandlerFunc
-	BindGetAllMyRoutinesByTimeRange(controllerFunc apitransport.ControllerFunc[*routinesdto.GetAllMyRoutinesByTimeRangeRequestDto]) gin.HandlerFunc
-	BindCreateRoutineByStationId(controllerFunc apitransport.ControllerFunc[*routinesdto.CreateRoutineByStationIdRequestDto]) gin.HandlerFunc
-	BindCreateRoutinesByStationIds(controllerFunc apitransport.ControllerFunc[*routinesdto.CreateRoutinesByStationIdsRequestDto]) gin.HandlerFunc
-	BindUpdateMyRoutineById(controllerFunc apitransport.ControllerFunc[*routinesdto.UpdateMyRoutineByIdRequestDto]) gin.HandlerFunc
-	BindUpdateMyRoutinesByIds(controllerFunc apitransport.ControllerFunc[*routinesdto.UpdateMyRoutinesByIdsRequestDto]) gin.HandlerFunc
-	BindLinkRoutineTagById(controllerFunc apitransport.ControllerFunc[*routinesdto.LinkRoutineTagByIdRequestDto]) gin.HandlerFunc
-	BindLinkRoutineTagsByIds(controllerFunc apitransport.ControllerFunc[*routinesdto.LinkRoutineTagsByIdsRequestDto]) gin.HandlerFunc
-	BindLinkRoutineItemById(controllerFunc apitransport.ControllerFunc[*routinesdto.LinkRoutineItemByIdRequestDto]) gin.HandlerFunc
-	BindLinkRoutineItemsByIds(controllerFunc apitransport.ControllerFunc[*routinesdto.LinkRoutineItemsByIdsRequestDto]) gin.HandlerFunc
-	BindRestoreMyRoutineById(controllerFunc apitransport.ControllerFunc[*routinesdto.RestoreMyRoutineByIdRequestDto]) gin.HandlerFunc
-	BindRestoreMyRoutinesByIds(controllerFunc apitransport.ControllerFunc[*routinesdto.RestoreMyRoutinesByIdsRequestDto]) gin.HandlerFunc
-	BindDeleteMyRoutineById(controllerFunc apitransport.ControllerFunc[*routinesdto.DeleteMyRoutineByIdRequestDto]) gin.HandlerFunc
-	BindDeleteMyRoutinesByIds(controllerFunc apitransport.ControllerFunc[*routinesdto.DeleteMyRoutinesByIdsRequestDto]) gin.HandlerFunc
-	BindHardDeleteMyRoutineById(controllerFunc apitransport.ControllerFunc[*routinesdto.HardDeleteMyRoutineByIdRequestDto]) gin.HandlerFunc
-	BindHardDeleteMyRoutinesByIds(controllerFunc apitransport.ControllerFunc[*routinesdto.HardDeleteMyRoutinesByIdsRequestDto]) gin.HandlerFunc
+	BindGetMyRoutineById(controllerFunc controllers.Func[*routinesdto.GetMyRoutineByIdRequestDto]) gin.HandlerFunc
+	BindGetMyRoutinesByStationId(controllerFunc controllers.Func[*routinesdto.GetMyRoutinesByStationIdRequestDto]) gin.HandlerFunc
+	BindGetAllMyRoutinesByTimeRange(controllerFunc controllers.Func[*routinesdto.GetAllMyRoutinesByTimeRangeRequestDto]) gin.HandlerFunc
+	BindCreateRoutineByStationId(controllerFunc controllers.Func[*routinesdto.CreateRoutineByStationIdRequestDto]) gin.HandlerFunc
+	BindCreateRoutinesByStationIds(controllerFunc controllers.Func[*routinesdto.CreateRoutinesByStationIdsRequestDto]) gin.HandlerFunc
+	BindUpdateMyRoutineById(controllerFunc controllers.Func[*routinesdto.UpdateMyRoutineByIdRequestDto]) gin.HandlerFunc
+	BindUpdateMyRoutinesByIds(controllerFunc controllers.Func[*routinesdto.UpdateMyRoutinesByIdsRequestDto]) gin.HandlerFunc
+	BindLinkRoutineTagById(controllerFunc controllers.Func[*routinesdto.LinkRoutineTagByIdRequestDto]) gin.HandlerFunc
+	BindLinkRoutineTagsByIds(controllerFunc controllers.Func[*routinesdto.LinkRoutineTagsByIdsRequestDto]) gin.HandlerFunc
+	BindLinkRoutineItemById(controllerFunc controllers.Func[*routinesdto.LinkRoutineItemByIdRequestDto]) gin.HandlerFunc
+	BindLinkRoutineItemsByIds(controllerFunc controllers.Func[*routinesdto.LinkRoutineItemsByIdsRequestDto]) gin.HandlerFunc
+	BindRestoreMyRoutineById(controllerFunc controllers.Func[*routinesdto.RestoreMyRoutineByIdRequestDto]) gin.HandlerFunc
+	BindRestoreMyRoutinesByIds(controllerFunc controllers.Func[*routinesdto.RestoreMyRoutinesByIdsRequestDto]) gin.HandlerFunc
+	BindDeleteMyRoutineById(controllerFunc controllers.Func[*routinesdto.DeleteMyRoutineByIdRequestDto]) gin.HandlerFunc
+	BindDeleteMyRoutinesByIds(controllerFunc controllers.Func[*routinesdto.DeleteMyRoutinesByIdsRequestDto]) gin.HandlerFunc
+	BindHardDeleteMyRoutineById(controllerFunc controllers.Func[*routinesdto.HardDeleteMyRoutineByIdRequestDto]) gin.HandlerFunc
+	BindHardDeleteMyRoutinesByIds(controllerFunc controllers.Func[*routinesdto.HardDeleteMyRoutinesByIdsRequestDto]) gin.HandlerFunc
 
 	/* ============================== Visualization Methods ============================== */
-	BindVisualizeMyRoutineStatusCount(controllerFunc apitransport.ControllerFunc[*routinesdto.VisualizeMyRoutineStatusCountRequestDto]) gin.HandlerFunc
-	BindVisualizeMyRoutinePeriodCount(controllerFunc apitransport.ControllerFunc[*routinesdto.VisualizeMyRoutinePeriodCountRequestDto]) gin.HandlerFunc
-	BindVisualizeMyRoutineScheduledStartAtCount(controllerFunc apitransport.ControllerFunc[*routinesdto.VisualizeMyRoutineScheduledStartAtCountRequestDto]) gin.HandlerFunc
-	BindVisualizeMyRoutineScheduledEndAtCount(controllerFunc apitransport.ControllerFunc[*routinesdto.VisualizeMyRoutineScheduledEndAtCountRequestDto]) gin.HandlerFunc
+	BindVisualizeMyRoutineStatusCount(controllerFunc controllers.Func[*routinesdto.VisualizeMyRoutineStatusCountRequestDto]) gin.HandlerFunc
+	BindVisualizeMyRoutinePeriodCount(controllerFunc controllers.Func[*routinesdto.VisualizeMyRoutinePeriodCountRequestDto]) gin.HandlerFunc
+	BindVisualizeMyRoutineScheduledStartAtCount(controllerFunc controllers.Func[*routinesdto.VisualizeMyRoutineScheduledStartAtCountRequestDto]) gin.HandlerFunc
+	BindVisualizeMyRoutineScheduledEndAtCount(controllerFunc controllers.Func[*routinesdto.VisualizeMyRoutineScheduledEndAtCountRequestDto]) gin.HandlerFunc
 }
 
 type RoutineBinder struct{}
 
 func NewRoutineBinder() RoutineBinderInterface { return &RoutineBinder{} }
 
-func bindRoutineJSON[T any](ctx *gin.Context, requestDto *T, body any, controllerFunc apitransport.ControllerFunc[*T]) {
+func bindRoutineJSON[T any](ctx *gin.Context, requestDto *T, body any, controllerFunc controllers.Func[*T]) {
 	if err := ctx.ShouldBindJSON(body); err != nil {
 		responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Routine").WithOrigin(err), ctx)
 		return
@@ -111,7 +111,7 @@ func parseRoutineUUIDs(ctx *gin.Context, name string) ([]uuid.UUID, bool) {
 	return ids, true
 }
 
-func (b *RoutineBinder) BindGetMyRoutineById(controllerFunc apitransport.ControllerFunc[*routinesdto.GetMyRoutineByIdRequestDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindGetMyRoutineById(controllerFunc controllers.Func[*routinesdto.GetMyRoutineByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinesdto.GetMyRoutineByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -130,7 +130,7 @@ func (b *RoutineBinder) BindGetMyRoutineById(controllerFunc apitransport.Control
 	}
 }
 
-func (b *RoutineBinder) BindGetMyRoutinesByStationId(controllerFunc apitransport.ControllerFunc[*routinesdto.GetMyRoutinesByStationIdRequestDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindGetMyRoutinesByStationId(controllerFunc controllers.Func[*routinesdto.GetMyRoutinesByStationIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinesdto.GetMyRoutinesByStationIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -149,7 +149,7 @@ func (b *RoutineBinder) BindGetMyRoutinesByStationId(controllerFunc apitransport
 	}
 }
 
-func (b *RoutineBinder) BindGetAllMyRoutinesByTimeRange(controllerFunc apitransport.ControllerFunc[*routinesdto.GetAllMyRoutinesByTimeRangeRequestDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindGetAllMyRoutinesByTimeRange(controllerFunc controllers.Func[*routinesdto.GetAllMyRoutinesByTimeRangeRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinesdto.GetAllMyRoutinesByTimeRangeRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -175,7 +175,7 @@ func (b *RoutineBinder) BindGetAllMyRoutinesByTimeRange(controllerFunc apitransp
 	}
 }
 
-func (b *RoutineBinder) BindCreateRoutineByStationId(controllerFunc apitransport.ControllerFunc[*routinesdto.CreateRoutineByStationIdRequestDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindCreateRoutineByStationId(controllerFunc controllers.Func[*routinesdto.CreateRoutineByStationIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinesdto.CreateRoutineByStationIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -189,7 +189,7 @@ func (b *RoutineBinder) BindCreateRoutineByStationId(controllerFunc apitransport
 	}
 }
 
-func (b *RoutineBinder) BindCreateRoutinesByStationIds(controllerFunc apitransport.ControllerFunc[*routinesdto.CreateRoutinesByStationIdsRequestDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindCreateRoutinesByStationIds(controllerFunc controllers.Func[*routinesdto.CreateRoutinesByStationIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinesdto.CreateRoutinesByStationIdsRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -198,7 +198,7 @@ func (b *RoutineBinder) BindCreateRoutinesByStationIds(controllerFunc apitranspo
 	}
 }
 
-func (b *RoutineBinder) BindUpdateMyRoutineById(controllerFunc apitransport.ControllerFunc[*routinesdto.UpdateMyRoutineByIdRequestDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindUpdateMyRoutineById(controllerFunc controllers.Func[*routinesdto.UpdateMyRoutineByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinesdto.UpdateMyRoutineByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -212,7 +212,7 @@ func (b *RoutineBinder) BindUpdateMyRoutineById(controllerFunc apitransport.Cont
 	}
 }
 
-func (b *RoutineBinder) BindUpdateMyRoutinesByIds(controllerFunc apitransport.ControllerFunc[*routinesdto.UpdateMyRoutinesByIdsRequestDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindUpdateMyRoutinesByIds(controllerFunc controllers.Func[*routinesdto.UpdateMyRoutinesByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinesdto.UpdateMyRoutinesByIdsRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -221,7 +221,7 @@ func (b *RoutineBinder) BindUpdateMyRoutinesByIds(controllerFunc apitransport.Co
 	}
 }
 
-func (b *RoutineBinder) BindLinkRoutineTagById(controllerFunc apitransport.ControllerFunc[*routinesdto.LinkRoutineTagByIdRequestDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindLinkRoutineTagById(controllerFunc controllers.Func[*routinesdto.LinkRoutineTagByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinesdto.LinkRoutineTagByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -241,7 +241,7 @@ func (b *RoutineBinder) BindLinkRoutineTagById(controllerFunc apitransport.Contr
 	}
 }
 
-func (b *RoutineBinder) BindLinkRoutineTagsByIds(controllerFunc apitransport.ControllerFunc[*routinesdto.LinkRoutineTagsByIdsRequestDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindLinkRoutineTagsByIds(controllerFunc controllers.Func[*routinesdto.LinkRoutineTagsByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinesdto.LinkRoutineTagsByIdsRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -250,7 +250,7 @@ func (b *RoutineBinder) BindLinkRoutineTagsByIds(controllerFunc apitransport.Con
 	}
 }
 
-func (b *RoutineBinder) BindLinkRoutineItemById(controllerFunc apitransport.ControllerFunc[*routinesdto.LinkRoutineItemByIdRequestDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindLinkRoutineItemById(controllerFunc controllers.Func[*routinesdto.LinkRoutineItemByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinesdto.LinkRoutineItemByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -271,7 +271,7 @@ func (b *RoutineBinder) BindLinkRoutineItemById(controllerFunc apitransport.Cont
 	}
 }
 
-func (b *RoutineBinder) BindLinkRoutineItemsByIds(controllerFunc apitransport.ControllerFunc[*routinesdto.LinkRoutineItemsByIdsRequestDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindLinkRoutineItemsByIds(controllerFunc controllers.Func[*routinesdto.LinkRoutineItemsByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinesdto.LinkRoutineItemsByIdsRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -280,7 +280,7 @@ func (b *RoutineBinder) BindLinkRoutineItemsByIds(controllerFunc apitransport.Co
 	}
 }
 
-func (b *RoutineBinder) BindRestoreMyRoutineById(controllerFunc apitransport.ControllerFunc[*routinesdto.RestoreMyRoutineByIdRequestDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindRestoreMyRoutineById(controllerFunc controllers.Func[*routinesdto.RestoreMyRoutineByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinesdto.RestoreMyRoutineByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -294,7 +294,7 @@ func (b *RoutineBinder) BindRestoreMyRoutineById(controllerFunc apitransport.Con
 	}
 }
 
-func (b *RoutineBinder) BindRestoreMyRoutinesByIds(controllerFunc apitransport.ControllerFunc[*routinesdto.RestoreMyRoutinesByIdsRequestDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindRestoreMyRoutinesByIds(controllerFunc controllers.Func[*routinesdto.RestoreMyRoutinesByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinesdto.RestoreMyRoutinesByIdsRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -303,7 +303,7 @@ func (b *RoutineBinder) BindRestoreMyRoutinesByIds(controllerFunc apitransport.C
 	}
 }
 
-func (b *RoutineBinder) BindDeleteMyRoutineById(controllerFunc apitransport.ControllerFunc[*routinesdto.DeleteMyRoutineByIdRequestDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindDeleteMyRoutineById(controllerFunc controllers.Func[*routinesdto.DeleteMyRoutineByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinesdto.DeleteMyRoutineByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -317,7 +317,7 @@ func (b *RoutineBinder) BindDeleteMyRoutineById(controllerFunc apitransport.Cont
 	}
 }
 
-func (b *RoutineBinder) BindDeleteMyRoutinesByIds(controllerFunc apitransport.ControllerFunc[*routinesdto.DeleteMyRoutinesByIdsRequestDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindDeleteMyRoutinesByIds(controllerFunc controllers.Func[*routinesdto.DeleteMyRoutinesByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinesdto.DeleteMyRoutinesByIdsRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -326,7 +326,7 @@ func (b *RoutineBinder) BindDeleteMyRoutinesByIds(controllerFunc apitransport.Co
 	}
 }
 
-func (b *RoutineBinder) BindHardDeleteMyRoutineById(controllerFunc apitransport.ControllerFunc[*routinesdto.HardDeleteMyRoutineByIdRequestDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindHardDeleteMyRoutineById(controllerFunc controllers.Func[*routinesdto.HardDeleteMyRoutineByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinesdto.HardDeleteMyRoutineByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -340,7 +340,7 @@ func (b *RoutineBinder) BindHardDeleteMyRoutineById(controllerFunc apitransport.
 	}
 }
 
-func (b *RoutineBinder) BindHardDeleteMyRoutinesByIds(controllerFunc apitransport.ControllerFunc[*routinesdto.HardDeleteMyRoutinesByIdsRequestDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindHardDeleteMyRoutinesByIds(controllerFunc controllers.Func[*routinesdto.HardDeleteMyRoutinesByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinesdto.HardDeleteMyRoutinesByIdsRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -349,7 +349,7 @@ func (b *RoutineBinder) BindHardDeleteMyRoutinesByIds(controllerFunc apitranspor
 	}
 }
 
-func (b *RoutineBinder) BindVisualizeMyRoutineStatusCount(controllerFunc apitransport.ControllerFunc[*routinesdto.VisualizeMyRoutineStatusCountRequestDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindVisualizeMyRoutineStatusCount(controllerFunc controllers.Func[*routinesdto.VisualizeMyRoutineStatusCountRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinesdto.VisualizeMyRoutineStatusCountRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -363,7 +363,7 @@ func (b *RoutineBinder) BindVisualizeMyRoutineStatusCount(controllerFunc apitran
 	}
 }
 
-func (b *RoutineBinder) BindVisualizeMyRoutinePeriodCount(controllerFunc apitransport.ControllerFunc[*routinesdto.VisualizeMyRoutinePeriodCountRequestDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindVisualizeMyRoutinePeriodCount(controllerFunc controllers.Func[*routinesdto.VisualizeMyRoutinePeriodCountRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinesdto.VisualizeMyRoutinePeriodCountRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -377,7 +377,7 @@ func (b *RoutineBinder) BindVisualizeMyRoutinePeriodCount(controllerFunc apitran
 	}
 }
 
-func (b *RoutineBinder) BindVisualizeMyRoutineScheduledStartAtCount(controllerFunc apitransport.ControllerFunc[*routinesdto.VisualizeMyRoutineScheduledStartAtCountRequestDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindVisualizeMyRoutineScheduledStartAtCount(controllerFunc controllers.Func[*routinesdto.VisualizeMyRoutineScheduledStartAtCountRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinesdto.VisualizeMyRoutineScheduledStartAtCountRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -400,7 +400,7 @@ func (b *RoutineBinder) BindVisualizeMyRoutineScheduledStartAtCount(controllerFu
 	}
 }
 
-func (b *RoutineBinder) BindVisualizeMyRoutineScheduledEndAtCount(controllerFunc apitransport.ControllerFunc[*routinesdto.VisualizeMyRoutineScheduledEndAtCountRequestDto]) gin.HandlerFunc {
+func (b *RoutineBinder) BindVisualizeMyRoutineScheduledEndAtCount(controllerFunc controllers.Func[*routinesdto.VisualizeMyRoutineScheduledEndAtCountRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &routinesdto.VisualizeMyRoutineScheduledEndAtCountRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")

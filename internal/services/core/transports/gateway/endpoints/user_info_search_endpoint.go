@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	userinfosdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/user-infos"
 	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
+	userinfosdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/user-infos"
 )
 
 func (t *UserInfoEndpoint) LoadUserInfos(ctx *gin.Context) {

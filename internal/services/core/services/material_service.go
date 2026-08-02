@@ -11,23 +11,23 @@ import (
 	pg "github.com/lib/pq"
 	"gorm.io/gorm"
 
-	materialsdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/materials"
+	materialsdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/materials"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/internal/platform/graphql/models"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas/enums"
-	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/scopes"
-	materialsql "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/sqls/material"
+	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
+	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/scopes"
+	materialsql "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/sqls/material"
+	storage "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/storage"
 	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/core/exceptions"
 	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
 	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
 	searchcursor "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/searchcursor"
-	storages "github.com/HiIamJeff67/notezy-backend/internal/shared/storage"
 	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
 )
 
@@ -51,7 +51,7 @@ type MaterialServiceInterface interface {
 
 type MaterialService struct {
 	db                 *gorm.DB
-	storage            storages.StorageInterface
+	storage            storage.StorageInterface
 	materialScope      scopes.MaterialScopeInterface
 	subShelfRepository repositories.SubShelfRepositoryInterface
 	materialRepository repositories.MaterialRepositoryInterface
@@ -59,7 +59,7 @@ type MaterialService struct {
 
 func NewMaterialService(
 	db *gorm.DB,
-	storage storages.StorageInterface,
+	storage storage.StorageInterface,
 	materialScope scopes.MaterialScopeInterface,
 	subShelfRepository repositories.SubShelfRepositoryInterface,
 	materialRepository repositories.MaterialRepositoryInterface,

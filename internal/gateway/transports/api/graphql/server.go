@@ -9,7 +9,7 @@ import (
 
 	resolvers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/graphql/resolvers"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	generated "github.com/HiIamJeff67/notezy-backend/internal/platform/graphql/generated"
+	generated "github.com/HiIamJeff67/notezy-backend/contracts/graphql/generated"
 	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
 )
 

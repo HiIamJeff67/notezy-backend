@@ -8,10 +8,10 @@ import (
 	"github.com/gin-gonic/gin"
 
 	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
-	caches "github.com/HiIamJeff67/notezy-backend/internal/caches"
-	cacheinputs "github.com/HiIamJeff67/notezy-backend/internal/caches/inputs"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
+	userdata "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/cache/userdata"
+	cacheinputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/cache/userdata/inputs"
 	sharedtokens "github.com/HiIamJeff67/notezy-backend/internal/shared/tokens"
 	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
 )
@@ -38,7 +38,7 @@ func CSRFMiddleware() gin.HandlerFunc {
 			})
 			return
 		}
-		userDataCache, exception := caches.UserDataStore.Get(actorUserName)
+		userDataCache, exception := userdata.NewUserDataCacheClient().Get(actorUserName)
 		if exception != nil {
 			ctx.AbortWithStatusJSON(exception.HTTPStatusCode(), core.Response[struct{}]{
 				Version:   core.Version,
@@ -69,7 +69,7 @@ func CSRFMiddleware() gin.HandlerFunc {
 				})
 				return
 			}
-			if exception := caches.UserDataStore.Update(actorUserName, cacheinputs.UpdateUserDataCacheInput{CSRFToken: newCSRFToken}); exception != nil {
+			if exception := userdata.NewUserDataCacheClient().Update(actorUserName, cacheinputs.UpdateUserDataCacheInput{CSRFToken: newCSRFToken}); exception != nil {
 				ctx.AbortWithStatusJSON(exception.HTTPStatusCode(), core.Response[struct{}]{
 					Version:   core.Version,
 					Metadata:  core.ResponseMetadata{RequestId: ctx.GetHeader("X-Request-Id"), RespondedAt: time.Now()},
@@ -78,11 +78,11 @@ func CSRFMiddleware() gin.HandlerFunc {
 				})
 				return
 			}
-			ctx.Header(core.AuthRefreshedHeader, "true")
+			ctx.Header(core.AuthRefreshed.String(), "true")
 			if accessToken, accessTokenExists := cookieValue(ctx, types.ValidCookieName_AccessToken.String()); accessTokenExists {
-				ctx.Header(core.SetAccessTokenHeader, accessToken)
+				ctx.Header(core.SetAccessToken.String(), accessToken)
 			}
-			ctx.Header(core.SetCSRFTokenHeader, *newCSRFToken)
+			ctx.Header(core.SetCSRFToken.String(), *newCSRFToken)
 		}
 
 		ctx.Next()

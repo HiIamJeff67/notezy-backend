@@ -9,7 +9,7 @@ import (
 
 	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas/enums"
+	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
 )
 

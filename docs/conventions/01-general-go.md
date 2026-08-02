@@ -122,7 +122,7 @@ result := tx.Exec(sql, valueArgs...)
 ## 共用函式庫
 
 - 新增 helper 前，先檢查 [internal/shared/lib](../../internal/shared/lib/) 是否已有可直接使用的函式庫。已有相同責任的實作時必須重用，不能在 service/repository 複製一份。
-- 依問題選用既有 package：去重/set 使用 `internal/shared/lib/array`，游標分頁使用 `internal/shared/lib/searchcursor`，併發工作使用 `internal/shared/lib/concurrency`，佇列與堆疊使用 `internal/shared/lib/queue`、`internal/shared/lib/stack`，以及其他已存在的 blocknote、editableblock 函式庫。rate limit 與 response writer 是 Gateway 責任，使用 `internal/gateway/ratelimit` 與 `internal/gateway/responsewriter`。
+- 依問題選用既有 package：去重/set 使用 `internal/shared/lib/array`，游標分頁使用 `internal/shared/lib/searchcursor`，併發工作使用 `internal/shared/lib/concurrency`，佇列與堆疊使用 `internal/shared/lib/queue`、`internal/shared/lib/stack`，以及其他已存在的 blocknote、editableblock 函式庫。跨 runtime 的 HTTP response formatting 與 public exception rendering 使用 `internal/shared/responsewriter`；rate limit 仍由各 Gateway runtime 自己持有。
 - `internal/shared/lib` 僅放跨領域、可重用且與 application layer 無關的邏輯。它不可 import Notezy project code；必要的第三方 library 可以使用。僅由單一領域使用的商業規則留在該領域，不要為了「可能重用」移入 shared。
 - 若既有 library 接近但不完全符合需求，優先在該 library 補最小且通用的能力；若需求只屬於單一領域，使用領域內的小 helper，避免為一次性需求建立新的 shared package。
 

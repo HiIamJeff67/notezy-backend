@@ -4,16 +4,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/blocks"
+	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/blocks"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/gateway/responsewriter"
-	apitransport "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api"
+	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
+	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
 )
 
 type BlockBinderInterface interface {
-	BindGetMyBlockById(controllerFunc apitransport.ControllerFunc[*blocksdto.GetMyBlockByIdRequestDto]) gin.HandlerFunc
-	BindGetMyBlocksByIds(controllerFunc apitransport.ControllerFunc[*blocksdto.GetMyBlocksByIdsRequestDto]) gin.HandlerFunc
-	BindGetMyBlocksByBlockPackId(controllerFunc apitransport.ControllerFunc[*blocksdto.GetMyBlocksByBlockPackIdRequestDto]) gin.HandlerFunc
+	BindGetMyBlockById(controllerFunc controllers.Func[*blocksdto.GetMyBlockByIdRequestDto]) gin.HandlerFunc
+	BindGetMyBlocksByIds(controllerFunc controllers.Func[*blocksdto.GetMyBlocksByIdsRequestDto]) gin.HandlerFunc
+	BindGetMyBlocksByBlockPackId(controllerFunc controllers.Func[*blocksdto.GetMyBlocksByBlockPackIdRequestDto]) gin.HandlerFunc
 }
 
 type BlockBinder struct{}
@@ -22,7 +22,7 @@ func NewBlockBinder() BlockBinderInterface {
 	return &BlockBinder{}
 }
 
-func (b *BlockBinder) BindGetMyBlockById(controllerFunc apitransport.ControllerFunc[*blocksdto.GetMyBlockByIdRequestDto]) gin.HandlerFunc {
+func (b *BlockBinder) BindGetMyBlockById(controllerFunc controllers.Func[*blocksdto.GetMyBlockByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &blocksdto.GetMyBlockByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -38,7 +38,7 @@ func (b *BlockBinder) BindGetMyBlockById(controllerFunc apitransport.ControllerF
 	}
 }
 
-func (b *BlockBinder) BindGetMyBlocksByIds(controllerFunc apitransport.ControllerFunc[*blocksdto.GetMyBlocksByIdsRequestDto]) gin.HandlerFunc {
+func (b *BlockBinder) BindGetMyBlocksByIds(controllerFunc controllers.Func[*blocksdto.GetMyBlocksByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &blocksdto.GetMyBlocksByIdsRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
@@ -52,7 +52,7 @@ func (b *BlockBinder) BindGetMyBlocksByIds(controllerFunc apitransport.Controlle
 	}
 }
 
-func (b *BlockBinder) BindGetMyBlocksByBlockPackId(controllerFunc apitransport.ControllerFunc[*blocksdto.GetMyBlocksByBlockPackIdRequestDto]) gin.HandlerFunc {
+func (b *BlockBinder) BindGetMyBlocksByBlockPackId(controllerFunc controllers.Func[*blocksdto.GetMyBlocksByBlockPackIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &blocksdto.GetMyBlocksByBlockPackIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")

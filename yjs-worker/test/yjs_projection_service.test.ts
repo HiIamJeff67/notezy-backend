@@ -6,11 +6,11 @@ import type { Block } from "@blocknote/core";
 import { blocksToYXmlFragment } from "@blocknote/core/yjs";
 import * as Y from "yjs";
 
-import { BlockPackProjector } from "../src/realtime/block_pack_projector.js";
-import { YjsProjectionService } from "../src/services/yjs_projection_service.js";
-import { Telemetry } from "../src/telemetry.js";
-import { notezyBlockNoteEditor } from "../src/types/blocknote_schema.js";
-import { convertUUIDToBytes } from "../src/util/uuid.js";
+import { BlockPackProjector } from "../realtime/block_pack_projector.js";
+import { YjsProjectionService } from "../services/yjs_projection_service.js";
+import { Telemetry } from "../telemetry.js";
+import { notezyBlockNoteEditor } from "../types/blocknote_schema.js";
+import { convertUUIDToBytes } from "../util/uuid.js";
 
 const telemetry = Telemetry.initialize();
 

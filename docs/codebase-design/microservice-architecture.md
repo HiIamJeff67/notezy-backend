@@ -9,10 +9,16 @@ Notezy adopts a staged migration rather than a one-time domain/database split. `
 ```text
 cmd/
   api/
-    commands/
+  core/
+  realtimegateway/
+  durablejob/
+  email/
 contracts/
   graphql/
-  api/v1/                  # public client-facing DTOs
+  gateway/
+    v1/
+      api/                 # public client-facing HTTP DTOs
+      websocket/           # Gateway WebSocket-to-Core DTOs
   core/v1/                 # Core-owned internal boundary
   durablejob/v1/           # DurableJob-owned internal boundary
   email/v1/                # Email-owned internal boundary
@@ -30,14 +36,26 @@ internal/
         routes/
       core/
         adapters/
-    server/
+  realtimegateway/           # standalone WebSocket edge runtime
+    data/cache/              # Realtime leases and Realtime-specific rate limits
+    transports/
+      client/                # WebSocket application, connection/channel state, middleware
+      core/                  # temporary versioned Core HTTP client
+    workers/                 # YjsWorker connection manager
   shared/
+    responsewriter/          # shared HTTP response and public exception rendering
+    realtimelease/           # transitional Core revocation publisher only
   platform/
+    redis/                     # Redis client lifecycle + RedisCacheStore registry
   services/
     core/
+      data/
+        database/             # schemas, repositories, scopes, SQL, seeds, options
+        cache/                # Core-owned Redis caches and Lua libraries
+        storage/              # Core-owned storage implementations
     durablejob/             # independent runtime; currently shares PostgreSQL
     email/                  # independent runtime and SMTP sender
-    yjsworker/              # external worker boundary
+yjs-worker/                 # standalone TypeScript runtime; no src/ layer
 docs/
 infra/
 tests/
@@ -57,7 +75,7 @@ shared -X-> exceptions + application/framework packages
 platform -X-> domain business packages
 ```
 
-`internal/shared/lib` is portable: it may use the standard library and a necessary third-party library, but never imports a Notezy package. Shared parsers return ordinary Go `error`; application boundaries map those errors to service exceptions.
+`internal/shared/lib` is portable: it may use the standard library and a necessary third-party library, but never imports a Notezy package. `internal/shared` utility packages such as `responsewriter` may depend on application-facing packages when they provide a deliberately shared runtime utility. Shared parsers return ordinary Go `error`; application boundaries map those errors to service exceptions.
 
 ## Public and internal transport
 
@@ -84,11 +102,16 @@ methods. Delegation and Core-owned authorization middleware belongs in
 `internal/services/core/transports/gateway/middlewares/`. Tests live beside
 their endpoint, router, or middleware target.
 
-`cmd/api` is the temporary development composition root: it starts Core, waits
-until Core has connected its owned dependencies and begun accepting its private
-transport, then starts the Gateway listener. Core never starts the public Gin
-listener itself. This keeps the two server lifecycles independently movable to
-their future commands without reintroducing a Core-to-Gateway source import.
+`cmd/api`, `cmd/core`, and `cmd/realtimegateway` are independent composition
+roots. API Gateway accepts HTTP and GraphQL browser traffic only; Core owns
+PostgreSQL-backed operations and its private listener; RealtimeGateway is the
+separate WebSocket edge runtime, directly addressed by the Nginx WebSocket
+upstream. RealtimeGateway owns connection admission, ticket verification, Redis
+leases, Realtime-specific rate limits, and long-lived Go-to-YjsWorker
+connections. Its root `application.go` is the composition root: each `Start()`
+creates a new client transport application with its own connection state; no
+global singleton application instance is retained. It never constructs Core
+repositories or services.
 
 NOT-57 adds `cmd/durablejob` and `cmd/email` as independent composition roots.
 DurableJob claims and executes task records from its service-owned data package;
@@ -100,11 +123,10 @@ context cancellation or SIGTERM.
 
 The WebSocket protocol's persistence payloads and capability values are shared
 transport types under `internal/shared/types`; Core services therefore do not
-import Gateway WebSocket types. Gateway owns socket admission, tickets, leases,
-connection state, and worker forwarding. Core owns the services used for
-authorization, durable Yjs state, and block projection. The next runtime split
-replaces the in-process bridge with the existing versioned Core client while
-preserving these protocol types.
+import Gateway WebSocket types. `contracts/gateway/v1/websocket` defines the
+WebSocket-to-Core request DTOs. The WebSocket runtime owns socket admission, tickets,
+leases, connection state, and worker forwarding; Core owns authorization,
+durable Yjs state, and block projection.
 
 The Gateway extracts and cryptographically parses browser access/refresh tokens
 without querying Core data, then applies route permission policy. It sends a
@@ -118,11 +140,152 @@ inbound routes use `DelegationMiddleware` for component-only operations and
 `DelegationAuthenticatedMiddleware` when a user subject is required. Go
 `context.Context` is never serialized as an internal transport contract.
 
+The versioned Core `Response[D]` envelope carries only operation data. A
+short-lived signed BlockPack channel ticket carries the room-admission policy
+snapshot required by the WebSocket runtime. Gateway verifies that ticket and
+uses its maximum-subscriber claim directly for atomic Redis lease admission; it
+does not persist a Core-owned room-policy cache or expose internal instructions
+through the public API.
+
 ## GraphQL
 
 GraphQL follows Scheme A. The Gateway owns GraphQL execution, resolvers, and dataloaders. Resolvers call Core transports through Gateway adapters; they never access Core repositories, GORM schemas, or data packages directly.
 
-GraphQL SDL, fragments, and operation documents are source contracts in `contracts/graphql/`. Generated Go artifacts, generated models, and scalar infrastructure belong in `internal/platform/graphql/` once GraphQL is migrated. Generated files are never edited directly.
+GraphQL SDL, fragments, operation documents, generated Go artifacts, generated models, and scalar infrastructure belong in `contracts/graphql/`. Generated files are never edited directly.
+
+## Data cache ownership
+
+Redis is divided into three explicit responsibilities: platform client lifecycle,
+runtime-owned cache registration, and domain-specific cache operations.
+
+```mermaid
+flowchart TB
+  subgraph Platform["internal/platform/redis"]
+    Manager["DefaultClientManager<br/>map[int]*redis.Client"]
+    Registry["RedisCacheStores<br/>map[int]RedisCacheStore"]
+  end
+
+  subgraph Core["Core runtime"]
+    CoreStart["core.Start()"]
+    UserRegister["userdata.Register()"]
+    UserStore["UserDataCacheStore<br/>DB 0–3"]
+    UserClient["UserDataCacheClient"]
+    RealtimeRegisterCore["realtimelease.Register()"]
+  end
+
+  subgraph Gateway["Gateway runtime"]
+    GatewayStart["gateway.Start()"]
+    RateRegister["ratelimitrecord.Register()"]
+    RateStore["RateLimitRecordCacheStore<br/>DB 4–7"]
+    RateClient["RateLimitRecordCacheClient"]
+  end
+
+  subgraph WebSocket["WebSocket runtime"]
+    WebSocketStart["websocket.Start()"]
+    RealtimeRegisterWebSocket["gateway realtimelease.Register()"]
+    LeaseStore["RealtimeLeaseCacheStore<br/>realtime DB"]
+    LeaseClient["RealtimeLeaseStore"]
+  end
+
+  CoreStart --> UserRegister --> Manager
+  UserRegister --> UserStore --> Registry
+  UserClient --> Registry
+  RealtimeRegisterCore --> Manager
+
+  GatewayStart --> RateRegister --> Manager
+  RateRegister --> RateStore --> Registry
+  RateClient --> Registry
+
+  WebSocketStart --> RealtimeRegisterWebSocket --> Manager
+  RealtimeRegisterWebSocket --> LeaseStore --> Registry
+  LeaseClient --> Registry
+```
+
+### Platform lifecycle
+
+`internal/platform/redis` owns no cache domain or business policy. Its
+`ClientManager` is the sole owner of Redis connection creation, lookup, and
+shutdown for the current process. It maintains `map[int]*redis.Client`, keyed
+by Redis database number.
+
+`RedisCacheStore` is the initialization boundary for a concrete database store:
+
+```go
+type RedisCacheStore interface {
+    DatabaseNumber() int
+    Initialize(ctx context.Context) error
+}
+```
+
+`RegisterCacheStores()` first calls each store's `Initialize()` and only
+registers successful stores in `RedisCacheStores`. Consequently, a failed Lua
+library load never leaves an apparently usable cache store in the registry.
+
+Each executable has its own process-local `DefaultClientManager` and
+`RedisCacheStores` registry. Core, Gateway, and WebSocket therefore have their
+own Redis TCP connections even when they target the same Redis server and DB
+numbers.
+
+### Runtime ownership
+
+| Runtime | Registration | Redis ownership |
+|---|---|---|
+| Core | `userdata.Register()` | User data and quota cache, DB 0–3 |
+| Core | `shared/realtimelease.Register()` | Transitional revocation publishing only |
+| Gateway API | `ratelimitrecord.Register()` + `gateway/data/cache/realtimelease.Register()` | Rate-limit records and participant reads, DB 4–8 |
+| WebSocket | `gateway/data/cache/realtimelease.Register()` | Connection/channel leases, participant writes, revocation subscription |
+| DurableJob / Email | None currently | No registered Redis cache domain |
+
+`UserDataCacheStore` and `RateLimitRecordCacheStore` each own a single
+`*redis.Client` and their cache library loading. Their matching `*CacheClient`
+types own key formatting, routing, and cache operations; they retrieve a store
+from the platform registry rather than keeping a Redis client map themselves.
+
+Core quota functions are one-function-per-file under
+`internal/services/core/data/cache/userdata/libraries/`. The UserData store
+embeds and joins them into one `user_quota_library`, then performs a single
+`FUNCTION LOAD REPLACE` during `Initialize()`.
+
+### Registration and operation flow
+
+```text
+core.Start()
+  -> userdata.Register(ctx, DefaultClientManager)
+    -> ConnectAll(DB 0–3)
+    -> NewUserDataCacheStore(DB, client)
+    -> RegisterCacheStores(stores...)
+      -> store.Initialize()
+        -> FUNCTION LOAD REPLACE user_quota_library
+      -> RedisCacheStores[DB] = store
+
+Auth/User service
+  -> UserDataCacheClient.Get/Set/Update(...)
+    -> hash identifier -> database number
+    -> GetRedisCacheStore(databaseNumber)
+    -> UserDataCacheStore.redisClient
+```
+
+`internal/realtimegateway/data/cache/realtimelease/` owns the RealtimeGateway
+runtime's user
+connection and BlockPack subscriber lease lifecycle, active lease inspection,
+participant presence, and presence PubSub fanout. A Core-issued BlockPack
+channel ticket carries the signed maximum-subscriber policy snapshot;
+RealtimeGateway uses the verified claim directly during atomic admission.
+Core revalidates canonical resource/permission access at subscribe and write
+boundaries, but does not read Gateway Redis or the live subscriber count during
+ownership or plan workflows. Its Lua scripts are private to that cache domain.
+
+`internal/shared/realtimelease/` is now a narrow transition boundary for the
+temporary Core revocation publisher only. RealtimeGateway owns the lease cache
+and produces participant snapshots and deltas. The REST participant endpoint
+will request that snapshot from RealtimeGateway, then call Core only to validate
+the requester's BlockPack permission and enrich a bounded, de-duplicated
+public-ID collection after a RootShelf membership filter. Revocation moves to
+Core outbox → Kafka → RealtimeGateway consumer; neither final flow permits Core
+to read or write RealtimeGateway-owned lease/cache state.
+
+`internal/services/core/data/storage/` owns Core's storage implementation;
+Gateway does not access it directly.
 
 ## Exceptions and lifecycle
 
@@ -134,4 +297,9 @@ Gateway/service boundary. Gateway transport owns client-safe HTTP exception
 rendering. Portable shared libraries and parsers never import or return an
 application exception.
 
-Kafka, transactional outbox, consumer reliability, and cross-Gateway event fanout are Phase 3 concerns. Yjs updates, awareness, and presence remain ephemeral transport traffic and do not enter the outbox.
+Kafka, transactional outbox, consumer reliability, and cross-Gateway event
+fanout are Phase 3 concerns. Core writes a service-owned outbox record in the
+same transaction as a lifecycle mutation; WebSocket consumes the resulting
+event and only executes the already decided detach/policy action. Yjs updates,
+awareness, presence, and Redis leases remain ephemeral transport traffic and do
+not enter the outbox.

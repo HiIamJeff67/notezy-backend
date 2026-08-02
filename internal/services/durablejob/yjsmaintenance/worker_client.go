@@ -17,7 +17,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
 
-	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/block-packs"
+	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/block-packs"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	metrics "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/metrics"
 	traces "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/traces"

@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	routinesdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/routines"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/gateway/responsewriter"
+	routinesdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/routines"
+	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
 )
 

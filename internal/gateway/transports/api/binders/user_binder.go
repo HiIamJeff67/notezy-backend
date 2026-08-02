@@ -1,36 +1,37 @@
 package binders
 
 import (
-	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/users"
-	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/gateway/responsewriter"
-	apitransport "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api"
 	"github.com/gin-gonic/gin"
+
+	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/users"
+	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
+	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
+	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
 )
 
 type UserBinderInterface interface {
-	BindGetUserData(apitransport.ControllerFunc[*usersdto.GetUserDataRequestDto]) gin.HandlerFunc
-	BindGetMe(apitransport.ControllerFunc[*usersdto.GetMeRequestDto]) gin.HandlerFunc
-	BindUpdateMe(apitransport.ControllerFunc[*usersdto.UpdateMeRequestDto]) gin.HandlerFunc
+	BindGetUserData(controllers.Func[*usersdto.GetUserDataRequestDto]) gin.HandlerFunc
+	BindGetMe(controllers.Func[*usersdto.GetMeRequestDto]) gin.HandlerFunc
+	BindUpdateMe(controllers.Func[*usersdto.UpdateMeRequestDto]) gin.HandlerFunc
 }
 type UserBinder struct{}
 
 func NewUserBinder() UserBinderInterface { return &UserBinder{} }
-func (b *UserBinder) BindGetUserData(controllerFunc apitransport.ControllerFunc[*usersdto.GetUserDataRequestDto]) gin.HandlerFunc {
+func (b *UserBinder) BindGetUserData(controllerFunc controllers.Func[*usersdto.GetUserDataRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &usersdto.GetUserDataRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		controllerFunc(ctx, requestDto)
 	}
 }
-func (b *UserBinder) BindGetMe(controllerFunc apitransport.ControllerFunc[*usersdto.GetMeRequestDto]) gin.HandlerFunc {
+func (b *UserBinder) BindGetMe(controllerFunc controllers.Func[*usersdto.GetMeRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &usersdto.GetMeRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		controllerFunc(ctx, requestDto)
 	}
 }
-func (b *UserBinder) BindUpdateMe(controllerFunc apitransport.ControllerFunc[*usersdto.UpdateMeRequestDto]) gin.HandlerFunc {
+func (b *UserBinder) BindUpdateMe(controllerFunc controllers.Func[*usersdto.UpdateMeRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestDto := &usersdto.UpdateMeRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")

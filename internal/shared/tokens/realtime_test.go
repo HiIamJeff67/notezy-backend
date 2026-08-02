@@ -50,6 +50,7 @@ func TestRealtimeBlockPackTicketRoundTrip(t *testing.T) {
 		Permission:              "write",
 		RealtimeProtocolVersion: constants.RealtimeProtocolVersion,
 		SchemaVersion:           constants.YjsBlockPackSchemaVersion,
+		MaximumSubscribers:      10,
 	}
 	claims.Subject = userPublicId.String()
 
@@ -62,7 +63,9 @@ func TestRealtimeBlockPackTicketRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parse realtime block pack ticket: %v", err)
 	}
-	if parsedClaims.Subject != userPublicId.String() || parsedClaims.ChannelId != blockPackId.String() {
+	if parsedClaims.Subject != userPublicId.String() ||
+		parsedClaims.ChannelId != blockPackId.String() ||
+		parsedClaims.MaximumSubscribers != 10 {
 		t.Fatalf("unexpected block pack ticket claims: %#v", parsedClaims)
 	}
 }

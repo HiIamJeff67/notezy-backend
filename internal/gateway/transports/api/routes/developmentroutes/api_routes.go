@@ -47,5 +47,4 @@ func ConfigureAPIRoutes() {
 
 	// test
 	configureStaticRoutes(DevelopmentAPIRouterGroup)
-	configureStorageRoutes(DevelopmentAPIRouterGroup)
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/blocks"
+	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/blocks"
 	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/inputs"
 	options "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/options"
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/repositories"

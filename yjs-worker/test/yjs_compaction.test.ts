@@ -6,7 +6,7 @@ import * as Y from "yjs";
 import {
   createYjsCompactionResult,
   parseYjsCompactionInput,
-} from "../src/types/yjs_compaction.js";
+} from "../types/yjs_compaction.js";
 
 test("materializes a compaction range into an equivalent Yjs snapshot", () => {
   const sourceDocument = new Y.Doc();

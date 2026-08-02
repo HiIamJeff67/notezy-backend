@@ -11,8 +11,8 @@ import (
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
-	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/block-packs"
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/blocks"
+	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/block-packs"
+	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/blocks"
 	adapters "github.com/HiIamJeff67/notezy-backend/internal/adapters"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/inputs"

@@ -10,24 +10,24 @@ import (
 	pg "github.com/lib/pq"
 	"gorm.io/gorm"
 
-	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/block-packs"
-	subshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/sub-shelves"
-	caches "github.com/HiIamJeff67/notezy-backend/internal/caches"
+	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/block-packs"
+	subshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/sub-shelves"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/internal/platform/graphql/models"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
-	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data"
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas"
-	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/scopes"
+	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
+	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
+	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/scopes"
+	storage "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/storage"
 	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/core/exceptions"
 	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
 	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
 	searchcursor "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/searchcursor"
-	storages "github.com/HiIamJeff67/notezy-backend/internal/shared/storage"
+	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/shared/realtimelease"
 	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
 )
 
@@ -53,30 +53,30 @@ type SubShelfServiceInterface interface {
 
 type SubShelfService struct {
 	db                  *gorm.DB
-	storage             storages.StorageInterface
+	storage             storage.StorageInterface
 	subShelfScope       scopes.SubShelfScopeInterface
 	subShelfRepository  repositories.SubShelfRepositoryInterface
 	rootShelfRepository repositories.RootShelfRepositoryInterface
 	materialRepository  repositories.MaterialRepositoryInterface
 	blockPackRepository repositories.BlockPackRepositoryInterface
-	realtimeLeaseStore  *caches.RealtimeLeaseStore
+	realtimeLeaseStore  *realtimelease.RealtimeLeaseStore
 }
 
 func NewSubShelfService(
 	db *gorm.DB,
-	storage storages.StorageInterface,
+	storage storage.StorageInterface,
 	subShelfScope scopes.SubShelfScopeInterface,
 	subShelfRepository repositories.SubShelfRepositoryInterface,
 	rootShelfRepository repositories.RootShelfRepositoryInterface,
 	materialRepository repositories.MaterialRepositoryInterface,
 	blockPackRepository repositories.BlockPackRepositoryInterface,
-	realtimeLeaseStore *caches.RealtimeLeaseStore,
+	realtimeLeaseStore *realtimelease.RealtimeLeaseStore,
 ) SubShelfServiceInterface {
 	if db == nil {
 		db = data.NotezyDB
 	}
 	if realtimeLeaseStore == nil {
-		realtimeLeaseStore = caches.NewRealtimeLeaseStore(caches.RedisClientMap)
+		realtimeLeaseStore = realtimelease.NewRealtimeLeaseStore()
 	}
 	return &SubShelfService{
 		db:                  db,

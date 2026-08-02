@@ -5,9 +5,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	realtimedto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/realtime"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/gateway/responsewriter"
+	realtimedto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/realtime"
+	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
+	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
+	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
 )
 
 type RealtimeControllerInterface interface {
@@ -17,18 +19,47 @@ type RealtimeControllerInterface interface {
 }
 
 type RealtimeController struct {
-	coreClient *coreadapters.CoreClient
+	coreClient         *coreadapters.CoreClient
+	realtimeLeaseCache *realtimelease.RealtimeLeaseCacheClient
 }
 
 func NewRealtimeController(coreClient *coreadapters.CoreClient) RealtimeControllerInterface {
 	return &RealtimeController{
-		coreClient: coreClient,
+		coreClient:         coreClient,
+		realtimeLeaseCache: realtimelease.NewRealtimeLeaseCacheClient(),
 	}
 }
 
 func (c *RealtimeController) GetMyBlockPackRealtimeParticipants(
 	ctx *gin.Context, requestDto *realtimedto.GetMyBlockPackRealtimeParticipantsRequestDto,
 ) {
+	participants, err := c.realtimeLeaseCache.GetBlockPackParticipants(requestDto.Param.BlockPackId)
+	if err != nil {
+		responsewriter.SafelyAbortAndResponseWithJSON(
+			exceptions.New(
+				"Unavailable",
+				"Realtime",
+				"GetMyBlockPackRealtimeParticipants",
+				"Realtime participant presence is unavailable",
+				http.StatusServiceUnavailable,
+			).WithOrigin(err),
+			ctx,
+		)
+		return
+	}
+
+	requestDto.Body.Participants = make(
+		[]realtimedto.RealtimeBlockPackParticipantRequestDto,
+		len(participants),
+	)
+	for index, participant := range participants {
+		requestDto.Body.Participants[index] = realtimedto.RealtimeBlockPackParticipantRequestDto{
+			UserPublicId:      participant.UserPublicId,
+			ChannelPermission: participant.ChannelPermission,
+			ConnectionCount:   participant.ConnectionCount,
+		}
+	}
+
 	response, exception := coreadapters.CallSecurly[
 		realtimedto.GetMyBlockPackRealtimeParticipantsRequestDto,
 		realtimedto.GetMyBlockPackRealtimeParticipantsResponseDto,

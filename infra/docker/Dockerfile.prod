@@ -10,8 +10,10 @@ RUN go mod download
 COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o api ./cmd/api \
+	&& CGO_ENABLED=0 GOOS=linux go build -o core ./cmd/core \
 	&& CGO_ENABLED=0 GOOS=linux go build -o durablejob ./cmd/durablejob \
-	&& CGO_ENABLED=0 GOOS=linux go build -o email ./cmd/email
+	&& CGO_ENABLED=0 GOOS=linux go build -o email ./cmd/email \
+	&& CGO_ENABLED=0 GOOS=linux go build -o realtimegateway ./cmd/realtimegateway
 
 FROM alpine:latest
 
@@ -20,8 +22,10 @@ WORKDIR /app
 RUN apk --no-cache add ca-certificates
 
 COPY --from=builder /app/api .
+COPY --from=builder /app/core .
 COPY --from=builder /app/durablejob .
 COPY --from=builder /app/email .
+COPY --from=builder /app/realtimegateway .
 
 EXPOSE 7777
 

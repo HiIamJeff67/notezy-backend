@@ -154,18 +154,18 @@ func call[RequestDto any, ResponseDto any](
 		).WithOrigin(err)
 	}
 	defer httpResponse.Body.Close()
-	if gatewayContext != nil && httpResponse.Header.Get(core.AuthRefreshedHeader) == "true" {
+	if gatewayContext != nil && httpResponse.Header.Get(core.AuthRefreshed.String()) == "true" {
 		gatewayContext.Set(
 			types.ContextFieldName_IsNewTokens.String(),
 			true,
 		)
 		gatewayContext.Set(
 			types.ContextFieldName_AccessToken.String(),
-			httpResponse.Header.Get(core.SetAccessTokenHeader),
+			httpResponse.Header.Get(core.SetAccessToken.String()),
 		)
 		gatewayContext.Set(
 			types.ContextFieldName_CSRFToken.String(),
-			httpResponse.Header.Get(core.SetCSRFTokenHeader),
+			httpResponse.Header.Get(core.SetCSRFToken.String()),
 		)
 	}
 
@@ -288,6 +288,61 @@ func Call[RequestDto any, ResponseDto any](
 				RequestId:      requestId,
 				TraceParent:    ctx.GetHeader("Traceparent"),
 				IdempotencyKey: ctx.GetHeader("Idempotency-Key"),
+			},
+			Dto: *requestDto,
+		},
+	)
+}
+
+func CallAsComponent[RequestDto any, ResponseDto any](
+	ctx context.Context,
+	client *CoreClient,
+	actor string,
+	requestDto *RequestDto,
+	operation string,
+	path string,
+) (*core.Response[ResponseDto], *exceptions.Exception) {
+	if requestDto == nil {
+		return nil, exceptions.New(
+			"InvalidRequest",
+			"Gateway",
+			operation,
+			"The Core service request DTO is required",
+			http.StatusBadRequest,
+		)
+	}
+
+	requestId := uuid.NewString()
+	delegationToken, err := IssueDelegationToken(
+		actor,
+		"",
+		nil,
+		operation,
+		requestId,
+	)
+	if err != nil {
+		return nil, exceptions.New(
+			"CoreDelegationFailed",
+			"Gateway",
+			operation,
+			"Failed to communicate with the Core service",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
+
+	return call[RequestDto, ResponseDto](
+		client,
+		nil,
+		ctx,
+		http.MethodPost,
+		path,
+		delegationToken,
+		http.Header{},
+		&core.Request[RequestDto]{
+			Operation: operation,
+			Metadata: core.RequestMetadata{
+				RequestId: requestId,
 			},
 			Dto: *requestDto,
 		},

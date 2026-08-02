@@ -5,6 +5,12 @@ Gateway-to-service calls. The HTTP delegation credential is carried only in the
 `Authorization: Bearer` header; browser JWTs and Go contexts are never
 serialized into this envelope.
 
+`Response[D]` contains only the operation data in `data`. A BlockPack channel
+ticket includes the short-lived, signed room-admission policy snapshot required
+by the WebSocket runtime. Gateway uses the verified ticket claim directly for
+atomic subscriber admission; Redis stores ephemeral leases and presence, not a
+Core-owned policy cache.
+
 The Gateway supplies the route operation, request identity, trace context, and
 an optional idempotency key. The delegation credential identifies the calling
 component in `actor`; an authenticated user is carried separately as the
@@ -26,7 +32,7 @@ the operation-specific Core transport explicitly supports it. This initial v1
 client performs no automatic retries.
 
 `CORE_LISTEN_ADDRESS` configures the private Core listener (default
-`127.0.0.1:8080`). Gateway resolves it through `CORE_BASE_URL` (default
-`http://127.0.0.1:8080`). A deployment with separate Gateway and Core processes
+`0.0.0.0:7778`). Gateway resolves it through `CORE_BASE_URL` (default
+`http://127.0.0.1:7778`). A deployment with separate Gateway and Core processes
 sets the latter to the Core service's private network address; neither listener
 is registered through the browser-facing route tree.

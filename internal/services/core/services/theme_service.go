@@ -10,8 +10,8 @@ import (
 	"gorm.io/gorm"
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/internal/platform/graphql/models"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
+	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
 	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
 	searchcursor "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/searchcursor"
 )

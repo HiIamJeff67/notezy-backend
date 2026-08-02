@@ -32,6 +32,7 @@ type RealtimeBlockPackTicketClaims struct {
 	Permission              string `json:"permission" validate:"required,oneof=read write"`
 	RealtimeProtocolVersion int    `json:"realtimeProtocolVersion" validate:"required"`
 	SchemaVersion           int    `json:"schemaVersion" validate:"required"`
+	MaximumSubscribers      int32  `json:"maximumSubscribers" validate:"required,min=1"`
 	jwt.RegisteredClaims
 }
 
@@ -75,6 +76,7 @@ func GenerateRealtimeBlockPackTicket(claims RealtimeBlockPackTicketClaims) (*str
 		claims.ChannelType != "BlockPack" ||
 		claims.RealtimeProtocolVersion != constants.RealtimeProtocolVersion ||
 		claims.SchemaVersion != constants.YjsBlockPackSchemaVersion ||
+		claims.MaximumSubscribers <= 0 ||
 		(claims.Permission != "read" && claims.Permission != "write") {
 		return nil, time.Time{}, errors.New("realtime block pack ticket claims are invalid")
 	}
@@ -132,7 +134,9 @@ func ParseRealtimeConnectionTicket(ticketString string, userAgent string) (*Real
 	}
 
 	userAgentHash := sha256.Sum256([]byte(userAgent))
-	if claims.UserAgentHash != fmt.Sprintf("%x", userAgentHash) ||
+	if claims.ID == "" ||
+		claims.ExpiresAt == nil ||
+		claims.UserAgentHash != fmt.Sprintf("%x", userAgentHash) ||
 		claims.RealtimeProtocolVersion != constants.RealtimeProtocolVersion {
 		return nil, fmt.Errorf("invalid realtime connection ticket claims")
 	}
@@ -171,10 +175,13 @@ func ParseRealtimeBlockPackTicket(ticketString string, userAgent string) (*Realt
 	}
 
 	userAgentHash := sha256.Sum256([]byte(userAgent))
-	if claims.UserAgentHash != fmt.Sprintf("%x", userAgentHash) ||
+	if claims.ID == "" ||
+		claims.ExpiresAt == nil ||
+		claims.UserAgentHash != fmt.Sprintf("%x", userAgentHash) ||
 		claims.ChannelType != "BlockPack" ||
 		claims.RealtimeProtocolVersion != constants.RealtimeProtocolVersion ||
-		claims.SchemaVersion != constants.YjsBlockPackSchemaVersion {
+		claims.SchemaVersion != constants.YjsBlockPackSchemaVersion ||
+		claims.MaximumSubscribers <= 0 {
 		return nil, fmt.Errorf("invalid realtime block pack ticket claims")
 	}
 	if _, err := uuid.Parse(claims.Subject); err != nil {

@@ -7,8 +7,8 @@ package resolvers
 import (
 	"context"
 
-	"github.com/HiIamJeff67/notezy-backend/internal/platform/graphql/generated"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/internal/platform/graphql/models"
+	"github.com/HiIamJeff67/notezy-backend/contracts/graphql/generated"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
 )
 
 // Info is the resolver for the info field.

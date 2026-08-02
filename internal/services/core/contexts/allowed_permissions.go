@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas/enums"
+	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	sharedcontexts "github.com/HiIamJeff67/notezy-backend/internal/shared/contexts"
 	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
 )

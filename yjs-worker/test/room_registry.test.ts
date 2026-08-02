@@ -4,8 +4,8 @@ import test from "node:test";
 import type WebSocket from "ws";
 import * as Y from "yjs";
 
-import { RoomRegistry } from "../src/realtime/room_registry.js";
-import { Telemetry } from "../src/telemetry.js";
+import { RoomRegistry } from "../realtime/room_registry.js";
+import { Telemetry } from "../telemetry.js";
 
 const telemetry = Telemetry.initialize();
 

@@ -11,14 +11,13 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	realtimedto "github.com/HiIamJeff67/notezy-backend/contracts/api/v1/realtime"
-	caches "github.com/HiIamJeff67/notezy-backend/internal/caches"
+	realtimedto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/realtime"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
-	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/schemas/enums"
+	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
 	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
 	sharedtokens "github.com/HiIamJeff67/notezy-backend/internal/shared/tokens"
@@ -28,7 +27,6 @@ import (
 
 type RealtimeServiceInterface interface {
 	GetMyBlockPackRealtimeParticipants(ctx context.Context, requestDto *realtimedto.GetMyBlockPackRealtimeParticipantsRequestDto) (*realtimedto.GetMyBlockPackRealtimeParticipantsResponseDto, *exceptions.Exception)
-	GetBlockPackChannelPermission(ctx context.Context, userPublicId uuid.UUID, blockPackId uuid.UUID, permission sharedtypes.ChannelPermission) (int32, sharedtypes.ErrorCode, error)
 	ValidateBlockPackChannelPermission(ctx context.Context, userPublicId uuid.UUID, blockPackId uuid.UUID, permission sharedtypes.ChannelPermission) (sharedtypes.ErrorCode, error)
 	CreateMyRealtimeConnectionTicket(ctx context.Context, requestDto *realtimedto.CreateMyRealtimeConnectionTicketRequestDto) (*realtimedto.CreateMyRealtimeConnectionTicketResponseDto, *exceptions.Exception)
 	CreateMyBlockPackChannelTicket(ctx context.Context, requestDto *realtimedto.CreateMyBlockPackChannelTicketRequestDto) (*realtimedto.CreateMyBlockPackChannelTicketResponseDto, *exceptions.Exception)
@@ -37,7 +35,6 @@ type RealtimeServiceInterface interface {
 type RealtimeService struct {
 	db                  *gorm.DB
 	blockPackRepository repositories.BlockPackRepositoryInterface
-	leaseStore          *caches.RealtimeLeaseStore
 }
 
 func NewRealtimeService(
@@ -47,7 +44,6 @@ func NewRealtimeService(
 	return &RealtimeService{
 		db:                  db,
 		blockPackRepository: blockPackRepository,
-		leaseStore:          caches.NewRealtimeLeaseStore(caches.RedisClientMap),
 	}
 }
 
@@ -111,46 +107,59 @@ func (s *RealtimeService) GetMyBlockPackRealtimeParticipants(
 		return nil, exception
 	}
 
-	participants, err := s.leaseStore.GetBlockPackParticipants(requestDto.Param.BlockPackId)
-	if err != nil {
-		return nil, exceptions.New(
-			"ReadFailed",
-			"Cache",
-			"GetMyBlockPackRealtimeParticipants",
-			"Failed to retrieve realtime participants",
-			http.StatusInternalServerError,
-			true,
-		).WithOrigin(err)
-	}
-	if len(participants) == 0 {
+	if len(requestDto.Body.Participants) == 0 {
 		responseDto := realtimedto.GetMyBlockPackRealtimeParticipantsResponseDto{}
 		return &responseDto, nil
 	}
 
-	connectionCountByPublicId := make(map[uuid.UUID]int, len(participants))
-	permissionByPublicId := make(map[uuid.UUID]sharedtypes.ChannelPermission, len(participants))
-	userPublicIds := make([]uuid.UUID, 0, len(participants))
-	for _, participant := range participants {
-		userPublicId, err := uuid.Parse(participant.UserPublicId)
-		if err != nil {
+	participantByPublicId := make(map[uuid.UUID]realtimedto.RealtimeBlockPackParticipantRequestDto, len(requestDto.Body.Participants))
+	for _, participant := range requestDto.Body.Participants {
+		existingParticipant, exists := participantByPublicId[participant.UserPublicId]
+		if !exists {
+			participantByPublicId[participant.UserPublicId] = participant
 			continue
 		}
 
-		if connectionCountByPublicId[userPublicId] == 0 {
-			userPublicIds = append(userPublicIds, userPublicId)
+		existingParticipant.ConnectionCount += participant.ConnectionCount
+		if existingParticipant.ConnectionCount > constants.RealtimeMaxConnectionsPerUser {
+			return nil, exceptions.New(
+				"InvalidRequest",
+				"BlockPack",
+				"GetMyBlockPackRealtimeParticipants",
+				"Realtime participant connection count is invalid",
+				http.StatusBadRequest,
+			)
 		}
-		connectionCountByPublicId[userPublicId]++
-		permissionByPublicId[userPublicId] = sharedtypes.ChannelPermission(participant.ChannelPermission)
+		if existingParticipant.ChannelPermission != "write" || participant.ChannelPermission == "write" {
+			existingParticipant.ChannelPermission = participant.ChannelPermission
+		}
+		participantByPublicId[participant.UserPublicId] = existingParticipant
 	}
-	if len(userPublicIds) == 0 {
-		responseDto := realtimedto.GetMyBlockPackRealtimeParticipantsResponseDto{}
-		return &responseDto, nil
+	if len(participantByPublicId) > constants.MaxSearchLimit {
+		return nil, exceptions.New(
+			"InvalidRequest",
+			"BlockPack",
+			"GetMyBlockPackRealtimeParticipants",
+			"Realtime participant request contains too many identities",
+			http.StatusBadRequest,
+		)
+	}
+
+	userPublicIds := make([]uuid.UUID, 0, len(participantByPublicId))
+	for userPublicId := range participantByPublicId {
+		userPublicIds = append(userPublicIds, userPublicId)
 	}
 
 	var users []schemas.User
 	result := db.
 		Model(&schemas.User{}).
 		Select("public_id, name, display_name").
+		Joins(`INNER JOIN "UsersToShelvesTable" AS users_to_shelves ON users_to_shelves.user_id = "UserTable".id`).
+		Joins(`INNER JOIN "SubShelfTable" ON "SubShelfTable".root_shelf_id = users_to_shelves.root_shelf_id`).
+		Joins(`INNER JOIN "BlockPackTable" ON "BlockPackTable".parent_sub_shelf_id = "SubShelfTable".id`).
+		Where(`"BlockPackTable".id = ?`, requestDto.Param.BlockPackId).
+		Where(`"BlockPackTable".deleted_at IS NULL`).
+		Where(`"SubShelfTable".deleted_at IS NULL`).
 		Where("public_id IN ?", userPublicIds).
 		Find(&users)
 	if result.Error != nil {
@@ -166,12 +175,13 @@ func (s *RealtimeService) GetMyBlockPackRealtimeParticipants(
 
 	responseDto := make(realtimedto.GetMyBlockPackRealtimeParticipantsResponseDto, 0, len(users))
 	for _, user := range users {
+		participant := participantByPublicId[user.PublicId]
 		responseDto = append(responseDto, realtimedto.RealtimeBlockPackParticipantResponseDto{
 			UserPublicId:      user.PublicId,
 			Name:              user.Name,
 			DisplayName:       user.DisplayName,
-			ChannelPermission: string(permissionByPublicId[user.PublicId]),
-			ConnectionCount:   connectionCountByPublicId[user.PublicId],
+			ChannelPermission: participant.ChannelPermission,
+			ConnectionCount:   participant.ConnectionCount,
 		})
 	}
 
@@ -182,20 +192,12 @@ func (s *RealtimeService) GetMyBlockPackRealtimeParticipants(
 	return &responseDto, nil
 }
 
-func (s *RealtimeService) GetBlockPackChannelPermission(
+func (s *RealtimeService) getBlockPackMaximumSubscribers(
 	ctx context.Context,
-	userPublicId uuid.UUID,
 	blockPackId uuid.UUID,
-	permission sharedtypes.ChannelPermission,
 ) (int32, sharedtypes.ErrorCode, error) {
-	db := s.db.WithContext(ctx)
-
-	if errorCode, err := s.ValidateBlockPackChannelPermission(ctx, userPublicId, blockPackId, permission); err != nil {
-		return 0, errorCode, err
-	}
-
 	var rootShelf schemas.RootShelf
-	result := db.
+	result := s.db.WithContext(ctx).
 		Model(&schemas.BlockPack{}).
 		Select(`"RootShelfTable".owner_id`).
 		Joins(`INNER JOIN "SubShelfTable" ON "SubShelfTable".id = "BlockPackTable".parent_sub_shelf_id`).
@@ -213,7 +215,7 @@ func (s *RealtimeService) GetBlockPackChannelPermission(
 	}
 
 	var maximumSubscribers int32
-	result = db.
+	result = s.db.WithContext(ctx).
 		Model(&schemas.User{}).
 		Select(`"PlanLimitationTable".max_realtime_room_subscriber_count`).
 		Joins(`INNER JOIN "PlanLimitationTable" ON "PlanLimitationTable".key = "UserTable".plan`).
@@ -409,6 +411,19 @@ func (s *RealtimeService) CreateMyBlockPackChannelTicket(
 		).WithOrigin(result.Error)
 	}
 
+	maximumSubscribers, errorCode, err := s.getBlockPackMaximumSubscribers(ctx, blockPack.Id)
+	if err != nil {
+		return nil, exceptions.New(
+			"Unavailable",
+			"BlockPack",
+			"CreateMyBlockPackChannelTicket",
+			"Block pack realtime room admission is unavailable",
+			http.StatusServiceUnavailable,
+		).WithOrigin(err).WithDetails(map[string]any{
+			"errorCode": errorCode,
+		})
+	}
+
 	userAgentHash := sha256.Sum256([]byte(requestDto.Header.UserAgent))
 	channelClaims := sharedtokens.RealtimeBlockPackTicketClaims{
 		UserAgentHash:           fmt.Sprintf("%x", userAgentHash),
@@ -417,6 +432,7 @@ func (s *RealtimeService) CreateMyBlockPackChannelTicket(
 		Permission:              string(permission),
 		RealtimeProtocolVersion: constants.RealtimeProtocolVersion,
 		SchemaVersion:           constants.YjsBlockPackSchemaVersion,
+		MaximumSubscribers:      maximumSubscribers,
 	}
 	channelClaims.Subject = userPublicId.String()
 	channelTicket, expiresAt, err := sharedtokens.GenerateRealtimeBlockPackTicket(channelClaims)

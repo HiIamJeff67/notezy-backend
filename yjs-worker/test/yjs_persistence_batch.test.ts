@@ -6,7 +6,7 @@ import * as Y from "yjs";
 import {
   createYjsPersistenceBatch,
   parseYjsPersistenceBatch,
-} from "../src/types/yjs_persistence_batch.js";
+} from "../types/yjs_persistence_batch.js";
 
 test("encodes a mixed-origin Yjs persistence batch", () => {
   const persistenceBatchId = "719ea8f4-4fcb-4cee-b2f2-8652c52c343f";
