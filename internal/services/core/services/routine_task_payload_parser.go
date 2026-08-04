@@ -6,6 +6,7 @@ import (
 
 	"gorm.io/datatypes"
 
+	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
 	typescontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
@@ -21,7 +22,7 @@ func (s *RoutineTaskService) parseRoutineTaskPayload(
 ) *exceptions.Exception {
 	switch purpose {
 	case enums.RoutineTaskPurpose_CreateRootShelf:
-		var parsedPayload typescontract.CreateRootShelfRoutineTaskPayload
+		var parsedPayload routinetasktypes.CreateRootShelfRoutineTaskPayload
 		if err := jsonpayload.Decode(payload, &parsedPayload); err != nil {
 			return exceptions.New(
 				"InvalidRoutineTaskPayload",
@@ -43,7 +44,7 @@ func (s *RoutineTaskService) parseRoutineTaskPayload(
 		return nil
 
 	case enums.RoutineTaskPurpose_UpdateRootShelf:
-		var parsedPayload typescontract.UpdateRootShelfRoutineTaskPayload
+		var parsedPayload routinetasktypes.UpdateRootShelfRoutineTaskPayload
 		if err := jsonpayload.Decode(payload, &parsedPayload); err != nil {
 			return exceptions.New(
 				"InvalidRoutineTaskPayload",
@@ -65,7 +66,7 @@ func (s *RoutineTaskService) parseRoutineTaskPayload(
 		return nil
 
 	case enums.RoutineTaskPurpose_ResetRootShelf:
-		var parsedPayload typescontract.ResetRootShelfRoutineTaskPayload
+		var parsedPayload routinetasktypes.ResetRootShelfRoutineTaskPayload
 		if err := jsonpayload.Decode(payload, &parsedPayload); err != nil {
 			return exceptions.New(
 				"InvalidRoutineTaskPayload",
@@ -87,7 +88,7 @@ func (s *RoutineTaskService) parseRoutineTaskPayload(
 		return nil
 
 	case enums.RoutineTaskPurpose_CreateSubShelf:
-		var parsedPayload typescontract.CreateSubShelfRoutineTaskPayload
+		var parsedPayload routinetasktypes.CreateSubShelfRoutineTaskPayload
 		if err := jsonpayload.Decode(payload, &parsedPayload); err != nil {
 			return exceptions.New(
 				"InvalidRoutineTaskPayload",
@@ -109,7 +110,7 @@ func (s *RoutineTaskService) parseRoutineTaskPayload(
 		return nil
 
 	case enums.RoutineTaskPurpose_UpdateSubShelf:
-		var parsedPayload typescontract.UpdateSubShelfRoutineTaskPayload
+		var parsedPayload routinetasktypes.UpdateSubShelfRoutineTaskPayload
 		if err := jsonpayload.Decode(payload, &parsedPayload); err != nil {
 			return exceptions.New(
 				"InvalidRoutineTaskPayload",
@@ -131,7 +132,7 @@ func (s *RoutineTaskService) parseRoutineTaskPayload(
 		return nil
 
 	case enums.RoutineTaskPurpose_ResetSubShelf:
-		var parsedPayload typescontract.ResetSubShelfRoutineTaskPayload
+		var parsedPayload routinetasktypes.ResetSubShelfRoutineTaskPayload
 		if err := jsonpayload.Decode(payload, &parsedPayload); err != nil {
 			return exceptions.New(
 				"InvalidRoutineTaskPayload",
@@ -153,7 +154,7 @@ func (s *RoutineTaskService) parseRoutineTaskPayload(
 		return nil
 
 	case enums.RoutineTaskPurpose_CreateBlockPack:
-		var parsedPayload typescontract.CreateBlockPackRoutineTaskPayload
+		var parsedPayload routinetasktypes.CreateBlockPackRoutineTaskPayload
 		if err := jsonpayload.Decode(payload, &parsedPayload); err != nil {
 			return exceptions.New(
 				"InvalidRoutineTaskPayload",
@@ -210,7 +211,7 @@ func (s *RoutineTaskService) parseRoutineTaskPayload(
 		return nil
 
 	case enums.RoutineTaskPurpose_UpdateBlockPack:
-		var parsedPayload typescontract.UpdateBlockPackRoutineTaskPayload
+		var parsedPayload routinetasktypes.UpdateBlockPackRoutineTaskPayload
 		if err := jsonpayload.Decode(payload, &parsedPayload); err != nil {
 			return exceptions.New(
 				"InvalidRoutineTaskPayload",
@@ -249,7 +250,7 @@ func (s *RoutineTaskService) parseRoutineTaskPayload(
 		return nil
 
 	case enums.RoutineTaskPurpose_ResetBlockPack:
-		var parsedPayload typescontract.ResetBlockPackRoutineTaskPayload
+		var parsedPayload routinetasktypes.ResetBlockPackRoutineTaskPayload
 		if err := jsonpayload.Decode(payload, &parsedPayload); err != nil {
 			return exceptions.New(
 				"InvalidRoutineTaskPayload",
@@ -271,7 +272,7 @@ func (s *RoutineTaskService) parseRoutineTaskPayload(
 		return nil
 
 	case enums.RoutineTaskPurpose_AppendBlock:
-		var parsedPayload typescontract.AppendBlockRoutineTaskPayload
+		var parsedPayload routinetasktypes.AppendBlockRoutineTaskPayload
 		if err := jsonpayload.Decode(payload, &parsedPayload); err != nil {
 			return exceptions.New(
 				"InvalidRoutineTaskPayload",
@@ -296,7 +297,7 @@ func (s *RoutineTaskService) parseRoutineTaskPayload(
 		return nil
 
 	case enums.RoutineTaskPurpose_UpdateBlock:
-		var parsedPayload typescontract.UpdateBlockRoutineTaskPayload
+		var parsedPayload routinetasktypes.UpdateBlockRoutineTaskPayload
 		if err := jsonpayload.Decode(payload, &parsedPayload); err != nil {
 			return exceptions.New(
 				"InvalidRoutineTaskPayload",
@@ -321,7 +322,7 @@ func (s *RoutineTaskService) parseRoutineTaskPayload(
 		return nil
 
 	case enums.RoutineTaskPurpose_ResetBlock:
-		var parsedPayload typescontract.ResetBlockRoutineTaskPayload
+		var parsedPayload routinetasktypes.ResetBlockRoutineTaskPayload
 		if err := jsonpayload.Decode(payload, &parsedPayload); err != nil {
 			return exceptions.New(
 				"InvalidRoutineTaskPayload",
@@ -343,7 +344,7 @@ func (s *RoutineTaskService) parseRoutineTaskPayload(
 		return nil
 
 	case enums.RoutineTaskPurpose_CreateRoutine:
-		var parsedPayload typescontract.CreateRoutineRoutineTaskPayload
+		var parsedPayload routinetasktypes.CreateRoutineRoutineTaskPayload
 		if err := jsonpayload.Decode(payload, &parsedPayload); err != nil {
 			return exceptions.New(
 				"InvalidRoutineTaskPayload",
@@ -365,7 +366,7 @@ func (s *RoutineTaskService) parseRoutineTaskPayload(
 		return nil
 
 	case enums.RoutineTaskPurpose_UpdateRoutine:
-		var parsedPayload typescontract.UpdateRoutineRoutineTaskPayload
+		var parsedPayload routinetasktypes.UpdateRoutineRoutineTaskPayload
 		if err := jsonpayload.Decode(payload, &parsedPayload); err != nil {
 			return exceptions.New(
 				"InvalidRoutineTaskPayload",

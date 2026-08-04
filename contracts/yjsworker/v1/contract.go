@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	eventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
+	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 )
 
 const Version = "v1"
@@ -21,30 +21,30 @@ const (
 )
 
 type CommandEnvelope[D any] struct {
-	SchemaVersion string                       `json:"schemaVersion"`
-	CommandId     uuid.UUID                    `json:"commandId"`
-	CommandType   CommandType                  `json:"commandType"`
-	BlockPackId   uuid.UUID                    `json:"blockPackId"`
-	CorrelationId string                       `json:"correlationId"`
-	CausationId   *uuid.UUID                   `json:"causationId,omitempty"`
-	Trace         eventscontract.TraceMetadata `json:"trace"`
-	Producer      string                       `json:"producer"`
-	OccurredAt    time.Time                    `json:"occurredAt"`
-	Data          D                            `json:"data"`
+	SchemaVersion string                           `json:"schemaVersion"`
+	CommandId     uuid.UUID                        `json:"commandId"`
+	CommandType   CommandType                      `json:"commandType"`
+	BlockPackId   uuid.UUID                        `json:"blockPackId"`
+	CorrelationId string                           `json:"correlationId"`
+	CausationId   *uuid.UUID                       `json:"causationId,omitempty"`
+	Trace         coreeventscontract.TraceMetadata `json:"trace"`
+	Producer      string                           `json:"producer"`
+	OccurredAt    time.Time                        `json:"occurredAt"`
+	Data          D                                `json:"data"`
 }
 
 type ReplyEnvelope[D any] struct {
-	SchemaVersion string                       `json:"schemaVersion"`
-	CommandId     uuid.UUID                    `json:"commandId"`
-	CommandType   CommandType                  `json:"commandType"`
-	BlockPackId   uuid.UUID                    `json:"blockPackId"`
-	CorrelationId string                       `json:"correlationId"`
-	CausationId   *uuid.UUID                   `json:"causationId,omitempty"`
-	Trace         eventscontract.TraceMetadata `json:"trace"`
-	Producer      string                       `json:"producer"`
-	RespondedAt   time.Time                    `json:"respondedAt"`
-	Data          D                            `json:"data"`
-	Error         *Error                       `json:"error,omitempty"`
+	SchemaVersion string                           `json:"schemaVersion"`
+	CommandId     uuid.UUID                        `json:"commandId"`
+	CommandType   CommandType                      `json:"commandType"`
+	BlockPackId   uuid.UUID                        `json:"blockPackId"`
+	CorrelationId string                           `json:"correlationId"`
+	CausationId   *uuid.UUID                       `json:"causationId,omitempty"`
+	Trace         coreeventscontract.TraceMetadata `json:"trace"`
+	Producer      string                           `json:"producer"`
+	RespondedAt   time.Time                        `json:"respondedAt"`
+	Data          D                                `json:"data"`
+	Error         *Error                           `json:"error,omitempty"`
 }
 
 type Error struct {

@@ -3,8 +3,6 @@ package workers
 import (
 	"context"
 	"hash/fnv"
-	"os"
-	"strings"
 	"sync"
 
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/types"
@@ -24,17 +22,11 @@ type WorkerManager struct {
 	waiter  sync.WaitGroup
 }
 
-func NewWorkerManager() *WorkerManager {
+func NewWorkerManager(endpoints []string) *WorkerManager {
 	ctx, cancel := context.WithCancel(context.Background())
-	endpoints := strings.Split(os.Getenv("YJS_WORKER_URLS"), ",")
 	workers := make([]*realtimeWorker, 0, len(endpoints))
 
 	for _, endpoint := range endpoints {
-		endpoint = strings.TrimSpace(endpoint)
-		if endpoint == "" {
-			continue
-		}
-
 		worker := &realtimeWorker{
 			endpoint:       endpoint,
 			activeChannels: make(map[string]realtimetypes.InternalFrame),

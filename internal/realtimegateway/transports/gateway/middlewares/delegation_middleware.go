@@ -10,7 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtimegateway/v1"
+	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtime-gateway/v1"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 )

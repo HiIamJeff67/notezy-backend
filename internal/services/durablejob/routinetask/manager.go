@@ -2,6 +2,7 @@ package routinetask
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"sync"
@@ -11,13 +12,19 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
+	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
+	durablejobroutinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas/enums"
-	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/scopes"
+	platformkafka "github.com/HiIamJeff67/notezy-backend/internal/platform/kafka"
+	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
+	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/scopes"
+	durablejobconfig "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/config"
 	handlers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers"
 	matchers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers/matchers"
 	resolvers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers/resolvers"
@@ -30,18 +37,14 @@ type HandlerManager struct {
 	activeWorkers     atomic.Int32
 	workerPool        sync.WaitGroup
 	sem               chan struct{}
+	workerId          uuid.UUID
 	failed            []routineTaskWithRecord
 	failedMutex       sync.Mutex
 	success           []routineTaskWithRecord
 	successMutex      sync.Mutex
 	db                *gorm.DB
 	routineRepository repositories.RoutineRepositoryInterface
-	registries        map[enums.RoutineTaskPurpose]PurposeHandler
-}
-
-type PurposeHandler struct {
-	HandlerFunc        handlers.PurposeHandlerFunc
-	AllowedPermissions []enums.AccessControlPermission
+	registries        map[enums.RoutineTaskPurpose]handlers.PurposeHandler
 }
 
 type routineTaskWithRecord struct {
@@ -55,7 +58,12 @@ type purposeTaskGroup struct {
 	tasks              []schemas.RoutineTask
 }
 
-func NewHandlerManager(maxWorkers int, db *gorm.DB) HandlerManager {
+func NewHandlerManager(
+	maxWorkers int,
+	db *gorm.DB,
+	config durablejobconfig.Config,
+	workerIds ...uuid.UUID,
+) HandlerManager {
 	validator := validation.New()
 
 	if maxWorkers <= 0 {
@@ -69,7 +77,7 @@ func NewHandlerManager(maxWorkers int, db *gorm.DB) HandlerManager {
 	routineRepository := repositories.NewRoutineRepository(scopes.NewRoutineScope())
 	patternResolver := resolvers.NewPatternResolver(db, blockRepository, blockPackRepository)
 	templateBlockMatcher := matchers.NewTemplateBlockMatcher()
-	yjsWorkerClient := yjsmaintenance.NewWorkerClient()
+	yjsWorkerClient := yjsmaintenance.NewWorkerClient(config)
 
 	blockPackHandler := handlers.NewBlockPackHandler(
 		validator,
@@ -128,13 +136,19 @@ func NewHandlerManager(maxWorkers int, db *gorm.DB) HandlerManager {
 		enums.AccessControlPermission_Write,
 	}
 
+	workerId := uuid.New()
+	if len(workerIds) > 0 && workerIds[0] != uuid.Nil {
+		workerId = workerIds[0]
+	}
+
 	return HandlerManager{
 		maxWorkers:        maxWorkers,
 		activeWorkers:     atomic.Int32{},
 		sem:               make(chan struct{}, maxWorkers),
+		workerId:          workerId,
 		db:                db,
 		routineRepository: routineRepository,
-		registries: map[enums.RoutineTaskPurpose]PurposeHandler{
+		registries: map[enums.RoutineTaskPurpose]handlers.PurposeHandler{
 			enums.RoutineTaskPurpose_CreateRootShelf: {
 				HandlerFunc:        rootShelfHandler.HandleCreateRootShelf,
 				AllowedPermissions: readPermissions,
@@ -289,186 +303,87 @@ func (hm *HandlerManager) finalize(ctx context.Context) *exceptions.Exception {
 		return nil
 	}
 
-	tx := hm.db.WithContext(ctx).Begin()
-
-	now := time.Now()
-	successTaskIds := make([]uuid.UUID, len(success))
-	successRecordIds := make([]uuid.UUID, len(success))
-	for index, item := range success {
-		successTaskIds[index] = item.task.Id
-		successRecordIds[index] = item.record.Id
-	}
-
-	if len(successTaskIds) > 0 {
-		result := tx.
-			Model(&schemas.RoutineTask{}).
-			Where("id IN ? AND status = ?", successTaskIds, enums.RoutineTaskStatus_Running).
-			Updates(map[string]any{
-				"status":          enums.RoutineTaskStatus_Idle,
-				"attempts":        0,
-				"actual_ended_at": now,
-				"updated_at":      now,
-			})
-		if result.Error != nil {
-			tx.Rollback()
-			return exceptions.New(
-				"FinalizeFailed",
-				"RoutineTask",
-				"Finalize",
-				"Failed to finalize routine tasks",
-				http.StatusInternalServerError,
-				true,
-			).WithOrigin(result.Error)
+	correlationId := uuid.New().String()
+	if len(success) > 0 {
+		completed := durablejobcontract.MarkCompletedRoutineTasksRequestDto{
+			WorkerId: hm.workerId,
+			Tasks:    make([]durablejobroutinetasktypes.CompletedRoutineTask, len(success)),
 		}
-		if result.RowsAffected != int64(len(successTaskIds)) {
-			tx.Rollback()
-			return exceptions.New(
-				"FinalizeFailed",
-				"RoutineTask",
-				"Finalize",
-				"Failed to finalize routine tasks",
-				http.StatusInternalServerError,
-				true,
-			).WithOrigin(errors.New("routine task success finalize count mismatch"))
-		}
-
-		result = tx.
-			Model(&schemas.RoutineTaskRecord{}).
-			Where("id IN ? AND status = ?", successRecordIds, enums.RoutineTaskRecordStatus_Running).
-			Updates(map[string]any{
-				"status":          enums.RoutineTaskRecordStatus_Success,
-				"actual_ended_at": now,
-				"error_code":      nil,
-				"error_reason":    nil,
-				"updated_at":      now,
-			})
-		if result.Error != nil {
-			tx.Rollback()
-			return exceptions.New(
-				"FinalizeFailed",
-				"RoutineTask",
-				"Finalize",
-				"Failed to finalize routine tasks",
-				http.StatusInternalServerError,
-				true,
-			).WithOrigin(result.Error)
-		}
-		if result.RowsAffected != int64(len(successRecordIds)) {
-			tx.Rollback()
-			return exceptions.New(
-				"FinalizeFailed",
-				"RoutineTask",
-				"Finalize",
-				"Failed to finalize routine tasks",
-				http.StatusInternalServerError,
-				true,
-			).WithOrigin(errors.New("routine task record success finalize count mismatch"))
-		}
-	}
-
-	failedTaskIds := make([]uuid.UUID, 0, len(failed))
-	type failedRecordGroupKey struct {
-		errorCode   enums.RoutineTaskRecordErrorCode
-		errorReason string
-	}
-	failedRecordIdsByGroup := make(map[failedRecordGroupKey][]uuid.UUID)
-	for _, item := range failed {
-		failedTaskIds = append(failedTaskIds, item.task.Id)
-		errorCode := enums.RoutineTaskRecordErrorCode_HandlerFailed
-		if item.record.ErrorCode != nil {
-			errorCode = *item.record.ErrorCode
-		}
-		errorReason := "Routine task handler returned unsuccessful result"
-		if item.record.ErrorReason != nil {
-			errorReason = *item.record.ErrorReason
-		}
-		key := failedRecordGroupKey{errorCode: errorCode, errorReason: errorReason}
-		failedRecordIdsByGroup[key] = append(failedRecordIdsByGroup[key], item.record.Id)
-	}
-
-	if len(failedTaskIds) > 0 {
-		result := tx.
-			Model(&schemas.RoutineTask{}).
-			Where("id IN ? AND status = ?", failedTaskIds, enums.RoutineTaskStatus_Running).
-			Updates(map[string]any{
-				"status":          enums.RoutineTaskStatus_Idle,
-				"actual_ended_at": now,
-				"updated_at":      now,
-			})
-		if result.Error != nil {
-			tx.Rollback()
-			return exceptions.New(
-				"FinalizeFailed",
-				"RoutineTask",
-				"Finalize",
-				"Failed to finalize routine tasks",
-				http.StatusInternalServerError,
-				true,
-			).WithOrigin(result.Error)
-		}
-		if result.RowsAffected != int64(len(failedTaskIds)) {
-			tx.Rollback()
-			return exceptions.New(
-				"FinalizeFailed",
-				"RoutineTask",
-				"Finalize",
-				"Failed to finalize routine tasks",
-				http.StatusInternalServerError,
-				true,
-			).WithOrigin(errors.New("routine task failed finalize count mismatch"))
-		}
-
-		updatedFailedRecordCount := int64(0)
-		for key, failedRecordIds := range failedRecordIdsByGroup {
-			errorCode := key.errorCode
-			errorReason := key.errorReason
-			result = tx.
-				Model(&schemas.RoutineTaskRecord{}).
-				Where("id IN ? AND status = ?", failedRecordIds, enums.RoutineTaskRecordStatus_Running).
-				Updates(map[string]any{
-					"status":          enums.RoutineTaskRecordStatus_Failed,
-					"actual_ended_at": now,
-					"error_code":      errorCode,
-					"error_reason":    errorReason,
-					"updated_at":      now,
-				})
-			if result.Error != nil {
-				tx.Rollback()
-				return exceptions.New(
-					"FinalizeFailed",
-					"RoutineTask",
-					"Finalize",
-					"Failed to finalize routine tasks",
-					http.StatusInternalServerError,
-					true,
-				).WithOrigin(result.Error)
+		for index, item := range success {
+			completedAt := time.Now().UTC()
+			if item.record.ActualEndedAt != nil {
+				completedAt = *item.record.ActualEndedAt
 			}
-			updatedFailedRecordCount += result.RowsAffected
+			completed.Tasks[index] = durablejobroutinetasktypes.CompletedRoutineTask{
+				RoutineTaskId:       item.task.Id,
+				RoutineTaskRecordId: item.record.Id,
+				CompletedAt:         completedAt,
+			}
 		}
-		if updatedFailedRecordCount != int64(len(failed)) {
-			tx.Rollback()
-			return exceptions.New(
-				"FinalizeFailed",
-				"RoutineTask",
-				"Finalize",
-				"Failed to finalize routine tasks",
-				http.StatusInternalServerError,
-				true,
-			).WithOrigin(errors.New("routine task record failed finalize count mismatch"))
+		if exception := hm.publishResult(ctx, coreeventscontract.CoreDurableJobRoutineTaskTopic, coreeventscontract.EventType_RoutineTasksCompleted, correlationId, completed); exception != nil {
+			return exception
+		}
+	}
+	if len(failed) > 0 {
+		failedBatch := durablejobcontract.MarkFailedRoutineTasksRequestDto{
+			WorkerId: hm.workerId,
+			Tasks:    make([]durablejobroutinetasktypes.FailedRoutineTask, len(failed)),
+		}
+		for index, item := range failed {
+			errorCode := enumcontract.RoutineTaskRecordErrorCode_HandlerFailed
+			if item.record.ErrorCode != nil {
+				if contractErrorCode := item.record.ErrorCode.ToContractable(); contractErrorCode != nil {
+					errorCode = *contractErrorCode
+				}
+			}
+			errorReason := "Routine task handler returned unsuccessful result"
+			if item.record.ErrorReason != nil {
+				errorReason = *item.record.ErrorReason
+			}
+			failedAt := time.Now().UTC()
+			if item.record.ActualEndedAt != nil {
+				failedAt = *item.record.ActualEndedAt
+			}
+			failedBatch.Tasks[index] = durablejobroutinetasktypes.FailedRoutineTask{
+				RoutineTaskId:       item.task.Id,
+				RoutineTaskRecordId: item.record.Id,
+				FailedAt:            failedAt,
+				ErrorCode:           errorCode,
+				ErrorReason:         errorReason,
+			}
+		}
+		if exception := hm.publishResult(ctx, coreeventscontract.CoreDurableJobRoutineTaskTopic, coreeventscontract.EventType_RoutineTasksFailed, correlationId, failedBatch); exception != nil {
+			return exception
 		}
 	}
 
-	if err := tx.Commit().Error; err != nil {
-		return exceptions.New(
-			"TransactionCommitFailed",
-			"RoutineTask",
-			"Finalize",
-			"Failed to commit the routine task finalization transaction",
-			http.StatusInternalServerError,
-			true,
-		).WithOrigin(err)
-	}
+	return nil
+}
 
+func (hm *HandlerManager) publishResult(
+	ctx context.Context,
+	topic coreeventscontract.Topic,
+	eventType coreeventscontract.EventType,
+	correlationId string,
+	data any,
+) *exceptions.Exception {
+	payload, err := json.Marshal(coreeventscontract.EventEnvelope[any]{
+		SchemaVersion: coreeventscontract.Version,
+		EventId:       uuid.New(),
+		EventType:     eventType,
+		AggregateType: coreeventscontract.AggregateType_DurableJobWorker,
+		AggregateId:   hm.workerId,
+		KafkaKey:      hm.workerId.String(),
+		OccurredAt:    time.Now().UTC(),
+		CorrelationId: correlationId,
+		Data:          data,
+	})
+	if err != nil {
+		return exceptions.New("FailedToPublishResult", "RoutineTask", "Finalize", "Failed to serialize the routine task result", http.StatusInternalServerError, true).WithOrigin(err)
+	}
+	if err := platformkafka.ProduceWithDefaultProducer(ctx, topic.String(), hm.workerId.String(), payload); err != nil {
+		return exceptions.New("FailedToPublishResult", "RoutineTask", "Finalize", "Failed to publish the routine task result", http.StatusInternalServerError, true).WithOrigin(err)
+	}
 	return nil
 }
 

@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	realtimedto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/realtime"
-	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtimegateway/v1"
+	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtime-gateway/v1"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
 	realtimegatewayadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/realtimegateway/adapters"
 	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"

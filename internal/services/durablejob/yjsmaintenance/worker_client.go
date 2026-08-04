@@ -10,7 +10,6 @@ import (
 	"io"
 	"math"
 	"net/http"
-	"os"
 	"time"
 
 	"go.opentelemetry.io/otel"
@@ -22,6 +21,7 @@ import (
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	metrics "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/metrics"
 	traces "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/traces"
+	durablejobconfig "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/config"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
@@ -32,11 +32,11 @@ type WorkerClient struct {
 	client                         *http.Client
 }
 
-func NewWorkerClient() WorkerClient {
+func NewWorkerClient(config durablejobconfig.Config) WorkerClient {
 	return WorkerClient{
-		compactionEndpoint:             os.Getenv("YJS_MAINTENANCE_WORKER_URL"),
-		documentInitializationEndpoint: os.Getenv("YJS_DOCUMENT_INITIALIZATION_WORKER_URL"),
-		projectionEndpoint:             os.Getenv("YJS_PROJECTION_WORKER_URL"),
+		compactionEndpoint:             config.YjsMaintenanceWorkerUrl,
+		documentInitializationEndpoint: config.YjsDocumentInitializationWorkerUrl,
+		projectionEndpoint:             config.YjsProjectionWorkerUrl,
 		client: &http.Client{
 			Timeout: constants.YjsMaintenanceWorkerRequestTimeout,
 		},

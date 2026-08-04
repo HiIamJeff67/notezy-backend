@@ -10,11 +10,11 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	config "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
 	platformkafka "github.com/HiIamJeff67/notezy-backend/internal/platform/kafka"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	metrics "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/metrics"
 	traces "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/traces"
+	coreconfig "github.com/HiIamJeff67/notezy-backend/internal/services/core/config"
 	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/inputs"
 	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
@@ -23,13 +23,14 @@ import (
 type OutboxRelay struct {
 	db                    *gorm.DB
 	outboxEventRepository repositories.OutboxEventRepositoryInterface
-	config                config.OutboxRelayConfig
+	config                coreconfig.OutboxRelayConfig
 	workerId              string
 }
 
 func NewOutboxRelay(
 	db *gorm.DB,
 	outboxEventRepository repositories.OutboxEventRepositoryInterface,
+	config coreconfig.OutboxRelayConfig,
 ) *OutboxRelay {
 	hostname, err := os.Hostname()
 	if err != nil || hostname == "" {
@@ -39,7 +40,7 @@ func NewOutboxRelay(
 	return &OutboxRelay{
 		db:                    db,
 		outboxEventRepository: outboxEventRepository,
-		config:                config.OutboxRelay(),
+		config:                config,
 		workerId:              fmt.Sprintf("%s-%d", hostname, os.Getpid()),
 	}
 }

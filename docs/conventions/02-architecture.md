@@ -85,6 +85,13 @@ method.
 
 ## Composition roots
 
+Environment configuration follows the same ownership rule. A runtime composition
+root loads each typed owner config once and injects it into dependencies;
+infrastructure config is colocated with its component at
+`internal/platform/<component>/config.go`. Do not read environment variables
+from transports, services, workers, clients, or middleware, and do not recreate
+`internal/platform/config/`.
+
 Do not introduce an application `modules/` package merely to wrap service
 construction. The owning composition root constructs its scope -> repository ->
 service dependencies directly, then passes each concrete service to the router or

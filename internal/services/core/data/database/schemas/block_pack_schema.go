@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )

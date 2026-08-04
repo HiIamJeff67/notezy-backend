@@ -3,7 +3,6 @@ package observability
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"go.opentelemetry.io/otel"
@@ -21,28 +20,16 @@ import (
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	metrics "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/metrics"
 	traces "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/traces"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
-func Initialize(ctx context.Context) func() {
-	serviceName := os.Getenv("OTEL_SERVICE_NAME")
-	if serviceName == "" {
-		serviceName = constants.ServiceName
-	}
-	serviceVersion := os.Getenv("OTEL_SERVICE_VERSION")
-	deploymentEnvironment := os.Getenv("OTEL_DEPLOYMENT_ENVIRONMENT")
-	serviceInstanceId := os.Getenv("OTEL_SERVICE_INSTANCE_ID")
-	if serviceInstanceId == "" {
-		serviceInstanceId, _ = os.Hostname()
-	}
-	collectorEndpoint := os.Getenv("OTEL_EXPORTER_OTLP_GRPC_ENDPOINT")
+func Initialize(ctx context.Context, config Config) func() {
 
 	response, err := resource.New(ctx,
 		resource.WithAttributes(
-			semconv.ServiceName(serviceName),
-			semconv.ServiceVersion(serviceVersion),
-			semconv.DeploymentEnvironment(deploymentEnvironment),
-			semconv.ServiceInstanceID(serviceInstanceId),
+			semconv.ServiceName(config.ServiceName),
+			semconv.ServiceVersion(config.ServiceVersion),
+			semconv.DeploymentEnvironment(config.DeploymentEnvironment),
+			semconv.ServiceInstanceID(config.ServiceInstanceId),
 		),
 	)
 	if err != nil {
@@ -55,7 +42,7 @@ func Initialize(ctx context.Context) func() {
 	}
 	traceExporter, err := otlptracegrpc.New(
 		ctx,
-		otlptracegrpc.WithEndpoint(collectorEndpoint),
+		otlptracegrpc.WithEndpoint(config.CollectorEndpoint),
 		otlptracegrpc.WithInsecure(),
 	)
 	if err != nil {
@@ -71,7 +58,7 @@ func Initialize(ctx context.Context) func() {
 	}
 	metricExporter, err := otlpmetricgrpc.New(
 		ctx,
-		otlpmetricgrpc.WithEndpoint(collectorEndpoint),
+		otlpmetricgrpc.WithEndpoint(config.CollectorEndpoint),
 		otlpmetricgrpc.WithInsecure(),
 	)
 	if err != nil {
@@ -92,7 +79,7 @@ func Initialize(ctx context.Context) func() {
 	}
 	logExporter, err := otlploggrpc.New(
 		ctx,
-		otlploggrpc.WithEndpoint(collectorEndpoint),
+		otlploggrpc.WithEndpoint(config.CollectorEndpoint),
 		otlploggrpc.WithInsecure(),
 	)
 	if err != nil {
@@ -106,8 +93,8 @@ func Initialize(ctx context.Context) func() {
 	otel.SetTextMapPropagator(propagation.TraceContext{})
 
 	logs.NotezyLogger = logs.NewLogger(true)
-	metrics.NotezyMeter = metrics.NewMeter(otel.Meter(serviceName))
-	traces.NotezyTracer = traces.NewTracer(otel.Tracer(serviceName))
+	metrics.NotezyMeter = metrics.NewMeter(otel.Meter(config.ServiceName))
+	traces.NotezyTracer = traces.NewTracer(otel.Tracer(config.ServiceName))
 
 	return func() {
 		if err := traceProvider.Shutdown(ctx); err != nil {

@@ -11,9 +11,9 @@ import (
 
 	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjsworker/v1"
 	metrics "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/metrics"
-	options "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas"
+	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 

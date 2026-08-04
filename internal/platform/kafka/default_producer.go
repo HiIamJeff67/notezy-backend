@@ -4,15 +4,13 @@ import (
 	"context"
 	"errors"
 	"sync"
-
-	config "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
 )
 
 var defaultProducerMutex sync.RWMutex
 var DefaultProducer *Producer
 
-func ConnectDefaultProducer(ctx context.Context) error {
-	producer, err := NewProducer(config.Kafka())
+func ConnectDefaultProducer(ctx context.Context, config ClientConfig) error {
+	producer, err := NewProducer(config)
 	if err != nil {
 		return err
 	}

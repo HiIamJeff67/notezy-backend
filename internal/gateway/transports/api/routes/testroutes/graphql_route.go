@@ -12,6 +12,7 @@ import (
 
 func ConfigureTestGraphQLRoutes(
 	routerGroup *gin.RouterGroup,
+	coreClient *coreadapters.CoreClient,
 	accessTokenCookieHandler *cookies.CookieHandler,
 	refreshTokenCookieHandler *cookies.CookieHandler,
 ) {
@@ -22,7 +23,7 @@ func ConfigureTestGraphQLRoutes(
 		middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 	)
 	{
-		graphqlRoutes.POST("/", graphql.GraphQLHandler(coreadapters.NewConfiguredCoreClient()))
+		graphqlRoutes.POST("/", graphql.GraphQLHandler(coreClient))
 		if gin.Mode() == gin.DebugMode {
 			graphqlRoutes.GET("/", graphql.PlaygroundHandler())
 		}

@@ -7,8 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 	durablejobdto "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	services "github.com/HiIamJeff67/notezy-backend/internal/services/core/services"
 )

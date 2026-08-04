@@ -11,13 +11,13 @@ import (
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
-	typescontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas/enums"
+	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	matchers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers/matchers"
 	resolvers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers/resolvers"
 	editableblock "github.com/HiIamJeff67/notezy-backend/shared/editableblock"
@@ -67,15 +67,15 @@ func (h BlockHandler) HandleAppendBlock(
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
 	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
-	candidatePayloads := make([]typescontract.AppendBlockRoutineTaskPayload, 0, len(tasks))
-	candidatePatterns := make([]typescontract.RoutineTaskPattern, 0, len(tasks))
+	candidatePayloads := make([]routinetasktypes.AppendBlockRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]routinetasktypes.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		actorUserId, exists := taskIdToActorUserId[task.Id]
 		if !exists {
 			continue
 		}
-		payload, exception := decodePayload[typescontract.AppendBlockRoutineTaskPayload](h.validator, task)
+		payload, exception := decodePayload[routinetasktypes.AppendBlockRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}
@@ -278,15 +278,15 @@ func (h BlockHandler) HandleUpdateBlock(
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
 	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
-	candidatePayloads := make([]typescontract.UpdateBlockRoutineTaskPayload, 0, len(tasks))
-	candidatePatterns := make([]typescontract.RoutineTaskPattern, 0, len(tasks))
+	candidatePayloads := make([]routinetasktypes.UpdateBlockRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]routinetasktypes.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		actorUserId, exists := taskIdToActorUserId[task.Id]
 		if !exists {
 			continue
 		}
-		payload, exception := decodePayload[typescontract.UpdateBlockRoutineTaskPayload](h.validator, task)
+		payload, exception := decodePayload[routinetasktypes.UpdateBlockRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}
@@ -381,7 +381,7 @@ func (h BlockHandler) HandleResetBlock(
 		if !exists {
 			continue
 		}
-		payload, exception := decodePayload[typescontract.ResetBlockRoutineTaskPayload](h.validator, task)
+		payload, exception := decodePayload[routinetasktypes.ResetBlockRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}

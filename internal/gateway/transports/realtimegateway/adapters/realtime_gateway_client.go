@@ -5,15 +5,13 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"os"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtimegateway/v1"
+	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtime-gateway/v1"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 )
@@ -32,23 +30,6 @@ func NewRealtimeGatewayClient(baseURL string, timeout time.Duration) *RealtimeGa
 			Timeout: timeout,
 		},
 	}
-}
-
-func NewConfiguredRealtimeGatewayClient() *RealtimeGatewayClient {
-	baseURL := os.Getenv("REALTIME_GATEWAY_BASE_URL")
-	if baseURL == "" {
-		baseURL = "http://127.0.0.1:7779"
-	}
-
-	timeoutSeconds, err := strconv.Atoi(os.Getenv("REALTIME_GATEWAY_CLIENT_TIMEOUT_SECONDS"))
-	if err != nil || timeoutSeconds <= 0 {
-		timeoutSeconds = 3
-	}
-
-	return NewRealtimeGatewayClient(
-		baseURL,
-		time.Duration(timeoutSeconds)*time.Second,
-	)
 }
 
 func (c *RealtimeGatewayClient) GetBlockPackParticipants(

@@ -6,15 +6,15 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
+	gatewayconfig "github.com/HiIamJeff67/notezy-backend/internal/gateway/config"
 	ratelimitrecord "github.com/HiIamJeff67/notezy-backend/internal/gateway/data/cache/ratelimitrecord"
 	developmentroutes "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/routes/developmentroutes"
-	config "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
+	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
+	realtimegatewayadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/realtimegateway/adapters"
 	observability "github.com/HiIamJeff67/notezy-backend/internal/platform/observability"
 	platformredis "github.com/HiIamJeff67/notezy-backend/internal/platform/redis"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
@@ -23,7 +23,19 @@ import (
 )
 
 func Start() func() {
-	shutdownObservability := observability.Initialize(context.Background())
+	config, err := gatewayconfig.LoadConfig()
+	if err != nil {
+		panic(err)
+	}
+	redisConfig, err := platformredis.LoadConfig()
+	if err != nil {
+		panic(err)
+	}
+	shutdownObservability := observability.Initialize(
+		context.Background(),
+		observability.LoadConfig("notezy-gateway"),
+	)
+	platformredis.InitializeDefaultClientManager(redisConfig)
 
 	if err := ratelimitrecord.Register(context.Background(), platformredis.DefaultClientManager); err != nil {
 		_ = platformredis.DefaultClientManager.DisconnectAll()
@@ -31,8 +43,7 @@ func Start() func() {
 		panic(err)
 	}
 	developmentroutes.DevelopmentRouter = gin.Default()
-	proxies := strings.Split(os.Getenv("GIN_TRUSTED_PROXIES"), ",")
-	if err := developmentroutes.DevelopmentRouter.SetTrustedProxies(proxies); err != nil {
+	if err := developmentroutes.DevelopmentRouter.SetTrustedProxies(config.TrustedProxies); err != nil {
 		_ = platformredis.DefaultClientManager.DisconnectAll()
 		shutdownObservability()
 		panic(err)
@@ -59,9 +70,18 @@ func Start() func() {
 		HTTPOnly: true,
 		SameSite: http.SameSiteStrictMode,
 	})
-	developmentroutes.ConfigureAPIRoutes(accessTokenCookieHandler, refreshTokenCookieHandler)
+	developmentroutes.ConfigureAPIRoutes(
+		coreadapters.NewCoreClient(config.CoreBaseUrl, config.CoreClientTimeout),
+		realtimegatewayadapters.NewRealtimeGatewayClient(
+			config.RealtimeGatewayBaseUrl,
+			config.RealtimeGatewayClientTimeout,
+		),
+		config.AllowedDomains,
+		accessTokenCookieHandler,
+		refreshTokenCookieHandler,
+	)
 
-	listener, err := net.Listen("tcp", config.GatewayListenAddress())
+	listener, err := net.Listen("tcp", config.ListenAddress)
 	if err != nil {
 		_ = platformredis.DefaultClientManager.DisconnectAll()
 		shutdownObservability()

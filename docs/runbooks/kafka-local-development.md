@@ -46,16 +46,15 @@ an absent topic is always a provisioning failure.
 
 ## Runtime configuration
 
-`internal/platform/config.Kafka()` reads these values. Core and
-RealtimeGateway establish a Kafka client at startup; the other runtimes do not
-connect until they own a producer or consumer.
+`internal/platform/kafka/config.go` reads the infrastructure connection values.
+Each runtime keeps its own consumer policy in its local config package. Core,
+DurableJob, and RealtimeGateway establish Kafka clients at startup when they
+own a producer or consumer.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `KAFKA_BROKERS` | `127.0.0.1:9094` | Comma-separated broker addresses. |
-| `KAFKA_CLIENT_ID` | `notezy-runtime` | Kafka client identity. |
-| `KAFKA_CONSUMER_GROUP` | `notezy-runtime` | Default group used by a runtime consumer. |
-| `KAFKA_DIAL_TIMEOUT_SECONDS` | `3` | Broker connection timeout. |
+| `KAFKA_DIAL_TIMEOUT` | `3s` | Broker connection timeout as a Go duration. |
 | `KAFKA_TLS_ENABLED` | `false` | Enable TLS with system roots or the file values below. |
 | `KAFKA_TLS_CA_FILE` | empty | PEM CA file path inside the runtime container. |
 | `KAFKA_TLS_CERT_FILE`, `KAFKA_TLS_KEY_FILE` | empty | Optional mTLS pair; both are required together. |
@@ -63,8 +62,8 @@ connect until they own a producer or consumer.
 | `KAFKA_SASL_MECHANISM` | empty | `PLAIN`, `SCRAM-SHA-256`, or `SCRAM-SHA-512`. |
 | `KAFKA_SASL_USERNAME`, `KAFKA_SASL_PASSWORD` | empty | Required whenever SASL is configured. |
 | `KAFKA_CONSUMER_MAXIMUM_ATTEMPTS` | `3` | Per-delivery handler attempts before a transient error enters DLQ. |
-| `KAFKA_CONSUMER_INITIAL_RETRY_BACKOFF_MILLISECONDS` | `250` | First consumer retry delay. |
-| `KAFKA_CONSUMER_MAXIMUM_RETRY_BACKOFF_MILLISECONDS` | `5000` | Cap for consumer exponential retry backoff. |
+| `KAFKA_CONSUMER_INITIAL_RETRY_BACKOFF` | `250ms` | First consumer retry delay as a Go duration. |
+| `KAFKA_CONSUMER_MAXIMUM_RETRY_BACKOFF` | `5s` | Cap for consumer exponential retry backoff as a Go duration. |
 | `KAFKA_CONSUMER_MAXIMUM_POLL_RECORDS` | `100` | Bound on records held while rebalance is blocked. |
 
 TLS/SASL settings are never committed as Compose secrets. A future deployment

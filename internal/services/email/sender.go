@@ -2,13 +2,12 @@ package email
 
 import (
 	"net/http"
-	"os"
-	"strconv"
 
 	"gopkg.in/gomail.v2"
 
 	emailcontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
+	emailconfig "github.com/HiIamJeff67/notezy-backend/internal/services/email/config"
 )
 
 /* ============================== Initialization & Instance ============================== */
@@ -21,14 +20,17 @@ type EmailSender struct {
 	From     string
 }
 
-var smtpPort, _ = strconv.Atoi(os.Getenv("SMTP_PORT"))
+var NotezyEmailSender *EmailSender
 
-var NotezyEmailSender = &EmailSender{
-	Host:     os.Getenv("SMTP_HOST"),
-	Port:     smtpPort,
-	UserName: os.Getenv("NOTEZY_OFFICIAL_GMAIL"),
-	Password: os.Getenv("NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD"),
-	From:     os.Getenv("NOTEZY_OFFICIAL_NAME") + "<" + os.Getenv("NOTEZY_OFFICIAL_GMAIL") + ">",
+func Initialize(config emailconfig.SMTPConfig) {
+	NotezyEmailSender = &EmailSender{
+		Host:     config.Host,
+		Port:     config.Port,
+		UserName: config.UserName,
+		Password: config.Password,
+		From:     config.From,
+	}
+	NotezyEmailWorkerManager = NewEmailWorkerManager(16, *NotezyEmailSender)
 }
 
 func (s *EmailSender) AsyncSend(to string, subject string, body string, contentType emailcontract.EmailContentType) *exceptions.Exception {

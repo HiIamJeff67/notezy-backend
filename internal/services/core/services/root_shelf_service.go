@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	rootshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/root-shelves"
-	eventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
+	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
@@ -241,7 +241,7 @@ func (s *RootShelfService) saveMyRootShelfPermission(
 			rootShelf.Id.String(),
 			blockPackIds,
 			[]uuid.UUID{targetUser.PublicId},
-			eventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
+			coreeventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
 		); err != nil {
 			tx.Rollback()
 			return nil, exceptions.New(
@@ -655,9 +655,9 @@ func (s *RootShelfService) DeleteMyRootShelfById(
 		}
 		targetUserPublicIds = []uuid.UUID{actorUserPublicId}
 	}
-	reason := eventscontract.BlockPackAccessRevocationReason_PermissionRevoked
+	reason := coreeventscontract.BlockPackAccessRevocationReason_PermissionRevoked
 	if permission == enums.AccessControlPermission_Owner {
-		reason = eventscontract.BlockPackAccessRevocationReason_ResourceUnavailable
+		reason = coreeventscontract.BlockPackAccessRevocationReason_ResourceUnavailable
 	}
 	if err := repositories.NewOutboxEventRepository().EnqueueBlockPackAccessRevocations(
 		tx,
@@ -749,7 +749,7 @@ func (s *RootShelfService) DeleteMyRootShelvesByIds(
 		"root-shelf-bulk-delete",
 		blockPackIds,
 		nil,
-		eventscontract.BlockPackAccessRevocationReason_ResourceUnavailable,
+		coreeventscontract.BlockPackAccessRevocationReason_ResourceUnavailable,
 	); err != nil {
 		tx.Rollback()
 		return nil, exceptions.New(
@@ -1443,7 +1443,7 @@ func (s *RootShelfService) DeleteMyRootShelfPermission(
 		rootShelf.Id.String(),
 		blockPackIds,
 		[]uuid.UUID{targetUser.PublicId},
-		eventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
+		coreeventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
 	); err != nil {
 		tx.Rollback()
 		return nil, exceptions.New(
@@ -1637,7 +1637,7 @@ func (s *RootShelfService) DeleteMyRootShelfPermissions(
 		rootShelf.Id.String(),
 		blockPackIds,
 		requestDto.Body.UserPublicIds,
-		eventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
+		coreeventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
 	); err != nil {
 		tx.Rollback()
 		return nil, exceptions.New(
@@ -1740,7 +1740,7 @@ func (s *RootShelfService) LeaveMyRootShelf(
 		rootShelf.Id.String(),
 		blockPackIds,
 		[]uuid.UUID{actorUserPublicId},
-		eventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
+		coreeventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
 	); err != nil {
 		tx.Rollback()
 		return exceptions.New(
@@ -1866,7 +1866,7 @@ func (s *RootShelfService) LeaveMyRootShelves(
 		"root-shelf-bulk-leave",
 		blockPackIds,
 		[]uuid.UUID{actorUserPublicId},
-		eventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
+		coreeventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
 	); err != nil {
 		tx.Rollback()
 		return exceptions.New(

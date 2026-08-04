@@ -10,11 +10,16 @@ import (
 
 	typescontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas/enums"
+	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	editableblock "github.com/HiIamJeff67/notezy-backend/shared/editableblock"
 	jsonpayload "github.com/HiIamJeff67/notezy-backend/shared/lib/jsonpayload"
 )
+
+type PurposeHandler struct {
+	HandlerFunc        PurposeHandlerFunc
+	AllowedPermissions []enums.AccessControlPermission
+}
 
 type PurposeHandlerFunc func(
 	ctx context.Context,

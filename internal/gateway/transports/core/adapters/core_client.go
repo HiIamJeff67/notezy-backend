@@ -15,7 +15,6 @@ import (
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	gatewaycontexts "github.com/HiIamJeff67/notezy-backend/internal/gateway/contexts"
-	config "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
 	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
 	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 )
@@ -32,13 +31,6 @@ func NewCoreClient(baseURL string, timeout time.Duration) *CoreClient {
 			Timeout: timeout,
 		},
 	}
-}
-
-func NewConfiguredCoreClient() *CoreClient {
-	return NewCoreClient(
-		config.CoreBaseURL(),
-		config.CoreClientTimeout(),
-	)
 }
 
 /* ============================== Delegation Methods ============================== */

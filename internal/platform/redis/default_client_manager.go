@@ -1,19 +1,15 @@
 package redis
 
-import (
-	"os"
-	"strconv"
+import "sync"
 
-	configs "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
-)
+var defaultClientManagerMutex sync.RWMutex
+var DefaultClientManager *ClientManager
 
-var defaultDatabaseNumber, _ = strconv.Atoi(os.Getenv("REDIS_INIT_DB"))
+func InitializeDefaultClientManager(config Config) *ClientManager {
+	defaultClientManagerMutex.Lock()
+	defer defaultClientManagerMutex.Unlock()
 
-var DefaultClientManager = NewClientManager(configs.CacheManagerConfig{
-	Host:     os.Getenv("REDIS_HOST"),
-	Port:     os.Getenv("REDIS_PORT"),
-	Password: os.Getenv("REDIS_PASSWORD"),
-	DB:       defaultDatabaseNumber,
-})
+	DefaultClientManager = NewClientManager(config)
 
-var ClientMap = DefaultClientManager.Clients()
+	return DefaultClientManager
+}

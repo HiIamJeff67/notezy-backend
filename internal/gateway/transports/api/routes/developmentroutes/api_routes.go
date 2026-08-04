@@ -17,15 +17,19 @@ var (
 	DevelopmentAPIRouterGroup *gin.RouterGroup
 )
 
-func ConfigureAPIRoutes(accessTokenCookieHandler, refreshTokenCookieHandler *cookies.CookieHandler) {
-	coreClient := coreadapters.NewConfiguredCoreClient()
-	realtimeGatewayClient := realtimegatewayadapters.NewConfiguredRealtimeGatewayClient()
+func ConfigureAPIRoutes(
+	coreClient *coreadapters.CoreClient,
+	realtimeGatewayClient *realtimegatewayadapters.RealtimeGatewayClient,
+	allowedDomains []string,
+	accessTokenCookieHandler *cookies.CookieHandler,
+	refreshTokenCookieHandler *cookies.CookieHandler,
+) {
 
 	DevelopmentAPIRouterGroup = DevelopmentRouter.Group("/" + constants.APIDevelopmentBaseURL) // use in development mode
 	DevelopmentAPIRouterGroup.Use(
 		middlewares.SanitizeXForwardedForMiddleware(),
 		middlewares.CORSMiddleware(),
-		middlewares.DomainWhiteListMiddleware(),
+		middlewares.DomainWhiteListMiddleware(allowedDomains),
 	)
 	DevelopmentAPIRouterGroup.OPTIONS("/*path", func(ctx *gin.Context) { ctx.Status(200) })
 	fmt.Println("API router group path:", DevelopmentAPIRouterGroup.BasePath())

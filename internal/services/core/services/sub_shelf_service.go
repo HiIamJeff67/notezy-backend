@@ -13,7 +13,7 @@ import (
 
 	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
 	subshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/sub-shelves"
-	eventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
+	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
@@ -646,7 +646,7 @@ func (s *SubShelfService) MoveMySubShelfByRootShelfId(
 		requestDto.Body.SourceSubShelfId.String(),
 		blockPackIds,
 		nil,
-		eventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
+		coreeventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
 	); err != nil {
 		tx.Rollback()
 		return nil, exceptions.New(
@@ -809,7 +809,7 @@ func (s *SubShelfService) MoveMySubShelvesByRootShelfId(
 		"sub-shelf-bulk-move",
 		blockPackIds,
 		nil,
-		eventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
+		coreeventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
 	); err != nil {
 		tx.Rollback()
 		return nil, exceptions.New(
@@ -1042,7 +1042,7 @@ func (s *SubShelfService) MoveMySubShelvesByRootShelfIds(
 		"sub-shelf-multi-root-move",
 		blockPackIds,
 		nil,
-		eventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
+		coreeventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
 	); err != nil {
 		tx.Rollback()
 		return nil, exceptions.New(
@@ -1181,7 +1181,7 @@ func (s *SubShelfService) DeleteMySubShelfById(
 		requestDto.Param.SubShelfId.String(),
 		blockPackIds,
 		nil,
-		eventscontract.BlockPackAccessRevocationReason_ResourceUnavailable,
+		coreeventscontract.BlockPackAccessRevocationReason_ResourceUnavailable,
 	); err != nil {
 		tx.Rollback()
 		return nil, exceptions.New(
@@ -1261,7 +1261,7 @@ func (s *SubShelfService) DeleteMySubShelvesByIds(
 		"sub-shelf-bulk-delete",
 		blockPackIds,
 		nil,
-		eventscontract.BlockPackAccessRevocationReason_ResourceUnavailable,
+		coreeventscontract.BlockPackAccessRevocationReason_ResourceUnavailable,
 	); err != nil {
 		tx.Rollback()
 		return nil, exceptions.New(

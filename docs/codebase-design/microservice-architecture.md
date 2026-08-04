@@ -27,7 +27,7 @@ contracts/
     *_routine_task_payload.go
   durablejob/v1/           # DurableJob-owned internal boundary
   email/v1/                # Email-owned internal boundary
-  realtimegateway/v1/      # RealtimeGateway-owned internal boundary
+  realtime-gateway/v1/     # RealtimeGateway-owned internal boundary
   yjsworker/v1/            # YjsWorker-owned internal boundary
 internal/
   exceptions/
@@ -314,7 +314,7 @@ deltas. Its lifecycle Kafka consumer publishes received revocations to its local
 Redis Pub/Sub channel so every RealtimeGateway instance detaches only its own
 matching connections and releases their leases. The API Gateway REST participant
 controller requests that snapshot through the versioned private
-`contracts/realtimegateway/v1` transport, then calls Core only to validate the
+`contracts/realtime-gateway/v1` transport, then calls Core only to validate the
 requester's BlockPack permission and enrich a bounded, de-duplicated public-ID
 collection after a RootShelf membership filter. Core's lifecycle path is outbox
 → Kafka → RealtimeGateway; it never reads or writes RealtimeGateway-owned

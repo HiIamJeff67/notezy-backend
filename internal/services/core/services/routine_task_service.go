@@ -3,14 +3,19 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	routinetasksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tasks"
+	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
+	durablejobroutinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
 	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
@@ -44,6 +49,10 @@ type RoutineTaskServiceInterface interface {
 	VisualizeMyRoutineTaskActualEndedAtCount(ctx context.Context, reqDto *routinetasksdto.VisualizeMyRoutineTaskActualEndedAtCountRequestDto) (*routinetasksdto.VisualizeMyRoutineTaskActualEndedAtCountResponseDto, *exceptions.Exception)
 
 	SearchPrivateRoutineTasks(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRoutineTaskInput) (*gqlmodels.SearchRoutineTaskConnection, *exceptions.Exception)
+
+	ClaimRoutineTasks(ctx context.Context, eventId uuid.UUID, reqDto *durablejobcontract.ClaimRoutineTasksRequestDto) (*durablejobcontract.ClaimRoutineTasksResponseDto, *exceptions.Exception)
+	MarkCompletedRoutineTasks(ctx context.Context, eventId uuid.UUID, request *durablejobcontract.MarkCompletedRoutineTasksRequestDto) *exceptions.Exception
+	MarkFailedRoutineTasks(ctx context.Context, eventId uuid.UUID, request *durablejobcontract.MarkFailedRoutineTasksRequestDto) *exceptions.Exception
 }
 
 type RoutineTaskService struct {
@@ -149,7 +158,7 @@ func (s *RoutineTaskService) visualizeMyRoutineTaskTimeCount(
 		}
 		meta, err := json.Marshal(metadata)
 		if err != nil {
-			return nil, apiexceptions.Routine.FailedToMarshalData(metadata)
+			return nil, apiexceptions.Routine.FailedToMarshalData(metadata).WithOrigin(err)
 		}
 
 		data[index] = routinetasksdto.RoutineTaskCountDatum{
@@ -1037,4 +1046,506 @@ func (s *RoutineTaskService) SearchPrivateRoutineTasks(
 		TotalCount:     int32(len(searchEdges)),
 		SearchTime:     searchTime,
 	}, nil
+}
+
+/* ============================== System Methods for DurableJob RoutineTask ============================== */
+
+func (s *RoutineTaskService) ClaimRoutineTasks(
+	ctx context.Context,
+	eventId uuid.UUID,
+	reqDto *durablejobcontract.ClaimRoutineTasksRequestDto,
+) (*durablejobcontract.ClaimRoutineTasksResponseDto, *exceptions.Exception) {
+	if eventId == uuid.Nil {
+		return nil, exceptions.New(
+			"InvalidDto",
+			"RoutineTask",
+			"Claim",
+			"The routine task claim request is invalid",
+			http.StatusBadRequest,
+		)
+	}
+	if err := s.validator.Struct(reqDto); err != nil {
+		return nil, exceptions.New(
+			"InvalidDto",
+			"RoutineTask",
+			"Claim",
+			"The routine task claim request is invalid",
+			http.StatusBadRequest,
+		).WithOrigin(err)
+	}
+
+	tx := s.db.WithContext(ctx).Begin()
+	if err := tx.Error; err != nil {
+		return nil, apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+	}
+
+	result := tx.
+		Clauses(clause.OnConflict{
+			DoNothing: true,
+		}).
+		Create(&schemas.InboxEvent{
+			EventId: eventId,
+		})
+	if result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToRecordInboxEvent",
+			"RoutineTask",
+			"Claim",
+			"Failed to record the Kafka claim event",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(result.Error)
+	}
+	if result.RowsAffected == 0 {
+		if err := tx.Commit().Error; err != nil {
+			tx.Rollback()
+			return nil, apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+		}
+
+		return nil, nil
+	}
+
+	type claimableRoutineTask struct {
+		Id          uuid.UUID `gorm:"column:id;"`
+		ScheduledAt time.Time `gorm:"column:scheduled_at;"`
+	}
+
+	now := time.Now().UTC()
+	var claimableRoutineTasks []claimableRoutineTask
+	result = tx.
+		Model(&schemas.RoutineTask{}).
+		Select("id, scheduled_at").
+		Where("status = ?", enums.RoutineTaskStatus_Idle).
+		Where("scheduled_at <= ?", now).
+		Where("attempts < max_attempts").
+		Order("priority DESC, scheduled_at ASC, id ASC").
+		Clauses(clause.Locking{
+			Strength: "UPDATE",
+			Options:  "SKIP LOCKED",
+		}).
+		Limit(reqDto.BatchSize).
+		Find(&claimableRoutineTasks)
+	if result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"ClaimFailed",
+			"RoutineTask",
+			"Claim",
+			"Failed to claim routine tasks",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(result.Error)
+	}
+
+	if len(claimableRoutineTasks) == 0 {
+		response := &durablejobcontract.ClaimRoutineTasksResponseDto{
+			RequestId:   reqDto.RequestId,
+			WorkerId:    reqDto.WorkerId,
+			Assignments: []durablejobroutinetasktypes.RoutineTaskAssignment{},
+		}
+		if err := repositories.EnqueueOutboxEvents(
+			tx,
+			coreeventscontract.CoreDurableJobRoutineTaskTopic,
+			[]coreeventscontract.EventEnvelope[durablejobcontract.ClaimRoutineTasksResponseDto]{
+				{
+					SchemaVersion: coreeventscontract.Version,
+					EventId:       uuid.New(),
+					EventType:     coreeventscontract.EventType_RoutineTasksAssigned,
+					AggregateType: coreeventscontract.AggregateType_DurableJobWorker,
+					AggregateId:   reqDto.WorkerId,
+					KafkaKey:      reqDto.WorkerId.String(),
+					OccurredAt:    now,
+					CorrelationId: reqDto.RequestId.String(),
+					Data:          *response,
+				},
+			},
+		); err != nil {
+			tx.Rollback()
+			return nil, exceptions.New(
+				"FailedToEnqueueAssignment",
+				"RoutineTask",
+				"Claim",
+				"Failed to enqueue routine task assignments",
+				http.StatusInternalServerError,
+				true,
+			).WithOrigin(err)
+		}
+		if err := tx.Commit().Error; err != nil {
+			tx.Rollback()
+			return nil, apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+		}
+
+		return response, nil
+	}
+
+	claimedRoutineTaskIds := make([]uuid.UUID, len(claimableRoutineTasks))
+	recordScheduledAtByRoutineTaskId := make(map[uuid.UUID]time.Time, len(claimableRoutineTasks))
+	for index, routineTask := range claimableRoutineTasks {
+		claimedRoutineTaskIds[index] = routineTask.Id
+		recordScheduledAtByRoutineTaskId[routineTask.Id] = routineTask.ScheduledAt
+	}
+
+	result = tx.
+		Model(&schemas.RoutineTask{}).
+		Where("id IN ?", claimedRoutineTaskIds).
+		Updates(map[string]any{
+			"status":   enums.RoutineTaskStatus_Running,
+			"attempts": gorm.Expr("attempts + 1"),
+			"scheduled_at": gorm.Expr(
+				`CASE period
+					WHEN ? THEN GREATEST(scheduled_at, next_scheduled_at) + INTERVAL '1 day'
+					WHEN ? THEN GREATEST(scheduled_at, next_scheduled_at) + INTERVAL '7 days'
+					WHEN ? THEN GREATEST(scheduled_at, next_scheduled_at) + INTERVAL '30 days'
+					ELSE GREATEST(scheduled_at, next_scheduled_at)
+				END`,
+				enums.RoutinePeriod_Daily,
+				enums.RoutinePeriod_Weekly,
+				enums.RoutinePeriod_Monthly,
+			),
+			"next_scheduled_at": gorm.Expr(
+				`CASE period
+					WHEN ? THEN GREATEST(scheduled_at, next_scheduled_at) + INTERVAL '1 day'
+					WHEN ? THEN GREATEST(scheduled_at, next_scheduled_at) + INTERVAL '7 days'
+					WHEN ? THEN GREATEST(scheduled_at, next_scheduled_at) + INTERVAL '30 days'
+					ELSE GREATEST(scheduled_at, next_scheduled_at)
+				END`,
+				enums.RoutinePeriod_Daily,
+				enums.RoutinePeriod_Weekly,
+				enums.RoutinePeriod_Monthly,
+			),
+			"actual_started_at": now,
+			"actual_ended_at":   nil,
+			"updated_at":        now,
+		})
+	if result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"ClaimFailed",
+			"RoutineTask",
+			"Claim",
+			"Failed to update claimed routine tasks",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(result.Error)
+	}
+
+	var claimedRoutineTasks []schemas.RoutineTask
+	result = tx.
+		Model(&schemas.RoutineTask{}).
+		Where("id IN ?", claimedRoutineTaskIds).
+		Find(&claimedRoutineTasks)
+	if result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"ClaimFailed",
+			"RoutineTask",
+			"Claim",
+			"Failed to retrieve claimed routine tasks",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(result.Error)
+	}
+
+	routineTaskRecords := make([]schemas.RoutineTaskRecord, len(claimedRoutineTasks))
+	for index, routineTask := range claimedRoutineTasks {
+		routineTaskRecords[index] = schemas.RoutineTaskRecord{
+			Id:              uuid.New(),
+			RoutineTaskId:   routineTask.Id,
+			Purpose:         routineTask.Purpose,
+			Status:          enums.RoutineTaskRecordStatus_Running,
+			CostUnit:        routineTask.CostUnit,
+			TotalAttempts:   int64(routineTask.Attempts),
+			ScheduledAt:     recordScheduledAtByRoutineTaskId[routineTask.Id],
+			ActualStartedAt: routineTask.ActualStartedAt,
+		}
+	}
+
+	result = tx.CreateInBatches(&routineTaskRecords, reqDto.BatchSize)
+	if result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"ClaimFailed",
+			"RoutineTaskRecord",
+			"Claim",
+			"Failed to create routine task records",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(result.Error)
+	}
+
+	recordIdByRoutineTaskId := make(map[uuid.UUID]uuid.UUID, len(routineTaskRecords))
+	for _, routineTaskRecord := range routineTaskRecords {
+		recordIdByRoutineTaskId[routineTaskRecord.RoutineTaskId] = routineTaskRecord.Id
+	}
+
+	assignments := make([]durablejobroutinetasktypes.RoutineTaskAssignment, len(claimedRoutineTasks))
+	for index, routineTask := range claimedRoutineTasks {
+		startedAt := now
+		if routineTask.ActualStartedAt != nil {
+			startedAt = *routineTask.ActualStartedAt
+		}
+
+		assignments[index] = durablejobroutinetasktypes.RoutineTaskAssignment{
+			RoutineTaskId:       routineTask.Id,
+			RoutineTaskRecordId: recordIdByRoutineTaskId[routineTask.Id],
+			RoutineId:           routineTask.RoutineId,
+			ActorUserId:         routineTask.ActorUserId,
+			Title:               routineTask.Title,
+			Purpose:             *routineTask.Purpose.ToContractable(),
+			Payload:             json.RawMessage(routineTask.Payload),
+			CostUnit:            routineTask.CostUnit,
+			Priority:            routineTask.Priority,
+			Attempt:             routineTask.Attempts,
+			ScheduledAt:         recordScheduledAtByRoutineTaskId[routineTask.Id],
+			StartedAt:           startedAt,
+		}
+	}
+
+	response := &durablejobcontract.ClaimRoutineTasksResponseDto{
+		RequestId:   reqDto.RequestId,
+		WorkerId:    reqDto.WorkerId,
+		Assignments: assignments,
+	}
+
+	if err := repositories.EnqueueOutboxEvents(
+		tx,
+		coreeventscontract.CoreDurableJobRoutineTaskTopic,
+		[]coreeventscontract.EventEnvelope[durablejobcontract.ClaimRoutineTasksResponseDto]{
+			{
+				SchemaVersion: coreeventscontract.Version,
+				EventId:       uuid.New(),
+				EventType:     coreeventscontract.EventType_RoutineTasksAssigned,
+				AggregateType: coreeventscontract.AggregateType_DurableJobWorker,
+				AggregateId:   reqDto.WorkerId,
+				KafkaKey:      reqDto.WorkerId.String(),
+				OccurredAt:    now,
+				CorrelationId: reqDto.RequestId.String(),
+				Data:          *response,
+			},
+		},
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToEnqueueAssignment",
+			"RoutineTask",
+			"Claim",
+			"Failed to enqueue routine task assignments",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+	}
+
+	return response, nil
+}
+
+func (s *RoutineTaskService) MarkCompletedRoutineTasks(
+	ctx context.Context,
+	eventId uuid.UUID,
+	request *durablejobcontract.MarkCompletedRoutineTasksRequestDto,
+) *exceptions.Exception {
+	if eventId == uuid.Nil || request == nil || request.WorkerId == uuid.Nil || len(request.Tasks) == 0 {
+		return exceptions.New(
+			"InvalidDto",
+			"RoutineTask",
+			"MarkCompletedRoutineTasks",
+			"The routine task completion response is invalid",
+			http.StatusBadRequest,
+		)
+	}
+	if err := s.validator.Struct(request); err != nil {
+		return exceptions.New(
+			"InvalidDto",
+			"RoutineTask",
+			"MarkCompletedRoutineTasks",
+			"The routine task completion response is invalid",
+			http.StatusBadRequest,
+		).WithOrigin(err)
+	}
+
+	tx := s.db.WithContext(ctx).Begin()
+	if err := tx.Error; err != nil {
+		return apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+	}
+	result := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&schemas.InboxEvent{EventId: eventId})
+	if result.Error != nil {
+		tx.Rollback()
+		return exceptions.New("FailedToRecordInboxEvent", "RoutineTask", "MarkCompletedRoutineTasks", "Failed to record the Kafka result event", http.StatusInternalServerError, true).WithOrigin(result.Error)
+	}
+	if result.RowsAffected == 0 {
+		if err := tx.Commit().Error; err != nil {
+			return apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+		}
+		return nil
+	}
+
+	now := time.Now().UTC()
+	taskIds := make([]uuid.UUID, len(request.Tasks))
+	recordIds := make([]uuid.UUID, len(request.Tasks))
+	for index, task := range request.Tasks {
+		taskIds[index] = task.RoutineTaskId
+		recordIds[index] = task.RoutineTaskRecordId
+	}
+	result = tx.Model(&schemas.RoutineTask{}).
+		Where("id IN ? AND status = ?", taskIds, enums.RoutineTaskStatus_Running).
+		Updates(map[string]any{
+			"status":          enums.RoutineTaskStatus_Idle,
+			"attempts":        0,
+			"actual_ended_at": now,
+			"updated_at":      now,
+		})
+	if result.Error != nil || result.RowsAffected != int64(len(taskIds)) {
+		var finalizedRecordCount int64
+		finalizedResult := tx.Model(&schemas.RoutineTaskRecord{}).
+			Where("id IN ? AND status = ?", recordIds, enums.RoutineTaskRecordStatus_Success).
+			Count(&finalizedRecordCount)
+		if result.Error == nil && finalizedResult.Error == nil && finalizedRecordCount == int64(len(recordIds)) {
+			if err := tx.Commit().Error; err != nil {
+				return apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+			}
+			return nil
+		}
+		tx.Rollback()
+		if result.Error != nil {
+			return apiexceptions.RoutineTask.FailedToUpdate().WithOrigin(result.Error)
+		}
+		return exceptions.New("ResultStateMismatch", "RoutineTask", "MarkCompletedRoutineTasks", "Routine task completion count does not match the claimed batch", http.StatusConflict, true)
+	}
+	result = tx.Model(&schemas.RoutineTaskRecord{}).
+		Where("id IN ? AND status = ?", recordIds, enums.RoutineTaskRecordStatus_Running).
+		Updates(map[string]any{
+			"status":          enums.RoutineTaskRecordStatus_Success,
+			"actual_ended_at": now,
+			"error_code":      nil,
+			"error_reason":    nil,
+			"updated_at":      now,
+		})
+	if result.Error != nil || result.RowsAffected != int64(len(recordIds)) {
+		var finalizedRecordCount int64
+		finalizedResult := tx.Model(&schemas.RoutineTaskRecord{}).
+			Where("id IN ? AND status = ?", recordIds, enums.RoutineTaskRecordStatus_Success).
+			Count(&finalizedRecordCount)
+		if result.Error == nil && finalizedResult.Error == nil && finalizedRecordCount == int64(len(recordIds)) {
+			if err := tx.Commit().Error; err != nil {
+				return apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+			}
+			return nil
+		}
+		tx.Rollback()
+		if result.Error != nil {
+			return apiexceptions.RoutineTask.FailedToUpdate().WithOrigin(result.Error)
+		}
+		return exceptions.New("ResultStateMismatch", "RoutineTaskRecord", "MarkCompletedRoutineTasks", "Routine task record completion count does not match the claimed batch", http.StatusConflict, true)
+	}
+	if err := tx.Commit().Error; err != nil {
+		return apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+	}
+	return nil
+}
+
+func (s *RoutineTaskService) MarkFailedRoutineTasks(
+	ctx context.Context,
+	eventId uuid.UUID,
+	request *durablejobcontract.MarkFailedRoutineTasksRequestDto,
+) *exceptions.Exception {
+	if eventId == uuid.Nil || request == nil || request.WorkerId == uuid.Nil || len(request.Tasks) == 0 {
+		return exceptions.New("InvalidDto", "RoutineTask", "MarkFailedRoutineTasks", "The routine task failure response is invalid", http.StatusBadRequest)
+	}
+	if err := s.validator.Struct(request); err != nil {
+		return exceptions.New("InvalidDto", "RoutineTask", "MarkFailedRoutineTasks", "The routine task failure response is invalid", http.StatusBadRequest).WithOrigin(err)
+	}
+
+	tx := s.db.WithContext(ctx).Begin()
+	if err := tx.Error; err != nil {
+		return apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+	}
+	result := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&schemas.InboxEvent{EventId: eventId})
+	if result.Error != nil {
+		tx.Rollback()
+		return exceptions.New("FailedToRecordInboxEvent", "RoutineTask", "MarkFailedRoutineTasks", "Failed to record the Kafka result event", http.StatusInternalServerError, true).WithOrigin(result.Error)
+	}
+	if result.RowsAffected == 0 {
+		if err := tx.Commit().Error; err != nil {
+			return apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+		}
+		return nil
+	}
+
+	now := time.Now().UTC()
+	taskIds := make([]uuid.UUID, 0, len(request.Tasks))
+	recordIds := make([]uuid.UUID, 0, len(request.Tasks))
+	recordIdsByError := make(map[string][]uuid.UUID)
+	for _, task := range request.Tasks {
+		taskIds = append(taskIds, task.RoutineTaskId)
+		recordIds = append(recordIds, task.RoutineTaskRecordId)
+		recordIdsByError[string(task.ErrorCode)+"\x00"+task.ErrorReason] = append(
+			recordIdsByError[string(task.ErrorCode)+"\x00"+task.ErrorReason],
+			task.RoutineTaskRecordId,
+		)
+	}
+	result = tx.Model(&schemas.RoutineTask{}).
+		Where("id IN ? AND status = ?", taskIds, enums.RoutineTaskStatus_Running).
+		Updates(map[string]any{
+			"status":          enums.RoutineTaskStatus_Idle,
+			"actual_ended_at": now,
+			"updated_at":      now,
+		})
+	if result.Error != nil || result.RowsAffected != int64(len(taskIds)) {
+		var finalizedRecordCount int64
+		finalizedResult := tx.Model(&schemas.RoutineTaskRecord{}).
+			Where("id IN ? AND status = ?", recordIds, enums.RoutineTaskRecordStatus_Failed).
+			Count(&finalizedRecordCount)
+		if result.Error == nil && finalizedResult.Error == nil && finalizedRecordCount == int64(len(request.Tasks)) {
+			if err := tx.Commit().Error; err != nil {
+				return apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+			}
+			return nil
+		}
+		tx.Rollback()
+		if result.Error != nil {
+			return apiexceptions.RoutineTask.FailedToUpdate().WithOrigin(result.Error)
+		}
+		return exceptions.New("ResultStateMismatch", "RoutineTask", "MarkFailedRoutineTasks", "Routine task failure count does not match the claimed batch", http.StatusConflict, true)
+	}
+	updatedRecordCount := int64(0)
+	for errorKey, ids := range recordIdsByError {
+		parts := strings.SplitN(errorKey, "\x00", 2)
+		result = tx.Model(&schemas.RoutineTaskRecord{}).
+			Where("id IN ? AND status = ?", ids, enums.RoutineTaskRecordStatus_Running).
+			Updates(map[string]any{
+				"status":          enums.RoutineTaskRecordStatus_Failed,
+				"actual_ended_at": now,
+				"error_code":      parts[0],
+				"error_reason":    parts[1],
+				"updated_at":      now,
+			})
+		if result.Error != nil {
+			tx.Rollback()
+			return apiexceptions.RoutineTask.FailedToUpdate().WithOrigin(result.Error)
+		}
+		updatedRecordCount += result.RowsAffected
+	}
+	if updatedRecordCount != int64(len(request.Tasks)) {
+		var finalizedRecordCount int64
+		finalizedResult := tx.Model(&schemas.RoutineTaskRecord{}).
+			Where("id IN ? AND status = ?", recordIds, enums.RoutineTaskRecordStatus_Failed).
+			Count(&finalizedRecordCount)
+		if finalizedResult.Error == nil && finalizedRecordCount == int64(len(request.Tasks)) {
+			if err := tx.Commit().Error; err != nil {
+				return apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+			}
+			return nil
+		}
+		tx.Rollback()
+		return exceptions.New("ResultStateMismatch", "RoutineTaskRecord", "MarkFailedRoutineTasks", "Routine task record failure count does not match the claimed batch", http.StatusConflict, true)
+	}
+	if err := tx.Commit().Error; err != nil {
+		return apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
+	}
+	return nil
 }

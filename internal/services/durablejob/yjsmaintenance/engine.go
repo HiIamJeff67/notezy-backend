@@ -11,6 +11,7 @@ import (
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	metrics "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/metrics"
 	traces "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/traces"
+	durablejobconfig "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/config"
 	coretransport "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/transports/core"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
@@ -22,12 +23,15 @@ type Engine struct {
 	workerClient WorkerClient
 }
 
-func NewEngine(db *gorm.DB) *Engine {
+func NewEngine(db *gorm.DB, config durablejobconfig.Config) *Engine {
 	return &Engine{
-		ticker:       time.NewTicker(constants.YjsMaintenanceScanInterval),
-		claimer:      NewClaimer(db),
-		handler:      NewHandler(db, coretransport.NewClient()),
-		workerClient: NewWorkerClient(),
+		ticker:  time.NewTicker(constants.YjsMaintenanceScanInterval),
+		claimer: NewClaimer(db),
+		handler: NewHandler(
+			db,
+			coretransport.NewClient(config.CoreBaseUrl, config.CoreClientTimeout),
+		),
+		workerClient: NewWorkerClient(config),
 	}
 }
 

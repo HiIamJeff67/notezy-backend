@@ -14,8 +14,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
 
-	eventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	config "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
+	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	traces "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/traces"
 )
@@ -59,7 +58,7 @@ type ConsumerRecord struct {
 type ConsumerHandler func(
 	ctx context.Context,
 	record ConsumerRecord,
-	envelope eventscontract.EventEnvelope[json.RawMessage],
+	envelope coreeventscontract.EventEnvelope[json.RawMessage],
 ) error
 
 type DeadLetter struct {
@@ -80,11 +79,11 @@ type DeadLetter struct {
 type Consumer struct {
 	client        *franzkgo.Client
 	consumerGroup string
-	config        config.KafkaConsumerConfig
+	config        ConsumerConfig
 }
 
 func NewConsumer(
-	kafkaConfig config.KafkaConfig,
+	kafkaConfig ConsumerConfig,
 	topics ...string,
 ) (*Consumer, error) {
 	if kafkaConfig.ConsumerGroup == "" {
@@ -94,7 +93,7 @@ func NewConsumer(
 		return nil, errors.New("at least one Kafka consumer topic is required")
 	}
 
-	options, err := newConnectionOptions(kafkaConfig)
+	options, err := newConnectionOptions(kafkaConfig.ClientConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +111,7 @@ func NewConsumer(
 	return &Consumer{
 		client:        client,
 		consumerGroup: kafkaConfig.ConsumerGroup,
-		config:        config.KafkaConsumer(),
+		config:        kafkaConfig,
 	}, nil
 }
 
@@ -244,7 +243,7 @@ func (c *Consumer) deadLetter(
 	}
 
 	deadLetter := DeadLetter{
-		SchemaVersion:   eventscontract.Version,
+		SchemaVersion:   coreeventscontract.Version,
 		ConsumerGroup:   c.consumerGroup,
 		SourceTopic:     record.Topic,
 		SourcePartition: record.Partition,
@@ -310,20 +309,20 @@ func DeadLetterTopic(topic string) string {
 	return topic + ".dlq"
 }
 
-func decodeEventEnvelope(record *franzkgo.Record) (eventscontract.EventEnvelope[json.RawMessage], error) {
-	var envelope eventscontract.EventEnvelope[json.RawMessage]
+func decodeEventEnvelope(record *franzkgo.Record) (coreeventscontract.EventEnvelope[json.RawMessage], error) {
+	var envelope coreeventscontract.EventEnvelope[json.RawMessage]
 	if err := json.Unmarshal(record.Value, &envelope); err != nil {
-		return eventscontract.EventEnvelope[json.RawMessage]{}, fmt.Errorf("decode Kafka event envelope: %w", err)
+		return coreeventscontract.EventEnvelope[json.RawMessage]{}, fmt.Errorf("decode Kafka event envelope: %w", err)
 	}
-	if envelope.SchemaVersion != eventscontract.Version {
-		return eventscontract.EventEnvelope[json.RawMessage]{}, fmt.Errorf("unsupported Kafka event schema version %q", envelope.SchemaVersion)
+	if envelope.SchemaVersion != coreeventscontract.Version {
+		return coreeventscontract.EventEnvelope[json.RawMessage]{}, fmt.Errorf("unsupported Kafka event schema version %q", envelope.SchemaVersion)
 	}
 	if envelope.EventId == uuid.Nil || envelope.EventType == "" || envelope.AggregateType == "" ||
 		envelope.AggregateId == uuid.Nil || envelope.KafkaKey == "" {
-		return eventscontract.EventEnvelope[json.RawMessage]{}, errors.New("Kafka event envelope is incomplete")
+		return coreeventscontract.EventEnvelope[json.RawMessage]{}, errors.New("Kafka event envelope is incomplete")
 	}
 	if envelope.KafkaKey != envelope.AggregateId.String() || envelope.KafkaKey != string(record.Key) {
-		return eventscontract.EventEnvelope[json.RawMessage]{}, errors.New("Kafka event envelope key does not match the aggregate ID")
+		return coreeventscontract.EventEnvelope[json.RawMessage]{}, errors.New("Kafka event envelope key does not match the aggregate ID")
 	}
 
 	return envelope, nil
@@ -341,7 +340,7 @@ func errorClassification(err error) ErrorClassification {
 	return ErrorClassification_Transient
 }
 
-func retryBackoff(consumerConfig config.KafkaConsumerConfig, attempt int) time.Duration {
+func retryBackoff(consumerConfig ConsumerConfig, attempt int) time.Duration {
 	backoff := consumerConfig.InitialRetryBackoff
 	for index := 1; index < attempt && backoff < consumerConfig.MaximumRetryBackoff; index++ {
 		backoff *= 2
@@ -353,7 +352,7 @@ func retryBackoff(consumerConfig config.KafkaConsumerConfig, attempt int) time.D
 	return backoff
 }
 
-func extractTraceContext(ctx context.Context, traceMetadata eventscontract.TraceMetadata) context.Context {
+func extractTraceContext(ctx context.Context, traceMetadata coreeventscontract.TraceMetadata) context.Context {
 	if traceMetadata.TraceParent == "" {
 		return ctx
 	}

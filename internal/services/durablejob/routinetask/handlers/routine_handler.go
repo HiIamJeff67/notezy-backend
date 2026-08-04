@@ -7,13 +7,13 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	typescontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas/enums"
+	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	matchers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers/matchers"
 	resolvers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers/resolvers"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
@@ -59,8 +59,8 @@ func (h RoutineHandler) HandleCreateRoutine(
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
 	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
-	candidatePayloads := make([]typescontract.CreateRoutineRoutineTaskPayload, 0, len(tasks))
-	candidatePatterns := make([]typescontract.RoutineTaskPattern, 0, len(tasks))
+	candidatePayloads := make([]routinetasktypes.CreateRoutineRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]routinetasktypes.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		actorUserId, exists := taskIdToActorUserId[task.Id]
@@ -68,7 +68,7 @@ func (h RoutineHandler) HandleCreateRoutine(
 			continue
 		}
 
-		payload, exception := decodePayload[typescontract.CreateRoutineRoutineTaskPayload](h.validator, task)
+		payload, exception := decodePayload[routinetasktypes.CreateRoutineRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}
@@ -149,8 +149,8 @@ func (h RoutineHandler) HandleUpdateRoutine(
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
 	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
-	candidatePayloads := make([]typescontract.UpdateRoutineRoutineTaskPayload, 0, len(tasks))
-	candidatePatterns := make([]typescontract.RoutineTaskPattern, 0, len(tasks))
+	candidatePayloads := make([]routinetasktypes.UpdateRoutineRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]routinetasktypes.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		actorUserId, exists := taskIdToActorUserId[task.Id]
@@ -158,7 +158,7 @@ func (h RoutineHandler) HandleUpdateRoutine(
 			continue
 		}
 
-		payload, exception := decodePayload[typescontract.UpdateRoutineRoutineTaskPayload](h.validator, task)
+		payload, exception := decodePayload[routinetasktypes.UpdateRoutineRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}

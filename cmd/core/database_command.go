@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	config "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
+	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
@@ -29,7 +29,11 @@ var viewAllDatabaseEnumsCommand = &cobra.Command{
 	Short: "View all the nums of the database.",
 	Long:  "Use a simple select sql command to get all the enums of the database",
 	Run: func(_ *cobra.Command, _ []string) {
-		db := data.ConnectToDatabase(config.PostgresDatabaseConfig)
+		config, err := platformdatabase.LoadConfig()
+		if err != nil {
+			panic(err)
+		}
+		db := data.ConnectToDatabase(config)
 		defer data.DisconnectToDatabase(db)
 
 		if !data.ViewAllDatabaseEnums(db) {
@@ -80,10 +84,14 @@ var migrateDatabaseCommand = &cobra.Command{
 	Short: "Migrate enums, tables, and some triggers to the database.",
 	Long:  "Use some migration SQLs to migrate required enums, tables, and some triggers to the database.",
 	Run: func(_ *cobra.Command, _ []string) {
-		db := data.ConnectToDatabase(config.PostgresDatabaseConfig)
+		config, err := platformdatabase.LoadConfig()
+		if err != nil {
+			panic(err)
+		}
+		db := data.ConnectToDatabase(config)
 		defer data.DisconnectToDatabase(db)
 
-		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Start the process of migrating database schema to %v", config.PostgresDatabaseConfig.DBName))
+		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Start the process of migrating database schema to %v", config.Name))
 
 		if !data.MigrateEnumsToDatabase(db) {
 			return
@@ -105,10 +113,14 @@ var seedDatabaseCommand = &cobra.Command{
 	Short: "Seed some default data for management or main business logic.",
 	Long:  "Use some seeding default data SQLs to seed data for management or main business logic.",
 	Run: func(_ *cobra.Command, _ []string) {
-		db := data.ConnectToDatabase(config.PostgresDatabaseConfig)
+		config, err := platformdatabase.LoadConfig()
+		if err != nil {
+			panic(err)
+		}
+		db := data.ConnectToDatabase(config)
 		defer data.DisconnectToDatabase(db)
 
-		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Start the process of seeding database default data to %v", config.PostgresDatabaseConfig.DBName))
+		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Start the process of seeding database default data to %v", config.Name))
 
 		if !data.SeedDefaultDataToDatabase(db) {
 			return

@@ -3,7 +3,6 @@ package services
 import (
 	"bytes"
 	"context"
-	"os"
 	"strings"
 	"time"
 
@@ -56,6 +55,7 @@ type MaterialService struct {
 	materialScope      scopes.MaterialScopeInterface
 	subShelfRepository repositories.SubShelfRepositoryInterface
 	materialRepository repositories.MaterialRepositoryInterface
+	storageKeySalt     string
 }
 
 func NewMaterialService(
@@ -65,6 +65,7 @@ func NewMaterialService(
 	materialScope scopes.MaterialScopeInterface,
 	subShelfRepository repositories.SubShelfRepositoryInterface,
 	materialRepository repositories.MaterialRepositoryInterface,
+	storageKeySalt string,
 ) MaterialServiceInterface {
 	return &MaterialService{
 		validator:          validator,
@@ -73,6 +74,7 @@ func NewMaterialService(
 		materialScope:      materialScope,
 		subShelfRepository: subShelfRepository,
 		materialRepository: materialRepository,
+		storageKeySalt:     storageKeySalt,
 	}
 }
 
@@ -353,7 +355,7 @@ func (s *MaterialService) CreateMyMaterial(
 	newContentKey := s.storage.GetKey(
 		actorUserPublicId.String(),
 		newMaterialId.String(),
-		os.Getenv("STORAGE_KEY_SALT"),
+		s.storageKeySalt,
 	)
 	zeroSize := int64(0)
 	_, exception = s.materialRepository.CreateOneBySubShelfId(
@@ -462,7 +464,7 @@ func (s *MaterialService) SaveMyMaterialById(
 	var contentKey = s.storage.GetKey(
 		actorUserPublicId.String(),
 		requestDto.Param.MaterialId.String(),
-		os.Getenv("STORAGE_KEY_SALT"),
+		s.storageKeySalt,
 	)
 
 	fileHeaderSize := int64(len(requestDto.Body.ContentFile))

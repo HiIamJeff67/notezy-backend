@@ -3,23 +3,22 @@ package kafka
 import (
 	"testing"
 	"time"
-
-	config "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
 )
 
 func TestNewProducerRejectsUnsupportedSASLMechanism(t *testing.T) {
-	_, err := NewProducer(config.KafkaConfig{
-		Brokers: []string{
-			"127.0.0.1:9094",
+	_, err := NewProducer(ClientConfig{
+		ConnectionConfig: ConnectionConfig{
+			Brokers: []string{
+				"127.0.0.1:9094",
+			},
+			DialTimeout: time.Second,
+			SASL: SASLConfig{
+				Mechanism: "OAUTHBEARER",
+				Username:  "test-user",
+				Password:  "test-password",
+			},
 		},
-		ClientId:      "test-client",
-		ConsumerGroup: "test-group",
-		DialTimeout:   time.Second,
-		SASL: config.KafkaSASLConfig{
-			Mechanism: "OAUTHBEARER",
-			Username:  "test-user",
-			Password:  "test-password",
-		},
+		ClientId: "test-client",
 	})
 	if err == nil {
 		t.Fatal("expected unsupported Kafka SASL mechanism to be rejected")
@@ -27,17 +26,18 @@ func TestNewProducerRejectsUnsupportedSASLMechanism(t *testing.T) {
 }
 
 func TestNewProducerRejectsPartialTLSClientCertificate(t *testing.T) {
-	_, err := NewProducer(config.KafkaConfig{
-		Brokers: []string{
-			"127.0.0.1:9094",
+	_, err := NewProducer(ClientConfig{
+		ConnectionConfig: ConnectionConfig{
+			Brokers: []string{
+				"127.0.0.1:9094",
+			},
+			DialTimeout: time.Second,
+			TLS: TLSConfig{
+				Enabled:  true,
+				CertFile: "client.crt",
+			},
 		},
-		ClientId:      "test-client",
-		ConsumerGroup: "test-group",
-		DialTimeout:   time.Second,
-		TLS: config.KafkaTLSConfig{
-			Enabled:  true,
-			CertFile: "client.crt",
-		},
+		ClientId: "test-client",
 	})
 	if err == nil {
 		t.Fatal("expected partial Kafka TLS client certificate to be rejected")

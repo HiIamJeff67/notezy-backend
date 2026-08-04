@@ -8,13 +8,13 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	typescontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas/enums"
+	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	matchers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers/matchers"
 	resolvers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers/resolvers"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
@@ -63,8 +63,8 @@ func (h RootShelfHandler) HandleCreateRootShelf(
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
 	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
-	candidatePayloads := make([]typescontract.CreateRootShelfRoutineTaskPayload, 0, len(tasks))
-	candidatePatterns := make([]typescontract.RoutineTaskPattern, 0, len(tasks))
+	candidatePayloads := make([]routinetasktypes.CreateRootShelfRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]routinetasktypes.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		actorUserId, exists := taskIdToActorUserId[task.Id]
@@ -72,7 +72,7 @@ func (h RootShelfHandler) HandleCreateRootShelf(
 			continue
 		}
 
-		payload, exception := decodePayload[typescontract.CreateRootShelfRoutineTaskPayload](h.validator, task)
+		payload, exception := decodePayload[routinetasktypes.CreateRootShelfRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}
@@ -144,8 +144,8 @@ func (h RootShelfHandler) HandleUpdateRootShelf(
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
 	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
-	candidatePayloads := make([]typescontract.UpdateRootShelfRoutineTaskPayload, 0, len(tasks))
-	candidatePatterns := make([]typescontract.RoutineTaskPattern, 0, len(tasks))
+	candidatePayloads := make([]routinetasktypes.UpdateRootShelfRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]routinetasktypes.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		actorUserId, exists := taskIdToActorUserId[task.Id]
@@ -153,7 +153,7 @@ func (h RootShelfHandler) HandleUpdateRootShelf(
 			continue
 		}
 
-		payload, exception := decodePayload[typescontract.UpdateRootShelfRoutineTaskPayload](h.validator, task)
+		payload, exception := decodePayload[routinetasktypes.UpdateRootShelfRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}
@@ -240,7 +240,7 @@ func (h RootShelfHandler) HandleResetRootShelf(
 			continue
 		}
 
-		payload, exception := decodePayload[typescontract.ResetRootShelfRoutineTaskPayload](h.validator, task)
+		payload, exception := decodePayload[routinetasktypes.ResetRootShelfRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}

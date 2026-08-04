@@ -5,14 +5,14 @@ import (
 
 	"github.com/google/uuid"
 
-	eventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
+	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 )
 
 type BlockPackChannelRevocation struct {
-	EventId            uuid.UUID                                      `json:"eventId"`
-	BlockPackId        uuid.UUID                                      `json:"blockPackId"`
-	TargetUserPublicId *uuid.UUID                                     `json:"targetUserPublicId,omitempty"`
-	Reason             eventscontract.BlockPackAccessRevocationReason `json:"reason"`
+	EventId            uuid.UUID                                          `json:"eventId"`
+	BlockPackId        uuid.UUID                                          `json:"blockPackId"`
+	TargetUserPublicId *uuid.UUID                                         `json:"targetUserPublicId,omitempty"`
+	Reason             coreeventscontract.BlockPackAccessRevocationReason `json:"reason"`
 }
 
 type UserSessionRevocation struct {

@@ -1,17 +1,13 @@
 package database
 
-import (
-	"testing"
-
-	configs "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
-)
+import "testing"
 
 func TestConnectionString(t *testing.T) {
-	config := configs.DatabaseConfig{
+	config := Config{
 		Host:     "database",
 		Port:     "5432",
 		User:     "notezy",
-		DBName:   "notezy",
+		Name:     "notezy",
 		Password: "password",
 	}
 

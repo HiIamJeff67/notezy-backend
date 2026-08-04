@@ -1,0 +1,22 @@
+{
+  "Generate a Pair of Context Separators with Size of 10 for Text File": {
+    "prefix": "tsep10",
+    "body": ["# ========== ${1:_Title_} ========== #"],
+    "description": "Create a text-file context separator"
+  },
+  "Generate a Pair of Context Separators with Size of 15 for Text File": {
+    "prefix": "tsep15",
+    "body": ["# =============== ${1:_Title_} =============== #"],
+    "description": "Create a text-file context separator"
+  },
+  "Generate a Pair of Context Separators with Size of 20 for Text File": {
+    "prefix": "tsep20",
+    "body": ["# ==================== ${1:_Title_} ==================== #"],
+    "description": "Create a text-file context separator"
+  },
+  "Generate a Pair of Context Separators with Size of 30 for Text File": {
+    "prefix": "tsep30",
+    "body": ["# ============================== ${1:_Title_} ============================== #"],
+    "description": "Create a text-file context separator"
+  }
+}

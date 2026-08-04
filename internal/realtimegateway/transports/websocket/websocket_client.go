@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -16,10 +15,11 @@ import (
 	"github.com/gorilla/websocket"
 	"go.opentelemetry.io/otel/attribute"
 
-	eventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
+	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	metrics "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/metrics"
 	traces "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/traces"
+	realtimeconfig "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/config"
 	realtimeleasecache "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/types"
 	workers "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/workers"
@@ -43,16 +43,13 @@ type WebSocketClient struct {
 	shutdownPresenceListener    func()
 }
 
-func NewWebSocketClient() *WebSocketClient {
-	workerManager := workers.NewWorkerManager()
-
-	realtimeEnabled, _ := strconv.ParseBool(os.Getenv("REALTIME_ENABLED"))
-
+func NewWebSocketClient(config realtimeconfig.Config) *WebSocketClient {
+	workerManager := workers.NewWorkerManager(config.YjsWorkerUrls)
 	var realtimeBetaUserPublicIdSet map[uuid.UUID]bool
-	if rawUserPublicIds := strings.TrimSpace(os.Getenv("REALTIME_BETA_USER_PUBLIC_IDS")); rawUserPublicIds != "" {
+	if len(config.BetaUserPublicIds) > 0 {
 		realtimeBetaUserPublicIdSet = make(map[uuid.UUID]bool)
-		for _, rawUserPublicId := range strings.Split(rawUserPublicIds, ",") {
-			userPublicId, err := uuid.Parse(strings.TrimSpace(rawUserPublicId))
+		for _, rawUserPublicId := range config.BetaUserPublicIds {
+			userPublicId, err := uuid.Parse(rawUserPublicId)
 			if err == nil {
 				realtimeBetaUserPublicIdSet[userPublicId] = true
 			}
@@ -62,7 +59,7 @@ func NewWebSocketClient() *WebSocketClient {
 	application := &WebSocketClient{
 		workerManager:               workerManager,
 		leaseStore:                  realtimeleasecache.NewRealtimeLeaseCacheClient(),
-		realtimeDisabled:            !realtimeEnabled,
+		realtimeDisabled:            !config.RealtimeEnabled,
 		realtimeBetaUserPublicIdSet: realtimeBetaUserPublicIdSet,
 		connectors:                  make(map[uuid.UUID]*Connector),
 		maximumConnectors:           constants.RealtimeMaxConnectorsPerGateway,
@@ -179,7 +176,7 @@ func (g *WebSocketClient) revokeBlockPackChannels(revocation realtimeleasecache.
 			code := realtimetypes.ErrorCode_PermissionRevoked
 			message := "permission for this channel has been revoked"
 			outcome := "permission_revoked"
-			if revocation.Reason == eventscontract.BlockPackAccessRevocationReason_ResourceUnavailable {
+			if revocation.Reason == coreeventscontract.BlockPackAccessRevocationReason_ResourceUnavailable {
 				code = realtimetypes.ErrorCode_ResourceUnavailable
 				message = "the block pack is no longer available"
 				outcome = "resource_unavailable"

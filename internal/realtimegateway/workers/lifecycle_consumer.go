@@ -7,22 +7,24 @@ import (
 	"sync"
 	"time"
 
-	eventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	config "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
+	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 	platformkafka "github.com/HiIamJeff67/notezy-backend/internal/platform/kafka"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
 )
 
 type LifecycleConsumer struct {
-	leaseStore *realtimelease.RealtimeLeaseCacheClient
+	leaseStore  *realtimelease.RealtimeLeaseCacheClient
+	kafkaConfig platformkafka.ConsumerConfig
 }
 
 func NewLifecycleConsumer(
 	leaseStore *realtimelease.RealtimeLeaseCacheClient,
+	kafkaConfig platformkafka.ConsumerConfig,
 ) *LifecycleConsumer {
 	return &LifecycleConsumer{
-		leaseStore: leaseStore,
+		leaseStore:  leaseStore,
+		kafkaConfig: kafkaConfig,
 	}
 }
 
@@ -44,8 +46,8 @@ func (c *LifecycleConsumer) Start(ctx context.Context) func() {
 func (c *LifecycleConsumer) run(ctx context.Context) {
 	for ctx.Err() == nil {
 		consumer, err := platformkafka.NewConsumer(
-			config.Kafka(),
-			eventscontract.CoreLifecycleTopic.String(),
+			c.kafkaConfig,
+			coreeventscontract.CoreLifecycleTopic.String(),
 		)
 		if err == nil {
 			err = consumer.Run(ctx, c.handle)
@@ -69,19 +71,19 @@ func (c *LifecycleConsumer) run(ctx context.Context) {
 func (c *LifecycleConsumer) handle(
 	_ context.Context,
 	_ platformkafka.ConsumerRecord,
-	envelope eventscontract.EventEnvelope[json.RawMessage],
+	envelope coreeventscontract.EventEnvelope[json.RawMessage],
 ) error {
 	switch envelope.EventType {
-	case eventscontract.EventType_BlockPackAccessRevoked:
-		var data eventscontract.BlockPackAccessRevokedData
+	case coreeventscontract.EventType_BlockPackAccessRevoked:
+		var data coreeventscontract.BlockPackAccessRevokedData
 		if err := json.Unmarshal(envelope.Data, &data); err != nil {
 			return &platformkafka.ConsumerError{
 				Classification: platformkafka.ErrorClassification_SchemaIncompatible,
 				Origin:         err,
 			}
 		}
-		if data.Reason != eventscontract.BlockPackAccessRevocationReason_PermissionRevoked &&
-			data.Reason != eventscontract.BlockPackAccessRevocationReason_ResourceUnavailable {
+		if data.Reason != coreeventscontract.BlockPackAccessRevocationReason_PermissionRevoked &&
+			data.Reason != coreeventscontract.BlockPackAccessRevocationReason_ResourceUnavailable {
 			return &platformkafka.ConsumerError{
 				Classification: platformkafka.ErrorClassification_SchemaIncompatible,
 				Origin:         errors.New("Kafka BlockPack access revocation has an unsupported reason"),
@@ -94,13 +96,13 @@ func (c *LifecycleConsumer) handle(
 			TargetUserPublicId: data.TargetUserPublicId,
 			Reason:             data.Reason,
 		})
-	case eventscontract.EventType_UserSessionsRevoked:
+	case coreeventscontract.EventType_UserSessionsRevoked:
 		return c.leaseStore.PublishUserSessionRevocation(realtimelease.UserSessionRevocation{
 			EventId:      envelope.EventId,
 			UserPublicId: envelope.AggregateId,
 		})
-	case eventscontract.EventType_BlockPackRoomPolicyChanged,
-		eventscontract.EventType_RootShelfPermissionRevoked:
+	case coreeventscontract.EventType_BlockPackRoomPolicyChanged,
+		coreeventscontract.EventType_RootShelfPermissionRevoked:
 		return nil
 	default:
 		return &platformkafka.ConsumerError{

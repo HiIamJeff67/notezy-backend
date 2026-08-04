@@ -4,8 +4,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-
-	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtimegateway/v1"
 )
 
 const Version = "v1"
@@ -17,18 +15,26 @@ func (t Topic) String() string {
 }
 
 const (
-	CoreLifecycleTopic        Topic = "notezy.core.lifecycle.v1"
-	YjsWorkerCoreCommandTopic Topic = "notezy.yjsworker.core.command.v1"
-	CoreYjsWorkerReplyTopic   Topic = "notezy.core.yjsworker.reply.v1"
+	CoreLifecycleTopic             Topic = "notezy.core.lifecycle.v1"
+	YjsWorkerCoreCommandTopic      Topic = "notezy.yjsworker.core.command.v1"
+	CoreYjsWorkerReplyTopic        Topic = "notezy.core.yjsworker.reply.v1"
+	CoreDurableJobRoutineTaskTopic Topic = "notezy.core.durablejob.routine-task.v1"
+)
+
+const (
+	DurableJobRoutineTaskConsumerGroup           = "notezy-durablejob-routine-task-v1"
+	CoreDurableJobRoutineTaskClaimConsumerGroup  = "notezy-core-durablejob-routine-task-v1"
+	CoreDurableJobRoutineTaskResultConsumerGroup = "notezy-core-durablejob-routine-task-result-v1"
 )
 
 type AggregateType string
 
 const (
-	AggregateType_RootShelf AggregateType = "RootShelf"
-	AggregateType_SubShelf  AggregateType = "SubShelf"
-	AggregateType_BlockPack AggregateType = "BlockPack"
-	AggregateType_User      AggregateType = "User"
+	AggregateType_RootShelf        AggregateType = "RootShelf"
+	AggregateType_SubShelf         AggregateType = "SubShelf"
+	AggregateType_BlockPack        AggregateType = "BlockPack"
+	AggregateType_User             AggregateType = "User"
+	AggregateType_DurableJobWorker AggregateType = "DurableJobWorker"
 )
 
 type EventType string
@@ -40,12 +46,10 @@ const (
 	EventType_UserSessionsRevoked        EventType = "UserSessionsRevoked"
 	EventType_YjsWorkerCommand           EventType = "YjsWorkerCommand"
 	EventType_YjsWorkerCommandCompleted  EventType = "YjsWorkerCommandCompleted"
-)
-
-type RoomAdmissionEnforcementStrategy = realtimegatewaycontract.RoomAdmissionEnforcementStrategy
-
-const (
-	RoomAdmissionEnforcementStrategy_RejectNewSubscriber = realtimegatewaycontract.RoomAdmissionEnforcementStrategy_RejectNewSubscriber
+	EventType_RoutineTaskClaimRequested  EventType = "RoutineTaskClaimRequested"
+	EventType_RoutineTasksAssigned       EventType = "RoutineTasksAssigned"
+	EventType_RoutineTasksCompleted      EventType = "RoutineTasksCompleted"
+	EventType_RoutineTasksFailed         EventType = "RoutineTasksFailed"
 )
 
 type EventEnvelope[D any] struct {

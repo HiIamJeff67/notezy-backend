@@ -15,12 +15,13 @@ import (
 // and its function name also start with the upper case letter
 func ConfigureTestAuthRoutes(
 	routerGroup *gin.RouterGroup,
+	coreClient *coreadapters.CoreClient,
 	accessTokenCookieHandler *cookies.CookieHandler,
 	refreshTokenCookieHandler *cookies.CookieHandler,
 ) {
 	authBinder := binders.NewAuthBinder()
 	authController := controllers.NewAuthController(
-		coreadapters.NewConfiguredCoreClient(),
+		coreClient,
 		accessTokenCookieHandler,
 		refreshTokenCookieHandler,
 	)

@@ -11,9 +11,8 @@ import (
 	"gorm.io/gorm"
 
 	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
-	eventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
+	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjsworker/v1"
-	config "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
 	platformkafka "github.com/HiIamJeff67/notezy-backend/internal/platform/kafka"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/inputs"
@@ -29,26 +28,26 @@ type YjsCommandConsumer struct {
 	yjsPersistenceService  services.YjsPersistenceServiceInterface
 	blockService           services.BlockServiceInterface
 	blockPackYjsRepository repositories.BlockPackYjsRepositoryInterface
+	kafkaConfig            platformkafka.ConsumerConfig
 }
 
 func NewYjsCommandConsumer(
 	db *gorm.DB,
 	yjsPersistenceService services.YjsPersistenceServiceInterface,
 	blockService services.BlockServiceInterface,
+	kafkaConfig platformkafka.ConsumerConfig,
 ) *YjsCommandConsumer {
 	return &YjsCommandConsumer{
 		db:                     db,
 		yjsPersistenceService:  yjsPersistenceService,
 		blockService:           blockService,
 		blockPackYjsRepository: repositories.NewBlockPackYjsRepository(),
+		kafkaConfig:            kafkaConfig,
 	}
 }
 
 func (c *YjsCommandConsumer) Start(ctx context.Context) func() {
-	kafkaConfig := config.Kafka()
-	kafkaConfig.ClientId = "notezy-core-yjsworker"
-	kafkaConfig.ConsumerGroup = yjsWorkerCoreConsumerGroup
-	consumer, err := platformkafka.NewConsumer(kafkaConfig, eventscontract.YjsWorkerCoreCommandTopic.String())
+	consumer, err := platformkafka.NewConsumer(c.kafkaConfig, coreeventscontract.YjsWorkerCoreCommandTopic.String())
 	if err != nil {
 		if logs.NotezyLogger != nil {
 			logs.NotezyLogger.Error(ctx, err, "Failed to create YjsWorker command consumer")
@@ -73,7 +72,7 @@ func (c *YjsCommandConsumer) Start(ctx context.Context) func() {
 func (c *YjsCommandConsumer) consume(
 	ctx context.Context,
 	_ platformkafka.ConsumerRecord,
-	event eventscontract.EventEnvelope[json.RawMessage],
+	event coreeventscontract.EventEnvelope[json.RawMessage],
 ) error {
 	var command yjsworkercontract.CommandEnvelope[json.RawMessage]
 	if err := json.Unmarshal(event.Data, &command); err != nil {
@@ -111,7 +110,7 @@ func (c *YjsCommandConsumer) consume(
 
 func validateYjsCommand(
 	command yjsworkercontract.CommandEnvelope[json.RawMessage],
-	event eventscontract.EventEnvelope[json.RawMessage],
+	event coreeventscontract.EventEnvelope[json.RawMessage],
 ) *yjsworkercontract.Error {
 	if command.SchemaVersion != yjsworkercontract.Version || command.CommandId == uuid.Nil ||
 		command.BlockPackId == uuid.Nil || command.CommandType == "" || command.Producer != "yjs-worker" {
@@ -353,13 +352,13 @@ func (c *YjsCommandConsumer) enqueueReply(
 
 	return repositories.EnqueueOutboxEvents(
 		tx,
-		eventscontract.CoreYjsWorkerReplyTopic,
-		[]eventscontract.EventEnvelope[yjsworkercontract.ReplyEnvelope[json.RawMessage]]{
+		coreeventscontract.CoreYjsWorkerReplyTopic,
+		[]coreeventscontract.EventEnvelope[yjsworkercontract.ReplyEnvelope[json.RawMessage]]{
 			{
-				SchemaVersion: eventscontract.Version,
+				SchemaVersion: coreeventscontract.Version,
 				EventId:       uuid.New(),
-				EventType:     eventscontract.EventType_YjsWorkerCommandCompleted,
-				AggregateType: eventscontract.AggregateType_BlockPack,
+				EventType:     coreeventscontract.EventType_YjsWorkerCommandCompleted,
+				AggregateType: coreeventscontract.AggregateType_BlockPack,
 				AggregateId:   command.BlockPackId,
 				KafkaKey:      command.BlockPackId.String(),
 				OccurredAt:    time.Now().UTC(),

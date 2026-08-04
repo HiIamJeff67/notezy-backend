@@ -11,12 +11,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/otel/attribute"
 
+	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	config "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
+	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
 	platformkafka "github.com/HiIamJeff67/notezy-backend/internal/platform/kafka"
 	observability "github.com/HiIamJeff67/notezy-backend/internal/platform/observability"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	platformredis "github.com/HiIamJeff67/notezy-backend/internal/platform/redis"
+	coreconfig "github.com/HiIamJeff67/notezy-backend/internal/services/core/config"
 	userdata "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/cache/userdata"
 	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
@@ -31,7 +33,7 @@ import (
 	workers "github.com/HiIamJeff67/notezy-backend/internal/services/core/workers"
 )
 
-func NewCoreTransportRouter() *gin.Engine {
+func NewCoreTransportRouter(config coreconfig.Config) *gin.Engine {
 	validator := validation.New()
 
 	rootShelfScope := scopes.NewRootShelfScope()
@@ -65,8 +67,11 @@ func NewCoreTransportRouter() *gin.Engine {
 	itemRepository := repositories.NewItemRepository(itemScope)
 	inMemoryStorage := storage.NewInMemoryStorage()
 
-	oauthService := services.NewOAuthService(config.OAuthGoogleConfig)
-	emailClient := emailtransport.NewClient()
+	oauthService := services.NewOAuthService(config.OAuthGoogle.OAuthConfig())
+	emailClient := emailtransport.NewClient(
+		config.EmailBaseUrl,
+		config.EmailClientTimeout,
+	)
 
 	authService := services.NewAuthService(
 		validator,
@@ -164,6 +169,7 @@ func NewCoreTransportRouter() *gin.Engine {
 		materialScope,
 		subShelfRepository,
 		materialRepository,
+		config.StorageKeySalt,
 	)
 	routineService := services.NewRoutineService(
 		validator,
@@ -224,10 +230,50 @@ func NewCoreTransportRouter() *gin.Engine {
 	return router
 }
 
-func Start() func() {
-	shutdownObservability := observability.Initialize(context.Background())
+func newKafkaConsumerConfig(
+	connectionConfig platformkafka.ConnectionConfig,
+	config coreconfig.KafkaConsumerConfig,
+	clientId string,
+	consumerGroup string,
+) platformkafka.ConsumerConfig {
+	return platformkafka.ConsumerConfig{
+		ClientConfig: platformkafka.ClientConfig{
+			ConnectionConfig: connectionConfig,
+			ClientId:         clientId,
+		},
+		ConsumerGroup:       consumerGroup,
+		MaximumAttempts:     config.MaximumAttempts,
+		InitialRetryBackoff: config.InitialRetryBackoff,
+		MaximumRetryBackoff: config.MaximumRetryBackoff,
+		MaximumPollRecords:  config.MaximumPollRecords,
+	}
+}
 
-	data.NotezyDB = data.ConnectToDatabase(config.PostgresDatabaseConfig)
+func Start() func() {
+	config, err := coreconfig.LoadConfig()
+	if err != nil {
+		panic(err)
+	}
+	databaseConfig, err := platformdatabase.LoadConfig()
+	if err != nil {
+		panic(err)
+	}
+	redisConfig, err := platformredis.LoadConfig()
+	if err != nil {
+		panic(err)
+	}
+	kafkaConnectionConfig, err := platformkafka.LoadConnectionConfig()
+	if err != nil {
+		panic(err)
+	}
+
+	shutdownObservability := observability.Initialize(
+		context.Background(),
+		observability.LoadConfig("notezy-core"),
+	)
+	platformredis.InitializeDefaultClientManager(redisConfig)
+
+	data.NotezyDB = data.ConnectToDatabase(databaseConfig)
 
 	if err := userdata.Register(context.Background(), platformredis.DefaultClientManager); err != nil {
 		exception := exceptions.New(
@@ -249,7 +295,13 @@ func Start() func() {
 		shutdownObservability()
 		panic(exception)
 	}
-	if err := platformkafka.ConnectDefaultProducer(context.Background()); err != nil {
+	if err := platformkafka.ConnectDefaultProducer(
+		context.Background(),
+		platformkafka.ClientConfig{
+			ConnectionConfig: kafkaConnectionConfig,
+			ClientId:         "notezy-core",
+		},
+	); err != nil {
 		logs.NotezyLogger.Warn(
 			context.Background(),
 			"Kafka is unavailable; Core is running in degraded mode",
@@ -259,8 +311,39 @@ func Start() func() {
 	outboxRelay := workers.NewOutboxRelay(
 		data.NotezyDB,
 		repositories.NewOutboxEventRepository(),
+		config.OutboxRelay,
 	)
 	shutdownOutboxRelay := outboxRelay.Start(context.Background())
+	routineTaskClaimConsumer := workers.NewDurableJobRoutineTaskClaimConsumer(
+		services.NewRoutineTaskService(
+			validation.New(),
+			data.NotezyDB,
+			scopes.NewRoutineTaskScope(),
+			repositories.NewRoutineTaskRepository(scopes.NewRoutineTaskScope()),
+		),
+		newKafkaConsumerConfig(
+			kafkaConnectionConfig,
+			config.KafkaConsumer,
+			"notezy-core-durablejob-routine-task",
+			coreeventscontract.CoreDurableJobRoutineTaskClaimConsumerGroup,
+		),
+	)
+	shutdownRoutineTaskClaimConsumer := routineTaskClaimConsumer.Start(context.Background())
+	routineTaskResultConsumer := workers.NewDurableJobRoutineTaskResultConsumer(
+		services.NewRoutineTaskService(
+			validation.New(),
+			data.NotezyDB,
+			scopes.NewRoutineTaskScope(),
+			repositories.NewRoutineTaskRepository(scopes.NewRoutineTaskScope()),
+		),
+		newKafkaConsumerConfig(
+			kafkaConnectionConfig,
+			config.KafkaConsumer,
+			"notezy-core-durablejob-routine-task-result",
+			coreeventscontract.CoreDurableJobRoutineTaskResultConsumerGroup,
+		),
+	)
+	shutdownRoutineTaskResultConsumer := routineTaskResultConsumer.Start(context.Background())
 	yjsCommandConsumer := workers.NewYjsCommandConsumer(
 		data.NotezyDB,
 		services.NewYjsPersistenceService(data.NotezyDB),
@@ -273,13 +356,21 @@ func Start() func() {
 			repositories.NewBlockPackRepository(scopes.NewBlockPackScope()),
 			repositories.NewBlockRepository(scopes.NewBlockScope()),
 		),
+		newKafkaConsumerConfig(
+			kafkaConnectionConfig,
+			config.KafkaConsumer,
+			"notezy-core-yjsworker",
+			"notezy-core-yjsworker-v1",
+		),
 	)
 	shutdownYjsCommandConsumer := yjsCommandConsumer.Start(context.Background())
 
-	coreTransportListener, err := net.Listen("tcp", config.CoreListenAddress())
+	coreTransportListener, err := net.Listen("tcp", config.ListenAddress)
 	if err != nil {
 		fmt.Println("Failed to listen for Core service transport: ", err)
 		shutdownYjsCommandConsumer()
+		shutdownRoutineTaskResultConsumer()
+		shutdownRoutineTaskClaimConsumer()
 		shutdownOutboxRelay()
 		platformkafka.CloseDefaultProducer()
 		_ = platformredis.DefaultClientManager.DisconnectAll()
@@ -288,7 +379,7 @@ func Start() func() {
 		panic(err)
 	}
 	coreTransportServer := &http.Server{
-		Handler: NewCoreTransportRouter(),
+		Handler: NewCoreTransportRouter(config),
 	}
 
 	go func() {
@@ -304,6 +395,8 @@ func Start() func() {
 			fmt.Println("Failed to shutdown Core service transport: ", err)
 		}
 		shutdownYjsCommandConsumer()
+		shutdownRoutineTaskResultConsumer()
+		shutdownRoutineTaskClaimConsumer()
 		shutdownOutboxRelay()
 		platformkafka.CloseDefaultProducer()
 		if err := platformredis.DefaultClientManager.DisconnectAll(); err != nil {

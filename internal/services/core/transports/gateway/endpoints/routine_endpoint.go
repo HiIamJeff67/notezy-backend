@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 	routinesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routines"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 	services "github.com/HiIamJeff67/notezy-backend/internal/services/core/services"
 )
 

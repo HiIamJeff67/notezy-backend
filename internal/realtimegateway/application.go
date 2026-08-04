@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -17,6 +15,7 @@ import (
 	observability "github.com/HiIamJeff67/notezy-backend/internal/platform/observability"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	platformredis "github.com/HiIamJeff67/notezy-backend/internal/platform/redis"
+	realtimeconfig "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/config"
 	ratelimitrecord "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/ratelimitrecord"
 	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
 	gatewayrouters "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/gateway/routers"
@@ -27,7 +26,23 @@ import (
 )
 
 func Start() func() {
-	shutdownObservability := observability.Initialize(context.Background())
+	config, err := realtimeconfig.LoadConfig()
+	if err != nil {
+		panic(err)
+	}
+	redisConfig, err := platformredis.LoadConfig()
+	if err != nil {
+		panic(err)
+	}
+	kafkaConnectionConfig, err := platformkafka.LoadConnectionConfig()
+	if err != nil {
+		panic(err)
+	}
+	shutdownObservability := observability.Initialize(
+		context.Background(),
+		observability.LoadConfig("notezy-realtime-gateway"),
+	)
+	platformredis.InitializeDefaultClientManager(redisConfig)
 
 	if err := realtimelease.Register(context.Background(), platformredis.DefaultClientManager); err != nil {
 		_ = platformredis.DefaultClientManager.DisconnectAll()
@@ -39,7 +54,13 @@ func Start() func() {
 		shutdownObservability()
 		panic(err)
 	}
-	if err := platformkafka.ConnectDefaultProducer(context.Background()); err != nil {
+	if err := platformkafka.ConnectDefaultProducer(
+		context.Background(),
+		platformkafka.ClientConfig{
+			ConnectionConfig: kafkaConnectionConfig,
+			ClientId:         "notezy-realtime-gateway",
+		},
+	); err != nil {
 		logs.NotezyLogger.Warn(
 			context.Background(),
 			"Kafka is unavailable; RealtimeGateway is running in degraded mode",
@@ -48,8 +69,7 @@ func Start() func() {
 	}
 
 	router := gin.Default()
-	proxies := strings.Split(os.Getenv("GIN_TRUSTED_PROXIES"), ",")
-	if err := router.SetTrustedProxies(proxies); err != nil {
+	if err := router.SetTrustedProxies(config.TrustedProxies); err != nil {
 		platformkafka.CloseDefaultProducer()
 		_ = platformredis.DefaultClientManager.DisconnectAll()
 		shutdownObservability()
@@ -71,22 +91,30 @@ func Start() func() {
 		realtimelease.NewRealtimeLeaseCacheClient(),
 	)
 
-	websocketClient := realtimewebsocket.NewWebSocketClient()
-	lifecycleConsumer := workers.NewLifecycleConsumer(realtimelease.NewRealtimeLeaseCacheClient())
+	websocketClient := realtimewebsocket.NewWebSocketClient(config)
+	lifecycleConsumer := workers.NewLifecycleConsumer(
+		realtimelease.NewRealtimeLeaseCacheClient(),
+		platformkafka.ConsumerConfig{
+			ClientConfig: platformkafka.ClientConfig{
+				ConnectionConfig: kafkaConnectionConfig,
+				ClientId:         "notezy-realtime-gateway-lifecycle",
+			},
+			ConsumerGroup:       "notezy-realtime-gateway-lifecycle-v1",
+			MaximumAttempts:     config.KafkaConsumer.MaximumAttempts,
+			InitialRetryBackoff: config.KafkaConsumer.InitialRetryBackoff,
+			MaximumRetryBackoff: config.KafkaConsumer.MaximumRetryBackoff,
+			MaximumPollRecords:  config.KafkaConsumer.MaximumPollRecords,
+		},
+	)
 	shutdownLifecycleConsumer := lifecycleConsumer.Start(context.Background())
 	routes := router.Group("/" + constants.RealtimeDevelopmentBaseURL)
 	routes.Use(
-		middlewares.DomainWhiteListMiddleware(),
+		middlewares.DomainWhiteListMiddleware(config.AllowedDomains),
 		middlewares.UnauthorizedRateLimitMiddleware(),
 	)
 	routes.GET("", websocketClient.Handle)
 
-	listenAddress := os.Getenv("REALTIME_GATEWAY_LISTEN_ADDRESS")
-	if listenAddress == "" {
-		listenAddress = "0.0.0.0:7779"
-	}
-
-	listener, err := net.Listen("tcp", listenAddress)
+	listener, err := net.Listen("tcp", config.ListenAddress)
 	if err != nil {
 		platformkafka.CloseDefaultProducer()
 		_ = platformredis.DefaultClientManager.DisconnectAll()

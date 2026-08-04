@@ -21,8 +21,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 
-	eventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtimegateway/v1"
+	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
+	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtime-gateway/v1"
 	platformredis "github.com/HiIamJeff67/notezy-backend/internal/platform/redis"
 	realtimeleasecache "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/types"
@@ -178,7 +178,7 @@ func TestGatewayRevokesMatchingBlockPackChannels(t *testing.T) {
 		EventId:            uuid.New(),
 		BlockPackId:        blockPackId,
 		TargetUserPublicId: &userPublicId,
-		Reason:             eventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
+		Reason:             coreeventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
 	})
 
 	if _, exists := connector.get(1); exists {

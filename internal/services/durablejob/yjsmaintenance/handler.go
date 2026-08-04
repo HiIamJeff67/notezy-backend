@@ -11,9 +11,9 @@ import (
 
 	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
 	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjsworker/v1"
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/repositories"
+	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
 	coretransport "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/transports/core"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )

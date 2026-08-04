@@ -11,14 +11,13 @@ import (
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/gateway/ratelimit"
-	configs "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 var unauthorizedRateLimiter *ratelimit.HybridRateLimiter
 
-func InitUnauthorizedRateLimiter(config configs.RateLimitConfig) {
+func InitUnauthorizedRateLimiter(config ratelimit.Config) {
 	if unauthorizedRateLimiter != nil {
 		unauthorizedRateLimiter.Stop()
 	}
@@ -35,8 +34,8 @@ func InitUnauthorizedRateLimiter(config configs.RateLimitConfig) {
 	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Unauthorized rate limiter initialized with rate: %v, burst: %d, user limit: %d, window: %v", config.RateLimit, config.Burst, config.UserLimit, config.WindowDuration))
 }
 
-func UnauthorizedRateLimitMiddleware(config ...configs.RateLimitConfig) gin.HandlerFunc {
-	cfg := configs.DefaultUnauthorizedRateLimitConfig
+func UnauthorizedRateLimitMiddleware(config ...ratelimit.Config) gin.HandlerFunc {
+	cfg := ratelimit.DefaultUnauthorizedConfig()
 	if len(config) > 0 {
 		cfg = config[0]
 	}

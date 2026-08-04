@@ -4,11 +4,22 @@ This directory is the versioned boundary owned by the DurableJob service. A
 caller uses these contracts when it invokes DurableJob; the path does not encode
 the caller or transport direction.
 
-DurableJob currently receives work through the shared PostgreSQL task tables and
-does not expose a public HTTP API. The contract package is reserved for the
-internal command and result envelopes that will replace direct task-table
-coordination when the Core-to-DurableJob transport is introduced.
+Routine task scheduling uses the following Kafka directions:
 
-The service owns its runtime, handlers, validation, exceptions, and data model
-under `internal/services/durablejob`. It may share the existing database during
-this migration, but it must not import Core service implementations.
+```text
+Core <-> DurableJob: CoreDurableJobRoutineTaskTopic
+
+The event type distinguishes claim requests, assignments, completed results,
+and failed results on this single topic.
+```
+
+`ClaimRoutineTasksRequestDto` is a capacity request, not a request for one
+specific task. Core owns task claiming, task records, scheduling state, and the
+transactional outbox. It responds with one `RoutineTaskAssignment` per task
+claimed within the requested batch size.
+
+The service owns its runtime, handlers, validation, and execution state. It does
+not own Core database schemas or repositories. DurableJob publishes execution
+results after its handlers finish. Core consumes those results and is the only
+runtime that finalizes RoutineTask and RoutineTaskRecord state. The InboxEvent
+table makes result consumption idempotent.

@@ -6,8 +6,8 @@ import (
 	"github.com/google/uuid"
 
 	coreapicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api"
-	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 	routinestypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/routines"
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
 type LinkRoutineTagByIdRequestDto struct {
@@ -33,8 +33,8 @@ type LinkRoutineTagsByIdsRequestDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			LinkedRoutinesAndTags []routinestypes.LinkedRoutineAndTag `json:"linkedRoutinesAndTags" validate:"required,min=1,max=1024,dive"`
-			IsUnlink              bool                                `json:"isUnlink"`
+			LinkedRoutinesAndTags []routinestypes.LinkableRoutineAndTag `json:"linkedRoutinesAndTags" validate:"required,min=1,max=1024,dive"`
+			IsUnlink              bool                                  `json:"isUnlink"`
 		},
 		struct{},
 		struct{},
@@ -67,8 +67,8 @@ type LinkRoutineItemsByIdsRequestDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			LinkedRoutinesAndItems []routinestypes.LinkedRoutineAndItem `json:"linkedRoutinesAndItems" validate:"required,min=1,max=1024,dive"`
-			IsUnlink               bool                                 `json:"isUnlink"`
+			LinkedRoutinesAndItems []routinestypes.LinkableRoutineAndItem `json:"linkedRoutinesAndItems" validate:"required,min=1,max=1024,dive"`
+			IsUnlink               bool                                   `json:"isUnlink"`
 		},
 		struct{},
 		struct{},

@@ -43,9 +43,7 @@ func NewEmailWorkerManager(maxWorkers int, sender EmailSender) *EmailWorkerManag
 	}
 }
 
-var (
-	NotezyEmailWorkerManager = NewEmailWorkerManager(16, *NotezyEmailSender)
-)
+var NotezyEmailWorkerManager *EmailWorkerManager
 
 /* ============================== Aulixary Functions ============================== */
 

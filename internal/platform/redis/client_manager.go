@@ -8,27 +8,26 @@ import (
 
 	redisclient "github.com/go-redis/redis"
 
-	configs "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type ClientManager struct {
-	config configs.CacheManagerConfig
+	config Config
 
 	clients        map[int]*redisclient.Client
-	clientToConfig map[*redisclient.Client]configs.CacheManagerConfig
+	clientToConfig map[*redisclient.Client]Config
 	clientMapMutex sync.Mutex
 }
 
 /* ============================== Constructor ============================== */
 
-func NewClientManager(config configs.CacheManagerConfig) *ClientManager {
+func NewClientManager(config Config) *ClientManager {
 	return &ClientManager{
 		config: config,
 
 		clients:        make(map[int]*redisclient.Client),
-		clientToConfig: make(map[*redisclient.Client]configs.CacheManagerConfig),
+		clientToConfig: make(map[*redisclient.Client]Config),
 	}
 }
 
@@ -72,28 +71,28 @@ func (m *ClientManager) Connect(serverNumber int) (*redisclient.Client, error) {
 	}
 
 	config := m.config
-	config.DB = serverNumber
+	config.Database = serverNumber
 	client := redisclient.NewClient(&redisclient.Options{
 		Addr:     config.Host + ":" + config.Port,
 		Password: config.Password,
-		DB:       config.DB,
+		DB:       config.Database,
 	})
 	if _, err := client.Ping().Result(); err != nil {
 		_ = client.Close()
 
-		return nil, fmt.Errorf("connect Redis database %d: %w", config.DB, err)
+		return nil, fmt.Errorf("connect Redis database %d: %w", config.Database, err)
 	}
 
-	m.clients[config.DB] = client
+	m.clients[config.Database] = client
 	m.clientToConfig[client] = config
-	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Redis client server of %d connected", config.DB))
+	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Redis client server of %d connected", config.Database))
 
 	return client, nil
 }
 
 func (m *ClientManager) DisconnectAll() error {
 	m.clientMapMutex.Lock()
-	clients := make(map[*redisclient.Client]configs.CacheManagerConfig, len(m.clientToConfig))
+	clients := make(map[*redisclient.Client]Config, len(m.clientToConfig))
 	for client, config := range m.clientToConfig {
 		clients[client] = config
 	}
@@ -102,15 +101,15 @@ func (m *ClientManager) DisconnectAll() error {
 	var exceptions []error
 	for client, config := range clients {
 		if err := client.Close(); err != nil {
-			exceptions = append(exceptions, fmt.Errorf("disconnect Redis database %d: %w", config.DB, err))
+			exceptions = append(exceptions, fmt.Errorf("disconnect Redis database %d: %w", config.Database, err))
 			continue
 		}
 
 		m.clientMapMutex.Lock()
 		delete(m.clientToConfig, client)
-		delete(m.clients, config.DB)
+		delete(m.clients, config.Database)
 		m.clientMapMutex.Unlock()
-		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Redis client server of %d disconnected", config.DB))
+		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Redis client server of %d disconnected", config.Database))
 	}
 
 	return errors.Join(exceptions...)

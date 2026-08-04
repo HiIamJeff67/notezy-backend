@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 
 	realtimedto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/realtime"
-	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtimegateway/v1"
+	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtime-gateway/v1"
 	enumscontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"

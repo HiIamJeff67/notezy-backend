@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 
-	eventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
+	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
 )
 
@@ -16,22 +16,22 @@ func TestNewCreateOutboxEventInputAndSerializePreserveEventContract(t *testing.T
 	eventId := uuid.New()
 	aggregateId := uuid.New()
 	occurredAt := time.Now().UTC().Round(0)
-	envelope := eventscontract.EventEnvelope[eventscontract.BlockPackAccessRevokedData]{
-		SchemaVersion: eventscontract.Version,
+	envelope := coreeventscontract.EventEnvelope[coreeventscontract.BlockPackAccessRevokedData]{
+		SchemaVersion: coreeventscontract.Version,
 		EventId:       eventId,
-		EventType:     eventscontract.EventType_BlockPackAccessRevoked,
-		AggregateType: eventscontract.AggregateType_BlockPack,
+		EventType:     coreeventscontract.EventType_BlockPackAccessRevoked,
+		AggregateType: coreeventscontract.AggregateType_BlockPack,
 		AggregateId:   aggregateId,
 		KafkaKey:      aggregateId.String(),
 		OccurredAt:    occurredAt,
 		CorrelationId: "request-123",
-		Trace: eventscontract.TraceMetadata{
+		Trace: coreeventscontract.TraceMetadata{
 			TraceParent: "00-trace",
 		},
-		Data: eventscontract.BlockPackAccessRevokedData{},
+		Data: coreeventscontract.BlockPackAccessRevokedData{},
 	}
 
-	createInput, err := newCreateOutboxEventInput(eventscontract.CoreLifecycleTopic, envelope)
+	createInput, err := newCreateOutboxEventInput(coreeventscontract.CoreLifecycleTopic, envelope)
 	if err != nil {
 		t.Fatalf("failed to create outbox input: %v", err)
 	}
@@ -49,7 +49,7 @@ func TestNewCreateOutboxEventInputAndSerializePreserveEventContract(t *testing.T
 		t.Fatalf("failed to serialize outbox event: %v", err)
 	}
 
-	var serialized eventscontract.EventEnvelope[eventscontract.BlockPackAccessRevokedData]
+	var serialized coreeventscontract.EventEnvelope[coreeventscontract.BlockPackAccessRevokedData]
 	if err := json.Unmarshal(payload, &serialized); err != nil {
 		t.Fatalf("failed to decode serialized event: %v", err)
 	}
@@ -62,17 +62,17 @@ func TestNewCreateOutboxEventInputAndSerializePreserveEventContract(t *testing.T
 
 func TestNewCreateOutboxEventInputRejectsMismatchedKafkaKey(t *testing.T) {
 	_, err := newCreateOutboxEventInput(
-		eventscontract.CoreLifecycleTopic,
-		eventscontract.EventEnvelope[eventscontract.UserSessionsRevokedData]{
-			SchemaVersion: eventscontract.Version,
+		coreeventscontract.CoreLifecycleTopic,
+		coreeventscontract.EventEnvelope[coreeventscontract.UserSessionsRevokedData]{
+			SchemaVersion: coreeventscontract.Version,
 			EventId:       uuid.New(),
-			EventType:     eventscontract.EventType_UserSessionsRevoked,
-			AggregateType: eventscontract.AggregateType_User,
+			EventType:     coreeventscontract.EventType_UserSessionsRevoked,
+			AggregateType: coreeventscontract.AggregateType_User,
 			AggregateId:   uuid.New(),
 			KafkaKey:      "another-aggregate",
 			OccurredAt:    time.Now(),
 			CorrelationId: "request-123",
-			Data:          eventscontract.UserSessionsRevokedData{},
+			Data:          coreeventscontract.UserSessionsRevokedData{},
 		},
 	)
 	if err == nil {

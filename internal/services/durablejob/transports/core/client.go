@@ -6,15 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
-	durablejobdto "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
 	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
+	durablejobdto "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 )
 
@@ -25,16 +24,11 @@ type Client struct {
 	httpClient *http.Client
 }
 
-func NewClient() Client {
-	baseURL := strings.TrimRight(os.Getenv("CORE_BASE_URL"), "/")
-	if baseURL == "" {
-		baseURL = "http://127.0.0.1:7778"
-	}
-
+func NewClient(baseURL string, timeout time.Duration) Client {
 	return Client{
-		baseURL: baseURL,
+		baseURL: strings.TrimRight(baseURL, "/"),
 		httpClient: &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout: timeout,
 		},
 	}
 }

@@ -9,17 +9,16 @@ import (
 	"github.com/google/uuid"
 	franzkgo "github.com/twmb/franz-go/pkg/kgo"
 
-	eventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	config "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
+	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 )
 
 func TestDecodeEventEnvelopeRejectsMismatchedKafkaKey(t *testing.T) {
 	aggregateId := uuid.New()
-	payload, err := json.Marshal(eventscontract.EventEnvelope[json.RawMessage]{
-		SchemaVersion: eventscontract.Version,
+	payload, err := json.Marshal(coreeventscontract.EventEnvelope[json.RawMessage]{
+		SchemaVersion: coreeventscontract.Version,
 		EventId:       uuid.New(),
-		EventType:     eventscontract.EventType_BlockPackAccessRevoked,
-		AggregateType: eventscontract.AggregateType_BlockPack,
+		EventType:     coreeventscontract.EventType_BlockPackAccessRevoked,
+		AggregateType: coreeventscontract.AggregateType_BlockPack,
 		AggregateId:   aggregateId,
 		KafkaKey:      aggregateId.String(),
 	})
@@ -37,12 +36,12 @@ func TestDecodeEventEnvelopeRejectsMismatchedKafkaKey(t *testing.T) {
 }
 
 func TestNewConsumerRejectsMissingGroupOrTopics(t *testing.T) {
-	_, err := NewConsumer(config.KafkaConfig{}, eventscontract.CoreLifecycleTopic.String())
+	_, err := NewConsumer(ConsumerConfig{}, coreeventscontract.CoreLifecycleTopic.String())
 	if err == nil {
 		t.Fatal("expected Kafka consumer group to be required")
 	}
 
-	_, err = NewConsumer(config.KafkaConfig{
+	_, err = NewConsumer(ConsumerConfig{
 		ConsumerGroup: "test-group",
 	})
 	if err == nil {
@@ -69,7 +68,7 @@ func TestErrorClassificationDefaultsToTransient(t *testing.T) {
 }
 
 func TestRetryBackoffCapsAtConfiguredMaximum(t *testing.T) {
-	consumerConfig := config.KafkaConsumerConfig{
+	consumerConfig := ConsumerConfig{
 		InitialRetryBackoff: time.Second,
 		MaximumRetryBackoff: 4 * time.Second,
 	}
@@ -79,7 +78,7 @@ func TestRetryBackoffCapsAtConfiguredMaximum(t *testing.T) {
 }
 
 func TestDeadLetterTopic(t *testing.T) {
-	if DeadLetterTopic(eventscontract.CoreLifecycleTopic.String()) != "notezy.core.lifecycle.v1.dlq" {
+	if DeadLetterTopic(coreeventscontract.CoreLifecycleTopic.String()) != "notezy.core.lifecycle.v1.dlq" {
 		t.Fatal("unexpected Kafka dead-letter topic name")
 	}
 }

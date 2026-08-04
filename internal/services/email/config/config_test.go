@@ -1,0 +1,20 @@
+package config
+
+import "testing"
+
+func TestLoadConfig(t *testing.T) {
+	t.Setenv("EMAIL_LISTEN_ADDRESS", "127.0.0.1:8081")
+	t.Setenv("SMTP_HOST", "smtp.example.com")
+	t.Setenv("SMTP_PORT", "587")
+	t.Setenv("NOTEZY_OFFICIAL_NAME", "Notezy")
+	t.Setenv("NOTEZY_OFFICIAL_GMAIL", "noreply@example.com")
+	t.Setenv("NOTEZY_OFFICIAL_GOOGLE_APPLICATION_PASSWORD", "secret")
+
+	config, err := LoadConfig()
+	if err != nil {
+		t.Fatalf("LoadConfig() error = %v", err)
+	}
+	if config.SMTP.Port != 587 || config.SMTP.From != "Notezy <noreply@example.com>" {
+		t.Fatalf("LoadConfig() = %#v", config)
+	}
+}

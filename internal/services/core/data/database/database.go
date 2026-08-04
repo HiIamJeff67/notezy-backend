@@ -7,7 +7,6 @@ import (
 
 	"gorm.io/gorm"
 
-	configs "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
 	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
@@ -26,27 +25,27 @@ var (
 	NotezyDB *gorm.DB
 
 	// maintain the static information about the database instance and its config
-	DatabaseInstanceToConfig = map[*gorm.DB]configs.DatabaseConfig{}
+	DatabaseInstanceToConfig = map[*gorm.DB]platformdatabase.Config{}
 	DatabaseNameToInstance   = map[string]*gorm.DB{}
 )
 
-func ConnectToDatabase(config configs.DatabaseConfig) *gorm.DB {
+func ConnectToDatabase(config platformdatabase.Config) *gorm.DB {
 	dbConn, err := platformdatabase.Connect(config)
 	if err != nil {
-		logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprintf("Error connecting to the %s database\n", config.DBName))
+		logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprintf("Error connecting to the %s database\n", config.Name))
 		panic("Connecting to database error : " + err.Error())
 	}
 
 	if _, ok := DatabaseInstanceToConfig[dbConn]; !ok {
-		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Storing database of %s into the DatabaseInstanceToConfig...", config.DBName))
+		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Storing database of %s into the DatabaseInstanceToConfig...", config.Name))
 		DatabaseInstanceToConfig[dbConn] = config
 	}
-	if _, ok := DatabaseNameToInstance[config.DBName]; !ok {
-		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Storing database of %s into the DatabaseNameToInstance...", config.DBName))
-		DatabaseNameToInstance[config.DBName] = dbConn
+	if _, ok := DatabaseNameToInstance[config.Name]; !ok {
+		logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Storing database of %s into the DatabaseNameToInstance...", config.Name))
+		DatabaseNameToInstance[config.Name] = dbConn
 	}
 
-	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("%s database connected\n", config.DBName))
+	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("%s database connected\n", config.Name))
 
 	return dbConn
 }
@@ -59,16 +58,16 @@ func DisconnectToDatabase(db *gorm.DB) bool {
 	}
 
 	if err := platformdatabase.Disconnect(db); err != nil {
-		logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprintf("Failed to close the connection of %s database", config.DBName))
+		logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprintf("Failed to close the connection of %s database", config.Name))
 		return false
 	}
 
-	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Extracting database of %s into the DatabaseInstanceToConfig...", config.DBName))
+	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Extracting database of %s into the DatabaseInstanceToConfig...", config.Name))
 	delete(DatabaseInstanceToConfig, db)
-	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Extracting database of %s into the DatabaseNameToInstance...", config.DBName))
-	delete(DatabaseNameToInstance, config.DBName)
+	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Extracting database of %s into the DatabaseNameToInstance...", config.Name))
+	delete(DatabaseNameToInstance, config.Name)
 
-	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("%s database connection closed", config.DBName))
+	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("%s database connection closed", config.Name))
 
 	return true
 }
@@ -81,7 +80,7 @@ func ViewAllDatabaseEnums(db *gorm.DB) bool {
 	var enumInfos []EnumInfo
 	result := db.Raw(managementsql.GetAllEnumsSQL).Scan(&enumInfos)
 	if err := result.Error; err != nil {
-		logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprintf("Failed to display %s database enums", DatabaseInstanceToConfig[db].DBName))
+		logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprintf("Failed to display %s database enums", DatabaseInstanceToConfig[db].Name))
 		return false
 	}
 
@@ -100,11 +99,11 @@ func ViewAllDatabaseEnums(db *gorm.DB) bool {
 func TruncateTablesInDatabase(tableName types.TableName, db *gorm.DB) bool {
 	result := db.Exec(fmt.Sprintf("TRUNCATE TABLE \"%s\" RESTART IDENTITY CASCADE;", tableName))
 	if err := result.Error; err != nil {
-		logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprintf("Failed to truncate %s database %s table", DatabaseInstanceToConfig[db].DBName, tableName))
+		logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprintf("Failed to truncate %s database %s table", DatabaseInstanceToConfig[db].Name, tableName))
 		return false
 	}
 
-	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("%s database %s table truncated", DatabaseInstanceToConfig[db].DBName, tableName))
+	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("%s database %s table truncated", DatabaseInstanceToConfig[db].Name, tableName))
 	return true
 }
 

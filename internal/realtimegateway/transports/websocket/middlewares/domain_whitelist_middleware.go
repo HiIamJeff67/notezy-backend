@@ -3,8 +3,6 @@ package middlewares
 import (
 	"fmt"
 	"net/http"
-	"os"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -31,14 +29,7 @@ func isAllowedReferer(referer string, allowedDomains []string) bool {
 	return false
 }
 
-func DomainWhiteListMiddleware() gin.HandlerFunc {
-	var allowedDomains []string
-	if envDomains := os.Getenv("ALLOWED_DOMAINS"); len(strings.ReplaceAll(envDomains, " ", "")) > 0 {
-		additionalDomains := strings.Split(envDomains, ",")
-		for _, domain := range additionalDomains {
-			allowedDomains = append(allowedDomains, strings.TrimSpace(domain))
-		}
-	}
+func DomainWhiteListMiddleware(allowedDomains []string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		origin := ctx.GetHeader("Origin")
 		if origin != "" {

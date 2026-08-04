@@ -5,22 +5,20 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-
-	configs "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
 )
 
-func ConnectionString(config configs.DatabaseConfig) string {
+func ConnectionString(config Config) string {
 	return fmt.Sprintf(
 		"host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
 		config.Host,
 		config.Port,
 		config.User,
-		config.DBName,
+		config.Name,
 		config.Password,
 	)
 }
 
-func Connect(config configs.DatabaseConfig) (*gorm.DB, error) {
+func Connect(config Config) (*gorm.DB, error) {
 	return gorm.Open(postgres.Open(ConnectionString(config)), &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: true,
 	})

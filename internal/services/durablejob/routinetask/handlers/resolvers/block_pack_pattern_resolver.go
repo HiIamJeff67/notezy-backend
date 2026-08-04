@@ -9,19 +9,19 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	typescontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/inputs"
-	options "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/options"
-	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/repositories"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas"
-	enums "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas/enums"
+	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/inputs"
+	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
+	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
+	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type BlockPackPatternResolverInterface interface {
-	Resolve(ctx context.Context, actorUserId uuid.UUID, pattern typescontract.RoutineTaskPattern, allowedPermissions []enums.AccessControlPermission) (map[string]string, *exceptions.Exception)
-	ResolveMany(ctx context.Context, actorUserIds []uuid.UUID, patterns []typescontract.RoutineTaskPattern, allowedPermissions []enums.AccessControlPermission) ([]map[string]string, []bool, *exceptions.Exception)
+	Resolve(ctx context.Context, actorUserId uuid.UUID, pattern routinetasktypes.RoutineTaskPattern, allowedPermissions []enums.AccessControlPermission) (map[string]string, *exceptions.Exception)
+	ResolveMany(ctx context.Context, actorUserIds []uuid.UUID, patterns []routinetasktypes.RoutineTaskPattern, allowedPermissions []enums.AccessControlPermission) ([]map[string]string, []bool, *exceptions.Exception)
 }
 
 type BlockPackPatternResolver struct {
@@ -39,13 +39,13 @@ func NewBlockPackPatternResolver(db *gorm.DB, blockPackRepository repositories.B
 func (r BlockPackPatternResolver) Resolve(
 	ctx context.Context,
 	actorUserId uuid.UUID,
-	pattern typescontract.RoutineTaskPattern,
+	pattern routinetasktypes.RoutineTaskPattern,
 	allowedPermissions []enums.AccessControlPermission,
 ) (map[string]string, *exceptions.Exception) {
 	values, successes, exception := r.ResolveMany(
 		ctx,
 		[]uuid.UUID{actorUserId},
-		[]typescontract.RoutineTaskPattern{pattern},
+		[]routinetasktypes.RoutineTaskPattern{pattern},
 		allowedPermissions,
 	)
 	if exception != nil {
@@ -66,7 +66,7 @@ func (r BlockPackPatternResolver) Resolve(
 func (r BlockPackPatternResolver) ResolveMany(
 	ctx context.Context,
 	actorUserIds []uuid.UUID,
-	patterns []typescontract.RoutineTaskPattern,
+	patterns []routinetasktypes.RoutineTaskPattern,
 	allowedPermissions []enums.AccessControlPermission,
 ) ([]map[string]string, []bool, *exceptions.Exception) {
 	values := make([]map[string]string, len(patterns))

@@ -10,7 +10,6 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/gateway/contexts"
 	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/gateway/ratelimit"
-	configs "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
@@ -18,7 +17,7 @@ import (
 
 var authorizedRateLimiter *ratelimit.HybridRateLimiter // use the hybrid one which including token bucket and cross server request management by redis
 
-func InitAuthorizedRateLimiter(config configs.RateLimitConfig) {
+func InitAuthorizedRateLimiter(config ratelimit.Config) {
 	if authorizedRateLimiter != nil {
 		authorizedRateLimiter.Stop()
 	}
@@ -35,8 +34,8 @@ func InitAuthorizedRateLimiter(config configs.RateLimitConfig) {
 	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Authorized rate limiter initialized with rate: %v, burst: %d, user limit: %d, window: %v", config.RateLimit, config.Burst, config.UserLimit, config.WindowDuration))
 }
 
-func AuthorizedRateLimitMiddleware(config ...configs.RateLimitConfig) gin.HandlerFunc {
-	cfg := configs.DefaultAuthorizedRateLimitConfig
+func AuthorizedRateLimitMiddleware(config ...ratelimit.Config) gin.HandlerFunc {
+	cfg := ratelimit.DefaultAuthorizedConfig()
 	if len(config) > 0 {
 		cfg = config[0]
 	}

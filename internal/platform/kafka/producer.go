@@ -13,8 +13,6 @@ import (
 	franzkgo "github.com/twmb/franz-go/pkg/kgo"
 	plain "github.com/twmb/franz-go/pkg/sasl/plain"
 	scram "github.com/twmb/franz-go/pkg/sasl/scram"
-
-	config "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
 )
 
 type Producer struct {
@@ -22,7 +20,7 @@ type Producer struct {
 	ready  atomic.Bool
 }
 
-func NewProducer(kafkaConfig config.KafkaConfig) (*Producer, error) {
+func NewProducer(kafkaConfig ClientConfig) (*Producer, error) {
 	options, err := newConnectionOptions(kafkaConfig)
 	if err != nil {
 		return nil, err
@@ -38,7 +36,7 @@ func NewProducer(kafkaConfig config.KafkaConfig) (*Producer, error) {
 	}, nil
 }
 
-func newConnectionOptions(kafkaConfig config.KafkaConfig) ([]franzkgo.Opt, error) {
+func newConnectionOptions(kafkaConfig ClientConfig) ([]franzkgo.Opt, error) {
 	if len(kafkaConfig.Brokers) == 0 {
 		return nil, errors.New("Kafka brokers are required")
 	}

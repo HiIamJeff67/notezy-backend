@@ -6,14 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 
-	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 	emaildto "github.com/HiIamJeff67/notezy-backend/contracts/email/v1"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 )
 
@@ -28,16 +27,11 @@ type Client struct {
 	httpClient *http.Client
 }
 
-func NewClient() ClientInterface {
-	baseURL := strings.TrimRight(os.Getenv("EMAIL_SERVICE_BASE_URL"), "/")
-	if baseURL == "" {
-		baseURL = "http://127.0.0.1:8081"
-	}
-
+func NewClient(baseURL string, timeout time.Duration) ClientInterface {
 	return &Client{
-		baseURL: baseURL,
+		baseURL: strings.TrimRight(baseURL, "/"),
 		httpClient: &http.Client{
-			Timeout: 5 * time.Second,
+			Timeout: timeout,
 		},
 	}
 }
