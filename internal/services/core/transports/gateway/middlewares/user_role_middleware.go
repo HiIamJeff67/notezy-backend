@@ -7,20 +7,20 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
 )
 
 func UserRoleMiddleware(atLeastUserRole enums.UserRole) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		currentUserRoleValue, exists := ctx.Get(types.ContextFieldName_User_Role.String())
+		currentUserRoleValue, exists := ctx.Get(sharedcontexts.ContextFieldName_User_Role.String())
 		currentUserRole, ok := currentUserRoleValue.(enums.UserRole)
 		if !exists || !ok {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, core.Response[struct{}]{
-				Version: core.Version,
-				Metadata: core.ResponseMetadata{
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gatewaycontract.Response[struct{}]{
+				Version: gatewaycontract.Version,
+				Metadata: gatewaycontract.ResponseMetadata{
 					RequestId:   ctx.GetHeader("X-Request-Id"),
 					RespondedAt: time.Now(),
 				},
@@ -47,9 +47,9 @@ func UserRoleMiddleware(atLeastUserRole enums.UserRole) gin.HandlerFunc {
 				return
 			}
 			if userRole == atLeastUserRole {
-				ctx.AbortWithStatusJSON(http.StatusForbidden, core.Response[struct{}]{
-					Version: core.Version,
-					Metadata: core.ResponseMetadata{
+				ctx.AbortWithStatusJSON(http.StatusForbidden, gatewaycontract.Response[struct{}]{
+					Version: gatewaycontract.Version,
+					Metadata: gatewaycontract.ResponseMetadata{
 						RequestId:   ctx.GetHeader("X-Request-Id"),
 						RespondedAt: time.Now(),
 					},
@@ -66,9 +66,9 @@ func UserRoleMiddleware(atLeastUserRole enums.UserRole) gin.HandlerFunc {
 			}
 		}
 
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   ctx.GetHeader("X-Request-Id"),
 				RespondedAt: time.Now(),
 			},

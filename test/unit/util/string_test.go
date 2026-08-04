@@ -5,7 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	stringutil "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/stringutil"
+	stringutil "github.com/HiIamJeff67/notezy-backend/shared/lib/stringutil"
+	validators "github.com/HiIamJeff67/notezy-backend/shared/validations/validators"
 	test "github.com/HiIamJeff67/notezy-backend/test"
 )
 
@@ -89,7 +90,7 @@ func TestIsEmailString(t *testing.T) {
 		t, "testdata/string_testdata/is_email_string_testdata.json",
 	)
 	for _, c := range cases {
-		got := stringutil.IsEmailString(c.Args.S)
+		got := validators.IsEmailString(c.Args.S)
 		assert.Equal(t, c.Returns, got)
 	}
 }
@@ -109,7 +110,7 @@ func TestIsAlphaNumberString(t *testing.T) {
 		t, "testdata/string_testdata/is_alpha_number_string_testdata.json",
 	)
 	for _, c := range cases {
-		got := stringutil.IsAlphaOrNumberString(c.Args.S)
+		got := validators.IsAlphaOrNumberString(c.Args.S)
 		assert.Equal(t, c.Returns, got)
 	}
 }

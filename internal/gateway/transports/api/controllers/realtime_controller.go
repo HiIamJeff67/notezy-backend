@@ -5,11 +5,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	realtimedto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/realtime"
-	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
+	realtimedto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/realtime"
+	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtimegateway/v1"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
+	realtimegatewayadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/realtimegateway/adapters"
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 type RealtimeControllerInterface interface {
@@ -19,40 +19,39 @@ type RealtimeControllerInterface interface {
 }
 
 type RealtimeController struct {
-	coreClient         *coreadapters.CoreClient
-	realtimeLeaseCache *realtimelease.RealtimeLeaseCacheClient
+	coreClient            *coreadapters.CoreClient
+	realtimeGatewayClient *realtimegatewayadapters.RealtimeGatewayClient
 }
 
-func NewRealtimeController(coreClient *coreadapters.CoreClient) RealtimeControllerInterface {
+func NewRealtimeController(
+	coreClient *coreadapters.CoreClient,
+	realtimeGatewayClient *realtimegatewayadapters.RealtimeGatewayClient,
+) RealtimeControllerInterface {
 	return &RealtimeController{
-		coreClient:         coreClient,
-		realtimeLeaseCache: realtimelease.NewRealtimeLeaseCacheClient(),
+		coreClient:            coreClient,
+		realtimeGatewayClient: realtimeGatewayClient,
 	}
 }
 
 func (c *RealtimeController) GetMyBlockPackRealtimeParticipants(
 	ctx *gin.Context, requestDto *realtimedto.GetMyBlockPackRealtimeParticipantsRequestDto,
 ) {
-	participants, err := c.realtimeLeaseCache.GetBlockPackParticipants(requestDto.Param.BlockPackId)
-	if err != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(
-			exceptions.New(
-				"Unavailable",
-				"Realtime",
-				"GetMyBlockPackRealtimeParticipants",
-				"Realtime participant presence is unavailable",
-				http.StatusServiceUnavailable,
-			).WithOrigin(err),
-			ctx,
-		)
+	participantsResponseDto, exception := c.realtimeGatewayClient.GetBlockPackParticipants(
+		ctx,
+		&realtimegatewaycontract.GetBlockPackParticipantsRequestDto{
+			BlockPackId: requestDto.Param.BlockPackId,
+		},
+	)
+	if exception != nil {
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
 	requestDto.Body.Participants = make(
 		[]realtimedto.RealtimeBlockPackParticipantRequestDto,
-		len(participants),
+		len(participantsResponseDto.Participants),
 	)
-	for index, participant := range participants {
+	for index, participant := range participantsResponseDto.Participants {
 		requestDto.Body.Participants[index] = realtimedto.RealtimeBlockPackParticipantRequestDto{
 			UserPublicId:      participant.UserPublicId,
 			ChannelPermission: participant.ChannelPermission,
@@ -71,7 +70,7 @@ func (c *RealtimeController) GetMyBlockPackRealtimeParticipants(
 		"/core/v1/realtime/block-pack-participants/get",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -97,7 +96,7 @@ func (c *RealtimeController) CreateMyRealtimeConnectionTicket(
 		"/core/v1/realtime/connection-ticket/create",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -123,7 +122,7 @@ func (c *RealtimeController) CreateMyBlockPackChannelTicket(
 		"/core/v1/realtime/block-pack-channel-ticket/create",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 

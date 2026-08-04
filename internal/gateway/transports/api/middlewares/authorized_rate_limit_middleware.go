@@ -10,10 +10,10 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/gateway/contexts"
 	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/gateway/ratelimit"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
 	configs "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
+	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
 )
 
 var authorizedRateLimiter *ratelimit.HybridRateLimiter // use the hybrid one which including token bucket and cross server request management by redis
@@ -46,14 +46,14 @@ func AuthorizedRateLimitMiddleware(config ...configs.RateLimitConfig) gin.Handle
 	}
 
 	return func(ctx *gin.Context) {
-		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_Id)
+		userId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, sharedcontexts.ContextFieldName_User_Id)
 		if exception != nil || userId == nil {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.New(
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.New(
 				"WrongMiddlewareOrder",
 				"Context",
 				"Middleware",
 				"Cannot find the userId, "+
-					"please make sure the AuthMiddleware() is placing before the AuthorizedRateLimitMiddleware()",
+					"please make sure JWTMiddleware() is placed before AuthorizedRateLimitMiddleware()",
 				http.StatusInternalServerError,
 				true,
 			), ctx)
@@ -64,7 +64,7 @@ func AuthorizedRateLimitMiddleware(config ...configs.RateLimitConfig) gin.Handle
 		if !allowed {
 			setRateLimitHeaders(ctx, remaining, authorizedRateLimiter)
 			logs.NotezyLogger.Debug(ctx.Request.Context(), fmt.Sprintf("Rate limit exceeded for user: %s", userId.String()))
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.New(
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.New(
 				"PermissionDeniedDueToTooManyRequests",
 				"Auth",
 				"Authorize",

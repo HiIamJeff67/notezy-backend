@@ -7,14 +7,23 @@ import (
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
+	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
 )
 
 // the route structure is different here, since we use these routes to do the e2e test
 // like it receive a database instance and a gin router group
 // and its function name also start with the upper case letter
-func ConfigureTestAuthRoutes(routerGroup *gin.RouterGroup) {
+func ConfigureTestAuthRoutes(
+	routerGroup *gin.RouterGroup,
+	accessTokenCookieHandler *cookies.CookieHandler,
+	refreshTokenCookieHandler *cookies.CookieHandler,
+) {
 	authBinder := binders.NewAuthBinder()
-	authController := controllers.NewAuthController(coreadapters.NewConfiguredCoreClient())
+	authController := controllers.NewAuthController(
+		coreadapters.NewConfiguredCoreClient(),
+		accessTokenCookieHandler,
+		refreshTokenCookieHandler,
+	)
 
 	authRoutes := routerGroup.Group("/auth")
 	{
@@ -36,7 +45,7 @@ func ConfigureTestAuthRoutes(routerGroup *gin.RouterGroup) {
 		)
 		authRoutes.POST(
 			"/logout",
-			middlewares.AuthMiddleware(),
+			middlewares.JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler),
 			middlewares.AuthorizedRateLimitMiddleware(),
 			authBinder.BindLogout(authController.Logout),
 		)
@@ -46,13 +55,13 @@ func ConfigureTestAuthRoutes(routerGroup *gin.RouterGroup) {
 		)
 		authRoutes.PUT(
 			"/validateEmail",
-			middlewares.AuthMiddleware(),
+			middlewares.JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler),
 			middlewares.AuthorizedRateLimitMiddleware(),
 			authBinder.BindValidateEmail(authController.ValidateEmail),
 		)
 		authRoutes.PUT(
 			"/resetEmail",
-			middlewares.AuthMiddleware(),
+			middlewares.JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler),
 			middlewares.AuthorizedRateLimitMiddleware(),
 			authBinder.BindResetEmail(authController.ResetEmail),
 		)
@@ -62,13 +71,13 @@ func ConfigureTestAuthRoutes(routerGroup *gin.RouterGroup) {
 		)
 		authRoutes.PUT(
 			"/resetMe",
-			middlewares.AuthMiddleware(),
+			middlewares.JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler),
 			middlewares.AuthorizedRateLimitMiddleware(),
 			authBinder.BindResetMe(authController.ResetMe),
 		)
 		authRoutes.DELETE(
 			"/deleteMe",
-			middlewares.AuthMiddleware(),
+			middlewares.JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler),
 			middlewares.AuthorizedRateLimitMiddleware(),
 			authBinder.BindDeleteMe(authController.DeleteMe),
 		)

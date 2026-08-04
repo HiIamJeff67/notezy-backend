@@ -3,10 +3,10 @@ package binders
 import (
 	"github.com/gin-gonic/gin"
 
-	useraccountsdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/user-accounts"
+	useraccountsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-accounts"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 type UserAccountBinderInterface interface {
@@ -36,7 +36,7 @@ func (b *UserAccountBinder) BindUpdateMyAccount(controllerFunc controllers.Func[
 		requestDto := &useraccountsdto.UpdateMyAccountRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		if err := ctx.ShouldBindJSON(&requestDto.Body); err != nil {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("UserAccount").WithOrigin(err), ctx)
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("UserAccount").WithOrigin(err), ctx)
 			return
 		}
 
@@ -49,7 +49,7 @@ func (b *UserAccountBinder) BindBindGoogleAccount(controllerFunc controllers.Fun
 		requestDto := &useraccountsdto.BindGoogleAccountRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		if err := ctx.ShouldBindJSON(&requestDto.Body); err != nil {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("UserAccount").WithOrigin(err), ctx)
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("UserAccount").WithOrigin(err), ctx)
 			return
 		}
 
@@ -62,7 +62,7 @@ func (b *UserAccountBinder) BindUnbindGoogleAccount(controllerFunc controllers.F
 		requestDto := &useraccountsdto.UnbindGoogleAccountRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		if err := ctx.ShouldBindJSON(&requestDto.Body); err != nil {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("UserAccount").WithOrigin(err), ctx)
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("UserAccount").WithOrigin(err), ctx)
 			return
 		}
 

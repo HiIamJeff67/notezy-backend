@@ -5,15 +5,21 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 	binders "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/binders"
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
 	interceptors "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	sharedtypes "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
 )
 
-func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup, coreClient *coreadapters.CoreClient) {
+func configureDevelopmentRoutineTaskRoutes(
+	router *gin.RouterGroup,
+	coreClient *coreadapters.CoreClient,
+	accessTokenCookieHandler *cookies.CookieHandler,
+	refreshTokenCookieHandler *cookies.CookieHandler,
+) {
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
@@ -25,9 +31,9 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup, coreClient *
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(3 * time.Second),
-		middlewares.AuthMiddleware(),
+		middlewares.JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler),
 		interceptors.ShareableResponseWriterInterceptor(
-			interceptors.RefreshTokenInterceptor,
+			interceptors.RefreshTokenInterceptor(accessTokenCookieHandler),
 			interceptors.EmbeddedInterceptor,
 		),
 	}
@@ -41,7 +47,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup, coreClient *
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				routineTaskBinder.BindGetMyRoutineTaskById(routineTaskController.GetMyRoutineTaskById),
 			)...,
@@ -55,7 +61,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup, coreClient *
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				routineTaskBinder.BindGetAllMyRoutineTasksByRoutineIds(routineTaskController.GetAllMyRoutineTasksByRoutineIds),
 			)...,
@@ -69,7 +75,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup, coreClient *
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				routineTaskBinder.BindGetAllMyRoutineTasks(routineTaskController.GetAllMyRoutineTasks),
 			)...,
@@ -83,7 +89,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup, coreClient *
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Write),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Write),
 				),
 				routineTaskBinder.BindCreateRoutineTaskByRoutineId(routineTaskController.CreateRoutineTaskByRoutineId),
 			)...,
@@ -97,7 +103,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup, coreClient *
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Write),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Write),
 				),
 				routineTaskBinder.BindUpdateMyRoutineTaskById(routineTaskController.UpdateMyRoutineTaskById),
 			)...,
@@ -111,7 +117,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup, coreClient *
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Write),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Write),
 				),
 				routineTaskBinder.BindPauseMyRoutineTaskById(routineTaskController.PauseMyRoutineTaskById),
 			)...,
@@ -125,7 +131,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup, coreClient *
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Write),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Write),
 				),
 				routineTaskBinder.BindResumeMyRoutineTaskById(routineTaskController.ResumeMyRoutineTaskById),
 			)...,
@@ -139,7 +145,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup, coreClient *
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Write),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Write),
 				),
 				routineTaskBinder.BindHardDeleteMyRoutineTaskById(routineTaskController.HardDeleteMyRoutineTaskById),
 			)...,
@@ -153,7 +159,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup, coreClient *
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Write),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Write),
 				),
 				routineTaskBinder.BindHardDeleteMyRoutineTasksByIds(routineTaskController.HardDeleteMyRoutineTasksByIds),
 			)...,
@@ -166,9 +172,9 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup, coreClient *
 	visualizationMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(3 * time.Second),
-		middlewares.AuthMiddleware(),
+		middlewares.JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler),
 		interceptors.ShareableResponseWriterInterceptor(
-			interceptors.RefreshTokenInterceptor,
+			interceptors.RefreshTokenInterceptor(accessTokenCookieHandler),
 			interceptors.EmbeddedInterceptor,
 		),
 	}
@@ -182,7 +188,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup, coreClient *
 				},
 				append(
 					visualizationMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				routineTaskBinder.BindVisualizeMyRoutineTaskStatusCount(routineTaskController.VisualizeMyRoutineTaskStatusCount),
 			)...,
@@ -196,7 +202,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup, coreClient *
 				},
 				append(
 					visualizationMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				routineTaskBinder.BindVisualizeMyRoutineTaskPurposeCount(routineTaskController.VisualizeMyRoutineTaskPurposeCount),
 			)...,
@@ -210,7 +216,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup, coreClient *
 				},
 				append(
 					visualizationMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				routineTaskBinder.BindVisualizeMyRoutineTaskScheduledAtCount(routineTaskController.VisualizeMyRoutineTaskScheduledAtCount),
 			)...,
@@ -224,7 +230,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup, coreClient *
 				},
 				append(
 					visualizationMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				routineTaskBinder.BindVisualizeMyRoutineTaskActualStartedAtCount(routineTaskController.VisualizeMyRoutineTaskActualStartedAtCount),
 			)...,
@@ -238,7 +244,7 @@ func configureDevelopmentRoutineTaskRoutes(router *gin.RouterGroup, coreClient *
 				},
 				append(
 					visualizationMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				routineTaskBinder.BindVisualizeMyRoutineTaskActualEndedAtCount(routineTaskController.VisualizeMyRoutineTaskActualEndedAtCount),
 			)...,

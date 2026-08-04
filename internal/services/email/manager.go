@@ -11,7 +11,7 @@ import (
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 /* ============================== Initialization & Instance ============================== */

@@ -11,9 +11,9 @@ import (
 
 	ratelimitrecord "github.com/HiIamJeff67/notezy-backend/internal/gateway/data/cache/ratelimitrecord"
 	cacheinputs "github.com/HiIamJeff67/notezy-backend/internal/gateway/data/cache/ratelimitrecord/inputs"
+	configs "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 type HybridRateLimitTask struct {
@@ -35,7 +35,7 @@ type HybridRateLimiter struct {
 	syncTicker        *time.Ticker
 	stopChan          chan struct{}
 
-	BackendServerName   types.BackendServerName
+	BackendServerName   configs.BackendServerName
 	IsAuthorizedLimiter bool
 	cacheClient         *ratelimitrecord.RateLimitRecordCacheClient
 }
@@ -45,7 +45,7 @@ func NewHybridRateLimiter(
 	burst int,
 	userLimit int32,
 	windowDuration time.Duration,
-	backendServerName types.BackendServerName,
+	backendServerName configs.BackendServerName,
 	isAuthorizedLimiter bool,
 ) *HybridRateLimiter {
 	syncInterval := windowDuration / constants.SynchronizationToWindowDurationRatio
@@ -159,7 +159,7 @@ func (hrl *HybridRateLimiter) syncLoop() {
 func (hrl *HybridRateLimiter) checkBucketLimitByFingerprint(fingerprint string, n int32) int32 {
 	var totalTokensUsed int32 = 0
 
-	for _, backendServerName := range types.AllBackendServerNames {
+	for _, backendServerName := range configs.AllBackendServerNames {
 		rateLimitRecordCache, exception := hrl.cacheClient.Get(fingerprint, backendServerName)
 		if exception != nil {
 			continue
@@ -208,7 +208,7 @@ func (hrl *HybridRateLimiter) AllowNByFingerprint(fingerprint string, now time.T
 func (hrl *HybridRateLimiter) checkBucketLimitByUserId(userId uuid.UUID, n int32) int32 {
 	var totalTokensUsed int32 = 0
 
-	for _, backendServerName := range types.AllBackendServerNames {
+	for _, backendServerName := range configs.AllBackendServerNames {
 		rateLimitRecordCache, exception := hrl.cacheClient.Get(userId.String(), backendServerName)
 		if exception != nil {
 			continue

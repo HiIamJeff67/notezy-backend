@@ -8,10 +8,10 @@ import (
 	"github.com/google/uuid"
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
 )
 
-func GetAndConvertContextFieldToBoolean(ctx *gin.Context, name types.ContextFieldName) (*bool, *exceptions.Exception) {
+func GetAndConvertContextFieldToBoolean(ctx *gin.Context, name sharedcontexts.ContextFieldName) (*bool, *exceptions.Exception) {
 	value, exists := ctx.Get(name.String())
 	if !exists {
 		return nil, exceptions.New(
@@ -39,7 +39,7 @@ func GetAndConvertContextFieldToBoolean(ctx *gin.Context, name types.ContextFiel
 	return &valueBoolean, nil
 }
 
-func GetAndConvertContextFieldToString(ctx *gin.Context, name types.ContextFieldName) (*string, *exceptions.Exception) {
+func GetAndConvertContextFieldToString(ctx *gin.Context, name sharedcontexts.ContextFieldName) (*string, *exceptions.Exception) {
 	value, exists := ctx.Get(name.String())
 	if !exists {
 		return nil, exceptions.New(
@@ -67,7 +67,7 @@ func GetAndConvertContextFieldToString(ctx *gin.Context, name types.ContextField
 	return &valueString, nil
 }
 
-func GetAndConvertContextFieldToUUID(ctx *gin.Context, name types.ContextFieldName) (*uuid.UUID, *exceptions.Exception) {
+func GetAndConvertContextFieldToUUID(ctx *gin.Context, name sharedcontexts.ContextFieldName) (*uuid.UUID, *exceptions.Exception) {
 	value, exists := ctx.Get(name.String())
 	if !exists {
 		return nil, exceptions.New(
@@ -111,7 +111,7 @@ func GetAndConvertContextFieldToUUID(ctx *gin.Context, name types.ContextFieldNa
 }
 
 func GetAndConvertContextToGinContext(ctx context.Context) (*gin.Context, *exceptions.Exception) {
-	ginCtx, ok := ctx.Value(types.ContextFieldName_GinContext).(*gin.Context)
+	ginCtx, ok := ctx.Value(sharedcontexts.ContextFieldName_GinContext).(*gin.Context)
 	if !ok {
 		return nil, exceptions.New(
 			"ContextFieldInvalid",

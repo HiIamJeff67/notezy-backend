@@ -4,15 +4,35 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"reflect"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type BillingIntervalUnit string
+type BillingIntervalUnit enumcontract.BillingIntervalUnit
+
+func (value *BillingIntervalUnit) ToContractable() *enumcontract.BillingIntervalUnit {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.BillingIntervalUnit(*value)
+	return &contractValue
+}
+
+func (value *BillingIntervalUnit) ToStorable() *BillingIntervalUnit {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	BillingIntervalUnit_Day   BillingIntervalUnit = "DAY"
-	BillingIntervalUnit_Week  BillingIntervalUnit = "WEEK"
-	BillingIntervalUnit_Month BillingIntervalUnit = "MONTH"
-	BillingIntervalUnit_Year  BillingIntervalUnit = "YEAR"
+	BillingIntervalUnit_Day   BillingIntervalUnit = BillingIntervalUnit(enumcontract.BillingIntervalUnit_Day)
+	BillingIntervalUnit_Week  BillingIntervalUnit = BillingIntervalUnit(enumcontract.BillingIntervalUnit_Week)
+	BillingIntervalUnit_Month BillingIntervalUnit = BillingIntervalUnit(enumcontract.BillingIntervalUnit_Month)
+	BillingIntervalUnit_Year  BillingIntervalUnit = BillingIntervalUnit(enumcontract.BillingIntervalUnit_Year)
 )
 
 var AllBillingIntervalUnits = []BillingIntervalUnit{

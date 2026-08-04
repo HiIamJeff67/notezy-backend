@@ -19,7 +19,7 @@ import (
 	cacheinputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/cache/userdata/inputs"
 	redislibraries "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/cache/userdata/libraries"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type UserDataCache struct {
@@ -104,7 +104,7 @@ func (s *UserDataCacheClient) hashIdentifier(identifier string) int {
 }
 
 func formatUserDataKey(identifier string) string {
-	return fmt.Sprintf("%s:%s", types.ValidCachePurpose_UserData.String(), identifier)
+	return fmt.Sprintf("%s:%s", platformredis.CachePurpose_UserData.String(), identifier)
 }
 
 func isValidUserDataCache(userDataCache *UserDataCache) bool {

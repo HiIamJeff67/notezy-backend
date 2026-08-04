@@ -7,7 +7,7 @@ import (
 
 	"gorm.io/gorm"
 
-	useraccountsdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/user-accounts"
+	useraccountsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-accounts"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
 	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
@@ -16,7 +16,7 @@ import (
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
+	validator "github.com/go-playground/validator/v10"
 )
 
 type UserAccountServiceInterface interface {
@@ -27,6 +27,7 @@ type UserAccountServiceInterface interface {
 }
 
 type UserAccountService struct {
+	validator             *validator.Validate
 	db                    *gorm.DB
 	userRepository        repositories.UserRepositoryInterface
 	userAccountRepository repositories.UserAccountRepositoryInterface
@@ -34,6 +35,7 @@ type UserAccountService struct {
 }
 
 func NewUserAccountService(
+	validator *validator.Validate,
 	db *gorm.DB,
 	userRepository repositories.UserRepositoryInterface,
 	userAccountRepository repositories.UserAccountRepositoryInterface,
@@ -43,6 +45,7 @@ func NewUserAccountService(
 		db = data.NotezyDB
 	}
 	return &UserAccountService{
+		validator:             validator,
 		db:                    db,
 		userRepository:        userRepository,
 		userAccountRepository: userAccountRepository,
@@ -55,7 +58,7 @@ func NewUserAccountService(
 func (s *UserAccountService) GetMyAccount(
 	ctx context.Context, requestDto *useraccountsdto.GetMyAccountRequestDto,
 ) (*useraccountsdto.GetMyAccountResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"UserAccount",
@@ -103,7 +106,7 @@ func (s *UserAccountService) GetMyAccount(
 func (s *UserAccountService) UpdateMyAccount(
 	ctx context.Context, requestDto *useraccountsdto.UpdateMyAccountRequestDto,
 ) (*useraccountsdto.UpdateMyAccountResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"UserAccount",
@@ -166,7 +169,7 @@ func (s *UserAccountService) UpdateMyAccount(
 func (s *UserAccountService) BindGoogleAccount(
 	ctx context.Context, requestDto *useraccountsdto.BindGoogleAccountRequestDto,
 ) (*useraccountsdto.BindGoogleAccountResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"UserAccount",
@@ -229,7 +232,7 @@ func (s *UserAccountService) BindGoogleAccount(
 func (s *UserAccountService) UnbindGoogleAccount(
 	ctx context.Context, requestDto *useraccountsdto.UnbindGoogleAccountRequestDto,
 ) (*useraccountsdto.UnbindGoogleAccountResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"UserAccount",

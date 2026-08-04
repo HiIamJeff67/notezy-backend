@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"strings"
 
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/blocks"
+	typescontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 )
 
 type TemplateBlockMatcherInterface interface {
 	MatchString(value string, values map[string]string) string
-	MatchArborizedEditableBlock(block blocksdto.ArborizedEditableBlock, values map[string]string) (blocksdto.ArborizedEditableBlock, *exceptions.Exception)
+	MatchArborizedEditableBlock(block typescontract.ArborizedEditableBlock, values map[string]string) (typescontract.ArborizedEditableBlock, *exceptions.Exception)
 }
 
 type TemplateBlockMatcher struct{}
@@ -33,14 +33,14 @@ func (m TemplateBlockMatcher) MatchString(value string, values map[string]string
 }
 
 func (m TemplateBlockMatcher) MatchArborizedEditableBlock(
-	block blocksdto.ArborizedEditableBlock,
+	block typescontract.ArborizedEditableBlock,
 	values map[string]string,
-) (blocksdto.ArborizedEditableBlock, *exceptions.Exception) {
-	matchedChildren := make([]blocksdto.ArborizedEditableBlock, len(block.Children))
+) (typescontract.ArborizedEditableBlock, *exceptions.Exception) {
+	matchedChildren := make([]typescontract.ArborizedEditableBlock, len(block.Children))
 	for index, child := range block.Children {
 		matchedChild, exception := m.MatchArborizedEditableBlock(child, values)
 		if exception != nil {
-			return blocksdto.ArborizedEditableBlock{}, exception
+			return typescontract.ArborizedEditableBlock{}, exception
 		}
 		matchedChildren[index] = matchedChild
 	}
@@ -48,7 +48,7 @@ func (m TemplateBlockMatcher) MatchArborizedEditableBlock(
 
 	rawBlock, err := json.Marshal(block)
 	if err != nil {
-		return blocksdto.ArborizedEditableBlock{}, exceptions.New(
+		return typescontract.ArborizedEditableBlock{}, exceptions.New(
 			"InvalidRoutineTaskPayload",
 			"RoutineTask",
 			"Resolve",
@@ -59,7 +59,7 @@ func (m TemplateBlockMatcher) MatchArborizedEditableBlock(
 
 	var blockMap map[string]any
 	if err := json.Unmarshal(rawBlock, &blockMap); err != nil {
-		return blocksdto.ArborizedEditableBlock{}, exceptions.New(
+		return typescontract.ArborizedEditableBlock{}, exceptions.New(
 			"InvalidRoutineTaskPayload",
 			"RoutineTask",
 			"Resolve",
@@ -87,7 +87,7 @@ func (m TemplateBlockMatcher) MatchArborizedEditableBlock(
 
 	rawMatchedBlock, err := json.Marshal(blockMap)
 	if err != nil {
-		return blocksdto.ArborizedEditableBlock{}, exceptions.New(
+		return typescontract.ArborizedEditableBlock{}, exceptions.New(
 			"InvalidRoutineTaskPayload",
 			"RoutineTask",
 			"Resolve",
@@ -96,9 +96,9 @@ func (m TemplateBlockMatcher) MatchArborizedEditableBlock(
 		).WithOrigin(err)
 	}
 
-	var matchedBlock blocksdto.ArborizedEditableBlock
+	var matchedBlock typescontract.ArborizedEditableBlock
 	if err := json.Unmarshal(rawMatchedBlock, &matchedBlock); err != nil {
-		return blocksdto.ArborizedEditableBlock{}, exceptions.New(
+		return typescontract.ArborizedEditableBlock{}, exceptions.New(
 			"InvalidRoutineTaskPayload",
 			"RoutineTask",
 			"Resolve",

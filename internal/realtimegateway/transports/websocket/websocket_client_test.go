@@ -7,8 +7,6 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -23,19 +21,28 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/blocks"
+	eventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
+	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtimegateway/v1"
 	platformredis "github.com/HiIamJeff67/notezy-backend/internal/platform/redis"
 	realtimeleasecache "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/types"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
-	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/shared/realtimelease"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/internal/shared/tokens"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 )
 
 type fakeWorkerManager struct {
 	frameHandler func(realtimetypes.InternalFrame)
 	frames       []realtimetypes.InternalFrame
 	mutex        sync.Mutex
+}
+
+func (m *fakeWorkerManager) Attach(frame realtimetypes.InternalFrame) bool {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	m.frames = append(m.frames, frame)
+
+	return true
 }
 
 func generateRealtimeConnectionTicket(userPublicId uuid.UUID, userAgent string) (*string, time.Time, error) {
@@ -75,69 +82,21 @@ func generateRealtimeBlockPackTicketWithMaximumSubscribers(
 ) (*string, time.Time, error) {
 	userAgentHash := sha256.Sum256([]byte(userAgent))
 	claims := sharedtokens.RealtimeBlockPackTicketClaims{
-		UserAgentHash:           fmt.Sprintf("%x", userAgentHash),
-		ChannelType:             string(realtimetypes.ChannelType_BlockPack),
-		ChannelId:               blockPackId.String(),
-		Permission:              string(permission),
-		RealtimeProtocolVersion: constants.RealtimeProtocolVersion,
-		SchemaVersion:           constants.YjsBlockPackSchemaVersion,
-		MaximumSubscribers:      maximumSubscribers,
+		UserAgentHash:                    fmt.Sprintf("%x", userAgentHash),
+		ChannelType:                      string(realtimetypes.ChannelType_BlockPack),
+		ChannelId:                        blockPackId.String(),
+		Permission:                       string(permission),
+		RealtimeProtocolVersion:          constants.RealtimeProtocolVersion,
+		SchemaVersion:                    constants.YjsBlockPackSchemaVersion,
+		RoomAdmissionPolicyVersion:       realtimegatewaycontract.BlockPackRoomAdmissionPolicyVersion,
+		RoomAdmissionEnforcementStrategy: string(realtimegatewaycontract.RoomAdmissionEnforcementStrategy_RejectNewSubscriber),
+		MaximumSubscribers:               maximumSubscribers,
 	}
 	claims.Subject = userPublicId.String()
 
 	return sharedtokens.GenerateRealtimeBlockPackTicket(
 		claims,
 	)
-}
-
-type fakeBlockProjectionService struct {
-	CoreClientInterface
-	blockPackId uuid.UUID
-	requestDto  blocksdto.ApplyBlockProjectionRequestDto
-}
-
-type fakeRealtimeAdmissionService struct {
-	CoreClientInterface
-	errorCode           realtimetypes.ErrorCode
-	err                 error
-	validationErrorCode realtimetypes.ErrorCode
-	validationErr       error
-}
-
-func (s *fakeRealtimeAdmissionService) ValidateBlockPackChannelPermission(
-	ctx context.Context,
-	userPublicId uuid.UUID,
-	blockPackId uuid.UUID,
-	permission realtimetypes.ChannelPermission,
-) (realtimetypes.ErrorCode, error) {
-	if s.validationErr != nil {
-		return s.validationErrorCode, s.validationErr
-	}
-
-	return s.errorCode, s.err
-}
-
-func (s *fakeBlockProjectionService) ApplyBlockProjection(
-	ctx context.Context,
-	blockPackId uuid.UUID,
-	requestDto blocksdto.ApplyBlockProjectionRequestDto,
-) (*blocksdto.ApplyBlockProjectionResponseDto, error) {
-	s.blockPackId = blockPackId
-	s.requestDto = requestDto
-
-	return &blocksdto.ApplyBlockProjectionResponseDto{
-		Applied:                true,
-		ProjectedUntilSequence: requestDto.ProjectedSequence,
-	}, nil
-}
-
-func (m *fakeWorkerManager) Attach(frame realtimetypes.InternalFrame) bool {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	m.frames = append(m.frames, frame)
-
-	return true
 }
 
 func (m *fakeWorkerManager) Detach(frame realtimetypes.InternalFrame) {
@@ -215,9 +174,11 @@ func TestGatewayRevokesMatchingBlockPackChannels(t *testing.T) {
 		},
 	}
 
-	gateway.revokeBlockPackChannels(realtimelease.RealtimeBlockPackChannelRevocation{
-		UserId:       userPublicId,
-		BlockPackIds: []uuid.UUID{blockPackId},
+	gateway.revokeBlockPackChannels(realtimeleasecache.BlockPackChannelRevocation{
+		EventId:            uuid.New(),
+		BlockPackId:        blockPackId,
+		TargetUserPublicId: &userPublicId,
+		Reason:             eventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
 	})
 
 	if _, exists := connector.get(1); exists {
@@ -250,7 +211,6 @@ func TestGatewaySendsReadyAndPong(t *testing.T) {
 			},
 		},
 		workerManager: workerManager,
-		coreClient:    &fakeRealtimeAdmissionService{},
 		leaseStore:    newTestRealtimeLeaseStore(t),
 		connectors:    make(map[uuid.UUID]*Connector),
 	}
@@ -502,7 +462,6 @@ func TestGatewayRejectsBlockPackSubscriptionWhenRoomCapacityIsReached(t *testing
 			},
 		},
 		workerManager: workerManager,
-		coreClient:    &fakeRealtimeAdmissionService{},
 		leaseStore:    newTestRealtimeLeaseStore(t),
 		connectors:    make(map[uuid.UUID]*Connector),
 	}
@@ -625,7 +584,6 @@ func TestGatewayMultiplexesAndRelaysBlockPackChannels(t *testing.T) {
 			},
 		},
 		workerManager: workerManager,
-		coreClient:    &fakeRealtimeAdmissionService{},
 		leaseStore:    newTestRealtimeLeaseStore(t),
 		connectors:    make(map[uuid.UUID]*Connector),
 	}
@@ -816,7 +774,6 @@ func TestGatewayRejectsYjsDocumentUpdatesOnReadOnlyChannels(t *testing.T) {
 			},
 		},
 		workerManager: workerManager,
-		coreClient:    &fakeRealtimeAdmissionService{},
 		leaseStore:    newTestRealtimeLeaseStore(t),
 		connectors:    make(map[uuid.UUID]*Connector),
 	}
@@ -893,239 +850,6 @@ func TestGatewayRejectsYjsDocumentUpdatesOnReadOnlyChannels(t *testing.T) {
 		if frame.Type == realtimetypes.InternalFrameType_YjsDocument {
 			t.Fatalf("read-only Yjs document frame must not reach the worker: %#v", frame)
 		}
-	}
-}
-
-func TestGatewayReturnsResourceUnavailableWhenBlockPackSubscriptionCannotBeAdmitted(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-
-	userAgent := "notezy-realtime-test"
-	userPublicId := uuid.New()
-	blockPackId := uuid.New()
-	configureRealtimeTicketPrivateKey(t)
-	connectionTicket, _, exception := generateRealtimeConnectionTicket(userPublicId, userAgent)
-	if exception != nil {
-		t.Fatalf("failed to generate connection ticket: %v", exception)
-	}
-	channelTicket, _, exception := generateRealtimeBlockPackTicket(
-		userPublicId,
-		userAgent,
-		blockPackId,
-		realtimetypes.ChannelPermission_Write,
-	)
-	if exception != nil {
-		t.Fatalf("failed to generate channel ticket: %v", exception)
-	}
-
-	workerManager := &fakeWorkerManager{}
-	gateway := &WebSocketClient{
-		upgrader: websocket.Upgrader{
-			CheckOrigin: func(req *http.Request) bool {
-				return req.Header.Get("Origin") != ""
-			},
-		},
-		workerManager: workerManager,
-		coreClient: &fakeRealtimeAdmissionService{
-			errorCode: realtimetypes.ErrorCode_ResourceUnavailable,
-			err:       errors.New("block pack is deleted"),
-		},
-		leaseStore: newTestRealtimeLeaseStore(t),
-		connectors: make(map[uuid.UUID]*Connector),
-	}
-	workerManager.SetFrameHandler(gateway.handleInternalFrame)
-
-	router := gin.New()
-	router.GET("/"+constants.RealtimeDevelopmentBaseURL, gateway.Handle)
-
-	server := httptest.NewServer(router)
-	defer server.Close()
-
-	connection := dialGateway(t, server.URL, userAgent, *connectionTicket)
-	defer connection.Close()
-
-	var ready realtimetypes.ReadyFrame
-	if err := connection.ReadJSON(&ready); err != nil {
-		t.Fatalf("failed to read ready frame: %v", err)
-	}
-
-	if err := connection.WriteJSON(realtimetypes.SubscribeFrame{
-		Version:       constants.RealtimeProtocolVersion,
-		Type:          realtimetypes.FrameType_Subscribe,
-		RequestId:     "subscribe-deleted",
-		ChannelType:   realtimetypes.ChannelType_BlockPack,
-		ChannelId:     blockPackId,
-		ChannelTicket: *channelTicket,
-	}); err != nil {
-		t.Fatalf("failed to subscribe to unavailable block pack: %v", err)
-	}
-
-	var errorFrame realtimetypes.ErrorFrame
-	if err := connection.ReadJSON(&errorFrame); err != nil {
-		t.Fatalf("failed to read resource unavailable error: %v", err)
-	}
-	if errorFrame.Code != realtimetypes.ErrorCode_ResourceUnavailable ||
-		errorFrame.ChannelId == nil || *errorFrame.ChannelId != blockPackId {
-		t.Fatalf("unexpected resource unavailable error: %#v", errorFrame)
-	}
-}
-
-func TestGatewayDetachesYjsWriteChannelWhenBlockPackBecomesUnavailable(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-
-	userAgent := "notezy-realtime-test"
-	userPublicId := uuid.New()
-	blockPackId := uuid.New()
-	configureRealtimeTicketPrivateKey(t)
-	connectionTicket, _, exception := generateRealtimeConnectionTicket(userPublicId, userAgent)
-	if exception != nil {
-		t.Fatalf("failed to generate connection ticket: %v", exception)
-	}
-	channelTicket, _, exception := generateRealtimeBlockPackTicket(
-		userPublicId,
-		userAgent,
-		blockPackId,
-		realtimetypes.ChannelPermission_Write,
-	)
-	if exception != nil {
-		t.Fatalf("failed to generate channel ticket: %v", exception)
-	}
-
-	workerManager := &fakeWorkerManager{}
-	realtimeService := &fakeRealtimeAdmissionService{}
-	gateway := &WebSocketClient{
-		upgrader: websocket.Upgrader{
-			CheckOrigin: func(req *http.Request) bool {
-				return req.Header.Get("Origin") != ""
-			},
-		},
-		workerManager: workerManager,
-		coreClient:    realtimeService,
-		leaseStore:    newTestRealtimeLeaseStore(t),
-		connectors:    make(map[uuid.UUID]*Connector),
-	}
-	workerManager.SetFrameHandler(gateway.handleInternalFrame)
-
-	router := gin.New()
-	router.GET("/"+constants.RealtimeDevelopmentBaseURL, gateway.Handle)
-
-	server := httptest.NewServer(router)
-	defer server.Close()
-
-	connection := dialGateway(t, server.URL, userAgent, *connectionTicket)
-	defer connection.Close()
-
-	var ready realtimetypes.ReadyFrame
-	if err := connection.ReadJSON(&ready); err != nil {
-		t.Fatalf("failed to read ready frame: %v", err)
-	}
-
-	if err := connection.WriteJSON(realtimetypes.SubscribeFrame{
-		Version:       constants.RealtimeProtocolVersion,
-		Type:          realtimetypes.FrameType_Subscribe,
-		RequestId:     "subscribe-write",
-		ChannelType:   realtimetypes.ChannelType_BlockPack,
-		ChannelId:     blockPackId,
-		ChannelTicket: *channelTicket,
-	}); err != nil {
-		t.Fatalf("failed to subscribe to write channel: %v", err)
-	}
-
-	var subscribed realtimetypes.SubscribedFrame
-	if err := connection.ReadJSON(&subscribed); err != nil {
-		t.Fatalf("failed to read subscribed frame: %v", err)
-	}
-
-	realtimeService.validationErrorCode = realtimetypes.ErrorCode_ResourceUnavailable
-	realtimeService.validationErr = errors.New("block pack is deleted")
-
-	binaryPayload, err := realtimetypes.BinaryFrame{
-		Version:            byte(constants.RealtimeProtocolVersion),
-		Type:               realtimetypes.BinaryFrameType_YjsDocument,
-		ConnectorChannelId: subscribed.ConnectorChannelId,
-		Payload:            []byte{1, 2, 3},
-	}.MarshalBytes()
-	if err != nil {
-		t.Fatalf("failed to marshal Yjs document frame: %v", err)
-	}
-
-	if err := connection.WriteMessage(websocket.BinaryMessage, binaryPayload); err != nil {
-		t.Fatalf("failed to write Yjs document frame: %v", err)
-	}
-
-	var errorFrame realtimetypes.ErrorFrame
-	if err := connection.ReadJSON(&errorFrame); err != nil {
-		t.Fatalf("failed to read resource unavailable error: %v", err)
-	}
-	if errorFrame.Code != realtimetypes.ErrorCode_ResourceUnavailable ||
-		errorFrame.ConnectorChannelId != subscribed.ConnectorChannelId {
-		t.Fatalf("unexpected resource unavailable error: %#v", errorFrame)
-	}
-
-	workerManager.mutex.Lock()
-	defer workerManager.mutex.Unlock()
-	for _, frame := range workerManager.frames {
-		if frame.Type == realtimetypes.InternalFrameType_YjsDocument {
-			t.Fatalf("unavailable block pack Yjs document frame must not reach the worker: %#v", frame)
-		}
-	}
-}
-
-func TestGatewayAppliesBlockProjectionInternalFrames(t *testing.T) {
-	workerManager := &fakeWorkerManager{}
-	blockService := &fakeBlockProjectionService{}
-	gateway := &WebSocketClient{
-		workerManager: workerManager,
-		coreClient:    blockService,
-		connectors:    make(map[uuid.UUID]*Connector),
-	}
-	workerManager.SetFrameHandler(gateway.handleInternalFrame)
-
-	blockPackId := uuid.New()
-	connectionId := uuid.New()
-	requestDto := blocksdto.ApplyBlockProjectionRequestDto{
-		SchemaId:          "notezy.blocknote",
-		SchemaVersion:     1,
-		ProjectedSequence: 7,
-		Blocks:            []blocksdto.ArborizedEditableBlock{},
-	}
-	payload, err := json.Marshal(requestDto)
-	if err != nil {
-		t.Fatalf("failed to marshal block projection input: %v", err)
-	}
-
-	gateway.handleInternalFrame(realtimetypes.InternalFrame{
-		Version:            byte(constants.RealtimeWorkerProtocolVersion),
-		Type:               realtimetypes.InternalFrameType_ApplyBlockProjection,
-		ChannelType:        realtimetypes.ChannelType_BlockPack,
-		ConnectionId:       connectionId,
-		ConnectorChannelId: 1,
-		ChannelId:          blockPackId,
-		Payload:            payload,
-	})
-
-	if blockService.blockPackId != blockPackId ||
-		blockService.requestDto.ProjectedSequence != requestDto.ProjectedSequence {
-		t.Fatalf("unexpected block service invocation: %#v", blockService)
-	}
-
-	workerManager.mutex.Lock()
-	defer workerManager.mutex.Unlock()
-	if len(workerManager.frames) != 1 {
-		t.Fatalf("expected one projection response frame, got %d", len(workerManager.frames))
-	}
-
-	frame := workerManager.frames[0]
-	if frame.Type != realtimetypes.InternalFrameType_BlockProjectionApplied ||
-		frame.ChannelId != blockPackId || frame.ConnectionId != connectionId {
-		t.Fatalf("unexpected projection response frame: %#v", frame)
-	}
-
-	var responseDto blocksdto.ApplyBlockProjectionResponseDto
-	if err := json.Unmarshal(frame.Payload, &responseDto); err != nil {
-		t.Fatalf("failed to unmarshal block projection response: %v", err)
-	}
-	if !responseDto.Applied || responseDto.ProjectedUntilSequence != requestDto.ProjectedSequence {
-		t.Fatalf("unexpected block projection response: %#v", responseDto)
 	}
 }
 

@@ -9,11 +9,11 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	typescontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas/enums"
-	payloads "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/payloads"
 )
 
 const (
@@ -26,8 +26,8 @@ const (
 )
 
 type PatternResolverInterface interface {
-	Resolve(ctx context.Context, task schemas.RoutineTask, actorUserId uuid.UUID, pattern payloads.RoutineTaskPattern, allowedPermissions []enums.AccessControlPermission) (map[string]string, *exceptions.Exception)
-	ResolveMany(ctx context.Context, tasks []schemas.RoutineTask, actorUserIds []uuid.UUID, patterns []payloads.RoutineTaskPattern, allowedPermissions []enums.AccessControlPermission) ([]map[string]string, []bool, *exceptions.Exception)
+	Resolve(ctx context.Context, task schemas.RoutineTask, actorUserId uuid.UUID, pattern typescontract.RoutineTaskPattern, allowedPermissions []enums.AccessControlPermission) (map[string]string, *exceptions.Exception)
+	ResolveMany(ctx context.Context, tasks []schemas.RoutineTask, actorUserIds []uuid.UUID, patterns []typescontract.RoutineTaskPattern, allowedPermissions []enums.AccessControlPermission) ([]map[string]string, []bool, *exceptions.Exception)
 }
 
 type PatternResolver struct {
@@ -50,14 +50,14 @@ func (r PatternResolver) Resolve(
 	ctx context.Context,
 	task schemas.RoutineTask,
 	actorUserId uuid.UUID,
-	pattern payloads.RoutineTaskPattern,
+	pattern typescontract.RoutineTaskPattern,
 	allowedPermissions []enums.AccessControlPermission,
 ) (map[string]string, *exceptions.Exception) {
 	values, successes, exception := r.ResolveMany(
 		ctx,
 		[]schemas.RoutineTask{task},
 		[]uuid.UUID{actorUserId},
-		[]payloads.RoutineTaskPattern{pattern},
+		[]typescontract.RoutineTaskPattern{pattern},
 		allowedPermissions,
 	)
 	if exception != nil {
@@ -79,7 +79,7 @@ func (r PatternResolver) ResolveMany(
 	ctx context.Context,
 	tasks []schemas.RoutineTask,
 	actorUserIds []uuid.UUID,
-	patterns []payloads.RoutineTaskPattern,
+	patterns []typescontract.RoutineTaskPattern,
 	allowedPermissions []enums.AccessControlPermission,
 ) ([]map[string]string, []bool, *exceptions.Exception) {
 	values := make([]map[string]string, len(patterns))

@@ -15,7 +15,6 @@ import { createInternalFrame } from "../types/internal_frame.js";
 import { InternalFrameType } from "../types/internal_frame_type.js";
 import type { Room } from "../types/room.js";
 import {
-  createYjsPersistenceBatch,
   type InFlightYjsPersistenceBatch,
 } from "../types/yjs_persistence_batch.js";
 import { YjsPersistenceFailureType } from "../types/yjs_persistence_failure_type.js";
@@ -23,14 +22,38 @@ import type { PendingYjsUpdate } from "../types/yjs_update.js";
 
 export class YjsDebouncer {
   private resyncRoom!: (room: Room, blockPackId: string) => void;
+  private readonly appendYjsUpdate: (
+    blockPackId: string,
+    persistenceBatchId: string,
+    originConnectionId: string | null,
+    payload: Buffer
+  ) => Promise<number>;
+  private readonly persisted: (
+    room: Room,
+    blockPackId: string,
+    batch: InFlightYjsPersistenceBatch
+  ) => void;
   private readonly telemetry: Telemetry;
 
   constructor(
     telemetry: Telemetry,
-    resyncRoom: (room: Room, blockPackId: string) => void
+    resyncRoom: (room: Room, blockPackId: string) => void,
+    appendYjsUpdate: (
+      blockPackId: string,
+      persistenceBatchId: string,
+      originConnectionId: string | null,
+      payload: Buffer
+    ) => Promise<number>,
+    persisted: (
+      room: Room,
+      blockPackId: string,
+      batch: InFlightYjsPersistenceBatch
+    ) => void
   ) {
     this.telemetry = telemetry;
     this.resyncRoom = resyncRoom;
+    this.appendYjsUpdate = appendYjsUpdate;
+    this.persisted = persisted;
   }
 
   scheduleFlush(room: Room, blockPackId: string): void {
@@ -286,23 +309,31 @@ export class YjsDebouncer {
       return false;
     }
 
-    if (batch.webSocket.readyState !== WebSocketState.OPEN) {
-      return false;
-    }
-
-    batch.webSocket.send(
-      createInternalFrame(
-        InternalFrameType.InternalFrameType_AppendYjsUpdateBatch,
-        batch.connectionId,
-        batch.connectorChannelId,
-        blockPackId,
-        createYjsPersistenceBatch(
-          batch.persistenceBatchId,
-          batch.originConnectionId,
-          batch.payload
-        )
-      )
-    );
+    void this.appendYjsUpdate(
+      blockPackId,
+      batch.persistenceBatchId,
+      batch.originConnectionId,
+      batch.payload
+    )
+      .then(updateSequence => {
+        const persisted = this.handlePersisted(
+          room,
+          blockPackId,
+          batch.connectionId,
+          batch.connectorChannelId,
+          updateSequence
+        );
+        if (persisted !== null) this.persisted(room, blockPackId, persisted);
+      })
+      .catch(() => {
+        this.handlePersistenceFailure(
+          room,
+          blockPackId,
+          Buffer.from([
+            YjsPersistenceFailureType.YjsPersistenceFailureType_Retryable,
+          ])
+        );
+      });
 
     return true;
   }

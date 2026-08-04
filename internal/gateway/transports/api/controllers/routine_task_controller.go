@@ -5,9 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	routinetasksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/routine-tasks"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
+	routinetasksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tasks"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 type RoutineTaskControllerInterface interface {
@@ -46,7 +46,7 @@ func (c *RoutineTaskController) GetMyRoutineTaskById(ctx *gin.Context, requestDt
 		"/core/v1/routine-tasks/get-by-id",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -66,7 +66,7 @@ func (c *RoutineTaskController) GetAllMyRoutineTasksByRoutineIds(ctx *gin.Contex
 		"/core/v1/routine-tasks/get-all-by-routine-ids",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -86,7 +86,7 @@ func (c *RoutineTaskController) GetAllMyRoutineTasks(ctx *gin.Context, requestDt
 		"/core/v1/routine-tasks/get-all",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -106,7 +106,7 @@ func (c *RoutineTaskController) CreateRoutineTaskByRoutineId(ctx *gin.Context, r
 		"/core/v1/routine-tasks/create-by-routine-id",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -126,7 +126,7 @@ func (c *RoutineTaskController) UpdateMyRoutineTaskById(ctx *gin.Context, reques
 		"/core/v1/routine-tasks/update",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -146,7 +146,7 @@ func (c *RoutineTaskController) PauseMyRoutineTaskById(ctx *gin.Context, request
 		"/core/v1/routine-tasks/pause",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -166,7 +166,7 @@ func (c *RoutineTaskController) ResumeMyRoutineTaskById(ctx *gin.Context, reques
 		"/core/v1/routine-tasks/resume",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -186,7 +186,7 @@ func (c *RoutineTaskController) HardDeleteMyRoutineTaskById(ctx *gin.Context, re
 		"/core/v1/routine-tasks/hard-delete",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -206,7 +206,7 @@ func (c *RoutineTaskController) HardDeleteMyRoutineTasksByIds(ctx *gin.Context, 
 		"/core/v1/routine-tasks/hard-delete-many",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -226,7 +226,7 @@ func (c *RoutineTaskController) VisualizeMyRoutineTaskStatusCount(ctx *gin.Conte
 		"/core/v1/routine-tasks/visualize-status-count",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -246,7 +246,7 @@ func (c *RoutineTaskController) VisualizeMyRoutineTaskPurposeCount(ctx *gin.Cont
 		"/core/v1/routine-tasks/visualize-purpose-count",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -266,7 +266,7 @@ func (c *RoutineTaskController) VisualizeMyRoutineTaskScheduledAtCount(ctx *gin.
 		"/core/v1/routine-tasks/visualize-scheduled-at-count",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -286,7 +286,7 @@ func (c *RoutineTaskController) VisualizeMyRoutineTaskActualStartedAtCount(ctx *
 		"/core/v1/routine-tasks/visualize-actual-started-at-count",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -306,7 +306,7 @@ func (c *RoutineTaskController) VisualizeMyRoutineTaskActualEndedAtCount(ctx *gi
 		"/core/v1/routine-tasks/visualize-actual-ended-at-count",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 

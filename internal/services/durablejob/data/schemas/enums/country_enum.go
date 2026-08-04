@@ -4,20 +4,40 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"reflect"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type Country string
+type Country enumcontract.Country
+
+func (value *Country) ToContractable() *enumcontract.Country {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.Country(*value)
+	return &contractValue
+}
+
+func (value *Country) ToStorable() *Country {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	Country_Taiwan                Country = "Taiwan"
-	Country_Japan                 Country = "Japan"
-	Country_Malaysia              Country = "Malaysia"
-	Country_Singapore             Country = "Singapore"
-	Country_China                 Country = "China"
-	Country_UnitedStatusOfAmerica Country = "UnitedStatesOfAmerica"
-	Country_UnitedKingdom         Country = "UnitedKingdom"
-	Country_Australia             Country = "Australia"
-	Country_Canada                Country = "Canada"
+	Country_Taiwan                Country = Country(enumcontract.Country_Taiwan)
+	Country_Japan                 Country = Country(enumcontract.Country_Japan)
+	Country_Malaysia              Country = Country(enumcontract.Country_Malaysia)
+	Country_Singapore             Country = Country(enumcontract.Country_Singapore)
+	Country_China                 Country = Country(enumcontract.Country_China)
+	Country_UnitedStatusOfAmerica Country = Country(enumcontract.Country_UnitedStatusOfAmerica)
+	Country_UnitedKingdom         Country = Country(enumcontract.Country_UnitedKingdom)
+	Country_Australia             Country = Country(enumcontract.Country_Australia)
+	Country_Canada                Country = Country(enumcontract.Country_Canada)
 )
 
 var AllCountries = []Country{

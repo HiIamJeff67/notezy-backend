@@ -5,9 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/blocks"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
+	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 type BlockControllerInterface interface {
@@ -38,7 +38,7 @@ func (c *BlockController) GetMyBlockById(ctx *gin.Context, requestDto *blocksdto
 		"/core/v1/blocks/get-by-id",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -61,7 +61,7 @@ func (c *BlockController) GetMyBlocksByIds(ctx *gin.Context, requestDto *blocksd
 		"/core/v1/blocks/get-by-ids",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -84,7 +84,7 @@ func (c *BlockController) GetMyBlocksByBlockPackId(ctx *gin.Context, requestDto 
 		"/core/v1/blocks/get-by-block-pack-id",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 

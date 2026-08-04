@@ -5,14 +5,20 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 	graphql "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/graphql"
 	interceptors "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	sharedtypes "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
 )
 
-func configureDevelopmentGraphQLRoutes(router *gin.RouterGroup, coreClient *coreadapters.CoreClient) {
+func configureDevelopmentGraphQLRoutes(
+	router *gin.RouterGroup,
+	coreClient *coreadapters.CoreClient,
+	accessTokenCookieHandler *cookies.CookieHandler,
+	refreshTokenCookieHandler *cookies.CookieHandler,
+) {
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
@@ -22,10 +28,10 @@ func configureDevelopmentGraphQLRoutes(router *gin.RouterGroup, coreClient *core
 	graphqlRoutes.Use(
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(3*time.Second),
-		middlewares.AuthMiddleware(),
-		middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+		middlewares.JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler),
+		middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 		interceptors.ShareableResponseWriterInterceptor(
-			interceptors.RefreshTokenInterceptor,
+			interceptors.RefreshTokenInterceptor(accessTokenCookieHandler),
 			interceptors.EmbeddedInterceptor,
 		),
 	)

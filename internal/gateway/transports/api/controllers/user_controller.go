@@ -4,9 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 
-	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/users"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
+	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 type UserControllerInterface interface {
@@ -29,7 +29,7 @@ func (c *UserController) GetUserData(ctx *gin.Context, requestDto *usersdto.GetU
 		ctx, c.coreClient, requestDto, usersdto.GetUserDataOperation, "/core/v1/users/data",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{
@@ -42,7 +42,7 @@ func (c *UserController) GetMe(ctx *gin.Context, requestDto *usersdto.GetMeReque
 		ctx, c.coreClient, requestDto, usersdto.GetMeOperation, "/core/v1/users/me",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{
@@ -55,7 +55,7 @@ func (c *UserController) UpdateMe(ctx *gin.Context, requestDto *usersdto.UpdateM
 		ctx, c.coreClient, requestDto, usersdto.UpdateMeOperation, "/core/v1/users/me/update",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{

@@ -3,8 +3,8 @@ package email
 import (
 	"time"
 
+	emailcontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
 )
 
 const (
@@ -43,7 +43,7 @@ func AsyncSendSecurityAlertEmail(
 		To:               to,
 		Subject:          SecurityAlertEmailSubject,
 		Body:             body,
-		EmailContentType: types.EmailContentType_HTML,
+		EmailContentType: emailcontract.EmailContentType_HTML,
 	}
 
 	exception = NotezyEmailWorkerManager.Enqueue(emailObject, EmailTaskType_Security, 3, 5)

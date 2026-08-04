@@ -4,6 +4,7 @@ import { Hono } from "hono";
 import { WebSocketServer } from "ws";
 
 import { config } from "./config.js";
+import { CoreCommandDispatcher } from "./kafka/core_command_dispatcher.js";
 import { BlockPackProjector } from "./realtime/block_pack_projector.js";
 import { RealtimeGateway } from "./realtime/gateway.js";
 import { RoomRegistry } from "./realtime/room_registry.js";
@@ -21,6 +22,7 @@ export class YjsWorkerServer {
   private readonly server: ReturnType<typeof serve>;
   private readonly webSocketServer: WebSocketServer;
   private readonly realtimeGateway: RealtimeGateway;
+  private readonly coreCommandDispatcher: CoreCommandDispatcher;
 
   constructor(telemetry: Telemetry) {
     const app = new Hono();
@@ -33,10 +35,12 @@ export class YjsWorkerServer {
       telemetry
     );
     const roomRegistry = new RoomRegistry(telemetry);
+    this.coreCommandDispatcher = new CoreCommandDispatcher();
     this.webSocketServer = new WebSocketServer({ noServer: true });
     this.realtimeGateway = new RealtimeGateway(
       roomRegistry,
       yjsCompactionService,
+      this.coreCommandDispatcher,
       telemetry
     );
 
@@ -78,6 +82,7 @@ export class YjsWorkerServer {
     });
 
     await this.realtimeGateway.shutdown();
+    await this.coreCommandDispatcher.shutdown();
     await closeServer;
   }
 }

@@ -10,8 +10,8 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	routinesdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/routines"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
+	routinesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routines"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
 	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
@@ -22,11 +22,11 @@ import (
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/scopes"
 	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/core/exceptions"
-	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
-	searchcursor "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/searchcursor"
-	timeutil "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/timeutil"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
+	timeutil "github.com/HiIamJeff67/notezy-backend/shared/lib/timeutil"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	validator "github.com/go-playground/validator/v10"
 )
 
 type RoutineServiceInterface interface {
@@ -57,6 +57,7 @@ type RoutineServiceInterface interface {
 }
 
 type RoutineService struct {
+	validator             *validator.Validate
 	db                    *gorm.DB
 	routineScope          scopes.RoutineScopeInterface
 	stationRepository     repositories.StationRepositoryInterface
@@ -67,6 +68,7 @@ type RoutineService struct {
 }
 
 func NewRoutineService(
+	validator *validator.Validate,
 	db *gorm.DB,
 	routineScope scopes.RoutineScopeInterface,
 	stationRepository repositories.StationRepositoryInterface,
@@ -79,6 +81,7 @@ func NewRoutineService(
 		db = data.NotezyDB
 	}
 	return &RoutineService{
+		validator:             validator,
 		db:                    db,
 		routineScope:          routineScope,
 		stationRepository:     stationRepository,
@@ -89,7 +92,7 @@ func NewRoutineService(
 	}
 }
 
-/* ============================== Helper Functions ============================== */
+/* ============================== Auxiliary Functions ============================== */
 
 func (s *RoutineService) filterReadableRoutineItems(
 	ctx context.Context,
@@ -214,6 +217,8 @@ func (s *RoutineService) visualizeMyRoutineTimeCount(
 
 /* ============================== Service Methods for Routine ============================== */
 
+/* ============================== Main Methods ============================== */
+
 func (s *RoutineService) GetMyRoutineById(
 	ctx context.Context, reqDto *routinesdto.GetMyRoutineByIdRequestDto,
 ) (*routinesdto.GetMyRoutineByIdResponseDto, *exceptions.Exception) {
@@ -221,7 +226,7 @@ func (s *RoutineService) GetMyRoutineById(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
@@ -287,11 +292,11 @@ func (s *RoutineService) GetMyRoutineById(
 		StationId:        routine.StationId,
 		Title:            routine.Title,
 		Description:      routine.Description,
-		Status:           routine.Status,
+		Status:           *routine.Status.ToContractable(),
 		IsPinned:         routine.IsPinned,
 		ScheduledStartAt: routine.ScheduledStartAt,
 		ScheduledEndAt:   routine.ScheduledEndAt,
-		Period:           routine.Period,
+		Period:           routine.Period.ToContractable(),
 		Timezone:         routine.Timezone,
 		DeletedAt:        routine.DeletedAt,
 		UpdatedAt:        routine.UpdatedAt,
@@ -309,7 +314,7 @@ func (s *RoutineService) GetMyRoutinesByStationId(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
@@ -386,11 +391,11 @@ func (s *RoutineService) GetMyRoutinesByStationId(
 			Id:               routine.Id,
 			StationId:        routine.StationId,
 			Title:            routine.Title,
-			Status:           routine.Status,
+			Status:           *routine.Status.ToContractable(),
 			IsPinned:         routine.IsPinned,
 			ScheduledStartAt: routine.ScheduledStartAt,
 			ScheduledEndAt:   routine.ScheduledEndAt,
-			Period:           routine.Period,
+			Period:           routine.Period.ToContractable(),
 			Timezone:         routine.Timezone,
 			DeletedAt:        routine.DeletedAt,
 			UpdatedAt:        routine.UpdatedAt,
@@ -411,7 +416,7 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 	if !reqDto.Param.From.Before(reqDto.Param.To) { // make sure from is before to
@@ -485,11 +490,11 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 			Id:               routine.Id,
 			StationId:        routine.StationId,
 			Title:            routine.Title,
-			Status:           routine.Status,
+			Status:           *routine.Status.ToContractable(),
 			IsPinned:         routine.IsPinned,
 			ScheduledStartAt: routine.ScheduledStartAt,
 			ScheduledEndAt:   routine.ScheduledEndAt,
-			Period:           routine.Period,
+			Period:           routine.Period.ToContractable(),
 			Timezone:         routine.Timezone,
 			DeletedAt:        routine.DeletedAt,
 			UpdatedAt:        routine.UpdatedAt,
@@ -510,7 +515,7 @@ func (s *RoutineService) CreateRoutineByStationId(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
@@ -527,11 +532,11 @@ func (s *RoutineService) CreateRoutineByStationId(
 			Id:               reqDto.Body.Id,
 			Title:            reqDto.Body.Title,
 			Description:      reqDto.Body.Description,
-			Status:           reqDto.Body.Status,
+			Status:           (*enums.RoutineStatus)(reqDto.Body.Status).ToStorable(),
 			IsPinned:         reqDto.Body.IsPinned,
 			ScheduledStartAt: reqDto.Body.ScheduledStartAt,
 			ScheduledEndAt:   reqDto.Body.ScheduledEndAt,
-			Period:           reqDto.Body.Period,
+			Period:           (*enums.RoutinePeriod)(reqDto.Body.Period).ToStorable(),
 			Timezone:         reqDto.Body.Timezone,
 		},
 		options.WithDB(db),
@@ -554,7 +559,7 @@ func (s *RoutineService) CreateRoutinesByStationIds(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
@@ -571,11 +576,11 @@ func (s *RoutineService) CreateRoutinesByStationIds(
 			StationId:        createdRoutine.StationId,
 			Title:            createdRoutine.Title,
 			Description:      createdRoutine.Description,
-			Status:           createdRoutine.Status,
+			Status:           (*enums.RoutineStatus)(createdRoutine.Status).ToStorable(),
 			IsPinned:         createdRoutine.IsPinned,
 			ScheduledStartAt: createdRoutine.ScheduledStartAt,
 			ScheduledEndAt:   createdRoutine.ScheduledEndAt,
-			Period:           createdRoutine.Period,
+			Period:           (*enums.RoutinePeriod)(createdRoutine.Period).ToStorable(),
 			Timezone:         createdRoutine.Timezone,
 		}
 	}
@@ -602,7 +607,7 @@ func (s *RoutineService) UpdateMyRoutineById(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
@@ -620,11 +625,11 @@ func (s *RoutineService) UpdateMyRoutineById(
 				StationId:        reqDto.Body.Values.StationId,
 				Title:            reqDto.Body.Values.Title,
 				Description:      reqDto.Body.Values.Description,
-				Status:           reqDto.Body.Values.Status,
+				Status:           (*enums.RoutineStatus)(reqDto.Body.Values.Status).ToStorable(),
 				IsPinned:         reqDto.Body.Values.IsPinned,
 				ScheduledStartAt: reqDto.Body.Values.ScheduledStartAt,
 				ScheduledEndAt:   reqDto.Body.Values.ScheduledEndAt,
-				Period:           reqDto.Body.Values.Period,
+				Period:           (*enums.RoutinePeriod)(reqDto.Body.Values.Period).ToStorable(),
 				Timezone:         reqDto.Body.Values.Timezone,
 			},
 			SetNull: reqDto.Body.SetNull,
@@ -648,7 +653,7 @@ func (s *RoutineService) UpdateMyRoutinesByIds(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
@@ -667,11 +672,11 @@ func (s *RoutineService) UpdateMyRoutinesByIds(
 					StationId:        updatedRoutine.Values.StationId,
 					Title:            updatedRoutine.Values.Title,
 					Description:      updatedRoutine.Values.Description,
-					Status:           updatedRoutine.Values.Status,
+					Status:           (*enums.RoutineStatus)(updatedRoutine.Values.Status).ToStorable(),
 					IsPinned:         updatedRoutine.Values.IsPinned,
 					ScheduledStartAt: updatedRoutine.Values.ScheduledStartAt,
 					ScheduledEndAt:   updatedRoutine.Values.ScheduledEndAt,
-					Period:           updatedRoutine.Values.Period,
+					Period:           (*enums.RoutinePeriod)(updatedRoutine.Values.Period).ToStorable(),
 					Timezone:         updatedRoutine.Values.Timezone,
 				},
 				SetNull: updatedRoutine.SetNull,
@@ -700,7 +705,7 @@ func (s *RoutineService) LinkRoutineTagById(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
@@ -783,7 +788,7 @@ func (s *RoutineService) LinkRoutineTagsByIds(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
@@ -903,7 +908,7 @@ func (s *RoutineService) LinkRoutineItemById(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
@@ -929,7 +934,7 @@ func (s *RoutineService) LinkRoutineItemById(
 
 	if !s.itemRepository.HasPermission(
 		reqDto.Body.ItemId,
-		reqDto.Body.ItemType,
+		enums.ItemType(reqDto.Body.ItemType),
 		actorUserId,
 		allowedPermissions,
 		options.WithTransactionDB(tx),
@@ -944,7 +949,7 @@ func (s *RoutineService) LinkRoutineItemById(
 	var newRoutinesToItems schemas.RoutinesToItems
 	newRoutinesToItems.RoutineId = reqDto.Body.RoutineId
 	newRoutinesToItems.ItemId = reqDto.Body.ItemId
-	newRoutinesToItems.ItemType = reqDto.Body.ItemType
+	newRoutinesToItems.ItemType = enums.ItemType(reqDto.Body.ItemType)
 
 	var result *gorm.DB
 	if reqDto.Body.IsUnlink {
@@ -985,7 +990,7 @@ func (s *RoutineService) LinkRoutineItemsByIds(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
@@ -1007,7 +1012,7 @@ func (s *RoutineService) LinkRoutineItemsByIds(
 		}
 		itemIdentity := types.Pair[uuid.UUID, enums.ItemType]{
 			First:  linkedRoutineAndItem.ItemId,
-			Second: linkedRoutineAndItem.ItemType,
+			Second: enums.ItemType(linkedRoutineAndItem.ItemType),
 		}
 		if !isItemExist[itemIdentity] {
 			isItemExist[itemIdentity] = true
@@ -1060,7 +1065,7 @@ func (s *RoutineService) LinkRoutineItemsByIds(
 	for _, linkedRoutineAndItem := range reqDto.Body.LinkedRoutinesAndItems {
 		itemIdentity := types.Pair[uuid.UUID, enums.ItemType]{
 			First:  linkedRoutineAndItem.ItemId,
-			Second: linkedRoutineAndItem.ItemType,
+			Second: enums.ItemType(linkedRoutineAndItem.ItemType),
 		}
 		if !isRoutineValid[linkedRoutineAndItem.RoutineId] ||
 			!isItemValid[itemIdentity] {
@@ -1069,7 +1074,7 @@ func (s *RoutineService) LinkRoutineItemsByIds(
 		newRoutinesToItems = append(newRoutinesToItems, schemas.RoutinesToItems{
 			RoutineId: linkedRoutineAndItem.RoutineId,
 			ItemId:    linkedRoutineAndItem.ItemId,
-			ItemType:  linkedRoutineAndItem.ItemType,
+			ItemType:  enums.ItemType(linkedRoutineAndItem.ItemType),
 		})
 	}
 	if len(newRoutinesToItems) == 0 {
@@ -1116,7 +1121,7 @@ func (s *RoutineService) RestoreMyRoutineById(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
@@ -1141,11 +1146,11 @@ func (s *RoutineService) RestoreMyRoutineById(
 		StationId:        restoredRoutine.StationId,
 		Title:            restoredRoutine.Title,
 		Description:      restoredRoutine.Description,
-		Status:           restoredRoutine.Status,
+		Status:           *restoredRoutine.Status.ToContractable(),
 		IsPinned:         restoredRoutine.IsPinned,
 		ScheduledStartAt: restoredRoutine.ScheduledStartAt,
 		ScheduledEndAt:   restoredRoutine.ScheduledEndAt,
-		Period:           restoredRoutine.Period,
+		Period:           restoredRoutine.Period.ToContractable(),
 		Timezone:         restoredRoutine.Timezone,
 		DeletedAt:        restoredRoutine.DeletedAt,
 		UpdatedAt:        restoredRoutine.UpdatedAt,
@@ -1160,7 +1165,7 @@ func (s *RoutineService) RestoreMyRoutinesByIds(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
@@ -1187,11 +1192,11 @@ func (s *RoutineService) RestoreMyRoutinesByIds(
 			StationId:        restoredRoutine.StationId,
 			Title:            restoredRoutine.Title,
 			Description:      restoredRoutine.Description,
-			Status:           restoredRoutine.Status,
+			Status:           *restoredRoutine.Status.ToContractable(),
 			IsPinned:         restoredRoutine.IsPinned,
 			ScheduledStartAt: restoredRoutine.ScheduledStartAt,
 			ScheduledEndAt:   restoredRoutine.ScheduledEndAt,
-			Period:           restoredRoutine.Period,
+			Period:           restoredRoutine.Period.ToContractable(),
 			Timezone:         restoredRoutine.Timezone,
 			DeletedAt:        restoredRoutine.DeletedAt,
 			UpdatedAt:        restoredRoutine.UpdatedAt,
@@ -1209,7 +1214,7 @@ func (s *RoutineService) DeleteMyRoutineById(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
@@ -1241,7 +1246,7 @@ func (s *RoutineService) DeleteMyRoutinesByIds(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
@@ -1273,7 +1278,7 @@ func (s *RoutineService) HardDeleteMyRoutineById(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
@@ -1305,7 +1310,7 @@ func (s *RoutineService) HardDeleteMyRoutinesByIds(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
@@ -1339,7 +1344,7 @@ func (s *RoutineService) VisualizeMyRoutineStatusCount(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
@@ -1432,7 +1437,7 @@ func (s *RoutineService) VisualizeMyRoutinePeriodCount(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 
@@ -1510,7 +1515,7 @@ func (s *RoutineService) VisualizeMyRoutineScheduledStartAtCount(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 	if !reqDto.Param.QueryRangeStartedAt.Before(reqDto.Param.QueryRangeEndedAt) {
@@ -1546,7 +1551,7 @@ func (s *RoutineService) VisualizeMyRoutineScheduledEndAtCount(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Routine.InvalidDto().WithOrigin(err)
 	}
 	if !reqDto.Param.QueryRangeStartedAt.Before(reqDto.Param.QueryRangeEndedAt) {

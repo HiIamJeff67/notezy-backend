@@ -5,9 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	userinfosdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/user-infos"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
+	userinfosdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-infos"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 type UserInfoControllerInterface interface {
@@ -39,7 +39,7 @@ func (c *UserInfoController) GetMyInfo(ctx *gin.Context, request *userinfosdto.G
 		"/core/v1/user-infos/get",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -62,7 +62,7 @@ func (c *UserInfoController) UpdateMyInfo(ctx *gin.Context, request *userinfosdt
 		"/core/v1/user-infos/update",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 

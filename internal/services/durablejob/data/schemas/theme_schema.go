@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type Theme struct {

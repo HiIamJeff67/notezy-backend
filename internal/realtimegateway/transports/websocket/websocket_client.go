@@ -3,7 +3,6 @@ package websocket
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -16,34 +15,21 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"go.opentelemetry.io/otel/attribute"
-	"gorm.io/gorm"
 
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/blocks"
+	eventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	metrics "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/metrics"
 	traces "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/traces"
 	realtimeleasecache "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/types"
 	workers "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/workers"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
-	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/shared/realtimelease"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/internal/shared/tokens"
-	sharedtypes "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 )
-
-type CoreClientInterface interface {
-	ValidateBlockPackChannelPermission(ctx context.Context, userPublicId uuid.UUID, blockPackId uuid.UUID, permission sharedtypes.ChannelPermission) (sharedtypes.ErrorCode, error)
-	GetCompactableYjsDocumentWithUpdates(ctx context.Context, blockPackId uuid.UUID) (*sharedtypes.YjsCompactionInput, error)
-	ApplyCompactedYjsDocument(ctx context.Context, blockPackId uuid.UUID, result sharedtypes.YjsCompactionResult) (bool, error)
-	LoadDocument(ctx context.Context, blockPackId uuid.UUID) (*sharedtypes.YjsDocumentState, error)
-	AppendUpdate(ctx context.Context, blockPackId uuid.UUID, persistenceBatchId uuid.UUID, originConnectionId *uuid.UUID, payload []byte) (int64, error)
-	ApplyBlockProjection(ctx context.Context, blockPackId uuid.UUID, requestDto blocksdto.ApplyBlockProjectionRequestDto) (*blocksdto.ApplyBlockProjectionResponseDto, error)
-}
 
 type WebSocketClient struct {
 	upgrader                    websocket.Upgrader
 	workerManager               workers.WorkerManagerInterface
-	coreClient                  CoreClientInterface
 	leaseStore                  *realtimeleasecache.RealtimeLeaseCacheClient
 	realtimeDisabled            bool
 	realtimeBetaUserPublicIdSet map[uuid.UUID]bool
@@ -52,11 +38,12 @@ type WebSocketClient struct {
 	pendingConnectorCount       int
 	maximumConnectors           int
 	maximumConnectionsPerUser   int
+	shutdownRevocationListener  func()
+	shutdownSessionListener     func()
+	shutdownPresenceListener    func()
 }
 
-func NewWebSocketClient(
-	coreClient CoreClientInterface,
-) *WebSocketClient {
+func NewWebSocketClient() *WebSocketClient {
 	workerManager := workers.NewWorkerManager()
 
 	realtimeEnabled, _ := strconv.ParseBool(os.Getenv("REALTIME_ENABLED"))
@@ -74,7 +61,6 @@ func NewWebSocketClient(
 
 	application := &WebSocketClient{
 		workerManager:               workerManager,
-		coreClient:                  coreClient,
 		leaseStore:                  realtimeleasecache.NewRealtimeLeaseCacheClient(),
 		realtimeDisabled:            !realtimeEnabled,
 		realtimeBetaUserPublicIdSet: realtimeBetaUserPublicIdSet,
@@ -89,24 +75,53 @@ func NewWebSocketClient(
 	}
 	workerManager.SetFrameHandler(application.handleInternalFrame)
 	application.subscribeBlockPackChannelRevocations()
+	application.subscribeUserSessionRevocations()
 	application.subscribeBlockPackPresenceEvents()
 
 	return application
 }
 
 func (g *WebSocketClient) subscribeBlockPackChannelRevocations() {
-	if _, err := g.leaseStore.SubscribeBlockPackChannelRevocations(g.revokeBlockPackChannels); err != nil {
+	shutdown, err := g.leaseStore.SubscribeBlockPackChannelRevocations(g.revokeBlockPackChannels)
+	if err != nil {
 		logs.NotezyLogger.Error(context.Background(), err, "Failed to subscribe to realtime BlockPack channel revocations")
+		return
 	}
+
+	g.shutdownRevocationListener = shutdown
 }
 
 func (g *WebSocketClient) subscribeBlockPackPresenceEvents() {
-	if _, err := g.leaseStore.SubscribeBlockPackPresenceEvents(g.broadcastBlockPackPresenceEvent); err != nil {
+	shutdown, err := g.leaseStore.SubscribeBlockPackPresenceEvents(g.broadcastBlockPackPresenceEvent)
+	if err != nil {
 		logs.NotezyLogger.Error(context.Background(), err, "Failed to subscribe to realtime BlockPack presence events")
+		return
 	}
+
+	g.shutdownPresenceListener = shutdown
+}
+
+func (g *WebSocketClient) subscribeUserSessionRevocations() {
+	shutdown, err := g.leaseStore.SubscribeUserSessionRevocations(g.revokeUserSessions)
+	if err != nil {
+		logs.NotezyLogger.Error(context.Background(), err, "Failed to subscribe to realtime user session revocations")
+		return
+	}
+
+	g.shutdownSessionListener = shutdown
 }
 
 func (g *WebSocketClient) Shutdown() {
+	if g.shutdownRevocationListener != nil {
+		g.shutdownRevocationListener()
+	}
+	if g.shutdownSessionListener != nil {
+		g.shutdownSessionListener()
+	}
+	if g.shutdownPresenceListener != nil {
+		g.shutdownPresenceListener()
+	}
+
 	g.connectorMutex.RLock()
 	connections := make([]*websocket.Conn, 0, len(g.connectors))
 	for _, connector := range g.connectors {
@@ -122,16 +137,26 @@ func (g *WebSocketClient) Shutdown() {
 	}
 }
 
-func (g *WebSocketClient) revokeBlockPackChannels(revocation realtimelease.RealtimeBlockPackChannelRevocation) {
-	blockPackIdSet := make(map[uuid.UUID]struct{}, len(revocation.BlockPackIds))
-	for _, blockPackId := range revocation.BlockPackIds {
-		blockPackIdSet[blockPackId] = struct{}{}
+func (g *WebSocketClient) revokeUserSessions(revocation realtimeleasecache.UserSessionRevocation) {
+	g.connectorMutex.RLock()
+	connections := make([]*websocket.Conn, 0)
+	for _, connector := range g.connectors {
+		if connector.UserPublicId == revocation.UserPublicId {
+			connections = append(connections, connector.connection)
+		}
 	}
+	g.connectorMutex.RUnlock()
 
+	for _, connection := range connections {
+		_ = connection.Close()
+	}
+}
+
+func (g *WebSocketClient) revokeBlockPackChannels(revocation realtimeleasecache.BlockPackChannelRevocation) {
 	g.connectorMutex.RLock()
 	connectors := make([]*Connector, 0, len(g.connectors))
 	for _, connector := range g.connectors {
-		if revocation.UserId == uuid.Nil || connector.UserPublicId == revocation.UserId {
+		if revocation.TargetUserPublicId == nil || connector.UserPublicId == *revocation.TargetUserPublicId {
 			connectors = append(connectors, connector)
 		}
 	}
@@ -144,23 +169,81 @@ func (g *WebSocketClient) revokeBlockPackChannels(revocation realtimelease.Realt
 			if channel.Type != realtimetypes.ChannelType_BlockPack {
 				continue
 			}
-			if _, exists := blockPackIdSet[channel.Id]; exists {
+			if channel.Id == revocation.BlockPackId {
 				blockPackIdByConnectorChannelId[connectorChannelId] = channel.Id
 			}
 		}
 		connector.channelMutex.RUnlock()
 
 		for connectorChannelId, blockPackId := range blockPackIdByConnectorChannelId {
-			g.handleInternalFrame(realtimetypes.InternalFrame{
-				Version:            byte(constants.RealtimeWorkerProtocolVersion),
-				Type:               realtimetypes.InternalFrameType_PermissionRevoked,
-				ChannelType:        realtimetypes.ChannelType_BlockPack,
-				ConnectionId:       connector.Id,
-				ConnectorChannelId: connectorChannelId,
-				ChannelId:          blockPackId,
-			})
+			code := realtimetypes.ErrorCode_PermissionRevoked
+			message := "permission for this channel has been revoked"
+			outcome := "permission_revoked"
+			if revocation.Reason == eventscontract.BlockPackAccessRevocationReason_ResourceUnavailable {
+				code = realtimetypes.ErrorCode_ResourceUnavailable
+				message = "the block pack is no longer available"
+				outcome = "resource_unavailable"
+			}
+			g.detachBlockPackChannel(
+				connector,
+				connectorChannelId,
+				blockPackId,
+				code,
+				message,
+				outcome,
+			)
 		}
 	}
+}
+
+func (g *WebSocketClient) detachBlockPackChannel(
+	connector *Connector,
+	connectorChannelId uint32,
+	blockPackId uuid.UUID,
+	code realtimetypes.ErrorCode,
+	message string,
+	outcome string,
+) {
+	channel, exists := connector.unsubscribe(connectorChannelId)
+	if !exists || channel.Type != realtimetypes.ChannelType_BlockPack || channel.Id != blockPackId {
+		return
+	}
+
+	if err := g.releaseBlockPackSubscriber(
+		channel.Id,
+		fmt.Sprintf("%s:%d", connector.Id, connectorChannelId),
+	); err != nil {
+		logs.NotezyLogger.Error(context.Background(), err, "Failed to release realtime BlockPack subscriber lease")
+	}
+
+	g.workerManager.Detach(realtimetypes.InternalFrame{
+		Version:            byte(constants.RealtimeWorkerProtocolVersion),
+		Type:               realtimetypes.InternalFrameType_Detach,
+		ChannelType:        channel.Type,
+		ConnectionId:       connector.Id,
+		ConnectorChannelId: connectorChannelId,
+		ChannelId:          channel.Id,
+	})
+
+	metrics.NotezyMeter.Count(context.Background(), "realtime.channel.subscription.count", 1,
+		attribute.String("action", "detach"),
+		attribute.String("channelType", string(channel.Type)),
+		attribute.String("outcome", outcome),
+	)
+	metrics.NotezyMeter.UpDown(context.Background(), "realtime.channel.count", -1,
+		attribute.String("channelType", string(channel.Type)),
+		attribute.String("permission", string(channel.Permission)),
+	)
+
+	connector.writeError(realtimetypes.ErrorFrame{
+		Version:            constants.RealtimeProtocolVersion,
+		Type:               realtimetypes.FrameType_Error,
+		ChannelType:        channel.Type,
+		ChannelId:          &channel.Id,
+		ConnectorChannelId: connectorChannelId,
+		Code:               code,
+		Message:            message,
+	})
 }
 
 func (g *WebSocketClient) broadcastBlockPackPresenceEvent(event realtimeleasecache.RealtimeBlockPackPresenceEvent) {
@@ -692,63 +775,6 @@ func (g *WebSocketClient) handleBinaryFrame(ctx context.Context, connector *Conn
 			Message:            "channel permission does not allow yjs document updates",
 		})
 	}
-	if frame.Type == realtimetypes.BinaryFrameType_YjsDocument {
-		errorCode, err := g.coreClient.ValidateBlockPackChannelPermission(
-			ctx,
-			connector.UserPublicId,
-			channel.Id,
-			channel.Permission,
-		)
-		if err != nil {
-			connector.unsubscribe(frame.ConnectorChannelId)
-			if errorCode == "" {
-				errorCode = realtimetypes.ErrorCode_PermissionRevoked
-			}
-
-			if releaseErr := g.releaseBlockPackSubscriber(
-				channel.Id,
-				fmt.Sprintf("%s:%d", connector.Id, frame.ConnectorChannelId),
-			); releaseErr != nil {
-				logs.NotezyLogger.Error(ctx, releaseErr, "Failed to release realtime BlockPack subscriber lease")
-			}
-
-			g.workerManager.Detach(realtimetypes.InternalFrame{
-				Version:            byte(constants.RealtimeWorkerProtocolVersion),
-				Type:               realtimetypes.InternalFrameType_Detach,
-				ChannelType:        channel.Type,
-				ConnectionId:       connector.Id,
-				ConnectorChannelId: frame.ConnectorChannelId,
-				ChannelId:          channel.Id,
-			})
-
-			outcome := "permission_revoked"
-			message := "permission for this channel has been revoked"
-			if errorCode == realtimetypes.ErrorCode_ResourceUnavailable {
-				outcome = "resource_unavailable"
-				message = "the block pack is no longer available"
-			}
-			metrics.NotezyMeter.Count(ctx, "realtime.channel.subscription.count", 1,
-				attribute.String("action", "detach"),
-				attribute.String("channelType", string(channel.Type)),
-				attribute.String("outcome", outcome),
-			)
-			metrics.NotezyMeter.UpDown(ctx, "realtime.channel.count", -1,
-				attribute.String("channelType", string(channel.Type)),
-				attribute.String("permission", string(channel.Permission)),
-			)
-
-			return connector.writeError(realtimetypes.ErrorFrame{
-				Version:            constants.RealtimeProtocolVersion,
-				Type:               realtimetypes.FrameType_Error,
-				ChannelType:        channel.Type,
-				ChannelId:          &channel.Id,
-				ConnectorChannelId: frame.ConnectorChannelId,
-				Code:               errorCode,
-				Message:            message,
-			})
-		}
-	}
-
 	internalFrameType := realtimetypes.InternalFrameType_YjsDocument
 	if frame.Type == realtimetypes.BinaryFrameType_Awareness {
 		internalFrameType = realtimetypes.InternalFrameType_Awareness
@@ -1018,43 +1044,6 @@ func (g *WebSocketClient) handleControlFrame(ctx context.Context, connector *Con
 			}) == nil
 		}
 
-		// Revalidate the canonical access decision before Gateway-owned admission.
-		errorCode, err := g.coreClient.ValidateBlockPackChannelPermission(
-			ctx,
-			connector.UserPublicId,
-			channel.Id,
-			channel.Permission,
-		)
-		if err != nil {
-			connector.unsubscribe(connectorChannelId)
-			if errorCode == "" {
-				errorCode = realtimetypes.ErrorCode_PermissionRevoked
-			}
-
-			message := "permission for this channel has been revoked"
-			if errorCode == realtimetypes.ErrorCode_ResourceUnavailable {
-				message = "the block pack is no longer available"
-			} else if errorCode == realtimetypes.ErrorCode_RoomAdmissionUnavailable {
-				message = "room admission is temporarily unavailable"
-			}
-
-			metrics.NotezyMeter.Count(ctx, "realtime.channel.subscription.count", 1,
-				attribute.String("action", "subscribe"),
-				attribute.String("channelType", string(channel.Type)),
-				attribute.String("outcome", string(errorCode)),
-			)
-
-			return connector.writeError(realtimetypes.ErrorFrame{
-				Version:            constants.RealtimeProtocolVersion,
-				Type:               realtimetypes.FrameType_Error,
-				RequestId:          subscribeFrame.RequestId,
-				ChannelType:        channel.Type,
-				ChannelId:          &channel.Id,
-				ConnectorChannelId: connectorChannelId,
-				Code:               errorCode,
-				Message:            message,
-			})
-		}
 		leaseMember := fmt.Sprintf("%s:%d", connector.Id, connectorChannelId)
 		acquired, activeSubscribers, err := g.leaseStore.AcquireBlockPackSubscriber(
 			channel.Id,
@@ -1399,279 +1388,6 @@ func (g *WebSocketClient) handleControlFrame(ctx context.Context, connector *Con
 }
 
 func (g *WebSocketClient) handleInternalFrame(frame realtimetypes.InternalFrame) {
-	switch frame.Type {
-	case realtimetypes.InternalFrameType_LoadCompactableYjsDocument:
-		input, err := g.coreClient.GetCompactableYjsDocumentWithUpdates(
-			context.Background(), frame.ChannelId,
-		)
-		if err != nil || input == nil {
-			g.workerManager.Forward(realtimetypes.InternalFrame{
-				Version:            byte(constants.RealtimeWorkerProtocolVersion),
-				Type:               realtimetypes.InternalFrameType_YjsDocumentCompactionFailed,
-				ChannelType:        frame.ChannelType,
-				ConnectionId:       frame.ConnectionId,
-				ConnectorChannelId: frame.ConnectorChannelId,
-				ChannelId:          frame.ChannelId,
-			})
-
-			return
-		}
-
-		payload, err := input.MarshalBytes()
-		if err != nil {
-			g.workerManager.Forward(realtimetypes.InternalFrame{
-				Version:            byte(constants.RealtimeWorkerProtocolVersion),
-				Type:               realtimetypes.InternalFrameType_YjsDocumentCompactionFailed,
-				ChannelType:        frame.ChannelType,
-				ConnectionId:       frame.ConnectionId,
-				ConnectorChannelId: frame.ConnectorChannelId,
-				ChannelId:          frame.ChannelId,
-			})
-
-			return
-		}
-
-		g.workerManager.Forward(realtimetypes.InternalFrame{
-			Version:            byte(constants.RealtimeWorkerProtocolVersion),
-			Type:               realtimetypes.InternalFrameType_CompactableYjsDocumentLoaded,
-			ChannelType:        frame.ChannelType,
-			ConnectionId:       frame.ConnectionId,
-			ConnectorChannelId: frame.ConnectorChannelId,
-			ChannelId:          frame.ChannelId,
-			Payload:            payload,
-		})
-
-		return
-	case realtimetypes.InternalFrameType_ApplyCompactedYjsDocument:
-		var result realtimetypes.YjsCompactionResult
-		if err := result.UnmarshalBytes(frame.Payload); err != nil {
-			g.workerManager.Forward(realtimetypes.InternalFrame{
-				Version:            byte(constants.RealtimeWorkerProtocolVersion),
-				Type:               realtimetypes.InternalFrameType_YjsDocumentCompactionFailed,
-				ChannelType:        frame.ChannelType,
-				ConnectionId:       frame.ConnectionId,
-				ConnectorChannelId: frame.ConnectorChannelId,
-				ChannelId:          frame.ChannelId,
-			})
-
-			return
-		}
-
-		applied, err := g.coreClient.ApplyCompactedYjsDocument(
-			context.Background(), frame.ChannelId, result,
-		)
-		if err != nil || !applied {
-			g.workerManager.Forward(realtimetypes.InternalFrame{
-				Version:            byte(constants.RealtimeWorkerProtocolVersion),
-				Type:               realtimetypes.InternalFrameType_YjsDocumentCompactionFailed,
-				ChannelType:        frame.ChannelType,
-				ConnectionId:       frame.ConnectionId,
-				ConnectorChannelId: frame.ConnectorChannelId,
-				ChannelId:          frame.ChannelId,
-			})
-
-			return
-		}
-
-		g.workerManager.Forward(realtimetypes.InternalFrame{
-			Version:            byte(constants.RealtimeWorkerProtocolVersion),
-			Type:               realtimetypes.InternalFrameType_YjsDocumentCompacted,
-			ChannelType:        frame.ChannelType,
-			ConnectionId:       frame.ConnectionId,
-			ConnectorChannelId: frame.ConnectorChannelId,
-			ChannelId:          frame.ChannelId,
-			Payload:            realtimetypes.MarshalYjsUpdateSequence(result.CutoffSequence),
-		})
-
-		return
-	case realtimetypes.InternalFrameType_LoadYjsDocument:
-		state, err := g.coreClient.LoadDocument(context.Background(), frame.ChannelId)
-		if err != nil {
-			failureType := realtimetypes.YjsPersistenceFailureType_Retryable
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				failureType = realtimetypes.YjsPersistenceFailureType_Terminal
-			}
-
-			g.workerManager.Forward(realtimetypes.InternalFrame{
-				Version:            byte(constants.RealtimeWorkerProtocolVersion),
-				Type:               realtimetypes.InternalFrameType_YjsPersistenceFailed,
-				ChannelType:        frame.ChannelType,
-				ConnectionId:       frame.ConnectionId,
-				ConnectorChannelId: frame.ConnectorChannelId,
-				ChannelId:          frame.ChannelId,
-				Payload:            []byte{byte(failureType)},
-			})
-
-			return
-		}
-
-		payload, err := state.MarshalBytes()
-		if err != nil {
-			g.workerManager.Forward(realtimetypes.InternalFrame{
-				Version:            byte(constants.RealtimeWorkerProtocolVersion),
-				Type:               realtimetypes.InternalFrameType_YjsPersistenceFailed,
-				ChannelType:        frame.ChannelType,
-				ConnectionId:       frame.ConnectionId,
-				ConnectorChannelId: frame.ConnectorChannelId,
-				ChannelId:          frame.ChannelId,
-			})
-
-			return
-		}
-
-		g.workerManager.Forward(realtimetypes.InternalFrame{
-			Version:            byte(constants.RealtimeWorkerProtocolVersion),
-			Type:               realtimetypes.InternalFrameType_YjsDocumentLoaded,
-			ChannelType:        frame.ChannelType,
-			ConnectionId:       frame.ConnectionId,
-			ConnectorChannelId: frame.ConnectorChannelId,
-			ChannelId:          frame.ChannelId,
-			Payload:            payload,
-		})
-
-		return
-	case realtimetypes.InternalFrameType_AppendYjsUpdate:
-		originConnectionId := frame.ConnectionId
-		updateSequence, err := g.coreClient.AppendUpdate(
-			context.Background(),
-			frame.ChannelId,
-			uuid.New(),
-			&originConnectionId,
-			frame.Payload,
-		)
-		if err != nil {
-			g.workerManager.Forward(realtimetypes.InternalFrame{
-				Version:            byte(constants.RealtimeWorkerProtocolVersion),
-				Type:               realtimetypes.InternalFrameType_YjsPersistenceFailed,
-				ChannelType:        frame.ChannelType,
-				ConnectionId:       frame.ConnectionId,
-				ConnectorChannelId: frame.ConnectorChannelId,
-				ChannelId:          frame.ChannelId,
-			})
-
-			return
-		}
-
-		g.workerManager.Forward(realtimetypes.InternalFrame{
-			Version:            byte(constants.RealtimeWorkerProtocolVersion),
-			Type:               realtimetypes.InternalFrameType_YjsUpdatePersisted,
-			ChannelType:        frame.ChannelType,
-			ConnectionId:       frame.ConnectionId,
-			ConnectorChannelId: frame.ConnectorChannelId,
-			ChannelId:          frame.ChannelId,
-			Payload:            realtimetypes.MarshalYjsUpdateSequence(updateSequence),
-		})
-
-		return
-	case realtimetypes.InternalFrameType_AppendYjsUpdateBatch:
-		var batch realtimetypes.YjsPersistenceBatch
-		if err := batch.UnmarshalBytes(frame.Payload); err != nil {
-			g.workerManager.Forward(realtimetypes.InternalFrame{
-				Version:            byte(constants.RealtimeWorkerProtocolVersion),
-				Type:               realtimetypes.InternalFrameType_YjsPersistenceFailed,
-				ChannelType:        frame.ChannelType,
-				ConnectionId:       frame.ConnectionId,
-				ConnectorChannelId: frame.ConnectorChannelId,
-				ChannelId:          frame.ChannelId,
-				Payload:            []byte{byte(realtimetypes.YjsPersistenceFailureType_Terminal)},
-			})
-
-			return
-		}
-
-		updateSequence, err := g.coreClient.AppendUpdate(
-			context.Background(),
-			frame.ChannelId,
-			batch.PersistenceBatchId,
-			batch.OriginConnectionId,
-			batch.Payload,
-		)
-		if err != nil {
-			failureType := realtimetypes.YjsPersistenceFailureType_Retryable
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				failureType = realtimetypes.YjsPersistenceFailureType_Terminal
-			}
-
-			g.workerManager.Forward(realtimetypes.InternalFrame{
-				Version:            byte(constants.RealtimeWorkerProtocolVersion),
-				Type:               realtimetypes.InternalFrameType_YjsPersistenceFailed,
-				ChannelType:        frame.ChannelType,
-				ConnectionId:       frame.ConnectionId,
-				ConnectorChannelId: frame.ConnectorChannelId,
-				ChannelId:          frame.ChannelId,
-				Payload:            []byte{byte(failureType)},
-			})
-
-			return
-		}
-
-		g.workerManager.Forward(realtimetypes.InternalFrame{
-			Version:            byte(constants.RealtimeWorkerProtocolVersion),
-			Type:               realtimetypes.InternalFrameType_YjsUpdatePersisted,
-			ChannelType:        frame.ChannelType,
-			ConnectionId:       frame.ConnectionId,
-			ConnectorChannelId: frame.ConnectorChannelId,
-			ChannelId:          frame.ChannelId,
-			Payload:            realtimetypes.MarshalYjsUpdateSequence(updateSequence),
-		})
-
-		return
-	case realtimetypes.InternalFrameType_ApplyBlockProjection:
-		var requestDto blocksdto.ApplyBlockProjectionRequestDto
-		if err := json.Unmarshal(frame.Payload, &requestDto); err != nil {
-			g.workerManager.Forward(realtimetypes.InternalFrame{
-				Version:            byte(constants.RealtimeWorkerProtocolVersion),
-				Type:               realtimetypes.InternalFrameType_BlockProjectionFailed,
-				ChannelType:        frame.ChannelType,
-				ConnectionId:       frame.ConnectionId,
-				ConnectorChannelId: frame.ConnectorChannelId,
-				ChannelId:          frame.ChannelId,
-			})
-
-			return
-		}
-
-		responseDto, err := g.coreClient.ApplyBlockProjection(context.Background(), frame.ChannelId, requestDto)
-		if err != nil {
-			g.workerManager.Forward(realtimetypes.InternalFrame{
-				Version:            byte(constants.RealtimeWorkerProtocolVersion),
-				Type:               realtimetypes.InternalFrameType_BlockProjectionFailed,
-				ChannelType:        frame.ChannelType,
-				ConnectionId:       frame.ConnectionId,
-				ConnectorChannelId: frame.ConnectorChannelId,
-				ChannelId:          frame.ChannelId,
-			})
-
-			return
-		}
-
-		payload, err := json.Marshal(responseDto)
-		if err != nil {
-			g.workerManager.Forward(realtimetypes.InternalFrame{
-				Version:            byte(constants.RealtimeWorkerProtocolVersion),
-				Type:               realtimetypes.InternalFrameType_BlockProjectionFailed,
-				ChannelType:        frame.ChannelType,
-				ConnectionId:       frame.ConnectionId,
-				ConnectorChannelId: frame.ConnectorChannelId,
-				ChannelId:          frame.ChannelId,
-			})
-
-			return
-		}
-
-		g.workerManager.Forward(realtimetypes.InternalFrame{
-			Version:            byte(constants.RealtimeWorkerProtocolVersion),
-			Type:               realtimetypes.InternalFrameType_BlockProjectionApplied,
-			ChannelType:        frame.ChannelType,
-			ConnectionId:       frame.ConnectionId,
-			ConnectorChannelId: frame.ConnectorChannelId,
-			ChannelId:          frame.ChannelId,
-			Payload:            payload,
-		})
-
-		return
-	}
-
 	g.connectorMutex.RLock()
 	connector, exists := g.connectors[frame.ConnectionId]
 	g.connectorMutex.RUnlock()
@@ -1687,52 +1403,22 @@ func (g *WebSocketClient) handleInternalFrame(frame realtimetypes.InternalFrame)
 
 	if frame.Type == realtimetypes.InternalFrameType_ResyncRequired ||
 		frame.Type == realtimetypes.InternalFrameType_PermissionRevoked {
-		connector.unsubscribe(frame.ConnectorChannelId)
-		if err := g.releaseBlockPackSubscriber(
-			channel.Id,
-			fmt.Sprintf("%s:%d", connector.Id, frame.ConnectorChannelId),
-		); err != nil {
-			logs.NotezyLogger.Error(context.Background(), err, "Failed to release realtime BlockPack subscriber lease")
-		}
-
-		g.workerManager.Detach(realtimetypes.InternalFrame{
-			Version:            byte(constants.RealtimeWorkerProtocolVersion),
-			Type:               realtimetypes.InternalFrameType_Detach,
-			ChannelType:        channel.Type,
-			ConnectionId:       connector.Id,
-			ConnectorChannelId: frame.ConnectorChannelId,
-			ChannelId:          channel.Id,
-		})
-
 		code := realtimetypes.ErrorCode_ResubscribeRequired
 		message := "the yjs worker requires this channel to resubscribe"
+		outcome := "resync_required"
 		if frame.Type == realtimetypes.InternalFrameType_PermissionRevoked {
 			code = realtimetypes.ErrorCode_PermissionRevoked
 			message = "permission for this channel has been revoked"
-		}
-		outcome := "resync_required"
-		if frame.Type == realtimetypes.InternalFrameType_PermissionRevoked {
 			outcome = "permission_revoked"
 		}
-		metrics.NotezyMeter.Count(context.Background(), "realtime.channel.subscription.count", 1,
-			attribute.String("action", "detach"),
-			attribute.String("channelType", string(channel.Type)),
-			attribute.String("outcome", outcome),
+		g.detachBlockPackChannel(
+			connector,
+			frame.ConnectorChannelId,
+			channel.Id,
+			code,
+			message,
+			outcome,
 		)
-		metrics.NotezyMeter.UpDown(context.Background(), "realtime.channel.count", -1,
-			attribute.String("channelType", string(channel.Type)),
-			attribute.String("permission", string(channel.Permission)),
-		)
-
-		connector.writeError(realtimetypes.ErrorFrame{
-			Version:            constants.RealtimeProtocolVersion,
-			Type:               realtimetypes.FrameType_Error,
-			ChannelType:        channel.Type,
-			ChannelId:          &channel.Id,
-			ConnectorChannelId: frame.ConnectorChannelId,
-			Code:               code,
-			Message:            message,
-		})
 
 		return
 	}
@@ -1755,11 +1441,6 @@ func (g *WebSocketClient) handleInternalFrame(frame realtimetypes.InternalFrame)
 		return
 	}
 	metrics.NotezyMeter.Count(context.Background(), "realtime.frame.count", 1,
-		attribute.String("direction", "outbound"),
-		attribute.String("channelType", string(channel.Type)),
-		attribute.String("frameType", string(binaryFrameType)),
-	)
-	metrics.NotezyMeter.Bytes(context.Background(), "realtime.payload.bytes", int64(len(frame.Payload)),
 		attribute.String("direction", "outbound"),
 		attribute.String("channelType", string(channel.Type)),
 		attribute.String("frameType", string(binaryFrameType)),

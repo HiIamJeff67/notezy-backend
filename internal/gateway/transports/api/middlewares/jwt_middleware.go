@@ -8,42 +8,42 @@ import (
 	"github.com/google/uuid"
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	cookies "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/cookies"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/internal/shared/tokens"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
+	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
+	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 )
 
-func AuthMiddleware() gin.HandlerFunc {
+func JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler *cookies.CookieHandler) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		ctx.Set(types.ContextFieldName_User_Id.String(), nil)
-		ctx.Set(types.ContextFieldName_User_PublicId.String(), nil)
-		ctx.Set(types.ContextFieldName_User_Name.String(), nil)
-		ctx.Set(types.ContextFieldName_User_Email.String(), nil)
-		ctx.Set(types.ContextFieldName_AccessToken.String(), nil)
-		ctx.Set(types.ContextFieldName_CSRFToken.String(), nil)
-		ctx.Set(types.ContextFieldName_IsNewTokens.String(), false)
+		ctx.Set(sharedcontexts.ContextFieldName_User_Id.String(), nil)
+		ctx.Set(sharedcontexts.ContextFieldName_User_PublicId.String(), nil)
+		ctx.Set(sharedcontexts.ContextFieldName_User_Name.String(), nil)
+		ctx.Set(sharedcontexts.ContextFieldName_User_Email.String(), nil)
+		ctx.Set(sharedcontexts.ContextFieldName_AccessToken.String(), nil)
+		ctx.Set(sharedcontexts.ContextFieldName_CSRFToken.String(), nil)
+		ctx.Set(sharedcontexts.ContextFieldName_IsNewTokens.String(), false)
 
-		accessToken, _ := extractAccessToken(ctx)
+		accessToken, _ := extractAccessToken(ctx, accessTokenCookieHandler)
 		if accessToken != "" {
 			if claims, err := sharedtokens.ParseAccessToken(accessToken); err == nil {
 				if _, err := uuid.Parse(claims.Subject); err == nil {
-					ctx.Set(types.ContextFieldName_User_PublicId.String(), claims.Subject)
-					ctx.Set(types.ContextFieldName_User_Name.String(), claims.Name)
-					ctx.Set(types.ContextFieldName_User_Email.String(), claims.Email)
-					ctx.Set(types.ContextFieldName_AccessToken.String(), accessToken)
+					ctx.Set(sharedcontexts.ContextFieldName_User_PublicId.String(), claims.Subject)
+					ctx.Set(sharedcontexts.ContextFieldName_User_Name.String(), claims.Name)
+					ctx.Set(sharedcontexts.ContextFieldName_User_Email.String(), claims.Email)
+					ctx.Set(sharedcontexts.ContextFieldName_AccessToken.String(), accessToken)
 					ctx.Next()
 					return
 				}
 			}
 		}
 
-		refreshToken, _ := extractRefreshToken(ctx)
+		refreshToken, _ := extractRefreshToken(ctx, refreshTokenCookieHandler)
 		if refreshToken != "" {
 			if claims, err := sharedtokens.ParseRefreshToken(refreshToken); err == nil {
 				if _, err := uuid.Parse(claims.Subject); err == nil {
-					ctx.Set(types.ContextFieldName_User_PublicId.String(), claims.Subject)
-					ctx.Set(types.ContextFieldName_User_Name.String(), claims.Name)
-					ctx.Set(types.ContextFieldName_User_Email.String(), claims.Email)
+					ctx.Set(sharedcontexts.ContextFieldName_User_PublicId.String(), claims.Subject)
+					ctx.Set(sharedcontexts.ContextFieldName_User_Name.String(), claims.Name)
+					ctx.Set(sharedcontexts.ContextFieldName_User_Email.String(), claims.Email)
 				}
 			}
 		}
@@ -52,9 +52,9 @@ func AuthMiddleware() gin.HandlerFunc {
 	}
 }
 
-func extractAccessToken(ctx *gin.Context) (string, *exceptions.Exception) {
-	accessToken, exception := cookies.AccessTokenCookieHandler.Get(ctx)
-	if exception == nil && strings.TrimSpace(accessToken) != "" {
+func extractAccessToken(ctx *gin.Context, accessTokenCookieHandler *cookies.CookieHandler) (string, *exceptions.Exception) {
+	accessToken, err := accessTokenCookieHandler.Get(ctx)
+	if err == nil && strings.TrimSpace(accessToken) != "" {
 		return accessToken, nil
 	}
 
@@ -72,9 +72,9 @@ func extractAccessToken(ctx *gin.Context) (string, *exceptions.Exception) {
 	return strings.TrimPrefix(authorizationHeader, "Bearer "), nil
 }
 
-func extractRefreshToken(ctx *gin.Context) (string, *exceptions.Exception) {
-	refreshToken, exception := cookies.RefreshTokenCookieHandler.Get(ctx)
-	if exception != nil || strings.TrimSpace(refreshToken) == "" {
+func extractRefreshToken(ctx *gin.Context, refreshTokenCookieHandler *cookies.CookieHandler) (string, *exceptions.Exception) {
+	refreshToken, err := refreshTokenCookieHandler.Get(ctx)
+	if err != nil || strings.TrimSpace(refreshToken) == "" {
 		return "", exceptions.New(
 			"InvalidRefreshToken",
 			"Token",

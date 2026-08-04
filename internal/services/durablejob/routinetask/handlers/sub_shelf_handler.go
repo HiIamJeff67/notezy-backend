@@ -4,9 +4,11 @@ import (
 	"context"
 	"net/http"
 
+	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	typescontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/inputs"
 	options "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/options"
@@ -15,11 +17,11 @@ import (
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas/enums"
 	matchers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers/matchers"
 	resolvers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers/resolvers"
-	payloads "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/payloads"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type SubShelfHandler struct {
+	validator            *validator.Validate
 	db                   *gorm.DB
 	patternResolver      resolvers.PatternResolverInterface
 	templateBlockMatcher matchers.TemplateBlockMatcherInterface
@@ -29,6 +31,7 @@ type SubShelfHandler struct {
 }
 
 func NewSubShelfHandler(
+	validator *validator.Validate,
 	db *gorm.DB,
 	patternResolver resolvers.PatternResolverInterface,
 	templateBlockMatcher matchers.TemplateBlockMatcherInterface,
@@ -43,6 +46,7 @@ func NewSubShelfHandler(
 		templateBlockMatcher = matchers.NewTemplateBlockMatcher()
 	}
 	return SubShelfHandler{
+		validator:            validator,
 		db:                   db,
 		patternResolver:      patternResolver,
 		templateBlockMatcher: templateBlockMatcher,
@@ -62,8 +66,8 @@ func (h SubShelfHandler) HandleCreateSubShelf(
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
 	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
-	candidatePayloads := make([]payloads.CreateSubShelfRoutineTaskPayload, 0, len(tasks))
-	candidatePatterns := make([]payloads.RoutineTaskPattern, 0, len(tasks))
+	candidatePayloads := make([]typescontract.CreateSubShelfRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]typescontract.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		actorUserId, exists := taskIdToActorUserId[task.Id]
@@ -71,7 +75,7 @@ func (h SubShelfHandler) HandleCreateSubShelf(
 			continue
 		}
 
-		payload, exception := decodePayload[payloads.CreateSubShelfRoutineTaskPayload](task)
+		payload, exception := decodePayload[typescontract.CreateSubShelfRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}
@@ -145,8 +149,8 @@ func (h SubShelfHandler) HandleUpdateSubShelf(
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
 	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
-	candidatePayloads := make([]payloads.UpdateSubShelfRoutineTaskPayload, 0, len(tasks))
-	candidatePatterns := make([]payloads.RoutineTaskPattern, 0, len(tasks))
+	candidatePayloads := make([]typescontract.UpdateSubShelfRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]typescontract.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		actorUserId, exists := taskIdToActorUserId[task.Id]
@@ -154,7 +158,7 @@ func (h SubShelfHandler) HandleUpdateSubShelf(
 			continue
 		}
 
-		payload, exception := decodePayload[payloads.UpdateSubShelfRoutineTaskPayload](task)
+		payload, exception := decodePayload[typescontract.UpdateSubShelfRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}
@@ -240,7 +244,7 @@ func (h SubShelfHandler) HandleResetSubShelf(
 			continue
 		}
 
-		payload, exception := decodePayload[payloads.ResetSubShelfRoutineTaskPayload](task)
+		payload, exception := decodePayload[typescontract.ResetSubShelfRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}

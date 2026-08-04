@@ -5,27 +5,47 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type BlockType string
+type BlockType enumcontract.BlockType
+
+func (value *BlockType) ToContractable() *enumcontract.BlockType {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.BlockType(*value)
+	return &contractValue
+}
+
+func (value *BlockType) ToStorable() *BlockType {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	BlockType_Paragraph BlockType = "paragraph"
-	BlockType_Heading   BlockType = "heading"
-	BlockType_Quote     BlockType = "quote"
+	BlockType_Paragraph BlockType = BlockType(enumcontract.BlockType_Paragraph)
+	BlockType_Heading   BlockType = BlockType(enumcontract.BlockType_Heading)
+	BlockType_Quote     BlockType = BlockType(enumcontract.BlockType_Quote)
 
-	BlockType_BulletListItem   BlockType = "bulletListItem"
-	BlockType_NumberedListItem BlockType = "numberedListItem"
-	BlockType_CheckListItem    BlockType = "checkListItem"
-	BlockType_ToggleListItem   BlockType = "toggleListItem"
+	BlockType_BulletListItem   BlockType = BlockType(enumcontract.BlockType_BulletListItem)
+	BlockType_NumberedListItem BlockType = BlockType(enumcontract.BlockType_NumberedListItem)
+	BlockType_CheckListItem    BlockType = BlockType(enumcontract.BlockType_CheckListItem)
+	BlockType_ToggleListItem   BlockType = BlockType(enumcontract.BlockType_ToggleListItem)
 
-	BlockType_Image BlockType = "image"
-	BlockType_Video BlockType = "video"
-	BlockType_Audio BlockType = "audio"
-	BlockType_File  BlockType = "file"
+	BlockType_Image BlockType = BlockType(enumcontract.BlockType_Image)
+	BlockType_Video BlockType = BlockType(enumcontract.BlockType_Video)
+	BlockType_Audio BlockType = BlockType(enumcontract.BlockType_Audio)
+	BlockType_File  BlockType = BlockType(enumcontract.BlockType_File)
 
-	BlockType_Table     BlockType = "table"
-	BlockType_CodeBlock BlockType = "codeBlock"
+	BlockType_Table     BlockType = BlockType(enumcontract.BlockType_Table)
+	BlockType_CodeBlock BlockType = BlockType(enumcontract.BlockType_CodeBlock)
 )
 
 var AllBlockTypes = []BlockType{

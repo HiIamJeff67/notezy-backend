@@ -9,13 +9,13 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/blocks"
+	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
+	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjsworker/v1"
 	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/inputs"
 	options "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/options"
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/repositories"
 	coretransport "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/transports/core"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
-	sharedtypes "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 type Handler struct {
@@ -34,8 +34,8 @@ func NewHandler(db *gorm.DB, projectionClient coretransport.Client) Handler {
 
 func (h Handler) HandleCompactions(
 	ctx context.Context,
-	batchInputs []sharedtypes.YjsCompactionBatchInput,
-	results []sharedtypes.YjsCompactionBatchResult,
+	batchInputs []yjsworkercontract.YjsCompactionBatchInput,
+	results []yjsworkercontract.YjsCompactionBatchResult,
 ) ([]uuid.UUID, error) {
 	if len(batchInputs) == 0 || len(results) == 0 {
 		return []uuid.UUID{}, nil
@@ -44,7 +44,7 @@ func (h Handler) HandleCompactions(
 		return nil, fmt.Errorf("incomplete yjs compaction batch result")
 	}
 
-	inputByBlockPackId := make(map[uuid.UUID]sharedtypes.YjsCompactionBatchInput, len(batchInputs))
+	inputByBlockPackId := make(map[uuid.UUID]yjsworkercontract.YjsCompactionBatchInput, len(batchInputs))
 	for _, input := range batchInputs {
 		inputByBlockPackId[input.BlockPackId] = input
 	}
@@ -90,8 +90,8 @@ func (h Handler) HandleCompactions(
 
 func (h Handler) HandleProjections(
 	ctx context.Context,
-	inputs []sharedtypes.YjsProjectionBatchInput,
-	results []sharedtypes.YjsProjectionBatchResult,
+	inputs []yjsworkercontract.YjsProjectionBatchInput,
+	results []yjsworkercontract.YjsProjectionBatchResult,
 ) (blocksdto.ApplyBlockProjectionDocumentResponseDto, error) {
 	if len(inputs) == 0 && len(results) == 0 {
 		return blocksdto.ApplyBlockProjectionDocumentResponseDto{}, nil
@@ -100,7 +100,7 @@ func (h Handler) HandleProjections(
 		return nil, fmt.Errorf("incomplete yjs projection batch result")
 	}
 
-	inputByBlockPackId := make(map[uuid.UUID]sharedtypes.YjsProjectionBatchInput, len(inputs))
+	inputByBlockPackId := make(map[uuid.UUID]yjsworkercontract.YjsProjectionBatchInput, len(inputs))
 	for _, input := range inputs {
 		if _, exists := inputByBlockPackId[input.BlockPackId]; exists {
 			return nil, fmt.Errorf("duplicate yjs projection input")

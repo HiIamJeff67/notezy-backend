@@ -9,12 +9,12 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
+	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjsworker/v1"
 	metrics "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/metrics"
 	options "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/options"
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
-	sharedtypes "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 type Claimer struct {
@@ -29,7 +29,7 @@ func NewClaimer(db *gorm.DB) Claimer {
 	}
 }
 
-func (c Claimer) ClaimCompactions(ctx context.Context) ([]sharedtypes.YjsCompactionBatchInput, error) {
+func (c Claimer) ClaimCompactions(ctx context.Context) ([]yjsworkercontract.YjsCompactionBatchInput, error) {
 	tx := c.db.WithContext(ctx).Begin()
 
 	type claimableDocument struct {
@@ -88,20 +88,20 @@ func (c Claimer) ClaimCompactions(ctx context.Context) ([]sharedtypes.YjsCompact
 		return nil, err
 	}
 
-	inputs := make([]sharedtypes.YjsCompactionBatchInput, 0, len(pairs))
+	inputs := make([]yjsworkercontract.YjsCompactionBatchInput, 0, len(pairs))
 	payloadSize := 4
 	for _, pair := range pairs {
-		updates := make([]sharedtypes.YjsDocumentUpdate, len(pair.Updates))
+		updates := make([]yjsworkercontract.YjsDocumentUpdate, len(pair.Updates))
 		for updateIndex, update := range pair.Updates {
-			updates[updateIndex] = sharedtypes.YjsDocumentUpdate{
+			updates[updateIndex] = yjsworkercontract.YjsDocumentUpdate{
 				UpdateSequence: update.UpdateSequence,
 				Payload:        update.Payload,
 			}
 		}
 
-		input := sharedtypes.YjsCompactionBatchInput{
+		input := yjsworkercontract.YjsCompactionBatchInput{
 			BlockPackId: pair.Document.BlockPackId,
-			Input: sharedtypes.YjsCompactionInput{
+			Input: yjsworkercontract.YjsCompactionInput{
 				Snapshot:                   pair.Document.Snapshot,
 				StateVector:                pair.Document.StateVector,
 				BaseCompactedUntilSequence: pair.Document.CompactedUntilSequence,
@@ -131,7 +131,7 @@ func (c Claimer) ClaimCompactions(ctx context.Context) ([]sharedtypes.YjsCompact
 	return inputs, nil
 }
 
-func (c Claimer) ClaimProjections(ctx context.Context) ([]sharedtypes.YjsProjectionBatchInput, error) {
+func (c Claimer) ClaimProjections(ctx context.Context) ([]yjsworkercontract.YjsProjectionBatchInput, error) {
 	tx := c.db.WithContext(ctx).Begin()
 
 	type claimableDocument struct {
@@ -186,20 +186,20 @@ func (c Claimer) ClaimProjections(ctx context.Context) ([]sharedtypes.YjsProject
 		return nil, err
 	}
 
-	inputs := make([]sharedtypes.YjsProjectionBatchInput, 0, len(pairs))
+	inputs := make([]yjsworkercontract.YjsProjectionBatchInput, 0, len(pairs))
 	payloadSize := 4
 	for _, pair := range pairs {
-		updates := make([]sharedtypes.YjsDocumentUpdate, len(pair.Updates))
+		updates := make([]yjsworkercontract.YjsDocumentUpdate, len(pair.Updates))
 		for updateIndex, update := range pair.Updates {
-			updates[updateIndex] = sharedtypes.YjsDocumentUpdate{
+			updates[updateIndex] = yjsworkercontract.YjsDocumentUpdate{
 				UpdateSequence: update.UpdateSequence,
 				Payload:        update.Payload,
 			}
 		}
 
-		input := sharedtypes.YjsProjectionBatchInput{
+		input := yjsworkercontract.YjsProjectionBatchInput{
 			BlockPackId: pair.Document.BlockPackId,
-			State: sharedtypes.YjsDocumentState{
+			State: yjsworkercontract.YjsDocumentState{
 				Snapshot:               pair.Document.Snapshot,
 				StateVector:            pair.Document.StateVector,
 				LastUpdateSequence:     pair.Document.LastUpdateSequence,

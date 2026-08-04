@@ -7,8 +7,8 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	userinfosdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/user-infos"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
+	userinfosdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-infos"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
@@ -20,7 +20,7 @@ import (
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
+	validator "github.com/go-playground/validator/v10"
 )
 
 type UserInfoServiceInterface interface {
@@ -33,11 +33,13 @@ type UserInfoServiceInterface interface {
 }
 
 type UserInfoService struct {
+	validator          *validator.Validate
 	db                 *gorm.DB
 	userInfoRepository repositories.UserInfoRepositoryInterface
 }
 
 func NewUserInfoService(
+	validator *validator.Validate,
 	db *gorm.DB,
 	userInfoRepository repositories.UserInfoRepositoryInterface,
 ) UserInfoServiceInterface {
@@ -45,6 +47,7 @@ func NewUserInfoService(
 		db = data.NotezyDB
 	}
 	return &UserInfoService{
+		validator:          validator,
 		db:                 db,
 		userInfoRepository: userInfoRepository,
 	}
@@ -55,7 +58,7 @@ func NewUserInfoService(
 func (s *UserInfoService) GetMyInfo(
 	ctx context.Context, requestDto *userinfosdto.GetMyInfoRequestDto,
 ) (*userinfosdto.GetMyInfoResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"UserInfo",
@@ -98,7 +101,7 @@ func (s *UserInfoService) GetMyInfo(
 func (s *UserInfoService) UpdateMyInfo(
 	ctx context.Context, requestDto *userinfosdto.UpdateMyInfoRequestDto,
 ) (*userinfosdto.UpdateMyInfoResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"UserInfo",

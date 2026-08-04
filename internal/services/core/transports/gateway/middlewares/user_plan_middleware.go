@@ -7,19 +7,19 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
 )
 
 func UserPlanMiddleware(atLeastUserPlan enums.UserPlan) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		currentUserPlanValue, exists := ctx.Get(types.ContextFieldName_User_Plan.String())
+		currentUserPlanValue, exists := ctx.Get(sharedcontexts.ContextFieldName_User_Plan.String())
 		if !exists {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, core.Response[struct{}]{
-				Version: core.Version,
-				Metadata: core.ResponseMetadata{
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gatewaycontract.Response[struct{}]{
+				Version: gatewaycontract.Version,
+				Metadata: gatewaycontract.ResponseMetadata{
 					RequestId:   ctx.GetHeader("X-Request-Id"),
 					RespondedAt: time.Now(),
 				},
@@ -38,9 +38,9 @@ func UserPlanMiddleware(atLeastUserPlan enums.UserPlan) gin.HandlerFunc {
 
 		currentUserPlan, ok := currentUserPlanValue.(enums.UserPlan)
 		if !ok {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, core.Response[struct{}]{
-				Version: core.Version,
-				Metadata: core.ResponseMetadata{
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gatewaycontract.Response[struct{}]{
+				Version: gatewaycontract.Version,
+				Metadata: gatewaycontract.ResponseMetadata{
 					RequestId:   ctx.GetHeader("X-Request-Id"),
 					RespondedAt: time.Now(),
 				},
@@ -67,9 +67,9 @@ func UserPlanMiddleware(atLeastUserPlan enums.UserPlan) gin.HandlerFunc {
 				return
 			}
 			if userPlan == atLeastUserPlan {
-				ctx.AbortWithStatusJSON(http.StatusForbidden, core.Response[struct{}]{
-					Version: core.Version,
-					Metadata: core.ResponseMetadata{
+				ctx.AbortWithStatusJSON(http.StatusForbidden, gatewaycontract.Response[struct{}]{
+					Version: gatewaycontract.Version,
+					Metadata: gatewaycontract.ResponseMetadata{
 						RequestId:   ctx.GetHeader("X-Request-Id"),
 						RespondedAt: time.Now(),
 					},
@@ -86,9 +86,9 @@ func UserPlanMiddleware(atLeastUserPlan enums.UserPlan) gin.HandlerFunc {
 			}
 		}
 
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   ctx.GetHeader("X-Request-Id"),
 				RespondedAt: time.Now(),
 			},
@@ -107,12 +107,12 @@ func UserPlanMiddleware(atLeastUserPlan enums.UserPlan) gin.HandlerFunc {
 
 func AllowedUserPlanMiddleware(allowedPlans []enums.UserPlan) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		currentUserPlanValue, exists := ctx.Get(types.ContextFieldName_User_Plan.String())
+		currentUserPlanValue, exists := ctx.Get(sharedcontexts.ContextFieldName_User_Plan.String())
 		currentUserPlan, ok := currentUserPlanValue.(enums.UserPlan)
 		if !exists || !ok {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, core.Response[struct{}]{
-				Version: core.Version,
-				Metadata: core.ResponseMetadata{
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gatewaycontract.Response[struct{}]{
+				Version: gatewaycontract.Version,
+				Metadata: gatewaycontract.ResponseMetadata{
 					RequestId:   ctx.GetHeader("X-Request-Id"),
 					RespondedAt: time.Now(),
 				},
@@ -140,9 +140,9 @@ func AllowedUserPlanMiddleware(allowedPlans []enums.UserPlan) gin.HandlerFunc {
 			}
 		}
 
-		ctx.AbortWithStatusJSON(http.StatusForbidden, core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   ctx.GetHeader("X-Request-Id"),
 				RespondedAt: time.Now(),
 			},

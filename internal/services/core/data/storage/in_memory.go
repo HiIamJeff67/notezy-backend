@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 /* ============================== Interface & Constructor ============================== */

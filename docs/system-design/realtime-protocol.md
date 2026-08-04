@@ -54,12 +54,14 @@ The response body uses the normal `{ success, data, exception }` envelope. `data
 }
 ```
 
-RealtimeGateway derives participants from its active Redis subscriber leases. It sends
-the resulting bounded public-ID, permission, and connection-count collection to
-Core only for authenticated request validation, RootShelf membership filtering,
-and name/display-name enrichment. Core never reads RealtimeGateway Redis participant
-state. Participants are ephemeral presence data, not an access-control source;
-an empty array means no active room connection was observed.
+RealtimeGateway derives participants from its active Redis subscriber leases. API
+Gateway requests the bounded public-ID, permission, and connection-count snapshot
+through its versioned private RealtimeGateway transport, then sends that collection
+to Core only for authenticated request validation, RootShelf membership filtering,
+and name/display-name enrichment. Neither API Gateway nor Core reads
+RealtimeGateway Redis participant state directly. Participants are ephemeral
+presence data, not an access-control source; an empty array means no active room
+connection was observed.
 
 Tickets are EdDSA JWTs signed by Core and verified by RealtimeGateway. Go receives `REALTIME_TICKET_PRIVATE_KEY_BASE64`, which is Base64-encoded PKCS#8 Ed25519 DER. Node worker 不接收 ticket key，也不驗證 public ticket；它只接受已由 RealtimeGateway 驗證後送出的 internal frame。Tickets contain `iss`, `aud`, `sub`, `jti`, `iat`, `exp`, a hash of the `User-Agent`, and the channel claims where applicable. Audiences are `notezy-realtime-connection` and `notezy-realtime-block-pack`.
 
@@ -165,9 +167,7 @@ Stable error codes are `authentication_managed_by_upgrade`, `binary_channel_not_
 
 Before upgrading a public socket, Go applies an IP-based upgrade rate limit, its per-process connector cap, and a distributed per-user root-connection cap. A rejected upgrade returns HTTP `429` for the user cap or HTTP `503` for gateway/admission availability; the client must not retry in a tight loop. The distributed cap is represented by Redis TTL leases and is refreshed with the transport heartbeat, so an abnormal process exit is recovered automatically after the lease expires.
 
-Core issues a BlockPack channel ticket containing the short-lived, signed room-admission policy snapshot, including `maximumSubscribers`. At subscribe time Gateway re-authorizes the user with Core, then atomically acquires one shared active-subscriber lease using the verified ticket claim. Before a `yjs-document` mutation is forwarded, Go revalidates the active BlockPack hierarchy and writer permission. A validation failure releases the lease, detaches the worker channel, and returns `permission_revoked` or `resource_unavailable`. Read and write subscriptions use the same room capacity. `room_connection_limit_exceeded` means the client should close or unsubscribe another active subscriber before retrying. A successful `unsubscribe`, connection close, permission revocation, and lease expiry all release the slot. Core does not synchronously query active subscriber counts during ownership or plan mutations; future Core lifecycle events revoke affected Gateway channels asynchronously.
-
-This monolith phase does not yet fan out an external permission/delete event to every Gateway process. An idle channel can therefore remain open until it next subscribes or submits a document mutation. Kafka-backed lifecycle fanout is intentionally deferred to the microservice architecture project.
+Core issues a BlockPack channel ticket containing the short-lived, signed room-admission policy snapshot: `roomAdmissionPolicyVersion`, `roomAdmissionEnforcementStrategy` (`reject-new-subscriber`), and `maximumSubscribers`. RealtimeGateway accepts only the supported policy version and strategy, then atomically acquires one shared active-subscriber lease using the verified maximum-subscriber claim. Before a `yjs-document` mutation is forwarded, Core revalidates the active BlockPack hierarchy and writer permission. A validation failure releases the lease, detaches the worker channel, and returns `permission_revoked` or `resource_unavailable`. Read and write subscriptions use the same room capacity. `room_connection_limit_exceeded` means the client should close or unsubscribe another active subscriber before retrying. A successful `unsubscribe`, connection close, permission revocation, and lease expiry all release the slot. Core does not synchronously query active subscriber counts during ownership or plan mutations; its committed lifecycle events flow through the transactional outbox and Kafka to RealtimeGateway, which fans them out through its own Redis Pub/Sub channel to detach matching local channels on every instance.
 
 The gateway caps a connection at 64 active channels. Released IDs are not reused during that connection. Public outbound data uses a bounded queue per `connectorChannelId`, with round-robin scheduling between channels. JSON control frames are always scheduled before binary data. Each channel allows at most 256 queued binary frames and 4 MiB of queued binary payload. Awareness is ephemeral: a queued awareness frame replaces the previous queued awareness frame for that channel. Yjs document updates are never silently dropped or coalesced by Go; if their channel queue is full, the gateway detaches only that channel and sends `channel_backpressure`, requiring a resubscribe/resync while unrelated channels remain active. A failed read or a write that cannot complete within 10 seconds closes the physical socket. Go-to-worker multiplexing uses `YJS_WORKER_URLS`, a comma-separated internal endpoint list. Each `blockPackId` maps consistently to one endpoint; each endpoint has one long-lived internal WebSocket and a bounded outbound queue. An unavailable worker or a full internal queue rejects the affected channel payload with `worker_unavailable`.
 

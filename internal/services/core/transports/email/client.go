@@ -12,7 +12,7 @@ import (
 
 	"github.com/google/uuid"
 
-	corecontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 	emaildto "github.com/HiIamJeff67/notezy-backend/contracts/email/v1"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 )
@@ -84,10 +84,10 @@ func (c *Client) send(
 	path string,
 	requestDto any,
 ) *exceptions.Exception {
-	request := corecontract.Request[any]{
-		Version:   corecontract.Version,
+	request := gatewaycontract.Request[any]{
+		Version:   gatewaycontract.Version,
 		Operation: operation,
-		Metadata: corecontract.RequestMetadata{
+		Metadata: gatewaycontract.RequestMetadata{
 			RequestId: uuid.NewString(),
 		},
 		Dto: requestDto,
@@ -135,7 +135,7 @@ func (c *Client) send(
 	}
 	defer httpResponse.Body.Close()
 
-	var response corecontract.Response[emaildto.SendEmailResponseDto]
+	var response gatewaycontract.Response[emaildto.SendEmailResponseDto]
 	if err := json.NewDecoder(httpResponse.Body).Decode(&response); err != nil {
 		return exceptions.New(
 			"InvalidServiceResponse",

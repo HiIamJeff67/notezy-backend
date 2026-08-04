@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -11,10 +12,10 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	rootshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/root-shelves"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
+	rootshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/root-shelves"
+	eventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
 	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
 	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/inputs"
@@ -24,11 +25,10 @@ import (
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/scopes"
 	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/core/exceptions"
-	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
-	searchcursor "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/searchcursor"
-	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/shared/realtimelease"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	validator "github.com/go-playground/validator/v10"
 )
 
 type RootShelfServiceInterface interface {
@@ -57,39 +57,44 @@ type RootShelfServiceInterface interface {
 }
 
 type RootShelfService struct {
+	validator                *validator.Validate
 	db                       *gorm.DB
 	rootShelfScope           scopes.RootShelfScopeInterface
 	rootShelfRepository      repositories.RootShelfRepositoryInterface
 	usersToShelvesRepository repositories.UsersToShelvesRepositoryInterface
 	blockPackRepository      repositories.BlockPackRepositoryInterface
-	realtimeLeaseStore       *realtimelease.RealtimeLeaseStore
 }
 
 func NewRootShelfService(
+	validator *validator.Validate,
 	db *gorm.DB,
 	rootShelfScope scopes.RootShelfScopeInterface,
 	rootShelfRepository repositories.RootShelfRepositoryInterface,
 	usersToShelvesRepository repositories.UsersToShelvesRepositoryInterface,
 	blockPackRepository repositories.BlockPackRepositoryInterface,
-	realtimeLeaseStore *realtimelease.RealtimeLeaseStore,
 ) RootShelfServiceInterface {
 	if db == nil {
 		db = data.NotezyDB
 	}
-	if realtimeLeaseStore == nil {
-		realtimeLeaseStore = realtimelease.NewRealtimeLeaseStore()
-	}
 	return &RootShelfService{
+		validator:                validator,
 		db:                       db,
 		rootShelfScope:           rootShelfScope,
 		rootShelfRepository:      rootShelfRepository,
 		usersToShelvesRepository: usersToShelvesRepository,
 		blockPackRepository:      blockPackRepository,
-		realtimeLeaseStore:       realtimeLeaseStore,
 	}
 }
 
 /* ============================== Auxiliary Functions ============================== */
+
+func isRootShelfPermissionDowngraded(
+	previousPermission enums.AccessControlPermission,
+	permission enums.AccessControlPermission,
+) bool {
+	return slices.Index(enums.AllAccessControlPermissions, permission) <
+		slices.Index(enums.AllAccessControlPermissions, previousPermission)
+}
 
 func (s *RootShelfService) saveMyRootShelfPermission(
 	ctx context.Context,
@@ -230,6 +235,25 @@ func (s *RootShelfService) saveMyRootShelfPermission(
 	for index, blockPack := range blockPacks {
 		blockPackIds[index] = blockPack.Id
 	}
+	if targetPermission != nil && isRootShelfPermissionDowngraded(targetPermission.Permission, permission) {
+		if err := repositories.NewOutboxEventRepository().EnqueueBlockPackAccessRevocations(
+			tx,
+			rootShelf.Id.String(),
+			blockPackIds,
+			[]uuid.UUID{targetUser.PublicId},
+			eventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
+		); err != nil {
+			tx.Rollback()
+			return nil, exceptions.New(
+				"FailedToCreate",
+				"Outbox",
+				"SaveMyRootShelfPermission",
+				"Failed to create lifecycle outbox events",
+				http.StatusInternalServerError,
+				true,
+			).WithOrigin(err)
+		}
+	}
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return nil, exceptions.New(
@@ -241,10 +265,6 @@ func (s *RootShelfService) saveMyRootShelfPermission(
 			true,
 		).WithOrigin(err)
 	}
-	if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(targetUser.Id, blockPackIds); err != nil {
-		logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
-	}
-
 	return &rootshelvesdto.RootShelfPermissionResponseDto{
 		UserPublicId: targetUser.PublicId,
 		Permission:   relation.Permission.String(),
@@ -258,7 +278,7 @@ func (s *RootShelfService) saveMyRootShelfPermission(
 func (s *RootShelfService) GetMyRootShelfById(
 	ctx context.Context, requestDto *rootshelvesdto.GetMyRootShelfByIdRequestDto,
 ) (*rootshelvesdto.GetMyRootShelfByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
@@ -309,7 +329,7 @@ func (s *RootShelfService) GetMyRootShelfById(
 func (s *RootShelfService) CreateRootShelf(
 	ctx context.Context, requestDto *rootshelvesdto.CreateRootShelfRequestDto,
 ) (*rootshelvesdto.CreateRootShelfResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
@@ -342,7 +362,7 @@ func (s *RootShelfService) CreateRootShelf(
 func (s *RootShelfService) CreateRootShelves(
 	ctx context.Context, requestDto *rootshelvesdto.CreateRootShelvesRequestDto,
 ) (*rootshelvesdto.CreateRootShelvesResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
@@ -379,7 +399,7 @@ func (s *RootShelfService) CreateRootShelves(
 func (s *RootShelfService) UpdateMyRootShelfById(
 	ctx context.Context, requestDto *rootshelvesdto.UpdateMyRootShelfByIdRequestDto,
 ) (*rootshelvesdto.UpdateMyRootShelfByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
@@ -418,7 +438,7 @@ func (s *RootShelfService) UpdateMyRootShelvesByIds(
 	ctx context.Context,
 	requestDto *rootshelvesdto.UpdateMyRootShelvesByIdsRequestDto,
 ) (*rootshelvesdto.UpdateMyRootShelvesByIdsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
@@ -461,7 +481,7 @@ func (s *RootShelfService) RestoreMyRootShelfById(
 	ctx context.Context,
 	requestDto *rootshelvesdto.RestoreMyRootShelfByIdRequestDto,
 ) (*rootshelvesdto.RestoreMyRootShelfByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
@@ -501,7 +521,7 @@ func (s *RootShelfService) RestoreMyRootShelvesByIds(
 	ctx context.Context,
 	requestDto *rootshelvesdto.RestoreMyRootShelvesByIdsRequestDto,
 ) (*rootshelvesdto.RestoreMyRootShelvesByIdsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
@@ -546,7 +566,7 @@ func (s *RootShelfService) DeleteMyRootShelfById(
 	ctx context.Context,
 	requestDto *rootshelvesdto.DeleteMyRootShelfByIdRequestDto,
 ) (*rootshelvesdto.DeleteMyRootShelfByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
@@ -626,6 +646,37 @@ func (s *RootShelfService) DeleteMyRootShelfById(
 		}
 	}
 
+	var targetUserPublicIds []uuid.UUID
+	if permission != enums.AccessControlPermission_Owner {
+		actorUserPublicId, exception := contexts.GetActorUserPublicId(ctx)
+		if exception != nil {
+			tx.Rollback()
+			return nil, exception
+		}
+		targetUserPublicIds = []uuid.UUID{actorUserPublicId}
+	}
+	reason := eventscontract.BlockPackAccessRevocationReason_PermissionRevoked
+	if permission == enums.AccessControlPermission_Owner {
+		reason = eventscontract.BlockPackAccessRevocationReason_ResourceUnavailable
+	}
+	if err := repositories.NewOutboxEventRepository().EnqueueBlockPackAccessRevocations(
+		tx,
+		rootShelf.Id.String(),
+		blockPackIds,
+		targetUserPublicIds,
+		reason,
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"DeleteMyRootShelfById",
+			"Failed to create lifecycle outbox events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
+
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return nil, exceptions.New(
@@ -637,16 +688,6 @@ func (s *RootShelfService) DeleteMyRootShelfById(
 			true,
 		).WithOrigin(err)
 	}
-	if permission == enums.AccessControlPermission_Owner {
-		if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(uuid.Nil, blockPackIds); err != nil {
-			logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
-		}
-	} else {
-		if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(actorUserId, blockPackIds); err != nil {
-			logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
-		}
-	}
-
 	return &rootshelvesdto.DeleteMyRootShelfByIdResponseDto{
 		DeletedAt: time.Now(),
 	}, nil
@@ -656,7 +697,7 @@ func (s *RootShelfService) DeleteMyRootShelvesByIds(
 	ctx context.Context,
 	requestDto *rootshelvesdto.DeleteMyRootShelvesByIdsRequestDto,
 ) (*rootshelvesdto.DeleteMyRootShelvesByIdsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
@@ -668,13 +709,24 @@ func (s *RootShelfService) DeleteMyRootShelvesByIds(
 		return nil, exception
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, exceptions.New(
+			"TransactionBeginFailed",
+			"RootShelf",
+			"DeleteMyRootShelvesByIds",
+			"Failed to begin the root shelf transaction",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(tx.Error)
+	}
 	blockPacks, exception := s.blockPackRepository.GetManyByRootShelfIds(
 		requestDto.Body.RootShelfIds,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 	blockPackIds := make([]uuid.UUID, len(blockPacks))
@@ -685,14 +737,40 @@ func (s *RootShelfService) DeleteMyRootShelvesByIds(
 	exception = s.rootShelfRepository.SoftDeleteManyByIds(
 		requestDto.Body.RootShelfIds,
 		actorUserId,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
-	if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(uuid.Nil, blockPackIds); err != nil {
-		logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
+	if err := repositories.NewOutboxEventRepository().EnqueueBlockPackAccessRevocations(
+		tx,
+		"root-shelf-bulk-delete",
+		blockPackIds,
+		nil,
+		eventscontract.BlockPackAccessRevocationReason_ResourceUnavailable,
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"DeleteMyRootShelvesByIds",
+			"Failed to create lifecycle outbox events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"TransactionCommitFailed",
+			"RootShelf",
+			"DeleteMyRootShelvesByIds",
+			"Failed to commit the root shelf transaction",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
 	}
 
 	return &rootshelvesdto.DeleteMyRootShelvesByIdsResponseDto{
@@ -703,7 +781,7 @@ func (s *RootShelfService) DeleteMyRootShelvesByIds(
 func (s *RootShelfService) GetMyRootShelfPermission(
 	ctx context.Context, requestDto *rootshelvesdto.GetMyRootShelfPermissionRequestDto,
 ) (*rootshelvesdto.GetMyRootShelfPermissionResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
@@ -759,7 +837,7 @@ func (s *RootShelfService) GetMyRootShelfPermission(
 func (s *RootShelfService) CreateMyRootShelfPermission(
 	ctx context.Context, requestDto *rootshelvesdto.CreateMyRootShelfPermissionRequestDto,
 ) (*rootshelvesdto.CreateMyRootShelfPermissionResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 	permission, err := enums.ConvertStringToAccessControlPermission(requestDto.Body.Permission)
@@ -777,7 +855,7 @@ func (s *RootShelfService) CreateMyRootShelfPermission(
 func (s *RootShelfService) UpsertMyRootShelfPermission(
 	ctx context.Context, requestDto *rootshelvesdto.UpsertMyRootShelfPermissionRequestDto,
 ) (*rootshelvesdto.UpsertMyRootShelfPermissionResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 	permission, err := enums.ConvertStringToAccessControlPermission(requestDto.Body.Permission)
@@ -794,7 +872,7 @@ func (s *RootShelfService) UpsertMyRootShelfPermission(
 func (s *RootShelfService) UpsertMyRootShelfPermissions(
 	ctx context.Context, requestDto *rootshelvesdto.UpsertMyRootShelfPermissionsRequestDto,
 ) (*rootshelvesdto.UpsertMyRootShelfPermissionsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
@@ -996,7 +1074,7 @@ func (s *RootShelfService) UpsertMyRootShelfPermissions(
 func (s *RootShelfService) UpdateMyRootShelfPermission(
 	ctx context.Context, requestDto *rootshelvesdto.UpdateMyRootShelfPermissionRequestDto,
 ) (*rootshelvesdto.UpdateMyRootShelfPermissionResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 	permission, err := enums.ConvertStringToAccessControlPermission(requestDto.Body.Permission)
@@ -1015,7 +1093,7 @@ func (s *RootShelfService) TransferMyRootShelfOwnership(
 	ctx context.Context,
 	requestDto *rootshelvesdto.TransferMyRootShelfOwnershipRequestDto,
 ) (*rootshelvesdto.TransferMyRootShelfOwnershipResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
@@ -1260,7 +1338,7 @@ func (s *RootShelfService) TransferMyRootShelfOwnership(
 func (s *RootShelfService) DeleteMyRootShelfPermission(
 	ctx context.Context, requestDto *rootshelvesdto.DeleteMyRootShelfPermissionRequestDto,
 ) (*rootshelvesdto.DeleteMyRootShelfPermissionResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
@@ -1360,6 +1438,23 @@ func (s *RootShelfService) DeleteMyRootShelfPermission(
 	for index, blockPack := range blockPacks {
 		blockPackIds[index] = blockPack.Id
 	}
+	if err := repositories.NewOutboxEventRepository().EnqueueBlockPackAccessRevocations(
+		tx,
+		rootShelf.Id.String(),
+		blockPackIds,
+		[]uuid.UUID{targetUser.PublicId},
+		eventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"DeleteMyRootShelfPermission",
+			"Failed to create lifecycle outbox events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
@@ -1372,17 +1467,13 @@ func (s *RootShelfService) DeleteMyRootShelfPermission(
 			true,
 		).WithOrigin(err)
 	}
-	if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(targetUser.Id, blockPackIds); err != nil {
-		logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
-	}
-
 	return &rootshelvesdto.DeleteMyRootShelfPermissionResponseDto{}, nil
 }
 
 func (s *RootShelfService) DeleteMyRootShelfPermissions(
 	ctx context.Context, requestDto *rootshelvesdto.DeleteMyRootShelfPermissionsRequestDto,
 ) (*rootshelvesdto.DeleteMyRootShelfPermissionsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
@@ -1541,6 +1632,23 @@ func (s *RootShelfService) DeleteMyRootShelfPermissions(
 	for index, blockPack := range blockPacks {
 		blockPackIds[index] = blockPack.Id
 	}
+	if err := repositories.NewOutboxEventRepository().EnqueueBlockPackAccessRevocations(
+		tx,
+		rootShelf.Id.String(),
+		blockPackIds,
+		requestDto.Body.UserPublicIds,
+		eventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"DeleteMyRootShelfPermissions",
+			"Failed to create lifecycle outbox events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
@@ -1553,19 +1661,13 @@ func (s *RootShelfService) DeleteMyRootShelfPermissions(
 			true,
 		).WithOrigin(err)
 	}
-	for _, targetUser := range targetUsers {
-		if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(targetUser.Id, blockPackIds); err != nil {
-			logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
-		}
-	}
-
 	return &rootshelvesdto.DeleteMyRootShelfPermissionsResponseDto{}, nil
 }
 
 func (s *RootShelfService) LeaveMyRootShelf(
 	ctx context.Context, requestDto *rootshelvesdto.LeaveMyRootShelfRequestDto,
 ) *exceptions.Exception {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
@@ -1628,6 +1730,28 @@ func (s *RootShelfService) LeaveMyRootShelf(
 		tx.Rollback()
 		return exception
 	}
+	actorUserPublicId, exception := contexts.GetActorUserPublicId(ctx)
+	if exception != nil {
+		tx.Rollback()
+		return exception
+	}
+	if err := repositories.NewOutboxEventRepository().EnqueueBlockPackAccessRevocations(
+		tx,
+		rootShelf.Id.String(),
+		blockPackIds,
+		[]uuid.UUID{actorUserPublicId},
+		eventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
+	); err != nil {
+		tx.Rollback()
+		return exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"LeaveMyRootShelf",
+			"Failed to create lifecycle outbox events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return exceptions.New(
@@ -1639,17 +1763,13 @@ func (s *RootShelfService) LeaveMyRootShelf(
 			true,
 		).WithOrigin(err)
 	}
-	if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(actorUserId, blockPackIds); err != nil {
-		logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
-	}
-
 	return nil
 }
 
 func (s *RootShelfService) LeaveMyRootShelves(
 	ctx context.Context, requestDto *rootshelvesdto.LeaveMyRootShelvesRequestDto,
 ) *exceptions.Exception {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
@@ -1736,6 +1856,28 @@ func (s *RootShelfService) LeaveMyRootShelves(
 		tx.Rollback()
 		return exception
 	}
+	actorUserPublicId, exception := contexts.GetActorUserPublicId(ctx)
+	if exception != nil {
+		tx.Rollback()
+		return exception
+	}
+	if err := repositories.NewOutboxEventRepository().EnqueueBlockPackAccessRevocations(
+		tx,
+		"root-shelf-bulk-leave",
+		blockPackIds,
+		[]uuid.UUID{actorUserPublicId},
+		eventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
+	); err != nil {
+		tx.Rollback()
+		return exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"LeaveMyRootShelves",
+			"Failed to create lifecycle outbox events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return exceptions.New(
@@ -1747,10 +1889,6 @@ func (s *RootShelfService) LeaveMyRootShelves(
 			true,
 		).WithOrigin(err)
 	}
-	if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(actorUserId, blockPackIds); err != nil {
-		logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
-	}
-
 	return nil
 }
 

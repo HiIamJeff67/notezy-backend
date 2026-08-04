@@ -5,9 +5,10 @@ import (
 
 	"github.com/google/uuid"
 
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type RootShelf struct {
@@ -53,7 +54,7 @@ func (rs *RootShelf) ToPrivateRootShelf(permission enums.AccessControlPermission
 	return &gqlmodels.PrivateRootShelf{
 		ID:             rs.Id,
 		Name:           rs.Name,
-		Permission:     permission,
+		Permission:     enumcontract.AccessControlPermission(permission),
 		SubShelfCount:  rs.SubShelfCount,
 		ItemCount:      rs.ItemCount,
 		LastAnalyzedAt: rs.LastAnalyzedAt,

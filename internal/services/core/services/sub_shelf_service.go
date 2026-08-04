@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -10,11 +11,11 @@ import (
 	pg "github.com/lib/pq"
 	"gorm.io/gorm"
 
-	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/block-packs"
-	subshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/sub-shelves"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
+	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
+	subshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/sub-shelves"
+	eventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
 	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
 	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/inputs"
@@ -24,11 +25,10 @@ import (
 	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/scopes"
 	storage "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/storage"
 	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/core/exceptions"
-	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
-	searchcursor "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/searchcursor"
-	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/shared/realtimelease"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	validator "github.com/go-playground/validator/v10"
 )
 
 type SubShelfServiceInterface interface {
@@ -52,6 +52,7 @@ type SubShelfServiceInterface interface {
 }
 
 type SubShelfService struct {
+	validator           *validator.Validate
 	db                  *gorm.DB
 	storage             storage.StorageInterface
 	subShelfScope       scopes.SubShelfScopeInterface
@@ -59,10 +60,10 @@ type SubShelfService struct {
 	rootShelfRepository repositories.RootShelfRepositoryInterface
 	materialRepository  repositories.MaterialRepositoryInterface
 	blockPackRepository repositories.BlockPackRepositoryInterface
-	realtimeLeaseStore  *realtimelease.RealtimeLeaseStore
 }
 
 func NewSubShelfService(
+	validator *validator.Validate,
 	db *gorm.DB,
 	storage storage.StorageInterface,
 	subShelfScope scopes.SubShelfScopeInterface,
@@ -70,15 +71,12 @@ func NewSubShelfService(
 	rootShelfRepository repositories.RootShelfRepositoryInterface,
 	materialRepository repositories.MaterialRepositoryInterface,
 	blockPackRepository repositories.BlockPackRepositoryInterface,
-	realtimeLeaseStore *realtimelease.RealtimeLeaseStore,
 ) SubShelfServiceInterface {
 	if db == nil {
 		db = data.NotezyDB
 	}
-	if realtimeLeaseStore == nil {
-		realtimeLeaseStore = realtimelease.NewRealtimeLeaseStore()
-	}
 	return &SubShelfService{
+		validator:           validator,
 		db:                  db,
 		storage:             storage,
 		subShelfScope:       subShelfScope,
@@ -86,7 +84,6 @@ func NewSubShelfService(
 		rootShelfRepository: rootShelfRepository,
 		materialRepository:  materialRepository,
 		blockPackRepository: blockPackRepository,
-		realtimeLeaseStore:  realtimeLeaseStore,
 	}
 }
 
@@ -110,7 +107,7 @@ func newSubShelfResponseDto(subShelf schemas.SubShelf) subshelvesdto.SubShelfRes
 func (s *SubShelfService) GetMySubShelfById(
 	ctx context.Context, requestDto *subshelvesdto.GetMySubShelfByIdRequestDto,
 ) (*subshelvesdto.GetMySubShelfByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
@@ -152,7 +149,7 @@ func (s *SubShelfService) GetMySubShelfById(
 func (s *SubShelfService) GetMySubShelvesByPrevSubShelfId(
 	ctx context.Context, requestDto *subshelvesdto.GetMySubShelvesByPrevSubShelfIdRequestDto,
 ) (*subshelvesdto.GetMySubShelvesByPrevSubShelfIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
@@ -201,7 +198,7 @@ func (s *SubShelfService) GetMySubShelvesByPrevSubShelfId(
 func (s *SubShelfService) GetAllMySubShelvesByRootShelfId(
 	ctx context.Context, requestDto *subshelvesdto.GetAllMySubShelvesByRootShelfIdRequestDto,
 ) (*subshelvesdto.GetAllMySubShelvesByRootShelfIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
@@ -252,7 +249,7 @@ func (s *SubShelfService) GetAllMySubShelvesByRootShelfId(
 func (s *SubShelfService) GetMySubShelvesAndItemsByPrevSubShelfId(
 	ctx context.Context, requestDto *subshelvesdto.GetMySubShelvesAndItemsByPrevSubShelfIdRequestDto,
 ) (*subshelvesdto.GetMySubShelvesAndItemsByPrevSubShelfIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
@@ -352,7 +349,7 @@ func (s *SubShelfService) GetMySubShelvesAndItemsByPrevSubShelfId(
 	for _, blockPack := range blockPacks {
 		var icon *string
 		if blockPack.Icon != nil {
-			value := blockPack.Icon.String()
+			value := string(*blockPack.Icon)
 			icon = &value
 		}
 		resDto.BlockPacks = append(resDto.BlockPacks, subshelvesdto.SubShelfBlockPackResponseDto{
@@ -378,11 +375,10 @@ func (s *SubShelfService) GetMySubShelvesAndItemsByPrevSubShelfId(
 func (s *SubShelfService) CreateSubShelfByRootShelfId(
 	ctx context.Context, requestDto *subshelvesdto.CreateSubShelfByRootShelfIdRequestDto,
 ) (*subshelvesdto.CreateSubShelfByRootShelfIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
 	if exception != nil {
 		return nil, exception
@@ -400,7 +396,7 @@ func (s *SubShelfService) CreateSubShelfByRootShelfId(
 			Name:           requestDto.Body.Name,
 			PrevSubShelfId: requestDto.Body.PrevSubShelfId,
 		},
-		options.WithDB(db),
+		options.WithDB(s.db.WithContext(ctx)),
 		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
@@ -416,7 +412,7 @@ func (s *SubShelfService) CreateSubShelfByRootShelfId(
 func (s *SubShelfService) CreateSubShelvesByRootShelfIds(
 	ctx context.Context, requestDto *subshelvesdto.CreateSubShelvesByRootShelfIdsRequestDto,
 ) (*subshelvesdto.CreateSubShelvesByRootShelfIdsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
@@ -458,7 +454,7 @@ func (s *SubShelfService) CreateSubShelvesByRootShelfIds(
 func (s *SubShelfService) UpdateMySubShelfById(
 	ctx context.Context, requestDto *subshelvesdto.UpdateMySubShelfByIdRequestDto,
 ) (*subshelvesdto.UpdateMySubShelfByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
@@ -496,7 +492,7 @@ func (s *SubShelfService) UpdateMySubShelfById(
 func (s *SubShelfService) UpdateMySubShelvesByIds(
 	ctx context.Context, requestDto *subshelvesdto.UpdateMySubShelvesByIdsRequestDto,
 ) (*subshelvesdto.UpdateMySubShelvesByIdsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
@@ -540,7 +536,7 @@ func (s *SubShelfService) UpdateMySubShelvesByIds(
 func (s *SubShelfService) MoveMySubShelfByRootShelfId(
 	ctx context.Context, requestDto *subshelvesdto.MoveMySubShelfByRootShelfIdRequestDto,
 ) (*subshelvesdto.MoveMySubShelfByRootShelfIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 	if requestDto.Body.DestinationSubShelfId != nil &&
@@ -572,6 +568,15 @@ func (s *SubShelfService) MoveMySubShelfByRootShelfId(
 	if exception = exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
 		{First: from.RootShelfId != requestDto.Body.SourceRootShelfId, Second: apiexceptions.Shelf.NotFound()},
 	}); exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+	blockPackIds, exception := s.blockPackRepository.GetIdsBySubShelfIdsAndDescendants(
+		[]uuid.UUID{from.Id},
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
@@ -636,6 +641,23 @@ func (s *SubShelfService) MoveMySubShelfByRootShelfId(
 			return nil, apiexceptions.Shelf.FailedToUpdate().WithOrigin(err)
 		}
 	}
+	if err := repositories.NewOutboxEventRepository().EnqueueBlockPackAccessRevocations(
+		tx,
+		requestDto.Body.SourceSubShelfId.String(),
+		blockPackIds,
+		nil,
+		eventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"MoveMySubShelfByRootShelfId",
+			"Failed to create lifecycle outbox events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
@@ -650,7 +672,7 @@ func (s *SubShelfService) MoveMySubShelfByRootShelfId(
 func (s *SubShelfService) MoveMySubShelvesByRootShelfId(
 	ctx context.Context, requestDto *subshelvesdto.MoveMySubShelvesByRootShelfIdRequestDto,
 ) (*subshelvesdto.MoveMySubShelvesByRootShelfIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
@@ -684,6 +706,19 @@ func (s *SubShelfService) MoveMySubShelvesByRootShelfId(
 			tx.Rollback()
 			return nil, apiexceptions.Shelf.NotFound()
 		}
+	}
+	sourceSubShelfIds := make([]uuid.UUID, len(froms))
+	for index, from := range froms {
+		sourceSubShelfIds[index] = from.Id
+	}
+	blockPackIds, exception := s.blockPackRepository.GetIdsBySubShelfIdsAndDescendants(
+		sourceSubShelfIds,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
 	}
 
 	if requestDto.Body.DestinationSubShelfId != nil {
@@ -769,6 +804,23 @@ func (s *SubShelfService) MoveMySubShelvesByRootShelfId(
 			return nil, apiexceptions.Shelf.FailedToUpdate().WithOrigin(err)
 		}
 	}
+	if err := repositories.NewOutboxEventRepository().EnqueueBlockPackAccessRevocations(
+		tx,
+		"sub-shelf-bulk-move",
+		blockPackIds,
+		nil,
+		eventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"MoveMySubShelvesByRootShelfId",
+			"Failed to create lifecycle outbox events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
@@ -783,7 +835,7 @@ func (s *SubShelfService) MoveMySubShelvesByRootShelfId(
 func (s *SubShelfService) MoveMySubShelvesByRootShelfIds(
 	ctx context.Context, requestDto *subshelvesdto.MoveMySubShelvesByRootShelfIdsRequestDto,
 ) (*subshelvesdto.MoveMySubShelvesByRootShelfIdsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
@@ -927,6 +979,20 @@ func (s *SubShelfService) MoveMySubShelvesByRootShelfIds(
 		}
 	}
 
+	validSourceSubShelfIds := make([]uuid.UUID, 0, len(validSourceSubShelfMap))
+	for sourceSubShelfId := range validSourceSubShelfMap {
+		validSourceSubShelfIds = append(validSourceSubShelfIds, sourceSubShelfId)
+	}
+	blockPackIds, exception := s.blockPackRepository.GetIdsBySubShelfIdsAndDescendants(
+		validSourceSubShelfIds,
+		options.WithTransactionDB(tx),
+		options.WithOnlyDeleted(types.Ternary_Negative),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+
 	var valuePlaceholders []string
 	var valueArgs []interface{}
 	for _, to := range finalValidDestinationSubShelves {
@@ -971,6 +1037,23 @@ func (s *SubShelfService) MoveMySubShelvesByRootShelfIds(
 		tx.Rollback()
 		return nil, exception
 	}
+	if err := repositories.NewOutboxEventRepository().EnqueueBlockPackAccessRevocations(
+		tx,
+		"sub-shelf-multi-root-move",
+		blockPackIds,
+		nil,
+		eventscontract.BlockPackAccessRevocationReason_PermissionRevoked,
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"MoveMySubShelvesByRootShelfIds",
+			"Failed to create lifecycle outbox events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
@@ -985,7 +1068,7 @@ func (s *SubShelfService) MoveMySubShelvesByRootShelfIds(
 func (s *SubShelfService) RestoreMySubShelfById(
 	ctx context.Context, requestDto *subshelvesdto.RestoreMySubShelfByIdRequestDto,
 ) (*subshelvesdto.RestoreMySubShelfByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
@@ -1016,7 +1099,7 @@ func (s *SubShelfService) RestoreMySubShelfById(
 func (s *SubShelfService) RestoreMySubShelvesByIds(
 	ctx context.Context, requestDto *subshelvesdto.RestoreMySubShelvesByIdsRequestDto,
 ) (*subshelvesdto.RestoreMySubShelvesByIdsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
@@ -1050,11 +1133,21 @@ func (s *SubShelfService) RestoreMySubShelvesByIds(
 func (s *SubShelfService) DeleteMySubShelfById(
 	ctx context.Context, requestDto *subshelvesdto.DeleteMySubShelfByIdRequestDto,
 ) (*subshelvesdto.DeleteMySubShelfByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, exceptions.New(
+			"TransactionBeginFailed",
+			"SubShelf",
+			"DeleteMySubShelfById",
+			"Failed to begin the sub shelf transaction",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(tx.Error)
+	}
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
 	if exception != nil {
 		return nil, exception
@@ -1065,24 +1158,51 @@ func (s *SubShelfService) DeleteMySubShelfById(
 	}
 	blockPackIds, exception := s.blockPackRepository.GetIdsByParentSubShelfIds(
 		[]uuid.UUID{requestDto.Param.SubShelfId},
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
 	exception = s.subShelfRepository.SoftDeleteOneById(
 		requestDto.Param.SubShelfId,
 		actorUserId,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
-	if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(uuid.Nil, blockPackIds); err != nil {
-		logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
+	if err := repositories.NewOutboxEventRepository().EnqueueBlockPackAccessRevocations(
+		tx,
+		requestDto.Param.SubShelfId.String(),
+		blockPackIds,
+		nil,
+		eventscontract.BlockPackAccessRevocationReason_ResourceUnavailable,
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"DeleteMySubShelfById",
+			"Failed to create lifecycle outbox events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"TransactionCommitFailed",
+			"SubShelf",
+			"DeleteMySubShelfById",
+			"Failed to commit the sub shelf transaction",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
 	}
 
 	return &subshelvesdto.DeleteMySubShelfByIdResponseDto{
@@ -1093,11 +1213,21 @@ func (s *SubShelfService) DeleteMySubShelfById(
 func (s *SubShelfService) DeleteMySubShelvesByIds(
 	ctx context.Context, requestDto *subshelvesdto.DeleteMySubShelvesByIdsRequestDto,
 ) (*subshelvesdto.DeleteMySubShelvesByIdsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, exceptions.New(
+			"TransactionBeginFailed",
+			"SubShelf",
+			"DeleteMySubShelvesByIds",
+			"Failed to begin the sub shelf transaction",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(tx.Error)
+	}
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
 	if exception != nil {
 		return nil, exception
@@ -1108,24 +1238,51 @@ func (s *SubShelfService) DeleteMySubShelvesByIds(
 	}
 	blockPackIds, exception := s.blockPackRepository.GetIdsByParentSubShelfIds(
 		requestDto.Body.SubShelfIds,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithOnlyDeleted(types.Ternary_Negative),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
 	exception = s.subShelfRepository.SoftDeleteManyByIds(
 		requestDto.Body.SubShelfIds,
 		actorUserId,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
-	if err := s.realtimeLeaseStore.PublishBlockPackChannelRevocation(uuid.Nil, blockPackIds); err != nil {
-		logs.NotezyLogger.Error(ctx, err, "Failed to revoke realtime BlockPack channels")
+	if err := repositories.NewOutboxEventRepository().EnqueueBlockPackAccessRevocations(
+		tx,
+		"sub-shelf-bulk-delete",
+		blockPackIds,
+		nil,
+		eventscontract.BlockPackAccessRevocationReason_ResourceUnavailable,
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"DeleteMySubShelvesByIds",
+			"Failed to create lifecycle outbox events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"TransactionCommitFailed",
+			"SubShelf",
+			"DeleteMySubShelvesByIds",
+			"Failed to commit the sub shelf transaction",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
 	}
 
 	return &subshelvesdto.DeleteMySubShelvesByIdsResponseDto{

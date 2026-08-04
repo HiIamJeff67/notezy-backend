@@ -2,7 +2,9 @@ package authe2etest
 
 import (
 	"fmt"
+	"net/http"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -10,6 +12,7 @@ import (
 	testroutes "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/routes/testroutes"
 	configs "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
 	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
+	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
 	test "github.com/HiIamJeff67/notezy-backend/test"
 )
 
@@ -34,7 +37,23 @@ func (p *testAuthFeatureProcedure) BeforeAll(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	p.testRouter = gin.New()
 	p.testRouterGroup = p.testRouter.Group(testAuthRouteNamespace)
-	testroutes.ConfigureTestAuthRoutes(p.testRouterGroup)
+	testroutes.ConfigureTestAuthRoutes(
+		p.testRouterGroup,
+		cookies.New(cookies.Config{
+			Name:     cookies.ValidCookieName_AccessToken,
+			Path:     "/",
+			Duration: 30 * time.Minute,
+			HTTPOnly: true,
+			SameSite: http.SameSiteLaxMode,
+		}),
+		cookies.New(cookies.Config{
+			Name:     cookies.ValidCookieName_RefreshToken,
+			Path:     "/",
+			Duration: 14 * 24 * time.Hour,
+			HTTPOnly: true,
+			SameSite: http.SameSiteStrictMode,
+		}),
+	)
 }
 
 func (p *testAuthFeatureProcedure) BeforeEach(t *testing.T) { /* Do Nothing */ }

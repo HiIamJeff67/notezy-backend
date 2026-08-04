@@ -7,11 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
 )
 
 func GetAndConvertContextToMultipartFileHeaders(ctx *gin.Context) ([]*multipart.FileHeader, *exceptions.Exception) {
-	value, exists := ctx.Get(types.ContextFieldName_FormDataFileHeaders.String())
+	value, exists := ctx.Get(sharedcontexts.ContextFieldName_FormDataFileHeaders.String())
 	if !exists {
 		return nil, exceptions.New(
 			"ContextFieldMissing",

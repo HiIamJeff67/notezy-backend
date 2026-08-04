@@ -13,8 +13,8 @@ import (
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
 	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/scopes"
 	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/core/exceptions"
-	partialupdate "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/partialupdate"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	partialupdate "github.com/HiIamJeff67/notezy-backend/shared/lib/partialupdate"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type UserAccountRepositoryInterface interface {

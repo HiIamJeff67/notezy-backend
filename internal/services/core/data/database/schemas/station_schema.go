@@ -5,9 +5,10 @@ import (
 
 	"github.com/google/uuid"
 
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type Station struct {
@@ -47,10 +48,10 @@ const (
 func (s *Station) ToPrivateStation(permission enums.AccessControlPermission) *gqlmodels.PrivateStation {
 	return &gqlmodels.PrivateStation{
 		ID:                  s.Id,
-		Permission:          permission,
+		Permission:          enumcontract.AccessControlPermission(permission),
 		Name:                s.Name,
 		Description:         s.Description,
-		Icon:                s.Icon,
+		Icon:                (*enumcontract.SupportedIcon)(s.Icon),
 		HeaderBackgroundURL: s.HeaderBackgroundURL,
 		RoutineCount:        s.RoutineCount,
 		DeletedAt:           s.DeletedAt,
@@ -62,9 +63,9 @@ func (s *Station) ToPrivateStation(permission enums.AccessControlPermission) *gq
 func (s *Station) ToPrivateSearchableStation(permission enums.AccessControlPermission) *gqlmodels.PrivateSearchableStation {
 	return &gqlmodels.PrivateSearchableStation{
 		ID:                  s.Id,
-		Permission:          permission,
+		Permission:          enumcontract.AccessControlPermission(permission),
 		Name:                s.Name,
-		Icon:                s.Icon,
+		Icon:                (*enumcontract.SupportedIcon)(s.Icon),
 		HeaderBackgroundURL: s.HeaderBackgroundURL,
 		RoutineCount:        s.RoutineCount,
 		DeletedAt:           s.DeletedAt,

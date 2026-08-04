@@ -3,8 +3,9 @@ package core
 import (
 	"time"
 
+	"github.com/go-playground/validator/v10"
+
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	validation "github.com/HiIamJeff67/notezy-backend/internal/shared/validation"
 )
 
 type Sender struct {
@@ -14,11 +15,13 @@ type Sender struct {
 }
 
 type Endpoint struct {
-	sender Sender
+	sender    Sender
+	validator *validator.Validate
 }
 
-var requestValidator = validation.New()
-
-func NewEndpoint(sender Sender) Endpoint {
-	return Endpoint{sender: sender}
+func NewEndpoint(sender Sender, validator *validator.Validate) Endpoint {
+	return Endpoint{
+		sender:    sender,
+		validator: validator,
+	}
 }

@@ -12,7 +12,7 @@ import (
 	metrics "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/metrics"
 	traces "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/traces"
 	coretransport "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/transports/core"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 type Engine struct {

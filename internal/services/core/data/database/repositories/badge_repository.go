@@ -8,7 +8,7 @@ import (
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
 	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/scopes"
 	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/core/exceptions"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type BadgeRepositoryInterface interface {

@@ -8,20 +8,20 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"gorm.io/gorm"
 
+	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjsworker/v1"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	metrics "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/metrics"
 	traces "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/traces"
 	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/inputs"
 	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
-	sharedtypes "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
 )
 
 type YjsPersistenceServiceInterface interface {
-	LoadDocument(ctx context.Context, blockPackId uuid.UUID) (*sharedtypes.YjsDocumentState, error)
+	LoadDocument(ctx context.Context, blockPackId uuid.UUID) (*yjsworkercontract.YjsDocumentState, error)
 	AppendUpdate(ctx context.Context, blockPackId uuid.UUID, persistenceBatchId uuid.UUID, originConnectionId *uuid.UUID, payload []byte) (int64, error)
-	GetCompactableYjsDocumentWithUpdates(ctx context.Context, blockPackId uuid.UUID) (*sharedtypes.YjsCompactionInput, error)
-	ApplyCompactedYjsDocument(ctx context.Context, blockPackId uuid.UUID, result sharedtypes.YjsCompactionResult) (bool, error)
+	GetCompactableYjsDocumentWithUpdates(ctx context.Context, blockPackId uuid.UUID) (*yjsworkercontract.YjsCompactionInput, error)
+	ApplyCompactedYjsDocument(ctx context.Context, blockPackId uuid.UUID, result yjsworkercontract.YjsCompactionResult) (bool, error)
 }
 
 type YjsPersistenceService struct {
@@ -38,7 +38,7 @@ func NewYjsPersistenceService(db *gorm.DB) YjsPersistenceServiceInterface {
 
 func (s *YjsPersistenceService) LoadDocument(
 	ctx context.Context, blockPackId uuid.UUID,
-) (state *sharedtypes.YjsDocumentState, err error) {
+) (state *yjsworkercontract.YjsDocumentState, err error) {
 	start := time.Now()
 	ctx, span := traces.NotezyTracer.Start(ctx, "yjs.document.load")
 	defer func() { traces.NotezyTracer.End(span, err) }()
@@ -63,16 +63,16 @@ func (s *YjsPersistenceService) LoadDocument(
 		return nil, err
 	}
 
-	state = &sharedtypes.YjsDocumentState{
+	state = &yjsworkercontract.YjsDocumentState{
 		Snapshot:               document.Snapshot,
 		StateVector:            document.StateVector,
 		LastUpdateSequence:     document.LastUpdateSequence,
 		CompactedUntilSequence: document.CompactedUntilSequence,
 		ProjectedUntilSequence: document.ProjectedUntilSequence,
-		Updates:                make([]sharedtypes.YjsDocumentUpdate, len(updates)),
+		Updates:                make([]yjsworkercontract.YjsDocumentUpdate, len(updates)),
 	}
 	for index, update := range updates {
-		state.Updates[index] = sharedtypes.YjsDocumentUpdate{
+		state.Updates[index] = yjsworkercontract.YjsDocumentUpdate{
 			UpdateSequence: update.UpdateSequence,
 			Payload:        update.Payload,
 		}
@@ -144,7 +144,7 @@ func (s *YjsPersistenceService) AppendUpdate(
 
 func (s *YjsPersistenceService) GetCompactableYjsDocumentWithUpdates(
 	ctx context.Context, blockPackId uuid.UUID,
-) (input *sharedtypes.YjsCompactionInput, err error) {
+) (input *yjsworkercontract.YjsCompactionInput, err error) {
 	start := time.Now()
 	ctx, span := traces.NotezyTracer.Start(ctx, "yjs.compaction.load")
 	defer func() { traces.NotezyTracer.End(span, err) }()
@@ -171,15 +171,15 @@ func (s *YjsPersistenceService) GetCompactableYjsDocumentWithUpdates(
 		return nil, err
 	}
 
-	input = &sharedtypes.YjsCompactionInput{
+	input = &yjsworkercontract.YjsCompactionInput{
 		Snapshot:                   document.Snapshot,
 		StateVector:                document.StateVector,
 		BaseCompactedUntilSequence: document.CompactedUntilSequence,
 		CutoffSequence:             document.LastUpdateSequence,
-		Updates:                    make([]sharedtypes.YjsDocumentUpdate, len(updates)),
+		Updates:                    make([]yjsworkercontract.YjsDocumentUpdate, len(updates)),
 	}
 	for index, update := range updates {
-		input.Updates[index] = sharedtypes.YjsDocumentUpdate{
+		input.Updates[index] = yjsworkercontract.YjsDocumentUpdate{
 			UpdateSequence: update.UpdateSequence,
 			Payload:        update.Payload,
 		}
@@ -199,7 +199,7 @@ func (s *YjsPersistenceService) GetCompactableYjsDocumentWithUpdates(
 }
 
 func (s *YjsPersistenceService) ApplyCompactedYjsDocument(
-	ctx context.Context, blockPackId uuid.UUID, result sharedtypes.YjsCompactionResult,
+	ctx context.Context, blockPackId uuid.UUID, result yjsworkercontract.YjsCompactionResult,
 ) (applied bool, err error) {
 	start := time.Now()
 	ctx, span := traces.NotezyTracer.Start(ctx, "yjs.compaction.apply")

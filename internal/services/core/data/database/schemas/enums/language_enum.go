@@ -5,16 +5,36 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type Language string
+type Language enumcontract.Language
+
+func (value *Language) ToContractable() *enumcontract.Language {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.Language(*value)
+	return &contractValue
+}
+
+func (value *Language) ToStorable() *Language {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	Language_English            Language = "English"
-	Language_TraditionalChinese Language = "TraditionalChinese"
-	Language_SimpleChinese      Language = "SimpleChinese"
-	Language_Japanese           Language = "Japanese"
-	Language_Korean             Language = "Korean"
+	Language_English            Language = Language(enumcontract.Language_English)
+	Language_TraditionalChinese Language = Language(enumcontract.Language_TraditionalChinese)
+	Language_SimpleChinese      Language = Language(enumcontract.Language_SimpleChinese)
+	Language_Japanese           Language = Language(enumcontract.Language_Japanese)
+	Language_Korean             Language = Language(enumcontract.Language_Korean)
 )
 
 var AllLanguages = []Language{

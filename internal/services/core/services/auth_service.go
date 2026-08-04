@@ -16,8 +16,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
+	authdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/auth"
 	emaildto "github.com/HiIamJeff67/notezy-backend/contracts/email/v1"
-	authdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/auth"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
@@ -31,11 +31,11 @@ import (
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/core/exceptions"
 	emailtransport "github.com/HiIamJeff67/notezy-backend/internal/services/core/transports/email"
-	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
-	snowflake "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/snowflake"
-	stringutil "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/stringutil"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/internal/shared/tokens"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	snowflake "github.com/HiIamJeff67/notezy-backend/shared/lib/snowflake"
+	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
+	validators "github.com/HiIamJeff67/notezy-backend/shared/validations/validators"
+	validator "github.com/go-playground/validator/v10"
 
 	authsql "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/sqls/auth"
 	badgesql "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/sqls/badge"
@@ -57,6 +57,7 @@ type AuthServiceInterface interface {
 }
 
 type AuthService struct {
+	validator             *validator.Validate
 	db                    *gorm.DB
 	userRepository        repositories.UserRepositoryInterface
 	userInfoRepository    repositories.UserInfoRepositoryInterface
@@ -68,6 +69,7 @@ type AuthService struct {
 }
 
 func NewAuthService(
+	validator *validator.Validate,
 	db *gorm.DB,
 	userRepository repositories.UserRepositoryInterface,
 	userInfoRepository repositories.UserInfoRepositoryInterface,
@@ -81,6 +83,7 @@ func NewAuthService(
 		db = data.NotezyDB
 	}
 	return &AuthService{
+		validator:             validator,
 		db:                    db,
 		userRepository:        userRepository,
 		userInfoRepository:    userInfoRepository,
@@ -247,7 +250,7 @@ func (s *AuthService) generateCSRFToken() (*string, *exceptions.Exception) {
 func (s *AuthService) Register(
 	ctx context.Context, reqDto *authdto.RegisterRequestDto,
 ) (*authdto.RegisterResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Auth.InvalidDto().WithOrigin(err)
 	}
 
@@ -365,7 +368,6 @@ func (s *AuthService) Register(
 		tx.Rollback()
 		return nil, exception
 	}
-
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return nil, apiexceptions.User.FailedToCommitTransaction().WithOrigin(err)
@@ -419,7 +421,7 @@ func (s *AuthService) Register(
 func (s *AuthService) RegisterViaGoogle(
 	ctx context.Context, reqDto *authdto.RegisterViaGoogleRequestDto,
 ) (*authdto.RegisterViaGoogleResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Auth.InvalidDto().WithOrigin(err)
 	}
 
@@ -619,7 +621,7 @@ func (s *AuthService) RegisterViaGoogle(
 func (s *AuthService) Login(
 	ctx context.Context, reqDto *authdto.LoginRequestDto,
 ) (*authdto.LoginResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.User.InvalidInput().WithOrigin(err)
 	}
 
@@ -628,7 +630,7 @@ func (s *AuthService) Login(
 	// otherwise, the user should provide their account and password
 	var user *schemas.User = nil
 	var exception *exceptions.Exception = nil
-	if stringutil.IsAlphaAndNumberString(reqDto.Body.Account) { // if the account field contains user name
+	if validators.IsAlphaAndNumberString(reqDto.Body.Account) { // if the account field contains user name
 		if user, exception = s.userRepository.GetOneByName(
 			reqDto.Body.Account,
 			nil,
@@ -638,7 +640,7 @@ func (s *AuthService) Login(
 			tx.Rollback()
 			return nil, exception
 		}
-	} else if stringutil.IsEmailString(reqDto.Body.Account) { // if the account field contains email
+	} else if validators.IsEmailString(reqDto.Body.Account) { // if the account field contains email
 		if user, exception = s.userRepository.GetOneByEmail(
 			reqDto.Body.Account,
 			nil,
@@ -856,7 +858,7 @@ func (s *AuthService) Login(
 func (s *AuthService) LoginViaGoogle(
 	ctx context.Context, reqDto *authdto.LoginViaGoogleRequestDto,
 ) (*authdto.LoginViaGoogleResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Auth.InvalidDto().WithOrigin(err)
 	}
 
@@ -1082,10 +1084,14 @@ func (s *AuthService) LoginViaGoogle(
 func (s *AuthService) Logout(
 	ctx context.Context, reqDto *authdto.LogoutRequestDto,
 ) (*authdto.LogoutResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Auth.InvalidDto().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
+	if exception != nil {
+		return nil, exception
+	}
+	actorUserPublicId, exception := contexts.GetActorUserPublicId(ctx)
 	if exception != nil {
 		return nil, exception
 	}
@@ -1094,7 +1100,17 @@ func (s *AuthService) Logout(
 		return nil, exception
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, exceptions.New(
+			"TransactionBeginFailed",
+			"Auth",
+			"Logout",
+			"Failed to begin the logout transaction",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(tx.Error)
+	}
 
 	offlineStatus := enums.UserStatus_Offline
 	emptyString := ""
@@ -1107,10 +1123,30 @@ func (s *AuthService) Logout(
 			},
 			SetNull: nil,
 		},
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
+	}
+	if err := repositories.NewOutboxEventRepository().EnqueueUserSessionsRevoked(
+		tx,
+		actorUserPublicId.String(),
+		actorUserPublicId,
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"Logout",
+			"Failed to create user session revocation event",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, apiexceptions.User.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	exception = userdata.NewUserDataCacheClient().Delete(actorUserName)
@@ -1126,7 +1162,7 @@ func (s *AuthService) Logout(
 func (s *AuthService) SendAuthCode(
 	ctx context.Context, reqDto *authdto.SendAuthCodeRequestDto,
 ) (*authdto.SendAuthCodeResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.User.InvalidInput().WithOrigin(err)
 	}
 
@@ -1169,7 +1205,7 @@ func (s *AuthService) SendAuthCode(
 func (s *AuthService) ValidateEmail(
 	ctx context.Context, reqDto *authdto.ValidateEmailRequestDto,
 ) (*authdto.ValidateEmailResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.User.InvalidInput().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
@@ -1195,7 +1231,7 @@ func (s *AuthService) ValidateEmail(
 func (s *AuthService) ResetEmail(
 	ctx context.Context, reqDto *authdto.ResetEmailRequestDto,
 ) (*authdto.ResetEmailResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.User.InvalidInput().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
@@ -1232,7 +1268,6 @@ func (s *AuthService) ResetEmail(
 		tx.Rollback()
 		return nil, exception
 	}
-
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return nil, apiexceptions.User.FailedToCommitTransaction().WithOrigin(err)
@@ -1246,7 +1281,7 @@ func (s *AuthService) ResetEmail(
 func (s *AuthService) ForgetPassword(
 	ctx context.Context, reqDto *authdto.ForgetPasswordRequestDto,
 ) (*authdto.ForgetPasswordResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.User.InvalidInput().WithOrigin(err)
 	}
 
@@ -1255,7 +1290,7 @@ func (s *AuthService) ForgetPassword(
 	var user *schemas.User = nil
 	var exception *exceptions.Exception = nil
 	var preloads = []schemas.UserRelation{schemas.UserRelation_UserAccount, schemas.UserRelation_UserInfo, schemas.UserRelation_UserSetting}
-	if stringutil.IsEmailString(reqDto.Body.Account) { // if the account field contains email
+	if validators.IsEmailString(reqDto.Body.Account) { // if the account field contains email
 		if user, exception = s.userRepository.GetOneByEmail(
 			reqDto.Body.Account,
 			preloads,
@@ -1265,7 +1300,7 @@ func (s *AuthService) ForgetPassword(
 			tx.Rollback()
 			return nil, exception
 		}
-	} else if stringutil.IsAlphaAndNumberString(reqDto.Body.Account) { // if the account field contains user name
+	} else if validators.IsAlphaAndNumberString(reqDto.Body.Account) { // if the account field contains user name
 		if user, exception = s.userRepository.GetOneByName(
 			reqDto.Body.Account,
 			preloads,
@@ -1355,6 +1390,21 @@ func (s *AuthService) ForgetPassword(
 		tx.Rollback()
 		return nil, exception
 	}
+	if err := repositories.NewOutboxEventRepository().EnqueueUserSessionsRevoked(
+		tx,
+		user.PublicId.String(),
+		user.PublicId,
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"ForgetPassword",
+			"Failed to create user session revocation event",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
@@ -1369,14 +1419,13 @@ func (s *AuthService) ForgetPassword(
 func (s *AuthService) ResetMe(
 	ctx context.Context, reqDto *authdto.ResetMeRequestDto,
 ) (*authdto.ResetMeResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.User.InvalidInput().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
 	}
-
 	tx := s.db.WithContext(ctx).Begin()
 
 	// Instead of deleting the user, we recreate their relative data in the database
@@ -1463,7 +1512,7 @@ func (s *AuthService) ResetMe(
 func (s *AuthService) DeleteMe(
 	ctx context.Context, reqDto *authdto.DeleteMeRequestDto,
 ) (*authdto.DeleteMeResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.User.InvalidInput().WithOrigin(err)
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
@@ -1474,11 +1523,45 @@ func (s *AuthService) DeleteMe(
 	if exception != nil {
 		return nil, exception
 	}
+	actorUserPublicId, exception := contexts.GetActorUserPublicId(ctx)
+	if exception != nil {
+		return nil, exception
+	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, exceptions.New(
+			"TransactionBeginFailed",
+			"Auth",
+			"DeleteMe",
+			"Failed to begin the delete account transaction",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(tx.Error)
+	}
 
-	if err := db.Exec(authsql.DeleteMeSQL, actorUserId, reqDto.Body.AuthCode).Error; err != nil {
+	if err := tx.Exec(authsql.DeleteMeSQL, actorUserId, reqDto.Body.AuthCode).Error; err != nil {
+		tx.Rollback()
 		return nil, apiexceptions.User.FailedToDelete().WithOrigin(err)
+	}
+	if err := repositories.NewOutboxEventRepository().EnqueueUserSessionsRevoked(
+		tx,
+		actorUserPublicId.String(),
+		actorUserPublicId,
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"DeleteMe",
+			"Failed to create user session revocation event",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, apiexceptions.User.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	exception = userdata.NewUserDataCacheClient().Delete(actorUserName)

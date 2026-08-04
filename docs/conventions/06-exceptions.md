@@ -3,7 +3,7 @@
 ## Ownership and envelope
 
 - `internal/exceptions` is a pure application envelope. It may use the standard
-  library and `internal/shared`, but must not import Gateway, a microservice,
+  library and `shared`, but must not import Gateway, a microservice,
   platform observability, Gin, GORM, or generated GraphQL code.
 - `internal/exceptions` creates the shared envelope with `exceptions.New()`.
   Its optional final `isInternal ...bool` accepts only the first value and
@@ -13,8 +13,7 @@
   `exceptions/` package when two or more callers share the same domain error
   semantics. Examples are `internal/gateway/exceptions/` and
   `internal/services/core/exceptions/`. A component with its own operational
-  failure semantics may do the same beneath the component, such as
-  `internal/shared/storage/exceptions/`.
+  failure semantics may do the same beneath its own owned package.
 - A local factory returns `*exceptions.Exception`, contains no numeric code
   registry, and is never imported across a Gateway/service boundary. Gateway
   never imports an API local factory, and one service never imports another
@@ -56,7 +55,7 @@ exception := exceptions.New(
 
 ## Public safety boundary
 
-- Only `internal/shared/responsewriter.ToPublic()` may convert an exception
+- Only `shared/responsewriter.ToPublic()` may convert an exception
   into a browser-facing exception. It records the original internal exception
   before conversion and removes `Origin`, `Details`, numeric compatibility
   codes, and all implementation diagnostics.
@@ -94,7 +93,7 @@ exception := exceptions.New(
 
 ## Context ownership
 
-- `internal/shared/contexts` contains only generic `context.Context` value
+- `shared/contexts` contains only generic `context.Context` value
   helpers; it never imports exceptions or framework code.
 - `internal/gateway/contexts` owns Gin/request-context parsing and the
   route-declared permission set used to construct an outbound delegation.

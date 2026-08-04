@@ -11,21 +11,22 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/blocks"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
-	adapters "github.com/HiIamJeff67/notezy-backend/internal/adapters"
+	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	metrics "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/metrics"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
 	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
+	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/scopes"
 	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/core/exceptions"
-	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
-	searchcursor "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/searchcursor"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	editableblock "github.com/HiIamJeff67/notezy-backend/shared/editableblock"
+	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	validator "github.com/go-playground/validator/v10"
 )
 
 type BlockServiceInterface interface {
@@ -34,22 +35,24 @@ type BlockServiceInterface interface {
 	GetMyBlocksByBlockPackId(ctx context.Context, requestDto *blocksdto.GetMyBlocksByBlockPackIdRequestDto) (*blocksdto.GetMyBlocksByBlockPackIdResponseDto, *exceptions.Exception)
 
 	Apply(ctx context.Context, blockPackId uuid.UUID, requestDto blocksdto.ApplyBlockProjectionRequestDto) (*blocksdto.ApplyBlockProjectionResponseDto, error)
+	ApplyWithTransaction(ctx context.Context, tx *gorm.DB, blockPackId uuid.UUID, requestDto blocksdto.ApplyBlockProjectionRequestDto) (*blocksdto.ApplyBlockProjectionResponseDto, error)
 	ApplyMany(ctx context.Context, requestDtos []blocksdto.ApplyBlockProjectionDocumentRequestDto) (blocksdto.ApplyBlockProjectionDocumentResponseDto, error)
 
 	SearchPrivateBlocks(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchBlockInput) (*gqlmodels.SearchBlockConnection, *exceptions.Exception)
 }
 
 type BlockService struct {
-	db                   *gorm.DB
-	blockScope           scopes.BlockScopeInterface
-	blockPackScope       scopes.BlockPackScopeInterface
-	subShelfScope        scopes.SubShelfScopeInterface
-	blockPackRepository  repositories.BlockPackRepositoryInterface
-	blockRepository      repositories.BlockRepositoryInterface
-	editableBlockAdapter adapters.EditableBlockAdapterInterface
+	validator           *validator.Validate
+	db                  *gorm.DB
+	blockScope          scopes.BlockScopeInterface
+	blockPackScope      scopes.BlockPackScopeInterface
+	subShelfScope       scopes.SubShelfScopeInterface
+	blockPackRepository repositories.BlockPackRepositoryInterface
+	blockRepository     repositories.BlockRepositoryInterface
 }
 
 func NewBlockService(
+	validator *validator.Validate,
 	db *gorm.DB,
 	blockScope scopes.BlockScopeInterface,
 	blockPackScope scopes.BlockPackScopeInterface,
@@ -58,15 +61,17 @@ func NewBlockService(
 	blockRepository repositories.BlockRepositoryInterface,
 ) BlockServiceInterface {
 	return &BlockService{
-		db:                   db,
-		blockScope:           blockScope,
-		blockPackScope:       blockPackScope,
-		subShelfScope:        subShelfScope,
-		blockPackRepository:  blockPackRepository,
-		blockRepository:      blockRepository,
-		editableBlockAdapter: adapters.NewEditableBlockAdapter(),
+		validator:           validator,
+		db:                  db,
+		blockScope:          blockScope,
+		blockPackScope:      blockPackScope,
+		subShelfScope:       subShelfScope,
+		blockPackRepository: blockPackRepository,
+		blockRepository:     blockRepository,
 	}
 }
+
+/* ============================== Auxiliary Functions ============================== */
 
 func newBlockResponseDto(block schemas.Block) blocksdto.BlockResponseDto {
 	return blocksdto.BlockResponseDto{
@@ -83,10 +88,12 @@ func newBlockResponseDto(block schemas.Block) blocksdto.BlockResponseDto {
 	}
 }
 
+/* ============================== Service Methods for Block ============================== */
+
 func (s *BlockService) GetMyBlockById(
 	ctx context.Context, requestDto *blocksdto.GetMyBlockByIdRequestDto,
 ) (*blocksdto.GetMyBlockByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
@@ -119,7 +126,7 @@ func (s *BlockService) GetMyBlockById(
 func (s *BlockService) GetMyBlocksByIds(
 	ctx context.Context, requestDto *blocksdto.GetMyBlocksByIdsRequestDto,
 ) (*blocksdto.GetMyBlocksByIdsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
@@ -157,7 +164,7 @@ func (s *BlockService) GetMyBlocksByIds(
 func (s *BlockService) GetMyBlocksByBlockPackId(
 	ctx context.Context, requestDto *blocksdto.GetMyBlocksByBlockPackIdRequestDto,
 ) (*blocksdto.GetMyBlocksByBlockPackIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Block.InvalidDto().WithOrigin(err)
 	}
 
@@ -204,6 +211,30 @@ func (s *BlockService) Apply(
 	blockPackId uuid.UUID,
 	requestDto blocksdto.ApplyBlockProjectionRequestDto,
 ) (*blocksdto.ApplyBlockProjectionResponseDto, error) {
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, fmt.Errorf("begin block projection transaction: %w", tx.Error)
+	}
+
+	responseDto, err := s.ApplyWithTransaction(ctx, tx, blockPackId, requestDto)
+	if err != nil {
+		tx.Rollback()
+
+		return nil, err
+	}
+	if err := tx.Commit().Error; err != nil {
+		return nil, fmt.Errorf("commit block projection: %w", err)
+	}
+
+	return responseDto, nil
+}
+
+func (s *BlockService) ApplyWithTransaction(
+	ctx context.Context,
+	tx *gorm.DB,
+	blockPackId uuid.UUID,
+	requestDto blocksdto.ApplyBlockProjectionRequestDto,
+) (*blocksdto.ApplyBlockProjectionResponseDto, error) {
 	if blockPackId == uuid.Nil {
 		return nil, fmt.Errorf("block projection requires a block pack id")
 	}
@@ -215,9 +246,9 @@ func (s *BlockService) Apply(
 		return nil, fmt.Errorf("block projection target update sequence must not be negative")
 	}
 
-	flattenedBlocks, _, exception := s.editableBlockAdapter.FlattenManyToRaw(requestDto.Blocks)
-	if exception != nil {
-		return nil, fmt.Errorf("failed to flatten block projection: %w", exception)
+	flattenedBlocks, _, err := editableblock.FlattenEditableBlocks(requestDto.Blocks)
+	if err != nil {
+		return nil, fmt.Errorf("failed to flatten block projection: %w", err)
 	}
 
 	blockIds := make([]uuid.UUID, len(flattenedBlocks))
@@ -230,13 +261,11 @@ func (s *BlockService) Apply(
 			ParentBlockId: flattenedBlock.ParentBlockId,
 			PrevBlockId:   flattenedBlock.PrevBlockId,
 			NextBlockId:   flattenedBlock.NextBlockId,
-			Type:          flattenedBlock.Type,
+			Type:          enums.BlockType(flattenedBlock.Type),
 			Props:         flattenedBlock.Props,
 			Content:       flattenedBlock.Content,
 		}
 	}
-
-	tx := s.db.WithContext(ctx).Begin()
 
 	lockingStrength := "UPDATE"
 	var blockPack schemas.BlockPack
@@ -245,8 +274,6 @@ func (s *BlockService) Apply(
 		Scopes(scopes.Locking(&lockingStrength)).
 		Where("id = ? AND deleted_at IS NULL", blockPackId).
 		First(&blockPack).Error; err != nil {
-		tx.Rollback()
-
 		return nil, fmt.Errorf("failed to lock block pack for projection: %w", err)
 	}
 
@@ -255,17 +282,11 @@ func (s *BlockService) Apply(
 		Scopes(scopes.Locking(&lockingStrength)).
 		Where("block_pack_id = ? AND deleted_at IS NULL", blockPackId).
 		First(&document).Error; err != nil {
-		tx.Rollback()
-
 		return nil, fmt.Errorf("failed to lock yjs document for projection: %w", err)
 	}
 	metrics.NotezyMeter.Value(ctx, "yjs.projection.lag", document.LastUpdateSequence-document.ProjectedUntilSequence)
 
 	if requestDto.ProjectedSequence <= document.ProjectedUntilSequence {
-		if err := tx.Commit().Error; err != nil {
-			return nil, fmt.Errorf("failed to commit stale block projection: %w", err)
-		}
-
 		return &blocksdto.ApplyBlockProjectionResponseDto{
 			Applied:                false,
 			ProjectedUntilSequence: document.ProjectedUntilSequence,
@@ -273,8 +294,6 @@ func (s *BlockService) Apply(
 	}
 
 	if requestDto.ProjectedSequence > document.LastUpdateSequence {
-		tx.Rollback()
-
 		return nil, fmt.Errorf("block projection target update sequence exceeds durable yjs state")
 	}
 
@@ -290,16 +309,12 @@ func (s *BlockService) Apply(
 			Scopes(scopes.Locking(&lockingStrength)).
 			Where("id IN ?", blockIds).
 			Find(&existingBlocks).Error; err != nil {
-			tx.Rollback()
-
 			return nil, fmt.Errorf("failed to lock projected blocks: %w", err)
 		}
 	}
 
 	for _, existingBlock := range existingBlocks {
 		if existingBlock.BlockPackId != blockPackId {
-			tx.Rollback()
-
 			return nil, fmt.Errorf("block projection contains an id owned by another block pack")
 		}
 	}
@@ -320,8 +335,6 @@ func (s *BlockService) Apply(
 				"updated_at":      now,
 			}),
 		}).CreateInBatches(&projectedBlocks, constants.MaxBatchCreateBlockSize).Error; err != nil {
-			tx.Rollback()
-
 			return nil, fmt.Errorf("failed to bulk upsert block projection: %w", err)
 		}
 	}
@@ -331,8 +344,6 @@ func (s *BlockService) Apply(
 		deleteQuery = deleteQuery.Where("id NOT IN ?", blockIds)
 	}
 	if err := deleteQuery.Delete(&schemas.Block{}).Error; err != nil {
-		tx.Rollback()
-
 		return nil, fmt.Errorf("failed to delete removed projected blocks: %w", err)
 	}
 
@@ -342,13 +353,7 @@ func (s *BlockService) Apply(
 			"projected_until_sequence": requestDto.ProjectedSequence,
 			"updated_at":               now,
 		}).Error; err != nil {
-		tx.Rollback()
-
 		return nil, fmt.Errorf("failed to update block projection checkpoint: %w", err)
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		return nil, fmt.Errorf("failed to commit block projection: %w", err)
 	}
 
 	return &blocksdto.ApplyBlockProjectionResponseDto{
@@ -391,9 +396,9 @@ func (s *BlockService) ApplyMany(
 		}
 		blockPackIdSet[requestDto.BlockPackId] = true
 
-		flattenedBlocks, _, exception := s.editableBlockAdapter.FlattenManyToRaw(requestDto.Projection.Blocks)
-		if exception != nil {
-			return nil, fmt.Errorf("failed to flatten block projection: %w", exception)
+		flattenedBlocks, _, err := editableblock.FlattenEditableBlocks(requestDto.Projection.Blocks)
+		if err != nil {
+			return nil, fmt.Errorf("failed to flatten block projection: %w", err)
 		}
 
 		blocks := make([]schemas.Block, len(flattenedBlocks))
@@ -410,7 +415,7 @@ func (s *BlockService) ApplyMany(
 				ParentBlockId: flattenedBlock.ParentBlockId,
 				PrevBlockId:   flattenedBlock.PrevBlockId,
 				NextBlockId:   flattenedBlock.NextBlockId,
-				Type:          flattenedBlock.Type,
+				Type:          enums.BlockType(flattenedBlock.Type),
 				Props:         flattenedBlock.Props,
 				Content:       flattenedBlock.Content,
 			}

@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	routinetaskrecordsdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/routine-task-records"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
+	routinetaskrecordsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-task-records"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
 	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
@@ -20,10 +20,10 @@ import (
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/scopes"
 	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/core/exceptions"
-	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
-	searchcursor "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/searchcursor"
-	timeutil "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/timeutil"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
+	timeutil "github.com/HiIamJeff67/notezy-backend/shared/lib/timeutil"
+	validator "github.com/go-playground/validator/v10"
 )
 
 type RoutineTaskRecordServiceInterface interface {
@@ -40,11 +40,13 @@ type RoutineTaskRecordServiceInterface interface {
 }
 
 type RoutineTaskRecordService struct {
+	validator                   *validator.Validate
 	db                          *gorm.DB
 	routineTaskRecordRepository repositories.RoutineTaskRecordRepositoryInterface
 }
 
 func NewRoutineTaskRecordService(
+	validator *validator.Validate,
 	db *gorm.DB,
 	routineTaskRecordRepository repositories.RoutineTaskRecordRepositoryInterface,
 ) RoutineTaskRecordServiceInterface {
@@ -56,6 +58,7 @@ func NewRoutineTaskRecordService(
 	}
 
 	return &RoutineTaskRecordService{
+		validator:                   validator,
 		db:                          db,
 		routineTaskRecordRepository: routineTaskRecordRepository,
 	}
@@ -157,7 +160,7 @@ func (s *RoutineTaskRecordService) visualizeMyRoutineTaskRecordTimeCount(
 func (s *RoutineTaskRecordService) GetAllMyRoutineTaskRecordsByRoutineTaskId(
 	ctx context.Context, requestDto *routinetaskrecordsdto.GetAllMyRoutineTaskRecordsByRoutineTaskIdRequestDto,
 ) (*routinetaskrecordsdto.GetAllMyRoutineTaskRecordsByRoutineTaskIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 
@@ -212,7 +215,7 @@ func (s *RoutineTaskRecordService) GetAllMyRoutineTaskRecordsByRoutineTaskId(
 func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordStatusCount(
 	ctx context.Context, requestDto *routinetaskrecordsdto.VisualizeMyRoutineTaskRecordStatusCountRequestDto,
 ) (*routinetaskrecordsdto.VisualizeMyRoutineTaskRecordStatusCountResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 
@@ -274,7 +277,7 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordStatusCount(
 func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordPurposeCount(
 	ctx context.Context, requestDto *routinetaskrecordsdto.VisualizeMyRoutineTaskRecordPurposeCountRequestDto,
 ) (*routinetaskrecordsdto.VisualizeMyRoutineTaskRecordPurposeCountResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 
@@ -336,7 +339,7 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordPurposeCount(
 func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordScheduledAtCount(
 	ctx context.Context, requestDto *routinetaskrecordsdto.VisualizeMyRoutineTaskRecordScheduledAtCountRequestDto,
 ) (*routinetaskrecordsdto.VisualizeMyRoutineTaskRecordScheduledAtCountResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 	if !requestDto.Param.QueryRangeStartedAt.Before(requestDto.Param.QueryRangeEndedAt) {
@@ -377,7 +380,7 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordScheduledAtCount(
 func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordActualStartedAtCount(
 	ctx context.Context, requestDto *routinetaskrecordsdto.VisualizeMyRoutineTaskRecordActualStartedAtCountRequestDto,
 ) (*routinetaskrecordsdto.VisualizeMyRoutineTaskRecordActualStartedAtCountResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 	if !requestDto.Param.QueryRangeStartedAt.Before(requestDto.Param.QueryRangeEndedAt) {
@@ -418,7 +421,7 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordActualStartedAtCo
 func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordActualEndedAtCount(
 	ctx context.Context, requestDto *routinetaskrecordsdto.VisualizeMyRoutineTaskRecordActualEndedAtCountRequestDto,
 ) (*routinetaskrecordsdto.VisualizeMyRoutineTaskRecordActualEndedAtCountResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 	if !requestDto.Param.QueryRangeStartedAt.Before(requestDto.Param.QueryRangeEndedAt) {

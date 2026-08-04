@@ -5,15 +5,35 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type RoutineTaskRecordStatus string
+type RoutineTaskRecordStatus enumcontract.RoutineTaskRecordStatus
+
+func (value *RoutineTaskRecordStatus) ToContractable() *enumcontract.RoutineTaskRecordStatus {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.RoutineTaskRecordStatus(*value)
+	return &contractValue
+}
+
+func (value *RoutineTaskRecordStatus) ToStorable() *RoutineTaskRecordStatus {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	RoutineTaskRecordStatus_Running RoutineTaskRecordStatus = "Running"
-	RoutineTaskRecordStatus_Success RoutineTaskRecordStatus = "Success"
-	RoutineTaskRecordStatus_Failed  RoutineTaskRecordStatus = "Failed"
-	RoutineTaskRecordStatus_Cancel  RoutineTaskRecordStatus = "Cancel"
+	RoutineTaskRecordStatus_Running RoutineTaskRecordStatus = RoutineTaskRecordStatus(enumcontract.RoutineTaskRecordStatus_Running)
+	RoutineTaskRecordStatus_Success RoutineTaskRecordStatus = RoutineTaskRecordStatus(enumcontract.RoutineTaskRecordStatus_Success)
+	RoutineTaskRecordStatus_Failed  RoutineTaskRecordStatus = RoutineTaskRecordStatus(enumcontract.RoutineTaskRecordStatus_Failed)
+	RoutineTaskRecordStatus_Cancel  RoutineTaskRecordStatus = RoutineTaskRecordStatus(enumcontract.RoutineTaskRecordStatus_Cancel)
 )
 
 var AllRoutineTaskRecordStatuses = []RoutineTaskRecordStatus{

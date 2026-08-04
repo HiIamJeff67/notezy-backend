@@ -9,7 +9,7 @@ import (
 	config "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 var viewAllAvailableDatabasesCommand = &cobra.Command{

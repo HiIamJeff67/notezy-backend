@@ -10,7 +10,7 @@ import (
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 func isAllowedOrigin(origin string, allowedDomains []string) bool {
@@ -48,7 +48,7 @@ func DomainWhiteListMiddleware() gin.HandlerFunc {
 					logs.NotezyLogger.Alert(ctx.Request.Context(), nil, domain)
 				}
 				ctx.AbortWithStatusJSON(http.StatusForbidden,
-					responsewriter.GetGinH(exceptions.New(
+					exceptionwriter.GetGinH(exceptions.New(
 						"PermissionDeniedDueToInvalidRequestOriginDomain",
 						"Auth",
 						"Authorize",
@@ -64,7 +64,7 @@ func DomainWhiteListMiddleware() gin.HandlerFunc {
 			if !isAllowedReferer(referer, allowedDomains) {
 				logs.NotezyLogger.Alert(ctx.Request.Context(), nil, fmt.Sprintf("Blocked Referer: %s", referer))
 				ctx.AbortWithStatusJSON(http.StatusForbidden,
-					responsewriter.GetGinH(exceptions.New(
+					exceptionwriter.GetGinH(exceptions.New(
 						"PermissionDeniedDueToInvalidRequestOriginDomain",
 						"Auth",
 						"Authorize",

@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	routinetagsdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/routine-tags"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
+	routinetagsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tags"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
 	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
@@ -19,9 +19,9 @@ import (
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/core/exceptions"
-	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
-	searchcursor "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/searchcursor"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
+	validator "github.com/go-playground/validator/v10"
 )
 
 type RoutineTagServiceInterface interface {
@@ -38,11 +38,13 @@ type RoutineTagServiceInterface interface {
 }
 
 type RoutineTagService struct {
+	validator            *validator.Validate
 	db                   *gorm.DB
 	routineTagRepository repositories.RoutineTagRepositoryInterface
 }
 
 func NewRoutineTagService(
+	validator *validator.Validate,
 	db *gorm.DB,
 	routineTagRepository repositories.RoutineTagRepositoryInterface,
 ) RoutineTagServiceInterface {
@@ -50,6 +52,7 @@ func NewRoutineTagService(
 		db = data.NotezyDB
 	}
 	return &RoutineTagService{
+		validator:            validator,
 		db:                   db,
 		routineTagRepository: routineTagRepository,
 	}
@@ -91,7 +94,7 @@ func (s *RoutineTagService) GetMyRoutineTagById(
 	ctx context.Context,
 	requestDto *routinetagsdto.GetMyRoutineTagByIdRequestDto,
 ) (*routinetagsdto.GetMyRoutineTagByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
 	if requestDto.Param.IsDeleted != nil && *requestDto.Param.IsDeleted {
@@ -122,7 +125,7 @@ func (s *RoutineTagService) GetAllMyRoutineTags(
 	ctx context.Context,
 	requestDto *routinetagsdto.GetAllMyRoutineTagsRequestDto,
 ) (*routinetagsdto.GetAllMyRoutineTagsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
 	if requestDto.Param.AreDeleted != nil && *requestDto.Param.AreDeleted {
@@ -157,7 +160,7 @@ func (s *RoutineTagService) CreateRoutineTag(
 	ctx context.Context,
 	requestDto *routinetagsdto.CreateRoutineTagRequestDto,
 ) (*routinetagsdto.CreateRoutineTagResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
 
@@ -195,7 +198,7 @@ func (s *RoutineTagService) CreateRoutineTags(
 	ctx context.Context,
 	requestDto *routinetagsdto.CreateRoutineTagsRequestDto,
 ) (*routinetagsdto.CreateRoutineTagsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
 
@@ -237,7 +240,7 @@ func (s *RoutineTagService) UpdateMyRoutineTagById(
 	ctx context.Context,
 	requestDto *routinetagsdto.UpdateMyRoutineTagByIdRequestDto,
 ) (*routinetagsdto.UpdateMyRoutineTagByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
 
@@ -277,7 +280,7 @@ func (s *RoutineTagService) UpdateMyRoutineTagsByIds(
 	ctx context.Context,
 	requestDto *routinetagsdto.UpdateMyRoutineTagsByIdsRequestDto,
 ) (*routinetagsdto.UpdateMyRoutineTagsByIdsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
 
@@ -323,7 +326,7 @@ func (s *RoutineTagService) HardDeleteMyRoutineTagById(
 	ctx context.Context,
 	requestDto *routinetagsdto.HardDeleteMyRoutineTagByIdRequestDto,
 ) (*routinetagsdto.HardDeleteMyRoutineTagByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
 
@@ -351,7 +354,7 @@ func (s *RoutineTagService) HardDeleteMyRoutineTagsByIds(
 	ctx context.Context,
 	requestDto *routinetagsdto.HardDeleteMyRoutineTagsByIdsRequestDto,
 ) (*routinetagsdto.HardDeleteMyRoutineTagsByIdsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
 

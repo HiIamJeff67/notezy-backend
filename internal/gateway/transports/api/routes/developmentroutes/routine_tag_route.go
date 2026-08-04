@@ -10,9 +10,15 @@ import (
 	interceptors "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
+	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
 )
 
-func configureDevelopmentRoutineTagRoutes(router *gin.RouterGroup, coreClient *coreadapters.CoreClient) {
+func configureDevelopmentRoutineTagRoutes(
+	router *gin.RouterGroup,
+	coreClient *coreadapters.CoreClient,
+	accessTokenCookieHandler *cookies.CookieHandler,
+	refreshTokenCookieHandler *cookies.CookieHandler,
+) {
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
@@ -24,9 +30,9 @@ func configureDevelopmentRoutineTagRoutes(router *gin.RouterGroup, coreClient *c
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(3 * time.Second),
-		middlewares.AuthMiddleware(),
+		middlewares.JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler),
 		interceptors.ShareableResponseWriterInterceptor(
-			interceptors.RefreshTokenInterceptor,
+			interceptors.RefreshTokenInterceptor(accessTokenCookieHandler),
 			interceptors.EmbeddedInterceptor,
 		),
 	}

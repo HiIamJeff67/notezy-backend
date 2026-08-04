@@ -1,8 +1,8 @@
 package email
 
 import (
+	emailcontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
 )
 
 const (
@@ -33,7 +33,7 @@ func AsyncSendWelcomeEmail(
 		To:               to,
 		Subject:          WelcomeEmailSubject,
 		Body:             body,
-		EmailContentType: types.EmailContentType_HTML,
+		EmailContentType: emailcontract.EmailContentType_HTML,
 	}
 
 	exception = NotezyEmailWorkerManager.Enqueue(emailObject, EmailTaskType_Welcome, 3, 1)

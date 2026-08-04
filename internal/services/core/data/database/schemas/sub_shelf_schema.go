@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type SubShelf struct {

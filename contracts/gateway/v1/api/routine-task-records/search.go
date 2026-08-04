@@ -1,6 +1,0 @@
-package routinetaskrecordsdto
-
-import gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
-
-type SearchRoutineTaskRecordsRequestDto = gqlmodels.SearchRoutineTaskRecordInput
-type SearchRoutineTaskRecordsResponseDto = gqlmodels.SearchRoutineTaskRecordConnection

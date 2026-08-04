@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
-	usersettingsdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/user-settings"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	usersettingsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-settings"
 	services "github.com/HiIamJeff67/notezy-backend/internal/services/core/services"
 )
 
@@ -29,7 +29,7 @@ func NewUserSettingEndpoint(
 }
 
 func (t *UserSettingEndpoint) GetMySetting(ctx *gin.Context) {
-	request := &core.Request[usersettingsdto.GetMySettingRequestDto]{}
+	request := &gatewaycontract.Request[usersettingsdto.GetMySettingRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -38,9 +38,9 @@ func (t *UserSettingEndpoint) GetMySetting(ctx *gin.Context) {
 	responseDto, exception := t.userSettingService.GetMySetting(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -50,9 +50,9 @@ func (t *UserSettingEndpoint) GetMySetting(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[usersettingsdto.GetMySettingResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[usersettingsdto.GetMySettingResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -61,7 +61,7 @@ func (t *UserSettingEndpoint) GetMySetting(ctx *gin.Context) {
 }
 
 func (t *UserSettingEndpoint) UpdateMySetting(ctx *gin.Context) {
-	request := &core.Request[usersettingsdto.UpdateMySettingRequestDto]{}
+	request := &gatewaycontract.Request[usersettingsdto.UpdateMySettingRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -70,9 +70,9 @@ func (t *UserSettingEndpoint) UpdateMySetting(ctx *gin.Context) {
 	responseDto, exception := t.userSettingService.UpdateMySetting(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -82,9 +82,9 @@ func (t *UserSettingEndpoint) UpdateMySetting(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[usersettingsdto.UpdateMySettingResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[usersettingsdto.UpdateMySettingResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},

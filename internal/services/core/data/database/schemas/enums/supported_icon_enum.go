@@ -5,26 +5,46 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type SupportedIcon string
+type SupportedIcon enumcontract.SupportedIcon
+
+func (value *SupportedIcon) ToContractable() *enumcontract.SupportedIcon {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.SupportedIcon(*value)
+	return &contractValue
+}
+
+func (value *SupportedIcon) ToStorable() *SupportedIcon {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	SupportedIcon_GrinningFace               SupportedIcon = "😀"
-	SupportedIcon_SmilingFaceWithSmilingEyes SupportedIcon = "😊"
-	SupportedIcon_RedHeart                   SupportedIcon = "❤️"
-	SupportedIcon_Fire                       SupportedIcon = "🔥"
-	SupportedIcon_Star                       SupportedIcon = "⭐"
-	SupportedIcon_Books                      SupportedIcon = "📚"
-	SupportedIcon_Notebook                   SupportedIcon = "📓"
-	SupportedIcon_PencilPaper                SupportedIcon = "📝"
-	SupportedIcon_Lightbulb                  SupportedIcon = "💡"
-	SupportedIcon_Rocket                     SupportedIcon = "🚀"
-	SupportedIcon_CheckMark                  SupportedIcon = "✅"
-	SupportedIcon_Pin                        SupportedIcon = "📌"
-	SupportedIcon_FolderOpen                 SupportedIcon = "📂"
-	SupportedIcon_Calendar                   SupportedIcon = "📅"
-	SupportedIcon_Clock                      SupportedIcon = "⏰"
+	SupportedIcon_GrinningFace               SupportedIcon = SupportedIcon(enumcontract.SupportedIcon_GrinningFace)
+	SupportedIcon_SmilingFaceWithSmilingEyes SupportedIcon = SupportedIcon(enumcontract.SupportedIcon_SmilingFaceWithSmilingEyes)
+	SupportedIcon_RedHeart                   SupportedIcon = SupportedIcon(enumcontract.SupportedIcon_RedHeart)
+	SupportedIcon_Fire                       SupportedIcon = SupportedIcon(enumcontract.SupportedIcon_Fire)
+	SupportedIcon_Star                       SupportedIcon = SupportedIcon(enumcontract.SupportedIcon_Star)
+	SupportedIcon_Books                      SupportedIcon = SupportedIcon(enumcontract.SupportedIcon_Books)
+	SupportedIcon_Notebook                   SupportedIcon = SupportedIcon(enumcontract.SupportedIcon_Notebook)
+	SupportedIcon_PencilPaper                SupportedIcon = SupportedIcon(enumcontract.SupportedIcon_PencilPaper)
+	SupportedIcon_Lightbulb                  SupportedIcon = SupportedIcon(enumcontract.SupportedIcon_Lightbulb)
+	SupportedIcon_Rocket                     SupportedIcon = SupportedIcon(enumcontract.SupportedIcon_Rocket)
+	SupportedIcon_CheckMark                  SupportedIcon = SupportedIcon(enumcontract.SupportedIcon_CheckMark)
+	SupportedIcon_Pin                        SupportedIcon = SupportedIcon(enumcontract.SupportedIcon_Pin)
+	SupportedIcon_FolderOpen                 SupportedIcon = SupportedIcon(enumcontract.SupportedIcon_FolderOpen)
+	SupportedIcon_Calendar                   SupportedIcon = SupportedIcon(enumcontract.SupportedIcon_Calendar)
+	SupportedIcon_Clock                      SupportedIcon = SupportedIcon(enumcontract.SupportedIcon_Clock)
 )
 
 var AllSupportedIcons = []SupportedIcon{

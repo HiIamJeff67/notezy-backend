@@ -12,12 +12,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	gatewaycontexts "github.com/HiIamJeff67/notezy-backend/internal/gateway/contexts"
 	config "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/internal/shared/tokens"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
+	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 )
 
 type CoreClient struct {
@@ -74,8 +74,8 @@ func call[RequestDto any, ResponseDto any](
 	path string,
 	delegationToken string,
 	forwardedHeaders http.Header,
-	request *core.Request[RequestDto],
-) (*core.Response[ResponseDto], *exceptions.Exception) {
+	request *gatewaycontract.Request[RequestDto],
+) (*gatewaycontract.Response[ResponseDto], *exceptions.Exception) {
 	if client == nil {
 		return nil, exceptions.New(
 			"CoreClientRequired",
@@ -97,7 +97,7 @@ func call[RequestDto any, ResponseDto any](
 		)
 	}
 	if request.Version == "" {
-		request.Version = core.Version
+		request.Version = gatewaycontract.Version
 	}
 
 	body, err := json.Marshal(request)
@@ -154,18 +154,18 @@ func call[RequestDto any, ResponseDto any](
 		).WithOrigin(err)
 	}
 	defer httpResponse.Body.Close()
-	if gatewayContext != nil && httpResponse.Header.Get(core.AuthRefreshed.String()) == "true" {
+	if gatewayContext != nil && httpResponse.Header.Get(gatewaycontract.CoreAuthRefreshed.String()) == "true" {
 		gatewayContext.Set(
-			types.ContextFieldName_IsNewTokens.String(),
+			sharedcontexts.ContextFieldName_IsNewTokens.String(),
 			true,
 		)
 		gatewayContext.Set(
-			types.ContextFieldName_AccessToken.String(),
-			httpResponse.Header.Get(core.SetAccessToken.String()),
+			sharedcontexts.ContextFieldName_AccessToken.String(),
+			httpResponse.Header.Get(gatewaycontract.CoreSetAccessToken.String()),
 		)
 		gatewayContext.Set(
-			types.ContextFieldName_CSRFToken.String(),
-			httpResponse.Header.Get(core.SetCSRFToken.String()),
+			sharedcontexts.ContextFieldName_CSRFToken.String(),
+			httpResponse.Header.Get(gatewaycontract.CoreSetCSRFToken.String()),
 		)
 	}
 
@@ -180,7 +180,7 @@ func call[RequestDto any, ResponseDto any](
 			true,
 		).WithOrigin(err)
 	}
-	response := &core.Response[ResponseDto]{}
+	response := &gatewaycontract.Response[ResponseDto]{}
 	if err := json.Unmarshal(responseBody, response); err != nil {
 		return nil, exceptions.New(
 			"CoreResponseDecodingFailed",
@@ -191,7 +191,7 @@ func call[RequestDto any, ResponseDto any](
 			true,
 		).WithOrigin(err)
 	}
-	if response.Version != core.Version {
+	if response.Version != gatewaycontract.Version {
 		return nil, exceptions.New(
 			"CoreResponseVersionInvalid",
 			"Gateway",
@@ -236,7 +236,7 @@ func Call[RequestDto any, ResponseDto any](
 	requestDto *RequestDto,
 	operation string,
 	path string,
-) (*core.Response[ResponseDto], *exceptions.Exception) {
+) (*gatewaycontract.Response[ResponseDto], *exceptions.Exception) {
 	if requestDto == nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -282,9 +282,9 @@ func Call[RequestDto any, ResponseDto any](
 		path,
 		delegationToken,
 		forwardedHeaders,
-		&core.Request[RequestDto]{
+		&gatewaycontract.Request[RequestDto]{
 			Operation: operation,
-			Metadata: core.RequestMetadata{
+			Metadata: gatewaycontract.RequestMetadata{
 				RequestId:      requestId,
 				TraceParent:    ctx.GetHeader("Traceparent"),
 				IdempotencyKey: ctx.GetHeader("Idempotency-Key"),
@@ -301,7 +301,7 @@ func CallAsComponent[RequestDto any, ResponseDto any](
 	requestDto *RequestDto,
 	operation string,
 	path string,
-) (*core.Response[ResponseDto], *exceptions.Exception) {
+) (*gatewaycontract.Response[ResponseDto], *exceptions.Exception) {
 	if requestDto == nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -339,9 +339,9 @@ func CallAsComponent[RequestDto any, ResponseDto any](
 		path,
 		delegationToken,
 		http.Header{},
-		&core.Request[RequestDto]{
+		&gatewaycontract.Request[RequestDto]{
 			Operation: operation,
-			Metadata: core.RequestMetadata{
+			Metadata: gatewaycontract.RequestMetadata{
 				RequestId: requestId,
 			},
 			Dto: *requestDto,
@@ -355,7 +355,7 @@ func CallSecurly[RequestDto any, ResponseDto any](
 	requestDto *RequestDto,
 	operation string,
 	path string,
-) (*core.Response[ResponseDto], *exceptions.Exception) {
+) (*gatewaycontract.Response[ResponseDto], *exceptions.Exception) {
 	if requestDto == nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -368,7 +368,7 @@ func CallSecurly[RequestDto any, ResponseDto any](
 
 	userSubject, exception := gatewaycontexts.GetAndConvertContextFieldToUUID(
 		ctx,
-		types.ContextFieldName_User_PublicId,
+		sharedcontexts.ContextFieldName_User_PublicId,
 	)
 	if exception != nil {
 		return nil, exception
@@ -390,7 +390,7 @@ func CallSecurly[RequestDto any, ResponseDto any](
 	}
 	delegatedPermissions := make([]string, len(allowedPermissions))
 	for index, permission := range allowedPermissions {
-		delegatedPermissions[index] = permission.String()
+		delegatedPermissions[index] = string(permission)
 	}
 
 	requestId := ctx.GetHeader("X-Request-Id")
@@ -440,9 +440,9 @@ func CallSecurly[RequestDto any, ResponseDto any](
 		path,
 		delegationToken,
 		forwardedHeaders,
-		&core.Request[RequestDto]{
+		&gatewaycontract.Request[RequestDto]{
 			Operation: operation,
-			Metadata: core.RequestMetadata{
+			Metadata: gatewaycontract.RequestMetadata{
 				RequestId:      requestId,
 				TraceParent:    ctx.GetHeader("Traceparent"),
 				IdempotencyKey: ctx.GetHeader("Idempotency-Key"),

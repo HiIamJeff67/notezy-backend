@@ -1,10 +1,10 @@
 package realtimetypes
 
-import sharedtypes "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+import enumscontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 
-type ChannelPermission = sharedtypes.ChannelPermission
+type ChannelPermission = enumscontract.ChannelPermission
 
 const (
-	ChannelPermission_Read  = sharedtypes.ChannelPermission_Read
-	ChannelPermission_Write = sharedtypes.ChannelPermission_Write
+	ChannelPermission_Read  = enumscontract.ChannelPermission_Read
+	ChannelPermission_Write = enumscontract.ChannelPermission_Write
 )

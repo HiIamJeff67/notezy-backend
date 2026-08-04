@@ -11,8 +11,8 @@ import (
 	pg "github.com/lib/pq"
 	"gorm.io/gorm"
 
-	materialsdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/materials"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
+	materialsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/materials"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
@@ -25,10 +25,10 @@ import (
 	materialsql "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/sqls/material"
 	storage "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/storage"
 	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/core/exceptions"
-	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
-	searchcursor "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/searchcursor"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	validator "github.com/go-playground/validator/v10"
 )
 
 type MaterialServiceInterface interface {
@@ -50,6 +50,7 @@ type MaterialServiceInterface interface {
 }
 
 type MaterialService struct {
+	validator          *validator.Validate
 	db                 *gorm.DB
 	storage            storage.StorageInterface
 	materialScope      scopes.MaterialScopeInterface
@@ -58,6 +59,7 @@ type MaterialService struct {
 }
 
 func NewMaterialService(
+	validator *validator.Validate,
 	db *gorm.DB,
 	storage storage.StorageInterface,
 	materialScope scopes.MaterialScopeInterface,
@@ -65,6 +67,7 @@ func NewMaterialService(
 	materialRepository repositories.MaterialRepositoryInterface,
 ) MaterialServiceInterface {
 	return &MaterialService{
+		validator:          validator,
 		db:                 db,
 		storage:            storage,
 		materialScope:      materialScope,
@@ -76,7 +79,7 @@ func NewMaterialService(
 func (s *MaterialService) GetMyMaterialById(
 	ctx context.Context, requestDto *materialsdto.GetMyMaterialByIdRequestDto,
 ) (*materialsdto.GetMyMaterialByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
@@ -120,7 +123,7 @@ func (s *MaterialService) GetMyMaterialById(
 		ParentSubShelfId: material.ParentSubShelfId,
 		Name:             material.Name,
 		Size:             material.Size,
-		ContentType:      material.ContentType,
+		ContentType:      *material.ContentType.ToContractable(),
 		ParseMediaType:   material.ParseMediaType,
 		DownloadURL:      downloadURL,
 		DeletedAt:        material.DeletedAt,
@@ -132,7 +135,7 @@ func (s *MaterialService) GetMyMaterialById(
 func (s *MaterialService) GetMyMaterialAndItsParentById(
 	ctx context.Context, requestDto *materialsdto.GetMyMaterialAndItsParentByIdRequestDto,
 ) (*materialsdto.GetMyMaterialAndItsParentByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
@@ -198,7 +201,7 @@ func (s *MaterialService) GetMyMaterialAndItsParentById(
 func (s *MaterialService) GetMyMaterialsByParentSubShelfId(
 	ctx context.Context, requestDto *materialsdto.GetMyMaterialsByParentSubShelfIdRequestDto,
 ) (*materialsdto.GetMyMaterialsByParentSubShelfIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
@@ -249,7 +252,7 @@ func (s *MaterialService) GetMyMaterialsByParentSubShelfId(
 			ParentSubShelfId: material.ParentSubShelfId,
 			Name:             material.Name,
 			Size:             material.Size,
-			ContentType:      material.ContentType,
+			ContentType:      *material.ContentType.ToContractable(),
 			ParseMediaType:   material.ParseMediaType,
 			DownloadURL:      downloadURL,
 			DeletedAt:        material.DeletedAt,
@@ -264,7 +267,7 @@ func (s *MaterialService) GetMyMaterialsByParentSubShelfId(
 func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
 	ctx context.Context, requestDto *materialsdto.GetAllMyMaterialsByRootShelfIdRequestDto,
 ) (*materialsdto.GetAllMyMaterialsByRootShelfIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
@@ -313,7 +316,7 @@ func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
 			ParentSubShelfId: material.ParentSubShelfId,
 			Name:             material.Name,
 			Size:             material.Size,
-			ContentType:      material.ContentType,
+			ContentType:      *material.ContentType.ToContractable(),
 			ParseMediaType:   material.ParseMediaType,
 			DownloadURL:      downloadURL,
 			DeletedAt:        material.DeletedAt,
@@ -328,7 +331,7 @@ func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
 func (s *MaterialService) CreateMyMaterial(
 	ctx context.Context, requestDto *materialsdto.CreateMyMaterialRequestDto,
 ) (*materialsdto.CreateMyMaterialResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
@@ -390,7 +393,7 @@ func (s *MaterialService) CreateMyMaterial(
 func (s *MaterialService) UpdateMyMaterialById(
 	ctx context.Context, requestDto *materialsdto.UpdateMyMaterialByIdRequestDto,
 ) (*materialsdto.UpdateMyMaterialByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
@@ -428,7 +431,7 @@ func (s *MaterialService) UpdateMyMaterialById(
 func (s *MaterialService) SaveMyMaterialById(
 	ctx context.Context, requestDto *materialsdto.SaveMyMaterialByIdRequestDto,
 ) (*materialsdto.SaveMyMaterialByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
 	// check if there does exist a file in the requestDto
@@ -506,7 +509,7 @@ func (s *MaterialService) SaveMyMaterialById(
 func (s *MaterialService) MoveMyMaterialById(
 	ctx context.Context, requestDto *materialsdto.MoveMyMaterialByIdRequestDto,
 ) (*materialsdto.MoveMyMaterialByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
@@ -545,7 +548,7 @@ func (s *MaterialService) MoveMyMaterialById(
 func (s *MaterialService) MoveMyMaterialsByIds(
 	ctx context.Context, requestDto *materialsdto.MoveMyMaterialsByIdsRequestDto,
 ) (*materialsdto.MoveMyMaterialsByIdsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
@@ -584,7 +587,7 @@ func (s *MaterialService) MoveMyMaterialsByIds(
 func (s *MaterialService) RestoreMyMaterialById(
 	ctx context.Context, requestDto *materialsdto.RestoreMyMaterialByIdRequestDto,
 ) (*materialsdto.RestoreMyMaterialByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
@@ -618,7 +621,7 @@ func (s *MaterialService) RestoreMyMaterialById(
 		ParentSubShelfId: restoredMaterial.ParentSubShelfId,
 		Name:             restoredMaterial.Name,
 		Size:             restoredMaterial.Size,
-		ContentType:      restoredMaterial.ContentType,
+		ContentType:      *restoredMaterial.ContentType.ToContractable(),
 		ParseMediaType:   restoredMaterial.ParseMediaType,
 		DownloadURL:      downloadURL,
 		DeletedAt:        restoredMaterial.DeletedAt,
@@ -630,7 +633,7 @@ func (s *MaterialService) RestoreMyMaterialById(
 func (s *MaterialService) RestoreMyMaterialsByIds(
 	ctx context.Context, requestDto *materialsdto.RestoreMyMaterialsByIdsRequestDto,
 ) (*materialsdto.RestoreMyMaterialsByIdsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
@@ -665,7 +668,7 @@ func (s *MaterialService) RestoreMyMaterialsByIds(
 			ParentSubShelfId: restoredMaterial.ParentSubShelfId,
 			Name:             restoredMaterial.Name,
 			Size:             restoredMaterial.Size,
-			ContentType:      restoredMaterial.ContentType,
+			ContentType:      *restoredMaterial.ContentType.ToContractable(),
 			ParseMediaType:   restoredMaterial.ParseMediaType,
 			DownloadURL:      downloadURL,
 			DeletedAt:        restoredMaterial.DeletedAt,
@@ -679,7 +682,7 @@ func (s *MaterialService) RestoreMyMaterialsByIds(
 func (s *MaterialService) DeleteMyMaterialById(
 	ctx context.Context, requestDto *materialsdto.DeleteMyMaterialByIdRequestDto,
 ) (*materialsdto.DeleteMyMaterialByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
 
@@ -711,7 +714,7 @@ func (s *MaterialService) DeleteMyMaterialById(
 func (s *MaterialService) DeleteMyMaterialsByIds(
 	ctx context.Context, requestDto *materialsdto.DeleteMyMaterialsByIdsRequestDto,
 ) (*materialsdto.DeleteMyMaterialsByIdsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
 

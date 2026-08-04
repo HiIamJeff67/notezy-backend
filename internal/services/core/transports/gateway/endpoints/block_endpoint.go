@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/blocks"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
 	services "github.com/HiIamJeff67/notezy-backend/internal/services/core/services"
 )
 
@@ -33,7 +33,7 @@ func NewBlockEndpoint(
 }
 
 func (t *BlockEndpoint) GetMyBlockById(ctx *gin.Context) {
-	request := &core.Request[blocksdto.GetMyBlockByIdRequestDto]{}
+	request := &gatewaycontract.Request[blocksdto.GetMyBlockByIdRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -42,9 +42,9 @@ func (t *BlockEndpoint) GetMyBlockById(ctx *gin.Context) {
 	responseDto, exception := t.blockService.GetMyBlockById(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -54,9 +54,9 @@ func (t *BlockEndpoint) GetMyBlockById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[blocksdto.GetMyBlockByIdResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[blocksdto.GetMyBlockByIdResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -65,7 +65,7 @@ func (t *BlockEndpoint) GetMyBlockById(ctx *gin.Context) {
 }
 
 func (t *BlockEndpoint) GetMyBlocksByIds(ctx *gin.Context) {
-	request := &core.Request[blocksdto.GetMyBlocksByIdsRequestDto]{}
+	request := &gatewaycontract.Request[blocksdto.GetMyBlocksByIdsRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -74,9 +74,9 @@ func (t *BlockEndpoint) GetMyBlocksByIds(ctx *gin.Context) {
 	responseDto, exception := t.blockService.GetMyBlocksByIds(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -86,9 +86,9 @@ func (t *BlockEndpoint) GetMyBlocksByIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[blocksdto.GetMyBlocksByIdsResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[blocksdto.GetMyBlocksByIdsResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -97,7 +97,7 @@ func (t *BlockEndpoint) GetMyBlocksByIds(ctx *gin.Context) {
 }
 
 func (t *BlockEndpoint) GetMyBlocksByBlockPackId(ctx *gin.Context) {
-	request := &core.Request[blocksdto.GetMyBlocksByBlockPackIdRequestDto]{}
+	request := &gatewaycontract.Request[blocksdto.GetMyBlocksByBlockPackIdRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -106,9 +106,9 @@ func (t *BlockEndpoint) GetMyBlocksByBlockPackId(ctx *gin.Context) {
 	responseDto, exception := t.blockService.GetMyBlocksByBlockPackId(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -118,9 +118,9 @@ func (t *BlockEndpoint) GetMyBlocksByBlockPackId(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[blocksdto.GetMyBlocksByBlockPackIdResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[blocksdto.GetMyBlocksByBlockPackIdResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},

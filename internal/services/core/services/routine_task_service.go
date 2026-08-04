@@ -9,9 +9,8 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	routinetasksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/routine-tasks"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
-	adapters "github.com/HiIamJeff67/notezy-backend/internal/adapters"
+	routinetasksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tasks"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
 	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
@@ -22,10 +21,10 @@ import (
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/scopes"
 	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/core/exceptions"
-	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
-	searchcursor "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/searchcursor"
-	timeutil "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/timeutil"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
+	timeutil "github.com/HiIamJeff67/notezy-backend/shared/lib/timeutil"
+	validator "github.com/go-playground/validator/v10"
 )
 
 type RoutineTaskServiceInterface interface {
@@ -48,17 +47,17 @@ type RoutineTaskServiceInterface interface {
 }
 
 type RoutineTaskService struct {
-	db                        *gorm.DB
-	routineTaskScope          scopes.RoutineTaskScopeInterface
-	routineTaskRepository     repositories.RoutineTaskRepositoryInterface
-	routineTaskPayloadAdapter adapters.RoutineTaskPayloadAdapterInterface
+	validator             *validator.Validate
+	db                    *gorm.DB
+	routineTaskScope      scopes.RoutineTaskScopeInterface
+	routineTaskRepository repositories.RoutineTaskRepositoryInterface
 }
 
 func NewRoutineTaskService(
+	validator *validator.Validate,
 	db *gorm.DB,
 	routineTaskScope scopes.RoutineTaskScopeInterface,
 	routineTaskRepository repositories.RoutineTaskRepositoryInterface,
-	routineTaskPayloadAdapter adapters.RoutineTaskPayloadAdapterInterface,
 ) RoutineTaskServiceInterface {
 	if db == nil {
 		db = data.NotezyDB
@@ -66,18 +65,15 @@ func NewRoutineTaskService(
 	if routineTaskScope == nil {
 		routineTaskScope = scopes.NewRoutineTaskScope()
 	}
-	if routineTaskPayloadAdapter == nil {
-		routineTaskPayloadAdapter = adapters.NewRoutineTaskPayloadAdapter(nil)
-	}
 	return &RoutineTaskService{
-		db:                        db,
-		routineTaskScope:          routineTaskScope,
-		routineTaskRepository:     routineTaskRepository,
-		routineTaskPayloadAdapter: routineTaskPayloadAdapter,
+		validator:             validator,
+		db:                    db,
+		routineTaskScope:      routineTaskScope,
+		routineTaskRepository: routineTaskRepository,
 	}
 }
 
-/* ============================== Helper function ============================== */
+/* ============================== Auxiliary Functions ============================== */
 
 func (s *RoutineTaskService) visualizeMyRoutineTaskTimeCount(
 	ctx context.Context,
@@ -169,6 +165,8 @@ func (s *RoutineTaskService) visualizeMyRoutineTaskTimeCount(
 
 /* ============================== Service Methods for RoutineTask ============================== */
 
+/* ============================== Main Methods ============================== */
+
 func (s *RoutineTaskService) GetMyRoutineTaskById(
 	ctx context.Context, reqDto *routinetasksdto.GetMyRoutineTaskByIdRequestDto,
 ) (*routinetasksdto.GetMyRoutineTaskByIdResponseDto, *exceptions.Exception) {
@@ -176,7 +174,7 @@ func (s *RoutineTaskService) GetMyRoutineTaskById(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 	if reqDto.Param.IsDeleted != nil && *reqDto.Param.IsDeleted {
@@ -204,14 +202,14 @@ func (s *RoutineTaskService) GetMyRoutineTaskById(
 		Id:              routineTask.Id,
 		RoutineId:       routineTask.RoutineId,
 		Title:           routineTask.Title,
-		Purpose:         routineTask.Purpose,
+		Purpose:         *routineTask.Purpose.ToContractable(),
 		Payload:         routineTask.Payload,
 		CostUnit:        routineTask.CostUnit,
 		Priority:        routineTask.Priority,
-		Status:          routineTask.Status,
+		Status:          *routineTask.Status.ToContractable(),
 		Attempts:        routineTask.Attempts,
 		MaxAttempts:     routineTask.MaxAttempts,
-		Period:          routineTask.Period,
+		Period:          routineTask.Period.ToContractable(),
 		NextScheduledAt: routineTask.NextScheduledAt,
 		ScheduledAt:     routineTask.ScheduledAt,
 		ActualStartedAt: routineTask.ActualStartedAt,
@@ -228,7 +226,7 @@ func (s *RoutineTaskService) GetAllMyRoutineTasksByRoutineIds(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 	if reqDto.Param.AreDeleted != nil && *reqDto.Param.AreDeleted {
@@ -259,13 +257,13 @@ func (s *RoutineTaskService) GetAllMyRoutineTasksByRoutineIds(
 			Id:              routineTask.Id,
 			RoutineId:       routineTask.RoutineId,
 			Title:           routineTask.Title,
-			Purpose:         routineTask.Purpose,
+			Purpose:         *routineTask.Purpose.ToContractable(),
 			CostUnit:        routineTask.CostUnit,
 			Priority:        routineTask.Priority,
-			Status:          routineTask.Status,
+			Status:          *routineTask.Status.ToContractable(),
 			Attempts:        routineTask.Attempts,
 			MaxAttempts:     routineTask.MaxAttempts,
-			Period:          routineTask.Period,
+			Period:          routineTask.Period.ToContractable(),
 			NextScheduledAt: routineTask.NextScheduledAt,
 			ScheduledAt:     routineTask.ScheduledAt,
 			ActualStartedAt: routineTask.ActualStartedAt,
@@ -285,7 +283,7 @@ func (s *RoutineTaskService) GetAllMyRoutineTasks(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 	if reqDto.Param.AreDeleted != nil && *reqDto.Param.AreDeleted {
@@ -315,14 +313,14 @@ func (s *RoutineTaskService) GetAllMyRoutineTasks(
 			Id:              routineTask.Id,
 			RoutineId:       routineTask.RoutineId,
 			Title:           routineTask.Title,
-			Purpose:         routineTask.Purpose,
+			Purpose:         *routineTask.Purpose.ToContractable(),
 			Payload:         routineTask.Payload,
 			CostUnit:        routineTask.CostUnit,
 			Priority:        routineTask.Priority,
-			Status:          routineTask.Status,
+			Status:          *routineTask.Status.ToContractable(),
 			Attempts:        routineTask.Attempts,
 			MaxAttempts:     routineTask.MaxAttempts,
-			Period:          routineTask.Period,
+			Period:          routineTask.Period.ToContractable(),
 			NextScheduledAt: routineTask.NextScheduledAt,
 			ScheduledAt:     routineTask.ScheduledAt,
 			ActualStartedAt: routineTask.ActualStartedAt,
@@ -342,10 +340,13 @@ func (s *RoutineTaskService) CreateRoutineTaskByRoutineId(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
-	if exception := s.routineTaskPayloadAdapter.Parse(reqDto.Body.Purpose, reqDto.Body.Payload); exception != nil {
+	if exception := s.parseRoutineTaskPayload(
+		*(*enums.RoutineTaskPurpose)(&reqDto.Body.Purpose).ToStorable(),
+		reqDto.Body.Payload,
+	); exception != nil {
 		return nil, exception
 	}
 
@@ -361,11 +362,11 @@ func (s *RoutineTaskService) CreateRoutineTaskByRoutineId(
 		inputs.CreateRoutineTaskInput{
 			ActorUserId:     actorUserId,
 			Title:           reqDto.Body.Title,
-			Purpose:         reqDto.Body.Purpose,
+			Purpose:         *(*enums.RoutineTaskPurpose)(&reqDto.Body.Purpose).ToStorable(),
 			Payload:         reqDto.Body.Payload,
 			Priority:        reqDto.Body.Priority,
 			MaxAttempts:     reqDto.Body.MaxAttempts,
-			Period:          reqDto.Body.Period,
+			Period:          (*enums.RoutinePeriod)(reqDto.Body.Period).ToStorable(),
 			NextScheduledAt: reqDto.Body.NextScheduledAt,
 		},
 		options.WithDB(db),
@@ -388,7 +389,7 @@ func (s *RoutineTaskService) UpdateMyRoutineTaskById(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 
@@ -398,9 +399,9 @@ func (s *RoutineTaskService) UpdateMyRoutineTaskById(
 		return nil, exception
 	}
 	if reqDto.Body.Values.Purpose != nil || reqDto.Body.Values.Payload != nil {
-		finalPurpose := reqDto.Body.Values.Purpose
+		var finalPurpose enums.RoutineTaskPurpose
 		finalPayload := reqDto.Body.Values.Payload
-		if finalPurpose == nil || finalPayload == nil {
+		if reqDto.Body.Values.Purpose == nil || finalPayload == nil {
 			existingRoutineTask, exception := s.routineTaskRepository.GetOneById(
 				reqDto.Body.RoutineTaskId,
 				actorUserId,
@@ -411,14 +412,18 @@ func (s *RoutineTaskService) UpdateMyRoutineTaskById(
 			if exception != nil {
 				return nil, exception
 			}
-			if finalPurpose == nil {
-				finalPurpose = &existingRoutineTask.Purpose
+			if reqDto.Body.Values.Purpose == nil {
+				finalPurpose = existingRoutineTask.Purpose
+			} else {
+				finalPurpose = enums.RoutineTaskPurpose(*reqDto.Body.Values.Purpose)
 			}
 			if finalPayload == nil {
 				finalPayload = &existingRoutineTask.Payload
 			}
+		} else {
+			finalPurpose = *(*enums.RoutineTaskPurpose)(reqDto.Body.Values.Purpose).ToStorable()
 		}
-		if exception := s.routineTaskPayloadAdapter.Parse(*finalPurpose, *finalPayload); exception != nil {
+		if exception := s.parseRoutineTaskPayload(finalPurpose, *finalPayload); exception != nil {
 			return nil, exception
 		}
 	}
@@ -430,11 +435,11 @@ func (s *RoutineTaskService) UpdateMyRoutineTaskById(
 			Values: inputs.UpdateRoutineTaskInput{
 				RoutineId:       reqDto.Body.Values.RoutineId,
 				Title:           reqDto.Body.Values.Title,
-				Purpose:         reqDto.Body.Values.Purpose,
+				Purpose:         (*enums.RoutineTaskPurpose)(reqDto.Body.Values.Purpose).ToStorable(),
 				Payload:         reqDto.Body.Values.Payload,
 				Priority:        reqDto.Body.Values.Priority,
 				MaxAttempts:     reqDto.Body.Values.MaxAttempts,
-				Period:          reqDto.Body.Values.Period,
+				Period:          (*enums.RoutinePeriod)(reqDto.Body.Values.Period).ToStorable(),
 				NextScheduledAt: reqDto.Body.Values.NextScheduledAt,
 			},
 			SetNull: reqDto.Body.SetNull,
@@ -458,7 +463,7 @@ func (s *RoutineTaskService) PauseMyRoutineTaskById(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 
@@ -516,7 +521,7 @@ func (s *RoutineTaskService) ResumeMyRoutineTaskById(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 
@@ -574,7 +579,7 @@ func (s *RoutineTaskService) HardDeleteMyRoutineTaskById(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 
@@ -606,7 +611,7 @@ func (s *RoutineTaskService) HardDeleteMyRoutineTasksByIds(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 
@@ -640,7 +645,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskStatusCount(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 
@@ -694,7 +699,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskPurposeCount(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 
@@ -748,7 +753,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskScheduledAtCount(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 	if !reqDto.Param.QueryRangeStartedAt.Before(reqDto.Param.QueryRangeEndedAt) {
@@ -784,7 +789,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskActualStartedAtCount(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 	if !reqDto.Param.QueryRangeStartedAt.Before(reqDto.Param.QueryRangeEndedAt) {
@@ -820,7 +825,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskActualEndedAtCount(
 	if exception != nil {
 		return nil, exception
 	}
-	if err := validation.Validator.Struct(reqDto); err != nil {
+	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 	if !reqDto.Param.QueryRangeStartedAt.Before(reqDto.Param.QueryRangeEndedAt) {

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 )
 
 func TestCoreClientForwardsVersionedEnvelopeAndMetadata(t *testing.T) {
@@ -20,18 +20,18 @@ func TestCoreClientForwardsVersionedEnvelopeAndMetadata(t *testing.T) {
 			t.Fatal("expected trace parent header")
 		}
 
-		requestEnvelope := core.Request[struct{}]{}
+		requestEnvelope := gatewaycontract.Request[struct{}]{}
 		if err := json.NewDecoder(request.Body).Decode(&requestEnvelope); err != nil {
 			t.Fatalf("decode request envelope: %v", err)
 		}
-		if requestEnvelope.Version != core.Version || requestEnvelope.Operation != "station.get" {
+		if requestEnvelope.Version != gatewaycontract.Version || requestEnvelope.Operation != "station.get" {
 			t.Fatal("expected versioned station request envelope")
 		}
 
 		responseWriter.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(responseWriter).Encode(&core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		if err := json.NewEncoder(responseWriter).Encode(&gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId: requestEnvelope.Metadata.RequestId,
 			},
 			Data: struct{}{},
@@ -54,9 +54,9 @@ func TestCoreClientForwardsVersionedEnvelopeAndMetadata(t *testing.T) {
 			"User-Agent": []string{"test-agent"},
 			"X-Real-IP":  []string{"192.0.2.1"},
 		},
-		&core.Request[struct{}]{
+		&gatewaycontract.Request[struct{}]{
 			Operation: "station.get",
-			Metadata: core.RequestMetadata{
+			Metadata: gatewaycontract.RequestMetadata{
 				RequestId:   "request-id",
 				TraceParent: "00-trace",
 			},

@@ -8,23 +8,24 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
 	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
 	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/internal/shared/tokens"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
+	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
+	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 )
 
 func AuthMiddleware(userRepository repositories.UserRepositoryInterface) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		userPublicId, exception := contexts.GetActorUserPublicId(ctx.Request.Context())
 		if exception != nil {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, core.Response[struct{}]{
-				Version: core.Version,
-				Metadata: core.ResponseMetadata{
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gatewaycontract.Response[struct{}]{
+				Version: gatewaycontract.Version,
+				Metadata: gatewaycontract.ResponseMetadata{
 					RequestId:   ctx.GetHeader("X-Request-Id"),
 					RespondedAt: time.Now(),
 				},
@@ -40,8 +41,8 @@ func AuthMiddleware(userRepository repositories.UserRepositoryInterface) gin.Han
 			return
 		}
 
-		accessToken, accessTokenExists := cookieValue(ctx, types.ValidCookieName_AccessToken.String())
-		refreshToken, refreshTokenExists := cookieValue(ctx, types.ValidCookieName_RefreshToken.String())
+		accessToken, accessTokenExists := cookieValue(ctx, cookies.ValidCookieName_AccessToken.String())
+		refreshToken, refreshTokenExists := cookieValue(ctx, cookies.ValidCookieName_RefreshToken.String())
 		userAgent := ctx.GetHeader("User-Agent")
 		if accessTokenExists {
 			claims, err := sharedtokens.ParseAccessToken(accessToken)
@@ -54,9 +55,9 @@ func AuthMiddleware(userRepository repositories.UserRepositoryInterface) gin.Han
 		}
 
 		if !refreshTokenExists {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, core.Response[struct{}]{
-				Version: core.Version,
-				Metadata: core.ResponseMetadata{
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gatewaycontract.Response[struct{}]{
+				Version: gatewaycontract.Version,
+				Metadata: gatewaycontract.ResponseMetadata{
 					RequestId:   ctx.GetHeader("X-Request-Id"),
 					RespondedAt: time.Now(),
 				},
@@ -74,9 +75,9 @@ func AuthMiddleware(userRepository repositories.UserRepositoryInterface) gin.Han
 
 		claims, err := sharedtokens.ParseRefreshToken(refreshToken)
 		if err != nil || claims.Subject != userPublicId.String() || claims.UserAgent != userAgent {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, core.Response[struct{}]{
-				Version: core.Version,
-				Metadata: core.ResponseMetadata{
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gatewaycontract.Response[struct{}]{
+				Version: gatewaycontract.Version,
+				Metadata: gatewaycontract.ResponseMetadata{
 					RequestId:   ctx.GetHeader("X-Request-Id"),
 					RespondedAt: time.Now(),
 				},
@@ -103,9 +104,9 @@ func AuthMiddleware(userRepository repositories.UserRepositoryInterface) gin.Han
 			options.WithDB(data.NotezyDB),
 		)
 		if exception != nil || user.RefreshToken != refreshToken || user.UserAgent != userAgent {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, core.Response[struct{}]{
-				Version: core.Version,
-				Metadata: core.ResponseMetadata{
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gatewaycontract.Response[struct{}]{
+				Version: gatewaycontract.Version,
+				Metadata: gatewaycontract.ResponseMetadata{
 					RequestId:   ctx.GetHeader("X-Request-Id"),
 					RespondedAt: time.Now(),
 				},
@@ -130,9 +131,9 @@ func AuthMiddleware(userRepository repositories.UserRepositoryInterface) gin.Han
 			},
 		)
 		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, core.Response[struct{}]{
-				Version: core.Version,
-				Metadata: core.ResponseMetadata{
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gatewaycontract.Response[struct{}]{
+				Version: gatewaycontract.Version,
+				Metadata: gatewaycontract.ResponseMetadata{
 					RequestId:   ctx.GetHeader("X-Request-Id"),
 					RespondedAt: time.Now(),
 				},
@@ -150,9 +151,9 @@ func AuthMiddleware(userRepository repositories.UserRepositoryInterface) gin.Han
 		}
 		newCSRFToken, err := sharedtokens.GenerateCSRFToken(sharedtokens.CSRFTokenClaims{})
 		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, core.Response[struct{}]{
-				Version: core.Version,
-				Metadata: core.ResponseMetadata{
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gatewaycontract.Response[struct{}]{
+				Version: gatewaycontract.Version,
+				Metadata: gatewaycontract.ResponseMetadata{
 					RequestId:   ctx.GetHeader("X-Request-Id"),
 					RespondedAt: time.Now(),
 				},
@@ -169,9 +170,9 @@ func AuthMiddleware(userRepository repositories.UserRepositoryInterface) gin.Han
 			return
 		}
 
-		ctx.Header(core.AuthRefreshed.String(), "true")
-		ctx.Header(core.SetAccessToken.String(), *newAccessToken)
-		ctx.Header(core.SetCSRFToken.String(), *newCSRFToken)
+		ctx.Header(gatewaycontract.CoreAuthRefreshed.String(), "true")
+		ctx.Header(gatewaycontract.CoreSetAccessToken.String(), *newAccessToken)
+		ctx.Header(gatewaycontract.CoreSetCSRFToken.String(), *newCSRFToken)
 		if !setActorUserId(ctx, userRepository, userPublicId) {
 			return
 		}
@@ -203,9 +204,9 @@ func setActorUserId(
 		options.WithDB(data.NotezyDB),
 	)
 	if exception != nil {
-		ctx.AbortWithStatusJSON(http.StatusUnauthorized, core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   ctx.GetHeader("X-Request-Id"),
 				RespondedAt: time.Now(),
 			},
@@ -223,9 +224,9 @@ func setActorUserId(
 
 	requestContext := contexts.WithActorUserId(ctx.Request.Context(), user.Id)
 	ctx.Request = ctx.Request.WithContext(contexts.WithActorUserName(requestContext, user.Name))
-	ctx.Set(types.ContextFieldName_User_Name.String(), user.Name)
-	ctx.Set(types.ContextFieldName_User_Email.String(), user.Email)
-	ctx.Set(types.ContextFieldName_User_Role.String(), user.Role)
-	ctx.Set(types.ContextFieldName_User_Plan.String(), user.Plan)
+	ctx.Set(sharedcontexts.ContextFieldName_User_Name.String(), user.Name)
+	ctx.Set(sharedcontexts.ContextFieldName_User_Email.String(), user.Email)
+	ctx.Set(sharedcontexts.ContextFieldName_User_Role.String(), user.Role)
+	ctx.Set(sharedcontexts.ContextFieldName_User_Plan.String(), user.Plan)
 	return true
 }

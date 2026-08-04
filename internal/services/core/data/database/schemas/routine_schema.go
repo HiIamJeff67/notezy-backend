@@ -5,9 +5,10 @@ import (
 
 	"github.com/google/uuid"
 
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type Routine struct {
@@ -70,11 +71,11 @@ func (r *Routine) ToPrivateRoutine() *gqlmodels.PrivateRoutine {
 		StationID:        r.StationId,
 		Title:            r.Title,
 		Description:      r.Description,
-		Status:           r.Status,
+		Status:           enumcontract.RoutineStatus(r.Status),
 		IsPinned:         r.IsPinned,
 		ScheduledStartAt: r.ScheduledStartAt,
 		ScheduledEndAt:   r.ScheduledEndAt,
-		Period:           r.Period,
+		Period:           (*enumcontract.RoutinePeriod)(r.Period),
 		Timezone:         r.Timezone,
 		DeletedAt:        r.DeletedAt,
 		UpdatedAt:        r.UpdatedAt,
@@ -105,11 +106,11 @@ func (r *Routine) ToPrivateSearchableRoutine() *gqlmodels.PrivateSearchableRouti
 		ID:               r.Id,
 		StationID:        r.StationId,
 		Title:            r.Title,
-		Status:           r.Status,
+		Status:           enumcontract.RoutineStatus(r.Status),
 		IsPinned:         r.IsPinned,
 		ScheduledStartAt: r.ScheduledStartAt,
 		ScheduledEndAt:   r.ScheduledEndAt,
-		Period:           r.Period,
+		Period:           (*enumcontract.RoutinePeriod)(r.Period),
 		Timezone:         r.Timezone,
 		DeletedAt:        r.DeletedAt,
 		UpdatedAt:        r.UpdatedAt,

@@ -5,15 +5,35 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type UserStatus string
+type UserStatus enumcontract.UserStatus
+
+func (value *UserStatus) ToContractable() *enumcontract.UserStatus {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.UserStatus(*value)
+	return &contractValue
+}
+
+func (value *UserStatus) ToStorable() *UserStatus {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	UserStatus_Online       UserStatus = "Online"
-	UserStatus_AFK          UserStatus = "AFK"
-	UserStatus_DoNotDisturb UserStatus = "DoNotDisturb"
-	UserStatus_Offline      UserStatus = "Offline"
+	UserStatus_Online       UserStatus = UserStatus(enumcontract.UserStatus_Online)
+	UserStatus_AFK          UserStatus = UserStatus(enumcontract.UserStatus_AFK)
+	UserStatus_DoNotDisturb UserStatus = UserStatus(enumcontract.UserStatus_DoNotDisturb)
+	UserStatus_Offline      UserStatus = UserStatus(enumcontract.UserStatus_Offline)
 )
 
 var AllUserStatuses = []UserStatus{

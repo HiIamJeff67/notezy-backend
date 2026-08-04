@@ -14,14 +14,20 @@ cmd/
   durablejob/
   email/
 contracts/
-  graphql/
-  gateway/
+  gateway/v1/              # Gateway-owned private request/response envelope
+  core/
     v1/
-      api/                 # public client-facing HTTP DTOs
-      websocket/           # Gateway WebSocket-to-Core DTOs
-  core/v1/                 # Core-owned internal boundary
+      api/                 # Core-owned HTTP and GraphQL operation DTOs
+      events/              # Core-owned Kafka lifecycle event contracts
+      graphql/             # Core-owned GraphQL schema and generated artifacts
+      types/               # Core-only reusable DTO shapes
+  types/
+    enums/                 # Canonical cross-runtime enum values
+    editable_block.go      # Arborized input tree and raw flattened persistence shape
+    *_routine_task_payload.go
   durablejob/v1/           # DurableJob-owned internal boundary
   email/v1/                # Email-owned internal boundary
+  realtimegateway/v1/      # RealtimeGateway-owned internal boundary
   yjsworker/v1/            # YjsWorker-owned internal boundary
 internal/
   exceptions/
@@ -36,16 +42,16 @@ internal/
         routes/
       core/
         adapters/
+      realtimegateway/
+        adapters/
   realtimegateway/           # standalone WebSocket edge runtime
     data/cache/              # Realtime leases and Realtime-specific rate limits
     transports/
-      client/                # WebSocket application, connection/channel state, middleware
-      core/                  # temporary versioned Core HTTP client
+      gateway/               # private API Gateway presence transport
+      websocket/             # WebSocket client, connection/channel state, middleware
     workers/                 # YjsWorker connection manager
-  shared/
-    responsewriter/          # shared HTTP response and public exception rendering
-    realtimelease/           # transitional Core revocation publisher only
   platform/
+    kafka/                     # Kafka client, readiness, and common telemetry
     redis/                     # Redis client lifecycle + RedisCacheStore registry
   services/
     core/
@@ -55,13 +61,18 @@ internal/
         storage/              # Core-owned storage implementations
     durablejob/             # independent runtime; currently shares PostgreSQL
     email/                  # independent runtime and SMTP sender
+shared/
+  cookies/                    # reusable Gin access/refresh cookie handlers
+  editableblock/              # tree-to-row EditableBlock conversion
+  constants/ contexts/ responsewriter/ tokens/ types/ validations/
+  lib/                       # portable libraries, including BlockNote schemas
 yjs-worker/                 # standalone TypeScript runtime; no src/ layer
 docs/
 infra/
 tests/
 ```
 
-Directories are created only when they receive an owned implementation. The first migration baseline moves the existing Go application under `internal/`, creates `cmd/api/` for the API executable and its Cobra commands, and moves GraphQL SDL/documents to `contracts/graphql/`. Later issues establish the remaining owners; no empty directory tree is committed merely to mirror this diagram.
+Directories are created only when they receive an owned implementation. The first migration baseline moves the existing Go application under `internal/`, creates `cmd/api/` for the API executable and its Cobra commands, and moves GraphQL SDL/documents to `contracts/core/v1/graphql/`. Later issues establish the remaining owners; no empty directory tree is committed merely to mirror this diagram.
 
 ## Dependency direction
 
@@ -71,11 +82,32 @@ gateway -> contracts + shared + platform
 gateway -X-> service data/repository
 services/* -> contracts + shared + platform + own data
 services/* -X-> other service source
-shared -X-> exceptions + application/framework packages
+shared/lib -X-> all Notezy packages
 platform -X-> domain business packages
 ```
 
-`internal/shared/lib` is portable: it may use the standard library and a necessary third-party library, but never imports a Notezy package. `internal/shared` utility packages such as `responsewriter` may depend on application-facing packages when they provide a deliberately shared runtime utility. Shared parsers return ordinary Go `error`; application boundaries map those errors to service exceptions.
+`shared/lib` is portable: it may use the standard library and a necessary third-party library, but never imports a Notezy package. `shared` utility packages such as `responsewriter` may depend on application-facing packages when they provide a deliberately shared runtime utility. Shared parsers return ordinary Go `error`; application boundaries map those errors to service exceptions.
+
+## Shared contract types
+
+`contracts/types/enums` is the canonical owner of cross-runtime enum values.
+Core and DurableJob database enum wrappers import those values and add only the
+PostgreSQL responsibilities (`Name`, `Scan`, `Value`, validation, and string
+conversion); neither runtime redefines a value set.
+
+`contracts/types/editable_block.go` has exactly two EditableBlock shapes:
+`ArborizedEditableBlock` is the recursive, validated transport tree, while
+`RawFlattenedEditableBlock` is the persistence/projection row with parent and
+sibling identifiers plus raw JSON props/content.
+`shared/editableblock.FlattenEditableBlock` and
+`shared/editableblock.FlattenEditableBlocks` convert the former to the latter. There are
+no generic `ArborizedBlock`, `RawArborizedEditableBlock`, or duplicate
+`FlattenedEditableBlock` types.
+
+Cross-runtime RoutineTask payloads live directly under `contracts/types/` by
+domain. Core parses them into a task request; DurableJob handlers consume the
+same contract without importing Core source. BlockNote schemas remain portable
+in `shared/lib/blocknote`.
 
 ## Public and internal transport
 
@@ -85,8 +117,8 @@ controllers invoke an adapter and render the client-safe response. Client-only
 cookies, middlewares, and interceptors remain under the same `api` transport.
 Neither layer owns transactions, business workflows, or persistence queries.
 
-Gateway internal-API adapters are outbound clients reusable by REST, GraphQL,
-and WebSocket. They live in
+Gateway internal-API adapters are outbound clients reusable by REST and
+GraphQL. They live in
 `internal/gateway/transports/core/adapters/`; client transport code must
 not contain Core service client implementation. Core transports are
 inbound adapters: they verify the internal delegation credential, map a
@@ -109,7 +141,7 @@ separate WebSocket edge runtime, directly addressed by the Nginx WebSocket
 upstream. RealtimeGateway owns connection admission, ticket verification, Redis
 leases, Realtime-specific rate limits, and long-lived Go-to-YjsWorker
 connections. Its root `application.go` is the composition root: each `Start()`
-creates a new client transport application with its own connection state; no
+creates a new WebSocket client with its own connection state; no
 global singleton application instance is retained. It never constructs Core
 repositories or services.
 
@@ -121,12 +153,11 @@ its SMTP sender and queue and exposes only its Core-facing transport. Both
 commands initialize observability and stop their workers/HTTP servers on
 context cancellation or SIGTERM.
 
-The WebSocket protocol's persistence payloads and capability values are shared
-transport types under `internal/shared/types`; Core services therefore do not
-import Gateway WebSocket types. `contracts/gateway/v1/websocket` defines the
-WebSocket-to-Core request DTOs. The WebSocket runtime owns socket admission, tickets,
-leases, connection state, and worker forwarding; Core owns authorization,
-durable Yjs state, and block projection.
+RealtimeGateway owns socket admission, tickets, leases, connection state, and
+worker forwarding. Core owns authorization, durable Yjs state, and block
+projection, but RealtimeGateway does not synchronously call Core for those
+operations. YjsWorker sends its persistence and projection commands to Core
+through Kafka; Core publishes lifecycle facts through its transactional outbox.
 
 The Gateway extracts and cryptographically parses browser access/refresh tokens
 without querying Core data, then applies route permission policy. It sends a
@@ -142,16 +173,17 @@ inbound routes use `DelegationMiddleware` for component-only operations and
 
 The versioned Core `Response[D]` envelope carries only operation data. A
 short-lived signed BlockPack channel ticket carries the room-admission policy
-snapshot required by the WebSocket runtime. Gateway verifies that ticket and
-uses its maximum-subscriber claim directly for atomic Redis lease admission; it
-does not persist a Core-owned room-policy cache or expose internal instructions
-through the public API.
+snapshot required by the WebSocket runtime: policy version, admission enforcement
+strategy, and maximum subscribers. RealtimeGateway verifies that ticket and uses
+the attested strategy and maximum-subscriber claim directly for atomic Redis lease
+admission; it does not persist a Core-owned room-policy cache or expose internal
+instructions through the public API.
 
 ## GraphQL
 
 GraphQL follows Scheme A. The Gateway owns GraphQL execution, resolvers, and dataloaders. Resolvers call Core transports through Gateway adapters; they never access Core repositories, GORM schemas, or data packages directly.
 
-GraphQL SDL, fragments, operation documents, generated Go artifacts, generated models, and scalar infrastructure belong in `contracts/graphql/`. Generated files are never edited directly.
+GraphQL SDL, fragments, operation documents, generated Go artifacts, generated models, and scalar infrastructure belong in `contracts/core/v1/graphql/`. Generated files are never edited directly.
 
 ## Data cache ownership
 
@@ -180,9 +212,9 @@ flowchart TB
     RateClient["RateLimitRecordCacheClient"]
   end
 
-  subgraph WebSocket["WebSocket runtime"]
-    WebSocketStart["websocket.Start()"]
-    RealtimeRegisterWebSocket["gateway realtimelease.Register()"]
+  subgraph RealtimeGateway["RealtimeGateway runtime"]
+    RealtimeGatewayStart["realtimegateway.Start()"]
+    RealtimeRegisterGateway["realtimelease.Register()"]
     LeaseStore["RealtimeLeaseCacheStore<br/>realtime DB"]
     LeaseClient["RealtimeLeaseStore"]
   end
@@ -196,8 +228,8 @@ flowchart TB
   RateRegister --> RateStore --> Registry
   RateClient --> Registry
 
-  WebSocketStart --> RealtimeRegisterWebSocket --> Manager
-  RealtimeRegisterWebSocket --> LeaseStore --> Registry
+  RealtimeGatewayStart --> RealtimeRegisterGateway --> Manager
+  RealtimeRegisterGateway --> LeaseStore --> Registry
   LeaseClient --> Registry
 ```
 
@@ -231,9 +263,8 @@ numbers.
 | Runtime | Registration | Redis ownership |
 |---|---|---|
 | Core | `userdata.Register()` | User data and quota cache, DB 0–3 |
-| Core | `shared/realtimelease.Register()` | Transitional revocation publishing only |
-| Gateway API | `ratelimitrecord.Register()` + `gateway/data/cache/realtimelease.Register()` | Rate-limit records and participant reads, DB 4–8 |
-| WebSocket | `gateway/data/cache/realtimelease.Register()` | Connection/channel leases, participant writes, revocation subscription |
+| Gateway API | `ratelimitrecord.Register()` | API rate-limit records, DB 4–7 |
+| RealtimeGateway | `realtimelease.Register()` + `ratelimitrecord.Register()` | Connection/channel leases, participant presence, Realtime rate-limit records, lifecycle Pub/Sub fan-out |
 | DurableJob / Email | None currently | No registered Redis cache domain |
 
 `UserDataCacheStore` and `RateLimitRecordCacheStore` each own a single
@@ -269,23 +300,39 @@ Auth/User service
 runtime's user
 connection and BlockPack subscriber lease lifecycle, active lease inspection,
 participant presence, and presence PubSub fanout. A Core-issued BlockPack
-channel ticket carries the signed maximum-subscriber policy snapshot;
-RealtimeGateway uses the verified claim directly during atomic admission.
-Core revalidates canonical resource/permission access at subscribe and write
-boundaries, but does not read Gateway Redis or the live subscriber count during
-ownership or plan workflows. Its Lua scripts are private to that cache domain.
+channel ticket carries the signed policy version, reject-new-subscriber strategy,
+and maximum-subscriber policy snapshot; RealtimeGateway uses those verified claims
+directly during atomic admission.
+Core authorizes channel admission when it issues a signed ticket, but it does
+not participate in RealtimeGateway subscribe or write boundaries and does not
+read RealtimeGateway Redis or the live subscriber count during ownership or
+plan workflows. RealtimeGateway applies the ticket's verified channel policy;
+its Lua scripts are private to that cache domain.
 
-`internal/shared/realtimelease/` is now a narrow transition boundary for the
-temporary Core revocation publisher only. RealtimeGateway owns the lease cache
-and produces participant snapshots and deltas. The REST participant endpoint
-will request that snapshot from RealtimeGateway, then call Core only to validate
-the requester's BlockPack permission and enrich a bounded, de-duplicated
-public-ID collection after a RootShelf membership filter. Revocation moves to
-Core outbox → Kafka → RealtimeGateway consumer; neither final flow permits Core
-to read or write RealtimeGateway-owned lease/cache state.
+RealtimeGateway owns the lease cache and produces participant snapshots and
+deltas. Its lifecycle Kafka consumer publishes received revocations to its local
+Redis Pub/Sub channel so every RealtimeGateway instance detaches only its own
+matching connections and releases their leases. The API Gateway REST participant
+controller requests that snapshot through the versioned private
+`contracts/realtimegateway/v1` transport, then calls Core only to validate the
+requester's BlockPack permission and enrich a bounded, de-duplicated public-ID
+collection after a RootShelf membership filter. Core's lifecycle path is outbox
+→ Kafka → RealtimeGateway; it never reads or writes RealtimeGateway-owned
+lease/cache state.
 
 `internal/services/core/data/storage/` owns Core's storage implementation;
 Gateway does not access it directly.
+
+## Lifecycle event contracts
+
+Cross-runtime lifecycle events are defined in
+[`contracts/core/v1/events`](../../contracts/core/v1/events/) and documented in
+[Kafka Event Contracts](../system-design/kafka-event-contracts.md). Core owns
+the facts and policy values in those messages. RealtimeGateway consumes them to
+execute detach or future admission behavior, but never derives business rules.
+The event envelope is independent of the Kafka client, outbox schema, and
+consumer implementation so NOT-34, NOT-35, and NOT-33 can evolve those owners
+without changing the semantic boundary.
 
 ## Exceptions and lifecycle
 
@@ -303,3 +350,16 @@ same transaction as a lifecycle mutation; WebSocket consumes the resulting
 event and only executes the already decided detach/policy action. Yjs updates,
 awareness, presence, and Redis leases remain ephemeral transport traffic and do
 not enter the outbox.
+
+The platform Kafka client owns broker configuration, TLS/SASL setup, broker
+readiness checks, and common telemetry names. Core and RealtimeGateway may run
+in degraded mode when Kafka is unavailable, but their readiness endpoints stay
+unready until a broker ping succeeds. Local provisioning and operational steps
+are documented in [Kafka Local Development](../runbooks/kafka-local-development.md).
+
+Core's PostgreSQL-to-Kafka handoff is a Core-owned transactional outbox. Domain
+transactions persist `OutboxEventTable` rows before committing; a Core worker
+claims rows with `FOR UPDATE SKIP LOCKED`, publishes the versioned event
+envelope, and marks acknowledgements. This deliberately provides at-least-once
+delivery, with consumer idempotency owned separately. See the
+[transactional outbox design](../system-design/transactional-outbox.md).

@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
-	stationsdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/stations"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	stationsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/stations"
 	services "github.com/HiIamJeff67/notezy-backend/internal/services/core/services"
 )
 
@@ -53,7 +53,7 @@ func NewStationEndpoint(
 }
 
 func (t *StationEndpoint) GetMyStationById(ctx *gin.Context) {
-	request := &core.Request[stationsdto.GetMyStationByIdRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.GetMyStationByIdRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -62,9 +62,9 @@ func (t *StationEndpoint) GetMyStationById(ctx *gin.Context) {
 	responseDto, exception := t.stationService.GetMyStationById(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -74,9 +74,9 @@ func (t *StationEndpoint) GetMyStationById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.GetMyStationByIdResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.GetMyStationByIdResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -85,7 +85,7 @@ func (t *StationEndpoint) GetMyStationById(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) GetAllMyStations(ctx *gin.Context) {
-	request := &core.Request[stationsdto.GetAllMyStationsRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.GetAllMyStationsRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -94,9 +94,9 @@ func (t *StationEndpoint) GetAllMyStations(ctx *gin.Context) {
 	responseDto, exception := t.stationService.GetAllMyStations(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -106,9 +106,9 @@ func (t *StationEndpoint) GetAllMyStations(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.GetAllMyStationsResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.GetAllMyStationsResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -117,7 +117,7 @@ func (t *StationEndpoint) GetAllMyStations(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) CreateStation(ctx *gin.Context) {
-	request := &core.Request[stationsdto.CreateStationRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.CreateStationRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -126,9 +126,9 @@ func (t *StationEndpoint) CreateStation(ctx *gin.Context) {
 	responseDto, exception := t.stationService.CreateStation(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -138,9 +138,9 @@ func (t *StationEndpoint) CreateStation(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.CreateStationResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.CreateStationResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -149,7 +149,7 @@ func (t *StationEndpoint) CreateStation(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) CreateStations(ctx *gin.Context) {
-	request := &core.Request[stationsdto.CreateStationsRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.CreateStationsRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -158,9 +158,9 @@ func (t *StationEndpoint) CreateStations(ctx *gin.Context) {
 	responseDto, exception := t.stationService.CreateStations(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -170,9 +170,9 @@ func (t *StationEndpoint) CreateStations(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.CreateStationsResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.CreateStationsResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -181,7 +181,7 @@ func (t *StationEndpoint) CreateStations(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) UpdateMyStationById(ctx *gin.Context) {
-	request := &core.Request[stationsdto.UpdateMyStationByIdRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.UpdateMyStationByIdRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -190,9 +190,9 @@ func (t *StationEndpoint) UpdateMyStationById(ctx *gin.Context) {
 	responseDto, exception := t.stationService.UpdateMyStationById(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -202,9 +202,9 @@ func (t *StationEndpoint) UpdateMyStationById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.UpdateMyStationByIdResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.UpdateMyStationByIdResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -213,7 +213,7 @@ func (t *StationEndpoint) UpdateMyStationById(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) UpdateMyStationsByIds(ctx *gin.Context) {
-	request := &core.Request[stationsdto.UpdateMyStationsByIdsRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.UpdateMyStationsByIdsRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -222,9 +222,9 @@ func (t *StationEndpoint) UpdateMyStationsByIds(ctx *gin.Context) {
 	responseDto, exception := t.stationService.UpdateMyStationsByIds(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -234,9 +234,9 @@ func (t *StationEndpoint) UpdateMyStationsByIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.UpdateMyStationsByIdsResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.UpdateMyStationsByIdsResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -245,7 +245,7 @@ func (t *StationEndpoint) UpdateMyStationsByIds(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) RestoreMyStationById(ctx *gin.Context) {
-	request := &core.Request[stationsdto.RestoreMyStationByIdRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.RestoreMyStationByIdRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -254,9 +254,9 @@ func (t *StationEndpoint) RestoreMyStationById(ctx *gin.Context) {
 	responseDto, exception := t.stationService.RestoreMyStationById(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -266,9 +266,9 @@ func (t *StationEndpoint) RestoreMyStationById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.RestoreMyStationByIdResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.RestoreMyStationByIdResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -277,7 +277,7 @@ func (t *StationEndpoint) RestoreMyStationById(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) RestoreMyStationsByIds(ctx *gin.Context) {
-	request := &core.Request[stationsdto.RestoreMyStationsByIdsRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.RestoreMyStationsByIdsRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -286,9 +286,9 @@ func (t *StationEndpoint) RestoreMyStationsByIds(ctx *gin.Context) {
 	responseDto, exception := t.stationService.RestoreMyStationsByIds(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -298,9 +298,9 @@ func (t *StationEndpoint) RestoreMyStationsByIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.RestoreMyStationsByIdsResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.RestoreMyStationsByIdsResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -309,7 +309,7 @@ func (t *StationEndpoint) RestoreMyStationsByIds(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) DeleteMyStationById(ctx *gin.Context) {
-	request := &core.Request[stationsdto.DeleteMyStationByIdRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.DeleteMyStationByIdRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -318,9 +318,9 @@ func (t *StationEndpoint) DeleteMyStationById(ctx *gin.Context) {
 	responseDto, exception := t.stationService.DeleteMyStationById(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -330,9 +330,9 @@ func (t *StationEndpoint) DeleteMyStationById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.DeleteMyStationByIdResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.DeleteMyStationByIdResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -341,7 +341,7 @@ func (t *StationEndpoint) DeleteMyStationById(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) DeleteMyStationsByIds(ctx *gin.Context) {
-	request := &core.Request[stationsdto.DeleteMyStationsByIdsRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.DeleteMyStationsByIdsRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -350,9 +350,9 @@ func (t *StationEndpoint) DeleteMyStationsByIds(ctx *gin.Context) {
 	responseDto, exception := t.stationService.DeleteMyStationsByIds(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -362,9 +362,9 @@ func (t *StationEndpoint) DeleteMyStationsByIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.DeleteMyStationsByIdsResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.DeleteMyStationsByIdsResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -373,7 +373,7 @@ func (t *StationEndpoint) DeleteMyStationsByIds(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) HardDeleteMyStationById(ctx *gin.Context) {
-	request := &core.Request[stationsdto.HardDeleteMyStationByIdRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.HardDeleteMyStationByIdRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -382,9 +382,9 @@ func (t *StationEndpoint) HardDeleteMyStationById(ctx *gin.Context) {
 	responseDto, exception := t.stationService.HardDeleteMyStationById(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -394,9 +394,9 @@ func (t *StationEndpoint) HardDeleteMyStationById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.HardDeleteMyStationByIdResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.HardDeleteMyStationByIdResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -405,7 +405,7 @@ func (t *StationEndpoint) HardDeleteMyStationById(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) HardDeleteMyStationsByIds(ctx *gin.Context) {
-	request := &core.Request[stationsdto.HardDeleteMyStationsByIdsRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.HardDeleteMyStationsByIdsRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -414,9 +414,9 @@ func (t *StationEndpoint) HardDeleteMyStationsByIds(ctx *gin.Context) {
 	responseDto, exception := t.stationService.HardDeleteMyStationsByIds(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -426,9 +426,9 @@ func (t *StationEndpoint) HardDeleteMyStationsByIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.HardDeleteMyStationsByIdsResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.HardDeleteMyStationsByIdsResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -437,7 +437,7 @@ func (t *StationEndpoint) HardDeleteMyStationsByIds(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) VisualizeMyTotalCount(ctx *gin.Context) {
-	request := &core.Request[stationsdto.VisualizeMyTotalCountRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.VisualizeMyTotalCountRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -446,9 +446,9 @@ func (t *StationEndpoint) VisualizeMyTotalCount(ctx *gin.Context) {
 	responseDto, exception := t.stationService.VisualizeMyTotalCount(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -458,9 +458,9 @@ func (t *StationEndpoint) VisualizeMyTotalCount(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.VisualizeMyTotalCountResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.VisualizeMyTotalCountResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -469,7 +469,7 @@ func (t *StationEndpoint) VisualizeMyTotalCount(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) GetMyStationPermission(ctx *gin.Context) {
-	request := &core.Request[stationsdto.GetMyStationPermissionRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.GetMyStationPermissionRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -478,9 +478,9 @@ func (t *StationEndpoint) GetMyStationPermission(ctx *gin.Context) {
 	responseDto, exception := t.stationService.GetMyStationPermission(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -490,9 +490,9 @@ func (t *StationEndpoint) GetMyStationPermission(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.GetMyStationPermissionResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.GetMyStationPermissionResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -501,7 +501,7 @@ func (t *StationEndpoint) GetMyStationPermission(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) CreateMyStationPermission(ctx *gin.Context) {
-	request := &core.Request[stationsdto.CreateMyStationPermissionRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.CreateMyStationPermissionRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -510,9 +510,9 @@ func (t *StationEndpoint) CreateMyStationPermission(ctx *gin.Context) {
 	responseDto, exception := t.stationService.CreateMyStationPermission(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -522,9 +522,9 @@ func (t *StationEndpoint) CreateMyStationPermission(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.CreateMyStationPermissionResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.CreateMyStationPermissionResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -533,7 +533,7 @@ func (t *StationEndpoint) CreateMyStationPermission(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) UpsertMyStationPermission(ctx *gin.Context) {
-	request := &core.Request[stationsdto.UpsertMyStationPermissionRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.UpsertMyStationPermissionRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -542,9 +542,9 @@ func (t *StationEndpoint) UpsertMyStationPermission(ctx *gin.Context) {
 	responseDto, exception := t.stationService.UpsertMyStationPermission(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -554,9 +554,9 @@ func (t *StationEndpoint) UpsertMyStationPermission(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.UpsertMyStationPermissionResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.UpsertMyStationPermissionResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -565,7 +565,7 @@ func (t *StationEndpoint) UpsertMyStationPermission(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) UpsertMyStationPermissions(ctx *gin.Context) {
-	request := &core.Request[stationsdto.UpsertMyStationPermissionsRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.UpsertMyStationPermissionsRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -574,9 +574,9 @@ func (t *StationEndpoint) UpsertMyStationPermissions(ctx *gin.Context) {
 	responseDto, exception := t.stationService.UpsertMyStationPermissions(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -586,9 +586,9 @@ func (t *StationEndpoint) UpsertMyStationPermissions(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.UpsertMyStationPermissionsResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.UpsertMyStationPermissionsResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -597,7 +597,7 @@ func (t *StationEndpoint) UpsertMyStationPermissions(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) UpdateMyStationPermission(ctx *gin.Context) {
-	request := &core.Request[stationsdto.UpdateMyStationPermissionRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.UpdateMyStationPermissionRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -606,9 +606,9 @@ func (t *StationEndpoint) UpdateMyStationPermission(ctx *gin.Context) {
 	responseDto, exception := t.stationService.UpdateMyStationPermission(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -618,9 +618,9 @@ func (t *StationEndpoint) UpdateMyStationPermission(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.UpdateMyStationPermissionResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.UpdateMyStationPermissionResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -629,7 +629,7 @@ func (t *StationEndpoint) UpdateMyStationPermission(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) TransferMyStationOwnership(ctx *gin.Context) {
-	request := &core.Request[stationsdto.TransferMyStationOwnershipRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.TransferMyStationOwnershipRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -638,9 +638,9 @@ func (t *StationEndpoint) TransferMyStationOwnership(ctx *gin.Context) {
 	responseDto, exception := t.stationService.TransferMyStationOwnership(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -650,9 +650,9 @@ func (t *StationEndpoint) TransferMyStationOwnership(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.TransferMyStationOwnershipResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.TransferMyStationOwnershipResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -661,7 +661,7 @@ func (t *StationEndpoint) TransferMyStationOwnership(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) DeleteMyStationPermission(ctx *gin.Context) {
-	request := &core.Request[stationsdto.DeleteMyStationPermissionRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.DeleteMyStationPermissionRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -670,9 +670,9 @@ func (t *StationEndpoint) DeleteMyStationPermission(ctx *gin.Context) {
 	responseDto, exception := t.stationService.DeleteMyStationPermission(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -682,9 +682,9 @@ func (t *StationEndpoint) DeleteMyStationPermission(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.DeleteMyStationPermissionResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.DeleteMyStationPermissionResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -693,7 +693,7 @@ func (t *StationEndpoint) DeleteMyStationPermission(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) DeleteMyStationPermissions(ctx *gin.Context) {
-	request := &core.Request[stationsdto.DeleteMyStationPermissionsRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.DeleteMyStationPermissionsRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -702,9 +702,9 @@ func (t *StationEndpoint) DeleteMyStationPermissions(ctx *gin.Context) {
 	responseDto, exception := t.stationService.DeleteMyStationPermissions(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -714,9 +714,9 @@ func (t *StationEndpoint) DeleteMyStationPermissions(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.DeleteMyStationPermissionsResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.DeleteMyStationPermissionsResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -725,16 +725,16 @@ func (t *StationEndpoint) DeleteMyStationPermissions(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) LeaveMyStation(ctx *gin.Context) {
-	request := &core.Request[stationsdto.LeaveMyStationRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.LeaveMyStationRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 	if exception := t.stationService.LeaveMyStation(ctx.Request.Context(), &request.Dto); exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -744,9 +744,9 @@ func (t *StationEndpoint) LeaveMyStation(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.LeaveMyStationResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.LeaveMyStationResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -755,16 +755,16 @@ func (t *StationEndpoint) LeaveMyStation(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) LeaveMyStations(ctx *gin.Context) {
-	request := &core.Request[stationsdto.LeaveMyStationsRequestDto]{}
+	request := &gatewaycontract.Request[stationsdto.LeaveMyStationsRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 	if exception := t.stationService.LeaveMyStations(ctx.Request.Context(), &request.Dto); exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -774,9 +774,9 @@ func (t *StationEndpoint) LeaveMyStations(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[stationsdto.LeaveMyStationsResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.LeaveMyStationsResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},

@@ -3,9 +3,11 @@ package handlers
 import (
 	"context"
 
+	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	typescontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/inputs"
 	options "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/options"
@@ -14,11 +16,11 @@ import (
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas/enums"
 	matchers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers/matchers"
 	resolvers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers/resolvers"
-	payloads "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/payloads"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type RoutineHandler struct {
+	validator            *validator.Validate
 	db                   *gorm.DB
 	patternResolver      resolvers.PatternResolverInterface
 	templateBlockMatcher matchers.TemplateBlockMatcherInterface
@@ -26,6 +28,7 @@ type RoutineHandler struct {
 }
 
 func NewRoutineHandler(
+	validator *validator.Validate,
 	db *gorm.DB,
 	patternResolver resolvers.PatternResolverInterface,
 	templateBlockMatcher matchers.TemplateBlockMatcherInterface,
@@ -38,6 +41,7 @@ func NewRoutineHandler(
 		templateBlockMatcher = matchers.NewTemplateBlockMatcher()
 	}
 	return RoutineHandler{
+		validator:            validator,
 		db:                   db,
 		patternResolver:      patternResolver,
 		templateBlockMatcher: templateBlockMatcher,
@@ -55,8 +59,8 @@ func (h RoutineHandler) HandleCreateRoutine(
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
 	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
-	candidatePayloads := make([]payloads.CreateRoutineRoutineTaskPayload, 0, len(tasks))
-	candidatePatterns := make([]payloads.RoutineTaskPattern, 0, len(tasks))
+	candidatePayloads := make([]typescontract.CreateRoutineRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]typescontract.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		actorUserId, exists := taskIdToActorUserId[task.Id]
@@ -64,7 +68,7 @@ func (h RoutineHandler) HandleCreateRoutine(
 			continue
 		}
 
-		payload, exception := decodePayload[payloads.CreateRoutineRoutineTaskPayload](task)
+		payload, exception := decodePayload[typescontract.CreateRoutineRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}
@@ -104,11 +108,11 @@ func (h RoutineHandler) HandleCreateRoutine(
 			StationId:        payload.StationId,
 			Title:            title,
 			Description:      description,
-			Status:           payload.Status,
+			Status:           (*enums.RoutineStatus)(payload.Status),
 			IsPinned:         payload.IsPinned,
 			ScheduledStartAt: payload.ScheduledStartAt,
 			ScheduledEndAt:   payload.ScheduledEndAt,
-			Period:           payload.Period,
+			Period:           (*enums.RoutinePeriod)(payload.Period),
 			Timezone:         payload.Timezone,
 		})
 		taskIndexes = append(taskIndexes, candidateTaskIndexes[candidateIndex])
@@ -145,8 +149,8 @@ func (h RoutineHandler) HandleUpdateRoutine(
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
 	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
-	candidatePayloads := make([]payloads.UpdateRoutineRoutineTaskPayload, 0, len(tasks))
-	candidatePatterns := make([]payloads.RoutineTaskPattern, 0, len(tasks))
+	candidatePayloads := make([]typescontract.UpdateRoutineRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]typescontract.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		actorUserId, exists := taskIdToActorUserId[task.Id]
@@ -154,7 +158,7 @@ func (h RoutineHandler) HandleUpdateRoutine(
 			continue
 		}
 
-		payload, exception := decodePayload[payloads.UpdateRoutineRoutineTaskPayload](task)
+		payload, exception := decodePayload[typescontract.UpdateRoutineRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}
@@ -203,11 +207,11 @@ func (h RoutineHandler) HandleUpdateRoutine(
 				Values: inputs.UpdateRoutineInput{
 					Title:            title,
 					Description:      description,
-					Status:           payload.Status,
+					Status:           (*enums.RoutineStatus)(payload.Status),
 					IsPinned:         payload.IsPinned,
 					ScheduledStartAt: payload.ScheduledStartAt,
 					ScheduledEndAt:   payload.ScheduledEndAt,
-					Period:           payload.Period,
+					Period:           (*enums.RoutinePeriod)(payload.Period),
 					Timezone:         payload.Timezone,
 				},
 			},

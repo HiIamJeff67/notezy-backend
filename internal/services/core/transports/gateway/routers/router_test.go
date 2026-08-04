@@ -9,11 +9,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
-	rootshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/root-shelves"
-	stationsdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/stations"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	rootshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/root-shelves"
+	stationsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/stations"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/internal/shared/tokens"
+	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 )
 
 func TestRouterValidatesRootShelfEnvelopeBeforeCallingService(t *testing.T) {
@@ -122,10 +122,10 @@ func TestRouterRejectsDelegationForAnotherOperation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("issue delegation token: %v", err)
 	}
-	requestBody, err := json.Marshal(core.Request[struct{}]{
-		Version:   core.Version,
+	requestBody, err := json.Marshal(gatewaycontract.Request[struct{}]{
+		Version:   gatewaycontract.Version,
 		Operation: rootshelvesdto.GetMyRootShelfByIdOperation,
-		Metadata: core.RequestMetadata{
+		Metadata: gatewaycontract.RequestMetadata{
 			RequestId: "request-id",
 		},
 		Dto: struct{}{},

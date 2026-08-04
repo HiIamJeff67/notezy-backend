@@ -139,9 +139,9 @@
   - `infra/nginx/default.dev.conf`: HTTP reverse proxy to `notezy-api:7777`.
   - `infra/nginx/default.prod.conf`: HTTPS termination + redirect + proxy headers.
 - **GraphQL Artifacts**
-  - Schemas: `contracts/graphql/schemas/**/*.graphql`.
+  - Schemas: `contracts/core/v1/graphql/schemas/**/*.graphql`.
   - Generator config: `infra/graphql/gqlgen.yaml`.
-  - Generated outputs: `contracts/graphql/generated/*_generated.go`, `contracts/graphql/models/models_gen.go`.
+  - Generated outputs: `contracts/core/v1/graphql/generated/*_generated.go`, `contracts/core/v1/graphql/models/models_gen.go`.
 - **Observability (LGTM + OTEL)**
   - Collector: `infra/monitor/otel-collector-config.dev.yaml`.
   - Loki/Tempo/Mimir configs: `infra/monitor/*.yaml`.

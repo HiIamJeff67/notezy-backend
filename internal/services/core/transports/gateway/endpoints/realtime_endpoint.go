@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
-	realtimedto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/realtime"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	realtimedto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/realtime"
 	services "github.com/HiIamJeff67/notezy-backend/internal/services/core/services"
 )
 
@@ -30,7 +30,7 @@ func NewRealtimeEndpoint(
 }
 
 func (t *RealtimeEndpoint) GetMyBlockPackRealtimeParticipants(ctx *gin.Context) {
-	request := &core.Request[realtimedto.GetMyBlockPackRealtimeParticipantsRequestDto]{}
+	request := &gatewaycontract.Request[realtimedto.GetMyBlockPackRealtimeParticipantsRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -39,9 +39,9 @@ func (t *RealtimeEndpoint) GetMyBlockPackRealtimeParticipants(ctx *gin.Context) 
 	responseDto, exception := t.realtimeService.GetMyBlockPackRealtimeParticipants(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -51,9 +51,9 @@ func (t *RealtimeEndpoint) GetMyBlockPackRealtimeParticipants(ctx *gin.Context) 
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[realtimedto.GetMyBlockPackRealtimeParticipantsResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[realtimedto.GetMyBlockPackRealtimeParticipantsResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -62,7 +62,7 @@ func (t *RealtimeEndpoint) GetMyBlockPackRealtimeParticipants(ctx *gin.Context) 
 }
 
 func (t *RealtimeEndpoint) CreateMyRealtimeConnectionTicket(ctx *gin.Context) {
-	request := &core.Request[realtimedto.CreateMyRealtimeConnectionTicketRequestDto]{}
+	request := &gatewaycontract.Request[realtimedto.CreateMyRealtimeConnectionTicketRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -71,9 +71,9 @@ func (t *RealtimeEndpoint) CreateMyRealtimeConnectionTicket(ctx *gin.Context) {
 	responseDto, exception := t.realtimeService.CreateMyRealtimeConnectionTicket(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -83,9 +83,9 @@ func (t *RealtimeEndpoint) CreateMyRealtimeConnectionTicket(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[realtimedto.CreateMyRealtimeConnectionTicketResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[realtimedto.CreateMyRealtimeConnectionTicketResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -94,7 +94,7 @@ func (t *RealtimeEndpoint) CreateMyRealtimeConnectionTicket(ctx *gin.Context) {
 }
 
 func (t *RealtimeEndpoint) CreateMyBlockPackChannelTicket(ctx *gin.Context) {
-	request := &core.Request[realtimedto.CreateMyBlockPackChannelTicketRequestDto]{}
+	request := &gatewaycontract.Request[realtimedto.CreateMyBlockPackChannelTicketRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -103,9 +103,9 @@ func (t *RealtimeEndpoint) CreateMyBlockPackChannelTicket(ctx *gin.Context) {
 	responseDto, exception := t.realtimeService.CreateMyBlockPackChannelTicket(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -115,9 +115,9 @@ func (t *RealtimeEndpoint) CreateMyBlockPackChannelTicket(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[realtimedto.CreateMyBlockPackChannelTicketResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[realtimedto.CreateMyBlockPackChannelTicketResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},

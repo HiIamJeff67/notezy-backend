@@ -36,7 +36,7 @@ station, permission, exception := s.stationRepository.CheckPermissionAndGetOneBy
 ## 命名與型別
 
 - exported type/function 使用 `PascalCase`；未匯出識別字使用 `camelCase`；縮寫沿用 Go 慣例，如 `Id`、`Url`、`Db` 的專案既有寫法，不在同一領域混用兩種拼法。
-- 版本化 transport DTO 使用完整 `XxxRequestDto`、`XxxResponseDto`；資料庫寫入資料使用 `XxxInput`；資料庫 table 使用 `schemas.Xxx`。`core.Request[Dto]` 與 `core.Response[Dto]` 是 Gateway 與 Core service 的 transport envelope，DTO 才是操作資料單位。
+- 版本化 transport DTO 使用完整 `XxxRequestDto`、`XxxResponseDto`；資料庫寫入資料使用 `XxxInput`；資料庫 table 使用 `schemas.Xxx`。`gatewaycontract.Request[Dto]` 與 `gatewaycontract.Response[Dto]` 是 Gateway 與 Core service 的 transport envelope，DTO 才是操作資料單位。
 - 新功能以領域名對齊檔案、transport controller、adapter、service、repository、scope，例如 `station_*`。
 - interface 僅在呼叫端需要替換實作、邊界已存在或測試確有必要時建立。新 interface 以 `XxxInterface` 對齊現有程式；不要為單一 struct 預先抽象。
 
@@ -121,9 +121,9 @@ result := tx.Exec(sql, valueArgs...)
 
 ## 共用函式庫
 
-- 新增 helper 前，先檢查 [internal/shared/lib](../../internal/shared/lib/) 是否已有可直接使用的函式庫。已有相同責任的實作時必須重用，不能在 service/repository 複製一份。
-- 依問題選用既有 package：去重/set 使用 `internal/shared/lib/array`，游標分頁使用 `internal/shared/lib/searchcursor`，併發工作使用 `internal/shared/lib/concurrency`，佇列與堆疊使用 `internal/shared/lib/queue`、`internal/shared/lib/stack`，以及其他已存在的 blocknote、editableblock 函式庫。跨 runtime 的 HTTP response formatting 與 public exception rendering 使用 `internal/shared/responsewriter`；rate limit 仍由各 Gateway runtime 自己持有。
-- `internal/shared/lib` 僅放跨領域、可重用且與 application layer 無關的邏輯。它不可 import Notezy project code；必要的第三方 library 可以使用。僅由單一領域使用的商業規則留在該領域，不要為了「可能重用」移入 shared。
+- 新增 helper 前，先檢查 [shared/lib](../../shared/lib/) 是否已有可直接使用的函式庫。已有相同責任的實作時必須重用，不能在 service/repository 複製一份。
+- 依問題選用既有 package：去重/set 使用 `shared/lib/array`，游標分頁使用 `shared/lib/searchcursor`，併發工作使用 `shared/lib/concurrency`，佇列與堆疊使用 `shared/lib/queue`、`shared/lib/stack`，以及其他已存在的 blocknote 函式庫。EditableBlock tree 的扁平化使用 `shared/editableblock.FlattenEditableBlock(s)`。跨 runtime 的 HTTP response formatting 與 public exception rendering 使用 `shared/responsewriter`；rate limit 仍由各 Gateway runtime 自己持有。
+- `shared/lib` 僅放跨領域、可重用且與 application layer 無關的邏輯。它不可 import Notezy project code；必要的第三方 library 可以使用。僅由單一領域使用的商業規則留在該領域，不要為了「可能重用」移入 shared。
 - 若既有 library 接近但不完全符合需求，優先在該 library 補最小且通用的能力；若需求只屬於單一領域，使用領域內的小 helper，避免為一次性需求建立新的 shared package。
 
 ## 變更範圍

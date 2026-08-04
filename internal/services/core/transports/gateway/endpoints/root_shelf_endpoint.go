@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
-	rootshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/root-shelves"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	rootshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/root-shelves"
 	services "github.com/HiIamJeff67/notezy-backend/internal/services/core/services"
 )
 
@@ -51,7 +51,7 @@ func NewRootShelfEndpoint(
 /* ============================== RootShelf Endpoint Methods ============================== */
 
 func (t *RootShelfEndpoint) GetMyRootShelfById(ctx *gin.Context) {
-	request := &core.Request[rootshelvesdto.GetMyRootShelfByIdRequestDto]{}
+	request := &gatewaycontract.Request[rootshelvesdto.GetMyRootShelfByIdRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -60,9 +60,9 @@ func (t *RootShelfEndpoint) GetMyRootShelfById(ctx *gin.Context) {
 	responseDto, exception := t.rootShelfService.GetMyRootShelfById(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -72,9 +72,9 @@ func (t *RootShelfEndpoint) GetMyRootShelfById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[rootshelvesdto.GetMyRootShelfByIdResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[rootshelvesdto.GetMyRootShelfByIdResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -83,7 +83,7 @@ func (t *RootShelfEndpoint) GetMyRootShelfById(ctx *gin.Context) {
 }
 
 func (t *RootShelfEndpoint) CreateRootShelf(ctx *gin.Context) {
-	request := &core.Request[rootshelvesdto.CreateRootShelfRequestDto]{}
+	request := &gatewaycontract.Request[rootshelvesdto.CreateRootShelfRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -92,9 +92,9 @@ func (t *RootShelfEndpoint) CreateRootShelf(ctx *gin.Context) {
 	responseDto, exception := t.rootShelfService.CreateRootShelf(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -104,9 +104,9 @@ func (t *RootShelfEndpoint) CreateRootShelf(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[rootshelvesdto.CreateRootShelfResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[rootshelvesdto.CreateRootShelfResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -115,7 +115,7 @@ func (t *RootShelfEndpoint) CreateRootShelf(ctx *gin.Context) {
 }
 
 func (t *RootShelfEndpoint) CreateRootShelves(ctx *gin.Context) {
-	request := &core.Request[rootshelvesdto.CreateRootShelvesRequestDto]{}
+	request := &gatewaycontract.Request[rootshelvesdto.CreateRootShelvesRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -124,9 +124,9 @@ func (t *RootShelfEndpoint) CreateRootShelves(ctx *gin.Context) {
 	responseDto, exception := t.rootShelfService.CreateRootShelves(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -136,9 +136,9 @@ func (t *RootShelfEndpoint) CreateRootShelves(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[rootshelvesdto.CreateRootShelvesResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[rootshelvesdto.CreateRootShelvesResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -147,7 +147,7 @@ func (t *RootShelfEndpoint) CreateRootShelves(ctx *gin.Context) {
 }
 
 func (t *RootShelfEndpoint) UpdateMyRootShelfById(ctx *gin.Context) {
-	request := &core.Request[rootshelvesdto.UpdateMyRootShelfByIdRequestDto]{}
+	request := &gatewaycontract.Request[rootshelvesdto.UpdateMyRootShelfByIdRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -156,9 +156,9 @@ func (t *RootShelfEndpoint) UpdateMyRootShelfById(ctx *gin.Context) {
 	responseDto, exception := t.rootShelfService.UpdateMyRootShelfById(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -168,9 +168,9 @@ func (t *RootShelfEndpoint) UpdateMyRootShelfById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[rootshelvesdto.UpdateMyRootShelfByIdResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[rootshelvesdto.UpdateMyRootShelfByIdResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -179,7 +179,7 @@ func (t *RootShelfEndpoint) UpdateMyRootShelfById(ctx *gin.Context) {
 }
 
 func (t *RootShelfEndpoint) UpdateMyRootShelvesByIds(ctx *gin.Context) {
-	request := &core.Request[rootshelvesdto.UpdateMyRootShelvesByIdsRequestDto]{}
+	request := &gatewaycontract.Request[rootshelvesdto.UpdateMyRootShelvesByIdsRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -188,9 +188,9 @@ func (t *RootShelfEndpoint) UpdateMyRootShelvesByIds(ctx *gin.Context) {
 	responseDto, exception := t.rootShelfService.UpdateMyRootShelvesByIds(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -200,9 +200,9 @@ func (t *RootShelfEndpoint) UpdateMyRootShelvesByIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[rootshelvesdto.UpdateMyRootShelvesByIdsResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[rootshelvesdto.UpdateMyRootShelvesByIdsResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -211,7 +211,7 @@ func (t *RootShelfEndpoint) UpdateMyRootShelvesByIds(ctx *gin.Context) {
 }
 
 func (t *RootShelfEndpoint) RestoreMyRootShelfById(ctx *gin.Context) {
-	request := &core.Request[rootshelvesdto.RestoreMyRootShelfByIdRequestDto]{}
+	request := &gatewaycontract.Request[rootshelvesdto.RestoreMyRootShelfByIdRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -220,9 +220,9 @@ func (t *RootShelfEndpoint) RestoreMyRootShelfById(ctx *gin.Context) {
 	responseDto, exception := t.rootShelfService.RestoreMyRootShelfById(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -232,9 +232,9 @@ func (t *RootShelfEndpoint) RestoreMyRootShelfById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[rootshelvesdto.RestoreMyRootShelfByIdResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[rootshelvesdto.RestoreMyRootShelfByIdResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -243,7 +243,7 @@ func (t *RootShelfEndpoint) RestoreMyRootShelfById(ctx *gin.Context) {
 }
 
 func (t *RootShelfEndpoint) RestoreMyRootShelvesByIds(ctx *gin.Context) {
-	request := &core.Request[rootshelvesdto.RestoreMyRootShelvesByIdsRequestDto]{}
+	request := &gatewaycontract.Request[rootshelvesdto.RestoreMyRootShelvesByIdsRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -252,9 +252,9 @@ func (t *RootShelfEndpoint) RestoreMyRootShelvesByIds(ctx *gin.Context) {
 	responseDto, exception := t.rootShelfService.RestoreMyRootShelvesByIds(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -264,9 +264,9 @@ func (t *RootShelfEndpoint) RestoreMyRootShelvesByIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[rootshelvesdto.RestoreMyRootShelvesByIdsResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[rootshelvesdto.RestoreMyRootShelvesByIdsResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -275,7 +275,7 @@ func (t *RootShelfEndpoint) RestoreMyRootShelvesByIds(ctx *gin.Context) {
 }
 
 func (t *RootShelfEndpoint) DeleteMyRootShelfById(ctx *gin.Context) {
-	request := &core.Request[rootshelvesdto.DeleteMyRootShelfByIdRequestDto]{}
+	request := &gatewaycontract.Request[rootshelvesdto.DeleteMyRootShelfByIdRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -284,9 +284,9 @@ func (t *RootShelfEndpoint) DeleteMyRootShelfById(ctx *gin.Context) {
 	responseDto, exception := t.rootShelfService.DeleteMyRootShelfById(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -296,9 +296,9 @@ func (t *RootShelfEndpoint) DeleteMyRootShelfById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[rootshelvesdto.DeleteMyRootShelfByIdResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[rootshelvesdto.DeleteMyRootShelfByIdResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -307,7 +307,7 @@ func (t *RootShelfEndpoint) DeleteMyRootShelfById(ctx *gin.Context) {
 }
 
 func (t *RootShelfEndpoint) DeleteMyRootShelvesByIds(ctx *gin.Context) {
-	request := &core.Request[rootshelvesdto.DeleteMyRootShelvesByIdsRequestDto]{}
+	request := &gatewaycontract.Request[rootshelvesdto.DeleteMyRootShelvesByIdsRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -316,9 +316,9 @@ func (t *RootShelfEndpoint) DeleteMyRootShelvesByIds(ctx *gin.Context) {
 	responseDto, exception := t.rootShelfService.DeleteMyRootShelvesByIds(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -328,9 +328,9 @@ func (t *RootShelfEndpoint) DeleteMyRootShelvesByIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[rootshelvesdto.DeleteMyRootShelvesByIdsResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[rootshelvesdto.DeleteMyRootShelvesByIdsResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -339,7 +339,7 @@ func (t *RootShelfEndpoint) DeleteMyRootShelvesByIds(ctx *gin.Context) {
 }
 
 func (t *RootShelfEndpoint) GetMyRootShelfPermission(ctx *gin.Context) {
-	request := &core.Request[rootshelvesdto.GetMyRootShelfPermissionRequestDto]{}
+	request := &gatewaycontract.Request[rootshelvesdto.GetMyRootShelfPermissionRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -348,9 +348,9 @@ func (t *RootShelfEndpoint) GetMyRootShelfPermission(ctx *gin.Context) {
 	responseDto, exception := t.rootShelfService.GetMyRootShelfPermission(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -360,15 +360,15 @@ func (t *RootShelfEndpoint) GetMyRootShelfPermission(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[rootshelvesdto.GetMyRootShelfPermissionResponseDto]{
-		Version:  core.Version,
-		Metadata: core.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()},
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[rootshelvesdto.GetMyRootShelfPermissionResponseDto]{
+		Version:  gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()},
 		Data:     *responseDto,
 	})
 }
 
 func (t *RootShelfEndpoint) CreateMyRootShelfPermission(ctx *gin.Context) {
-	request := &core.Request[rootshelvesdto.CreateMyRootShelfPermissionRequestDto]{}
+	request := &gatewaycontract.Request[rootshelvesdto.CreateMyRootShelfPermissionRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -377,9 +377,9 @@ func (t *RootShelfEndpoint) CreateMyRootShelfPermission(ctx *gin.Context) {
 	responseDto, exception := t.rootShelfService.CreateMyRootShelfPermission(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -389,11 +389,11 @@ func (t *RootShelfEndpoint) CreateMyRootShelfPermission(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[rootshelvesdto.CreateMyRootShelfPermissionResponseDto]{Version: core.Version, Metadata: core.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[rootshelvesdto.CreateMyRootShelfPermissionResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RootShelfEndpoint) UpsertMyRootShelfPermission(ctx *gin.Context) {
-	request := &core.Request[rootshelvesdto.UpsertMyRootShelfPermissionRequestDto]{}
+	request := &gatewaycontract.Request[rootshelvesdto.UpsertMyRootShelfPermissionRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -402,9 +402,9 @@ func (t *RootShelfEndpoint) UpsertMyRootShelfPermission(ctx *gin.Context) {
 	responseDto, exception := t.rootShelfService.UpsertMyRootShelfPermission(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -414,11 +414,11 @@ func (t *RootShelfEndpoint) UpsertMyRootShelfPermission(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[rootshelvesdto.UpsertMyRootShelfPermissionResponseDto]{Version: core.Version, Metadata: core.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[rootshelvesdto.UpsertMyRootShelfPermissionResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RootShelfEndpoint) UpsertMyRootShelfPermissions(ctx *gin.Context) {
-	request := &core.Request[rootshelvesdto.UpsertMyRootShelfPermissionsRequestDto]{}
+	request := &gatewaycontract.Request[rootshelvesdto.UpsertMyRootShelfPermissionsRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -427,9 +427,9 @@ func (t *RootShelfEndpoint) UpsertMyRootShelfPermissions(ctx *gin.Context) {
 	responseDto, exception := t.rootShelfService.UpsertMyRootShelfPermissions(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -439,9 +439,9 @@ func (t *RootShelfEndpoint) UpsertMyRootShelfPermissions(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[rootshelvesdto.UpsertMyRootShelfPermissionsResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[rootshelvesdto.UpsertMyRootShelfPermissionsResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -450,7 +450,7 @@ func (t *RootShelfEndpoint) UpsertMyRootShelfPermissions(ctx *gin.Context) {
 }
 
 func (t *RootShelfEndpoint) UpdateMyRootShelfPermission(ctx *gin.Context) {
-	request := &core.Request[rootshelvesdto.UpdateMyRootShelfPermissionRequestDto]{}
+	request := &gatewaycontract.Request[rootshelvesdto.UpdateMyRootShelfPermissionRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -459,9 +459,9 @@ func (t *RootShelfEndpoint) UpdateMyRootShelfPermission(ctx *gin.Context) {
 	responseDto, exception := t.rootShelfService.UpdateMyRootShelfPermission(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -471,11 +471,11 @@ func (t *RootShelfEndpoint) UpdateMyRootShelfPermission(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[rootshelvesdto.UpdateMyRootShelfPermissionResponseDto]{Version: core.Version, Metadata: core.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[rootshelvesdto.UpdateMyRootShelfPermissionResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RootShelfEndpoint) TransferMyRootShelfOwnership(ctx *gin.Context) {
-	request := &core.Request[rootshelvesdto.TransferMyRootShelfOwnershipRequestDto]{}
+	request := &gatewaycontract.Request[rootshelvesdto.TransferMyRootShelfOwnershipRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -484,9 +484,9 @@ func (t *RootShelfEndpoint) TransferMyRootShelfOwnership(ctx *gin.Context) {
 	responseDto, exception := t.rootShelfService.TransferMyRootShelfOwnership(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -496,9 +496,9 @@ func (t *RootShelfEndpoint) TransferMyRootShelfOwnership(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[rootshelvesdto.TransferMyRootShelfOwnershipResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[rootshelvesdto.TransferMyRootShelfOwnershipResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -507,7 +507,7 @@ func (t *RootShelfEndpoint) TransferMyRootShelfOwnership(ctx *gin.Context) {
 }
 
 func (t *RootShelfEndpoint) DeleteMyRootShelfPermission(ctx *gin.Context) {
-	request := &core.Request[rootshelvesdto.DeleteMyRootShelfPermissionRequestDto]{}
+	request := &gatewaycontract.Request[rootshelvesdto.DeleteMyRootShelfPermissionRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -516,9 +516,9 @@ func (t *RootShelfEndpoint) DeleteMyRootShelfPermission(ctx *gin.Context) {
 	responseDto, exception := t.rootShelfService.DeleteMyRootShelfPermission(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -528,15 +528,15 @@ func (t *RootShelfEndpoint) DeleteMyRootShelfPermission(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[rootshelvesdto.DeleteMyRootShelfPermissionResponseDto]{
-		Version:  core.Version,
-		Metadata: core.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()},
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[rootshelvesdto.DeleteMyRootShelfPermissionResponseDto]{
+		Version:  gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()},
 		Data:     *responseDto,
 	})
 }
 
 func (t *RootShelfEndpoint) DeleteMyRootShelfPermissions(ctx *gin.Context) {
-	request := &core.Request[rootshelvesdto.DeleteMyRootShelfPermissionsRequestDto]{}
+	request := &gatewaycontract.Request[rootshelvesdto.DeleteMyRootShelfPermissionsRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -545,9 +545,9 @@ func (t *RootShelfEndpoint) DeleteMyRootShelfPermissions(ctx *gin.Context) {
 	responseDto, exception := t.rootShelfService.DeleteMyRootShelfPermissions(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -557,9 +557,9 @@ func (t *RootShelfEndpoint) DeleteMyRootShelfPermissions(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[rootshelvesdto.DeleteMyRootShelfPermissionsResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[rootshelvesdto.DeleteMyRootShelfPermissionsResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -568,16 +568,16 @@ func (t *RootShelfEndpoint) DeleteMyRootShelfPermissions(ctx *gin.Context) {
 }
 
 func (t *RootShelfEndpoint) LeaveMyRootShelf(ctx *gin.Context) {
-	request := &core.Request[rootshelvesdto.LeaveMyRootShelfRequestDto]{}
+	request := &gatewaycontract.Request[rootshelvesdto.LeaveMyRootShelfRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 	if exception := t.rootShelfService.LeaveMyRootShelf(ctx.Request.Context(), &request.Dto); exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -587,9 +587,9 @@ func (t *RootShelfEndpoint) LeaveMyRootShelf(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[rootshelvesdto.LeaveMyRootShelfResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[rootshelvesdto.LeaveMyRootShelfResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -598,16 +598,16 @@ func (t *RootShelfEndpoint) LeaveMyRootShelf(ctx *gin.Context) {
 }
 
 func (t *RootShelfEndpoint) LeaveMyRootShelves(ctx *gin.Context) {
-	request := &core.Request[rootshelvesdto.LeaveMyRootShelvesRequestDto]{}
+	request := &gatewaycontract.Request[rootshelvesdto.LeaveMyRootShelvesRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 	if exception := t.rootShelfService.LeaveMyRootShelves(ctx.Request.Context(), &request.Dto); exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -617,9 +617,9 @@ func (t *RootShelfEndpoint) LeaveMyRootShelves(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[rootshelvesdto.LeaveMyRootShelvesResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[rootshelvesdto.LeaveMyRootShelvesResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},

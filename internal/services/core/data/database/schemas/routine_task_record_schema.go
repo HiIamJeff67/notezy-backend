@@ -5,9 +5,10 @@ import (
 
 	"github.com/google/uuid"
 
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type RoutineTaskRecord struct {
@@ -42,9 +43,9 @@ func (rtr *RoutineTaskRecord) ToPrivateRoutineTaskRecord() *gqlmodels.PrivateRou
 	return &gqlmodels.PrivateRoutineTaskRecord{
 		ID:              rtr.Id,
 		RoutineTaskID:   rtr.RoutineTaskId,
-		Purpose:         rtr.Purpose,
-		Status:          rtr.Status,
-		ErrorCode:       rtr.ErrorCode,
+		Purpose:         enumcontract.RoutineTaskPurpose(rtr.Purpose),
+		Status:          enumcontract.RoutineTaskRecordStatus(rtr.Status),
+		ErrorCode:       (*enumcontract.RoutineTaskRecordErrorCode)(rtr.ErrorCode),
 		ErrorReason:     rtr.ErrorReason,
 		CostUnit:        rtr.CostUnit,
 		TotalAttempts:   rtr.TotalAttempts,

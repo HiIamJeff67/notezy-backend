@@ -7,7 +7,7 @@ import (
 	"github.com/go-redis/redis"
 
 	platformredis "github.com/HiIamJeff67/notezy-backend/internal/platform/redis"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 type RealtimeLeaseCacheStore struct {

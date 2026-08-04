@@ -34,11 +34,12 @@ component, optional authenticated public user subject, trace/request identity, a
 route-declared allowed permissions. Core verifies it, validates the forwarded
 browser credential, then resolves its own trusted identity before passing
 permissions to service/repository options. Browser JWTs and `context.Context` are
-not DTO fields or internal request payloads.
+not DTO fields or internal request types.
 
 The client-facing Gateway transport lives in
-`internal/gateway/transports/api/`. It owns routes, binders, controllers,
-cookies, client-only middlewares, and client-only interceptors.
+`internal/gateway/transports/api/`. It owns routes, binders, controllers, and
+client-only middlewares/interceptors. Reusable Gin cookie handlers live in
+`shared/cookies/`.
 `controller_func.go` defines the shared controller function type; binder packages
 must import it explicitly as `apitransport`.
 
@@ -69,13 +70,14 @@ method.
 - `cmd/*` may import `internal/*`.
 - Gateway client/API and Core-adapter transport code may import contracts, shared,
   platform, and its own code; it must not query Core data or import repositories/
-  GORM schemas. The WebSocket runtime calls Core only through its versioned
-  contract and Core client; it must not construct Core services or query Core
-  data directly.
+  GORM schemas. RealtimeGateway does not construct Core services, query Core
+  data, or synchronously call Core after ticket issuance; it communicates with
+  YjsWorker and receives Core lifecycle facts through Kafka.
 - A service may import contracts, shared, platform, and its own data. A service
   must not import another service source package.
-- `internal/shared` never imports exceptions or an application/framework package.
-  Portable `internal/shared/lib` never imports a Notezy package.
+- `shared` is the root-level cross-runtime utility layer. It may depend on
+  contracts and the minimum common application support it genuinely needs;
+  portable `shared/lib` never imports a Notezy package.
 - `internal/platform` owns infrastructure mechanics, not User/Shelf/Routine
   business rules.
 - Cross-runtime calls use a versioned contract and adapter/client. Core adapters
@@ -149,10 +151,10 @@ optional GraphQL/system-only methods
 
 GraphQL uses Scheme A: Gateway owns the executor, resolvers, and dataloaders.
 GraphQL source SDL/fragments/documents, generated Go code, scalars, and generated
-models live in `contracts/graphql`. Generated files are regenerated from source and
+models live in `contracts/core/v1/graphql`. Generated files are regenerated from source and
 never edited directly. GraphQL business
 RequestDto/ResponseDto live in the same
-`contracts/gateway/v1/api/<route-domain>/search.go`
+`contracts/core/v1/api/<route-domain>/search.go`
 as their owning Core service. Core exposes each GraphQL operation from that
 service's endpoint and router; never create a shared GraphQLEndpoint or a central
 Core GraphQL router.

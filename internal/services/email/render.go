@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	stringutil "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/stringutil"
+	stringutil "github.com/HiIamJeff67/notezy-backend/shared/lib/stringutil"
 )
 
 /* ==================== HTML Email Renderer ==================== */

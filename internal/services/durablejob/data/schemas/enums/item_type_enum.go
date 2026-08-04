@@ -5,13 +5,33 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type ItemType string
+type ItemType enumcontract.ItemType
+
+func (value *ItemType) ToContractable() *enumcontract.ItemType {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.ItemType(*value)
+	return &contractValue
+}
+
+func (value *ItemType) ToStorable() *ItemType {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	ItemType_BlockPack ItemType = "BlockPack"
-	ItemType_Material  ItemType = "Material"
+	ItemType_BlockPack ItemType = ItemType(enumcontract.ItemType_BlockPack)
+	ItemType_Material  ItemType = ItemType(enumcontract.ItemType_Material)
 )
 
 var AllItemTypes = []ItemType{

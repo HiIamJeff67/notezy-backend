@@ -4,7 +4,6 @@ import (
 	"time"
 
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
 )
 
 type UpdateUserDataCacheInput struct {
@@ -22,7 +21,7 @@ type UpdateUserDataCacheInput struct {
 }
 
 type CheckAndUpdateUserQuotaInput struct {
-	Field        types.UserQuotaField
+	Field        string
 	ChangeAmount int32
 	MaxLimit     int32
 	ExpiresIn    time.Time

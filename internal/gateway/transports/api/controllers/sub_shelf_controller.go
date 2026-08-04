@@ -5,9 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	subshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/sub-shelves"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
+	subshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/sub-shelves"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 type SubShelfControllerInterface interface {
@@ -50,7 +50,7 @@ func (c *SubShelfController) GetMySubShelfById(ctx *gin.Context, requestDto *sub
 		"/core/v1/sub-shelves/get-by-id",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -73,7 +73,7 @@ func (c *SubShelfController) GetMySubShelvesByPrevSubShelfId(ctx *gin.Context, r
 		"/core/v1/sub-shelves/get-by-prev-sub-shelf-id",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -96,7 +96,7 @@ func (c *SubShelfController) GetAllMySubShelvesByRootShelfId(ctx *gin.Context, r
 		"/core/v1/sub-shelves/get-all-by-root-shelf-id",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -119,7 +119,7 @@ func (c *SubShelfController) GetMySubShelvesAndItemsByPrevSubShelfId(ctx *gin.Co
 		"/core/v1/sub-shelves/get-and-items-by-prev-sub-shelf-id",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -142,7 +142,7 @@ func (c *SubShelfController) CreateSubShelfByRootShelfId(ctx *gin.Context, reque
 		"/core/v1/sub-shelves/create",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -165,7 +165,7 @@ func (c *SubShelfController) CreateSubShelvesByRootShelfIds(ctx *gin.Context, re
 		"/core/v1/sub-shelves/create-many",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -188,7 +188,7 @@ func (c *SubShelfController) UpdateMySubShelfById(ctx *gin.Context, requestDto *
 		"/core/v1/sub-shelves/update",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -211,7 +211,7 @@ func (c *SubShelfController) UpdateMySubShelvesByIds(ctx *gin.Context, requestDt
 		"/core/v1/sub-shelves/update-many",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -234,7 +234,7 @@ func (c *SubShelfController) MoveMySubShelfByRootShelfId(ctx *gin.Context, reque
 		"/core/v1/sub-shelves/move",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -257,7 +257,7 @@ func (c *SubShelfController) MoveMySubShelvesByRootShelfId(ctx *gin.Context, req
 		"/core/v1/sub-shelves/move-many",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -280,7 +280,7 @@ func (c *SubShelfController) MoveMySubShelvesByRootShelfIds(ctx *gin.Context, re
 		"/core/v1/sub-shelves/move-many-by-root-shelves",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -303,7 +303,7 @@ func (c *SubShelfController) RestoreMySubShelfById(ctx *gin.Context, requestDto 
 		"/core/v1/sub-shelves/restore",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -326,7 +326,7 @@ func (c *SubShelfController) RestoreMySubShelvesByIds(ctx *gin.Context, requestD
 		"/core/v1/sub-shelves/restore-many",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -349,7 +349,7 @@ func (c *SubShelfController) DeleteMySubShelfById(ctx *gin.Context, requestDto *
 		"/core/v1/sub-shelves/delete",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -372,7 +372,7 @@ func (c *SubShelfController) DeleteMySubShelvesByIds(ctx *gin.Context, requestDt
 		"/core/v1/sub-shelves/delete-many",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 

@@ -2,6 +2,7 @@ import { WebSocket } from "ws";
 import * as Y from "yjs";
 import { YjsCompactionUpdateThreshold } from "../constants/yjs_compaction.js";
 import { YjsPersistenceBatchShutdownTimeoutMilliseconds } from "../constants/yjs_persistence_batch.js";
+import { CoreCommandDispatcher } from "../kafka/core_command_dispatcher.js";
 import type { YjsCompactionService } from "../services/yjs_compaction_service.js";
 import type { Telemetry } from "../telemetry.js";
 import {
@@ -26,6 +27,7 @@ export class RealtimeGateway {
   private readonly roomRegistry: RoomRegistry;
   private readonly blockPackProjector: BlockPackProjector;
   private readonly yjsCompactionService: YjsCompactionService;
+  private readonly coreCommandDispatcher: CoreCommandDispatcher;
   private readonly webSockets = new Set<WebSocket>();
   private readonly yjsDebouncer: YjsDebouncer;
   private readonly telemetry: Telemetry;
@@ -33,12 +35,39 @@ export class RealtimeGateway {
   constructor(
     roomRegistry: RoomRegistry,
     yjsCompactionService: YjsCompactionService,
+    coreCommandDispatcher: CoreCommandDispatcher,
     telemetry: Telemetry
   ) {
     this.roomRegistry = roomRegistry;
     this.blockPackProjector = new BlockPackProjector();
     this.yjsCompactionService = yjsCompactionService;
-    this.yjsDebouncer = new YjsDebouncer(telemetry, this.resyncRoom.bind(this));
+    this.coreCommandDispatcher = coreCommandDispatcher;
+    this.yjsDebouncer = new YjsDebouncer(
+      telemetry,
+      this.resyncRoom.bind(this),
+      async (
+        blockPackId,
+        persistenceBatchId,
+        originConnectionId,
+        payload
+      ) => {
+        const response = await this.coreCommandDispatcher.dispatch<
+          {
+            persistenceBatchId: string;
+            originConnectionId: string | null;
+            payload: string;
+          },
+          { updateSequence: number }
+        >("AppendYjsUpdate", blockPackId, {
+          persistenceBatchId,
+          originConnectionId,
+          payload: payload.toString("base64"),
+        });
+
+        return response.updateSequence;
+      },
+      this.handleYjsUpdatePersisted.bind(this)
+    );
     this.telemetry = telemetry;
     this.telemetry.setRoomStateProvider(() => ({
       activeRooms: this.roomRegistry.size,
@@ -232,32 +261,36 @@ export class RealtimeGateway {
         connectorChannelId: subscriber.connectorChannelId,
         projectedSequence,
       };
-      if (subscriber.webSocket.readyState === WebSocket.OPEN) {
-        subscriber.webSocket.send(
-          createInternalFrame(
-            InternalFrameType.InternalFrameType_ApplyBlockProjection,
-            subscriber.connectionId,
-            subscriber.connectorChannelId,
-            blockPackId,
-            payload
-          )
-        );
+      void this.coreCommandDispatcher
+        .dispatch<{ projection: string }, { applied: boolean; projectedUntilSequence: number }>(
+          "ApplyBlockProjection",
+          blockPackId,
+          { projection: payload.toString("base64") }
+        )
+        .then(response => {
+          if (
+            room.inFlightProjection === null ||
+            response.projectedUntilSequence < projectedSequence ||
+            response.projectedUntilSequence > room.lastUpdateSequence
+          ) {
+            this.resyncRoom(room, blockPackId);
 
-        return;
-      }
+            return;
+          }
 
-      room.inFlightProjection = null;
-      this.scheduleBlockProjection(room, blockPackId, 1_000);
+          room.inFlightProjection = null;
+          room.projectedUntilSequence = response.projectedUntilSequence;
+          this.scheduleBlockProjection(room, blockPackId);
+          this.roomRegistry.scheduleRoomEviction(blockPackId);
+        })
+        .catch(() => {
+          room.inFlightProjection = null;
+          this.scheduleBlockProjection(room, blockPackId, 1_000);
+        });
     }, delayMilliseconds);
   }
 
-  private requestYjsCompaction(
-    room: Room,
-    webSocket: WebSocket,
-    connectionId: string,
-    connectorChannelId: number,
-    blockPackId: string
-  ): void {
+  private requestYjsCompaction(room: Room, blockPackId: string): void {
     if (
       room.document === null ||
       room.isCompacting ||
@@ -274,19 +307,114 @@ export class RealtimeGateway {
       return;
     }
 
-    if (webSocket.readyState !== WebSocket.OPEN) {
-      return;
-    }
-
-    webSocket.send(
-      createInternalFrame(
-        InternalFrameType.InternalFrameType_LoadCompactableYjsDocument,
-        connectionId,
-        connectorChannelId,
-        blockPackId
-      )
-    );
     room.isCompacting = true;
+    void this.coreCommandDispatcher
+      .dispatch<Record<string, never>, { found: boolean; payload?: string }>(
+        "LoadCompactableYjsDocument",
+        blockPackId,
+        {}
+      )
+      .then(async response => {
+        if (!response.found || response.payload === undefined) {
+          room.isCompacting = false;
+
+          return;
+        }
+        const input = parseYjsCompactionInput(
+          Buffer.from(response.payload, "base64")
+        );
+        if (input === null || !room.isCompacting) {
+          room.isCompacting = false;
+
+          return;
+        }
+        const compacted = this.yjsCompactionService.compact(input);
+        const result = createYjsCompactionResult(
+          input,
+          compacted.snapshot,
+          compacted.stateVector
+        );
+        const applied = await this.coreCommandDispatcher.dispatch<
+          { payload: string },
+          { applied: boolean }
+        >("ApplyCompactedYjsDocument", blockPackId, {
+          payload: result.toString("base64"),
+        });
+        room.isCompacting = false;
+        if (applied.applied) room.compactedUntilSequence = input.cutoffSequence;
+        this.roomRegistry.scheduleRoomEviction(blockPackId);
+      })
+      .catch(() => {
+        room.isCompacting = false;
+      });
+  }
+
+  private loadYjsDocument(room: Room, blockPackId: string): void {
+    void this.coreCommandDispatcher
+      .dispatch<Record<string, never>, { found: boolean; payload?: string }>(
+        "LoadYjsDocument",
+        blockPackId,
+        {}
+      )
+      .then(response => {
+        const state = response.found && response.payload !== undefined
+          ? parseYjsDocumentState(Buffer.from(response.payload, "base64"))
+          : null;
+        if (state === null) {
+          this.resyncRoom(room, blockPackId);
+
+          return;
+        }
+
+        try {
+          const document = new Y.Doc();
+          if (state.snapshot.length > 0) Y.applyUpdate(document, state.snapshot);
+          for (const update of state.updates) Y.applyUpdate(document, update.payload);
+
+          this.roomRegistry.initializeAwareness(room, document);
+          room.isLoading = false;
+          room.lastUpdateSequence = state.lastUpdateSequence;
+          room.compactedUntilSequence = state.compactedUntilSequence;
+          room.projectedUntilSequence = state.projectedUntilSequence;
+          this.yjsDebouncer.queueDeferredUpdates(room);
+          if (
+            room.inFlightPersistenceBatch === null &&
+            room.pendingPersistenceUpdates.length === 0
+          ) {
+            this.sendRoomInitialState(room, blockPackId);
+          }
+          this.scheduleBlockProjection(room, blockPackId);
+          this.roomRegistry.scheduleRoomEviction(blockPackId);
+        } catch {
+          this.resyncRoom(room, blockPackId);
+        }
+      })
+      .catch(() => {
+        this.resyncRoom(room, blockPackId);
+      });
+  }
+
+  private handleYjsUpdatePersisted(
+    room: Room,
+    blockPackId: string,
+    inFlightPersistenceBatch: {
+      payload: Buffer;
+      webSocket: WebSocket;
+      connectionId: string;
+      connectorChannelId: number;
+    }
+  ): void {
+    RealtimeGateway.broadcastInternalFrame(
+      room,
+      InternalFrameType.InternalFrameType_YjsDocument,
+      blockPackId,
+      inFlightPersistenceBatch.payload
+    );
+    this.sendRoomInitialState(room, blockPackId);
+    this.yjsDebouncer.flush(room, blockPackId);
+    this.requestYjsCompaction(room, blockPackId);
+    this.scheduleBlockProjection(room, blockPackId);
+    this.roomRegistry.scheduleRoomEviction(blockPackId);
   }
 
   /* ============================== WebSocket connection ============================== */
@@ -386,20 +514,7 @@ export class RealtimeGateway {
           }
 
           room.isLoading = true;
-          if (webSocket.readyState === WebSocket.OPEN) {
-            webSocket.send(
-              createInternalFrame(
-                InternalFrameType.InternalFrameType_LoadYjsDocument,
-                frame.connectionId,
-                frame.connectorChannelId,
-                frame.blockPackId
-              )
-            );
-
-            return;
-          }
-
-          this.resyncRoom(room, frame.blockPackId);
+          this.loadYjsDocument(room, frame.blockPackId);
 
           return;
         }
@@ -424,13 +539,7 @@ export class RealtimeGateway {
           }
           if (room.subscribers.size === 0) {
             this.yjsDebouncer.flush(room, frame.blockPackId);
-            this.requestYjsCompaction(
-              room,
-              webSocket,
-              frame.connectionId,
-              frame.connectorChannelId,
-              frame.blockPackId
-            );
+            this.requestYjsCompaction(room, frame.blockPackId);
             this.roomRegistry.scheduleRoomEviction(frame.blockPackId);
           }
 
@@ -571,13 +680,7 @@ export class RealtimeGateway {
           );
           this.sendRoomInitialState(room, frame.blockPackId);
           this.yjsDebouncer.flush(room, frame.blockPackId);
-          this.requestYjsCompaction(
-            room,
-            inFlightPersistenceBatch.webSocket,
-            inFlightPersistenceBatch.connectionId,
-            inFlightPersistenceBatch.connectorChannelId,
-            frame.blockPackId
-          );
+          this.requestYjsCompaction(room, frame.blockPackId);
           this.scheduleBlockProjection(room, frame.blockPackId);
           this.roomRegistry.scheduleRoomEviction(frame.blockPackId);
 

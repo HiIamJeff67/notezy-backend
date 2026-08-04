@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 type BinaryFrame struct {

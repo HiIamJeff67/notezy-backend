@@ -5,10 +5,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	authdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/auth"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
-	cookies "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/cookies"
+	authdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/auth"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
+	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 type AuthControllerInterface interface {
@@ -26,18 +26,26 @@ type AuthControllerInterface interface {
 }
 
 type AuthController struct {
-	coreClient *coreadapters.CoreClient
+	coreClient                *coreadapters.CoreClient
+	accessTokenCookieHandler  *cookies.CookieHandler
+	refreshTokenCookieHandler *cookies.CookieHandler
 }
 
-func NewAuthController(coreClient *coreadapters.CoreClient) AuthControllerInterface {
+func NewAuthController(
+	coreClient *coreadapters.CoreClient,
+	accessTokenCookieHandler *cookies.CookieHandler,
+	refreshTokenCookieHandler *cookies.CookieHandler,
+) AuthControllerInterface {
 	return &AuthController{
-		coreClient: coreClient,
+		coreClient:                coreClient,
+		accessTokenCookieHandler:  accessTokenCookieHandler,
+		refreshTokenCookieHandler: refreshTokenCookieHandler,
 	}
 }
 
 func (c *AuthController) Register(ctx *gin.Context, requestDto *authdto.RegisterRequestDto) {
-	cookies.AccessTokenCookieHandler.Delete(ctx)
-	cookies.RefreshTokenCookieHandler.Delete(ctx)
+	c.accessTokenCookieHandler.Delete(ctx)
+	c.refreshTokenCookieHandler.Delete(ctx)
 
 	response, exception := coreadapters.Call[authdto.RegisterRequestDto, authdto.RegisterResponseDto](
 		ctx,
@@ -47,12 +55,12 @@ func (c *AuthController) Register(ctx *gin.Context, requestDto *authdto.Register
 		"/core/v1/auth/register",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
-	cookies.AccessTokenCookieHandler.Set(ctx, response.Data.AccessToken)
-	cookies.RefreshTokenCookieHandler.Set(ctx, response.Data.RefreshToken)
+	c.accessTokenCookieHandler.Set(ctx, response.Data.AccessToken)
+	c.refreshTokenCookieHandler.Set(ctx, response.Data.RefreshToken)
 	ctx.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data": gin.H{
@@ -69,8 +77,8 @@ func (c *AuthController) Register(ctx *gin.Context, requestDto *authdto.Register
 }
 
 func (c *AuthController) RegisterViaGoogle(ctx *gin.Context, requestDto *authdto.RegisterViaGoogleRequestDto) {
-	cookies.AccessTokenCookieHandler.Delete(ctx)
-	cookies.RefreshTokenCookieHandler.Delete(ctx)
+	c.accessTokenCookieHandler.Delete(ctx)
+	c.refreshTokenCookieHandler.Delete(ctx)
 
 	response, exception := coreadapters.Call[authdto.RegisterViaGoogleRequestDto, authdto.RegisterViaGoogleResponseDto](
 		ctx,
@@ -80,12 +88,12 @@ func (c *AuthController) RegisterViaGoogle(ctx *gin.Context, requestDto *authdto
 		"/core/v1/auth/register/google",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
-	cookies.AccessTokenCookieHandler.Set(ctx, response.Data.AccessToken)
-	cookies.RefreshTokenCookieHandler.Set(ctx, response.Data.RefreshToken)
+	c.accessTokenCookieHandler.Set(ctx, response.Data.AccessToken)
+	c.refreshTokenCookieHandler.Set(ctx, response.Data.RefreshToken)
 	ctx.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data": gin.H{
@@ -102,8 +110,8 @@ func (c *AuthController) RegisterViaGoogle(ctx *gin.Context, requestDto *authdto
 }
 
 func (c *AuthController) Login(ctx *gin.Context, requestDto *authdto.LoginRequestDto) {
-	cookies.AccessTokenCookieHandler.Delete(ctx)
-	cookies.RefreshTokenCookieHandler.Delete(ctx)
+	c.accessTokenCookieHandler.Delete(ctx)
+	c.refreshTokenCookieHandler.Delete(ctx)
 
 	response, exception := coreadapters.Call[authdto.LoginRequestDto, authdto.LoginResponseDto](
 		ctx,
@@ -113,12 +121,12 @@ func (c *AuthController) Login(ctx *gin.Context, requestDto *authdto.LoginReques
 		"/core/v1/auth/login",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
-	cookies.AccessTokenCookieHandler.Set(ctx, response.Data.AccessToken)
-	cookies.RefreshTokenCookieHandler.Set(ctx, response.Data.RefreshToken)
+	c.accessTokenCookieHandler.Set(ctx, response.Data.AccessToken)
+	c.refreshTokenCookieHandler.Set(ctx, response.Data.RefreshToken)
 	ctx.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data": gin.H{
@@ -136,8 +144,8 @@ func (c *AuthController) Login(ctx *gin.Context, requestDto *authdto.LoginReques
 }
 
 func (c *AuthController) LoginViaGoogle(ctx *gin.Context, requestDto *authdto.LoginViaGoogleRequestDto) {
-	cookies.AccessTokenCookieHandler.Delete(ctx)
-	cookies.RefreshTokenCookieHandler.Delete(ctx)
+	c.accessTokenCookieHandler.Delete(ctx)
+	c.refreshTokenCookieHandler.Delete(ctx)
 
 	response, exception := coreadapters.Call[authdto.LoginViaGoogleRequestDto, authdto.LoginViaGoogleResponseDto](
 		ctx,
@@ -147,12 +155,12 @@ func (c *AuthController) LoginViaGoogle(ctx *gin.Context, requestDto *authdto.Lo
 		"/core/v1/auth/login/google",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
-	cookies.AccessTokenCookieHandler.Set(ctx, response.Data.AccessToken)
-	cookies.RefreshTokenCookieHandler.Set(ctx, response.Data.RefreshToken)
+	c.accessTokenCookieHandler.Set(ctx, response.Data.AccessToken)
+	c.refreshTokenCookieHandler.Set(ctx, response.Data.RefreshToken)
 	ctx.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data": gin.H{
@@ -178,19 +186,19 @@ func (c *AuthController) Logout(ctx *gin.Context, requestDto *authdto.LogoutRequ
 		"/core/v1/auth/logout",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
-	cookies.AccessTokenCookieHandler.Delete(ctx)
-	cookies.RefreshTokenCookieHandler.Delete(ctx)
+	c.accessTokenCookieHandler.Delete(ctx)
+	c.refreshTokenCookieHandler.Delete(ctx)
 	ctx.JSON(http.StatusOK, gin.H{"success": true, "data": response.Data, "exception": nil})
 }
 
 func (c *AuthController) SendAuthCode(ctx *gin.Context, requestDto *authdto.SendAuthCodeRequestDto) {
 	response, exception := coreadapters.Call[authdto.SendAuthCodeRequestDto, authdto.SendAuthCodeResponseDto](ctx, c.coreClient, requestDto, authdto.SendAuthCodeOperation, "/core/v1/auth/email/code")
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -200,7 +208,7 @@ func (c *AuthController) SendAuthCode(ctx *gin.Context, requestDto *authdto.Send
 func (c *AuthController) ValidateEmail(ctx *gin.Context, requestDto *authdto.ValidateEmailRequestDto) {
 	response, exception := coreadapters.CallSecurly[authdto.ValidateEmailRequestDto, authdto.ValidateEmailResponseDto](ctx, c.coreClient, requestDto, authdto.ValidateEmailOperation, "/core/v1/auth/email/validate")
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -210,7 +218,7 @@ func (c *AuthController) ValidateEmail(ctx *gin.Context, requestDto *authdto.Val
 func (c *AuthController) ResetEmail(ctx *gin.Context, requestDto *authdto.ResetEmailRequestDto) {
 	response, exception := coreadapters.CallSecurly[authdto.ResetEmailRequestDto, authdto.ResetEmailResponseDto](ctx, c.coreClient, requestDto, authdto.ResetEmailOperation, "/core/v1/auth/email/reset")
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -220,7 +228,7 @@ func (c *AuthController) ResetEmail(ctx *gin.Context, requestDto *authdto.ResetE
 func (c *AuthController) ForgetPassword(ctx *gin.Context, requestDto *authdto.ForgetPasswordRequestDto) {
 	response, exception := coreadapters.Call[authdto.ForgetPasswordRequestDto, authdto.ForgetPasswordResponseDto](ctx, c.coreClient, requestDto, authdto.ForgetPasswordOperation, "/core/v1/auth/password/forget")
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -230,7 +238,7 @@ func (c *AuthController) ForgetPassword(ctx *gin.Context, requestDto *authdto.Fo
 func (c *AuthController) ResetMe(ctx *gin.Context, requestDto *authdto.ResetMeRequestDto) {
 	response, exception := coreadapters.CallSecurly[authdto.ResetMeRequestDto, authdto.ResetMeResponseDto](ctx, c.coreClient, requestDto, authdto.ResetMeOperation, "/core/v1/auth/me/reset")
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -240,7 +248,7 @@ func (c *AuthController) ResetMe(ctx *gin.Context, requestDto *authdto.ResetMeRe
 func (c *AuthController) DeleteMe(ctx *gin.Context, requestDto *authdto.DeleteMeRequestDto) {
 	response, exception := coreadapters.CallSecurly[authdto.DeleteMeRequestDto, authdto.DeleteMeResponseDto](ctx, c.coreClient, requestDto, authdto.DeleteMeOperation, "/core/v1/auth/me/delete")
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 

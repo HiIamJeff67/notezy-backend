@@ -7,8 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/gateway/contexts"
-	sharedtypes "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
 )
 
 func TestAllowedPermissionsMiddleware(t *testing.T) {
@@ -17,33 +17,33 @@ func TestAllowedPermissionsMiddleware(t *testing.T) {
 	testCases := []struct {
 		name                string
 		middleware          gin.HandlerFunc
-		expectedPermissions []sharedtypes.AccessControlPermission
+		expectedPermissions []enumcontract.AccessControlPermission
 	}{
 		{
 			name:       "above includes the requested permission",
-			middleware: AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Admin),
-			expectedPermissions: []sharedtypes.AccessControlPermission{
-				sharedtypes.AccessControlPermission_Admin,
-				sharedtypes.AccessControlPermission_Owner,
+			middleware: AllowedPermissionsAbove(enumcontract.AccessControlPermission_Admin),
+			expectedPermissions: []enumcontract.AccessControlPermission{
+				enumcontract.AccessControlPermission_Admin,
+				enumcontract.AccessControlPermission_Owner,
 			},
 		},
 		{
 			name:       "below includes the requested permission",
-			middleware: AllowedPermissionsBelow(sharedtypes.AccessControlPermission_Write),
-			expectedPermissions: []sharedtypes.AccessControlPermission{
-				sharedtypes.AccessControlPermission_Read,
-				sharedtypes.AccessControlPermission_Write,
+			middleware: AllowedPermissionsBelow(enumcontract.AccessControlPermission_Write),
+			expectedPermissions: []enumcontract.AccessControlPermission{
+				enumcontract.AccessControlPermission_Read,
+				enumcontract.AccessControlPermission_Write,
 			},
 		},
 		{
 			name: "within preserves the explicit permission set",
 			middleware: AllowedPermissionsWithin(
-				sharedtypes.AccessControlPermission_Owner,
-				sharedtypes.AccessControlPermission_Write,
+				enumcontract.AccessControlPermission_Owner,
+				enumcontract.AccessControlPermission_Write,
 			),
-			expectedPermissions: []sharedtypes.AccessControlPermission{
-				sharedtypes.AccessControlPermission_Owner,
-				sharedtypes.AccessControlPermission_Write,
+			expectedPermissions: []enumcontract.AccessControlPermission{
+				enumcontract.AccessControlPermission_Owner,
+				enumcontract.AccessControlPermission_Write,
 			},
 		},
 	}

@@ -12,7 +12,7 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas/enums"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 type Claimer struct {

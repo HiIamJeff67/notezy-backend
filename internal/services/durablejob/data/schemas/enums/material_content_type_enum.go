@@ -5,27 +5,47 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
 // MaterialContentType indicates the MIME content type of material files.
-type MaterialContentType string
+type MaterialContentType enumcontract.MaterialContentType
+
+func (value *MaterialContentType) ToContractable() *enumcontract.MaterialContentType {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.MaterialContentType(*value)
+	return &contractValue
+}
+
+func (value *MaterialContentType) ToStorable() *MaterialContentType {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	MaterialContentType_None      MaterialContentType = "none"
-	MaterialContentType_JSON      MaterialContentType = "application/json"
-	MaterialContentType_PDF       MaterialContentType = "application/pdf"
-	MaterialContentType_PlainText MaterialContentType = "text/plain"
-	MaterialContentType_HTML      MaterialContentType = "text/html"
-	MaterialContentType_Markdown  MaterialContentType = "text/markdown"
-	MaterialContentType_PNG       MaterialContentType = "image/png"
-	MaterialContentType_JPG       MaterialContentType = "image/jpg"
-	MaterialContentType_JPEG      MaterialContentType = "image/jpeg"
-	MaterialContentType_GIF       MaterialContentType = "image/gif"
-	MaterialContentType_SVG       MaterialContentType = "image/svg+xml"
-	MaterialContentType_WebP      MaterialContentType = "image/webp"
-	MaterialContentType_MP4       MaterialContentType = "video/mp4"
-	MaterialContentType_WebM      MaterialContentType = "video/webm"
-	MaterialContentType_Mpeg      MaterialContentType = "audio/mpeg"
+	MaterialContentType_None      MaterialContentType = MaterialContentType(enumcontract.MaterialContentType_None)
+	MaterialContentType_JSON      MaterialContentType = MaterialContentType(enumcontract.MaterialContentType_JSON)
+	MaterialContentType_PDF       MaterialContentType = MaterialContentType(enumcontract.MaterialContentType_PDF)
+	MaterialContentType_PlainText MaterialContentType = MaterialContentType(enumcontract.MaterialContentType_PlainText)
+	MaterialContentType_HTML      MaterialContentType = MaterialContentType(enumcontract.MaterialContentType_HTML)
+	MaterialContentType_Markdown  MaterialContentType = MaterialContentType(enumcontract.MaterialContentType_Markdown)
+	MaterialContentType_PNG       MaterialContentType = MaterialContentType(enumcontract.MaterialContentType_PNG)
+	MaterialContentType_JPG       MaterialContentType = MaterialContentType(enumcontract.MaterialContentType_JPG)
+	MaterialContentType_JPEG      MaterialContentType = MaterialContentType(enumcontract.MaterialContentType_JPEG)
+	MaterialContentType_GIF       MaterialContentType = MaterialContentType(enumcontract.MaterialContentType_GIF)
+	MaterialContentType_SVG       MaterialContentType = MaterialContentType(enumcontract.MaterialContentType_SVG)
+	MaterialContentType_WebP      MaterialContentType = MaterialContentType(enumcontract.MaterialContentType_WebP)
+	MaterialContentType_MP4       MaterialContentType = MaterialContentType(enumcontract.MaterialContentType_MP4)
+	MaterialContentType_WebM      MaterialContentType = MaterialContentType(enumcontract.MaterialContentType_WebM)
+	MaterialContentType_Mpeg      MaterialContentType = MaterialContentType(enumcontract.MaterialContentType_Mpeg)
 )
 
 var AllMaterialContentTypes = []MaterialContentType{

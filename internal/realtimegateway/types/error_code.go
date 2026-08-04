@@ -1,33 +1,31 @@
 package realtimetypes
 
-import sharedtypes "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
-
-type ErrorCode = sharedtypes.ErrorCode
+type ErrorCode string
 
 const (
-	ErrorCode_AuthenticationManagedByUpgrade = sharedtypes.ErrorCode_AuthenticationManagedByUpgrade
-	ErrorCode_BinaryChannelNotReady          = sharedtypes.ErrorCode_BinaryChannelNotReady
-	ErrorCode_ChannelLimitExceeded           = sharedtypes.ErrorCode_ChannelLimitExceeded
-	ErrorCode_ChannelNotFound                = sharedtypes.ErrorCode_ChannelNotFound
-	ErrorCode_ChannelPermissionDenied        = sharedtypes.ErrorCode_ChannelPermissionDenied
-	ErrorCode_ChannelBackpressure            = sharedtypes.ErrorCode_ChannelBackpressure
-	ErrorCode_InvalidAcknowledgement         = sharedtypes.ErrorCode_InvalidAcknowledgement
-	ErrorCode_InvalidBinaryFrame             = sharedtypes.ErrorCode_InvalidBinaryFrame
-	ErrorCode_InvalidChannelId               = sharedtypes.ErrorCode_InvalidChannelId
-	ErrorCode_InvalidChannelTicket           = sharedtypes.ErrorCode_InvalidChannelTicket
-	ErrorCode_InvalidChannelType             = sharedtypes.ErrorCode_InvalidChannelType
-	ErrorCode_InvalidConnectorChannelId      = sharedtypes.ErrorCode_InvalidConnectorChannelId
-	ErrorCode_InvalidControlFrame            = sharedtypes.ErrorCode_InvalidControlFrame
-	ErrorCode_PermissionRevoked              = sharedtypes.ErrorCode_PermissionRevoked
-	ErrorCode_ResourceUnavailable            = sharedtypes.ErrorCode_ResourceUnavailable
-	ErrorCode_RoomAdmissionUnavailable       = sharedtypes.ErrorCode_RoomAdmissionUnavailable
-	ErrorCode_RoomConnectionLimitExceeded    = sharedtypes.ErrorCode_RoomConnectionLimitExceeded
-	ErrorCode_ResubscribeRequired            = sharedtypes.ErrorCode_ResubscribeRequired
-	ErrorCode_TicketAlreadyUsed              = sharedtypes.ErrorCode_TicketAlreadyUsed
-	ErrorCode_UnsupportedBinaryType          = sharedtypes.ErrorCode_UnsupportedBinaryType
-	ErrorCode_UnsupportedChannelType         = sharedtypes.ErrorCode_UnsupportedChannelType
-	ErrorCode_UnsupportedControlType         = sharedtypes.ErrorCode_UnsupportedControlType
-	ErrorCode_UnsupportedMessageType         = sharedtypes.ErrorCode_UnsupportedMessageType
-	ErrorCode_UnsupportedProtocolVersion     = sharedtypes.ErrorCode_UnsupportedProtocolVersion
-	ErrorCode_WorkerUnavailable              = sharedtypes.ErrorCode_WorkerUnavailable
+	ErrorCode_AuthenticationManagedByUpgrade ErrorCode = "authentication_managed_by_upgrade"
+	ErrorCode_BinaryChannelNotReady          ErrorCode = "binary_channel_not_ready"
+	ErrorCode_ChannelLimitExceeded           ErrorCode = "channel_limit_exceeded"
+	ErrorCode_ChannelNotFound                ErrorCode = "channel_not_found"
+	ErrorCode_ChannelPermissionDenied        ErrorCode = "channel_permission_denied"
+	ErrorCode_ChannelBackpressure            ErrorCode = "channel_backpressure"
+	ErrorCode_InvalidAcknowledgement         ErrorCode = "invalid_acknowledgement"
+	ErrorCode_InvalidBinaryFrame             ErrorCode = "invalid_binary_frame"
+	ErrorCode_InvalidChannelId               ErrorCode = "invalid_channel_id"
+	ErrorCode_InvalidChannelTicket           ErrorCode = "invalid_channel_ticket"
+	ErrorCode_InvalidChannelType             ErrorCode = "invalid_channel_type"
+	ErrorCode_InvalidConnectorChannelId      ErrorCode = "invalid_connector_channel_id"
+	ErrorCode_InvalidControlFrame            ErrorCode = "invalid_control_frame"
+	ErrorCode_PermissionRevoked              ErrorCode = "permission_revoked"
+	ErrorCode_ResourceUnavailable            ErrorCode = "resource_unavailable"
+	ErrorCode_RoomAdmissionUnavailable       ErrorCode = "room_admission_unavailable"
+	ErrorCode_RoomConnectionLimitExceeded    ErrorCode = "room_connection_limit_exceeded"
+	ErrorCode_ResubscribeRequired            ErrorCode = "resubscribe_required"
+	ErrorCode_TicketAlreadyUsed              ErrorCode = "ticket_already_used"
+	ErrorCode_UnsupportedBinaryType          ErrorCode = "unsupported_binary_type"
+	ErrorCode_UnsupportedChannelType         ErrorCode = "unsupported_channel_type"
+	ErrorCode_UnsupportedControlType         ErrorCode = "unsupported_control_type"
+	ErrorCode_UnsupportedMessageType         ErrorCode = "unsupported_message_type"
+	ErrorCode_UnsupportedProtocolVersion     ErrorCode = "unsupported_protocol_version"
+	ErrorCode_WorkerUnavailable              ErrorCode = "worker_unavailable"
 )

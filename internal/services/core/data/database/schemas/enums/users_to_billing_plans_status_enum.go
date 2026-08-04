@@ -4,17 +4,37 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"reflect"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type UsersToBillingPlansStatus string
+type UsersToBillingPlansStatus enumcontract.UsersToBillingPlansStatus
+
+func (value *UsersToBillingPlansStatus) ToContractable() *enumcontract.UsersToBillingPlansStatus {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.UsersToBillingPlansStatus(*value)
+	return &contractValue
+}
+
+func (value *UsersToBillingPlansStatus) ToStorable() *UsersToBillingPlansStatus {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	UsersToBillingPlansStatus_ApprovalPending = "APPROVAL_PENDING"
-	UsersToBillingPlansStatus_Approved        = "APPROVED"
-	UsersToBillingPlansStatus_Active          = "ACTIVE"
-	UsersToBillingPlansStatus_Suspended       = "SUSPENDED"
-	UsersToBillingPlansStatus_Cancelled       = "CANCELLED"
-	UsersToBillingPlansStatus_Expired         = "EXPIRED"
+	UsersToBillingPlansStatus_ApprovalPending UsersToBillingPlansStatus = UsersToBillingPlansStatus(enumcontract.UsersToBillingPlansStatus_ApprovalPending)
+	UsersToBillingPlansStatus_Approved        UsersToBillingPlansStatus = UsersToBillingPlansStatus(enumcontract.UsersToBillingPlansStatus_Approved)
+	UsersToBillingPlansStatus_Active          UsersToBillingPlansStatus = UsersToBillingPlansStatus(enumcontract.UsersToBillingPlansStatus_Active)
+	UsersToBillingPlansStatus_Suspended       UsersToBillingPlansStatus = UsersToBillingPlansStatus(enumcontract.UsersToBillingPlansStatus_Suspended)
+	UsersToBillingPlansStatus_Cancelled       UsersToBillingPlansStatus = UsersToBillingPlansStatus(enumcontract.UsersToBillingPlansStatus_Cancelled)
+	UsersToBillingPlansStatus_Expired         UsersToBillingPlansStatus = UsersToBillingPlansStatus(enumcontract.UsersToBillingPlansStatus_Expired)
 )
 
 var AllUsersToBillingPlansStatuses = []UsersToBillingPlansStatus{

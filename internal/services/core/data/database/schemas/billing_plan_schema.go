@@ -4,7 +4,7 @@ import (
 	"time"
 
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 // This table is only mutatable by the admin, and accessable by both client user and admin.

@@ -11,20 +11,20 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/internal/shared/tokens"
+	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 )
 
 func DelegationAuthenticatedMiddleware(expectedOperation string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		delegationClaims, err := sharedtokens.ParseDelegationToken(strings.TrimPrefix(ctx.GetHeader("Authorization"), "Bearer "))
 		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, core.Response[struct{}]{
-				Version: core.Version,
-				Metadata: core.ResponseMetadata{
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gatewaycontract.Response[struct{}]{
+				Version: gatewaycontract.Version,
+				Metadata: gatewaycontract.ResponseMetadata{
 					RequestId:   ctx.GetHeader("X-Request-Id"),
 					RespondedAt: time.Now(),
 				},
@@ -42,9 +42,9 @@ func DelegationAuthenticatedMiddleware(expectedOperation string) gin.HandlerFunc
 
 		payload, err := io.ReadAll(ctx.Request.Body)
 		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusBadRequest, core.Response[struct{}]{
-				Version: core.Version,
-				Metadata: core.ResponseMetadata{
+			ctx.AbortWithStatusJSON(http.StatusBadRequest, gatewaycontract.Response[struct{}]{
+				Version: gatewaycontract.Version,
+				Metadata: gatewaycontract.ResponseMetadata{
 					RequestId:   ctx.GetHeader("X-Request-Id"),
 					RespondedAt: time.Now(),
 				},
@@ -60,15 +60,15 @@ func DelegationAuthenticatedMiddleware(expectedOperation string) gin.HandlerFunc
 			return
 		}
 
-		request := &core.Request[json.RawMessage]{}
+		request := &gatewaycontract.Request[json.RawMessage]{}
 		if err := json.Unmarshal(payload, request); err != nil ||
-			request.GetVersion() != core.Version ||
+			request.GetVersion() != gatewaycontract.Version ||
 			(expectedOperation != "" && request.GetOperation() != expectedOperation) ||
 			delegationClaims.Operation != request.GetOperation() ||
 			delegationClaims.RequestId != request.GetMetadata().RequestId {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, core.Response[struct{}]{
-				Version: core.Version,
-				Metadata: core.ResponseMetadata{
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gatewaycontract.Response[struct{}]{
+				Version: gatewaycontract.Version,
+				Metadata: gatewaycontract.ResponseMetadata{
 					RequestId:   ctx.GetHeader("X-Request-Id"),
 					RespondedAt: time.Now(),
 				},
@@ -89,9 +89,9 @@ func DelegationAuthenticatedMiddleware(expectedOperation string) gin.HandlerFunc
 		for _, permissionString := range delegationClaims.AllowedPermissions {
 			permission, err := enums.ConvertStringToAccessControlPermission(permissionString)
 			if err != nil {
-				ctx.AbortWithStatusJSON(http.StatusUnauthorized, core.Response[struct{}]{
-					Version: core.Version,
-					Metadata: core.ResponseMetadata{
+				ctx.AbortWithStatusJSON(http.StatusUnauthorized, gatewaycontract.Response[struct{}]{
+					Version: gatewaycontract.Version,
+					Metadata: gatewaycontract.ResponseMetadata{
 						RequestId:   ctx.GetHeader("X-Request-Id"),
 						RespondedAt: time.Now(),
 					},
@@ -110,9 +110,9 @@ func DelegationAuthenticatedMiddleware(expectedOperation string) gin.HandlerFunc
 		}
 
 		if delegationClaims.UserSubject == "" {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, core.Response[struct{}]{
-				Version: core.Version,
-				Metadata: core.ResponseMetadata{
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gatewaycontract.Response[struct{}]{
+				Version: gatewaycontract.Version,
+				Metadata: gatewaycontract.ResponseMetadata{
 					RequestId:   ctx.GetHeader("X-Request-Id"),
 					RespondedAt: time.Now(),
 				},
@@ -129,9 +129,9 @@ func DelegationAuthenticatedMiddleware(expectedOperation string) gin.HandlerFunc
 		}
 		userSubject, err := uuid.Parse(delegationClaims.UserSubject)
 		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, core.Response[struct{}]{
-				Version: core.Version,
-				Metadata: core.ResponseMetadata{
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gatewaycontract.Response[struct{}]{
+				Version: gatewaycontract.Version,
+				Metadata: gatewaycontract.ResponseMetadata{
 					RequestId:   ctx.GetHeader("X-Request-Id"),
 					RespondedAt: time.Now(),
 				},

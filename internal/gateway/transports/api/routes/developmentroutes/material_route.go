@@ -5,16 +5,21 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	adapters "github.com/HiIamJeff67/notezy-backend/internal/adapters"
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 	binders "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/binders"
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
 	interceptors "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	sharedtypes "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
 )
 
-func configureDevelopmentMaterialRoutes(router *gin.RouterGroup, coreClient *coreadapters.CoreClient) {
+func configureDevelopmentMaterialRoutes(
+	router *gin.RouterGroup,
+	coreClient *coreadapters.CoreClient,
+	accessTokenCookieHandler *cookies.CookieHandler,
+	refreshTokenCookieHandler *cookies.CookieHandler,
+) {
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
@@ -26,9 +31,9 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup, coreClient *cor
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(3 * time.Second),
-		middlewares.AuthMiddleware(),
+		middlewares.JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler),
 		interceptors.ShareableResponseWriterInterceptor(
-			interceptors.RefreshTokenInterceptor,
+			interceptors.RefreshTokenInterceptor(accessTokenCookieHandler),
 			interceptors.EmbeddedInterceptor,
 		),
 	}
@@ -42,7 +47,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup, coreClient *cor
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				materialBinder.BindGetMyMaterialById(materialController.GetMyMaterialById),
 			)...,
@@ -56,7 +61,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup, coreClient *cor
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				materialBinder.BindGetMyMaterialAndItsParentById(materialController.GetMyMaterialAndItsParentById),
 			)...,
@@ -70,7 +75,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup, coreClient *cor
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				materialBinder.BindGetMyMaterialsByParentSubShelfId(materialController.GetMyMaterialsByParentSubShelfId),
 			)...,
@@ -84,7 +89,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup, coreClient *cor
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				materialBinder.BindGetAllMyMaterialsByRootShelfId(materialController.GetAllMyMaterialsByRootShelfId),
 			)...,
@@ -98,7 +103,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup, coreClient *cor
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Write),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Write),
 				),
 				materialBinder.BindCreateMyMaterial(materialController.CreateMyMaterial),
 			)...,
@@ -112,7 +117,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup, coreClient *cor
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Write),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Write),
 				),
 				materialBinder.BindUpdateMyMaterialById(materialController.UpdateMyMaterialById),
 			)...,
@@ -123,11 +128,11 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup, coreClient *cor
 				[]gin.HandlerFunc{
 					middlewares.ApplyTracerMiddleware("saveMyMaterialById"),
 					middlewares.ApplyMeterMiddleware("server.requests.material.saveMyMaterialById"),
-					adapters.MultipartAdapter(),
+					middlewares.MultipartMiddleware(),
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Write),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Write),
 				),
 				materialBinder.BindSaveMyMaterialById(materialController.SaveMyMaterialById),
 			)...,
@@ -141,7 +146,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup, coreClient *cor
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Write),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Write),
 				),
 				materialBinder.BindMoveMyMaterialById(materialController.MoveMyMaterialById),
 			)...,
@@ -155,7 +160,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup, coreClient *cor
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Write),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Write),
 				),
 				materialBinder.BindMoveMyMaterialsByIds(materialController.MoveMyMaterialsByIds),
 			)...,
@@ -169,7 +174,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup, coreClient *cor
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Write),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Write),
 				),
 				materialBinder.BindRestoreMyMaterialById(materialController.RestoreMyMaterialById),
 			)...,
@@ -183,7 +188,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup, coreClient *cor
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Write),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Write),
 				),
 				materialBinder.BindRestoreMyMaterialsByIds(materialController.RestoreMyMaterialsByIds),
 			)...,
@@ -197,7 +202,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup, coreClient *cor
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Write),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Write),
 				),
 				materialBinder.BindDeleteMyMaterialById(materialController.DeleteMyMaterialById),
 			)...,
@@ -211,7 +216,7 @@ func configureDevelopmentMaterialRoutes(router *gin.RouterGroup, coreClient *cor
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Write),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Write),
 				),
 				materialBinder.BindDeleteMyMaterialsByIds(materialController.DeleteMyMaterialsByIds),
 			)...,

@@ -4,20 +4,40 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"reflect"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type BillingPlanName string
+type BillingPlanName enumcontract.BillingPlanName
+
+func (value *BillingPlanName) ToContractable() *enumcontract.BillingPlanName {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.BillingPlanName(*value)
+	return &contractValue
+}
+
+func (value *BillingPlanName) ToStorable() *BillingPlanName {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	BillingPlanName_NotezyMonthlyFreePlan       BillingPlanName = "Notezy Monthly Free Plan"
-	BillingPlanName_NotezyMonthlyProPlan        BillingPlanName = "Notezy Monthly Pro Plan"
-	BillingPlanName_NotezyYearlyProPlan         BillingPlanName = "Notezy Yearly Pro Plan"
-	BillingPlanName_NotezyMonthlyPremiumPlan    BillingPlanName = "Notezy Monthly Premium Plan"
-	BillingPlanName_NotezyYearlyPremiumPlan     BillingPlanName = "Notezy Yearly Premium Plan"
-	BillingPlanName_NotezyMonthlyUltimatePlan   BillingPlanName = "Notezy Monthly Ultimate Plan"
-	BillingPlanName_NotezyYearlyUltimatePlan    BillingPlanName = "Notezy Yearly Ultimate Plan"
-	BillingPlanName_NotezyMonthlyEnterprisePlan BillingPlanName = "Notezy Monthly Enterprise Plan"
-	BillingPlanName_NotezyYearlyEnterprisePlan  BillingPlanName = "Notezy Yearly Enterprise Plan"
+	BillingPlanName_NotezyMonthlyFreePlan       BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotezyMonthlyFreePlan)
+	BillingPlanName_NotezyMonthlyProPlan        BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotezyMonthlyProPlan)
+	BillingPlanName_NotezyYearlyProPlan         BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotezyYearlyProPlan)
+	BillingPlanName_NotezyMonthlyPremiumPlan    BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotezyMonthlyPremiumPlan)
+	BillingPlanName_NotezyYearlyPremiumPlan     BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotezyYearlyPremiumPlan)
+	BillingPlanName_NotezyMonthlyUltimatePlan   BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotezyMonthlyUltimatePlan)
+	BillingPlanName_NotezyYearlyUltimatePlan    BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotezyYearlyUltimatePlan)
+	BillingPlanName_NotezyMonthlyEnterprisePlan BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotezyMonthlyEnterprisePlan)
+	BillingPlanName_NotezyYearlyEnterprisePlan  BillingPlanName = BillingPlanName(enumcontract.BillingPlanName_NotezyYearlyEnterprisePlan)
 )
 
 var AllBillingPlanNames = []BillingPlanName{

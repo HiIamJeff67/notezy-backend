@@ -11,8 +11,9 @@ import (
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/gateway/ratelimit"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
+	responsewriter "github.com/HiIamJeff67/notezy-backend/shared/responsewriter"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 // use reusable buffer pool for timeout response writer to storing the current response of the handlers
@@ -75,7 +76,7 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 				ctx.Writer.Write(panicInfo.Stack)
 			}
 
-			responsewriter.SafelyAbortAndResponseWithJSON(
+			exceptionwriter.SafelyAbortAndResponseWithJSON(
 				exceptions.New(
 					"FatalPanic",
 					"General",
@@ -104,7 +105,7 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 
 			if currentBufferPool.Len() > 0 {
 				if _, err := writer.ResponseWriter.Write(currentBufferPool.Bytes()); err != nil {
-					responsewriter.SafelyAbortAndResponseWithJSON(exceptions.New(
+					exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.New(
 						"FatalPanic",
 						"General",
 						"Respond",
@@ -133,9 +134,9 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 					http.StatusRequestTimeout,
 				)
 				writer.ResponseWriter.WriteHeader(exception.HTTPStatusCode())
-				timeoutResponseBody, err := responsewriter.GetResponseJSONBytes(exception)
+				timeoutResponseBody, err := exceptionwriter.GetResponseJSONBytes(exception)
 				if err != nil {
-					responsewriter.SafelyAbortAndResponseWithJSON(exceptions.New(
+					exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.New(
 						"FatalPanic",
 						"General",
 						"Respond",
@@ -145,7 +146,7 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 					).WithOrigin(err), ctx)
 				}
 				if _, err := writer.ResponseWriter.Write(timeoutResponseBody); err != nil {
-					responsewriter.SafelyAbortAndResponseWithJSON(exceptions.New(
+					exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.New(
 						"FatalPanic",
 						"General",
 						"Respond",
@@ -174,9 +175,9 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 					http.StatusRequestTimeout,
 				)
 				writer.ResponseWriter.WriteHeader(exception.HTTPStatusCode())
-				timeoutResponseBody, err := responsewriter.GetResponseJSONBytes(exception)
+				timeoutResponseBody, err := exceptionwriter.GetResponseJSONBytes(exception)
 				if err != nil {
-					responsewriter.SafelyAbortAndResponseWithJSON(exceptions.New(
+					exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.New(
 						"FatalPanic",
 						"General",
 						"Respond",
@@ -186,7 +187,7 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 					).WithOrigin(err), ctx)
 				}
 				if _, err := writer.ResponseWriter.Write(timeoutResponseBody); err != nil {
-					responsewriter.SafelyAbortAndResponseWithJSON(exceptions.New(
+					exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.New(
 						"FatalPanic",
 						"General",
 						"Respond",

@@ -5,15 +5,35 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type RoutineStatus string
+type RoutineStatus enumcontract.RoutineStatus
+
+func (value *RoutineStatus) ToContractable() *enumcontract.RoutineStatus {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.RoutineStatus(*value)
+	return &contractValue
+}
+
+func (value *RoutineStatus) ToStorable() *RoutineStatus {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	RoutineStatus_Scheduled  RoutineStatus = "Scheduled"
-	RoutineStatus_InProgress RoutineStatus = "InProgress"
-	RoutineStatus_Completed  RoutineStatus = "Completed"
-	RoutineStatus_OverDue    RoutineStatus = "OverDue"
+	RoutineStatus_Scheduled  RoutineStatus = RoutineStatus(enumcontract.RoutineStatus_Scheduled)
+	RoutineStatus_InProgress RoutineStatus = RoutineStatus(enumcontract.RoutineStatus_InProgress)
+	RoutineStatus_Completed  RoutineStatus = RoutineStatus(enumcontract.RoutineStatus_Completed)
+	RoutineStatus_OverDue    RoutineStatus = RoutineStatus(enumcontract.RoutineStatus_OverDue)
 )
 
 var AllRoutineStatuses = []RoutineStatus{

@@ -4,19 +4,39 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"reflect"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type CountryCode string
+type CountryCode enumcontract.CountryCode
+
+func (value *CountryCode) ToContractable() *enumcontract.CountryCode {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.CountryCode(*value)
+	return &contractValue
+}
+
+func (value *CountryCode) ToStorable() *CountryCode {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	CountryCode_Taiwan        CountryCode = "+886"
-	CountryCode_Japan         CountryCode = "+81"
-	CountryCode_Malaysia      CountryCode = "+60"
-	CountryCode_Singapore     CountryCode = "+65"
-	CountryCode_China         CountryCode = "+86"
-	CountryCode_NANP          CountryCode = "+1"
-	CountryCode_UnitedKingdom CountryCode = "+44"
-	CountryCode_Australia     CountryCode = "+61"
+	CountryCode_Taiwan        CountryCode = CountryCode(enumcontract.CountryCode_Taiwan)
+	CountryCode_Japan         CountryCode = CountryCode(enumcontract.CountryCode_Japan)
+	CountryCode_Malaysia      CountryCode = CountryCode(enumcontract.CountryCode_Malaysia)
+	CountryCode_Singapore     CountryCode = CountryCode(enumcontract.CountryCode_Singapore)
+	CountryCode_China         CountryCode = CountryCode(enumcontract.CountryCode_China)
+	CountryCode_NANP          CountryCode = CountryCode(enumcontract.CountryCode_NANP)
+	CountryCode_UnitedKingdom CountryCode = CountryCode(enumcontract.CountryCode_UnitedKingdom)
+	CountryCode_Australia     CountryCode = CountryCode(enumcontract.CountryCode_Australia)
 )
 
 var AllCountryCodes = []CountryCode{

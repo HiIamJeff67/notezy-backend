@@ -1,0 +1,10 @@
+package userinfosdto
+
+import (
+	"github.com/google/uuid"
+
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+)
+
+type LoadUserInfosRequestDto []uuid.UUID
+type LoadUserInfosResponseDto []*gqlmodels.PublicUserInfo

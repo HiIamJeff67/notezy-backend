@@ -7,14 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 func MaxContextSizeMiddleware(limitBytes int64, unit types.ByteType) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		if ctx.Request.ContentLength > limitBytes*int64(unit) {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.New(
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.New(
 				"MaxContextBodySizeExceeded",
 				"Context",
 				"Validate",

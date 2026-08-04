@@ -5,9 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	usersettingsdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/user-settings"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
+	usersettingsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-settings"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 type UserSettingControllerInterface interface {
@@ -37,7 +37,7 @@ func (c *UserSettingController) GetMySetting(ctx *gin.Context, requestDto *users
 		"/core/v1/user-settings/get",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -60,7 +60,7 @@ func (c *UserSettingController) UpdateMySetting(ctx *gin.Context, requestDto *us
 		"/core/v1/user-settings/update",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 

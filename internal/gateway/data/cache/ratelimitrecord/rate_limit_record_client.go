@@ -14,9 +14,10 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	cacheinputs "github.com/HiIamJeff67/notezy-backend/internal/gateway/data/cache/ratelimitrecord/inputs"
 	redislibraries "github.com/HiIamJeff67/notezy-backend/internal/gateway/data/cache/ratelimitrecord/libraries"
+	configs "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	platformredis "github.com/HiIamJeff67/notezy-backend/internal/platform/redis"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type RateLimitRecordCache struct {
@@ -29,7 +30,7 @@ type RateLimitRecordCache struct {
 type RateLimitRecordCacheClient struct {
 	Range                         types.Range[int, int]
 	MaxServerNumber               int
-	backendServerNameToRedisIndex map[types.BackendServerName]int
+	backendServerNameToRedisIndex map[configs.BackendServerName]int
 
 	jitterMaxOffset                    time.Duration
 	batchSynchronizeFunctionArgvPerKey int
@@ -43,11 +44,11 @@ func NewRateLimitRecordCacheClient() *RateLimitRecordCacheClient {
 	return &RateLimitRecordCacheClient{
 		Range:           rangeValue,
 		MaxServerNumber: rangeValue.Start + rangeValue.Size - 1,
-		backendServerNameToRedisIndex: map[types.BackendServerName]int{
-			types.BackendServerName_EastAsia:    4,
-			types.BackendServerName_EastAmerica: 5,
-			types.BackendServerName_WestAmerica: 6,
-			types.BackendServerName_WestEurope:  7,
+		backendServerNameToRedisIndex: map[configs.BackendServerName]int{
+			configs.BackendServerName_EastAsia:    4,
+			configs.BackendServerName_EastAmerica: 5,
+			configs.BackendServerName_WestAmerica: 6,
+			configs.BackendServerName_WestEurope:  7,
 		},
 
 		jitterMaxOffset:                    5 * time.Second,
@@ -57,7 +58,7 @@ func NewRateLimitRecordCacheClient() *RateLimitRecordCacheClient {
 
 /* ============================== Auxiliary Methods ============================== */
 
-func (s *RateLimitRecordCacheClient) getRedisClient(backendServerName types.BackendServerName) (*redis.Client, int, *exceptions.Exception) {
+func (s *RateLimitRecordCacheClient) getRedisClient(backendServerName configs.BackendServerName) (*redis.Client, int, *exceptions.Exception) {
 	serverNumber, ok := s.backendServerNameToRedisIndex[backendServerName]
 	if !ok {
 		return nil, 0, exceptions.New(
@@ -97,7 +98,7 @@ func (s *RateLimitRecordCacheClient) getRedisClient(backendServerName types.Back
 }
 
 func formatRateLimitRecordKey(identifier string) string {
-	return fmt.Sprintf("%s:%s", types.ValidCachePurpose_RateLimite.String(), identifier)
+	return fmt.Sprintf("%s:%s", platformredis.CachePurpose_RateLimit.String(), identifier)
 }
 
 func (s *RateLimitRecordCacheClient) calculateExpiration(identifier string, windowStart time.Time, windowDuration time.Duration) time.Duration {
@@ -117,7 +118,7 @@ func (s *RateLimitRecordCacheClient) calculateExpiration(identifier string, wind
 
 func (s *RateLimitRecordCacheClient) Get(
 	identifier string,
-	backendServerName types.BackendServerName,
+	backendServerName configs.BackendServerName,
 ) (*RateLimitRecordCache, *exceptions.Exception) {
 	redisClient, serverNumber, exception := s.getRedisClient(backendServerName)
 	if exception != nil {
@@ -154,7 +155,7 @@ func (s *RateLimitRecordCacheClient) Get(
 
 func (s *RateLimitRecordCacheClient) Set(
 	identifier string,
-	backendServerName types.BackendServerName,
+	backendServerName configs.BackendServerName,
 	rateLimitRecordCache RateLimitRecordCache,
 ) *exceptions.Exception {
 	redisClient, serverNumber, exception := s.getRedisClient(backendServerName)
@@ -192,7 +193,7 @@ func (s *RateLimitRecordCacheClient) Set(
 
 func (s *RateLimitRecordCacheClient) Update(
 	identifier string,
-	backendServerName types.BackendServerName,
+	backendServerName configs.BackendServerName,
 	input cacheinputs.SynchronizeRateLimitRecordCacheInput,
 ) *exceptions.Exception {
 	rateLimitRecordCache, exception := s.Get(identifier, backendServerName)
@@ -253,7 +254,7 @@ func (s *RateLimitRecordCacheClient) Update(
 
 func (s *RateLimitRecordCacheClient) Delete(
 	identifier string,
-	backendServerName types.BackendServerName,
+	backendServerName configs.BackendServerName,
 ) *exceptions.Exception {
 	redisClient, serverNumber, exception := s.getRedisClient(backendServerName)
 	if exception != nil {
@@ -279,7 +280,7 @@ func (s *RateLimitRecordCacheClient) Delete(
 
 func (s *RateLimitRecordCacheClient) BatchSynchronize(
 	inputs []cacheinputs.BatchSynchronizeRateLimitRecordCacheInput,
-	backendServerName types.BackendServerName,
+	backendServerName configs.BackendServerName,
 ) *exceptions.Exception {
 	if len(inputs) == 0 {
 		return nil
@@ -321,7 +322,7 @@ func (s *RateLimitRecordCacheClient) BatchSynchronize(
 
 func (s *RateLimitRecordCacheClient) BatchDelete(
 	identifiers []string,
-	backendServerName types.BackendServerName,
+	backendServerName configs.BackendServerName,
 ) *exceptions.Exception {
 	if len(identifiers) == 0 {
 		return nil

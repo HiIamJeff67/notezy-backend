@@ -5,15 +5,35 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type RoutineTaskStatus string
+type RoutineTaskStatus enumcontract.RoutineTaskStatus
+
+func (value *RoutineTaskStatus) ToContractable() *enumcontract.RoutineTaskStatus {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.RoutineTaskStatus(*value)
+	return &contractValue
+}
+
+func (value *RoutineTaskStatus) ToStorable() *RoutineTaskStatus {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	RoutineTaskStatus_Idle    RoutineTaskStatus = "Idle"
-	RoutineTaskStatus_Waiting RoutineTaskStatus = "Waiting" // include scheduling, but we don't need to present to the client
-	RoutineTaskStatus_Running RoutineTaskStatus = "Running"
-	RoutineTaskStatus_Pause   RoutineTaskStatus = "Pause"
+	RoutineTaskStatus_Idle    RoutineTaskStatus = RoutineTaskStatus(enumcontract.RoutineTaskStatus_Idle)
+	RoutineTaskStatus_Waiting RoutineTaskStatus = RoutineTaskStatus(enumcontract.RoutineTaskStatus_Waiting) // include scheduling, but we don't need to present to the client
+	RoutineTaskStatus_Running RoutineTaskStatus = RoutineTaskStatus(enumcontract.RoutineTaskStatus_Running)
+	RoutineTaskStatus_Pause   RoutineTaskStatus = RoutineTaskStatus(enumcontract.RoutineTaskStatus_Pause)
 )
 
 var AllRoutineTaskStatuses = []RoutineTaskStatus{

@@ -3,7 +3,7 @@ package email
 import (
 	"time"
 
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	emailcontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1"
 )
 
 type EmailTaskType string
@@ -20,7 +20,7 @@ type EmailObject struct {
 	To               string `json:"to"`
 	Subject          string `json:"subject"`
 	Body             string `json:"body"`
-	EmailContentType types.EmailContentType
+	EmailContentType emailcontract.EmailContentType
 }
 
 type EmailTask struct {

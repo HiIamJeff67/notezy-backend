@@ -4,10 +4,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	realtimedto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/realtime"
+	realtimedto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/realtime"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 type RealtimeBinderInterface interface {
@@ -29,7 +29,7 @@ func (b *RealtimeBinder) BindGetMyBlockPackRealtimeParticipants(controllerFunc c
 
 		blockPackId, err := uuid.Parse(ctx.Param("blockPackId"))
 		if err != nil {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("BlockPack").WithOrigin(err), ctx)
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("BlockPack").WithOrigin(err), ctx)
 			return
 		}
 		requestDto.Param.BlockPackId = blockPackId
@@ -53,7 +53,7 @@ func (b *RealtimeBinder) BindCreateMyBlockPackChannelTicket(controllerFunc contr
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
 		if err := ctx.ShouldBindJSON(&requestDto.Body); err != nil {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("BlockPack").WithOrigin(err), ctx)
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("BlockPack").WithOrigin(err), ctx)
 			return
 		}
 

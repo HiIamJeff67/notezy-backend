@@ -4,17 +4,37 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"reflect"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type SupportedCurrencyCode string
+type SupportedCurrencyCode enumcontract.SupportedCurrencyCode
+
+func (value *SupportedCurrencyCode) ToContractable() *enumcontract.SupportedCurrencyCode {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.SupportedCurrencyCode(*value)
+	return &contractValue
+}
+
+func (value *SupportedCurrencyCode) ToStorable() *SupportedCurrencyCode {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	SupportedCurrencyCode_USD SupportedCurrencyCode = "USD"
-	SupportedCurrencyCode_EUR SupportedCurrencyCode = "EUR"
-	SupportedCurrencyCode_JPY SupportedCurrencyCode = "JPY"
-	SupportedCurrencyCode_TWD SupportedCurrencyCode = "TWD"
-	SupportedCurrencyCode_KRW SupportedCurrencyCode = "KRW"
-	SupportedCurrencyCode_CNY SupportedCurrencyCode = "CNY"
+	SupportedCurrencyCode_USD SupportedCurrencyCode = SupportedCurrencyCode(enumcontract.SupportedCurrencyCode_USD)
+	SupportedCurrencyCode_EUR SupportedCurrencyCode = SupportedCurrencyCode(enumcontract.SupportedCurrencyCode_EUR)
+	SupportedCurrencyCode_JPY SupportedCurrencyCode = SupportedCurrencyCode(enumcontract.SupportedCurrencyCode_JPY)
+	SupportedCurrencyCode_TWD SupportedCurrencyCode = SupportedCurrencyCode(enumcontract.SupportedCurrencyCode_TWD)
+	SupportedCurrencyCode_KRW SupportedCurrencyCode = SupportedCurrencyCode(enumcontract.SupportedCurrencyCode_KRW)
+	SupportedCurrencyCode_CNY SupportedCurrencyCode = SupportedCurrencyCode(enumcontract.SupportedCurrencyCode_CNY)
 )
 
 /* ============================== All instances ============================== */

@@ -4,9 +4,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
-func NewRouter(sender Sender) *gin.Engine {
+func NewRouter(sender Sender, validator *validator.Validate) *gin.Engine {
 	router := gin.New()
 	router.GET("/healthz", func(ctx *gin.Context) {
 		ctx.Status(http.StatusOK)
@@ -14,7 +15,7 @@ func NewRouter(sender Sender) *gin.Engine {
 	router.GET("/readyz", func(ctx *gin.Context) {
 		ctx.Status(http.StatusOK)
 	})
-	endpoint := NewEndpoint(sender)
+	endpoint := NewEndpoint(sender, validator)
 	emailRoutes := router.Group("/email/v1")
 	{
 		emailRoutes.POST(

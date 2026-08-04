@@ -3,9 +3,9 @@
 ## Gateway routes and middleware
 
 - Browser/client-facing HTTP routes live under
-  `internal/gateway/transports/api/routes`. Its cookies, middlewares, and
-  interceptors are client transport concerns. Test-only routes stay in this
-  client transport.
+  `internal/gateway/transports/api/routes`. Its middlewares and interceptors
+  are client transport concerns; reusable Gin cookie handlers live in
+  `shared/cookies/`. Test-only routes stay in this client transport.
 - Routes register URL, middleware, trace operation, metric name, and the
   allowed-permission policy. They do not parse input or call repositories.
 - Collection paths use plural kebab-case resource names. Route changes update
@@ -20,10 +20,11 @@
 ## Request and response contracts
 
 - Public and internal operation payloads use `XxxRequestDto` and
-  `XxxResponseDto`. `core.Request[Dto]` and `core.Response[Dto]`
+  `XxxResponseDto`. `gatewaycontract.Request[Dto]` and
+  `gatewaycontract.Response[Dto]`
   carry version, operation, metadata, and the DTO; do not add a nested DTO body
   solely to repeat the envelope.
-- `contracts/gateway/v1/api` package `apicontract` exports the common
+- `contracts/core/v1/api` package `coreapicontract` exports the common
   `RequestDto[Header, Body, Param, Query]`.
   composable request shape. Domain request DTOs embed it with anonymous
   concrete struct types directly at the declaration; do not create one-off

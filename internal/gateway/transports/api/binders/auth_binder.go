@@ -3,10 +3,10 @@ package binders
 import (
 	"github.com/gin-gonic/gin"
 
-	authdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/auth"
+	authdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/auth"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 type AuthBinderInterface interface {
@@ -34,7 +34,7 @@ func (b *AuthBinder) BindRegister(controllerFunc controllers.Func[*authdto.Regis
 		requestDto := &authdto.RegisterRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		if err := ctx.ShouldBindJSON(&requestDto.Body); err != nil {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Auth").WithOrigin(err), ctx)
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Auth").WithOrigin(err), ctx)
 			return
 		}
 
@@ -47,7 +47,7 @@ func (b *AuthBinder) BindRegisterViaGoogle(controllerFunc controllers.Func[*auth
 		requestDto := &authdto.RegisterViaGoogleRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		if err := ctx.ShouldBindJSON(&requestDto.Body); err != nil {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Auth").WithOrigin(err), ctx)
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Auth").WithOrigin(err), ctx)
 			return
 		}
 
@@ -60,7 +60,7 @@ func (b *AuthBinder) BindLogin(controllerFunc controllers.Func[*authdto.LoginReq
 		requestDto := &authdto.LoginRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		if err := ctx.ShouldBindJSON(&requestDto.Body); err != nil {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Auth").WithOrigin(err), ctx)
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Auth").WithOrigin(err), ctx)
 			return
 		}
 
@@ -73,7 +73,7 @@ func (b *AuthBinder) BindLoginViaGoogle(controllerFunc controllers.Func[*authdto
 		requestDto := &authdto.LoginViaGoogleRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		if err := ctx.ShouldBindJSON(&requestDto.Body); err != nil {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Auth").WithOrigin(err), ctx)
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Auth").WithOrigin(err), ctx)
 			return
 		}
 
@@ -95,7 +95,7 @@ func (b *AuthBinder) BindSendAuthCode(controllerFunc controllers.Func[*authdto.S
 		requestDto := &authdto.SendAuthCodeRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		if err := ctx.ShouldBindJSON(&requestDto.Body); err != nil {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Auth").WithOrigin(err), ctx)
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Auth").WithOrigin(err), ctx)
 			return
 		}
 
@@ -108,7 +108,7 @@ func (b *AuthBinder) BindValidateEmail(controllerFunc controllers.Func[*authdto.
 		requestDto := &authdto.ValidateEmailRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		if err := ctx.ShouldBindJSON(&requestDto.Body); err != nil {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Auth").WithOrigin(err), ctx)
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Auth").WithOrigin(err), ctx)
 			return
 		}
 
@@ -121,7 +121,7 @@ func (b *AuthBinder) BindResetEmail(controllerFunc controllers.Func[*authdto.Res
 		requestDto := &authdto.ResetEmailRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		if err := ctx.ShouldBindJSON(&requestDto.Body); err != nil {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Auth").WithOrigin(err), ctx)
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Auth").WithOrigin(err), ctx)
 			return
 		}
 
@@ -134,7 +134,7 @@ func (b *AuthBinder) BindForgetPassword(controllerFunc controllers.Func[*authdto
 		requestDto := &authdto.ForgetPasswordRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		if err := ctx.ShouldBindJSON(&requestDto.Body); err != nil {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Auth").WithOrigin(err), ctx)
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Auth").WithOrigin(err), ctx)
 			return
 		}
 
@@ -147,7 +147,7 @@ func (b *AuthBinder) BindResetMe(controllerFunc controllers.Func[*authdto.ResetM
 		requestDto := &authdto.ResetMeRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		if err := ctx.ShouldBindJSON(&requestDto.Body); err != nil {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Auth").WithOrigin(err), ctx)
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Auth").WithOrigin(err), ctx)
 			return
 		}
 
@@ -160,7 +160,7 @@ func (b *AuthBinder) BindDeleteMe(controllerFunc controllers.Func[*authdto.Delet
 		requestDto := &authdto.DeleteMeRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		if err := ctx.ShouldBindJSON(&requestDto.Body); err != nil {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Auth").WithOrigin(err), ctx)
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Auth").WithOrigin(err), ctx)
 			return
 		}
 

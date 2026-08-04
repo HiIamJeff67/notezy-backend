@@ -6,13 +6,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
-	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/users"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
 )
 
 func (t *UserEndpoint) SearchUsers(ctx *gin.Context) {
-	request := &core.Request[usersdto.SearchUsersRequestDto]{}
+	request := &gatewaycontract.Request[usersdto.SearchUsersRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -21,9 +21,9 @@ func (t *UserEndpoint) SearchUsers(ctx *gin.Context) {
 	userId, exception := contexts.GetActorUserId(ctx.Request.Context())
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -36,9 +36,9 @@ func (t *UserEndpoint) SearchUsers(ctx *gin.Context) {
 	responseDto, exception := t.userService.SearchPublicUsers(ctx.Request.Context(), userId, request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -48,9 +48,9 @@ func (t *UserEndpoint) SearchUsers(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[usersdto.SearchUsersResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[usersdto.SearchUsersResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -59,7 +59,7 @@ func (t *UserEndpoint) SearchUsers(ctx *gin.Context) {
 }
 
 func (t *UserEndpoint) LoadThemeAuthors(ctx *gin.Context) {
-	request := &core.Request[usersdto.LoadThemeAuthorsRequestDto]{}
+	request := &gatewaycontract.Request[usersdto.LoadThemeAuthorsRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -68,9 +68,9 @@ func (t *UserEndpoint) LoadThemeAuthors(ctx *gin.Context) {
 	responseDtos, exception := t.userService.GetPublicAuthorByThemePublicIds(ctx.Request.Context(), request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -80,9 +80,9 @@ func (t *UserEndpoint) LoadThemeAuthors(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[usersdto.LoadThemeAuthorsResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[usersdto.LoadThemeAuthorsResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},

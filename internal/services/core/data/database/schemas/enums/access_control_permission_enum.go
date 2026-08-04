@@ -5,15 +5,35 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type AccessControlPermission string
+type AccessControlPermission enumcontract.AccessControlPermission
+
+func (value *AccessControlPermission) ToContractable() *enumcontract.AccessControlPermission {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.AccessControlPermission(*value)
+	return &contractValue
+}
+
+func (value *AccessControlPermission) ToStorable() *AccessControlPermission {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	AccessControlPermission_Read  AccessControlPermission = "Read"
-	AccessControlPermission_Write AccessControlPermission = "Write"
-	AccessControlPermission_Admin AccessControlPermission = "Admin"
-	AccessControlPermission_Owner AccessControlPermission = "Owner"
+	AccessControlPermission_Read  AccessControlPermission = AccessControlPermission(enumcontract.AccessControlPermission_Read)
+	AccessControlPermission_Write AccessControlPermission = AccessControlPermission(enumcontract.AccessControlPermission_Write)
+	AccessControlPermission_Admin AccessControlPermission = AccessControlPermission(enumcontract.AccessControlPermission_Admin)
+	AccessControlPermission_Owner AccessControlPermission = AccessControlPermission(enumcontract.AccessControlPermission_Owner)
 )
 
 var AllAccessControlPermissions = []AccessControlPermission{

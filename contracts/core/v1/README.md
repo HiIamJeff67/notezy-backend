@@ -1,38 +1,31 @@
-# Core service Contract v1
+# Core v1 contracts
 
-`Request[D]` and `Response[D]` are the versioned envelope for
-Gateway-to-service calls. The HTTP delegation credential is carried only in the
-`Authorization: Bearer` header; browser JWTs and Go contexts are never
-serialized into this envelope.
+Core owns the versioned contracts for the business capabilities it provides.
+The folders are organized by transport concern and then by business domain:
 
-`Response[D]` contains only the operation data in `data`. A BlockPack channel
-ticket includes the short-lived, signed room-admission policy snapshot required
-by the WebSocket runtime. Gateway uses the verified ticket claim directly for
-atomic subscriber admission; Redis stores ephemeral leases and presence, not a
-Core-owned policy cache.
+- `api/` contains Core operation RequestDto/ResponseDto contracts. Each domain
+  has one folder and operation-oriented files such as `get.go`, `create.go`,
+  `update.go`, and `search.go`.
+- `events/` contains Core lifecycle Kafka event schemas. Core writes these
+  events through its transactional outbox; consumers such as RealtimeGateway
+  depend on the schema but do not own it.
+- `graphql/` contains the Core GraphQL schema, fragments, client documents,
+  generated Go artifacts, generated models, and scalars. Gateway owns GraphQL
+  execution, but Core owns the schema and business-facing query contract.
+- `types/` contains Core-only reusable DTO shapes shared by more than one Core
+  API operation.
 
-The Gateway supplies the route operation, request identity, trace context, and
-an optional idempotency key. The delegation credential identifies the calling
-component in `actor`; an authenticated user is carried separately as the
-optional public UUID `userSubject`. Secure Gateway calls also forward the
-browser access/refresh cookies and sanitized request identity headers so Core's
-authentication middleware can validate the browser credential.
+Cross-runtime data vocabulary is outside this versioned service contract:
 
-Core transport uses `DelegationMiddleware` for operations that do not require a
-user and `DelegationAuthenticatedMiddleware` for operations that do.
+- `contracts/types/enums/` owns enum values. Core and DurableJob database
+  wrappers add persistence behavior without redefining values.
+- `contracts/types/editable_block.go` owns the single recursive
+  `ArborizedEditableBlock` input shape and the single
+  `RawFlattenedEditableBlock` projection/persistence shape.
+- `contracts/types/*_routine_task_payload.go` owns payloads used by both Core
+  and DurableJob.
 
-If Core authenticates through the forwarded refresh cookie, it returns rotated
-tokens only through private response headers (`X-Core-Auth-Refreshed`,
-`X-Core-Set-Access-Token`, and `X-Core-Set-CSRF-Token`). The Gateway consumes
-those headers and updates the browser-facing response; Core never writes client
-cookies directly.
-
-Internal clients do not retry writes unless an idempotency key is present and
-the operation-specific Core transport explicitly supports it. This initial v1
-client performs no automatic retries.
-
-`CORE_LISTEN_ADDRESS` configures the private Core listener (default
-`0.0.0.0:7778`). Gateway resolves it through `CORE_BASE_URL` (default
-`http://127.0.0.1:7778`). A deployment with separate Gateway and Core processes
-sets the latter to the Core service's private network address; neither listener
-is registered through the browser-facing route tree.
+Gateway owns the private HTTP `Request[D]` / `Response[D]` envelope in
+`contracts/gateway/v1`. It carries version, operation, request metadata, and
+the Core-owned DTO. Delegation credentials stay in the authorization header;
+browser JWTs and contexts are never serialized into either contract.

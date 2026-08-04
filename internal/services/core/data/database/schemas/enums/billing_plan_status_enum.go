@@ -4,14 +4,34 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"reflect"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type BillingPlanStatus string
+type BillingPlanStatus enumcontract.BillingPlanStatus
+
+func (value *BillingPlanStatus) ToContractable() *enumcontract.BillingPlanStatus {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.BillingPlanStatus(*value)
+	return &contractValue
+}
+
+func (value *BillingPlanStatus) ToStorable() *BillingPlanStatus {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	BillingPlanStatus_Created  BillingPlanStatus = "CREATED"
-	BillingPlanStatus_Active   BillingPlanStatus = "ACTIVE"
-	BillingPlanStatus_Inactive BillingPlanStatus = "INACTIVE"
+	BillingPlanStatus_Created  BillingPlanStatus = BillingPlanStatus(enumcontract.BillingPlanStatus_Created)
+	BillingPlanStatus_Active   BillingPlanStatus = BillingPlanStatus(enumcontract.BillingPlanStatus_Active)
+	BillingPlanStatus_Inactive BillingPlanStatus = BillingPlanStatus(enumcontract.BillingPlanStatus_Inactive)
 )
 
 var AllBillingPlanStatuses = []BillingPlanStatus{

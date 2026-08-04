@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 
 	platformredis "github.com/HiIamJeff67/notezy-backend/internal/platform/redis"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 func newTestRealtimeLeaseCacheClient(t *testing.T, redisClient *redis.Client) *RealtimeLeaseCacheClient {

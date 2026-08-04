@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/websocket"
 
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/types"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 type realtimeWorker struct {

@@ -31,6 +31,7 @@ var MigratingTables = []any{
 	&RoutinesToTags{},
 	&RoutineTask{},
 	&RoutineTaskRecord{},
+	&OutboxEvent{},
 
 	&UsersToBillingPlans{},
 

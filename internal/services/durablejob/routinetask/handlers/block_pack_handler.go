@@ -7,13 +7,13 @@ import (
 	"strings"
 	"time"
 
+	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
-	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/block-packs"
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/blocks"
-	adapters "github.com/HiIamJeff67/notezy-backend/internal/adapters"
+	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
+	typescontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/inputs"
 	options "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/options"
@@ -22,15 +22,14 @@ import (
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas/enums"
 	matchers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers/matchers"
 	resolvers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers/resolvers"
-	payloads "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/payloads"
 	yjsmaintenance "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/yjsmaintenance"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type BlockPackHandler struct {
+	validator            *validator.Validate
 	db                   *gorm.DB
-	editableBlockAdapter adapters.EditableBlockAdapterInterface
 	patternResolver      resolvers.PatternResolverInterface
 	templateBlockMatcher matchers.TemplateBlockMatcherInterface
 	blockPackRepository  repositories.BlockPackRepositoryInterface
@@ -39,17 +38,14 @@ type BlockPackHandler struct {
 }
 
 func NewBlockPackHandler(
+	validator *validator.Validate,
 	db *gorm.DB,
-	editableBlockAdapter adapters.EditableBlockAdapterInterface,
 	patternResolver resolvers.PatternResolverInterface,
 	templateBlockMatcher matchers.TemplateBlockMatcherInterface,
 	blockPackRepository repositories.BlockPackRepositoryInterface,
 	blockRepository repositories.BlockRepositoryInterface,
 	yjsWorkerClient yjsmaintenance.WorkerClient,
 ) BlockPackHandler {
-	if editableBlockAdapter == nil {
-		editableBlockAdapter = adapters.NewEditableBlockAdapter()
-	}
 	if patternResolver == nil {
 		patternResolver = resolvers.NewPatternResolver(db, blockRepository, blockPackRepository)
 	}
@@ -57,8 +53,8 @@ func NewBlockPackHandler(
 		templateBlockMatcher = matchers.NewTemplateBlockMatcher()
 	}
 	return BlockPackHandler{
+		validator:            validator,
 		db:                   db,
-		editableBlockAdapter: editableBlockAdapter,
 		patternResolver:      patternResolver,
 		templateBlockMatcher: templateBlockMatcher,
 		blockPackRepository:  blockPackRepository,
@@ -77,15 +73,15 @@ func (h BlockPackHandler) HandleCreateBlockPack(
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
 	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
-	candidatePayloads := make([]payloads.CreateBlockPackRoutineTaskPayload, 0, len(tasks))
-	candidatePatterns := make([]payloads.RoutineTaskPattern, 0, len(tasks))
+	candidatePayloads := make([]typescontract.CreateBlockPackRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]typescontract.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		actorUserId, exists := taskIdToActorUserId[task.Id]
 		if !exists {
 			continue
 		}
-		payload, exception := decodePayload[payloads.CreateBlockPackRoutineTaskPayload](task)
+		payload, exception := decodePayload[typescontract.CreateBlockPackRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}
@@ -125,7 +121,7 @@ func (h BlockPackHandler) HandleCreateBlockPack(
 		var prevRootId *uuid.UUID
 		taskFailed := false
 		taskBlocks := make([]inputs.CreateBlockInput, 0)
-		matchedRootBlocks := make([]blocksdto.ArborizedEditableBlock, 0, len(payload.Template.Blocks))
+		matchedRootBlocks := make([]typescontract.ArborizedEditableBlock, 0, len(payload.Template.Blocks))
 		prevRootInputIndex := -1
 		for _, block := range payload.Template.Blocks {
 			matchedBlock, exception := h.templateBlockMatcher.MatchArborizedEditableBlock(block.ArborizedEditableBlock, patternValues)
@@ -134,7 +130,7 @@ func (h BlockPackHandler) HandleCreateBlockPack(
 				break
 			}
 			matchedRootBlocks = append(matchedRootBlocks, matchedBlock)
-			blocks, _, _, exception := flattenArborizedBlock(h.editableBlockAdapter, blockPackId, &matchedBlock)
+			blocks, _, _, exception := flattenArborizedBlock(blockPackId, &matchedBlock)
 			if exception != nil || len(blocks) == 0 {
 				taskFailed = true
 				break
@@ -167,7 +163,7 @@ func (h BlockPackHandler) HandleCreateBlockPack(
 			Id:                  &blockPackId,
 			ParentSubShelfId:    payload.TargetSubShelfId,
 			Name:                name,
-			Icon:                payload.Template.Icon,
+			Icon:                (*enums.SupportedIcon)(payload.Template.Icon),
 			HeaderBackgroundURL: payload.Template.HeaderBackgroundURL,
 		})
 		blockContentInputs = append(blockContentInputs, inputs.BulkCreateBlockPackContentInput{
@@ -290,15 +286,15 @@ func (h BlockPackHandler) HandleUpdateBlockPack(
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
 	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
-	candidatePayloads := make([]payloads.UpdateBlockPackRoutineTaskPayload, 0, len(tasks))
-	candidatePatterns := make([]payloads.RoutineTaskPattern, 0, len(tasks))
+	candidatePayloads := make([]typescontract.UpdateBlockPackRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]typescontract.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		actorUserId, exists := taskIdToActorUserId[task.Id]
 		if !exists {
 			continue
 		}
-		payload, exception := decodePayload[payloads.UpdateBlockPackRoutineTaskPayload](task)
+		payload, exception := decodePayload[typescontract.UpdateBlockPackRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}
@@ -342,7 +338,7 @@ func (h BlockPackHandler) HandleUpdateBlockPack(
 			if exception != nil {
 				continue
 			}
-			flattenedBlocks, _, _, exception := flattenArborizedBlock(h.editableBlockAdapter, payload.BlockPackId, &matchedBlock)
+			flattenedBlocks, _, _, exception := flattenArborizedBlock(payload.BlockPackId, &matchedBlock)
 			if exception != nil || len(flattenedBlocks) != 1 {
 				continue
 			}
@@ -436,7 +432,7 @@ func (h BlockPackHandler) HandleResetBlockPack(
 		if !exists {
 			continue
 		}
-		payload, exception := decodePayload[payloads.ResetBlockPackRoutineTaskPayload](task)
+		payload, exception := decodePayload[typescontract.ResetBlockPackRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}

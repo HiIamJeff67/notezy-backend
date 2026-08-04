@@ -10,15 +10,25 @@ import (
 	interceptors "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
+	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
 )
 
-func configureDevelopmentAuthRoutes(router *gin.RouterGroup, coreClient *coreadapters.CoreClient) {
+func configureDevelopmentAuthRoutes(
+	router *gin.RouterGroup,
+	coreClient *coreadapters.CoreClient,
+	accessTokenCookieHandler *cookies.CookieHandler,
+	refreshTokenCookieHandler *cookies.CookieHandler,
+) {
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
 
 	authBinder := binders.NewAuthBinder()
-	authController := controllers.NewAuthController(coreClient)
+	authController := controllers.NewAuthController(
+		coreClient,
+		accessTokenCookieHandler,
+		refreshTokenCookieHandler,
+	)
 
 	authRoutes := router.Group("/auth")
 	{
@@ -60,7 +70,7 @@ func configureDevelopmentAuthRoutes(router *gin.RouterGroup, coreClient *coreada
 			middlewares.ApplyMeterMiddleware("server.requests.auth.logout"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(3*time.Second),
-			middlewares.AuthMiddleware(),
+			middlewares.JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler),
 			interceptors.ShareableResponseWriterInterceptor(
 				interceptors.EmbeddedInterceptor,
 			),
@@ -80,9 +90,9 @@ func configureDevelopmentAuthRoutes(router *gin.RouterGroup, coreClient *coreada
 			middlewares.ApplyMeterMiddleware("server.requests.auth.validateEmail"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(3*time.Second),
-			middlewares.AuthMiddleware(),
+			middlewares.JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler),
 			interceptors.ShareableResponseWriterInterceptor(
-				interceptors.RefreshTokenInterceptor,
+				interceptors.RefreshTokenInterceptor(accessTokenCookieHandler),
 				interceptors.EmbeddedInterceptor,
 			),
 			authBinder.BindValidateEmail(authController.ValidateEmail),
@@ -93,9 +103,9 @@ func configureDevelopmentAuthRoutes(router *gin.RouterGroup, coreClient *coreada
 			middlewares.ApplyMeterMiddleware("server.requests.auth.resetEmail"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(3*time.Second),
-			middlewares.AuthMiddleware(),
+			middlewares.JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler),
 			interceptors.ShareableResponseWriterInterceptor(
-				interceptors.RefreshTokenInterceptor,
+				interceptors.RefreshTokenInterceptor(accessTokenCookieHandler),
 				interceptors.EmbeddedInterceptor,
 			),
 			authBinder.BindResetEmail(authController.ResetEmail),
@@ -114,9 +124,9 @@ func configureDevelopmentAuthRoutes(router *gin.RouterGroup, coreClient *coreada
 			middlewares.ApplyMeterMiddleware("server.requests.auth.resetMe"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(3*time.Second),
-			middlewares.AuthMiddleware(),
+			middlewares.JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler),
 			interceptors.ShareableResponseWriterInterceptor(
-				interceptors.RefreshTokenInterceptor,
+				interceptors.RefreshTokenInterceptor(accessTokenCookieHandler),
 				interceptors.EmbeddedInterceptor,
 			),
 			authBinder.BindResetMe(authController.ResetMe),
@@ -127,7 +137,7 @@ func configureDevelopmentAuthRoutes(router *gin.RouterGroup, coreClient *coreada
 			middlewares.ApplyMeterMiddleware("server.requests.auth.deleteMe"),
 			middlewares.UnauthorizedRateLimitMiddleware(),
 			middlewares.TimeoutMiddleware(5*time.Second),
-			middlewares.AuthMiddleware(),
+			middlewares.JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler),
 			interceptors.ShareableResponseWriterInterceptor(
 				interceptors.EmbeddedInterceptor,
 			),

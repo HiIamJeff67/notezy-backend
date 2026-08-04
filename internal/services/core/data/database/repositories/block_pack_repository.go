@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
+	pg "github.com/lib/pq"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
@@ -19,9 +20,9 @@ import (
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/scopes"
 	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/core/exceptions"
-	array "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/array"
-	partialupdate "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/partialupdate"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	array "github.com/HiIamJeff67/notezy-backend/shared/lib/array"
+	partialupdate "github.com/HiIamJeff67/notezy-backend/shared/lib/partialupdate"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type BlockPackRepositoryInterface interface {
@@ -34,6 +35,7 @@ type BlockPackRepositoryInterface interface {
 	GetOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) (*schemas.BlockPack, *exceptions.Exception)
 	GetManyByRootShelfIds(rootShelfIds []uuid.UUID, opts ...options.RepositoryOptions) ([]schemas.BlockPack, *exceptions.Exception)
 	GetIdsByParentSubShelfIds(parentSubShelfIds []uuid.UUID, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
+	GetIdsBySubShelfIdsAndDescendants(subShelfIds []uuid.UUID, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	CreateOneBySubShelfId(subShelfId uuid.UUID, userId uuid.UUID, input inputs.CreateBlockPackInput, opts ...options.RepositoryOptions) (*uuid.UUID, *exceptions.Exception)
 	CreateManyBySubShelfIds(userId uuid.UUID, input []inputs.CreateBlockPackBySubShelfIdInput, opts ...options.RepositoryOptions) ([]uuid.UUID, *exceptions.Exception)
 	UpdateOneById(id uuid.UUID, userId uuid.UUID, input inputs.PartialUpdateBlockPackInput, opts ...options.RepositoryOptions) (*schemas.BlockPack, *exceptions.Exception)
@@ -311,6 +313,31 @@ func (r *BlockPackRepository) GetIdsByParentSubShelfIds(
 		Select("id").
 		Where("parent_sub_shelf_id IN ?", parentSubShelfIds).
 		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Find(&blockPackIds)
+	if result.Error != nil {
+		return nil, apiexceptions.BlockPack.NotFound().WithOrigin(result.Error)
+	}
+
+	return blockPackIds, nil
+}
+
+func (r *BlockPackRepository) GetIdsBySubShelfIdsAndDescendants(
+	subShelfIds []uuid.UUID,
+	opts ...options.RepositoryOptions,
+) ([]uuid.UUID, *exceptions.Exception) {
+	if len(subShelfIds) == 0 {
+		return []uuid.UUID{}, nil
+	}
+
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+	var blockPackIds []uuid.UUID
+	result := parsedOptions.DB.
+		Model(&schemas.BlockPack{}).
+		Select(`"BlockPackTable".id`).
+		Joins(`INNER JOIN "SubShelfTable" ON "SubShelfTable".id = "BlockPackTable".parent_sub_shelf_id`).
+		Where(`"SubShelfTable".id IN ? OR "SubShelfTable".path && ?`, subShelfIds, pg.Array(subShelfIds)).
+		Scopes(r.blockPackScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
+		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&blockPackIds)
 	if result.Error != nil {
 		return nil, apiexceptions.BlockPack.NotFound().WithOrigin(result.Error)

@@ -17,7 +17,9 @@ import (
 	config "github.com/HiIamJeff67/notezy-backend/internal/platform/config"
 	observability "github.com/HiIamJeff67/notezy-backend/internal/platform/observability"
 	platformredis "github.com/HiIamJeff67/notezy-backend/internal/platform/redis"
-	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 func Start() func() {
@@ -28,12 +30,6 @@ func Start() func() {
 		shutdownObservability()
 		panic(err)
 	}
-	if err := realtimelease.Register(context.Background(), platformredis.DefaultClientManager); err != nil {
-		_ = platformredis.DefaultClientManager.DisconnectAll()
-		shutdownObservability()
-		panic(err)
-	}
-
 	developmentroutes.DevelopmentRouter = gin.Default()
 	proxies := strings.Split(os.Getenv("GIN_TRUSTED_PROXIES"), ",")
 	if err := developmentroutes.DevelopmentRouter.SetTrustedProxies(proxies); err != nil {
@@ -47,7 +43,23 @@ func Start() func() {
 	developmentroutes.DevelopmentRouter.GET("/readyz", func(ctx *gin.Context) {
 		ctx.Status(http.StatusOK)
 	})
-	developmentroutes.ConfigureAPIRoutes()
+	accessTokenCookieHandler := cookies.New(cookies.Config{
+		Name:     cookies.ValidCookieName_AccessToken,
+		Path:     "/",
+		Duration: 30 * time.Minute, // 30 minutes
+		Secure:   constants.CurrentEnvironment == types.Environment_Production,
+		HTTPOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+	refreshTokenCookieHandler := cookies.New(cookies.Config{
+		Name:     cookies.ValidCookieName_RefreshToken,
+		Path:     "/",
+		Duration: 14 * 24 * time.Hour, // 14 days
+		Secure:   constants.CurrentEnvironment == types.Environment_Production,
+		HTTPOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	})
+	developmentroutes.ConfigureAPIRoutes(accessTokenCookieHandler, refreshTokenCookieHandler)
 
 	listener, err := net.Listen("tcp", config.GatewayListenAddress())
 	if err != nil {

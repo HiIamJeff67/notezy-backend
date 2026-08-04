@@ -5,20 +5,40 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type RoutineTaskRecordErrorCode string
+type RoutineTaskRecordErrorCode enumcontract.RoutineTaskRecordErrorCode
+
+func (value *RoutineTaskRecordErrorCode) ToContractable() *enumcontract.RoutineTaskRecordErrorCode {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.RoutineTaskRecordErrorCode(*value)
+	return &contractValue
+}
+
+func (value *RoutineTaskRecordErrorCode) ToStorable() *RoutineTaskRecordErrorCode {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	RoutineTaskRecordErrorCode_PermissionDenied  RoutineTaskRecordErrorCode = "PermissionDenied"
-	RoutineTaskRecordErrorCode_PayloadInvalid    RoutineTaskRecordErrorCode = "PayloadInvalid"
-	RoutineTaskRecordErrorCode_TargetNotFound    RoutineTaskRecordErrorCode = "TargetNotFound"
-	RoutineTaskRecordErrorCode_PlanLimitExceeded RoutineTaskRecordErrorCode = "PlanLimitExceeded"
-	RoutineTaskRecordErrorCode_HandlerFailed     RoutineTaskRecordErrorCode = "HandlerFailed"
-	RoutineTaskRecordErrorCode_DatabaseError     RoutineTaskRecordErrorCode = "DatabaseError"
-	RoutineTaskRecordErrorCode_Timeout           RoutineTaskRecordErrorCode = "Timeout"
-	RoutineTaskRecordErrorCode_Canceled          RoutineTaskRecordErrorCode = "Canceled"
-	RoutineTaskRecordErrorCode_Unknown           RoutineTaskRecordErrorCode = "Unknown"
+	RoutineTaskRecordErrorCode_PermissionDenied  RoutineTaskRecordErrorCode = RoutineTaskRecordErrorCode(enumcontract.RoutineTaskRecordErrorCode_PermissionDenied)
+	RoutineTaskRecordErrorCode_PayloadInvalid    RoutineTaskRecordErrorCode = RoutineTaskRecordErrorCode(enumcontract.RoutineTaskRecordErrorCode_PayloadInvalid)
+	RoutineTaskRecordErrorCode_TargetNotFound    RoutineTaskRecordErrorCode = RoutineTaskRecordErrorCode(enumcontract.RoutineTaskRecordErrorCode_TargetNotFound)
+	RoutineTaskRecordErrorCode_PlanLimitExceeded RoutineTaskRecordErrorCode = RoutineTaskRecordErrorCode(enumcontract.RoutineTaskRecordErrorCode_PlanLimitExceeded)
+	RoutineTaskRecordErrorCode_HandlerFailed     RoutineTaskRecordErrorCode = RoutineTaskRecordErrorCode(enumcontract.RoutineTaskRecordErrorCode_HandlerFailed)
+	RoutineTaskRecordErrorCode_DatabaseError     RoutineTaskRecordErrorCode = RoutineTaskRecordErrorCode(enumcontract.RoutineTaskRecordErrorCode_DatabaseError)
+	RoutineTaskRecordErrorCode_Timeout           RoutineTaskRecordErrorCode = RoutineTaskRecordErrorCode(enumcontract.RoutineTaskRecordErrorCode_Timeout)
+	RoutineTaskRecordErrorCode_Canceled          RoutineTaskRecordErrorCode = RoutineTaskRecordErrorCode(enumcontract.RoutineTaskRecordErrorCode_Canceled)
+	RoutineTaskRecordErrorCode_Unknown           RoutineTaskRecordErrorCode = RoutineTaskRecordErrorCode(enumcontract.RoutineTaskRecordErrorCode_Unknown)
 )
 
 var AllRoutineTaskRecordErrorCodes = []RoutineTaskRecordErrorCode{

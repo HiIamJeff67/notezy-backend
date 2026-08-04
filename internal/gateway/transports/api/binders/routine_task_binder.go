@@ -8,11 +8,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	routinetasksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/routine-tasks"
+	routinetasksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tasks"
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
-	sharedtypes "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 type RoutineTaskBinderInterface interface {
@@ -40,7 +40,7 @@ func NewRoutineTaskBinder() RoutineTaskBinderInterface { return &RoutineTaskBind
 
 func bindRoutineTaskJSON[T any](ctx *gin.Context, requestDto *T, body any, controllerFunc controllers.Func[*T]) {
 	if err := ctx.ShouldBindJSON(body); err != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("RoutineTask").WithOrigin(err), ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("RoutineTask").WithOrigin(err), ctx)
 		return
 	}
 	controllerFunc(ctx, requestDto)
@@ -49,7 +49,7 @@ func bindRoutineTaskJSON[T any](ctx *gin.Context, requestDto *T, body any, contr
 func parseRoutineTaskUUID(ctx *gin.Context, name string) (uuid.UUID, bool) {
 	value, err := uuid.Parse(ctx.Param(name))
 	if err != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("RoutineTask").WithOrigin(err), ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("RoutineTask").WithOrigin(err), ctx)
 		return uuid.Nil, false
 	}
 	return value, true
@@ -61,23 +61,28 @@ func parseRoutineTaskBool(ctx *gin.Context, name string) (*bool, bool) {
 	}
 	value, err := strconv.ParseBool(valueString)
 	if err != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("RoutineTask").WithOrigin(err), ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("RoutineTask").WithOrigin(err), ctx)
 		return nil, false
 	}
 	return &value, true
 }
-func parseRoutineTaskPermission(ctx *gin.Context) (sharedtypes.AccessControlPermission, bool) {
-	value, err := sharedtypes.ParseAccessControlPermission(ctx.Query("permission"))
-	if err != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("RoutineTask").WithOrigin(err), ctx)
+func parseRoutineTaskPermission(ctx *gin.Context) (enumcontract.AccessControlPermission, bool) {
+	permission := enumcontract.AccessControlPermission(ctx.Query("permission"))
+	switch permission {
+	case enumcontract.AccessControlPermission_Read,
+		enumcontract.AccessControlPermission_Write,
+		enumcontract.AccessControlPermission_Admin,
+		enumcontract.AccessControlPermission_Owner:
+		return permission, true
+	default:
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("RoutineTask"), ctx)
 		return "", false
 	}
-	return *value, true
 }
 func parseRoutineTaskTime(ctx *gin.Context, name string) (time.Time, bool) {
 	value, err := time.Parse(time.RFC3339, ctx.Query(name))
 	if err != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("RoutineTask").WithOrigin(err), ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("RoutineTask").WithOrigin(err), ctx)
 		return time.Time{}, false
 	}
 	return value, true
@@ -92,7 +97,7 @@ func parseRoutineTaskUUIDs(ctx *gin.Context, name string) ([]uuid.UUID, bool) {
 	for index, value := range values {
 		parsed, err := uuid.Parse(value)
 		if err != nil {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("RoutineTask").WithOrigin(err), ctx)
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("RoutineTask").WithOrigin(err), ctx)
 			return nil, false
 		}
 		ids[index] = parsed

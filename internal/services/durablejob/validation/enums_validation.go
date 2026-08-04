@@ -4,7 +4,7 @@ import (
 	"github.com/go-playground/validator/v10" // make sure we use the version 10
 
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas/enums"
-	stringutil "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/stringutil"
+	stringutil "github.com/HiIamJeff67/notezy-backend/shared/lib/stringutil"
 )
 
 func RegisterEnumsValidation(validate *validator.Validate) {

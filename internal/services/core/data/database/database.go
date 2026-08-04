@@ -16,9 +16,9 @@ import (
 	triggers "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/triggers"
 	seeds "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/seeds"
 	managementsql "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/sqls/management"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
-	stringutil "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/stringutil"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	stringutil "github.com/HiIamJeff67/notezy-backend/shared/lib/stringutil"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 var (

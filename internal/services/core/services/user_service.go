@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/users"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
+	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
@@ -22,9 +22,9 @@ import (
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
-	searchcursor "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/searchcursor"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
+	validator "github.com/go-playground/validator/v10"
 )
 
 type UserServiceInterface interface {
@@ -39,11 +39,13 @@ type UserServiceInterface interface {
 }
 
 type UserService struct {
+	validator      *validator.Validate
 	db             *gorm.DB
 	userRepository repositories.UserRepositoryInterface
 }
 
 func NewUserService(
+	validator *validator.Validate,
 	db *gorm.DB,
 	userRepository repositories.UserRepositoryInterface,
 ) UserServiceInterface {
@@ -51,6 +53,7 @@ func NewUserService(
 		db = data.NotezyDB
 	}
 	return &UserService{
+		validator:      validator,
 		db:             db,
 		userRepository: userRepository,
 	}
@@ -61,7 +64,7 @@ func NewUserService(
 func (s *UserService) GetUserData(
 	ctx context.Context, requestDto *usersdto.GetUserDataRequestDto,
 ) (*usersdto.GetUserDataResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"User",
@@ -104,7 +107,7 @@ func (s *UserService) GetUserData(
 func (s *UserService) GetMe(
 	ctx context.Context, requestDto *usersdto.GetMeRequestDto,
 ) (*usersdto.GetMeResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"User",
@@ -141,7 +144,7 @@ func (s *UserService) GetMe(
 func (s *UserService) UpdateMe(
 	ctx context.Context, requestDto *usersdto.UpdateMeRequestDto,
 ) (*usersdto.UpdateMeResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"User",

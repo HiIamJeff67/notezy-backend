@@ -4,10 +4,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/blocks"
+	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 type BlockBinderInterface interface {
@@ -29,7 +29,7 @@ func (b *BlockBinder) BindGetMyBlockById(controllerFunc controllers.Func[*blocks
 
 		blockId, err := uuid.Parse(ctx.Param("blockId"))
 		if err != nil {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Block").WithOrigin(err), ctx)
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Block").WithOrigin(err), ctx)
 			return
 		}
 		requestDto.Param.BlockId = blockId
@@ -44,7 +44,7 @@ func (b *BlockBinder) BindGetMyBlocksByIds(controllerFunc controllers.Func[*bloc
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
 		if err := ctx.ShouldBindQuery(&requestDto.Param); err != nil {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Block").WithOrigin(err), ctx)
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("Block").WithOrigin(err), ctx)
 			return
 		}
 
@@ -59,7 +59,7 @@ func (b *BlockBinder) BindGetMyBlocksByBlockPackId(controllerFunc controllers.Fu
 
 		blockPackId, err := uuid.Parse(ctx.Param("blockPackId"))
 		if err != nil {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Block").WithOrigin(err), ctx)
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("Block").WithOrigin(err), ctx)
 			return
 		}
 		requestDto.Param.BlockPackId = blockPackId

@@ -7,10 +7,10 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-gonic/gin"
 
+	generated "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/generated"
 	resolvers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/graphql/resolvers"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	generated "github.com/HiIamJeff67/notezy-backend/contracts/graphql/generated"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
 )
 
 func GraphQLHandler(coreClient *coreadapters.CoreClient) gin.HandlerFunc {
@@ -22,7 +22,7 @@ func GraphQLHandler(coreClient *coreadapters.CoreClient) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		requestContext := context.WithValue(
 			ctx.Request.Context(),
-			types.ContextFieldName_GinContext,
+			sharedcontexts.ContextFieldName_GinContext,
 			ctx,
 		)
 		server.ServeHTTP(ctx.Writer, ctx.Request.WithContext(requestContext))

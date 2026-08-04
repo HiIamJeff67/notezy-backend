@@ -5,14 +5,34 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type RoutinePeriod string
+type RoutinePeriod enumcontract.RoutinePeriod
+
+func (value *RoutinePeriod) ToContractable() *enumcontract.RoutinePeriod {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.RoutinePeriod(*value)
+	return &contractValue
+}
+
+func (value *RoutinePeriod) ToStorable() *RoutinePeriod {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	RoutinePeriod_Daily   RoutinePeriod = "Daily"
-	RoutinePeriod_Weekly  RoutinePeriod = "Weekly"
-	RoutinePeriod_Monthly RoutinePeriod = "Monthly"
+	RoutinePeriod_Daily   RoutinePeriod = RoutinePeriod(enumcontract.RoutinePeriod_Daily)
+	RoutinePeriod_Weekly  RoutinePeriod = RoutinePeriod(enumcontract.RoutinePeriod_Weekly)
+	RoutinePeriod_Monthly RoutinePeriod = RoutinePeriod(enumcontract.RoutinePeriod_Monthly)
 )
 
 var AllRoutinePeriods = []RoutinePeriod{

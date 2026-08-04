@@ -12,10 +12,10 @@ import (
 
 	"github.com/google/uuid"
 
-	corecontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 	durablejobdto "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/blocks"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/internal/shared/tokens"
+	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
+	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 )
 
 const applyBlockProjectionPath = "/durablejob/" + durablejobdto.ApplyBlockProjectionOperation
@@ -53,10 +53,10 @@ func (c Client) ApplyBlockProjections(
 		return nil, err
 	}
 
-	payload, err := json.Marshal(corecontract.Request[durablejobdto.ApplyBlockProjectionRequestDto]{
-		Version:   corecontract.Version,
+	payload, err := json.Marshal(gatewaycontract.Request[durablejobdto.ApplyBlockProjectionRequestDto]{
+		Version:   gatewaycontract.Version,
 		Operation: durablejobdto.ApplyBlockProjectionOperation,
-		Metadata: corecontract.RequestMetadata{
+		Metadata: gatewaycontract.RequestMetadata{
 			RequestId: requestId,
 		},
 		Dto: durablejobdto.ApplyBlockProjectionRequestDto{
@@ -85,7 +85,7 @@ func (c Client) ApplyBlockProjections(
 	}
 	defer response.Body.Close()
 
-	var result corecontract.Response[durablejobdto.ApplyBlockProjectionResponseDto]
+	var result gatewaycontract.Response[durablejobdto.ApplyBlockProjectionResponseDto]
 	if err := json.NewDecoder(response.Body).Decode(&result); err != nil {
 		return nil, err
 	}

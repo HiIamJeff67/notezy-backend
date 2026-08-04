@@ -8,9 +8,12 @@ import (
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/gateway/contexts"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
+	responsewriter "github.com/HiIamJeff67/notezy-backend/shared/responsewriter"
 )
+
+const embeddedResponseFieldName = "embedded"
+const embeddedPublicIdFieldName = "publicId"
 
 // To add additional field to the response with possibly embedded data that is required for the frontend.
 // ex. the frontend require a publicId to indicate the user in their local database across APIs
@@ -51,13 +54,13 @@ func EmbeddedInterceptor(responseWriterKey string) gin.HandlerFunc {
 			return
 		}
 
-		publicId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, types.ContextFieldName_User_PublicId)
+		publicId, exception := contexts.GetAndConvertContextFieldToUUID(ctx, sharedcontexts.ContextFieldName_User_PublicId)
 		if exception != nil || publicId == nil {
 			return
 		}
 
-		originalResponse[types.AdditionalResponseFieldDomainName_Embedded.String()] = gin.H{
-			types.EmbeddedAuthorizedResponseFieldName_PublicId.String(): *publicId,
+		originalResponse[embeddedResponseFieldName] = gin.H{
+			embeddedPublicIdFieldName: *publicId,
 		}
 		modifiedResponse, err := json.Marshal(originalResponse)
 		if err != nil {

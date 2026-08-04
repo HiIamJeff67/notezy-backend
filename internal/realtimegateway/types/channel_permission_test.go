@@ -3,17 +3,17 @@ package realtimetypes
 import (
 	"testing"
 
-	sharedtypes "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
 func TestChannelPermissionAllowedAccessControlPermissions(t *testing.T) {
 	readPermissions := ChannelPermission_Read.AllowedAccessControlPermissions()
-	if len(readPermissions) != 4 || readPermissions[3] != sharedtypes.AccessControlPermission_Read {
+	if len(readPermissions) != 4 || readPermissions[3] != enumcontract.AccessControlPermission_Read {
 		t.Fatalf("expected read channel to include Read access: %#v", readPermissions)
 	}
 
 	writePermissions := ChannelPermission_Write.AllowedAccessControlPermissions()
-	if len(writePermissions) != 3 || writePermissions[2] != sharedtypes.AccessControlPermission_Write {
+	if len(writePermissions) != 3 || writePermissions[2] != enumcontract.AccessControlPermission_Write {
 		t.Fatalf("expected write channel to stop at Write access: %#v", writePermissions)
 	}
 

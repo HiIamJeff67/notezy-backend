@@ -9,8 +9,7 @@ import (
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	sharedcontexts "github.com/HiIamJeff67/notezy-backend/internal/shared/contexts"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
 )
 
 func WithAllowedPermissions(
@@ -19,7 +18,7 @@ func WithAllowedPermissions(
 ) context.Context {
 	return sharedcontexts.WithValue(
 		ctx,
-		types.ContextFieldName_Allowed_Permissions,
+		sharedcontexts.ContextFieldName_Allowed_Permissions,
 		slices.Clone(allowedPermissions),
 	)
 }
@@ -27,7 +26,7 @@ func WithAllowedPermissions(
 func WithActorUserId(ctx context.Context, actorUserId uuid.UUID) context.Context {
 	return sharedcontexts.WithValue(
 		ctx,
-		types.ContextFieldName_User_Id,
+		sharedcontexts.ContextFieldName_User_Id,
 		actorUserId,
 	)
 }
@@ -35,7 +34,7 @@ func WithActorUserId(ctx context.Context, actorUserId uuid.UUID) context.Context
 func WithActorUserName(ctx context.Context, actorUserName string) context.Context {
 	return sharedcontexts.WithValue(
 		ctx,
-		types.ContextFieldName_User_Name,
+		sharedcontexts.ContextFieldName_User_Name,
 		actorUserName,
 	)
 }
@@ -43,7 +42,7 @@ func WithActorUserName(ctx context.Context, actorUserName string) context.Contex
 func WithActorUserPublicId(ctx context.Context, actorUserPublicId uuid.UUID) context.Context {
 	return sharedcontexts.WithValue(
 		ctx,
-		types.ContextFieldName_User_PublicId,
+		sharedcontexts.ContextFieldName_User_PublicId,
 		actorUserPublicId,
 	)
 }
@@ -53,7 +52,7 @@ func GetAllowedPermissions(
 ) ([]enums.AccessControlPermission, *exceptions.Exception) {
 	allowedPermissions, err := sharedcontexts.GetValue[[]enums.AccessControlPermission](
 		ctx,
-		types.ContextFieldName_Allowed_Permissions,
+		sharedcontexts.ContextFieldName_Allowed_Permissions,
 	)
 	if err != nil {
 		return nil, exceptions.New(
@@ -72,7 +71,7 @@ func GetAllowedPermissions(
 func GetActorUserId(ctx context.Context) (uuid.UUID, *exceptions.Exception) {
 	actorUserId, err := sharedcontexts.GetValue[uuid.UUID](
 		ctx,
-		types.ContextFieldName_User_Id,
+		sharedcontexts.ContextFieldName_User_Id,
 	)
 	if err != nil || actorUserId == uuid.Nil {
 		return uuid.Nil, exceptions.New(
@@ -91,7 +90,7 @@ func GetActorUserId(ctx context.Context) (uuid.UUID, *exceptions.Exception) {
 func GetActorUserName(ctx context.Context) (string, *exceptions.Exception) {
 	actorUserName, err := sharedcontexts.GetValue[string](
 		ctx,
-		types.ContextFieldName_User_Name,
+		sharedcontexts.ContextFieldName_User_Name,
 	)
 	if err != nil || actorUserName == "" {
 		return "", exceptions.New(
@@ -110,7 +109,7 @@ func GetActorUserName(ctx context.Context) (string, *exceptions.Exception) {
 func GetActorUserPublicId(ctx context.Context) (uuid.UUID, *exceptions.Exception) {
 	actorUserPublicId, err := sharedcontexts.GetValue[uuid.UUID](
 		ctx,
-		types.ContextFieldName_User_PublicId,
+		sharedcontexts.ContextFieldName_User_PublicId,
 	)
 	if err != nil || actorUserPublicId == uuid.Nil {
 		return uuid.Nil, exceptions.New(

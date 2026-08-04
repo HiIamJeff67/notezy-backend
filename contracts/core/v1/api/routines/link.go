@@ -1,0 +1,79 @@
+package routinesdto
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+
+	coreapicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api"
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	routinestypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/routines"
+)
+
+type LinkRoutineTagByIdRequestDto struct {
+	coreapicontract.RequestDto[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			RoutineId    uuid.UUID `json:"routineId" validate:"required"`
+			RoutineTagId uuid.UUID `json:"routineTagId" validate:"required"`
+			IsUnlink     bool      `json:"isUnlink"`
+		},
+		struct{},
+		struct{},
+	]
+}
+type LinkRoutineTagByIdResponseDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+type LinkRoutineTagsByIdsRequestDto struct {
+	coreapicontract.RequestDto[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			LinkedRoutinesAndTags []routinestypes.LinkedRoutineAndTag `json:"linkedRoutinesAndTags" validate:"required,min=1,max=1024,dive"`
+			IsUnlink              bool                                `json:"isUnlink"`
+		},
+		struct{},
+		struct{},
+	]
+}
+type LinkRoutineTagsByIdsResponseDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+type LinkRoutineItemByIdRequestDto struct {
+	coreapicontract.RequestDto[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			RoutineId uuid.UUID             `json:"routineId" validate:"required"`
+			ItemId    uuid.UUID             `json:"itemId" validate:"required"`
+			ItemType  enumcontract.ItemType `json:"itemType" validate:"required,isitemtype"`
+			IsUnlink  bool                  `json:"isUnlink"`
+		},
+		struct{},
+		struct{},
+	]
+}
+type LinkRoutineItemByIdResponseDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+type LinkRoutineItemsByIdsRequestDto struct {
+	coreapicontract.RequestDto[
+		struct {
+			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
+		},
+		struct {
+			LinkedRoutinesAndItems []routinestypes.LinkedRoutineAndItem `json:"linkedRoutinesAndItems" validate:"required,min=1,max=1024,dive"`
+			IsUnlink               bool                                 `json:"isUnlink"`
+		},
+		struct{},
+		struct{},
+	]
+}
+type LinkRoutineItemsByIdsResponseDto struct {
+	UpdatedAt time.Time `json:"updatedAt"`
+}

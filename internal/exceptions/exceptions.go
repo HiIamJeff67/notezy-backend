@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type ExceptionReason = string

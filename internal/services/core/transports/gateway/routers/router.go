@@ -3,7 +3,7 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 	services "github.com/HiIamJeff67/notezy-backend/internal/services/core/services"
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/services/core/transports/gateway/endpoints"
 )
@@ -32,7 +32,7 @@ func NewRouter(
 ) *gin.Engine {
 	router := gin.New()
 
-	coreRouterGroup := router.Group("/core/" + core.Version)
+	coreRouterGroup := router.Group("/core/" + gatewaycontract.Version)
 	anonymousCoreRouterGroup := coreRouterGroup.Group("")
 	secureCoreRouterGroup := coreRouterGroup.Group("")
 

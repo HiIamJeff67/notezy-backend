@@ -29,7 +29,7 @@ response envelope. Routes are rooted at `/api/development/v1`.
 | --- | --- | --- |
 | `POST` | `/realtime/connection/ticket` | Issue a short-lived capability for one root WebSocket connection. |
 | `POST` | `/realtime/channel/block-pack/ticket` | Issue a BlockPack-scoped read or write channel capability. |
-| `GET` | `/realtime/block-pack/:blockPackId/participants` | Return Gateway-owned ephemeral active presence enriched by Core after permission and membership filtering. |
+| `GET` | `/realtime/block-pack/:blockPackId/participants` | Return RealtimeGateway-owned ephemeral active presence, fetched through a private transport and enriched by Core after permission and membership filtering. |
 
 ### Connection ticket
 
@@ -49,7 +49,9 @@ caller's effective RootShelf permission before issuing a ticket.
 `Read`, `Write`, `Admin`, and `Owner` may request `read`; only `Write`,
 `Admin`, and `Owner` may request `write`. The response contains the signed
 ticket, expiry, channel identity, effective permission, room/document schema
-metadata, and sequence checkpoints required by the protocol.
+metadata, and sequence checkpoints required by the protocol. The signed ticket,
+not the public response, carries the private room-admission policy snapshot
+(version, strategy, and maximum subscribers) that RealtimeGateway executes.
 
 ### Presence
 
@@ -59,16 +61,16 @@ was observed; it does not affect membership or permission state.
 
 ## Channel lifecycle
 
-1. The Gateway validates the connection ticket during WebSocket upgrade and
+1. RealtimeGateway validates the connection ticket during WebSocket upgrade and
    emits `ready` after a successful connection.
-2. A `subscribe` control frame carries the channel ticket. The Gateway checks
-   that connection and channel claims belong to the same user, authorizes the
-   current hierarchy, allocates a connection-local `connectorChannelId`, and
-   attaches the channel to the Yjs worker.
+2. A `subscribe` control frame carries the channel ticket. RealtimeGateway checks
+   that connection and channel claims belong to the same user, applies the
+   ticket's signed room-admission policy, allocates a connection-local
+   `connectorChannelId`, and attaches the channel to the Yjs worker.
 3. The worker cold-loads durable Yjs state and sends the complete document
    state through the subscribed channel.
 4. On `unsubscribe`, connection close, permission revocation, resource
-   unavailability, or resync, the Gateway detaches the channel and releases
+   unavailability, or resync, RealtimeGateway detaches the channel and releases
    all associated leases.
 
 `connectorChannelId` is valid only for one root connection and must never be

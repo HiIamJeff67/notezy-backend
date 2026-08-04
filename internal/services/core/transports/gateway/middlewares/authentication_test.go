@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/internal/shared/tokens"
+	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 )
 
 func TestAuthenticationMiddlewareValidatesForwardedAccessToken(t *testing.T) {

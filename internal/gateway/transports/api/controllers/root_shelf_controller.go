@@ -5,9 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	rootshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/root-shelves"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
+	rootshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/root-shelves"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 type RootShelfControllerInterface interface {
@@ -57,7 +57,7 @@ func (c *RootShelfController) GetMyRootShelfById(ctx *gin.Context, request *root
 		"/core/v1/root-shelves/get-by-id",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -80,7 +80,7 @@ func (c *RootShelfController) CreateRootShelf(ctx *gin.Context, request *rootshe
 		"/core/v1/root-shelves/create",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -103,7 +103,7 @@ func (c *RootShelfController) CreateRootShelves(ctx *gin.Context, request *roots
 		"/core/v1/root-shelves/create-many",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -126,7 +126,7 @@ func (c *RootShelfController) UpdateMyRootShelfById(ctx *gin.Context, request *r
 		"/core/v1/root-shelves/update",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -149,7 +149,7 @@ func (c *RootShelfController) UpdateMyRootShelvesByIds(ctx *gin.Context, request
 		"/core/v1/root-shelves/update-many",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -172,7 +172,7 @@ func (c *RootShelfController) RestoreMyRootShelfById(ctx *gin.Context, requestDt
 		"/core/v1/root-shelves/restore",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -195,7 +195,7 @@ func (c *RootShelfController) RestoreMyRootShelvesByIds(ctx *gin.Context, reques
 		"/core/v1/root-shelves/restore-many",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -218,7 +218,7 @@ func (c *RootShelfController) DeleteMyRootShelfById(ctx *gin.Context, requestDto
 		"/core/v1/root-shelves/delete",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -241,7 +241,7 @@ func (c *RootShelfController) DeleteMyRootShelvesByIds(ctx *gin.Context, request
 		"/core/v1/root-shelves/delete-many",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -255,7 +255,7 @@ func (c *RootShelfController) DeleteMyRootShelvesByIds(ctx *gin.Context, request
 func (c *RootShelfController) GetMyRootShelfPermission(ctx *gin.Context, requestDto *rootshelvesdto.GetMyRootShelfPermissionRequestDto) {
 	response, exception := coreadapters.CallSecurly[rootshelvesdto.GetMyRootShelfPermissionRequestDto, rootshelvesdto.GetMyRootShelfPermissionResponseDto](ctx, c.coreClient, requestDto, rootshelvesdto.GetMyRootShelfPermissionOperation, "/core/v1/root-shelves/permissions/get")
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -269,7 +269,7 @@ func (c *RootShelfController) GetMyRootShelfPermission(ctx *gin.Context, request
 func (c *RootShelfController) CreateMyRootShelfPermission(ctx *gin.Context, requestDto *rootshelvesdto.CreateMyRootShelfPermissionRequestDto) {
 	response, exception := coreadapters.CallSecurly[rootshelvesdto.CreateMyRootShelfPermissionRequestDto, rootshelvesdto.CreateMyRootShelfPermissionResponseDto](ctx, c.coreClient, requestDto, rootshelvesdto.CreateMyRootShelfPermissionOperation, "/core/v1/root-shelves/permissions/create")
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -285,7 +285,7 @@ func (c *RootShelfController) UpsertMyRootShelfPermission(
 ) {
 	response, exception := coreadapters.CallSecurly[rootshelvesdto.UpsertMyRootShelfPermissionRequestDto, rootshelvesdto.UpsertMyRootShelfPermissionResponseDto](ctx, c.coreClient, requestDto, rootshelvesdto.UpsertMyRootShelfPermissionOperation, "/core/v1/root-shelves/permissions/upsert")
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -310,7 +310,7 @@ func (c *RootShelfController) UpsertMyRootShelfPermissions(
 		"/core/v1/root-shelves/permissions/upsert-many",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -324,7 +324,7 @@ func (c *RootShelfController) UpsertMyRootShelfPermissions(
 func (c *RootShelfController) UpdateMyRootShelfPermission(ctx *gin.Context, requestDto *rootshelvesdto.UpdateMyRootShelfPermissionRequestDto) {
 	response, exception := coreadapters.CallSecurly[rootshelvesdto.UpdateMyRootShelfPermissionRequestDto, rootshelvesdto.UpdateMyRootShelfPermissionResponseDto](ctx, c.coreClient, requestDto, rootshelvesdto.UpdateMyRootShelfPermissionOperation, "/core/v1/root-shelves/permissions/update")
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -349,7 +349,7 @@ func (c *RootShelfController) TransferMyRootShelfOwnership(
 		"/core/v1/root-shelves/ownership/transfer",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -374,7 +374,7 @@ func (c *RootShelfController) DeleteMyRootShelfPermission(
 		"/core/v1/root-shelves/permissions/delete",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -395,7 +395,7 @@ func (c *RootShelfController) DeleteMyRootShelfPermissions(
 		"/core/v1/root-shelves/permissions/delete-many",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -414,7 +414,7 @@ func (c *RootShelfController) LeaveMyRootShelf(ctx *gin.Context, requestDto *roo
 		"/core/v1/root-shelves/memberships/leave",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -433,7 +433,7 @@ func (c *RootShelfController) LeaveMyRootShelves(ctx *gin.Context, requestDto *r
 		"/core/v1/root-shelves/memberships/leave-many",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 

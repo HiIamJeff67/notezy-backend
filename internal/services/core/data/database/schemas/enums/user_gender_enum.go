@@ -5,14 +5,34 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type UserGender string
+type UserGender enumcontract.UserGender
+
+func (value *UserGender) ToContractable() *enumcontract.UserGender {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.UserGender(*value)
+	return &contractValue
+}
+
+func (value *UserGender) ToStorable() *UserGender {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	UserGender_Male           UserGender = "Male"
-	UserGender_Female         UserGender = "Female"
-	UserGender_PreferNotToSay UserGender = "PreferNotToSay"
+	UserGender_Male           UserGender = UserGender(enumcontract.UserGender_Male)
+	UserGender_Female         UserGender = UserGender(enumcontract.UserGender_Female)
+	UserGender_PreferNotToSay UserGender = UserGender(enumcontract.UserGender_PreferNotToSay)
 )
 
 var AllUserGenders = []UserGender{

@@ -4,9 +4,11 @@ import (
 	"context"
 	"net/http"
 
+	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	typescontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/inputs"
 	options "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/options"
@@ -15,11 +17,11 @@ import (
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas/enums"
 	matchers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers/matchers"
 	resolvers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers/resolvers"
-	payloads "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/payloads"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type RootShelfHandler struct {
+	validator            *validator.Validate
 	db                   *gorm.DB
 	patternResolver      resolvers.PatternResolverInterface
 	templateBlockMatcher matchers.TemplateBlockMatcherInterface
@@ -28,6 +30,7 @@ type RootShelfHandler struct {
 }
 
 func NewRootShelfHandler(
+	validator *validator.Validate,
 	db *gorm.DB,
 	patternResolver resolvers.PatternResolverInterface,
 	templateBlockMatcher matchers.TemplateBlockMatcherInterface,
@@ -41,6 +44,7 @@ func NewRootShelfHandler(
 		templateBlockMatcher = matchers.NewTemplateBlockMatcher()
 	}
 	return RootShelfHandler{
+		validator:            validator,
 		db:                   db,
 		patternResolver:      patternResolver,
 		templateBlockMatcher: templateBlockMatcher,
@@ -59,8 +63,8 @@ func (h RootShelfHandler) HandleCreateRootShelf(
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
 	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
-	candidatePayloads := make([]payloads.CreateRootShelfRoutineTaskPayload, 0, len(tasks))
-	candidatePatterns := make([]payloads.RoutineTaskPattern, 0, len(tasks))
+	candidatePayloads := make([]typescontract.CreateRootShelfRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]typescontract.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		actorUserId, exists := taskIdToActorUserId[task.Id]
@@ -68,7 +72,7 @@ func (h RootShelfHandler) HandleCreateRootShelf(
 			continue
 		}
 
-		payload, exception := decodePayload[payloads.CreateRootShelfRoutineTaskPayload](task)
+		payload, exception := decodePayload[typescontract.CreateRootShelfRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}
@@ -140,8 +144,8 @@ func (h RootShelfHandler) HandleUpdateRootShelf(
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
 	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
-	candidatePayloads := make([]payloads.UpdateRootShelfRoutineTaskPayload, 0, len(tasks))
-	candidatePatterns := make([]payloads.RoutineTaskPattern, 0, len(tasks))
+	candidatePayloads := make([]typescontract.UpdateRootShelfRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]typescontract.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		actorUserId, exists := taskIdToActorUserId[task.Id]
@@ -149,7 +153,7 @@ func (h RootShelfHandler) HandleUpdateRootShelf(
 			continue
 		}
 
-		payload, exception := decodePayload[payloads.UpdateRootShelfRoutineTaskPayload](task)
+		payload, exception := decodePayload[typescontract.UpdateRootShelfRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}
@@ -236,7 +240,7 @@ func (h RootShelfHandler) HandleResetRootShelf(
 			continue
 		}
 
-		payload, exception := decodePayload[payloads.ResetRootShelfRoutineTaskPayload](task)
+		payload, exception := decodePayload[typescontract.ResetRootShelfRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}

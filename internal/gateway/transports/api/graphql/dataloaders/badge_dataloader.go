@@ -7,12 +7,12 @@ import (
 	"github.com/google/uuid"
 	gophersdataloader "github.com/graph-gophers/dataloader/v7"
 
-	badgesdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/badges"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
+	badgesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/badges"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	gatewaycontexts "github.com/HiIamJeff67/notezy-backend/internal/gateway/contexts"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 type LoadBadgeSource string

@@ -5,9 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	materialsdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/materials"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
+	materialsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/materials"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 type MaterialControllerInterface interface {
@@ -48,7 +48,7 @@ func (c *MaterialController) GetMyMaterialById(ctx *gin.Context, requestDto *mat
 		"/core/v1/materials/get-by-id",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -71,7 +71,7 @@ func (c *MaterialController) GetMyMaterialAndItsParentById(ctx *gin.Context, req
 		"/core/v1/materials/get-and-parent-by-id",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -94,7 +94,7 @@ func (c *MaterialController) GetMyMaterialsByParentSubShelfId(ctx *gin.Context, 
 		"/core/v1/materials/get-by-parent-sub-shelf-id",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -117,7 +117,7 @@ func (c *MaterialController) GetAllMyMaterialsByRootShelfId(ctx *gin.Context, re
 		"/core/v1/materials/get-all-by-root-shelf-id",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -140,7 +140,7 @@ func (c *MaterialController) CreateMyMaterial(ctx *gin.Context, requestDto *mate
 		"/core/v1/materials/create",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -163,7 +163,7 @@ func (c *MaterialController) UpdateMyMaterialById(ctx *gin.Context, requestDto *
 		"/core/v1/materials/update",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -186,7 +186,7 @@ func (c *MaterialController) SaveMyMaterialById(ctx *gin.Context, requestDto *ma
 		"/core/v1/materials/save",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -209,7 +209,7 @@ func (c *MaterialController) MoveMyMaterialById(ctx *gin.Context, requestDto *ma
 		"/core/v1/materials/move",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -232,7 +232,7 @@ func (c *MaterialController) MoveMyMaterialsByIds(ctx *gin.Context, requestDto *
 		"/core/v1/materials/move-many",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -255,7 +255,7 @@ func (c *MaterialController) RestoreMyMaterialById(ctx *gin.Context, requestDto 
 		"/core/v1/materials/restore",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -278,7 +278,7 @@ func (c *MaterialController) RestoreMyMaterialsByIds(ctx *gin.Context, requestDt
 		"/core/v1/materials/restore-many",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -301,7 +301,7 @@ func (c *MaterialController) DeleteMyMaterialById(ctx *gin.Context, requestDto *
 		"/core/v1/materials/delete",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
@@ -324,7 +324,7 @@ func (c *MaterialController) DeleteMyMaterialsByIds(ctx *gin.Context, requestDto
 		"/core/v1/materials/delete-many",
 	)
 	if exception != nil {
-		responsewriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 

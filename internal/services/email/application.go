@@ -7,6 +7,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/go-playground/validator/v10"
+
 	observability "github.com/HiIamJeff67/notezy-backend/internal/platform/observability"
 	coretransport "github.com/HiIamJeff67/notezy-backend/internal/services/email/transports/core"
 )
@@ -25,11 +27,14 @@ func Start() func() {
 	}
 
 	server := &http.Server{
-		Handler: coretransport.NewRouter(coretransport.Sender{
-			SendWelcomeEmail:       AsyncSendWelcomeEmail,
-			SendValidationEmail:    AsyncSendValidationEmail,
-			SendSecurityAlertEmail: AsyncSendSecurityAlertEmail,
-		}),
+		Handler: coretransport.NewRouter(
+			coretransport.Sender{
+				SendWelcomeEmail:       AsyncSendWelcomeEmail,
+				SendValidationEmail:    AsyncSendValidationEmail,
+				SendSecurityAlertEmail: AsyncSendSecurityAlertEmail,
+			},
+			validator.New(),
+		),
 	}
 	go func() {
 		if err := server.Serve(listener); err != nil && err != http.ErrServerClosed {

@@ -14,9 +14,8 @@ import (
 
 	platformredis "github.com/HiIamJeff67/notezy-backend/internal/platform/redis"
 	redisscripts "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease/scripts"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
-	sharedrealtimelease "github.com/HiIamJeff67/notezy-backend/internal/shared/realtimelease"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type RealtimeBlockPackSubscriberLease struct {
@@ -166,6 +165,10 @@ func (s *RealtimeLeaseCacheClient) blockPackChannelRevocationKey() string {
 
 func (s *RealtimeLeaseCacheClient) blockPackPresenceKey() string {
 	return "Realtime:blockPack:presence-events"
+}
+
+func (s *RealtimeLeaseCacheClient) userSessionRevocationKey() string {
+	return "Realtime:user:session-revocations"
 }
 
 func (s *RealtimeLeaseCacheClient) ConsumeTicket(
@@ -479,32 +482,6 @@ func (s *RealtimeLeaseCacheClient) GetBlockPackSubscriberLeases(
 	}
 
 	return result, nil
-}
-
-func (s *RealtimeLeaseCacheClient) SubscribeBlockPackChannelRevocations(
-	handler func(sharedrealtimelease.RealtimeBlockPackChannelRevocation),
-) (func(), error) {
-	redisClient, err := s.getRedisClient(s.blockPackChannelRevocationKey())
-	if err != nil {
-		return nil, err
-	}
-
-	pubsub := redisClient.Subscribe(s.blockPackChannelRevocationKey())
-
-	go func() {
-		for message := range pubsub.Channel() {
-			var revocation sharedrealtimelease.RealtimeBlockPackChannelRevocation
-			if err := json.Unmarshal([]byte(message.Payload), &revocation); err != nil {
-				continue
-			}
-
-			handler(revocation)
-		}
-	}()
-
-	return func() {
-		_ = pubsub.Close()
-	}, nil
 }
 
 func (s *RealtimeLeaseCacheClient) PublishBlockPackPresenceEvent(

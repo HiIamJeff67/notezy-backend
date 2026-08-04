@@ -7,7 +7,9 @@ import (
 
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
+	realtimegatewayadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/realtimegateway/adapters"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
 )
 
 var (
@@ -15,8 +17,9 @@ var (
 	DevelopmentAPIRouterGroup *gin.RouterGroup
 )
 
-func ConfigureAPIRoutes() {
+func ConfigureAPIRoutes(accessTokenCookieHandler, refreshTokenCookieHandler *cookies.CookieHandler) {
 	coreClient := coreadapters.NewConfiguredCoreClient()
+	realtimeGatewayClient := realtimegatewayadapters.NewConfiguredRealtimeGatewayClient()
 
 	DevelopmentAPIRouterGroup = DevelopmentRouter.Group("/" + constants.APIDevelopmentBaseURL) // use in development mode
 	DevelopmentAPIRouterGroup.Use(
@@ -27,23 +30,23 @@ func ConfigureAPIRoutes() {
 	DevelopmentAPIRouterGroup.OPTIONS("/*path", func(ctx *gin.Context) { ctx.Status(200) })
 	fmt.Println("API router group path:", DevelopmentAPIRouterGroup.BasePath())
 
-	configureDevelopmentAuthRoutes(DevelopmentAPIRouterGroup, coreClient)
-	configureDevelopmentUserRoutes(DevelopmentAPIRouterGroup, coreClient)
-	configureDevelopmentUserInfoRoutes(DevelopmentAPIRouterGroup, coreClient)
-	configureUserSettingRoutes(DevelopmentAPIRouterGroup, coreClient)
-	configureDevelopmentUserAccountRoutes(DevelopmentAPIRouterGroup, coreClient)
-	configureDevelopmentStationRoutes(DevelopmentAPIRouterGroup, coreClient)
-	configureDevelopmentRoutineRoutes(DevelopmentAPIRouterGroup, coreClient)
-	configureDevelopmentRoutineTagRoutes(DevelopmentAPIRouterGroup, coreClient)
-	configureDevelopmentRoutineTaskRoutes(DevelopmentAPIRouterGroup, coreClient)
-	configureDevelopmentRoutineTaskRecordRoutes(DevelopmentAPIRouterGroup, coreClient)
-	configureDevelopmentRootShelfRoutes(DevelopmentAPIRouterGroup, coreClient)
-	configureDevelopmentSubShelfRoutes(DevelopmentAPIRouterGroup, coreClient)
-	configureDevelopmentMaterialRoutes(DevelopmentAPIRouterGroup, coreClient)
-	configureDevelopmentBlockPackRoutes(DevelopmentAPIRouterGroup, coreClient)
-	configureDevelopmentBlockRoutes(DevelopmentAPIRouterGroup, coreClient)
-	configureDevelopmentRealtimeRoutes(DevelopmentAPIRouterGroup, coreClient)
-	configureDevelopmentGraphQLRoutes(DevelopmentAPIRouterGroup, coreClient)
+	configureDevelopmentAuthRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
+	configureDevelopmentUserRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
+	configureDevelopmentUserInfoRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
+	configureUserSettingRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
+	configureDevelopmentUserAccountRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
+	configureDevelopmentStationRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
+	configureDevelopmentRoutineRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
+	configureDevelopmentRoutineTagRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
+	configureDevelopmentRoutineTaskRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
+	configureDevelopmentRoutineTaskRecordRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
+	configureDevelopmentRootShelfRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
+	configureDevelopmentSubShelfRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
+	configureDevelopmentMaterialRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
+	configureDevelopmentBlockPackRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
+	configureDevelopmentBlockRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
+	configureDevelopmentRealtimeRoutes(DevelopmentAPIRouterGroup, coreClient, realtimeGatewayClient, accessTokenCookieHandler, refreshTokenCookieHandler)
+	configureDevelopmentGraphQLRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
 
 	// test
 	configureStaticRoutes(DevelopmentAPIRouterGroup)

@@ -3,10 +3,10 @@ package binders
 import (
 	"github.com/gin-gonic/gin"
 
-	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/users"
+	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/internal/shared/responsewriter"
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 type UserBinderInterface interface {
@@ -36,7 +36,7 @@ func (b *UserBinder) BindUpdateMe(controllerFunc controllers.Func[*usersdto.Upda
 		requestDto := &usersdto.UpdateMeRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		if err := ctx.ShouldBindJSON(&requestDto.Body); err != nil {
-			responsewriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("User").WithOrigin(err), ctx)
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidDto("User").WithOrigin(err), ctx)
 			return
 		}
 		controllerFunc(ctx, requestDto)

@@ -5,14 +5,34 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type UserRole string
+type UserRole enumcontract.UserRole
+
+func (value *UserRole) ToContractable() *enumcontract.UserRole {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.UserRole(*value)
+	return &contractValue
+}
+
+func (value *UserRole) ToStorable() *UserRole {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	UserRole_Admin  UserRole = "Admin"
-	UserRole_Normal UserRole = "Normal"
-	UserRole_Guest  UserRole = "Guest"
+	UserRole_Admin  UserRole = UserRole(enumcontract.UserRole_Admin)
+	UserRole_Normal UserRole = UserRole(enumcontract.UserRole_Normal)
+	UserRole_Guest  UserRole = UserRole(enumcontract.UserRole_Guest)
 )
 
 // All the userRoles placing in the descending order

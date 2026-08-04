@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
-	badgesdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/badges"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	badgesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/badges"
 	services "github.com/HiIamJeff67/notezy-backend/internal/services/core/services"
 )
 
@@ -28,7 +28,7 @@ func NewBadgeEndpoint(
 }
 
 func (t *BadgeEndpoint) LoadUserBadges(ctx *gin.Context) {
-	request := &core.Request[badgesdto.LoadUserBadgesRequestDto]{}
+	request := &gatewaycontract.Request[badgesdto.LoadUserBadgesRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -37,9 +37,9 @@ func (t *BadgeEndpoint) LoadUserBadges(ctx *gin.Context) {
 	responseDtos, exception := t.badgeService.GetPublicBadgesByUserPublicIds(ctx.Request.Context(), request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -49,9 +49,9 @@ func (t *BadgeEndpoint) LoadUserBadges(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[badgesdto.LoadUserBadgesResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[badgesdto.LoadUserBadgesResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},

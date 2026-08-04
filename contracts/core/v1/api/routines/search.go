@@ -1,0 +1,6 @@
+package routinesdto
+
+import gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+
+type SearchRoutinesRequestDto = gqlmodels.SearchRoutineInput
+type SearchRoutinesResponseDto = gqlmodels.SearchRoutineConnection

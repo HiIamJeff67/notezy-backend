@@ -19,9 +19,9 @@ import (
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas/enums"
 	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/scopes"
 	durablejobexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/exceptions"
-	array "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/array"
-	partialupdate "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/partialupdate"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	array "github.com/HiIamJeff67/notezy-backend/shared/lib/array"
+	partialupdate "github.com/HiIamJeff67/notezy-backend/shared/lib/partialupdate"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type BlockPackRepositoryInterface interface {

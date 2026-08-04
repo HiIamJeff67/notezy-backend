@@ -21,6 +21,7 @@ import (
 	handlers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers"
 	matchers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers/matchers"
 	resolvers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers/resolvers"
+	validation "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/validation"
 	yjsmaintenance "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/yjsmaintenance"
 )
 
@@ -55,6 +56,8 @@ type purposeTaskGroup struct {
 }
 
 func NewHandlerManager(maxWorkers int, db *gorm.DB) HandlerManager {
+	validator := validation.New()
+
 	if maxWorkers <= 0 {
 		maxWorkers = 1
 	}
@@ -69,8 +72,8 @@ func NewHandlerManager(maxWorkers int, db *gorm.DB) HandlerManager {
 	yjsWorkerClient := yjsmaintenance.NewWorkerClient()
 
 	blockPackHandler := handlers.NewBlockPackHandler(
+		validator,
 		db,
-		nil,
 		patternResolver,
 		templateBlockMatcher,
 		blockPackRepository,
@@ -78,16 +81,37 @@ func NewHandlerManager(maxWorkers int, db *gorm.DB) HandlerManager {
 		yjsWorkerClient,
 	)
 	blockHandler := handlers.NewBlockHandler(
+		validator,
 		db,
-		nil,
 		patternResolver,
 		templateBlockMatcher,
 		blockPackRepository,
 		blockRepository,
 	)
-	rootShelfHandler := handlers.NewRootShelfHandler(db, patternResolver, templateBlockMatcher, rootShelfRepository, subShelfRepository)
-	subShelfHandler := handlers.NewSubShelfHandler(db, patternResolver, templateBlockMatcher, subShelfRepository, materialRepository, blockPackRepository)
-	routineHandler := handlers.NewRoutineHandler(db, patternResolver, templateBlockMatcher, routineRepository)
+	rootShelfHandler := handlers.NewRootShelfHandler(
+		validator,
+		db,
+		patternResolver,
+		templateBlockMatcher,
+		rootShelfRepository,
+		subShelfRepository,
+	)
+	subShelfHandler := handlers.NewSubShelfHandler(
+		validator,
+		db,
+		patternResolver,
+		templateBlockMatcher,
+		subShelfRepository,
+		materialRepository,
+		blockPackRepository,
+	)
+	routineHandler := handlers.NewRoutineHandler(
+		validator,
+		db,
+		patternResolver,
+		templateBlockMatcher,
+		routineRepository,
+	)
 	readPermissions := []enums.AccessControlPermission{
 		enums.AccessControlPermission_Owner,
 		enums.AccessControlPermission_Admin,

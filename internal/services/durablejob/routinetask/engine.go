@@ -8,7 +8,7 @@ import (
 
 	"gorm.io/gorm"
 
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 type Engine struct {

@@ -5,9 +5,10 @@ import (
 
 	"github.com/google/uuid"
 
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type BlockPack struct {
@@ -55,7 +56,7 @@ func (bp *BlockPack) ToPrivateBlockPack() *gqlmodels.PrivateBlockPack {
 		ID:                  bp.Id,
 		ParentSubShelfID:    bp.ParentSubShelfId,
 		Name:                bp.Name,
-		Icon:                bp.Icon,
+		Icon:                (*enumcontract.SupportedIcon)(bp.Icon),
 		HeaderBackgroundURL: bp.HeaderBackgroundURL,
 		BlockCount:          bp.BlockCount,
 		DeletedAt:           bp.DeletedAt,

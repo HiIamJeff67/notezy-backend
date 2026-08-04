@@ -6,11 +6,12 @@ import (
 	"net/http"
 	"strings"
 
+	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
-	adapters "github.com/HiIamJeff67/notezy-backend/internal/adapters"
+	typescontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/inputs"
 	options "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/options"
@@ -19,13 +20,13 @@ import (
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas/enums"
 	matchers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers/matchers"
 	resolvers "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/handlers/resolvers"
-	payloads "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/payloads"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	editableblock "github.com/HiIamJeff67/notezy-backend/shared/editableblock"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type BlockHandler struct {
+	validator            *validator.Validate
 	db                   *gorm.DB
-	editableBlockAdapter adapters.EditableBlockAdapterInterface
 	patternResolver      resolvers.PatternResolverInterface
 	templateBlockMatcher matchers.TemplateBlockMatcherInterface
 	blockPackRepository  repositories.BlockPackRepositoryInterface
@@ -33,16 +34,13 @@ type BlockHandler struct {
 }
 
 func NewBlockHandler(
+	validator *validator.Validate,
 	db *gorm.DB,
-	editableBlockAdapter adapters.EditableBlockAdapterInterface,
 	patternResolver resolvers.PatternResolverInterface,
 	templateBlockMatcher matchers.TemplateBlockMatcherInterface,
 	blockPackRepository repositories.BlockPackRepositoryInterface,
 	blockRepository repositories.BlockRepositoryInterface,
 ) BlockHandler {
-	if editableBlockAdapter == nil {
-		editableBlockAdapter = adapters.NewEditableBlockAdapter()
-	}
 	if patternResolver == nil {
 		patternResolver = resolvers.NewPatternResolver(db, blockRepository, blockPackRepository)
 	}
@@ -50,8 +48,8 @@ func NewBlockHandler(
 		templateBlockMatcher = matchers.NewTemplateBlockMatcher()
 	}
 	return BlockHandler{
+		validator:            validator,
 		db:                   db,
-		editableBlockAdapter: editableBlockAdapter,
 		patternResolver:      patternResolver,
 		templateBlockMatcher: templateBlockMatcher,
 		blockPackRepository:  blockPackRepository,
@@ -69,15 +67,15 @@ func (h BlockHandler) HandleAppendBlock(
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
 	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
-	candidatePayloads := make([]payloads.AppendBlockRoutineTaskPayload, 0, len(tasks))
-	candidatePatterns := make([]payloads.RoutineTaskPattern, 0, len(tasks))
+	candidatePayloads := make([]typescontract.AppendBlockRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]typescontract.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		actorUserId, exists := taskIdToActorUserId[task.Id]
 		if !exists {
 			continue
 		}
-		payload, exception := decodePayload[payloads.AppendBlockRoutineTaskPayload](task)
+		payload, exception := decodePayload[typescontract.AppendBlockRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}
@@ -115,7 +113,7 @@ func (h BlockHandler) HandleAppendBlock(
 		if exception != nil {
 			continue
 		}
-		blocks, _, _, exception := flattenArborizedBlock(h.editableBlockAdapter, payload.BlockPackId, &matchedBlock)
+		blocks, _, _, exception := flattenArborizedBlock(payload.BlockPackId, &matchedBlock)
 		if exception != nil {
 			continue
 		}
@@ -280,15 +278,15 @@ func (h BlockHandler) HandleUpdateBlock(
 	candidateTaskIndexes := make([]int, 0, len(tasks))
 	candidateTasks := make([]schemas.RoutineTask, 0, len(tasks))
 	candidateActorUserIds := make([]uuid.UUID, 0, len(tasks))
-	candidatePayloads := make([]payloads.UpdateBlockRoutineTaskPayload, 0, len(tasks))
-	candidatePatterns := make([]payloads.RoutineTaskPattern, 0, len(tasks))
+	candidatePayloads := make([]typescontract.UpdateBlockRoutineTaskPayload, 0, len(tasks))
+	candidatePatterns := make([]typescontract.RoutineTaskPattern, 0, len(tasks))
 
 	for taskIndex, task := range tasks {
 		actorUserId, exists := taskIdToActorUserId[task.Id]
 		if !exists {
 			continue
 		}
-		payload, exception := decodePayload[payloads.UpdateBlockRoutineTaskPayload](task)
+		payload, exception := decodePayload[typescontract.UpdateBlockRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}
@@ -327,8 +325,8 @@ func (h BlockHandler) HandleUpdateBlock(
 		if exception != nil {
 			continue
 		}
-		rawBlocks, _, exception := h.editableBlockAdapter.FlattenToRaw(&matchedBlock)
-		if exception != nil || len(rawBlocks) != 1 {
+		rawBlocks, _, err := editableblock.FlattenEditableBlock(&matchedBlock)
+		if err != nil || len(rawBlocks) != 1 {
 			continue
 		}
 		blockType := enums.BlockType(rawBlocks[0].Type)
@@ -383,7 +381,7 @@ func (h BlockHandler) HandleResetBlock(
 		if !exists {
 			continue
 		}
-		payload, exception := decodePayload[payloads.ResetBlockRoutineTaskPayload](task)
+		payload, exception := decodePayload[typescontract.ResetBlockRoutineTaskPayload](h.validator, task)
 		if exception != nil {
 			continue
 		}

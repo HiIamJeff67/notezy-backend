@@ -11,8 +11,8 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	stationsdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/stations"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/graphql/models"
+	stationsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/stations"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
 	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
@@ -22,10 +22,10 @@ import (
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/scopes"
-	validation "github.com/HiIamJeff67/notezy-backend/internal/services/core/validation"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
-	searchcursor "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/searchcursor"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	validator "github.com/go-playground/validator/v10"
 )
 
 type StationServiceInterface interface {
@@ -59,6 +59,7 @@ type StationServiceInterface interface {
 }
 
 type StationService struct {
+	validator                 *validator.Validate
 	db                        *gorm.DB
 	stationScope              scopes.StationScopeInterface
 	stationRepository         repositories.StationRepositoryInterface
@@ -66,6 +67,7 @@ type StationService struct {
 }
 
 func NewStationService(
+	validator *validator.Validate,
 	db *gorm.DB,
 	stationScope scopes.StationScopeInterface,
 	stationRepository repositories.StationRepositoryInterface,
@@ -75,6 +77,7 @@ func NewStationService(
 		db = data.NotezyDB
 	}
 	return &StationService{
+		validator:                 validator,
 		db:                        db,
 		stationScope:              stationScope,
 		stationRepository:         stationRepository,
@@ -236,7 +239,7 @@ func (s *StationService) GetMyStationById(
 	ctx context.Context,
 	requestDto *stationsdto.GetMyStationByIdRequestDto,
 ) (*stationsdto.GetMyStationByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -302,7 +305,7 @@ func (s *StationService) GetAllMyStations(
 	ctx context.Context,
 	requestDto *stationsdto.GetAllMyStationsRequestDto,
 ) (*stationsdto.GetAllMyStationsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -370,7 +373,7 @@ func (s *StationService) CreateStation(
 	ctx context.Context,
 	requestDto *stationsdto.CreateStationRequestDto,
 ) (*stationsdto.CreateStationResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -416,7 +419,7 @@ func (s *StationService) CreateStations(
 	ctx context.Context,
 	requestDto *stationsdto.CreateStationsRequestDto,
 ) (*stationsdto.CreateStationsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -465,7 +468,7 @@ func (s *StationService) UpdateMyStationById(
 	ctx context.Context,
 	requestDto *stationsdto.UpdateMyStationByIdRequestDto,
 ) (*stationsdto.UpdateMyStationByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -519,7 +522,7 @@ func (s *StationService) UpdateMyStationsByIds(
 	ctx context.Context,
 	requestDto *stationsdto.UpdateMyStationsByIdsRequestDto,
 ) (*stationsdto.UpdateMyStationsByIdsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -578,7 +581,7 @@ func (s *StationService) RestoreMyStationById(
 	ctx context.Context,
 	requestDto *stationsdto.RestoreMyStationByIdRequestDto,
 ) (*stationsdto.RestoreMyStationByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -631,7 +634,7 @@ func (s *StationService) RestoreMyStationsByIds(
 	ctx context.Context,
 	requestDto *stationsdto.RestoreMyStationsByIdsRequestDto,
 ) (*stationsdto.RestoreMyStationsByIdsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -688,7 +691,7 @@ func (s *StationService) DeleteMyStationById(
 	ctx context.Context,
 	requestDto *stationsdto.DeleteMyStationByIdRequestDto,
 ) (*stationsdto.DeleteMyStationByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -783,7 +786,7 @@ func (s *StationService) DeleteMyStationsByIds(
 	ctx context.Context,
 	requestDto *stationsdto.DeleteMyStationsByIdsRequestDto,
 ) (*stationsdto.DeleteMyStationsByIdsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -822,7 +825,7 @@ func (s *StationService) HardDeleteMyStationById(
 	ctx context.Context,
 	requestDto *stationsdto.HardDeleteMyStationByIdRequestDto,
 ) (*stationsdto.HardDeleteMyStationByIdResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -861,7 +864,7 @@ func (s *StationService) HardDeleteMyStationsByIds(
 	ctx context.Context,
 	requestDto *stationsdto.HardDeleteMyStationsByIdsRequestDto,
 ) (*stationsdto.HardDeleteMyStationsByIdsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -901,7 +904,7 @@ func (s *StationService) HardDeleteMyStationsByIds(
 func (s *StationService) VisualizeMyTotalCount(
 	ctx context.Context, requestDto *stationsdto.VisualizeMyTotalCountRequestDto,
 ) (*stationsdto.VisualizeMyTotalCountResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -1058,7 +1061,7 @@ func (s *StationService) VisualizeMyTotalCount(
 func (s *StationService) GetMyStationPermission(
 	ctx context.Context, requestDto *stationsdto.GetMyStationPermissionRequestDto,
 ) (*stationsdto.GetMyStationPermissionResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -1120,7 +1123,7 @@ func (s *StationService) GetMyStationPermission(
 func (s *StationService) CreateMyStationPermission(
 	ctx context.Context, requestDto *stationsdto.CreateMyStationPermissionRequestDto,
 ) (*stationsdto.CreateMyStationPermissionResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -1160,7 +1163,7 @@ func (s *StationService) CreateMyStationPermission(
 func (s *StationService) UpsertMyStationPermission(
 	ctx context.Context, requestDto *stationsdto.UpsertMyStationPermissionRequestDto,
 ) (*stationsdto.UpsertMyStationPermissionResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -1199,7 +1202,7 @@ func (s *StationService) UpsertMyStationPermission(
 func (s *StationService) UpsertMyStationPermissions(
 	ctx context.Context, requestDto *stationsdto.UpsertMyStationPermissionsRequestDto,
 ) (*stationsdto.UpsertMyStationPermissionsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -1406,7 +1409,7 @@ func (s *StationService) UpsertMyStationPermissions(
 func (s *StationService) UpdateMyStationPermission(
 	ctx context.Context, requestDto *stationsdto.UpdateMyStationPermissionRequestDto,
 ) (*stationsdto.UpdateMyStationPermissionResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -1447,7 +1450,7 @@ func (s *StationService) TransferMyStationOwnership(
 	ctx context.Context,
 	requestDto *stationsdto.TransferMyStationOwnershipRequestDto,
 ) (*stationsdto.TransferMyStationOwnershipResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -1648,7 +1651,7 @@ func (s *StationService) TransferMyStationOwnership(
 func (s *StationService) DeleteMyStationPermission(
 	ctx context.Context, requestDto *stationsdto.DeleteMyStationPermissionRequestDto,
 ) (*stationsdto.DeleteMyStationPermissionResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -1770,7 +1773,7 @@ func (s *StationService) DeleteMyStationPermission(
 func (s *StationService) DeleteMyStationPermissions(
 	ctx context.Context, requestDto *stationsdto.DeleteMyStationPermissionsRequestDto,
 ) (*stationsdto.DeleteMyStationPermissionsResponseDto, *exceptions.Exception) {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -1941,7 +1944,7 @@ func (s *StationService) DeleteMyStationPermissions(
 func (s *StationService) LeaveMyStation(
 	ctx context.Context, requestDto *stationsdto.LeaveMyStationRequestDto,
 ) *exceptions.Exception {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return exceptions.New(
 			"InvalidRequest",
 			"Station",
@@ -2013,7 +2016,7 @@ func (s *StationService) LeaveMyStation(
 func (s *StationService) LeaveMyStations(
 	ctx context.Context, requestDto *stationsdto.LeaveMyStationsRequestDto,
 ) *exceptions.Exception {
-	if err := validation.Validator.Struct(requestDto); err != nil {
+	if err := s.validator.Struct(requestDto); err != nil {
 		return exceptions.New(
 			"InvalidRequest",
 			"Station",

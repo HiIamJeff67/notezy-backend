@@ -10,19 +10,19 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	typescontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/inputs"
 	options "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/options"
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas/enums"
-	payloads "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/routinetask/payloads"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type BlockPatternResolverInterface interface {
-	Resolve(ctx context.Context, actorUserId uuid.UUID, pattern payloads.RoutineTaskPattern, allowedPermissions []enums.AccessControlPermission) (map[string]string, *exceptions.Exception)
-	ResolveMany(ctx context.Context, actorUserIds []uuid.UUID, patterns []payloads.RoutineTaskPattern, allowedPermissions []enums.AccessControlPermission) ([]map[string]string, []bool, *exceptions.Exception)
+	Resolve(ctx context.Context, actorUserId uuid.UUID, pattern typescontract.RoutineTaskPattern, allowedPermissions []enums.AccessControlPermission) (map[string]string, *exceptions.Exception)
+	ResolveMany(ctx context.Context, actorUserIds []uuid.UUID, patterns []typescontract.RoutineTaskPattern, allowedPermissions []enums.AccessControlPermission) ([]map[string]string, []bool, *exceptions.Exception)
 }
 
 type BlockPatternResolver struct {
@@ -40,13 +40,13 @@ func NewBlockPatternResolver(db *gorm.DB, blockRepository repositories.BlockRepo
 func (r BlockPatternResolver) Resolve(
 	ctx context.Context,
 	actorUserId uuid.UUID,
-	pattern payloads.RoutineTaskPattern,
+	pattern typescontract.RoutineTaskPattern,
 	allowedPermissions []enums.AccessControlPermission,
 ) (map[string]string, *exceptions.Exception) {
 	values, successes, exception := r.ResolveMany(
 		ctx,
 		[]uuid.UUID{actorUserId},
-		[]payloads.RoutineTaskPattern{pattern},
+		[]typescontract.RoutineTaskPattern{pattern},
 		allowedPermissions,
 	)
 	if exception != nil {
@@ -67,7 +67,7 @@ func (r BlockPatternResolver) Resolve(
 func (r BlockPatternResolver) ResolveMany(
 	ctx context.Context,
 	actorUserIds []uuid.UUID,
-	patterns []payloads.RoutineTaskPattern,
+	patterns []typescontract.RoutineTaskPattern,
 	allowedPermissions []enums.AccessControlPermission,
 ) ([]map[string]string, []bool, *exceptions.Exception) {
 	values := make([]map[string]string, len(patterns))

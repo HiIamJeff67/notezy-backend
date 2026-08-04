@@ -3,7 +3,7 @@ package durablejobcontract
 import (
 	"github.com/google/uuid"
 
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/blocks"
+	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
 )
 
 const ApplyBlockProjectionOperation = "durablejob.apply-block-projection"

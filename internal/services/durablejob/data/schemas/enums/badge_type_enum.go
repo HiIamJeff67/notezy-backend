@@ -4,16 +4,36 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"reflect"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type BadgeType string
+type BadgeType enumcontract.BadgeType
+
+func (value *BadgeType) ToContractable() *enumcontract.BadgeType {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.BadgeType(*value)
+	return &contractValue
+}
+
+func (value *BadgeType) ToStorable() *BadgeType {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	BadgeType_Diamond BadgeType = "Diamond"
-	BadgeType_Golden  BadgeType = "Golden"
-	BadgeType_Silver  BadgeType = "Silver"
-	BadgeType_Bronze  BadgeType = "Bronze"
-	BadgeType_Steel   BadgeType = "Steel"
+	BadgeType_Diamond BadgeType = BadgeType(enumcontract.BadgeType_Diamond)
+	BadgeType_Golden  BadgeType = BadgeType(enumcontract.BadgeType_Golden)
+	BadgeType_Silver  BadgeType = BadgeType(enumcontract.BadgeType_Silver)
+	BadgeType_Bronze  BadgeType = BadgeType(enumcontract.BadgeType_Bronze)
+	BadgeType_Steel   BadgeType = BadgeType(enumcontract.BadgeType_Steel)
 )
 
 var AllBadgeTypes = []BadgeType{

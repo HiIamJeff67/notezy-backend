@@ -7,8 +7,8 @@ import (
 
 	"gopkg.in/gomail.v2"
 
+	emailcontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
 )
 
 /* ============================== Initialization & Instance ============================== */
@@ -31,7 +31,7 @@ var NotezyEmailSender = &EmailSender{
 	From:     os.Getenv("NOTEZY_OFFICIAL_NAME") + "<" + os.Getenv("NOTEZY_OFFICIAL_GMAIL") + ">",
 }
 
-func (s *EmailSender) AsyncSend(to string, subject string, body string, contentType types.EmailContentType) *exceptions.Exception {
+func (s *EmailSender) AsyncSend(to string, subject string, body string, contentType emailcontract.EmailContentType) *exceptions.Exception {
 	if !contentType.IsValidEnum() {
 		return exceptions.New(
 			"InvalidContentType",

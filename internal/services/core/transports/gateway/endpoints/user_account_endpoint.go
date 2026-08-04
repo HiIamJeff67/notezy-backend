@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
-	useraccountsdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/user-accounts"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	useraccountsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-accounts"
 	services "github.com/HiIamJeff67/notezy-backend/internal/services/core/services"
 )
 
@@ -31,7 +31,7 @@ func NewUserAccountEndpoint(
 }
 
 func (t *UserAccountEndpoint) GetMyAccount(ctx *gin.Context) {
-	request := &core.Request[useraccountsdto.GetMyAccountRequestDto]{}
+	request := &gatewaycontract.Request[useraccountsdto.GetMyAccountRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -40,9 +40,9 @@ func (t *UserAccountEndpoint) GetMyAccount(ctx *gin.Context) {
 	responseDto, exception := t.userAccountService.GetMyAccount(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -52,9 +52,9 @@ func (t *UserAccountEndpoint) GetMyAccount(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[useraccountsdto.GetMyAccountResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[useraccountsdto.GetMyAccountResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -63,7 +63,7 @@ func (t *UserAccountEndpoint) GetMyAccount(ctx *gin.Context) {
 }
 
 func (t *UserAccountEndpoint) UpdateMyAccount(ctx *gin.Context) {
-	request := &core.Request[useraccountsdto.UpdateMyAccountRequestDto]{}
+	request := &gatewaycontract.Request[useraccountsdto.UpdateMyAccountRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -72,9 +72,9 @@ func (t *UserAccountEndpoint) UpdateMyAccount(ctx *gin.Context) {
 	responseDto, exception := t.userAccountService.UpdateMyAccount(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -84,9 +84,9 @@ func (t *UserAccountEndpoint) UpdateMyAccount(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[useraccountsdto.UpdateMyAccountResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[useraccountsdto.UpdateMyAccountResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -95,7 +95,7 @@ func (t *UserAccountEndpoint) UpdateMyAccount(ctx *gin.Context) {
 }
 
 func (t *UserAccountEndpoint) BindGoogleAccount(ctx *gin.Context) {
-	request := &core.Request[useraccountsdto.BindGoogleAccountRequestDto]{}
+	request := &gatewaycontract.Request[useraccountsdto.BindGoogleAccountRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -104,9 +104,9 @@ func (t *UserAccountEndpoint) BindGoogleAccount(ctx *gin.Context) {
 	responseDto, exception := t.userAccountService.BindGoogleAccount(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -116,9 +116,9 @@ func (t *UserAccountEndpoint) BindGoogleAccount(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[useraccountsdto.BindGoogleAccountResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[useraccountsdto.BindGoogleAccountResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
@@ -127,7 +127,7 @@ func (t *UserAccountEndpoint) BindGoogleAccount(ctx *gin.Context) {
 }
 
 func (t *UserAccountEndpoint) UnbindGoogleAccount(ctx *gin.Context) {
-	request := &core.Request[useraccountsdto.UnbindGoogleAccountRequestDto]{}
+	request := &gatewaycontract.Request[useraccountsdto.UnbindGoogleAccountRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -136,9 +136,9 @@ func (t *UserAccountEndpoint) UnbindGoogleAccount(ctx *gin.Context) {
 	responseDto, exception := t.userAccountService.UnbindGoogleAccount(ctx.Request.Context(), &request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -148,9 +148,9 @@ func (t *UserAccountEndpoint) UnbindGoogleAccount(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[useraccountsdto.UnbindGoogleAccountResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[useraccountsdto.UnbindGoogleAccountResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},

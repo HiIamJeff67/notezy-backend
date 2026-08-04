@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	core "github.com/HiIamJeff67/notezy-backend/contracts/core/v1"
-	themesdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/themes"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	themesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/themes"
 	services "github.com/HiIamJeff67/notezy-backend/internal/services/core/services"
 )
 
@@ -28,7 +28,7 @@ func NewThemeEndpoint(
 }
 
 func (t *ThemeEndpoint) SearchThemes(ctx *gin.Context) {
-	request := &core.Request[themesdto.SearchThemesRequestDto]{}
+	request := &gatewaycontract.Request[themesdto.SearchThemesRequestDto]{}
 	if err := ctx.ShouldBindJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
@@ -37,9 +37,9 @@ func (t *ThemeEndpoint) SearchThemes(ctx *gin.Context) {
 	responseDto, exception := t.themeService.SearchPublicThemes(ctx.Request.Context(), request.Dto)
 	if exception != nil {
 		publicException := exception.ToPublic()
-		ctx.JSON(publicException.HTTPStatusCode(), core.Response[struct{}]{
-			Version: core.Version,
-			Metadata: core.ResponseMetadata{
+		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{
+			Version: gatewaycontract.Version,
+			Metadata: gatewaycontract.ResponseMetadata{
 				RequestId:   request.Metadata.RequestId,
 				RespondedAt: time.Now(),
 			},
@@ -49,9 +49,9 @@ func (t *ThemeEndpoint) SearchThemes(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, core.Response[themesdto.SearchThemesResponseDto]{
-		Version: core.Version,
-		Metadata: core.ResponseMetadata{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[themesdto.SearchThemesResponseDto]{
+		Version: gatewaycontract.Version,
+		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},

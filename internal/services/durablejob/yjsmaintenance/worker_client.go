@@ -17,12 +17,12 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
 
-	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1/api/block-packs"
+	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
+	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjsworker/v1"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	metrics "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/metrics"
 	traces "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/traces"
-	constants "github.com/HiIamJeff67/notezy-backend/internal/shared/constants"
-	sharedtypes "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 type WorkerClient struct {
@@ -136,8 +136,8 @@ func (c WorkerClient) InitializeDocuments(
 
 func (c WorkerClient) Compact(
 	ctx context.Context,
-	inputs []sharedtypes.YjsCompactionBatchInput,
-) (results []sharedtypes.YjsCompactionBatchResult, err error) {
+	inputs []yjsworkercontract.YjsCompactionBatchInput,
+) (results []yjsworkercontract.YjsCompactionBatchResult, err error) {
 	start := time.Now()
 	ctx, span := traces.NotezyTracer.Start(ctx, "yjs.maintenance.worker.compact")
 	span.SetAttributes(attribute.Int("yjs.document_count", len(inputs)))
@@ -232,7 +232,7 @@ func (c WorkerClient) Compact(
 		return nil, errors.New("incomplete yjs maintenance worker response")
 	}
 
-	results = make([]sharedtypes.YjsCompactionBatchResult, 0, resultCount)
+	results = make([]yjsworkercontract.YjsCompactionBatchResult, 0, resultCount)
 	resultBlockPackIdSet := make(map[[16]byte]bool, resultCount)
 	offset := 4
 	for index := uint32(0); index < resultCount; index++ {
@@ -246,7 +246,7 @@ func (c WorkerClient) Compact(
 			return nil, errors.New("invalid yjs maintenance worker response")
 		}
 
-		var result sharedtypes.YjsCompactionBatchResult
+		var result yjsworkercontract.YjsCompactionBatchResult
 		if err := result.UnmarshalBytes(responsePayload[offset : offset+int(resultLength)]); err != nil {
 			return nil, err
 		}
@@ -267,8 +267,8 @@ func (c WorkerClient) Compact(
 
 func (c WorkerClient) Project(
 	ctx context.Context,
-	inputs []sharedtypes.YjsProjectionBatchInput,
-) (results []sharedtypes.YjsProjectionBatchResult, err error) {
+	inputs []yjsworkercontract.YjsProjectionBatchInput,
+) (results []yjsworkercontract.YjsProjectionBatchResult, err error) {
 	start := time.Now()
 	ctx, span := traces.NotezyTracer.Start(ctx, "yjs.maintenance.worker.project")
 	span.SetAttributes(attribute.Int("yjs.document_count", len(inputs)))
@@ -353,7 +353,7 @@ func (c WorkerClient) Project(
 		return nil, errors.New("incomplete yjs projection worker response")
 	}
 
-	results = make([]sharedtypes.YjsProjectionBatchResult, 0, resultCount)
+	results = make([]yjsworkercontract.YjsProjectionBatchResult, 0, resultCount)
 	resultBlockPackIdSet := make(map[[16]byte]bool, resultCount)
 	offset := 4
 	for index := uint32(0); index < resultCount; index++ {
@@ -367,7 +367,7 @@ func (c WorkerClient) Project(
 			return nil, errors.New("invalid yjs projection worker response")
 		}
 
-		var result sharedtypes.YjsProjectionBatchResult
+		var result yjsworkercontract.YjsProjectionBatchResult
 		if err := result.UnmarshalBytes(responsePayload[offset : offset+int(resultLength)]); err != nil {
 			return nil, err
 		}

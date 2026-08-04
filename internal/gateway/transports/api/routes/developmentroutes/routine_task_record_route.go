@@ -5,15 +5,21 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 	binders "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/binders"
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
 	interceptors "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	sharedtypes "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
 )
 
-func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup, coreClient *coreadapters.CoreClient) {
+func configureDevelopmentRoutineTaskRecordRoutes(
+	router *gin.RouterGroup,
+	coreClient *coreadapters.CoreClient,
+	accessTokenCookieHandler *cookies.CookieHandler,
+	refreshTokenCookieHandler *cookies.CookieHandler,
+) {
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
@@ -25,9 +31,9 @@ func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup, coreCl
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(3 * time.Second),
-		middlewares.AuthMiddleware(),
+		middlewares.JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler),
 		interceptors.ShareableResponseWriterInterceptor(
-			interceptors.RefreshTokenInterceptor,
+			interceptors.RefreshTokenInterceptor(accessTokenCookieHandler),
 			interceptors.EmbeddedInterceptor,
 		),
 	}
@@ -41,7 +47,7 @@ func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup, coreCl
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				routineTaskRecordBinder.BindGetAllMyRoutineTaskRecordsByRoutineTaskId(routineTaskRecordController.GetAllMyRoutineTaskRecordsByRoutineTaskId),
 			)...,
@@ -54,9 +60,9 @@ func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup, coreCl
 	visualizationMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(3 * time.Second),
-		middlewares.AuthMiddleware(),
+		middlewares.JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler),
 		interceptors.ShareableResponseWriterInterceptor(
-			interceptors.RefreshTokenInterceptor,
+			interceptors.RefreshTokenInterceptor(accessTokenCookieHandler),
 			interceptors.EmbeddedInterceptor,
 		),
 	}
@@ -70,7 +76,7 @@ func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup, coreCl
 				},
 				append(
 					visualizationMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				routineTaskRecordBinder.BindVisualizeMyRoutineTaskRecordStatusCount(routineTaskRecordController.VisualizeMyRoutineTaskRecordStatusCount),
 			)...,
@@ -84,7 +90,7 @@ func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup, coreCl
 				},
 				append(
 					visualizationMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				routineTaskRecordBinder.BindVisualizeMyRoutineTaskRecordPurposeCount(routineTaskRecordController.VisualizeMyRoutineTaskRecordPurposeCount),
 			)...,
@@ -98,7 +104,7 @@ func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup, coreCl
 				},
 				append(
 					visualizationMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				routineTaskRecordBinder.BindVisualizeMyRoutineTaskRecordScheduledAtCount(routineTaskRecordController.VisualizeMyRoutineTaskRecordScheduledAtCount),
 			)...,
@@ -112,7 +118,7 @@ func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup, coreCl
 				},
 				append(
 					visualizationMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				routineTaskRecordBinder.BindVisualizeMyRoutineTaskRecordActualStartedAtCount(routineTaskRecordController.VisualizeMyRoutineTaskRecordActualStartedAtCount),
 			)...,
@@ -126,7 +132,7 @@ func configureDevelopmentRoutineTaskRecordRoutes(router *gin.RouterGroup, coreCl
 				},
 				append(
 					visualizationMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				routineTaskRecordBinder.BindVisualizeMyRoutineTaskRecordActualEndedAtCount(routineTaskRecordController.VisualizeMyRoutineTaskRecordActualEndedAtCount),
 			)...,

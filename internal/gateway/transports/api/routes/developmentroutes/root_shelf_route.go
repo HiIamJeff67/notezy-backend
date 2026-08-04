@@ -5,15 +5,21 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 	binders "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/binders"
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
 	interceptors "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	sharedtypes "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
 )
 
-func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup, coreClient *coreadapters.CoreClient) {
+func configureDevelopmentRootShelfRoutes(
+	router *gin.RouterGroup,
+	coreClient *coreadapters.CoreClient,
+	accessTokenCookieHandler *cookies.CookieHandler,
+	refreshTokenCookieHandler *cookies.CookieHandler,
+) {
 	if router == nil {
 		router = DevelopmentAPIRouterGroup
 	}
@@ -25,9 +31,9 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup, coreClient *co
 	defaultMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),
 		middlewares.TimeoutMiddleware(1 * time.Second),
-		middlewares.AuthMiddleware(),
+		middlewares.JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler),
 		interceptors.ShareableResponseWriterInterceptor(
-			interceptors.RefreshTokenInterceptor,
+			interceptors.RefreshTokenInterceptor(accessTokenCookieHandler),
 			interceptors.EmbeddedInterceptor,
 		),
 	}
@@ -41,7 +47,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup, coreClient *co
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				rootShelfBinder.BindGetMyRootShelfById(rootShelfController.GetMyRootShelfById),
 			)...,
@@ -55,7 +61,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup, coreClient *co
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				rootShelfBinder.BindCreateRootShelf(rootShelfController.CreateRootShelf),
 			)...,
@@ -69,7 +75,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup, coreClient *co
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				rootShelfBinder.BindCreateRootShelves(rootShelfController.CreateRootShelves),
 			)...,
@@ -83,7 +89,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup, coreClient *co
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Admin),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Admin),
 				),
 				rootShelfBinder.BindUpdateMyRootShelfById(rootShelfController.UpdateMyRootShelfById),
 			)...,
@@ -97,7 +103,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup, coreClient *co
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Admin),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Admin),
 				),
 				rootShelfBinder.BindUpdateMyRootShelvesByIds(rootShelfController.UpdateMyRootShelvesByIds),
 			)...,
@@ -111,7 +117,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup, coreClient *co
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Owner),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Owner),
 				),
 				rootShelfBinder.BindRestoreMyRootShelfById(rootShelfController.RestoreMyRootShelfById),
 			)...,
@@ -125,7 +131,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup, coreClient *co
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Owner),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Owner),
 				),
 				rootShelfBinder.BindRestoreMyRootShelvesByIds(rootShelfController.RestoreMyRootShelvesByIds),
 			)...,
@@ -139,7 +145,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup, coreClient *co
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				rootShelfBinder.BindDeleteMyRootShelfById(rootShelfController.DeleteMyRootShelfById),
 			)...,
@@ -153,7 +159,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup, coreClient *co
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Owner),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Owner),
 				),
 				rootShelfBinder.BindDeleteMyRootShelvesByIds(rootShelfController.DeleteMyRootShelvesByIds),
 			)...,
@@ -167,7 +173,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup, coreClient *co
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				rootShelfBinder.BindGetMyRootShelfPermission(rootShelfController.GetMyRootShelfPermission),
 			)...,
@@ -181,7 +187,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup, coreClient *co
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Admin),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Admin),
 				),
 				rootShelfBinder.BindCreateMyRootShelfPermission(rootShelfController.CreateMyRootShelfPermission),
 			)...,
@@ -195,7 +201,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup, coreClient *co
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Admin),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Admin),
 				),
 				rootShelfBinder.BindUpsertMyRootShelfPermission(rootShelfController.UpsertMyRootShelfPermission),
 			)...,
@@ -209,7 +215,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup, coreClient *co
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Admin),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Admin),
 				),
 				rootShelfBinder.BindUpsertMyRootShelfPermissions(rootShelfController.UpsertMyRootShelfPermissions),
 			)...,
@@ -223,7 +229,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup, coreClient *co
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Admin),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Admin),
 				),
 				rootShelfBinder.BindUpdateMyRootShelfPermission(rootShelfController.UpdateMyRootShelfPermission),
 			)...,
@@ -237,7 +243,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup, coreClient *co
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Owner),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Owner),
 				),
 				rootShelfBinder.BindTransferMyRootShelfOwnership(rootShelfController.TransferMyRootShelfOwnership),
 			)...,
@@ -251,7 +257,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup, coreClient *co
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Admin),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Admin),
 				),
 				rootShelfBinder.BindDeleteMyRootShelfPermission(rootShelfController.DeleteMyRootShelfPermission),
 			)...,
@@ -265,7 +271,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup, coreClient *co
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Admin),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Admin),
 				),
 				rootShelfBinder.BindDeleteMyRootShelfPermissions(rootShelfController.DeleteMyRootShelfPermissions),
 			)...,
@@ -279,7 +285,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup, coreClient *co
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				rootShelfBinder.BindLeaveMyRootShelf(rootShelfController.LeaveMyRootShelf),
 			)...,
@@ -293,7 +299,7 @@ func configureDevelopmentRootShelfRoutes(router *gin.RouterGroup, coreClient *co
 				},
 				append(
 					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(sharedtypes.AccessControlPermission_Read),
+					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
 				),
 				rootShelfBinder.BindLeaveMyRootShelves(rootShelfController.LeaveMyRootShelves),
 			)...,

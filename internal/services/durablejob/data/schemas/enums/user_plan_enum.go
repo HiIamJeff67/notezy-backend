@@ -5,16 +5,36 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
-type UserPlan string
+type UserPlan enumcontract.UserPlan
+
+func (value *UserPlan) ToContractable() *enumcontract.UserPlan {
+	if value == nil {
+		return nil
+	}
+
+	contractValue := enumcontract.UserPlan(*value)
+	return &contractValue
+}
+
+func (value *UserPlan) ToStorable() *UserPlan {
+	if value == nil {
+		return nil
+	}
+
+	storableValue := *value
+	return &storableValue
+}
 
 const (
-	UserPlan_Enterprise UserPlan = "Enterprise"
-	UserPlan_Ultimate   UserPlan = "Ultimate"
-	UserPlan_Premium    UserPlan = "Premium"
-	UserPlan_Pro        UserPlan = "Pro"
-	UserPlan_Free       UserPlan = "Free"
+	UserPlan_Enterprise UserPlan = UserPlan(enumcontract.UserPlan_Enterprise)
+	UserPlan_Ultimate   UserPlan = UserPlan(enumcontract.UserPlan_Ultimate)
+	UserPlan_Premium    UserPlan = UserPlan(enumcontract.UserPlan_Premium)
+	UserPlan_Pro        UserPlan = UserPlan(enumcontract.UserPlan_Pro)
+	UserPlan_Free       UserPlan = UserPlan(enumcontract.UserPlan_Free)
 )
 
 // All the userPlans placing in the descending order

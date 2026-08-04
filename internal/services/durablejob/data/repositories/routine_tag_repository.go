@@ -14,8 +14,8 @@ import (
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/schemas"
 	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/data/scopes"
 	durablejobexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/durablejob/exceptions"
-	partialupdate "github.com/HiIamJeff67/notezy-backend/internal/shared/lib/partialupdate"
-	types "github.com/HiIamJeff67/notezy-backend/internal/shared/types"
+	partialupdate "github.com/HiIamJeff67/notezy-backend/shared/lib/partialupdate"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type RoutineTagRepositoryInterface interface {
