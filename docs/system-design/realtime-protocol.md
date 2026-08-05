@@ -113,6 +113,29 @@ channel-permission change. A `presence-left` participant has `connectionCount:
 0`. Clients must apply deltas idempotently because leave/revoke cleanup can race
 with lease expiry or reconnection.
 
+The same root connection may receive a user-scoped `resource-event` control
+frame after a Core mutation commits. Its payload is a minimal invalidation
+hint, not a resource snapshot:
+
+```json
+{
+  "version": 1,
+  "type": "resource-event",
+  "eventId": "UUID",
+  "eventType": "RootShelfPermissionChanged",
+  "resourceId": "UUID",
+  "targetUserPublicId": "UUID",
+  "change": "permission_updated",
+  "permission": "write"
+}
+```
+
+`eventId` is stable across Kafka redelivery and is the client de-duplication
+key. Permission and root-shelf events are sent only to the affected user's
+active connections. BlockPack update/delete events are sent to connections
+currently subscribed to that BlockPack. Reconnect does not replay historical
+resource events; the client refetches canonical REST or GraphQL state.
+
 ```json
 { "version": 1, "type": "unsubscribe", "requestId": "unsub-1", "connectorChannelId": 1 }
 ```
@@ -189,7 +212,7 @@ Internal types are `1` `attach`, `2` `detach`, `3` `yjs-document`, `4` `awarenes
 
 `attach` and `detach` are idempotent. A first attach asks Go for a binary cold-load payload: `lastUpdateSequence(int64)`, `compactedUntilSequence(int64)`, `projectedUntilSequence(int64)`, snapshot length/state-vector length/update count (`uint32` each), snapshot bytes, state-vector bytes, then ordered update entries of `updateSequence(int64)`, payload length (`uint32`), raw update bytes. The worker materializes the document before it sends the public initial state.
 
-`append-yjs-update-batch` carries `[persistenceBatchId:16][originConnectionId:16, zero UUID when mixed][merged raw Yjs update:n]`. Go appends it transactionally and returns `yjs-update-persisted` with its `updateSequence(int64)` payload. The worker serializes persistence batches per BlockPack and broadcasts only after this ACK. `persistenceBatchId` makes a retry idempotent when PostgreSQL committed but the ACK was lost. On an internal worker reconnect, Go replays `attach` for every active channel assigned to that worker before it forwards a client payload. When replay cannot be completed, Go emits `resync_required` to that public channel and waits for the client to resubscribe; it never silently broadcasts an unpersisted Yjs payload.
+`append-yjs-update-batch` carries `[persistenceBatchId:16][originConnectionId:16, zero UUID when mixed][merged raw Yjs update:n]`. Go appends it transactionally and returns an application reply with its authoritative `updateSequence(int64)`; the worker does not wait for that reply on the editor message path. It serializes commands per BlockPack, broadcasts after Kafka's replicated producer ACK, and applies an optimistic local sequence until Core confirms the durable watermark. `persistenceBatchId` makes a retry idempotent when PostgreSQL committed but the ACK was lost. A rejected or timed-out application reply causes a room resync; on an internal worker reconnect, Go replays `attach` for every active channel assigned to that worker before it forwards a client payload. When replay cannot be completed, Go emits `resync_required` to that public channel and waits for the client to resubscribe.
 
 `apply-block-projection` carries UTF-8 JSON `{ schemaId, schemaVersion, projectedSequence, blocks }`; the BlockPack id is the internal frame `channelId`. This request is accepted only over Go-established private worker connections, not through public WebSocket or REST routes. Go validates the schema and durable sequence, bulk applies the BlockTable projection, and returns JSON `{ applied, projectedUntilSequence }` with `block-projection-applied`; malformed, stale-invalid, or failed requests receive `block-projection-failed`.
 

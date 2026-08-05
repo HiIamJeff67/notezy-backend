@@ -12,10 +12,11 @@ import (
 	"gorm.io/gorm/clause"
 
 	routinetasksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tasks"
-	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
+	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/events"
 	durablejobroutinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
+	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/events"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
 	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
@@ -26,9 +27,10 @@ import (
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
 	scopes "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/scopes"
 	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/core/exceptions"
+	durablejobeventbuilders "github.com/HiIamJeff67/notezy-backend/internal/services/core/transports/durablejob/eventbuilders"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
-	timeutil "github.com/HiIamJeff67/notezy-backend/shared/lib/timeutil"
+	times "github.com/HiIamJeff67/notezy-backend/shared/lib/times"
 	validator "github.com/go-playground/validator/v10"
 )
 
@@ -768,7 +770,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskScheduledAtCount(
 	if !reqDto.Param.QueryRangeStartedAt.Before(reqDto.Param.QueryRangeEndedAt) {
 		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
 	}
-	if !timeutil.IsTimeWithin(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
+	if !times.IsTimeWithin(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
 		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt and queryRangeEndedAt should be within 360 days")
 	}
 
@@ -804,7 +806,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskActualStartedAtCount(
 	if !reqDto.Param.QueryRangeStartedAt.Before(reqDto.Param.QueryRangeEndedAt) {
 		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
 	}
-	if !timeutil.IsTimeWithin(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
+	if !times.IsTimeWithin(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
 		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt and queryRangeEndedAt should be within 360 days")
 	}
 
@@ -840,7 +842,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskActualEndedAtCount(
 	if !reqDto.Param.QueryRangeStartedAt.Before(reqDto.Param.QueryRangeEndedAt) {
 		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
 	}
-	if !timeutil.IsTimeWithin(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
+	if !times.IsTimeWithin(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
 		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt and queryRangeEndedAt should be within 360 days")
 	}
 
@@ -1146,19 +1148,9 @@ func (s *RoutineTaskService) ClaimRoutineTasks(
 		}
 		if err := repositories.EnqueueOutboxEvents(
 			tx,
-			coreeventscontract.CoreDurableJobRoutineTaskTopic,
-			[]coreeventscontract.EventEnvelope[durablejobcontract.ClaimRoutineTasksResponseDto]{
-				{
-					SchemaVersion: coreeventscontract.Version,
-					EventId:       uuid.New(),
-					EventType:     coreeventscontract.EventType_RoutineTasksAssigned,
-					AggregateType: coreeventscontract.AggregateType_DurableJobWorker,
-					AggregateId:   reqDto.WorkerId,
-					KafkaKey:      reqDto.WorkerId.String(),
-					OccurredAt:    now,
-					CorrelationId: reqDto.RequestId.String(),
-					Data:          *response,
-				},
+			durablejobeventscontract.CoreDurableJobRoutineTaskTopic,
+			[]eventcontract.EventEnvelope[durablejobcontract.ClaimRoutineTasksResponseDto]{
+				durablejobeventbuilders.NewRoutineTaskAssignmentEventBuilder().Build(*response, now),
 			},
 		); err != nil {
 			tx.Rollback()
@@ -1310,19 +1302,9 @@ func (s *RoutineTaskService) ClaimRoutineTasks(
 
 	if err := repositories.EnqueueOutboxEvents(
 		tx,
-		coreeventscontract.CoreDurableJobRoutineTaskTopic,
-		[]coreeventscontract.EventEnvelope[durablejobcontract.ClaimRoutineTasksResponseDto]{
-			{
-				SchemaVersion: coreeventscontract.Version,
-				EventId:       uuid.New(),
-				EventType:     coreeventscontract.EventType_RoutineTasksAssigned,
-				AggregateType: coreeventscontract.AggregateType_DurableJobWorker,
-				AggregateId:   reqDto.WorkerId,
-				KafkaKey:      reqDto.WorkerId.String(),
-				OccurredAt:    now,
-				CorrelationId: reqDto.RequestId.String(),
-				Data:          *response,
-			},
+		durablejobeventscontract.CoreDurableJobRoutineTaskTopic,
+		[]eventcontract.EventEnvelope[durablejobcontract.ClaimRoutineTasksResponseDto]{
+			durablejobeventbuilders.NewRoutineTaskAssignmentEventBuilder().Build(*response, now),
 		},
 	); err != nil {
 		tx.Rollback()

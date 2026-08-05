@@ -22,14 +22,7 @@ func InitAuthorizedRateLimiter(config ratelimit.Config) {
 		authorizedRateLimiter.Stop()
 	}
 
-	authorizedRateLimiter = ratelimit.NewHybridRateLimiter(
-		config.RateLimit,
-		config.Burst,
-		config.UserLimit,
-		config.WindowDuration,
-		config.BackendServerName,
-		true,
-	)
+	authorizedRateLimiter = ratelimit.NewHybridRateLimiter(config, true)
 
 	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Authorized rate limiter initialized with rate: %v, burst: %d, user limit: %d, window: %v", config.RateLimit, config.Burst, config.UserLimit, config.WindowDuration))
 }

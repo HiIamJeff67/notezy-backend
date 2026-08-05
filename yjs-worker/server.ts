@@ -5,6 +5,7 @@ import { WebSocketServer } from "ws";
 
 import { config } from "./config.js";
 import { CoreCommandDispatcher } from "./kafka/core_command_dispatcher.js";
+import { YjsMaintenanceConsumer } from "./kafka/yjs_maintenance_consumer.js";
 import { BlockPackProjector } from "./realtime/block_pack_projector.js";
 import { RealtimeGateway } from "./realtime/gateway.js";
 import { RoomRegistry } from "./realtime/room_registry.js";
@@ -23,6 +24,7 @@ export class YjsWorkerServer {
   private readonly webSocketServer: WebSocketServer;
   private readonly realtimeGateway: RealtimeGateway;
   private readonly coreCommandDispatcher: CoreCommandDispatcher;
+  private readonly yjsMaintenanceConsumer: YjsMaintenanceConsumer;
 
   constructor(telemetry: Telemetry) {
     const app = new Hono();
@@ -36,6 +38,11 @@ export class YjsWorkerServer {
     );
     const roomRegistry = new RoomRegistry(telemetry);
     this.coreCommandDispatcher = new CoreCommandDispatcher();
+    this.yjsMaintenanceConsumer = new YjsMaintenanceConsumer(
+      this.coreCommandDispatcher,
+      yjsCompactionService,
+      yjsProjectionService
+    );
     this.webSocketServer = new WebSocketServer({ noServer: true });
     this.realtimeGateway = new RealtimeGateway(
       roomRegistry,
@@ -43,6 +50,11 @@ export class YjsWorkerServer {
       this.coreCommandDispatcher,
       telemetry
     );
+    void this.yjsMaintenanceConsumer.start().catch(error => {
+      telemetry.log(SeverityNumber.ERROR, "yjs_maintenance_consumer.start_failed", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    });
 
     configureHealthRoutes(
       app,
@@ -82,6 +94,7 @@ export class YjsWorkerServer {
     });
 
     await this.realtimeGateway.shutdown();
+    await this.yjsMaintenanceConsumer.shutdown();
     await this.coreCommandDispatcher.shutdown();
     await closeServer;
   }

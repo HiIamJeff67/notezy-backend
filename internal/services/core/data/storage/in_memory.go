@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
@@ -150,10 +151,10 @@ func (s *inMemoryStorage) DeleteObjectByKey(ctx context.Context, key string) err
 
 // [not implemented] For Testing：return fake URL
 func (s *inMemoryStorage) PresignPutObjectByKey(ctx context.Context, key string, option *PresignOptions) (string, error) {
-	return "http://localhost:" + "/" + constants.APIDevelopmentBaseURL + "/" + "storage/mock://put/" + key, nil
+	return "http://localhost:" + "/" + gatewaycontract.APIDevelopmentBaseURL + "/" + "storage/mock://put/" + key, nil
 }
 
 // For Testing：return localhost URL, give the frontend ability to visit
 func (s *inMemoryStorage) PresignGetObjectByKey(ctx context.Context, key string, option *PresignOptions) (string, error) {
-	return "http://localhost:" + "/" + constants.APIDevelopmentBaseURL + "/" + "storage/mock/files/" + key, nil
+	return "http://localhost:" + "/" + gatewaycontract.APIDevelopmentBaseURL + "/" + "storage/mock/files/" + key, nil
 }

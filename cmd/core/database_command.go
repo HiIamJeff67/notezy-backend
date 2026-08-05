@@ -9,7 +9,6 @@ import (
 	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 var viewAllAvailableDatabasesCommand = &cobra.Command{
@@ -59,7 +58,7 @@ var truncateDatabaseCommand = &cobra.Command{
 			return
 		}
 
-		tableName, exists := types.ConvertToTableName(tableNameString)
+		tableName, exists := data.ConvertToTableName(tableNameString)
 		if !exists {
 			logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprintf("The table name of %s is not in the database %s", tableNameString, databaseName))
 			return

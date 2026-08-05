@@ -98,3 +98,14 @@ type HeartbeatFrame struct {
 	RequestId    string    `json:"requestId,omitempty"`
 	UnixMilliNow int64     `json:"unixMilliNow"`
 }
+
+type ResourceEventFrame struct {
+	Version            int        `json:"version"`
+	Type               FrameType  `json:"type"`
+	EventId            uuid.UUID  `json:"eventId"`
+	EventType          string     `json:"eventType"`
+	ResourceId         uuid.UUID  `json:"resourceId"`
+	TargetUserPublicId *uuid.UUID `json:"targetUserPublicId,omitempty"`
+	Change             string     `json:"change"`
+	Permission         string     `json:"permission,omitempty"`
+}

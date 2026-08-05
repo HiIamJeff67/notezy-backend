@@ -14,6 +14,7 @@ import (
 	realtimedto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/realtime"
 	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtime-gateway/v1"
 	enumscontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjsworker/v1"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
 	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
@@ -275,7 +276,7 @@ func (s *RealtimeService) CreateMyRealtimeConnectionTicket(
 	}
 
 	return &realtimedto.CreateMyRealtimeConnectionTicketResponseDto{
-		RealtimeEndpoint:        "/" + constants.RealtimeDevelopmentBaseURL,
+		RealtimeEndpoint:        "/" + realtimegatewaycontract.RealtimeDevelopmentBaseURL,
 		RealtimeProtocolVersion: constants.RealtimeProtocolVersion,
 		ConnectionTicket:        *connectionTicket,
 		ExpiresAt:               expiresAt,
@@ -368,7 +369,7 @@ func (s *RealtimeService) CreateMyBlockPackChannelTicket(
 		ChannelId:                        blockPack.Id.String(),
 		Permission:                       string(permission),
 		RealtimeProtocolVersion:          constants.RealtimeProtocolVersion,
-		SchemaVersion:                    constants.YjsBlockPackSchemaVersion,
+		SchemaVersion:                    yjsworkercontract.YjsBlockPackSchemaVersion,
 		RoomAdmissionPolicyVersion:       realtimegatewaycontract.BlockPackRoomAdmissionPolicyVersion,
 		RoomAdmissionEnforcementStrategy: string(realtimegatewaycontract.RoomAdmissionEnforcementStrategy_RejectNewSubscriber),
 		MaximumSubscribers:               maximumSubscribers,
@@ -392,10 +393,10 @@ func (s *RealtimeService) CreateMyBlockPackChannelTicket(
 		ChannelType:             "BlockPack",
 		ChannelId:               blockPack.Id,
 		Permission:              string(permission),
-		RoomName:                fmt.Sprintf("%s:%s", constants.YjsBlockPackRoomPrefix, blockPack.Id),
-		FragmentName:            constants.YjsBlockPackFragmentName,
-		SchemaId:                constants.YjsBlockPackSchemaId,
-		SchemaVersion:           constants.YjsBlockPackSchemaVersion,
+		RoomName:                fmt.Sprintf("%s:%s", yjsworkercontract.YjsBlockPackRoomPrefix, blockPack.Id),
+		FragmentName:            yjsworkercontract.YjsBlockPackFragmentName,
+		SchemaId:                yjsworkercontract.YjsBlockPackSchemaId,
+		SchemaVersion:           yjsworkercontract.YjsBlockPackSchemaVersion,
 		RealtimeProtocolVersion: constants.RealtimeProtocolVersion,
 		LastUpdateSequence:      yjsDocument.LastUpdateSequence,
 		CompactedUntilSequence:  yjsDocument.CompactedUntilSequence,

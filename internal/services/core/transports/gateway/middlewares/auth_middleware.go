@@ -41,8 +41,19 @@ func AuthMiddleware(userRepository repositories.UserRepositoryInterface) gin.Han
 			return
 		}
 
-		accessToken, accessTokenExists := cookieValue(ctx, cookies.ValidCookieName_AccessToken.String())
-		refreshToken, refreshTokenExists := cookieValue(ctx, cookies.ValidCookieName_RefreshToken.String())
+		accessToken := ""
+		accessTokenExists := false
+		if cookie, err := ctx.Request.Cookie(cookies.ValidCookieName_AccessToken.String()); err == nil && strings.TrimSpace(cookie.Value) != "" {
+			accessToken = cookie.Value
+			accessTokenExists = true
+		}
+
+		refreshToken := ""
+		refreshTokenExists := false
+		if cookie, err := ctx.Request.Cookie(cookies.ValidCookieName_RefreshToken.String()); err == nil && strings.TrimSpace(cookie.Value) != "" {
+			refreshToken = cookie.Value
+			refreshTokenExists = true
+		}
 		userAgent := ctx.GetHeader("User-Agent")
 		if accessTokenExists {
 			claims, err := sharedtokens.ParseAccessToken(accessToken)
@@ -178,15 +189,6 @@ func AuthMiddleware(userRepository repositories.UserRepositoryInterface) gin.Han
 		}
 		ctx.Next()
 	}
-}
-
-func cookieValue(ctx *gin.Context, name string) (string, bool) {
-	cookie, err := ctx.Request.Cookie(name)
-	if err != nil || strings.TrimSpace(cookie.Value) == "" {
-		return "", false
-	}
-
-	return cookie.Value, true
 }
 
 func setActorUserId(

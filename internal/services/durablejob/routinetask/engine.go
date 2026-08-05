@@ -2,8 +2,7 @@ package routinetask
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
+	"errors"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -12,9 +11,8 @@ import (
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
-	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
-	platformkafka "github.com/HiIamJeff67/notezy-backend/internal/platform/kafka"
+	durablejobroutetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
@@ -29,13 +27,10 @@ type Engine struct {
 	isHealthy      atomic.Bool
 	isManagingWork atomic.Bool
 	handlerManager HandlerManager
-	kafkaConfig    platformkafka.ConsumerConfig
-	config         durablejobconfig.Config
 }
 
 func NewEngine(
 	db *gorm.DB,
-	kafkaConfig platformkafka.ConsumerConfig,
 	config durablejobconfig.Config,
 	maxWorkers ...int,
 ) *Engine {
@@ -45,11 +40,9 @@ func NewEngine(
 	}
 
 	engine := &Engine{
-		ticker:      time.NewTicker(constants.RoutineTaskEngineTickerDuration),
-		workerId:    uuid.New(),
-		batchSize:   initialMaxWorkers,
-		kafkaConfig: kafkaConfig,
-		config:      config,
+		ticker:    time.NewTicker(constants.RoutineTaskEngineTickerDuration),
+		workerId:  uuid.New(),
+		batchSize: initialMaxWorkers,
 	}
 	engine.handlerManager = NewHandlerManager(initialMaxWorkers, db, config, engine.workerId)
 	engine.isHealthy.Store(true)
@@ -57,102 +50,36 @@ func NewEngine(
 	return engine
 }
 
-func (e *Engine) requestRoutineTasks(ctx context.Context) {
+func (e *Engine) SetResultPublisher(publisher ResultPublisher) {
+	e.handlerManager.SetResultPublisher(publisher)
+}
+
+func (e *Engine) NewClaimRoutineTasksRequest() (durablejobcontract.ClaimRoutineTasksRequestDto, bool) {
 	if e.isManagingWork.Load() {
-		return
+		return durablejobcontract.ClaimRoutineTasksRequestDto{}, false
 	}
 
-	request := durablejobcontract.ClaimRoutineTasksRequestDto{
+	return durablejobcontract.ClaimRoutineTasksRequestDto{
 		RequestId: uuid.New(),
 		WorkerId:  e.workerId,
 		BatchSize: e.batchSize,
-	}
-	payload, err := json.Marshal(coreeventscontract.EventEnvelope[durablejobcontract.ClaimRoutineTasksRequestDto]{
-		SchemaVersion: coreeventscontract.Version,
-		EventId:       uuid.New(),
-		EventType:     coreeventscontract.EventType_RoutineTaskClaimRequested,
-		AggregateType: coreeventscontract.AggregateType_DurableJobWorker,
-		AggregateId:   e.workerId,
-		KafkaKey:      e.workerId.String(),
-		OccurredAt:    time.Now().UTC(),
-		CorrelationId: request.RequestId.String(),
-		Data:          request,
-	})
-	if err != nil {
-		e.isHealthy.Store(false)
-		if logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(ctx, err, "Failed to serialize routine task claim request")
-		}
-
-		return
-	}
-	if err := platformkafka.ProduceWithDefaultProducer(
-		ctx,
-		coreeventscontract.CoreDurableJobRoutineTaskTopic.String(),
-		e.workerId.String(),
-		payload,
-	); err != nil {
-		e.isHealthy.Store(false)
-		if logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(ctx, err, "Failed to publish routine task claim request")
-		}
-
-		return
-	}
-
-	e.isHealthy.Store(true)
+	}, true
 }
 
-func (e *Engine) consumeAssignment(
+func (e *Engine) HandleRoutineTaskAssignments(
 	ctx context.Context,
-	_ platformkafka.ConsumerRecord,
-	event coreeventscontract.EventEnvelope[json.RawMessage],
+	assignments []durablejobroutetasktypes.RoutineTaskAssignment,
 ) error {
-	if event.EventType != coreeventscontract.EventType_RoutineTasksAssigned {
-		return nil
-	}
-	if event.AggregateType != coreeventscontract.AggregateType_DurableJobWorker {
-		return &platformkafka.ConsumerError{
-			Classification: platformkafka.ErrorClassification_SchemaIncompatible,
-			Origin:         fmt.Errorf("DurableJob routine task assignment event is invalid"),
-		}
-	}
-
-	var response durablejobcontract.ClaimRoutineTasksResponseDto
-	if err := json.Unmarshal(event.Data, &response); err != nil {
-		return &platformkafka.ConsumerError{
-			Classification: platformkafka.ErrorClassification_SchemaIncompatible,
-			Origin:         fmt.Errorf("decode DurableJob routine task assignments: %w", err),
-		}
-	}
-	if response.RequestId == uuid.Nil || response.WorkerId != event.AggregateId {
-		return &platformkafka.ConsumerError{
-			Classification: platformkafka.ErrorClassification_SchemaIncompatible,
-			Origin:         fmt.Errorf("DurableJob routine task assignment response is invalid"),
-		}
-	}
-	if len(response.Assignments) == 0 {
+	if len(assignments) == 0 {
 		return nil
 	}
 	if !e.isManagingWork.CompareAndSwap(false, true) {
-		return &platformkafka.ConsumerError{
-			Classification: platformkafka.ErrorClassification_Transient,
-			Origin:         fmt.Errorf("DurableJob routine task worker is at capacity"),
-		}
+		return errors.New("DurableJob routine task worker is at capacity")
 	}
 	defer e.isManagingWork.Store(false)
 
-	routineTasks := make([]schemas.RoutineTask, len(response.Assignments))
-	for index, assignment := range response.Assignments {
-		if assignment.RoutineTaskId == uuid.Nil || assignment.RoutineTaskRecordId == uuid.Nil ||
-			assignment.ActorUserId == uuid.Nil || assignment.RoutineId == uuid.Nil ||
-			assignment.Purpose == "" || len(assignment.Payload) == 0 || assignment.StartedAt.IsZero() {
-			return &platformkafka.ConsumerError{
-				Classification: platformkafka.ErrorClassification_SchemaIncompatible,
-				Origin:         fmt.Errorf("DurableJob routine task assignment at index %d is invalid", index),
-			}
-		}
-
+	routineTasks := make([]schemas.RoutineTask, len(assignments))
+	for index, assignment := range assignments {
 		startedAt := assignment.StartedAt
 		routineTasks[index] = schemas.RoutineTask{
 			Id:                assignment.RoutineTaskId,
@@ -172,10 +99,7 @@ func (e *Engine) consumeAssignment(
 	}
 
 	if exception := e.handlerManager.Manage(ctx, routineTasks); exception != nil {
-		return &platformkafka.ConsumerError{
-			Classification: platformkafka.ErrorClassification_Transient,
-			Origin:         exception,
-		}
+		return exception
 	}
 
 	e.isHealthy.Store(true)
@@ -183,45 +107,44 @@ func (e *Engine) consumeAssignment(
 	return nil
 }
 
-func (e *Engine) Start(ctx context.Context) func() {
+func (e *Engine) Start(
+	ctx context.Context,
+	requestRoutineTasks func(context.Context, durablejobcontract.ClaimRoutineTasksRequestDto) error,
+) func() {
 	workerCtx, cancel := context.WithCancel(ctx)
 	done := make(chan struct{})
 	var shutdownOnce sync.Once
-
-	consumer, err := platformkafka.NewConsumer(
-		e.kafkaConfig,
-		coreeventscontract.CoreDurableJobRoutineTaskTopic.String(),
-	)
-	if err != nil {
-		e.isHealthy.Store(false)
-		if logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(workerCtx, err, "Failed to create routine task assignment consumer")
-		}
-
-		return func() {
-			shutdownOnce.Do(func() {
-				cancel()
-				e.Stop()
-			})
-		}
-	}
-	go func() {
-		if err := consumer.Run(workerCtx, e.consumeAssignment); err != nil && workerCtx.Err() == nil && logs.NotezyLogger != nil {
-			logs.NotezyLogger.Error(workerCtx, err, "Routine task assignment consumer stopped")
-		}
-	}()
 
 	go func() {
 		defer close(done)
 		defer e.Stop()
 
-		e.requestRoutineTasks(workerCtx)
+		request, shouldRequest := e.NewClaimRoutineTasksRequest()
+		if shouldRequest {
+			if err := requestRoutineTasks(workerCtx, request); err != nil {
+				e.isHealthy.Store(false)
+				if logs.NotezyLogger != nil {
+					logs.NotezyLogger.Error(workerCtx, err, "Failed to publish routine task claim request")
+				}
+			}
+		}
 		for {
 			select {
 			case <-workerCtx.Done():
 				return
 			case <-e.ticker.C:
-				e.requestRoutineTasks(workerCtx)
+				request, shouldRequest := e.NewClaimRoutineTasksRequest()
+				if !shouldRequest {
+					continue
+				}
+				if err := requestRoutineTasks(workerCtx, request); err != nil {
+					e.isHealthy.Store(false)
+					if logs.NotezyLogger != nil {
+						logs.NotezyLogger.Error(workerCtx, err, "Failed to publish routine task claim request")
+					}
+					continue
+				}
+				e.isHealthy.Store(true)
 			}
 		}
 	}()
@@ -229,9 +152,6 @@ func (e *Engine) Start(ctx context.Context) func() {
 	return func() {
 		shutdownOnce.Do(func() {
 			cancel()
-			if consumer != nil {
-				consumer.Close()
-			}
 			<-done
 		})
 	}

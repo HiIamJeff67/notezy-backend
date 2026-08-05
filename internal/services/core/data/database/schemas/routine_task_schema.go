@@ -9,8 +9,8 @@ import (
 
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type RoutineTask struct {
@@ -43,11 +43,11 @@ type RoutineTask struct {
 
 // RoutineTask Table Name
 func (RoutineTask) TableName() string {
-	return types.TableName_RoutineTaskTable.String()
+	return "RoutineTaskTable"
 }
 
 // RoutineTask Table Relations
-type RoutineTaskRelation types.RelationName
+type RoutineTaskRelation platformdatabase.RelationName
 
 const (
 	RoutineTaskRelation_Routine   RoutineTaskRelation = "Routine"

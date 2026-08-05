@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
+	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 // the structure of subscriptions or checkouts or anything that related to the payment and the user
@@ -28,11 +28,11 @@ type UsersToBillingPlans struct {
 
 // UsersToBillingPlans Table Name
 func (UsersToBillingPlans) TableName() string {
-	return types.TableName_UsersToBillingPlansTable.String()
+	return "UsersToBillingPlansTable"
 }
 
 // UsersToBilling Plans Relations
-type UsersToBullingPlansRelation types.RelationName
+type UsersToBullingPlansRelation platformdatabase.RelationName
 
 const (
 	UsersToBillingPlansRelation_User        UsersToBullingPlansRelation = "User"

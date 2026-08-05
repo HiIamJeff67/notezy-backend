@@ -15,9 +15,6 @@ import (
 	triggers "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/triggers"
 	seeds "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/seeds"
 	managementsql "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/sqls/management"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	stringutil "github.com/HiIamJeff67/notezy-backend/shared/lib/stringutil"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 var (
@@ -96,7 +93,7 @@ func ViewAllDatabaseEnums(db *gorm.DB) bool {
 	return true
 }
 
-func TruncateTablesInDatabase(tableName types.TableName, db *gorm.DB) bool {
+func TruncateTablesInDatabase(tableName platformdatabase.TableName, db *gorm.DB) bool {
 	result := db.Exec(fmt.Sprintf("TRUNCATE TABLE \"%s\" RESTART IDENTITY CASCADE;", tableName))
 	if err := result.Error; err != nil {
 		logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprintf("Failed to truncate %s database %s table", DatabaseInstanceToConfig[db].Name, tableName))
@@ -121,7 +118,7 @@ func MigrateEnumsToDatabase(db *gorm.DB) bool {
 
 		if !exists {
 			// if the enum does not exist, create it
-			enumSQL := fmt.Sprintf("CREATE TYPE \"%s\" AS ENUM ('%s');", name, stringutil.JoinValues(values))
+			enumSQL := fmt.Sprintf("CREATE TYPE \"%s\" AS ENUM ('%s');", name, strings.Join(values, "', '"))
 			if err := db.Exec(enumSQL).Error; err != nil {
 				logs.NotezyLogger.Error(context.Background(), nil, fmt.Sprintf("Failed to create enum %s: %v", name, err))
 				return false
@@ -204,7 +201,7 @@ func MigrateTriggersToDatabase(db *gorm.DB) bool {
 
 	for _, sql := range triggers.MigratingTriggerSQLs {
 		// split the sql statements(treated as string) in every embed files by the sql separator
-		statements := strings.Split(sql, constants.SQLSeparator)
+		statements := strings.Split(sql, platformdatabase.SQLSeparator)
 		for _, stmt := range statements {
 			stmt = strings.TrimSpace(stmt)
 			if stmt == "" { // skip empty string
@@ -227,7 +224,7 @@ func MigrateConstraintsToDatabase(db *gorm.DB) bool {
 
 	for _, sql := range constraints.MigratingConstraintSQLs {
 		// split the sql statements(treated as string) in every embed files by the sql separator
-		statements := strings.Split(sql, constants.SQLSeparator)
+		statements := strings.Split(sql, platformdatabase.SQLSeparator)
 		for _, stmt := range statements {
 			stmt = strings.TrimSpace(stmt)
 			if stmt == "" { // skip empty string
@@ -249,7 +246,7 @@ func SeedDefaultDataToDatabase(db *gorm.DB) bool {
 	logs.NotezyLogger.Info(context.Background(), "Seeding default data found in models/seeds/seed.go")
 
 	for _, sql := range seeds.SeedingDefaultDataSQLs {
-		statements := strings.Split(sql, constants.SQLSeparator)
+		statements := strings.Split(sql, platformdatabase.SQLSeparator)
 		for _, stmt := range statements {
 			stmt = strings.TrimSpace(stmt)
 			if stmt == "" {

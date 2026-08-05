@@ -112,11 +112,11 @@ frames always include `connectionId`, `connectorChannelId`, `channelType`, and
 `channelId`; raw Yjs updates are never Base64-encoded or rewritten as JSON
 block events.
 
-internal attach/detach 是 idempotent。worker reconnect 後，Gateway 為其所屬 active channels replay attach；worker 會先向 Go cold-load snapshot + tail，materialize `Y.Doc` 後才回傳 complete encoded state。worker 會先套用收到的 raw Yjs updates，再以同一個 BlockPack room 為單位暫存並使用 `Y.mergeUpdates()` 合併為一筆 persistence batch；只有收到 persistence ACK 後才 broadcast merged raw Yjs update。
+internal attach/detach 是 idempotent。worker reconnect 後，Gateway 為其所屬 active channels replay attach；worker 會先向 Go cold-load snapshot + tail，materialize `Y.Doc` 後才回傳 complete encoded state。worker 會先套用收到的 raw Yjs updates，再以同一個 BlockPack room 為單位暫存並使用 `Y.mergeUpdates()` 合併為一筆 persistence batch。batch 會以 Kafka command 非同步送往 Core；editor message path 只等待 Kafka producer 的 replicated broker ACK，不等待 Core transaction。broker ACK 後 worker 即可釋出 room 的下一個 batch 並廣播 merged raw Yjs update；Core 的 application reply 會在背景更新持久化 watermark，若 Core 最終拒絕或逾時則要求 room resync。
 
-每個 persistence batch 有只供 Go/worker 使用的 UUID idempotency key。Go 以 `(block_pack_id, persistence_batch_id)` 保證 internal WebSocket retry 不會建立重複 update row；同一 batch 的多個來源 connection 不可任意挑選其中一個寫入 `OriginConnectionId`，必須保留為 `NULL`。append terminal failure 時 worker 對 room 所有 subscriber 發出 `resync_required`，不能 broadcast 未持久化 update。
+每個 persistence batch 有只供 Go/worker 使用的 UUID idempotency key。Go 以 `(block_pack_id, persistence_batch_id)` 保證 internal WebSocket retry 不會建立重複 update row；同一 batch 的多個來源 connection 不可任意挑選其中一個寫入 `OriginConnectionId`，必須保留為 `NULL`。broker ACK 只代表 command 已被 Kafka 接受，不代表 PostgreSQL 已提交；若 Core application reply 最終失敗，worker 對 room 所有 subscriber 發出 `resync_required`，並以 cold-load 的 authoritative watermark 修正本地 optimistic sequence。
 
-batch flush 條件由 worker constants 控制：trailing debounce、maximum wait、raw update count、raw payload bytes、最後 subscriber detach 與 graceful worker shutdown。`LastUpdateSequence` 只會在 merged update transaction 成功後推進；每一筆 merged update 只消耗一個 sequence。
+batch flush 條件由 worker constants 控制：trailing debounce、maximum wait、raw update count、raw payload bytes、最後 subscriber detach 與 graceful worker shutdown。worker 在 broker ACK 後以每個 batch 一個 optimistic sequence 維持 room 順序；Core application reply 回來後會以 authoritative `UpdateSequence` 校正，重連 cold-load 時永遠以 Core watermark 為準。
 
 ## Projection
 
@@ -138,3 +138,25 @@ projection 使用 private Go-to-worker internal frame `apply-block-projection`�
 worker 僅在 room 沒有尚未持久化的 update 時，將目前 `LastUpdateSequence` 的 document 投影。它對更新 burst 做 debounce，且每個 room 同時最多一筆 projection；只有收到 `block-projection-applied` 後才推進 in-memory `ProjectedUntilSequence`。失敗不會前進 checkpoint，並以 retry delay 重試。
 
 外部 editor 不讀取 `BlockPackYjsDocument` 或 `BlockPackYjsUpdate` rows，也不自行合併 update tail；加入 room 時由 Node worker 從 snapshot + tail 恢復 Y.Doc，再以標準 Yjs sync protocol 完成同步。
+
+## DurableJob Maintenance Coordination
+
+DurableJob 不再 polling Core database，也不再直接持有 Core 的 Yjs
+repository 或 maintenance HTTP client。Core 在建立 BlockPack Yjs document，或
+同一筆 transaction 接受新的 Yjs update 後，將只包含 document watermark、大小與
+sequence 的 `YjsMaintenanceHint` 寫入 Core transactional outbox。hint 不攜帶
+snapshot、state vector 或 raw Yjs binary。
+
+DurableJob 消費 hint 後以 BlockPack UUID 作為 Kafka partition key，在記憶體中
+coalesce 同一個 BlockPack 的最新 hint，依 uncompacted update count、projection
+lag 與 document age 排序。它只在 queue 有事件時提出 compact/project request；
+沒有固定 5 分鐘 ticker。Core 收到 request 後將它轉成 Yjs Worker command，Core
+仍是唯一讀寫 PostgreSQL 的 runtime，Yjs Worker 只負責 CRDT compact 或
+projection 計算，再以 result event 回傳。Core 的結果 consumer 將 result 轉發給
+DurableJob，失敗 request 依 bounded retry，超過上限交給 Kafka consumer retry/DLQ
+與 reconciliation 流程。
+
+這條 maintenance path 是非同步的：Core domain transaction 不等待 DurableJob
+或 Yjs Worker，DurableJob 也不把大型 document payload 放進 Kafka。所有 consumer
+都必須以 request/event UUID 與 document sequence 做 idempotency，並接受 outbox
+relay 的 at-least-once delivery。

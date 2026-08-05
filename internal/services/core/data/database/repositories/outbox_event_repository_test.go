@@ -5,19 +5,19 @@ import (
 	"testing"
 	"time"
 
+	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
+	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/events"
+	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
-
-	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	schemas "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
 )
 
 func TestNewCreateOutboxEventInputAndSerializePreserveEventContract(t *testing.T) {
 	eventId := uuid.New()
 	aggregateId := uuid.New()
 	occurredAt := time.Now().UTC().Round(0)
-	envelope := coreeventscontract.EventEnvelope[coreeventscontract.BlockPackAccessRevokedData]{
-		SchemaVersion: coreeventscontract.Version,
+	envelope := eventcontract.EventEnvelope[coreeventscontract.BlockPackAccessRevokedData]{
+		SchemaVersion: eventcontract.Version,
 		EventId:       eventId,
 		EventType:     coreeventscontract.EventType_BlockPackAccessRevoked,
 		AggregateType: coreeventscontract.AggregateType_BlockPack,
@@ -25,7 +25,7 @@ func TestNewCreateOutboxEventInputAndSerializePreserveEventContract(t *testing.T
 		KafkaKey:      aggregateId.String(),
 		OccurredAt:    occurredAt,
 		CorrelationId: "request-123",
-		Trace: coreeventscontract.TraceMetadata{
+		Trace: eventcontract.TraceMetadata{
 			TraceParent: "00-trace",
 		},
 		Data: coreeventscontract.BlockPackAccessRevokedData{},
@@ -49,7 +49,7 @@ func TestNewCreateOutboxEventInputAndSerializePreserveEventContract(t *testing.T
 		t.Fatalf("failed to serialize outbox event: %v", err)
 	}
 
-	var serialized coreeventscontract.EventEnvelope[coreeventscontract.BlockPackAccessRevokedData]
+	var serialized eventcontract.EventEnvelope[coreeventscontract.BlockPackAccessRevokedData]
 	if err := json.Unmarshal(payload, &serialized); err != nil {
 		t.Fatalf("failed to decode serialized event: %v", err)
 	}
@@ -63,8 +63,8 @@ func TestNewCreateOutboxEventInputAndSerializePreserveEventContract(t *testing.T
 func TestNewCreateOutboxEventInputRejectsMismatchedKafkaKey(t *testing.T) {
 	_, err := newCreateOutboxEventInput(
 		coreeventscontract.CoreLifecycleTopic,
-		coreeventscontract.EventEnvelope[coreeventscontract.UserSessionsRevokedData]{
-			SchemaVersion: coreeventscontract.Version,
+		eventcontract.EventEnvelope[coreeventscontract.UserSessionsRevokedData]{
+			SchemaVersion: eventcontract.Version,
 			EventId:       uuid.New(),
 			EventType:     coreeventscontract.EventType_UserSessionsRevoked,
 			AggregateType: coreeventscontract.AggregateType_User,

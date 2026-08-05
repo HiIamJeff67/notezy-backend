@@ -7,7 +7,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
+
 	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
+	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/events"
 	platformkafka "github.com/HiIamJeff67/notezy-backend/internal/platform/kafka"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
@@ -69,9 +72,29 @@ func (c *LifecycleConsumer) run(ctx context.Context) {
 }
 
 func (c *LifecycleConsumer) handle(
+	ctx context.Context,
+	record platformkafka.ConsumerRecord,
+	envelope eventcontract.EventEnvelope[json.RawMessage],
+) error {
+	claimed, err := c.leaseStore.MarkLifecycleEventProcessed(envelope.EventId)
+	if err != nil {
+		return err
+	}
+	if !claimed {
+		return nil
+	}
+	if err := c.process(ctx, record, envelope); err != nil {
+		_ = c.leaseStore.ReleaseLifecycleEvent(envelope.EventId)
+		return err
+	}
+
+	return nil
+}
+
+func (c *LifecycleConsumer) process(
 	_ context.Context,
 	_ platformkafka.ConsumerRecord,
-	envelope coreeventscontract.EventEnvelope[json.RawMessage],
+	envelope eventcontract.EventEnvelope[json.RawMessage],
 ) error {
 	switch envelope.EventType {
 	case coreeventscontract.EventType_BlockPackAccessRevoked:
@@ -103,7 +126,67 @@ func (c *LifecycleConsumer) handle(
 		})
 	case coreeventscontract.EventType_BlockPackRoomPolicyChanged,
 		coreeventscontract.EventType_RootShelfPermissionRevoked:
+		if envelope.EventType == coreeventscontract.EventType_RootShelfPermissionRevoked {
+			var data coreeventscontract.ResourceChangedData
+			if err := json.Unmarshal(envelope.Data, &data); err != nil {
+				return &platformkafka.ConsumerError{
+					Classification: platformkafka.ErrorClassification_SchemaIncompatible,
+					Origin:         err,
+				}
+			}
+
+			resourceId := data.ResourceId
+			if resourceId == uuid.Nil {
+				resourceId = envelope.AggregateId
+			}
+			change := data.Change
+			if change == "" {
+				change = coreeventscontract.ResourceEventChange_PermissionRevoked
+			}
+
+			return c.leaseStore.PublishResourceEvent(realtimelease.ResourceEvent{
+				EventId:            envelope.EventId,
+				EventType:          string(envelope.EventType),
+				ResourceId:         resourceId,
+				TargetUserPublicId: data.TargetUserPublicId,
+				Change:             string(change),
+				Permission:         data.Permission,
+			})
+		}
+
 		return nil
+	case coreeventscontract.EventType_RootShelfPermissionChanged,
+		coreeventscontract.EventType_RootShelfDeleted,
+		coreeventscontract.EventType_BlockPackChanged,
+		coreeventscontract.EventType_BlockPackDeleted:
+		var data coreeventscontract.ResourceChangedData
+		if err := json.Unmarshal(envelope.Data, &data); err != nil {
+			return &platformkafka.ConsumerError{
+				Classification: platformkafka.ErrorClassification_SchemaIncompatible,
+				Origin:         err,
+			}
+		}
+		resourceId := data.ResourceId
+		if resourceId == uuid.Nil {
+			resourceId = envelope.AggregateId
+		}
+		change := data.Change
+		if change == "" {
+			change = coreeventscontract.ResourceEventChange_Updated
+			if envelope.EventType == coreeventscontract.EventType_RootShelfDeleted ||
+				envelope.EventType == coreeventscontract.EventType_BlockPackDeleted {
+				change = coreeventscontract.ResourceEventChange_Deleted
+			}
+		}
+
+		return c.leaseStore.PublishResourceEvent(realtimelease.ResourceEvent{
+			EventId:            envelope.EventId,
+			EventType:          string(envelope.EventType),
+			ResourceId:         resourceId,
+			TargetUserPublicId: data.TargetUserPublicId,
+			Change:             string(change),
+			Permission:         data.Permission,
+		})
 	default:
 		return &platformkafka.ConsumerError{
 			Classification: platformkafka.ErrorClassification_PoisonMessage,

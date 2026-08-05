@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"sync/atomic"
 	"time"
 
 	franzkgo "github.com/twmb/franz-go/pkg/kgo"
@@ -17,7 +16,6 @@ import (
 
 type Producer struct {
 	client *franzkgo.Client
-	ready  atomic.Bool
 }
 
 func NewProducer(kafkaConfig ClientConfig) (*Producer, error) {
@@ -109,10 +107,13 @@ func newConnectionOptions(kafkaConfig ClientConfig) ([]franzkgo.Opt, error) {
 }
 
 func (p *Producer) Ping(ctx context.Context) error {
+	if p == nil || p.client == nil {
+		return errors.New("Kafka producer is unavailable")
+	}
+
 	startedAt := time.Now()
 	err := p.client.Ping(ctx)
 	RecordBrokerPing(ctx, time.Since(startedAt), err)
-	p.ready.Store(err == nil)
 
 	return err
 }
@@ -123,6 +124,10 @@ func (p *Producer) Produce(
 	key string,
 	value []byte,
 ) error {
+	if p == nil || p.client == nil {
+		return errors.New("Kafka producer is unavailable")
+	}
+
 	startedAt := time.Now()
 	result := p.client.ProduceSync(ctx, &franzkgo.Record{
 		Topic: topic,
@@ -135,11 +140,10 @@ func (p *Producer) Produce(
 	return err
 }
 
-func (p *Producer) IsReady() bool {
-	return p.ready.Load()
-}
-
 func (p *Producer) Close() {
-	p.ready.Store(false)
+	if p == nil || p.client == nil {
+		return
+	}
+
 	p.client.Close()
 }

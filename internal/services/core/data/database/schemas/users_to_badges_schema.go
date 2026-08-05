@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
 )
 
 type UsersToBadges struct {
@@ -20,11 +20,11 @@ type UsersToBadges struct {
 
 // UsersToBadges Table Name
 func (UsersToBadges) TableName() string {
-	return types.TableName_UsersToBadgesTable.String()
+	return "UsersToBadgesTable"
 }
 
 // UsersToBadges Table Relations
-type UsersToBadgesRelation types.RelationName
+type UsersToBadgesRelation platformdatabase.RelationName
 
 const (
 	UsersToBadgesRelation_User  UsersToBadgesRelation = "User"

@@ -45,6 +45,14 @@ transaction commits. Calling it outside a transaction is rejected by the
 repository. Lifecycle producer adoption and the RealtimeGateway consumer are
 deliberately owned by NOT-35.
 
+Yjs persistence uses the same boundary. BlockPack creation and every accepted
+Yjs update enqueue a lightweight `YjsMaintenanceHint` in the Core transaction.
+The hint contains only document IDs, sequence watermarks, size metadata, and a
+reason; it never contains snapshots, state vectors, or raw Yjs updates. The
+DurableJob strategy consumes the published hint and asynchronously requests
+compact/project work. This keeps Kafka publication atomic with the Core write
+without making Core wait for DurableJob or the Yjs worker.
+
 ## Configuration and maintenance
 
 | Variable | Default | Purpose |

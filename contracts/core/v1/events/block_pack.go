@@ -2,8 +2,6 @@ package eventscontract
 
 import (
 	"github.com/google/uuid"
-
-	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtime-gateway/v1"
 )
 
 type BlockPackAccessRevocationReason string
@@ -19,7 +17,7 @@ type BlockPackAccessRevokedData struct {
 }
 
 type BlockPackRoomPolicyChangedData struct {
-	RoomAdmissionPolicyVersion       int                                                      `json:"roomAdmissionPolicyVersion"`
-	RoomAdmissionEnforcementStrategy realtimegatewaycontract.RoomAdmissionEnforcementStrategy `json:"roomAdmissionEnforcementStrategy"`
-	MaximumSubscribers               int32                                                    `json:"maximumSubscribers"`
+	RoomAdmissionPolicyVersion       int    `json:"roomAdmissionPolicyVersion"`
+	RoomAdmissionEnforcementStrategy string `json:"roomAdmissionEnforcementStrategy"`
+	MaximumSubscribers               int32  `json:"maximumSubscribers"`
 }

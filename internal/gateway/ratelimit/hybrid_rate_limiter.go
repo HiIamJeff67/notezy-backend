@@ -13,7 +13,6 @@ import (
 	cacheinputs "github.com/HiIamJeff67/notezy-backend/internal/gateway/data/cache/ratelimitrecord/inputs"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	platformredis "github.com/HiIamJeff67/notezy-backend/internal/platform/redis"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 type HybridRateLimitTask struct {
@@ -40,26 +39,19 @@ type HybridRateLimiter struct {
 	cacheClient         *ratelimitrecord.RateLimitRecordCacheClient
 }
 
-func NewHybridRateLimiter(
-	rateLimit rate.Limit,
-	burst int,
-	userLimit int32,
-	windowDuration time.Duration,
-	backendServerName platformredis.BackendServerName,
-	isAuthorizedLimiter bool,
-) *HybridRateLimiter {
-	syncInterval := windowDuration / constants.SynchronizationToWindowDurationRatio
-	syncInterval = max(constants.MinSynchronizationInterval, syncInterval)
+func NewHybridRateLimiter(config Config, isAuthorizedLimiter bool) *HybridRateLimiter {
+	syncInterval := config.WindowDuration / time.Duration(config.SynchronizationToWindowDurationRatio)
+	syncInterval = max(config.MinSynchronizationInterval, syncInterval)
 
 	hrl := &HybridRateLimiter{
-		Limiter:             rate.NewLimiter(rateLimit, burst),
-		UserLimit:           userLimit,
-		WindowDuration:      windowDuration,
+		Limiter:             rate.NewLimiter(config.RateLimit, config.Burst),
+		UserLimit:           config.UserLimit,
+		WindowDuration:      config.WindowDuration,
 		pendingTasks:        make(map[string]HybridRateLimitTask, 0),
 		syncInterval:        syncInterval,
 		syncTicker:          time.NewTicker(syncInterval),
 		stopChan:            make(chan struct{}),
-		BackendServerName:   backendServerName,
+		BackendServerName:   config.BackendServerName,
 		IsAuthorizedLimiter: isAuthorizedLimiter,
 		cacheClient:         ratelimitrecord.NewRateLimitRecordCacheClient(),
 	}

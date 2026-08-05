@@ -3,6 +3,10 @@ import { Kafka, logLevel, type Consumer, type Producer } from "kafkajs";
 
 export const YjsWorkerCoreCommandTopic = "notezy.yjsworker.core.command.v1";
 export const CoreYjsWorkerReplyTopic = "notezy.core.yjsworker.reply.v1";
+export const CoreYjsWorkerMaintenanceCommandTopic =
+  "notezy.core.yjsworker.maintenance-command.v1";
+export const YjsWorkerCoreMaintenanceResultTopic =
+  "notezy.yjsworker.core.maintenance-result.v1";
 
 type EventEnvelope = {
   schemaVersion: string;
@@ -262,6 +266,26 @@ export class CoreCommandDispatcher {
     }
 
     return reply;
+  }
+
+  async dispatchAsync<D, R>(
+    commandType: string,
+    blockPackId: string,
+    data: D
+  ): Promise<{ commandId: string; reply: Promise<R> }> {
+    await this.producer.start();
+    await this.replyConsumer.start();
+
+    const command = this.producer.create(commandType, blockPackId, data);
+    const reply = this.replyConsumer.waitForReply<R>(command.commandId, commandType);
+    try {
+      await this.producer.produce(command);
+    } catch (error) {
+      this.replyConsumer.reject(command.commandId, error);
+      throw error;
+    }
+
+    return { commandId: command.commandId, reply };
   }
 
   async shutdown(): Promise<void> {

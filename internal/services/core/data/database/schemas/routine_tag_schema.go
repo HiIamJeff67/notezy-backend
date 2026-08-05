@@ -7,8 +7,8 @@ import (
 
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type RoutineTag struct {
@@ -27,11 +27,11 @@ type RoutineTag struct {
 
 // RoutineTag Table Name
 func (RoutineTag) TableName() string {
-	return types.TableName_RoutineTagTable.String()
+	return "RoutineTagTable"
 }
 
 // RoutineTag Table Relations
-type RoutineTagRelation types.RelationName
+type RoutineTagRelation platformdatabase.RelationName
 
 const (
 	RoutineTagRelation_Owner          RoutineTagRelation = "Owner"

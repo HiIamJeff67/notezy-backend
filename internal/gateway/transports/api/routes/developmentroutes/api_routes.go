@@ -5,10 +5,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
 	realtimegatewayadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/realtimegateway/adapters"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
 )
 
@@ -25,7 +25,7 @@ func ConfigureAPIRoutes(
 	refreshTokenCookieHandler *cookies.CookieHandler,
 ) {
 
-	DevelopmentAPIRouterGroup = DevelopmentRouter.Group("/" + constants.APIDevelopmentBaseURL) // use in development mode
+	DevelopmentAPIRouterGroup = DevelopmentRouter.Group("/" + gatewaycontract.APIDevelopmentBaseURL) // use in development mode
 	DevelopmentAPIRouterGroup.Use(
 		middlewares.SanitizeXForwardedForMiddleware(),
 		middlewares.CORSMiddleware(),

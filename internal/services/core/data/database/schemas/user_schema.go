@@ -8,8 +8,8 @@ import (
 
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type User struct {
@@ -46,11 +46,11 @@ type User struct {
 
 // User Table Name
 func (User) TableName() string {
-	return types.TableName_UserTable.String()
+	return "UserTable"
 }
 
 // User Table Relations
-type UserRelation types.RelationName
+type UserRelation platformdatabase.RelationName
 
 const (
 	UserRelation_UserInfo            UserRelation = "UserInfo"

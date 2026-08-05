@@ -184,7 +184,7 @@ func (s *SubShelfService) GetMySubShelvesByPrevSubShelfId(
 		Where("prev_sub_shelf_id = ? AND EXISTS (?)", requestDto.Param.PrevSubShelfId, subQuery).
 		Scopes(scopes.NewSubShelfScope().FilterOnlyDeleted(onlyDeleted)).
 		Order(`"SubShelfTable".name ASC`).
-		Limit(int(constants.MaxSubShelvesOfSubShelf)).
+		Limit(int(data.MaxSubShelvesOfSubShelf)).
 		Find(&subShelves)
 	if err := result.Error; err != nil {
 		return nil, apiexceptions.Shelf.NotFound().WithOrigin(err)
@@ -233,7 +233,7 @@ func (s *SubShelfService) GetAllMySubShelvesByRootShelfId(
 			requestDto.Param.RootShelfId, subQuery,
 		).Scopes(scopes.NewSubShelfScope().FilterOnlyDeleted(onlyDeleted)).
 		Order(`"SubShelfTable".name ASC`).
-		Limit(int(constants.MaxSubShelvesOfSubShelf)).
+		Limit(int(data.MaxSubShelvesOfSubShelf)).
 		Find(&subShelves)
 	if err := result.Error; err != nil {
 		return nil, apiexceptions.Shelf.NotFound().WithOrigin(err)
@@ -286,7 +286,7 @@ func (s *SubShelfService) GetMySubShelvesAndItemsByPrevSubShelfId(
 			requestDto.Param.PrevSubShelfId, subQuery,
 		).Scopes(scopes.NewSubShelfScope().FilterOnlyDeleted(onlyDeleted)).
 		Order(`"SubShelfTable".name ASC`).
-		Limit(int(constants.MaxSubShelvesOfSubShelf)).
+		Limit(int(data.MaxSubShelvesOfSubShelf)).
 		Find(&subShelves)
 	if err := resultOfGettingSubShelves.Error; err != nil {
 		return nil, apiexceptions.Shelf.NotFound().WithOrigin(err)
@@ -305,7 +305,7 @@ func (s *SubShelfService) GetMySubShelvesAndItemsByPrevSubShelfId(
 			allowedPermissions,
 		).Scopes(scopes.NewMaterialScope().FilterOnlyDeleted(onlyDeleted)).
 		Order(`"MaterialTable".name ASC`).
-		Limit(int(constants.MaxMaterialsOfSubShelf)).
+		Limit(int(data.MaxMaterialsOfSubShelf)).
 		Find(&materials)
 	if err := resultOfGettingMaterials.Error; err != nil {
 		return nil, apiexceptions.Material.NotFound().WithOrigin(err)
@@ -340,7 +340,7 @@ func (s *SubShelfService) GetMySubShelvesAndItemsByPrevSubShelfId(
 			allowedPermissions,
 		).Scopes(scopes.NewBlockPackScope().FilterOnlyDeleted(onlyDeleted)).
 		Order(`"BlockPackTable".name ASC`).
-		Limit(int(constants.MaxBlockPackOfSubShelf)).
+		Limit(int(data.MaxBlockPackOfSubShelf)).
 		Scan(&blockPacks)
 	if err := resultOfGettingBlockPacks.Error; err != nil {
 		return nil, apiexceptions.BlockPack.NotFound().WithOrigin(err)
@@ -595,10 +595,10 @@ func (s *SubShelfService) MoveMySubShelfByRootShelfId(
 		if exception = exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
 			{First: to.RootShelfId != requestDto.Body.DestinationRootShelfId, Second: apiexceptions.Shelf.NotFound()},
 			{
-				First: len(from.Path)+len(to.Path) > int(constants.MaxSubShelvesOfRootShelf),
+				First: len(from.Path)+len(to.Path) > int(data.MaxSubShelvesOfRootShelf),
 				Second: apiexceptions.Shelf.MaximumDepthExceeded(
 					int32(len(from.Path)+len(to.Path)),
-					constants.MaxSubShelvesOfRootShelf,
+					data.MaxSubShelvesOfRootShelf,
 				),
 			},
 		}); exception != nil {
@@ -745,10 +745,10 @@ func (s *SubShelfService) MoveMySubShelvesByRootShelfId(
 
 		sourceSubShelfIdMap := make(map[uuid.UUID]bool)
 		for _, from := range froms {
-			if len(from.Path)+len(to.Path) > int(constants.MaxSubShelvesOfRootShelf) {
+			if len(from.Path)+len(to.Path) > int(data.MaxSubShelvesOfRootShelf) {
 				apiexceptions.Shelf.MaximumDepthExceeded(
 					int32(len(from.Path)+len(to.Path)),
-					constants.MaxSubShelvesOfRootShelf,
+					data.MaxSubShelvesOfRootShelf,
 				)
 				// sourceSubShelfIdMap[from.Id] = false
 			} else if from.Id == to.Id { // handling inserting node to itself here
@@ -952,10 +952,10 @@ func (s *SubShelfService) MoveMySubShelvesByRootShelfIds(
 				continue
 			}
 
-			if len(from.Path)+len(to.Path) > int(constants.MaxSubShelvesOfRootShelf) {
+			if len(from.Path)+len(to.Path) > int(data.MaxSubShelvesOfRootShelf) {
 				apiexceptions.Shelf.MaximumDepthExceeded(
 					int32(len(from.Path)+len(to.Path)),
-					constants.MaxSubShelvesOfRootShelf,
+					data.MaxSubShelvesOfRootShelf,
 				)
 				// sourceSubShelfIdMap[sourceSubShelfId] = false
 			} else if from.Id == to.Id { // handling inserting node to itself here

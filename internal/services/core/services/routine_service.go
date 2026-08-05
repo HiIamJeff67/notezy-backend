@@ -24,7 +24,7 @@ import (
 	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/core/exceptions"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
-	timeutil "github.com/HiIamJeff67/notezy-backend/shared/lib/timeutil"
+	times "github.com/HiIamJeff67/notezy-backend/shared/lib/times"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 	validator "github.com/go-playground/validator/v10"
 )
@@ -422,7 +422,7 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 	if !reqDto.Param.From.Before(reqDto.Param.To) { // make sure from is before to
 		return nil, apiexceptions.Routine.InvalidInput().WithOrigin(fmt.Errorf("from must be before to"))
 	}
-	if !timeutil.IsTimeWithin(reqDto.Param.From, reqDto.Param.To, 360*24*time.Hour) { // make sure the time range is within 360 days which is approximate 1 year
+	if !times.IsTimeWithin(reqDto.Param.From, reqDto.Param.To, 360*24*time.Hour) { // make sure the time range is within 360 days which is approximate 1 year
 		return nil, apiexceptions.Routine.QueriedTimeRangeTooLarge(reqDto.Param.From, reqDto.Param.To)
 	}
 
@@ -1521,7 +1521,7 @@ func (s *RoutineService) VisualizeMyRoutineScheduledStartAtCount(
 	if !reqDto.Param.QueryRangeStartedAt.Before(reqDto.Param.QueryRangeEndedAt) {
 		return nil, apiexceptions.Routine.InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
 	}
-	if !timeutil.IsTimeWithin(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
+	if !times.IsTimeWithin(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
 		return nil, apiexceptions.Routine.QueriedTimeRangeTooLarge(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt)
 	}
 
@@ -1557,7 +1557,7 @@ func (s *RoutineService) VisualizeMyRoutineScheduledEndAtCount(
 	if !reqDto.Param.QueryRangeStartedAt.Before(reqDto.Param.QueryRangeEndedAt) {
 		return nil, apiexceptions.Routine.InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
 	}
-	if !timeutil.IsTimeWithin(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
+	if !times.IsTimeWithin(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
 		return nil, apiexceptions.Routine.QueriedTimeRangeTooLarge(reqDto.Param.QueryRangeStartedAt, reqDto.Param.QueryRangeEndedAt)
 	}
 

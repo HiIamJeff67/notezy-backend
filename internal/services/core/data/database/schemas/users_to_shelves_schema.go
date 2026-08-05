@@ -6,8 +6,8 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type UsersToShelves struct {
@@ -24,11 +24,11 @@ type UsersToShelves struct {
 
 // UsersToShelves Table Name
 func (UsersToShelves) TableName() string {
-	return types.TableName_UsersToShelvesTable.String()
+	return "UsersToShelvesTable"
 }
 
 // UsersToShelves Table Relations
-type UsersToShelvesRelation types.RelationName
+type UsersToShelvesRelation platformdatabase.RelationName
 
 const (
 	UsersToShelvesRelation_User      UsersToShelvesRelation = "User"

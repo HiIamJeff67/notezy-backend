@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
 )
 
 type BlockPackYjsDocument struct {
@@ -26,10 +26,10 @@ type BlockPackYjsDocument struct {
 }
 
 func (BlockPackYjsDocument) TableName() string {
-	return types.TableName_BlockPackYjsDocumentTable.String()
+	return "BlockPackYjsDocumentTable"
 }
 
-type BlockPackYjsDocumentRelation types.RelationName
+type BlockPackYjsDocumentRelation platformdatabase.RelationName
 
 const (
 	BlockPackYjsDocumentRelation_BlockPack BlockPackYjsDocumentRelation = "BlockPack"

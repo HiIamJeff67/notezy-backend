@@ -5,31 +5,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	stringutil "github.com/HiIamJeff67/notezy-backend/shared/lib/stringutil"
+	strings "github.com/HiIamJeff67/notezy-backend/shared/lib/strings"
 	validators "github.com/HiIamJeff67/notezy-backend/shared/validations/validators"
 	test "github.com/HiIamJeff67/notezy-backend/test"
 )
-
-/* ============================== Test JoinValues() ============================== */
-
-type JoinValuesArgType = struct {
-	Values []string
-}
-type JoinValuesReturnType = string
-type JoinValuesTestCase = test.UnitTestCase[
-	JoinValuesArgType,
-	JoinValuesReturnType,
-]
-
-func TestJoinValues(t *testing.T) {
-	cases := test.LoadTestCases[JoinValuesTestCase](
-		t, "testdata/string_testdata/join_values_testdata.json",
-	)
-	for _, c := range cases {
-		got := stringutil.JoinValues(c.Args.Values)
-		assert.Equal(t, c.Returns, got)
-	}
-}
 
 /* ============================== Test ConvertCamelCaseToSenctenceCase() ============================== */
 
@@ -47,29 +26,7 @@ func TestConvertCamelCaseToSentenceCase(t *testing.T) {
 		t, "testdata/string_testdata/convert_camel_case_to_sentence_case_testdata.json",
 	)
 	for _, c := range cases {
-		got := stringutil.ConvertCamelCaseToSentenceCase(c.Args.Input)
-		assert.Equal(t, c.Returns, got)
-	}
-}
-
-/* ============================== Test IsStringIn() ============================== */
-
-type IsStringInArgType = struct {
-	S    string
-	Strs []string
-}
-type IsStringInReturnType = bool
-type IsStringInTestCase = test.UnitTestCase[
-	IsStringInArgType,
-	IsStringInReturnType,
-]
-
-func TestIsStringIn(t *testing.T) {
-	cases := test.LoadTestCases[IsStringInTestCase](
-		t, "testdata/string_testdata/is_string_in_testdata.json",
-	)
-	for _, c := range cases {
-		got := stringutil.IsStringIn(c.Args.S, c.Args.Strs)
+		got := strings.ConvertCamelCaseToSentenceCase(c.Args.Input)
 		assert.Equal(t, c.Returns, got)
 	}
 }

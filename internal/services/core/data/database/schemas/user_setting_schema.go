@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type UserSetting struct {
@@ -20,5 +19,5 @@ type UserSetting struct {
 
 // User Setting Table Name
 func (UserSetting) TableName() string {
-	return types.TableName_UserSettingTable.String()
+	return "UserSettingTable"
 }

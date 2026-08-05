@@ -3,8 +3,6 @@ package ratelimiter
 import (
 	"sync"
 	"time"
-
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 // The weak rate limiter is an implementation of Leaky Bucket algorithm
@@ -14,15 +12,17 @@ type WeakRateLimiter struct {
 	requestArrivalTimes []time.Time
 	capacity            int
 	minInterval         time.Duration
+	minRetention        time.Duration
 	mutex               sync.Mutex
 }
 
-func NewWeakRateLimiter(requestsPerSecond int) *WeakRateLimiter {
+func NewWeakRateLimiter(requestsPerSecond int, config Config) *WeakRateLimiter {
 	minInterval := time.Second / time.Duration(requestsPerSecond)
 	return &WeakRateLimiter{
 		requestArrivalTimes: make([]time.Time, 0),
-		capacity:            requestsPerSecond + constants.RequestFrequencyExtraCapacity,
+		capacity:            requestsPerSecond + config.RequestFrequencyExtraCapacity,
 		minInterval:         minInterval,
+		minRetention:        config.MinIntervalTimeOfLastRequest,
 	}
 }
 
@@ -34,7 +34,7 @@ func (lb *WeakRateLimiter) Allow() bool {
 
 	validRequests := make([]time.Time, 0)
 	for _, reqArrivalTime := range lb.requestArrivalTimes {
-		if now.Sub(reqArrivalTime) < constants.MinIntervalTimeOfLastRequest {
+		if now.Sub(reqArrivalTime) < lb.minRetention {
 			validRequests = append(validRequests, reqArrivalTime)
 		}
 	}

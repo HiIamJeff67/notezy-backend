@@ -79,8 +79,8 @@ func CSRFMiddleware() gin.HandlerFunc {
 				return
 			}
 			ctx.Header(gatewaycontract.CoreAuthRefreshed.String(), "true")
-			if accessToken, accessTokenExists := cookieValue(ctx, cookies.ValidCookieName_AccessToken.String()); accessTokenExists {
-				ctx.Header(gatewaycontract.CoreSetAccessToken.String(), accessToken)
+			if cookie, err := ctx.Request.Cookie(cookies.ValidCookieName_AccessToken.String()); err == nil && strings.TrimSpace(cookie.Value) != "" {
+				ctx.Header(gatewaycontract.CoreSetAccessToken.String(), cookie.Value)
 			}
 			ctx.Header(gatewaycontract.CoreSetCSRFToken.String(), *newCSRFToken)
 		}

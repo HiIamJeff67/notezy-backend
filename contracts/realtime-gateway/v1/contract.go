@@ -6,8 +6,6 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 )
 
-const Version = "v1"
-
 type RequestEnvelope interface {
 	GetVersion() string
 	GetOperation() string

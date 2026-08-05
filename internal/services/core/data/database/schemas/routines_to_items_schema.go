@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
+	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type RoutinesToItems struct {
@@ -22,11 +22,11 @@ type RoutinesToItems struct {
 
 // RoutinesToItems Table Name
 func (RoutinesToItems) TableName() string {
-	return types.TableName_RoutinesToItemsTable.String()
+	return "RoutinesToItemsTable"
 }
 
 // RoutinesToItems Table Relations
-type RoutinesToItemsRelation types.RelationName
+type RoutinesToItemsRelation platformdatabase.RelationName
 
 const (
 	RoutinesToItemsRelation_Routine RoutinesToItemsRelation = "Routine"

@@ -4,10 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"math/rand/v2"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -32,6 +30,7 @@ import (
 	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/core/exceptions"
 	emailtransport "github.com/HiIamJeff67/notezy-backend/internal/services/core/transports/email"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	authcode "github.com/HiIamJeff67/notezy-backend/shared/lib/authcode"
 	snowflake "github.com/HiIamJeff67/notezy-backend/shared/lib/snowflake"
 	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 	validators "github.com/HiIamJeff67/notezy-backend/shared/validations/validators"
@@ -66,6 +65,7 @@ type AuthService struct {
 	rootShelfRepository   repositories.RootShelfRepositoryInterface
 	oauthService          OAuthServiceInterface
 	emailClient           emailtransport.ClientInterface
+	authCodeGenerator     *authcode.AuthCodeGenerator
 }
 
 func NewAuthService(
@@ -78,9 +78,13 @@ func NewAuthService(
 	rootShelfRepository repositories.RootShelfRepositoryInterface,
 	oauthService OAuthServiceInterface,
 	emailClient emailtransport.ClientInterface,
+	authCodeGenerator *authcode.AuthCodeGenerator,
 ) AuthServiceInterface {
 	if db == nil {
 		db = data.NotezyDB
+	}
+	if authCodeGenerator == nil {
+		authCodeGenerator = authcode.New()
 	}
 	return &AuthService{
 		validator:             validator,
@@ -92,6 +96,7 @@ func NewAuthService(
 		rootShelfRepository:   rootShelfRepository,
 		oauthService:          oauthService,
 		emailClient:           emailClient,
+		authCodeGenerator:     authCodeGenerator,
 	}
 }
 
@@ -105,15 +110,6 @@ var loginCountToBlockDurationMap = map[int32]time.Duration{
 	15: 6 * time.Hour,
 	20: 24 * time.Hour,
 	30: 7 * 24 * time.Hour,
-}
-
-func (s *AuthService) generateAuthCode() string {
-	randomNumber := rand.IntN(constants.MaxAuthCode + 1)
-	code := strconv.Itoa(randomNumber)
-	for len(code) < constants.MaxLengthOfAuthCode {
-		code = "0" + code
-	}
-	return code
 }
 
 func (s *AuthService) generateRandomFakeDisplayName() string {
@@ -314,8 +310,8 @@ func (s *AuthService) Register(
 		return nil, exception
 	}
 
-	authCode := s.generateAuthCode()
-	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
+	authCode := s.authCodeGenerator.Generate()
+	authCodeExpiredAt := s.authCodeGenerator.ExpireAt(time.Now())
 
 	newUser, exception := s.userRepository.UpdateOneById(
 		*newUserId,
@@ -511,8 +507,8 @@ func (s *AuthService) RegisterViaGoogle(
 		return nil, exception
 	}
 
-	authCode := s.generateAuthCode()
-	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
+	authCode := s.authCodeGenerator.Generate()
+	authCodeExpiredAt := s.authCodeGenerator.ExpireAt(time.Now())
 
 	newUser, exception := s.userRepository.UpdateOneById(
 		*newUserId,
@@ -1168,8 +1164,8 @@ func (s *AuthService) SendAuthCode(
 
 	db := s.db.WithContext(ctx)
 
-	authCode := s.generateAuthCode()
-	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
+	authCode := s.authCodeGenerator.Generate()
+	authCodeExpiredAt := s.authCodeGenerator.ExpireAt(time.Now())
 	blockAuthCodeUntil := s.getAuthCodeBlockUntil()
 	output := struct {
 		Name               string    `json:"name" gorm:"column:name;"`
@@ -1250,8 +1246,8 @@ func (s *AuthService) ResetEmail(
 		return nil, apiexceptions.User.FailedToUpdate().WithOrigin(err)
 	}
 
-	authCode := s.generateAuthCode()
-	authCodeExpiredAt := time.Now().Add(constants.ExpirationTimeOfAuthCode)
+	authCode := s.authCodeGenerator.Generate()
+	authCodeExpiredAt := s.authCodeGenerator.ExpireAt(time.Now())
 	_, exception = s.userAccountRepository.UpdateOneByUserId(
 		actorUserId,
 		inputs.PartialUpdateUserAccountInput{

@@ -9,20 +9,19 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.opentelemetry.io/otel/attribute"
 
+	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtime-gateway/v1"
 	platformkafka "github.com/HiIamJeff67/notezy-backend/internal/platform/kafka"
 	observability "github.com/HiIamJeff67/notezy-backend/internal/platform/observability"
-	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	platformredis "github.com/HiIamJeff67/notezy-backend/internal/platform/redis"
 	realtimeconfig "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/config"
 	ratelimitrecord "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/ratelimitrecord"
 	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
+	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/ratelimit"
 	gatewayrouters "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/gateway/routers"
-	realtimewebsocket "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/websocket"
-	middlewares "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/websocket/middlewares"
+	yjsworker "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/yjsworker"
+	middlewares "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/yjsworker/middlewares"
 	workers "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/workers"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 func Start() func() {
@@ -42,36 +41,24 @@ func Start() func() {
 		context.Background(),
 		observability.LoadConfig("notezy-realtime-gateway"),
 	)
-	platformredis.InitializeDefaultClientManager(redisConfig)
+	redisClientManager := platformredis.NewClientManager(redisConfig)
 
-	if err := realtimelease.Register(context.Background(), platformredis.DefaultClientManager); err != nil {
-		_ = platformredis.DefaultClientManager.DisconnectAll()
+	if err := realtimelease.Register(context.Background(), redisClientManager); err != nil {
+		_ = redisClientManager.DisconnectAll()
 		shutdownObservability()
 		panic(err)
 	}
-	if err := ratelimitrecord.Register(context.Background(), platformredis.DefaultClientManager); err != nil {
-		_ = platformredis.DefaultClientManager.DisconnectAll()
+	if err := ratelimitrecord.Register(context.Background(), redisClientManager); err != nil {
+		_ = redisClientManager.DisconnectAll()
 		shutdownObservability()
 		panic(err)
 	}
-	if err := platformkafka.ConnectDefaultProducer(
-		context.Background(),
-		platformkafka.ClientConfig{
-			ConnectionConfig: kafkaConnectionConfig,
-			ClientId:         "notezy-realtime-gateway",
-		},
-	); err != nil {
-		logs.NotezyLogger.Warn(
-			context.Background(),
-			"Kafka is unavailable; RealtimeGateway is running in degraded mode",
-			attribute.String("error.message", err.Error()),
-		)
-	}
+	middlewares.InitUnauthorizedRateLimiter(ratelimit.DefaultUpgradeConfig())
 
 	router := gin.Default()
 	if err := router.SetTrustedProxies(config.TrustedProxies); err != nil {
-		platformkafka.CloseDefaultProducer()
-		_ = platformredis.DefaultClientManager.DisconnectAll()
+		middlewares.StopUnauthorizedRateLimiter()
+		_ = redisClientManager.DisconnectAll()
 		shutdownObservability()
 		panic(err)
 	}
@@ -79,11 +66,6 @@ func Start() func() {
 		ctx.Status(http.StatusOK)
 	})
 	router.GET("/readyz", func(ctx *gin.Context) {
-		if err := platformkafka.CheckDefaultProducer(ctx.Request.Context()); err != nil {
-			ctx.Status(http.StatusServiceUnavailable)
-			return
-		}
-
 		ctx.Status(http.StatusOK)
 	})
 	gatewayrouters.ConfigureRoutes(
@@ -91,7 +73,7 @@ func Start() func() {
 		realtimelease.NewRealtimeLeaseCacheClient(),
 	)
 
-	websocketClient := realtimewebsocket.NewWebSocketClient(config)
+	websocketClient := yjsworker.NewWebSocketClient(config)
 	lifecycleConsumer := workers.NewLifecycleConsumer(
 		realtimelease.NewRealtimeLeaseCacheClient(),
 		platformkafka.ConsumerConfig{
@@ -107,7 +89,7 @@ func Start() func() {
 		},
 	)
 	shutdownLifecycleConsumer := lifecycleConsumer.Start(context.Background())
-	routes := router.Group("/" + constants.RealtimeDevelopmentBaseURL)
+	routes := router.Group("/" + realtimegatewaycontract.RealtimeDevelopmentBaseURL)
 	routes.Use(
 		middlewares.DomainWhiteListMiddleware(config.AllowedDomains),
 		middlewares.UnauthorizedRateLimitMiddleware(),
@@ -116,8 +98,7 @@ func Start() func() {
 
 	listener, err := net.Listen("tcp", config.ListenAddress)
 	if err != nil {
-		platformkafka.CloseDefaultProducer()
-		_ = platformredis.DefaultClientManager.DisconnectAll()
+		_ = redisClientManager.DisconnectAll()
 		shutdownObservability()
 		panic(err)
 	}
@@ -139,9 +120,8 @@ func Start() func() {
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			fmt.Println("Failed to shutdown WebSocket server: ", err)
 		}
-		platformkafka.CloseDefaultProducer()
 		middlewares.StopUnauthorizedRateLimiter()
-		if err := platformredis.DefaultClientManager.DisconnectAll(); err != nil {
+		if err := redisClientManager.DisconnectAll(); err != nil {
 			fmt.Println("Failed to disconnect WebSocket cache servers: ", err)
 		}
 		shutdownObservability()

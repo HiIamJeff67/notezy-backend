@@ -65,6 +65,76 @@ Core-owned authorization before an endpoint runs. Keep `endpoint.go` only for
 endpoint-wide helpers; render a successful operation response in its endpoint
 method.
 
+Kafka is also a transport boundary. Runtime-specific Kafka consumers and
+producers belong under the transport owned by the peer they communicate with;
+they do not belong in a generic `workers/` package:
+
+```text
+internal/services/core/transports/
+  durablejob/
+    consumers/
+    eventbuilders/
+    producers/
+  yjsworker/
+    consumers/
+    producers/
+  outbox_relay.go
+
+internal/services/durablejob/transports/
+  core/
+    consumers/
+    producers/
+    strategies/
+```
+
+For a peer transport, event directions are kept one-to-one at the file
+boundary: each Core-to-DurableJob consumer has a matching DurableJob Core
+producer, and each Core producer has a matching DurableJob consumer. A file
+under `producers/` is a broker producer only when it owns a `Produce()` method
+and receives the platform Kafka producer. A file under `eventbuilders/` only
+builds a versioned envelope through `Build()`; it never publishes to Kafka.
+Core events written inside a database transaction use the Core `OutboxRelay` as
+their Kafka publisher. The event builder and the outbox relay together provide
+the atomic database-to-Kafka handoff, so an event builder must not call the
+broker directly.
+
+The transport owns Kafka envelopes, producer/consumer setup, retry and offset
+handling, and calls the local service or engine through constructor-injected
+dependencies. Scheduling and execution policy remain in the owning runtime's
+service or engine; those packages must not import their transport back.
+
+## Runtime-owned workers
+
+Long-lived background loops belong to the owning runtime's `workers/` package,
+not to `services/` or a generic `workers/` package under `internal/platform`:
+
+```text
+internal/services/<runtime>/
+  services/   # request-scoped business workflows
+  workers/    # runtime-owned long-lived loops and reconciliation
+```
+
+A runtime-owned worker must:
+
+- define an `XxxWorkerInterface` before its concrete worker when the composition
+  root or tests need a replaceable lifecycle boundary;
+- define an `XxxWorker` struct and `NewXxxWorker(...)` constructor for explicit
+  dependency injection;
+- expose `Start(context.Context) func()` and use the returned function for
+  cancellation and graceful shutdown;
+- accept context cancellation, avoid reading environment variables, and never
+  register HTTP routes or render HTTP responses;
+- own scheduling concerns such as tickers, bounded scans, retries, and
+  reconciliation triggers while delegating business mutations to injected
+  services/repositories;
+- be constructed and started only by the runtime's application composition root.
+
+Workers are runtime infrastructure with business-domain awareness. They may
+coordinate the owning runtime's data and service dependencies, but they must not
+import another runtime's source package or become a hidden replacement for a
+service method. A service method must remain directly callable without starting
+the worker.
+
 ## Dependency direction
 
 - `cmd/*` may import `internal/*`.
@@ -167,9 +237,11 @@ service's endpoint and router; never create a shared GraphQLEndpoint or a centra
 Core GraphQL router.
 
 DurableJob, Email, and YjsWorker own their own runtime, transport, and service-local
-data/types/config. They must support `context.Context` cancellation and graceful
-shutdown. Kafka, outbox, and consumer reliability are separate Phase 3 concerns;
-Yjs update, awareness, and presence stay out of the outbox.
+data/types/config. Core and every other runtime may add a runtime-owned
+`workers/` package for long-lived background coordination. They must support
+`context.Context` cancellation and graceful shutdown. Kafka, outbox, and consumer
+reliability are separate Phase 3 concerns; Yjs update, awareness, and presence
+stay out of the outbox.
 
 ## Minimal pre-change check
 

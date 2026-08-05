@@ -12,7 +12,6 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	gatewaycontexts "github.com/HiIamJeff67/notezy-backend/internal/gateway/contexts"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 )
 
 type LoadUserInfoSource string
@@ -46,7 +45,7 @@ func NewUserInfoDataloader(coreClient *coreadapters.CoreClient) UserInfoDataload
 	}
 	dataloader.loader = gophersdataloader.NewBatchedLoader(
 		dataloader.batchFunction(),
-		gophersdataloader.WithWait[UserInfoLoaderKey, *gqlmodels.PublicUserInfo](constants.LoaderDelayOfUserInfo),
+		gophersdataloader.WithWait[UserInfoLoaderKey, *gqlmodels.PublicUserInfo](loaderDelayOfUserInfo),
 	)
 
 	return dataloader

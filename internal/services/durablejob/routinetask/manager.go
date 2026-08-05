@@ -2,7 +2,6 @@ package routinetask
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"sync"
@@ -12,12 +11,10 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
 	durablejobroutinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
 	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	platformkafka "github.com/HiIamJeff67/notezy-backend/internal/platform/kafka"
 	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/inputs"
 	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
@@ -45,7 +42,24 @@ type HandlerManager struct {
 	db                *gorm.DB
 	routineRepository repositories.RoutineRepositoryInterface
 	registries        map[enums.RoutineTaskPurpose]handlers.PurposeHandler
+	resultPublisher   ResultPublisher
 }
+
+type RoutineTaskResultKind string
+
+const (
+	RoutineTaskResultKind_Completed RoutineTaskResultKind = "completed"
+	RoutineTaskResultKind_Failed    RoutineTaskResultKind = "failed"
+)
+
+type RoutineTaskResult struct {
+	Kind          RoutineTaskResultKind
+	WorkerId      uuid.UUID
+	CorrelationId string
+	Data          any
+}
+
+type ResultPublisher func(context.Context, RoutineTaskResult) error
 
 type routineTaskWithRecord struct {
 	task   schemas.RoutineTask
@@ -209,6 +223,10 @@ func NewHandlerManager(
 	}
 }
 
+func (hm *HandlerManager) SetResultPublisher(publisher ResultPublisher) {
+	hm.resultPublisher = publisher
+}
+
 /* ============================== Util & Helpers for Routine Tasks and Routine Task Records ============================== */
 
 func (hm *HandlerManager) getErrorDetails(exception *exceptions.Exception) (enums.RoutineTaskRecordErrorCode, string) {
@@ -320,7 +338,12 @@ func (hm *HandlerManager) finalize(ctx context.Context) *exceptions.Exception {
 				CompletedAt:         completedAt,
 			}
 		}
-		if exception := hm.publishResult(ctx, coreeventscontract.CoreDurableJobRoutineTaskTopic, coreeventscontract.EventType_RoutineTasksCompleted, correlationId, completed); exception != nil {
+		if exception := hm.publishResult(ctx, RoutineTaskResult{
+			Kind:          RoutineTaskResultKind_Completed,
+			WorkerId:      hm.workerId,
+			CorrelationId: correlationId,
+			Data:          completed,
+		}); exception != nil {
 			return exception
 		}
 	}
@@ -352,7 +375,12 @@ func (hm *HandlerManager) finalize(ctx context.Context) *exceptions.Exception {
 				ErrorReason:         errorReason,
 			}
 		}
-		if exception := hm.publishResult(ctx, coreeventscontract.CoreDurableJobRoutineTaskTopic, coreeventscontract.EventType_RoutineTasksFailed, correlationId, failedBatch); exception != nil {
+		if exception := hm.publishResult(ctx, RoutineTaskResult{
+			Kind:          RoutineTaskResultKind_Failed,
+			WorkerId:      hm.workerId,
+			CorrelationId: correlationId,
+			Data:          failedBatch,
+		}); exception != nil {
 			return exception
 		}
 	}
@@ -360,29 +388,26 @@ func (hm *HandlerManager) finalize(ctx context.Context) *exceptions.Exception {
 	return nil
 }
 
-func (hm *HandlerManager) publishResult(
-	ctx context.Context,
-	topic coreeventscontract.Topic,
-	eventType coreeventscontract.EventType,
-	correlationId string,
-	data any,
-) *exceptions.Exception {
-	payload, err := json.Marshal(coreeventscontract.EventEnvelope[any]{
-		SchemaVersion: coreeventscontract.Version,
-		EventId:       uuid.New(),
-		EventType:     eventType,
-		AggregateType: coreeventscontract.AggregateType_DurableJobWorker,
-		AggregateId:   hm.workerId,
-		KafkaKey:      hm.workerId.String(),
-		OccurredAt:    time.Now().UTC(),
-		CorrelationId: correlationId,
-		Data:          data,
-	})
-	if err != nil {
-		return exceptions.New("FailedToPublishResult", "RoutineTask", "Finalize", "Failed to serialize the routine task result", http.StatusInternalServerError, true).WithOrigin(err)
+func (hm *HandlerManager) publishResult(ctx context.Context, result RoutineTaskResult) *exceptions.Exception {
+	if hm.resultPublisher == nil {
+		return exceptions.New(
+			"FailedToPublishResult",
+			"RoutineTask",
+			"Finalize",
+			"Routine task result publisher is not configured",
+			http.StatusInternalServerError,
+			true,
+		)
 	}
-	if err := platformkafka.ProduceWithDefaultProducer(ctx, topic.String(), hm.workerId.String(), payload); err != nil {
-		return exceptions.New("FailedToPublishResult", "RoutineTask", "Finalize", "Failed to publish the routine task result", http.StatusInternalServerError, true).WithOrigin(err)
+	if err := hm.resultPublisher(ctx, result); err != nil {
+		return exceptions.New(
+			"FailedToPublishResult",
+			"RoutineTask",
+			"Finalize",
+			"Failed to publish the routine task result",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
 	}
 	return nil
 }

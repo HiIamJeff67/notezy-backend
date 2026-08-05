@@ -15,6 +15,7 @@ import (
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
+	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
 	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/inputs"
 	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
@@ -240,7 +241,7 @@ func (s *BlockPackService) GetMyBlockPacksByParentSubShelfId(
 			allowedPermissions,
 		).Scopes(scopes.NewBlockPackScope().FilterOnlyDeleted(onlyDeleted)).
 		Order("name ASC").
-		Limit(int(constants.MaxBlockPackOfSubShelf)).
+		Limit(int(data.MaxBlockPackOfSubShelf)).
 		Scan(&resDto)
 	if err := result.Error; err != nil {
 		return nil, apiexceptions.BlockPack.NotFound().WithOrigin(err)
@@ -291,7 +292,7 @@ func (s *BlockPackService) GetAllMyBlockPacksByRootShelfId(
 		Where("ss.root_shelf_id = ? AND uts.user_id = ? AND uts.permission IN ?",
 			requestDto.Param.RootShelfId, actorUserId, allowedPermissions,
 		).Scopes(scopes.NewBlockPackScope().FilterOnlyDeleted(onlyDeleted)).
-		Limit(int(constants.MaxBlockPackOfRootShelf)).
+		Limit(int(data.MaxBlockPackOfRootShelf)).
 		Order("name ASC").
 		Scan(&resDto)
 	if err := result.Error; err != nil {
@@ -339,6 +340,15 @@ func (s *BlockPackService) CreateBlockPack(
 
 	document := schemas.BlockPackYjsDocument{BlockPackId: *newBlockPackId}
 	if err := tx.Create(&document).Error; err != nil {
+		tx.Rollback()
+		return nil, apiexceptions.BlockPack.FailedToCreate().WithOrigin(err)
+	}
+	if err := repositories.NewOutboxEventRepository().EnqueueYjsMaintenanceHint(
+		tx,
+		uuid.NewString(),
+		*newBlockPackId,
+		"block_pack_created",
+	); err != nil {
 		tx.Rollback()
 		return nil, apiexceptions.BlockPack.FailedToCreate().WithOrigin(err)
 	}
@@ -403,6 +413,18 @@ func (s *BlockPackService) CreateBlockPacks(
 
 		return nil, apiexceptions.BlockPack.FailedToCreate().WithOrigin(err)
 	}
+	for _, newBlockPackId := range newBlockPackIds {
+		if err := repositories.NewOutboxEventRepository().EnqueueYjsMaintenanceHint(
+			tx,
+			uuid.NewString(),
+			newBlockPackId,
+			"block_pack_created",
+		); err != nil {
+			tx.Rollback()
+
+			return nil, apiexceptions.BlockPack.FailedToCreate().WithOrigin(err)
+		}
+	}
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
@@ -423,13 +445,18 @@ func (s *BlockPackService) UpdateMyBlockPackById(
 		return nil, apiexceptions.BlockPack.InvalidDto().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, apiexceptions.BlockPack.FailedToUpdate().WithOrigin(tx.Error)
+	}
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
@@ -444,11 +471,24 @@ func (s *BlockPackService) UpdateMyBlockPackById(
 			},
 			SetNull: requestDto.Body.SetNull,
 		},
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
+	}
+	if err := repositories.NewOutboxEventRepository().EnqueueBlockPackChanged(
+		tx,
+		requestDto.Param.BlockPackId.String(),
+		[]uuid.UUID{requestDto.Param.BlockPackId},
+	); err != nil {
+		tx.Rollback()
+		return nil, apiexceptions.BlockPack.FailedToCreate().WithOrigin(err)
+	}
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, apiexceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &blockpacksdto.UpdateMyBlockPackByIdResponseDto{
@@ -463,13 +503,18 @@ func (s *BlockPackService) UpdateMyBlockPacksByIds(
 		return nil, apiexceptions.BlockPack.InvalidDto().WithOrigin(err)
 	}
 
-	db := s.db.WithContext(ctx)
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, apiexceptions.BlockPack.FailedToUpdate().WithOrigin(tx.Error)
+	}
 	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
 	}
 
@@ -489,11 +534,28 @@ func (s *BlockPackService) UpdateMyBlockPacksByIds(
 	exception = s.blockPackRepository.UpdateManyByIds(
 		actorUserId,
 		input,
-		options.WithDB(db),
+		options.WithTransactionDB(tx),
 		options.WithAllowedPermissions(allowedPermissions),
 	)
 	if exception != nil {
+		tx.Rollback()
 		return nil, exception
+	}
+	blockPackIds := make([]uuid.UUID, len(requestDto.Body.UpdatedBlockPacks))
+	for index, updatedBlockPack := range requestDto.Body.UpdatedBlockPacks {
+		blockPackIds[index] = updatedBlockPack.BlockPackId
+	}
+	if err := repositories.NewOutboxEventRepository().EnqueueBlockPackChanged(
+		tx,
+		"block-pack-bulk-update",
+		blockPackIds,
+	); err != nil {
+		tx.Rollback()
+		return nil, apiexceptions.BlockPack.FailedToCreate().WithOrigin(err)
+	}
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return nil, apiexceptions.BlockPack.FailedToCommitTransaction().WithOrigin(err)
 	}
 
 	return &blockpacksdto.UpdateMyBlockPacksByIdsResponseDto{
@@ -557,6 +619,21 @@ func (s *BlockPackService) MoveMyBlockPackByParentSubShelfId(
 			"Outbox",
 			"MoveMyBlockPackByParentSubShelfId",
 			"Failed to create lifecycle outbox events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
+	if err := repositories.NewOutboxEventRepository().EnqueueBlockPackChanged(
+		tx,
+		requestDto.Body.BlockPackId.String(),
+		[]uuid.UUID{requestDto.Body.BlockPackId},
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"MoveMyBlockPackByParentSubShelfId",
+			"Failed to create resource event",
 			http.StatusInternalServerError,
 			true,
 		).WithOrigin(err)
@@ -639,6 +716,21 @@ func (s *BlockPackService) MoveMyBlockPacksByParentSubShelfId(
 			"Outbox",
 			"MoveMyBlockPacksByParentSubShelfId",
 			"Failed to create lifecycle outbox events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
+	if err := repositories.NewOutboxEventRepository().EnqueueBlockPackChanged(
+		tx,
+		"block-pack-bulk-move",
+		requestDto.Body.BlockPackIds,
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"MoveMyBlockPacksByParentSubShelfId",
+			"Failed to create resource event",
 			http.StatusInternalServerError,
 			true,
 		).WithOrigin(err)
@@ -886,6 +978,21 @@ func (s *BlockPackService) DeleteMyBlockPackById(
 			true,
 		).WithOrigin(err)
 	}
+	if err := repositories.NewOutboxEventRepository().EnqueueBlockPackDeleted(
+		tx,
+		requestDto.Param.BlockPackId.String(),
+		[]uuid.UUID{requestDto.Param.BlockPackId},
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"DeleteMyBlockPackById",
+			"Failed to create resource event",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return nil, exceptions.New(
@@ -952,6 +1059,21 @@ func (s *BlockPackService) DeleteMyBlockPacksByIds(
 			"Outbox",
 			"DeleteMyBlockPacksByIds",
 			"Failed to create lifecycle outbox events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
+	if err := repositories.NewOutboxEventRepository().EnqueueBlockPackDeleted(
+		tx,
+		"block-pack-bulk-delete",
+		requestDto.Body.BlockPackIds,
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"DeleteMyBlockPacksByIds",
+			"Failed to create resource events",
 			http.StatusInternalServerError,
 			true,
 		).WithOrigin(err)

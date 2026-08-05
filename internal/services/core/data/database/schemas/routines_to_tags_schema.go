@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
 )
 
 type RoutinesToTags struct {
@@ -23,11 +23,11 @@ type RoutinesToTags struct {
 
 // RoutinesToTags Table Name
 func (RoutinesToTags) TableName() string {
-	return types.TableName_RoutinesToTagsTable.String()
+	return "RoutinesToTagsTable"
 }
 
 // RoutinesToTags Table Relations
-type RoutinesToTagsRelation types.RelationName
+type RoutinesToTagsRelation platformdatabase.RelationName
 
 const (
 	RoutinesToTagsRelation_Routine        RoutinesToTagsRelation = "Routine"

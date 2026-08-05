@@ -96,6 +96,29 @@ func isRootShelfPermissionDowngraded(
 		slices.Index(enums.AllAccessControlPermissions, previousPermission)
 }
 
+func getRootShelfMemberPublicIds(tx *gorm.DB, rootShelfIds []uuid.UUID) ([]uuid.UUID, error) {
+	if tx == nil || len(rootShelfIds) == 0 {
+		return nil, nil
+	}
+
+	var relations []schemas.UsersToShelves
+	if result := tx.
+		Preload(string(schemas.UsersToShelvesRelation_User)).
+		Where("root_shelf_id IN ?", rootShelfIds).
+		Find(&relations); result.Error != nil {
+		return nil, result.Error
+	}
+
+	publicIds := make([]uuid.UUID, 0, len(relations))
+	for _, relation := range relations {
+		if relation.User.PublicId != uuid.Nil {
+			publicIds = append(publicIds, relation.User.PublicId)
+		}
+	}
+
+	return publicIds, nil
+}
+
 func (s *RootShelfService) saveMyRootShelfPermission(
 	ctx context.Context,
 	actorUserId uuid.UUID,
@@ -253,6 +276,23 @@ func (s *RootShelfService) saveMyRootShelfPermission(
 				true,
 			).WithOrigin(err)
 		}
+	}
+	if err := repositories.NewOutboxEventRepository().EnqueueRootShelfPermissionChanged(
+		tx,
+		rootShelf.Id.String(),
+		rootShelf.Id,
+		targetUser.PublicId,
+		permission.String(),
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"SaveMyRootShelfPermission",
+			"Failed to create resource event",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
 	}
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
@@ -607,6 +647,22 @@ func (s *RootShelfService) DeleteMyRootShelfById(
 	for index, blockPack := range blockPacks {
 		blockPackIds[index] = blockPack.Id
 	}
+	var rootShelfMemberPublicIds []uuid.UUID
+	if permission == enums.AccessControlPermission_Owner {
+		var memberErr error
+		rootShelfMemberPublicIds, memberErr = getRootShelfMemberPublicIds(tx, []uuid.UUID{rootShelf.Id})
+		if memberErr != nil {
+			tx.Rollback()
+			return nil, exceptions.New(
+				"FailedToRead",
+				"RootShelf",
+				"DeleteMyRootShelfById",
+				"Failed to resolve root shelf members",
+				http.StatusInternalServerError,
+				true,
+			).WithOrigin(memberErr)
+		}
+	}
 
 	if permission == enums.AccessControlPermission_Owner {
 		result := tx.
@@ -676,6 +732,41 @@ func (s *RootShelfService) DeleteMyRootShelfById(
 			true,
 		).WithOrigin(err)
 	}
+	if permission == enums.AccessControlPermission_Owner {
+		if err := repositories.NewOutboxEventRepository().EnqueueRootShelfDeleted(
+			tx,
+			rootShelf.Id.String(),
+			rootShelf.Id,
+			rootShelfMemberPublicIds,
+		); err != nil {
+			tx.Rollback()
+			return nil, exceptions.New(
+				"FailedToCreate",
+				"Outbox",
+				"DeleteMyRootShelfById",
+				"Failed to create resource events",
+				http.StatusInternalServerError,
+				true,
+			).WithOrigin(err)
+		}
+	} else if len(targetUserPublicIds) > 0 {
+		if err := repositories.NewOutboxEventRepository().EnqueueRootShelfPermissionRevoked(
+			tx,
+			rootShelf.Id.String(),
+			rootShelf.Id,
+			targetUserPublicIds[0],
+		); err != nil {
+			tx.Rollback()
+			return nil, exceptions.New(
+				"FailedToCreate",
+				"Outbox",
+				"DeleteMyRootShelfById",
+				"Failed to create resource event",
+				http.StatusInternalServerError,
+				true,
+			).WithOrigin(err)
+		}
+	}
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
@@ -733,6 +824,30 @@ func (s *RootShelfService) DeleteMyRootShelvesByIds(
 	for index, blockPack := range blockPacks {
 		blockPackIds[index] = blockPack.Id
 	}
+	var rootShelfRelations []schemas.UsersToShelves
+	if result := tx.
+		Preload(string(schemas.UsersToShelvesRelation_User)).
+		Where("root_shelf_id IN ?", requestDto.Body.RootShelfIds).
+		Find(&rootShelfRelations); result.Error != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToRead",
+			"RootShelf",
+			"DeleteMyRootShelvesByIds",
+			"Failed to resolve root shelf members",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(result.Error)
+	}
+	rootShelfMemberPublicIdsById := make(map[uuid.UUID][]uuid.UUID, len(requestDto.Body.RootShelfIds))
+	for _, relation := range rootShelfRelations {
+		if relation.User.PublicId != uuid.Nil {
+			rootShelfMemberPublicIdsById[relation.RootShelfId] = append(
+				rootShelfMemberPublicIdsById[relation.RootShelfId],
+				relation.User.PublicId,
+			)
+		}
+	}
 
 	exception = s.rootShelfRepository.SoftDeleteManyByIds(
 		requestDto.Body.RootShelfIds,
@@ -760,6 +875,24 @@ func (s *RootShelfService) DeleteMyRootShelvesByIds(
 			http.StatusInternalServerError,
 			true,
 		).WithOrigin(err)
+	}
+	for _, rootShelfId := range requestDto.Body.RootShelfIds {
+		if err := repositories.NewOutboxEventRepository().EnqueueRootShelfDeleted(
+			tx,
+			"root-shelf-bulk-delete",
+			rootShelfId,
+			rootShelfMemberPublicIdsById[rootShelfId],
+		); err != nil {
+			tx.Rollback()
+			return nil, exceptions.New(
+				"FailedToCreate",
+				"Outbox",
+				"DeleteMyRootShelvesByIds",
+				"Failed to create resource events",
+				http.StatusInternalServerError,
+				true,
+			).WithOrigin(err)
+		}
 	}
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
@@ -1036,6 +1169,26 @@ func (s *RootShelfService) UpsertMyRootShelfPermissions(
 	if exception != nil {
 		tx.Rollback()
 		return nil, exception
+	}
+	for _, updatedPermission := range updatedPermissions {
+		user := userById[updatedPermission.UserId]
+		if err := repositories.NewOutboxEventRepository().EnqueueRootShelfPermissionChanged(
+			tx,
+			rootShelf.Id.String(),
+			rootShelf.Id,
+			user.PublicId,
+			updatedPermission.Permission.String(),
+		); err != nil {
+			tx.Rollback()
+			return nil, exceptions.New(
+				"FailedToCreate",
+				"Outbox",
+				"UpsertMyRootShelfPermissions",
+				"Failed to create resource events",
+				http.StatusInternalServerError,
+				true,
+			).WithOrigin(err)
+		}
 	}
 
 	if err := tx.Commit().Error; err != nil {
@@ -1315,6 +1468,40 @@ func (s *RootShelfService) TransferMyRootShelfOwnership(
 			http.StatusNotFound,
 		)
 	}
+	if err := repositories.NewOutboxEventRepository().EnqueueRootShelfPermissionChanged(
+		tx,
+		rootShelf.Id.String(),
+		rootShelf.Id,
+		actorUser.PublicId,
+		enums.AccessControlPermission_Admin.String(),
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"TransferMyRootShelfOwnership",
+			"Failed to create resource events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
+	if err := repositories.NewOutboxEventRepository().EnqueueRootShelfPermissionChanged(
+		tx,
+		rootShelf.Id.String(),
+		rootShelf.Id,
+		targetUser.PublicId,
+		enums.AccessControlPermission_Owner.String(),
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"TransferMyRootShelfOwnership",
+			"Failed to create resource events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return nil, exceptions.New(
@@ -1451,6 +1638,22 @@ func (s *RootShelfService) DeleteMyRootShelfPermission(
 			"Outbox",
 			"DeleteMyRootShelfPermission",
 			"Failed to create lifecycle outbox events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
+	if err := repositories.NewOutboxEventRepository().EnqueueRootShelfPermissionRevoked(
+		tx,
+		rootShelf.Id.String(),
+		rootShelf.Id,
+		targetUser.PublicId,
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"DeleteMyRootShelfPermission",
+			"Failed to create resource event",
 			http.StatusInternalServerError,
 			true,
 		).WithOrigin(err)
@@ -1649,6 +1852,24 @@ func (s *RootShelfService) DeleteMyRootShelfPermissions(
 			true,
 		).WithOrigin(err)
 	}
+	for _, targetUserPublicId := range requestDto.Body.UserPublicIds {
+		if err := repositories.NewOutboxEventRepository().EnqueueRootShelfPermissionRevoked(
+			tx,
+			rootShelf.Id.String(),
+			rootShelf.Id,
+			targetUserPublicId,
+		); err != nil {
+			tx.Rollback()
+			return nil, exceptions.New(
+				"FailedToCreate",
+				"Outbox",
+				"DeleteMyRootShelfPermissions",
+				"Failed to create resource events",
+				http.StatusInternalServerError,
+				true,
+			).WithOrigin(err)
+		}
+	}
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
@@ -1748,6 +1969,22 @@ func (s *RootShelfService) LeaveMyRootShelf(
 			"Outbox",
 			"LeaveMyRootShelf",
 			"Failed to create lifecycle outbox events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
+	if err := repositories.NewOutboxEventRepository().EnqueueRootShelfPermissionRevoked(
+		tx,
+		rootShelf.Id.String(),
+		rootShelf.Id,
+		actorUserPublicId,
+	); err != nil {
+		tx.Rollback()
+		return exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"LeaveMyRootShelf",
+			"Failed to create resource event",
 			http.StatusInternalServerError,
 			true,
 		).WithOrigin(err)
@@ -1877,6 +2114,24 @@ func (s *RootShelfService) LeaveMyRootShelves(
 			http.StatusInternalServerError,
 			true,
 		).WithOrigin(err)
+	}
+	for _, rootShelfId := range rootShelfIds {
+		if err := repositories.NewOutboxEventRepository().EnqueueRootShelfPermissionRevoked(
+			tx,
+			"root-shelf-bulk-leave",
+			rootShelfId,
+			actorUserPublicId,
+		); err != nil {
+			tx.Rollback()
+			return exceptions.New(
+				"FailedToCreate",
+				"Outbox",
+				"LeaveMyRootShelves",
+				"Failed to create resource events",
+				http.StatusInternalServerError,
+				true,
+			).WithOrigin(err)
+		}
 	}
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()

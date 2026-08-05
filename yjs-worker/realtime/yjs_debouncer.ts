@@ -27,7 +27,7 @@ export class YjsDebouncer {
     persistenceBatchId: string,
     originConnectionId: string | null,
     payload: Buffer
-  ) => Promise<number>;
+  ) => Promise<void>;
   private readonly persisted: (
     room: Room,
     blockPackId: string,
@@ -43,7 +43,7 @@ export class YjsDebouncer {
       persistenceBatchId: string,
       originConnectionId: string | null,
       payload: Buffer
-    ) => Promise<number>,
+    ) => Promise<void>,
     persisted: (
       room: Room,
       blockPackId: string,
@@ -247,13 +247,43 @@ export class YjsDebouncer {
       return null;
     }
 
+    return this.completePersistence(room, updateSequence);
+  }
+
+  handleBrokerAccepted(
+    room: Room,
+    blockPackId: string,
+    connectionId: string,
+    connectorChannelId: number
+  ): InFlightYjsPersistenceBatch | null {
+    if (
+      room.inFlightPersistenceBatch === null ||
+      room.inFlightPersistenceBatch.connectionId !== connectionId ||
+      room.inFlightPersistenceBatch.connectorChannelId !== connectorChannelId
+    ) {
+      this.resyncRoom(room, blockPackId);
+
+      return null;
+    }
+
+    return this.completePersistence(room, null);
+  }
+
+  private completePersistence(
+    room: Room,
+    updateSequence: number | null
+  ): InFlightYjsPersistenceBatch | null {
     const inFlightPersistenceBatch = room.inFlightPersistenceBatch;
+    if (inFlightPersistenceBatch === null) {
+      return null;
+    }
+
     room.inFlightPersistenceBatch = null;
     if (room.persistenceRetryTimer !== null) {
       clearTimeout(room.persistenceRetryTimer);
       room.persistenceRetryTimer = null;
     }
-    room.lastUpdateSequence = updateSequence;
+    room.lastUpdateSequence = updateSequence ?? room.lastUpdateSequence + 1;
     room.dirtyUpdateCount += inFlightPersistenceBatch.updateCount;
     this.telemetry.recordOperation({
       operation: "persistence.batch_persisted",
@@ -315,13 +345,12 @@ export class YjsDebouncer {
       batch.originConnectionId,
       batch.payload
     )
-      .then(updateSequence => {
-        const persisted = this.handlePersisted(
+      .then(() => {
+        const persisted = this.handleBrokerAccepted(
           room,
           blockPackId,
           batch.connectionId,
-          batch.connectorChannelId,
-          updateSequence
+          batch.connectorChannelId
         );
         if (persisted !== null) this.persisted(room, blockPackId, persisted);
       })

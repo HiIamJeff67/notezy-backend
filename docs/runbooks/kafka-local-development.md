@@ -37,11 +37,17 @@ Containers connect to `notezy-kafka:9092`. A process started on the host uses
 seven-day retention, three local partitions, and replication factor one. Its
 paired dead-letter topic, `notezy.core.lifecycle.v1.dlq`, has the same local
 partition count and 30-day retention. The same provisioner also creates the
-YjsWorker command/reply topics and their DLQs:
+YjsWorker command/reply and DurableJob maintenance topics:
 `notezy.yjsworker.core.command.v1`,
 `notezy.yjsworker.core.command.v1.dlq`,
-`notezy.core.yjsworker.reply.v1`, and
-`notezy.core.yjsworker.reply.v1.dlq`. Automatic topic creation is disabled, so
+`notezy.core.yjsworker.reply.v1`,
+`notezy.core.yjsworker.reply.v1.dlq`,
+`notezy.core.durablejob.yjs-maintenance-hint.v1`,
+`notezy.durablejob.core.yjs-maintenance-request.v1`,
+`notezy.core.yjsworker.maintenance-command.v1`,
+`notezy.yjsworker.core.maintenance-result.v1`, and
+`notezy.core.durablejob.yjs-maintenance-result.v1` (and their local DLQs).
+Automatic topic creation is disabled, so
 an absent topic is always a provisioning failure.
 
 ## Runtime configuration

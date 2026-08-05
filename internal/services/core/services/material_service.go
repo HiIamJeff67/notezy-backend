@@ -15,6 +15,7 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
+	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
 	inputs "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/inputs"
 	options "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/options"
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/repositories"
@@ -237,7 +238,7 @@ func (s *MaterialService) GetMyMaterialsByParentSubShelfId(
 			allowedPermissions,
 		).Scopes(scopes.NewMaterialScope().FilterOnlyDeleted(onlyDeleted)).
 		Order("name ASC").
-		Limit(int(constants.MaxMaterialsOfSubShelf)).
+		Limit(int(data.MaxMaterialsOfSubShelf)).
 		Find(&materials)
 	if err := result.Error; err != nil {
 		return nil, apiexceptions.Material.NotFound().WithOrigin(err)
@@ -300,7 +301,7 @@ func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
 		Where("ss.root_shelf_id = ? AND uts.user_id = ? AND uts.permission IN ?",
 			requestDto.Param.RootShelfId, actorUserId, allowedPermissions,
 		).Scopes(scopes.NewMaterialScope().FilterOnlyDeleted(onlyDeleted)).
-		Limit(int(constants.MaxMaterialsOfRootShelf)).
+		Limit(int(data.MaxMaterialsOfRootShelf)).
 		Order("name ASC").
 		Find(&materials)
 	if err := result.Error; err != nil {

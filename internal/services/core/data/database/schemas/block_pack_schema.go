@@ -7,8 +7,8 @@ import (
 
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type BlockPack struct {
@@ -31,11 +31,11 @@ type BlockPack struct {
 
 // BlockPack Table Name
 func (BlockPack) TableName() string {
-	return types.TableName_BlockPackTable.String()
+	return "BlockPackTable"
 }
 
 // BlockPack Table Relations
-type BlockPackRelation types.RelationName
+type BlockPackRelation platformdatabase.RelationName
 
 const (
 	BlockPackRelation_ParentSubShelf BlockPackRelation = "ParentSubShelf"

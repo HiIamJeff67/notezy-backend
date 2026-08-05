@@ -8,7 +8,6 @@ import (
 	"gorm.io/gorm"
 
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type UserAccount struct {
@@ -37,7 +36,7 @@ type UserAccount struct {
 
 // User Account Table Name
 func (UserAccount) TableName() string {
-	return types.TableName_UserAccountTable.String()
+	return "UserAccountTable"
 }
 
 /* ============================== Relative Type Conversions ============================== */

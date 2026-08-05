@@ -14,7 +14,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
 
-	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
+	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/events"
 	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 	traces "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/traces"
 )
@@ -58,7 +58,7 @@ type ConsumerRecord struct {
 type ConsumerHandler func(
 	ctx context.Context,
 	record ConsumerRecord,
-	envelope coreeventscontract.EventEnvelope[json.RawMessage],
+	envelope eventcontract.EventEnvelope[json.RawMessage],
 ) error
 
 type DeadLetter struct {
@@ -115,30 +115,7 @@ func NewConsumer(
 	}, nil
 }
 
-func (c *Consumer) Run(ctx context.Context, handler ConsumerHandler) error {
-	if handler == nil {
-		return errors.New("Kafka consumer handler is required")
-	}
-
-	for ctx.Err() == nil {
-		fetches := c.client.PollRecords(ctx, c.config.MaximumPollRecords)
-		if err := fetches.Err(); err != nil {
-			if ctx.Err() != nil {
-				return nil
-			}
-			return fmt.Errorf("poll Kafka consumer records: %w", err)
-		}
-
-		c.consumeFetches(ctx, fetches, handler)
-		c.client.AllowRebalance()
-	}
-
-	return nil
-}
-
-func (c *Consumer) Close() {
-	c.client.Close()
-}
+/* ============================== Auxiliary Methods ============================== */
 
 func (c *Consumer) consumeFetches(
 	ctx context.Context,
@@ -185,18 +162,62 @@ func (c *Consumer) consumeRecord(
 	record *franzkgo.Record,
 	handler ConsumerHandler,
 ) bool {
-	envelope, err := decodeEventEnvelope(record)
-	if err != nil {
-		return c.deadLetter(ctx, record, nil, ErrorClassification_SchemaIncompatible, 1, err)
+	var envelope eventcontract.EventEnvelope[json.RawMessage]
+	if err := json.Unmarshal(record.Value, &envelope); err != nil {
+		return c.deadLetter(
+			ctx,
+			record,
+			nil,
+			ErrorClassification_SchemaIncompatible,
+			1,
+			fmt.Errorf("decode Kafka event envelope: %w", err),
+		)
+	}
+	if envelope.SchemaVersion != eventcontract.Version {
+		return c.deadLetter(
+			ctx,
+			record,
+			nil,
+			ErrorClassification_SchemaIncompatible,
+			1,
+			fmt.Errorf("unsupported Kafka event schema version %q", envelope.SchemaVersion),
+		)
+	}
+	if envelope.EventId == uuid.Nil || envelope.EventType == "" || envelope.AggregateType == "" ||
+		envelope.AggregateId == uuid.Nil || envelope.KafkaKey == "" {
+		return c.deadLetter(
+			ctx,
+			record,
+			nil,
+			ErrorClassification_SchemaIncompatible,
+			1,
+			errors.New("Kafka event envelope is incomplete"),
+		)
+	}
+	if envelope.KafkaKey != envelope.AggregateId.String() || envelope.KafkaKey != string(record.Key) {
+		return c.deadLetter(
+			ctx,
+			record,
+			nil,
+			ErrorClassification_SchemaIncompatible,
+			1,
+			errors.New("Kafka event envelope key does not match the aggregate ID"),
+		)
 	}
 
-	ctx = extractTraceContext(ctx, envelope.Trace)
+	if envelope.Trace.TraceParent != "" {
+		ctx = otel.GetTextMapPropagator().Extract(ctx, propagation.MapCarrier{
+			"traceparent": envelope.Trace.TraceParent,
+			"tracestate":  envelope.Trace.TraceState,
+		})
+	}
 	if traces.NotezyTracer != nil {
 		consumerCtx, span := traces.NotezyTracer.Start(ctx, "kafka.consume")
 		defer traces.NotezyTracer.End(span, nil)
 		ctx = consumerCtx
 	}
 
+	var err error
 	for attempt := 1; attempt <= c.config.MaximumAttempts; attempt++ {
 		startedAt := time.Now()
 		err = handler(ctx, ConsumerRecord{
@@ -210,7 +231,14 @@ func (c *Consumer) consumeRecord(
 			return true
 		}
 
-		classification := errorClassification(err)
+		classification := ErrorClassification_Transient
+		var consumerErr *ConsumerError
+		if errors.As(err, &consumerErr) {
+			switch consumerErr.Classification {
+			case ErrorClassification_PoisonMessage, ErrorClassification_SchemaIncompatible:
+				classification = consumerErr.Classification
+			}
+		}
 		if classification != ErrorClassification_Transient {
 			return c.deadLetter(ctx, record, &envelope.EventId, classification, attempt, err)
 		}
@@ -220,10 +248,17 @@ func (c *Consumer) consumeRecord(
 
 		RecordRetry(ctx, record.Topic, c.consumerGroup)
 		c.recordFailure(ctx, record.Topic, record.Partition, record.Offset, "Retrying Kafka consumer event", err)
+		backoff := c.config.InitialRetryBackoff
+		for index := 1; index < attempt && backoff < c.config.MaximumRetryBackoff; index++ {
+			backoff *= 2
+		}
+		if backoff > c.config.MaximumRetryBackoff {
+			backoff = c.config.MaximumRetryBackoff
+		}
 		select {
 		case <-ctx.Done():
 			return false
-		case <-time.After(retryBackoff(c.config, attempt)):
+		case <-time.After(backoff):
 		}
 	}
 
@@ -243,7 +278,7 @@ func (c *Consumer) deadLetter(
 	}
 
 	deadLetter := DeadLetter{
-		SchemaVersion:   coreeventscontract.Version,
+		SchemaVersion:   eventcontract.Version,
 		ConsumerGroup:   c.consumerGroup,
 		SourceTopic:     record.Topic,
 		SourcePartition: record.Partition,
@@ -305,60 +340,35 @@ func (c *Consumer) recordFailure(
 	}
 }
 
+/* ============================== Consumer Methods ============================== */
+
+func (c *Consumer) Run(ctx context.Context, handler ConsumerHandler) error {
+	if handler == nil {
+		return errors.New("Kafka consumer handler is required")
+	}
+
+	for ctx.Err() == nil {
+		fetches := c.client.PollRecords(ctx, c.config.MaximumPollRecords)
+		if err := fetches.Err(); err != nil {
+			if ctx.Err() != nil {
+				return nil
+			}
+			return fmt.Errorf("poll Kafka consumer records: %w", err)
+		}
+
+		c.consumeFetches(ctx, fetches, handler)
+		c.client.AllowRebalance()
+	}
+
+	return nil
+}
+
+func (c *Consumer) Close() {
+	c.client.Close()
+}
+
+/* ============================== Auxiliary Functions ============================== */
+
 func DeadLetterTopic(topic string) string {
 	return topic + ".dlq"
-}
-
-func decodeEventEnvelope(record *franzkgo.Record) (coreeventscontract.EventEnvelope[json.RawMessage], error) {
-	var envelope coreeventscontract.EventEnvelope[json.RawMessage]
-	if err := json.Unmarshal(record.Value, &envelope); err != nil {
-		return coreeventscontract.EventEnvelope[json.RawMessage]{}, fmt.Errorf("decode Kafka event envelope: %w", err)
-	}
-	if envelope.SchemaVersion != coreeventscontract.Version {
-		return coreeventscontract.EventEnvelope[json.RawMessage]{}, fmt.Errorf("unsupported Kafka event schema version %q", envelope.SchemaVersion)
-	}
-	if envelope.EventId == uuid.Nil || envelope.EventType == "" || envelope.AggregateType == "" ||
-		envelope.AggregateId == uuid.Nil || envelope.KafkaKey == "" {
-		return coreeventscontract.EventEnvelope[json.RawMessage]{}, errors.New("Kafka event envelope is incomplete")
-	}
-	if envelope.KafkaKey != envelope.AggregateId.String() || envelope.KafkaKey != string(record.Key) {
-		return coreeventscontract.EventEnvelope[json.RawMessage]{}, errors.New("Kafka event envelope key does not match the aggregate ID")
-	}
-
-	return envelope, nil
-}
-
-func errorClassification(err error) ErrorClassification {
-	var consumerErr *ConsumerError
-	if errors.As(err, &consumerErr) {
-		switch consumerErr.Classification {
-		case ErrorClassification_PoisonMessage, ErrorClassification_SchemaIncompatible:
-			return consumerErr.Classification
-		}
-	}
-
-	return ErrorClassification_Transient
-}
-
-func retryBackoff(consumerConfig ConsumerConfig, attempt int) time.Duration {
-	backoff := consumerConfig.InitialRetryBackoff
-	for index := 1; index < attempt && backoff < consumerConfig.MaximumRetryBackoff; index++ {
-		backoff *= 2
-	}
-	if backoff > consumerConfig.MaximumRetryBackoff {
-		return consumerConfig.MaximumRetryBackoff
-	}
-
-	return backoff
-}
-
-func extractTraceContext(ctx context.Context, traceMetadata coreeventscontract.TraceMetadata) context.Context {
-	if traceMetadata.TraceParent == "" {
-		return ctx
-	}
-
-	return otel.GetTextMapPropagator().Extract(ctx, propagation.MapCarrier{
-		"traceparent": traceMetadata.TraceParent,
-		"tracestate":  traceMetadata.TraceState,
-	})
 }

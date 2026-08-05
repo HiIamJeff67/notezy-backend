@@ -12,6 +12,10 @@ import (
 	validators "github.com/HiIamJeff67/notezy-backend/shared/validations/validators"
 )
 
+var urlWhiteList = []string{"http", "https", "mailto", "tel", "ws"}
+
+var urlBlackList = []string{"javascript", "vbscript", "file", "data"}
+
 func RegisterStringsValidation(validate *validator.Validate) {
 	validate.RegisterValidation("isaccount", func(fl validator.FieldLevel) bool {
 		val := fl.Field().String()
@@ -72,12 +76,12 @@ func RegisterStringsValidation(validate *validator.Validate) {
 		}
 
 		scheme := strings.ToLower(parsedURL.Scheme)
-		for _, validScheme := range constants.URLWhiteList {
+		for _, validScheme := range urlWhiteList {
 			if scheme == validScheme {
 				return true
 			}
 		}
-		for _, invalidScheme := range constants.URLBlackList {
+		for _, invalidScheme := range urlBlackList {
 			if scheme == invalidScheme {
 				return false
 			}

@@ -14,22 +14,35 @@ type Config struct {
 	UserLimit         int32
 	WindowDuration    time.Duration
 	BackendServerName platformredis.BackendServerName
+
+	RequestFrequencyExtraCapacity        int
+	MinIntervalTimeOfLastRequest         time.Duration
+	SynchronizationToWindowDurationRatio int64
+	MinSynchronizationInterval           time.Duration
 }
 
 var defaultAuthorizedConfig = Config{
-	RateLimit:         rate.Limit(100),
-	Burst:             20,
-	UserLimit:         3000,
-	WindowDuration:    time.Minute,
-	BackendServerName: platformredis.BackendServerName_EastAsia,
+	RateLimit:                            rate.Limit(100),
+	Burst:                                20,
+	UserLimit:                            3000,
+	WindowDuration:                       time.Minute,
+	BackendServerName:                    platformredis.BackendServerName_EastAsia,
+	RequestFrequencyExtraCapacity:        2,
+	MinIntervalTimeOfLastRequest:         time.Microsecond,
+	SynchronizationToWindowDurationRatio: 10,
+	MinSynchronizationInterval:           time.Second,
 }
 
 var defaultUnauthorizedConfig = Config{
-	RateLimit:         rate.Limit(100),
-	Burst:             10,
-	UserLimit:         1000,
-	WindowDuration:    time.Minute,
-	BackendServerName: platformredis.BackendServerName_EastAsia,
+	RateLimit:                            rate.Limit(100),
+	Burst:                                10,
+	UserLimit:                            1000,
+	WindowDuration:                       time.Minute,
+	BackendServerName:                    platformredis.BackendServerName_EastAsia,
+	RequestFrequencyExtraCapacity:        2,
+	MinIntervalTimeOfLastRequest:         time.Microsecond,
+	SynchronizationToWindowDurationRatio: 10,
+	MinSynchronizationInterval:           time.Second,
 }
 
 func DefaultAuthorizedConfig() Config {

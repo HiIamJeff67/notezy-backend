@@ -22,14 +22,7 @@ func InitUnauthorizedRateLimiter(config ratelimit.Config) {
 		unauthorizedRateLimiter.Stop()
 	}
 
-	unauthorizedRateLimiter = ratelimit.NewHybridRateLimiter(
-		config.RateLimit,
-		config.Burst,
-		config.UserLimit,
-		config.WindowDuration,
-		config.BackendServerName,
-		false,
-	)
+	unauthorizedRateLimiter = ratelimit.NewHybridRateLimiter(config, false)
 
 	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Unauthorized rate limiter initialized with rate: %v, burst: %d, user limit: %d, window: %v", config.RateLimit, config.Burst, config.UserLimit, config.WindowDuration))
 }

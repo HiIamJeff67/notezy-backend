@@ -12,12 +12,14 @@ import (
 
 	gatewayconfig "github.com/HiIamJeff67/notezy-backend/internal/gateway/config"
 	ratelimitrecord "github.com/HiIamJeff67/notezy-backend/internal/gateway/data/cache/ratelimitrecord"
+	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/gateway/ratelimit"
+	ratelimitmiddlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	developmentroutes "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/routes/developmentroutes"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
 	realtimegatewayadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/realtimegateway/adapters"
+	platform "github.com/HiIamJeff67/notezy-backend/internal/platform"
 	observability "github.com/HiIamJeff67/notezy-backend/internal/platform/observability"
 	platformredis "github.com/HiIamJeff67/notezy-backend/internal/platform/redis"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
@@ -35,16 +37,20 @@ func Start() func() {
 		context.Background(),
 		observability.LoadConfig("notezy-gateway"),
 	)
-	platformredis.InitializeDefaultClientManager(redisConfig)
+	redisClientManager := platformredis.NewClientManager(redisConfig)
 
-	if err := ratelimitrecord.Register(context.Background(), platformredis.DefaultClientManager); err != nil {
-		_ = platformredis.DefaultClientManager.DisconnectAll()
+	if err := ratelimitrecord.Register(context.Background(), redisClientManager); err != nil {
+		_ = redisClientManager.DisconnectAll()
 		shutdownObservability()
 		panic(err)
 	}
+	ratelimitmiddlewares.InitUnauthorizedRateLimiter(ratelimit.DefaultUnauthorizedConfig())
+	ratelimitmiddlewares.InitAuthorizedRateLimiter(ratelimit.DefaultAuthorizedConfig())
 	developmentroutes.DevelopmentRouter = gin.Default()
 	if err := developmentroutes.DevelopmentRouter.SetTrustedProxies(config.TrustedProxies); err != nil {
-		_ = platformredis.DefaultClientManager.DisconnectAll()
+		ratelimitmiddlewares.StopUnauthorizedRateLimiter()
+		ratelimitmiddlewares.StopAuthorizedRateLimiter()
+		_ = redisClientManager.DisconnectAll()
 		shutdownObservability()
 		panic(err)
 	}
@@ -58,7 +64,7 @@ func Start() func() {
 		Name:     cookies.ValidCookieName_AccessToken,
 		Path:     "/",
 		Duration: 30 * time.Minute, // 30 minutes
-		Secure:   constants.CurrentEnvironment == types.Environment_Production,
+		Secure:   platform.CurrentEnvironment == types.Environment_Production,
 		HTTPOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})
@@ -66,7 +72,7 @@ func Start() func() {
 		Name:     cookies.ValidCookieName_RefreshToken,
 		Path:     "/",
 		Duration: 14 * 24 * time.Hour, // 14 days
-		Secure:   constants.CurrentEnvironment == types.Environment_Production,
+		Secure:   platform.CurrentEnvironment == types.Environment_Production,
 		HTTPOnly: true,
 		SameSite: http.SameSiteStrictMode,
 	})
@@ -83,7 +89,9 @@ func Start() func() {
 
 	listener, err := net.Listen("tcp", config.ListenAddress)
 	if err != nil {
-		_ = platformredis.DefaultClientManager.DisconnectAll()
+		ratelimitmiddlewares.StopUnauthorizedRateLimiter()
+		ratelimitmiddlewares.StopAuthorizedRateLimiter()
+		_ = redisClientManager.DisconnectAll()
 		shutdownObservability()
 		panic(err)
 	}
@@ -103,9 +111,11 @@ func Start() func() {
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			fmt.Println("Failed to shutdown Gateway server: ", err)
 		}
-		if err := platformredis.DefaultClientManager.DisconnectAll(); err != nil {
+		if err := redisClientManager.DisconnectAll(); err != nil {
 			fmt.Println("Failed to disconnect Gateway cache servers: ", err)
 		}
+		ratelimitmiddlewares.StopUnauthorizedRateLimiter()
+		ratelimitmiddlewares.StopAuthorizedRateLimiter()
 		shutdownObservability()
 	}
 }

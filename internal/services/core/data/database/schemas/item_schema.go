@@ -7,8 +7,8 @@ import (
 
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type Item struct {
@@ -28,11 +28,11 @@ type Item struct {
 
 // Item Table Name
 func (Item) TableName() string {
-	return types.TableName_ItemTable.String()
+	return "ItemTable"
 }
 
 // Item Table Relations
-type ItemRelation types.RelationName
+type ItemRelation platformdatabase.RelationName
 
 const (
 	ItemRelation_ParentSubShelf  ItemRelation = "ParentSubShelf"

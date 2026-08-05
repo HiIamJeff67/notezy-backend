@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
@@ -33,11 +34,11 @@ type SubShelf struct {
 // 3. The maximum length of SubShelf.Path should be less than or equal to 100.
 
 func (SubShelf) TableName() string {
-	return types.TableName_SubShelfTable.String()
+	return "SubShelfTable"
 }
 
 // SubShelf Table Relations
-type SubShelfRelation types.RelationName
+type SubShelfRelation platformdatabase.RelationName
 
 const (
 	SubShelfRelation_RootShelf      SubShelfRelation = "RootShelf"

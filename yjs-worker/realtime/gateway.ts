@@ -29,6 +29,7 @@ export class RealtimeGateway {
   private readonly yjsCompactionService: YjsCompactionService;
   private readonly coreCommandDispatcher: CoreCommandDispatcher;
   private readonly webSockets = new Set<WebSocket>();
+  private readonly pendingPersistenceBatches = new Map<string, string>();
   private readonly yjsDebouncer: YjsDebouncer;
   private readonly telemetry: Telemetry;
 
@@ -51,7 +52,7 @@ export class RealtimeGateway {
         originConnectionId,
         payload
       ) => {
-        const response = await this.coreCommandDispatcher.dispatch<
+        const { reply } = await this.coreCommandDispatcher.dispatchAsync<
           {
             persistenceBatchId: string;
             originConnectionId: string | null;
@@ -63,8 +64,19 @@ export class RealtimeGateway {
           originConnectionId,
           payload: payload.toString("base64"),
         });
-
-        return response.updateSequence;
+        this.pendingPersistenceBatches.set(persistenceBatchId, blockPackId);
+        void reply.then(
+          response => {
+            this.handleYjsPersistenceResult(
+              blockPackId,
+              persistenceBatchId,
+              response.updateSequence
+            );
+          },
+          error => {
+            this.handleYjsPersistenceFailure(blockPackId, persistenceBatchId, error);
+          }
+        );
       },
       this.handleYjsUpdatePersisted.bind(this)
     );
@@ -148,6 +160,12 @@ export class RealtimeGateway {
   }
 
   private resyncRoom(room: Room, blockPackId: string): void {
+    for (const [persistenceBatchId, pendingBlockPackId] of this.pendingPersistenceBatches) {
+      if (pendingBlockPackId === blockPackId) {
+        this.pendingPersistenceBatches.delete(persistenceBatchId);
+      }
+    }
+
     if (room.projectionTimer !== null) {
       clearTimeout(room.projectionTimer);
     }
@@ -415,6 +433,58 @@ export class RealtimeGateway {
     this.requestYjsCompaction(room, blockPackId);
     this.scheduleBlockProjection(room, blockPackId);
     this.roomRegistry.scheduleRoomEviction(blockPackId);
+  }
+
+  private handleYjsPersistenceResult(
+    blockPackId: string,
+    persistenceBatchId: string,
+    updateSequence: number
+  ): void {
+    if (this.pendingPersistenceBatches.get(persistenceBatchId) !== blockPackId) {
+      return;
+    }
+    this.pendingPersistenceBatches.delete(persistenceBatchId);
+
+    const room = this.roomRegistry.get(blockPackId);
+    if (room === undefined || !Number.isSafeInteger(updateSequence) || updateSequence < 0) {
+      return;
+    }
+
+    room.lastUpdateSequence = Math.max(room.lastUpdateSequence, updateSequence);
+    this.telemetry.recordOperation({
+      operation: "persistence.batch_confirmed",
+      outcome: "success",
+      durationMilliseconds: 0,
+    });
+  }
+
+  private handleYjsPersistenceFailure(
+    blockPackId: string,
+    persistenceBatchId: string,
+    error: unknown
+  ): void {
+    if (this.pendingPersistenceBatches.get(persistenceBatchId) !== blockPackId) {
+      return;
+    }
+    this.pendingPersistenceBatches.delete(persistenceBatchId);
+
+    const room = this.roomRegistry.get(blockPackId);
+    if (room === undefined) {
+      return;
+    }
+
+    console.error("Core rejected Yjs persistence batch", {
+      blockPackId,
+      persistenceBatchId,
+      error,
+    });
+    this.telemetry.recordOperation({
+      operation: "persistence.batch_confirmed",
+      outcome: "error",
+      durationMilliseconds: 0,
+      error,
+    });
+    this.resyncRoom(room, blockPackId);
   }
 
   /* ============================== WebSocket connection ============================== */

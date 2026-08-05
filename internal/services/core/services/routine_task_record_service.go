@@ -22,7 +22,7 @@ import (
 	apiexceptions "github.com/HiIamJeff67/notezy-backend/internal/services/core/exceptions"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
-	timeutil "github.com/HiIamJeff67/notezy-backend/shared/lib/timeutil"
+	times "github.com/HiIamJeff67/notezy-backend/shared/lib/times"
 	validator "github.com/go-playground/validator/v10"
 )
 
@@ -345,7 +345,7 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordScheduledAtCount(
 	if !requestDto.Param.QueryRangeStartedAt.Before(requestDto.Param.QueryRangeEndedAt) {
 		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
 	}
-	if !timeutil.IsTimeWithin(requestDto.Param.QueryRangeStartedAt, requestDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
+	if !times.IsTimeWithin(requestDto.Param.QueryRangeStartedAt, requestDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
 		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt and queryRangeEndedAt should be within 360 days")
 	}
 
@@ -386,7 +386,7 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordActualStartedAtCo
 	if !requestDto.Param.QueryRangeStartedAt.Before(requestDto.Param.QueryRangeEndedAt) {
 		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
 	}
-	if !timeutil.IsTimeWithin(requestDto.Param.QueryRangeStartedAt, requestDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
+	if !times.IsTimeWithin(requestDto.Param.QueryRangeStartedAt, requestDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
 		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt and queryRangeEndedAt should be within 360 days")
 	}
 
@@ -427,7 +427,7 @@ func (s *RoutineTaskRecordService) VisualizeMyRoutineTaskRecordActualEndedAtCoun
 	if !requestDto.Param.QueryRangeStartedAt.Before(requestDto.Param.QueryRangeEndedAt) {
 		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt should be earlier then queryRangeEndedAt")
 	}
-	if !timeutil.IsTimeWithin(requestDto.Param.QueryRangeStartedAt, requestDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
+	if !times.IsTimeWithin(requestDto.Param.QueryRangeStartedAt, requestDto.Param.QueryRangeEndedAt, 360*24*time.Hour) {
 		return nil, apiexceptions.RoutineTask.InvalidDto("queryRangeStartedAt and queryRangeEndedAt should be within 360 days")
 	}
 

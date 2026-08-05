@@ -13,6 +13,7 @@ import (
 
 	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjsworker/v1"
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	metrics "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/metrics"
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/services/core/contexts"
@@ -238,8 +239,8 @@ func (s *BlockService) ApplyWithTransaction(
 	if blockPackId == uuid.Nil {
 		return nil, fmt.Errorf("block projection requires a block pack id")
 	}
-	if requestDto.SchemaId != constants.YjsBlockPackSchemaId ||
-		requestDto.SchemaVersion != constants.YjsBlockPackSchemaVersion {
+	if requestDto.SchemaId != yjsworkercontract.YjsBlockPackSchemaId ||
+		requestDto.SchemaVersion != yjsworkercontract.YjsBlockPackSchemaVersion {
 		return nil, fmt.Errorf("block projection source schema is not supported")
 	}
 	if requestDto.ProjectedSequence < 0 {
@@ -384,8 +385,8 @@ func (s *BlockService) ApplyMany(
 		if requestDto.BlockPackId == uuid.Nil {
 			return nil, fmt.Errorf("block projection requires a block pack id")
 		}
-		if requestDto.Projection.SchemaId != constants.YjsBlockPackSchemaId ||
-			requestDto.Projection.SchemaVersion != constants.YjsBlockPackSchemaVersion {
+		if requestDto.Projection.SchemaId != yjsworkercontract.YjsBlockPackSchemaId ||
+			requestDto.Projection.SchemaVersion != yjsworkercontract.YjsBlockPackSchemaVersion {
 			return nil, fmt.Errorf("block projection source schema is not supported")
 		}
 		if requestDto.Projection.ProjectedSequence < 0 {

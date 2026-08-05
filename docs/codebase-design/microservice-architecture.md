@@ -48,7 +48,7 @@ internal/
     data/cache/              # Realtime leases and Realtime-specific rate limits
     transports/
       gateway/               # private API Gateway presence transport
-      websocket/             # WebSocket client, connection/channel state, middleware
+      yjsworker/             # WebSocket client, connection/channel state, middleware
     workers/                 # YjsWorker connection manager
   platform/
     kafka/                     # Kafka client, readiness, and common telemetry
@@ -59,7 +59,10 @@ internal/
         database/             # schemas, repositories, scopes, SQL, seeds, options
         cache/                # Core-owned Redis caches and Lua libraries
         storage/              # Core-owned storage implementations
+      workers/                # Core-owned long-lived reconciliation and background loops
     durablejob/             # independent runtime; currently shares PostgreSQL
+      transports/core/       # Core-facing Kafka consumers, event builders, and producers
+        strategies/           # DurableJob maintenance scheduling policy
     email/                  # independent runtime and SMTP sender
 shared/
   cookies/                    # reusable Gin access/refresh cookie handlers
@@ -193,7 +196,7 @@ runtime-owned cache registration, and domain-specific cache operations.
 ```mermaid
 flowchart TB
   subgraph Platform["internal/platform/redis"]
-    Manager["DefaultClientManager<br/>map[int]*redis.Client"]
+    Manager["runtime-owned ClientManager<br/>map[int]*redis.Client"]
     Registry["RedisCacheStores<br/>map[int]RedisCacheStore"]
   end
 
@@ -253,8 +256,8 @@ type RedisCacheStore interface {
 registers successful stores in `RedisCacheStores`. Consequently, a failed Lua
 library load never leaves an apparently usable cache store in the registry.
 
-Each executable has its own process-local `DefaultClientManager` and
-`RedisCacheStores` registry. Core, Gateway, and WebSocket therefore have their
+Each executable creates and owns its own process-local `ClientManager` and
+`RedisCacheStores` registry. Core, Gateway, and RealtimeGateway therefore have their
 own Redis TCP connections even when they target the same Redis server and DB
 numbers.
 
@@ -281,7 +284,8 @@ embeds and joins them into one `user_quota_library`, then performs a single
 
 ```text
 core.Start()
-  -> userdata.Register(ctx, DefaultClientManager)
+  -> clientManager := redis.NewClientManager(config)
+  -> userdata.Register(ctx, clientManager)
     -> ConnectAll(DB 0–3)
     -> NewUserDataCacheStore(DB, client)
     -> RegisterCacheStores(stores...)
@@ -325,14 +329,24 @@ Gateway does not access it directly.
 
 ## Lifecycle event contracts
 
-Cross-runtime lifecycle events are defined in
-[`contracts/core/v1/events`](../../contracts/core/v1/events/) and documented in
-[Kafka Event Contracts](../system-design/kafka-event-contracts.md). Core owns
-the facts and policy values in those messages. RealtimeGateway consumes them to
-execute detach or future admission behavior, but never derives business rules.
-The event envelope is independent of the Kafka client, outbox schema, and
-consumer implementation so NOT-34, NOT-35, and NOT-33 can evolve those owners
-without changing the semantic boundary.
+The runtime-neutral envelope is defined in
+[`contracts/events`](../../contracts/events/). It contains no topic, consumer
+group, or business payload, so `internal/platform/kafka` can consume any
+runtime's event without importing that runtime's contracts. Runtime-owned event
+families are kept at their boundaries:
+
+- [`contracts/core/v1/events`](../../contracts/core/v1/events/) contains Core
+  lifecycle facts and policy decisions consumed by RealtimeGateway.
+- [`contracts/durablejob/v1/events`](../../contracts/durablejob/v1/events/)
+  contains RoutineTask and Yjs maintenance coordination owned by DurableJob.
+- [`contracts/yjsworker/v1/events`](../../contracts/yjsworker/v1/events/)
+  contains YjsWorker command/reply transport metadata.
+
+Core owns the facts and policy values in its lifecycle messages.
+RealtimeGateway consumes them to execute detach or future admission behavior,
+but never derives business rules. The event envelope is independent of the
+Kafka client, outbox schema, and consumer implementation so NOT-34, NOT-35,
+and NOT-33 can evolve those owners without changing the semantic boundary.
 
 ## Exceptions and lifecycle
 

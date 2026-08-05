@@ -5,10 +5,10 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	stringutil "github.com/HiIamJeff67/notezy-backend/shared/lib/stringutil"
 )
 
 /* ==================== HTML Email Renderer ==================== */
@@ -18,7 +18,7 @@ type HTMLEmailRenderer struct {
 }
 
 func (r *HTMLEmailRenderer) Render() (string, *exceptions.Exception) {
-	if templateFileType := strings.Split(r.TemplatePath, ".")[1]; !stringutil.IsStringIn(templateFileType, []string{"html"}) {
+	if templateFileType := strings.Split(r.TemplatePath, ".")[1]; !slices.Contains([]string{"html"}, templateFileType) {
 		return "", exceptions.New(
 			"InvalidTemplate",
 			"Email",
@@ -74,7 +74,7 @@ type PlainTextEmailRenderer struct {
 }
 
 func (r *PlainTextEmailRenderer) Render() (string, *exceptions.Exception) {
-	if templateFileType := strings.Split(r.TemplatePath, ".")[1]; stringutil.IsStringIn(templateFileType, []string{"txt", "log", "conf", "ini", "csv"}) {
+	if templateFileType := strings.Split(r.TemplatePath, ".")[1]; slices.Contains([]string{"txt", "log", "conf", "ini", "csv"}, templateFileType) {
 		return "", exceptions.New(
 			"InvalidTemplate",
 			"Email",
@@ -130,7 +130,7 @@ type MarkdownEmailRenderer struct {
 }
 
 func (r *MarkdownEmailRenderer) Render() (string, *exceptions.Exception) {
-	if templateFileType := strings.Split(r.TemplatePath, ".")[1]; stringutil.IsStringIn(templateFileType, []string{"md"}) {
+	if templateFileType := strings.Split(r.TemplatePath, ".")[1]; slices.Contains([]string{"md"}, templateFileType) {
 		return "", exceptions.New(
 			"InvalidTemplate",
 			"Email",

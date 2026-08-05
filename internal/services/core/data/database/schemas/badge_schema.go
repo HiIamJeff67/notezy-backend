@@ -8,8 +8,8 @@ import (
 
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type Badge struct {
@@ -27,11 +27,11 @@ type Badge struct {
 
 // Badge Table Name
 func (Badge) TableName() string {
-	return types.TableName_BadgeTable.String()
+	return "BadgeTable"
 }
 
 // Badge Table Relations
-type BadgeRelation types.RelationName
+type BadgeRelation platformdatabase.RelationName
 
 const (
 	BadgeRelation_UsersToBadges BadgeRelation = "UsersToBadges"

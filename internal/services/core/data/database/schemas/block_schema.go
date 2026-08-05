@@ -8,8 +8,8 @@ import (
 
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas/enums"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 type Block struct {
@@ -34,11 +34,11 @@ type Block struct {
 
 // Root Block Table Name
 func (Block) TableName() string {
-	return types.TableName_BlockTable.String()
+	return "BlockTable"
 }
 
 // Root Block Table Relations
-type BlockRelation types.RelationName
+type BlockRelation platformdatabase.RelationName
 
 const (
 	BlockRelation_BlockPack BlockRelation = "BlockPack"
