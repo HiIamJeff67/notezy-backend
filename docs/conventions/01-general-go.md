@@ -5,7 +5,7 @@
 - 所有 Go 程式碼必須可被 `gofmt` 格式化；工作區已設定 Go formatter 於存檔時執行。
 - 檔名採 `snake_case.go`，並依功能命名，例如 `root_shelf_service.go`、`root_shelf_controller_test.go`。
 - package 名稱維持小寫單數或既有複數慣例；不要為單一用途建立新 package。
-- import 由 `gofmt` 排序，標準函式庫、第三方、專案內 import 以空行分組。所有專案內 import 都必須使用顯式且準確的 package alias，例如 `dtos`、`schemas`、`exceptions`、`types`、`apitransport`、`coreadapters`；不得依賴 import path 最後一段的隱式名稱。
+- import 由 `gofmt` 排序，並依責任以空行分組：標準函式庫、第三方 Go module、`shared/`（不含 `lib`／`util`）、`shared/lib`、`shared/util`、`contracts`、platform 與 runtime-owned imports。所有專案內 import 都必須使用顯式且準確的 package alias，例如 `dtos`、`schemas`、`exceptions`、`types`、`apitransport`、`coreadapters`；不得依賴 import path 最後一段的隱式名稱。
 - 所有非空 struct literal 一律展開為多行，每個 field 各佔一行並保留 trailing comma；不可將 DTO、response 或任何只有一個 field 的 struct literal 寫在一行。這也適用於 `return` 的 struct literal 與巢狀 struct literal。
 
   ```go
@@ -42,7 +42,7 @@ station, permission, exception := s.stationRepository.CheckPermissionAndGetOneBy
 
 ## Service DTO 與 repository input 的邊界
 
-- `internal/services/<service>/data/.../inputs` 的 `XxxInput` 是 repository persistence contract：描述 create、update、partial update 或 bulk SQL 所需的資料，只能作為 repository method 的 input。service、controller 或 gateway 不得把它當成 transport request/response contract。
+- `internal/<service>/data/.../inputs` 的 `XxxInput` 是 repository persistence contract：描述 create、update、partial update 或 bulk SQL 所需的資料，只能作為 repository method 的 input。service、controller 或 gateway 不得把它當成 transport request/response contract。
 - service method 若參數很多、代表同一個完整意圖，或由 Gateway 接收後要輸出到外部，就使用 `*XxxRequestDto` 作為單一 request parameter，並以 `*XxxResponseDto` 回傳資料。request / response 變數命名為 `request` / `response`；不新增不清楚的 `req`、`res` 縮寫。
 - service-only 或 gateway-only workflow 也可使用具體的 `XxxRequestDto` / `XxxResponseDto` 封裝相關資料、context 與輸出，而不是用長串零散 parameters 或 anonymous struct；名稱必須描述操作，不可使用泛用的 `Data`、`Params` 或 `Payload`。
 - 參數少且語意清楚時保留直接參數，不為了套用 DTO 強行包裝。只有 parameter 數量、共同 lifecycle 或呼叫邊界確實使 DTO 提高可讀性時才建立。
@@ -122,7 +122,7 @@ result := tx.Exec(sql, valueArgs...)
 ## 共用函式庫
 
 - 新增 helper 前，先檢查 [shared/lib](../../shared/lib/) 是否已有可直接使用的函式庫。已有相同責任的實作時必須重用，不能在 service/repository 複製一份。
-- 依問題選用既有 package：去重/set 使用 `shared/lib/array`，游標分頁使用 `shared/lib/searchcursor`，併發工作使用 `shared/lib/concurrency`，佇列與堆疊使用 `shared/lib/queue`、`shared/lib/stack`，以及其他已存在的 blocknote 函式庫。EditableBlock tree 的扁平化使用 `shared/editableblock.FlattenEditableBlock(s)`。跨 runtime 的 HTTP response formatting 與 public exception rendering 使用 `shared/responsewriter`；rate limit 仍由各 Gateway runtime 自己持有。
+- 依問題選用既有 package：去重/set 使用 `shared/lib/array`，游標分頁使用 `shared/lib/searchcursor`，併發工作使用 `shared/lib/concurrency`，佇列與堆疊使用 `shared/lib/queue`、`shared/lib/stack`。EditableBlock tree 的扁平化使用 `shared/util/editableblock.FlattenEditableBlock(s)`；跨 runtime 的 HTTP response formatting 與 public exception rendering 使用 `shared/util/responsewriter` 與 `shared/util/exceptionwriter`；rate limit 仍由各 Gateway runtime 自己持有。
 - `shared/lib` 僅放跨領域、可重用且與 application layer 無關的邏輯。它不可 import Notezy project code；必要的第三方 library 可以使用。僅由單一領域使用的商業規則留在該領域，不要為了「可能重用」移入 shared。
 - 若既有 library 接近但不完全符合需求，優先在該 library 補最小且通用的能力；若需求只屬於單一領域，使用領域內的小 helper，避免為一次性需求建立新的 shared package。
 

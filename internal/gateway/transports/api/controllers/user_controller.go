@@ -1,12 +1,15 @@
 package controllers
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+
 	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
+
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 type UserControllerInterface interface {

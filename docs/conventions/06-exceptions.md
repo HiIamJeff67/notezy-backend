@@ -2,17 +2,17 @@
 
 ## Ownership and envelope
 
-- `internal/exceptions` is a pure application envelope. It may use the standard
+- `shared/exceptions` is a pure application envelope. It may use the standard
   library and `shared`, but must not import Gateway, a microservice,
   platform observability, Gin, GORM, or generated GraphQL code.
-- `internal/exceptions` creates the shared envelope with `exceptions.New()`.
+- `shared/exceptions` creates the shared envelope with `exceptions.New()`.
   Its optional final `isInternal ...bool` accepts only the first value and
   cannot be changed after construction. It must not own a domain factory or a
   numeric code registry.
 - Gateway and each microservice may define a local factory in their own
   `exceptions/` package when two or more callers share the same domain error
   semantics. Examples are `internal/gateway/exceptions/` and
-  `internal/services/core/exceptions/`. A component with its own operational
+  `internal/core/exceptions/`. A component with its own operational
   failure semantics may do the same beneath its own owned package.
 - A local factory returns `*exceptions.Exception`, contains no numeric code
   registry, and is never imported across a Gateway/service boundary. Gateway
@@ -55,7 +55,7 @@ exception := exceptions.New(
 
 ## Public safety boundary
 
-- Only `shared/responsewriter.ToPublic()` may convert an exception
+- Only `shared/util/responsewriter.ToPublic()` may convert an exception
   into a browser-facing exception. It records the original internal exception
   before conversion and removes `Origin`, `Details`, numeric compatibility
   codes, and all implementation diagnostics.
@@ -97,7 +97,7 @@ exception := exceptions.New(
   helpers; it never imports exceptions or framework code.
 - `internal/gateway/contexts` owns Gin/request-context parsing and the
   route-declared permission set used to construct an outbound delegation.
-- `internal/services/core/contexts` owns verified API-service context values,
+- `internal/core/contexts` owns verified API-service context values,
   including permissions reconstructed from the verified delegation credential.
   Core services must not trust client DTO fields for actor identity or route
   permission policy.

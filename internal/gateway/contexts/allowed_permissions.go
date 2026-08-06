@@ -5,9 +5,11 @@ import (
 	"net/http"
 	"slices"
 
-	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
-	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+
 	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
+
+	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
 func WithAllowedPermissions(

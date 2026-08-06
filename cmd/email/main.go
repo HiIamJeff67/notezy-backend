@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	email "github.com/HiIamJeff67/notezy-backend/internal/services/email"
+	email "github.com/HiIamJeff67/notezy-backend/internal/email"
 )
 
 func main() {

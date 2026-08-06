@@ -4,15 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"go.opentelemetry.io/otel/attribute"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
-	"go.opentelemetry.io/otel/attribute"
 
-	metrics "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/metrics"
-	realtimetypes "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/types"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+
+	metrics "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/metrics"
+
+	realtimetypes "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/types"
 )
 
 type outboundQueue struct {

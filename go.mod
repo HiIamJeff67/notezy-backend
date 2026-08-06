@@ -4,15 +4,15 @@ go 1.26.0
 
 require (
 	github.com/99designs/gqlgen v0.17.76
-	github.com/Pallinder/go-randomdata v1.2.0
-	github.com/alicebob/miniredis/v2 v2.37.0
+	github.com/HiIamJeff67/notezy-backend/internal/durablejob v0.0.0
+	github.com/HiIamJeff67/notezy-backend/internal/email v0.0.0
+	github.com/HiIamJeff67/notezy-backend/internal/gateway v0.0.0
+	github.com/HiIamJeff67/notezy-backend/internal/realtimegateway v0.0.0
 	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/comail/colog v0.0.0-20160416085026-fba8e7b1f46c
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/golang-jwt/jwt/v5 v5.2.2
-	github.com/gorilla/websocket v1.5.0
-	github.com/graph-gophers/dataloader/v7 v7.1.0
 	github.com/jinzhu/copier v0.4.0
 	github.com/lib/pq v1.10.9
 	github.com/spf13/cobra v1.9.1
@@ -30,11 +30,16 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.42.0
 	go.opentelemetry.io/otel/trace v1.42.0
 	golang.org/x/crypto v0.51.0
-	golang.org/x/time v0.14.0
-	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gorm.io/datatypes v1.2.7
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.30.0
+)
+
+replace (
+	github.com/HiIamJeff67/notezy-backend/internal/durablejob => ./internal/durablejob
+	github.com/HiIamJeff67/notezy-backend/internal/email => ./internal/email
+	github.com/HiIamJeff67/notezy-backend/internal/gateway => ./internal/gateway
+	github.com/HiIamJeff67/notezy-backend/internal/realtimegateway => ./internal/realtimegateway
 )
 
 require (
@@ -48,6 +53,8 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.3.0 // indirect
+	github.com/gorilla/websocket v1.5.0 // indirect
+	github.com/graph-gophers/dataloader/v7 v7.1.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/klauspost/compress v1.18.6 // indirect
@@ -55,14 +62,15 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
 	github.com/twmb/franz-go/pkg/kmsg v1.13.1 // indirect
-	github.com/yuin/gopher-lua v1.1.1 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.42.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.9.0 // indirect
+	golang.org/x/time v0.14.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260209200024-4cfbd4190f57 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260209200024-4cfbd4190f57 // indirect
 	google.golang.org/grpc v1.79.2 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
+	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df // indirect
 	gorm.io/driver/mysql v1.5.6 // indirect
 )
 

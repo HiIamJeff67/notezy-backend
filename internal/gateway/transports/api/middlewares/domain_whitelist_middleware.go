@@ -6,9 +6,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
+	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+
+	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
 )
 
 func isAllowedOrigin(origin string, allowedDomains []string) bool {

@@ -7,12 +7,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+
+	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
+
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+
+	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/gateway/contexts"
 	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/gateway/ratelimit"
-	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
-	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
 )
 
 var authorizedRateLimiter *ratelimit.HybridRateLimiter // use the hybrid one which including token bucket and cross server request management by redis

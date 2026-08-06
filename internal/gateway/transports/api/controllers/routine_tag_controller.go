@@ -5,9 +5,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+
 	routinetagsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tags"
+
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 type RoutineTagControllerInterface interface {

@@ -7,7 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+
 	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
 )
 

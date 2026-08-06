@@ -3,9 +3,8 @@ package routinetasktypes
 import (
 	"github.com/google/uuid"
 
-	"github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
-
 	typescontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	enums "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
 type CreateBlockPackRoutineTaskTemplateBlock struct {

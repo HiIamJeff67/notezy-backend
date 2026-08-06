@@ -3,7 +3,7 @@
 This package is Core's versioned domain-event boundary for Kafka. It has no
 dependency on Core implementation, RealtimeGateway, persistence, or a Kafka
 client. The generic envelope and primitive transport types are imported from
-`contracts/events`; this package owns only Core lifecycle topics and payloads.
+`contracts/types/event.go`; this package owns only Core lifecycle topics and payloads.
 
 `notezy.core.lifecycle.v1` carries Core lifecycle facts. Every event uses its
 aggregate UUID string as `kafkaKey`, so one aggregate remains ordered within a
@@ -29,3 +29,12 @@ The envelope and payloads exclude entity snapshots, browser credentials,
 cookies, tokens, presence, awareness, and Yjs updates. Producers may add only
 backward-compatible optional fields within `v1`; a breaking change requires a
 new contract and topic major version.
+
+Core also publishes `YjsMaintenanceHintData` on the Core-to-DurableJob hint
+topic. The hint contains only Core's current maintenance metadata; it never
+contains a snapshot, state vector, or Yjs update payload.
+
+Core publishes `RoutineTaskCompletedData` on the lifecycle topic after a
+prepared DurableJob result has been applied. It contains only task identity,
+attempt, worker, and completion metadata; it never contains Core schemas or
+database payloads.

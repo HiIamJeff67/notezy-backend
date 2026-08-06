@@ -1,14 +1,17 @@
 package eventscontract
 
-import eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/events"
+import eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
 
 const CoreLifecycleTopic eventcontract.Topic = "notezy.core.lifecycle.v1"
 
+const CoreDurableJobYjsMaintenanceHintTopic eventcontract.Topic = "notezy.core.durablejob.yjs-maintenance-hint.v1"
+
 const (
-	AggregateType_RootShelf eventcontract.AggregateType = "RootShelf"
-	AggregateType_SubShelf  eventcontract.AggregateType = "SubShelf"
-	AggregateType_BlockPack eventcontract.AggregateType = "BlockPack"
-	AggregateType_User      eventcontract.AggregateType = "User"
+	AggregateType_RootShelf   eventcontract.AggregateType = "RootShelf"
+	AggregateType_SubShelf    eventcontract.AggregateType = "SubShelf"
+	AggregateType_BlockPack   eventcontract.AggregateType = "BlockPack"
+	AggregateType_RoutineTask eventcontract.AggregateType = "RoutineTask"
+	AggregateType_User        eventcontract.AggregateType = "User"
 )
 
 const (
@@ -20,4 +23,6 @@ const (
 	EventType_BlockPackChanged           eventcontract.EventType = "BlockPackChanged"
 	EventType_BlockPackDeleted           eventcontract.EventType = "BlockPackDeleted"
 	EventType_UserSessionsRevoked        eventcontract.EventType = "UserSessionsRevoked"
+	EventType_YjsMaintenanceHint         eventcontract.EventType = "YjsMaintenanceHint"
+	EventType_RoutineTaskCompleted       eventcontract.EventType = "RoutineTaskCompleted"
 )

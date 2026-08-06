@@ -10,11 +10,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+
 	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtime-gateway/v1"
-	platformkafka "github.com/HiIamJeff67/notezy-backend/internal/platform/kafka"
-	observability "github.com/HiIamJeff67/notezy-backend/internal/platform/observability"
-	platformredis "github.com/HiIamJeff67/notezy-backend/internal/platform/redis"
-	realtimeconfig "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/config"
+
+	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
+	observability "github.com/HiIamJeff67/notezy-backend/shared/platform/observability"
+	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
+
+	realtimeconfig "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/configs"
 	ratelimitrecord "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/ratelimitrecord"
 	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
 	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/ratelimit"
@@ -42,18 +46,32 @@ func Start() func() {
 		observability.LoadConfig("notezy-realtime-gateway"),
 	)
 	redisClientManager := platformredis.NewClientManager(redisConfig)
+	realtimeLeaseCacheClient := realtimelease.NewRealtimeLeaseCacheClient(realtimelease.Config{
+		ServerRange: types.Range[int, int]{
+			Start: config.Redis.RealtimeLeaseServerStart,
+			Size:  config.Redis.RealtimeLeaseServerSize,
+		},
+	})
+	rateLimitRecordCacheClient := ratelimitrecord.NewRateLimitRecordCacheClient(ratelimitrecord.Config{
+		ServerRange: types.Range[int, int]{
+			Start: config.Redis.RateLimitRecordServerStart,
+			Size:  config.Redis.RateLimitRecordServerSize,
+		},
+	})
 
-	if err := realtimelease.Register(context.Background(), redisClientManager); err != nil {
+	if err := realtimelease.Register(context.Background(), redisClientManager, realtimeLeaseCacheClient); err != nil {
 		_ = redisClientManager.DisconnectAll()
 		shutdownObservability()
 		panic(err)
 	}
-	if err := ratelimitrecord.Register(context.Background(), redisClientManager); err != nil {
+	if err := ratelimitrecord.Register(context.Background(), redisClientManager, rateLimitRecordCacheClient); err != nil {
 		_ = redisClientManager.DisconnectAll()
 		shutdownObservability()
 		panic(err)
 	}
-	middlewares.InitUnauthorizedRateLimiter(ratelimit.DefaultUpgradeConfig())
+	upgradeRateLimitConfig := ratelimit.DefaultUpgradeConfig()
+	upgradeRateLimitConfig.CacheServerRange = rateLimitRecordCacheClient.Range
+	middlewares.InitUnauthorizedRateLimiter(upgradeRateLimitConfig)
 
 	router := gin.Default()
 	if err := router.SetTrustedProxies(config.TrustedProxies); err != nil {
@@ -70,12 +88,12 @@ func Start() func() {
 	})
 	gatewayrouters.ConfigureRoutes(
 		router,
-		realtimelease.NewRealtimeLeaseCacheClient(),
+		realtimeLeaseCacheClient,
 	)
 
-	websocketClient := yjsworker.NewWebSocketClient(config)
+	websocketClient := yjsworker.NewWebSocketClient(config, realtimeLeaseCacheClient)
 	lifecycleConsumer := workers.NewLifecycleConsumer(
-		realtimelease.NewRealtimeLeaseCacheClient(),
+		realtimeLeaseCacheClient,
 		platformkafka.ConsumerConfig{
 			ClientConfig: platformkafka.ClientConfig{
 				ConnectionConfig: kafkaConnectionConfig,

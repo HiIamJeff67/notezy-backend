@@ -5,11 +5,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
+
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
 	realtimegatewayadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/realtimegateway/adapters"
-	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
 )
 
 var (

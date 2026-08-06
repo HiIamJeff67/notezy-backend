@@ -6,6 +6,10 @@ WORKDIR /notezy-backend
 
 # copy go mod & go sum files
 COPY go.mod go.sum ./
+COPY internal/gateway/go.mod internal/gateway/go.sum internal/gateway/
+COPY internal/durablejob/go.mod internal/durablejob/go.sum internal/durablejob/
+COPY internal/email/go.mod internal/email/go.sum internal/email/
+COPY internal/realtimegateway/go.mod internal/realtimegateway/go.sum internal/realtimegateway/
 
 # download go modules & dependencies
 RUN go mod tidy

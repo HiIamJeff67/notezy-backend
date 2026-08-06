@@ -8,11 +8,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
+	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+
 	routinesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routines"
 	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
-	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
+
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 type RoutineBinderInterface interface {

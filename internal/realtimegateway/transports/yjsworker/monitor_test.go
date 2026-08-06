@@ -1,14 +1,13 @@
 package yjsworker
 
 import (
+	"go.opentelemetry.io/otel"
 	"os"
 	"testing"
 
-	"go.opentelemetry.io/otel"
-
-	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
-	metrics "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/metrics"
-	traces "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/traces"
+	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	metrics "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/metrics"
+	traces "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/traces"
 )
 
 func TestMain(m *testing.M) {

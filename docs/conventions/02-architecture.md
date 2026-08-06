@@ -51,7 +51,7 @@ inbound Gateway transport is
 organized by responsibility:
 
 ```text
-internal/services/core/transports/
+internal/core/transports/
   middlewares/              # delegation, authentication, role, and plan checks
   gateway/
     endpoints/              # endpoint interfaces, handlers, and adjacent tests
@@ -70,7 +70,7 @@ producers belong under the transport owned by the peer they communicate with;
 they do not belong in a generic `workers/` package:
 
 ```text
-internal/services/core/transports/
+internal/core/transports/
   durablejob/
     consumers/
     eventbuilders/
@@ -80,7 +80,7 @@ internal/services/core/transports/
     producers/
   outbox_relay.go
 
-internal/services/durablejob/transports/
+internal/durablejob/transports/
   core/
     consumers/
     producers/
@@ -106,10 +106,10 @@ service or engine; those packages must not import their transport back.
 ## Runtime-owned workers
 
 Long-lived background loops belong to the owning runtime's `workers/` package,
-not to `services/` or a generic `workers/` package under `internal/platform`:
+not to `services/` or a generic `workers/` package under `shared/platform`:
 
 ```text
-internal/services/<runtime>/
+internal/<runtime>/
   services/   # request-scoped business workflows
   workers/    # runtime-owned long-lived loops and reconciliation
 ```
@@ -135,20 +135,77 @@ import another runtime's source package or become a hidden replacement for a
 service method. A service method must remain directly callable without starting
 the worker.
 
+Core services are grouped by business ownership so a future runtime split has a
+stable package boundary:
+
+```text
+internal/core/services/
+  auth/                               # auth and OAuth
+  user/                               # user, account, info, settings, billing plans
+  shelves/                            # root shelf, sub shelf, item
+  blocks/                             # block pack, block, Yjs persistence
+  material/
+  routines/                           # station, routine, routine tag, RoutineTask
+    handlers/                          # RoutineTask execution handlers by aggregate
+      block_pack_handler.go
+      root_shelf_handler.go
+      routine_handler.go
+      sub_shelf_handler.go
+    matchers/                          # template matching
+    parsers/                           # RoutineTask payload decoding and flattening
+    resolvers/                         # RoutineTask and block-pattern resolution
+  other/                              # badge and theme
+  realtime/
+```
+
+`routines/routine_task_execution_service.go` owns Core's transaction, permission,
+and result-application boundary. Aggregate-specific RoutineTask execution belongs
+to the `handlers` package (`RootShelfHandler`, `SubShelfHandler`,
+`BlockPackHandler`, and `RoutineHandler`), each with an interface and constructor
+for dependency injection. Pattern resolution, payload parsing, and template
+matching live in their respective `resolvers`, `parsers`, and `matchers`
+packages. Handler constructors receive the base `*gorm.DB` and initialize their
+own repositories; operation methods receive the exact `*gorm.DB` session from the
+execution service, so a transaction and a normal session use the same path and
+never require a service clone such as `withTransactionDB`. Handler methods use an
+explicit `Handle...` prefix (for example, `HandleCreateBlockPack`) so they remain
+visually distinct from Core service methods.
+These packages must not contain a second service orchestration layer or transaction
+helper.
+Pure assignment execution and template interpolation remain in the DurableJob
+runtime; Block remains a projection read model and must not gain RoutineTask
+append/update/reset mutation methods in Core.
+
 ## Dependency direction
 
 - `cmd/*` may import `internal/*`.
 - Gateway client/API and Core-adapter transport code may import contracts, shared,
-  platform, and its own code; it must not query Core data or import repositories/
+  and its own code; it must not query Core data or import repositories/
   GORM schemas. RealtimeGateway does not construct Core services, query Core
   data, or synchronously call Core after ticket issuance; it communicates with
   YjsWorker and receives Core lifecycle facts through Kafka.
-- A service may import contracts, shared, platform, and its own data. A service
+- A runtime may import contracts, shared, and its own data. A runtime
   must not import another service source package.
+- Gateway, DurableJob, Email, and RealtimeGateway are separate Go environments:
+  each runtime owns a `go.mod` and `go.sum` beside its `application.go`. The
+  root module still composes `cmd/*`, contracts, shared, and Core during
+  migration; runtime modules may use a local root-module replacement only for
+  explicitly tracked transitional dependencies. Do not add a runtime
+  dependency merely to reuse another runtime's source. YjsWorker keeps its
+  independent Node/TypeScript package environment.
 - `shared` is the root-level cross-runtime utility layer. It may depend on
   contracts and the minimum common application support it genuinely needs;
   portable `shared/lib` never imports a Notezy package.
-- `internal/platform` owns infrastructure mechanics, not User/Shelf/Routine
+- `shared/cookies`, `shared/exceptions`, and `shared/tokens` are shared semantic
+  boundaries that remain at the root of `shared`; reusable implementation
+  utilities belong under `shared/util/` (`editableblock`, `exceptionwriter`,
+  and `responsewriter`). `shared/util` may use application-support packages,
+  while `shared/lib` remains the stricter dependency-free library layer.
+- The generic Kafka envelope is maintained in `contracts/types/event.go`.
+  Runtime event domains remain under their owning `contracts/<runtime>/v1/events/`
+  package; email request payloads therefore live in
+  `contracts/email/v1/events/`.
+- `shared/platform` owns infrastructure mechanics, not User/Shelf/Routine
   business rules.
 - Cross-runtime calls use a versioned contract and adapter/client. Core adapters
   are outbound only; a Core inbound transport is already the inbound adapter.
@@ -156,11 +213,17 @@ the worker.
 ## Composition roots
 
 Environment configuration follows the same ownership rule. A runtime composition
-root loads each typed owner config once and injects it into dependencies;
+root loads each typed owner config once from its `configs/` package and injects it into dependencies;
 infrastructure config is colocated with its component at
-`internal/platform/<component>/config.go`. Do not read environment variables
+`shared/platform/<component>/config.go`. Do not read environment variables
 from transports, services, workers, clients, or middleware, and do not recreate
-`internal/platform/config/`.
+`shared/platform/config/`.
+
+Runtime-owned Redis cache ranges and TTLs follow the same boundary. Cache
+clients receive a cache-specific config from the runtime composition root; cache
+client constructors must not embed Redis database range or user-data expiry
+values. The resulting client is reused for its runtime's stores, services, and
+transports instead of constructing a new client inside an operation.
 
 Do not introduce an application `modules/` package merely to wrap service
 construction. The owning composition root constructs its scope -> repository ->

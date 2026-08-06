@@ -6,8 +6,9 @@ import (
 
 	"github.com/google/uuid"
 
-	realtimetypes "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/types"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+
+	realtimetypes "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/types"
 )
 
 func TestConnectorPrioritizesControlFramesOverChannelData(t *testing.T) {

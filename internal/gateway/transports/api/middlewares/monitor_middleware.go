@@ -1,11 +1,12 @@
 package middlewares
 
 import (
-	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/otel/attribute"
 
-	metrics "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/metrics"
-	traces "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/traces"
+	"github.com/gin-gonic/gin"
+
+	metrics "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/metrics"
+	traces "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/traces"
 )
 
 func ApplyTracerMiddleware(spanName string) gin.HandlerFunc {

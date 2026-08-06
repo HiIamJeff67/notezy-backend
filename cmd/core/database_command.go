@@ -6,9 +6,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
-	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
-	data "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database"
+	platformdatabase "github.com/HiIamJeff67/notezy-backend/shared/platform/database"
+	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+
+	data "github.com/HiIamJeff67/notezy-backend/internal/core/data/database"
 )
 
 var viewAllAvailableDatabasesCommand = &cobra.Command{

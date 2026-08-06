@@ -21,14 +21,18 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+
 	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtime-gateway/v1"
 	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjsworker/v1"
-	platformredis "github.com/HiIamJeff67/notezy-backend/internal/platform/redis"
+
+	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
+
 	realtimeleasecache "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/types"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 )
 
 type fakeWorkerManager struct {
@@ -142,12 +146,14 @@ func newTestRealtimeLeaseStore(t *testing.T) *realtimeleasecache.RealtimeLeaseCa
 
 	if err := platformredis.RegisterCacheStores(
 		context.Background(),
-		realtimeleasecache.NewRealtimeLeaseCacheStore(constants.RealtimeRedisServerNumber, redisClient),
+		realtimeleasecache.NewRealtimeLeaseCacheStore(0, redisClient),
 	); err != nil {
 		t.Fatalf("failed to initialize realtime lease cache store: %v", err)
 	}
 
-	return realtimeleasecache.NewRealtimeLeaseCacheClient()
+	return realtimeleasecache.NewRealtimeLeaseCacheClient(realtimeleasecache.Config{
+		ServerRange: types.Range[int, int]{Start: 0, Size: 1},
+	})
 }
 
 func TestGatewayRevokesMatchingBlockPackChannels(t *testing.T) {

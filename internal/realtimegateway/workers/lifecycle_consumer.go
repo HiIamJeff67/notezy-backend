@@ -10,9 +10,11 @@ import (
 	"github.com/google/uuid"
 
 	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/events"
-	platformkafka "github.com/HiIamJeff67/notezy-backend/internal/platform/kafka"
-	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
+	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+
+	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
+	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+
 	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
 )
 

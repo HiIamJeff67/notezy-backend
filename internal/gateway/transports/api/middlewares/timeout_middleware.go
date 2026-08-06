@@ -9,11 +9,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/gateway/ratelimit"
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/shared/responsewriter"
+	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+	responsewriter "github.com/HiIamJeff67/notezy-backend/shared/util/responsewriter"
+
+	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/gateway/ratelimit"
 )
 
 // use reusable buffer pool for timeout response writer to storing the current response of the handlers

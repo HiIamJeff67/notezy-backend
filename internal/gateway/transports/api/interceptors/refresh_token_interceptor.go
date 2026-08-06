@@ -6,11 +6,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	contexts "github.com/HiIamJeff67/notezy-backend/internal/gateway/contexts"
 	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
+	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+
 	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
-	responsewriter "github.com/HiIamJeff67/notezy-backend/shared/responsewriter"
+
+	responsewriter "github.com/HiIamJeff67/notezy-backend/shared/util/responsewriter"
+
+	contexts "github.com/HiIamJeff67/notezy-backend/internal/gateway/contexts"
 )
 
 const refreshableTokensResponseFieldName = "refreshableTokens"

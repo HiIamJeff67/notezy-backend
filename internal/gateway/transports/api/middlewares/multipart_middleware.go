@@ -10,10 +10,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
+	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+
 	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
+
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
 )
 
 func MultipartMiddleware() gin.HandlerFunc {

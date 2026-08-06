@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"go.opentelemetry.io/otel/attribute"
 	"net/http"
 	"strconv"
 	"strings"
@@ -13,18 +14,20 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"go.opentelemetry.io/otel/attribute"
+
+	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 
 	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
-	metrics "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/metrics"
-	traces "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/traces"
-	realtimeconfig "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/config"
+
+	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	metrics "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/metrics"
+	traces "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/traces"
+
+	realtimeconfig "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/configs"
 	realtimeleasecache "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
 	realtimetypes "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/types"
 	workers "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/workers"
-	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 )
 
 type WebSocketClient struct {
@@ -44,7 +47,10 @@ type WebSocketClient struct {
 	shutdownResourceListener    func()
 }
 
-func NewWebSocketClient(config realtimeconfig.Config) *WebSocketClient {
+func NewWebSocketClient(
+	config realtimeconfig.Config,
+	leaseStore *realtimeleasecache.RealtimeLeaseCacheClient,
+) *WebSocketClient {
 	workerManager := workers.NewWorkerManager(config.YjsWorkerUrls)
 	var realtimeBetaUserPublicIdSet map[uuid.UUID]bool
 	if len(config.BetaUserPublicIds) > 0 {
@@ -59,7 +65,7 @@ func NewWebSocketClient(config realtimeconfig.Config) *WebSocketClient {
 
 	application := &WebSocketClient{
 		workerManager:               workerManager,
-		leaseStore:                  realtimeleasecache.NewRealtimeLeaseCacheClient(),
+		leaseStore:                  leaseStore,
 		realtimeDisabled:            !config.RealtimeEnabled,
 		realtimeBetaUserPublicIdSet: realtimeBetaUserPublicIdSet,
 		connectors:                  make(map[uuid.UUID]*Connector),

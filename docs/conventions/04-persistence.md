@@ -165,7 +165,7 @@ result := parsedOptions.DB.Model(&schemas.Station{}).
 
 ## Schema、migration 與 SQL
 
-- table schema、enum、constraint、trigger、seed、raw SQL 與 migration 放在 owning service 的 `internal/services/<service>/data/postgres/`。遷移過程中的 legacy 路徑只在其 owner 尚未搬遷時保留。
+- table schema、enum、constraint、trigger、seed、raw SQL 與 migration 放在 owning service 的 `internal/<service>/data/database/`。遷移過程中的 legacy 路徑只在其 owner 尚未搬遷時保留。
 - 新 table/enum/trigger/constraint 必須註冊至其對應的 `migrate.go`，否則 migration 不會套用。
 - soft-delete、ownership、projection/accounting 等資料庫不變量，優先延續現有 trigger/constraint/scope 模式；不可只依賴 controller 的檢查。
 - 修改 trigger 或 raw SQL 時，確認引用到的表名、欄位與 migration 註冊都同步；資料庫公開語意改動也要更新對應的 `docs/codebase-design/`、`docs/api-route-design/` 或 `docs/system-design/` 文件。

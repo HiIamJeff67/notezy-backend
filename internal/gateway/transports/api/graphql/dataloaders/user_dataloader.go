@@ -7,9 +7,11 @@ import (
 	"github.com/google/uuid"
 	gophersdataloader "github.com/graph-gophers/dataloader/v7"
 
+	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+
 	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
-	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
+
 	gatewaycontexts "github.com/HiIamJeff67/notezy-backend/internal/gateway/contexts"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
 )

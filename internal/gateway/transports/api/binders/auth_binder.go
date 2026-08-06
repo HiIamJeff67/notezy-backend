@@ -3,10 +3,13 @@ package binders
 import (
 	"github.com/gin-gonic/gin"
 
+	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+
 	authdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/auth"
-	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
+
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 type AuthBinderInterface interface {

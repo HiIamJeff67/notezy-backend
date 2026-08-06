@@ -4,7 +4,7 @@
 
 This document defines the versioned Kafka contracts used across service
 boundaries. The runtime-neutral envelope is owned by
-[`contracts/events`](../../contracts/events/); Core lifecycle payloads remain in
+[`contracts/types/event.go`](../../contracts/types/event.go); Core lifecycle payloads remain in
 [`contracts/core/v1/events`](../../contracts/core/v1/events/), while
 DurableJob and YjsWorker interaction contracts are owned by their respective
 runtime contract packages. Core writes its lifecycle events through the
@@ -78,7 +78,7 @@ only ordering guarantee consumers may rely on.
 Within a major contract version, producers may add optional JSON fields only.
 Consumers must ignore unknown fields. Renaming, changing a field type or
 meaning, making an optional field required, or changing an event's ordering
-meaning requires `contracts/events/v2` and a new `.v2` topic. Producers publish
+meaning requires a versioned `contracts/types/event.go` contract and a new `.v2` topic. Producers publish
 the new topic independently until all consumers migrate.
 
 Lifecycle payloads contain identifiers and already-decided policy values only.
@@ -115,6 +115,13 @@ RealtimeGateway does not relay Yjs persistence or projection HTTP requests.
 
 ## DurableJob Yjs maintenance coordination
 
+The contract ownership follows the direction of the protocol rather than the
+consumer implementation: Core owns the maintenance hint, DurableJob owns the
+request/result it sends to and receives from Core, and YjsWorker owns the
+maintenance operation plus the command/result exchanged with Core. This keeps
+each runtime's public contract independent from its database or implementation
+packages.
+
 Core writes `YjsMaintenanceHint` to
 `notezy.core.durablejob.yjs-maintenance-hint.v1` in the same transaction as a
 new BlockPack Yjs document or accepted update. DurableJob coalesces and
@@ -135,7 +142,7 @@ They never carry raw Yjs updates, snapshots, state vectors, or BlockNote block
 trees. A missing result is recoverable through the next Core hint and the
 reconciliation process; no Core transaction waits for DurableJob or the worker.
 Core's runtime-owned
-`internal/services/core/workers/yjs_maintenance_reconciliation_worker.go` runs
+`internal/core/workers/yjs_maintenance_reconciliation_worker.go` runs
 an immediate startup scan and a low-frequency hourly reconciliation scan for
 documents whose durable sequence is still ahead of a compaction or projection
 watermark. The scan emits only fresh metadata hints through the same
@@ -143,7 +150,7 @@ transactional outbox; it never reads or sends document bytes to DurableJob.
 
 ## Consumer reliability and idempotency
 
-Every runtime consumer is built on `internal/platform/kafka.Consumer`. It uses
+Every runtime consumer is built on `shared/platform/kafka.Consumer`. It uses
 manual offset commits, bounded `PollRecords`, and Kafka's
 `BlockRebalanceOnPoll`: an offset is committed only after its handler has
 completed successfully, or after the original record has been durably written
@@ -158,7 +165,7 @@ Kafka integration is runtime-specific transport code, not a generic worker
 layer. Core's inbound consumers are grouped by the runtime they receive from:
 
 ```text
-internal/services/core/transports/
+internal/core/transports/
   durablejob/consumers/
   durablejob/eventbuilders/
   durablejob/producers/
@@ -170,7 +177,7 @@ internal/services/core/transports/
 DurableJob's Core-facing consumers and producers live beside one another:
 
 ```text
-internal/services/durablejob/transports/core/
+internal/durablejob/transports/core/
   consumers/
   producers/
   strategies/
@@ -217,6 +224,12 @@ producer/consumer contract. The maintenance-result producer publishes a
 forwarded result directly because it is not coupled to a Core mutation
 transaction.
 
+The DurableJob completion consumer follows the same rule: Core records the
+incoming result in `InboxEvent`, applies the prepared mutation, finalizes the
+task lifecycle, and enqueues one Core-owned `RoutineTaskCompleted` lifecycle
+event per task in the same transaction. The event contains only task identity,
+worker, attempt, and completion metadata.
+
 Kafka and the Core outbox are at-least-once. The consumer platform cannot
 atomically mark an arbitrary runtime side effect as complete, so it must not
 pretend to own a global deduplication table. Each concrete handler owns its
@@ -255,3 +268,18 @@ Consumer telemetry uses `kafka.consume.*`, `kafka.consumer.lag`,
 `kafka.retry.count`, and `kafka.dlq.count`, alongside structured failure logs.
 `traceParent`/`traceState` in the event envelope are extracted before the
 handler runs, so handler spans continue the producer trace.
+
+### Core/Email direction map
+
+Core authentication workflows enqueue one of the operation-specific
+`SendWelcomeEmailRequestDto`, `SendValidationEmailRequestDto`, or
+`SendSecurityAlertEmailRequestDto` DTOs in Core's transactional outbox.
+`OutboxRelay` publishes the envelope to
+`notezy.core.email.request.v1`; Email consumes it with the
+`notezy-email-core-v1` group and hands the operation to its local email worker
+manager. Email owns SMTP, templates, retries, and delivery-side failures. The
+Core process no longer calls Email's business HTTP endpoints; Email's HTTP
+transport now exposes health/readiness only.
+The event contains the selected operation and its operation-specific DTO, not
+access tokens, cookies, or database records. Invalid events are sent to the
+consumer's DLQ and transient worker failures use bounded consumer retries.

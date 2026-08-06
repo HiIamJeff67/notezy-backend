@@ -22,4 +22,5 @@ type RoutineTaskAssignment struct {
 	Attempt             int32                    `json:"attempt"`
 	ScheduledAt         time.Time                `json:"scheduledAt"`
 	StartedAt           time.Time                `json:"startedAt"`
+	PatternValues       map[string]string        `json:"patternValues,omitempty"`
 }

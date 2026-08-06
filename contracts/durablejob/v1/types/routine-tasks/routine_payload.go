@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+	enums "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
 type CreateRoutineRoutineTaskPayload struct {

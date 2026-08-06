@@ -6,14 +6,16 @@ import (
 	"testing"
 	"time"
 
+	test "github.com/HiIamJeff67/notezy-backend/test"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
+	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
+
+	platformdatabase "github.com/HiIamJeff67/notezy-backend/shared/platform/database"
+
 	testroutes "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/routes/testroutes"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	platformdatabase "github.com/HiIamJeff67/notezy-backend/internal/platform/database"
-	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
-	test "github.com/HiIamJeff67/notezy-backend/test"
 )
 
 const (

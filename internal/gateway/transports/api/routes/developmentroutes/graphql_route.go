@@ -5,12 +5,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
+
 	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+
 	graphql "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/graphql"
 	interceptors "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
 )
 
 func configureDevelopmentGraphQLRoutes(

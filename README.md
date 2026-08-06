@@ -74,19 +74,19 @@
 #### Layer Breakdown
 
 - **Models Layer**
-  - `internal/services/core/data/database/schemas`: table schemas.
-  - `internal/services/core/data/database/schemas/enums`: enum definitions and migration mappings.
-  - `internal/services/core/data/database/schemas/triggers`: SQL triggers (cascading, projection, accounting, maintenance).
-  - `internal/services/core/data/database/schemas/constraints`: SQL constraints/indexes.
-  - `internal/services/core/data/database/seeds`: seed SQL sets for billing and plan limitations.
-  - `internal/services/core/data/database/inputs`: create/update input contracts.
+  - `internal/core/data/database/schemas`: table schemas.
+  - `internal/core/data/database/schemas/enums`: enum definitions and migration mappings.
+  - `internal/core/data/database/schemas/triggers`: SQL triggers (cascading, projection, accounting, maintenance).
+  - `internal/core/data/database/schemas/constraints`: SQL constraints/indexes.
+  - `internal/core/data/database/seeds`: seed SQL sets for billing and plan limitations.
+  - `internal/core/data/database/inputs`: create/update input contracts.
 - **Repository Layer**
-  - `internal/services/core/data/database/repositories`: persistence APIs.
-  - `internal/services/core/data/database/scopes`: permission, preload, soft-delete filtering logic.
-  - `internal/services/core/data/database/sqls`: raw SQL units for targeted operations.
-  - `internal/services/core/data/database/options/repository_option.go`: DB/session/transaction behavior control.
+  - `internal/core/data/database/repositories`: persistence APIs.
+  - `internal/core/data/database/scopes`: permission, preload, soft-delete filtering logic.
+  - `internal/core/data/database/sqls`: raw SQL units for targeted operations.
+  - `internal/core/data/database/options/repository_option.go`: DB/session/transaction behavior control.
 - **Service Layer**
-  - `internal/services/core/services`: business orchestration and workflow composition.
+  - `internal/core/services`: business orchestration and workflow composition.
   - Integrates DTOs, cache operations, token ops, and async email dispatch.
 - **Controller Layer**
   - `internal/controllers`: HTTP response boundaries (`success/data/exception`).
@@ -98,7 +98,7 @@
 - **Commands and CLI**
   - `cmd/api/commands`: migration, seed, enum/db inspect, truncation commands.
 - **Exception System**
-  - `internal/exceptions`: centralized error taxonomy + safe response + metric integration.
+  - `shared/exceptions`: centralized error taxonomy + safe response + metric integration.
 
 ### Build and Run
 
@@ -146,7 +146,7 @@
   - Collector: `infra/monitor/otel-collector-config.dev.yaml`.
   - Loki/Tempo/Mimir configs: `infra/monitor/*.yaml`.
   - Grafana datasource provisioning: `infra/monitor/grafana/datasources.dev.yaml`.
-  - App-side tracing/metrics initialized in `internal/services/core/application.go` and route middleware.
+  - App-side tracing/metrics initialized in `internal/core/application.go` and route middleware.
 - **Scope Exclusion (PayPal)**
   - `infra/paypal/*` and related docs are intentionally excluded from this main infra analysis section.
 
@@ -172,7 +172,7 @@
   - Interceptor strategy supports token refresh embedding and response augmentation.
 - Redis cache ownership follows runtime boundaries:
   - Core owns user-data and quota cache stores; Gateway owns rate-limit records.
-  - `internal/platform/redis` only owns Redis client lifecycle and cache-store registration.
+  - `shared/platform/redis` only owns Redis client lifecycle and cache-store registration.
 - Current testing profile:
   - e2e tests are focused on auth flows.
   - unit tests target utility-level behavior and helpers.

@@ -6,9 +6,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
+	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
 )
 
 func MaxContextSizeMiddleware(limitBytes int64, unit types.ByteType) gin.HandlerFunc {

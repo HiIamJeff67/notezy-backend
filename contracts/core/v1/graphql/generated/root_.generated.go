@@ -10,9 +10,10 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
+
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 )
 
 // NewExecutableSchema creates an ExecutableSchema from the ResolverRoot interface.
@@ -3696,7 +3697,7 @@ type PrivateSearchableStation {
   updatedAt: Time!
 }
 `, BuiltIn: false},
-	{Name: "../schemas/user.graphql", Input: `# the complete user structure: internal/services/core/data/database/schemas/user_schema.go
+	{Name: "../schemas/user.graphql", Input: `# the complete user structure: internal/core/data/database/schemas/user_schema.go
 # this schema file is only use for go graphql to improve better user experience
 
 type PublicUser {

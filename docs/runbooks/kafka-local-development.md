@@ -52,7 +52,7 @@ an absent topic is always a provisioning failure.
 
 ## Runtime configuration
 
-`internal/platform/kafka/config.go` reads the infrastructure connection values.
+`shared/platform/kafka/config.go` reads the infrastructure connection values.
 Each runtime keeps its own consumer policy in its local config package. Core,
 DurableJob, and RealtimeGateway establish Kafka clients at startup when they
 own a producer or consumer.
@@ -89,7 +89,7 @@ RealtimeGateway consumes them before fan-out to its own Redis Pub/Sub channel.
 
 ## Telemetry names
 
-`internal/platform/kafka` owns the common OpenTelemetry metric names. The
+`shared/platform/kafka` owns the common OpenTelemetry metric names. The
 outbox relay and consumers must record these instead of inventing runtime-local
 variants:
 

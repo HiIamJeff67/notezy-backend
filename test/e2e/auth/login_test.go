@@ -9,10 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gin-gonic/gin"
-
 	test "github.com/HiIamJeff67/notezy-backend/test"
 	testutil "github.com/HiIamJeff67/notezy-backend/test/util"
+	"github.com/gin-gonic/gin"
 )
 
 /* ============================== Test Case Types ============================== */

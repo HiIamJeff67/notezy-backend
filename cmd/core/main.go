@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	core "github.com/HiIamJeff67/notezy-backend/internal/services/core"
+	core "github.com/HiIamJeff67/notezy-backend/internal/core"
 )
 
 func main() {

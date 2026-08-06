@@ -7,8 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
+	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+
 	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtime-gateway/v1"
-	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
+
 	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
 )
 

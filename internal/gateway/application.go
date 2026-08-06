@@ -10,18 +10,20 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	gatewayconfig "github.com/HiIamJeff67/notezy-backend/internal/gateway/config"
+	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
+	platform "github.com/HiIamJeff67/notezy-backend/shared/platform"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+
+	observability "github.com/HiIamJeff67/notezy-backend/shared/platform/observability"
+	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
+
+	gatewayconfig "github.com/HiIamJeff67/notezy-backend/internal/gateway/configs"
 	ratelimitrecord "github.com/HiIamJeff67/notezy-backend/internal/gateway/data/cache/ratelimitrecord"
 	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/gateway/ratelimit"
 	ratelimitmiddlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	developmentroutes "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/routes/developmentroutes"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
 	realtimegatewayadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/realtimegateway/adapters"
-	platform "github.com/HiIamJeff67/notezy-backend/internal/platform"
-	observability "github.com/HiIamJeff67/notezy-backend/internal/platform/observability"
-	platformredis "github.com/HiIamJeff67/notezy-backend/internal/platform/redis"
-	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 )
 
 func Start() func() {
@@ -39,13 +41,23 @@ func Start() func() {
 	)
 	redisClientManager := platformredis.NewClientManager(redisConfig)
 
-	if err := ratelimitrecord.Register(context.Background(), redisClientManager); err != nil {
+	rateLimitRecordCacheClient := ratelimitrecord.NewRateLimitRecordCacheClient(ratelimitrecord.Config{
+		ServerRange: types.Range[int, int]{
+			Start: config.Redis.RateLimitRecordServerStart,
+			Size:  config.Redis.RateLimitRecordServerSize,
+		},
+	})
+	if err := ratelimitrecord.Register(context.Background(), redisClientManager, rateLimitRecordCacheClient); err != nil {
 		_ = redisClientManager.DisconnectAll()
 		shutdownObservability()
 		panic(err)
 	}
-	ratelimitmiddlewares.InitUnauthorizedRateLimiter(ratelimit.DefaultUnauthorizedConfig())
-	ratelimitmiddlewares.InitAuthorizedRateLimiter(ratelimit.DefaultAuthorizedConfig())
+	unauthorizedRateLimitConfig := ratelimit.DefaultUnauthorizedConfig()
+	unauthorizedRateLimitConfig.CacheServerRange = rateLimitRecordCacheClient.Range
+	authorizedRateLimitConfig := ratelimit.DefaultAuthorizedConfig()
+	authorizedRateLimitConfig.CacheServerRange = rateLimitRecordCacheClient.Range
+	ratelimitmiddlewares.InitUnauthorizedRateLimiter(unauthorizedRateLimitConfig)
+	ratelimitmiddlewares.InitAuthorizedRateLimiter(authorizedRateLimitConfig)
 	developmentroutes.DevelopmentRouter = gin.Default()
 	if err := developmentroutes.DevelopmentRouter.SetTrustedProxies(config.TrustedProxies); err != nil {
 		ratelimitmiddlewares.StopUnauthorizedRateLimiter()

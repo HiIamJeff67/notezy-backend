@@ -1,10 +1,10 @@
 package blocksdto
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
-	"gorm.io/datatypes"
 
 	coreapicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api"
 )
@@ -23,16 +23,16 @@ type GetMyBlockByIdRequestDto struct {
 }
 
 type BlockResponseDto struct {
-	Id            uuid.UUID      `json:"id"`
-	BlockPackId   uuid.UUID      `json:"blockPackId"`
-	ParentBlockId *uuid.UUID     `json:"parentBlockId"`
-	PrevBlockId   *uuid.UUID     `json:"prevBlockId"`
-	NextBlockId   *uuid.UUID     `json:"nextBlockId"`
-	Type          string         `json:"type"`
-	Props         datatypes.JSON `json:"props"`
-	Content       datatypes.JSON `json:"content"`
-	UpdatedAt     time.Time      `json:"updatedAt"`
-	CreatedAt     time.Time      `json:"createdAt"`
+	Id            uuid.UUID       `json:"id"`
+	BlockPackId   uuid.UUID       `json:"blockPackId"`
+	ParentBlockId *uuid.UUID      `json:"parentBlockId"`
+	PrevBlockId   *uuid.UUID      `json:"prevBlockId"`
+	NextBlockId   *uuid.UUID      `json:"nextBlockId"`
+	Type          string          `json:"type"`
+	Props         json.RawMessage `json:"props"`
+	Content       json.RawMessage `json:"content"`
+	UpdatedAt     time.Time       `json:"updatedAt"`
+	CreatedAt     time.Time       `json:"createdAt"`
 }
 
 type GetMyBlockByIdResponseDto = BlockResponseDto

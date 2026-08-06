@@ -4,10 +4,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
+	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+
 	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
-	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
+
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 type BlockBinderInterface interface {

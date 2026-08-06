@@ -9,10 +9,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
-	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
+	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+
+	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+
 	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/ratelimit"
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
 )
 
 var unauthorizedRateLimiter *ratelimit.HybridRateLimiter

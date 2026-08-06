@@ -7,10 +7,12 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-gonic/gin"
 
+	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
+
 	generated "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/generated"
+
 	resolvers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/graphql/resolvers"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
 )
 
 func GraphQLHandler(coreClient *coreadapters.CoreClient) gin.HandlerFunc {

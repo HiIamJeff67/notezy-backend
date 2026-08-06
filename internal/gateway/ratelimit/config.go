@@ -5,7 +5,9 @@ import (
 
 	"golang.org/x/time/rate"
 
-	platformredis "github.com/HiIamJeff67/notezy-backend/internal/platform/redis"
+	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+
+	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
 )
 
 type Config struct {
@@ -14,6 +16,7 @@ type Config struct {
 	UserLimit         int32
 	WindowDuration    time.Duration
 	BackendServerName platformredis.BackendServerName
+	CacheServerRange  types.Range[int, int]
 
 	RequestFrequencyExtraCapacity        int
 	MinIntervalTimeOfLastRequest         time.Duration
@@ -27,6 +30,7 @@ var defaultAuthorizedConfig = Config{
 	UserLimit:                            3000,
 	WindowDuration:                       time.Minute,
 	BackendServerName:                    platformredis.BackendServerName_EastAsia,
+	CacheServerRange:                     types.Range[int, int]{Start: 4, Size: 4},
 	RequestFrequencyExtraCapacity:        2,
 	MinIntervalTimeOfLastRequest:         time.Microsecond,
 	SynchronizationToWindowDurationRatio: 10,
@@ -39,6 +43,7 @@ var defaultUnauthorizedConfig = Config{
 	UserLimit:                            1000,
 	WindowDuration:                       time.Minute,
 	BackendServerName:                    platformredis.BackendServerName_EastAsia,
+	CacheServerRange:                     types.Range[int, int]{Start: 4, Size: 4},
 	RequestFrequencyExtraCapacity:        2,
 	MinIntervalTimeOfLastRequest:         time.Microsecond,
 	SynchronizationToWindowDurationRatio: 10,

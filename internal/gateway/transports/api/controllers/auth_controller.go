@@ -5,10 +5,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	authdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/auth"
-	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
 	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/exceptionwriter"
+
+	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
+
+	authdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/auth"
+
+	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
 )
 
 type AuthControllerInterface interface {

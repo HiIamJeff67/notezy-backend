@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
+	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
 )
 
 var rootCommand = &cobra.Command{

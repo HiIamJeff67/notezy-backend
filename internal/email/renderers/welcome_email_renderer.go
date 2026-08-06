@@ -1,0 +1,13 @@
+package renderers
+
+import (
+	emailconfig "github.com/HiIamJeff67/notezy-backend/internal/email/configs"
+)
+
+type HTMLEmailRenderer struct {
+	Renderer
+}
+
+func NewHTMLEmailRenderer(config emailconfig.RendererConfig) RendererInterface {
+	return &HTMLEmailRenderer{Renderer: newRenderer(config, "html", "RenderHTML")}
+}

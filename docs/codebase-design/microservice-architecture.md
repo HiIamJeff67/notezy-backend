@@ -30,7 +30,6 @@ contracts/
   realtime-gateway/v1/     # RealtimeGateway-owned internal boundary
   yjsworker/v1/            # YjsWorker-owned internal boundary
 internal/
-  exceptions/
   gateway/
     transports/
       api/
@@ -50,26 +49,34 @@ internal/
       gateway/               # private API Gateway presence transport
       yjsworker/             # WebSocket client, connection/channel state, middleware
     workers/                 # YjsWorker connection manager
-  platform/
-    kafka/                     # Kafka client, readiness, and common telemetry
-    redis/                     # Redis client lifecycle + RedisCacheStore registry
-  services/
-    core/
-      data/
-        database/             # schemas, repositories, scopes, SQL, seeds, options
-        cache/                # Core-owned Redis caches and Lua libraries
-        storage/              # Core-owned storage implementations
-      workers/                # Core-owned long-lived reconciliation and background loops
-    durablejob/             # independent runtime; currently shares PostgreSQL
-      transports/core/       # Core-facing Kafka consumers, event builders, and producers
-        strategies/           # DurableJob maintenance scheduling policy
-    email/                  # independent runtime and SMTP sender
+  core/
+    data/
+      database/             # schemas, repositories, scopes, SQL, seeds, options
+      cache/                # Core-owned Redis caches and Lua libraries
+      storage/              # Core-owned storage implementations
+    services/
+      routines/
+        handlers/            # RoutineTask aggregate execution handlers
+        resolvers/           # RoutineTask and block-pattern resolution
+        parsers/             # RoutineTask payload decoding and flattening
+        matchers/            # RoutineTask template matching
+    workers/                # Core-owned long-lived reconciliation and background loops
+  durablejob/               # independent runtime; no direct database access
+    transports/core/        # Core-facing Kafka consumers and producers
+      strategies/           # DurableJob maintenance scheduling policy
+  email/                    # independent runtime and SMTP sender
+  yjsworker/                # standalone TypeScript runtime; no src/ layer
 shared/
+  exceptions/                # base exception envelope and rendering helpers
+  platform/                  # database, Redis, Kafka, and observability lifecycle
   cookies/                    # reusable Gin access/refresh cookie handlers
-  editableblock/              # tree-to-row EditableBlock conversion
-  constants/ contexts/ responsewriter/ tokens/ types/ validations/
+  tokens/                    # access, refresh, delegation, and realtime tokens
+  util/
+    editableblock/            # tree-to-row EditableBlock conversion
+    exceptionwriter/          # public exception formatting
+    responsewriter/           # shared HTTP response buffering
+  constants/ types/ validations/
   lib/                       # portable libraries, including BlockNote schemas
-yjs-worker/                 # standalone TypeScript runtime; no src/ layer
 docs/
 infra/
 tests/
@@ -77,19 +84,41 @@ tests/
 
 Directories are created only when they receive an owned implementation. The first migration baseline moves the existing Go application under `internal/`, creates `cmd/api/` for the API executable and its Cobra commands, and moves GraphQL SDL/documents to `contracts/core/v1/graphql/`. Later issues establish the remaining owners; no empty directory tree is committed merely to mirror this diagram.
 
+## Runtime module boundaries
+
+The repository currently keeps Core, contracts, shared packages, and the command
+composition roots in the root Go module. Gateway, DurableJob, Email, and
+RealtimeGateway each also have an owned Go module at their runtime root:
+
+```text
+internal/gateway/go.mod
+internal/durablejob/go.mod
+internal/email/go.mod
+internal/realtimegateway/go.mod
+```
+
+Each runtime module has its own `go.sum` and can be tested or built from its
+directory without inheriting another runtime's module metadata. During this
+migration, these modules use a local `replace` to the root module for shared
+contracts and infrastructure. That replace is a migration bridge, not permission
+to import another runtime's source. DurableJob's execution protocol is carried
+by versioned contracts; Core remains the sole owner of database-backed task
+execution and state transitions.
+YjsWorker remains a separate Node/TypeScript environment.
+
 ## Dependency direction
 
 ```text
 cmd/* -> internal/*
-gateway -> contracts + shared + platform
+gateway -> contracts + shared
 gateway -X-> service data/repository
-services/* -> contracts + shared + platform + own data
-services/* -X-> other service source
+internal/<runtime>/* -> contracts + shared + own data
+internal/<runtime>/* -X-> another runtime's source
 shared/lib -X-> all Notezy packages
-platform -X-> domain business packages
+shared/platform -X-> domain business packages
 ```
 
-`shared/lib` is portable: it may use the standard library and a necessary third-party library, but never imports a Notezy package. `shared` utility packages such as `responsewriter` may depend on application-facing packages when they provide a deliberately shared runtime utility. Shared parsers return ordinary Go `error`; application boundaries map those errors to service exceptions.
+`shared/lib` is portable: it may use the standard library and a necessary third-party library, but never imports a Notezy package. `shared/util` contains reusable application-facing utilities such as `editableblock`, `exceptionwriter`, and `responsewriter`; unlike `shared/lib`, these utilities may depend on shared application packages. Shared parsers return ordinary Go `error`; application boundaries map those errors to service exceptions.
 
 ## Shared contract types
 
@@ -102,15 +131,17 @@ conversion); neither runtime redefines a value set.
 `ArborizedEditableBlock` is the recursive, validated transport tree, while
 `RawFlattenedEditableBlock` is the persistence/projection row with parent and
 sibling identifiers plus raw JSON props/content.
-`shared/editableblock.FlattenEditableBlock` and
-`shared/editableblock.FlattenEditableBlocks` convert the former to the latter. There are
+`shared/util/editableblock.FlattenEditableBlock` and
+`shared/util/editableblock.FlattenEditableBlocks` convert the former to the latter. There are
 no generic `ArborizedBlock`, `RawArborizedEditableBlock`, or duplicate
 `FlattenedEditableBlock` types.
 
-Cross-runtime RoutineTask payloads live directly under `contracts/types/` by
-domain. Core parses them into a task request; DurableJob handlers consume the
-same contract without importing Core source. BlockNote schemas remain portable
-in `shared/lib/blocknote`.
+DurableJob-owned RoutineTask execution payloads live under
+`contracts/durablejob/v1/types/routine-tasks/`. Core validates and persists the
+protocol boundary while DurableJob handlers consume it without importing Core
+source. Only genuinely portable structures, such as EditableBlock shapes,
+remain under `contracts/types/`. BlockNote schemas remain portable in
+`shared/lib/blocknote`.
 
 ## Public and internal transport
 
@@ -130,11 +161,11 @@ versioned response. Core adapters exist only for Core outbound calls to another
 runtime.
 
 Core's inbound Gateway transport is organized as
-`internal/services/core/transports/gateway/endpoints/` and
-`internal/services/core/transports/gateway/routers/`. Endpoints own the
+`internal/core/transports/gateway/endpoints/` and
+`internal/core/transports/gateway/routers/`. Endpoints own the
 delegated request/service/response flow; routers only bind HTTP paths and
 methods. Delegation and Core-owned authorization middleware belongs in
-`internal/services/core/transports/gateway/middlewares/`. Tests live beside
+`internal/core/transports/gateway/middlewares/`. Tests live beside
 their endpoint, router, or middleware target.
 
 `cmd/api`, `cmd/core`, and `cmd/realtimegateway` are independent composition
@@ -149,10 +180,14 @@ global singleton application instance is retained. It never constructs Core
 repositories or services.
 
 NOT-57 adds `cmd/durablejob` and `cmd/email` as independent composition roots.
-DurableJob claims and executes task records from its service-owned data package;
-when it needs Core-owned projection business logic, it uses the versioned
-DurableJob-to-Core internal HTTP endpoint and delegation credential. Email owns
-its SMTP sender and queue and exposes only its Core-facing transport. Both
+DurableJob is an independent process. Its RoutineTask handlers only validate,
+decode, and prepare versioned assignments; Core owns all database-backed task
+execution and state transitions. DurableJob therefore has no import path to
+Core's schemas, repositories, scopes, or services. It publishes prepared
+completion/failure results through the DurableJob contracts, and Core applies
+them through one transaction-owned application/data boundary. Email owns its SMTP sender and queue and consumes
+Core's versioned Kafka email request contract; its HTTP transport exposes only
+health/readiness endpoints. Both
 commands initialize observability and stop their workers/HTTP servers on
 context cancellation or SIGTERM.
 
@@ -195,7 +230,7 @@ runtime-owned cache registration, and domain-specific cache operations.
 
 ```mermaid
 flowchart TB
-  subgraph Platform["internal/platform/redis"]
+  subgraph Platform["shared/platform/redis"]
     Manager["runtime-owned ClientManager<br/>map[int]*redis.Client"]
     Registry["RedisCacheStores<br/>map[int]RedisCacheStore"]
   end
@@ -238,7 +273,7 @@ flowchart TB
 
 ### Platform lifecycle
 
-`internal/platform/redis` owns no cache domain or business policy. Its
+`shared/platform/redis` owns no cache domain or business policy. Its
 `ClientManager` is the sole owner of Redis connection creation, lookup, and
 shutdown for the current process. It maintains `map[int]*redis.Client`, keyed
 by Redis database number.
@@ -276,7 +311,7 @@ types own key formatting, routing, and cache operations; they retrieve a store
 from the platform registry rather than keeping a Redis client map themselves.
 
 Core quota functions are one-function-per-file under
-`internal/services/core/data/cache/userdata/libraries/`. The UserData store
+`internal/core/data/cache/userdata/libraries/`. The UserData store
 embeds and joins them into one `user_quota_library`, then performs a single
 `FUNCTION LOAD REPLACE` during `Initialize()`.
 
@@ -324,23 +359,26 @@ collection after a RootShelf membership filter. Core's lifecycle path is outbox
 → Kafka → RealtimeGateway; it never reads or writes RealtimeGateway-owned
 lease/cache state.
 
-`internal/services/core/data/storage/` owns Core's storage implementation;
+`internal/core/data/storage/` owns Core's storage implementation;
 Gateway does not access it directly.
 
 ## Lifecycle event contracts
 
 The runtime-neutral envelope is defined in
-[`contracts/events`](../../contracts/events/). It contains no topic, consumer
-group, or business payload, so `internal/platform/kafka` can consume any
+[`contracts/types/event.go`](../../contracts/types/event.go). It contains no topic, consumer
+group, or business payload, so `shared/platform/kafka` can consume any
 runtime's event without importing that runtime's contracts. Runtime-owned event
 families are kept at their boundaries:
 
 - [`contracts/core/v1/events`](../../contracts/core/v1/events/) contains Core
   lifecycle facts and policy decisions consumed by RealtimeGateway.
 - [`contracts/durablejob/v1/events`](../../contracts/durablejob/v1/events/)
-  contains RoutineTask and Yjs maintenance coordination owned by DurableJob.
+  contains RoutineTask and DurableJob-to-Core Yjs maintenance coordination.
+- [`contracts/core/v1/events`](../../contracts/core/v1/events/)
+  contains Core-owned lifecycle facts and Yjs maintenance hints.
 - [`contracts/yjsworker/v1/events`](../../contracts/yjsworker/v1/events/)
-  contains YjsWorker command/reply transport metadata.
+  contains YjsWorker command/reply transport metadata and maintenance
+  operations.
 
 Core owns the facts and policy values in its lifecycle messages.
 RealtimeGateway consumes them to execute detach or future admission behavior,
@@ -350,9 +388,9 @@ and NOT-33 can evolve those owners without changing the semantic boundary.
 
 ## Exceptions and lifecycle
 
-`internal/exceptions` contains only the base exception envelope and origin
+`shared/exceptions` contains only the base exception envelope and origin
 classification. Core domain factories stay in
-`internal/services/core/exceptions/`; Gateway-only failures use the base envelope
+`internal/core/exceptions/`; Gateway-only failures use the base envelope
 at their use site. They return the base envelope but are never imported across a
 Gateway/service boundary. Gateway transport owns client-safe HTTP exception
 rendering. Portable shared libraries and parsers never import or return an

@@ -5,13 +5,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
+
 	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
+
 	binders "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/binders"
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
 	interceptors "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
 )
 
 func configureDevelopmentRootShelfRoutes(

@@ -6,8 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
-	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
 )
 
 func configureStaticRoutes(router *gin.RouterGroup) {

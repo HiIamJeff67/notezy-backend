@@ -3,7 +3,7 @@ package realtimegatewaycontract
 import (
 	"time"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/internal/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
 )
 
 type RequestEnvelope interface {

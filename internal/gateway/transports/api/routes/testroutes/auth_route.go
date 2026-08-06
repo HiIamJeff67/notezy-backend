@@ -3,11 +3,12 @@ package testroutes
 import (
 	"github.com/gin-gonic/gin"
 
+	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
+
 	binders "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/binders"
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
 )
 
 // the route structure is different here, since we use these routes to do the e2e test

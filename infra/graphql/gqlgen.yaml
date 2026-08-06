@@ -114,7 +114,7 @@ call_argument_directives_with_null: true
 # gqlgen will search for any type names in the schema in these go packages
 # if they match it will use them, otherwise it will generate them.
 autobind:
-  - "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas"
+  - "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
 
 # This section declares type mapping between the GraphQL and go type systems
 #
@@ -399,23 +399,23 @@ models:
   # ============================== Corresponded Schemas Which Have Prebuilt in Gorm ============================== #
 
   User:
-    model: "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas.User"
+    model: "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas.User"
   UserInfo:
-    model: "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas.UserInfo"
+    model: "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas.UserInfo"
   UserAccount:
-    model: "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas.UserAccount"
+    model: "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas.UserAccount"
   UserSetting:
-    model: "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas.UserSetting"
+    model: "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas.UserSetting"
   Theme:
-    model: "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas.Theme"
+    model: "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas.Theme"
   Badge:
-    model: "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas.Badge"
+    model: "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas.Badge"
   UsersToBadges:
-    model: "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas.UsersToBadges"
+    model: "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas.UsersToBadges"
   Shelf:
-    model: "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas.Shelf"
+    model: "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas.Shelf"
   Material:
-    model: "github.com/HiIamJeff67/notezy-backend/internal/services/core/data/database/schemas.Material"
+    model: "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas.Material"
 
   # The GraphQL spec explicitly states that the Int type is a signed 32-bit
   # integer. Using Go int or int64 to represent it can lead to unexpected

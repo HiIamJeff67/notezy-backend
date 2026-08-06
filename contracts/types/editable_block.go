@@ -6,10 +6,10 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
-	"gorm.io/datatypes"
 
-	"github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 	blocknote "github.com/HiIamJeff67/notezy-backend/shared/lib/blocknote"
+
+	enums "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
 type ArborizedEditableBlock struct {
@@ -85,6 +85,6 @@ type RawFlattenedEditableBlock struct {
 	PrevBlockId   *uuid.UUID      `json:"prevBlockId"`
 	NextBlockId   *uuid.UUID      `json:"nextBlockId"`
 	Type          enums.BlockType `json:"type"`
-	Props         datatypes.JSON  `json:"props"`
-	Content       datatypes.JSON  `json:"content"`
+	Props         json.RawMessage `json:"props"`
+	Content       json.RawMessage `json:"content"`
 }

@@ -9,10 +9,11 @@ import (
 	"github.com/google/uuid"
 	rate "golang.org/x/time/rate"
 
+	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
+	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
+
 	ratelimitrecord "github.com/HiIamJeff67/notezy-backend/internal/gateway/data/cache/ratelimitrecord"
 	cacheinputs "github.com/HiIamJeff67/notezy-backend/internal/gateway/data/cache/ratelimitrecord/inputs"
-	logs "github.com/HiIamJeff67/notezy-backend/internal/platform/observability/logs"
-	platformredis "github.com/HiIamJeff67/notezy-backend/internal/platform/redis"
 )
 
 type HybridRateLimitTask struct {
@@ -53,7 +54,9 @@ func NewHybridRateLimiter(config Config, isAuthorizedLimiter bool) *HybridRateLi
 		stopChan:            make(chan struct{}),
 		BackendServerName:   config.BackendServerName,
 		IsAuthorizedLimiter: isAuthorizedLimiter,
-		cacheClient:         ratelimitrecord.NewRateLimitRecordCacheClient(),
+		cacheClient: ratelimitrecord.NewRateLimitRecordCacheClient(ratelimitrecord.Config{
+			ServerRange: config.CacheServerRange,
+		}),
 	}
 
 	// initially calling syncLoop() to start syncing periodically
