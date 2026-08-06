@@ -1,18 +1,18 @@
 # ============================== Database Shortcut Commands ============================== #
 view-hotreload-dbs:
-	docker compose exec -T notezy-api go run ./cmd/api viewDatabases
+	docker compose exec -T notezy-gateway go run ./cmd/api viewDatabases
 
 view-hotreload-enums:
-	docker compose exec -T notezy-api go run ./cmd/api viewAllEnums
+	docker compose exec -T notezy-gateway go run ./cmd/api viewAllEnums
 
 psql:
 	docker exec -it notezy-db psql -U jeff -d notezy-db
 
 # ============================== Migration Commands ============================== #
 migrate-build-db:
-	docker compose exec -T notezy-api ./api migrateDB
+	docker compose exec -T notezy-gateway ./api migrateDB
 migrate-hotreload-db:
-	docker compose exec -T notezy-api go run ./cmd/api migrateDB
+	docker compose exec -T notezy-gateway go run ./cmd/api migrateDB
 
 clear-build-db:
 	docker exec -i notezy-db psql -U jeff -d notezy-db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
@@ -29,16 +29,16 @@ remigrate-hotreload-db:
 
 # ============================== Seeding Commands ============================== #
 seed-build-db:
-	docker compose exec -T notezy-api ./api seedDB
+	docker compose exec -T notezy-gateway ./api seedDB
 seed-hotreload-db:
-	docker compose exec -T notezy-api go run ./cmd/api seedDB
+	docker compose exec -T notezy-gateway go run ./cmd/api seedDB
 
 clear-go-cache:
 	go clean -modcache
 	go mod download
 
 test-auth-e2e:
-	docker compose exec -T notezy-api go test ./test/e2e/auth
+	docker compose exec -T notezy-gateway go test ./test/e2e/auth
 
 test-architecture:
 	go test ./test/architecture

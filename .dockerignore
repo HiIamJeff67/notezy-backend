@@ -3,3 +3,5 @@ docs/**
 temp/
 backup-codes-thenotezy.*
 LICENSES/**
+internal/yjsworker/node_modules/
+internal/yjsworker/dist/

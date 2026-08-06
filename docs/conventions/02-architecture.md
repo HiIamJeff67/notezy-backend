@@ -7,6 +7,14 @@ when the corresponding migration issue owns its implementation.
 
 ## Public HTTP and internal transport
 
+Runtime status transports expose two probe endpoints with distinct meanings:
+`/startedz` maps to the application `IsHealthy()` startup flag and only confirms
+that the runtime has started its HTTP server; `/healthz` maps to `IsReady()` and
+confirms that the runtime can accept its normal external operations. A status
+router must only inspect its own runtime and must not probe another runtime.
+Docker Compose `service_healthy` checks `/healthz`; dependency ordering remains
+the responsibility of Compose or the deployment orchestrator.
+
 ```text
 public HTTP: route -> binder -> controller -> Gateway Core adapter -> Core Gateway endpoint -> Core service -> repository/scope
 GraphQL: Gateway executor -> resolver/dataloader -> Gateway Core adapter -> Core Gateway endpoint -> Core service
@@ -300,7 +308,10 @@ service's endpoint and router; never create a shared GraphQLEndpoint or a centra
 Core GraphQL router.
 
 DurableJob, Email, and YjsWorker own their own runtime, transport, and service-local
-data/types/config. Core and every other runtime may add a runtime-owned
+data/types/config. A Node/TypeScript runtime follows the same boundary rule as a
+Go runtime: `transports/` owns external protocols, `services/` owns application
+logic, `types/` owns runtime data shapes, and `configs/` owns runtime policy.
+Core and every other runtime may add a runtime-owned
 `workers/` package for long-lived background coordination. They must support
 `context.Context` cancellation and graceful shutdown. Kafka, outbox, and consumer
 reliability are separate Phase 3 concerns; Yjs update, awareness, and presence

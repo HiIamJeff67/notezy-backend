@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -23,12 +24,27 @@ import (
 	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
 	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/ratelimit"
 	gatewayrouters "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/gateway/routers"
+	status "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/status"
 	yjsworker "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/yjsworker"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/yjsworker/middlewares"
 	workers "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/workers"
 )
 
+type Application struct {
+	healthy atomic.Bool
+	ready   atomic.Bool
+}
+
+func (a *Application) IsHealthy() bool {
+	return a.healthy.Load()
+}
+
+func (a *Application) IsReady() bool {
+	return a.ready.Load()
+}
+
 func Start() func() {
+	application := &Application{}
 	config, err := realtimeconfig.LoadConfig()
 	if err != nil {
 		panic(err)
@@ -80,12 +96,8 @@ func Start() func() {
 		shutdownObservability()
 		panic(err)
 	}
-	router.GET("/healthz", func(ctx *gin.Context) {
-		ctx.Status(http.StatusOK)
-	})
-	router.GET("/readyz", func(ctx *gin.Context) {
-		ctx.Status(http.StatusOK)
-	})
+	status.ConfigureStartedRouter(router, application.IsHealthy)
+	status.ConfigureHealthRouter(router, application.IsReady)
 	gatewayrouters.ConfigureRoutes(
 		router,
 		realtimeLeaseCacheClient,
@@ -120,6 +132,8 @@ func Start() func() {
 		shutdownObservability()
 		panic(err)
 	}
+	application.healthy.Store(true)
+	application.ready.Store(true)
 	server := &http.Server{
 		Handler: router,
 	}
@@ -131,6 +145,8 @@ func Start() func() {
 	}()
 
 	return func() {
+		application.ready.Store(false)
+		application.healthy.Store(false)
 		shutdownLifecycleConsumer()
 		websocketClient.Shutdown()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

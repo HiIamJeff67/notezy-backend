@@ -24,7 +24,7 @@ import (
 
 	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
-	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjsworker/v1"
+	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1"
 
 	metrics "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/metrics"
 

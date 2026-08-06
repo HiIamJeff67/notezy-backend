@@ -78,11 +78,12 @@ must mount certificate files and inject credentials through its secret manager.
 ## Health and degraded behavior
 
 Core and RealtimeGateway start even if the initial Kafka ping fails. They log a
-degraded-mode warning; their `/healthz` remains process liveness, while
-`/readyz` returns `503` until a broker ping succeeds. Every readiness request
-performs the next ping, so readiness recovers without restarting the runtime.
+degraded-mode warning; their `/startedz` reports that the process has started,
+while `/healthz` returns `503` until the runtime can accept normal operations.
+The current startup status is evaluated once; restart the runtime after the
+required broker connection becomes available so `/healthz` can report healthy.
 
-Do not treat degraded readiness as permission to lose lifecycle events: Core
+Do not treat degraded health as permission to lose lifecycle events: Core
 persists them in PostgreSQL outbox rows before committing the associated domain
 mutation. The relay publishes those rows when Kafka recovers, and
 RealtimeGateway consumes them before fan-out to its own Redis Pub/Sub channel.
@@ -95,7 +96,7 @@ variants:
 
 | Metric | Use |
 | --- | --- |
-| `kafka.broker.ping.duration`, `kafka.broker.ping.count` | Startup/readiness broker reachability. |
+| `kafka.broker.ping.duration`, `kafka.broker.ping.count` | Startup/health broker reachability. |
 | `kafka.publish.duration`, `kafka.publish.count`, `kafka.publish.failure.count` | Producer and outbox relay results. |
 | `kafka.consume.duration`, `kafka.consume.count` | Successful consumer handling. |
 | `kafka.consumer.lag` | Per topic/group lag observation. |

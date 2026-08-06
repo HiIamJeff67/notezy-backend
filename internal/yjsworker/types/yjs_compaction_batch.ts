@@ -1,4 +1,4 @@
-import { convertBytesToUUIDString, convertUUIDToBytes } from "../util/uuid.js";
+import { convertBytesToUUIDString, convertUUIDStringToBytes } from "../util/uuid.js";
 import {
   createYjsCompactionResult,
   parseYjsCompactionInput,
@@ -40,7 +40,7 @@ export function createYjsCompactionBatchResult(
 ): Buffer {
   const resultPayload = createYjsCompactionResult(input, snapshot, stateVector);
   const payload = Buffer.alloc(20 + resultPayload.length);
-  convertUUIDToBytes(blockPackId).copy(payload, 0);
+  convertUUIDStringToBytes(blockPackId).copy(payload, 0);
   payload.writeUInt32BE(resultPayload.length, 16);
   resultPayload.copy(payload, 20);
 

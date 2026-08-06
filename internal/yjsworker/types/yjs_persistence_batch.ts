@@ -1,6 +1,6 @@
 import type WebSocket from "ws";
 
-import { convertBytesToUUIDString, convertUUIDToBytes } from "../util/uuid.js";
+import { convertBytesToUUIDString, convertUUIDStringToBytes } from "../util/uuid.js";
 
 // YjsPersistenceBatch is the internal Go/worker envelope for one merged raw Yjs update and its idempotency key
 export type YjsPersistenceBatch = {
@@ -28,9 +28,9 @@ export function createYjsPersistenceBatch(
   // [persistenceBatchId:16][originConnectionId:16, zero UUID when mixed][raw Yjs update:n]
   const batchPayload = Buffer.alloc(32 + payload.length);
 
-  convertUUIDToBytes(persistenceBatchId).copy(batchPayload, 0);
+  convertUUIDStringToBytes(persistenceBatchId).copy(batchPayload, 0);
   if (originConnectionId !== null) {
-    convertUUIDToBytes(originConnectionId).copy(batchPayload, 16);
+    convertUUIDStringToBytes(originConnectionId).copy(batchPayload, 16);
   }
   payload.copy(batchPayload, 32);
 

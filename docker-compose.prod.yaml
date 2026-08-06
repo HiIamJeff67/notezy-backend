@@ -24,9 +24,9 @@ services:
       timeout: 5s
       retries: 5
 
-  notezy-api:
-    container_name: ${DOCKER_API_SERVICE_NAME}
-    image: ${DOCKER_API_SERVICE_NAME}:latest
+  notezy-gateway:
+    container_name: ${DOCKER_GATEWAY_SERVICE_NAME:-notezy-gateway}
+    image: ${DOCKER_GATEWAY_SERVICE_NAME:-notezy-gateway}:latest
     # restart: always
     build:
       context: .
@@ -50,20 +50,28 @@ services:
       REALTIME_GATEWAY_BASE_URL: ${REALTIME_GATEWAY_BASE_URL:-http://notezy-realtime-gateway:7779}
       CORE_CLIENT_TIMEOUT: ${CORE_CLIENT_TIMEOUT:-10s}
       REALTIME_GATEWAY_CLIENT_TIMEOUT: ${REALTIME_GATEWAY_CLIENT_TIMEOUT:-3s}
-      OTEL_SERVICE_NAME: notezy-api
+      OTEL_SERVICE_NAME: notezy-gateway
       OTEL_SERVICE_VERSION: ${OTEL_SERVICE_VERSION:-unknown}
       OTEL_DEPLOYMENT_ENVIRONMENT: production
       OTEL_EXPORTER_OTLP_GRPC_ENDPOINT: ${OTEL_EXPORTER_OTLP_GRPC_ENDPOINT}
       ALLOWED_DOMAINS: ${ALLOWED_DOMAINS}
     ports:
       - "${GIN_PORT}:${DOCKER_GIN_PORT}"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:${DOCKER_GIN_PORT}/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
     depends_on:
       notezy-core:
-        condition: service_started
+        condition: service_healthy
+      notezy-realtime-gateway:
+        condition: service_healthy
 
   notezy-core:
     container_name: ${DOCKER_CORE_SERVICE_NAME:-notezy-core}
-    image: ${DOCKER_API_SERVICE_NAME}:latest
+    image: ${DOCKER_GATEWAY_SERVICE_NAME:-notezy-gateway}:latest
     command: ["./core"]
     environment:
       DB_HOST: ${DB_HOST}
@@ -112,6 +120,12 @@ services:
       OTEL_EXPORTER_OTLP_GRPC_ENDPOINT: ${OTEL_EXPORTER_OTLP_GRPC_ENDPOINT}
     expose:
       - "7778"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:7778/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
     depends_on:
       notezy-db:
         condition: service_healthy
@@ -120,7 +134,7 @@ services:
 
   notezy-realtime-gateway:
     container_name: ${DOCKER_REALTIME_GATEWAY_SERVICE_NAME:-notezy-realtime-gateway}
-    image: ${DOCKER_API_SERVICE_NAME}:latest
+    image: ${DOCKER_GATEWAY_SERVICE_NAME:-notezy-gateway}:latest
     command: ["./realtimegateway"]
     environment:
       REDIS_HOST: ${DOCKER_REDIS_SERVICE_NAME}
@@ -158,15 +172,21 @@ services:
       OTEL_EXPORTER_OTLP_GRPC_ENDPOINT: ${OTEL_EXPORTER_OTLP_GRPC_ENDPOINT}
     expose:
       - "7779"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:7779/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
     depends_on:
       notezy-core:
-        condition: service_started
+        condition: service_healthy
       notezy-yjs-worker:
         condition: service_healthy
 
-  notezy-durablejob:
-    container_name: ${DOCKER_DURABLEJOB_SERVICE_NAME:-notezy-durablejob}
-    image: ${DOCKER_API_SERVICE_NAME}:latest
+  notezy-durable-job:
+    container_name: ${DOCKER_DURABLE_JOB_SERVICE_NAME:-notezy-durable-job}
+    image: ${DOCKER_GATEWAY_SERVICE_NAME:-notezy-gateway}:latest
     command: ["./durablejob"]
     environment:
       DB_HOST: ${DB_HOST}
@@ -185,23 +205,29 @@ services:
       KAFKA_CONSUMER_INITIAL_RETRY_BACKOFF: ${KAFKA_CONSUMER_INITIAL_RETRY_BACKOFF:-250ms}
       KAFKA_CONSUMER_MAXIMUM_RETRY_BACKOFF: ${KAFKA_CONSUMER_MAXIMUM_RETRY_BACKOFF:-5s}
       KAFKA_CONSUMER_MAXIMUM_POLL_RECORDS: ${KAFKA_CONSUMER_MAXIMUM_POLL_RECORDS:-100}
-      OTEL_SERVICE_NAME: notezy-durablejob
+      OTEL_SERVICE_NAME: notezy-durable-job
       OTEL_SERVICE_VERSION: ${OTEL_SERVICE_VERSION:-unknown}
       OTEL_DEPLOYMENT_ENVIRONMENT: production
       OTEL_EXPORTER_OTLP_GRPC_ENDPOINT: ${OTEL_EXPORTER_OTLP_GRPC_ENDPOINT}
     expose:
       - "8082"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8082/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
     depends_on:
       notezy-db:
         condition: service_healthy
       notezy-core:
-        condition: service_started
+        condition: service_healthy
       notezy-yjs-worker:
-        condition: service_started
+        condition: service_healthy
 
   notezy-email:
     container_name: ${DOCKER_EMAIL_SERVICE_NAME:-notezy-email}
-    image: ${DOCKER_API_SERVICE_NAME}:latest
+    image: ${DOCKER_GATEWAY_SERVICE_NAME:-notezy-gateway}:latest
     command: ["./email"]
     environment:
       EMAIL_LISTEN_ADDRESS: 0.0.0.0:8081
@@ -227,15 +253,17 @@ services:
       OTEL_EXPORTER_OTLP_GRPC_ENDPOINT: ${OTEL_EXPORTER_OTLP_GRPC_ENDPOINT}
     expose:
       - "8081"
-    depends_on:
-      notezy-kafka:
-        condition: service_healthy
-
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8081/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
   notezy-yjs-worker:
     image: ${DOCKER_YJS_WORKER_SERVICE_NAME:-notezy-yjs-worker}:latest
     build:
-      context: ./internal/yjsworker
-      dockerfile: Dockerfile # this is based on the build/context of ./internal/yjsworker
+      context: .
+      dockerfile: internal/yjsworker/Dockerfile
     environment:
       NODE_ENV: production
       YJS_WORKER_HOST: 0.0.0.0
@@ -250,7 +278,7 @@ services:
     expose:
       - "${DOCKER_YJS_WORKER_PORT:-8787}"
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:' + process.env.YJS_WORKER_PORT + '/readyz').then(response => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:' + process.env.YJS_WORKER_PORT + '/healthz').then(response => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 10s
       timeout: 5s
       retries: 6
@@ -259,10 +287,10 @@ services:
     image: nginx:1.27-alpine
     container_name: ${DOCKER_NGINX_SERVICE_NAME}
     depends_on:
-      notezy-api:
-        condition: service_started
+      notezy-gateway:
+        condition: service_healthy
       notezy-realtime-gateway:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "${NGINX_HTTP_PORT}:${DOCKER_NGINX_HTTP_PORT}"
       - "${NGINX_HTTPS_PORT}:${DOCKER_NGINX_HTTPS_PORT}"

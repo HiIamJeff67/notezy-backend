@@ -21,7 +21,7 @@ import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
 } from "@opentelemetry/semantic-conventions";
-import { config } from "./config.js";
+import { config } from "./configs/config.js";
 
 type RoomState = {
   activeRooms: number;

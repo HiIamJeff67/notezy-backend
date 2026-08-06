@@ -7,6 +7,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"net"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -44,12 +45,26 @@ import (
 	emailtransport "github.com/HiIamJeff67/notezy-backend/internal/core/transports/email"
 	coremiddlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
 	gatewayrouters "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/routers"
+	status "github.com/HiIamJeff67/notezy-backend/internal/core/transports/status"
 	yjsworkertransport "github.com/HiIamJeff67/notezy-backend/internal/core/transports/yjsworker"
 	yjsworkerconsumers "github.com/HiIamJeff67/notezy-backend/internal/core/transports/yjsworker/consumers"
 	yjsworkerproducers "github.com/HiIamJeff67/notezy-backend/internal/core/transports/yjsworker/producers"
 	validation "github.com/HiIamJeff67/notezy-backend/internal/core/validations"
 	coreworkers "github.com/HiIamJeff67/notezy-backend/internal/core/workers"
 )
+
+type Application struct {
+	healthy atomic.Bool
+	ready   atomic.Bool
+}
+
+func (a *Application) IsHealthy() bool {
+	return a.healthy.Load()
+}
+
+func (a *Application) IsReady() bool {
+	return a.ready.Load()
+}
 
 func NewCoreTransportRouter(
 	config coreconfig.Config,
@@ -247,18 +262,6 @@ func NewCoreTransportRouter(
 		userDataCacheClient,
 	)
 	durablejobrouters.ConfigureBlockProjectionRoutes(router, blockService)
-	router.GET("/healthz", func(ctx *gin.Context) {
-		ctx.Status(http.StatusOK)
-	})
-	router.GET("/readyz", func(ctx *gin.Context) {
-		if err := kafkaProducer.Ping(ctx.Request.Context()); err != nil {
-			ctx.Status(http.StatusServiceUnavailable)
-			return
-		}
-
-		ctx.Status(http.StatusOK)
-	})
-
 	return router
 }
 
@@ -282,6 +285,7 @@ func newKafkaConsumerConfig(
 }
 
 func Start() func() {
+	application := &Application{}
 	config, err := coreconfig.LoadConfig()
 	if err != nil {
 		panic(err)
@@ -338,6 +342,7 @@ func Start() func() {
 		ConnectionConfig: kafkaConnectionConfig,
 		ClientId:         "notezy-core",
 	})
+	kafkaReady := err == nil
 	if err != nil {
 		logs.NotezyLogger.Warn(
 			context.Background(),
@@ -345,6 +350,7 @@ func Start() func() {
 			attribute.String("error.message", err.Error()),
 		)
 	} else if err := kafkaProducer.Ping(context.Background()); err != nil {
+		kafkaReady = false
 		logs.NotezyLogger.Warn(
 			context.Background(),
 			"Kafka is unavailable; Core is running in degraded mode",
@@ -460,8 +466,13 @@ func Start() func() {
 		shutdownObservability()
 		panic(err)
 	}
+	application.healthy.Store(true)
+	application.ready.Store(kafkaReady)
+	coreTransportRouter := NewCoreTransportRouter(config, kafkaProducer, userDataCacheClient)
+	status.ConfigureStartedRouter(coreTransportRouter, application.IsHealthy)
+	status.ConfigureHealthRouter(coreTransportRouter, application.IsReady)
 	coreTransportServer := &http.Server{
-		Handler: NewCoreTransportRouter(config, kafkaProducer, userDataCacheClient),
+		Handler: coreTransportRouter,
 	}
 
 	go func() {
@@ -471,6 +482,8 @@ func Start() func() {
 	}()
 
 	return func() {
+		application.ready.Store(false)
+		application.healthy.Store(false)
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if err := coreTransportServer.Shutdown(shutdownCtx); err != nil {

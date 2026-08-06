@@ -1,0 +1,17 @@
+// Versioned TypeScript contract corresponding to constants.go in this package.
+// The planned contract generator will own this file once it is introduced.
+
+export const YjsBlockPackRoomPrefix = "block-pack";
+export const YjsBlockPackFragmentName = "document-store";
+export const YjsBlockPackSchemaId = "notezy.blocknote";
+export const YjsBlockPackSchemaVersion = 1;
+export const YjsCompactionUpdateThreshold = 500;
+export const YjsMaintenanceMaximumPayloadBytes = 64 * 1024 * 1024;
+export const InternalFrameHeaderSize = 39;
+
+export const YjsWorkerCoreCommandTopic = "notezy.yjsworker.core.command.v1";
+export const CoreYjsWorkerReplyTopic = "notezy.core.yjsworker.reply.v1";
+export const CoreYjsWorkerMaintenanceCommandTopic =
+  "notezy.core.yjsworker.maintenance-command.v1";
+export const YjsWorkerCoreMaintenanceResultTopic =
+  "notezy.yjsworker.core.maintenance-result.v1";

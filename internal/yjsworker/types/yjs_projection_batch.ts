@@ -1,6 +1,6 @@
 import type { Block } from "@blocknote/core";
 
-import { convertBytesToUUIDString, convertUUIDToBytes } from "../util/uuid.js";
+import { convertBytesToUUIDString, convertUUIDStringToBytes } from "../util/uuid.js";
 import {
   parseYjsDocumentState,
   type YjsDocumentState,
@@ -46,7 +46,7 @@ export function createYjsProjectionBatchResult(
 ): Buffer {
   const resultPayload = Buffer.from(JSON.stringify(result));
   const payload = Buffer.alloc(20 + resultPayload.length);
-  convertUUIDToBytes(result.blockPackId).copy(payload, 0);
+  convertUUIDStringToBytes(result.blockPackId).copy(payload, 0);
   payload.writeUInt32BE(resultPayload.length, 16);
   resultPayload.copy(payload, 20);
 

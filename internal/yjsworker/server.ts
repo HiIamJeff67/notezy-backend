@@ -3,21 +3,20 @@ import { SeverityNumber } from "@opentelemetry/api-logs";
 import { Hono } from "hono";
 import { WebSocketServer } from "ws";
 
-import { config } from "./config.js";
-import { CoreCommandDispatcher } from "./kafka/core_command_dispatcher.js";
-import { YjsMaintenanceConsumer } from "./kafka/yjs_maintenance_consumer.js";
-import { BlockPackProjector } from "./realtime/block_pack_projector.js";
-import { RealtimeGateway } from "./realtime/gateway.js";
-import { RoomRegistry } from "./realtime/room_registry.js";
-import { configureHealthRoutes } from "./routes/health_route.js";
-import { configureRealtimeRoutes } from "./routes/realtime_route.js";
-import { configureYjsCompactionRoutes } from "./routes/yjs_compaction_route.js";
-import { configureYjsDocumentInitializationRoutes } from "./routes/yjs_document_initialization_route.js";
-import { configureYjsProjectionRoutes } from "./routes/yjs_projection_route.js";
+import { config } from "./configs/config.js";
+import { BlockPackProjector } from "./services/block_pack_projector.js";
 import { YjsCompactionService } from "./services/yjs_compaction_service.js";
 import { YjsDocumentInitializationService } from "./services/yjs_document_initialization_service.js";
 import { YjsProjectionService } from "./services/yjs_projection_service.js";
 import type { Telemetry } from "./telemetry.js";
+import { YjsMaintenanceConsumer } from "./transports/core/consumers/yjs_maintenance_consumer.js";
+import { CoreCommandDispatcher } from "./transports/core/dispatchers/core_command_dispatcher.js";
+import { configureCoreRouter } from "./transports/core/routers/core_router.js";
+import { RealtimeGateway } from "./transports/realtime/realtime_gateway.js";
+import { configureRealtimeRouter } from "./transports/realtime/realtime_router.js";
+import { RoomRegistry } from "./transports/realtime/room_registry.js";
+import { configureHealthRouter } from "./transports/status/health_router.js";
+import { configureStartedRouter } from "./transports/status/started_router.js";
 
 export class YjsWorkerServer {
   private readonly server: ReturnType<typeof serve>;
@@ -25,6 +24,8 @@ export class YjsWorkerServer {
   private readonly realtimeGateway: RealtimeGateway;
   private readonly coreCommandDispatcher: CoreCommandDispatcher;
   private readonly yjsMaintenanceConsumer: YjsMaintenanceConsumer;
+  private healthy = false;
+  private ready = false;
 
   constructor(telemetry: Telemetry) {
     const app = new Hono();
@@ -50,27 +51,34 @@ export class YjsWorkerServer {
       this.coreCommandDispatcher,
       telemetry
     );
-    void this.yjsMaintenanceConsumer.start().catch(error => {
-      telemetry.log(SeverityNumber.ERROR, "yjs_maintenance_consumer.start_failed", {
-        error: error instanceof Error ? error.message : String(error),
+    void this.yjsMaintenanceConsumer
+      .start()
+      .then(() => {
+        this.ready = true;
+      })
+      .catch(error => {
+        telemetry.log(
+          SeverityNumber.ERROR,
+          "yjs_maintenance_consumer.start_failed",
+          {
+            error: error instanceof Error ? error.message : String(error),
+          }
+        );
       });
-    });
 
-    configureHealthRoutes(
-      app,
-      this.realtimeGateway.getActiveRoomCount.bind(this.realtimeGateway)
-    );
-    configureRealtimeRoutes(
+    configureStartedRouter(app, () => this.isHealthy());
+    configureHealthRouter(app, () => this.isReady());
+    configureRealtimeRouter(
       app,
       this.realtimeGateway.handleConnection.bind(this.realtimeGateway)
     );
-    configureYjsCompactionRoutes(app, yjsCompactionService, telemetry);
-    configureYjsDocumentInitializationRoutes(
+    configureCoreRouter(
       app,
+      yjsCompactionService,
       yjsDocumentInitializationService,
+      yjsProjectionService,
       telemetry
     );
-    configureYjsProjectionRoutes(app, yjsProjectionService, telemetry);
 
     this.server = serve(
       {
@@ -80,6 +88,7 @@ export class YjsWorkerServer {
         websocket: { server: this.webSocketServer },
       },
       () => {
+        this.healthy = true;
         telemetry.log(SeverityNumber.INFO, "yjs_worker.started", {
           host: config.host,
           port: config.port,
@@ -88,7 +97,17 @@ export class YjsWorkerServer {
     );
   }
 
+  isHealthy(): boolean {
+    return this.healthy;
+  }
+
+  isReady(): boolean {
+    return this.ready;
+  }
+
   async shutdown(): Promise<void> {
+    this.ready = false;
+    this.healthy = false;
     const closeServer = new Promise<void>(resolve => {
       this.server.close(() => resolve());
     });

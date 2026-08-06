@@ -136,7 +136,7 @@
   - `infra/docker/Dockerfile.dev`: hot-reload image (`air`).
   - `infra/docker/Dockerfile.prod`: multi-stage production build.
 - **Nginx Reverse Proxy**
-  - `infra/nginx/default.dev.conf`: HTTP reverse proxy to `notezy-api:7777`.
+  - `infra/nginx/default.dev.conf`: HTTP reverse proxy to `notezy-gateway:7777`.
   - `infra/nginx/default.prod.conf`: HTTPS termination + redirect + proxy headers.
 - **GraphQL Artifacts**
   - Schemas: `contracts/core/v1/graphql/schemas/**/*.graphql`.

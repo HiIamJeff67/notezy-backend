@@ -1,7 +1,5 @@
 import { SpanStatusCode } from "@opentelemetry/api";
 import * as Y from "yjs";
-
-import type { BlockPackProjector } from "../realtime/block_pack_projector.js";
 import type { Telemetry } from "../telemetry.js";
 import {
   createYjsProjectionBatchResult,
@@ -9,6 +7,7 @@ import {
   type YjsProjectionBatchInput,
   type YjsProjectionBatchResult,
 } from "../types/yjs_projection_batch.js";
+import type { BlockPackProjector } from "./block_pack_projector.js";
 
 export class YjsProjectionService {
   private readonly blockPackProjector: BlockPackProjector;

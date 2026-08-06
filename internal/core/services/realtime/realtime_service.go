@@ -20,7 +20,7 @@ import (
 	realtimedto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/realtime"
 	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtime-gateway/v1"
 	enumscontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
-	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjsworker/v1"
+	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1"
 
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
 	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"

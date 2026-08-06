@@ -89,7 +89,7 @@ awareness, presence, Redis leases, or WebSocket frames.
 ## YjsWorker command/reply
 
 Yjs persistence is a separate, versioned Kafka boundary in
-[`contracts/yjsworker/v1`](../../contracts/yjsworker/v1/). YjsWorker produces
+[`contracts/yjs-worker/v1`](../../contracts/yjs-worker/v1/). YjsWorker produces
 an `EventEnvelope` carrying a `CommandEnvelope` to
 `notezy.yjsworker.core.command.v1`, keyed by `blockPackId`. Core consumes it
 with the `notezy-core-yjsworker-v1` group and writes a matching reply envelope
@@ -279,7 +279,7 @@ Core authentication workflows enqueue one of the operation-specific
 `notezy-email-core-v1` group and hands the operation to its local email worker
 manager. Email owns SMTP, templates, retries, and delivery-side failures. The
 Core process no longer calls Email's business HTTP endpoints; Email's HTTP
-transport now exposes health/readiness only.
+transport now exposes only `/startedz` and `/healthz`.
 The event contains the selected operation and its operation-specific DTO, not
 access tokens, cookies, or database records. Invalid events are sent to the
 consumer's DLQ and transient worker failures use bounded consumer retries.

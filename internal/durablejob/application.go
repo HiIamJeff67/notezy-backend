@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
@@ -16,7 +17,22 @@ import (
 	coreconsumers "github.com/HiIamJeff67/notezy-backend/internal/durablejob/transports/core/consumers"
 	coreproducers "github.com/HiIamJeff67/notezy-backend/internal/durablejob/transports/core/producers"
 	corestrategies "github.com/HiIamJeff67/notezy-backend/internal/durablejob/transports/core/strategies"
+	status "github.com/HiIamJeff67/notezy-backend/internal/durablejob/transports/status"
 )
+
+type Application struct {
+	healthy           atomic.Bool
+	ready             atomic.Bool
+	routineTaskEngine *routinetask.Engine
+}
+
+func (a *Application) IsHealthy() bool {
+	return a.healthy.Load()
+}
+
+func (a *Application) IsReady() bool {
+	return a.ready.Load() && a.routineTaskEngine != nil && a.routineTaskEngine.IsReady()
+}
 
 func Start() func() {
 	config, err := durablejobconfig.LoadConfig()
@@ -29,12 +45,12 @@ func Start() func() {
 	}
 	shutdownObservability := observability.Initialize(
 		context.Background(),
-		observability.LoadConfig("notezy-durablejob"),
+		observability.LoadConfig("notezy-durable-job"),
 	)
 
 	kafkaProducer, err := platformkafka.NewProducer(platformkafka.ClientConfig{
 		ConnectionConfig: kafkaConnectionConfig,
-		ClientId:         "notezy-durablejob",
+		ClientId:         "notezy-durable-job",
 	})
 	if err != nil {
 		shutdownObservability()
@@ -47,6 +63,7 @@ func Start() func() {
 	}
 
 	routineTaskEngine := routinetask.NewEngine(config)
+	application := &Application{routineTaskEngine: routineTaskEngine}
 	routineTaskClaimProducer := coreproducers.NewRoutineTaskClaimProducer(kafkaProducer)
 	routineTaskResultProducer := coreproducers.NewRoutineTaskResultProducer(kafkaProducer)
 	routineTaskEngine.SetResultPublisher(routineTaskResultProducer.Produce)
@@ -55,7 +72,7 @@ func Start() func() {
 		platformkafka.ConsumerConfig{
 			ClientConfig: platformkafka.ClientConfig{
 				ConnectionConfig: kafkaConnectionConfig,
-				ClientId:         "notezy-durablejob-routine-task",
+				ClientId:         "notezy-durable-job-routine-task",
 			},
 			ConsumerGroup:       durablejobconfig.RoutineTaskConsumerGroup,
 			MaximumAttempts:     config.KafkaConsumer.MaximumAttempts,
@@ -78,7 +95,7 @@ func Start() func() {
 		platformkafka.ConsumerConfig{
 			ClientConfig: platformkafka.ClientConfig{
 				ConnectionConfig: kafkaConnectionConfig,
-				ClientId:         "notezy-durablejob-yjs-maintenance",
+				ClientId:         "notezy-durable-job-yjs-maintenance",
 			},
 			ConsumerGroup:       durablejobconfig.YjsMaintenanceHintConsumerGroup,
 			MaximumAttempts:     config.KafkaConsumer.MaximumAttempts,
@@ -93,7 +110,7 @@ func Start() func() {
 		platformkafka.ConsumerConfig{
 			ClientConfig: platformkafka.ClientConfig{
 				ConnectionConfig: kafkaConnectionConfig,
-				ClientId:         "notezy-durablejob-yjs-maintenance-result",
+				ClientId:         "notezy-durable-job-yjs-maintenance-result",
 			},
 			ConsumerGroup:       durablejobconfig.YjsMaintenanceResultConsumerGroup,
 			MaximumAttempts:     config.KafkaConsumer.MaximumAttempts,
@@ -105,12 +122,8 @@ func Start() func() {
 	shutdownYjsMaintenanceResultConsumer := yjsMaintenanceResultConsumer.Start(context.Background())
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/healthz", func(writer http.ResponseWriter, _ *http.Request) {
-		writer.WriteHeader(http.StatusOK)
-	})
-	mux.HandleFunc("/readyz", func(writer http.ResponseWriter, _ *http.Request) {
-		writer.WriteHeader(http.StatusOK)
-	})
+	status.ConfigureStartedRouter(mux, application.IsHealthy)
+	status.ConfigureHealthRouter(mux, application.IsReady)
 	listener, err := net.Listen("tcp", config.ListenAddress)
 	if err != nil {
 		shutdownYjsMaintenanceResultConsumer()
@@ -121,6 +134,8 @@ func Start() func() {
 		shutdownObservability()
 		panic(err)
 	}
+	application.healthy.Store(true)
+	application.ready.Store(application.routineTaskEngine.IsReady())
 	server := &http.Server{
 		Handler: mux,
 	}
@@ -131,6 +146,8 @@ func Start() func() {
 	}()
 
 	return func() {
+		application.ready.Store(false)
+		application.healthy.Store(false)
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if err := server.Shutdown(shutdownCtx); err != nil {

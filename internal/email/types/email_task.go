@@ -30,5 +30,5 @@ type EmailTask struct {
 	CreatedAt  time.Time     `json:"createdAt"`
 	Retries    int           `json:"retries"`
 	MaxRetries int           `json:"maxRetries"`
-	Priority   int           `json:"priority"` // the higher priotiy, the much more urgent
+	Priority   int           `json:"priority"` // the higher priority, the much more urgent
 }

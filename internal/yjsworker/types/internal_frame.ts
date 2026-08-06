@@ -1,5 +1,5 @@
-import { InternalFrameHeaderSize } from "../constants/header_size.js";
-import { convertBytesToUUIDString, convertUUIDToBytes } from "../util/uuid.js";
+import { InternalFrameHeaderSize } from "../../../contracts/yjs-worker/v1/yjsworker_contract.js";
+import { convertBytesToUUIDString, convertUUIDStringToBytes } from "../util/uuid.js";
 import { InternalChannelType } from "./internal_channel_type.js";
 import { InternalFrameType } from "./internal_frame_type.js";
 
@@ -59,9 +59,9 @@ export function createInternalFrame(
   frame[0] = 1;
   frame[1] = type;
   frame[2] = InternalChannelType.InternalChannelType_BlockPack;
-  convertUUIDToBytes(connectionId).copy(frame, 3);
+  convertUUIDStringToBytes(connectionId).copy(frame, 3);
   frame.writeUInt32BE(connectorChannelId, 19);
-  convertUUIDToBytes(blockPackId).copy(frame, 23);
+  convertUUIDStringToBytes(blockPackId).copy(frame, 23);
   payload.copy(frame, InternalFrameHeaderSize);
 
   return frame;

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -14,9 +15,24 @@ import (
 	"github.com/HiIamJeff67/notezy-backend/internal/email/renderers"
 	emailsenders "github.com/HiIamJeff67/notezy-backend/internal/email/senders"
 	coretransport "github.com/HiIamJeff67/notezy-backend/internal/email/transports/core"
+	status "github.com/HiIamJeff67/notezy-backend/internal/email/transports/status"
 )
 
+type Application struct {
+	healthy atomic.Bool
+	ready   atomic.Bool
+}
+
+func (a *Application) IsHealthy() bool {
+	return a.healthy.Load()
+}
+
+func (a *Application) IsReady() bool {
+	return a.ready.Load()
+}
+
 func Start() func() {
+	application := &Application{}
 	config, err := emailconfig.LoadConfig()
 	if err != nil {
 		panic(err)
@@ -61,9 +77,12 @@ func Start() func() {
 		panic(err)
 	}
 
-	server := &http.Server{
-		Handler: coretransport.NewRouter(),
-	}
+	mux := http.NewServeMux()
+	status.ConfigureStartedRouter(mux, application.IsHealthy)
+	status.ConfigureHealthRouter(mux, application.IsReady)
+	server := &http.Server{Handler: mux}
+	application.healthy.Store(true)
+	application.ready.Store(true)
 	go func() {
 		if err := server.Serve(listener); err != nil && err != http.ErrServerClosed {
 			panic(err)
@@ -71,6 +90,8 @@ func Start() func() {
 	}()
 
 	return func() {
+		application.ready.Store(false)
+		application.healthy.Store(false)
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if err := server.Shutdown(shutdownCtx); err != nil {

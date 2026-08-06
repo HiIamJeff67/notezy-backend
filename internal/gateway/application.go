@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -24,9 +25,24 @@ import (
 	developmentroutes "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/routes/developmentroutes"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
 	realtimegatewayadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/realtimegateway/adapters"
+	status "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/status"
 )
 
+type Application struct {
+	healthy atomic.Bool
+	ready   atomic.Bool
+}
+
+func (a *Application) IsHealthy() bool {
+	return a.healthy.Load()
+}
+
+func (a *Application) IsReady() bool {
+	return a.ready.Load()
+}
+
 func Start() func() {
+	application := &Application{}
 	config, err := gatewayconfig.LoadConfig()
 	if err != nil {
 		panic(err)
@@ -66,12 +82,8 @@ func Start() func() {
 		shutdownObservability()
 		panic(err)
 	}
-	developmentroutes.DevelopmentRouter.GET("/healthz", func(ctx *gin.Context) {
-		ctx.Status(http.StatusOK)
-	})
-	developmentroutes.DevelopmentRouter.GET("/readyz", func(ctx *gin.Context) {
-		ctx.Status(http.StatusOK)
-	})
+	status.ConfigureStartedRouter(developmentroutes.DevelopmentRouter, application.IsHealthy)
+	status.ConfigureHealthRouter(developmentroutes.DevelopmentRouter, application.IsReady)
 	accessTokenCookieHandler := cookies.New(cookies.Config{
 		Name:     cookies.ValidCookieName_AccessToken,
 		Path:     "/",
@@ -107,6 +119,8 @@ func Start() func() {
 		shutdownObservability()
 		panic(err)
 	}
+	application.healthy.Store(true)
+	application.ready.Store(true)
 	server := &http.Server{
 		Handler: developmentroutes.DevelopmentRouter,
 	}
@@ -118,6 +132,8 @@ func Start() func() {
 	}()
 
 	return func() {
+		application.ready.Store(false)
+		application.healthy.Store(false)
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if err := server.Shutdown(shutdownCtx); err != nil {

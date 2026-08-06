@@ -28,7 +28,7 @@ contracts/
   durablejob/v1/           # DurableJob-owned internal boundary
   email/v1/                # Email-owned internal boundary
   realtime-gateway/v1/     # RealtimeGateway-owned internal boundary
-  yjsworker/v1/            # YjsWorker-owned internal boundary
+  yjs-worker/v1/           # YjsWorker-owned internal boundary
 internal/
   gateway/
     transports/
@@ -66,6 +66,17 @@ internal/
       strategies/           # DurableJob maintenance scheduling policy
   email/                    # independent runtime and SMTP sender
   yjsworker/                # standalone TypeScript runtime; no src/ layer
+    configs/                # runtime tuning and environment-backed settings
+    transports/             # Core HTTP/Kafka and Realtime WebSocket boundaries
+      core/
+        endpoints/
+        routers/
+        consumers/
+        dispatchers/
+      realtime/
+      health/
+    services/               # Yjs transformation and projection application logic
+    types/                  # runtime data shapes; versioned contracts live in contracts/
 shared/
   exceptions/                # base exception envelope and rendering helpers
   platform/                  # database, Redis, Kafka, and observability lifecycle
@@ -104,7 +115,15 @@ contracts and infrastructure. That replace is a migration bridge, not permission
 to import another runtime's source. DurableJob's execution protocol is carried
 by versioned contracts; Core remains the sole owner of database-backed task
 execution and state transitions.
-YjsWorker remains a separate Node/TypeScript environment.
+YjsWorker remains a separate Node/TypeScript environment. It follows the same
+runtime layering as the Go services: `transports/` contains Core-facing HTTP and
+Kafka boundaries plus the Realtime WebSocket boundary, `services/` contains Yjs
+transformation logic, `types/` contains runtime shapes, and `configs/` contains
+runtime policies. Protocol constants and their versioned TypeScript counterpart
+are owned together by `contracts/yjs-worker/v1`; the planned Go-to-TypeScript
+contract generator will keep the two definitions synchronized. Eviction and
+batching values remain runtime policy and therefore stay in `configs/` rather
+than the cross-runtime contract.
 
 ## Dependency direction
 
@@ -187,7 +206,7 @@ Core's schemas, repositories, scopes, or services. It publishes prepared
 completion/failure results through the DurableJob contracts, and Core applies
 them through one transaction-owned application/data boundary. Email owns its SMTP sender and queue and consumes
 Core's versioned Kafka email request contract; its HTTP transport exposes only
-health/readiness endpoints. Both
+started/health endpoints. Both
 commands initialize observability and stop their workers/HTTP servers on
 context cancellation or SIGTERM.
 
@@ -376,7 +395,7 @@ families are kept at their boundaries:
   contains RoutineTask and DurableJob-to-Core Yjs maintenance coordination.
 - [`contracts/core/v1/events`](../../contracts/core/v1/events/)
   contains Core-owned lifecycle facts and Yjs maintenance hints.
-- [`contracts/yjsworker/v1/events`](../../contracts/yjsworker/v1/events/)
+- [`contracts/yjs-worker/v1/events`](../../contracts/yjs-worker/v1/events/)
   contains YjsWorker command/reply transport metadata and maintenance
   operations.
 
@@ -404,9 +423,9 @@ awareness, presence, and Redis leases remain ephemeral transport traffic and do
 not enter the outbox.
 
 The platform Kafka client owns broker configuration, TLS/SASL setup, broker
-readiness checks, and common telemetry names. Core and RealtimeGateway may run
-in degraded mode when Kafka is unavailable, but their readiness endpoints stay
-unready until a broker ping succeeds. Local provisioning and operational steps
+health checks, and common telemetry names. Core and RealtimeGateway may run
+in degraded mode when Kafka is unavailable, but their `/healthz` endpoints stay
+unhealthy until the runtime can accept normal operations. Local provisioning and operational steps
 are documented in [Kafka Local Development](../runbooks/kafka-local-development.md).
 
 Core's PostgreSQL-to-Kafka handoff is a Core-owned transactional outbox. Domain

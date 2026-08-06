@@ -12,8 +12,8 @@ import (
 
 	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
 	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
-	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjsworker/v1"
-	yjsworkereventscontract "github.com/HiIamJeff67/notezy-backend/contracts/yjsworker/v1/events"
+	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1"
+	yjsworkereventscontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1/events"
 
 	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"

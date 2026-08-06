@@ -7,7 +7,7 @@ This package owns the Kafka protocols coordinated by DurableJob:
 
 Core publishes Yjs maintenance hints from `contracts/core/v1/events`. YjsWorker
 owns the maintenance operation, command, and worker-result contracts in
-`contracts/yjsworker/v1/events`.
+`contracts/yjs-worker/v1/events`.
 
 The generic envelope is imported from `contracts/types/event.go`; this package owns the
 topics, event types, and payloads. Consumer groups remain runtime deployment

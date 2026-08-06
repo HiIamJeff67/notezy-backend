@@ -142,6 +142,6 @@ func (e *Engine) Stop() {
 	e.isHealthy.Store(false)
 }
 
-func (e *Engine) IsHealthy() bool {
+func (e *Engine) IsReady() bool {
 	return e.isHealthy.Load()
 }

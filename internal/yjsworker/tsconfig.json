@@ -3,7 +3,7 @@
     "target": "ES2024",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "rootDir": ".",
+    "rootDir": "../..",
     "outDir": "dist",
     "strict": true,
     "esModuleInterop": true,
@@ -13,12 +13,12 @@
   },
   "include": [
     "*.ts",
-    "constants/**/*.ts",
-    "kafka/**/*.ts",
-    "realtime/**/*.ts",
-    "routes/**/*.ts",
+    "configs/**/*.ts",
+    "transports/**/*.ts",
     "services/**/*.ts",
     "types/**/*.ts",
-    "util/**/*.ts"
-  ]
+    "util/**/*.ts",
+    "../../contracts/yjs-worker/v1/yjsworker_contract.ts"
+  ],
+  "exclude": ["**/*.test.ts"]
 }

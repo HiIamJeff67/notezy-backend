@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjsworker/v1"
+	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1"
 
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
 	metrics "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/metrics"

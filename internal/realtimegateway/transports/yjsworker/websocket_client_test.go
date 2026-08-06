@@ -27,7 +27,7 @@ import (
 
 	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtime-gateway/v1"
-	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjsworker/v1"
+	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1"
 
 	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
 

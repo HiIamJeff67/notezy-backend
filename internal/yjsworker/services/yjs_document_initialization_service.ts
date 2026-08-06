@@ -1,7 +1,6 @@
 import { blocksToYXmlFragment } from "@blocknote/core/yjs";
 import * as Y from "yjs";
-
-import { YjsBlockPackFragmentName } from "../constants/fragment_name.js";
+import { YjsBlockPackFragmentName } from "../../../contracts/yjs-worker/v1/yjsworker_contract.js";
 import {
   type NotezyBlock,
   notezyBlockNoteEditor,
