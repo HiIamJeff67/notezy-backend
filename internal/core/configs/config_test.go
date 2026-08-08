@@ -21,8 +21,6 @@ func TestLoadConfig(t *testing.T) {
 	t.Setenv("KAFKA_CONSUMER_MAXIMUM_RETRY_BACKOFF", "5s")
 	t.Setenv("KAFKA_CONSUMER_MAXIMUM_POLL_RECORDS", "100")
 	t.Setenv("STORAGE_KEY_SALT", "salt")
-	t.Setenv("CORE_USER_DATA_CACHE_SERVER_START", "0")
-	t.Setenv("CORE_USER_DATA_CACHE_SERVER_SIZE", "4")
 	t.Setenv("CORE_USER_DATA_CACHE_EXPIRES_IN", "1h")
 
 	config, err := LoadConfig()

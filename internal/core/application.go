@@ -13,7 +13,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
 	authcode "github.com/HiIamJeff67/notezy-backend/shared/lib/authcode"
 
@@ -308,18 +307,16 @@ func Start() func() {
 		context.Background(),
 		observability.LoadConfig("notezy-core"),
 	)
-	redisClientManager := platformredis.NewClientManager(redisConfig)
+	redisClientSet, err := platformredis.NewClientSet(redisConfig)
+	if err != nil {
+		shutdownObservability()
+		panic(err)
+	}
 
 	data.NotezyDB = data.ConnectToDatabase(databaseConfig)
 
-	userDataCacheClient := userdata.NewUserDataCacheClient(userdata.Config{
-		ServerRange: types.Range[int, int]{
-			Start: config.Redis.UserDataCacheServerStart,
-			Size:  config.Redis.UserDataCacheServerSize,
-		},
-		CacheExpiresIn: config.Redis.UserDataCacheExpiresIn,
-	})
-	if err := userdata.Register(context.Background(), redisClientManager, userDataCacheClient); err != nil {
+	userDataCacheStore, err := userdata.Register(context.Background(), redisClientSet)
+	if err != nil {
 		exception := exceptions.New(
 			"ConnectionFailed",
 			"Cache",
@@ -335,10 +332,11 @@ func Start() func() {
 				exception.String(),
 			)
 		}
-		_ = redisClientManager.DisconnectAll()
+		_ = redisClientSet.Close()
 		shutdownObservability()
 		panic(exception)
 	}
+	userDataCacheClient := userdata.NewUserDataCacheClient(config.UserDataCache, userDataCacheStore)
 	kafkaProducer, err := platformkafka.NewProducer(platformkafka.ClientConfig{
 		ConnectionConfig: kafkaConnectionConfig,
 		ClientId:         "notezy-core",
@@ -464,7 +462,7 @@ func Start() func() {
 		shutdownRoutineTaskClaimConsumer()
 		shutdownOutboxRelay()
 		kafkaProducer.Close()
-		_ = redisClientManager.DisconnectAll()
+		_ = redisClientSet.Close()
 		_ = data.DisconnectToDatabase(data.NotezyDB)
 		shutdownObservability()
 		panic(err)
@@ -500,7 +498,7 @@ func Start() func() {
 		shutdownRoutineTaskClaimConsumer()
 		shutdownOutboxRelay()
 		kafkaProducer.Close()
-		if err := redisClientManager.DisconnectAll(); err != nil {
+		if err := redisClientSet.Close(); err != nil {
 			exception := exceptions.New(
 				"DisconnectionFailed",
 				"Cache",

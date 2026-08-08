@@ -13,11 +13,11 @@ clients, workers, transports, and services.
 | Redis connection | `shared/platform/redis/config.go` | `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_INIT_DB` |
 | Kafka connection and TLS | `shared/platform/kafka/config.go` | `KAFKA_BROKERS`, `KAFKA_DIAL_TIMEOUT`, `KAFKA_TLS_*`, `KAFKA_SASL_*` |
 | OpenTelemetry SDK | `shared/platform/observability/config.go` | `OTEL_SERVICE_*`, `OTEL_EXPORTER_OTLP_GRPC_ENDPOINT` |
-| Gateway | `internal/gateway/configs/` | `GATEWAY_LISTEN_ADDRESS`, `CORE_BASE_URL`, Gateway Redis cache ranges |
-| Core | `internal/core/configs/` | `CORE_LISTEN_ADDRESS`, `OAUTH_GOOGLE_*`, `STORAGE_KEY_SALT`, `OUTBOX_RELAY_*`, user-data cache range and TTL |
+| Gateway | `internal/gateway/configs/` | `GATEWAY_LISTEN_ADDRESS`, `CORE_BASE_URL` |
+| Core | `internal/core/configs/` | `CORE_LISTEN_ADDRESS`, `OAUTH_GOOGLE_*`, `STORAGE_KEY_SALT`, `OUTBOX_RELAY_*`, user-data cache TTL |
 | DurableJob | `internal/durablejob/configs/` | `DURABLEJOB_LISTEN_ADDRESS`, runtime Kafka and maintenance strategy settings |
 | Email | `internal/email/configs/` | `EMAIL_LISTEN_ADDRESS`, `SMTP_*`, `NOTEZY_OFFICIAL_*`, `KAFKA_*` consumer settings |
-| RealtimeGateway | `internal/realtimegateway/configs/` | `REALTIME_GATEWAY_LISTEN_ADDRESS`, `REALTIME_ENABLED`, `YJS_WORKER_URLS`, Realtime Redis cache ranges |
+| RealtimeGateway | `internal/realtimegateway/configs/` | `REALTIME_GATEWAY_LISTEN_ADDRESS`, `REALTIME_ENABLED`, `YJS_WORKER_URLS` |
 
 `shared/platform/config/` must not be recreated. A platform component owns
 only its infrastructure connection configuration; runtime policy remains with
@@ -57,13 +57,10 @@ All credentials, salts, passwords, client secrets, and SASL credentials are
 secrets. They are injected by local development tooling, Compose, or the
 production secret manager and must never be logged or committed.
 
-Redis database selection is runtime-owned rather than embedded in cache client
-constructors. Core reads `CORE_USER_DATA_CACHE_SERVER_START` and
-`CORE_USER_DATA_CACHE_SERVER_SIZE` together with
-`CORE_USER_DATA_CACHE_EXPIRES_IN`; Gateway reads
-`GATEWAY_RATE_LIMIT_RECORD_CACHE_SERVER_START` and
-`GATEWAY_RATE_LIMIT_RECORD_CACHE_SERVER_SIZE`; RealtimeGateway reads its
-`REALTIME_GATEWAY_RATE_LIMIT_RECORD_CACHE_*` and
-`REALTIME_GATEWAY_REALTIME_LEASE_CACHE_*` pairs. The composition root converts
-these values to cache-specific configs and injects the resulting clients into
-services, stores, and transports.
+Redis topology is runtime-owned. Each runtime composition root creates an
+immutable `shared/platform/redis.ClientSet` and injects it into its cache stores
+and clients. Cache clients may select a private shard by hashing a key, but no
+server number or cross-runtime Redis registry is part of their configuration.
+Core currently reads only `CORE_USER_DATA_CACHE_EXPIRES_IN`; Gateway and
+RealtimeGateway keep their rate-limit policies in
+`internal/<runtime>/configs/rate_limit.go`.

@@ -20,7 +20,6 @@ import (
 
 	gatewayconfig "github.com/HiIamJeff67/notezy-backend/internal/gateway/configs"
 	ratelimitrecord "github.com/HiIamJeff67/notezy-backend/internal/gateway/data/cache/ratelimitrecord"
-	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/gateway/ratelimit"
 	ratelimitmiddlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	developmentroutes "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/routes/developmentroutes"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
@@ -54,30 +53,29 @@ func Start() func() {
 		context.Background(),
 		observability.LoadConfig("notezy-gateway"),
 	)
-	redisClientManager := platformredis.NewClientManager(redisConfig)
-
-	rateLimitRecordCacheClient := ratelimitrecord.NewRateLimitRecordCacheClient(ratelimitrecord.Config{
-		ServerRange: types.Range[int, int]{
-			Start: config.Redis.RateLimitRecordServerStart,
-			Size:  config.Redis.RateLimitRecordServerSize,
-		},
-	})
-	if err := ratelimitrecord.Register(context.Background(), redisClientManager, rateLimitRecordCacheClient); err != nil {
-		_ = redisClientManager.DisconnectAll()
+	redisClientSet, err := platformredis.NewClientSet(redisConfig)
+	if err != nil {
 		shutdownObservability()
 		panic(err)
 	}
-	unauthorizedRateLimitConfig := ratelimit.DefaultUnauthorizedConfig()
-	unauthorizedRateLimitConfig.CacheServerRange = rateLimitRecordCacheClient.Range
-	authorizedRateLimitConfig := ratelimit.DefaultAuthorizedConfig()
-	authorizedRateLimitConfig.CacheServerRange = rateLimitRecordCacheClient.Range
+	rateLimitRecordCacheStore := ratelimitrecord.Register(context.Background(), redisClientSet)
+	if err := rateLimitRecordCacheStore.Initialize(context.Background()); err != nil {
+		_ = redisClientSet.Close()
+		shutdownObservability()
+		panic(err)
+	}
+	rateLimitRecordCacheClient := ratelimitrecord.NewRateLimitRecordCacheClient(rateLimitRecordCacheStore)
+	unauthorizedRateLimitConfig := gatewayconfig.DefaultUnauthorizedRateLimitConfig()
+	unauthorizedRateLimitConfig.CacheClient = rateLimitRecordCacheClient
+	authorizedRateLimitConfig := gatewayconfig.DefaultAuthorizedRateLimitConfig()
+	authorizedRateLimitConfig.CacheClient = rateLimitRecordCacheClient
 	ratelimitmiddlewares.InitUnauthorizedRateLimiter(unauthorizedRateLimitConfig)
 	ratelimitmiddlewares.InitAuthorizedRateLimiter(authorizedRateLimitConfig)
 	developmentroutes.DevelopmentRouter = gin.Default()
 	if err := developmentroutes.DevelopmentRouter.SetTrustedProxies(config.TrustedProxies); err != nil {
 		ratelimitmiddlewares.StopUnauthorizedRateLimiter()
 		ratelimitmiddlewares.StopAuthorizedRateLimiter()
-		_ = redisClientManager.DisconnectAll()
+		_ = redisClientSet.Close()
 		shutdownObservability()
 		panic(err)
 	}
@@ -110,7 +108,7 @@ func Start() func() {
 	if err != nil {
 		ratelimitmiddlewares.StopUnauthorizedRateLimiter()
 		ratelimitmiddlewares.StopAuthorizedRateLimiter()
-		_ = redisClientManager.DisconnectAll()
+		_ = redisClientSet.Close()
 		shutdownObservability()
 		panic(err)
 	}
@@ -134,7 +132,7 @@ func Start() func() {
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			fmt.Println("Failed to shutdown Gateway server: ", err)
 		}
-		if err := redisClientManager.DisconnectAll(); err != nil {
+		if err := redisClientSet.Close(); err != nil {
 			fmt.Println("Failed to disconnect Gateway cache servers: ", err)
 		}
 		ratelimitmiddlewares.StopUnauthorizedRateLimiter()

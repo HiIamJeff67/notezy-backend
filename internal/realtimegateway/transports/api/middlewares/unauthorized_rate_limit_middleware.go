@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -18,34 +17,24 @@ import (
 	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/ratelimit"
 )
 
-var unauthorizedRateLimiter *ratelimit.HybridRateLimiter
-
-func InitUnauthorizedRateLimiter(config ratelimit.Config) {
-	if unauthorizedRateLimiter != nil {
-		unauthorizedRateLimiter.Stop()
-	}
-
-	unauthorizedRateLimiter = ratelimit.NewHybridRateLimiter(config, false)
-
-	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Unauthorized rate limiter initialized with rate: %v, burst: %d, user limit: %d, window: %v", config.RateLimit, config.Burst, config.UserLimit, config.WindowDuration))
-}
-
-func UnauthorizedRateLimitMiddleware(config ...ratelimit.Config) gin.HandlerFunc {
-	cfg := ratelimit.DefaultUpgradeConfig()
-	if len(config) > 0 {
-		cfg = config[0]
-	}
-
-	if unauthorizedRateLimiter == nil {
-		InitUnauthorizedRateLimiter(cfg)
-	}
-
+func UnauthorizedRateLimitMiddleware(rateLimiter *ratelimit.HybridRateLimiter) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		fingerprint := ctx.ClientIP()
+		if rateLimiter == nil {
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.New(
+				"RateLimiterRequired",
+				"RealtimeGateway",
+				"RateLimit",
+				"The unauthorized rate limiter is not configured",
+				http.StatusInternalServerError,
+				true,
+			), ctx)
+			return
+		}
 
-		allowed, remaining := unauthorizedRateLimiter.AllowByFingerprint(fingerprint)
+		fingerprint := ctx.ClientIP()
+		allowed, remaining := rateLimiter.AllowByFingerprint(fingerprint)
 		if !allowed {
-			setRateLimitHeaders(ctx, remaining, unauthorizedRateLimiter)
+			setRateLimitHeaders(ctx, remaining, rateLimiter)
 			logs.NotezyLogger.Debug(ctx.Request.Context(), fmt.Sprintf("Rate limit exceeded for fingerprint: %s", fingerprint))
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.New(
 				"PermissionDeniedDueToTooManyRequests",
@@ -57,8 +46,7 @@ func UnauthorizedRateLimitMiddleware(config ...ratelimit.Config) gin.HandlerFunc
 			return
 		}
 
-		setRateLimitHeaders(ctx, remaining, unauthorizedRateLimiter)
-
+		setRateLimitHeaders(ctx, remaining, rateLimiter)
 		ctx.Next()
 	}
 }
@@ -69,12 +57,4 @@ func setRateLimitHeaders(ctx *gin.Context, remaining int32, limiter *ratelimit.H
 	ctx.Header("X-RateLimit-Reset", strconv.FormatInt(time.Now().Add(limiter.WindowDuration).Unix(), 10))
 	ctx.Header("X-RateLimit-Window", limiter.WindowDuration.String())
 	ctx.Header("X-RateLimit-Policy", "hybrid-token-bucket")
-}
-
-func StopUnauthorizedRateLimiter() {
-	if unauthorizedRateLimiter != nil {
-		unauthorizedRateLimiter.Stop()
-		unauthorizedRateLimiter = nil
-		logs.NotezyLogger.Info(context.Background(), "Unauthorized rate limiter stopped")
-	}
 }

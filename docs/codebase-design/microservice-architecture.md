@@ -266,90 +266,80 @@ GraphQL SDL, fragments, operation documents, generated Go artifacts, generated m
 
 ## Data cache ownership
 
-Redis is divided into three explicit responsibilities: platform client lifecycle,
-runtime-owned cache registration, and domain-specific cache operations.
+Redis is divided into two explicit responsibilities: platform client lifecycle
+and runtime-owned cache operations. A runtime owns an immutable Redis client set;
+there is no cross-runtime cache registry or server-number lookup.
 
 ```mermaid
 flowchart TB
   subgraph Platform["shared/platform/redis"]
-    Manager["runtime-owned ClientManager<br/>map[int]*redis.Client"]
-    Registry["RedisCacheStores<br/>map[int]RedisCacheStore"]
+    ClientSet["ClientSet<br/>immutable []*redis.Client"]
   end
 
   subgraph Core["Core runtime"]
     CoreStart["core.Start()"]
-    UserRegister["userdata.Register()"]
-    UserStore["UserDataCacheStore<br/>DB 0–3"]
+    UserRegister["userdata.Register(clientSet)"]
+    UserStore["UserDataCacheStore<br/>runtime-owned"]
     UserClient["UserDataCacheClient"]
-    RealtimeRegisterCore["realtimelease.Register()"]
   end
 
   subgraph Gateway["Gateway runtime"]
     GatewayStart["gateway.Start()"]
-    RateRegister["ratelimitrecord.Register()"]
-    RateStore["RateLimitRecordCacheStore<br/>DB 4–7"]
+    RateRegister["ratelimitrecord.Register(clientSet)"]
+    RateStore["RateLimitRecordCacheStore<br/>runtime-owned"]
     RateClient["RateLimitRecordCacheClient"]
   end
 
   subgraph RealtimeGateway["RealtimeGateway runtime"]
     RealtimeGatewayStart["realtimegateway.Start()"]
-    RealtimeRegisterGateway["realtimelease.Register()"]
-    LeaseStore["RealtimeLeaseCacheStore<br/>realtime DB"]
+    RealtimeRegisterGateway["realtimelease.Register(clientSet)"]
+    LeaseStore["RealtimeLeaseCacheStore<br/>runtime-owned"]
     LeaseClient["RealtimeLeaseStore"]
   end
 
-  CoreStart --> UserRegister --> Manager
-  UserRegister --> UserStore --> Registry
-  UserClient --> Registry
-  RealtimeRegisterCore --> Manager
+  CoreStart --> ClientSet --> UserRegister --> UserStore
+  UserClient --> UserStore
 
-  GatewayStart --> RateRegister --> Manager
-  RateRegister --> RateStore --> Registry
-  RateClient --> Registry
+  GatewayStart --> ClientSet --> RateRegister --> RateStore
+  RateClient --> RateStore
 
-  RealtimeGatewayStart --> RealtimeRegisterGateway --> Manager
-  RealtimeRegisterGateway --> LeaseStore --> Registry
-  LeaseClient --> Registry
+  RealtimeGatewayStart --> ClientSet --> RealtimeRegisterGateway --> LeaseStore
+  LeaseClient --> LeaseStore
 ```
 
 ### Platform lifecycle
 
-`shared/platform/redis` owns no cache domain or business policy. Its
-`ClientManager` is the sole owner of Redis connection creation, lookup, and
-shutdown for the current process. It maintains `map[int]*redis.Client`, keyed
-by Redis database number.
+`shared/platform/redis` owns no cache domain or business policy. Its `ClientSet`
+creates and closes the Redis clients owned by one runtime. The set is immutable
+after startup; cache clients choose a client by a private hash-based shard index
+when a runtime has more than one client.
 
-`RedisCacheStore` is the initialization boundary for a concrete database store:
+Each runtime-specific cache store is the initialization boundary for its own
+Lua libraries and cache policy:
 
 ```go
-type RedisCacheStore interface {
-    DatabaseNumber() int
-    Initialize(ctx context.Context) error
-}
+store := userdata.Register(ctx, clientSet)
+client := userdata.NewUserDataCacheClient(config, store)
 ```
 
-`RegisterCacheStores()` first calls each store's `Initialize()` and only
-registers successful stores in `RedisCacheStores`. Consequently, a failed Lua
-library load never leaves an apparently usable cache store in the registry.
-
-Each executable creates and owns its own process-local `ClientManager` and
-`RedisCacheStores` registry. Core, Gateway, and RealtimeGateway therefore have their
-own Redis TCP connections even when they target the same Redis server and DB
-numbers.
+Core, Gateway, and RealtimeGateway each create their own process-local
+`ClientSet`. They may target the same infrastructure Redis during development,
+but no runtime knows another runtime's Redis topology or server numbers.
 
 ### Runtime ownership
 
 | Runtime | Registration | Redis ownership |
 |---|---|---|
-| Core | `userdata.Register()` | User data and quota cache, DB 0–3 |
-| Gateway API | `ratelimitrecord.Register()` | API rate-limit records, DB 4–7 |
-| RealtimeGateway | `realtimelease.Register()` + `ratelimitrecord.Register()` | Connection/channel leases, participant presence, Realtime rate-limit records, lifecycle Pub/Sub fan-out |
+| Core | `userdata.Register(clientSet)` | User data and quota cache |
+| Gateway API | `ratelimitrecord.Register(clientSet)` | API rate-limit records |
+| RealtimeGateway | `realtimelease.Register(clientSet)` + `ratelimitrecord.Register(clientSet)` | Connection/channel leases, participant presence, Realtime rate-limit records, lifecycle Pub/Sub fan-out |
 | DurableJob / Email | None currently | No registered Redis cache domain |
 
-`UserDataCacheStore` and `RateLimitRecordCacheStore` each own a single
-`*redis.Client` and their cache library loading. Their matching `*CacheClient`
-types own key formatting, routing, and cache operations; they retrieve a store
-from the platform registry rather than keeping a Redis client map themselves.
+`UserDataCacheStore`, `RateLimitRecordCacheStore`, and
+`RealtimeLeaseCacheStore` each own a runtime-injected `ClientSet` and their
+cache library loading. Their matching `*CacheClient` types own key formatting,
+shard selection, and cache operations; they never retrieve another runtime's
+store from a global registry.
 
 Core quota functions are one-function-per-file under
 `internal/core/data/cache/userdata/libraries/`. The UserData store
@@ -360,20 +350,16 @@ embeds and joins them into one `user_quota_library`, then performs a single
 
 ```text
 core.Start()
-  -> clientManager := redis.NewClientManager(config)
-  -> userdata.Register(ctx, clientManager)
-    -> ConnectAll(DB 0–3)
-    -> NewUserDataCacheStore(DB, client)
-    -> RegisterCacheStores(stores...)
-      -> store.Initialize()
-        -> FUNCTION LOAD REPLACE user_quota_library
-      -> RedisCacheStores[DB] = store
+  -> clientSet := redis.NewClientSet(config)
+  -> userdata.Register(ctx, clientSet)
+    -> store.Initialize()
+      -> FUNCTION LOAD REPLACE user_quota_library
+  -> UserDataCacheClient(config, store)
 
 Auth/User service
   -> UserDataCacheClient.Get/Set/Update(...)
-    -> hash identifier -> database number
-    -> GetRedisCacheStore(databaseNumber)
-    -> UserDataCacheStore.redisClient
+    -> hash identifier -> private client-set shard
+    -> UserDataCacheStore.ClientSet()
 ```
 
 `internal/realtimegateway/data/cache/realtimelease/` owns the RealtimeGateway

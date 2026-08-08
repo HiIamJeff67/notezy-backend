@@ -3,6 +3,8 @@ package ratelimiter
 import (
 	"sync"
 	"time"
+
+	realtimeconfig "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/configs"
 )
 
 // The weak rate limiter is an implementation of Leaky Bucket algorithm
@@ -16,7 +18,7 @@ type WeakRateLimiter struct {
 	mutex               sync.Mutex
 }
 
-func NewWeakRateLimiter(requestsPerSecond int, config Config) *WeakRateLimiter {
+func NewWeakRateLimiter(requestsPerSecond int, config realtimeconfig.RateLimitConfig) *WeakRateLimiter {
 	minInterval := time.Second / time.Duration(requestsPerSecond)
 	return &WeakRateLimiter{
 		requestArrivalTimes: make([]time.Time, 0),

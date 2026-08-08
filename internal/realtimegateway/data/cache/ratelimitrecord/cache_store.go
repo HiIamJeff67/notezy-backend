@@ -2,9 +2,6 @@ package ratelimitrecord
 
 import (
 	"context"
-	"fmt"
-
-	"github.com/go-redis/redis"
 
 	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
 
@@ -12,50 +9,39 @@ import (
 )
 
 type RateLimitRecordCacheStore struct {
-	databaseNumber int
-	redisClient    *redis.Client
+	clientSet *platformredis.ClientSet
 }
 
 func NewRateLimitRecordCacheStore(
-	databaseNumber int,
-	redisClient *redis.Client,
+	clientSet *platformredis.ClientSet,
 ) *RateLimitRecordCacheStore {
 	return &RateLimitRecordCacheStore{
-		databaseNumber: databaseNumber,
-		redisClient:    redisClient,
+		clientSet: clientSet,
 	}
 }
 
 func Register(
-	ctx context.Context,
-	clientManager *platformredis.ClientManager,
-	cacheClient *RateLimitRecordCacheClient,
-) error {
-	if err := clientManager.ConnectAll(cacheClient.Range); err != nil {
-		return err
-	}
-
-	cacheStores := make([]platformredis.RedisCacheStore, 0, cacheClient.Range.Size)
-	for databaseNumber := cacheClient.Range.Start; databaseNumber < cacheClient.Range.Start+cacheClient.Range.Size; databaseNumber++ {
-		redisClient, exists := clientManager.Client(databaseNumber)
-		if !exists {
-			return fmt.Errorf("Redis client for database %d is unavailable", databaseNumber)
-		}
-		cacheStores = append(cacheStores, NewRateLimitRecordCacheStore(databaseNumber, redisClient))
-	}
-
-	return platformredis.RegisterCacheStores(ctx, cacheStores...)
-}
-
-func (s *RateLimitRecordCacheStore) DatabaseNumber() int {
-	return s.databaseNumber
+	_ context.Context,
+	clientSet *platformredis.ClientSet,
+) *RateLimitRecordCacheStore {
+	return NewRateLimitRecordCacheStore(clientSet)
 }
 
 func (s *RateLimitRecordCacheStore) Initialize(_ context.Context) error {
-	return s.redisClient.Do(
-		"FUNCTION",
-		"LOAD",
-		"REPLACE",
-		redislibraries.RateLimitRecordLibraryContent,
-	).Err()
+	for _, redisClient := range s.clientSet.Clients() {
+		if err := redisClient.Do(
+			"FUNCTION",
+			"LOAD",
+			"REPLACE",
+			redislibraries.RateLimitRecordLibraryContent,
+		).Err(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *RateLimitRecordCacheStore) ClientSet() *platformredis.ClientSet {
+	return s.clientSet
 }

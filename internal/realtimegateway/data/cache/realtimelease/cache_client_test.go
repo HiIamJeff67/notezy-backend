@@ -1,7 +1,6 @@
 package realtimelease
 
 import (
-	"context"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -12,7 +11,6 @@ import (
 	"github.com/google/uuid"
 
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
 	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
 )
@@ -20,16 +18,9 @@ import (
 func newTestRealtimeLeaseCacheClient(t *testing.T, redisClient *redis.Client) *RealtimeLeaseCacheClient {
 	t.Helper()
 
-	if err := platformredis.RegisterCacheStores(
-		context.Background(),
-		NewRealtimeLeaseCacheStore(0, redisClient),
-	); err != nil {
-		t.Fatalf("failed to initialize realtime lease cache store: %v", err)
-	}
-
-	return NewRealtimeLeaseCacheClient(Config{
-		ServerRange: types.Range[int, int]{Start: 0, Size: 1},
-	})
+	clientSet := platformredis.NewClientSetFromClients(redisClient)
+	cacheStore := NewRealtimeLeaseCacheStore(clientSet)
+	return NewRealtimeLeaseCacheClient(cacheStore)
 }
 
 func TestRealtimeLeaseCacheClientLimitsConcurrentUserConnections(t *testing.T) {

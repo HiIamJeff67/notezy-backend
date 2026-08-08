@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"hash/fnv"
 	"net/http"
 	"strings"
 	"time"
@@ -14,11 +13,10 @@ import (
 	"github.com/jinzhu/copier"
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
-
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
 	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
 
+	coreconfig "github.com/HiIamJeff67/notezy-backend/internal/core/configs"
 	cacheinputs "github.com/HiIamJeff67/notezy-backend/internal/core/data/cache/userdata/inputs"
 	redislibraries "github.com/HiIamJeff67/notezy-backend/internal/core/data/cache/userdata/libraries"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
@@ -44,8 +42,7 @@ type UserDataCache struct {
 }
 
 type UserDataCacheClient struct {
-	Range           types.Range[int, int]
-	MaxServerNumber int
+	cacheStore *UserDataCacheStore
 
 	cacheExpiresIn                                       time.Duration
 	batchCheckAndUpdateQuotasByFormattedKeysArgvPerKey   int
@@ -54,10 +51,9 @@ type UserDataCacheClient struct {
 
 /* ============================== Constructor ============================== */
 
-func NewUserDataCacheClient(config Config) *UserDataCacheClient {
+func NewUserDataCacheClient(config coreconfig.UserDataCacheConfig, cacheStore *UserDataCacheStore) *UserDataCacheClient {
 	return &UserDataCacheClient{
-		Range:           config.ServerRange,
-		MaxServerNumber: config.ServerRange.Start + config.ServerRange.Size - 1,
+		cacheStore: cacheStore,
 
 		cacheExpiresIn: config.CacheExpiresIn,
 		batchCheckAndUpdateQuotasByFormattedKeysArgvPerKey:   4,
@@ -68,9 +64,17 @@ func NewUserDataCacheClient(config Config) *UserDataCacheClient {
 /* ============================== Auxiliary Methods ============================== */
 
 func (s *UserDataCacheClient) getRedisClient(identifier string) (*redis.Client, int, *exceptions.Exception) {
-	hash := s.hashIdentifier(identifier)
-	serverNumber := min(s.MaxServerNumber, s.Range.Start+hash)
-	cacheStore, err := platformredis.GetRedisCacheStore(serverNumber)
+	if s == nil || s.cacheStore == nil {
+		return nil, 0, exceptions.New(
+			"CacheClientUnavailable",
+			"Cache",
+			"GetRedisClient",
+			"User data cache client is unavailable",
+			http.StatusInternalServerError,
+			true,
+		)
+	}
+	redisClient, shardIndex, err := s.cacheStore.ClientSet().ClientForKey(identifier)
 	if err != nil {
 		return nil, 0, exceptions.New(
 			"CacheClientUnavailable",
@@ -81,26 +85,7 @@ func (s *UserDataCacheClient) getRedisClient(identifier string) (*redis.Client, 
 			true,
 		).WithOrigin(err)
 	}
-	userDataCacheStore, ok := cacheStore.(*UserDataCacheStore)
-	if !ok || userDataCacheStore.redisClient == nil {
-		return nil, 0, exceptions.New(
-			"CacheClientUnavailable",
-			"Cache",
-			"GetRedisClient",
-			"User data cache client is unavailable",
-			http.StatusInternalServerError,
-			true,
-		)
-	}
-
-	return userDataCacheStore.redisClient, serverNumber, nil
-}
-
-func (s *UserDataCacheClient) hashIdentifier(identifier string) int {
-	hash := fnv.New32a()
-	_, _ = hash.Write([]byte(identifier))
-
-	return int(hash.Sum32()) % s.Range.Size
+	return redisClient, shardIndex, nil
 }
 
 func formatUserDataKey(identifier string) string {
@@ -182,20 +167,18 @@ func (s *UserDataCacheClient) BestEffortBatchCheckAndUpdateQuotas(
 		return nil
 	}
 
-	inputsByServerNumber := make(map[int][]cacheinputs.BatchCheckAndUpdateUserQuotaInput)
+	inputsByShard := make(map[int][]cacheinputs.BatchCheckAndUpdateUserQuotaInput)
 	for _, input := range inputs {
-		hash := s.hashIdentifier(input.Identifier)
-		serverNumber := min(s.MaxServerNumber, s.Range.Start+hash)
-		inputsByServerNumber[serverNumber] = append(inputsByServerNumber[serverNumber], input)
-	}
-
-	for serverNumber, groupedInputs := range inputsByServerNumber {
-		cacheStore, err := platformredis.GetRedisCacheStore(serverNumber)
+		_, shardIndex, err := s.cacheStore.ClientSet().ClientForKey(input.Identifier)
 		if err != nil {
 			continue
 		}
-		userDataCacheStore, ok := cacheStore.(*UserDataCacheStore)
-		if !ok || userDataCacheStore.redisClient == nil {
+		inputsByShard[shardIndex] = append(inputsByShard[shardIndex], input)
+	}
+
+	for shardIndex, groupedInputs := range inputsByShard {
+		redisClient, exists := s.cacheStore.ClientSet().Client(shardIndex)
+		if !exists {
 			continue
 		}
 
@@ -218,7 +201,7 @@ func (s *UserDataCacheClient) BestEffortBatchCheckAndUpdateQuotas(
 		}
 		command = append(command, keys...)
 		command = append(command, arguments...)
-		if _, err := userDataCacheStore.redisClient.Do(command...).Result(); err != nil {
+		if _, err := redisClient.Do(command...).Result(); err != nil {
 			return exceptions.New(
 				"FailedToUpdate",
 				"Cache",

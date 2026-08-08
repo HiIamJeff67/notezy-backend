@@ -15,12 +15,13 @@ import (
 
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
 
+	gatewayconfig "github.com/HiIamJeff67/notezy-backend/internal/gateway/configs"
 	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/gateway/ratelimit"
 )
 
 var unauthorizedRateLimiter *ratelimit.HybridRateLimiter
 
-func InitUnauthorizedRateLimiter(config ratelimit.Config) {
+func InitUnauthorizedRateLimiter(config gatewayconfig.RateLimitConfig) {
 	if unauthorizedRateLimiter != nil {
 		unauthorizedRateLimiter.Stop()
 	}
@@ -30,8 +31,8 @@ func InitUnauthorizedRateLimiter(config ratelimit.Config) {
 	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Unauthorized rate limiter initialized with rate: %v, burst: %d, user limit: %d, window: %v", config.RateLimit, config.Burst, config.UserLimit, config.WindowDuration))
 }
 
-func UnauthorizedRateLimitMiddleware(config ...ratelimit.Config) gin.HandlerFunc {
-	cfg := ratelimit.DefaultUnauthorizedConfig()
+func UnauthorizedRateLimitMiddleware(config ...gatewayconfig.RateLimitConfig) gin.HandlerFunc {
+	cfg := gatewayconfig.DefaultUnauthorizedRateLimitConfig()
 	if len(config) > 0 {
 		cfg = config[0]
 	}

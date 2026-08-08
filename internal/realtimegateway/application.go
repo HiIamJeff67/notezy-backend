@@ -63,40 +63,35 @@ func Start() func() {
 		context.Background(),
 		observability.LoadConfig("notezy-realtime-gateway"),
 	)
-	redisClientManager := platformredis.NewClientManager(redisConfig)
-	realtimeLeaseCacheClient := realtimelease.NewRealtimeLeaseCacheClient(realtimelease.Config{
-		ServerRange: types.Range[int, int]{
-			Start: config.Redis.RealtimeLeaseServerStart,
-			Size:  config.Redis.RealtimeLeaseServerSize,
-		},
-	})
-	rateLimitRecordCacheClient := ratelimitrecord.NewRateLimitRecordCacheClient(ratelimitrecord.Config{
-		ServerRange: types.Range[int, int]{
-			Start: config.Redis.RateLimitRecordServerStart,
-			Size:  config.Redis.RateLimitRecordServerSize,
-		},
-	})
-
-	if err := realtimelease.Register(context.Background(), redisClientManager, realtimeLeaseCacheClient); err != nil {
-		_ = redisClientManager.DisconnectAll()
+	redisClientSet, err := platformredis.NewClientSet(redisConfig)
+	if err != nil {
 		shutdownObservability()
 		panic(err)
 	}
-	if err := ratelimitrecord.Register(context.Background(), redisClientManager, rateLimitRecordCacheClient); err != nil {
-		_ = redisClientManager.DisconnectAll()
+	realtimeLeaseCacheStore := realtimelease.Register(context.Background(), redisClientSet)
+	if err := realtimeLeaseCacheStore.Initialize(context.Background()); err != nil {
+		_ = redisClientSet.Close()
 		shutdownObservability()
 		panic(err)
 	}
-	upgradeRateLimitConfig := ratelimit.DefaultUpgradeConfig()
-	upgradeRateLimitConfig.CacheServerRange = rateLimitRecordCacheClient.Range
-	middlewares.InitUnauthorizedRateLimiter(upgradeRateLimitConfig)
-	middlewares.InitAuthorizedRateLimiter(upgradeRateLimitConfig)
+	realtimeLeaseCacheClient := realtimelease.NewRealtimeLeaseCacheClient(realtimeLeaseCacheStore)
+	rateLimitRecordCacheStore := ratelimitrecord.Register(context.Background(), redisClientSet)
+	if err := rateLimitRecordCacheStore.Initialize(context.Background()); err != nil {
+		_ = redisClientSet.Close()
+		shutdownObservability()
+		panic(err)
+	}
+	rateLimitRecordCacheClient := ratelimitrecord.NewRateLimitRecordCacheClient(rateLimitRecordCacheStore)
+	upgradeRateLimitConfig := realtimeconfig.DefaultUpgradeRateLimitConfig()
+	upgradeRateLimitConfig.CacheClient = rateLimitRecordCacheClient
+	unauthorizedRateLimiter := ratelimit.NewHybridRateLimiter(upgradeRateLimitConfig, false)
+	authorizedRateLimiter := ratelimit.NewHybridRateLimiter(upgradeRateLimitConfig, true)
 
 	router := gin.Default()
 	if err := router.SetTrustedProxies(config.TrustedProxies); err != nil {
-		middlewares.StopUnauthorizedRateLimiter()
-		middlewares.StopAuthorizedRateLimiter()
-		_ = redisClientManager.DisconnectAll()
+		unauthorizedRateLimiter.Stop()
+		authorizedRateLimiter.Stop()
+		_ = redisClientSet.Close()
 		shutdownObservability()
 		panic(err)
 	}
@@ -107,7 +102,7 @@ func Start() func() {
 		middlewares.SanitizeXForwardedForMiddleware(),
 		middlewares.CORSMiddleware(),
 		middlewares.DomainWhiteListMiddleware(config.AllowedDomains),
-		middlewares.UnauthorizedRateLimitMiddleware(),
+		middlewares.UnauthorizedRateLimitMiddleware(unauthorizedRateLimiter),
 	)
 	routes.OPTIONS("/*path", func(ctx *gin.Context) { ctx.Status(http.StatusNoContent) })
 	accessTokenCookieHandler := cookies.New(cookies.Config{
@@ -126,7 +121,7 @@ func Start() func() {
 		HTTPOnly: true,
 		SameSite: http.SameSiteStrictMode,
 	})
-	apiRouters.ConfigureRoutes(routes, realtimeLeaseCacheClient, accessTokenCookieHandler, refreshTokenCookieHandler)
+	apiRouters.ConfigureRoutes(routes, realtimeLeaseCacheClient, accessTokenCookieHandler, refreshTokenCookieHandler, authorizedRateLimiter)
 
 	websocketAdapter := yjsworker.NewWebSocketAdapter(config, realtimeLeaseCacheClient)
 	lifecycleConsumer := workers.NewLifecycleConsumer(
@@ -148,7 +143,9 @@ func Start() func() {
 
 	listener, err := net.Listen("tcp", config.ListenAddress)
 	if err != nil {
-		_ = redisClientManager.DisconnectAll()
+		unauthorizedRateLimiter.Stop()
+		authorizedRateLimiter.Stop()
+		_ = redisClientSet.Close()
 		shutdownObservability()
 		panic(err)
 	}
@@ -174,9 +171,9 @@ func Start() func() {
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			fmt.Println("Failed to shutdown WebSocket server: ", err)
 		}
-		middlewares.StopUnauthorizedRateLimiter()
-		middlewares.StopAuthorizedRateLimiter()
-		if err := redisClientManager.DisconnectAll(); err != nil {
+		unauthorizedRateLimiter.Stop()
+		authorizedRateLimiter.Stop()
+		if err := redisClientSet.Close(); err != nil {
 			fmt.Println("Failed to disconnect WebSocket cache servers: ", err)
 		}
 		shutdownObservability()

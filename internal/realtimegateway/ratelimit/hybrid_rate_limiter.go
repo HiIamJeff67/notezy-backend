@@ -12,6 +12,7 @@ import (
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
 	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
 
+	realtimeconfig "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/configs"
 	ratelimitrecord "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/ratelimitrecord"
 	cacheinputs "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/ratelimitrecord/inputs"
 )
@@ -40,7 +41,7 @@ type HybridRateLimiter struct {
 	cacheClient         *ratelimitrecord.RateLimitRecordCacheClient
 }
 
-func NewHybridRateLimiter(config Config, isAuthorizedLimiter bool) *HybridRateLimiter {
+func NewHybridRateLimiter(config realtimeconfig.RateLimitConfig, isAuthorizedLimiter bool) *HybridRateLimiter {
 	syncInterval := config.WindowDuration / time.Duration(config.SynchronizationToWindowDurationRatio)
 	syncInterval = max(config.MinSynchronizationInterval, syncInterval)
 
@@ -54,9 +55,7 @@ func NewHybridRateLimiter(config Config, isAuthorizedLimiter bool) *HybridRateLi
 		stopChan:            make(chan struct{}),
 		BackendServerName:   config.BackendServerName,
 		IsAuthorizedLimiter: isAuthorizedLimiter,
-		cacheClient: ratelimitrecord.NewRateLimitRecordCacheClient(ratelimitrecord.Config{
-			ServerRange: config.CacheServerRange,
-		}),
+		cacheClient:         config.CacheClient,
 	}
 
 	// initially calling syncLoop() to start syncing periodically

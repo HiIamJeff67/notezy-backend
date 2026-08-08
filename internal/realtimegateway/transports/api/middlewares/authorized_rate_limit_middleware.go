@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -12,29 +11,25 @@ import (
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
-	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
 	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
 
 	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/ratelimit"
 )
 
-var authorizedRateLimiter *ratelimit.HybridRateLimiter
-
-func InitAuthorizedRateLimiter(config ratelimit.Config) {
-	if authorizedRateLimiter != nil {
-		authorizedRateLimiter.Stop()
-	}
-
-	authorizedRateLimiter = ratelimit.NewHybridRateLimiter(config, true)
-	logs.NotezyLogger.Info(context.Background(), fmt.Sprintf("Authorized realtime rate limiter initialized with rate: %v, burst: %d, user limit: %d, window: %v", config.RateLimit, config.Burst, config.UserLimit, config.WindowDuration))
-}
-
-func AuthorizedRateLimitMiddleware() gin.HandlerFunc {
-	if authorizedRateLimiter == nil {
-		InitAuthorizedRateLimiter(ratelimit.DefaultUpgradeConfig())
-	}
-
+func AuthorizedRateLimitMiddleware(rateLimiter *ratelimit.HybridRateLimiter) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		if rateLimiter == nil {
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.New(
+				"RateLimiterRequired",
+				"RealtimeGateway",
+				"RateLimit",
+				"The authorized rate limiter is not configured",
+				http.StatusInternalServerError,
+				true,
+			), ctx)
+			return
+		}
+
 		userPublicId, exists := ctx.Get(sharedcontexts.ContextFieldName_User_PublicId.String())
 		if !exists || userPublicId == nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.New(
@@ -47,17 +42,18 @@ func AuthorizedRateLimitMiddleware() gin.HandlerFunc {
 			), ctx)
 			return
 		}
+
 		publicId, err := uuid.Parse(fmt.Sprint(userPublicId))
 		if err != nil {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("User").WithOrigin(err), ctx)
 			return
 		}
 
-		allowed, remaining := authorizedRateLimiter.AllowByUserId(publicId)
-		ctx.Header("X-RateLimit-Limit", strconv.Itoa(int(authorizedRateLimiter.UserLimit)))
+		allowed, remaining := rateLimiter.AllowByUserId(publicId)
+		ctx.Header("X-RateLimit-Limit", strconv.Itoa(int(rateLimiter.UserLimit)))
 		ctx.Header("X-RateLimit-Remaining", strconv.Itoa(int(remaining)))
-		ctx.Header("X-RateLimit-Reset", strconv.FormatInt(time.Now().Add(authorizedRateLimiter.WindowDuration).Unix(), 10))
-		ctx.Header("X-RateLimit-Window", authorizedRateLimiter.WindowDuration.String())
+		ctx.Header("X-RateLimit-Reset", strconv.FormatInt(time.Now().Add(rateLimiter.WindowDuration).Unix(), 10))
+		ctx.Header("X-RateLimit-Window", rateLimiter.WindowDuration.String())
 		ctx.Header("X-RateLimit-Policy", "hybrid-token-bucket")
 		if !allowed {
 			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.New(
@@ -71,13 +67,5 @@ func AuthorizedRateLimitMiddleware() gin.HandlerFunc {
 		}
 
 		ctx.Next()
-	}
-}
-
-func StopAuthorizedRateLimiter() {
-	if authorizedRateLimiter != nil {
-		authorizedRateLimiter.Stop()
-		authorizedRateLimiter = nil
-		logs.NotezyLogger.Info(context.Background(), "Authorized realtime rate limiter stopped")
 	}
 }

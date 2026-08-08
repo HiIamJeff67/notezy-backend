@@ -9,9 +9,6 @@ func TestLoadConfig(t *testing.T) {
 	t.Setenv("GATEWAY_LISTEN_ADDRESS", "127.0.0.1:7777")
 	t.Setenv("CORE_BASE_URL", "http://core:7778")
 	t.Setenv("CORE_CLIENT_TIMEOUT", "10s")
-	t.Setenv("GATEWAY_RATE_LIMIT_RECORD_CACHE_SERVER_START", "4")
-	t.Setenv("GATEWAY_RATE_LIMIT_RECORD_CACHE_SERVER_SIZE", "4")
-
 	config, err := LoadConfig()
 	if err != nil {
 		t.Fatalf("LoadConfig() error = %v", err)

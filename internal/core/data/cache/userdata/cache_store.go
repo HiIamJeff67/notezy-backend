@@ -2,10 +2,7 @@ package userdata
 
 import (
 	"context"
-	"fmt"
 	"strings"
-
-	"github.com/go-redis/redis"
 
 	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
 
@@ -13,43 +10,27 @@ import (
 )
 
 type UserDataCacheStore struct {
-	databaseNumber int
-	redisClient    *redis.Client
+	clientSet *platformredis.ClientSet
 }
 
 func NewUserDataCacheStore(
-	databaseNumber int,
-	redisClient *redis.Client,
+	clientSet *platformredis.ClientSet,
 ) *UserDataCacheStore {
 	return &UserDataCacheStore{
-		databaseNumber: databaseNumber,
-		redisClient:    redisClient,
+		clientSet: clientSet,
 	}
 }
 
 func Register(
 	ctx context.Context,
-	clientManager *platformredis.ClientManager,
-	cacheClient *UserDataCacheClient,
-) error {
-	if err := clientManager.ConnectAll(cacheClient.Range); err != nil {
-		return err
+	clientSet *platformredis.ClientSet,
+) (*UserDataCacheStore, error) {
+	store := NewUserDataCacheStore(clientSet)
+	if err := store.Initialize(ctx); err != nil {
+		return nil, err
 	}
 
-	cacheStores := make([]platformredis.RedisCacheStore, 0, cacheClient.Range.Size)
-	for databaseNumber := cacheClient.Range.Start; databaseNumber < cacheClient.Range.Start+cacheClient.Range.Size; databaseNumber++ {
-		redisClient, exists := clientManager.Client(databaseNumber)
-		if !exists {
-			return fmt.Errorf("Redis client for database %d is unavailable", databaseNumber)
-		}
-		cacheStores = append(cacheStores, NewUserDataCacheStore(databaseNumber, redisClient))
-	}
-
-	return platformredis.RegisterCacheStores(ctx, cacheStores...)
-}
-
-func (s *UserDataCacheStore) DatabaseNumber() int {
-	return s.databaseNumber
+	return store, nil
 }
 
 func (s *UserDataCacheStore) Initialize(_ context.Context) error {
@@ -62,10 +43,20 @@ func (s *UserDataCacheStore) Initialize(_ context.Context) error {
 		redislibraries.AllOrNothingBatchCheckAndUpdateUserQuotasByFormattedKeyContent,
 	}, "\n\n")
 
-	return s.redisClient.Do(
-		"FUNCTION",
-		"LOAD",
-		"REPLACE",
-		userQuotaLibraryContent,
-	).Err()
+	for _, redisClient := range s.clientSet.Clients() {
+		if err := redisClient.Do(
+			"FUNCTION",
+			"LOAD",
+			"REPLACE",
+			userQuotaLibraryContent,
+		).Err(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *UserDataCacheStore) ClientSet() *platformredis.ClientSet {
+	return s.clientSet
 }

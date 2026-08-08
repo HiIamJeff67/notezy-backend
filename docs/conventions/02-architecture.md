@@ -238,11 +238,20 @@ infrastructure config is colocated with its component at
 from transports, services, workers, clients, or middleware, and do not recreate
 `shared/platform/config/`.
 
-Runtime-owned Redis cache ranges and TTLs follow the same boundary. Cache
-clients receive a cache-specific config from the runtime composition root; cache
-client constructors must not embed Redis database range or user-data expiry
-values. The resulting client is reused for its runtime's stores, services, and
-transports instead of constructing a new client inside an operation.
+Keep runtime configuration files split by concern instead of placing every
+loader and policy in `configs/config.go`: for example, Kafka consumer settings,
+rate-limit policy, SMTP settings, renderer settings, cache TTLs, and outbox
+relay settings each have an appropriately named file under the owning runtime's
+`configs/` package. Delete empty configuration files; a configuration package
+should expose only settings that are actually consumed by that runtime.
+
+Runtime-owned Redis client sets and TTLs follow the same boundary. Each runtime
+composition root creates its immutable Redis client set and injects it into the
+runtime-owned cache stores. Cache clients must not read Redis topology or
+database ranges from a global registry, and cache-specific expiry values remain
+in the owning runtime config. The resulting clients are reused for that
+runtime's stores, services, and transports instead of constructing a new client
+inside an operation.
 
 Do not introduce an application `modules/` package merely to wrap service
 construction. The owning composition root constructs its scope -> repository ->

@@ -1,7 +1,6 @@
 package yjsworker
 
 import (
-	"context"
 	"crypto/ed25519"
 	"crypto/rand"
 	"crypto/sha256"
@@ -23,7 +22,6 @@ import (
 
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
 	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtime-gateway/v1"
@@ -137,23 +135,15 @@ func newTestRealtimeLeaseStore(t *testing.T) *realtimeleasecache.RealtimeLeaseCa
 	if err != nil {
 		t.Fatalf("failed to start test redis server: %v", err)
 	}
-	t.Cleanup(server.Close)
-
 	redisClient := redis.NewClient(&redis.Options{Addr: server.Addr()})
 	t.Cleanup(func() {
+		server.Close()
 		_ = redisClient.Close()
 	})
 
-	if err := platformredis.RegisterCacheStores(
-		context.Background(),
-		realtimeleasecache.NewRealtimeLeaseCacheStore(0, redisClient),
-	); err != nil {
-		t.Fatalf("failed to initialize realtime lease cache store: %v", err)
-	}
-
-	return realtimeleasecache.NewRealtimeLeaseCacheClient(realtimeleasecache.Config{
-		ServerRange: types.Range[int, int]{Start: 0, Size: 1},
-	})
+	clientSet := platformredis.NewClientSetFromClients(redisClient)
+	cacheStore := realtimeleasecache.NewRealtimeLeaseCacheStore(clientSet)
+	return realtimeleasecache.NewRealtimeLeaseCacheClient(cacheStore)
 }
 
 func TestGatewayRevokesMatchingBlockPackChannels(t *testing.T) {

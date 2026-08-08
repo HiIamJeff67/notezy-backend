@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"hash/fnv"
 	"sort"
 	"strconv"
 	"time"
@@ -13,11 +12,8 @@ import (
 	"github.com/google/uuid"
 
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
 	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-
-	platformredis "github.com/HiIamJeff67/notezy-backend/shared/platform/redis"
 
 	redisscripts "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease/scripts"
 )
@@ -70,44 +66,30 @@ type ResourceEvent struct {
 }
 
 type RealtimeLeaseCacheClient struct {
-	Range           types.Range[int, int]
-	MaxServerNumber int
+	cacheStore *RealtimeLeaseCacheStore
 }
 
 /* ============================== Constructor ============================== */
 
-func NewRealtimeLeaseCacheClient(config Config) *RealtimeLeaseCacheClient {
+func NewRealtimeLeaseCacheClient(cacheStore *RealtimeLeaseCacheStore) *RealtimeLeaseCacheClient {
 	return &RealtimeLeaseCacheClient{
-		Range:           config.ServerRange,
-		MaxServerNumber: config.ServerRange.Start + config.ServerRange.Size - 1,
+		cacheStore: cacheStore,
 	}
 }
 
 /* ============================== Auxiliary Methods ============================== */
 
 func (s *RealtimeLeaseCacheClient) getRedisClient(identifier string) (*redis.Client, error) {
-	if s == nil || s.Range.Size <= 0 {
+	if s == nil || s.cacheStore == nil {
 		return nil, errors.New("realtime redis lease store is unavailable")
 	}
 
-	serverNumber := min(s.MaxServerNumber, s.Range.Start+s.hashIdentifier(identifier))
-	cacheStore, err := platformredis.GetRedisCacheStore(serverNumber)
+	redisClient, _, err := s.cacheStore.ClientSet().ClientForKey(identifier)
 	if err != nil {
 		return nil, errors.New("realtime redis lease store is unavailable")
 	}
-	realtimeLeaseCacheStore, ok := cacheStore.(*RealtimeLeaseCacheStore)
-	if !ok || realtimeLeaseCacheStore.redisClient == nil {
-		return nil, errors.New("realtime redis lease store is unavailable")
-	}
 
-	return realtimeLeaseCacheStore.redisClient, nil
-}
-
-func (s *RealtimeLeaseCacheClient) hashIdentifier(identifier string) int {
-	hash := fnv.New32a()
-	_, _ = hash.Write([]byte(identifier))
-
-	return int(hash.Sum32()) % s.Range.Size
+	return redisClient, nil
 }
 
 func (s *RealtimeLeaseCacheClient) acquire(identifier string, key string, member string, maximumMembers int) (bool, int64, error) {
