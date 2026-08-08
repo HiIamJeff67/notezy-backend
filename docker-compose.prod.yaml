@@ -30,7 +30,8 @@ services:
     # restart: always
     build:
       context: .
-      dockerfile: infra/docker/Dockerfile.prod
+      dockerfile: internal/gateway/Dockerfile
+      target: production
     # entrypoint: ["${ENTRYPOINT_CMD}"]
     environment:
       REDIS_HOST: ${DOCKER_REDIS_SERVICE_NAME}
@@ -47,9 +48,7 @@ services:
       CORE_DELEGATION_AUDIENCE: ${CORE_DELEGATION_AUDIENCE}
       CORE_DELEGATION_ISSUER: ${CORE_DELEGATION_ISSUER}
       CORE_BASE_URL: ${CORE_BASE_URL:-http://notezy-core:7778}
-      REALTIME_GATEWAY_BASE_URL: ${REALTIME_GATEWAY_BASE_URL:-http://notezy-realtime-gateway:7779}
       CORE_CLIENT_TIMEOUT: ${CORE_CLIENT_TIMEOUT:-10s}
-      REALTIME_GATEWAY_CLIENT_TIMEOUT: ${REALTIME_GATEWAY_CLIENT_TIMEOUT:-3s}
       OTEL_SERVICE_NAME: notezy-gateway
       OTEL_SERVICE_VERSION: ${OTEL_SERVICE_VERSION:-unknown}
       OTEL_DEPLOYMENT_ENVIRONMENT: production
@@ -66,13 +65,14 @@ services:
     depends_on:
       notezy-core:
         condition: service_healthy
-      notezy-realtime-gateway:
-        condition: service_healthy
 
   notezy-core:
     container_name: ${DOCKER_CORE_SERVICE_NAME:-notezy-core}
-    image: ${DOCKER_GATEWAY_SERVICE_NAME:-notezy-gateway}:latest
-    command: ["./core"]
+    image: ${DOCKER_CORE_SERVICE_NAME:-notezy-core}:latest
+    build:
+      context: .
+      dockerfile: internal/core/Dockerfile
+      target: production
     environment:
       DB_HOST: ${DB_HOST}
       DB_USER: ${DB_USER}
@@ -134,8 +134,11 @@ services:
 
   notezy-realtime-gateway:
     container_name: ${DOCKER_REALTIME_GATEWAY_SERVICE_NAME:-notezy-realtime-gateway}
-    image: ${DOCKER_GATEWAY_SERVICE_NAME:-notezy-gateway}:latest
-    command: ["./realtimegateway"]
+    image: ${DOCKER_REALTIME_GATEWAY_SERVICE_NAME:-notezy-realtime-gateway}:latest
+    build:
+      context: .
+      dockerfile: internal/realtimegateway/Dockerfile
+      target: production
     environment:
       REDIS_HOST: ${DOCKER_REDIS_SERVICE_NAME}
       REDIS_PORT: ${DOCKER_REDIS_PORT}
@@ -186,8 +189,11 @@ services:
 
   notezy-durable-job:
     container_name: ${DOCKER_DURABLE_JOB_SERVICE_NAME:-notezy-durable-job}
-    image: ${DOCKER_GATEWAY_SERVICE_NAME:-notezy-gateway}:latest
-    command: ["./durablejob"]
+    image: ${DOCKER_DURABLE_JOB_SERVICE_NAME:-notezy-durable-job}:latest
+    build:
+      context: .
+      dockerfile: internal/durablejob/Dockerfile
+      target: production
     environment:
       DB_HOST: ${DB_HOST}
       DB_USER: ${DB_USER}
@@ -205,6 +211,10 @@ services:
       KAFKA_CONSUMER_INITIAL_RETRY_BACKOFF: ${KAFKA_CONSUMER_INITIAL_RETRY_BACKOFF:-250ms}
       KAFKA_CONSUMER_MAXIMUM_RETRY_BACKOFF: ${KAFKA_CONSUMER_MAXIMUM_RETRY_BACKOFF:-5s}
       KAFKA_CONSUMER_MAXIMUM_POLL_RECORDS: ${KAFKA_CONSUMER_MAXIMUM_POLL_RECORDS:-100}
+      DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_PENDING_HINTS: ${DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_PENDING_HINTS:-1000}
+      DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_DISPATCH_BATCH: ${DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_DISPATCH_BATCH:-32}
+      DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_DISPATCH_WORKERS: ${DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_DISPATCH_WORKERS:-8}
+      DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_REQUEST_ATTEMPTS: ${DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_REQUEST_ATTEMPTS:-3}
       OTEL_SERVICE_NAME: notezy-durable-job
       OTEL_SERVICE_VERSION: ${OTEL_SERVICE_VERSION:-unknown}
       OTEL_DEPLOYMENT_ENVIRONMENT: production
@@ -227,8 +237,11 @@ services:
 
   notezy-email:
     container_name: ${DOCKER_EMAIL_SERVICE_NAME:-notezy-email}
-    image: ${DOCKER_GATEWAY_SERVICE_NAME:-notezy-gateway}:latest
-    command: ["./email"]
+    image: ${DOCKER_EMAIL_SERVICE_NAME:-notezy-email}:latest
+    build:
+      context: .
+      dockerfile: internal/email/Dockerfile
+      target: production
     environment:
       EMAIL_LISTEN_ADDRESS: 0.0.0.0:8081
       SMTP_HOST: ${SMTP_HOST}

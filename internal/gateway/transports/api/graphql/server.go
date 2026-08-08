@@ -15,7 +15,7 @@ import (
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
 )
 
-func GraphQLHandler(coreClient *coreadapters.CoreClient) gin.HandlerFunc {
+func GraphQLHandler(coreClient *coreadapters.CoreAdapter) gin.HandlerFunc {
 	resolver := resolvers.NewResolver(coreClient)
 	server := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{
 		Resolvers: resolver,

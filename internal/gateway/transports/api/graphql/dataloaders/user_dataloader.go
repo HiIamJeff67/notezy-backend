@@ -7,9 +7,9 @@ import (
 	"github.com/google/uuid"
 	gophersdataloader "github.com/graph-gophers/dataloader/v7"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
-	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 
 	gatewaycontexts "github.com/HiIamJeff67/notezy-backend/internal/gateway/contexts"
@@ -37,11 +37,11 @@ type UserDataloaderInterface interface {
 }
 
 type UserDataloader struct {
-	coreClient *coreadapters.CoreClient
+	coreClient *coreadapters.CoreAdapter
 	loader     *UserLoaderType
 }
 
-func NewUserDataloader(coreClient *coreadapters.CoreClient) UserDataloaderInterface {
+func NewUserDataloader(coreClient *coreadapters.CoreAdapter) UserDataloaderInterface {
 	dataloader := &UserDataloader{
 		coreClient: coreClient,
 	}
@@ -100,15 +100,15 @@ func (d *UserDataloader) batchFunction() UserBatchFunctionType {
 			return results
 		}
 
-		requestDto := usersdto.LoadThemeAuthorsRequestDto(publicIds)
+		requestDto := apicontract.LoadThemeAuthorsRequestDto(publicIds)
 		response, exception := coreadapters.CallSecurly[
-			usersdto.LoadThemeAuthorsRequestDto,
-			usersdto.LoadThemeAuthorsResponseDto,
+			apicontract.LoadThemeAuthorsRequestDto,
+			apicontract.LoadThemeAuthorsResponseDto,
 		](
 			ginContext,
 			d.coreClient,
 			&requestDto,
-			usersdto.LoadThemeAuthorsOperation,
+			apicontract.LoadThemeAuthorsOperation,
 			"/core/v1/users/graphql/load-theme-authors",
 		)
 		if exception != nil {

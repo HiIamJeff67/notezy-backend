@@ -15,6 +15,7 @@ import (
 	shelfservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/shelves"
 	userservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/user"
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
+	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
 )
 
 func NewRouter(
@@ -41,6 +42,7 @@ func NewRouter(
 	userDataCacheClient *userdata.UserDataCacheClient,
 ) *gin.Engine {
 	router := gin.New()
+	router.Use(middlewares.TokenResponseMiddleware())
 
 	coreRouterGroup := router.Group("/core/" + gatewaycontract.Version)
 	anonymousCoreRouterGroup := coreRouterGroup.Group("")

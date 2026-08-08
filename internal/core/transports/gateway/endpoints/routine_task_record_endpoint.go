@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	routinetaskrecordsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-task-records"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-task-records"
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 
 	routineservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/routines"
@@ -39,8 +39,8 @@ func NewRoutineTaskRecordEndpoint(
 }
 
 func (t *RoutineTaskRecordEndpoint) GetAllMyRoutineTaskRecordsByRoutineTaskId(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinetaskrecordsdto.GetAllMyRoutineTaskRecordsByRoutineTaskIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetAllMyRoutineTaskRecordsByRoutineTaskIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -60,7 +60,7 @@ func (t *RoutineTaskRecordEndpoint) GetAllMyRoutineTaskRecordsByRoutineTaskId(ct
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinetaskrecordsdto.GetAllMyRoutineTaskRecordsByRoutineTaskIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetAllMyRoutineTaskRecordsByRoutineTaskIdResponseDto]{
 		Version:  gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()},
 		Data:     *responseDto,
@@ -70,8 +70,8 @@ func (t *RoutineTaskRecordEndpoint) GetAllMyRoutineTaskRecordsByRoutineTaskId(ct
 /* ============================== Visualization Methods ============================== */
 
 func (t *RoutineTaskRecordEndpoint) VisualizeMyRoutineTaskRecordStatusCount(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinetaskrecordsdto.VisualizeMyRoutineTaskRecordStatusCountRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.VisualizeMyRoutineTaskRecordStatusCountRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -91,7 +91,7 @@ func (t *RoutineTaskRecordEndpoint) VisualizeMyRoutineTaskRecordStatusCount(ctx 
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinetaskrecordsdto.VisualizeMyRoutineTaskRecordStatusCountResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.VisualizeMyRoutineTaskRecordStatusCountResponseDto]{
 		Version:  gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()},
 		Data:     *responseDto,
@@ -99,8 +99,8 @@ func (t *RoutineTaskRecordEndpoint) VisualizeMyRoutineTaskRecordStatusCount(ctx 
 }
 
 func (t *RoutineTaskRecordEndpoint) VisualizeMyRoutineTaskRecordPurposeCount(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinetaskrecordsdto.VisualizeMyRoutineTaskRecordPurposeCountRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.VisualizeMyRoutineTaskRecordPurposeCountRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -120,7 +120,7 @@ func (t *RoutineTaskRecordEndpoint) VisualizeMyRoutineTaskRecordPurposeCount(ctx
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinetaskrecordsdto.VisualizeMyRoutineTaskRecordPurposeCountResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.VisualizeMyRoutineTaskRecordPurposeCountResponseDto]{
 		Version:  gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()},
 		Data:     *responseDto,
@@ -128,8 +128,8 @@ func (t *RoutineTaskRecordEndpoint) VisualizeMyRoutineTaskRecordPurposeCount(ctx
 }
 
 func (t *RoutineTaskRecordEndpoint) VisualizeMyRoutineTaskRecordScheduledAtCount(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinetaskrecordsdto.VisualizeMyRoutineTaskRecordScheduledAtCountRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.VisualizeMyRoutineTaskRecordScheduledAtCountRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -149,7 +149,7 @@ func (t *RoutineTaskRecordEndpoint) VisualizeMyRoutineTaskRecordScheduledAtCount
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinetaskrecordsdto.VisualizeMyRoutineTaskRecordScheduledAtCountResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.VisualizeMyRoutineTaskRecordScheduledAtCountResponseDto]{
 		Version:  gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()},
 		Data:     *responseDto,
@@ -157,8 +157,8 @@ func (t *RoutineTaskRecordEndpoint) VisualizeMyRoutineTaskRecordScheduledAtCount
 }
 
 func (t *RoutineTaskRecordEndpoint) VisualizeMyRoutineTaskRecordActualStartedAtCount(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinetaskrecordsdto.VisualizeMyRoutineTaskRecordActualStartedAtCountRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.VisualizeMyRoutineTaskRecordActualStartedAtCountRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -178,7 +178,7 @@ func (t *RoutineTaskRecordEndpoint) VisualizeMyRoutineTaskRecordActualStartedAtC
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinetaskrecordsdto.VisualizeMyRoutineTaskRecordActualStartedAtCountResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.VisualizeMyRoutineTaskRecordActualStartedAtCountResponseDto]{
 		Version:  gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()},
 		Data:     *responseDto,
@@ -186,8 +186,8 @@ func (t *RoutineTaskRecordEndpoint) VisualizeMyRoutineTaskRecordActualStartedAtC
 }
 
 func (t *RoutineTaskRecordEndpoint) VisualizeMyRoutineTaskRecordActualEndedAtCount(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinetaskrecordsdto.VisualizeMyRoutineTaskRecordActualEndedAtCountRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.VisualizeMyRoutineTaskRecordActualEndedAtCountRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -207,7 +207,7 @@ func (t *RoutineTaskRecordEndpoint) VisualizeMyRoutineTaskRecordActualEndedAtCou
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinetaskrecordsdto.VisualizeMyRoutineTaskRecordActualEndedAtCountResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.VisualizeMyRoutineTaskRecordActualEndedAtCountResponseDto]{
 		Version:  gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()},
 		Data:     *responseDto,

@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm/clause"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
 	array "github.com/HiIamJeff67/notezy-backend/shared/lib/array"
@@ -123,7 +123,7 @@ func (r *BlockRepository) CheckPermissionAndGetOneById(
 		Scopes(r.blockScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&block)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Block.NotFound().WithOrigin(result.Error)},
 		{First: block.Id == uuid.Nil, Second: apiexceptions.Block.NotFound()},
 	}); exception != nil {
@@ -152,7 +152,7 @@ func (r *BlockRepository) CheckPermissionsAndGetManyByIds(
 		Scopes(r.blockScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&blocks)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Block.NotFound().WithOrigin(result.Error)},
 		{First: len(blocks) == 0, Second: apiexceptions.Block.NotFound()},
 	}); exception != nil {

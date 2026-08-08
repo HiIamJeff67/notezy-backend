@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	stationsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/stations"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/stations"
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 
 	routineservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/routines"
@@ -54,8 +54,8 @@ func NewStationEndpoint(
 }
 
 func (t *StationEndpoint) GetMyStationById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.GetMyStationByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetMyStationByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -75,7 +75,7 @@ func (t *StationEndpoint) GetMyStationById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.GetMyStationByIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetMyStationByIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -86,8 +86,8 @@ func (t *StationEndpoint) GetMyStationById(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) GetAllMyStations(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.GetAllMyStationsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetAllMyStationsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -107,7 +107,7 @@ func (t *StationEndpoint) GetAllMyStations(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.GetAllMyStationsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetAllMyStationsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -118,8 +118,8 @@ func (t *StationEndpoint) GetAllMyStations(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) CreateStation(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.CreateStationRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.CreateStationRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -139,7 +139,7 @@ func (t *StationEndpoint) CreateStation(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.CreateStationResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.CreateStationResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -150,8 +150,8 @@ func (t *StationEndpoint) CreateStation(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) CreateStations(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.CreateStationsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.CreateStationsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -171,7 +171,7 @@ func (t *StationEndpoint) CreateStations(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.CreateStationsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.CreateStationsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -182,8 +182,8 @@ func (t *StationEndpoint) CreateStations(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) UpdateMyStationById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.UpdateMyStationByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.UpdateMyStationByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -203,7 +203,7 @@ func (t *StationEndpoint) UpdateMyStationById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.UpdateMyStationByIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.UpdateMyStationByIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -214,8 +214,8 @@ func (t *StationEndpoint) UpdateMyStationById(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) UpdateMyStationsByIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.UpdateMyStationsByIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.UpdateMyStationsByIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -235,7 +235,7 @@ func (t *StationEndpoint) UpdateMyStationsByIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.UpdateMyStationsByIdsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.UpdateMyStationsByIdsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -246,8 +246,8 @@ func (t *StationEndpoint) UpdateMyStationsByIds(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) RestoreMyStationById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.RestoreMyStationByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.RestoreMyStationByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -267,7 +267,7 @@ func (t *StationEndpoint) RestoreMyStationById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.RestoreMyStationByIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.RestoreMyStationByIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -278,8 +278,8 @@ func (t *StationEndpoint) RestoreMyStationById(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) RestoreMyStationsByIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.RestoreMyStationsByIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.RestoreMyStationsByIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -299,7 +299,7 @@ func (t *StationEndpoint) RestoreMyStationsByIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.RestoreMyStationsByIdsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.RestoreMyStationsByIdsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -310,8 +310,8 @@ func (t *StationEndpoint) RestoreMyStationsByIds(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) DeleteMyStationById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.DeleteMyStationByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.DeleteMyStationByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -331,7 +331,7 @@ func (t *StationEndpoint) DeleteMyStationById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.DeleteMyStationByIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.DeleteMyStationByIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -342,8 +342,8 @@ func (t *StationEndpoint) DeleteMyStationById(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) DeleteMyStationsByIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.DeleteMyStationsByIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.DeleteMyStationsByIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -363,7 +363,7 @@ func (t *StationEndpoint) DeleteMyStationsByIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.DeleteMyStationsByIdsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.DeleteMyStationsByIdsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -374,8 +374,8 @@ func (t *StationEndpoint) DeleteMyStationsByIds(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) HardDeleteMyStationById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.HardDeleteMyStationByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.HardDeleteMyStationByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -395,7 +395,7 @@ func (t *StationEndpoint) HardDeleteMyStationById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.HardDeleteMyStationByIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.HardDeleteMyStationByIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -406,8 +406,8 @@ func (t *StationEndpoint) HardDeleteMyStationById(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) HardDeleteMyStationsByIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.HardDeleteMyStationsByIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.HardDeleteMyStationsByIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -427,7 +427,7 @@ func (t *StationEndpoint) HardDeleteMyStationsByIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.HardDeleteMyStationsByIdsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.HardDeleteMyStationsByIdsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -438,8 +438,8 @@ func (t *StationEndpoint) HardDeleteMyStationsByIds(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) VisualizeMyTotalCount(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.VisualizeMyTotalCountRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.VisualizeMyTotalCountRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -459,7 +459,7 @@ func (t *StationEndpoint) VisualizeMyTotalCount(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.VisualizeMyTotalCountResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.VisualizeMyTotalCountResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -470,8 +470,8 @@ func (t *StationEndpoint) VisualizeMyTotalCount(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) GetMyStationPermission(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.GetMyStationPermissionRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetMyStationPermissionRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -491,7 +491,7 @@ func (t *StationEndpoint) GetMyStationPermission(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.GetMyStationPermissionResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetMyStationPermissionResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -502,8 +502,8 @@ func (t *StationEndpoint) GetMyStationPermission(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) CreateMyStationPermission(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.CreateMyStationPermissionRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.CreateMyStationPermissionRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -523,7 +523,7 @@ func (t *StationEndpoint) CreateMyStationPermission(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.CreateMyStationPermissionResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.CreateMyStationPermissionResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -534,8 +534,8 @@ func (t *StationEndpoint) CreateMyStationPermission(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) UpsertMyStationPermission(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.UpsertMyStationPermissionRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.UpsertMyStationPermissionRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -555,7 +555,7 @@ func (t *StationEndpoint) UpsertMyStationPermission(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.UpsertMyStationPermissionResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.UpsertMyStationPermissionResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -566,8 +566,8 @@ func (t *StationEndpoint) UpsertMyStationPermission(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) UpsertMyStationPermissions(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.UpsertMyStationPermissionsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.UpsertMyStationPermissionsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -587,7 +587,7 @@ func (t *StationEndpoint) UpsertMyStationPermissions(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.UpsertMyStationPermissionsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.UpsertMyStationPermissionsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -598,8 +598,8 @@ func (t *StationEndpoint) UpsertMyStationPermissions(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) UpdateMyStationPermission(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.UpdateMyStationPermissionRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.UpdateMyStationPermissionRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -619,7 +619,7 @@ func (t *StationEndpoint) UpdateMyStationPermission(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.UpdateMyStationPermissionResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.UpdateMyStationPermissionResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -630,8 +630,8 @@ func (t *StationEndpoint) UpdateMyStationPermission(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) TransferMyStationOwnership(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.TransferMyStationOwnershipRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.TransferMyStationOwnershipRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -651,7 +651,7 @@ func (t *StationEndpoint) TransferMyStationOwnership(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.TransferMyStationOwnershipResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.TransferMyStationOwnershipResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -662,8 +662,8 @@ func (t *StationEndpoint) TransferMyStationOwnership(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) DeleteMyStationPermission(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.DeleteMyStationPermissionRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.DeleteMyStationPermissionRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -683,7 +683,7 @@ func (t *StationEndpoint) DeleteMyStationPermission(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.DeleteMyStationPermissionResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.DeleteMyStationPermissionResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -694,8 +694,8 @@ func (t *StationEndpoint) DeleteMyStationPermission(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) DeleteMyStationPermissions(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.DeleteMyStationPermissionsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.DeleteMyStationPermissionsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -715,7 +715,7 @@ func (t *StationEndpoint) DeleteMyStationPermissions(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.DeleteMyStationPermissionsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.DeleteMyStationPermissionsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -726,8 +726,8 @@ func (t *StationEndpoint) DeleteMyStationPermissions(ctx *gin.Context) {
 }
 
 func (t *StationEndpoint) LeaveMyStation(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.LeaveMyStationRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.LeaveMyStationRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -745,19 +745,19 @@ func (t *StationEndpoint) LeaveMyStation(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.LeaveMyStationResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.LeaveMyStationResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
-		Data: stationsdto.LeaveMyStationResponseDto{},
+		Data: apicontract.LeaveMyStationResponseDto{},
 	})
 }
 
 func (t *StationEndpoint) LeaveMyStations(ctx *gin.Context) {
-	request := &gatewaycontract.Request[stationsdto.LeaveMyStationsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.LeaveMyStationsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -775,12 +775,12 @@ func (t *StationEndpoint) LeaveMyStations(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[stationsdto.LeaveMyStationsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.LeaveMyStationsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
 			RespondedAt: time.Now(),
 		},
-		Data: stationsdto.LeaveMyStationsResponseDto{},
+		Data: apicontract.LeaveMyStationsResponseDto{},
 	})
 }

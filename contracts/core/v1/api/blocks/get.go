@@ -1,4 +1,4 @@
-package blocksdto
+package apicontract
 
 import (
 	"encoding/json"

@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 

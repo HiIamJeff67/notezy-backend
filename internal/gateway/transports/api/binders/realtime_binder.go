@@ -2,21 +2,19 @@ package binders
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
 
-	realtimedto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/realtime"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/realtime"
 
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
 )
 
 type RealtimeBinderInterface interface {
-	BindGetMyBlockPackRealtimeParticipants(controllerFunc controllers.Func[*realtimedto.GetMyBlockPackRealtimeParticipantsRequestDto]) gin.HandlerFunc
-	BindCreateMyRealtimeConnectionTicket(controllerFunc controllers.Func[*realtimedto.CreateMyRealtimeConnectionTicketRequestDto]) gin.HandlerFunc
-	BindCreateMyBlockPackChannelTicket(controllerFunc controllers.Func[*realtimedto.CreateMyBlockPackChannelTicketRequestDto]) gin.HandlerFunc
+	BindCreateMyRealtimeConnectionTicket(controllerFunc controllers.Func[*apicontract.CreateMyRealtimeConnectionTicketRequestDto]) gin.HandlerFunc
+	BindCreateMyBlockPackChannelTicket(controllerFunc controllers.Func[*apicontract.CreateMyBlockPackChannelTicketRequestDto]) gin.HandlerFunc
 }
 
 type RealtimeBinder struct{}
@@ -25,34 +23,18 @@ func NewRealtimeBinder() RealtimeBinderInterface {
 	return &RealtimeBinder{}
 }
 
-func (b *RealtimeBinder) BindGetMyBlockPackRealtimeParticipants(controllerFunc controllers.Func[*realtimedto.GetMyBlockPackRealtimeParticipantsRequestDto]) gin.HandlerFunc {
+func (b *RealtimeBinder) BindCreateMyRealtimeConnectionTicket(controllerFunc controllers.Func[*apicontract.CreateMyRealtimeConnectionTicketRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &realtimedto.GetMyBlockPackRealtimeParticipantsRequestDto{}
-		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-
-		blockPackId, err := uuid.Parse(ctx.Param("blockPackId"))
-		if err != nil {
-			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("BlockPack").WithOrigin(err), ctx)
-			return
-		}
-		requestDto.Param.BlockPackId = blockPackId
-
-		controllerFunc(ctx, requestDto)
-	}
-}
-
-func (b *RealtimeBinder) BindCreateMyRealtimeConnectionTicket(controllerFunc controllers.Func[*realtimedto.CreateMyRealtimeConnectionTicketRequestDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		requestDto := &realtimedto.CreateMyRealtimeConnectionTicketRequestDto{}
+		requestDto := &apicontract.CreateMyRealtimeConnectionTicketRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
 		controllerFunc(ctx, requestDto)
 	}
 }
 
-func (b *RealtimeBinder) BindCreateMyBlockPackChannelTicket(controllerFunc controllers.Func[*realtimedto.CreateMyBlockPackChannelTicketRequestDto]) gin.HandlerFunc {
+func (b *RealtimeBinder) BindCreateMyBlockPackChannelTicket(controllerFunc controllers.Func[*apicontract.CreateMyBlockPackChannelTicketRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &realtimedto.CreateMyBlockPackChannelTicketRequestDto{}
+		requestDto := &apicontract.CreateMyBlockPackChannelTicketRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
 		if err := ctx.ShouldBindJSON(&requestDto.Body); err != nil {

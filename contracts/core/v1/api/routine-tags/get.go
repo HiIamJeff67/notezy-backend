@@ -1,4 +1,4 @@
-package routinetagsdto
+package apicontract
 
 import (
 	"time"

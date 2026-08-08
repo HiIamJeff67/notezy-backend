@@ -14,10 +14,10 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 
 	inputs "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/inputs"
 	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
@@ -29,12 +29,16 @@ type OutboxEventRepositoryInterface interface {
 	CreateMany(createInputs []inputs.CreateOutboxEventInput, opts ...options.RepositoryOptions) *exceptions.Exception
 	EnqueueBlockPackAccessRevocations(tx *gorm.DB, correlationId string, blockPackIds []uuid.UUID, targetUserPublicIds []uuid.UUID, reason coreeventscontract.BlockPackAccessRevocationReason) error
 	EnqueueRootShelfPermissionChanged(tx *gorm.DB, correlationId string, rootShelfId uuid.UUID, targetUserPublicId uuid.UUID, permission string) error
+	EnqueueManyRootShelfPermissionChanges(tx *gorm.DB, correlationId string, rootShelfId uuid.UUID, permissions []schemas.UsersToShelves, userPublicIdByUserId map[uuid.UUID]uuid.UUID) error
 	EnqueueRootShelfPermissionRevoked(tx *gorm.DB, correlationId string, rootShelfId uuid.UUID, targetUserPublicId uuid.UUID) error
+	EnqueueManyRootShelfPermissionRevocations(tx *gorm.DB, correlationId string, rootShelfIds []uuid.UUID, targetUserPublicIds []uuid.UUID) error
 	EnqueueRootShelfDeleted(tx *gorm.DB, correlationId string, rootShelfId uuid.UUID, targetUserPublicIds []uuid.UUID) error
+	EnqueueManyRootShelfDeleted(tx *gorm.DB, correlationId string, rootShelfIds []uuid.UUID, targetUserPublicIdsByRootShelfId map[uuid.UUID][]uuid.UUID) error
 	EnqueueBlockPackChanged(tx *gorm.DB, correlationId string, blockPackIds []uuid.UUID) error
 	EnqueueBlockPackDeleted(tx *gorm.DB, correlationId string, blockPackIds []uuid.UUID) error
 	EnqueueUserSessionsRevoked(tx *gorm.DB, correlationId string, userPublicId uuid.UUID) error
 	EnqueueYjsMaintenanceHint(tx *gorm.DB, correlationId string, blockPackId uuid.UUID, reason string) error
+	EnqueueManyYjsMaintenanceHints(tx *gorm.DB, correlationId string, blockPackIds []uuid.UUID, reason string) error
 	ClaimAvailable(ctx context.Context, workerId string, batchSize int, claimTimeout time.Duration, opts ...options.RepositoryOptions) ([]schemas.OutboxEvent, *exceptions.Exception)
 	MarkPublishedMany(ctx context.Context, eventIds []uuid.UUID, workerId string, opts ...options.RepositoryOptions) *exceptions.Exception
 	MarkFailedMany(ctx context.Context, failureInputs []inputs.FailedOutboxEventInput, workerId string, opts ...options.RepositoryOptions) *exceptions.Exception
@@ -55,7 +59,7 @@ func NewOutboxEventRepository() OutboxEventRepositoryInterface {
 	return &OutboxEventRepository{}
 }
 
-func newCreateOutboxEventInput[D any](
+func ConvertEnvelopeToCreateOutboxEventInput[D any](
 	topic eventcontract.Topic,
 	envelope eventcontract.EventEnvelope[D],
 ) (inputs.CreateOutboxEventInput, error) {
@@ -106,7 +110,7 @@ func EnqueueOutboxEvents[D any](
 
 	createInputs := make([]inputs.CreateOutboxEventInput, len(envelopes))
 	for index, envelope := range envelopes {
-		createInput, err := newCreateOutboxEventInput(topic, envelope)
+		createInput, err := ConvertEnvelopeToCreateOutboxEventInput(topic, envelope)
 		if err != nil {
 			return err
 		}
@@ -260,6 +264,42 @@ func (r *OutboxEventRepository) EnqueueRootShelfPermissionChanged(
 	)
 }
 
+func (r *OutboxEventRepository) EnqueueManyRootShelfPermissionChanges(
+	tx *gorm.DB,
+	correlationId string,
+	rootShelfId uuid.UUID,
+	permissions []schemas.UsersToShelves,
+	userPublicIdByUserId map[uuid.UUID]uuid.UUID,
+) error {
+	events := make([]eventcontract.EventEnvelope[coreeventscontract.ResourceChangedData], 0, len(permissions))
+	occurredAt := time.Now().UTC()
+	for _, permission := range permissions {
+		targetUserPublicId, exists := userPublicIdByUserId[permission.UserId]
+		if !exists {
+			return errors.New("root shelf permission event target user is unavailable")
+		}
+
+		events = append(events, eventcontract.EventEnvelope[coreeventscontract.ResourceChangedData]{
+			SchemaVersion: eventcontract.Version,
+			EventId:       uuid.New(),
+			EventType:     coreeventscontract.EventType_RootShelfPermissionChanged,
+			AggregateType: coreeventscontract.AggregateType_RootShelf,
+			AggregateId:   rootShelfId,
+			KafkaKey:      rootShelfId.String(),
+			OccurredAt:    occurredAt,
+			CorrelationId: correlationId,
+			Data: coreeventscontract.ResourceChangedData{
+				ResourceId:         rootShelfId,
+				TargetUserPublicId: &targetUserPublicId,
+				Change:             coreeventscontract.ResourceEventChange_PermissionUpdated,
+				Permission:         permission.Permission.String(),
+			},
+		})
+	}
+
+	return EnqueueOutboxEvents(tx, coreeventscontract.CoreLifecycleTopic, events)
+}
+
 func (r *OutboxEventRepository) EnqueueRootShelfPermissionRevoked(
 	tx *gorm.DB,
 	correlationId string,
@@ -289,6 +329,38 @@ func (r *OutboxEventRepository) EnqueueRootShelfPermissionRevoked(
 	)
 }
 
+func (r *OutboxEventRepository) EnqueueManyRootShelfPermissionRevocations(
+	tx *gorm.DB,
+	correlationId string,
+	rootShelfIds []uuid.UUID,
+	targetUserPublicIds []uuid.UUID,
+) error {
+	events := make([]eventcontract.EventEnvelope[coreeventscontract.ResourceChangedData], 0, len(rootShelfIds)*len(targetUserPublicIds))
+	occurredAt := time.Now().UTC()
+	for _, rootShelfId := range rootShelfIds {
+		for _, targetUserPublicId := range targetUserPublicIds {
+			targetUserPublicId := targetUserPublicId
+			events = append(events, eventcontract.EventEnvelope[coreeventscontract.ResourceChangedData]{
+				SchemaVersion: eventcontract.Version,
+				EventId:       uuid.New(),
+				EventType:     coreeventscontract.EventType_RootShelfPermissionRevoked,
+				AggregateType: coreeventscontract.AggregateType_RootShelf,
+				AggregateId:   rootShelfId,
+				KafkaKey:      rootShelfId.String(),
+				OccurredAt:    occurredAt,
+				CorrelationId: correlationId,
+				Data: coreeventscontract.ResourceChangedData{
+					ResourceId:         rootShelfId,
+					TargetUserPublicId: &targetUserPublicId,
+					Change:             coreeventscontract.ResourceEventChange_PermissionRevoked,
+				},
+			})
+		}
+	}
+
+	return EnqueueOutboxEvents(tx, coreeventscontract.CoreLifecycleTopic, events)
+}
+
 func (r *OutboxEventRepository) EnqueueRootShelfDeleted(
 	tx *gorm.DB,
 	correlationId string,
@@ -313,6 +385,38 @@ func (r *OutboxEventRepository) EnqueueRootShelfDeleted(
 				Change:             coreeventscontract.ResourceEventChange_Deleted,
 			},
 		})
+	}
+
+	return EnqueueOutboxEvents(tx, coreeventscontract.CoreLifecycleTopic, events)
+}
+
+func (r *OutboxEventRepository) EnqueueManyRootShelfDeleted(
+	tx *gorm.DB,
+	correlationId string,
+	rootShelfIds []uuid.UUID,
+	targetUserPublicIdsByRootShelfId map[uuid.UUID][]uuid.UUID,
+) error {
+	events := make([]eventcontract.EventEnvelope[coreeventscontract.ResourceChangedData], 0)
+	occurredAt := time.Now().UTC()
+	for _, rootShelfId := range rootShelfIds {
+		for _, targetUserPublicId := range targetUserPublicIdsByRootShelfId[rootShelfId] {
+			targetUserPublicId := targetUserPublicId
+			events = append(events, eventcontract.EventEnvelope[coreeventscontract.ResourceChangedData]{
+				SchemaVersion: eventcontract.Version,
+				EventId:       uuid.New(),
+				EventType:     coreeventscontract.EventType_RootShelfDeleted,
+				AggregateType: coreeventscontract.AggregateType_RootShelf,
+				AggregateId:   rootShelfId,
+				KafkaKey:      rootShelfId.String(),
+				OccurredAt:    occurredAt,
+				CorrelationId: correlationId,
+				Data: coreeventscontract.ResourceChangedData{
+					ResourceId:         rootShelfId,
+					TargetUserPublicId: &targetUserPublicId,
+					Change:             coreeventscontract.ResourceEventChange_Deleted,
+				},
+			})
+		}
 	}
 
 	return EnqueueOutboxEvents(tx, coreeventscontract.CoreLifecycleTopic, events)
@@ -404,33 +508,51 @@ func (r *OutboxEventRepository) EnqueueYjsMaintenanceHint(
 		return errors.New("Yjs maintenance hint requires a transaction and BlockPack ID")
 	}
 
-	var document schemas.BlockPackYjsDocument
+	return r.EnqueueManyYjsMaintenanceHints(tx, correlationId, []uuid.UUID{blockPackId}, reason)
+}
+
+func (r *OutboxEventRepository) EnqueueManyYjsMaintenanceHints(
+	tx *gorm.DB,
+	correlationId string,
+	blockPackIds []uuid.UUID,
+	reason string,
+) error {
+	if tx == nil {
+		return errors.New("Yjs maintenance hints require a transaction")
+	}
+	if len(blockPackIds) == 0 {
+		return nil
+	}
+
+	var documents []schemas.BlockPackYjsDocument
 	if err := tx.Model(&schemas.BlockPackYjsDocument{}).
-		Where("block_pack_id = ? AND deleted_at IS NULL", blockPackId).
-		First(&document).Error; err != nil {
+		Where("block_pack_id IN ? AND deleted_at IS NULL", blockPackIds).
+		Find(&documents).Error; err != nil {
 		return err
 	}
-
-	hint := coreeventscontract.YjsMaintenanceHintData{
-		BlockPackId:            blockPackId,
-		DocumentId:             document.Id,
-		LatestUpdateSequence:   document.LastUpdateSequence,
-		CompactedUntilSequence: document.CompactedUntilSequence,
-		ProjectedUntilSequence: document.ProjectedUntilSequence,
-		LastCompactedAt:        document.LastCompactedAt,
-		UncompactedUpdateCount: document.LastUpdateSequence - document.CompactedUntilSequence,
-		SnapshotBytes:          len(document.Snapshot),
-		StateVectorBytes:       len(document.StateVector),
-		Reason:                 reason,
+	if len(documents) != len(blockPackIds) {
+		return errors.New("Yjs maintenance hints require documents for every BlockPack ID")
 	}
 
-	return EnqueueOutboxEvents(
-		tx,
-		coreeventscontract.CoreDurableJobYjsMaintenanceHintTopic,
-		[]eventcontract.EventEnvelope[coreeventscontract.YjsMaintenanceHintData]{
-			durablejobeventbuilders.NewYjsMaintenanceHintEventBuilder().Build(hint, correlationId, time.Now().UTC()),
-		},
-	)
+	eventBuilder := durablejobeventbuilders.NewYjsMaintenanceHintEventBuilder()
+	occurredAt := time.Now().UTC()
+	events := make([]eventcontract.EventEnvelope[coreeventscontract.YjsMaintenanceHintData], 0, len(documents))
+	for _, document := range documents {
+		events = append(events, eventBuilder.Build(coreeventscontract.YjsMaintenanceHintData{
+			BlockPackId:            document.BlockPackId,
+			DocumentId:             document.Id,
+			LatestUpdateSequence:   document.LastUpdateSequence,
+			CompactedUntilSequence: document.CompactedUntilSequence,
+			ProjectedUntilSequence: document.ProjectedUntilSequence,
+			LastCompactedAt:        document.LastCompactedAt,
+			UncompactedUpdateCount: document.LastUpdateSequence - document.CompactedUntilSequence,
+			SnapshotBytes:          len(document.Snapshot),
+			StateVectorBytes:       len(document.StateVector),
+			Reason:                 reason,
+		}, correlationId, occurredAt))
+	}
+
+	return EnqueueOutboxEvents(tx, coreeventscontract.CoreDurableJobYjsMaintenanceHintTopic, events)
 }
 
 func SerializeOutboxEvent(event schemas.OutboxEvent) ([]byte, error) {

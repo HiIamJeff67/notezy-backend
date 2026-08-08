@@ -1,4 +1,4 @@
-package rootshelvesdto
+package apicontract
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	coreapicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api"
-	rootshelvestypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/root-shelves"
+	coretypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/root-shelves"
 )
 
 type UpdateMyRootShelfByIdRequestDto struct {
@@ -37,7 +37,7 @@ type UpdateMyRootShelvesByIdsRequestDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			UpdatedRootShelves []rootshelvestypes.UpdatableRootShelf `json:"updatedRootShelves" validate:"required,min=1,max=1024,dive"`
+			UpdatedRootShelves []coretypes.UpdatableRootShelf `json:"updatedRootShelves" validate:"required,min=1,max=1024,dive"`
 		},
 		struct{},
 		struct{},

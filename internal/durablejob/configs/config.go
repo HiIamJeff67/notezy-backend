@@ -8,9 +8,17 @@ import (
 	"time"
 )
 
+type YjsMaintenanceStrategyConfig struct {
+	MaximumPendingHints    int
+	MaximumDispatchBatch   int
+	MaximumDispatchWorkers int
+	MaximumRequestAttempts int
+}
+
 type Config struct {
-	ListenAddress string
-	KafkaConsumer KafkaConsumerConfig
+	ListenAddress          string
+	KafkaConsumer          KafkaConsumerConfig
+	YjsMaintenanceStrategy YjsMaintenanceStrategyConfig
 }
 
 func LoadConfig() (Config, error) {
@@ -45,6 +53,29 @@ func LoadConfig() (Config, error) {
 		InitialRetryBackoff: initialRetryBackoff,
 		MaximumRetryBackoff: maximumRetryBackoff,
 		MaximumPollRecords:  maximumPollRecords,
+	}
+
+	maximumPendingHints, err := strconv.Atoi(strings.TrimSpace(os.Getenv("DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_PENDING_HINTS")))
+	if err != nil || maximumPendingHints <= 0 {
+		return Config{}, fmt.Errorf("DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_PENDING_HINTS must be a positive integer")
+	}
+	maximumDispatchBatch, err := strconv.Atoi(strings.TrimSpace(os.Getenv("DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_DISPATCH_BATCH")))
+	if err != nil || maximumDispatchBatch <= 0 {
+		return Config{}, fmt.Errorf("DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_DISPATCH_BATCH must be a positive integer")
+	}
+	maximumDispatchWorkers, err := strconv.Atoi(strings.TrimSpace(os.Getenv("DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_DISPATCH_WORKERS")))
+	if err != nil || maximumDispatchWorkers <= 0 {
+		return Config{}, fmt.Errorf("DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_DISPATCH_WORKERS must be a positive integer")
+	}
+	maximumRequestAttempts, err := strconv.Atoi(strings.TrimSpace(os.Getenv("DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_REQUEST_ATTEMPTS")))
+	if err != nil || maximumRequestAttempts <= 0 {
+		return Config{}, fmt.Errorf("DURABLEJOB_YJS_MAINTENANCE_MAXIMUM_REQUEST_ATTEMPTS must be a positive integer")
+	}
+	config.YjsMaintenanceStrategy = YjsMaintenanceStrategyConfig{
+		MaximumPendingHints:    maximumPendingHints,
+		MaximumDispatchBatch:   maximumDispatchBatch,
+		MaximumDispatchWorkers: maximumDispatchWorkers,
+		MaximumRequestAttempts: maximumRequestAttempts,
 	}
 
 	return config, nil

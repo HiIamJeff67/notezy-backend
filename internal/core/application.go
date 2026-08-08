@@ -12,7 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
 	authcode "github.com/HiIamJeff67/notezy-backend/shared/lib/authcode"
@@ -231,6 +231,7 @@ func NewCoreTransportRouter(
 		data.NotezyDB,
 		routineTaskScope,
 		routineTaskRepository,
+		routineTaskRecordRepository,
 		routineTaskExecutionService,
 	)
 	themeService := otherservices.NewThemeService(data.NotezyDB)
@@ -380,6 +381,7 @@ func Start() func() {
 			data.NotezyDB,
 			scopes.NewRoutineTaskScope(),
 			repositories.NewRoutineTaskRepository(scopes.NewRoutineTaskScope()),
+			repositories.NewRoutineTaskRecordRepository(scopes.NewRoutineTaskRecordScope()),
 			routineTaskExecutionService,
 		),
 		newKafkaConsumerConfig(
@@ -396,6 +398,7 @@ func Start() func() {
 			data.NotezyDB,
 			scopes.NewRoutineTaskScope(),
 			repositories.NewRoutineTaskRepository(scopes.NewRoutineTaskScope()),
+			repositories.NewRoutineTaskRecordRepository(scopes.NewRoutineTaskRecordScope()),
 			routineTaskExecutionService,
 		),
 		newKafkaConsumerConfig(

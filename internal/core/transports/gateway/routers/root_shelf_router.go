@@ -3,7 +3,7 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	rootshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/root-shelves"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/root-shelves"
 
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
@@ -19,7 +19,7 @@ func configureRootShelfRoutes(
 		rootShelfRoutes.POST(
 			"/get-by-id",
 			middlewares.DelegationAuthenticatedMiddleware(
-				rootshelvesdto.GetMyRootShelfByIdOperation,
+				apicontract.GetMyRootShelfByIdOperation,
 			),
 			authMiddleware,
 			endpoint.GetMyRootShelfById,
@@ -27,7 +27,7 @@ func configureRootShelfRoutes(
 		rootShelfRoutes.POST(
 			"/create",
 			middlewares.DelegationAuthenticatedMiddleware(
-				rootshelvesdto.CreateRootShelfOperation,
+				apicontract.CreateRootShelfOperation,
 			),
 			authMiddleware,
 			endpoint.CreateRootShelf,
@@ -35,7 +35,7 @@ func configureRootShelfRoutes(
 		rootShelfRoutes.POST(
 			"/create-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				rootshelvesdto.CreateRootShelvesOperation,
+				apicontract.CreateRootShelvesOperation,
 			),
 			authMiddleware,
 			endpoint.CreateRootShelves,
@@ -43,7 +43,7 @@ func configureRootShelfRoutes(
 		rootShelfRoutes.POST(
 			"/update",
 			middlewares.DelegationAuthenticatedMiddleware(
-				rootshelvesdto.UpdateMyRootShelfByIdOperation,
+				apicontract.UpdateMyRootShelfByIdOperation,
 			),
 			authMiddleware,
 			endpoint.UpdateMyRootShelfById,
@@ -51,7 +51,7 @@ func configureRootShelfRoutes(
 		rootShelfRoutes.POST(
 			"/update-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				rootshelvesdto.UpdateMyRootShelvesByIdsOperation,
+				apicontract.UpdateMyRootShelvesByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.UpdateMyRootShelvesByIds,
@@ -59,7 +59,7 @@ func configureRootShelfRoutes(
 		rootShelfRoutes.POST(
 			"/restore",
 			middlewares.DelegationAuthenticatedMiddleware(
-				rootshelvesdto.RestoreMyRootShelfByIdOperation,
+				apicontract.RestoreMyRootShelfByIdOperation,
 			),
 			authMiddleware,
 			endpoint.RestoreMyRootShelfById,
@@ -67,7 +67,7 @@ func configureRootShelfRoutes(
 		rootShelfRoutes.POST(
 			"/restore-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				rootshelvesdto.RestoreMyRootShelvesByIdsOperation,
+				apicontract.RestoreMyRootShelvesByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.RestoreMyRootShelvesByIds,
@@ -75,7 +75,7 @@ func configureRootShelfRoutes(
 		rootShelfRoutes.POST(
 			"/delete",
 			middlewares.DelegationAuthenticatedMiddleware(
-				rootshelvesdto.DeleteMyRootShelfByIdOperation,
+				apicontract.DeleteMyRootShelfByIdOperation,
 			),
 			authMiddleware,
 			endpoint.DeleteMyRootShelfById,
@@ -83,7 +83,7 @@ func configureRootShelfRoutes(
 		rootShelfRoutes.POST(
 			"/delete-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				rootshelvesdto.DeleteMyRootShelvesByIdsOperation,
+				apicontract.DeleteMyRootShelvesByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.DeleteMyRootShelvesByIds,
@@ -91,7 +91,7 @@ func configureRootShelfRoutes(
 		rootShelfRoutes.POST(
 			"/permissions/get",
 			middlewares.DelegationAuthenticatedMiddleware(
-				rootshelvesdto.GetMyRootShelfPermissionOperation,
+				apicontract.GetMyRootShelfPermissionOperation,
 			),
 			authMiddleware,
 			endpoint.GetMyRootShelfPermission,
@@ -99,7 +99,7 @@ func configureRootShelfRoutes(
 		rootShelfRoutes.POST(
 			"/permissions/create",
 			middlewares.DelegationAuthenticatedMiddleware(
-				rootshelvesdto.CreateMyRootShelfPermissionOperation,
+				apicontract.CreateMyRootShelfPermissionOperation,
 			),
 			authMiddleware,
 			endpoint.CreateMyRootShelfPermission,
@@ -107,7 +107,7 @@ func configureRootShelfRoutes(
 		rootShelfRoutes.POST(
 			"/permissions/upsert",
 			middlewares.DelegationAuthenticatedMiddleware(
-				rootshelvesdto.UpsertMyRootShelfPermissionOperation,
+				apicontract.UpsertMyRootShelfPermissionOperation,
 			),
 			authMiddleware,
 			endpoint.UpsertMyRootShelfPermission,
@@ -115,7 +115,7 @@ func configureRootShelfRoutes(
 		rootShelfRoutes.POST(
 			"/permissions/upsert-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				rootshelvesdto.UpsertMyRootShelfPermissionsOperation,
+				apicontract.UpsertMyRootShelfPermissionsOperation,
 			),
 			authMiddleware,
 			endpoint.UpsertMyRootShelfPermissions,
@@ -123,7 +123,7 @@ func configureRootShelfRoutes(
 		rootShelfRoutes.POST(
 			"/permissions/update",
 			middlewares.DelegationAuthenticatedMiddleware(
-				rootshelvesdto.UpdateMyRootShelfPermissionOperation,
+				apicontract.UpdateMyRootShelfPermissionOperation,
 			),
 			authMiddleware,
 			endpoint.UpdateMyRootShelfPermission,
@@ -131,7 +131,7 @@ func configureRootShelfRoutes(
 		rootShelfRoutes.POST(
 			"/ownership/transfer",
 			middlewares.DelegationAuthenticatedMiddleware(
-				rootshelvesdto.TransferMyRootShelfOwnershipOperation,
+				apicontract.TransferMyRootShelfOwnershipOperation,
 			),
 			authMiddleware,
 			endpoint.TransferMyRootShelfOwnership,
@@ -139,7 +139,7 @@ func configureRootShelfRoutes(
 		rootShelfRoutes.POST(
 			"/permissions/delete",
 			middlewares.DelegationAuthenticatedMiddleware(
-				rootshelvesdto.DeleteMyRootShelfPermissionOperation,
+				apicontract.DeleteMyRootShelfPermissionOperation,
 			),
 			authMiddleware,
 			endpoint.DeleteMyRootShelfPermission,
@@ -147,7 +147,7 @@ func configureRootShelfRoutes(
 		rootShelfRoutes.POST(
 			"/permissions/delete-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				rootshelvesdto.DeleteMyRootShelfPermissionsOperation,
+				apicontract.DeleteMyRootShelfPermissionsOperation,
 			),
 			authMiddleware,
 			endpoint.DeleteMyRootShelfPermissions,
@@ -155,7 +155,7 @@ func configureRootShelfRoutes(
 		rootShelfRoutes.POST(
 			"/memberships/leave",
 			middlewares.DelegationAuthenticatedMiddleware(
-				rootshelvesdto.LeaveMyRootShelfOperation,
+				apicontract.LeaveMyRootShelfOperation,
 			),
 			authMiddleware,
 			endpoint.LeaveMyRootShelf,
@@ -163,7 +163,7 @@ func configureRootShelfRoutes(
 		rootShelfRoutes.POST(
 			"/memberships/leave-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				rootshelvesdto.LeaveMyRootShelvesOperation,
+				apicontract.LeaveMyRootShelvesOperation,
 			),
 			authMiddleware,
 			endpoint.LeaveMyRootShelves,
@@ -171,7 +171,7 @@ func configureRootShelfRoutes(
 		rootShelfRoutes.POST(
 			"/graphql/search",
 			middlewares.DelegationAuthenticatedMiddleware(
-				rootshelvesdto.SearchRootShelvesOperation,
+				apicontract.SearchRootShelvesOperation,
 			),
 			authMiddleware,
 			endpoint.SearchRootShelves,

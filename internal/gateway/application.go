@@ -24,7 +24,6 @@ import (
 	ratelimitmiddlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	developmentroutes "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/routes/developmentroutes"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	realtimegatewayadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/realtimegateway/adapters"
 	status "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/status"
 )
 
@@ -101,11 +100,7 @@ func Start() func() {
 		SameSite: http.SameSiteStrictMode,
 	})
 	developmentroutes.ConfigureAPIRoutes(
-		coreadapters.NewCoreClient(config.CoreBaseUrl, config.CoreClientTimeout),
-		realtimegatewayadapters.NewRealtimeGatewayClient(
-			config.RealtimeGatewayBaseUrl,
-			config.RealtimeGatewayClientTimeout,
-		),
+		coreadapters.NewCoreAdapter(config.CoreBaseUrl, config.CoreAdapterTimeout),
 		config.AllowedDomains,
 		accessTokenCookieHandler,
 		refreshTokenCookieHandler,

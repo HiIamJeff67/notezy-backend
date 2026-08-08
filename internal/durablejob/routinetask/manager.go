@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/uuid"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
 	durablejobroutinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"

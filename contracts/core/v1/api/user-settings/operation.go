@@ -1,4 +1,4 @@
-package usersettingsdto
+package apicontract
 
 const (
 	GetMySettingOperation    = "user-setting.get-my-setting"

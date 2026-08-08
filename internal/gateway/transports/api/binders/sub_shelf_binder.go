@@ -6,31 +6,31 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
 
-	subshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/sub-shelves"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/sub-shelves"
 
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
 )
 
 type SubShelfBinderInterface interface {
-	BindGetMySubShelfById(controllerFunc controllers.Func[*subshelvesdto.GetMySubShelfByIdRequestDto]) gin.HandlerFunc
-	BindGetMySubShelvesByPrevSubShelfId(controllerFunc controllers.Func[*subshelvesdto.GetMySubShelvesByPrevSubShelfIdRequestDto]) gin.HandlerFunc
-	BindGetAllMySubShelvesByRootShelfId(controllerFunc controllers.Func[*subshelvesdto.GetAllMySubShelvesByRootShelfIdRequestDto]) gin.HandlerFunc
-	BindGetMySubShelvesAndItemsByPrevSubShelfId(controllerFunc controllers.Func[*subshelvesdto.GetMySubShelvesAndItemsByPrevSubShelfIdRequestDto]) gin.HandlerFunc
-	BindCreateSubShelfByRootShelfId(controllerFunc controllers.Func[*subshelvesdto.CreateSubShelfByRootShelfIdRequestDto]) gin.HandlerFunc
-	BindCreateSubShelvesByRootShelfIds(controllerFunc controllers.Func[*subshelvesdto.CreateSubShelvesByRootShelfIdsRequestDto]) gin.HandlerFunc
-	BindUpdateMySubShelfById(controllerFunc controllers.Func[*subshelvesdto.UpdateMySubShelfByIdRequestDto]) gin.HandlerFunc
-	BindUpdateMySubShelvesByIds(controllerFunc controllers.Func[*subshelvesdto.UpdateMySubShelvesByIdsRequestDto]) gin.HandlerFunc
-	BindMoveMySubShelfByRootShelfId(controllerFunc controllers.Func[*subshelvesdto.MoveMySubShelfByRootShelfIdRequestDto]) gin.HandlerFunc
-	BindMoveMySubShelvesByRootShelfId(controllerFunc controllers.Func[*subshelvesdto.MoveMySubShelvesByRootShelfIdRequestDto]) gin.HandlerFunc
-	BindMoveMySubShelvesByRootShelfIds(controllerFunc controllers.Func[*subshelvesdto.MoveMySubShelvesByRootShelfIdsRequestDto]) gin.HandlerFunc
-	BindRestoreMySubShelfById(controllerFunc controllers.Func[*subshelvesdto.RestoreMySubShelfByIdRequestDto]) gin.HandlerFunc
-	BindRestoreMySubShelvesByIds(controllerFunc controllers.Func[*subshelvesdto.RestoreMySubShelvesByIdsRequestDto]) gin.HandlerFunc
-	BindDeleteMySubShelfById(controllerFunc controllers.Func[*subshelvesdto.DeleteMySubShelfByIdRequestDto]) gin.HandlerFunc
-	BindDeleteMySubShelvesByIds(controllerFunc controllers.Func[*subshelvesdto.DeleteMySubShelvesByIdsRequestDto]) gin.HandlerFunc
+	BindGetMySubShelfById(controllerFunc controllers.Func[*apicontract.GetMySubShelfByIdRequestDto]) gin.HandlerFunc
+	BindGetMySubShelvesByPrevSubShelfId(controllerFunc controllers.Func[*apicontract.GetMySubShelvesByPrevSubShelfIdRequestDto]) gin.HandlerFunc
+	BindGetAllMySubShelvesByRootShelfId(controllerFunc controllers.Func[*apicontract.GetAllMySubShelvesByRootShelfIdRequestDto]) gin.HandlerFunc
+	BindGetMySubShelvesAndItemsByPrevSubShelfId(controllerFunc controllers.Func[*apicontract.GetMySubShelvesAndItemsByPrevSubShelfIdRequestDto]) gin.HandlerFunc
+	BindCreateSubShelfByRootShelfId(controllerFunc controllers.Func[*apicontract.CreateSubShelfByRootShelfIdRequestDto]) gin.HandlerFunc
+	BindCreateSubShelvesByRootShelfIds(controllerFunc controllers.Func[*apicontract.CreateSubShelvesByRootShelfIdsRequestDto]) gin.HandlerFunc
+	BindUpdateMySubShelfById(controllerFunc controllers.Func[*apicontract.UpdateMySubShelfByIdRequestDto]) gin.HandlerFunc
+	BindUpdateMySubShelvesByIds(controllerFunc controllers.Func[*apicontract.UpdateMySubShelvesByIdsRequestDto]) gin.HandlerFunc
+	BindMoveMySubShelfByRootShelfId(controllerFunc controllers.Func[*apicontract.MoveMySubShelfByRootShelfIdRequestDto]) gin.HandlerFunc
+	BindMoveMySubShelvesByRootShelfId(controllerFunc controllers.Func[*apicontract.MoveMySubShelvesByRootShelfIdRequestDto]) gin.HandlerFunc
+	BindMoveMySubShelvesByRootShelfIds(controllerFunc controllers.Func[*apicontract.MoveMySubShelvesByRootShelfIdsRequestDto]) gin.HandlerFunc
+	BindRestoreMySubShelfById(controllerFunc controllers.Func[*apicontract.RestoreMySubShelfByIdRequestDto]) gin.HandlerFunc
+	BindRestoreMySubShelvesByIds(controllerFunc controllers.Func[*apicontract.RestoreMySubShelvesByIdsRequestDto]) gin.HandlerFunc
+	BindDeleteMySubShelfById(controllerFunc controllers.Func[*apicontract.DeleteMySubShelfByIdRequestDto]) gin.HandlerFunc
+	BindDeleteMySubShelvesByIds(controllerFunc controllers.Func[*apicontract.DeleteMySubShelvesByIdsRequestDto]) gin.HandlerFunc
 }
 
 type SubShelfBinder struct{}
@@ -39,9 +39,9 @@ func NewSubShelfBinder() SubShelfBinderInterface {
 	return &SubShelfBinder{}
 }
 
-func (b *SubShelfBinder) BindGetMySubShelfById(controllerFunc controllers.Func[*subshelvesdto.GetMySubShelfByIdRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindGetMySubShelfById(controllerFunc controllers.Func[*apicontract.GetMySubShelfByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto subshelvesdto.GetMySubShelfByIdRequestDto
+		var requestDto apicontract.GetMySubShelfByIdRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -66,9 +66,9 @@ func (b *SubShelfBinder) BindGetMySubShelfById(controllerFunc controllers.Func[*
 	}
 }
 
-func (b *SubShelfBinder) BindGetMySubShelvesByPrevSubShelfId(controllerFunc controllers.Func[*subshelvesdto.GetMySubShelvesByPrevSubShelfIdRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindGetMySubShelvesByPrevSubShelfId(controllerFunc controllers.Func[*apicontract.GetMySubShelvesByPrevSubShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto subshelvesdto.GetMySubShelvesByPrevSubShelfIdRequestDto
+		var requestDto apicontract.GetMySubShelvesByPrevSubShelfIdRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -93,9 +93,9 @@ func (b *SubShelfBinder) BindGetMySubShelvesByPrevSubShelfId(controllerFunc cont
 	}
 }
 
-func (b *SubShelfBinder) BindGetAllMySubShelvesByRootShelfId(controllerFunc controllers.Func[*subshelvesdto.GetAllMySubShelvesByRootShelfIdRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindGetAllMySubShelvesByRootShelfId(controllerFunc controllers.Func[*apicontract.GetAllMySubShelvesByRootShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto subshelvesdto.GetAllMySubShelvesByRootShelfIdRequestDto
+		var requestDto apicontract.GetAllMySubShelvesByRootShelfIdRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -120,9 +120,9 @@ func (b *SubShelfBinder) BindGetAllMySubShelvesByRootShelfId(controllerFunc cont
 	}
 }
 
-func (b *SubShelfBinder) BindGetMySubShelvesAndItemsByPrevSubShelfId(controllerFunc controllers.Func[*subshelvesdto.GetMySubShelvesAndItemsByPrevSubShelfIdRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindGetMySubShelvesAndItemsByPrevSubShelfId(controllerFunc controllers.Func[*apicontract.GetMySubShelvesAndItemsByPrevSubShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto subshelvesdto.GetMySubShelvesAndItemsByPrevSubShelfIdRequestDto
+		var requestDto apicontract.GetMySubShelvesAndItemsByPrevSubShelfIdRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -147,9 +147,9 @@ func (b *SubShelfBinder) BindGetMySubShelvesAndItemsByPrevSubShelfId(controllerF
 	}
 }
 
-func (b *SubShelfBinder) BindCreateSubShelfByRootShelfId(controllerFunc controllers.Func[*subshelvesdto.CreateSubShelfByRootShelfIdRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindCreateSubShelfByRootShelfId(controllerFunc controllers.Func[*apicontract.CreateSubShelfByRootShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto subshelvesdto.CreateSubShelfByRootShelfIdRequestDto
+		var requestDto apicontract.CreateSubShelfByRootShelfIdRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -170,9 +170,9 @@ func (b *SubShelfBinder) BindCreateSubShelfByRootShelfId(controllerFunc controll
 	}
 }
 
-func (b *SubShelfBinder) BindCreateSubShelvesByRootShelfIds(controllerFunc controllers.Func[*subshelvesdto.CreateSubShelvesByRootShelfIdsRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindCreateSubShelvesByRootShelfIds(controllerFunc controllers.Func[*apicontract.CreateSubShelvesByRootShelfIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto subshelvesdto.CreateSubShelvesByRootShelfIdsRequestDto
+		var requestDto apicontract.CreateSubShelvesByRootShelfIdsRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -186,9 +186,9 @@ func (b *SubShelfBinder) BindCreateSubShelvesByRootShelfIds(controllerFunc contr
 	}
 }
 
-func (b *SubShelfBinder) BindUpdateMySubShelfById(controllerFunc controllers.Func[*subshelvesdto.UpdateMySubShelfByIdRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindUpdateMySubShelfById(controllerFunc controllers.Func[*apicontract.UpdateMySubShelfByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto subshelvesdto.UpdateMySubShelfByIdRequestDto
+		var requestDto apicontract.UpdateMySubShelfByIdRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -209,9 +209,9 @@ func (b *SubShelfBinder) BindUpdateMySubShelfById(controllerFunc controllers.Fun
 	}
 }
 
-func (b *SubShelfBinder) BindUpdateMySubShelvesByIds(controllerFunc controllers.Func[*subshelvesdto.UpdateMySubShelvesByIdsRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindUpdateMySubShelvesByIds(controllerFunc controllers.Func[*apicontract.UpdateMySubShelvesByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto subshelvesdto.UpdateMySubShelvesByIdsRequestDto
+		var requestDto apicontract.UpdateMySubShelvesByIdsRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -225,9 +225,9 @@ func (b *SubShelfBinder) BindUpdateMySubShelvesByIds(controllerFunc controllers.
 	}
 }
 
-func (b *SubShelfBinder) BindMoveMySubShelfByRootShelfId(controllerFunc controllers.Func[*subshelvesdto.MoveMySubShelfByRootShelfIdRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindMoveMySubShelfByRootShelfId(controllerFunc controllers.Func[*apicontract.MoveMySubShelfByRootShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto subshelvesdto.MoveMySubShelfByRootShelfIdRequestDto
+		var requestDto apicontract.MoveMySubShelfByRootShelfIdRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -242,9 +242,9 @@ func (b *SubShelfBinder) BindMoveMySubShelfByRootShelfId(controllerFunc controll
 	}
 }
 
-func (b *SubShelfBinder) BindMoveMySubShelvesByRootShelfId(controllerFunc controllers.Func[*subshelvesdto.MoveMySubShelvesByRootShelfIdRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindMoveMySubShelvesByRootShelfId(controllerFunc controllers.Func[*apicontract.MoveMySubShelvesByRootShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto subshelvesdto.MoveMySubShelvesByRootShelfIdRequestDto
+		var requestDto apicontract.MoveMySubShelvesByRootShelfIdRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -258,9 +258,9 @@ func (b *SubShelfBinder) BindMoveMySubShelvesByRootShelfId(controllerFunc contro
 	}
 }
 
-func (b *SubShelfBinder) BindMoveMySubShelvesByRootShelfIds(controllerFunc controllers.Func[*subshelvesdto.MoveMySubShelvesByRootShelfIdsRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindMoveMySubShelvesByRootShelfIds(controllerFunc controllers.Func[*apicontract.MoveMySubShelvesByRootShelfIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto subshelvesdto.MoveMySubShelvesByRootShelfIdsRequestDto
+		var requestDto apicontract.MoveMySubShelvesByRootShelfIdsRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -274,9 +274,9 @@ func (b *SubShelfBinder) BindMoveMySubShelvesByRootShelfIds(controllerFunc contr
 	}
 }
 
-func (b *SubShelfBinder) BindRestoreMySubShelfById(controllerFunc controllers.Func[*subshelvesdto.RestoreMySubShelfByIdRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindRestoreMySubShelfById(controllerFunc controllers.Func[*apicontract.RestoreMySubShelfByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto subshelvesdto.RestoreMySubShelfByIdRequestDto
+		var requestDto apicontract.RestoreMySubShelfByIdRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -291,9 +291,9 @@ func (b *SubShelfBinder) BindRestoreMySubShelfById(controllerFunc controllers.Fu
 	}
 }
 
-func (b *SubShelfBinder) BindRestoreMySubShelvesByIds(controllerFunc controllers.Func[*subshelvesdto.RestoreMySubShelvesByIdsRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindRestoreMySubShelvesByIds(controllerFunc controllers.Func[*apicontract.RestoreMySubShelvesByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto subshelvesdto.RestoreMySubShelvesByIdsRequestDto
+		var requestDto apicontract.RestoreMySubShelvesByIdsRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -307,9 +307,9 @@ func (b *SubShelfBinder) BindRestoreMySubShelvesByIds(controllerFunc controllers
 	}
 }
 
-func (b *SubShelfBinder) BindDeleteMySubShelfById(controllerFunc controllers.Func[*subshelvesdto.DeleteMySubShelfByIdRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindDeleteMySubShelfById(controllerFunc controllers.Func[*apicontract.DeleteMySubShelfByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto subshelvesdto.DeleteMySubShelfByIdRequestDto
+		var requestDto apicontract.DeleteMySubShelfByIdRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -324,9 +324,9 @@ func (b *SubShelfBinder) BindDeleteMySubShelfById(controllerFunc controllers.Fun
 	}
 }
 
-func (b *SubShelfBinder) BindDeleteMySubShelvesByIds(controllerFunc controllers.Func[*subshelvesdto.DeleteMySubShelvesByIdsRequestDto]) gin.HandlerFunc {
+func (b *SubShelfBinder) BindDeleteMySubShelvesByIds(controllerFunc controllers.Func[*apicontract.DeleteMySubShelvesByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto subshelvesdto.DeleteMySubShelvesByIdsRequestDto
+		var requestDto apicontract.DeleteMySubShelvesByIdsRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 

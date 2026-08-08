@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 
 	userservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/user"
@@ -31,8 +31,8 @@ func NewUserEndpoint(userService userservices.UserServiceInterface) UserEndpoint
 }
 
 func (t *UserEndpoint) GetUserData(ctx *gin.Context) {
-	request := &gatewaycontract.Request[usersdto.GetUserDataRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetUserDataRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -52,7 +52,7 @@ func (t *UserEndpoint) GetUserData(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[usersdto.GetUserDataResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetUserDataResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -63,8 +63,8 @@ func (t *UserEndpoint) GetUserData(ctx *gin.Context) {
 }
 
 func (t *UserEndpoint) GetMe(ctx *gin.Context) {
-	request := &gatewaycontract.Request[usersdto.GetMeRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetMeRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -84,7 +84,7 @@ func (t *UserEndpoint) GetMe(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[usersdto.GetMeResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetMeResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -95,8 +95,8 @@ func (t *UserEndpoint) GetMe(ctx *gin.Context) {
 }
 
 func (t *UserEndpoint) UpdateMe(ctx *gin.Context) {
-	request := &gatewaycontract.Request[usersdto.UpdateMeRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.UpdateMeRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -116,7 +116,7 @@ func (t *UserEndpoint) UpdateMe(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[usersdto.UpdateMeResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.UpdateMeResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,

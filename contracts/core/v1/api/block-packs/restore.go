@@ -1,4 +1,4 @@
-package blockpacksdto
+package apicontract
 
 import (
 	"github.com/google/uuid"

@@ -15,15 +15,15 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
 	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 	validators "github.com/HiIamJeff67/notezy-backend/shared/validations/validators"
 
 	authcode "github.com/HiIamJeff67/notezy-backend/shared/lib/authcode"
 	snowflake "github.com/HiIamJeff67/notezy-backend/shared/lib/snowflake"
 
-	authdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/auth"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/auth"
 	emaildto "github.com/HiIamJeff67/notezy-backend/contracts/email/v1/events"
 
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
@@ -45,17 +45,17 @@ import (
 )
 
 type AuthServiceInterface interface {
-	Register(ctx context.Context, requestDto *authdto.RegisterRequestDto) (*authdto.RegisterResponseDto, *exceptions.Exception)
-	RegisterViaGoogle(ctx context.Context, requestDto *authdto.RegisterViaGoogleRequestDto) (*authdto.RegisterViaGoogleResponseDto, *exceptions.Exception)
-	Login(ctx context.Context, requestDto *authdto.LoginRequestDto) (*authdto.LoginResponseDto, *exceptions.Exception)
-	LoginViaGoogle(ctx context.Context, requestDto *authdto.LoginViaGoogleRequestDto) (*authdto.LoginViaGoogleResponseDto, *exceptions.Exception)
-	Logout(ctx context.Context, requestDto *authdto.LogoutRequestDto) (*authdto.LogoutResponseDto, *exceptions.Exception)
-	SendAuthCode(ctx context.Context, requestDto *authdto.SendAuthCodeRequestDto) (*authdto.SendAuthCodeResponseDto, *exceptions.Exception)
-	ValidateEmail(ctx context.Context, requestDto *authdto.ValidateEmailRequestDto) (*authdto.ValidateEmailResponseDto, *exceptions.Exception)
-	ResetEmail(ctx context.Context, requestDto *authdto.ResetEmailRequestDto) (*authdto.ResetEmailResponseDto, *exceptions.Exception)
-	ForgetPassword(ctx context.Context, requestDto *authdto.ForgetPasswordRequestDto) (*authdto.ForgetPasswordResponseDto, *exceptions.Exception)
-	ResetMe(ctx context.Context, requestDto *authdto.ResetMeRequestDto) (*authdto.ResetMeResponseDto, *exceptions.Exception)
-	DeleteMe(ctx context.Context, requestDto *authdto.DeleteMeRequestDto) (*authdto.DeleteMeResponseDto, *exceptions.Exception)
+	Register(ctx context.Context, requestDto *apicontract.RegisterRequestDto) (*apicontract.RegisterResponseDto, *exceptions.Exception)
+	RegisterViaGoogle(ctx context.Context, requestDto *apicontract.RegisterViaGoogleRequestDto) (*apicontract.RegisterViaGoogleResponseDto, *exceptions.Exception)
+	Login(ctx context.Context, requestDto *apicontract.LoginRequestDto) (*apicontract.LoginResponseDto, *exceptions.Exception)
+	LoginViaGoogle(ctx context.Context, requestDto *apicontract.LoginViaGoogleRequestDto) (*apicontract.LoginViaGoogleResponseDto, *exceptions.Exception)
+	Logout(ctx context.Context, requestDto *apicontract.LogoutRequestDto) (*apicontract.LogoutResponseDto, *exceptions.Exception)
+	SendAuthCode(ctx context.Context, requestDto *apicontract.SendAuthCodeRequestDto) (*apicontract.SendAuthCodeResponseDto, *exceptions.Exception)
+	ValidateEmail(ctx context.Context, requestDto *apicontract.ValidateEmailRequestDto) (*apicontract.ValidateEmailResponseDto, *exceptions.Exception)
+	ResetEmail(ctx context.Context, requestDto *apicontract.ResetEmailRequestDto) (*apicontract.ResetEmailResponseDto, *exceptions.Exception)
+	ForgetPassword(ctx context.Context, requestDto *apicontract.ForgetPasswordRequestDto) (*apicontract.ForgetPasswordResponseDto, *exceptions.Exception)
+	ResetMe(ctx context.Context, requestDto *apicontract.ResetMeRequestDto) (*apicontract.ResetMeResponseDto, *exceptions.Exception)
+	DeleteMe(ctx context.Context, requestDto *apicontract.DeleteMeRequestDto) (*apicontract.DeleteMeResponseDto, *exceptions.Exception)
 }
 
 type AuthService struct {
@@ -141,10 +141,6 @@ func (s *AuthService) getLoginBlockedUntilByLoginCount(loginCount int32) (*time.
 	return &blockedUntil, nil
 }
 
-func (s *AuthService) getAuthCodeBlockUntil() time.Time {
-	return time.Now().Add(60 * time.Second)
-}
-
 func (s *AuthService) hashPassword(password string) (string, *exceptions.Exception) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -158,10 +154,6 @@ func (s *AuthService) hashPassword(password string) (string, *exceptions.Excepti
 		).WithOrigin(err)
 	}
 	return string(bytes), nil
-}
-
-func (s *AuthService) comparePassword(hashedPassword string, password string) bool {
-	return (bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))) == nil
 }
 
 func (s *AuthService) getOAuthFakeName() (string, *exceptions.Exception) {
@@ -250,8 +242,8 @@ func (s *AuthService) generateCSRFToken() (*string, *exceptions.Exception) {
 /* ============================== Service Methods for Authentication ============================== */
 
 func (s *AuthService) Register(
-	ctx context.Context, reqDto *authdto.RegisterRequestDto,
-) (*authdto.RegisterResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.RegisterRequestDto,
+) (*apicontract.RegisterResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Auth.InvalidDto().WithOrigin(err)
 	}
@@ -408,7 +400,7 @@ func (s *AuthService) Register(
 		_ = logs.NotezyLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
 	}
 
-	return &authdto.RegisterResponseDto{
+	return &apicontract.RegisterResponseDto{
 		PublicId:     newUser.PublicId,
 		Name:         newUser.Name,
 		DisplayName:  newUser.DisplayName,
@@ -421,8 +413,8 @@ func (s *AuthService) Register(
 }
 
 func (s *AuthService) RegisterViaGoogle(
-	ctx context.Context, reqDto *authdto.RegisterViaGoogleRequestDto,
-) (*authdto.RegisterViaGoogleResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.RegisterViaGoogleRequestDto,
+) (*apicontract.RegisterViaGoogleResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Auth.InvalidDto().WithOrigin(err)
 	}
@@ -443,37 +435,28 @@ func (s *AuthService) RegisterViaGoogle(
 
 	tx := s.db.WithContext(ctx).Begin()
 
-	// try to generate fake name at most 5 times
-	var newUserId *uuid.UUID
+	fakeName, exception := s.getOAuthFakeName()
+	if exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
+	if len(fakeName) > constants.MaxNameLength {
+		fakeName = fakeName[:constants.MaxNameLength]
+	}
+
 	createUserInput := inputs.CreateUserInput{
-		Name:        "",
+		Name:        fakeName,
 		DisplayName: s.generateRandomFakeDisplayName(), // we generate a default display name for the new user
 		Email:       userInfo.Email,
 		Password:    hashedPassword,
 		UserAgent:   reqDto.Header.UserAgent,
 	}
-	for i := 0; i < constants.MaxRetriesOfGeneratingFakeName; i++ {
-		fakeName, exception := s.getOAuthFakeName()
-		if exception != nil {
-			tx.Rollback()
-			return nil, exception
-		}
-
-		if len(fakeName) > constants.MaxNameLength {
-			fakeName = fakeName[:constants.MaxNameLength]
-		}
-		createUserInput.Name = fakeName
-
-		newUserId, exception = s.userRepository.CreateOne(
-			createUserInput,
-			options.WithTransactionDB(tx),
-			options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
-		)
-		if exception == nil {
-			break
-		}
-	}
-	if newUserId == nil {
+	newUserId, exception := s.userRepository.CreateOne(
+		createUserInput,
+		options.WithTransactionDB(tx),
+		options.WithLockingStrength(options.LockingStrengthNoKeyUpdate),
+	)
+	if exception != nil {
 		tx.Rollback()
 		return nil, exception
 	}
@@ -608,7 +591,7 @@ func (s *AuthService) RegisterViaGoogle(
 		_ = logs.NotezyLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
 	}
 
-	return &authdto.RegisterViaGoogleResponseDto{
+	return &apicontract.RegisterViaGoogleResponseDto{
 		PublicId:     newUser.PublicId,
 		Name:         newUser.Name,
 		DisplayName:  newUser.DisplayName,
@@ -621,8 +604,8 @@ func (s *AuthService) RegisterViaGoogle(
 }
 
 func (s *AuthService) Login(
-	ctx context.Context, reqDto *authdto.LoginRequestDto,
-) (*authdto.LoginResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.LoginRequestDto,
+) (*apicontract.LoginResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.User.InvalidInput().WithOrigin(err)
 	}
@@ -667,7 +650,7 @@ func (s *AuthService) Login(
 		return nil, apiexceptions.Auth.LoginBlockedDueToTryingTooManyTimes(user.BlockLoginUntil)
 	}
 
-	if !s.comparePassword(user.Password, reqDto.Body.Password) {
+	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(reqDto.Body.Password)) != nil {
 		newLoginCount := user.LoginCount + 1
 		blockLoginUntil, exception := s.getLoginBlockedUntilByLoginCount(newLoginCount)
 		if exception != nil {
@@ -844,7 +827,7 @@ func (s *AuthService) Login(
 		return nil, apiexceptions.User.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	return &authdto.LoginResponseDto{
+	return &apicontract.LoginResponseDto{
 		PublicId:     user.PublicId,
 		Name:         user.Name,
 		DisplayName:  user.DisplayName,
@@ -858,8 +841,8 @@ func (s *AuthService) Login(
 }
 
 func (s *AuthService) LoginViaGoogle(
-	ctx context.Context, reqDto *authdto.LoginViaGoogleRequestDto,
-) (*authdto.LoginViaGoogleResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.LoginViaGoogleRequestDto,
+) (*apicontract.LoginViaGoogleResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Auth.InvalidDto().WithOrigin(err)
 	}
@@ -1070,7 +1053,7 @@ func (s *AuthService) LoginViaGoogle(
 		return nil, apiexceptions.User.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	return &authdto.LoginViaGoogleResponseDto{
+	return &apicontract.LoginViaGoogleResponseDto{
 		PublicId:     user.PublicId,
 		Name:         user.Name,
 		DisplayName:  user.DisplayName,
@@ -1084,8 +1067,8 @@ func (s *AuthService) LoginViaGoogle(
 }
 
 func (s *AuthService) Logout(
-	ctx context.Context, reqDto *authdto.LogoutRequestDto,
-) (*authdto.LogoutResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.LogoutRequestDto,
+) (*apicontract.LogoutResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.Auth.InvalidDto().WithOrigin(err)
 	}
@@ -1156,14 +1139,14 @@ func (s *AuthService) Logout(
 		return nil, exception
 	}
 
-	return &authdto.LogoutResponseDto{
+	return &apicontract.LogoutResponseDto{
 		UpdatedAt: updatedUser.UpdatedAt,
 	}, nil
 }
 
 func (s *AuthService) SendAuthCode(
-	ctx context.Context, reqDto *authdto.SendAuthCodeRequestDto,
-) (*authdto.SendAuthCodeResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.SendAuthCodeRequestDto,
+) (*apicontract.SendAuthCodeResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.User.InvalidInput().WithOrigin(err)
 	}
@@ -1172,7 +1155,7 @@ func (s *AuthService) SendAuthCode(
 
 	authCode := s.authCodeGenerator.Generate()
 	authCodeExpiredAt := s.authCodeGenerator.ExpireAt(time.Now())
-	blockAuthCodeUntil := s.getAuthCodeBlockUntil()
+	blockAuthCodeUntil := time.Now().Add(60 * time.Second)
 	output := struct {
 		Name               string    `json:"name" gorm:"column:name;"`
 		UserAgent          string    `json:"userAgent" gorm:"column:user_agent;"`
@@ -1197,7 +1180,7 @@ func (s *AuthService) SendAuthCode(
 		return nil, exception
 	}
 
-	return &authdto.SendAuthCodeResponseDto{
+	return &apicontract.SendAuthCodeResponseDto{
 		AuthCodeExpiredAt:  authCodeExpiredAt,
 		BlockAuthCodeUntil: blockAuthCodeUntil,
 		UpdatedAt:          time.Now(),
@@ -1205,8 +1188,8 @@ func (s *AuthService) SendAuthCode(
 }
 
 func (s *AuthService) ValidateEmail(
-	ctx context.Context, reqDto *authdto.ValidateEmailRequestDto,
-) (*authdto.ValidateEmailResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.ValidateEmailRequestDto,
+) (*apicontract.ValidateEmailResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.User.InvalidInput().WithOrigin(err)
 	}
@@ -1225,14 +1208,14 @@ func (s *AuthService) ValidateEmail(
 		return nil, apiexceptions.User.FailedToUpdate().WithOrigin(err)
 	}
 
-	return &authdto.ValidateEmailResponseDto{
+	return &apicontract.ValidateEmailResponseDto{
 		UpdatedAt: updatedAt,
 	}, nil
 }
 
 func (s *AuthService) ResetEmail(
-	ctx context.Context, reqDto *authdto.ResetEmailRequestDto,
-) (*authdto.ResetEmailResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.ResetEmailRequestDto,
+) (*apicontract.ResetEmailResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.User.InvalidInput().WithOrigin(err)
 	}
@@ -1275,14 +1258,14 @@ func (s *AuthService) ResetEmail(
 		return nil, apiexceptions.User.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	return &authdto.ResetEmailResponseDto{
+	return &apicontract.ResetEmailResponseDto{
 		UpdatedAt: updatedAt,
 	}, nil
 }
 
 func (s *AuthService) ForgetPassword(
-	ctx context.Context, reqDto *authdto.ForgetPasswordRequestDto,
-) (*authdto.ForgetPasswordResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.ForgetPasswordRequestDto,
+) (*apicontract.ForgetPasswordResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.User.InvalidInput().WithOrigin(err)
 	}
@@ -1413,14 +1396,14 @@ func (s *AuthService) ForgetPassword(
 		return nil, apiexceptions.User.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	return &authdto.ForgetPasswordResponseDto{
+	return &apicontract.ForgetPasswordResponseDto{
 		UpdatedAt: updatedUser.UpdatedAt,
 	}, nil
 }
 
 func (s *AuthService) ResetMe(
-	ctx context.Context, reqDto *authdto.ResetMeRequestDto,
-) (*authdto.ResetMeResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.ResetMeRequestDto,
+) (*apicontract.ResetMeResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.User.InvalidInput().WithOrigin(err)
 	}
@@ -1506,14 +1489,14 @@ func (s *AuthService) ResetMe(
 		return nil, apiexceptions.User.FailedToCommitTransaction().WithDetails(err)
 	}
 
-	return &authdto.ResetMeResponseDto{
+	return &apicontract.ResetMeResponseDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
 
 func (s *AuthService) DeleteMe(
-	ctx context.Context, reqDto *authdto.DeleteMeRequestDto,
-) (*authdto.DeleteMeResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.DeleteMeRequestDto,
+) (*apicontract.DeleteMeResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(reqDto); err != nil {
 		return nil, apiexceptions.User.InvalidInput().WithOrigin(err)
 	}
@@ -1571,7 +1554,7 @@ func (s *AuthService) DeleteMe(
 		_ = logs.NotezyLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
 	}
 
-	return &authdto.DeleteMeResponseDto{
+	return &apicontract.DeleteMeResponseDto{
 		DeletedAt: time.Now(),
 	}, nil
 }

@@ -1,4 +1,4 @@
-package authdto
+package apicontract
 
 import (
 	"time"

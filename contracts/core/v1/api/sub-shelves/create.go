@@ -1,4 +1,4 @@
-package subshelvesdto
+package apicontract
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	coreapicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api"
-	subshelvestypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/sub-shelves"
+	coretypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/sub-shelves"
 )
 
 type CreateSubShelfByRootShelfIdRequestDto struct {
@@ -14,7 +14,7 @@ type CreateSubShelfByRootShelfIdRequestDto struct {
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
-		subshelvestypes.CreatableSubShelf,
+		coretypes.CreatableSubShelf,
 		struct{},
 		struct{},
 	]
@@ -31,7 +31,7 @@ type CreateSubShelvesByRootShelfIdsRequestDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			CreatedSubShelves []subshelvestypes.CreatableSubShelf `json:"createdSubShelves" validate:"required,min=1,max=1024,dive"`
+			CreatedSubShelves []coretypes.CreatableSubShelf `json:"createdSubShelves" validate:"required,min=1,max=1024,dive"`
 		},
 		struct{},
 		struct{},

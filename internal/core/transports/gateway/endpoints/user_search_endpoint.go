@@ -6,15 +6,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
 )
 
 func (t *UserEndpoint) SearchUsers(ctx *gin.Context) {
-	request := &gatewaycontract.Request[usersdto.SearchUsersRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.SearchUsersRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -49,7 +49,7 @@ func (t *UserEndpoint) SearchUsers(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[usersdto.SearchUsersResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.SearchUsersResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -60,8 +60,8 @@ func (t *UserEndpoint) SearchUsers(ctx *gin.Context) {
 }
 
 func (t *UserEndpoint) LoadThemeAuthors(ctx *gin.Context) {
-	request := &gatewaycontract.Request[usersdto.LoadThemeAuthorsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.LoadThemeAuthorsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -81,7 +81,7 @@ func (t *UserEndpoint) LoadThemeAuthors(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[usersdto.LoadThemeAuthorsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.LoadThemeAuthorsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,

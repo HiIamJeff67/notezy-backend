@@ -2,10 +2,10 @@
 
 ## Ownership and envelope
 
-- `shared/exceptions` is a pure application envelope. It may use the standard
+- `contracts/types/exceptions` is a pure application envelope. It may use the standard
   library and `shared`, but must not import Gateway, a microservice,
   platform observability, Gin, GORM, or generated GraphQL code.
-- `shared/exceptions` creates the shared envelope with `exceptions.New()`.
+- `contracts/types/exceptions` creates the shared envelope with `exceptions.New()`.
   Its optional final `isInternal ...bool` accepts only the first value and
   cannot be changed after construction. It must not own a domain factory or a
   numeric code registry.

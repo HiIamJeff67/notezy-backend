@@ -6,31 +6,31 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
 
-	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
 
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
 )
 
 type BlockPackBinderInterface interface {
-	BindGetMyBlockPackById(controllerFunc controllers.Func[*blockpacksdto.GetMyBlockPackByIdRequestDto]) gin.HandlerFunc
-	BindGetMyBlockPackAndItsParentById(controllerFunc controllers.Func[*blockpacksdto.GetMyBlockPackAndItsParentByIdRequestDto]) gin.HandlerFunc
-	BindGetMyBlockPacksByParentSubShelfId(controllerFunc controllers.Func[*blockpacksdto.GetMyBlockPacksByParentSubShelfIdRequestDto]) gin.HandlerFunc
-	BindGetAllMyBlockPacksByRootShelfId(controllerFunc controllers.Func[*blockpacksdto.GetAllMyBlockPacksByRootShelfIdRequestDto]) gin.HandlerFunc
-	BindCreateBlockPack(controllerFunc controllers.Func[*blockpacksdto.CreateBlockPackRequestDto]) gin.HandlerFunc
-	BindCreateBlockPacks(controllerFunc controllers.Func[*blockpacksdto.CreateBlockPacksRequestDto]) gin.HandlerFunc
-	BindUpdateMyBlockPackById(controllerFunc controllers.Func[*blockpacksdto.UpdateMyBlockPackByIdRequestDto]) gin.HandlerFunc
-	BindUpdateMyBlockPacksByIds(controllerFunc controllers.Func[*blockpacksdto.UpdateMyBlockPacksByIdsRequestDto]) gin.HandlerFunc
-	BindMoveMyBlockPackByParentSubShelfId(controllerFunc controllers.Func[*blockpacksdto.MoveMyBlockPackByParentSubShelfIdRequestDto]) gin.HandlerFunc
-	BindMoveMyBlockPacksByParentSubShelfId(controllerFunc controllers.Func[*blockpacksdto.MoveMyBlockPacksByParentSubShelfIdRequestDto]) gin.HandlerFunc
-	BindMoveMyBlockPacksByParentSubShelfIds(controllerFunc controllers.Func[*blockpacksdto.MoveMyBlockPacksByParentSubShelfIdsRequestDto]) gin.HandlerFunc
-	BindRestoreMyBlockPackById(controllerFunc controllers.Func[*blockpacksdto.RestoreMyBlockPackByIdRequestDto]) gin.HandlerFunc
-	BindRestoreMyBlockPacksByIds(controllerFunc controllers.Func[*blockpacksdto.RestoreMyBlockPacksByIdsRequestDto]) gin.HandlerFunc
-	BindDeleteMyBlockPackById(controllerFunc controllers.Func[*blockpacksdto.DeleteMyBlockPackByIdRequestDto]) gin.HandlerFunc
-	BindDeleteMyBlockPacksByIds(controllerFunc controllers.Func[*blockpacksdto.DeleteMyBlockPacksByIdsRequestDto]) gin.HandlerFunc
+	BindGetMyBlockPackById(controllerFunc controllers.Func[*apicontract.GetMyBlockPackByIdRequestDto]) gin.HandlerFunc
+	BindGetMyBlockPackAndItsParentById(controllerFunc controllers.Func[*apicontract.GetMyBlockPackAndItsParentByIdRequestDto]) gin.HandlerFunc
+	BindGetMyBlockPacksByParentSubShelfId(controllerFunc controllers.Func[*apicontract.GetMyBlockPacksByParentSubShelfIdRequestDto]) gin.HandlerFunc
+	BindGetAllMyBlockPacksByRootShelfId(controllerFunc controllers.Func[*apicontract.GetAllMyBlockPacksByRootShelfIdRequestDto]) gin.HandlerFunc
+	BindCreateBlockPack(controllerFunc controllers.Func[*apicontract.CreateBlockPackRequestDto]) gin.HandlerFunc
+	BindCreateBlockPacks(controllerFunc controllers.Func[*apicontract.CreateBlockPacksRequestDto]) gin.HandlerFunc
+	BindUpdateMyBlockPackById(controllerFunc controllers.Func[*apicontract.UpdateMyBlockPackByIdRequestDto]) gin.HandlerFunc
+	BindUpdateMyBlockPacksByIds(controllerFunc controllers.Func[*apicontract.UpdateMyBlockPacksByIdsRequestDto]) gin.HandlerFunc
+	BindMoveMyBlockPackByParentSubShelfId(controllerFunc controllers.Func[*apicontract.MoveMyBlockPackByParentSubShelfIdRequestDto]) gin.HandlerFunc
+	BindMoveMyBlockPacksByParentSubShelfId(controllerFunc controllers.Func[*apicontract.MoveMyBlockPacksByParentSubShelfIdRequestDto]) gin.HandlerFunc
+	BindMoveMyBlockPacksByParentSubShelfIds(controllerFunc controllers.Func[*apicontract.MoveMyBlockPacksByParentSubShelfIdsRequestDto]) gin.HandlerFunc
+	BindRestoreMyBlockPackById(controllerFunc controllers.Func[*apicontract.RestoreMyBlockPackByIdRequestDto]) gin.HandlerFunc
+	BindRestoreMyBlockPacksByIds(controllerFunc controllers.Func[*apicontract.RestoreMyBlockPacksByIdsRequestDto]) gin.HandlerFunc
+	BindDeleteMyBlockPackById(controllerFunc controllers.Func[*apicontract.DeleteMyBlockPackByIdRequestDto]) gin.HandlerFunc
+	BindDeleteMyBlockPacksByIds(controllerFunc controllers.Func[*apicontract.DeleteMyBlockPacksByIdsRequestDto]) gin.HandlerFunc
 }
 
 type BlockPackBinder struct{}
@@ -39,9 +39,9 @@ func NewBlockPackBinder() BlockPackBinderInterface {
 	return &BlockPackBinder{}
 }
 
-func (b *BlockPackBinder) BindGetMyBlockPackById(controllerFunc controllers.Func[*blockpacksdto.GetMyBlockPackByIdRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindGetMyBlockPackById(controllerFunc controllers.Func[*apicontract.GetMyBlockPackByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto blockpacksdto.GetMyBlockPackByIdRequestDto
+		var requestDto apicontract.GetMyBlockPackByIdRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -66,9 +66,9 @@ func (b *BlockPackBinder) BindGetMyBlockPackById(controllerFunc controllers.Func
 	}
 }
 
-func (b *BlockPackBinder) BindGetMyBlockPackAndItsParentById(controllerFunc controllers.Func[*blockpacksdto.GetMyBlockPackAndItsParentByIdRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindGetMyBlockPackAndItsParentById(controllerFunc controllers.Func[*apicontract.GetMyBlockPackAndItsParentByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto blockpacksdto.GetMyBlockPackAndItsParentByIdRequestDto
+		var requestDto apicontract.GetMyBlockPackAndItsParentByIdRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -93,9 +93,9 @@ func (b *BlockPackBinder) BindGetMyBlockPackAndItsParentById(controllerFunc cont
 	}
 }
 
-func (b *BlockPackBinder) BindGetMyBlockPacksByParentSubShelfId(controllerFunc controllers.Func[*blockpacksdto.GetMyBlockPacksByParentSubShelfIdRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindGetMyBlockPacksByParentSubShelfId(controllerFunc controllers.Func[*apicontract.GetMyBlockPacksByParentSubShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto blockpacksdto.GetMyBlockPacksByParentSubShelfIdRequestDto
+		var requestDto apicontract.GetMyBlockPacksByParentSubShelfIdRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -120,9 +120,9 @@ func (b *BlockPackBinder) BindGetMyBlockPacksByParentSubShelfId(controllerFunc c
 	}
 }
 
-func (b *BlockPackBinder) BindGetAllMyBlockPacksByRootShelfId(controllerFunc controllers.Func[*blockpacksdto.GetAllMyBlockPacksByRootShelfIdRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindGetAllMyBlockPacksByRootShelfId(controllerFunc controllers.Func[*apicontract.GetAllMyBlockPacksByRootShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto blockpacksdto.GetAllMyBlockPacksByRootShelfIdRequestDto
+		var requestDto apicontract.GetAllMyBlockPacksByRootShelfIdRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -147,9 +147,9 @@ func (b *BlockPackBinder) BindGetAllMyBlockPacksByRootShelfId(controllerFunc con
 	}
 }
 
-func (b *BlockPackBinder) BindCreateBlockPack(controllerFunc controllers.Func[*blockpacksdto.CreateBlockPackRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindCreateBlockPack(controllerFunc controllers.Func[*apicontract.CreateBlockPackRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto blockpacksdto.CreateBlockPackRequestDto
+		var requestDto apicontract.CreateBlockPackRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -170,9 +170,9 @@ func (b *BlockPackBinder) BindCreateBlockPack(controllerFunc controllers.Func[*b
 	}
 }
 
-func (b *BlockPackBinder) BindCreateBlockPacks(controllerFunc controllers.Func[*blockpacksdto.CreateBlockPacksRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindCreateBlockPacks(controllerFunc controllers.Func[*apicontract.CreateBlockPacksRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto blockpacksdto.CreateBlockPacksRequestDto
+		var requestDto apicontract.CreateBlockPacksRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -186,9 +186,9 @@ func (b *BlockPackBinder) BindCreateBlockPacks(controllerFunc controllers.Func[*
 	}
 }
 
-func (b *BlockPackBinder) BindUpdateMyBlockPackById(controllerFunc controllers.Func[*blockpacksdto.UpdateMyBlockPackByIdRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindUpdateMyBlockPackById(controllerFunc controllers.Func[*apicontract.UpdateMyBlockPackByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto blockpacksdto.UpdateMyBlockPackByIdRequestDto
+		var requestDto apicontract.UpdateMyBlockPackByIdRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -209,9 +209,9 @@ func (b *BlockPackBinder) BindUpdateMyBlockPackById(controllerFunc controllers.F
 	}
 }
 
-func (b *BlockPackBinder) BindUpdateMyBlockPacksByIds(controllerFunc controllers.Func[*blockpacksdto.UpdateMyBlockPacksByIdsRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindUpdateMyBlockPacksByIds(controllerFunc controllers.Func[*apicontract.UpdateMyBlockPacksByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto blockpacksdto.UpdateMyBlockPacksByIdsRequestDto
+		var requestDto apicontract.UpdateMyBlockPacksByIdsRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -225,9 +225,9 @@ func (b *BlockPackBinder) BindUpdateMyBlockPacksByIds(controllerFunc controllers
 	}
 }
 
-func (b *BlockPackBinder) BindMoveMyBlockPackByParentSubShelfId(controllerFunc controllers.Func[*blockpacksdto.MoveMyBlockPackByParentSubShelfIdRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindMoveMyBlockPackByParentSubShelfId(controllerFunc controllers.Func[*apicontract.MoveMyBlockPackByParentSubShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto blockpacksdto.MoveMyBlockPackByParentSubShelfIdRequestDto
+		var requestDto apicontract.MoveMyBlockPackByParentSubShelfIdRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -248,9 +248,9 @@ func (b *BlockPackBinder) BindMoveMyBlockPackByParentSubShelfId(controllerFunc c
 	}
 }
 
-func (b *BlockPackBinder) BindMoveMyBlockPacksByParentSubShelfId(controllerFunc controllers.Func[*blockpacksdto.MoveMyBlockPacksByParentSubShelfIdRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindMoveMyBlockPacksByParentSubShelfId(controllerFunc controllers.Func[*apicontract.MoveMyBlockPacksByParentSubShelfIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto blockpacksdto.MoveMyBlockPacksByParentSubShelfIdRequestDto
+		var requestDto apicontract.MoveMyBlockPacksByParentSubShelfIdRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -264,9 +264,9 @@ func (b *BlockPackBinder) BindMoveMyBlockPacksByParentSubShelfId(controllerFunc 
 	}
 }
 
-func (b *BlockPackBinder) BindMoveMyBlockPacksByParentSubShelfIds(controllerFunc controllers.Func[*blockpacksdto.MoveMyBlockPacksByParentSubShelfIdsRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindMoveMyBlockPacksByParentSubShelfIds(controllerFunc controllers.Func[*apicontract.MoveMyBlockPacksByParentSubShelfIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto blockpacksdto.MoveMyBlockPacksByParentSubShelfIdsRequestDto
+		var requestDto apicontract.MoveMyBlockPacksByParentSubShelfIdsRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -280,9 +280,9 @@ func (b *BlockPackBinder) BindMoveMyBlockPacksByParentSubShelfIds(controllerFunc
 	}
 }
 
-func (b *BlockPackBinder) BindRestoreMyBlockPackById(controllerFunc controllers.Func[*blockpacksdto.RestoreMyBlockPackByIdRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindRestoreMyBlockPackById(controllerFunc controllers.Func[*apicontract.RestoreMyBlockPackByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto blockpacksdto.RestoreMyBlockPackByIdRequestDto
+		var requestDto apicontract.RestoreMyBlockPackByIdRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -297,9 +297,9 @@ func (b *BlockPackBinder) BindRestoreMyBlockPackById(controllerFunc controllers.
 	}
 }
 
-func (b *BlockPackBinder) BindRestoreMyBlockPacksByIds(controllerFunc controllers.Func[*blockpacksdto.RestoreMyBlockPacksByIdsRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindRestoreMyBlockPacksByIds(controllerFunc controllers.Func[*apicontract.RestoreMyBlockPacksByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto blockpacksdto.RestoreMyBlockPacksByIdsRequestDto
+		var requestDto apicontract.RestoreMyBlockPacksByIdsRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -313,9 +313,9 @@ func (b *BlockPackBinder) BindRestoreMyBlockPacksByIds(controllerFunc controller
 	}
 }
 
-func (b *BlockPackBinder) BindDeleteMyBlockPackById(controllerFunc controllers.Func[*blockpacksdto.DeleteMyBlockPackByIdRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindDeleteMyBlockPackById(controllerFunc controllers.Func[*apicontract.DeleteMyBlockPackByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto blockpacksdto.DeleteMyBlockPackByIdRequestDto
+		var requestDto apicontract.DeleteMyBlockPackByIdRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
@@ -330,9 +330,9 @@ func (b *BlockPackBinder) BindDeleteMyBlockPackById(controllerFunc controllers.F
 	}
 }
 
-func (b *BlockPackBinder) BindDeleteMyBlockPacksByIds(controllerFunc controllers.Func[*blockpacksdto.DeleteMyBlockPacksByIdsRequestDto]) gin.HandlerFunc {
+func (b *BlockPackBinder) BindDeleteMyBlockPacksByIds(controllerFunc controllers.Func[*apicontract.DeleteMyBlockPacksByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var requestDto blockpacksdto.DeleteMyBlockPacksByIdsRequestDto
+		var requestDto apicontract.DeleteMyBlockPacksByIdsRequestDto
 
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 

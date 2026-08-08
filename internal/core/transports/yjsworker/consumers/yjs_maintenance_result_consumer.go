@@ -1,4 +1,4 @@
-package yjsworkerconsumers
+package adaptersconsumers
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 	yjsworkereventscontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1/events"
 
 	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"

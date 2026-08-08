@@ -6,15 +6,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	rootshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/root-shelves"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/root-shelves"
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
 )
 
 func (t *RootShelfEndpoint) SearchRootShelves(ctx *gin.Context) {
-	request := &gatewaycontract.Request[rootshelvesdto.SearchRootShelvesRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.SearchRootShelvesRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -49,7 +49,7 @@ func (t *RootShelfEndpoint) SearchRootShelves(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[rootshelvesdto.SearchRootShelvesResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.SearchRootShelvesResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,

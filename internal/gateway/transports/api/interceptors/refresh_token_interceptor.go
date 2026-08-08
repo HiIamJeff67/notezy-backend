@@ -7,21 +7,20 @@ import (
 	"github.com/gin-gonic/gin"
 
 	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
 
 	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
 
 	responsewriter "github.com/HiIamJeff67/notezy-backend/shared/util/responsewriter"
 
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
+
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/gateway/contexts"
 )
 
-const refreshableTokensResponseFieldName = "refreshableTokens"
-const newAccessTokenResponseFieldName = "newAccessToken"
-const newCSRFTokenResponseFieldName = "newCSRFToken"
-
-// To add additional field to the response with adding additional field of `newAccessToken` and `newCSRFToken`,
-// Note : It should be placed below the `JWTMiddleware`,
+// Adds non-sensitive refresh metadata to the public response.
+// The access token is written only to the Gateway cookie and never to JSON.
+// Note: this interceptor should be placed below the `JWTMiddleware`,
 // so that it can access the `AccessToken` and `CSRFToken` in the context field
 func RefreshTokenInterceptor(accessTokenCookieHandler *cookies.CookieHandler) func(string) gin.HandlerFunc {
 	return func(responseWriterKey string) gin.HandlerFunc {
@@ -61,7 +60,7 @@ func RefreshTokenInterceptor(accessTokenCookieHandler *cookies.CookieHandler) fu
 				return
 			}
 
-			var originalResponse map[string]interface{}
+			var originalResponse gatewaycontract.ClientResponse[json.RawMessage]
 			if err := json.Unmarshal(writer.Body.Bytes(), &originalResponse); err != nil {
 				return
 			}
@@ -74,9 +73,8 @@ func RefreshTokenInterceptor(accessTokenCookieHandler *cookies.CookieHandler) fu
 
 			accessTokenCookieHandler.Set(ctx, *accessToken)
 			ctx.Header("X-CSRF-Token", *csrfToken)
-			originalResponse[refreshableTokensResponseFieldName] = gin.H{
-				newAccessTokenResponseFieldName: *accessToken,
-				newCSRFTokenResponseFieldName:   *csrfToken,
+			originalResponse.RefreshableTokens = &gatewaycontract.RefreshableTokens{
+				NewCSRFToken: *csrfToken,
 			}
 			modifiedResponse, err := json.Marshal(originalResponse)
 			if err != nil {

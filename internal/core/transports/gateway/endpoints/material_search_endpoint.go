@@ -6,15 +6,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	materialsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/materials"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/materials"
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
 )
 
 func (t *MaterialEndpoint) SearchMaterials(ctx *gin.Context) {
-	request := &gatewaycontract.Request[materialsdto.SearchMaterialsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.SearchMaterialsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -49,7 +49,7 @@ func (t *MaterialEndpoint) SearchMaterials(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[materialsdto.SearchMaterialsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.SearchMaterialsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,

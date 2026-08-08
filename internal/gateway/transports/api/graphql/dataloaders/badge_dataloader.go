@@ -7,9 +7,9 @@ import (
 	"github.com/google/uuid"
 	gophersdataloader "github.com/graph-gophers/dataloader/v7"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
-	badgesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/badges"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/badges"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 
 	gatewaycontexts "github.com/HiIamJeff67/notezy-backend/internal/gateway/contexts"
@@ -37,11 +37,11 @@ type BadgeDataloaderInterface interface {
 }
 
 type BadgeDataloader struct {
-	coreClient *coreadapters.CoreClient
+	coreClient *coreadapters.CoreAdapter
 	loader     *BadgeLoaderType
 }
 
-func NewBadgeDataloader(coreClient *coreadapters.CoreClient) BadgeDataloaderInterface {
+func NewBadgeDataloader(coreClient *coreadapters.CoreAdapter) BadgeDataloaderInterface {
 	dataloader := &BadgeDataloader{
 		coreClient: coreClient,
 	}
@@ -100,15 +100,15 @@ func (d *BadgeDataloader) batchFunction() BadgeBatchFunctionType {
 			return results
 		}
 
-		requestDto := badgesdto.LoadUserBadgesRequestDto(publicIds)
+		requestDto := apicontract.LoadUserBadgesRequestDto(publicIds)
 		response, exception := coreadapters.CallSecurly[
-			badgesdto.LoadUserBadgesRequestDto,
-			badgesdto.LoadUserBadgesResponseDto,
+			apicontract.LoadUserBadgesRequestDto,
+			apicontract.LoadUserBadgesResponseDto,
 		](
 			ginContext,
 			d.coreClient,
 			&requestDto,
-			badgesdto.LoadUserBadgesOperation,
+			apicontract.LoadUserBadgesOperation,
 			"/core/v1/badges/graphql/load",
 		)
 		if exception != nil {

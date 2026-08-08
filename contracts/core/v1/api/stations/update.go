@@ -1,4 +1,4 @@
-package stationsdto
+package apicontract
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	coreapicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api"
-	stationstypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/stations"
+	coretypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/stations"
 )
 
 type UpdateMyStationByIdRequestDto struct {
@@ -40,7 +40,7 @@ type UpdateMyStationsByIdsRequestDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			UpdatedStations []stationstypes.UpdatableStation `json:"updatedStations" validate:"required,min=1,max=1024,dive"`
+			UpdatedStations []coretypes.UpdatableStation `json:"updatedStations" validate:"required,min=1,max=1024,dive"`
 		},
 		struct{},
 		struct{},

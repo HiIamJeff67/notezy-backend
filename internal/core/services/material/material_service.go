@@ -11,13 +11,13 @@ import (
 	pg "github.com/lib/pq"
 	"gorm.io/gorm"
 
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
 	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
 
-	materialsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/materials"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/materials"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
@@ -36,19 +36,19 @@ import (
 )
 
 type MaterialServiceInterface interface {
-	GetMyMaterialById(ctx context.Context, requestDto *materialsdto.GetMyMaterialByIdRequestDto) (*materialsdto.GetMyMaterialByIdResponseDto, *exceptions.Exception)
-	GetMyMaterialAndItsParentById(ctx context.Context, requestDto *materialsdto.GetMyMaterialAndItsParentByIdRequestDto) (*materialsdto.GetMyMaterialAndItsParentByIdResponseDto, *exceptions.Exception)
-	GetMyMaterialsByParentSubShelfId(ctx context.Context, requestDto *materialsdto.GetMyMaterialsByParentSubShelfIdRequestDto) (*materialsdto.GetMyMaterialsByParentSubShelfIdResponseDto, *exceptions.Exception)
-	GetAllMyMaterialsByRootShelfId(ctx context.Context, requestDto *materialsdto.GetAllMyMaterialsByRootShelfIdRequestDto) (*materialsdto.GetAllMyMaterialsByRootShelfIdResponseDto, *exceptions.Exception)
-	CreateMyMaterial(ctx context.Context, requestDto *materialsdto.CreateMyMaterialRequestDto) (*materialsdto.CreateMyMaterialResponseDto, *exceptions.Exception)
-	UpdateMyMaterialById(ctx context.Context, requestDto *materialsdto.UpdateMyMaterialByIdRequestDto) (*materialsdto.UpdateMyMaterialByIdResponseDto, *exceptions.Exception)
-	SaveMyMaterialById(ctx context.Context, requestDto *materialsdto.SaveMyMaterialByIdRequestDto) (*materialsdto.SaveMyMaterialByIdResponseDto, *exceptions.Exception)
-	MoveMyMaterialById(ctx context.Context, requestDto *materialsdto.MoveMyMaterialByIdRequestDto) (*materialsdto.MoveMyMaterialByIdResponseDto, *exceptions.Exception)
-	MoveMyMaterialsByIds(ctx context.Context, requestDto *materialsdto.MoveMyMaterialsByIdsRequestDto) (*materialsdto.MoveMyMaterialsByIdsResponseDto, *exceptions.Exception)
-	RestoreMyMaterialById(ctx context.Context, requestDto *materialsdto.RestoreMyMaterialByIdRequestDto) (*materialsdto.RestoreMyMaterialByIdResponseDto, *exceptions.Exception)
-	RestoreMyMaterialsByIds(ctx context.Context, requestDto *materialsdto.RestoreMyMaterialsByIdsRequestDto) (*materialsdto.RestoreMyMaterialsByIdsResponseDto, *exceptions.Exception)
-	DeleteMyMaterialById(ctx context.Context, requestDto *materialsdto.DeleteMyMaterialByIdRequestDto) (*materialsdto.DeleteMyMaterialByIdResponseDto, *exceptions.Exception)
-	DeleteMyMaterialsByIds(ctx context.Context, requestDto *materialsdto.DeleteMyMaterialsByIdsRequestDto) (*materialsdto.DeleteMyMaterialsByIdsResponseDto, *exceptions.Exception)
+	GetMyMaterialById(ctx context.Context, requestDto *apicontract.GetMyMaterialByIdRequestDto) (*apicontract.GetMyMaterialByIdResponseDto, *exceptions.Exception)
+	GetMyMaterialAndItsParentById(ctx context.Context, requestDto *apicontract.GetMyMaterialAndItsParentByIdRequestDto) (*apicontract.GetMyMaterialAndItsParentByIdResponseDto, *exceptions.Exception)
+	GetMyMaterialsByParentSubShelfId(ctx context.Context, requestDto *apicontract.GetMyMaterialsByParentSubShelfIdRequestDto) (*apicontract.GetMyMaterialsByParentSubShelfIdResponseDto, *exceptions.Exception)
+	GetAllMyMaterialsByRootShelfId(ctx context.Context, requestDto *apicontract.GetAllMyMaterialsByRootShelfIdRequestDto) (*apicontract.GetAllMyMaterialsByRootShelfIdResponseDto, *exceptions.Exception)
+	CreateMyMaterial(ctx context.Context, requestDto *apicontract.CreateMyMaterialRequestDto) (*apicontract.CreateMyMaterialResponseDto, *exceptions.Exception)
+	UpdateMyMaterialById(ctx context.Context, requestDto *apicontract.UpdateMyMaterialByIdRequestDto) (*apicontract.UpdateMyMaterialByIdResponseDto, *exceptions.Exception)
+	SaveMyMaterialById(ctx context.Context, requestDto *apicontract.SaveMyMaterialByIdRequestDto) (*apicontract.SaveMyMaterialByIdResponseDto, *exceptions.Exception)
+	MoveMyMaterialById(ctx context.Context, requestDto *apicontract.MoveMyMaterialByIdRequestDto) (*apicontract.MoveMyMaterialByIdResponseDto, *exceptions.Exception)
+	MoveMyMaterialsByIds(ctx context.Context, requestDto *apicontract.MoveMyMaterialsByIdsRequestDto) (*apicontract.MoveMyMaterialsByIdsResponseDto, *exceptions.Exception)
+	RestoreMyMaterialById(ctx context.Context, requestDto *apicontract.RestoreMyMaterialByIdRequestDto) (*apicontract.RestoreMyMaterialByIdResponseDto, *exceptions.Exception)
+	RestoreMyMaterialsByIds(ctx context.Context, requestDto *apicontract.RestoreMyMaterialsByIdsRequestDto) (*apicontract.RestoreMyMaterialsByIdsResponseDto, *exceptions.Exception)
+	DeleteMyMaterialById(ctx context.Context, requestDto *apicontract.DeleteMyMaterialByIdRequestDto) (*apicontract.DeleteMyMaterialByIdResponseDto, *exceptions.Exception)
+	DeleteMyMaterialsByIds(ctx context.Context, requestDto *apicontract.DeleteMyMaterialsByIdsRequestDto) (*apicontract.DeleteMyMaterialsByIdsResponseDto, *exceptions.Exception)
 
 	SearchPrivateMaterials(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchMaterialInput) (*gqlmodels.SearchMaterialConnection, *exceptions.Exception)
 }
@@ -84,8 +84,8 @@ func NewMaterialService(
 }
 
 func (s *MaterialService) GetMyMaterialById(
-	ctx context.Context, requestDto *materialsdto.GetMyMaterialByIdRequestDto,
-) (*materialsdto.GetMyMaterialByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.GetMyMaterialByIdRequestDto,
+) (*apicontract.GetMyMaterialByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
@@ -125,7 +125,7 @@ func (s *MaterialService) GetMyMaterialById(
 		logs.NotezyLogger.Error(ctx, err, "Failed to presign Material object")
 	}
 
-	return &materialsdto.GetMyMaterialByIdResponseDto{
+	return &apicontract.GetMyMaterialByIdResponseDto{
 		Id:               material.Id,
 		ParentSubShelfId: material.ParentSubShelfId,
 		Name:             material.Name,
@@ -140,8 +140,8 @@ func (s *MaterialService) GetMyMaterialById(
 }
 
 func (s *MaterialService) GetMyMaterialAndItsParentById(
-	ctx context.Context, requestDto *materialsdto.GetMyMaterialAndItsParentByIdRequestDto,
-) (*materialsdto.GetMyMaterialAndItsParentByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.GetMyMaterialAndItsParentByIdRequestDto,
+) (*apicontract.GetMyMaterialAndItsParentByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
@@ -166,7 +166,7 @@ func (s *MaterialService) GetMyMaterialAndItsParentById(
 		}
 	}
 
-	resDto := materialsdto.GetMyMaterialAndItsParentByIdResponseDto{}
+	resDto := apicontract.GetMyMaterialAndItsParentByIdResponseDto{}
 	var contentKey string
 	err := db.Raw(materialsql.GetMyMaterialAndItsParentByIdSQL,
 		requestDto.Param.MaterialId, actorUserId, pg.Array(allowedPermissions), onlyDeleted,
@@ -206,8 +206,8 @@ func (s *MaterialService) GetMyMaterialAndItsParentById(
 }
 
 func (s *MaterialService) GetMyMaterialsByParentSubShelfId(
-	ctx context.Context, requestDto *materialsdto.GetMyMaterialsByParentSubShelfIdRequestDto,
-) (*materialsdto.GetMyMaterialsByParentSubShelfIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.GetMyMaterialsByParentSubShelfIdRequestDto,
+) (*apicontract.GetMyMaterialsByParentSubShelfIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
@@ -248,13 +248,13 @@ func (s *MaterialService) GetMyMaterialsByParentSubShelfId(
 		return nil, apiexceptions.Material.NotFound().WithOrigin(err)
 	}
 
-	resDto := materialsdto.GetMyMaterialsByParentSubShelfIdResponseDto{}
+	resDto := apicontract.GetMyMaterialsByParentSubShelfIdResponseDto{}
 	for _, material := range materials {
 		downloadURL, err := s.storage.PresignGetObjectByKey(ctx, material.ContentKey, nil)
 		if err != nil {
 			logs.NotezyLogger.Error(ctx, err, "Failed to presign Material object")
 		}
-		resDto = append(resDto, materialsdto.GetMyMaterialByIdResponseDto{
+		resDto = append(resDto, apicontract.GetMyMaterialByIdResponseDto{
 			Id:               material.Id,
 			ParentSubShelfId: material.ParentSubShelfId,
 			Name:             material.Name,
@@ -272,8 +272,8 @@ func (s *MaterialService) GetMyMaterialsByParentSubShelfId(
 }
 
 func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
-	ctx context.Context, requestDto *materialsdto.GetAllMyMaterialsByRootShelfIdRequestDto,
-) (*materialsdto.GetAllMyMaterialsByRootShelfIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.GetAllMyMaterialsByRootShelfIdRequestDto,
+) (*apicontract.GetAllMyMaterialsByRootShelfIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
@@ -312,13 +312,13 @@ func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
 		return nil, apiexceptions.Material.NotFound()
 	}
 
-	resDto := materialsdto.GetAllMyMaterialsByRootShelfIdResponseDto{}
+	resDto := apicontract.GetAllMyMaterialsByRootShelfIdResponseDto{}
 	for _, material := range materials {
 		downloadURL, err := s.storage.PresignGetObjectByKey(ctx, material.ContentKey, nil)
 		if err != nil {
 			logs.NotezyLogger.Error(ctx, err, "Failed to presign Material object")
 		}
-		resDto = append(resDto, materialsdto.GetMyMaterialByIdResponseDto{
+		resDto = append(resDto, apicontract.GetMyMaterialByIdResponseDto{
 			Id:               material.Id,
 			ParentSubShelfId: material.ParentSubShelfId,
 			Name:             material.Name,
@@ -336,8 +336,8 @@ func (s *MaterialService) GetAllMyMaterialsByRootShelfId(
 }
 
 func (s *MaterialService) CreateMyMaterial(
-	ctx context.Context, requestDto *materialsdto.CreateMyMaterialRequestDto,
-) (*materialsdto.CreateMyMaterialResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.CreateMyMaterialRequestDto,
+) (*apicontract.CreateMyMaterialResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
@@ -391,15 +391,15 @@ func (s *MaterialService) CreateMyMaterial(
 		return nil, apiexceptions.Storage.FailedToPutObject(object).WithOrigin(err)
 	}
 
-	return &materialsdto.CreateMyMaterialResponseDto{
+	return &apicontract.CreateMyMaterialResponseDto{
 		Id:        newMaterialId,
 		CreatedAt: time.Now(),
 	}, nil
 }
 
 func (s *MaterialService) UpdateMyMaterialById(
-	ctx context.Context, requestDto *materialsdto.UpdateMyMaterialByIdRequestDto,
-) (*materialsdto.UpdateMyMaterialByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.UpdateMyMaterialByIdRequestDto,
+) (*apicontract.UpdateMyMaterialByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
@@ -430,14 +430,14 @@ func (s *MaterialService) UpdateMyMaterialById(
 		return nil, exception
 	}
 
-	return &materialsdto.UpdateMyMaterialByIdResponseDto{
+	return &apicontract.UpdateMyMaterialByIdResponseDto{
 		UpdatedAt: material.UpdatedAt,
 	}, nil
 }
 
 func (s *MaterialService) SaveMyMaterialById(
-	ctx context.Context, requestDto *materialsdto.SaveMyMaterialByIdRequestDto,
-) (*materialsdto.SaveMyMaterialByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.SaveMyMaterialByIdRequestDto,
+) (*apicontract.SaveMyMaterialByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
@@ -508,14 +508,14 @@ func (s *MaterialService) SaveMyMaterialById(
 		return nil, apiexceptions.Storage.FailedToPutObject(object).WithOrigin(err)
 	}
 
-	return &materialsdto.SaveMyMaterialByIdResponseDto{
+	return &apicontract.SaveMyMaterialByIdResponseDto{
 		UpdatedAt: material.UpdatedAt,
 	}, nil
 }
 
 func (s *MaterialService) MoveMyMaterialById(
-	ctx context.Context, requestDto *materialsdto.MoveMyMaterialByIdRequestDto,
-) (*materialsdto.MoveMyMaterialByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.MoveMyMaterialByIdRequestDto,
+) (*apicontract.MoveMyMaterialByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
@@ -547,14 +547,14 @@ func (s *MaterialService) MoveMyMaterialById(
 		return nil, apiexceptions.Material.NoChanges()
 	}
 
-	return &materialsdto.MoveMyMaterialByIdResponseDto{
+	return &apicontract.MoveMyMaterialByIdResponseDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
 
 func (s *MaterialService) MoveMyMaterialsByIds(
-	ctx context.Context, requestDto *materialsdto.MoveMyMaterialsByIdsRequestDto,
-) (*materialsdto.MoveMyMaterialsByIdsResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.MoveMyMaterialsByIdsRequestDto,
+) (*apicontract.MoveMyMaterialsByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
@@ -586,14 +586,14 @@ func (s *MaterialService) MoveMyMaterialsByIds(
 		return nil, apiexceptions.Material.NoChanges()
 	}
 
-	return &materialsdto.MoveMyMaterialsByIdsResponseDto{
+	return &apicontract.MoveMyMaterialsByIdsResponseDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
 
 func (s *MaterialService) RestoreMyMaterialById(
-	ctx context.Context, requestDto *materialsdto.RestoreMyMaterialByIdRequestDto,
-) (*materialsdto.RestoreMyMaterialByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.RestoreMyMaterialByIdRequestDto,
+) (*apicontract.RestoreMyMaterialByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
@@ -623,7 +623,7 @@ func (s *MaterialService) RestoreMyMaterialById(
 		logs.NotezyLogger.Error(ctx, err, "Failed to presign Material object")
 	}
 
-	return &materialsdto.RestoreMyMaterialByIdResponseDto{
+	return &apicontract.RestoreMyMaterialByIdResponseDto{
 		Id:               restoredMaterial.Id,
 		ParentSubShelfId: restoredMaterial.ParentSubShelfId,
 		Name:             restoredMaterial.Name,
@@ -638,8 +638,8 @@ func (s *MaterialService) RestoreMyMaterialById(
 }
 
 func (s *MaterialService) RestoreMyMaterialsByIds(
-	ctx context.Context, requestDto *materialsdto.RestoreMyMaterialsByIdsRequestDto,
-) (*materialsdto.RestoreMyMaterialsByIdsResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.RestoreMyMaterialsByIdsRequestDto,
+) (*apicontract.RestoreMyMaterialsByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
@@ -664,13 +664,13 @@ func (s *MaterialService) RestoreMyMaterialsByIds(
 		return nil, exception
 	}
 
-	resDto := materialsdto.RestoreMyMaterialsByIdsResponseDto{}
+	resDto := apicontract.RestoreMyMaterialsByIdsResponseDto{}
 	for _, restoredMaterial := range restoredMaterials {
 		downloadURL, err := s.storage.PresignGetObjectByKey(ctx, restoredMaterial.ContentKey, nil)
 		if err != nil {
 			logs.NotezyLogger.Error(ctx, err, "Failed to presign Material object")
 		}
-		resDto = append(resDto, materialsdto.RestoreMyMaterialByIdResponseDto{
+		resDto = append(resDto, apicontract.RestoreMyMaterialByIdResponseDto{
 			Id:               restoredMaterial.Id,
 			ParentSubShelfId: restoredMaterial.ParentSubShelfId,
 			Name:             restoredMaterial.Name,
@@ -687,8 +687,8 @@ func (s *MaterialService) RestoreMyMaterialsByIds(
 }
 
 func (s *MaterialService) DeleteMyMaterialById(
-	ctx context.Context, requestDto *materialsdto.DeleteMyMaterialByIdRequestDto,
-) (*materialsdto.DeleteMyMaterialByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.DeleteMyMaterialByIdRequestDto,
+) (*apicontract.DeleteMyMaterialByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
@@ -713,14 +713,14 @@ func (s *MaterialService) DeleteMyMaterialById(
 		return nil, exception
 	}
 
-	return &materialsdto.DeleteMyMaterialByIdResponseDto{
+	return &apicontract.DeleteMyMaterialByIdResponseDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
 
 func (s *MaterialService) DeleteMyMaterialsByIds(
-	ctx context.Context, requestDto *materialsdto.DeleteMyMaterialsByIdsRequestDto,
-) (*materialsdto.DeleteMyMaterialsByIdsResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.DeleteMyMaterialsByIdsRequestDto,
+) (*apicontract.DeleteMyMaterialsByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Material.InvalidDto().WithOrigin(err)
 	}
@@ -745,7 +745,7 @@ func (s *MaterialService) DeleteMyMaterialsByIds(
 		return nil, exception
 	}
 
-	return &materialsdto.DeleteMyMaterialsByIdsResponseDto{
+	return &apicontract.DeleteMyMaterialsByIdsResponseDto{
 		DeletedAt: time.Now(),
 	}, nil
 }

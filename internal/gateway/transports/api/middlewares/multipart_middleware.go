@@ -10,8 +10,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
 
 	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
 

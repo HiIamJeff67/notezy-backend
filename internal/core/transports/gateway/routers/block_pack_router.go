@@ -3,7 +3,7 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
 
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
@@ -19,7 +19,7 @@ func configureBlockPackRoutes(
 		blockPackRoutes.POST(
 			"/get-by-id",
 			middlewares.DelegationAuthenticatedMiddleware(
-				blockpacksdto.GetMyBlockPackByIdOperation,
+				apicontract.GetMyBlockPackByIdOperation,
 			),
 			authMiddleware,
 			endpoint.GetMyBlockPackById,
@@ -27,7 +27,7 @@ func configureBlockPackRoutes(
 		blockPackRoutes.POST(
 			"/get-and-parent-by-id",
 			middlewares.DelegationAuthenticatedMiddleware(
-				blockpacksdto.GetMyBlockPackAndItsParentByIdOperation,
+				apicontract.GetMyBlockPackAndItsParentByIdOperation,
 			),
 			authMiddleware,
 			endpoint.GetMyBlockPackAndItsParentById,
@@ -35,7 +35,7 @@ func configureBlockPackRoutes(
 		blockPackRoutes.POST(
 			"/get-by-parent-sub-shelf-id",
 			middlewares.DelegationAuthenticatedMiddleware(
-				blockpacksdto.GetMyBlockPacksByParentSubShelfIdOperation,
+				apicontract.GetMyBlockPacksByParentSubShelfIdOperation,
 			),
 			authMiddleware,
 			endpoint.GetMyBlockPacksByParentSubShelfId,
@@ -43,7 +43,7 @@ func configureBlockPackRoutes(
 		blockPackRoutes.POST(
 			"/get-all-by-root-shelf-id",
 			middlewares.DelegationAuthenticatedMiddleware(
-				blockpacksdto.GetAllMyBlockPacksByRootShelfIdOperation,
+				apicontract.GetAllMyBlockPacksByRootShelfIdOperation,
 			),
 			authMiddleware,
 			endpoint.GetAllMyBlockPacksByRootShelfId,
@@ -51,7 +51,7 @@ func configureBlockPackRoutes(
 		blockPackRoutes.POST(
 			"/create",
 			middlewares.DelegationAuthenticatedMiddleware(
-				blockpacksdto.CreateBlockPackOperation,
+				apicontract.CreateBlockPackOperation,
 			),
 			authMiddleware,
 			endpoint.CreateBlockPack,
@@ -59,7 +59,7 @@ func configureBlockPackRoutes(
 		blockPackRoutes.POST(
 			"/create-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				blockpacksdto.CreateBlockPacksOperation,
+				apicontract.CreateBlockPacksOperation,
 			),
 			authMiddleware,
 			endpoint.CreateBlockPacks,
@@ -67,7 +67,7 @@ func configureBlockPackRoutes(
 		blockPackRoutes.POST(
 			"/update",
 			middlewares.DelegationAuthenticatedMiddleware(
-				blockpacksdto.UpdateMyBlockPackByIdOperation,
+				apicontract.UpdateMyBlockPackByIdOperation,
 			),
 			authMiddleware,
 			endpoint.UpdateMyBlockPackById,
@@ -75,7 +75,7 @@ func configureBlockPackRoutes(
 		blockPackRoutes.POST(
 			"/update-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				blockpacksdto.UpdateMyBlockPacksByIdsOperation,
+				apicontract.UpdateMyBlockPacksByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.UpdateMyBlockPacksByIds,
@@ -83,7 +83,7 @@ func configureBlockPackRoutes(
 		blockPackRoutes.POST(
 			"/move",
 			middlewares.DelegationAuthenticatedMiddleware(
-				blockpacksdto.MoveMyBlockPackByParentSubShelfIdOperation,
+				apicontract.MoveMyBlockPackByParentSubShelfIdOperation,
 			),
 			authMiddleware,
 			endpoint.MoveMyBlockPackByParentSubShelfId,
@@ -91,7 +91,7 @@ func configureBlockPackRoutes(
 		blockPackRoutes.POST(
 			"/move-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				blockpacksdto.MoveMyBlockPacksByParentSubShelfIdOperation,
+				apicontract.MoveMyBlockPacksByParentSubShelfIdOperation,
 			),
 			authMiddleware,
 			endpoint.MoveMyBlockPacksByParentSubShelfId,
@@ -99,7 +99,7 @@ func configureBlockPackRoutes(
 		blockPackRoutes.POST(
 			"/move-many-by-parent-sub-shelves",
 			middlewares.DelegationAuthenticatedMiddleware(
-				blockpacksdto.MoveMyBlockPacksByParentSubShelfIdsOperation,
+				apicontract.MoveMyBlockPacksByParentSubShelfIdsOperation,
 			),
 			authMiddleware,
 			endpoint.MoveMyBlockPacksByParentSubShelfIds,
@@ -107,7 +107,7 @@ func configureBlockPackRoutes(
 		blockPackRoutes.POST(
 			"/restore",
 			middlewares.DelegationAuthenticatedMiddleware(
-				blockpacksdto.RestoreMyBlockPackByIdOperation,
+				apicontract.RestoreMyBlockPackByIdOperation,
 			),
 			authMiddleware,
 			endpoint.RestoreMyBlockPackById,
@@ -115,7 +115,7 @@ func configureBlockPackRoutes(
 		blockPackRoutes.POST(
 			"/restore-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				blockpacksdto.RestoreMyBlockPacksByIdsOperation,
+				apicontract.RestoreMyBlockPacksByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.RestoreMyBlockPacksByIds,
@@ -123,7 +123,7 @@ func configureBlockPackRoutes(
 		blockPackRoutes.POST(
 			"/delete",
 			middlewares.DelegationAuthenticatedMiddleware(
-				blockpacksdto.DeleteMyBlockPackByIdOperation,
+				apicontract.DeleteMyBlockPackByIdOperation,
 			),
 			authMiddleware,
 			endpoint.DeleteMyBlockPackById,
@@ -131,7 +131,7 @@ func configureBlockPackRoutes(
 		blockPackRoutes.POST(
 			"/delete-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				blockpacksdto.DeleteMyBlockPacksByIdsOperation,
+				apicontract.DeleteMyBlockPacksByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.DeleteMyBlockPacksByIds,
@@ -139,7 +139,7 @@ func configureBlockPackRoutes(
 		blockPackRoutes.POST(
 			"/graphql/search",
 			middlewares.DelegationAuthenticatedMiddleware(
-				blockpacksdto.SearchBlockPacksOperation,
+				apicontract.SearchBlockPacksOperation,
 			),
 			authMiddleware,
 			endpoint.SearchBlockPacks,

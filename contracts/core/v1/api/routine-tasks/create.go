@@ -1,4 +1,4 @@
-package routinetasksdto
+package apicontract
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	coreapicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api"
-	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/routine-tasks"
+	coretypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/routine-tasks"
 )
 
 type CreateRoutineTaskByRoutineIdRequestDto struct {
@@ -14,7 +14,7 @@ type CreateRoutineTaskByRoutineIdRequestDto struct {
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
-		routinetasktypes.CreatableRoutineTask,
+		coretypes.CreatableRoutineTask,
 		struct{},
 		struct{},
 	]

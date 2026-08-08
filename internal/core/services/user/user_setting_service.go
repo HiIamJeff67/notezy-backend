@@ -7,9 +7,9 @@ import (
 	validator "github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
-	usersettingsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-settings"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-settings"
 
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
 	data "github.com/HiIamJeff67/notezy-backend/internal/core/data/database"
@@ -20,8 +20,8 @@ import (
 )
 
 type UserSettingServiceInterface interface {
-	GetMySetting(ctx context.Context, requestDto *usersettingsdto.GetMySettingRequestDto) (*usersettingsdto.GetMySettingResponseDto, *exceptions.Exception)
-	UpdateMySetting(ctx context.Context, requestDto *usersettingsdto.UpdateMySettingRequestDto) (*usersettingsdto.UpdateMySettingResponseDto, *exceptions.Exception)
+	GetMySetting(ctx context.Context, requestDto *apicontract.GetMySettingRequestDto) (*apicontract.GetMySettingResponseDto, *exceptions.Exception)
+	UpdateMySetting(ctx context.Context, requestDto *apicontract.UpdateMySettingRequestDto) (*apicontract.UpdateMySettingResponseDto, *exceptions.Exception)
 }
 
 type UserSettingService struct {
@@ -49,8 +49,8 @@ func NewUserSettingService(
 
 func (s *UserSettingService) GetMySetting(
 	ctx context.Context,
-	requestDto *usersettingsdto.GetMySettingRequestDto,
-) (*usersettingsdto.GetMySettingResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.GetMySettingRequestDto,
+) (*apicontract.GetMySettingResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -75,7 +75,7 @@ func (s *UserSettingService) GetMySetting(
 		return nil, exception
 	}
 
-	return &usersettingsdto.GetMySettingResponseDto{
+	return &apicontract.GetMySettingResponseDto{
 		Language:           *userSetting.Language.ToContractable(),
 		GeneralSettingCode: userSetting.GeneralSettingCode,
 		PrivacySettingCode: userSetting.PrivacySettingCode,
@@ -84,8 +84,8 @@ func (s *UserSettingService) GetMySetting(
 
 func (s *UserSettingService) UpdateMySetting(
 	ctx context.Context,
-	requestDto *usersettingsdto.UpdateMySettingRequestDto,
-) (*usersettingsdto.UpdateMySettingResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.UpdateMySettingRequestDto,
+) (*apicontract.UpdateMySettingResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -123,7 +123,7 @@ func (s *UserSettingService) UpdateMySetting(
 		return nil, exception
 	}
 
-	return &usersettingsdto.UpdateMySettingResponseDto{
+	return &apicontract.UpdateMySettingResponseDto{
 		UpdatedAt: updatedUserSetting.UpdatedAt,
 	}, nil
 }

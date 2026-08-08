@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	concurrency "github.com/HiIamJeff67/notezy-backend/shared/lib/concurrency"
 	jsonpayload "github.com/HiIamJeff67/notezy-backend/shared/lib/jsonpayload"
@@ -16,7 +16,7 @@ import (
 	editableblock "github.com/HiIamJeff67/notezy-backend/shared/util/editableblock"
 
 	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
-	typescontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	blocknote "github.com/HiIamJeff67/notezy-backend/contracts/types/blocknote"
 
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
@@ -65,7 +65,7 @@ func DecodePayload[T any](validatorInstance *validator.Validate, task schemas.Ro
 
 func FlattenArborizedBlock(
 	blockPackId uuid.UUID,
-	arborizedEditableBlock *typescontract.ArborizedEditableBlock,
+	arborizedEditableBlock *blocknote.ArborizedEditableBlock,
 ) ([]schemas.Block, []uuid.UUID, int64, *exceptions.Exception) {
 	if blockPackId == uuid.Nil {
 		return nil, nil, 0, exceptions.New(
@@ -283,12 +283,12 @@ func (s *RoutineTaskPayloadParser) ValidateRoutineTaskPayload(
 			).WithOrigin(err)
 		}
 
-		validateBlockDto := make([]typescontract.ArborizedEditableBlock, len(parsedPayload.Template.Blocks))
+		validateBlockDto := make([]blocknote.ArborizedEditableBlock, len(parsedPayload.Template.Blocks))
 		for index, block := range parsedPayload.Template.Blocks {
 			validateBlockDto[index] = block.ArborizedEditableBlock
 		}
 
-		validateBlockFunc := func(validateDto typescontract.ArborizedEditableBlock) (bool, error) {
+		validateBlockFunc := func(validateDto blocknote.ArborizedEditableBlock) (bool, error) {
 			if exception := validateArborizedEditableBlock(&validateDto); exception != nil {
 				return false, exception
 			}
@@ -437,7 +437,7 @@ func (s *RoutineTaskPayloadParser) ValidateRoutineTaskPayload(
 }
 
 func validateArborizedEditableBlock(
-	arborizedEditableBlock *typescontract.ArborizedEditableBlock,
+	arborizedEditableBlock *blocknote.ArborizedEditableBlock,
 ) *exceptions.Exception {
 	if arborizedEditableBlock == nil {
 		return exceptions.New(

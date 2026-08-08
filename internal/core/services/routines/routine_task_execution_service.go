@@ -11,12 +11,12 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
 	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
-	typescontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
@@ -196,7 +196,7 @@ func (s *RoutineTaskExecutionService) ApplyPreparedRoutineTasks(
 		tx.Rollback()
 		return exception
 	}
-	completionEvents := make([]typescontract.EventEnvelope[coreeventscontract.RoutineTaskCompletedData], len(request.Tasks))
+	completionEvents := make([]eventcontract.EventEnvelope[coreeventscontract.RoutineTaskCompletedData], len(request.Tasks))
 	completionEventBuilder := durablejobeventbuilders.NewRoutineTaskCompletionEventBuilder()
 	for index, completedTask := range request.Tasks {
 		completionEvents[index] = completionEventBuilder.Build(

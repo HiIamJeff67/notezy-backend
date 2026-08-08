@@ -1,4 +1,4 @@
-package routinetasktypes
+package coretypes
 
 import (
 	"time"

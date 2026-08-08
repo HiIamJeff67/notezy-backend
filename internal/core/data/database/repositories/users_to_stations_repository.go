@@ -4,7 +4,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm/clause"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"

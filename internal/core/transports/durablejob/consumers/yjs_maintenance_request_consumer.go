@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/events"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 	yjsworkereventscontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1/events"
 
 	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
@@ -105,7 +105,20 @@ func (c *YjsMaintenanceRequestConsumer) consume(
 		Where("block_pack_id = ? AND deleted_at IS NULL", request.BlockPackId).
 		First(&document)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return c.publishResult(ctx, event, request, request.DocumentId, 0, 0, 0)
+		if err := c.resultProducer.Produce(ctx, event, yjsworkereventscontract.YjsMaintenanceResultData{
+			RequestId:              request.RequestId,
+			BlockPackId:            request.BlockPackId,
+			DocumentId:             request.DocumentId,
+			Operation:              request.Operation,
+			TargetSequence:         request.TargetSequence,
+			Success:                true,
+			CompactedUntilSequence: 0,
+			ProjectedUntilSequence: 0,
+		}); err != nil {
+			return fmt.Errorf("produce Yjs maintenance no-op result: %w", err)
+		}
+
+		return nil
 	}
 	if result.Error != nil {
 		return &platformkafka.ConsumerError{
@@ -128,44 +141,24 @@ func (c *YjsMaintenanceRequestConsumer) consume(
 		targetSequence <= document.CompactedUntilSequence) ||
 		(request.Operation == yjsworkereventscontract.YjsMaintenanceOperation_Project &&
 			targetSequence <= document.ProjectedUntilSequence) {
-		return c.publishResult(
-			ctx,
-			event,
-			request,
-			document.Id,
-			document.LastUpdateSequence,
-			document.CompactedUntilSequence,
-			document.ProjectedUntilSequence,
-		)
+		if err := c.resultProducer.Produce(ctx, event, yjsworkereventscontract.YjsMaintenanceResultData{
+			RequestId:              request.RequestId,
+			BlockPackId:            request.BlockPackId,
+			DocumentId:             document.Id,
+			Operation:              request.Operation,
+			TargetSequence:         request.TargetSequence,
+			Success:                true,
+			CompactedUntilSequence: document.CompactedUntilSequence,
+			ProjectedUntilSequence: document.ProjectedUntilSequence,
+		}); err != nil {
+			return fmt.Errorf("produce Yjs maintenance no-op result: %w", err)
+		}
+
+		return nil
 	}
 
 	if err := c.commandProducer.Produce(ctx, event, request, document.Id, targetSequence); err != nil {
 		return fmt.Errorf("produce Yjs maintenance command: %w", err)
-	}
-
-	return nil
-}
-
-func (c *YjsMaintenanceRequestConsumer) publishResult(
-	ctx context.Context,
-	event eventcontract.EventEnvelope[json.RawMessage],
-	request durablejobeventscontract.YjsMaintenanceRequestData,
-	documentId uuid.UUID,
-	lastUpdateSequence int64,
-	compactedUntilSequence int64,
-	projectedUntilSequence int64,
-) error {
-	if err := c.resultProducer.Produce(ctx, event, yjsworkereventscontract.YjsMaintenanceResultData{
-		RequestId:              request.RequestId,
-		BlockPackId:            request.BlockPackId,
-		DocumentId:             documentId,
-		Operation:              request.Operation,
-		TargetSequence:         request.TargetSequence,
-		Success:                true,
-		CompactedUntilSequence: compactedUntilSequence,
-		ProjectedUntilSequence: projectedUntilSequence,
-	}); err != nil {
-		return fmt.Errorf("produce Yjs maintenance no-op result: %w", err)
 	}
 
 	return nil

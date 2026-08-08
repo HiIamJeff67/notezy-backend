@@ -1,8 +1,8 @@
 .env
 
 *.temp
-temp/**.*
-tmp/**.*
+temp/**
+tmp/**
 
 .gocache/
 .pnpm-store/

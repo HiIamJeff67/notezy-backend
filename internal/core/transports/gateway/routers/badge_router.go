@@ -3,7 +3,7 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	badgesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/badges"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/badges"
 
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
@@ -19,7 +19,7 @@ func configureBadgeRoutes(
 		badgeRoutes.POST(
 			"/graphql/load",
 			middlewares.DelegationAuthenticatedMiddleware(
-				badgesdto.LoadUserBadgesOperation,
+				apicontract.LoadUserBadgesOperation,
 			),
 			authMiddleware,
 			endpoint.LoadUserBadges,

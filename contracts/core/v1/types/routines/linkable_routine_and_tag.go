@@ -1,4 +1,4 @@
-package routinestypes
+package coretypes
 
 import "github.com/google/uuid"
 

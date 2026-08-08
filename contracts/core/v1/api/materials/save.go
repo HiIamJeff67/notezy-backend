@@ -1,4 +1,4 @@
-package materialsdto
+package apicontract
 
 import (
 	"time"

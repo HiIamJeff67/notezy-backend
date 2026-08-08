@@ -9,12 +9,12 @@ import (
 	"gorm.io/datatypes"
 
 	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
 )
 
-func TestNewCreateOutboxEventInputAndSerializePreserveEventContract(t *testing.T) {
+func TestConvertEnvelopeToCreateOutboxEventInputAndSerializePreserveEventContract(t *testing.T) {
 	eventId := uuid.New()
 	aggregateId := uuid.New()
 	occurredAt := time.Now().UTC().Round(0)
@@ -33,7 +33,7 @@ func TestNewCreateOutboxEventInputAndSerializePreserveEventContract(t *testing.T
 		Data: coreeventscontract.BlockPackAccessRevokedData{},
 	}
 
-	createInput, err := newCreateOutboxEventInput(coreeventscontract.CoreLifecycleTopic, envelope)
+	createInput, err := ConvertEnvelopeToCreateOutboxEventInput(coreeventscontract.CoreLifecycleTopic, envelope)
 	if err != nil {
 		t.Fatalf("failed to create outbox input: %v", err)
 	}
@@ -62,8 +62,8 @@ func TestNewCreateOutboxEventInputAndSerializePreserveEventContract(t *testing.T
 	}
 }
 
-func TestNewCreateOutboxEventInputRejectsMismatchedKafkaKey(t *testing.T) {
-	_, err := newCreateOutboxEventInput(
+func TestConvertEnvelopeToCreateOutboxEventInputRejectsMismatchedKafkaKey(t *testing.T) {
+	_, err := ConvertEnvelopeToCreateOutboxEventInput(
 		coreeventscontract.CoreLifecycleTopic,
 		eventcontract.EventEnvelope[coreeventscontract.UserSessionsRevokedData]{
 			SchemaVersion: eventcontract.Version,

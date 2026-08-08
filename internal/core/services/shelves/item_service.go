@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
 	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"

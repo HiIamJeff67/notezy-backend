@@ -1,4 +1,4 @@
-package userinfosdto
+package apicontract
 
 const (
 	GetMyInfoOperation     = "user-info.get-my-info"

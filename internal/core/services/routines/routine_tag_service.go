@@ -9,12 +9,12 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
 
 	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
 
-	routinetagsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tags"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tags"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
@@ -28,14 +28,14 @@ import (
 )
 
 type RoutineTagServiceInterface interface {
-	GetMyRoutineTagById(ctx context.Context, requestDto *routinetagsdto.GetMyRoutineTagByIdRequestDto) (*routinetagsdto.GetMyRoutineTagByIdResponseDto, *exceptions.Exception)
-	GetAllMyRoutineTags(ctx context.Context, requestDto *routinetagsdto.GetAllMyRoutineTagsRequestDto) (*routinetagsdto.GetAllMyRoutineTagsResponseDto, *exceptions.Exception)
-	CreateRoutineTag(ctx context.Context, requestDto *routinetagsdto.CreateRoutineTagRequestDto) (*routinetagsdto.CreateRoutineTagResponseDto, *exceptions.Exception)
-	CreateRoutineTags(ctx context.Context, requestDto *routinetagsdto.CreateRoutineTagsRequestDto) (*routinetagsdto.CreateRoutineTagsResponseDto, *exceptions.Exception)
-	UpdateMyRoutineTagById(ctx context.Context, requestDto *routinetagsdto.UpdateMyRoutineTagByIdRequestDto) (*routinetagsdto.UpdateMyRoutineTagByIdResponseDto, *exceptions.Exception)
-	UpdateMyRoutineTagsByIds(ctx context.Context, requestDto *routinetagsdto.UpdateMyRoutineTagsByIdsRequestDto) (*routinetagsdto.UpdateMyRoutineTagsByIdsResponseDto, *exceptions.Exception)
-	HardDeleteMyRoutineTagById(ctx context.Context, requestDto *routinetagsdto.HardDeleteMyRoutineTagByIdRequestDto) (*routinetagsdto.HardDeleteMyRoutineTagByIdResponseDto, *exceptions.Exception)
-	HardDeleteMyRoutineTagsByIds(ctx context.Context, requestDto *routinetagsdto.HardDeleteMyRoutineTagsByIdsRequestDto) (*routinetagsdto.HardDeleteMyRoutineTagsByIdsResponseDto, *exceptions.Exception)
+	GetMyRoutineTagById(ctx context.Context, requestDto *apicontract.GetMyRoutineTagByIdRequestDto) (*apicontract.GetMyRoutineTagByIdResponseDto, *exceptions.Exception)
+	GetAllMyRoutineTags(ctx context.Context, requestDto *apicontract.GetAllMyRoutineTagsRequestDto) (*apicontract.GetAllMyRoutineTagsResponseDto, *exceptions.Exception)
+	CreateRoutineTag(ctx context.Context, requestDto *apicontract.CreateRoutineTagRequestDto) (*apicontract.CreateRoutineTagResponseDto, *exceptions.Exception)
+	CreateRoutineTags(ctx context.Context, requestDto *apicontract.CreateRoutineTagsRequestDto) (*apicontract.CreateRoutineTagsResponseDto, *exceptions.Exception)
+	UpdateMyRoutineTagById(ctx context.Context, requestDto *apicontract.UpdateMyRoutineTagByIdRequestDto) (*apicontract.UpdateMyRoutineTagByIdResponseDto, *exceptions.Exception)
+	UpdateMyRoutineTagsByIds(ctx context.Context, requestDto *apicontract.UpdateMyRoutineTagsByIdsRequestDto) (*apicontract.UpdateMyRoutineTagsByIdsResponseDto, *exceptions.Exception)
+	HardDeleteMyRoutineTagById(ctx context.Context, requestDto *apicontract.HardDeleteMyRoutineTagByIdRequestDto) (*apicontract.HardDeleteMyRoutineTagByIdResponseDto, *exceptions.Exception)
+	HardDeleteMyRoutineTagsByIds(ctx context.Context, requestDto *apicontract.HardDeleteMyRoutineTagsByIdsRequestDto) (*apicontract.HardDeleteMyRoutineTagsByIdsResponseDto, *exceptions.Exception)
 
 	SearchPrivateRoutineTags(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRoutineTagInput) (*gqlmodels.SearchRoutineTagConnection, *exceptions.Exception)
 }
@@ -75,13 +75,13 @@ func convertRoutineTagIcon(icon *string) (*enums.SupportedIcon, *exceptions.Exce
 	return convertedIcon, nil
 }
 
-func newRoutineTagResponseDto(routineTag schemas.RoutineTag) routinetagsdto.RoutineTagResponseDto {
+func newRoutineTagResponseDto(routineTag schemas.RoutineTag) apicontract.RoutineTagResponseDto {
 	var icon *string
 	if routineTag.Icon != nil {
 		iconValue := routineTag.Icon.String()
 		icon = &iconValue
 	}
-	return routinetagsdto.RoutineTagResponseDto{
+	return apicontract.RoutineTagResponseDto{
 		Id:        routineTag.Id,
 		Name:      routineTag.Name,
 		Color:     routineTag.Color,
@@ -95,8 +95,8 @@ func newRoutineTagResponseDto(routineTag schemas.RoutineTag) routinetagsdto.Rout
 
 func (s *RoutineTagService) GetMyRoutineTagById(
 	ctx context.Context,
-	requestDto *routinetagsdto.GetMyRoutineTagByIdRequestDto,
-) (*routinetagsdto.GetMyRoutineTagByIdResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.GetMyRoutineTagByIdRequestDto,
+) (*apicontract.GetMyRoutineTagByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
@@ -126,13 +126,13 @@ func (s *RoutineTagService) GetMyRoutineTagById(
 
 func (s *RoutineTagService) GetAllMyRoutineTags(
 	ctx context.Context,
-	requestDto *routinetagsdto.GetAllMyRoutineTagsRequestDto,
-) (*routinetagsdto.GetAllMyRoutineTagsResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.GetAllMyRoutineTagsRequestDto,
+) (*apicontract.GetAllMyRoutineTagsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
 	if requestDto.Param.AreDeleted != nil && *requestDto.Param.AreDeleted {
-		responseDto := routinetagsdto.GetAllMyRoutineTagsResponseDto{}
+		responseDto := apicontract.GetAllMyRoutineTagsResponseDto{}
 		return &responseDto, nil
 	}
 
@@ -151,7 +151,7 @@ func (s *RoutineTagService) GetAllMyRoutineTags(
 		return nil, exception
 	}
 
-	responseDto := make(routinetagsdto.GetAllMyRoutineTagsResponseDto, len(routineTags))
+	responseDto := make(apicontract.GetAllMyRoutineTagsResponseDto, len(routineTags))
 	for index, routineTag := range routineTags {
 		responseDto[index] = newRoutineTagResponseDto(routineTag)
 	}
@@ -161,8 +161,8 @@ func (s *RoutineTagService) GetAllMyRoutineTags(
 
 func (s *RoutineTagService) CreateRoutineTag(
 	ctx context.Context,
-	requestDto *routinetagsdto.CreateRoutineTagRequestDto,
-) (*routinetagsdto.CreateRoutineTagResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.CreateRoutineTagRequestDto,
+) (*apicontract.CreateRoutineTagResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
@@ -191,7 +191,7 @@ func (s *RoutineTagService) CreateRoutineTag(
 		return nil, exception
 	}
 
-	return &routinetagsdto.CreateRoutineTagResponseDto{
+	return &apicontract.CreateRoutineTagResponseDto{
 		Id:        *newRoutineTagId,
 		CreatedAt: time.Now(),
 	}, nil
@@ -199,8 +199,8 @@ func (s *RoutineTagService) CreateRoutineTag(
 
 func (s *RoutineTagService) CreateRoutineTags(
 	ctx context.Context,
-	requestDto *routinetagsdto.CreateRoutineTagsRequestDto,
-) (*routinetagsdto.CreateRoutineTagsResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.CreateRoutineTagsRequestDto,
+) (*apicontract.CreateRoutineTagsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
@@ -233,7 +233,7 @@ func (s *RoutineTagService) CreateRoutineTags(
 		return nil, exception
 	}
 
-	return &routinetagsdto.CreateRoutineTagsResponseDto{
+	return &apicontract.CreateRoutineTagsResponseDto{
 		Ids:       newRoutineTagIds,
 		CreatedAt: time.Now(),
 	}, nil
@@ -241,8 +241,8 @@ func (s *RoutineTagService) CreateRoutineTags(
 
 func (s *RoutineTagService) UpdateMyRoutineTagById(
 	ctx context.Context,
-	requestDto *routinetagsdto.UpdateMyRoutineTagByIdRequestDto,
-) (*routinetagsdto.UpdateMyRoutineTagByIdResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.UpdateMyRoutineTagByIdRequestDto,
+) (*apicontract.UpdateMyRoutineTagByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
@@ -274,15 +274,15 @@ func (s *RoutineTagService) UpdateMyRoutineTagById(
 		return nil, exception
 	}
 
-	return &routinetagsdto.UpdateMyRoutineTagByIdResponseDto{
+	return &apicontract.UpdateMyRoutineTagByIdResponseDto{
 		UpdatedAt: updatedRoutineTag.UpdatedAt,
 	}, nil
 }
 
 func (s *RoutineTagService) UpdateMyRoutineTagsByIds(
 	ctx context.Context,
-	requestDto *routinetagsdto.UpdateMyRoutineTagsByIdsRequestDto,
-) (*routinetagsdto.UpdateMyRoutineTagsByIdsResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.UpdateMyRoutineTagsByIdsRequestDto,
+) (*apicontract.UpdateMyRoutineTagsByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
@@ -320,15 +320,15 @@ func (s *RoutineTagService) UpdateMyRoutineTagsByIds(
 		return nil, exception
 	}
 
-	return &routinetagsdto.UpdateMyRoutineTagsByIdsResponseDto{
+	return &apicontract.UpdateMyRoutineTagsByIdsResponseDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
 
 func (s *RoutineTagService) HardDeleteMyRoutineTagById(
 	ctx context.Context,
-	requestDto *routinetagsdto.HardDeleteMyRoutineTagByIdRequestDto,
-) (*routinetagsdto.HardDeleteMyRoutineTagByIdResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.HardDeleteMyRoutineTagByIdRequestDto,
+) (*apicontract.HardDeleteMyRoutineTagByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
@@ -348,15 +348,15 @@ func (s *RoutineTagService) HardDeleteMyRoutineTagById(
 		return nil, exception
 	}
 
-	return &routinetagsdto.HardDeleteMyRoutineTagByIdResponseDto{
+	return &apicontract.HardDeleteMyRoutineTagByIdResponseDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
 
 func (s *RoutineTagService) HardDeleteMyRoutineTagsByIds(
 	ctx context.Context,
-	requestDto *routinetagsdto.HardDeleteMyRoutineTagsByIdsRequestDto,
-) (*routinetagsdto.HardDeleteMyRoutineTagsByIdsResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.HardDeleteMyRoutineTagsByIdsRequestDto,
+) (*apicontract.HardDeleteMyRoutineTagsByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.RoutineTag.InvalidDto().WithOrigin(err)
 	}
@@ -376,7 +376,7 @@ func (s *RoutineTagService) HardDeleteMyRoutineTagsByIds(
 		return nil, exception
 	}
 
-	return &routinetagsdto.HardDeleteMyRoutineTagsByIdsResponseDto{
+	return &apicontract.HardDeleteMyRoutineTagsByIdsResponseDto{
 		DeletedAt: time.Now(),
 	}, nil
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm/clause"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
 	array "github.com/HiIamJeff67/notezy-backend/shared/lib/array"
@@ -142,7 +142,7 @@ func (r *StationRepository) CheckPermissionAndGetOneById(
 		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&station)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Station.NotFound().WithOrigin(result.Error)},
 		{First: station.Id == uuid.Nil, Second: apiexceptions.Station.NotFound()},
 	}); exception != nil {
@@ -169,7 +169,7 @@ func (r *StationRepository) CheckPermissionsAndGetManyByIds(
 		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&stations)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Station.NotFound().WithOrigin(result.Error)},
 		{First: len(stations) == 0, Second: apiexceptions.Station.NotFound()},
 	}); exception != nil {
@@ -190,7 +190,7 @@ func (r *StationRepository) CheckPermissionsAndGetManyByIds(
 			).
 			Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 			Find(&usersToStations)
-		if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+		if exception := exceptions.Cover(nil, []exceptions.Pair{
 			{First: result.Error != nil, Second: apiexceptions.Station.NotFound().WithOrigin(result.Error)},
 			{First: len(usersToStations) == 0, Second: apiexceptions.Station.NotFound()},
 		}); exception != nil {
@@ -297,7 +297,7 @@ func (r *StationRepository) CreateOne(
 	result := parsedOptions.DB.Model(&schemas.Station{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newStation)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Station.FailedToCreate().WithOrigin(result.Error)},
 		{First: newStation.Id == uuid.Nil, Second: apiexceptions.Station.FailedToCreate()},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
@@ -313,7 +313,7 @@ func (r *StationRepository) CreateOne(
 	}
 	result = parsedOptions.DB.Model(&schemas.UsersToStations{}).
 		Create(&newUsersToStations)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Station.FailedToCreate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
 	}); exception != nil {
@@ -366,7 +366,7 @@ func (r *StationRepository) CreateMany(
 
 	result := parsedOptions.DB.Model(&schemas.Station{}).
 		CreateInBatches(&newStations, parsedOptions.BatchSize)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Station.FailedToCreate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
 	}); exception != nil {
@@ -386,7 +386,7 @@ func (r *StationRepository) CreateMany(
 	}
 	result = parsedOptions.DB.Model(&schemas.UsersToStations{}).
 		CreateInBatches(&newUsersToStations, parsedOptions.BatchSize)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Station.FailedToCreate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
 	}); exception != nil {
@@ -442,7 +442,7 @@ func (r *StationRepository) UpdateOneById(
 		Where(`"StationTable".id = ? AND "StationTable".deleted_at IS NULL`, id).
 		Select("*").
 		Updates(&updates)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
 	}); exception != nil {
@@ -548,7 +548,7 @@ func (r *StationRepository) UpdateManyByIds(
 		WHERE s.id = v.id::uuid AND s.deleted_at IS NULL
 	`, strings.Join(valuePlaceholders, ","))
 	result := parsedOptions.DB.Exec(sql, valueArgs...)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
 	}); exception != nil {
@@ -581,7 +581,7 @@ func (r *StationRepository) RestoreSoftDeletedOneById(
 		Clauses(clause.Returning{}).
 		Where(`"StationTable".id = ?`, id).
 		Updates(map[string]interface{}{"deleted_at": nil})
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
 		{First: restoredStation.Id == uuid.Nil, Second: apiexceptions.Station.FailedToUpdate()},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
@@ -611,7 +611,7 @@ func (r *StationRepository) RestoreSoftDeletedManyByIds(
 		Clauses(clause.Returning{}).
 		Where(`"StationTable".id IN ?`, ids).
 		Updates(map[string]interface{}{"deleted_at": nil})
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
 		{First: len(restoredStations) == 0, Second: apiexceptions.Station.FailedToUpdate()},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
@@ -635,7 +635,7 @@ func (r *StationRepository) SoftDeleteOneById(
 		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Where(`"StationTable".id = ?`, id).
 		Update("deleted_at", time.Now())
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
 	}); exception != nil {
@@ -662,7 +662,7 @@ func (r *StationRepository) SoftDeleteManyByIds(
 		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Where(`"StationTable".id IN ?`, ids).
 		Update("deleted_at", time.Now())
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
 	}); exception != nil {
@@ -683,7 +683,7 @@ func (r *StationRepository) SoftDeleteManyByUserId(
 		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Where("owner_id = ?", userId).
 		Update("deleted_at", time.Now())
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Station.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
 	}); exception != nil {
@@ -706,7 +706,7 @@ func (r *StationRepository) HardDeleteOneById(
 		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Where(`"StationTable".id = ?`, id).
 		Delete(&schemas.Station{})
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Station.FailedToDelete().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
 	}); exception != nil {
@@ -733,7 +733,7 @@ func (r *StationRepository) HardDeleteManyByIds(
 		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Where(`"StationTable".id IN ?`, ids).
 		Delete(&schemas.Station{})
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Station.FailedToDelete().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
 	}); exception != nil {
@@ -754,7 +754,7 @@ func (r *StationRepository) HardDeleteManyByUserId(
 		Scopes(r.stationScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Where("owner_id = ?", userId).
 		Delete(&schemas.Station{})
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Station.FailedToDelete().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Station.NoChanges()},
 	}); exception != nil {

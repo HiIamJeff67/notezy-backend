@@ -11,7 +11,6 @@ import (
 
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	realtimegatewayadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/realtimegateway/adapters"
 )
 
 var (
@@ -20,8 +19,7 @@ var (
 )
 
 func ConfigureAPIRoutes(
-	coreClient *coreadapters.CoreClient,
-	realtimeGatewayClient *realtimegatewayadapters.RealtimeGatewayClient,
+	coreClient *coreadapters.CoreAdapter,
 	allowedDomains []string,
 	accessTokenCookieHandler *cookies.CookieHandler,
 	refreshTokenCookieHandler *cookies.CookieHandler,
@@ -51,7 +49,7 @@ func ConfigureAPIRoutes(
 	configureDevelopmentMaterialRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
 	configureDevelopmentBlockPackRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
 	configureDevelopmentBlockRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
-	configureDevelopmentRealtimeRoutes(DevelopmentAPIRouterGroup, coreClient, realtimeGatewayClient, accessTokenCookieHandler, refreshTokenCookieHandler)
+	configureDevelopmentRealtimeRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
 	configureDevelopmentGraphQLRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
 
 	// test

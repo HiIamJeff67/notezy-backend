@@ -1,6 +1,6 @@
 package durablejobeventscontract
 
-import eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+import eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 
 const (
 	CoreDurableJobRoutineTaskTopic eventcontract.Topic = "notezy.core.durablejob.routine-task.v1"

@@ -9,12 +9,12 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
 	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/events"
 	durablejobroutinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 
 	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
 

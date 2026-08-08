@@ -12,13 +12,13 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
 	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
 
-	stationsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/stations"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/stations"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
@@ -32,31 +32,31 @@ import (
 )
 
 type StationServiceInterface interface {
-	GetMyStationById(ctx context.Context, requestDto *stationsdto.GetMyStationByIdRequestDto) (*stationsdto.GetMyStationByIdResponseDto, *exceptions.Exception)
-	GetAllMyStations(ctx context.Context, requestDto *stationsdto.GetAllMyStationsRequestDto) (*stationsdto.GetAllMyStationsResponseDto, *exceptions.Exception)
-	CreateStation(ctx context.Context, requestDto *stationsdto.CreateStationRequestDto) (*stationsdto.CreateStationResponseDto, *exceptions.Exception)
-	CreateStations(ctx context.Context, requestDto *stationsdto.CreateStationsRequestDto) (*stationsdto.CreateStationsResponseDto, *exceptions.Exception)
-	UpdateMyStationById(ctx context.Context, requestDto *stationsdto.UpdateMyStationByIdRequestDto) (*stationsdto.UpdateMyStationByIdResponseDto, *exceptions.Exception)
-	UpdateMyStationsByIds(ctx context.Context, requestDto *stationsdto.UpdateMyStationsByIdsRequestDto) (*stationsdto.UpdateMyStationsByIdsResponseDto, *exceptions.Exception)
-	RestoreMyStationById(ctx context.Context, requestDto *stationsdto.RestoreMyStationByIdRequestDto) (*stationsdto.RestoreMyStationByIdResponseDto, *exceptions.Exception)
-	RestoreMyStationsByIds(ctx context.Context, requestDto *stationsdto.RestoreMyStationsByIdsRequestDto) (*stationsdto.RestoreMyStationsByIdsResponseDto, *exceptions.Exception)
-	DeleteMyStationById(ctx context.Context, requestDto *stationsdto.DeleteMyStationByIdRequestDto) (*stationsdto.DeleteMyStationByIdResponseDto, *exceptions.Exception)
-	DeleteMyStationsByIds(ctx context.Context, requestDto *stationsdto.DeleteMyStationsByIdsRequestDto) (*stationsdto.DeleteMyStationsByIdsResponseDto, *exceptions.Exception)
-	HardDeleteMyStationById(ctx context.Context, requestDto *stationsdto.HardDeleteMyStationByIdRequestDto) (*stationsdto.HardDeleteMyStationByIdResponseDto, *exceptions.Exception)
-	HardDeleteMyStationsByIds(ctx context.Context, requestDto *stationsdto.HardDeleteMyStationsByIdsRequestDto) (*stationsdto.HardDeleteMyStationsByIdsResponseDto, *exceptions.Exception)
+	GetMyStationById(ctx context.Context, requestDto *apicontract.GetMyStationByIdRequestDto) (*apicontract.GetMyStationByIdResponseDto, *exceptions.Exception)
+	GetAllMyStations(ctx context.Context, requestDto *apicontract.GetAllMyStationsRequestDto) (*apicontract.GetAllMyStationsResponseDto, *exceptions.Exception)
+	CreateStation(ctx context.Context, requestDto *apicontract.CreateStationRequestDto) (*apicontract.CreateStationResponseDto, *exceptions.Exception)
+	CreateStations(ctx context.Context, requestDto *apicontract.CreateStationsRequestDto) (*apicontract.CreateStationsResponseDto, *exceptions.Exception)
+	UpdateMyStationById(ctx context.Context, requestDto *apicontract.UpdateMyStationByIdRequestDto) (*apicontract.UpdateMyStationByIdResponseDto, *exceptions.Exception)
+	UpdateMyStationsByIds(ctx context.Context, requestDto *apicontract.UpdateMyStationsByIdsRequestDto) (*apicontract.UpdateMyStationsByIdsResponseDto, *exceptions.Exception)
+	RestoreMyStationById(ctx context.Context, requestDto *apicontract.RestoreMyStationByIdRequestDto) (*apicontract.RestoreMyStationByIdResponseDto, *exceptions.Exception)
+	RestoreMyStationsByIds(ctx context.Context, requestDto *apicontract.RestoreMyStationsByIdsRequestDto) (*apicontract.RestoreMyStationsByIdsResponseDto, *exceptions.Exception)
+	DeleteMyStationById(ctx context.Context, requestDto *apicontract.DeleteMyStationByIdRequestDto) (*apicontract.DeleteMyStationByIdResponseDto, *exceptions.Exception)
+	DeleteMyStationsByIds(ctx context.Context, requestDto *apicontract.DeleteMyStationsByIdsRequestDto) (*apicontract.DeleteMyStationsByIdsResponseDto, *exceptions.Exception)
+	HardDeleteMyStationById(ctx context.Context, requestDto *apicontract.HardDeleteMyStationByIdRequestDto) (*apicontract.HardDeleteMyStationByIdResponseDto, *exceptions.Exception)
+	HardDeleteMyStationsByIds(ctx context.Context, requestDto *apicontract.HardDeleteMyStationsByIdsRequestDto) (*apicontract.HardDeleteMyStationsByIdsResponseDto, *exceptions.Exception)
 
-	VisualizeMyTotalCount(ctx context.Context, requestDto *stationsdto.VisualizeMyTotalCountRequestDto) (*stationsdto.VisualizeMyTotalCountResponseDto, *exceptions.Exception)
+	VisualizeMyTotalCount(ctx context.Context, requestDto *apicontract.VisualizeMyTotalCountRequestDto) (*apicontract.VisualizeMyTotalCountResponseDto, *exceptions.Exception)
 
-	GetMyStationPermission(ctx context.Context, requestDto *stationsdto.GetMyStationPermissionRequestDto) (*stationsdto.GetMyStationPermissionResponseDto, *exceptions.Exception)
-	CreateMyStationPermission(ctx context.Context, requestDto *stationsdto.CreateMyStationPermissionRequestDto) (*stationsdto.CreateMyStationPermissionResponseDto, *exceptions.Exception)
-	UpsertMyStationPermission(ctx context.Context, requestDto *stationsdto.UpsertMyStationPermissionRequestDto) (*stationsdto.UpsertMyStationPermissionResponseDto, *exceptions.Exception)
-	UpsertMyStationPermissions(ctx context.Context, requestDto *stationsdto.UpsertMyStationPermissionsRequestDto) (*stationsdto.UpsertMyStationPermissionsResponseDto, *exceptions.Exception)
-	UpdateMyStationPermission(ctx context.Context, requestDto *stationsdto.UpdateMyStationPermissionRequestDto) (*stationsdto.UpdateMyStationPermissionResponseDto, *exceptions.Exception)
-	TransferMyStationOwnership(ctx context.Context, requestDto *stationsdto.TransferMyStationOwnershipRequestDto) (*stationsdto.TransferMyStationOwnershipResponseDto, *exceptions.Exception)
-	DeleteMyStationPermission(ctx context.Context, requestDto *stationsdto.DeleteMyStationPermissionRequestDto) (*stationsdto.DeleteMyStationPermissionResponseDto, *exceptions.Exception)
-	DeleteMyStationPermissions(ctx context.Context, requestDto *stationsdto.DeleteMyStationPermissionsRequestDto) (*stationsdto.DeleteMyStationPermissionsResponseDto, *exceptions.Exception)
-	LeaveMyStation(ctx context.Context, requestDto *stationsdto.LeaveMyStationRequestDto) *exceptions.Exception
-	LeaveMyStations(ctx context.Context, requestDto *stationsdto.LeaveMyStationsRequestDto) *exceptions.Exception
+	GetMyStationPermission(ctx context.Context, requestDto *apicontract.GetMyStationPermissionRequestDto) (*apicontract.GetMyStationPermissionResponseDto, *exceptions.Exception)
+	CreateMyStationPermission(ctx context.Context, requestDto *apicontract.CreateMyStationPermissionRequestDto) (*apicontract.CreateMyStationPermissionResponseDto, *exceptions.Exception)
+	UpsertMyStationPermission(ctx context.Context, requestDto *apicontract.UpsertMyStationPermissionRequestDto) (*apicontract.UpsertMyStationPermissionResponseDto, *exceptions.Exception)
+	UpsertMyStationPermissions(ctx context.Context, requestDto *apicontract.UpsertMyStationPermissionsRequestDto) (*apicontract.UpsertMyStationPermissionsResponseDto, *exceptions.Exception)
+	UpdateMyStationPermission(ctx context.Context, requestDto *apicontract.UpdateMyStationPermissionRequestDto) (*apicontract.UpdateMyStationPermissionResponseDto, *exceptions.Exception)
+	TransferMyStationOwnership(ctx context.Context, requestDto *apicontract.TransferMyStationOwnershipRequestDto) (*apicontract.TransferMyStationOwnershipResponseDto, *exceptions.Exception)
+	DeleteMyStationPermission(ctx context.Context, requestDto *apicontract.DeleteMyStationPermissionRequestDto) (*apicontract.DeleteMyStationPermissionResponseDto, *exceptions.Exception)
+	DeleteMyStationPermissions(ctx context.Context, requestDto *apicontract.DeleteMyStationPermissionsRequestDto) (*apicontract.DeleteMyStationPermissionsResponseDto, *exceptions.Exception)
+	LeaveMyStation(ctx context.Context, requestDto *apicontract.LeaveMyStationRequestDto) *exceptions.Exception
+	LeaveMyStations(ctx context.Context, requestDto *apicontract.LeaveMyStationsRequestDto) *exceptions.Exception
 
 	SearchPrivateStations(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchStationInput) (*gqlmodels.SearchStationConnection, *exceptions.Exception)
 }
@@ -240,8 +240,8 @@ func (s *StationService) saveMyStationPermission(
 
 func (s *StationService) GetMyStationById(
 	ctx context.Context,
-	requestDto *stationsdto.GetMyStationByIdRequestDto,
-) (*stationsdto.GetMyStationByIdResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.GetMyStationByIdRequestDto,
+) (*apicontract.GetMyStationByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -290,7 +290,7 @@ func (s *StationService) GetMyStationById(
 		icon = &iconString
 	}
 
-	return &stationsdto.GetMyStationByIdResponseDto{
+	return &apicontract.GetMyStationByIdResponseDto{
 		Id:                  station.Id,
 		Name:                station.Name,
 		Description:         station.Description,
@@ -306,8 +306,8 @@ func (s *StationService) GetMyStationById(
 
 func (s *StationService) GetAllMyStations(
 	ctx context.Context,
-	requestDto *stationsdto.GetAllMyStationsRequestDto,
-) (*stationsdto.GetAllMyStationsResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.GetAllMyStationsRequestDto,
+) (*apicontract.GetAllMyStationsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -349,14 +349,14 @@ func (s *StationService) GetAllMyStations(
 		return nil, exception
 	}
 
-	responseDto := make(stationsdto.GetAllMyStationsResponseDto, len(stations))
+	responseDto := make(apicontract.GetAllMyStationsResponseDto, len(stations))
 	for index, station := range stations {
 		var icon *string
 		if station.Icon != nil {
 			iconString := station.Icon.String()
 			icon = &iconString
 		}
-		responseDto[index] = stationsdto.StationSummaryResponseDto{
+		responseDto[index] = apicontract.StationSummaryResponseDto{
 			Id:                  station.Id,
 			Name:                station.Name,
 			Icon:                icon,
@@ -374,8 +374,8 @@ func (s *StationService) GetAllMyStations(
 
 func (s *StationService) CreateStation(
 	ctx context.Context,
-	requestDto *stationsdto.CreateStationRequestDto,
-) (*stationsdto.CreateStationResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.CreateStationRequestDto,
+) (*apicontract.CreateStationResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -412,7 +412,7 @@ func (s *StationService) CreateStation(
 		return nil, exception
 	}
 
-	return &stationsdto.CreateStationResponseDto{
+	return &apicontract.CreateStationResponseDto{
 		Id:        *newStationId,
 		CreatedAt: time.Now(),
 	}, nil
@@ -420,8 +420,8 @@ func (s *StationService) CreateStation(
 
 func (s *StationService) CreateStations(
 	ctx context.Context,
-	requestDto *stationsdto.CreateStationsRequestDto,
-) (*stationsdto.CreateStationsResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.CreateStationsRequestDto,
+) (*apicontract.CreateStationsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -461,7 +461,7 @@ func (s *StationService) CreateStations(
 		return nil, exception
 	}
 
-	return &stationsdto.CreateStationsResponseDto{
+	return &apicontract.CreateStationsResponseDto{
 		Ids:       newStationIds,
 		CreatedAt: time.Now(),
 	}, nil
@@ -469,8 +469,8 @@ func (s *StationService) CreateStations(
 
 func (s *StationService) UpdateMyStationById(
 	ctx context.Context,
-	requestDto *stationsdto.UpdateMyStationByIdRequestDto,
-) (*stationsdto.UpdateMyStationByIdResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.UpdateMyStationByIdRequestDto,
+) (*apicontract.UpdateMyStationByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -516,15 +516,15 @@ func (s *StationService) UpdateMyStationById(
 		return nil, exception
 	}
 
-	return &stationsdto.UpdateMyStationByIdResponseDto{
+	return &apicontract.UpdateMyStationByIdResponseDto{
 		UpdatedAt: updatedStation.UpdatedAt,
 	}, nil
 }
 
 func (s *StationService) UpdateMyStationsByIds(
 	ctx context.Context,
-	requestDto *stationsdto.UpdateMyStationsByIdsRequestDto,
-) (*stationsdto.UpdateMyStationsByIdsResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.UpdateMyStationsByIdsRequestDto,
+) (*apicontract.UpdateMyStationsByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -575,15 +575,15 @@ func (s *StationService) UpdateMyStationsByIds(
 		return nil, exception
 	}
 
-	return &stationsdto.UpdateMyStationsByIdsResponseDto{
+	return &apicontract.UpdateMyStationsByIdsResponseDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
 
 func (s *StationService) RestoreMyStationById(
 	ctx context.Context,
-	requestDto *stationsdto.RestoreMyStationByIdRequestDto,
-) (*stationsdto.RestoreMyStationByIdResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.RestoreMyStationByIdRequestDto,
+) (*apicontract.RestoreMyStationByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -620,7 +620,7 @@ func (s *StationService) RestoreMyStationById(
 		icon = &iconString
 	}
 
-	return &stationsdto.RestoreMyStationByIdResponseDto{
+	return &apicontract.RestoreMyStationByIdResponseDto{
 		Id:                  restoredStation.Id,
 		Name:                restoredStation.Name,
 		Description:         restoredStation.Description,
@@ -635,8 +635,8 @@ func (s *StationService) RestoreMyStationById(
 
 func (s *StationService) RestoreMyStationsByIds(
 	ctx context.Context,
-	requestDto *stationsdto.RestoreMyStationsByIdsRequestDto,
-) (*stationsdto.RestoreMyStationsByIdsResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.RestoreMyStationsByIdsRequestDto,
+) (*apicontract.RestoreMyStationsByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -667,14 +667,14 @@ func (s *StationService) RestoreMyStationsByIds(
 		return nil, exception
 	}
 
-	responseDto := make(stationsdto.RestoreMyStationsByIdsResponseDto, 0, len(restoredStations))
+	responseDto := make(apicontract.RestoreMyStationsByIdsResponseDto, 0, len(restoredStations))
 	for _, restoredStation := range restoredStations {
 		var icon *string
 		if restoredStation.Icon != nil {
 			iconString := restoredStation.Icon.String()
 			icon = &iconString
 		}
-		responseDto = append(responseDto, stationsdto.RestoreMyStationByIdResponseDto{
+		responseDto = append(responseDto, apicontract.RestoreMyStationByIdResponseDto{
 			Id:                  restoredStation.Id,
 			Name:                restoredStation.Name,
 			Description:         restoredStation.Description,
@@ -692,8 +692,8 @@ func (s *StationService) RestoreMyStationsByIds(
 
 func (s *StationService) DeleteMyStationById(
 	ctx context.Context,
-	requestDto *stationsdto.DeleteMyStationByIdRequestDto,
-) (*stationsdto.DeleteMyStationByIdResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.DeleteMyStationByIdRequestDto,
+) (*apicontract.DeleteMyStationByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -780,15 +780,15 @@ func (s *StationService) DeleteMyStationById(
 		).WithOrigin(err)
 	}
 
-	return &stationsdto.DeleteMyStationByIdResponseDto{
+	return &apicontract.DeleteMyStationByIdResponseDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
 
 func (s *StationService) DeleteMyStationsByIds(
 	ctx context.Context,
-	requestDto *stationsdto.DeleteMyStationsByIdsRequestDto,
-) (*stationsdto.DeleteMyStationsByIdsResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.DeleteMyStationsByIdsRequestDto,
+) (*apicontract.DeleteMyStationsByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -819,15 +819,15 @@ func (s *StationService) DeleteMyStationsByIds(
 		return nil, exception
 	}
 
-	return &stationsdto.DeleteMyStationsByIdsResponseDto{
+	return &apicontract.DeleteMyStationsByIdsResponseDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
 
 func (s *StationService) HardDeleteMyStationById(
 	ctx context.Context,
-	requestDto *stationsdto.HardDeleteMyStationByIdRequestDto,
-) (*stationsdto.HardDeleteMyStationByIdResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.HardDeleteMyStationByIdRequestDto,
+) (*apicontract.HardDeleteMyStationByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -858,15 +858,15 @@ func (s *StationService) HardDeleteMyStationById(
 		return nil, exception
 	}
 
-	return &stationsdto.HardDeleteMyStationByIdResponseDto{
+	return &apicontract.HardDeleteMyStationByIdResponseDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
 
 func (s *StationService) HardDeleteMyStationsByIds(
 	ctx context.Context,
-	requestDto *stationsdto.HardDeleteMyStationsByIdsRequestDto,
-) (*stationsdto.HardDeleteMyStationsByIdsResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.HardDeleteMyStationsByIdsRequestDto,
+) (*apicontract.HardDeleteMyStationsByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -897,7 +897,7 @@ func (s *StationService) HardDeleteMyStationsByIds(
 		return nil, exception
 	}
 
-	return &stationsdto.HardDeleteMyStationsByIdsResponseDto{
+	return &apicontract.HardDeleteMyStationsByIdsResponseDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
@@ -905,8 +905,8 @@ func (s *StationService) HardDeleteMyStationsByIds(
 /* ============================== Service Methods for Visualization ============================== */
 
 func (s *StationService) VisualizeMyTotalCount(
-	ctx context.Context, requestDto *stationsdto.VisualizeMyTotalCountRequestDto,
-) (*stationsdto.VisualizeMyTotalCountResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.VisualizeMyTotalCountRequestDto,
+) (*apicontract.VisualizeMyTotalCountResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -972,8 +972,8 @@ func (s *StationService) VisualizeMyTotalCount(
 			).WithOrigin(result.Error)
 		}
 
-		return &stationsdto.VisualizeMyTotalCountResponseDto{
-			Data: []stationsdto.TotalCountDatumResponseDto{
+		return &apicontract.VisualizeMyTotalCountResponseDto{
+			Data: []apicontract.TotalCountDatumResponseDto{
 				{
 					Id:    "station-total-count",
 					X:     "Station Total Count",
@@ -1033,8 +1033,8 @@ func (s *StationService) VisualizeMyTotalCount(
 		).WithOrigin(result.Error)
 	}
 
-	return &stationsdto.VisualizeMyTotalCountResponseDto{
-		Data: []stationsdto.TotalCountDatumResponseDto{
+	return &apicontract.VisualizeMyTotalCountResponseDto{
+		Data: []apicontract.TotalCountDatumResponseDto{
 			{
 				Id:    "station-total-count",
 				X:     "Station Total Count",
@@ -1062,8 +1062,8 @@ func (s *StationService) VisualizeMyTotalCount(
 /* ============================== Service Methods for Station Permissions ============================== */
 
 func (s *StationService) GetMyStationPermission(
-	ctx context.Context, requestDto *stationsdto.GetMyStationPermissionRequestDto,
-) (*stationsdto.GetMyStationPermissionResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.GetMyStationPermissionRequestDto,
+) (*apicontract.GetMyStationPermissionResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -1115,7 +1115,7 @@ func (s *StationService) GetMyStationPermission(
 		return nil, exception
 	}
 
-	return &stationsdto.GetMyStationPermissionResponseDto{
+	return &apicontract.GetMyStationPermissionResponseDto{
 		UserPublicId: targetUser.PublicId,
 		Permission:   relation.Permission.String(),
 		UpdatedAt:    relation.UpdatedAt,
@@ -1124,8 +1124,8 @@ func (s *StationService) GetMyStationPermission(
 }
 
 func (s *StationService) CreateMyStationPermission(
-	ctx context.Context, requestDto *stationsdto.CreateMyStationPermissionRequestDto,
-) (*stationsdto.CreateMyStationPermissionResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.CreateMyStationPermissionRequestDto,
+) (*apicontract.CreateMyStationPermissionResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -1155,7 +1155,7 @@ func (s *StationService) CreateMyStationPermission(
 	if exception != nil {
 		return nil, exception
 	}
-	return &stationsdto.CreateMyStationPermissionResponseDto{
+	return &apicontract.CreateMyStationPermissionResponseDto{
 		UserPublicId: responseDto.UserPublicId,
 		Permission:   responseDto.Permission.String(),
 		UpdatedAt:    responseDto.UpdatedAt,
@@ -1164,8 +1164,8 @@ func (s *StationService) CreateMyStationPermission(
 }
 
 func (s *StationService) UpsertMyStationPermission(
-	ctx context.Context, requestDto *stationsdto.UpsertMyStationPermissionRequestDto,
-) (*stationsdto.UpsertMyStationPermissionResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.UpsertMyStationPermissionRequestDto,
+) (*apicontract.UpsertMyStationPermissionResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -1194,7 +1194,7 @@ func (s *StationService) UpsertMyStationPermission(
 	if exception != nil {
 		return nil, exception
 	}
-	return &stationsdto.UpsertMyStationPermissionResponseDto{
+	return &apicontract.UpsertMyStationPermissionResponseDto{
 		UserPublicId: responseDto.UserPublicId,
 		Permission:   responseDto.Permission.String(),
 		UpdatedAt:    responseDto.UpdatedAt,
@@ -1203,8 +1203,8 @@ func (s *StationService) UpsertMyStationPermission(
 }
 
 func (s *StationService) UpsertMyStationPermissions(
-	ctx context.Context, requestDto *stationsdto.UpsertMyStationPermissionsRequestDto,
-) (*stationsdto.UpsertMyStationPermissionsResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.UpsertMyStationPermissionsRequestDto,
+) (*apicontract.UpsertMyStationPermissionsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -1394,11 +1394,11 @@ func (s *StationService) UpsertMyStationPermissions(
 		updatedPermissionByUserId[updatedPermission.UserId] = updatedPermission
 	}
 
-	responseDtos := make([]stationsdto.StationPermissionResponseDto, len(userIds))
+	responseDtos := make([]apicontract.StationPermissionResponseDto, len(userIds))
 	for index, userId := range userIds {
 		user := userById[userId]
 		updatedPermission := updatedPermissionByUserId[userId]
-		responseDtos[index] = stationsdto.StationPermissionResponseDto{
+		responseDtos[index] = apicontract.StationPermissionResponseDto{
 			UserPublicId: user.PublicId,
 			Permission:   updatedPermission.Permission.String(),
 			UpdatedAt:    updatedPermission.UpdatedAt,
@@ -1406,12 +1406,12 @@ func (s *StationService) UpsertMyStationPermissions(
 		}
 	}
 
-	return &stationsdto.UpsertMyStationPermissionsResponseDto{Permissions: responseDtos}, nil
+	return &apicontract.UpsertMyStationPermissionsResponseDto{Permissions: responseDtos}, nil
 }
 
 func (s *StationService) UpdateMyStationPermission(
-	ctx context.Context, requestDto *stationsdto.UpdateMyStationPermissionRequestDto,
-) (*stationsdto.UpdateMyStationPermissionResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.UpdateMyStationPermissionRequestDto,
+) (*apicontract.UpdateMyStationPermissionResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -1441,7 +1441,7 @@ func (s *StationService) UpdateMyStationPermission(
 	if exception != nil {
 		return nil, exception
 	}
-	return &stationsdto.UpdateMyStationPermissionResponseDto{
+	return &apicontract.UpdateMyStationPermissionResponseDto{
 		UserPublicId: responseDto.UserPublicId,
 		Permission:   responseDto.Permission.String(),
 		UpdatedAt:    responseDto.UpdatedAt,
@@ -1451,8 +1451,8 @@ func (s *StationService) UpdateMyStationPermission(
 
 func (s *StationService) TransferMyStationOwnership(
 	ctx context.Context,
-	requestDto *stationsdto.TransferMyStationOwnershipRequestDto,
-) (*stationsdto.TransferMyStationOwnershipResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.TransferMyStationOwnershipRequestDto,
+) (*apicontract.TransferMyStationOwnershipResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -1643,7 +1643,7 @@ func (s *StationService) TransferMyStationOwnership(
 		).WithOrigin(err)
 	}
 
-	return &stationsdto.TransferMyStationOwnershipResponseDto{
+	return &apicontract.TransferMyStationOwnershipResponseDto{
 		StationId:                 station.Id,
 		PreviousOwnerUserPublicId: actorUser.PublicId,
 		NewOwnerUserPublicId:      targetUser.PublicId,
@@ -1652,8 +1652,8 @@ func (s *StationService) TransferMyStationOwnership(
 }
 
 func (s *StationService) DeleteMyStationPermission(
-	ctx context.Context, requestDto *stationsdto.DeleteMyStationPermissionRequestDto,
-) (*stationsdto.DeleteMyStationPermissionResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.DeleteMyStationPermissionRequestDto,
+) (*apicontract.DeleteMyStationPermissionResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -1770,12 +1770,12 @@ func (s *StationService) DeleteMyStationPermission(
 		).WithOrigin(err)
 	}
 
-	return &stationsdto.DeleteMyStationPermissionResponseDto{}, nil
+	return &apicontract.DeleteMyStationPermissionResponseDto{}, nil
 }
 
 func (s *StationService) DeleteMyStationPermissions(
-	ctx context.Context, requestDto *stationsdto.DeleteMyStationPermissionsRequestDto,
-) (*stationsdto.DeleteMyStationPermissionsResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.DeleteMyStationPermissionsRequestDto,
+) (*apicontract.DeleteMyStationPermissionsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -1941,11 +1941,11 @@ func (s *StationService) DeleteMyStationPermissions(
 		).WithOrigin(err)
 	}
 
-	return &stationsdto.DeleteMyStationPermissionsResponseDto{}, nil
+	return &apicontract.DeleteMyStationPermissionsResponseDto{}, nil
 }
 
 func (s *StationService) LeaveMyStation(
-	ctx context.Context, requestDto *stationsdto.LeaveMyStationRequestDto,
+	ctx context.Context, requestDto *apicontract.LeaveMyStationRequestDto,
 ) *exceptions.Exception {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return exceptions.New(
@@ -2017,7 +2017,7 @@ func (s *StationService) LeaveMyStation(
 }
 
 func (s *StationService) LeaveMyStations(
-	ctx context.Context, requestDto *stationsdto.LeaveMyStationsRequestDto,
+	ctx context.Context, requestDto *apicontract.LeaveMyStationsRequestDto,
 ) *exceptions.Exception {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return exceptions.New(

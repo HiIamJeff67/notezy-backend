@@ -1,4 +1,4 @@
-package coreapicontract
+package apicontract
 
 // RequestDto standardizes the sections carried by a client request.
 type RequestDto[Header any, Body any, Param any, Query any] struct {

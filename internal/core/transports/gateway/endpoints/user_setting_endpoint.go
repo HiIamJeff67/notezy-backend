@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	usersettingsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-settings"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-settings"
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 
 	userservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/user"
@@ -30,8 +30,8 @@ func NewUserSettingEndpoint(
 }
 
 func (t *UserSettingEndpoint) GetMySetting(ctx *gin.Context) {
-	request := &gatewaycontract.Request[usersettingsdto.GetMySettingRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetMySettingRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -51,7 +51,7 @@ func (t *UserSettingEndpoint) GetMySetting(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[usersettingsdto.GetMySettingResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetMySettingResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -62,8 +62,8 @@ func (t *UserSettingEndpoint) GetMySetting(ctx *gin.Context) {
 }
 
 func (t *UserSettingEndpoint) UpdateMySetting(ctx *gin.Context) {
-	request := &gatewaycontract.Request[usersettingsdto.UpdateMySettingRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.UpdateMySettingRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -83,7 +83,7 @@ func (t *UserSettingEndpoint) UpdateMySetting(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[usersettingsdto.UpdateMySettingResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.UpdateMySettingResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,

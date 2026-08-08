@@ -115,16 +115,18 @@ func (w *YjsMaintenanceReconciliationWorker) Reconcile(ctx context.Context) erro
 	if tx.Error != nil {
 		return fmt.Errorf("begin Yjs maintenance reconciliation transaction: %w", tx.Error)
 	}
-	for _, document := range documents {
-		if err := w.outboxEventRepository.EnqueueYjsMaintenanceHint(
-			tx,
-			uuid.NewString(),
-			document.BlockPackId,
-			"reconciliation",
-		); err != nil {
-			tx.Rollback()
-			return fmt.Errorf("enqueue Yjs maintenance hint for %s: %w", document.BlockPackId, err)
-		}
+	blockPackIds := make([]uuid.UUID, len(documents))
+	for index, document := range documents {
+		blockPackIds[index] = document.BlockPackId
+	}
+	if err := w.outboxEventRepository.EnqueueManyYjsMaintenanceHints(
+		tx,
+		uuid.NewString(),
+		blockPackIds,
+		"reconciliation",
+	); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("enqueue Yjs maintenance hints: %w", err)
 	}
 	if err := tx.Commit().Error; err != nil {
 		return fmt.Errorf("commit Yjs maintenance reconciliation transaction: %w", err)

@@ -4,7 +4,7 @@
 
 - 所有 Go 程式碼必須可被 `gofmt` 格式化；工作區已設定 Go formatter 於存檔時執行。
 - 檔名採 `snake_case.go`，並依功能命名，例如 `root_shelf_service.go`、`root_shelf_controller_test.go`。
-- package 名稱維持小寫單數或既有複數慣例；不要為單一用途建立新 package。
+- package 名稱維持小寫單數或既有複數慣例；不要為單一用途建立新 package。`contracts/core/v1/types/<domain>/` 各資料夾是獨立 Go package，但 package clause 統一使用 `coretypes`；同一檔案若同時引用多個 domain，import alias 可使用領域前綴避免衝突。
 - import 由 `gofmt` 排序，並依責任以空行分組：標準函式庫、第三方 Go module、`shared/`（不含 `lib`／`util`）、`shared/lib`、`shared/util`、`contracts`、platform 與 runtime-owned imports。所有專案內 import 都必須使用顯式且準確的 package alias，例如 `dtos`、`schemas`、`exceptions`、`types`、`apitransport`、`coreadapters`；不得依賴 import path 最後一段的隱式名稱。
 - 所有非空 struct literal 一律展開為多行，每個 field 各佔一行並保留 trailing comma；不可將 DTO、response 或任何只有一個 field 的 struct literal 寫在一行。這也適用於 `return` 的 struct literal 與巢狀 struct literal。
 

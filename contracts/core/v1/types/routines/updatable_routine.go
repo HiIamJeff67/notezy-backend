@@ -1,4 +1,4 @@
-package routinestypes
+package coretypes
 
 import (
 	"time"

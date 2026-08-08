@@ -7,7 +7,7 @@ import (
 
 	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
 	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/events"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 )
 
 type RoutineTaskAssignmentEventBuilder struct{}

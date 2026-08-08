@@ -14,15 +14,15 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
 	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
 
 	editableblock "github.com/HiIamJeff67/notezy-backend/shared/util/editableblock"
 
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1"
 
@@ -38,13 +38,13 @@ import (
 )
 
 type BlockServiceInterface interface {
-	GetMyBlockById(ctx context.Context, requestDto *blocksdto.GetMyBlockByIdRequestDto) (*blocksdto.GetMyBlockByIdResponseDto, *exceptions.Exception)
-	GetMyBlocksByIds(ctx context.Context, requestDto *blocksdto.GetMyBlocksByIdsRequestDto) (*blocksdto.GetMyBlocksByIdsResponseDto, *exceptions.Exception)
-	GetMyBlocksByBlockPackId(ctx context.Context, requestDto *blocksdto.GetMyBlocksByBlockPackIdRequestDto) (*blocksdto.GetMyBlocksByBlockPackIdResponseDto, *exceptions.Exception)
+	GetMyBlockById(ctx context.Context, requestDto *apicontract.GetMyBlockByIdRequestDto) (*apicontract.GetMyBlockByIdResponseDto, *exceptions.Exception)
+	GetMyBlocksByIds(ctx context.Context, requestDto *apicontract.GetMyBlocksByIdsRequestDto) (*apicontract.GetMyBlocksByIdsResponseDto, *exceptions.Exception)
+	GetMyBlocksByBlockPackId(ctx context.Context, requestDto *apicontract.GetMyBlocksByBlockPackIdRequestDto) (*apicontract.GetMyBlocksByBlockPackIdResponseDto, *exceptions.Exception)
 
-	Apply(ctx context.Context, blockPackId uuid.UUID, requestDto blocksdto.ApplyBlockProjectionRequestDto) (*blocksdto.ApplyBlockProjectionResponseDto, error)
-	ApplyWithTransaction(ctx context.Context, tx *gorm.DB, blockPackId uuid.UUID, requestDto blocksdto.ApplyBlockProjectionRequestDto) (*blocksdto.ApplyBlockProjectionResponseDto, error)
-	ApplyMany(ctx context.Context, requestDtos []blocksdto.ApplyBlockProjectionDocumentRequestDto) (blocksdto.ApplyBlockProjectionDocumentResponseDto, error)
+	Apply(ctx context.Context, blockPackId uuid.UUID, requestDto apicontract.ApplyBlockProjectionRequestDto) (*apicontract.ApplyBlockProjectionResponseDto, error)
+	ApplyWithTransaction(ctx context.Context, tx *gorm.DB, blockPackId uuid.UUID, requestDto apicontract.ApplyBlockProjectionRequestDto) (*apicontract.ApplyBlockProjectionResponseDto, error)
+	ApplyMany(ctx context.Context, requestDtos []apicontract.ApplyBlockProjectionDocumentRequestDto) (apicontract.ApplyBlockProjectionDocumentResponseDto, error)
 
 	SearchPrivateBlocks(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchBlockInput) (*gqlmodels.SearchBlockConnection, *exceptions.Exception)
 }
@@ -81,8 +81,8 @@ func NewBlockService(
 
 /* ============================== Auxiliary Functions ============================== */
 
-func newBlockResponseDto(block schemas.Block) blocksdto.BlockResponseDto {
-	return blocksdto.BlockResponseDto{
+func newBlockResponseDto(block schemas.Block) apicontract.BlockResponseDto {
+	return apicontract.BlockResponseDto{
 		Id:            block.Id,
 		BlockPackId:   block.BlockPackId,
 		ParentBlockId: block.ParentBlockId,
@@ -99,8 +99,8 @@ func newBlockResponseDto(block schemas.Block) blocksdto.BlockResponseDto {
 /* ============================== Service Methods for Block ============================== */
 
 func (s *BlockService) GetMyBlockById(
-	ctx context.Context, requestDto *blocksdto.GetMyBlockByIdRequestDto,
-) (*blocksdto.GetMyBlockByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.GetMyBlockByIdRequestDto,
+) (*apicontract.GetMyBlockByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Block.InvalidDto().WithOrigin(err)
 	}
@@ -132,8 +132,8 @@ func (s *BlockService) GetMyBlockById(
 }
 
 func (s *BlockService) GetMyBlocksByIds(
-	ctx context.Context, requestDto *blocksdto.GetMyBlocksByIdsRequestDto,
-) (*blocksdto.GetMyBlocksByIdsResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.GetMyBlocksByIdsRequestDto,
+) (*apicontract.GetMyBlocksByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Block.InvalidDto().WithOrigin(err)
 	}
@@ -161,7 +161,7 @@ func (s *BlockService) GetMyBlocksByIds(
 		return nil, exception
 	}
 
-	responseDto := make(blocksdto.GetMyBlocksByIdsResponseDto, len(blocks))
+	responseDto := make(apicontract.GetMyBlocksByIdsResponseDto, len(blocks))
 	for index, block := range blocks {
 		responseDto[index] = newBlockResponseDto(block)
 	}
@@ -170,8 +170,8 @@ func (s *BlockService) GetMyBlocksByIds(
 }
 
 func (s *BlockService) GetMyBlocksByBlockPackId(
-	ctx context.Context, requestDto *blocksdto.GetMyBlocksByBlockPackIdRequestDto,
-) (*blocksdto.GetMyBlocksByBlockPackIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.GetMyBlocksByBlockPackIdRequestDto,
+) (*apicontract.GetMyBlocksByBlockPackIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Block.InvalidDto().WithOrigin(err)
 	}
@@ -206,7 +206,7 @@ func (s *BlockService) GetMyBlocksByBlockPackId(
 		return nil, apiexceptions.Block.NotFound().WithOrigin(err)
 	}
 
-	responseDto := make(blocksdto.GetMyBlocksByBlockPackIdResponseDto, len(blocks))
+	responseDto := make(apicontract.GetMyBlocksByBlockPackIdResponseDto, len(blocks))
 	for index, block := range blocks {
 		responseDto[index] = newBlockResponseDto(block)
 	}
@@ -217,8 +217,8 @@ func (s *BlockService) GetMyBlocksByBlockPackId(
 func (s *BlockService) Apply(
 	ctx context.Context,
 	blockPackId uuid.UUID,
-	requestDto blocksdto.ApplyBlockProjectionRequestDto,
-) (*blocksdto.ApplyBlockProjectionResponseDto, error) {
+	requestDto apicontract.ApplyBlockProjectionRequestDto,
+) (*apicontract.ApplyBlockProjectionResponseDto, error) {
 	tx := s.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		return nil, fmt.Errorf("begin block projection transaction: %w", tx.Error)
@@ -241,8 +241,8 @@ func (s *BlockService) ApplyWithTransaction(
 	ctx context.Context,
 	tx *gorm.DB,
 	blockPackId uuid.UUID,
-	requestDto blocksdto.ApplyBlockProjectionRequestDto,
-) (*blocksdto.ApplyBlockProjectionResponseDto, error) {
+	requestDto apicontract.ApplyBlockProjectionRequestDto,
+) (*apicontract.ApplyBlockProjectionResponseDto, error) {
 	if blockPackId == uuid.Nil {
 		return nil, fmt.Errorf("block projection requires a block pack id")
 	}
@@ -295,7 +295,7 @@ func (s *BlockService) ApplyWithTransaction(
 	metrics.NotezyMeter.Value(ctx, "yjs.projection.lag", document.LastUpdateSequence-document.ProjectedUntilSequence)
 
 	if requestDto.ProjectedSequence <= document.ProjectedUntilSequence {
-		return &blocksdto.ApplyBlockProjectionResponseDto{
+		return &apicontract.ApplyBlockProjectionResponseDto{
 			Applied:                false,
 			ProjectedUntilSequence: document.ProjectedUntilSequence,
 		}, nil
@@ -364,7 +364,7 @@ func (s *BlockService) ApplyWithTransaction(
 		return nil, fmt.Errorf("failed to update block projection checkpoint: %w", err)
 	}
 
-	return &blocksdto.ApplyBlockProjectionResponseDto{
+	return &apicontract.ApplyBlockProjectionResponseDto{
 		Applied:                true,
 		ProjectedUntilSequence: requestDto.ProjectedSequence,
 	}, nil
@@ -372,10 +372,10 @@ func (s *BlockService) ApplyWithTransaction(
 
 func (s *BlockService) ApplyMany(
 	ctx context.Context,
-	requestDtos []blocksdto.ApplyBlockProjectionDocumentRequestDto,
-) (blocksdto.ApplyBlockProjectionDocumentResponseDto, error) {
+	requestDtos []apicontract.ApplyBlockProjectionDocumentRequestDto,
+) (apicontract.ApplyBlockProjectionDocumentResponseDto, error) {
 	if len(requestDtos) == 0 {
-		return blocksdto.ApplyBlockProjectionDocumentResponseDto{}, nil
+		return apicontract.ApplyBlockProjectionDocumentResponseDto{}, nil
 	}
 
 	type preparedProjection struct {
@@ -506,7 +506,7 @@ func (s *BlockService) ApplyMany(
 			return nil, fmt.Errorf("failed to commit stale block projections: %w", err)
 		}
 
-		return blocksdto.ApplyBlockProjectionDocumentResponseDto{}, nil
+		return apicontract.ApplyBlockProjectionDocumentResponseDto{}, nil
 	}
 
 	projectedBlockIds := make([]uuid.UUID, 0)
@@ -618,7 +618,7 @@ func (s *BlockService) ApplyMany(
 		appliedBlockPackIds[index] = document.BlockPackId
 	}
 
-	return blocksdto.ApplyBlockProjectionDocumentResponseDto(appliedBlockPackIds), nil
+	return apicontract.ApplyBlockProjectionDocumentResponseDto(appliedBlockPackIds), nil
 }
 
 func (s *BlockService) SearchPrivateBlocks(

@@ -1,13 +1,17 @@
 package repositories
 
 import (
+	"fmt"
+	"strings"
+	"time"
+
 	"github.com/google/uuid"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	array "github.com/HiIamJeff67/notezy-backend/shared/lib/array"
 
+	inputs "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/inputs"
 	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
@@ -21,6 +25,7 @@ type RoutineTaskRecordRepositoryInterface interface {
 	CheckPermissionAndGetOneById(id uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineTaskRecordRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) (*schemas.RoutineTaskRecord, *exceptions.Exception)
 	CheckPermissionsAndGetManyByIds(ids []uuid.UUID, userId uuid.UUID, preloads []schemas.RoutineTaskRecordRelation, allowedPermissions []enums.AccessControlPermission, opts ...options.RepositoryOptions) ([]schemas.RoutineTaskRecord, *exceptions.Exception)
 	GetAllByRoutineTaskId(routineTaskId uuid.UUID, userId uuid.UUID, limit int, preloads []schemas.RoutineTaskRecordRelation, opts ...options.RepositoryOptions) ([]schemas.RoutineTaskRecord, *exceptions.Exception)
+	UpdateManyAsFailed(failureInputs []inputs.UpdateRoutineTaskRecordFailureInput, failedAt time.Time, opts ...options.RepositoryOptions) (int64, *exceptions.Exception)
 	HardDeleteOneById(id uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 	HardDeleteManyByIds(ids []uuid.UUID, userId uuid.UUID, opts ...options.RepositoryOptions) *exceptions.Exception
 }
@@ -105,7 +110,7 @@ func (r *RoutineTaskRecordRepository) CheckPermissionAndGetOneById(
 		Scopes(r.routineTaskRecordScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&routineTaskRecord)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.RoutineTask.NotFound().WithOrigin(result.Error)},
 		{First: routineTaskRecord.Id == uuid.Nil, Second: apiexceptions.RoutineTask.NotFound()},
 	}); exception != nil {
@@ -135,7 +140,7 @@ func (r *RoutineTaskRecordRepository) CheckPermissionsAndGetManyByIds(
 		Scopes(r.routineTaskRecordScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&routineTaskRecords)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.RoutineTask.NotFound().WithOrigin(result.Error)},
 		{First: len(routineTaskRecords) == 0, Second: apiexceptions.RoutineTask.NotFound()},
 	}); exception != nil {
@@ -177,6 +182,58 @@ func (r *RoutineTaskRecordRepository) GetAllByRoutineTaskId(
 	return routineTaskRecords, nil
 }
 
+func (r *RoutineTaskRecordRepository) UpdateManyAsFailed(
+	failureInputs []inputs.UpdateRoutineTaskRecordFailureInput,
+	failedAt time.Time,
+	opts ...options.RepositoryOptions,
+) (int64, *exceptions.Exception) {
+	if len(failureInputs) == 0 {
+		return 0, nil
+	}
+
+	parsedOptions := options.ParseRepositoryOptions(opts...)
+	valuePlaceholders := make([]string, 0, len(failureInputs))
+	valueArgs := make([]any, 0, len(failureInputs)*3+4)
+	for _, failureInput := range failureInputs {
+		valuePlaceholders = append(valuePlaceholders, "(?::uuid, ?::\"RoutineTaskRecordErrorCode\", ?::varchar)")
+		valueArgs = append(
+			valueArgs,
+			failureInput.Id,
+			failureInput.ErrorCode.String(),
+			failureInput.ErrorReason,
+		)
+	}
+
+	query := fmt.Sprintf(`
+		UPDATE "RoutineTaskRecordTable" AS routine_task_record
+		SET
+			status = ?::"RoutineTaskRecordStatus",
+			actual_ended_at = ?::timestamptz,
+			error_code = value.error_code,
+			error_reason = value.error_reason,
+			updated_at = ?::timestamptz
+		FROM (VALUES %s) AS value(id, error_code, error_reason)
+		WHERE routine_task_record.id = value.id
+			AND routine_task_record.status = ?::"RoutineTaskRecordStatus"
+	`, strings.Join(valuePlaceholders, ","))
+	valueArgs = append(
+		[]any{
+			enums.RoutineTaskRecordStatus_Failed.String(),
+			failedAt,
+			failedAt,
+			enums.RoutineTaskRecordStatus_Running.String(),
+		},
+		valueArgs...,
+	)
+
+	result := parsedOptions.DB.Exec(query, valueArgs...)
+	if result.Error != nil {
+		return 0, apiexceptions.RoutineTask.FailedToUpdate().WithOrigin(result.Error)
+	}
+
+	return result.RowsAffected, nil
+}
+
 func (r *RoutineTaskRecordRepository) HardDeleteOneById(
 	id uuid.UUID,
 	userId uuid.UUID,
@@ -188,7 +245,7 @@ func (r *RoutineTaskRecordRepository) HardDeleteOneById(
 		Scopes(r.routineTaskRecordScope.PassPermissionCheck(id, userId, parsedOptions.AllowedPermissions)).
 		Where(`"RoutineTaskRecordTable".id = ?`, id).
 		Delete(&schemas.RoutineTaskRecord{})
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.RoutineTask.FailedToDelete().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.RoutineTask.NoChanges()},
 	}); exception != nil {
@@ -213,7 +270,7 @@ func (r *RoutineTaskRecordRepository) HardDeleteManyByIds(
 		Scopes(r.routineTaskRecordScope.PassPermissionChecks(ids, userId, parsedOptions.AllowedPermissions)).
 		Where(`"RoutineTaskRecordTable".id IN ?`, ids).
 		Delete(&schemas.RoutineTaskRecord{})
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.RoutineTask.FailedToDelete().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.RoutineTask.NoChanges()},
 	}); exception != nil {

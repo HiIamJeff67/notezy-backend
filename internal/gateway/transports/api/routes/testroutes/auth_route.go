@@ -16,7 +16,7 @@ import (
 // and its function name also start with the upper case letter
 func ConfigureTestAuthRoutes(
 	routerGroup *gin.RouterGroup,
-	coreClient *coreadapters.CoreClient,
+	coreClient *coreadapters.CoreAdapter,
 	accessTokenCookieHandler *cookies.CookieHandler,
 	refreshTokenCookieHandler *cookies.CookieHandler,
 ) {

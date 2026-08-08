@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	itemsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/items"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/items"
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
@@ -30,8 +30,8 @@ func NewItemEndpoint(
 }
 
 func (t *ItemEndpoint) SearchItems(ctx *gin.Context) {
-	request := &gatewaycontract.Request[itemsdto.SearchItemsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.SearchItemsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -66,7 +66,7 @@ func (t *ItemEndpoint) SearchItems(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[itemsdto.SearchItemsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.SearchItemsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,

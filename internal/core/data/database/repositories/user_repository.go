@@ -7,8 +7,7 @@ import (
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm/clause"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	partialupdate "github.com/HiIamJeff67/notezy-backend/shared/lib/partialupdate"
 
@@ -54,7 +53,7 @@ func (r *UserRepository) GetOneById(
 	result := db.Where("id = ?", id).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&user)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.User.NotFound().WithOrigin(result.Error)},
 		{First: user.Id == uuid.Nil, Second: apiexceptions.User.NotFound()},
 	}); exception != nil {
@@ -81,7 +80,7 @@ func (r *UserRepository) GetOneByPublicId(
 		Where("public_id = ?", publicId).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&user)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.User.NotFound().WithOrigin(result.Error)},
 		{First: user.Id == uuid.Nil, Second: apiexceptions.User.NotFound()},
 	}); exception != nil {
@@ -110,7 +109,7 @@ func (r *UserRepository) GetOneByName(
 	result := db.Where("name = ?", name).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&user)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.User.NotFound().WithOrigin(result.Error)},
 		{First: user.Id == uuid.Nil, Second: apiexceptions.User.NotFound()},
 	}); exception != nil {
@@ -139,7 +138,7 @@ func (r *UserRepository) GetOneByEmail(
 	result := query.Where("email = ?", email).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&user)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.User.NotFound().WithOrigin(result.Error)},
 		{First: user.Id == uuid.Nil, Second: apiexceptions.User.NotFound()},
 	}); exception != nil {
@@ -162,7 +161,7 @@ func (r *UserRepository) GetAll(
 		Preload("Badges").
 		Preload("Themes").
 		Find(&users)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.User.NotFound().WithOrigin(result.Error)},
 		{First: len(users) == 0, Second: apiexceptions.User.NotFound()},
 	}); exception != nil {
@@ -234,7 +233,7 @@ func (r *UserRepository) UpdateOneById(
 		Where("id = ?", id).
 		Select("*").
 		Updates(&updates)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.User.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.User.NoChanges()},
 	}); exception != nil {

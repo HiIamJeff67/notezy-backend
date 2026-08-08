@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 	franzkgo "github.com/twmb/franz-go/pkg/kgo"
 
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
 	traces "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/traces"

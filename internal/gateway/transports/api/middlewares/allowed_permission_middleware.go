@@ -11,7 +11,7 @@ import (
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/gateway/contexts"
 )
 
-var accessControlPermissions = []enumcontract.AccessControlPermission{
+var orderedAccessControlPermissions = []enumcontract.AccessControlPermission{
 	enumcontract.AccessControlPermission_Read,
 	enumcontract.AccessControlPermission_Write,
 	enumcontract.AccessControlPermission_Admin,
@@ -19,21 +19,21 @@ var accessControlPermissions = []enumcontract.AccessControlPermission{
 }
 
 func AllowedPermissionsAbove(permission enumcontract.AccessControlPermission) gin.HandlerFunc {
-	index := slices.Index(accessControlPermissions, permission)
+	index := slices.Index(orderedAccessControlPermissions, permission)
 	if index < 0 {
 		panic(fmt.Sprintf("invalid access control permission: %s", permission))
 	}
 
-	return AllowedPermissionsWithin(accessControlPermissions[index:]...)
+	return AllowedPermissionsWithin(orderedAccessControlPermissions[index:]...)
 }
 
 func AllowedPermissionsBelow(permission enumcontract.AccessControlPermission) gin.HandlerFunc {
-	index := slices.Index(accessControlPermissions, permission)
+	index := slices.Index(orderedAccessControlPermissions, permission)
 	if index < 0 {
 		panic(fmt.Sprintf("invalid access control permission: %s", permission))
 	}
 
-	return AllowedPermissionsWithin(accessControlPermissions[:index+1]...)
+	return AllowedPermissionsWithin(orderedAccessControlPermissions[:index+1]...)
 }
 
 func AllowedPermissionsWithin(allowedPermissions ...enumcontract.AccessControlPermission) gin.HandlerFunc {
@@ -41,7 +41,7 @@ func AllowedPermissionsWithin(allowedPermissions ...enumcontract.AccessControlPe
 		panic("allowed permissions are required")
 	}
 	for _, permission := range allowedPermissions {
-		if !slices.Contains(accessControlPermissions, permission) {
+		if !slices.Contains(orderedAccessControlPermissions, permission) {
 			panic(fmt.Sprintf("invalid access control permission: %s", permission))
 		}
 	}

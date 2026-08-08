@@ -4,7 +4,7 @@
 
 This document defines the backend boundary between the authenticated HTTP API,
 the public Realtime Gateway, the Yjs worker, and a BlockPack editor. It owns
-the ticket APIs and their relationship to the WebSocket protocol; binary frame
+the ticket APIs, direct RealtimeGateway presence query, and their relationship to the WebSocket protocol; binary frame
 formats and durable Yjs semantics are defined in
 [Realtime Protocol](../system-design/realtime-protocol.md) and
 [Yjs Collaboration](../system-design/yjs-collaboration.md).
@@ -22,14 +22,15 @@ Yjs. There is no public REST Block mutation API.
 
 ## HTTP API
 
-All endpoints use the normal authenticated REST pipeline and the standard
-response envelope. Routes are rooted at `/api/development/v1`.
+Ticket endpoints use the authenticated API pipeline and are rooted at
+`/api/development/v1`. Presence is served directly by RealtimeGateway under
+`/realtime/development/v1`.
 
 | Method | Path | Responsibility |
 | --- | --- | --- |
 | `POST` | `/realtime/connection/ticket` | Issue a short-lived capability for one root WebSocket connection. |
 | `POST` | `/realtime/channel/block-pack/ticket` | Issue a BlockPack-scoped read or write channel capability. |
-| `GET` | `/realtime/block-pack/:blockPackId/participants` | Return RealtimeGateway-owned ephemeral active presence, fetched through a private transport and enriched by Core after permission and membership filtering. |
+| `GET` | `/realtime/block-pack/:blockPackId/participants` | Return RealtimeGateway-owned ephemeral active presence directly from its Redis lease store. User profile details remain a separate Core API concern. |
 
 ### Connection ticket
 

@@ -1,4 +1,4 @@
-package stationstypes
+package coretypes
 
 import "github.com/google/uuid"
 

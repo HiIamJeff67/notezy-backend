@@ -12,7 +12,8 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
 	metrics "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/metrics"
@@ -53,10 +54,10 @@ func GetGinHBytes(exception *exceptions.Exception) ([]byte, error) {
 }
 
 func GetResponseJSONBytes(exception *exceptions.Exception) ([]byte, error) {
-	return json.Marshal(gin.H{
-		"success":   false,
-		"data":      nil,
-		"exception": GetGinH(exception),
+	return json.Marshal(gatewaycontract.ClientResponse[any]{
+		Success:   false,
+		Data:      nil,
+		Exception: ToPublic(context.Background(), exception),
 	})
 }
 
@@ -77,10 +78,10 @@ func ResponseWithJSON(exception *exceptions.Exception, ctx *gin.Context, names .
 		traces.NotezyTracer.RecordError(ctx, exception)
 	}
 
-	ctx.JSON(publicException.HTTPStatusCode(), gin.H{
-		"success":   false,
-		"data":      nil,
-		"exception": GetGinH(publicException),
+	ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.ClientResponse[any]{
+		Success:   false,
+		Data:      nil,
+		Exception: publicException,
 	})
 }
 
@@ -93,10 +94,10 @@ func SafelyResponseWithJSON(exception *exceptions.Exception, ctx *gin.Context, n
 		traces.NotezyTracer.RecordError(ctx, exception)
 	}
 
-	ctx.JSON(publicException.HTTPStatusCode(), gin.H{
-		"success":   false,
-		"data":      nil,
-		"exception": GetGinH(publicException),
+	ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.ClientResponse[any]{
+		Success:   false,
+		Data:      nil,
+		Exception: publicException,
 	})
 }
 
@@ -109,10 +110,10 @@ func SafelyAbortAndResponseWithJSON(exception *exceptions.Exception, ctx *gin.Co
 		traces.NotezyTracer.RecordError(ctx, exception)
 	}
 
-	ctx.AbortWithStatusJSON(publicException.HTTPStatusCode(), gin.H{
-		"success":   false,
-		"data":      nil,
-		"exception": GetGinH(publicException),
+	ctx.AbortWithStatusJSON(publicException.HTTPStatusCode(), gatewaycontract.ClientResponse[any]{
+		Success:   false,
+		Data:      nil,
+		Exception: publicException,
 	})
 }
 

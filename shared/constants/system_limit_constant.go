@@ -64,7 +64,6 @@ const (
 	MinPasswordLength  int = 8
 	MaxPasswordLength  int = 1024
 
-	MaxRetriesOfGeneratingFakeName = 5
 	// make sure the below values are as the same as the constraint in the dto while registering or creating the user
 	MaxNameLength = 32
 	MinNameLength = 6

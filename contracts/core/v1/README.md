@@ -19,7 +19,7 @@ Cross-runtime data vocabulary is outside this versioned service contract:
 
 - `contracts/types/enums/` owns enum values. Core and DurableJob database
   wrappers add persistence behavior without redefining values.
-- `contracts/types/editable_block.go` owns the single recursive
++ `contracts/types/blocknote/editable_block.go` owns the single recursive
   `ArborizedEditableBlock` input shape and the single
   `RawFlattenedEditableBlock` projection/persistence shape.
 - `contracts/types/*_routine_task_payload.go` owns payloads used by both Core

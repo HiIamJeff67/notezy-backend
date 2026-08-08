@@ -1,4 +1,4 @@
-package blockpacksdto
+package apicontract
 
 const (
 	GetMyBlockPackByIdOperation                  = "block-pack.get-by-id"

@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	themesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/themes"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/themes"
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 
 	otherservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/other"
@@ -29,8 +29,8 @@ func NewThemeEndpoint(
 }
 
 func (t *ThemeEndpoint) SearchThemes(ctx *gin.Context) {
-	request := &gatewaycontract.Request[themesdto.SearchThemesRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.SearchThemesRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -50,7 +50,7 @@ func (t *ThemeEndpoint) SearchThemes(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[themesdto.SearchThemesResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.SearchThemesResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,

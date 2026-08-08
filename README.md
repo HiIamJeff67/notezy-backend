@@ -96,9 +96,9 @@
   - `internal/routes/developmentroutes`: main API routes (`/api/development/v1`).
   - `internal/routes/testroutes`: test-only route registration.
 - **Commands and CLI**
-  - `cmd/api/commands`: migration, seed, enum/db inspect, truncation commands.
+  - `internal/core/commands`: migration, seed, enum/db inspect, truncation commands.
 - **Exception System**
-  - `shared/exceptions`: centralized error taxonomy + safe response + metric integration.
+  - `contracts/types/exceptions`: centralized error envelope and safe public fallback.
 
 ### Build and Run
 
@@ -111,7 +111,7 @@
 #### Local Run (Host)
 
 1. Configure `.env`.
-2. Run `go run ./cmd/api`.
+2. Run `(cd internal/gateway && go run ./commands)`.
 
 #### Development Run (Compose)
 
@@ -133,14 +133,13 @@
 - **Containerization**
   - `docker-compose.yaml`: dev topology with API + DB + Redis + Nginx + LGTM.
   - `docker-compose.prod.yaml`: leaner production-like topology.
-  - `infra/docker/Dockerfile.dev`: hot-reload image (`air`).
-  - `infra/docker/Dockerfile.prod`: multi-stage production build.
+  - `internal/<runtime>/Dockerfile`: runtime-owned multi-stage image build.
 - **Nginx Reverse Proxy**
   - `infra/nginx/default.dev.conf`: HTTP reverse proxy to `notezy-gateway:7777`.
   - `infra/nginx/default.prod.conf`: HTTPS termination + redirect + proxy headers.
 - **GraphQL Artifacts**
   - Schemas: `contracts/core/v1/graphql/schemas/**/*.graphql`.
-  - Generator config: `infra/graphql/gqlgen.yaml`.
+  - Generator config: `contracts/core/v1/graphql/gqlgen.yaml`.
   - Generated outputs: `contracts/core/v1/graphql/generated/*_generated.go`, `contracts/core/v1/graphql/models/models_gen.go`.
 - **Observability (LGTM + OTEL)**
   - Collector: `infra/monitor/otel-collector-config.dev.yaml`.
@@ -148,7 +147,7 @@
   - Grafana datasource provisioning: `infra/monitor/grafana/datasources.dev.yaml`.
   - App-side tracing/metrics initialized in `internal/core/application.go` and route middleware.
 - **Scope Exclusion (PayPal)**
-  - `infra/paypal/*` and related docs are intentionally excluded from this main infra analysis section.
+  - `infra/paypal/*` is retained as a temporary reference location and is intentionally excluded from this main infra analysis section.
 
 ### VS Code Workspace Configuration
 
@@ -246,9 +245,12 @@ go-start-monolithic-kit/
 ├── go.sum
 ├── LICENSE(tw).md
 ├── LICENSE.md
-├── cmd/api/
-│   ├── commands/
-│   └── main.go
+├── internal/
+│   ├── internal/gateway/commands/
+│   ├── internal/core/commands/
+│   ├── internal/durablejob/commands/
+│   ├── internal/email/commands/
+│   └── internal/realtimegateway/commands/
 ├── Makefile
 └── README.md
 ```

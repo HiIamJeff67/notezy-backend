@@ -1,16 +1,16 @@
-package yjsworkereventscontract
+package adapterseventscontract
 
 import (
 	"github.com/google/uuid"
 
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 )
 
 const (
-	YjsWorkerCoreCommandTopic            eventcontract.Topic = "notezy.yjsworker.core.command.v1"
-	CoreYjsWorkerReplyTopic              eventcontract.Topic = "notezy.core.yjsworker.reply.v1"
-	YjsWorkerCoreMaintenanceCommandTopic eventcontract.Topic = "notezy.core.yjsworker.maintenance-command.v1"
-	CoreYjsWorkerMaintenanceResultTopic  eventcontract.Topic = "notezy.yjsworker.core.maintenance-result.v1"
+	YjsWorkerCoreCommandTopic            eventcontract.Topic = "notezy.adapters.core.command.v1"
+	CoreYjsWorkerReplyTopic              eventcontract.Topic = "notezy.core.adapters.reply.v1"
+	YjsWorkerCoreMaintenanceCommandTopic eventcontract.Topic = "notezy.core.adapters.maintenance-command.v1"
+	CoreYjsWorkerMaintenanceResultTopic  eventcontract.Topic = "notezy.adapters.core.maintenance-result.v1"
 )
 
 const (

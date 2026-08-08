@@ -7,8 +7,7 @@ import (
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm/clause"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	partialupdate "github.com/HiIamJeff67/notezy-backend/shared/lib/partialupdate"
 
@@ -42,7 +41,7 @@ func (r *UserInfoRepository) GetOneByUserId(
 		Where("user_id = ?", userId).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&userInfo)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.UserInfo.NotFound().WithOrigin(result.Error)},
 		{First: userInfo.Id == uuid.Nil, Second: apiexceptions.UserInfo.NotFound()},
 	}); exception != nil {
@@ -68,7 +67,7 @@ func (r *UserInfoRepository) CreateOneByUserId(
 	result := parsedOptions.DB.Model(&schemas.UserInfo{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newUserInfo)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.UserInfo.FailedToCreate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.UserInfo.NoChanges()},
 	}); exception != nil {
@@ -102,7 +101,7 @@ func (r *UserInfoRepository) UpdateOneByUserId(
 		Where("user_id = ?", userId).
 		Select("*").
 		Updates(&updates)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.UserInfo.FailedToCreate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.UserInfo.NoChanges()},
 	}); exception != nil {

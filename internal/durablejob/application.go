@@ -87,7 +87,7 @@ func Start() func() {
 		routineTaskClaimProducer.Produce,
 	)
 
-	yjsMaintenanceStrategy := corestrategies.NewYjsMaintenanceStrategy()
+	yjsMaintenanceStrategy := corestrategies.NewYjsMaintenanceStrategy(config.YjsMaintenanceStrategy)
 	yjsMaintenanceRequestProducer := coreproducers.NewYjsMaintenanceRequestProducer(kafkaProducer)
 	yjsMaintenanceHintConsumer := coreconsumers.NewYjsMaintenanceHintConsumer(
 		yjsMaintenanceRequestProducer,

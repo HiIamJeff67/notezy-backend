@@ -44,6 +44,14 @@ browser credential, then resolves its own trusted identity before passing
 permissions to service/repository options. Browser JWTs and `context.Context` are
 not DTO fields or internal request types.
 
+`AllowedPermissions` is optional delegation metadata, not a second authentication
+requirement. Routes that only need an authenticated user (for example, `users/me`
+or authenticated auth operations) use `CallSecurly` without mounting an allowed
+permission middleware. Routes that operate on a protected resource must mount an
+explicit `AllowedPermissions...` middleware before `CallSecurly`; Core services
+that require resource authorization read the strict permission context and fail
+closed when that route policy is missing.
+
 The client-facing Gateway transport lives in
 `internal/gateway/transports/api/`. It owns routes, binders, controllers, and
 client-only middlewares/interceptors. Reusable Gin cookie handlers live in
@@ -186,7 +194,7 @@ append/update/reset mutation methods in Core.
 
 ## Dependency direction
 
-- `cmd/*` may import `internal/*`.
+- Each runtime's `commands/` package may import its owning `internal/<runtime>/` packages.
 - Gateway client/API and Core-adapter transport code may import contracts, shared,
   and its own code; it must not query Core data or import repositories/
   GORM schemas. RealtimeGateway does not construct Core services, query Core
@@ -194,22 +202,25 @@ append/update/reset mutation methods in Core.
   YjsWorker and receives Core lifecycle facts through Kafka.
 - A runtime may import contracts, shared, and its own data. A runtime
   must not import another service source package.
-- Gateway, DurableJob, Email, and RealtimeGateway are separate Go environments:
-  each runtime owns a `go.mod` and `go.sum` beside its `application.go`. The
-  root module still composes `cmd/*`, contracts, shared, and Core during
-  migration; runtime modules may use a local root-module replacement only for
-  explicitly tracked transitional dependencies. Do not add a runtime
+- Core, Gateway, DurableJob, Email, and RealtimeGateway are separate Go
+  environments. Each runtime owns a `go.mod` and `go.sum` beside its
+  `application.go`; `contracts` and `shared` own their own module metadata as
+  well. The repository root intentionally has no `go.mod` or `go.sum`.
+  `go.work` is the root workspace manifest that composes these modules for
+  local development, but it is not an application module. The independent
+  `test` module owns integration, architecture, and cross-runtime test
+  dependencies and may replace the local runtime modules. Do not add a runtime
   dependency merely to reuse another runtime's source. YjsWorker keeps its
   independent Node/TypeScript package environment.
 - `shared` is the root-level cross-runtime utility layer. It may depend on
   contracts and the minimum common application support it genuinely needs;
   portable `shared/lib` never imports a Notezy package.
-- `shared/cookies`, `shared/exceptions`, and `shared/tokens` are shared semantic
+- `shared/cookies`, `shared/tokens`, and `contracts/types/exceptions` are shared semantic
   boundaries that remain at the root of `shared`; reusable implementation
   utilities belong under `shared/util/` (`editableblock`, `exceptionwriter`,
   and `responsewriter`). `shared/util` may use application-support packages,
   while `shared/lib` remains the stricter dependency-free library layer.
-- The generic Kafka envelope is maintained in `contracts/types/event.go`.
+- The generic Kafka envelope is maintained in `contracts/types/events/`.
   Runtime event domains remain under their owning `contracts/<runtime>/v1/events/`
   package; email request payloads therefore live in
   `contracts/email/v1/events/`.

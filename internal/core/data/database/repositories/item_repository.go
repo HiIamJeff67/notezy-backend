@@ -3,7 +3,7 @@ package repositories
 import (
 	"github.com/google/uuid"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
 	array "github.com/HiIamJeff67/notezy-backend/shared/lib/array"
@@ -116,7 +116,7 @@ func (r *ItemRepository) CheckPermissionAndGetOneById(
 		Scopes(r.itemScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&item)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Item.NotFound().WithOrigin(result.Error)},
 		{First: item.Id == uuid.Nil, Second: apiexceptions.Item.NotFound()},
 	}); exception != nil {
@@ -143,7 +143,7 @@ func (r *ItemRepository) CheckPermissionsAndGetManyByIds(
 		Scopes(r.itemScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&items)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Item.NotFound().WithOrigin(result.Error)},
 		{First: len(items) == 0, Second: apiexceptions.Item.NotFound()},
 	}); exception != nil {

@@ -1,4 +1,4 @@
-package userinfosdto
+package apicontract
 
 import (
 	"time"

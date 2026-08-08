@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 
 	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1"
 	yjsworkereventscontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1/events"
 
@@ -36,14 +36,11 @@ func NewYjsMaintenanceHintConsumer(
 	strategy *corestrategies.YjsMaintenanceStrategy,
 	kafkaConfig platformkafka.ConsumerConfig,
 ) *YjsMaintenanceHintConsumer {
-	if strategy == nil {
-		strategy = corestrategies.NewYjsMaintenanceStrategy()
-	}
 	return &YjsMaintenanceHintConsumer{
 		producer:    producer,
 		kafkaConfig: kafkaConfig,
 		strategy:    strategy,
-		slots:       make(chan struct{}, corestrategies.MaximumDispatchWorkers),
+		slots:       make(chan struct{}, strategy.Config.MaximumDispatchWorkers),
 	}
 }
 
@@ -135,7 +132,7 @@ func (c *YjsMaintenanceHintConsumer) dispatch(ctx context.Context) {
 
 func (c *YjsMaintenanceHintConsumer) dispatchPending(ctx context.Context) {
 	for {
-		hints := c.strategy.DequeueBatch(corestrategies.MaximumDispatchBatch)
+		hints := c.strategy.DequeueBatch(c.strategy.Config.MaximumDispatchBatch)
 		if len(hints) == 0 {
 			return
 		}

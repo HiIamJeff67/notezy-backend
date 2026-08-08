@@ -1,4 +1,4 @@
-package userinfosdto
+package apicontract
 
 import (
 	"github.com/google/uuid"

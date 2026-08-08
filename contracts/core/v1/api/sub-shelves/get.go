@@ -1,4 +1,4 @@
-package subshelvesdto
+package apicontract
 
 import (
 	"time"

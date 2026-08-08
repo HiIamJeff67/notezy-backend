@@ -3,7 +3,7 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
 
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
@@ -19,7 +19,7 @@ func configureUserRoutes(
 		routes.POST(
 			"/data",
 			middlewares.DelegationAuthenticatedMiddleware(
-				usersdto.GetUserDataOperation,
+				apicontract.GetUserDataOperation,
 			),
 			authMiddleware,
 			endpoint.GetUserData,
@@ -27,7 +27,7 @@ func configureUserRoutes(
 		routes.POST(
 			"/me",
 			middlewares.DelegationAuthenticatedMiddleware(
-				usersdto.GetMeOperation,
+				apicontract.GetMeOperation,
 			),
 			authMiddleware,
 			endpoint.GetMe,
@@ -35,7 +35,7 @@ func configureUserRoutes(
 		routes.POST(
 			"/me/update",
 			middlewares.DelegationAuthenticatedMiddleware(
-				usersdto.UpdateMeOperation,
+				apicontract.UpdateMeOperation,
 			),
 			authMiddleware,
 			endpoint.UpdateMe,
@@ -43,7 +43,7 @@ func configureUserRoutes(
 		routes.POST(
 			"/graphql/search",
 			middlewares.DelegationAuthenticatedMiddleware(
-				usersdto.SearchUsersOperation,
+				apicontract.SearchUsersOperation,
 			),
 			authMiddleware,
 			endpoint.SearchUsers,
@@ -51,7 +51,7 @@ func configureUserRoutes(
 		routes.POST(
 			"/graphql/load-theme-authors",
 			middlewares.DelegationAuthenticatedMiddleware(
-				usersdto.LoadThemeAuthorsOperation,
+				apicontract.LoadThemeAuthorsOperation,
 			),
 			authMiddleware,
 			endpoint.LoadThemeAuthors,

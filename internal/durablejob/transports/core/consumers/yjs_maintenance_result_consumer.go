@@ -11,7 +11,7 @@ import (
 
 	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/events"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 	yjsworkereventscontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1/events"
 
 	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
@@ -30,9 +30,6 @@ func NewYjsMaintenanceResultConsumer(
 	strategy *corestrategies.YjsMaintenanceStrategy,
 	kafkaConfig platformkafka.ConsumerConfig,
 ) *YjsMaintenanceResultConsumer {
-	if strategy == nil {
-		strategy = corestrategies.NewYjsMaintenanceStrategy()
-	}
 	return &YjsMaintenanceResultConsumer{
 		kafkaConfig: kafkaConfig,
 		strategy:    strategy,
@@ -115,7 +112,7 @@ func (c *YjsMaintenanceResultConsumer) consume(
 		return nil
 	}
 
-	if request, exists := c.strategy.Fail(result.RequestId); exists && request.Attempt < corestrategies.MaximumRequestAttempts {
+	if request, exists := c.strategy.Fail(result.RequestId); exists && request.Attempt < c.strategy.Config.MaximumRequestAttempts {
 		c.retryHint(ctx, request.Hint)
 	}
 	if metrics.NotezyMeter != nil {

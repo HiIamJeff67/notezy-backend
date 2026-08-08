@@ -3,7 +3,7 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	routinetagsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tags"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tags"
 
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
@@ -19,7 +19,7 @@ func configureRoutineTagRoutes(
 		routineTagRoutes.POST(
 			"/get-by-id",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetagsdto.GetMyRoutineTagByIdOperation,
+				apicontract.GetMyRoutineTagByIdOperation,
 			),
 			authMiddleware,
 			endpoint.GetMyRoutineTagById,
@@ -27,7 +27,7 @@ func configureRoutineTagRoutes(
 		routineTagRoutes.POST(
 			"/get-all",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetagsdto.GetAllMyRoutineTagsOperation,
+				apicontract.GetAllMyRoutineTagsOperation,
 			),
 			authMiddleware,
 			endpoint.GetAllMyRoutineTags,
@@ -35,7 +35,7 @@ func configureRoutineTagRoutes(
 		routineTagRoutes.POST(
 			"/create",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetagsdto.CreateRoutineTagOperation,
+				apicontract.CreateRoutineTagOperation,
 			),
 			authMiddleware,
 			endpoint.CreateRoutineTag,
@@ -43,7 +43,7 @@ func configureRoutineTagRoutes(
 		routineTagRoutes.POST(
 			"/create-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetagsdto.CreateRoutineTagsOperation,
+				apicontract.CreateRoutineTagsOperation,
 			),
 			authMiddleware,
 			endpoint.CreateRoutineTags,
@@ -51,7 +51,7 @@ func configureRoutineTagRoutes(
 		routineTagRoutes.POST(
 			"/update",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetagsdto.UpdateMyRoutineTagByIdOperation,
+				apicontract.UpdateMyRoutineTagByIdOperation,
 			),
 			authMiddleware,
 			endpoint.UpdateMyRoutineTagById,
@@ -59,7 +59,7 @@ func configureRoutineTagRoutes(
 		routineTagRoutes.POST(
 			"/update-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetagsdto.UpdateMyRoutineTagsByIdsOperation,
+				apicontract.UpdateMyRoutineTagsByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.UpdateMyRoutineTagsByIds,
@@ -67,7 +67,7 @@ func configureRoutineTagRoutes(
 		routineTagRoutes.POST(
 			"/hard-delete",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetagsdto.HardDeleteMyRoutineTagByIdOperation,
+				apicontract.HardDeleteMyRoutineTagByIdOperation,
 			),
 			authMiddleware,
 			endpoint.HardDeleteMyRoutineTagById,
@@ -75,7 +75,7 @@ func configureRoutineTagRoutes(
 		routineTagRoutes.POST(
 			"/hard-delete-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetagsdto.HardDeleteMyRoutineTagsByIdsOperation,
+				apicontract.HardDeleteMyRoutineTagsByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.HardDeleteMyRoutineTagsByIds,
@@ -83,7 +83,7 @@ func configureRoutineTagRoutes(
 		routineTagRoutes.POST(
 			"/graphql/search",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetagsdto.SearchRoutineTagsOperation,
+				apicontract.SearchRoutineTagsOperation,
 			),
 			authMiddleware,
 			endpoint.SearchRoutineTags,

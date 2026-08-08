@@ -6,15 +6,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	routinesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routines"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routines"
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
 )
 
 func (t *RoutineEndpoint) SearchRoutines(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.SearchRoutinesRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.SearchRoutinesRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -49,7 +49,7 @@ func (t *RoutineEndpoint) SearchRoutines(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.SearchRoutinesResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.SearchRoutinesResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,

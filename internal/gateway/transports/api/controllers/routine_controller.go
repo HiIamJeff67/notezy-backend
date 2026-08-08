@@ -1,57 +1,55 @@
 package controllers
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
 	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
 
-	routinesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routines"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routines"
 
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
 )
 
 type RoutineControllerInterface interface {
-	GetMyRoutineById(ctx *gin.Context, requestDto *routinesdto.GetMyRoutineByIdRequestDto)
-	GetMyRoutinesByStationId(ctx *gin.Context, requestDto *routinesdto.GetMyRoutinesByStationIdRequestDto)
-	GetAllMyRoutinesByTimeRange(ctx *gin.Context, requestDto *routinesdto.GetAllMyRoutinesByTimeRangeRequestDto)
-	CreateRoutineByStationId(ctx *gin.Context, requestDto *routinesdto.CreateRoutineByStationIdRequestDto)
-	CreateRoutinesByStationIds(ctx *gin.Context, requestDto *routinesdto.CreateRoutinesByStationIdsRequestDto)
-	UpdateMyRoutineById(ctx *gin.Context, requestDto *routinesdto.UpdateMyRoutineByIdRequestDto)
-	UpdateMyRoutinesByIds(ctx *gin.Context, requestDto *routinesdto.UpdateMyRoutinesByIdsRequestDto)
-	LinkRoutineTagById(ctx *gin.Context, requestDto *routinesdto.LinkRoutineTagByIdRequestDto)
-	LinkRoutineTagsByIds(ctx *gin.Context, requestDto *routinesdto.LinkRoutineTagsByIdsRequestDto)
-	LinkRoutineItemById(ctx *gin.Context, requestDto *routinesdto.LinkRoutineItemByIdRequestDto)
-	LinkRoutineItemsByIds(ctx *gin.Context, requestDto *routinesdto.LinkRoutineItemsByIdsRequestDto)
-	RestoreMyRoutineById(ctx *gin.Context, requestDto *routinesdto.RestoreMyRoutineByIdRequestDto)
-	RestoreMyRoutinesByIds(ctx *gin.Context, requestDto *routinesdto.RestoreMyRoutinesByIdsRequestDto)
-	DeleteMyRoutineById(ctx *gin.Context, requestDto *routinesdto.DeleteMyRoutineByIdRequestDto)
-	DeleteMyRoutinesByIds(ctx *gin.Context, requestDto *routinesdto.DeleteMyRoutinesByIdsRequestDto)
-	HardDeleteMyRoutineById(ctx *gin.Context, requestDto *routinesdto.HardDeleteMyRoutineByIdRequestDto)
-	HardDeleteMyRoutinesByIds(ctx *gin.Context, requestDto *routinesdto.HardDeleteMyRoutinesByIdsRequestDto)
+	GetMyRoutineById(ctx *gin.Context, requestDto *apicontract.GetMyRoutineByIdRequestDto)
+	GetMyRoutinesByStationId(ctx *gin.Context, requestDto *apicontract.GetMyRoutinesByStationIdRequestDto)
+	GetAllMyRoutinesByTimeRange(ctx *gin.Context, requestDto *apicontract.GetAllMyRoutinesByTimeRangeRequestDto)
+	CreateRoutineByStationId(ctx *gin.Context, requestDto *apicontract.CreateRoutineByStationIdRequestDto)
+	CreateRoutinesByStationIds(ctx *gin.Context, requestDto *apicontract.CreateRoutinesByStationIdsRequestDto)
+	UpdateMyRoutineById(ctx *gin.Context, requestDto *apicontract.UpdateMyRoutineByIdRequestDto)
+	UpdateMyRoutinesByIds(ctx *gin.Context, requestDto *apicontract.UpdateMyRoutinesByIdsRequestDto)
+	LinkRoutineTagById(ctx *gin.Context, requestDto *apicontract.LinkRoutineTagByIdRequestDto)
+	LinkRoutineTagsByIds(ctx *gin.Context, requestDto *apicontract.LinkRoutineTagsByIdsRequestDto)
+	LinkRoutineItemById(ctx *gin.Context, requestDto *apicontract.LinkRoutineItemByIdRequestDto)
+	LinkRoutineItemsByIds(ctx *gin.Context, requestDto *apicontract.LinkRoutineItemsByIdsRequestDto)
+	RestoreMyRoutineById(ctx *gin.Context, requestDto *apicontract.RestoreMyRoutineByIdRequestDto)
+	RestoreMyRoutinesByIds(ctx *gin.Context, requestDto *apicontract.RestoreMyRoutinesByIdsRequestDto)
+	DeleteMyRoutineById(ctx *gin.Context, requestDto *apicontract.DeleteMyRoutineByIdRequestDto)
+	DeleteMyRoutinesByIds(ctx *gin.Context, requestDto *apicontract.DeleteMyRoutinesByIdsRequestDto)
+	HardDeleteMyRoutineById(ctx *gin.Context, requestDto *apicontract.HardDeleteMyRoutineByIdRequestDto)
+	HardDeleteMyRoutinesByIds(ctx *gin.Context, requestDto *apicontract.HardDeleteMyRoutinesByIdsRequestDto)
 
 	/* ============================== Visualization Methods ============================== */
-	VisualizeMyRoutineStatusCount(ctx *gin.Context, requestDto *routinesdto.VisualizeMyRoutineStatusCountRequestDto)
-	VisualizeMyRoutinePeriodCount(ctx *gin.Context, requestDto *routinesdto.VisualizeMyRoutinePeriodCountRequestDto)
-	VisualizeMyRoutineScheduledStartAtCount(ctx *gin.Context, requestDto *routinesdto.VisualizeMyRoutineScheduledStartAtCountRequestDto)
-	VisualizeMyRoutineScheduledEndAtCount(ctx *gin.Context, requestDto *routinesdto.VisualizeMyRoutineScheduledEndAtCountRequestDto)
+	VisualizeMyRoutineStatusCount(ctx *gin.Context, requestDto *apicontract.VisualizeMyRoutineStatusCountRequestDto)
+	VisualizeMyRoutinePeriodCount(ctx *gin.Context, requestDto *apicontract.VisualizeMyRoutinePeriodCountRequestDto)
+	VisualizeMyRoutineScheduledStartAtCount(ctx *gin.Context, requestDto *apicontract.VisualizeMyRoutineScheduledStartAtCountRequestDto)
+	VisualizeMyRoutineScheduledEndAtCount(ctx *gin.Context, requestDto *apicontract.VisualizeMyRoutineScheduledEndAtCountRequestDto)
 }
 
 type RoutineController struct {
-	coreClient *coreadapters.CoreClient
+	coreClient *coreadapters.CoreAdapter
 }
 
-func NewRoutineController(coreClient *coreadapters.CoreClient) RoutineControllerInterface {
+func NewRoutineController(coreClient *coreadapters.CoreAdapter) RoutineControllerInterface {
 	return &RoutineController{coreClient: coreClient}
 }
 
-func (c *RoutineController) GetMyRoutineById(ctx *gin.Context, requestDto *routinesdto.GetMyRoutineByIdRequestDto) {
-	response, exception := coreadapters.CallSecurly[routinesdto.GetMyRoutineByIdRequestDto, routinesdto.GetMyRoutineByIdResponseDto](
+func (c *RoutineController) GetMyRoutineById(ctx *gin.Context, requestDto *apicontract.GetMyRoutineByIdRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.GetMyRoutineByIdRequestDto, apicontract.GetMyRoutineByIdResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinesdto.GetMyRoutineByIdOperation,
+		apicontract.GetMyRoutineByIdOperation,
 		"/core/v1/routines/get-by-id",
 	)
 	if exception != nil {
@@ -59,19 +57,15 @@ func (c *RoutineController) GetMyRoutineById(ctx *gin.Context, requestDto *routi
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineController) GetMyRoutinesByStationId(ctx *gin.Context, requestDto *routinesdto.GetMyRoutinesByStationIdRequestDto) {
-	response, exception := coreadapters.CallSecurly[routinesdto.GetMyRoutinesByStationIdRequestDto, routinesdto.GetMyRoutinesByStationIdResponseDto](
+func (c *RoutineController) GetMyRoutinesByStationId(ctx *gin.Context, requestDto *apicontract.GetMyRoutinesByStationIdRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.GetMyRoutinesByStationIdRequestDto, apicontract.GetMyRoutinesByStationIdResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinesdto.GetMyRoutinesByStationIdOperation,
+		apicontract.GetMyRoutinesByStationIdOperation,
 		"/core/v1/routines/get-by-station-id",
 	)
 	if exception != nil {
@@ -79,19 +73,15 @@ func (c *RoutineController) GetMyRoutinesByStationId(ctx *gin.Context, requestDt
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineController) GetAllMyRoutinesByTimeRange(ctx *gin.Context, requestDto *routinesdto.GetAllMyRoutinesByTimeRangeRequestDto) {
-	response, exception := coreadapters.CallSecurly[routinesdto.GetAllMyRoutinesByTimeRangeRequestDto, routinesdto.GetAllMyRoutinesByTimeRangeResponseDto](
+func (c *RoutineController) GetAllMyRoutinesByTimeRange(ctx *gin.Context, requestDto *apicontract.GetAllMyRoutinesByTimeRangeRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.GetAllMyRoutinesByTimeRangeRequestDto, apicontract.GetAllMyRoutinesByTimeRangeResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinesdto.GetAllMyRoutinesByTimeRangeOperation,
+		apicontract.GetAllMyRoutinesByTimeRangeOperation,
 		"/core/v1/routines/get-all-by-time-range",
 	)
 	if exception != nil {
@@ -99,19 +89,15 @@ func (c *RoutineController) GetAllMyRoutinesByTimeRange(ctx *gin.Context, reques
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineController) CreateRoutineByStationId(ctx *gin.Context, requestDto *routinesdto.CreateRoutineByStationIdRequestDto) {
-	response, exception := coreadapters.CallSecurly[routinesdto.CreateRoutineByStationIdRequestDto, routinesdto.CreateRoutineByStationIdResponseDto](
+func (c *RoutineController) CreateRoutineByStationId(ctx *gin.Context, requestDto *apicontract.CreateRoutineByStationIdRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.CreateRoutineByStationIdRequestDto, apicontract.CreateRoutineByStationIdResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinesdto.CreateRoutineByStationIdOperation,
+		apicontract.CreateRoutineByStationIdOperation,
 		"/core/v1/routines/create-by-station-id",
 	)
 	if exception != nil {
@@ -119,19 +105,15 @@ func (c *RoutineController) CreateRoutineByStationId(ctx *gin.Context, requestDt
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineController) CreateRoutinesByStationIds(ctx *gin.Context, requestDto *routinesdto.CreateRoutinesByStationIdsRequestDto) {
-	response, exception := coreadapters.CallSecurly[routinesdto.CreateRoutinesByStationIdsRequestDto, routinesdto.CreateRoutinesByStationIdsResponseDto](
+func (c *RoutineController) CreateRoutinesByStationIds(ctx *gin.Context, requestDto *apicontract.CreateRoutinesByStationIdsRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.CreateRoutinesByStationIdsRequestDto, apicontract.CreateRoutinesByStationIdsResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinesdto.CreateRoutinesByStationIdsOperation,
+		apicontract.CreateRoutinesByStationIdsOperation,
 		"/core/v1/routines/create-many-by-station-ids",
 	)
 	if exception != nil {
@@ -139,19 +121,15 @@ func (c *RoutineController) CreateRoutinesByStationIds(ctx *gin.Context, request
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineController) UpdateMyRoutineById(ctx *gin.Context, requestDto *routinesdto.UpdateMyRoutineByIdRequestDto) {
-	response, exception := coreadapters.CallSecurly[routinesdto.UpdateMyRoutineByIdRequestDto, routinesdto.UpdateMyRoutineByIdResponseDto](
+func (c *RoutineController) UpdateMyRoutineById(ctx *gin.Context, requestDto *apicontract.UpdateMyRoutineByIdRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.UpdateMyRoutineByIdRequestDto, apicontract.UpdateMyRoutineByIdResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinesdto.UpdateMyRoutineByIdOperation,
+		apicontract.UpdateMyRoutineByIdOperation,
 		"/core/v1/routines/update",
 	)
 	if exception != nil {
@@ -159,19 +137,15 @@ func (c *RoutineController) UpdateMyRoutineById(ctx *gin.Context, requestDto *ro
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineController) UpdateMyRoutinesByIds(ctx *gin.Context, requestDto *routinesdto.UpdateMyRoutinesByIdsRequestDto) {
-	response, exception := coreadapters.CallSecurly[routinesdto.UpdateMyRoutinesByIdsRequestDto, routinesdto.UpdateMyRoutinesByIdsResponseDto](
+func (c *RoutineController) UpdateMyRoutinesByIds(ctx *gin.Context, requestDto *apicontract.UpdateMyRoutinesByIdsRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.UpdateMyRoutinesByIdsRequestDto, apicontract.UpdateMyRoutinesByIdsResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinesdto.UpdateMyRoutinesByIdsOperation,
+		apicontract.UpdateMyRoutinesByIdsOperation,
 		"/core/v1/routines/update-many",
 	)
 	if exception != nil {
@@ -179,19 +153,15 @@ func (c *RoutineController) UpdateMyRoutinesByIds(ctx *gin.Context, requestDto *
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineController) LinkRoutineTagById(ctx *gin.Context, requestDto *routinesdto.LinkRoutineTagByIdRequestDto) {
-	response, exception := coreadapters.CallSecurly[routinesdto.LinkRoutineTagByIdRequestDto, routinesdto.LinkRoutineTagByIdResponseDto](
+func (c *RoutineController) LinkRoutineTagById(ctx *gin.Context, requestDto *apicontract.LinkRoutineTagByIdRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.LinkRoutineTagByIdRequestDto, apicontract.LinkRoutineTagByIdResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinesdto.LinkRoutineTagByIdOperation,
+		apicontract.LinkRoutineTagByIdOperation,
 		"/core/v1/routines/link-tag",
 	)
 	if exception != nil {
@@ -199,19 +169,15 @@ func (c *RoutineController) LinkRoutineTagById(ctx *gin.Context, requestDto *rou
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineController) LinkRoutineTagsByIds(ctx *gin.Context, requestDto *routinesdto.LinkRoutineTagsByIdsRequestDto) {
-	response, exception := coreadapters.CallSecurly[routinesdto.LinkRoutineTagsByIdsRequestDto, routinesdto.LinkRoutineTagsByIdsResponseDto](
+func (c *RoutineController) LinkRoutineTagsByIds(ctx *gin.Context, requestDto *apicontract.LinkRoutineTagsByIdsRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.LinkRoutineTagsByIdsRequestDto, apicontract.LinkRoutineTagsByIdsResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinesdto.LinkRoutineTagsByIdsOperation,
+		apicontract.LinkRoutineTagsByIdsOperation,
 		"/core/v1/routines/link-tags",
 	)
 	if exception != nil {
@@ -219,19 +185,15 @@ func (c *RoutineController) LinkRoutineTagsByIds(ctx *gin.Context, requestDto *r
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineController) LinkRoutineItemById(ctx *gin.Context, requestDto *routinesdto.LinkRoutineItemByIdRequestDto) {
-	response, exception := coreadapters.CallSecurly[routinesdto.LinkRoutineItemByIdRequestDto, routinesdto.LinkRoutineItemByIdResponseDto](
+func (c *RoutineController) LinkRoutineItemById(ctx *gin.Context, requestDto *apicontract.LinkRoutineItemByIdRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.LinkRoutineItemByIdRequestDto, apicontract.LinkRoutineItemByIdResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinesdto.LinkRoutineItemByIdOperation,
+		apicontract.LinkRoutineItemByIdOperation,
 		"/core/v1/routines/link-item",
 	)
 	if exception != nil {
@@ -239,19 +201,15 @@ func (c *RoutineController) LinkRoutineItemById(ctx *gin.Context, requestDto *ro
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineController) LinkRoutineItemsByIds(ctx *gin.Context, requestDto *routinesdto.LinkRoutineItemsByIdsRequestDto) {
-	response, exception := coreadapters.CallSecurly[routinesdto.LinkRoutineItemsByIdsRequestDto, routinesdto.LinkRoutineItemsByIdsResponseDto](
+func (c *RoutineController) LinkRoutineItemsByIds(ctx *gin.Context, requestDto *apicontract.LinkRoutineItemsByIdsRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.LinkRoutineItemsByIdsRequestDto, apicontract.LinkRoutineItemsByIdsResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinesdto.LinkRoutineItemsByIdsOperation,
+		apicontract.LinkRoutineItemsByIdsOperation,
 		"/core/v1/routines/link-items",
 	)
 	if exception != nil {
@@ -259,19 +217,15 @@ func (c *RoutineController) LinkRoutineItemsByIds(ctx *gin.Context, requestDto *
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineController) RestoreMyRoutineById(ctx *gin.Context, requestDto *routinesdto.RestoreMyRoutineByIdRequestDto) {
-	response, exception := coreadapters.CallSecurly[routinesdto.RestoreMyRoutineByIdRequestDto, routinesdto.RestoreMyRoutineByIdResponseDto](
+func (c *RoutineController) RestoreMyRoutineById(ctx *gin.Context, requestDto *apicontract.RestoreMyRoutineByIdRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.RestoreMyRoutineByIdRequestDto, apicontract.RestoreMyRoutineByIdResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinesdto.RestoreMyRoutineByIdOperation,
+		apicontract.RestoreMyRoutineByIdOperation,
 		"/core/v1/routines/restore",
 	)
 	if exception != nil {
@@ -279,19 +233,15 @@ func (c *RoutineController) RestoreMyRoutineById(ctx *gin.Context, requestDto *r
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineController) RestoreMyRoutinesByIds(ctx *gin.Context, requestDto *routinesdto.RestoreMyRoutinesByIdsRequestDto) {
-	response, exception := coreadapters.CallSecurly[routinesdto.RestoreMyRoutinesByIdsRequestDto, routinesdto.RestoreMyRoutinesByIdsResponseDto](
+func (c *RoutineController) RestoreMyRoutinesByIds(ctx *gin.Context, requestDto *apicontract.RestoreMyRoutinesByIdsRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.RestoreMyRoutinesByIdsRequestDto, apicontract.RestoreMyRoutinesByIdsResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinesdto.RestoreMyRoutinesByIdsOperation,
+		apicontract.RestoreMyRoutinesByIdsOperation,
 		"/core/v1/routines/restore-many",
 	)
 	if exception != nil {
@@ -299,19 +249,15 @@ func (c *RoutineController) RestoreMyRoutinesByIds(ctx *gin.Context, requestDto 
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineController) DeleteMyRoutineById(ctx *gin.Context, requestDto *routinesdto.DeleteMyRoutineByIdRequestDto) {
-	response, exception := coreadapters.CallSecurly[routinesdto.DeleteMyRoutineByIdRequestDto, routinesdto.DeleteMyRoutineByIdResponseDto](
+func (c *RoutineController) DeleteMyRoutineById(ctx *gin.Context, requestDto *apicontract.DeleteMyRoutineByIdRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.DeleteMyRoutineByIdRequestDto, apicontract.DeleteMyRoutineByIdResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinesdto.DeleteMyRoutineByIdOperation,
+		apicontract.DeleteMyRoutineByIdOperation,
 		"/core/v1/routines/delete",
 	)
 	if exception != nil {
@@ -319,19 +265,15 @@ func (c *RoutineController) DeleteMyRoutineById(ctx *gin.Context, requestDto *ro
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineController) DeleteMyRoutinesByIds(ctx *gin.Context, requestDto *routinesdto.DeleteMyRoutinesByIdsRequestDto) {
-	response, exception := coreadapters.CallSecurly[routinesdto.DeleteMyRoutinesByIdsRequestDto, routinesdto.DeleteMyRoutinesByIdsResponseDto](
+func (c *RoutineController) DeleteMyRoutinesByIds(ctx *gin.Context, requestDto *apicontract.DeleteMyRoutinesByIdsRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.DeleteMyRoutinesByIdsRequestDto, apicontract.DeleteMyRoutinesByIdsResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinesdto.DeleteMyRoutinesByIdsOperation,
+		apicontract.DeleteMyRoutinesByIdsOperation,
 		"/core/v1/routines/delete-many",
 	)
 	if exception != nil {
@@ -339,19 +281,15 @@ func (c *RoutineController) DeleteMyRoutinesByIds(ctx *gin.Context, requestDto *
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineController) HardDeleteMyRoutineById(ctx *gin.Context, requestDto *routinesdto.HardDeleteMyRoutineByIdRequestDto) {
-	response, exception := coreadapters.CallSecurly[routinesdto.HardDeleteMyRoutineByIdRequestDto, routinesdto.HardDeleteMyRoutineByIdResponseDto](
+func (c *RoutineController) HardDeleteMyRoutineById(ctx *gin.Context, requestDto *apicontract.HardDeleteMyRoutineByIdRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.HardDeleteMyRoutineByIdRequestDto, apicontract.HardDeleteMyRoutineByIdResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinesdto.HardDeleteMyRoutineByIdOperation,
+		apicontract.HardDeleteMyRoutineByIdOperation,
 		"/core/v1/routines/hard-delete",
 	)
 	if exception != nil {
@@ -359,19 +297,15 @@ func (c *RoutineController) HardDeleteMyRoutineById(ctx *gin.Context, requestDto
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineController) HardDeleteMyRoutinesByIds(ctx *gin.Context, requestDto *routinesdto.HardDeleteMyRoutinesByIdsRequestDto) {
-	response, exception := coreadapters.CallSecurly[routinesdto.HardDeleteMyRoutinesByIdsRequestDto, routinesdto.HardDeleteMyRoutinesByIdsResponseDto](
+func (c *RoutineController) HardDeleteMyRoutinesByIds(ctx *gin.Context, requestDto *apicontract.HardDeleteMyRoutinesByIdsRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.HardDeleteMyRoutinesByIdsRequestDto, apicontract.HardDeleteMyRoutinesByIdsResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinesdto.HardDeleteMyRoutinesByIdsOperation,
+		apicontract.HardDeleteMyRoutinesByIdsOperation,
 		"/core/v1/routines/hard-delete-many",
 	)
 	if exception != nil {
@@ -379,19 +313,15 @@ func (c *RoutineController) HardDeleteMyRoutinesByIds(ctx *gin.Context, requestD
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineController) VisualizeMyRoutineStatusCount(ctx *gin.Context, requestDto *routinesdto.VisualizeMyRoutineStatusCountRequestDto) {
-	response, exception := coreadapters.CallSecurly[routinesdto.VisualizeMyRoutineStatusCountRequestDto, routinesdto.VisualizeMyRoutineStatusCountResponseDto](
+func (c *RoutineController) VisualizeMyRoutineStatusCount(ctx *gin.Context, requestDto *apicontract.VisualizeMyRoutineStatusCountRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.VisualizeMyRoutineStatusCountRequestDto, apicontract.VisualizeMyRoutineStatusCountResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinesdto.VisualizeMyRoutineStatusCountOperation,
+		apicontract.VisualizeMyRoutineStatusCountOperation,
 		"/core/v1/routines/visualize-status-count",
 	)
 	if exception != nil {
@@ -399,19 +329,15 @@ func (c *RoutineController) VisualizeMyRoutineStatusCount(ctx *gin.Context, requ
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineController) VisualizeMyRoutinePeriodCount(ctx *gin.Context, requestDto *routinesdto.VisualizeMyRoutinePeriodCountRequestDto) {
-	response, exception := coreadapters.CallSecurly[routinesdto.VisualizeMyRoutinePeriodCountRequestDto, routinesdto.VisualizeMyRoutinePeriodCountResponseDto](
+func (c *RoutineController) VisualizeMyRoutinePeriodCount(ctx *gin.Context, requestDto *apicontract.VisualizeMyRoutinePeriodCountRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.VisualizeMyRoutinePeriodCountRequestDto, apicontract.VisualizeMyRoutinePeriodCountResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinesdto.VisualizeMyRoutinePeriodCountOperation,
+		apicontract.VisualizeMyRoutinePeriodCountOperation,
 		"/core/v1/routines/visualize-period-count",
 	)
 	if exception != nil {
@@ -419,19 +345,15 @@ func (c *RoutineController) VisualizeMyRoutinePeriodCount(ctx *gin.Context, requ
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineController) VisualizeMyRoutineScheduledStartAtCount(ctx *gin.Context, requestDto *routinesdto.VisualizeMyRoutineScheduledStartAtCountRequestDto) {
-	response, exception := coreadapters.CallSecurly[routinesdto.VisualizeMyRoutineScheduledStartAtCountRequestDto, routinesdto.VisualizeMyRoutineScheduledStartAtCountResponseDto](
+func (c *RoutineController) VisualizeMyRoutineScheduledStartAtCount(ctx *gin.Context, requestDto *apicontract.VisualizeMyRoutineScheduledStartAtCountRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.VisualizeMyRoutineScheduledStartAtCountRequestDto, apicontract.VisualizeMyRoutineScheduledStartAtCountResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinesdto.VisualizeMyRoutineScheduledStartAtCountOperation,
+		apicontract.VisualizeMyRoutineScheduledStartAtCountOperation,
 		"/core/v1/routines/visualize-scheduled-start-at-count",
 	)
 	if exception != nil {
@@ -439,19 +361,15 @@ func (c *RoutineController) VisualizeMyRoutineScheduledStartAtCount(ctx *gin.Con
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineController) VisualizeMyRoutineScheduledEndAtCount(ctx *gin.Context, requestDto *routinesdto.VisualizeMyRoutineScheduledEndAtCountRequestDto) {
-	response, exception := coreadapters.CallSecurly[routinesdto.VisualizeMyRoutineScheduledEndAtCountRequestDto, routinesdto.VisualizeMyRoutineScheduledEndAtCountResponseDto](
+func (c *RoutineController) VisualizeMyRoutineScheduledEndAtCount(ctx *gin.Context, requestDto *apicontract.VisualizeMyRoutineScheduledEndAtCountRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.VisualizeMyRoutineScheduledEndAtCountRequestDto, apicontract.VisualizeMyRoutineScheduledEndAtCountResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinesdto.VisualizeMyRoutineScheduledEndAtCountOperation,
+		apicontract.VisualizeMyRoutineScheduledEndAtCountOperation,
 		"/core/v1/routines/visualize-scheduled-end-at-count",
 	)
 	if exception != nil {
@@ -459,9 +377,5 @@ func (c *RoutineController) VisualizeMyRoutineScheduledEndAtCount(ctx *gin.Conte
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }

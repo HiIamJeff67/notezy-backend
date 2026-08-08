@@ -3,7 +3,7 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	useraccountsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-accounts"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-accounts"
 
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
@@ -19,7 +19,7 @@ func configureUserAccountRoutes(
 		userAccountRoutes.POST(
 			"/get",
 			middlewares.DelegationAuthenticatedMiddleware(
-				useraccountsdto.GetMyAccountOperation,
+				apicontract.GetMyAccountOperation,
 			),
 			authMiddleware,
 			endpoint.GetMyAccount,
@@ -27,7 +27,7 @@ func configureUserAccountRoutes(
 		userAccountRoutes.POST(
 			"/update",
 			middlewares.DelegationAuthenticatedMiddleware(
-				useraccountsdto.UpdateMyAccountOperation,
+				apicontract.UpdateMyAccountOperation,
 			),
 			authMiddleware,
 			endpoint.UpdateMyAccount,
@@ -35,7 +35,7 @@ func configureUserAccountRoutes(
 		userAccountRoutes.POST(
 			"/google/bind",
 			middlewares.DelegationAuthenticatedMiddleware(
-				useraccountsdto.BindGoogleAccountOperation,
+				apicontract.BindGoogleAccountOperation,
 			),
 			authMiddleware,
 			endpoint.BindGoogleAccount,
@@ -43,7 +43,7 @@ func configureUserAccountRoutes(
 		userAccountRoutes.POST(
 			"/google/unbind",
 			middlewares.DelegationAuthenticatedMiddleware(
-				useraccountsdto.UnbindGoogleAccountOperation,
+				apicontract.UnbindGoogleAccountOperation,
 			),
 			authMiddleware,
 			endpoint.UnbindGoogleAccount,

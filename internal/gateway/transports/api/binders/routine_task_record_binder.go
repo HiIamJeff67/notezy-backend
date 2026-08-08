@@ -9,24 +9,24 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
 
-	routinetaskrecordsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-task-records"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-task-records"
 
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
 )
 
 type RoutineTaskRecordBinderInterface interface {
-	BindGetAllMyRoutineTaskRecordsByRoutineTaskId(controllerFunc controllers.Func[*routinetaskrecordsdto.GetAllMyRoutineTaskRecordsByRoutineTaskIdRequestDto]) gin.HandlerFunc
+	BindGetAllMyRoutineTaskRecordsByRoutineTaskId(controllerFunc controllers.Func[*apicontract.GetAllMyRoutineTaskRecordsByRoutineTaskIdRequestDto]) gin.HandlerFunc
 
 	/* ============================== Visualization Methods ============================== */
-	BindVisualizeMyRoutineTaskRecordStatusCount(controllerFunc controllers.Func[*routinetaskrecordsdto.VisualizeMyRoutineTaskRecordStatusCountRequestDto]) gin.HandlerFunc
-	BindVisualizeMyRoutineTaskRecordPurposeCount(controllerFunc controllers.Func[*routinetaskrecordsdto.VisualizeMyRoutineTaskRecordPurposeCountRequestDto]) gin.HandlerFunc
-	BindVisualizeMyRoutineTaskRecordScheduledAtCount(controllerFunc controllers.Func[*routinetaskrecordsdto.VisualizeMyRoutineTaskRecordScheduledAtCountRequestDto]) gin.HandlerFunc
-	BindVisualizeMyRoutineTaskRecordActualStartedAtCount(controllerFunc controllers.Func[*routinetaskrecordsdto.VisualizeMyRoutineTaskRecordActualStartedAtCountRequestDto]) gin.HandlerFunc
-	BindVisualizeMyRoutineTaskRecordActualEndedAtCount(controllerFunc controllers.Func[*routinetaskrecordsdto.VisualizeMyRoutineTaskRecordActualEndedAtCountRequestDto]) gin.HandlerFunc
+	BindVisualizeMyRoutineTaskRecordStatusCount(controllerFunc controllers.Func[*apicontract.VisualizeMyRoutineTaskRecordStatusCountRequestDto]) gin.HandlerFunc
+	BindVisualizeMyRoutineTaskRecordPurposeCount(controllerFunc controllers.Func[*apicontract.VisualizeMyRoutineTaskRecordPurposeCountRequestDto]) gin.HandlerFunc
+	BindVisualizeMyRoutineTaskRecordScheduledAtCount(controllerFunc controllers.Func[*apicontract.VisualizeMyRoutineTaskRecordScheduledAtCountRequestDto]) gin.HandlerFunc
+	BindVisualizeMyRoutineTaskRecordActualStartedAtCount(controllerFunc controllers.Func[*apicontract.VisualizeMyRoutineTaskRecordActualStartedAtCountRequestDto]) gin.HandlerFunc
+	BindVisualizeMyRoutineTaskRecordActualEndedAtCount(controllerFunc controllers.Func[*apicontract.VisualizeMyRoutineTaskRecordActualEndedAtCountRequestDto]) gin.HandlerFunc
 }
 
 type RoutineTaskRecordBinder struct{}
@@ -92,9 +92,9 @@ func parseRoutineTaskRecordVisualizationTimeRange(ctx *gin.Context) (int, time.T
 
 /* ============================== Service Methods for RoutineTaskRecord ============================== */
 
-func (b *RoutineTaskRecordBinder) BindGetAllMyRoutineTaskRecordsByRoutineTaskId(controllerFunc controllers.Func[*routinetaskrecordsdto.GetAllMyRoutineTaskRecordsByRoutineTaskIdRequestDto]) gin.HandlerFunc {
+func (b *RoutineTaskRecordBinder) BindGetAllMyRoutineTaskRecordsByRoutineTaskId(controllerFunc controllers.Func[*apicontract.GetAllMyRoutineTaskRecordsByRoutineTaskIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &routinetaskrecordsdto.GetAllMyRoutineTaskRecordsByRoutineTaskIdRequestDto{}
+		requestDto := &apicontract.GetAllMyRoutineTaskRecordsByRoutineTaskIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
 		routineTaskId, err := uuid.Parse(ctx.Param("routineTaskId"))
@@ -120,9 +120,9 @@ func (b *RoutineTaskRecordBinder) BindGetAllMyRoutineTaskRecordsByRoutineTaskId(
 
 /* ============================== Visualization Methods ============================== */
 
-func (b *RoutineTaskRecordBinder) BindVisualizeMyRoutineTaskRecordStatusCount(controllerFunc controllers.Func[*routinetaskrecordsdto.VisualizeMyRoutineTaskRecordStatusCountRequestDto]) gin.HandlerFunc {
+func (b *RoutineTaskRecordBinder) BindVisualizeMyRoutineTaskRecordStatusCount(controllerFunc controllers.Func[*apicontract.VisualizeMyRoutineTaskRecordStatusCountRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &routinetaskrecordsdto.VisualizeMyRoutineTaskRecordStatusCountRequestDto{}
+		requestDto := &apicontract.VisualizeMyRoutineTaskRecordStatusCountRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		params, exception := parseRoutineTaskRecordVisualizationParams(ctx)
 		if exception != nil {
@@ -135,9 +135,9 @@ func (b *RoutineTaskRecordBinder) BindVisualizeMyRoutineTaskRecordStatusCount(co
 	}
 }
 
-func (b *RoutineTaskRecordBinder) BindVisualizeMyRoutineTaskRecordPurposeCount(controllerFunc controllers.Func[*routinetaskrecordsdto.VisualizeMyRoutineTaskRecordPurposeCountRequestDto]) gin.HandlerFunc {
+func (b *RoutineTaskRecordBinder) BindVisualizeMyRoutineTaskRecordPurposeCount(controllerFunc controllers.Func[*apicontract.VisualizeMyRoutineTaskRecordPurposeCountRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &routinetaskrecordsdto.VisualizeMyRoutineTaskRecordPurposeCountRequestDto{}
+		requestDto := &apicontract.VisualizeMyRoutineTaskRecordPurposeCountRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		params, exception := parseRoutineTaskRecordVisualizationParams(ctx)
 		if exception != nil {
@@ -150,32 +150,9 @@ func (b *RoutineTaskRecordBinder) BindVisualizeMyRoutineTaskRecordPurposeCount(c
 	}
 }
 
-func (b *RoutineTaskRecordBinder) BindVisualizeMyRoutineTaskRecordScheduledAtCount(controllerFunc controllers.Func[*routinetaskrecordsdto.VisualizeMyRoutineTaskRecordScheduledAtCountRequestDto]) gin.HandlerFunc {
+func (b *RoutineTaskRecordBinder) BindVisualizeMyRoutineTaskRecordScheduledAtCount(controllerFunc controllers.Func[*apicontract.VisualizeMyRoutineTaskRecordScheduledAtCountRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &routinetaskrecordsdto.VisualizeMyRoutineTaskRecordScheduledAtCountRequestDto{}
-		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
-		params, exception := parseRoutineTaskRecordVisualizationParams(ctx)
-		if exception != nil {
-			exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
-			return
-		}
-		timeHourUnit, queryRangeStartedAt, queryRangeEndedAt, exception := parseRoutineTaskRecordVisualizationTimeRange(ctx)
-		if exception != nil {
-			exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
-			return
-		}
-		requestDto.Param.Permission = params.permission
-		requestDto.Param.RoutineTaskIds = params.routineTaskIds
-		requestDto.Param.TimeHourUnit = timeHourUnit
-		requestDto.Param.QueryRangeStartedAt = queryRangeStartedAt
-		requestDto.Param.QueryRangeEndedAt = queryRangeEndedAt
-		controllerFunc(ctx, requestDto)
-	}
-}
-
-func (b *RoutineTaskRecordBinder) BindVisualizeMyRoutineTaskRecordActualStartedAtCount(controllerFunc controllers.Func[*routinetaskrecordsdto.VisualizeMyRoutineTaskRecordActualStartedAtCountRequestDto]) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		requestDto := &routinetaskrecordsdto.VisualizeMyRoutineTaskRecordActualStartedAtCountRequestDto{}
+		requestDto := &apicontract.VisualizeMyRoutineTaskRecordScheduledAtCountRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		params, exception := parseRoutineTaskRecordVisualizationParams(ctx)
 		if exception != nil {
@@ -196,9 +173,32 @@ func (b *RoutineTaskRecordBinder) BindVisualizeMyRoutineTaskRecordActualStartedA
 	}
 }
 
-func (b *RoutineTaskRecordBinder) BindVisualizeMyRoutineTaskRecordActualEndedAtCount(controllerFunc controllers.Func[*routinetaskrecordsdto.VisualizeMyRoutineTaskRecordActualEndedAtCountRequestDto]) gin.HandlerFunc {
+func (b *RoutineTaskRecordBinder) BindVisualizeMyRoutineTaskRecordActualStartedAtCount(controllerFunc controllers.Func[*apicontract.VisualizeMyRoutineTaskRecordActualStartedAtCountRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &routinetaskrecordsdto.VisualizeMyRoutineTaskRecordActualEndedAtCountRequestDto{}
+		requestDto := &apicontract.VisualizeMyRoutineTaskRecordActualStartedAtCountRequestDto{}
+		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
+		params, exception := parseRoutineTaskRecordVisualizationParams(ctx)
+		if exception != nil {
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+			return
+		}
+		timeHourUnit, queryRangeStartedAt, queryRangeEndedAt, exception := parseRoutineTaskRecordVisualizationTimeRange(ctx)
+		if exception != nil {
+			exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
+			return
+		}
+		requestDto.Param.Permission = params.permission
+		requestDto.Param.RoutineTaskIds = params.routineTaskIds
+		requestDto.Param.TimeHourUnit = timeHourUnit
+		requestDto.Param.QueryRangeStartedAt = queryRangeStartedAt
+		requestDto.Param.QueryRangeEndedAt = queryRangeEndedAt
+		controllerFunc(ctx, requestDto)
+	}
+}
+
+func (b *RoutineTaskRecordBinder) BindVisualizeMyRoutineTaskRecordActualEndedAtCount(controllerFunc controllers.Func[*apicontract.VisualizeMyRoutineTaskRecordActualEndedAtCountRequestDto]) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		requestDto := &apicontract.VisualizeMyRoutineTaskRecordActualEndedAtCountRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		params, exception := parseRoutineTaskRecordVisualizationParams(ctx)
 		if exception != nil {

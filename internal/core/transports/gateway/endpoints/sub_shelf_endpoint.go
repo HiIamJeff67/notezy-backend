@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	subshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/sub-shelves"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/sub-shelves"
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 
 	shelfservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/shelves"
@@ -46,8 +46,8 @@ func NewSubShelfEndpoint(
 }
 
 func (t *SubShelfEndpoint) GetMySubShelfById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[subshelvesdto.GetMySubShelfByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetMySubShelfByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -67,7 +67,7 @@ func (t *SubShelfEndpoint) GetMySubShelfById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[subshelvesdto.GetMySubShelfByIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetMySubShelfByIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -78,8 +78,8 @@ func (t *SubShelfEndpoint) GetMySubShelfById(ctx *gin.Context) {
 }
 
 func (t *SubShelfEndpoint) GetMySubShelvesByPrevSubShelfId(ctx *gin.Context) {
-	request := &gatewaycontract.Request[subshelvesdto.GetMySubShelvesByPrevSubShelfIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetMySubShelvesByPrevSubShelfIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -99,7 +99,7 @@ func (t *SubShelfEndpoint) GetMySubShelvesByPrevSubShelfId(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[subshelvesdto.GetMySubShelvesByPrevSubShelfIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetMySubShelvesByPrevSubShelfIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -110,8 +110,8 @@ func (t *SubShelfEndpoint) GetMySubShelvesByPrevSubShelfId(ctx *gin.Context) {
 }
 
 func (t *SubShelfEndpoint) GetAllMySubShelvesByRootShelfId(ctx *gin.Context) {
-	request := &gatewaycontract.Request[subshelvesdto.GetAllMySubShelvesByRootShelfIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetAllMySubShelvesByRootShelfIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -131,7 +131,7 @@ func (t *SubShelfEndpoint) GetAllMySubShelvesByRootShelfId(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[subshelvesdto.GetAllMySubShelvesByRootShelfIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetAllMySubShelvesByRootShelfIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -142,8 +142,8 @@ func (t *SubShelfEndpoint) GetAllMySubShelvesByRootShelfId(ctx *gin.Context) {
 }
 
 func (t *SubShelfEndpoint) GetMySubShelvesAndItemsByPrevSubShelfId(ctx *gin.Context) {
-	request := &gatewaycontract.Request[subshelvesdto.GetMySubShelvesAndItemsByPrevSubShelfIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetMySubShelvesAndItemsByPrevSubShelfIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -163,7 +163,7 @@ func (t *SubShelfEndpoint) GetMySubShelvesAndItemsByPrevSubShelfId(ctx *gin.Cont
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[subshelvesdto.GetMySubShelvesAndItemsByPrevSubShelfIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetMySubShelvesAndItemsByPrevSubShelfIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -174,8 +174,8 @@ func (t *SubShelfEndpoint) GetMySubShelvesAndItemsByPrevSubShelfId(ctx *gin.Cont
 }
 
 func (t *SubShelfEndpoint) CreateSubShelfByRootShelfId(ctx *gin.Context) {
-	request := &gatewaycontract.Request[subshelvesdto.CreateSubShelfByRootShelfIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.CreateSubShelfByRootShelfIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -195,7 +195,7 @@ func (t *SubShelfEndpoint) CreateSubShelfByRootShelfId(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[subshelvesdto.CreateSubShelfByRootShelfIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.CreateSubShelfByRootShelfIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -206,8 +206,8 @@ func (t *SubShelfEndpoint) CreateSubShelfByRootShelfId(ctx *gin.Context) {
 }
 
 func (t *SubShelfEndpoint) CreateSubShelvesByRootShelfIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[subshelvesdto.CreateSubShelvesByRootShelfIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.CreateSubShelvesByRootShelfIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -227,7 +227,7 @@ func (t *SubShelfEndpoint) CreateSubShelvesByRootShelfIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[subshelvesdto.CreateSubShelvesByRootShelfIdsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.CreateSubShelvesByRootShelfIdsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -238,8 +238,8 @@ func (t *SubShelfEndpoint) CreateSubShelvesByRootShelfIds(ctx *gin.Context) {
 }
 
 func (t *SubShelfEndpoint) UpdateMySubShelfById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[subshelvesdto.UpdateMySubShelfByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.UpdateMySubShelfByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -259,7 +259,7 @@ func (t *SubShelfEndpoint) UpdateMySubShelfById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[subshelvesdto.UpdateMySubShelfByIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.UpdateMySubShelfByIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -270,8 +270,8 @@ func (t *SubShelfEndpoint) UpdateMySubShelfById(ctx *gin.Context) {
 }
 
 func (t *SubShelfEndpoint) UpdateMySubShelvesByIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[subshelvesdto.UpdateMySubShelvesByIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.UpdateMySubShelvesByIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -291,7 +291,7 @@ func (t *SubShelfEndpoint) UpdateMySubShelvesByIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[subshelvesdto.UpdateMySubShelvesByIdsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.UpdateMySubShelvesByIdsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -302,8 +302,8 @@ func (t *SubShelfEndpoint) UpdateMySubShelvesByIds(ctx *gin.Context) {
 }
 
 func (t *SubShelfEndpoint) MoveMySubShelfByRootShelfId(ctx *gin.Context) {
-	request := &gatewaycontract.Request[subshelvesdto.MoveMySubShelfByRootShelfIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.MoveMySubShelfByRootShelfIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -323,7 +323,7 @@ func (t *SubShelfEndpoint) MoveMySubShelfByRootShelfId(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[subshelvesdto.MoveMySubShelfByRootShelfIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.MoveMySubShelfByRootShelfIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -334,8 +334,8 @@ func (t *SubShelfEndpoint) MoveMySubShelfByRootShelfId(ctx *gin.Context) {
 }
 
 func (t *SubShelfEndpoint) MoveMySubShelvesByRootShelfId(ctx *gin.Context) {
-	request := &gatewaycontract.Request[subshelvesdto.MoveMySubShelvesByRootShelfIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.MoveMySubShelvesByRootShelfIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -355,7 +355,7 @@ func (t *SubShelfEndpoint) MoveMySubShelvesByRootShelfId(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[subshelvesdto.MoveMySubShelvesByRootShelfIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.MoveMySubShelvesByRootShelfIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -366,8 +366,8 @@ func (t *SubShelfEndpoint) MoveMySubShelvesByRootShelfId(ctx *gin.Context) {
 }
 
 func (t *SubShelfEndpoint) MoveMySubShelvesByRootShelfIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[subshelvesdto.MoveMySubShelvesByRootShelfIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.MoveMySubShelvesByRootShelfIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -387,7 +387,7 @@ func (t *SubShelfEndpoint) MoveMySubShelvesByRootShelfIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[subshelvesdto.MoveMySubShelvesByRootShelfIdsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.MoveMySubShelvesByRootShelfIdsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -398,8 +398,8 @@ func (t *SubShelfEndpoint) MoveMySubShelvesByRootShelfIds(ctx *gin.Context) {
 }
 
 func (t *SubShelfEndpoint) RestoreMySubShelfById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[subshelvesdto.RestoreMySubShelfByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.RestoreMySubShelfByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -419,7 +419,7 @@ func (t *SubShelfEndpoint) RestoreMySubShelfById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[subshelvesdto.RestoreMySubShelfByIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.RestoreMySubShelfByIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -430,8 +430,8 @@ func (t *SubShelfEndpoint) RestoreMySubShelfById(ctx *gin.Context) {
 }
 
 func (t *SubShelfEndpoint) RestoreMySubShelvesByIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[subshelvesdto.RestoreMySubShelvesByIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.RestoreMySubShelvesByIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -451,7 +451,7 @@ func (t *SubShelfEndpoint) RestoreMySubShelvesByIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[subshelvesdto.RestoreMySubShelvesByIdsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.RestoreMySubShelvesByIdsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -462,8 +462,8 @@ func (t *SubShelfEndpoint) RestoreMySubShelvesByIds(ctx *gin.Context) {
 }
 
 func (t *SubShelfEndpoint) DeleteMySubShelfById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[subshelvesdto.DeleteMySubShelfByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.DeleteMySubShelfByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -483,7 +483,7 @@ func (t *SubShelfEndpoint) DeleteMySubShelfById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[subshelvesdto.DeleteMySubShelfByIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.DeleteMySubShelfByIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -494,8 +494,8 @@ func (t *SubShelfEndpoint) DeleteMySubShelfById(ctx *gin.Context) {
 }
 
 func (t *SubShelfEndpoint) DeleteMySubShelvesByIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[subshelvesdto.DeleteMySubShelvesByIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.DeleteMySubShelvesByIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -515,7 +515,7 @@ func (t *SubShelfEndpoint) DeleteMySubShelvesByIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[subshelvesdto.DeleteMySubShelvesByIdsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.DeleteMySubShelvesByIdsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,

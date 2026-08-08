@@ -5,7 +5,7 @@ import (
 	"time"
 
 	emaileventscontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1/events"
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	"github.com/HiIamJeff67/notezy-backend/internal/email/renderers"
 	emailtypes "github.com/HiIamJeff67/notezy-backend/internal/email/types"

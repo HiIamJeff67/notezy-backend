@@ -11,6 +11,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
+	platform "github.com/HiIamJeff67/notezy-backend/shared/platform"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
 	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtime-gateway/v1"
@@ -23,10 +25,10 @@ import (
 	ratelimitrecord "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/ratelimitrecord"
 	realtimelease "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/data/cache/realtimelease"
 	ratelimit "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/ratelimit"
-	gatewayrouters "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/gateway/routers"
+	middlewares "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/api/middlewares"
+	apiRouters "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/api/routers"
 	status "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/status"
 	yjsworker "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/yjsworker"
-	middlewares "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/transports/yjsworker/middlewares"
 	workers "github.com/HiIamJeff67/notezy-backend/internal/realtimegateway/workers"
 )
 
@@ -88,22 +90,45 @@ func Start() func() {
 	upgradeRateLimitConfig := ratelimit.DefaultUpgradeConfig()
 	upgradeRateLimitConfig.CacheServerRange = rateLimitRecordCacheClient.Range
 	middlewares.InitUnauthorizedRateLimiter(upgradeRateLimitConfig)
+	middlewares.InitAuthorizedRateLimiter(upgradeRateLimitConfig)
 
 	router := gin.Default()
 	if err := router.SetTrustedProxies(config.TrustedProxies); err != nil {
 		middlewares.StopUnauthorizedRateLimiter()
+		middlewares.StopAuthorizedRateLimiter()
 		_ = redisClientManager.DisconnectAll()
 		shutdownObservability()
 		panic(err)
 	}
 	status.ConfigureStartedRouter(router, application.IsHealthy)
 	status.ConfigureHealthRouter(router, application.IsReady)
-	gatewayrouters.ConfigureRoutes(
-		router,
-		realtimeLeaseCacheClient,
+	routes := router.Group("/" + realtimegatewaycontract.RealtimeDevelopmentBaseURL)
+	routes.Use(
+		middlewares.SanitizeXForwardedForMiddleware(),
+		middlewares.CORSMiddleware(),
+		middlewares.DomainWhiteListMiddleware(config.AllowedDomains),
+		middlewares.UnauthorizedRateLimitMiddleware(),
 	)
+	routes.OPTIONS("/*path", func(ctx *gin.Context) { ctx.Status(http.StatusNoContent) })
+	accessTokenCookieHandler := cookies.New(cookies.Config{
+		Name:     cookies.ValidCookieName_AccessToken,
+		Path:     "/",
+		Duration: 30 * time.Minute,
+		Secure:   platform.CurrentEnvironment == types.Environment_Production,
+		HTTPOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+	refreshTokenCookieHandler := cookies.New(cookies.Config{
+		Name:     cookies.ValidCookieName_RefreshToken,
+		Path:     "/",
+		Duration: 14 * 24 * time.Hour,
+		Secure:   platform.CurrentEnvironment == types.Environment_Production,
+		HTTPOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	})
+	apiRouters.ConfigureRoutes(routes, realtimeLeaseCacheClient, accessTokenCookieHandler, refreshTokenCookieHandler)
 
-	websocketClient := yjsworker.NewWebSocketClient(config, realtimeLeaseCacheClient)
+	websocketAdapter := yjsworker.NewWebSocketAdapter(config, realtimeLeaseCacheClient)
 	lifecycleConsumer := workers.NewLifecycleConsumer(
 		realtimeLeaseCacheClient,
 		platformkafka.ConsumerConfig{
@@ -119,12 +144,7 @@ func Start() func() {
 		},
 	)
 	shutdownLifecycleConsumer := lifecycleConsumer.Start(context.Background())
-	routes := router.Group("/" + realtimegatewaycontract.RealtimeDevelopmentBaseURL)
-	routes.Use(
-		middlewares.DomainWhiteListMiddleware(config.AllowedDomains),
-		middlewares.UnauthorizedRateLimitMiddleware(),
-	)
-	routes.GET("", websocketClient.Handle)
+	routes.GET("", websocketAdapter.Handle)
 
 	listener, err := net.Listen("tcp", config.ListenAddress)
 	if err != nil {
@@ -148,13 +168,14 @@ func Start() func() {
 		application.ready.Store(false)
 		application.healthy.Store(false)
 		shutdownLifecycleConsumer()
-		websocketClient.Shutdown()
+		websocketAdapter.Shutdown()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			fmt.Println("Failed to shutdown WebSocket server: ", err)
 		}
 		middlewares.StopUnauthorizedRateLimiter()
+		middlewares.StopAuthorizedRateLimiter()
 		if err := redisClientManager.DisconnectAll(); err != nil {
 			fmt.Println("Failed to disconnect WebSocket cache servers: ", err)
 		}

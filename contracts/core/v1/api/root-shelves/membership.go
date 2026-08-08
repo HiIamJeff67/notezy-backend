@@ -1,4 +1,4 @@
-package rootshelvesdto
+package apicontract
 
 import (
 	"github.com/google/uuid"

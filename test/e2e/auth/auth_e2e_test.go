@@ -45,7 +45,7 @@ func (p *testAuthFeatureProcedure) BeforeAll(t *testing.T) {
 	p.testRouterGroup = p.testRouter.Group(testAuthRouteNamespace)
 	testroutes.ConfigureTestAuthRoutes(
 		p.testRouterGroup,
-		coreadapters.NewCoreClient("http://127.0.0.1:7778", 10*time.Second),
+		coreadapters.NewCoreAdapter("http://127.0.0.1:7778", 10*time.Second),
 		cookies.New(cookies.Config{
 			Name:     cookies.ValidCookieName_AccessToken,
 			Path:     "/",

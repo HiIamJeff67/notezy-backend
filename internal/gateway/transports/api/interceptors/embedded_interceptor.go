@@ -6,7 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
 
@@ -14,9 +15,6 @@ import (
 
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/gateway/contexts"
 )
-
-const embeddedResponseFieldName = "embedded"
-const embeddedPublicIdFieldName = "publicId"
 
 // To add additional field to the response with possibly embedded data that is required for the frontend.
 // ex. the frontend require a publicId to indicate the user in their local database across APIs
@@ -52,7 +50,7 @@ func EmbeddedInterceptor(responseWriterKey string) gin.HandlerFunc {
 			return
 		}
 
-		var originalResponse map[string]interface{}
+		var originalResponse gatewaycontract.ClientResponse[json.RawMessage]
 		if err := json.Unmarshal(writer.Body.Bytes(), &originalResponse); err != nil {
 			return
 		}
@@ -62,8 +60,8 @@ func EmbeddedInterceptor(responseWriterKey string) gin.HandlerFunc {
 			return
 		}
 
-		originalResponse[embeddedResponseFieldName] = gin.H{
-			embeddedPublicIdFieldName: *publicId,
+		originalResponse.Embedded = &gatewaycontract.EmbeddedResponse{
+			PublicId: *publicId,
 		}
 		modifiedResponse, err := json.Marshal(originalResponse)
 		if err != nil {

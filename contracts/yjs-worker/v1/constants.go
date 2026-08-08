@@ -1,4 +1,4 @@
-package yjsworkercontract
+package adapterscontract
 
 const (
 	YjsBlockPackRoomPrefix                  = "block-pack"

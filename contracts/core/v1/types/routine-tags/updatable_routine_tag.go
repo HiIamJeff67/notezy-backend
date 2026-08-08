@@ -1,4 +1,4 @@
-package routinetagstypes
+package coretypes
 
 import "github.com/google/uuid"
 

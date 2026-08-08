@@ -1,3 +1,3 @@
-package themesdto
+package apicontract
 
 const SearchThemesOperation = "graphql.search-themes"

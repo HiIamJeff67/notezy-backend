@@ -1,4 +1,4 @@
-package useraccountsdto
+package apicontract
 
 const (
 	GetMyAccountOperation        = "user-account.get-my-account"

@@ -1,4 +1,4 @@
-package routinesdto
+package apicontract
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	coreapicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api"
-	routinestypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/routines"
+	coretypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/routines"
 )
 
 type CreateRoutineByStationIdRequestDto struct {
@@ -14,7 +14,7 @@ type CreateRoutineByStationIdRequestDto struct {
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
-		routinestypes.CreatableRoutine,
+		coretypes.CreatableRoutine,
 		struct{},
 		struct{},
 	]
@@ -29,7 +29,7 @@ type CreateRoutinesByStationIdsRequestDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			CreatedRoutines []routinestypes.CreatableRoutine `json:"createdRoutines" validate:"required,min=1,max=1024,dive"`
+			CreatedRoutines []coretypes.CreatableRoutine `json:"createdRoutines" validate:"required,min=1,max=1024,dive"`
 		},
 		struct{},
 		struct{},

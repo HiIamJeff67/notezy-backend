@@ -4,7 +4,7 @@
 
 This document defines the versioned Kafka contracts used across service
 boundaries. The runtime-neutral envelope is owned by
-[`contracts/types/event.go`](../../contracts/types/event.go); Core lifecycle payloads remain in
+[`contracts/types/events/`](../../contracts/types/events/); Core lifecycle payloads remain in
 [`contracts/core/v1/events`](../../contracts/core/v1/events/), while
 DurableJob and YjsWorker interaction contracts are owned by their respective
 runtime contract packages. Core writes its lifecycle events through the
@@ -78,7 +78,7 @@ only ordering guarantee consumers may rely on.
 Within a major contract version, producers may add optional JSON fields only.
 Consumers must ignore unknown fields. Renaming, changing a field type or
 meaning, making an optional field required, or changing an event's ordering
-meaning requires a versioned `contracts/types/event.go` contract and a new `.v2` topic. Producers publish
+meaning requires a versioned `contracts/types/events/` contract and a new `.v2` topic. Producers publish
 the new topic independently until all consumers migrate.
 
 Lifecycle payloads contain identifiers and already-decided policy values only.

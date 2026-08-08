@@ -8,33 +8,29 @@ import (
 	"github.com/google/uuid"
 
 	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-)
-
-const (
-	maximumPendingHints    = 1_000
-	MaximumDispatchBatch   = 32
-	MaximumDispatchWorkers = 8
-	MaximumRequestAttempts = 3
+	durablejobconfig "github.com/HiIamJeff67/notezy-backend/internal/durablejob/configs"
 )
 
 type YjsMaintenanceStrategy struct {
+	Config   durablejobconfig.YjsMaintenanceStrategyConfig
 	mutex    sync.Mutex
 	pending  map[uuid.UUID]coreeventscontract.YjsMaintenanceHintData
-	requests map[uuid.UUID]MaintenanceRequest
+	requests map[uuid.UUID]maintenanceRequest
 	attempts map[uuid.UUID]int
 	inFlight map[uuid.UUID]struct{}
 	notify   chan struct{}
 }
 
-type MaintenanceRequest struct {
+type maintenanceRequest struct {
 	Hint    coreeventscontract.YjsMaintenanceHintData
 	Attempt int
 }
 
-func NewYjsMaintenanceStrategy() *YjsMaintenanceStrategy {
+func NewYjsMaintenanceStrategy(config durablejobconfig.YjsMaintenanceStrategyConfig) *YjsMaintenanceStrategy {
 	return &YjsMaintenanceStrategy{
+		Config:   config,
 		pending:  make(map[uuid.UUID]coreeventscontract.YjsMaintenanceHintData),
-		requests: make(map[uuid.UUID]MaintenanceRequest),
+		requests: make(map[uuid.UUID]maintenanceRequest),
 		attempts: make(map[uuid.UUID]int),
 		inFlight: make(map[uuid.UUID]struct{}),
 		notify:   make(chan struct{}, 1),
@@ -45,7 +41,7 @@ func (s *YjsMaintenanceStrategy) Enqueue(hint coreeventscontract.YjsMaintenanceH
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	if _, exists := s.pending[hint.BlockPackId]; !exists && len(s.pending) >= maximumPendingHints {
+	if _, exists := s.pending[hint.BlockPackId]; !exists && len(s.pending) >= s.Config.MaximumPendingHints {
 		return errors.New("Yjs maintenance strategy queue is full")
 	}
 	if current, exists := s.pending[hint.BlockPackId]; !exists || hint.LatestUpdateSequence >= current.LatestUpdateSequence {
@@ -114,11 +110,11 @@ func (s *YjsMaintenanceStrategy) Track(requestId uuid.UUID, hint coreeventscontr
 
 	attempt := s.attempts[hint.BlockPackId] + 1
 	s.attempts[hint.BlockPackId] = attempt
-	s.requests[requestId] = MaintenanceRequest{Hint: hint, Attempt: attempt}
+	s.requests[requestId] = maintenanceRequest{Hint: hint, Attempt: attempt}
 	s.inFlight[hint.BlockPackId] = struct{}{}
 }
 
-func (s *YjsMaintenanceStrategy) Complete(requestId uuid.UUID) (MaintenanceRequest, bool) {
+func (s *YjsMaintenanceStrategy) Complete(requestId uuid.UUID) (maintenanceRequest, bool) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -133,7 +129,7 @@ func (s *YjsMaintenanceStrategy) Complete(requestId uuid.UUID) (MaintenanceReque
 	return request, exists
 }
 
-func (s *YjsMaintenanceStrategy) Fail(requestId uuid.UUID) (MaintenanceRequest, bool) {
+func (s *YjsMaintenanceStrategy) Fail(requestId uuid.UUID) (maintenanceRequest, bool) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -141,7 +137,7 @@ func (s *YjsMaintenanceStrategy) Fail(requestId uuid.UUID) (MaintenanceRequest, 
 	if exists {
 		delete(s.requests, requestId)
 		delete(s.inFlight, request.Hint.BlockPackId)
-		if request.Attempt >= MaximumRequestAttempts {
+		if request.Attempt >= s.Config.MaximumRequestAttempts {
 			delete(s.attempts, request.Hint.BlockPackId)
 		}
 	}

@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	routinesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routines"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routines"
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 
 	routineservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/routines"
@@ -50,8 +50,8 @@ func NewRoutineEndpoint(routineService routineservices.RoutineServiceInterface) 
 }
 
 func (t *RoutineEndpoint) GetMyRoutineById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.GetMyRoutineByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetMyRoutineByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -62,12 +62,12 @@ func (t *RoutineEndpoint) GetMyRoutineById(ctx *gin.Context) {
 		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: struct{}{}, Exception: publicException})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.GetMyRoutineByIdResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetMyRoutineByIdResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RoutineEndpoint) GetMyRoutinesByStationId(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.GetMyRoutinesByStationIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetMyRoutinesByStationIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -78,12 +78,12 @@ func (t *RoutineEndpoint) GetMyRoutinesByStationId(ctx *gin.Context) {
 		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: struct{}{}, Exception: publicException})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.GetMyRoutinesByStationIdResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetMyRoutinesByStationIdResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RoutineEndpoint) GetAllMyRoutinesByTimeRange(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.GetAllMyRoutinesByTimeRangeRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetAllMyRoutinesByTimeRangeRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -94,12 +94,12 @@ func (t *RoutineEndpoint) GetAllMyRoutinesByTimeRange(ctx *gin.Context) {
 		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: struct{}{}, Exception: publicException})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.GetAllMyRoutinesByTimeRangeResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetAllMyRoutinesByTimeRangeResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RoutineEndpoint) CreateRoutineByStationId(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.CreateRoutineByStationIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.CreateRoutineByStationIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -110,12 +110,12 @@ func (t *RoutineEndpoint) CreateRoutineByStationId(ctx *gin.Context) {
 		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: struct{}{}, Exception: publicException})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.CreateRoutineByStationIdResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.CreateRoutineByStationIdResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RoutineEndpoint) CreateRoutinesByStationIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.CreateRoutinesByStationIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.CreateRoutinesByStationIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -126,12 +126,12 @@ func (t *RoutineEndpoint) CreateRoutinesByStationIds(ctx *gin.Context) {
 		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: struct{}{}, Exception: publicException})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.CreateRoutinesByStationIdsResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.CreateRoutinesByStationIdsResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RoutineEndpoint) UpdateMyRoutineById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.UpdateMyRoutineByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.UpdateMyRoutineByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -142,12 +142,12 @@ func (t *RoutineEndpoint) UpdateMyRoutineById(ctx *gin.Context) {
 		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: struct{}{}, Exception: publicException})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.UpdateMyRoutineByIdResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.UpdateMyRoutineByIdResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RoutineEndpoint) UpdateMyRoutinesByIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.UpdateMyRoutinesByIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.UpdateMyRoutinesByIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -158,12 +158,12 @@ func (t *RoutineEndpoint) UpdateMyRoutinesByIds(ctx *gin.Context) {
 		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: struct{}{}, Exception: publicException})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.UpdateMyRoutinesByIdsResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.UpdateMyRoutinesByIdsResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RoutineEndpoint) LinkRoutineTagById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.LinkRoutineTagByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.LinkRoutineTagByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -174,12 +174,12 @@ func (t *RoutineEndpoint) LinkRoutineTagById(ctx *gin.Context) {
 		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: struct{}{}, Exception: publicException})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.LinkRoutineTagByIdResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.LinkRoutineTagByIdResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RoutineEndpoint) LinkRoutineTagsByIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.LinkRoutineTagsByIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.LinkRoutineTagsByIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -190,12 +190,12 @@ func (t *RoutineEndpoint) LinkRoutineTagsByIds(ctx *gin.Context) {
 		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: struct{}{}, Exception: publicException})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.LinkRoutineTagsByIdsResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.LinkRoutineTagsByIdsResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RoutineEndpoint) LinkRoutineItemById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.LinkRoutineItemByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.LinkRoutineItemByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -206,12 +206,12 @@ func (t *RoutineEndpoint) LinkRoutineItemById(ctx *gin.Context) {
 		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: struct{}{}, Exception: publicException})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.LinkRoutineItemByIdResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.LinkRoutineItemByIdResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RoutineEndpoint) LinkRoutineItemsByIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.LinkRoutineItemsByIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.LinkRoutineItemsByIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -222,12 +222,12 @@ func (t *RoutineEndpoint) LinkRoutineItemsByIds(ctx *gin.Context) {
 		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: struct{}{}, Exception: publicException})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.LinkRoutineItemsByIdsResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.LinkRoutineItemsByIdsResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RoutineEndpoint) RestoreMyRoutineById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.RestoreMyRoutineByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.RestoreMyRoutineByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -238,12 +238,12 @@ func (t *RoutineEndpoint) RestoreMyRoutineById(ctx *gin.Context) {
 		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: struct{}{}, Exception: publicException})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.RestoreMyRoutineByIdResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.RestoreMyRoutineByIdResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RoutineEndpoint) RestoreMyRoutinesByIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.RestoreMyRoutinesByIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.RestoreMyRoutinesByIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -254,12 +254,12 @@ func (t *RoutineEndpoint) RestoreMyRoutinesByIds(ctx *gin.Context) {
 		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: struct{}{}, Exception: publicException})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.RestoreMyRoutinesByIdsResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.RestoreMyRoutinesByIdsResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RoutineEndpoint) DeleteMyRoutineById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.DeleteMyRoutineByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.DeleteMyRoutineByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -270,12 +270,12 @@ func (t *RoutineEndpoint) DeleteMyRoutineById(ctx *gin.Context) {
 		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: struct{}{}, Exception: publicException})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.DeleteMyRoutineByIdResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.DeleteMyRoutineByIdResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RoutineEndpoint) DeleteMyRoutinesByIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.DeleteMyRoutinesByIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.DeleteMyRoutinesByIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -286,12 +286,12 @@ func (t *RoutineEndpoint) DeleteMyRoutinesByIds(ctx *gin.Context) {
 		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: struct{}{}, Exception: publicException})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.DeleteMyRoutinesByIdsResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.DeleteMyRoutinesByIdsResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RoutineEndpoint) HardDeleteMyRoutineById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.HardDeleteMyRoutineByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.HardDeleteMyRoutineByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -302,12 +302,12 @@ func (t *RoutineEndpoint) HardDeleteMyRoutineById(ctx *gin.Context) {
 		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: struct{}{}, Exception: publicException})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.HardDeleteMyRoutineByIdResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.HardDeleteMyRoutineByIdResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RoutineEndpoint) HardDeleteMyRoutinesByIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.HardDeleteMyRoutinesByIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.HardDeleteMyRoutinesByIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -318,12 +318,12 @@ func (t *RoutineEndpoint) HardDeleteMyRoutinesByIds(ctx *gin.Context) {
 		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: struct{}{}, Exception: publicException})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.HardDeleteMyRoutinesByIdsResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.HardDeleteMyRoutinesByIdsResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RoutineEndpoint) VisualizeMyRoutineStatusCount(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.VisualizeMyRoutineStatusCountRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.VisualizeMyRoutineStatusCountRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -334,12 +334,12 @@ func (t *RoutineEndpoint) VisualizeMyRoutineStatusCount(ctx *gin.Context) {
 		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: struct{}{}, Exception: publicException})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.VisualizeMyRoutineStatusCountResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.VisualizeMyRoutineStatusCountResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RoutineEndpoint) VisualizeMyRoutinePeriodCount(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.VisualizeMyRoutinePeriodCountRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.VisualizeMyRoutinePeriodCountRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -350,12 +350,12 @@ func (t *RoutineEndpoint) VisualizeMyRoutinePeriodCount(ctx *gin.Context) {
 		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: struct{}{}, Exception: publicException})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.VisualizeMyRoutinePeriodCountResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.VisualizeMyRoutinePeriodCountResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RoutineEndpoint) VisualizeMyRoutineScheduledStartAtCount(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.VisualizeMyRoutineScheduledStartAtCountRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.VisualizeMyRoutineScheduledStartAtCountRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -366,12 +366,12 @@ func (t *RoutineEndpoint) VisualizeMyRoutineScheduledStartAtCount(ctx *gin.Conte
 		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: struct{}{}, Exception: publicException})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.VisualizeMyRoutineScheduledStartAtCountResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.VisualizeMyRoutineScheduledStartAtCountResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }
 
 func (t *RoutineEndpoint) VisualizeMyRoutineScheduledEndAtCount(ctx *gin.Context) {
-	request := &gatewaycontract.Request[routinesdto.VisualizeMyRoutineScheduledEndAtCountRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.VisualizeMyRoutineScheduledEndAtCountRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -382,5 +382,5 @@ func (t *RoutineEndpoint) VisualizeMyRoutineScheduledEndAtCount(ctx *gin.Context
 		ctx.JSON(publicException.HTTPStatusCode(), gatewaycontract.Response[struct{}]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: struct{}{}, Exception: publicException})
 		return
 	}
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[routinesdto.VisualizeMyRoutineScheduledEndAtCountResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.VisualizeMyRoutineScheduledEndAtCountResponseDto]{Version: gatewaycontract.Version, Metadata: gatewaycontract.ResponseMetadata{RequestId: request.Metadata.RequestId, RespondedAt: time.Now()}, Data: *responseDto})
 }

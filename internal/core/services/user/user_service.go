@@ -10,12 +10,12 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
 
 	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
 
-	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
@@ -32,9 +32,9 @@ import (
 )
 
 type UserServiceInterface interface {
-	GetUserData(ctx context.Context, requestDto *usersdto.GetUserDataRequestDto) (*usersdto.GetUserDataResponseDto, *exceptions.Exception)
-	GetMe(ctx context.Context, requestDto *usersdto.GetMeRequestDto) (*usersdto.GetMeResponseDto, *exceptions.Exception)
-	UpdateMe(ctx context.Context, requestDto *usersdto.UpdateMeRequestDto) (*usersdto.UpdateMeResponseDto, *exceptions.Exception)
+	GetUserData(ctx context.Context, requestDto *apicontract.GetUserDataRequestDto) (*apicontract.GetUserDataResponseDto, *exceptions.Exception)
+	GetMe(ctx context.Context, requestDto *apicontract.GetMeRequestDto) (*apicontract.GetMeResponseDto, *exceptions.Exception)
+	UpdateMe(ctx context.Context, requestDto *apicontract.UpdateMeRequestDto) (*apicontract.UpdateMeResponseDto, *exceptions.Exception)
 
 	// services for graphql users
 	GetPublicUserByPublicId(ctx context.Context, publicId uuid.UUID) (*gqlmodels.PublicUser, *exceptions.Exception)
@@ -69,8 +69,8 @@ func NewUserService(
 /* ============================== Service Methods for Users ============================== */
 
 func (s *UserService) GetUserData(
-	ctx context.Context, requestDto *usersdto.GetUserDataRequestDto,
-) (*usersdto.GetUserDataResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.GetUserDataRequestDto,
+) (*apicontract.GetUserDataResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -94,7 +94,7 @@ func (s *UserService) GetUserData(
 		return nil, exception
 	}
 
-	return &usersdto.GetUserDataResponseDto{
+	return &apicontract.GetUserDataResponseDto{
 		PublicId:           userDataCache.PublicId,
 		Name:               userDataCache.Name,
 		DisplayName:        userDataCache.DisplayName,
@@ -112,8 +112,8 @@ func (s *UserService) GetUserData(
 }
 
 func (s *UserService) GetMe(
-	ctx context.Context, requestDto *usersdto.GetMeRequestDto,
-) (*usersdto.GetMeResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.GetMeRequestDto,
+) (*apicontract.GetMeResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -135,7 +135,7 @@ func (s *UserService) GetMe(
 		return nil, exception
 	}
 
-	return &usersdto.GetMeResponseDto{
+	return &apicontract.GetMeResponseDto{
 		PublicId:    user.PublicId,
 		Name:        user.Name,
 		DisplayName: user.DisplayName,
@@ -149,8 +149,8 @@ func (s *UserService) GetMe(
 }
 
 func (s *UserService) UpdateMe(
-	ctx context.Context, requestDto *usersdto.UpdateMeRequestDto,
-) (*usersdto.UpdateMeResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.UpdateMeRequestDto,
+) (*apicontract.UpdateMeResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -219,7 +219,7 @@ func (s *UserService) UpdateMe(
 		}
 	}
 
-	return &usersdto.UpdateMeResponseDto{UpdatedAt: updatedUser.UpdatedAt}, nil
+	return &apicontract.UpdateMeResponseDto{UpdatedAt: updatedUser.UpdatedAt}, nil
 }
 
 /* ============================== Service Methods for Public User (Only available in GraphQL) ============================== */

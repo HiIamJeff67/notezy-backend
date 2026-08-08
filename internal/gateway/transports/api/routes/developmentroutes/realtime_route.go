@@ -14,13 +14,11 @@ import (
 	interceptors "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/interceptors"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
-	realtimegatewayadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/realtimegateway/adapters"
 )
 
 func configureDevelopmentRealtimeRoutes(
 	router *gin.RouterGroup,
-	coreClient *coreadapters.CoreClient,
-	realtimeGatewayClient *realtimegatewayadapters.RealtimeGatewayClient,
+	coreClient *coreadapters.CoreAdapter,
 	accessTokenCookieHandler *cookies.CookieHandler,
 	refreshTokenCookieHandler *cookies.CookieHandler,
 ) {
@@ -29,34 +27,8 @@ func configureDevelopmentRealtimeRoutes(
 	}
 
 	realtimeBinder := binders.NewRealtimeBinder()
-	realtimeController := controllers.NewRealtimeController(coreClient, realtimeGatewayClient)
+	realtimeController := controllers.NewRealtimeController(coreClient)
 	realtimeRoutes := router.Group("/realtime")
-	defaultMiddlewares := []gin.HandlerFunc{
-		middlewares.UnauthorizedRateLimitMiddleware(),
-		middlewares.TimeoutMiddleware(3 * time.Second),
-		middlewares.JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler),
-		interceptors.ShareableResponseWriterInterceptor(
-			interceptors.RefreshTokenInterceptor(accessTokenCookieHandler),
-			interceptors.EmbeddedInterceptor,
-		),
-	}
-	{
-		realtimeRoutes.GET(
-			"/block-pack/:blockPackId/participants",
-			middlewares.RepositionMiddleware(
-				[]gin.HandlerFunc{
-					middlewares.ApplyTracerMiddleware("getMyBlockPackRealtimeParticipants"),
-					middlewares.ApplyMeterMiddleware("server.requests.realtime.getMyBlockPackRealtimeParticipants"),
-				},
-				append(
-					defaultMiddlewares,
-					middlewares.AllowedPermissionsAbove(enumcontract.AccessControlPermission_Read),
-				),
-				realtimeBinder.BindGetMyBlockPackRealtimeParticipants(realtimeController.GetMyBlockPackRealtimeParticipants),
-			)...,
-		)
-	}
-
 	connectionRouterGroup := realtimeRoutes.Group("/connection")
 	connectionMiddlewares := []gin.HandlerFunc{
 		middlewares.UnauthorizedRateLimitMiddleware(),

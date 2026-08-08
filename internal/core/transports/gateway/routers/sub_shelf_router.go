@@ -3,7 +3,7 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	subshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/sub-shelves"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/sub-shelves"
 
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
@@ -19,7 +19,7 @@ func configureSubShelfRoutes(
 		subShelfRoutes.POST(
 			"/get-by-id",
 			middlewares.DelegationAuthenticatedMiddleware(
-				subshelvesdto.GetMySubShelfByIdOperation,
+				apicontract.GetMySubShelfByIdOperation,
 			),
 			authMiddleware,
 			endpoint.GetMySubShelfById,
@@ -27,7 +27,7 @@ func configureSubShelfRoutes(
 		subShelfRoutes.POST(
 			"/get-by-prev-sub-shelf-id",
 			middlewares.DelegationAuthenticatedMiddleware(
-				subshelvesdto.GetMySubShelvesByPrevSubShelfIdOperation,
+				apicontract.GetMySubShelvesByPrevSubShelfIdOperation,
 			),
 			authMiddleware,
 			endpoint.GetMySubShelvesByPrevSubShelfId,
@@ -35,7 +35,7 @@ func configureSubShelfRoutes(
 		subShelfRoutes.POST(
 			"/get-all-by-root-shelf-id",
 			middlewares.DelegationAuthenticatedMiddleware(
-				subshelvesdto.GetAllMySubShelvesByRootShelfIdOperation,
+				apicontract.GetAllMySubShelvesByRootShelfIdOperation,
 			),
 			authMiddleware,
 			endpoint.GetAllMySubShelvesByRootShelfId,
@@ -43,7 +43,7 @@ func configureSubShelfRoutes(
 		subShelfRoutes.POST(
 			"/get-and-items-by-prev-sub-shelf-id",
 			middlewares.DelegationAuthenticatedMiddleware(
-				subshelvesdto.GetMySubShelvesAndItemsByPrevSubShelfIdOperation,
+				apicontract.GetMySubShelvesAndItemsByPrevSubShelfIdOperation,
 			),
 			authMiddleware,
 			endpoint.GetMySubShelvesAndItemsByPrevSubShelfId,
@@ -51,7 +51,7 @@ func configureSubShelfRoutes(
 		subShelfRoutes.POST(
 			"/create",
 			middlewares.DelegationAuthenticatedMiddleware(
-				subshelvesdto.CreateSubShelfByRootShelfIdOperation,
+				apicontract.CreateSubShelfByRootShelfIdOperation,
 			),
 			authMiddleware,
 			endpoint.CreateSubShelfByRootShelfId,
@@ -59,7 +59,7 @@ func configureSubShelfRoutes(
 		subShelfRoutes.POST(
 			"/create-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				subshelvesdto.CreateSubShelvesByRootShelfIdsOperation,
+				apicontract.CreateSubShelvesByRootShelfIdsOperation,
 			),
 			authMiddleware,
 			endpoint.CreateSubShelvesByRootShelfIds,
@@ -67,7 +67,7 @@ func configureSubShelfRoutes(
 		subShelfRoutes.POST(
 			"/update",
 			middlewares.DelegationAuthenticatedMiddleware(
-				subshelvesdto.UpdateMySubShelfByIdOperation,
+				apicontract.UpdateMySubShelfByIdOperation,
 			),
 			authMiddleware,
 			endpoint.UpdateMySubShelfById,
@@ -75,7 +75,7 @@ func configureSubShelfRoutes(
 		subShelfRoutes.POST(
 			"/update-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				subshelvesdto.UpdateMySubShelvesByIdsOperation,
+				apicontract.UpdateMySubShelvesByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.UpdateMySubShelvesByIds,
@@ -83,7 +83,7 @@ func configureSubShelfRoutes(
 		subShelfRoutes.POST(
 			"/move",
 			middlewares.DelegationAuthenticatedMiddleware(
-				subshelvesdto.MoveMySubShelfByRootShelfIdOperation,
+				apicontract.MoveMySubShelfByRootShelfIdOperation,
 			),
 			authMiddleware,
 			endpoint.MoveMySubShelfByRootShelfId,
@@ -91,7 +91,7 @@ func configureSubShelfRoutes(
 		subShelfRoutes.POST(
 			"/move-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				subshelvesdto.MoveMySubShelvesByRootShelfIdOperation,
+				apicontract.MoveMySubShelvesByRootShelfIdOperation,
 			),
 			authMiddleware,
 			endpoint.MoveMySubShelvesByRootShelfId,
@@ -99,7 +99,7 @@ func configureSubShelfRoutes(
 		subShelfRoutes.POST(
 			"/move-many-by-root-shelves",
 			middlewares.DelegationAuthenticatedMiddleware(
-				subshelvesdto.MoveMySubShelvesByRootShelfIdsOperation,
+				apicontract.MoveMySubShelvesByRootShelfIdsOperation,
 			),
 			authMiddleware,
 			endpoint.MoveMySubShelvesByRootShelfIds,
@@ -107,7 +107,7 @@ func configureSubShelfRoutes(
 		subShelfRoutes.POST(
 			"/restore",
 			middlewares.DelegationAuthenticatedMiddleware(
-				subshelvesdto.RestoreMySubShelfByIdOperation,
+				apicontract.RestoreMySubShelfByIdOperation,
 			),
 			authMiddleware,
 			endpoint.RestoreMySubShelfById,
@@ -115,7 +115,7 @@ func configureSubShelfRoutes(
 		subShelfRoutes.POST(
 			"/restore-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				subshelvesdto.RestoreMySubShelvesByIdsOperation,
+				apicontract.RestoreMySubShelvesByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.RestoreMySubShelvesByIds,
@@ -123,7 +123,7 @@ func configureSubShelfRoutes(
 		subShelfRoutes.POST(
 			"/delete",
 			middlewares.DelegationAuthenticatedMiddleware(
-				subshelvesdto.DeleteMySubShelfByIdOperation,
+				apicontract.DeleteMySubShelfByIdOperation,
 			),
 			authMiddleware,
 			endpoint.DeleteMySubShelfById,
@@ -131,7 +131,7 @@ func configureSubShelfRoutes(
 		subShelfRoutes.POST(
 			"/delete-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				subshelvesdto.DeleteMySubShelvesByIdsOperation,
+				apicontract.DeleteMySubShelvesByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.DeleteMySubShelvesByIds,
@@ -139,7 +139,7 @@ func configureSubShelfRoutes(
 		subShelfRoutes.POST(
 			"/graphql/search",
 			middlewares.DelegationAuthenticatedMiddleware(
-				subshelvesdto.SearchSubShelvesOperation,
+				apicontract.SearchSubShelvesOperation,
 			),
 			authMiddleware,
 			endpoint.SearchSubShelves,

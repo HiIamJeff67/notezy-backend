@@ -3,7 +3,7 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	routinetasksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tasks"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tasks"
 
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
@@ -19,7 +19,7 @@ func configureRoutineTaskRoutes(
 		routineTaskRoutes.POST(
 			"/get-by-id",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetasksdto.GetMyRoutineTaskByIdOperation,
+				apicontract.GetMyRoutineTaskByIdOperation,
 			),
 			authMiddleware,
 			endpoint.GetMyRoutineTaskById,
@@ -27,7 +27,7 @@ func configureRoutineTaskRoutes(
 		routineTaskRoutes.POST(
 			"/get-all-by-routine-ids",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetasksdto.GetAllMyRoutineTasksByRoutineIdsOperation,
+				apicontract.GetAllMyRoutineTasksByRoutineIdsOperation,
 			),
 			authMiddleware,
 			endpoint.GetAllMyRoutineTasksByRoutineIds,
@@ -35,7 +35,7 @@ func configureRoutineTaskRoutes(
 		routineTaskRoutes.POST(
 			"/get-all",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetasksdto.GetAllMyRoutineTasksOperation,
+				apicontract.GetAllMyRoutineTasksOperation,
 			),
 			authMiddleware,
 			endpoint.GetAllMyRoutineTasks,
@@ -43,7 +43,7 @@ func configureRoutineTaskRoutes(
 		routineTaskRoutes.POST(
 			"/create-by-routine-id",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetasksdto.CreateRoutineTaskByRoutineIdOperation,
+				apicontract.CreateRoutineTaskByRoutineIdOperation,
 			),
 			authMiddleware,
 			endpoint.CreateRoutineTaskByRoutineId,
@@ -51,7 +51,7 @@ func configureRoutineTaskRoutes(
 		routineTaskRoutes.POST(
 			"/update",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetasksdto.UpdateMyRoutineTaskByIdOperation,
+				apicontract.UpdateMyRoutineTaskByIdOperation,
 			),
 			authMiddleware,
 			endpoint.UpdateMyRoutineTaskById,
@@ -59,7 +59,7 @@ func configureRoutineTaskRoutes(
 		routineTaskRoutes.POST(
 			"/pause",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetasksdto.PauseMyRoutineTaskByIdOperation,
+				apicontract.PauseMyRoutineTaskByIdOperation,
 			),
 			authMiddleware,
 			endpoint.PauseMyRoutineTaskById,
@@ -67,7 +67,7 @@ func configureRoutineTaskRoutes(
 		routineTaskRoutes.POST(
 			"/resume",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetasksdto.ResumeMyRoutineTaskByIdOperation,
+				apicontract.ResumeMyRoutineTaskByIdOperation,
 			),
 			authMiddleware,
 			endpoint.ResumeMyRoutineTaskById,
@@ -75,7 +75,7 @@ func configureRoutineTaskRoutes(
 		routineTaskRoutes.POST(
 			"/hard-delete",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetasksdto.HardDeleteMyRoutineTaskByIdOperation,
+				apicontract.HardDeleteMyRoutineTaskByIdOperation,
 			),
 			authMiddleware,
 			endpoint.HardDeleteMyRoutineTaskById,
@@ -83,7 +83,7 @@ func configureRoutineTaskRoutes(
 		routineTaskRoutes.POST(
 			"/hard-delete-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetasksdto.HardDeleteMyRoutineTasksByIdsOperation,
+				apicontract.HardDeleteMyRoutineTasksByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.HardDeleteMyRoutineTasksByIds,
@@ -94,7 +94,7 @@ func configureRoutineTaskRoutes(
 		visualizationRoutes.POST(
 			"/visualize-status-count",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetasksdto.VisualizeMyRoutineTaskStatusCountOperation,
+				apicontract.VisualizeMyRoutineTaskStatusCountOperation,
 			),
 			authMiddleware,
 			endpoint.VisualizeMyRoutineTaskStatusCount,
@@ -102,7 +102,7 @@ func configureRoutineTaskRoutes(
 		visualizationRoutes.POST(
 			"/visualize-purpose-count",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetasksdto.VisualizeMyRoutineTaskPurposeCountOperation,
+				apicontract.VisualizeMyRoutineTaskPurposeCountOperation,
 			),
 			authMiddleware,
 			endpoint.VisualizeMyRoutineTaskPurposeCount,
@@ -110,7 +110,7 @@ func configureRoutineTaskRoutes(
 		visualizationRoutes.POST(
 			"/visualize-scheduled-at-count",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetasksdto.VisualizeMyRoutineTaskScheduledAtCountOperation,
+				apicontract.VisualizeMyRoutineTaskScheduledAtCountOperation,
 			),
 			authMiddleware,
 			endpoint.VisualizeMyRoutineTaskScheduledAtCount,
@@ -118,7 +118,7 @@ func configureRoutineTaskRoutes(
 		visualizationRoutes.POST(
 			"/visualize-actual-started-at-count",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetasksdto.VisualizeMyRoutineTaskActualStartedAtCountOperation,
+				apicontract.VisualizeMyRoutineTaskActualStartedAtCountOperation,
 			),
 			authMiddleware,
 			endpoint.VisualizeMyRoutineTaskActualStartedAtCount,
@@ -126,7 +126,7 @@ func configureRoutineTaskRoutes(
 		visualizationRoutes.POST(
 			"/visualize-actual-ended-at-count",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinetasksdto.VisualizeMyRoutineTaskActualEndedAtCountOperation,
+				apicontract.VisualizeMyRoutineTaskActualEndedAtCountOperation,
 			),
 			authMiddleware,
 			endpoint.VisualizeMyRoutineTaskActualEndedAtCount,
@@ -135,7 +135,7 @@ func configureRoutineTaskRoutes(
 	router.POST(
 		"/routine-tasks/graphql/search",
 		middlewares.DelegationAuthenticatedMiddleware(
-			routinetasksdto.SearchRoutineTasksOperation,
+			apicontract.SearchRoutineTasksOperation,
 		),
 		authMiddleware,
 		endpoint.SearchRoutineTasks,

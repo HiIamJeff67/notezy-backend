@@ -1,4 +1,4 @@
-package materialsdto
+package apicontract
 
 const (
 	GetMyMaterialByIdOperation                = "material.get-by-id"

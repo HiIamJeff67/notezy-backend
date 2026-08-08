@@ -121,7 +121,7 @@ func TestExceptionsDoesNotDependOnTransportPackages(t *testing.T) {
 	}
 
 	repositoryRoot := filepath.Clean(filepath.Join(filepath.Dir(currentFilePath), "..", ".."))
-	exceptionRoot := filepath.Join(repositoryRoot, "shared", "exceptions")
+	exceptionRoot := filepath.Join(repositoryRoot, "contracts", "types", "exceptions")
 	if err := filepath.WalkDir(exceptionRoot, func(path string, entry fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr

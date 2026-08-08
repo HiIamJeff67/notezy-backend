@@ -1,4 +1,4 @@
-package yjsworkertransport
+package adapterstransport
 
 const (
 	CommandConsumerGroup           = "notezy-core-yjsworker-v1"

@@ -1,4 +1,4 @@
-package routinetagsdto
+package apicontract
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	coreapicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api"
-	routinetagstypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/routine-tags"
+	coretypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/routine-tags"
 )
 
 type CreateRoutineTagRequestDto struct {
@@ -14,7 +14,7 @@ type CreateRoutineTagRequestDto struct {
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
-		routinetagstypes.CreatableRoutineTag,
+		coretypes.CreatableRoutineTag,
 		struct{},
 		struct{},
 	]
@@ -31,7 +31,7 @@ type CreateRoutineTagsRequestDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			CreatedRoutineTags []routinetagstypes.CreatableRoutineTag `json:"createdRoutineTags" validate:"required,min=1,max=1024,dive"`
+			CreatedRoutineTags []coretypes.CreatableRoutineTag `json:"createdRoutineTags" validate:"required,min=1,max=1024,dive"`
 		},
 		struct{},
 		struct{},

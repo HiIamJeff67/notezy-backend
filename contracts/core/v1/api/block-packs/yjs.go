@@ -1,9 +1,9 @@
-package blockpacksdto
+package apicontract
 
-import typescontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+import blocknote "github.com/HiIamJeff67/notezy-backend/contracts/types/blocknote"
 
 type InitializeBlockPackYjsDocumentReqDto struct {
-	Blocks []typescontract.ArborizedEditableBlock `json:"blocks"`
+	Blocks []blocknote.ArborizedEditableBlock `json:"blocks"`
 }
 
 type InitializeBlockPackYjsDocumentResDto struct {

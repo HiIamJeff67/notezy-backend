@@ -1,4 +1,4 @@
-package badgesdto
+package apicontract
 
 import (
 	"github.com/google/uuid"

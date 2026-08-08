@@ -1,4 +1,4 @@
-package yjsworkerconsumers
+package adaptersconsumers
 
 import (
 	"context"
@@ -10,8 +10,8 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
+	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1"
 	yjsworkereventscontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1/events"
 
@@ -82,8 +82,20 @@ func (c *YjsCommandConsumer) consume(
 			Origin:         fmt.Errorf("decode YjsWorker command: %w", err),
 		}
 	}
-	if exception := validateYjsCommand(command, event); exception != nil {
-		return c.writeReply(ctx, command, nil, exception)
+	if command.SchemaVersion != yjsworkercontract.Version || command.CommandId == uuid.Nil ||
+		command.BlockPackId == uuid.Nil || command.CommandType == "" || command.Producer != "yjs-worker" {
+		return c.writeReply(ctx, command, nil, &yjsworkercontract.Error{
+			Code:      "InvalidCommand",
+			Message:   "the YjsWorker command envelope is invalid",
+			Retryable: false,
+		})
+	}
+	if command.BlockPackId != event.AggregateId || command.BlockPackId.String() != event.KafkaKey {
+		return c.writeReply(ctx, command, nil, &yjsworkercontract.Error{
+			Code:      "InvalidCommand",
+			Message:   "the YjsWorker command partition key is invalid",
+			Retryable: false,
+		})
 	}
 
 	tx := c.db.WithContext(ctx).Begin()
@@ -104,29 +116,6 @@ func (c *YjsCommandConsumer) consume(
 	}
 	if err := tx.Commit().Error; err != nil {
 		return fmt.Errorf("commit YjsWorker command transaction: %w", err)
-	}
-
-	return nil
-}
-
-func validateYjsCommand(
-	command yjsworkercontract.CommandEnvelope[json.RawMessage],
-	event eventcontract.EventEnvelope[json.RawMessage],
-) *yjsworkercontract.Error {
-	if command.SchemaVersion != yjsworkercontract.Version || command.CommandId == uuid.Nil ||
-		command.BlockPackId == uuid.Nil || command.CommandType == "" || command.Producer != "yjs-worker" {
-		return &yjsworkercontract.Error{
-			Code:      "InvalidCommand",
-			Message:   "the YjsWorker command envelope is invalid",
-			Retryable: false,
-		}
-	}
-	if command.BlockPackId != event.AggregateId || command.BlockPackId.String() != event.KafkaKey {
-		return &yjsworkercontract.Error{
-			Code:      "InvalidCommand",
-			Message:   "the YjsWorker command partition key is invalid",
-			Retryable: false,
-		}
 	}
 
 	return nil
@@ -266,7 +255,7 @@ func (c *YjsCommandConsumer) execute(
 		})
 	case yjsworkercontract.CommandType_ApplyBlockProjection:
 		var data yjsworkercontract.ApplyBlockProjectionCommandDto
-		var requestDto blocksdto.ApplyBlockProjectionRequestDto
+		var requestDto apicontract.ApplyBlockProjectionRequestDto
 		if err := json.Unmarshal(command.Data, &data); err != nil || json.Unmarshal(data.Projection, &requestDto) != nil {
 			return nil, &yjsworkercontract.Error{
 				Code:      "InvalidCommand",

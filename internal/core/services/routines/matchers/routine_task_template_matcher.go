@@ -6,14 +6,14 @@ import (
 	"net/http"
 	"strings"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
-	typescontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	blocknote "github.com/HiIamJeff67/notezy-backend/contracts/types/blocknote"
 )
 
 type RoutineTaskTemplateMatcherInterface interface {
 	MatchString(value string, values map[string]string) string
-	MatchArborizedEditableBlock(block typescontract.ArborizedEditableBlock, values map[string]string) (typescontract.ArborizedEditableBlock, *exceptions.Exception)
+	MatchArborizedEditableBlock(block blocknote.ArborizedEditableBlock, values map[string]string) (blocknote.ArborizedEditableBlock, *exceptions.Exception)
 }
 
 type RoutineTaskTemplateMatcher struct{}
@@ -34,14 +34,14 @@ func (m RoutineTaskTemplateMatcher) MatchString(value string, values map[string]
 }
 
 func (m RoutineTaskTemplateMatcher) MatchArborizedEditableBlock(
-	block typescontract.ArborizedEditableBlock,
+	block blocknote.ArborizedEditableBlock,
 	values map[string]string,
-) (typescontract.ArborizedEditableBlock, *exceptions.Exception) {
-	matchedChildren := make([]typescontract.ArborizedEditableBlock, len(block.Children))
+) (blocknote.ArborizedEditableBlock, *exceptions.Exception) {
+	matchedChildren := make([]blocknote.ArborizedEditableBlock, len(block.Children))
 	for index, child := range block.Children {
 		matchedChild, exception := m.MatchArborizedEditableBlock(child, values)
 		if exception != nil {
-			return typescontract.ArborizedEditableBlock{}, exception
+			return blocknote.ArborizedEditableBlock{}, exception
 		}
 		matchedChildren[index] = matchedChild
 	}
@@ -49,7 +49,7 @@ func (m RoutineTaskTemplateMatcher) MatchArborizedEditableBlock(
 
 	rawBlock, err := json.Marshal(block)
 	if err != nil {
-		return typescontract.ArborizedEditableBlock{}, exceptions.New(
+		return blocknote.ArborizedEditableBlock{}, exceptions.New(
 			"InvalidRoutineTaskPayload",
 			"RoutineTask",
 			"Resolve",
@@ -60,7 +60,7 @@ func (m RoutineTaskTemplateMatcher) MatchArborizedEditableBlock(
 
 	var blockMap map[string]any
 	if err := json.Unmarshal(rawBlock, &blockMap); err != nil {
-		return typescontract.ArborizedEditableBlock{}, exceptions.New(
+		return blocknote.ArborizedEditableBlock{}, exceptions.New(
 			"InvalidRoutineTaskPayload",
 			"RoutineTask",
 			"Resolve",
@@ -88,7 +88,7 @@ func (m RoutineTaskTemplateMatcher) MatchArborizedEditableBlock(
 
 	rawMatchedBlock, err := json.Marshal(blockMap)
 	if err != nil {
-		return typescontract.ArborizedEditableBlock{}, exceptions.New(
+		return blocknote.ArborizedEditableBlock{}, exceptions.New(
 			"InvalidRoutineTaskPayload",
 			"RoutineTask",
 			"Resolve",
@@ -97,9 +97,9 @@ func (m RoutineTaskTemplateMatcher) MatchArborizedEditableBlock(
 		).WithOrigin(err)
 	}
 
-	var matchedBlock typescontract.ArborizedEditableBlock
+	var matchedBlock blocknote.ArborizedEditableBlock
 	if err := json.Unmarshal(rawMatchedBlock, &matchedBlock); err != nil {
-		return typescontract.ArborizedEditableBlock{}, exceptions.New(
+		return blocknote.ArborizedEditableBlock{}, exceptions.New(
 			"InvalidRoutineTaskPayload",
 			"RoutineTask",
 			"Resolve",

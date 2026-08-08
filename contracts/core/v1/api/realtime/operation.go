@@ -1,7 +1,6 @@
-package realtimedto
+package apicontract
 
 const (
-	GetMyBlockPackRealtimeParticipantsOperation = "realtime.block-pack-participants.get"
-	CreateMyRealtimeConnectionTicketOperation   = "realtime.connection-ticket.create"
-	CreateMyBlockPackChannelTicketOperation     = "realtime.block-pack-channel-ticket.create"
+	CreateMyRealtimeConnectionTicketOperation = "realtime.connection-ticket.create"
+	CreateMyBlockPackChannelTicketOperation   = "realtime.block-pack-channel-ticket.create"
 )

@@ -1,4 +1,4 @@
-package subshelvesdto
+package apicontract
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	coreapicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api"
-	subshelvestypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/sub-shelves"
+	coretypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/sub-shelves"
 )
 
 type UpdateMySubShelfByIdRequestDto struct {
@@ -37,7 +37,7 @@ type UpdateMySubShelvesByIdsRequestDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			UpdatedSubShelves []subshelvestypes.UpdatableSubShelf `json:"updatedSubShelves" validate:"required,min=1,max=1024,dive"`
+			UpdatedSubShelves []coretypes.UpdatableSubShelf `json:"updatedSubShelves" validate:"required,min=1,max=1024,dive"`
 		},
 		struct{},
 		struct{},

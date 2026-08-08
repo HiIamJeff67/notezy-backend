@@ -18,7 +18,7 @@ type Dataloaders struct {
 	BadgeDataLoader    BadgeDataloaderInterface
 }
 
-func NewDataloaders(coreClient *coreadapters.CoreClient) Dataloaders {
+func NewDataloaders(coreClient *coreadapters.CoreAdapter) Dataloaders {
 	return Dataloaders{
 		UserDataLoader:     NewUserDataloader(coreClient),
 		UserInfoDataLoader: NewUserInfoDataloader(coreClient),

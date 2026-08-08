@@ -1,4 +1,4 @@
-package routinetaskrecordsdto
+package apicontract
 
 import (
 	"time"

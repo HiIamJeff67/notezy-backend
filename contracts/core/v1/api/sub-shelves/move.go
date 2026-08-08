@@ -1,4 +1,4 @@
-package subshelvesdto
+package apicontract
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	coreapicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api"
-	subshelvestypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/sub-shelves"
+	coretypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/sub-shelves"
 )
 
 type MoveMySubShelfByRootShelfIdRequestDto struct {
@@ -34,7 +34,7 @@ type MoveMySubShelvesByRootShelfIdRequestDto struct {
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
-		subshelvestypes.MovableSubShelf,
+		coretypes.MovableSubShelf,
 		struct{},
 		struct{},
 	]
@@ -50,7 +50,7 @@ type MoveMySubShelvesByRootShelfIdsRequestDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			MovedSubShelves []subshelvestypes.MovableSubShelf `json:"movedSubShelves" validate:"required,min=1,max=1024,dive"`
+			MovedSubShelves []coretypes.MovableSubShelf `json:"movedSubShelves" validate:"required,min=1,max=1024,dive"`
 		},
 		struct{},
 		struct{},

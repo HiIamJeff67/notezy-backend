@@ -1,9 +1,7 @@
 package middlewares
 
 import (
-	"bytes"
 	"encoding/json"
-	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -11,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
@@ -42,50 +40,32 @@ func DelegationAuthenticatedMiddleware(expectedOperation string) gin.HandlerFunc
 			return
 		}
 
-		payload, err := io.ReadAll(ctx.Request.Body)
-		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusBadRequest, gatewaycontract.Response[struct{}]{
-				Version: gatewaycontract.Version,
-				Metadata: gatewaycontract.ResponseMetadata{
-					RequestId:   ctx.GetHeader("X-Request-Id"),
-					RespondedAt: time.Now(),
-				},
-				Data: struct{}{},
-				Exception: exceptions.New(
-					"InvalidRequest",
-					"Core",
-					"VerifyDelegation",
-					"failed to read the Core service request",
-					http.StatusBadRequest,
-				),
-			})
-			return
-		}
-
 		request := &gatewaycontract.Request[json.RawMessage]{}
-		if err := json.Unmarshal(payload, request); err != nil ||
-			request.GetVersion() != gatewaycontract.Version ||
-			(expectedOperation != "" && request.GetOperation() != expectedOperation) ||
-			delegationClaims.Operation != request.GetOperation() ||
-			delegationClaims.RequestId != request.GetMetadata().RequestId {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gatewaycontract.Response[struct{}]{
-				Version: gatewaycontract.Version,
-				Metadata: gatewaycontract.ResponseMetadata{
-					RequestId:   ctx.GetHeader("X-Request-Id"),
-					RespondedAt: time.Now(),
-				},
-				Data: struct{}{},
-				Exception: exceptions.New(
-					"InvalidDelegation",
-					"Core",
-					"VerifyDelegation",
-					"delegation credential does not match the request",
-					http.StatusUnauthorized,
-				),
-			})
-			return
+		if ctx.Request.ContentLength != 0 {
+			bodyBindingError := ctx.ShouldBindBodyWithJSON(request)
+			if bodyBindingError != nil ||
+				request.GetVersion() != gatewaycontract.Version ||
+				(expectedOperation != "" && request.GetOperation() != expectedOperation) ||
+				delegationClaims.Operation != request.GetOperation() ||
+				delegationClaims.RequestId != request.GetMetadata().RequestId {
+				ctx.AbortWithStatusJSON(http.StatusUnauthorized, gatewaycontract.Response[struct{}]{
+					Version: gatewaycontract.Version,
+					Metadata: gatewaycontract.ResponseMetadata{
+						RequestId:   ctx.GetHeader("X-Request-Id"),
+						RespondedAt: time.Now(),
+					},
+					Data: struct{}{},
+					Exception: exceptions.New(
+						"InvalidDelegation",
+						"Core",
+						"VerifyDelegation",
+						"delegation credential does not match the request",
+						http.StatusUnauthorized,
+					),
+				})
+				return
+			}
 		}
-		ctx.Request.Body = io.NopCloser(bytes.NewReader(payload))
 
 		permissions := make([]enums.AccessControlPermission, 0, len(delegationClaims.AllowedPermissions))
 		for _, permissionString := range delegationClaims.AllowedPermissions {
@@ -152,9 +132,11 @@ func DelegationAuthenticatedMiddleware(expectedOperation string) gin.HandlerFunc
 		ctx.Request = ctx.Request.WithContext(
 			contexts.WithActorUserPublicId(ctx.Request.Context(), userSubject),
 		)
-		ctx.Request = ctx.Request.WithContext(
-			contexts.WithAllowedPermissions(ctx.Request.Context(), permissions),
-		)
+		if len(permissions) > 0 {
+			ctx.Request = ctx.Request.WithContext(
+				contexts.WithAllowedPermissions(ctx.Request.Context(), permissions),
+			)
+		}
 		ctx.Next()
 	}
 }

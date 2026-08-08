@@ -1,4 +1,4 @@
-package stationsdto
+package apicontract
 
 const (
 	GetMyStationByIdOperation           = "station.get-my-station-by-id"

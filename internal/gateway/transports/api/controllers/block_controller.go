@@ -1,42 +1,40 @@
 package controllers
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
 	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
 
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
 
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
 )
 
 type BlockControllerInterface interface {
-	GetMyBlockById(ctx *gin.Context, requestDto *blocksdto.GetMyBlockByIdRequestDto)
-	GetMyBlocksByIds(ctx *gin.Context, requestDto *blocksdto.GetMyBlocksByIdsRequestDto)
-	GetMyBlocksByBlockPackId(ctx *gin.Context, requestDto *blocksdto.GetMyBlocksByBlockPackIdRequestDto)
+	GetMyBlockById(ctx *gin.Context, requestDto *apicontract.GetMyBlockByIdRequestDto)
+	GetMyBlocksByIds(ctx *gin.Context, requestDto *apicontract.GetMyBlocksByIdsRequestDto)
+	GetMyBlocksByBlockPackId(ctx *gin.Context, requestDto *apicontract.GetMyBlocksByBlockPackIdRequestDto)
 }
 
 type BlockController struct {
-	coreClient *coreadapters.CoreClient
+	coreClient *coreadapters.CoreAdapter
 }
 
-func NewBlockController(coreClient *coreadapters.CoreClient) BlockControllerInterface {
+func NewBlockController(coreClient *coreadapters.CoreAdapter) BlockControllerInterface {
 	return &BlockController{
 		coreClient: coreClient,
 	}
 }
 
-func (c *BlockController) GetMyBlockById(ctx *gin.Context, requestDto *blocksdto.GetMyBlockByIdRequestDto) {
+func (c *BlockController) GetMyBlockById(ctx *gin.Context, requestDto *apicontract.GetMyBlockByIdRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		blocksdto.GetMyBlockByIdRequestDto,
-		blocksdto.GetMyBlockByIdResponseDto,
+		apicontract.GetMyBlockByIdRequestDto,
+		apicontract.GetMyBlockByIdResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		blocksdto.GetMyBlockByIdOperation,
+		apicontract.GetMyBlockByIdOperation,
 		"/core/v1/blocks/get-by-id",
 	)
 	if exception != nil {
@@ -44,22 +42,18 @@ func (c *BlockController) GetMyBlockById(ctx *gin.Context, requestDto *blocksdto
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *BlockController) GetMyBlocksByIds(ctx *gin.Context, requestDto *blocksdto.GetMyBlocksByIdsRequestDto) {
+func (c *BlockController) GetMyBlocksByIds(ctx *gin.Context, requestDto *apicontract.GetMyBlocksByIdsRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		blocksdto.GetMyBlocksByIdsRequestDto,
-		blocksdto.GetMyBlocksByIdsResponseDto,
+		apicontract.GetMyBlocksByIdsRequestDto,
+		apicontract.GetMyBlocksByIdsResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		blocksdto.GetMyBlocksByIdsOperation,
+		apicontract.GetMyBlocksByIdsOperation,
 		"/core/v1/blocks/get-by-ids",
 	)
 	if exception != nil {
@@ -67,22 +61,18 @@ func (c *BlockController) GetMyBlocksByIds(ctx *gin.Context, requestDto *blocksd
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *BlockController) GetMyBlocksByBlockPackId(ctx *gin.Context, requestDto *blocksdto.GetMyBlocksByBlockPackIdRequestDto) {
+func (c *BlockController) GetMyBlocksByBlockPackId(ctx *gin.Context, requestDto *apicontract.GetMyBlocksByBlockPackIdRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		blocksdto.GetMyBlocksByBlockPackIdRequestDto,
-		blocksdto.GetMyBlocksByBlockPackIdResponseDto,
+		apicontract.GetMyBlocksByBlockPackIdRequestDto,
+		apicontract.GetMyBlocksByBlockPackIdResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		blocksdto.GetMyBlocksByBlockPackIdOperation,
+		apicontract.GetMyBlocksByBlockPackIdOperation,
 		"/core/v1/blocks/get-by-block-pack-id",
 	)
 	if exception != nil {
@@ -90,9 +80,5 @@ func (c *BlockController) GetMyBlocksByBlockPackId(ctx *gin.Context, requestDto 
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }

@@ -9,7 +9,7 @@ Core publishes Yjs maintenance hints from `contracts/core/v1/events`. YjsWorker
 owns the maintenance operation, command, and worker-result contracts in
 `contracts/yjs-worker/v1/events`.
 
-The generic envelope is imported from `contracts/types/event.go`; this package owns the
+The generic envelope is imported from `contracts/types/events/`; this package owns the
 topics, event types, and payloads. Consumer groups remain runtime deployment
 configuration and are defined by the DurableJob/Core transport composition
 roots. This package does not import Core repositories, database schemas, or

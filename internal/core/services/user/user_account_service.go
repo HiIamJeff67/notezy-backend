@@ -8,9 +8,9 @@ import (
 	validator "github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
-	useraccountsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-accounts"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-accounts"
 
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
 	data "github.com/HiIamJeff67/notezy-backend/internal/core/data/database"
@@ -23,10 +23,10 @@ import (
 )
 
 type UserAccountServiceInterface interface {
-	GetMyAccount(ctx context.Context, requestDto *useraccountsdto.GetMyAccountRequestDto) (*useraccountsdto.GetMyAccountResponseDto, *exceptions.Exception)
-	UpdateMyAccount(ctx context.Context, requestDto *useraccountsdto.UpdateMyAccountRequestDto) (*useraccountsdto.UpdateMyAccountResponseDto, *exceptions.Exception)
-	BindGoogleAccount(ctx context.Context, requestDto *useraccountsdto.BindGoogleAccountRequestDto) (*useraccountsdto.BindGoogleAccountResponseDto, *exceptions.Exception)
-	UnbindGoogleAccount(ctx context.Context, requestDto *useraccountsdto.UnbindGoogleAccountRequestDto) (*useraccountsdto.UnbindGoogleAccountResponseDto, *exceptions.Exception)
+	GetMyAccount(ctx context.Context, requestDto *apicontract.GetMyAccountRequestDto) (*apicontract.GetMyAccountResponseDto, *exceptions.Exception)
+	UpdateMyAccount(ctx context.Context, requestDto *apicontract.UpdateMyAccountRequestDto) (*apicontract.UpdateMyAccountResponseDto, *exceptions.Exception)
+	BindGoogleAccount(ctx context.Context, requestDto *apicontract.BindGoogleAccountRequestDto) (*apicontract.BindGoogleAccountResponseDto, *exceptions.Exception)
+	UnbindGoogleAccount(ctx context.Context, requestDto *apicontract.UnbindGoogleAccountRequestDto) (*apicontract.UnbindGoogleAccountResponseDto, *exceptions.Exception)
 }
 
 type UserAccountService struct {
@@ -59,8 +59,8 @@ func NewUserAccountService(
 /* ============================== Service Methods for UserAccount ============================== */
 
 func (s *UserAccountService) GetMyAccount(
-	ctx context.Context, requestDto *useraccountsdto.GetMyAccountRequestDto,
-) (*useraccountsdto.GetMyAccountResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.GetMyAccountRequestDto,
+) (*apicontract.GetMyAccountResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -87,7 +87,7 @@ func (s *UserAccountService) GetMyAccount(
 		countryCodeString := userAccount.CountryCode.String()
 		countryCode = &countryCodeString
 	}
-	return &useraccountsdto.GetMyAccountResponseDto{
+	return &apicontract.GetMyAccountResponseDto{
 		CountryCode:              countryCode,
 		PhoneNumber:              userAccount.PhoneNumber,
 		GoogleCredential:         userAccount.GoogleCredential,
@@ -107,8 +107,8 @@ func (s *UserAccountService) GetMyAccount(
 }
 
 func (s *UserAccountService) UpdateMyAccount(
-	ctx context.Context, requestDto *useraccountsdto.UpdateMyAccountRequestDto,
-) (*useraccountsdto.UpdateMyAccountResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.UpdateMyAccountRequestDto,
+) (*apicontract.UpdateMyAccountResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -162,7 +162,7 @@ func (s *UserAccountService) UpdateMyAccount(
 		return nil, exception
 	}
 
-	return &useraccountsdto.UpdateMyAccountResponseDto{
+	return &apicontract.UpdateMyAccountResponseDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
@@ -170,8 +170,8 @@ func (s *UserAccountService) UpdateMyAccount(
 /* ============================== Service Methods for Binding Accounts ============================== */
 
 func (s *UserAccountService) BindGoogleAccount(
-	ctx context.Context, requestDto *useraccountsdto.BindGoogleAccountRequestDto,
-) (*useraccountsdto.BindGoogleAccountResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.BindGoogleAccountRequestDto,
+) (*apicontract.BindGoogleAccountResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -227,14 +227,14 @@ func (s *UserAccountService) BindGoogleAccount(
 		return nil, exception
 	}
 
-	return &useraccountsdto.BindGoogleAccountResponseDto{
+	return &apicontract.BindGoogleAccountResponseDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
 
 func (s *UserAccountService) UnbindGoogleAccount(
-	ctx context.Context, requestDto *useraccountsdto.UnbindGoogleAccountRequestDto,
-) (*useraccountsdto.UnbindGoogleAccountResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.UnbindGoogleAccountRequestDto,
+) (*apicontract.UnbindGoogleAccountResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -281,7 +281,7 @@ func (s *UserAccountService) UnbindGoogleAccount(
 		return nil, exception
 	}
 
-	return &useraccountsdto.UnbindGoogleAccountResponseDto{
+	return &apicontract.UnbindGoogleAccountResponseDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }

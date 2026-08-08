@@ -1,17 +1,19 @@
 package middlewares
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
-	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
 	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 
+	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
+
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
 	userdata "github.com/HiIamJeff67/notezy-backend/internal/core/data/cache/userdata"
@@ -30,7 +32,11 @@ func CSRFMiddleware(userDataCacheClient *userdata.UserDataCacheClient) gin.Handl
 			})
 			return
 		}
-		csrfToken := ctx.GetHeader("X-CSRF-Token")
+		request := &gatewaycontract.Request[json.RawMessage]{}
+		if ctx.Request.ContentLength != 0 {
+			_ = ctx.ShouldBindBodyWithJSON(request)
+		}
+		csrfToken := request.Tokens.CSRFToken
 		if strings.TrimSpace(csrfToken) == "" {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gatewaycontract.Response[struct{}]{
 				Version:   gatewaycontract.Version,
@@ -80,11 +86,11 @@ func CSRFMiddleware(userDataCacheClient *userdata.UserDataCacheClient) gin.Handl
 				})
 				return
 			}
-			ctx.Header(gatewaycontract.CoreAuthRefreshed.String(), "true")
-			if cookie, err := ctx.Request.Cookie(cookies.ValidCookieName_AccessToken.String()); err == nil && strings.TrimSpace(cookie.Value) != "" {
-				ctx.Header(gatewaycontract.CoreSetAccessToken.String(), cookie.Value)
+			ctx.Set(sharedcontexts.ContextFieldName_IsNewTokens.String(), true)
+			if strings.TrimSpace(request.Tokens.AccessToken) != "" {
+				ctx.Set(sharedcontexts.ContextFieldName_AccessToken.String(), request.Tokens.AccessToken)
 			}
-			ctx.Header(gatewaycontract.CoreSetCSRFToken.String(), *newCSRFToken)
+			ctx.Set(sharedcontexts.ContextFieldName_CSRFToken.String(), *newCSRFToken)
 		}
 
 		ctx.Next()

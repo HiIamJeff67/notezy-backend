@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 
 	blockservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/blocks"
@@ -46,8 +46,8 @@ func NewBlockPackEndpoint(
 }
 
 func (t *BlockPackEndpoint) GetMyBlockPackById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[blockpacksdto.GetMyBlockPackByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetMyBlockPackByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -67,7 +67,7 @@ func (t *BlockPackEndpoint) GetMyBlockPackById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[blockpacksdto.GetMyBlockPackByIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetMyBlockPackByIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -78,8 +78,8 @@ func (t *BlockPackEndpoint) GetMyBlockPackById(ctx *gin.Context) {
 }
 
 func (t *BlockPackEndpoint) GetMyBlockPackAndItsParentById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[blockpacksdto.GetMyBlockPackAndItsParentByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetMyBlockPackAndItsParentByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -99,7 +99,7 @@ func (t *BlockPackEndpoint) GetMyBlockPackAndItsParentById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[blockpacksdto.GetMyBlockPackAndItsParentByIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetMyBlockPackAndItsParentByIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -110,8 +110,8 @@ func (t *BlockPackEndpoint) GetMyBlockPackAndItsParentById(ctx *gin.Context) {
 }
 
 func (t *BlockPackEndpoint) GetMyBlockPacksByParentSubShelfId(ctx *gin.Context) {
-	request := &gatewaycontract.Request[blockpacksdto.GetMyBlockPacksByParentSubShelfIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetMyBlockPacksByParentSubShelfIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -131,7 +131,7 @@ func (t *BlockPackEndpoint) GetMyBlockPacksByParentSubShelfId(ctx *gin.Context) 
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[blockpacksdto.GetMyBlockPacksByParentSubShelfIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetMyBlockPacksByParentSubShelfIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -142,8 +142,8 @@ func (t *BlockPackEndpoint) GetMyBlockPacksByParentSubShelfId(ctx *gin.Context) 
 }
 
 func (t *BlockPackEndpoint) GetAllMyBlockPacksByRootShelfId(ctx *gin.Context) {
-	request := &gatewaycontract.Request[blockpacksdto.GetAllMyBlockPacksByRootShelfIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetAllMyBlockPacksByRootShelfIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -163,7 +163,7 @@ func (t *BlockPackEndpoint) GetAllMyBlockPacksByRootShelfId(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[blockpacksdto.GetAllMyBlockPacksByRootShelfIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetAllMyBlockPacksByRootShelfIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -174,8 +174,8 @@ func (t *BlockPackEndpoint) GetAllMyBlockPacksByRootShelfId(ctx *gin.Context) {
 }
 
 func (t *BlockPackEndpoint) CreateBlockPack(ctx *gin.Context) {
-	request := &gatewaycontract.Request[blockpacksdto.CreateBlockPackRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.CreateBlockPackRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -195,7 +195,7 @@ func (t *BlockPackEndpoint) CreateBlockPack(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[blockpacksdto.CreateBlockPackResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.CreateBlockPackResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -206,8 +206,8 @@ func (t *BlockPackEndpoint) CreateBlockPack(ctx *gin.Context) {
 }
 
 func (t *BlockPackEndpoint) CreateBlockPacks(ctx *gin.Context) {
-	request := &gatewaycontract.Request[blockpacksdto.CreateBlockPacksRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.CreateBlockPacksRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -227,7 +227,7 @@ func (t *BlockPackEndpoint) CreateBlockPacks(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[blockpacksdto.CreateBlockPacksResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.CreateBlockPacksResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -238,8 +238,8 @@ func (t *BlockPackEndpoint) CreateBlockPacks(ctx *gin.Context) {
 }
 
 func (t *BlockPackEndpoint) UpdateMyBlockPackById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[blockpacksdto.UpdateMyBlockPackByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.UpdateMyBlockPackByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -259,7 +259,7 @@ func (t *BlockPackEndpoint) UpdateMyBlockPackById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[blockpacksdto.UpdateMyBlockPackByIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.UpdateMyBlockPackByIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -270,8 +270,8 @@ func (t *BlockPackEndpoint) UpdateMyBlockPackById(ctx *gin.Context) {
 }
 
 func (t *BlockPackEndpoint) UpdateMyBlockPacksByIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[blockpacksdto.UpdateMyBlockPacksByIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.UpdateMyBlockPacksByIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -291,7 +291,7 @@ func (t *BlockPackEndpoint) UpdateMyBlockPacksByIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[blockpacksdto.UpdateMyBlockPacksByIdsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.UpdateMyBlockPacksByIdsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -302,8 +302,8 @@ func (t *BlockPackEndpoint) UpdateMyBlockPacksByIds(ctx *gin.Context) {
 }
 
 func (t *BlockPackEndpoint) MoveMyBlockPackByParentSubShelfId(ctx *gin.Context) {
-	request := &gatewaycontract.Request[blockpacksdto.MoveMyBlockPackByParentSubShelfIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.MoveMyBlockPackByParentSubShelfIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -323,7 +323,7 @@ func (t *BlockPackEndpoint) MoveMyBlockPackByParentSubShelfId(ctx *gin.Context) 
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[blockpacksdto.MoveMyBlockPackByParentSubShelfIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.MoveMyBlockPackByParentSubShelfIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -334,8 +334,8 @@ func (t *BlockPackEndpoint) MoveMyBlockPackByParentSubShelfId(ctx *gin.Context) 
 }
 
 func (t *BlockPackEndpoint) MoveMyBlockPacksByParentSubShelfId(ctx *gin.Context) {
-	request := &gatewaycontract.Request[blockpacksdto.MoveMyBlockPacksByParentSubShelfIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.MoveMyBlockPacksByParentSubShelfIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -355,7 +355,7 @@ func (t *BlockPackEndpoint) MoveMyBlockPacksByParentSubShelfId(ctx *gin.Context)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[blockpacksdto.MoveMyBlockPacksByParentSubShelfIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.MoveMyBlockPacksByParentSubShelfIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -366,8 +366,8 @@ func (t *BlockPackEndpoint) MoveMyBlockPacksByParentSubShelfId(ctx *gin.Context)
 }
 
 func (t *BlockPackEndpoint) MoveMyBlockPacksByParentSubShelfIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[blockpacksdto.MoveMyBlockPacksByParentSubShelfIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.MoveMyBlockPacksByParentSubShelfIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -387,7 +387,7 @@ func (t *BlockPackEndpoint) MoveMyBlockPacksByParentSubShelfIds(ctx *gin.Context
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[blockpacksdto.MoveMyBlockPacksByParentSubShelfIdsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.MoveMyBlockPacksByParentSubShelfIdsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -398,8 +398,8 @@ func (t *BlockPackEndpoint) MoveMyBlockPacksByParentSubShelfIds(ctx *gin.Context
 }
 
 func (t *BlockPackEndpoint) RestoreMyBlockPackById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[blockpacksdto.RestoreMyBlockPackByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.RestoreMyBlockPackByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -419,7 +419,7 @@ func (t *BlockPackEndpoint) RestoreMyBlockPackById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[blockpacksdto.RestoreMyBlockPackByIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.RestoreMyBlockPackByIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -430,8 +430,8 @@ func (t *BlockPackEndpoint) RestoreMyBlockPackById(ctx *gin.Context) {
 }
 
 func (t *BlockPackEndpoint) RestoreMyBlockPacksByIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[blockpacksdto.RestoreMyBlockPacksByIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.RestoreMyBlockPacksByIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -451,7 +451,7 @@ func (t *BlockPackEndpoint) RestoreMyBlockPacksByIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[blockpacksdto.RestoreMyBlockPacksByIdsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.RestoreMyBlockPacksByIdsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -462,8 +462,8 @@ func (t *BlockPackEndpoint) RestoreMyBlockPacksByIds(ctx *gin.Context) {
 }
 
 func (t *BlockPackEndpoint) DeleteMyBlockPackById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[blockpacksdto.DeleteMyBlockPackByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.DeleteMyBlockPackByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -483,7 +483,7 @@ func (t *BlockPackEndpoint) DeleteMyBlockPackById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[blockpacksdto.DeleteMyBlockPackByIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.DeleteMyBlockPackByIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -494,8 +494,8 @@ func (t *BlockPackEndpoint) DeleteMyBlockPackById(ctx *gin.Context) {
 }
 
 func (t *BlockPackEndpoint) DeleteMyBlockPacksByIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[blockpacksdto.DeleteMyBlockPacksByIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.DeleteMyBlockPacksByIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -515,7 +515,7 @@ func (t *BlockPackEndpoint) DeleteMyBlockPacksByIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[blockpacksdto.DeleteMyBlockPacksByIdsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.DeleteMyBlockPacksByIdsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,

@@ -1,4 +1,4 @@
-package stationsdto
+package apicontract
 
 import (
 	"github.com/google/uuid"

@@ -24,7 +24,7 @@
   `gatewaycontract.Response[Dto]`
   carry version, operation, metadata, and the DTO; do not add a nested DTO body
   solely to repeat the envelope.
-- `contracts/core/v1/api` package `coreapicontract` exports the common
+- `contracts/core/v1/api` package `apicontract` exports the common
   `RequestDto[Header, Body, Param, Query]`.
   composable request shape. Domain request DTOs embed it with anonymous
   concrete struct types directly at the declaration; do not create one-off
@@ -39,8 +39,8 @@
   expressed with `validate` tags and executed at the trust boundary.
 - The Gateway `AuthMiddleware` for Core-bound routes only extracts and
   cryptographically parses browser access/refresh tokens. It does not query
-  Redis or Core database data. Browser cookies remain on the request and are
-  forwarded through the internal client to Core.
+  Redis or Core database data. Browser cookies remain a Gateway concern and
+  are converted to typed `gatewaycontract.Tokens` in the internal request.
 - The Core gateway authentication middleware validates the forwarded token,
   matches its public subject with the delegation subject, and resolves the
   Core-owned internal user identity before invoking a secure endpoint.
@@ -48,11 +48,10 @@
   authentication middleware; Gateway retains only client-transport concerns
   such as rate limits, sanitization, CORS, and response interception.
 - When access authentication falls back to a valid refresh token, Core rotates
-  access and CSRF tokens and returns them through the private response headers
-  `X-Core-Set-Access-Token` and `X-Core-Set-CSRF-Token`, guarded by
-  `X-Core-Auth-Refreshed: true`. The Gateway adapter copies them into its
-  request context; the client response interceptor sets the access cookie and
-  `X-CSRF-Token` response header.
+  access and CSRF tokens and places them in the typed internal response
+  envelope. The Gateway adapter copies them into its request context; the
+  client response interceptor sets the access cookie and exposes only the
+  non-sensitive CSRF refresh metadata.
 - The Gateway binder binds and validates all public HTTP data. A
   binding/validation failure is mapped to a client-safe Gateway exception
   response; it does not reach a controller or Core service.

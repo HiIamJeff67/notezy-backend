@@ -1,52 +1,50 @@
 package controllers
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
 	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
 
-	materialsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/materials"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/materials"
 
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
 )
 
 type MaterialControllerInterface interface {
-	GetMyMaterialById(ctx *gin.Context, requestDto *materialsdto.GetMyMaterialByIdRequestDto)
-	GetMyMaterialAndItsParentById(ctx *gin.Context, requestDto *materialsdto.GetMyMaterialAndItsParentByIdRequestDto)
-	GetMyMaterialsByParentSubShelfId(ctx *gin.Context, requestDto *materialsdto.GetMyMaterialsByParentSubShelfIdRequestDto)
-	GetAllMyMaterialsByRootShelfId(ctx *gin.Context, requestDto *materialsdto.GetAllMyMaterialsByRootShelfIdRequestDto)
-	CreateMyMaterial(ctx *gin.Context, requestDto *materialsdto.CreateMyMaterialRequestDto)
-	UpdateMyMaterialById(ctx *gin.Context, requestDto *materialsdto.UpdateMyMaterialByIdRequestDto)
-	SaveMyMaterialById(ctx *gin.Context, requestDto *materialsdto.SaveMyMaterialByIdRequestDto)
-	MoveMyMaterialById(ctx *gin.Context, requestDto *materialsdto.MoveMyMaterialByIdRequestDto)
-	MoveMyMaterialsByIds(ctx *gin.Context, requestDto *materialsdto.MoveMyMaterialsByIdsRequestDto)
-	RestoreMyMaterialById(ctx *gin.Context, requestDto *materialsdto.RestoreMyMaterialByIdRequestDto)
-	RestoreMyMaterialsByIds(ctx *gin.Context, requestDto *materialsdto.RestoreMyMaterialsByIdsRequestDto)
-	DeleteMyMaterialById(ctx *gin.Context, requestDto *materialsdto.DeleteMyMaterialByIdRequestDto)
-	DeleteMyMaterialsByIds(ctx *gin.Context, requestDto *materialsdto.DeleteMyMaterialsByIdsRequestDto)
+	GetMyMaterialById(ctx *gin.Context, requestDto *apicontract.GetMyMaterialByIdRequestDto)
+	GetMyMaterialAndItsParentById(ctx *gin.Context, requestDto *apicontract.GetMyMaterialAndItsParentByIdRequestDto)
+	GetMyMaterialsByParentSubShelfId(ctx *gin.Context, requestDto *apicontract.GetMyMaterialsByParentSubShelfIdRequestDto)
+	GetAllMyMaterialsByRootShelfId(ctx *gin.Context, requestDto *apicontract.GetAllMyMaterialsByRootShelfIdRequestDto)
+	CreateMyMaterial(ctx *gin.Context, requestDto *apicontract.CreateMyMaterialRequestDto)
+	UpdateMyMaterialById(ctx *gin.Context, requestDto *apicontract.UpdateMyMaterialByIdRequestDto)
+	SaveMyMaterialById(ctx *gin.Context, requestDto *apicontract.SaveMyMaterialByIdRequestDto)
+	MoveMyMaterialById(ctx *gin.Context, requestDto *apicontract.MoveMyMaterialByIdRequestDto)
+	MoveMyMaterialsByIds(ctx *gin.Context, requestDto *apicontract.MoveMyMaterialsByIdsRequestDto)
+	RestoreMyMaterialById(ctx *gin.Context, requestDto *apicontract.RestoreMyMaterialByIdRequestDto)
+	RestoreMyMaterialsByIds(ctx *gin.Context, requestDto *apicontract.RestoreMyMaterialsByIdsRequestDto)
+	DeleteMyMaterialById(ctx *gin.Context, requestDto *apicontract.DeleteMyMaterialByIdRequestDto)
+	DeleteMyMaterialsByIds(ctx *gin.Context, requestDto *apicontract.DeleteMyMaterialsByIdsRequestDto)
 }
 
 type MaterialController struct {
-	coreClient *coreadapters.CoreClient
+	coreClient *coreadapters.CoreAdapter
 }
 
-func NewMaterialController(coreClient *coreadapters.CoreClient) MaterialControllerInterface {
+func NewMaterialController(coreClient *coreadapters.CoreAdapter) MaterialControllerInterface {
 	return &MaterialController{
 		coreClient: coreClient,
 	}
 }
 
-func (c *MaterialController) GetMyMaterialById(ctx *gin.Context, requestDto *materialsdto.GetMyMaterialByIdRequestDto) {
+func (c *MaterialController) GetMyMaterialById(ctx *gin.Context, requestDto *apicontract.GetMyMaterialByIdRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		materialsdto.GetMyMaterialByIdRequestDto,
-		materialsdto.GetMyMaterialByIdResponseDto,
+		apicontract.GetMyMaterialByIdRequestDto,
+		apicontract.GetMyMaterialByIdResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		materialsdto.GetMyMaterialByIdOperation,
+		apicontract.GetMyMaterialByIdOperation,
 		"/core/v1/materials/get-by-id",
 	)
 	if exception != nil {
@@ -54,22 +52,18 @@ func (c *MaterialController) GetMyMaterialById(ctx *gin.Context, requestDto *mat
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *MaterialController) GetMyMaterialAndItsParentById(ctx *gin.Context, requestDto *materialsdto.GetMyMaterialAndItsParentByIdRequestDto) {
+func (c *MaterialController) GetMyMaterialAndItsParentById(ctx *gin.Context, requestDto *apicontract.GetMyMaterialAndItsParentByIdRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		materialsdto.GetMyMaterialAndItsParentByIdRequestDto,
-		materialsdto.GetMyMaterialAndItsParentByIdResponseDto,
+		apicontract.GetMyMaterialAndItsParentByIdRequestDto,
+		apicontract.GetMyMaterialAndItsParentByIdResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		materialsdto.GetMyMaterialAndItsParentByIdOperation,
+		apicontract.GetMyMaterialAndItsParentByIdOperation,
 		"/core/v1/materials/get-and-parent-by-id",
 	)
 	if exception != nil {
@@ -77,22 +71,18 @@ func (c *MaterialController) GetMyMaterialAndItsParentById(ctx *gin.Context, req
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *MaterialController) GetMyMaterialsByParentSubShelfId(ctx *gin.Context, requestDto *materialsdto.GetMyMaterialsByParentSubShelfIdRequestDto) {
+func (c *MaterialController) GetMyMaterialsByParentSubShelfId(ctx *gin.Context, requestDto *apicontract.GetMyMaterialsByParentSubShelfIdRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		materialsdto.GetMyMaterialsByParentSubShelfIdRequestDto,
-		materialsdto.GetMyMaterialsByParentSubShelfIdResponseDto,
+		apicontract.GetMyMaterialsByParentSubShelfIdRequestDto,
+		apicontract.GetMyMaterialsByParentSubShelfIdResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		materialsdto.GetMyMaterialsByParentSubShelfIdOperation,
+		apicontract.GetMyMaterialsByParentSubShelfIdOperation,
 		"/core/v1/materials/get-by-parent-sub-shelf-id",
 	)
 	if exception != nil {
@@ -100,22 +90,18 @@ func (c *MaterialController) GetMyMaterialsByParentSubShelfId(ctx *gin.Context, 
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *MaterialController) GetAllMyMaterialsByRootShelfId(ctx *gin.Context, requestDto *materialsdto.GetAllMyMaterialsByRootShelfIdRequestDto) {
+func (c *MaterialController) GetAllMyMaterialsByRootShelfId(ctx *gin.Context, requestDto *apicontract.GetAllMyMaterialsByRootShelfIdRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		materialsdto.GetAllMyMaterialsByRootShelfIdRequestDto,
-		materialsdto.GetAllMyMaterialsByRootShelfIdResponseDto,
+		apicontract.GetAllMyMaterialsByRootShelfIdRequestDto,
+		apicontract.GetAllMyMaterialsByRootShelfIdResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		materialsdto.GetAllMyMaterialsByRootShelfIdOperation,
+		apicontract.GetAllMyMaterialsByRootShelfIdOperation,
 		"/core/v1/materials/get-all-by-root-shelf-id",
 	)
 	if exception != nil {
@@ -123,22 +109,18 @@ func (c *MaterialController) GetAllMyMaterialsByRootShelfId(ctx *gin.Context, re
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *MaterialController) CreateMyMaterial(ctx *gin.Context, requestDto *materialsdto.CreateMyMaterialRequestDto) {
+func (c *MaterialController) CreateMyMaterial(ctx *gin.Context, requestDto *apicontract.CreateMyMaterialRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		materialsdto.CreateMyMaterialRequestDto,
-		materialsdto.CreateMyMaterialResponseDto,
+		apicontract.CreateMyMaterialRequestDto,
+		apicontract.CreateMyMaterialResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		materialsdto.CreateMyMaterialOperation,
+		apicontract.CreateMyMaterialOperation,
 		"/core/v1/materials/create",
 	)
 	if exception != nil {
@@ -146,22 +128,18 @@ func (c *MaterialController) CreateMyMaterial(ctx *gin.Context, requestDto *mate
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *MaterialController) UpdateMyMaterialById(ctx *gin.Context, requestDto *materialsdto.UpdateMyMaterialByIdRequestDto) {
+func (c *MaterialController) UpdateMyMaterialById(ctx *gin.Context, requestDto *apicontract.UpdateMyMaterialByIdRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		materialsdto.UpdateMyMaterialByIdRequestDto,
-		materialsdto.UpdateMyMaterialByIdResponseDto,
+		apicontract.UpdateMyMaterialByIdRequestDto,
+		apicontract.UpdateMyMaterialByIdResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		materialsdto.UpdateMyMaterialByIdOperation,
+		apicontract.UpdateMyMaterialByIdOperation,
 		"/core/v1/materials/update",
 	)
 	if exception != nil {
@@ -169,22 +147,18 @@ func (c *MaterialController) UpdateMyMaterialById(ctx *gin.Context, requestDto *
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *MaterialController) SaveMyMaterialById(ctx *gin.Context, requestDto *materialsdto.SaveMyMaterialByIdRequestDto) {
+func (c *MaterialController) SaveMyMaterialById(ctx *gin.Context, requestDto *apicontract.SaveMyMaterialByIdRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		materialsdto.SaveMyMaterialByIdRequestDto,
-		materialsdto.SaveMyMaterialByIdResponseDto,
+		apicontract.SaveMyMaterialByIdRequestDto,
+		apicontract.SaveMyMaterialByIdResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		materialsdto.SaveMyMaterialByIdOperation,
+		apicontract.SaveMyMaterialByIdOperation,
 		"/core/v1/materials/save",
 	)
 	if exception != nil {
@@ -192,22 +166,18 @@ func (c *MaterialController) SaveMyMaterialById(ctx *gin.Context, requestDto *ma
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *MaterialController) MoveMyMaterialById(ctx *gin.Context, requestDto *materialsdto.MoveMyMaterialByIdRequestDto) {
+func (c *MaterialController) MoveMyMaterialById(ctx *gin.Context, requestDto *apicontract.MoveMyMaterialByIdRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		materialsdto.MoveMyMaterialByIdRequestDto,
-		materialsdto.MoveMyMaterialByIdResponseDto,
+		apicontract.MoveMyMaterialByIdRequestDto,
+		apicontract.MoveMyMaterialByIdResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		materialsdto.MoveMyMaterialByIdOperation,
+		apicontract.MoveMyMaterialByIdOperation,
 		"/core/v1/materials/move",
 	)
 	if exception != nil {
@@ -215,22 +185,18 @@ func (c *MaterialController) MoveMyMaterialById(ctx *gin.Context, requestDto *ma
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *MaterialController) MoveMyMaterialsByIds(ctx *gin.Context, requestDto *materialsdto.MoveMyMaterialsByIdsRequestDto) {
+func (c *MaterialController) MoveMyMaterialsByIds(ctx *gin.Context, requestDto *apicontract.MoveMyMaterialsByIdsRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		materialsdto.MoveMyMaterialsByIdsRequestDto,
-		materialsdto.MoveMyMaterialsByIdsResponseDto,
+		apicontract.MoveMyMaterialsByIdsRequestDto,
+		apicontract.MoveMyMaterialsByIdsResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		materialsdto.MoveMyMaterialsByIdsOperation,
+		apicontract.MoveMyMaterialsByIdsOperation,
 		"/core/v1/materials/move-many",
 	)
 	if exception != nil {
@@ -238,22 +204,18 @@ func (c *MaterialController) MoveMyMaterialsByIds(ctx *gin.Context, requestDto *
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *MaterialController) RestoreMyMaterialById(ctx *gin.Context, requestDto *materialsdto.RestoreMyMaterialByIdRequestDto) {
+func (c *MaterialController) RestoreMyMaterialById(ctx *gin.Context, requestDto *apicontract.RestoreMyMaterialByIdRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		materialsdto.RestoreMyMaterialByIdRequestDto,
-		materialsdto.RestoreMyMaterialByIdResponseDto,
+		apicontract.RestoreMyMaterialByIdRequestDto,
+		apicontract.RestoreMyMaterialByIdResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		materialsdto.RestoreMyMaterialByIdOperation,
+		apicontract.RestoreMyMaterialByIdOperation,
 		"/core/v1/materials/restore",
 	)
 	if exception != nil {
@@ -261,22 +223,18 @@ func (c *MaterialController) RestoreMyMaterialById(ctx *gin.Context, requestDto 
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *MaterialController) RestoreMyMaterialsByIds(ctx *gin.Context, requestDto *materialsdto.RestoreMyMaterialsByIdsRequestDto) {
+func (c *MaterialController) RestoreMyMaterialsByIds(ctx *gin.Context, requestDto *apicontract.RestoreMyMaterialsByIdsRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		materialsdto.RestoreMyMaterialsByIdsRequestDto,
-		materialsdto.RestoreMyMaterialsByIdsResponseDto,
+		apicontract.RestoreMyMaterialsByIdsRequestDto,
+		apicontract.RestoreMyMaterialsByIdsResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		materialsdto.RestoreMyMaterialsByIdsOperation,
+		apicontract.RestoreMyMaterialsByIdsOperation,
 		"/core/v1/materials/restore-many",
 	)
 	if exception != nil {
@@ -284,22 +242,18 @@ func (c *MaterialController) RestoreMyMaterialsByIds(ctx *gin.Context, requestDt
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *MaterialController) DeleteMyMaterialById(ctx *gin.Context, requestDto *materialsdto.DeleteMyMaterialByIdRequestDto) {
+func (c *MaterialController) DeleteMyMaterialById(ctx *gin.Context, requestDto *apicontract.DeleteMyMaterialByIdRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		materialsdto.DeleteMyMaterialByIdRequestDto,
-		materialsdto.DeleteMyMaterialByIdResponseDto,
+		apicontract.DeleteMyMaterialByIdRequestDto,
+		apicontract.DeleteMyMaterialByIdResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		materialsdto.DeleteMyMaterialByIdOperation,
+		apicontract.DeleteMyMaterialByIdOperation,
 		"/core/v1/materials/delete",
 	)
 	if exception != nil {
@@ -307,22 +261,18 @@ func (c *MaterialController) DeleteMyMaterialById(ctx *gin.Context, requestDto *
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *MaterialController) DeleteMyMaterialsByIds(ctx *gin.Context, requestDto *materialsdto.DeleteMyMaterialsByIdsRequestDto) {
+func (c *MaterialController) DeleteMyMaterialsByIds(ctx *gin.Context, requestDto *apicontract.DeleteMyMaterialsByIdsRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		materialsdto.DeleteMyMaterialsByIdsRequestDto,
-		materialsdto.DeleteMyMaterialsByIdsResponseDto,
+		apicontract.DeleteMyMaterialsByIdsRequestDto,
+		apicontract.DeleteMyMaterialsByIdsResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		materialsdto.DeleteMyMaterialsByIdsOperation,
+		apicontract.DeleteMyMaterialsByIdsOperation,
 		"/core/v1/materials/delete-many",
 	)
 	if exception != nil {
@@ -330,9 +280,5 @@ func (c *MaterialController) DeleteMyMaterialsByIds(ctx *gin.Context, requestDto
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }

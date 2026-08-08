@@ -18,7 +18,7 @@ import (
 
 func configureDevelopmentRootShelfRoutes(
 	router *gin.RouterGroup,
-	coreClient *coreadapters.CoreClient,
+	coreClient *coreadapters.CoreAdapter,
 	accessTokenCookieHandler *cookies.CookieHandler,
 	refreshTokenCookieHandler *cookies.CookieHandler,
 ) {

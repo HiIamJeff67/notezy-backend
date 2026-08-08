@@ -1,4 +1,4 @@
-package authdto
+package apicontract
 
 const (
 	RegisterOperation          = "auth.register"

@@ -9,8 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	array "github.com/HiIamJeff67/notezy-backend/shared/lib/array"
 	partialupdate "github.com/HiIamJeff67/notezy-backend/shared/lib/partialupdate"
@@ -117,7 +116,7 @@ func (r *RoutineTaskRepository) CheckPermissionAndGetOneById(
 		Scopes(r.routineTaskScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&routineTask)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.RoutineTask.NotFound().WithOrigin(result.Error)},
 		{First: routineTask.Id == uuid.Nil, Second: apiexceptions.RoutineTask.NotFound()},
 	}); exception != nil {
@@ -143,7 +142,7 @@ func (r *RoutineTaskRepository) CheckPermissionsAndGetManyByIds(
 		Scopes(r.routineTaskScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&routineTasks)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.RoutineTask.NotFound().WithOrigin(result.Error)},
 		{First: len(routineTasks) == 0, Second: apiexceptions.RoutineTask.NotFound()},
 	}); exception != nil {
@@ -267,7 +266,7 @@ func (r *RoutineTaskRepository) CreateOneByRoutineId(
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTask{}).
 		Create(&newRoutineTask)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.RoutineTask.FailedToCreate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.RoutineTask.NoChanges()},
 	}); exception != nil {
@@ -357,7 +356,7 @@ func (r *RoutineTaskRepository) CreateManyByRoutineIds(
 	result := parsedOptions.DB.
 		Model(&schemas.RoutineTask{}).
 		CreateInBatches(&newRoutineTasks, parsedOptions.BatchSize)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.RoutineTask.FailedToCreate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.RoutineTask.NoChanges()},
 	}); exception != nil {
@@ -438,7 +437,7 @@ func (r *RoutineTaskRepository) UpdateOneById(
 		Where(`"RoutineTaskTable".id = ?`, id).
 		Select("*").
 		Updates(&updates)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.RoutineTask.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.RoutineTask.NoChanges()},
 	}); exception != nil {
@@ -575,7 +574,7 @@ func (r *RoutineTaskRepository) UpdateManyByIds(
 		WHERE rt.id = v.id::uuid
 	`, strings.Join(valuePlaceholders, ","))
 	result := parsedOptions.DB.Exec(sql, valueArgs...)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.RoutineTask.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.RoutineTask.NoChanges()},
 	}); exception != nil {
@@ -605,7 +604,7 @@ func (r *RoutineTaskRepository) HardDeleteOneById(
 		Scopes(r.routineTaskScope.PassPermissionCheck(id, userId, parsedOptions.AllowedPermissions)).
 		Where(`"RoutineTaskTable".id = ?`, id).
 		Delete(&schemas.RoutineTask{})
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.RoutineTask.FailedToDelete().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.RoutineTask.NoChanges()},
 	}); exception != nil {
@@ -631,7 +630,7 @@ func (r *RoutineTaskRepository) HardDeleteManyByIds(
 		Scopes(r.routineTaskScope.PassPermissionChecks(ids, userId, parsedOptions.AllowedPermissions)).
 		Where(`"RoutineTaskTable".id IN ?`, ids).
 		Delete(&schemas.RoutineTask{})
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.RoutineTask.FailedToDelete().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.RoutineTask.NoChanges()},
 	}); exception != nil {

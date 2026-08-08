@@ -1,4 +1,4 @@
-package yjsworkercontract
+package adapterscontract
 
 import (
 	"testing"

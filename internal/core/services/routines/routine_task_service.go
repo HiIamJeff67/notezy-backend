@@ -12,18 +12,18 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
 
 	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
 	times "github.com/HiIamJeff67/notezy-backend/shared/lib/times"
 
-	routinetasksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tasks"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tasks"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
 	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/events"
 	durablejobroutinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
 	data "github.com/HiIamJeff67/notezy-backend/internal/core/data/database"
@@ -38,20 +38,20 @@ import (
 )
 
 type RoutineTaskServiceInterface interface {
-	GetMyRoutineTaskById(ctx context.Context, reqDto *routinetasksdto.GetMyRoutineTaskByIdRequestDto) (*routinetasksdto.GetMyRoutineTaskByIdResponseDto, *exceptions.Exception)
-	GetAllMyRoutineTasksByRoutineIds(ctx context.Context, reqDto *routinetasksdto.GetAllMyRoutineTasksByRoutineIdsRequestDto) (*routinetasksdto.GetAllMyRoutineTasksByRoutineIdsResponseDto, *exceptions.Exception)
-	GetAllMyRoutineTasks(ctx context.Context, reqDto *routinetasksdto.GetAllMyRoutineTasksRequestDto) (*routinetasksdto.GetAllMyRoutineTasksResponseDto, *exceptions.Exception)
-	CreateRoutineTaskByRoutineId(ctx context.Context, reqDto *routinetasksdto.CreateRoutineTaskByRoutineIdRequestDto) (*routinetasksdto.CreateRoutineTaskByRoutineIdResponseDto, *exceptions.Exception)
-	UpdateMyRoutineTaskById(ctx context.Context, reqDto *routinetasksdto.UpdateMyRoutineTaskByIdRequestDto) (*routinetasksdto.UpdateMyRoutineTaskByIdResponseDto, *exceptions.Exception)
-	PauseMyRoutineTaskById(ctx context.Context, reqDto *routinetasksdto.PauseMyRoutineTaskByIdRequestDto) (*routinetasksdto.PauseMyRoutineTaskByIdResponseDto, *exceptions.Exception)
-	ResumeMyRoutineTaskById(ctx context.Context, reqDto *routinetasksdto.ResumeMyRoutineTaskByIdRequestDto) (*routinetasksdto.ResumeMyRoutineTaskByIdResponseDto, *exceptions.Exception)
-	HardDeleteMyRoutineTaskById(ctx context.Context, reqDto *routinetasksdto.HardDeleteMyRoutineTaskByIdRequestDto) (*routinetasksdto.HardDeleteMyRoutineTaskByIdResponseDto, *exceptions.Exception)
-	HardDeleteMyRoutineTasksByIds(ctx context.Context, reqDto *routinetasksdto.HardDeleteMyRoutineTasksByIdsRequestDto) (*routinetasksdto.HardDeleteMyRoutineTasksByIdsResponseDto, *exceptions.Exception)
-	VisualizeMyRoutineTaskStatusCount(ctx context.Context, reqDto *routinetasksdto.VisualizeMyRoutineTaskStatusCountRequestDto) (*routinetasksdto.VisualizeMyRoutineTaskStatusCountResponseDto, *exceptions.Exception)
-	VisualizeMyRoutineTaskPurposeCount(ctx context.Context, reqDto *routinetasksdto.VisualizeMyRoutineTaskPurposeCountRequestDto) (*routinetasksdto.VisualizeMyRoutineTaskPurposeCountResponseDto, *exceptions.Exception)
-	VisualizeMyRoutineTaskScheduledAtCount(ctx context.Context, reqDto *routinetasksdto.VisualizeMyRoutineTaskScheduledAtCountRequestDto) (*routinetasksdto.VisualizeMyRoutineTaskScheduledAtCountResponseDto, *exceptions.Exception)
-	VisualizeMyRoutineTaskActualStartedAtCount(ctx context.Context, reqDto *routinetasksdto.VisualizeMyRoutineTaskActualStartedAtCountRequestDto) (*routinetasksdto.VisualizeMyRoutineTaskActualStartedAtCountResponseDto, *exceptions.Exception)
-	VisualizeMyRoutineTaskActualEndedAtCount(ctx context.Context, reqDto *routinetasksdto.VisualizeMyRoutineTaskActualEndedAtCountRequestDto) (*routinetasksdto.VisualizeMyRoutineTaskActualEndedAtCountResponseDto, *exceptions.Exception)
+	GetMyRoutineTaskById(ctx context.Context, reqDto *apicontract.GetMyRoutineTaskByIdRequestDto) (*apicontract.GetMyRoutineTaskByIdResponseDto, *exceptions.Exception)
+	GetAllMyRoutineTasksByRoutineIds(ctx context.Context, reqDto *apicontract.GetAllMyRoutineTasksByRoutineIdsRequestDto) (*apicontract.GetAllMyRoutineTasksByRoutineIdsResponseDto, *exceptions.Exception)
+	GetAllMyRoutineTasks(ctx context.Context, reqDto *apicontract.GetAllMyRoutineTasksRequestDto) (*apicontract.GetAllMyRoutineTasksResponseDto, *exceptions.Exception)
+	CreateRoutineTaskByRoutineId(ctx context.Context, reqDto *apicontract.CreateRoutineTaskByRoutineIdRequestDto) (*apicontract.CreateRoutineTaskByRoutineIdResponseDto, *exceptions.Exception)
+	UpdateMyRoutineTaskById(ctx context.Context, reqDto *apicontract.UpdateMyRoutineTaskByIdRequestDto) (*apicontract.UpdateMyRoutineTaskByIdResponseDto, *exceptions.Exception)
+	PauseMyRoutineTaskById(ctx context.Context, reqDto *apicontract.PauseMyRoutineTaskByIdRequestDto) (*apicontract.PauseMyRoutineTaskByIdResponseDto, *exceptions.Exception)
+	ResumeMyRoutineTaskById(ctx context.Context, reqDto *apicontract.ResumeMyRoutineTaskByIdRequestDto) (*apicontract.ResumeMyRoutineTaskByIdResponseDto, *exceptions.Exception)
+	HardDeleteMyRoutineTaskById(ctx context.Context, reqDto *apicontract.HardDeleteMyRoutineTaskByIdRequestDto) (*apicontract.HardDeleteMyRoutineTaskByIdResponseDto, *exceptions.Exception)
+	HardDeleteMyRoutineTasksByIds(ctx context.Context, reqDto *apicontract.HardDeleteMyRoutineTasksByIdsRequestDto) (*apicontract.HardDeleteMyRoutineTasksByIdsResponseDto, *exceptions.Exception)
+	VisualizeMyRoutineTaskStatusCount(ctx context.Context, reqDto *apicontract.VisualizeMyRoutineTaskStatusCountRequestDto) (*apicontract.VisualizeMyRoutineTaskStatusCountResponseDto, *exceptions.Exception)
+	VisualizeMyRoutineTaskPurposeCount(ctx context.Context, reqDto *apicontract.VisualizeMyRoutineTaskPurposeCountRequestDto) (*apicontract.VisualizeMyRoutineTaskPurposeCountResponseDto, *exceptions.Exception)
+	VisualizeMyRoutineTaskScheduledAtCount(ctx context.Context, reqDto *apicontract.VisualizeMyRoutineTaskScheduledAtCountRequestDto) (*apicontract.VisualizeMyRoutineTaskScheduledAtCountResponseDto, *exceptions.Exception)
+	VisualizeMyRoutineTaskActualStartedAtCount(ctx context.Context, reqDto *apicontract.VisualizeMyRoutineTaskActualStartedAtCountRequestDto) (*apicontract.VisualizeMyRoutineTaskActualStartedAtCountResponseDto, *exceptions.Exception)
+	VisualizeMyRoutineTaskActualEndedAtCount(ctx context.Context, reqDto *apicontract.VisualizeMyRoutineTaskActualEndedAtCountRequestDto) (*apicontract.VisualizeMyRoutineTaskActualEndedAtCountResponseDto, *exceptions.Exception)
 
 	SearchPrivateRoutineTasks(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRoutineTaskInput) (*gqlmodels.SearchRoutineTaskConnection, *exceptions.Exception)
 
@@ -65,6 +65,7 @@ type RoutineTaskService struct {
 	db                          *gorm.DB
 	routineTaskScope            scopes.RoutineTaskScopeInterface
 	routineTaskRepository       repositories.RoutineTaskRepositoryInterface
+	routineTaskRecordRepository repositories.RoutineTaskRecordRepositoryInterface
 	routineTaskExecutionService RoutineTaskExecutionServiceInterface
 }
 
@@ -73,6 +74,7 @@ func NewRoutineTaskService(
 	db *gorm.DB,
 	routineTaskScope scopes.RoutineTaskScopeInterface,
 	routineTaskRepository repositories.RoutineTaskRepositoryInterface,
+	routineTaskRecordRepository repositories.RoutineTaskRecordRepositoryInterface,
 	routineTaskExecutionServices ...RoutineTaskExecutionServiceInterface,
 ) RoutineTaskServiceInterface {
 	if db == nil {
@@ -80,6 +82,11 @@ func NewRoutineTaskService(
 	}
 	if routineTaskScope == nil {
 		routineTaskScope = scopes.NewRoutineTaskScope()
+	}
+	if routineTaskRecordRepository == nil {
+		routineTaskRecordRepository = repositories.NewRoutineTaskRecordRepository(
+			scopes.NewRoutineTaskRecordScope(),
+		)
 	}
 	var routineTaskExecutionService RoutineTaskExecutionServiceInterface
 	if len(routineTaskExecutionServices) > 0 {
@@ -94,6 +101,7 @@ func NewRoutineTaskService(
 		db:                          db,
 		routineTaskScope:            routineTaskScope,
 		routineTaskRepository:       routineTaskRepository,
+		routineTaskRecordRepository: routineTaskRecordRepository,
 		routineTaskExecutionService: routineTaskExecutionService,
 	}
 }
@@ -109,7 +117,7 @@ func (s *RoutineTaskService) visualizeMyRoutineTaskTimeCount(
 	queryRangeEndedAt time.Time,
 	columnName string,
 	fieldName string,
-) ([]routinetasksdto.RoutineTaskCountDatum, *exceptions.Exception) {
+) ([]apicontract.RoutineTaskCountDatum, *exceptions.Exception) {
 	db := s.db.WithContext(ctx)
 
 	var buckets []struct {
@@ -158,7 +166,7 @@ func (s *RoutineTaskService) visualizeMyRoutineTaskTimeCount(
 		return nil, apiexceptions.RoutineTask.NotFound().WithOrigin(err)
 	}
 
-	data := make([]routinetasksdto.RoutineTaskCountDatum, len(buckets))
+	data := make([]apicontract.RoutineTaskCountDatum, len(buckets))
 	for index, bucket := range buckets {
 		bucketEnd := bucket.BucketStart.Add(time.Duration(timeHourUnit) * time.Hour)
 		x := bucket.BucketStart.Format(time.DateOnly)
@@ -177,7 +185,7 @@ func (s *RoutineTaskService) visualizeMyRoutineTaskTimeCount(
 			return nil, apiexceptions.Routine.FailedToMarshalData(metadata).WithOrigin(err)
 		}
 
-		data[index] = routinetasksdto.RoutineTaskCountDatum{
+		data[index] = apicontract.RoutineTaskCountDatum{
 			Id:    bucket.BucketStart.Format(time.RFC3339),
 			X:     x,
 			Value: bucket.RoutineTaskCount,
@@ -193,8 +201,8 @@ func (s *RoutineTaskService) visualizeMyRoutineTaskTimeCount(
 /* ============================== Main Methods ============================== */
 
 func (s *RoutineTaskService) GetMyRoutineTaskById(
-	ctx context.Context, reqDto *routinetasksdto.GetMyRoutineTaskByIdRequestDto,
-) (*routinetasksdto.GetMyRoutineTaskByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.GetMyRoutineTaskByIdRequestDto,
+) (*apicontract.GetMyRoutineTaskByIdResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -223,7 +231,7 @@ func (s *RoutineTaskService) GetMyRoutineTaskById(
 		return nil, exception
 	}
 
-	return &routinetasksdto.GetMyRoutineTaskByIdResponseDto{
+	return &apicontract.GetMyRoutineTaskByIdResponseDto{
 		Id:              routineTask.Id,
 		RoutineId:       routineTask.RoutineId,
 		Title:           routineTask.Title,
@@ -245,8 +253,8 @@ func (s *RoutineTaskService) GetMyRoutineTaskById(
 }
 
 func (s *RoutineTaskService) GetAllMyRoutineTasksByRoutineIds(
-	ctx context.Context, reqDto *routinetasksdto.GetAllMyRoutineTasksByRoutineIdsRequestDto,
-) (*routinetasksdto.GetAllMyRoutineTasksByRoutineIdsResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.GetAllMyRoutineTasksByRoutineIdsRequestDto,
+) (*apicontract.GetAllMyRoutineTasksByRoutineIdsResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -255,7 +263,7 @@ func (s *RoutineTaskService) GetAllMyRoutineTasksByRoutineIds(
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 	if reqDto.Param.AreDeleted != nil && *reqDto.Param.AreDeleted {
-		resDto := routinetasksdto.GetAllMyRoutineTasksByRoutineIdsResponseDto{}
+		resDto := apicontract.GetAllMyRoutineTasksByRoutineIdsResponseDto{}
 		return &resDto, nil
 	}
 
@@ -276,9 +284,9 @@ func (s *RoutineTaskService) GetAllMyRoutineTasksByRoutineIds(
 		return nil, exception
 	}
 
-	resDto := make(routinetasksdto.GetAllMyRoutineTasksByRoutineIdsResponseDto, len(routineTasks))
+	resDto := make(apicontract.GetAllMyRoutineTasksByRoutineIdsResponseDto, len(routineTasks))
 	for index, routineTask := range routineTasks {
-		resDto[index] = routinetasksdto.RoutineTaskResponseDto{
+		resDto[index] = apicontract.RoutineTaskResponseDto{
 			Id:              routineTask.Id,
 			RoutineId:       routineTask.RoutineId,
 			Title:           routineTask.Title,
@@ -302,8 +310,8 @@ func (s *RoutineTaskService) GetAllMyRoutineTasksByRoutineIds(
 }
 
 func (s *RoutineTaskService) GetAllMyRoutineTasks(
-	ctx context.Context, reqDto *routinetasksdto.GetAllMyRoutineTasksRequestDto,
-) (*routinetasksdto.GetAllMyRoutineTasksResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.GetAllMyRoutineTasksRequestDto,
+) (*apicontract.GetAllMyRoutineTasksResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -312,7 +320,7 @@ func (s *RoutineTaskService) GetAllMyRoutineTasks(
 		return nil, apiexceptions.RoutineTask.InvalidDto().WithOrigin(err)
 	}
 	if reqDto.Param.AreDeleted != nil && *reqDto.Param.AreDeleted {
-		resDto := routinetasksdto.GetAllMyRoutineTasksResponseDto{}
+		resDto := apicontract.GetAllMyRoutineTasksResponseDto{}
 		return &resDto, nil
 	}
 
@@ -332,9 +340,9 @@ func (s *RoutineTaskService) GetAllMyRoutineTasks(
 		return nil, exception
 	}
 
-	resDto := make(routinetasksdto.GetAllMyRoutineTasksResponseDto, len(routineTasks))
+	resDto := make(apicontract.GetAllMyRoutineTasksResponseDto, len(routineTasks))
 	for index, routineTask := range routineTasks {
-		resDto[index] = routinetasksdto.GetMyRoutineTaskByIdResponseDto{
+		resDto[index] = apicontract.GetMyRoutineTaskByIdResponseDto{
 			Id:              routineTask.Id,
 			RoutineId:       routineTask.RoutineId,
 			Title:           routineTask.Title,
@@ -359,8 +367,8 @@ func (s *RoutineTaskService) GetAllMyRoutineTasks(
 }
 
 func (s *RoutineTaskService) CreateRoutineTaskByRoutineId(
-	ctx context.Context, reqDto *routinetasksdto.CreateRoutineTaskByRoutineIdRequestDto,
-) (*routinetasksdto.CreateRoutineTaskByRoutineIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.CreateRoutineTaskByRoutineIdRequestDto,
+) (*apicontract.CreateRoutineTaskByRoutineIdResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -401,15 +409,15 @@ func (s *RoutineTaskService) CreateRoutineTaskByRoutineId(
 		return nil, exception
 	}
 
-	return &routinetasksdto.CreateRoutineTaskByRoutineIdResponseDto{
+	return &apicontract.CreateRoutineTaskByRoutineIdResponseDto{
 		Id:        *newRoutineTaskId,
 		CreatedAt: time.Now(),
 	}, nil
 }
 
 func (s *RoutineTaskService) UpdateMyRoutineTaskById(
-	ctx context.Context, reqDto *routinetasksdto.UpdateMyRoutineTaskByIdRequestDto,
-) (*routinetasksdto.UpdateMyRoutineTaskByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.UpdateMyRoutineTaskByIdRequestDto,
+) (*apicontract.UpdateMyRoutineTaskByIdResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -476,14 +484,14 @@ func (s *RoutineTaskService) UpdateMyRoutineTaskById(
 		return nil, exception
 	}
 
-	return &routinetasksdto.UpdateMyRoutineTaskByIdResponseDto{
+	return &apicontract.UpdateMyRoutineTaskByIdResponseDto{
 		UpdatedAt: updatedRoutineTask.UpdatedAt,
 	}, nil
 }
 
 func (s *RoutineTaskService) PauseMyRoutineTaskById(
-	ctx context.Context, reqDto *routinetasksdto.PauseMyRoutineTaskByIdRequestDto,
-) (*routinetasksdto.PauseMyRoutineTaskByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.PauseMyRoutineTaskByIdRequestDto,
+) (*apicontract.PauseMyRoutineTaskByIdResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -536,12 +544,12 @@ func (s *RoutineTaskService) PauseMyRoutineTaskById(
 		return nil, apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	return &routinetasksdto.PauseMyRoutineTaskByIdResponseDto{UpdatedAt: now}, nil
+	return &apicontract.PauseMyRoutineTaskByIdResponseDto{UpdatedAt: now}, nil
 }
 
 func (s *RoutineTaskService) ResumeMyRoutineTaskById(
-	ctx context.Context, reqDto *routinetasksdto.ResumeMyRoutineTaskByIdRequestDto,
-) (*routinetasksdto.ResumeMyRoutineTaskByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.ResumeMyRoutineTaskByIdRequestDto,
+) (*apicontract.ResumeMyRoutineTaskByIdResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -594,12 +602,12 @@ func (s *RoutineTaskService) ResumeMyRoutineTaskById(
 		return nil, apiexceptions.RoutineTask.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	return &routinetasksdto.ResumeMyRoutineTaskByIdResponseDto{UpdatedAt: now}, nil
+	return &apicontract.ResumeMyRoutineTaskByIdResponseDto{UpdatedAt: now}, nil
 }
 
 func (s *RoutineTaskService) HardDeleteMyRoutineTaskById(
-	ctx context.Context, reqDto *routinetasksdto.HardDeleteMyRoutineTaskByIdRequestDto,
-) (*routinetasksdto.HardDeleteMyRoutineTaskByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.HardDeleteMyRoutineTaskByIdRequestDto,
+) (*apicontract.HardDeleteMyRoutineTaskByIdResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -624,14 +632,14 @@ func (s *RoutineTaskService) HardDeleteMyRoutineTaskById(
 		return nil, exception
 	}
 
-	return &routinetasksdto.HardDeleteMyRoutineTaskByIdResponseDto{
+	return &apicontract.HardDeleteMyRoutineTaskByIdResponseDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
 
 func (s *RoutineTaskService) HardDeleteMyRoutineTasksByIds(
-	ctx context.Context, reqDto *routinetasksdto.HardDeleteMyRoutineTasksByIdsRequestDto,
-) (*routinetasksdto.HardDeleteMyRoutineTasksByIdsResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.HardDeleteMyRoutineTasksByIdsRequestDto,
+) (*apicontract.HardDeleteMyRoutineTasksByIdsResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -656,7 +664,7 @@ func (s *RoutineTaskService) HardDeleteMyRoutineTasksByIds(
 		return nil, exception
 	}
 
-	return &routinetasksdto.HardDeleteMyRoutineTasksByIdsResponseDto{
+	return &apicontract.HardDeleteMyRoutineTasksByIdsResponseDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
@@ -664,8 +672,8 @@ func (s *RoutineTaskService) HardDeleteMyRoutineTasksByIds(
 /* ============================== Service Methods for Charts ============================== */
 
 func (s *RoutineTaskService) VisualizeMyRoutineTaskStatusCount(
-	ctx context.Context, reqDto *routinetasksdto.VisualizeMyRoutineTaskStatusCountRequestDto,
-) (*routinetasksdto.VisualizeMyRoutineTaskStatusCountResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.VisualizeMyRoutineTaskStatusCountRequestDto,
+) (*apicontract.VisualizeMyRoutineTaskStatusCountResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -696,7 +704,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskStatusCount(
 		counts[row.Status] = row.RoutineTaskCount
 	}
 
-	data := make([]routinetasksdto.RoutineTaskCountDatum, len(enums.AllRoutineTaskStatuses))
+	data := make([]apicontract.RoutineTaskCountDatum, len(enums.AllRoutineTaskStatuses))
 	for index, status := range enums.AllRoutineTaskStatuses {
 		metadata := map[string]string{"status": status.String()}
 		meta, err := json.Marshal(metadata)
@@ -704,7 +712,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskStatusCount(
 			return nil, apiexceptions.Routine.FailedToMarshalData(metadata)
 		}
 
-		data[index] = routinetasksdto.RoutineTaskCountDatum{
+		data[index] = apicontract.RoutineTaskCountDatum{
 			Id:    status.String() + "-routine-task-count",
 			X:     status.String() + " Routine Task Count",
 			Value: counts[status],
@@ -712,14 +720,14 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskStatusCount(
 		}
 	}
 
-	return &routinetasksdto.VisualizeMyRoutineTaskStatusCountResponseDto{
+	return &apicontract.VisualizeMyRoutineTaskStatusCountResponseDto{
 		Data: data,
 	}, nil
 }
 
 func (s *RoutineTaskService) VisualizeMyRoutineTaskPurposeCount(
-	ctx context.Context, reqDto *routinetasksdto.VisualizeMyRoutineTaskPurposeCountRequestDto,
-) (*routinetasksdto.VisualizeMyRoutineTaskPurposeCountResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.VisualizeMyRoutineTaskPurposeCountRequestDto,
+) (*apicontract.VisualizeMyRoutineTaskPurposeCountResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -750,7 +758,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskPurposeCount(
 		counts[row.Purpose] = row.RoutineTaskCount
 	}
 
-	data := make([]routinetasksdto.RoutineTaskCountDatum, len(enums.AllRoutineTaskPurposes))
+	data := make([]apicontract.RoutineTaskCountDatum, len(enums.AllRoutineTaskPurposes))
 	for index, purpose := range enums.AllRoutineTaskPurposes {
 		metadata := map[string]string{"purpose": purpose.String()}
 		meta, err := json.Marshal(metadata)
@@ -758,7 +766,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskPurposeCount(
 			return nil, apiexceptions.Routine.FailedToMarshalData(metadata)
 		}
 
-		data[index] = routinetasksdto.RoutineTaskCountDatum{
+		data[index] = apicontract.RoutineTaskCountDatum{
 			Id:    purpose.String() + "-routine-task-count",
 			X:     purpose.String() + " Routine Task Count",
 			Value: counts[purpose],
@@ -766,14 +774,14 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskPurposeCount(
 		}
 	}
 
-	return &routinetasksdto.VisualizeMyRoutineTaskPurposeCountResponseDto{
+	return &apicontract.VisualizeMyRoutineTaskPurposeCountResponseDto{
 		Data: data,
 	}, nil
 }
 
 func (s *RoutineTaskService) VisualizeMyRoutineTaskScheduledAtCount(
-	ctx context.Context, reqDto *routinetasksdto.VisualizeMyRoutineTaskScheduledAtCountRequestDto,
-) (*routinetasksdto.VisualizeMyRoutineTaskScheduledAtCountResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.VisualizeMyRoutineTaskScheduledAtCountRequestDto,
+) (*apicontract.VisualizeMyRoutineTaskScheduledAtCountResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -802,14 +810,14 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskScheduledAtCount(
 		return nil, exception
 	}
 
-	return &routinetasksdto.VisualizeMyRoutineTaskScheduledAtCountResponseDto{
+	return &apicontract.VisualizeMyRoutineTaskScheduledAtCountResponseDto{
 		Data: data,
 	}, nil
 }
 
 func (s *RoutineTaskService) VisualizeMyRoutineTaskActualStartedAtCount(
-	ctx context.Context, reqDto *routinetasksdto.VisualizeMyRoutineTaskActualStartedAtCountRequestDto,
-) (*routinetasksdto.VisualizeMyRoutineTaskActualStartedAtCountResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.VisualizeMyRoutineTaskActualStartedAtCountRequestDto,
+) (*apicontract.VisualizeMyRoutineTaskActualStartedAtCountResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -838,14 +846,14 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskActualStartedAtCount(
 		return nil, exception
 	}
 
-	return &routinetasksdto.VisualizeMyRoutineTaskActualStartedAtCountResponseDto{
+	return &apicontract.VisualizeMyRoutineTaskActualStartedAtCountResponseDto{
 		Data: data,
 	}, nil
 }
 
 func (s *RoutineTaskService) VisualizeMyRoutineTaskActualEndedAtCount(
-	ctx context.Context, reqDto *routinetasksdto.VisualizeMyRoutineTaskActualEndedAtCountRequestDto,
-) (*routinetasksdto.VisualizeMyRoutineTaskActualEndedAtCountResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.VisualizeMyRoutineTaskActualEndedAtCountRequestDto,
+) (*apicontract.VisualizeMyRoutineTaskActualEndedAtCountResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -874,7 +882,7 @@ func (s *RoutineTaskService) VisualizeMyRoutineTaskActualEndedAtCount(
 		return nil, exception
 	}
 
-	return &routinetasksdto.VisualizeMyRoutineTaskActualEndedAtCountResponseDto{
+	return &apicontract.VisualizeMyRoutineTaskActualEndedAtCountResponseDto{
 		Data: data,
 	}, nil
 }
@@ -1515,14 +1523,15 @@ func (s *RoutineTaskService) MarkFailedRoutineTasks(
 	now := time.Now().UTC()
 	taskIds := make([]uuid.UUID, 0, len(request.Tasks))
 	recordIds := make([]uuid.UUID, 0, len(request.Tasks))
-	recordIdsByError := make(map[string][]uuid.UUID)
+	failureInputs := make([]inputs.UpdateRoutineTaskRecordFailureInput, 0, len(request.Tasks))
 	for _, task := range request.Tasks {
 		taskIds = append(taskIds, task.RoutineTaskId)
 		recordIds = append(recordIds, task.RoutineTaskRecordId)
-		recordIdsByError[string(task.ErrorCode)+"\x00"+task.ErrorReason] = append(
-			recordIdsByError[string(task.ErrorCode)+"\x00"+task.ErrorReason],
-			task.RoutineTaskRecordId,
-		)
+		failureInputs = append(failureInputs, inputs.UpdateRoutineTaskRecordFailureInput{
+			Id:          task.RoutineTaskRecordId,
+			ErrorCode:   enums.RoutineTaskRecordErrorCode(task.ErrorCode),
+			ErrorReason: task.ErrorReason,
+		})
 	}
 	result = tx.Model(&schemas.RoutineTask{}).
 		Where("id IN ? AND status = ?", taskIds, enums.RoutineTaskStatus_Running).
@@ -1548,23 +1557,14 @@ func (s *RoutineTaskService) MarkFailedRoutineTasks(
 		}
 		return exceptions.New("ResultStateMismatch", "RoutineTask", "MarkFailedRoutineTasks", "Routine task failure count does not match the claimed batch", http.StatusConflict, true)
 	}
-	updatedRecordCount := int64(0)
-	for errorKey, ids := range recordIdsByError {
-		parts := strings.SplitN(errorKey, "\x00", 2)
-		result = tx.Model(&schemas.RoutineTaskRecord{}).
-			Where("id IN ? AND status = ?", ids, enums.RoutineTaskRecordStatus_Running).
-			Updates(map[string]any{
-				"status":          enums.RoutineTaskRecordStatus_Failed,
-				"actual_ended_at": now,
-				"error_code":      parts[0],
-				"error_reason":    parts[1],
-				"updated_at":      now,
-			})
-		if result.Error != nil {
-			tx.Rollback()
-			return apiexceptions.RoutineTask.FailedToUpdate().WithOrigin(result.Error)
-		}
-		updatedRecordCount += result.RowsAffected
+	updatedRecordCount, exception := s.routineTaskRecordRepository.UpdateManyAsFailed(
+		failureInputs,
+		now,
+		options.WithTransactionDB(tx),
+	)
+	if exception != nil {
+		tx.Rollback()
+		return exception
 	}
 	if updatedRecordCount != int64(len(request.Tasks)) {
 		var finalizedRecordCount int64

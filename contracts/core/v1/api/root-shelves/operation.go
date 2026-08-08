@@ -1,4 +1,4 @@
-package rootshelvesdto
+package apicontract
 
 const (
 	GetMyRootShelfByIdOperation           = "root-shelf.get-my-root-shelf-by-id"

@@ -11,7 +11,7 @@ import (
 
 	"github.com/go-redis/redis"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"

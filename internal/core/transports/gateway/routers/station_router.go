@@ -3,7 +3,7 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	stationsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/stations"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/stations"
 
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
@@ -19,7 +19,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/get-by-id",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.GetMyStationByIdOperation,
+				apicontract.GetMyStationByIdOperation,
 			),
 			authMiddleware,
 			endpoint.GetMyStationById,
@@ -27,7 +27,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/get-all",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.GetAllMyStationsOperation,
+				apicontract.GetAllMyStationsOperation,
 			),
 			authMiddleware,
 			endpoint.GetAllMyStations,
@@ -35,7 +35,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/create",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.CreateStationOperation,
+				apicontract.CreateStationOperation,
 			),
 			authMiddleware,
 			endpoint.CreateStation,
@@ -43,7 +43,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/create-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.CreateStationsOperation,
+				apicontract.CreateStationsOperation,
 			),
 			authMiddleware,
 			endpoint.CreateStations,
@@ -51,7 +51,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/update",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.UpdateMyStationByIdOperation,
+				apicontract.UpdateMyStationByIdOperation,
 			),
 			authMiddleware,
 			endpoint.UpdateMyStationById,
@@ -59,7 +59,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/update-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.UpdateMyStationsByIdsOperation,
+				apicontract.UpdateMyStationsByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.UpdateMyStationsByIds,
@@ -67,7 +67,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/restore",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.RestoreMyStationByIdOperation,
+				apicontract.RestoreMyStationByIdOperation,
 			),
 			authMiddleware,
 			endpoint.RestoreMyStationById,
@@ -75,7 +75,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/restore-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.RestoreMyStationsByIdsOperation,
+				apicontract.RestoreMyStationsByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.RestoreMyStationsByIds,
@@ -83,7 +83,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/delete",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.DeleteMyStationByIdOperation,
+				apicontract.DeleteMyStationByIdOperation,
 			),
 			authMiddleware,
 			endpoint.DeleteMyStationById,
@@ -91,7 +91,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/delete-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.DeleteMyStationsByIdsOperation,
+				apicontract.DeleteMyStationsByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.DeleteMyStationsByIds,
@@ -99,7 +99,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/hard-delete",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.HardDeleteMyStationByIdOperation,
+				apicontract.HardDeleteMyStationByIdOperation,
 			),
 			authMiddleware,
 			endpoint.HardDeleteMyStationById,
@@ -107,7 +107,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/hard-delete-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.HardDeleteMyStationsByIdsOperation,
+				apicontract.HardDeleteMyStationsByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.HardDeleteMyStationsByIds,
@@ -115,7 +115,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/visualizations/total-count",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.VisualizeMyTotalCountOperation,
+				apicontract.VisualizeMyTotalCountOperation,
 			),
 			authMiddleware,
 			endpoint.VisualizeMyTotalCount,
@@ -123,7 +123,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/permissions/get",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.GetMyStationPermissionOperation,
+				apicontract.GetMyStationPermissionOperation,
 			),
 			authMiddleware,
 			endpoint.GetMyStationPermission,
@@ -131,7 +131,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/permissions/create",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.CreateMyStationPermissionOperation,
+				apicontract.CreateMyStationPermissionOperation,
 			),
 			authMiddleware,
 			endpoint.CreateMyStationPermission,
@@ -139,7 +139,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/permissions/upsert",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.UpsertMyStationPermissionOperation,
+				apicontract.UpsertMyStationPermissionOperation,
 			),
 			authMiddleware,
 			endpoint.UpsertMyStationPermission,
@@ -147,7 +147,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/permissions/upsert-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.UpsertMyStationPermissionsOperation,
+				apicontract.UpsertMyStationPermissionsOperation,
 			),
 			authMiddleware,
 			endpoint.UpsertMyStationPermissions,
@@ -155,7 +155,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/permissions/update",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.UpdateMyStationPermissionOperation,
+				apicontract.UpdateMyStationPermissionOperation,
 			),
 			authMiddleware,
 			endpoint.UpdateMyStationPermission,
@@ -163,7 +163,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/ownership/transfer",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.TransferMyStationOwnershipOperation,
+				apicontract.TransferMyStationOwnershipOperation,
 			),
 			authMiddleware,
 			endpoint.TransferMyStationOwnership,
@@ -171,7 +171,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/permissions/delete",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.DeleteMyStationPermissionOperation,
+				apicontract.DeleteMyStationPermissionOperation,
 			),
 			authMiddleware,
 			endpoint.DeleteMyStationPermission,
@@ -179,7 +179,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/permissions/delete-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.DeleteMyStationPermissionsOperation,
+				apicontract.DeleteMyStationPermissionsOperation,
 			),
 			authMiddleware,
 			endpoint.DeleteMyStationPermissions,
@@ -187,7 +187,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/memberships/leave",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.LeaveMyStationOperation,
+				apicontract.LeaveMyStationOperation,
 			),
 			authMiddleware,
 			endpoint.LeaveMyStation,
@@ -195,7 +195,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/memberships/leave-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.LeaveMyStationsOperation,
+				apicontract.LeaveMyStationsOperation,
 			),
 			authMiddleware,
 			endpoint.LeaveMyStations,
@@ -203,7 +203,7 @@ func configureStationRoutes(
 		stationRoutes.POST(
 			"/graphql/search",
 			middlewares.DelegationAuthenticatedMiddleware(
-				stationsdto.SearchStationsOperation,
+				apicontract.SearchStationsOperation,
 			),
 			authMiddleware,
 			endpoint.SearchStations,

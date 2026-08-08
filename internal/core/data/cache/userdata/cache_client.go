@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
@@ -105,17 +105,6 @@ func (s *UserDataCacheClient) hashIdentifier(identifier string) int {
 
 func formatUserDataKey(identifier string) string {
 	return fmt.Sprintf("%s:%s", platformredis.CachePurpose_UserData.String(), identifier)
-}
-
-func isValidUserDataCache(userDataCache *UserDataCache) bool {
-	return userDataCache.PublicId != uuid.Nil &&
-		strings.TrimSpace(userDataCache.Name) != "" &&
-		strings.TrimSpace(userDataCache.DisplayName) != "" &&
-		strings.TrimSpace(userDataCache.Email) != "" &&
-		strings.TrimSpace(userDataCache.AccessToken) != "" &&
-		userDataCache.Role.IsValidEnum() &&
-		userDataCache.Plan.IsValidEnum() &&
-		userDataCache.Status.IsValidEnum()
 }
 
 /* ============================== Extend Methods ============================== */
@@ -325,7 +314,14 @@ func (s *UserDataCacheClient) Get(identifier string) (*UserDataCache, *exception
 }
 
 func (s *UserDataCacheClient) Set(identifier string, userDataCache UserDataCache) *exceptions.Exception {
-	if !isValidUserDataCache(&userDataCache) {
+	if userDataCache.PublicId == uuid.Nil ||
+		strings.TrimSpace(userDataCache.Name) == "" ||
+		strings.TrimSpace(userDataCache.DisplayName) == "" ||
+		strings.TrimSpace(userDataCache.Email) == "" ||
+		strings.TrimSpace(userDataCache.AccessToken) == "" ||
+		!userDataCache.Role.IsValidEnum() ||
+		!userDataCache.Plan.IsValidEnum() ||
+		!userDataCache.Status.IsValidEnum() {
 		return exceptions.New(
 			"InvalidCacheData",
 			"Cache",

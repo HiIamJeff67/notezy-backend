@@ -7,9 +7,9 @@ import (
 	"github.com/google/uuid"
 	gophersdataloader "github.com/graph-gophers/dataloader/v7"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
-	userinfosdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-infos"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-infos"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 
 	gatewaycontexts "github.com/HiIamJeff67/notezy-backend/internal/gateway/contexts"
@@ -37,11 +37,11 @@ type UserInfoDataloaderInterface interface {
 }
 
 type UserInfoDataloader struct {
-	coreClient *coreadapters.CoreClient
+	coreClient *coreadapters.CoreAdapter
 	loader     *UserInfoLoaderType
 }
 
-func NewUserInfoDataloader(coreClient *coreadapters.CoreClient) UserInfoDataloaderInterface {
+func NewUserInfoDataloader(coreClient *coreadapters.CoreAdapter) UserInfoDataloaderInterface {
 	dataloader := &UserInfoDataloader{
 		coreClient: coreClient,
 	}
@@ -100,15 +100,15 @@ func (d *UserInfoDataloader) batchFunction() UserInfoBatchFunctionType {
 			return results
 		}
 
-		requestDto := userinfosdto.LoadUserInfosRequestDto(publicIds)
+		requestDto := apicontract.LoadUserInfosRequestDto(publicIds)
 		response, exception := coreadapters.CallSecurly[
-			userinfosdto.LoadUserInfosRequestDto,
-			userinfosdto.LoadUserInfosResponseDto,
+			apicontract.LoadUserInfosRequestDto,
+			apicontract.LoadUserInfosResponseDto,
 		](
 			ginContext,
 			d.coreClient,
 			&requestDto,
-			userinfosdto.LoadUserInfosOperation,
+			apicontract.LoadUserInfosOperation,
 			"/core/v1/user-infos/graphql/load",
 		)
 		if exception != nil {

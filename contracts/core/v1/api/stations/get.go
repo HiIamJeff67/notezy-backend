@@ -1,4 +1,4 @@
-package stationsdto
+package apicontract
 
 import (
 	"time"

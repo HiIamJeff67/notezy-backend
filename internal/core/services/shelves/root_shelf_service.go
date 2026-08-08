@@ -13,13 +13,13 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
 	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
 
-	rootshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/root-shelves"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/root-shelves"
 	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 
@@ -35,26 +35,26 @@ import (
 )
 
 type RootShelfServiceInterface interface {
-	GetMyRootShelfById(ctx context.Context, requestDto *rootshelvesdto.GetMyRootShelfByIdRequestDto) (*rootshelvesdto.GetMyRootShelfByIdResponseDto, *exceptions.Exception)
-	CreateRootShelf(ctx context.Context, requestDto *rootshelvesdto.CreateRootShelfRequestDto) (*rootshelvesdto.CreateRootShelfResponseDto, *exceptions.Exception)
-	CreateRootShelves(ctx context.Context, requestDto *rootshelvesdto.CreateRootShelvesRequestDto) (*rootshelvesdto.CreateRootShelvesResponseDto, *exceptions.Exception)
-	UpdateMyRootShelfById(ctx context.Context, requestDto *rootshelvesdto.UpdateMyRootShelfByIdRequestDto) (*rootshelvesdto.UpdateMyRootShelfByIdResponseDto, *exceptions.Exception)
-	UpdateMyRootShelvesByIds(ctx context.Context, requestDto *rootshelvesdto.UpdateMyRootShelvesByIdsRequestDto) (*rootshelvesdto.UpdateMyRootShelvesByIdsResponseDto, *exceptions.Exception)
-	RestoreMyRootShelfById(ctx context.Context, requestDto *rootshelvesdto.RestoreMyRootShelfByIdRequestDto) (*rootshelvesdto.RestoreMyRootShelfByIdResponseDto, *exceptions.Exception)
-	RestoreMyRootShelvesByIds(ctx context.Context, requestDto *rootshelvesdto.RestoreMyRootShelvesByIdsRequestDto) (*rootshelvesdto.RestoreMyRootShelvesByIdsResponseDto, *exceptions.Exception)
-	DeleteMyRootShelfById(ctx context.Context, requestDto *rootshelvesdto.DeleteMyRootShelfByIdRequestDto) (*rootshelvesdto.DeleteMyRootShelfByIdResponseDto, *exceptions.Exception)
-	DeleteMyRootShelvesByIds(ctx context.Context, requestDto *rootshelvesdto.DeleteMyRootShelvesByIdsRequestDto) (*rootshelvesdto.DeleteMyRootShelvesByIdsResponseDto, *exceptions.Exception)
+	GetMyRootShelfById(ctx context.Context, requestDto *apicontract.GetMyRootShelfByIdRequestDto) (*apicontract.GetMyRootShelfByIdResponseDto, *exceptions.Exception)
+	CreateRootShelf(ctx context.Context, requestDto *apicontract.CreateRootShelfRequestDto) (*apicontract.CreateRootShelfResponseDto, *exceptions.Exception)
+	CreateRootShelves(ctx context.Context, requestDto *apicontract.CreateRootShelvesRequestDto) (*apicontract.CreateRootShelvesResponseDto, *exceptions.Exception)
+	UpdateMyRootShelfById(ctx context.Context, requestDto *apicontract.UpdateMyRootShelfByIdRequestDto) (*apicontract.UpdateMyRootShelfByIdResponseDto, *exceptions.Exception)
+	UpdateMyRootShelvesByIds(ctx context.Context, requestDto *apicontract.UpdateMyRootShelvesByIdsRequestDto) (*apicontract.UpdateMyRootShelvesByIdsResponseDto, *exceptions.Exception)
+	RestoreMyRootShelfById(ctx context.Context, requestDto *apicontract.RestoreMyRootShelfByIdRequestDto) (*apicontract.RestoreMyRootShelfByIdResponseDto, *exceptions.Exception)
+	RestoreMyRootShelvesByIds(ctx context.Context, requestDto *apicontract.RestoreMyRootShelvesByIdsRequestDto) (*apicontract.RestoreMyRootShelvesByIdsResponseDto, *exceptions.Exception)
+	DeleteMyRootShelfById(ctx context.Context, requestDto *apicontract.DeleteMyRootShelfByIdRequestDto) (*apicontract.DeleteMyRootShelfByIdResponseDto, *exceptions.Exception)
+	DeleteMyRootShelvesByIds(ctx context.Context, requestDto *apicontract.DeleteMyRootShelvesByIdsRequestDto) (*apicontract.DeleteMyRootShelvesByIdsResponseDto, *exceptions.Exception)
 
-	GetMyRootShelfPermission(ctx context.Context, requestDto *rootshelvesdto.GetMyRootShelfPermissionRequestDto) (*rootshelvesdto.GetMyRootShelfPermissionResponseDto, *exceptions.Exception)
-	CreateMyRootShelfPermission(ctx context.Context, requestDto *rootshelvesdto.CreateMyRootShelfPermissionRequestDto) (*rootshelvesdto.CreateMyRootShelfPermissionResponseDto, *exceptions.Exception)
-	UpsertMyRootShelfPermission(ctx context.Context, requestDto *rootshelvesdto.UpsertMyRootShelfPermissionRequestDto) (*rootshelvesdto.UpsertMyRootShelfPermissionResponseDto, *exceptions.Exception)
-	UpsertMyRootShelfPermissions(ctx context.Context, requestDto *rootshelvesdto.UpsertMyRootShelfPermissionsRequestDto) (*rootshelvesdto.UpsertMyRootShelfPermissionsResponseDto, *exceptions.Exception)
-	UpdateMyRootShelfPermission(ctx context.Context, requestDto *rootshelvesdto.UpdateMyRootShelfPermissionRequestDto) (*rootshelvesdto.UpdateMyRootShelfPermissionResponseDto, *exceptions.Exception)
-	TransferMyRootShelfOwnership(ctx context.Context, requestDto *rootshelvesdto.TransferMyRootShelfOwnershipRequestDto) (*rootshelvesdto.TransferMyRootShelfOwnershipResponseDto, *exceptions.Exception)
-	DeleteMyRootShelfPermission(ctx context.Context, requestDto *rootshelvesdto.DeleteMyRootShelfPermissionRequestDto) (*rootshelvesdto.DeleteMyRootShelfPermissionResponseDto, *exceptions.Exception)
-	DeleteMyRootShelfPermissions(ctx context.Context, requestDto *rootshelvesdto.DeleteMyRootShelfPermissionsRequestDto) (*rootshelvesdto.DeleteMyRootShelfPermissionsResponseDto, *exceptions.Exception)
-	LeaveMyRootShelf(ctx context.Context, requestDto *rootshelvesdto.LeaveMyRootShelfRequestDto) *exceptions.Exception
-	LeaveMyRootShelves(ctx context.Context, requestDto *rootshelvesdto.LeaveMyRootShelvesRequestDto) *exceptions.Exception
+	GetMyRootShelfPermission(ctx context.Context, requestDto *apicontract.GetMyRootShelfPermissionRequestDto) (*apicontract.GetMyRootShelfPermissionResponseDto, *exceptions.Exception)
+	CreateMyRootShelfPermission(ctx context.Context, requestDto *apicontract.CreateMyRootShelfPermissionRequestDto) (*apicontract.CreateMyRootShelfPermissionResponseDto, *exceptions.Exception)
+	UpsertMyRootShelfPermission(ctx context.Context, requestDto *apicontract.UpsertMyRootShelfPermissionRequestDto) (*apicontract.UpsertMyRootShelfPermissionResponseDto, *exceptions.Exception)
+	UpsertMyRootShelfPermissions(ctx context.Context, requestDto *apicontract.UpsertMyRootShelfPermissionsRequestDto) (*apicontract.UpsertMyRootShelfPermissionsResponseDto, *exceptions.Exception)
+	UpdateMyRootShelfPermission(ctx context.Context, requestDto *apicontract.UpdateMyRootShelfPermissionRequestDto) (*apicontract.UpdateMyRootShelfPermissionResponseDto, *exceptions.Exception)
+	TransferMyRootShelfOwnership(ctx context.Context, requestDto *apicontract.TransferMyRootShelfOwnershipRequestDto) (*apicontract.TransferMyRootShelfOwnershipResponseDto, *exceptions.Exception)
+	DeleteMyRootShelfPermission(ctx context.Context, requestDto *apicontract.DeleteMyRootShelfPermissionRequestDto) (*apicontract.DeleteMyRootShelfPermissionResponseDto, *exceptions.Exception)
+	DeleteMyRootShelfPermissions(ctx context.Context, requestDto *apicontract.DeleteMyRootShelfPermissionsRequestDto) (*apicontract.DeleteMyRootShelfPermissionsResponseDto, *exceptions.Exception)
+	LeaveMyRootShelf(ctx context.Context, requestDto *apicontract.LeaveMyRootShelfRequestDto) *exceptions.Exception
+	LeaveMyRootShelves(ctx context.Context, requestDto *apicontract.LeaveMyRootShelvesRequestDto) *exceptions.Exception
 
 	SearchPrivateRootShelves(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRootShelfInput) (*gqlmodels.SearchRootShelfConnection, *exceptions.Exception)
 }
@@ -89,16 +89,6 @@ func NewRootShelfService(
 	}
 }
 
-/* ============================== Auxiliary Functions ============================== */
-
-func isRootShelfPermissionDowngraded(
-	previousPermission enums.AccessControlPermission,
-	permission enums.AccessControlPermission,
-) bool {
-	return slices.Index(enums.AllAccessControlPermissions, permission) <
-		slices.Index(enums.AllAccessControlPermissions, previousPermission)
-}
-
 func getRootShelfMemberPublicIds(tx *gorm.DB, rootShelfIds []uuid.UUID) ([]uuid.UUID, error) {
 	if tx == nil || len(rootShelfIds) == 0 {
 		return nil, nil
@@ -129,7 +119,7 @@ func (s *RootShelfService) saveMyRootShelfPermission(
 	targetUserPublicId uuid.UUID,
 	permission enums.AccessControlPermission,
 	requireExisting *bool,
-) (*rootshelvesdto.RootShelfPermissionResponseDto, *exceptions.Exception) {
+) (*apicontract.RootShelfPermissionResponseDto, *exceptions.Exception) {
 	if permission == enums.AccessControlPermission_Owner {
 		return nil, exceptions.New(
 			"PermissionDenied",
@@ -261,7 +251,9 @@ func (s *RootShelfService) saveMyRootShelfPermission(
 	for index, blockPack := range blockPacks {
 		blockPackIds[index] = blockPack.Id
 	}
-	if targetPermission != nil && isRootShelfPermissionDowngraded(targetPermission.Permission, permission) {
+	if targetPermission != nil &&
+		slices.Index(enums.AllAccessControlPermissions, permission) <
+			slices.Index(enums.AllAccessControlPermissions, targetPermission.Permission) {
 		if err := repositories.NewOutboxEventRepository().EnqueueBlockPackAccessRevocations(
 			tx,
 			rootShelf.Id.String(),
@@ -308,7 +300,7 @@ func (s *RootShelfService) saveMyRootShelfPermission(
 			true,
 		).WithOrigin(err)
 	}
-	return &rootshelvesdto.RootShelfPermissionResponseDto{
+	return &apicontract.RootShelfPermissionResponseDto{
 		UserPublicId: targetUser.PublicId,
 		Permission:   relation.Permission.String(),
 		UpdatedAt:    relation.UpdatedAt,
@@ -319,8 +311,8 @@ func (s *RootShelfService) saveMyRootShelfPermission(
 /* ============================== Service Methods for RootShelf ============================== */
 
 func (s *RootShelfService) GetMyRootShelfById(
-	ctx context.Context, requestDto *rootshelvesdto.GetMyRootShelfByIdRequestDto,
-) (*rootshelvesdto.GetMyRootShelfByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.GetMyRootShelfByIdRequestDto,
+) (*apicontract.GetMyRootShelfByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
@@ -356,7 +348,7 @@ func (s *RootShelfService) GetMyRootShelfById(
 		return nil, exception
 	}
 
-	return &rootshelvesdto.GetMyRootShelfByIdResponseDto{
+	return &apicontract.GetMyRootShelfByIdResponseDto{
 		Id:             shelf.Id,
 		Name:           shelf.Name,
 		Permission:     permission.String(),
@@ -370,8 +362,8 @@ func (s *RootShelfService) GetMyRootShelfById(
 }
 
 func (s *RootShelfService) CreateRootShelf(
-	ctx context.Context, requestDto *rootshelvesdto.CreateRootShelfRequestDto,
-) (*rootshelvesdto.CreateRootShelfResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.CreateRootShelfRequestDto,
+) (*apicontract.CreateRootShelfResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
@@ -395,7 +387,7 @@ func (s *RootShelfService) CreateRootShelf(
 		return nil, exception
 	}
 
-	return &rootshelvesdto.CreateRootShelfResponseDto{
+	return &apicontract.CreateRootShelfResponseDto{
 		Id:             *newRootShelfId,
 		LastAnalyzedAt: now,
 		CreatedAt:      time.Now(),
@@ -403,8 +395,8 @@ func (s *RootShelfService) CreateRootShelf(
 }
 
 func (s *RootShelfService) CreateRootShelves(
-	ctx context.Context, requestDto *rootshelvesdto.CreateRootShelvesRequestDto,
-) (*rootshelvesdto.CreateRootShelvesResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.CreateRootShelvesRequestDto,
+) (*apicontract.CreateRootShelvesResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
@@ -432,7 +424,7 @@ func (s *RootShelfService) CreateRootShelves(
 		return nil, exception
 	}
 
-	return &rootshelvesdto.CreateRootShelvesResponseDto{
+	return &apicontract.CreateRootShelvesResponseDto{
 		Ids:            newRootShelfIds,
 		LastAnalyzedAt: now,
 		CreatedAt:      time.Now(),
@@ -440,8 +432,8 @@ func (s *RootShelfService) CreateRootShelves(
 }
 
 func (s *RootShelfService) UpdateMyRootShelfById(
-	ctx context.Context, requestDto *rootshelvesdto.UpdateMyRootShelfByIdRequestDto,
-) (*rootshelvesdto.UpdateMyRootShelfByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.UpdateMyRootShelfByIdRequestDto,
+) (*apicontract.UpdateMyRootShelfByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
@@ -472,15 +464,15 @@ func (s *RootShelfService) UpdateMyRootShelfById(
 		return nil, exception
 	}
 
-	return &rootshelvesdto.UpdateMyRootShelfByIdResponseDto{
+	return &apicontract.UpdateMyRootShelfByIdResponseDto{
 		UpdatedAt: rootShelf.UpdatedAt,
 	}, nil
 }
 
 func (s *RootShelfService) UpdateMyRootShelvesByIds(
 	ctx context.Context,
-	requestDto *rootshelvesdto.UpdateMyRootShelvesByIdsRequestDto,
-) (*rootshelvesdto.UpdateMyRootShelvesByIdsResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.UpdateMyRootShelvesByIdsRequestDto,
+) (*apicontract.UpdateMyRootShelvesByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
@@ -515,15 +507,15 @@ func (s *RootShelfService) UpdateMyRootShelvesByIds(
 		return nil, exception
 	}
 
-	return &rootshelvesdto.UpdateMyRootShelvesByIdsResponseDto{
+	return &apicontract.UpdateMyRootShelvesByIdsResponseDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
 
 func (s *RootShelfService) RestoreMyRootShelfById(
 	ctx context.Context,
-	requestDto *rootshelvesdto.RestoreMyRootShelfByIdRequestDto,
-) (*rootshelvesdto.RestoreMyRootShelfByIdResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.RestoreMyRootShelfByIdRequestDto,
+) (*apicontract.RestoreMyRootShelfByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
@@ -548,7 +540,7 @@ func (s *RootShelfService) RestoreMyRootShelfById(
 		return nil, exception
 	}
 
-	return &rootshelvesdto.RestoreMyRootShelfByIdResponseDto{
+	return &apicontract.RestoreMyRootShelfByIdResponseDto{
 		Id:             restoredRootShelf.Id,
 		Name:           restoredRootShelf.Name,
 		SubShelfCount:  restoredRootShelf.SubShelfCount,
@@ -562,8 +554,8 @@ func (s *RootShelfService) RestoreMyRootShelfById(
 
 func (s *RootShelfService) RestoreMyRootShelvesByIds(
 	ctx context.Context,
-	requestDto *rootshelvesdto.RestoreMyRootShelvesByIdsRequestDto,
-) (*rootshelvesdto.RestoreMyRootShelvesByIdsResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.RestoreMyRootShelvesByIdsRequestDto,
+) (*apicontract.RestoreMyRootShelvesByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
@@ -588,9 +580,9 @@ func (s *RootShelfService) RestoreMyRootShelvesByIds(
 		return nil, exception
 	}
 
-	responseDto := rootshelvesdto.RestoreMyRootShelvesByIdsResponseDto{}
+	responseDto := apicontract.RestoreMyRootShelvesByIdsResponseDto{}
 	for _, restoredRootShelf := range restoredRootShelves {
-		responseDto = append(responseDto, rootshelvesdto.RestoreMyRootShelfByIdResponseDto{
+		responseDto = append(responseDto, apicontract.RestoreMyRootShelfByIdResponseDto{
 			Id:             restoredRootShelf.Id,
 			Name:           restoredRootShelf.Name,
 			SubShelfCount:  restoredRootShelf.SubShelfCount,
@@ -607,8 +599,8 @@ func (s *RootShelfService) RestoreMyRootShelvesByIds(
 
 func (s *RootShelfService) DeleteMyRootShelfById(
 	ctx context.Context,
-	requestDto *rootshelvesdto.DeleteMyRootShelfByIdRequestDto,
-) (*rootshelvesdto.DeleteMyRootShelfByIdResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.DeleteMyRootShelfByIdRequestDto,
+) (*apicontract.DeleteMyRootShelfByIdResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
@@ -782,15 +774,15 @@ func (s *RootShelfService) DeleteMyRootShelfById(
 			true,
 		).WithOrigin(err)
 	}
-	return &rootshelvesdto.DeleteMyRootShelfByIdResponseDto{
+	return &apicontract.DeleteMyRootShelfByIdResponseDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
 
 func (s *RootShelfService) DeleteMyRootShelvesByIds(
 	ctx context.Context,
-	requestDto *rootshelvesdto.DeleteMyRootShelvesByIdsRequestDto,
-) (*rootshelvesdto.DeleteMyRootShelvesByIdsResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.DeleteMyRootShelvesByIdsRequestDto,
+) (*apicontract.DeleteMyRootShelvesByIdsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
@@ -879,23 +871,21 @@ func (s *RootShelfService) DeleteMyRootShelvesByIds(
 			true,
 		).WithOrigin(err)
 	}
-	for _, rootShelfId := range requestDto.Body.RootShelfIds {
-		if err := repositories.NewOutboxEventRepository().EnqueueRootShelfDeleted(
-			tx,
-			"root-shelf-bulk-delete",
-			rootShelfId,
-			rootShelfMemberPublicIdsById[rootShelfId],
-		); err != nil {
-			tx.Rollback()
-			return nil, exceptions.New(
-				"FailedToCreate",
-				"Outbox",
-				"DeleteMyRootShelvesByIds",
-				"Failed to create resource events",
-				http.StatusInternalServerError,
-				true,
-			).WithOrigin(err)
-		}
+	if err := repositories.NewOutboxEventRepository().EnqueueManyRootShelfDeleted(
+		tx,
+		"root-shelf-bulk-delete",
+		requestDto.Body.RootShelfIds,
+		rootShelfMemberPublicIdsById,
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"DeleteMyRootShelvesByIds",
+			"Failed to create resource events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
 	}
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
@@ -909,14 +899,14 @@ func (s *RootShelfService) DeleteMyRootShelvesByIds(
 		).WithOrigin(err)
 	}
 
-	return &rootshelvesdto.DeleteMyRootShelvesByIdsResponseDto{
+	return &apicontract.DeleteMyRootShelvesByIdsResponseDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
 
 func (s *RootShelfService) GetMyRootShelfPermission(
-	ctx context.Context, requestDto *rootshelvesdto.GetMyRootShelfPermissionRequestDto,
-) (*rootshelvesdto.GetMyRootShelfPermissionResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.GetMyRootShelfPermissionRequestDto,
+) (*apicontract.GetMyRootShelfPermissionResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
@@ -962,7 +952,7 @@ func (s *RootShelfService) GetMyRootShelfPermission(
 		return nil, exception
 	}
 
-	return &rootshelvesdto.GetMyRootShelfPermissionResponseDto{
+	return &apicontract.GetMyRootShelfPermissionResponseDto{
 		UserPublicId: targetUser.PublicId,
 		Permission:   relation.Permission.String(),
 		UpdatedAt:    relation.UpdatedAt,
@@ -971,8 +961,8 @@ func (s *RootShelfService) GetMyRootShelfPermission(
 }
 
 func (s *RootShelfService) CreateMyRootShelfPermission(
-	ctx context.Context, requestDto *rootshelvesdto.CreateMyRootShelfPermissionRequestDto,
-) (*rootshelvesdto.CreateMyRootShelfPermissionResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.CreateMyRootShelfPermissionRequestDto,
+) (*apicontract.CreateMyRootShelfPermissionResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
@@ -989,8 +979,8 @@ func (s *RootShelfService) CreateMyRootShelfPermission(
 }
 
 func (s *RootShelfService) UpsertMyRootShelfPermission(
-	ctx context.Context, requestDto *rootshelvesdto.UpsertMyRootShelfPermissionRequestDto,
-) (*rootshelvesdto.UpsertMyRootShelfPermissionResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.UpsertMyRootShelfPermissionRequestDto,
+) (*apicontract.UpsertMyRootShelfPermissionResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
@@ -1006,8 +996,8 @@ func (s *RootShelfService) UpsertMyRootShelfPermission(
 }
 
 func (s *RootShelfService) UpsertMyRootShelfPermissions(
-	ctx context.Context, requestDto *rootshelvesdto.UpsertMyRootShelfPermissionsRequestDto,
-) (*rootshelvesdto.UpsertMyRootShelfPermissionsResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.UpsertMyRootShelfPermissionsRequestDto,
+) (*apicontract.UpsertMyRootShelfPermissionsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
@@ -1173,25 +1163,26 @@ func (s *RootShelfService) UpsertMyRootShelfPermissions(
 		tx.Rollback()
 		return nil, exception
 	}
-	for _, updatedPermission := range updatedPermissions {
-		user := userById[updatedPermission.UserId]
-		if err := repositories.NewOutboxEventRepository().EnqueueRootShelfPermissionChanged(
-			tx,
-			rootShelf.Id.String(),
-			rootShelf.Id,
-			user.PublicId,
-			updatedPermission.Permission.String(),
-		); err != nil {
-			tx.Rollback()
-			return nil, exceptions.New(
-				"FailedToCreate",
-				"Outbox",
-				"UpsertMyRootShelfPermissions",
-				"Failed to create resource events",
-				http.StatusInternalServerError,
-				true,
-			).WithOrigin(err)
-		}
+	userPublicIdByUserId := make(map[uuid.UUID]uuid.UUID, len(userById))
+	for userId, user := range userById {
+		userPublicIdByUserId[userId] = user.PublicId
+	}
+	if err := repositories.NewOutboxEventRepository().EnqueueManyRootShelfPermissionChanges(
+		tx,
+		rootShelf.Id.String(),
+		rootShelf.Id,
+		updatedPermissions,
+		userPublicIdByUserId,
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"UpsertMyRootShelfPermissions",
+			"Failed to create resource events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
 	}
 
 	if err := tx.Commit().Error; err != nil {
@@ -1210,11 +1201,11 @@ func (s *RootShelfService) UpsertMyRootShelfPermissions(
 		updatedPermissionByUserId[updatedPermission.UserId] = updatedPermission
 	}
 
-	responseDtos := make([]rootshelvesdto.RootShelfPermissionResponseDto, len(userIds))
+	responseDtos := make([]apicontract.RootShelfPermissionResponseDto, len(userIds))
 	for index, userId := range userIds {
 		user := userById[userId]
 		updatedPermission := updatedPermissionByUserId[userId]
-		responseDtos[index] = rootshelvesdto.RootShelfPermissionResponseDto{
+		responseDtos[index] = apicontract.RootShelfPermissionResponseDto{
 			UserPublicId: user.PublicId,
 			Permission:   updatedPermission.Permission.String(),
 			UpdatedAt:    updatedPermission.UpdatedAt,
@@ -1222,14 +1213,14 @@ func (s *RootShelfService) UpsertMyRootShelfPermissions(
 		}
 	}
 
-	return &rootshelvesdto.UpsertMyRootShelfPermissionsResponseDto{
+	return &apicontract.UpsertMyRootShelfPermissionsResponseDto{
 		Permissions: responseDtos,
 	}, nil
 }
 
 func (s *RootShelfService) UpdateMyRootShelfPermission(
-	ctx context.Context, requestDto *rootshelvesdto.UpdateMyRootShelfPermissionRequestDto,
-) (*rootshelvesdto.UpdateMyRootShelfPermissionResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.UpdateMyRootShelfPermissionRequestDto,
+) (*apicontract.UpdateMyRootShelfPermissionResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
@@ -1247,8 +1238,8 @@ func (s *RootShelfService) UpdateMyRootShelfPermission(
 
 func (s *RootShelfService) TransferMyRootShelfOwnership(
 	ctx context.Context,
-	requestDto *rootshelvesdto.TransferMyRootShelfOwnershipRequestDto,
-) (*rootshelvesdto.TransferMyRootShelfOwnershipResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.TransferMyRootShelfOwnershipRequestDto,
+) (*apicontract.TransferMyRootShelfOwnershipResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
@@ -1517,7 +1508,7 @@ func (s *RootShelfService) TransferMyRootShelfOwnership(
 		).WithOrigin(err)
 	}
 
-	return &rootshelvesdto.TransferMyRootShelfOwnershipResponseDto{
+	return &apicontract.TransferMyRootShelfOwnershipResponseDto{
 		RootShelfId:               rootShelf.Id,
 		PreviousOwnerUserPublicId: actorUser.PublicId,
 		NewOwnerUserPublicId:      targetUser.PublicId,
@@ -1526,8 +1517,8 @@ func (s *RootShelfService) TransferMyRootShelfOwnership(
 }
 
 func (s *RootShelfService) DeleteMyRootShelfPermission(
-	ctx context.Context, requestDto *rootshelvesdto.DeleteMyRootShelfPermissionRequestDto,
-) (*rootshelvesdto.DeleteMyRootShelfPermissionResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.DeleteMyRootShelfPermissionRequestDto,
+) (*apicontract.DeleteMyRootShelfPermissionResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
@@ -1673,12 +1664,12 @@ func (s *RootShelfService) DeleteMyRootShelfPermission(
 			true,
 		).WithOrigin(err)
 	}
-	return &rootshelvesdto.DeleteMyRootShelfPermissionResponseDto{}, nil
+	return &apicontract.DeleteMyRootShelfPermissionResponseDto{}, nil
 }
 
 func (s *RootShelfService) DeleteMyRootShelfPermissions(
-	ctx context.Context, requestDto *rootshelvesdto.DeleteMyRootShelfPermissionsRequestDto,
-) (*rootshelvesdto.DeleteMyRootShelfPermissionsResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.DeleteMyRootShelfPermissionsRequestDto,
+) (*apicontract.DeleteMyRootShelfPermissionsResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, apiexceptions.Shelf.InvalidDto().WithOrigin(err)
 	}
@@ -1855,23 +1846,21 @@ func (s *RootShelfService) DeleteMyRootShelfPermissions(
 			true,
 		).WithOrigin(err)
 	}
-	for _, targetUserPublicId := range requestDto.Body.UserPublicIds {
-		if err := repositories.NewOutboxEventRepository().EnqueueRootShelfPermissionRevoked(
-			tx,
-			rootShelf.Id.String(),
-			rootShelf.Id,
-			targetUserPublicId,
-		); err != nil {
-			tx.Rollback()
-			return nil, exceptions.New(
-				"FailedToCreate",
-				"Outbox",
-				"DeleteMyRootShelfPermissions",
-				"Failed to create resource events",
-				http.StatusInternalServerError,
-				true,
-			).WithOrigin(err)
-		}
+	if err := repositories.NewOutboxEventRepository().EnqueueManyRootShelfPermissionRevocations(
+		tx,
+		rootShelf.Id.String(),
+		[]uuid.UUID{rootShelf.Id},
+		requestDto.Body.UserPublicIds,
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"DeleteMyRootShelfPermissions",
+			"Failed to create resource events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
 	}
 
 	if err := tx.Commit().Error; err != nil {
@@ -1885,11 +1874,11 @@ func (s *RootShelfService) DeleteMyRootShelfPermissions(
 			true,
 		).WithOrigin(err)
 	}
-	return &rootshelvesdto.DeleteMyRootShelfPermissionsResponseDto{}, nil
+	return &apicontract.DeleteMyRootShelfPermissionsResponseDto{}, nil
 }
 
 func (s *RootShelfService) LeaveMyRootShelf(
-	ctx context.Context, requestDto *rootshelvesdto.LeaveMyRootShelfRequestDto,
+	ctx context.Context, requestDto *apicontract.LeaveMyRootShelfRequestDto,
 ) *exceptions.Exception {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return apiexceptions.Shelf.InvalidDto().WithOrigin(err)
@@ -2007,7 +1996,7 @@ func (s *RootShelfService) LeaveMyRootShelf(
 }
 
 func (s *RootShelfService) LeaveMyRootShelves(
-	ctx context.Context, requestDto *rootshelvesdto.LeaveMyRootShelvesRequestDto,
+	ctx context.Context, requestDto *apicontract.LeaveMyRootShelvesRequestDto,
 ) *exceptions.Exception {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return apiexceptions.Shelf.InvalidDto().WithOrigin(err)
@@ -2118,23 +2107,21 @@ func (s *RootShelfService) LeaveMyRootShelves(
 			true,
 		).WithOrigin(err)
 	}
-	for _, rootShelfId := range rootShelfIds {
-		if err := repositories.NewOutboxEventRepository().EnqueueRootShelfPermissionRevoked(
-			tx,
-			"root-shelf-bulk-leave",
-			rootShelfId,
-			actorUserPublicId,
-		); err != nil {
-			tx.Rollback()
-			return exceptions.New(
-				"FailedToCreate",
-				"Outbox",
-				"LeaveMyRootShelves",
-				"Failed to create resource events",
-				http.StatusInternalServerError,
-				true,
-			).WithOrigin(err)
-		}
+	if err := repositories.NewOutboxEventRepository().EnqueueManyRootShelfPermissionRevocations(
+		tx,
+		"root-shelf-bulk-leave",
+		rootShelfIds,
+		[]uuid.UUID{actorUserPublicId},
+	); err != nil {
+		tx.Rollback()
+		return exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"LeaveMyRootShelves",
+			"Failed to create resource events",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
 	}
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()

@@ -7,10 +7,11 @@ import (
 	"github.com/google/uuid"
 
 	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
+	durablejobconfig "github.com/HiIamJeff67/notezy-backend/internal/durablejob/configs"
 )
 
 func TestYjsMaintenanceStrategyCoalescesHintsByBlockPack(t *testing.T) {
-	strategy := NewYjsMaintenanceStrategy()
+	strategy := NewYjsMaintenanceStrategy(testYjsMaintenanceStrategyConfig())
 	blockPackId := uuid.New()
 	documentId := uuid.New()
 	older := time.Now().UTC().Add(-time.Minute)
@@ -34,7 +35,7 @@ func TestYjsMaintenanceStrategyCoalescesHintsByBlockPack(t *testing.T) {
 }
 
 func TestYjsMaintenanceStrategyPrioritizesMaintenanceLag(t *testing.T) {
-	strategy := NewYjsMaintenanceStrategy()
+	strategy := NewYjsMaintenanceStrategy(testYjsMaintenanceStrategyConfig())
 	firstBlockPackId := uuid.New()
 	secondBlockPackId := uuid.New()
 	if err := strategy.Enqueue(coreeventscontract.YjsMaintenanceHintData{
@@ -57,7 +58,7 @@ func TestYjsMaintenanceStrategyPrioritizesMaintenanceLag(t *testing.T) {
 }
 
 func TestYjsMaintenanceStrategyPreservesBlockPackOrdering(t *testing.T) {
-	strategy := NewYjsMaintenanceStrategy()
+	strategy := NewYjsMaintenanceStrategy(testYjsMaintenanceStrategyConfig())
 	blockPackId := uuid.New()
 	firstHint := coreeventscontract.YjsMaintenanceHintData{
 		BlockPackId: blockPackId, DocumentId: uuid.New(), LatestUpdateSequence: 3,
@@ -78,5 +79,14 @@ func TestYjsMaintenanceStrategyPreservesBlockPackOrdering(t *testing.T) {
 	hints := strategy.DequeueBatch(1)
 	if len(hints) != 1 || hints[0].LatestUpdateSequence != 4 {
 		t.Fatalf("expected latest hint after completion, got %#v", hints)
+	}
+}
+
+func testYjsMaintenanceStrategyConfig() durablejobconfig.YjsMaintenanceStrategyConfig {
+	return durablejobconfig.YjsMaintenanceStrategyConfig{
+		MaximumPendingHints:    1_000,
+		MaximumDispatchBatch:   32,
+		MaximumDispatchWorkers: 8,
+		MaximumRequestAttempts: 3,
 	}
 }

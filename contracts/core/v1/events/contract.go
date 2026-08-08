@@ -1,6 +1,6 @@
 package eventscontract
 
-import eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+import eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 
 const CoreLifecycleTopic eventcontract.Topic = "notezy.core.lifecycle.v1"
 

@@ -3,7 +3,7 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	routinesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routines"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routines"
 
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
@@ -19,7 +19,7 @@ func configureRoutineRoutes(
 		routineRoutes.POST(
 			"/get-by-id",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinesdto.GetMyRoutineByIdOperation,
+				apicontract.GetMyRoutineByIdOperation,
 			),
 			authMiddleware,
 			endpoint.GetMyRoutineById,
@@ -27,7 +27,7 @@ func configureRoutineRoutes(
 		routineRoutes.POST(
 			"/get-by-station-id",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinesdto.GetMyRoutinesByStationIdOperation,
+				apicontract.GetMyRoutinesByStationIdOperation,
 			),
 			authMiddleware,
 			endpoint.GetMyRoutinesByStationId,
@@ -35,7 +35,7 @@ func configureRoutineRoutes(
 		routineRoutes.POST(
 			"/get-all-by-time-range",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinesdto.GetAllMyRoutinesByTimeRangeOperation,
+				apicontract.GetAllMyRoutinesByTimeRangeOperation,
 			),
 			authMiddleware,
 			endpoint.GetAllMyRoutinesByTimeRange,
@@ -43,7 +43,7 @@ func configureRoutineRoutes(
 		routineRoutes.POST(
 			"/create-by-station-id",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinesdto.CreateRoutineByStationIdOperation,
+				apicontract.CreateRoutineByStationIdOperation,
 			),
 			authMiddleware,
 			endpoint.CreateRoutineByStationId,
@@ -51,7 +51,7 @@ func configureRoutineRoutes(
 		routineRoutes.POST(
 			"/create-many-by-station-ids",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinesdto.CreateRoutinesByStationIdsOperation,
+				apicontract.CreateRoutinesByStationIdsOperation,
 			),
 			authMiddleware,
 			endpoint.CreateRoutinesByStationIds,
@@ -59,7 +59,7 @@ func configureRoutineRoutes(
 		routineRoutes.POST(
 			"/update",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinesdto.UpdateMyRoutineByIdOperation,
+				apicontract.UpdateMyRoutineByIdOperation,
 			),
 			authMiddleware,
 			endpoint.UpdateMyRoutineById,
@@ -67,7 +67,7 @@ func configureRoutineRoutes(
 		routineRoutes.POST(
 			"/update-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinesdto.UpdateMyRoutinesByIdsOperation,
+				apicontract.UpdateMyRoutinesByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.UpdateMyRoutinesByIds,
@@ -75,7 +75,7 @@ func configureRoutineRoutes(
 		routineRoutes.POST(
 			"/link-tag",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinesdto.LinkRoutineTagByIdOperation,
+				apicontract.LinkRoutineTagByIdOperation,
 			),
 			authMiddleware,
 			endpoint.LinkRoutineTagById,
@@ -83,7 +83,7 @@ func configureRoutineRoutes(
 		routineRoutes.POST(
 			"/link-tags",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinesdto.LinkRoutineTagsByIdsOperation,
+				apicontract.LinkRoutineTagsByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.LinkRoutineTagsByIds,
@@ -91,7 +91,7 @@ func configureRoutineRoutes(
 		routineRoutes.POST(
 			"/link-item",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinesdto.LinkRoutineItemByIdOperation,
+				apicontract.LinkRoutineItemByIdOperation,
 			),
 			authMiddleware,
 			endpoint.LinkRoutineItemById,
@@ -99,7 +99,7 @@ func configureRoutineRoutes(
 		routineRoutes.POST(
 			"/link-items",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinesdto.LinkRoutineItemsByIdsOperation,
+				apicontract.LinkRoutineItemsByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.LinkRoutineItemsByIds,
@@ -107,7 +107,7 @@ func configureRoutineRoutes(
 		routineRoutes.POST(
 			"/restore",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinesdto.RestoreMyRoutineByIdOperation,
+				apicontract.RestoreMyRoutineByIdOperation,
 			),
 			authMiddleware,
 			endpoint.RestoreMyRoutineById,
@@ -115,7 +115,7 @@ func configureRoutineRoutes(
 		routineRoutes.POST(
 			"/restore-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinesdto.RestoreMyRoutinesByIdsOperation,
+				apicontract.RestoreMyRoutinesByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.RestoreMyRoutinesByIds,
@@ -123,7 +123,7 @@ func configureRoutineRoutes(
 		routineRoutes.POST(
 			"/delete",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinesdto.DeleteMyRoutineByIdOperation,
+				apicontract.DeleteMyRoutineByIdOperation,
 			),
 			authMiddleware,
 			endpoint.DeleteMyRoutineById,
@@ -131,7 +131,7 @@ func configureRoutineRoutes(
 		routineRoutes.POST(
 			"/delete-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinesdto.DeleteMyRoutinesByIdsOperation,
+				apicontract.DeleteMyRoutinesByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.DeleteMyRoutinesByIds,
@@ -139,7 +139,7 @@ func configureRoutineRoutes(
 		routineRoutes.POST(
 			"/hard-delete",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinesdto.HardDeleteMyRoutineByIdOperation,
+				apicontract.HardDeleteMyRoutineByIdOperation,
 			),
 			authMiddleware,
 			endpoint.HardDeleteMyRoutineById,
@@ -147,7 +147,7 @@ func configureRoutineRoutes(
 		routineRoutes.POST(
 			"/hard-delete-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinesdto.HardDeleteMyRoutinesByIdsOperation,
+				apicontract.HardDeleteMyRoutinesByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.HardDeleteMyRoutinesByIds,
@@ -158,7 +158,7 @@ func configureRoutineRoutes(
 		visualizationRoutes.POST(
 			"/status-count",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinesdto.VisualizeMyRoutineStatusCountOperation,
+				apicontract.VisualizeMyRoutineStatusCountOperation,
 			),
 			authMiddleware,
 			endpoint.VisualizeMyRoutineStatusCount,
@@ -166,7 +166,7 @@ func configureRoutineRoutes(
 		visualizationRoutes.POST(
 			"/period-count",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinesdto.VisualizeMyRoutinePeriodCountOperation,
+				apicontract.VisualizeMyRoutinePeriodCountOperation,
 			),
 			authMiddleware,
 			endpoint.VisualizeMyRoutinePeriodCount,
@@ -174,7 +174,7 @@ func configureRoutineRoutes(
 		visualizationRoutes.POST(
 			"/scheduled-start-at-count",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinesdto.VisualizeMyRoutineScheduledStartAtCountOperation,
+				apicontract.VisualizeMyRoutineScheduledStartAtCountOperation,
 			),
 			authMiddleware,
 			endpoint.VisualizeMyRoutineScheduledStartAtCount,
@@ -182,7 +182,7 @@ func configureRoutineRoutes(
 		visualizationRoutes.POST(
 			"/scheduled-end-at-count",
 			middlewares.DelegationAuthenticatedMiddleware(
-				routinesdto.VisualizeMyRoutineScheduledEndAtCountOperation,
+				apicontract.VisualizeMyRoutineScheduledEndAtCountOperation,
 			),
 			authMiddleware,
 			endpoint.VisualizeMyRoutineScheduledEndAtCount,
@@ -191,7 +191,7 @@ func configureRoutineRoutes(
 	router.POST(
 		"/routines/graphql/search",
 		middlewares.DelegationAuthenticatedMiddleware(
-			routinesdto.SearchRoutinesOperation,
+			apicontract.SearchRoutinesOperation,
 		),
 		authMiddleware,
 		endpoint.SearchRoutines,

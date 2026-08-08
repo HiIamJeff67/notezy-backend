@@ -3,7 +3,7 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	usersettingsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-settings"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-settings"
 
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
@@ -19,7 +19,7 @@ func configureUserSettingRoutes(
 		userSettingRoutes.POST(
 			"/get",
 			middlewares.DelegationAuthenticatedMiddleware(
-				usersettingsdto.GetMySettingOperation,
+				apicontract.GetMySettingOperation,
 			),
 			authMiddleware,
 			endpoint.GetMySetting,
@@ -27,7 +27,7 @@ func configureUserSettingRoutes(
 		userSettingRoutes.POST(
 			"/update",
 			middlewares.DelegationAuthenticatedMiddleware(
-				usersettingsdto.UpdateMySettingOperation,
+				apicontract.UpdateMySettingOperation,
 			),
 			authMiddleware,
 			endpoint.UpdateMySetting,

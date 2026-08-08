@@ -1,4 +1,4 @@
-package materialsdto
+package apicontract
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	coreapicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api"
-	materialstypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/materials"
+	coretypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/materials"
 )
 
 type UpdateMyMaterialByIdRequestDto struct {
@@ -15,8 +15,8 @@ type UpdateMyMaterialByIdRequestDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			Values  materialstypes.UpdatableMaterial `json:"values"`
-			SetNull *map[string]bool                 `json:"setNull,omitempty"`
+			Values  coretypes.UpdatableMaterial `json:"values"`
+			SetNull *map[string]bool            `json:"setNull,omitempty"`
 		},
 		struct {
 			MaterialId uuid.UUID `json:"materialId" validate:"required"`

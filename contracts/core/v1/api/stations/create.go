@@ -1,4 +1,4 @@
-package stationsdto
+package apicontract
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	coreapicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api"
-	stationstypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/stations"
+	coretypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/stations"
 )
 
 type CreateStationRequestDto struct {
@@ -14,7 +14,7 @@ type CreateStationRequestDto struct {
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
-		stationstypes.CreatableStation,
+		coretypes.CreatableStation,
 		struct{},
 		struct{},
 	]
@@ -31,7 +31,7 @@ type CreateStationsRequestDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			CreatedStations []stationstypes.CreatableStation `json:"createdStations" validate:"required,min=1,max=200,dive"`
+			CreatedStations []coretypes.CreatableStation `json:"createdStations" validate:"required,min=1,max=200,dive"`
 		},
 		struct{},
 		struct{},

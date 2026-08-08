@@ -8,9 +8,9 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
-	userinfosdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-infos"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-infos"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
@@ -27,8 +27,8 @@ import (
 )
 
 type UserInfoServiceInterface interface {
-	GetMyInfo(ctx context.Context, requestDto *userinfosdto.GetMyInfoRequestDto) (*userinfosdto.GetMyInfoResponseDto, *exceptions.Exception)
-	UpdateMyInfo(ctx context.Context, requestDto *userinfosdto.UpdateMyInfoRequestDto) (*userinfosdto.UpdateMyInfoResponseDto, *exceptions.Exception)
+	GetMyInfo(ctx context.Context, requestDto *apicontract.GetMyInfoRequestDto) (*apicontract.GetMyInfoResponseDto, *exceptions.Exception)
+	UpdateMyInfo(ctx context.Context, requestDto *apicontract.UpdateMyInfoRequestDto) (*apicontract.UpdateMyInfoResponseDto, *exceptions.Exception)
 
 	// services for public userInfos
 	GetPublicUserInfoByUserPublicId(ctx context.Context, publicId uuid.UUID) (*gqlmodels.PublicUserInfo, *exceptions.Exception)
@@ -62,8 +62,8 @@ func NewUserInfoService(
 /* ============================== Service Methods for UserInfo ============================== */
 
 func (s *UserInfoService) GetMyInfo(
-	ctx context.Context, requestDto *userinfosdto.GetMyInfoRequestDto,
-) (*userinfosdto.GetMyInfoResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.GetMyInfoRequestDto,
+) (*apicontract.GetMyInfoResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -92,7 +92,7 @@ func (s *UserInfoService) GetMyInfo(
 		countryString := userInfo.Country.String()
 		country = &countryString
 	}
-	return &userinfosdto.GetMyInfoResponseDto{
+	return &apicontract.GetMyInfoResponseDto{
 		CoverBackgroundURL: userInfo.CoverBackgroundURL,
 		AvatarURL:          userInfo.AvatarURL,
 		Header:             userInfo.Header,
@@ -105,8 +105,8 @@ func (s *UserInfoService) GetMyInfo(
 }
 
 func (s *UserInfoService) UpdateMyInfo(
-	ctx context.Context, requestDto *userinfosdto.UpdateMyInfoRequestDto,
-) (*userinfosdto.UpdateMyInfoResponseDto, *exceptions.Exception) {
+	ctx context.Context, requestDto *apicontract.UpdateMyInfoRequestDto,
+) (*apicontract.UpdateMyInfoResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -183,7 +183,7 @@ func (s *UserInfoService) UpdateMyInfo(
 		)
 	}
 
-	return &userinfosdto.UpdateMyInfoResponseDto{
+	return &apicontract.UpdateMyInfoResponseDto{
 		UpdatedAt: updatedUserInfo.UpdatedAt,
 	}, nil
 }

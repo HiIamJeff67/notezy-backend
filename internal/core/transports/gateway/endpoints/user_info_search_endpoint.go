@@ -6,13 +6,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	userinfosdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-infos"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-infos"
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 )
 
 func (t *UserInfoEndpoint) LoadUserInfos(ctx *gin.Context) {
-	request := &gatewaycontract.Request[userinfosdto.LoadUserInfosRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.LoadUserInfosRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -32,7 +32,7 @@ func (t *UserInfoEndpoint) LoadUserInfos(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[userinfosdto.LoadUserInfosResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.LoadUserInfosResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,

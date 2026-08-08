@@ -3,7 +3,7 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	authdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/auth"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/auth"
 
 	userdata "github.com/HiIamJeff67/notezy-backend/internal/core/data/cache/userdata"
 	enums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"
@@ -20,42 +20,42 @@ func configureAnonymousAuthRoutes(
 		authRoutes.POST(
 			"/register",
 			middlewares.DelegationMiddleware(
-				authdto.RegisterOperation,
+				apicontract.RegisterOperation,
 			),
 			endpoint.Register,
 		)
 		authRoutes.POST(
 			"/register/google",
 			middlewares.DelegationMiddleware(
-				authdto.RegisterViaGoogleOperation,
+				apicontract.RegisterViaGoogleOperation,
 			),
 			endpoint.RegisterViaGoogle,
 		)
 		authRoutes.POST(
 			"/login",
 			middlewares.DelegationMiddleware(
-				authdto.LoginOperation,
+				apicontract.LoginOperation,
 			),
 			endpoint.Login,
 		)
 		authRoutes.POST(
 			"/login/google",
 			middlewares.DelegationMiddleware(
-				authdto.LoginViaGoogleOperation,
+				apicontract.LoginViaGoogleOperation,
 			),
 			endpoint.LoginViaGoogle,
 		)
 		authRoutes.POST(
 			"/email/code",
 			middlewares.DelegationMiddleware(
-				authdto.SendAuthCodeOperation,
+				apicontract.SendAuthCodeOperation,
 			),
 			endpoint.SendAuthCode,
 		)
 		authRoutes.PUT(
 			"/password/forget",
 			middlewares.DelegationMiddleware(
-				authdto.ForgetPasswordOperation,
+				apicontract.ForgetPasswordOperation,
 			),
 			endpoint.ForgetPassword,
 		)
@@ -73,7 +73,7 @@ func configureAuthenticatedAuthRoutes(
 		authRoutes.POST(
 			"/logout",
 			middlewares.DelegationAuthenticatedMiddleware(
-				authdto.LogoutOperation,
+				apicontract.LogoutOperation,
 			),
 			authMiddleware,
 			endpoint.Logout,
@@ -81,7 +81,7 @@ func configureAuthenticatedAuthRoutes(
 		authRoutes.PUT(
 			"/email/validate",
 			middlewares.DelegationAuthenticatedMiddleware(
-				authdto.ValidateEmailOperation,
+				apicontract.ValidateEmailOperation,
 			),
 			authMiddleware,
 			middlewares.CSRFMiddleware(userDataCacheClient),
@@ -90,7 +90,7 @@ func configureAuthenticatedAuthRoutes(
 		authRoutes.PUT(
 			"/email/reset",
 			middlewares.DelegationAuthenticatedMiddleware(
-				authdto.ResetEmailOperation,
+				apicontract.ResetEmailOperation,
 			),
 			authMiddleware,
 			middlewares.UserRoleMiddleware(enums.UserRole_Normal),
@@ -100,7 +100,7 @@ func configureAuthenticatedAuthRoutes(
 		authRoutes.PUT(
 			"/me/reset",
 			middlewares.DelegationAuthenticatedMiddleware(
-				authdto.ResetMeOperation,
+				apicontract.ResetMeOperation,
 			),
 			authMiddleware,
 			middlewares.CSRFMiddleware(userDataCacheClient),
@@ -109,7 +109,7 @@ func configureAuthenticatedAuthRoutes(
 		authRoutes.DELETE(
 			"/me/delete",
 			middlewares.DelegationAuthenticatedMiddleware(
-				authdto.DeleteMeOperation,
+				apicontract.DeleteMeOperation,
 			),
 			authMiddleware,
 			middlewares.CSRFMiddleware(userDataCacheClient),

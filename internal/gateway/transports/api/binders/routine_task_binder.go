@@ -8,33 +8,33 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
 
-	routinetasksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tasks"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tasks"
 	enumcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
 )
 
 type RoutineTaskBinderInterface interface {
-	BindGetMyRoutineTaskById(controllerFunc controllers.Func[*routinetasksdto.GetMyRoutineTaskByIdRequestDto]) gin.HandlerFunc
-	BindGetAllMyRoutineTasksByRoutineIds(controllerFunc controllers.Func[*routinetasksdto.GetAllMyRoutineTasksByRoutineIdsRequestDto]) gin.HandlerFunc
-	BindGetAllMyRoutineTasks(controllerFunc controllers.Func[*routinetasksdto.GetAllMyRoutineTasksRequestDto]) gin.HandlerFunc
-	BindCreateRoutineTaskByRoutineId(controllerFunc controllers.Func[*routinetasksdto.CreateRoutineTaskByRoutineIdRequestDto]) gin.HandlerFunc
-	BindUpdateMyRoutineTaskById(controllerFunc controllers.Func[*routinetasksdto.UpdateMyRoutineTaskByIdRequestDto]) gin.HandlerFunc
-	BindPauseMyRoutineTaskById(controllerFunc controllers.Func[*routinetasksdto.PauseMyRoutineTaskByIdRequestDto]) gin.HandlerFunc
-	BindResumeMyRoutineTaskById(controllerFunc controllers.Func[*routinetasksdto.ResumeMyRoutineTaskByIdRequestDto]) gin.HandlerFunc
-	BindHardDeleteMyRoutineTaskById(controllerFunc controllers.Func[*routinetasksdto.HardDeleteMyRoutineTaskByIdRequestDto]) gin.HandlerFunc
-	BindHardDeleteMyRoutineTasksByIds(controllerFunc controllers.Func[*routinetasksdto.HardDeleteMyRoutineTasksByIdsRequestDto]) gin.HandlerFunc
+	BindGetMyRoutineTaskById(controllerFunc controllers.Func[*apicontract.GetMyRoutineTaskByIdRequestDto]) gin.HandlerFunc
+	BindGetAllMyRoutineTasksByRoutineIds(controllerFunc controllers.Func[*apicontract.GetAllMyRoutineTasksByRoutineIdsRequestDto]) gin.HandlerFunc
+	BindGetAllMyRoutineTasks(controllerFunc controllers.Func[*apicontract.GetAllMyRoutineTasksRequestDto]) gin.HandlerFunc
+	BindCreateRoutineTaskByRoutineId(controllerFunc controllers.Func[*apicontract.CreateRoutineTaskByRoutineIdRequestDto]) gin.HandlerFunc
+	BindUpdateMyRoutineTaskById(controllerFunc controllers.Func[*apicontract.UpdateMyRoutineTaskByIdRequestDto]) gin.HandlerFunc
+	BindPauseMyRoutineTaskById(controllerFunc controllers.Func[*apicontract.PauseMyRoutineTaskByIdRequestDto]) gin.HandlerFunc
+	BindResumeMyRoutineTaskById(controllerFunc controllers.Func[*apicontract.ResumeMyRoutineTaskByIdRequestDto]) gin.HandlerFunc
+	BindHardDeleteMyRoutineTaskById(controllerFunc controllers.Func[*apicontract.HardDeleteMyRoutineTaskByIdRequestDto]) gin.HandlerFunc
+	BindHardDeleteMyRoutineTasksByIds(controllerFunc controllers.Func[*apicontract.HardDeleteMyRoutineTasksByIdsRequestDto]) gin.HandlerFunc
 
 	/* ============================== Visualization Methods ============================== */
-	BindVisualizeMyRoutineTaskStatusCount(controllerFunc controllers.Func[*routinetasksdto.VisualizeMyRoutineTaskStatusCountRequestDto]) gin.HandlerFunc
-	BindVisualizeMyRoutineTaskPurposeCount(controllerFunc controllers.Func[*routinetasksdto.VisualizeMyRoutineTaskPurposeCountRequestDto]) gin.HandlerFunc
-	BindVisualizeMyRoutineTaskScheduledAtCount(controllerFunc controllers.Func[*routinetasksdto.VisualizeMyRoutineTaskScheduledAtCountRequestDto]) gin.HandlerFunc
-	BindVisualizeMyRoutineTaskActualStartedAtCount(controllerFunc controllers.Func[*routinetasksdto.VisualizeMyRoutineTaskActualStartedAtCountRequestDto]) gin.HandlerFunc
-	BindVisualizeMyRoutineTaskActualEndedAtCount(controllerFunc controllers.Func[*routinetasksdto.VisualizeMyRoutineTaskActualEndedAtCountRequestDto]) gin.HandlerFunc
+	BindVisualizeMyRoutineTaskStatusCount(controllerFunc controllers.Func[*apicontract.VisualizeMyRoutineTaskStatusCountRequestDto]) gin.HandlerFunc
+	BindVisualizeMyRoutineTaskPurposeCount(controllerFunc controllers.Func[*apicontract.VisualizeMyRoutineTaskPurposeCountRequestDto]) gin.HandlerFunc
+	BindVisualizeMyRoutineTaskScheduledAtCount(controllerFunc controllers.Func[*apicontract.VisualizeMyRoutineTaskScheduledAtCountRequestDto]) gin.HandlerFunc
+	BindVisualizeMyRoutineTaskActualStartedAtCount(controllerFunc controllers.Func[*apicontract.VisualizeMyRoutineTaskActualStartedAtCountRequestDto]) gin.HandlerFunc
+	BindVisualizeMyRoutineTaskActualEndedAtCount(controllerFunc controllers.Func[*apicontract.VisualizeMyRoutineTaskActualEndedAtCountRequestDto]) gin.HandlerFunc
 }
 
 type RoutineTaskBinder struct{}
@@ -91,26 +91,9 @@ func parseRoutineTaskTime(ctx *gin.Context, name string) (time.Time, bool) {
 	return value, true
 }
 
-func parseRoutineTaskUUIDs(ctx *gin.Context, name string) ([]uuid.UUID, bool) {
-	values := ctx.QueryArray(name)
-	if len(values) == 1 {
-		values = strings.Split(values[0], ",")
-	}
-	ids := make([]uuid.UUID, len(values))
-	for index, value := range values {
-		parsed, err := uuid.Parse(value)
-		if err != nil {
-			exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("RoutineTask").WithOrigin(err), ctx)
-			return nil, false
-		}
-		ids[index] = parsed
-	}
-	return ids, true
-}
-
-func (b *RoutineTaskBinder) BindGetMyRoutineTaskById(controllerFunc controllers.Func[*routinetasksdto.GetMyRoutineTaskByIdRequestDto]) gin.HandlerFunc {
+func (b *RoutineTaskBinder) BindGetMyRoutineTaskById(controllerFunc controllers.Func[*apicontract.GetMyRoutineTaskByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &routinetasksdto.GetMyRoutineTaskByIdRequestDto{}
+		requestDto := &apicontract.GetMyRoutineTaskByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		isDeleted, ok := parseRoutineTaskBool(ctx, "isDeleted")
 		if !ok {
@@ -127,9 +110,9 @@ func (b *RoutineTaskBinder) BindGetMyRoutineTaskById(controllerFunc controllers.
 	}
 }
 
-func (b *RoutineTaskBinder) BindGetAllMyRoutineTasksByRoutineIds(controllerFunc controllers.Func[*routinetasksdto.GetAllMyRoutineTasksByRoutineIdsRequestDto]) gin.HandlerFunc {
+func (b *RoutineTaskBinder) BindGetAllMyRoutineTasksByRoutineIds(controllerFunc controllers.Func[*apicontract.GetAllMyRoutineTasksByRoutineIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &routinetasksdto.GetAllMyRoutineTasksByRoutineIdsRequestDto{}
+		requestDto := &apicontract.GetAllMyRoutineTasksByRoutineIdsRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		areDeleted, ok := parseRoutineTaskBool(ctx, "areDeleted")
 		if !ok {
@@ -139,18 +122,27 @@ func (b *RoutineTaskBinder) BindGetAllMyRoutineTasksByRoutineIds(controllerFunc 
 		if ctx.Query("areDeleted") != "" && requestDto.Param.AreDeleted == nil {
 			return
 		}
-		requestDto.Param.RoutineIds, ok = parseRoutineTaskUUIDs(ctx, "routineIds")
-		if !ok {
-			return
+		routineIdValues := ctx.QueryArray("routineIds")
+		if len(routineIdValues) == 1 {
+			routineIdValues = strings.Split(routineIdValues[0], ",")
+		}
+		requestDto.Param.RoutineIds = make([]uuid.UUID, len(routineIdValues))
+		for index, value := range routineIdValues {
+			parsed, err := uuid.Parse(value)
+			if err != nil {
+				exceptionwriter.SafelyAbortAndResponseWithJSON(exceptions.InvalidInput("RoutineTask").WithOrigin(err), ctx)
+				return
+			}
+			requestDto.Param.RoutineIds[index] = parsed
 		}
 		controllerFunc(ctx, requestDto)
 		return
 	}
 }
 
-func (b *RoutineTaskBinder) BindGetAllMyRoutineTasks(controllerFunc controllers.Func[*routinetasksdto.GetAllMyRoutineTasksRequestDto]) gin.HandlerFunc {
+func (b *RoutineTaskBinder) BindGetAllMyRoutineTasks(controllerFunc controllers.Func[*apicontract.GetAllMyRoutineTasksRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &routinetasksdto.GetAllMyRoutineTasksRequestDto{}
+		requestDto := &apicontract.GetAllMyRoutineTasksRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		areDeleted, ok := parseRoutineTaskBool(ctx, "areDeleted")
 		if !ok {
@@ -162,9 +154,9 @@ func (b *RoutineTaskBinder) BindGetAllMyRoutineTasks(controllerFunc controllers.
 	}
 }
 
-func (b *RoutineTaskBinder) BindCreateRoutineTaskByRoutineId(controllerFunc controllers.Func[*routinetasksdto.CreateRoutineTaskByRoutineIdRequestDto]) gin.HandlerFunc {
+func (b *RoutineTaskBinder) BindCreateRoutineTaskByRoutineId(controllerFunc controllers.Func[*apicontract.CreateRoutineTaskByRoutineIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &routinetasksdto.CreateRoutineTaskByRoutineIdRequestDto{}
+		requestDto := &apicontract.CreateRoutineTaskByRoutineIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		value, ok := parseRoutineTaskUUID(ctx, "routineId")
 		if !ok {
@@ -176,9 +168,9 @@ func (b *RoutineTaskBinder) BindCreateRoutineTaskByRoutineId(controllerFunc cont
 	}
 }
 
-func (b *RoutineTaskBinder) BindUpdateMyRoutineTaskById(controllerFunc controllers.Func[*routinetasksdto.UpdateMyRoutineTaskByIdRequestDto]) gin.HandlerFunc {
+func (b *RoutineTaskBinder) BindUpdateMyRoutineTaskById(controllerFunc controllers.Func[*apicontract.UpdateMyRoutineTaskByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &routinetasksdto.UpdateMyRoutineTaskByIdRequestDto{}
+		requestDto := &apicontract.UpdateMyRoutineTaskByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		value, ok := parseRoutineTaskUUID(ctx, "routineTaskId")
 		if !ok {
@@ -190,9 +182,9 @@ func (b *RoutineTaskBinder) BindUpdateMyRoutineTaskById(controllerFunc controlle
 	}
 }
 
-func (b *RoutineTaskBinder) BindPauseMyRoutineTaskById(controllerFunc controllers.Func[*routinetasksdto.PauseMyRoutineTaskByIdRequestDto]) gin.HandlerFunc {
+func (b *RoutineTaskBinder) BindPauseMyRoutineTaskById(controllerFunc controllers.Func[*apicontract.PauseMyRoutineTaskByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &routinetasksdto.PauseMyRoutineTaskByIdRequestDto{}
+		requestDto := &apicontract.PauseMyRoutineTaskByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		value, ok := parseRoutineTaskUUID(ctx, "routineTaskId")
 		if !ok {
@@ -204,9 +196,9 @@ func (b *RoutineTaskBinder) BindPauseMyRoutineTaskById(controllerFunc controller
 	}
 }
 
-func (b *RoutineTaskBinder) BindResumeMyRoutineTaskById(controllerFunc controllers.Func[*routinetasksdto.ResumeMyRoutineTaskByIdRequestDto]) gin.HandlerFunc {
+func (b *RoutineTaskBinder) BindResumeMyRoutineTaskById(controllerFunc controllers.Func[*apicontract.ResumeMyRoutineTaskByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &routinetasksdto.ResumeMyRoutineTaskByIdRequestDto{}
+		requestDto := &apicontract.ResumeMyRoutineTaskByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		value, ok := parseRoutineTaskUUID(ctx, "routineTaskId")
 		if !ok {
@@ -218,9 +210,9 @@ func (b *RoutineTaskBinder) BindResumeMyRoutineTaskById(controllerFunc controlle
 	}
 }
 
-func (b *RoutineTaskBinder) BindHardDeleteMyRoutineTaskById(controllerFunc controllers.Func[*routinetasksdto.HardDeleteMyRoutineTaskByIdRequestDto]) gin.HandlerFunc {
+func (b *RoutineTaskBinder) BindHardDeleteMyRoutineTaskById(controllerFunc controllers.Func[*apicontract.HardDeleteMyRoutineTaskByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &routinetasksdto.HardDeleteMyRoutineTaskByIdRequestDto{}
+		requestDto := &apicontract.HardDeleteMyRoutineTaskByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		value, ok := parseRoutineTaskUUID(ctx, "routineTaskId")
 		if !ok {
@@ -232,18 +224,18 @@ func (b *RoutineTaskBinder) BindHardDeleteMyRoutineTaskById(controllerFunc contr
 	}
 }
 
-func (b *RoutineTaskBinder) BindHardDeleteMyRoutineTasksByIds(controllerFunc controllers.Func[*routinetasksdto.HardDeleteMyRoutineTasksByIdsRequestDto]) gin.HandlerFunc {
+func (b *RoutineTaskBinder) BindHardDeleteMyRoutineTasksByIds(controllerFunc controllers.Func[*apicontract.HardDeleteMyRoutineTasksByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &routinetasksdto.HardDeleteMyRoutineTasksByIdsRequestDto{}
+		requestDto := &apicontract.HardDeleteMyRoutineTasksByIdsRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		bindRoutineTaskJSON(ctx, requestDto, &requestDto.Body, controllerFunc)
 		return
 	}
 }
 
-func (b *RoutineTaskBinder) BindVisualizeMyRoutineTaskStatusCount(controllerFunc controllers.Func[*routinetasksdto.VisualizeMyRoutineTaskStatusCountRequestDto]) gin.HandlerFunc {
+func (b *RoutineTaskBinder) BindVisualizeMyRoutineTaskStatusCount(controllerFunc controllers.Func[*apicontract.VisualizeMyRoutineTaskStatusCountRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &routinetasksdto.VisualizeMyRoutineTaskStatusCountRequestDto{}
+		requestDto := &apicontract.VisualizeMyRoutineTaskStatusCountRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		ok := true
 		requestDto.Param.Permission, ok = parseRoutineTaskPermission(ctx)
@@ -255,9 +247,9 @@ func (b *RoutineTaskBinder) BindVisualizeMyRoutineTaskStatusCount(controllerFunc
 	}
 }
 
-func (b *RoutineTaskBinder) BindVisualizeMyRoutineTaskPurposeCount(controllerFunc controllers.Func[*routinetasksdto.VisualizeMyRoutineTaskPurposeCountRequestDto]) gin.HandlerFunc {
+func (b *RoutineTaskBinder) BindVisualizeMyRoutineTaskPurposeCount(controllerFunc controllers.Func[*apicontract.VisualizeMyRoutineTaskPurposeCountRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &routinetasksdto.VisualizeMyRoutineTaskPurposeCountRequestDto{}
+		requestDto := &apicontract.VisualizeMyRoutineTaskPurposeCountRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		ok := true
 		requestDto.Param.Permission, ok = parseRoutineTaskPermission(ctx)
@@ -269,9 +261,9 @@ func (b *RoutineTaskBinder) BindVisualizeMyRoutineTaskPurposeCount(controllerFun
 	}
 }
 
-func (b *RoutineTaskBinder) BindVisualizeMyRoutineTaskScheduledAtCount(controllerFunc controllers.Func[*routinetasksdto.VisualizeMyRoutineTaskScheduledAtCountRequestDto]) gin.HandlerFunc {
+func (b *RoutineTaskBinder) BindVisualizeMyRoutineTaskScheduledAtCount(controllerFunc controllers.Func[*apicontract.VisualizeMyRoutineTaskScheduledAtCountRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &routinetasksdto.VisualizeMyRoutineTaskScheduledAtCountRequestDto{}
+		requestDto := &apicontract.VisualizeMyRoutineTaskScheduledAtCountRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		ok := true
 		requestDto.Param.Permission, ok = parseRoutineTaskPermission(ctx)
@@ -292,9 +284,9 @@ func (b *RoutineTaskBinder) BindVisualizeMyRoutineTaskScheduledAtCount(controlle
 	}
 }
 
-func (b *RoutineTaskBinder) BindVisualizeMyRoutineTaskActualStartedAtCount(controllerFunc controllers.Func[*routinetasksdto.VisualizeMyRoutineTaskActualStartedAtCountRequestDto]) gin.HandlerFunc {
+func (b *RoutineTaskBinder) BindVisualizeMyRoutineTaskActualStartedAtCount(controllerFunc controllers.Func[*apicontract.VisualizeMyRoutineTaskActualStartedAtCountRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &routinetasksdto.VisualizeMyRoutineTaskActualStartedAtCountRequestDto{}
+		requestDto := &apicontract.VisualizeMyRoutineTaskActualStartedAtCountRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		ok := true
 		requestDto.Param.Permission, ok = parseRoutineTaskPermission(ctx)
@@ -315,9 +307,9 @@ func (b *RoutineTaskBinder) BindVisualizeMyRoutineTaskActualStartedAtCount(contr
 	}
 }
 
-func (b *RoutineTaskBinder) BindVisualizeMyRoutineTaskActualEndedAtCount(controllerFunc controllers.Func[*routinetasksdto.VisualizeMyRoutineTaskActualEndedAtCountRequestDto]) gin.HandlerFunc {
+func (b *RoutineTaskBinder) BindVisualizeMyRoutineTaskActualEndedAtCount(controllerFunc controllers.Func[*apicontract.VisualizeMyRoutineTaskActualEndedAtCountRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &routinetasksdto.VisualizeMyRoutineTaskActualEndedAtCountRequestDto{}
+		requestDto := &apicontract.VisualizeMyRoutineTaskActualEndedAtCountRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 		ok := true
 		requestDto.Param.Permission, ok = parseRoutineTaskPermission(ctx)

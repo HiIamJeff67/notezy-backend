@@ -1,14 +1,12 @@
 package middlewares
 
 import (
-	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
 	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
 	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 
 	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
@@ -21,10 +19,20 @@ func JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler *cookies.
 		ctx.Set(sharedcontexts.ContextFieldName_User_Name.String(), nil)
 		ctx.Set(sharedcontexts.ContextFieldName_User_Email.String(), nil)
 		ctx.Set(sharedcontexts.ContextFieldName_AccessToken.String(), nil)
+		ctx.Set(sharedcontexts.ContextFieldName_RefreshToken.String(), nil)
 		ctx.Set(sharedcontexts.ContextFieldName_CSRFToken.String(), nil)
 		ctx.Set(sharedcontexts.ContextFieldName_IsNewTokens.String(), false)
+		if csrfToken := ctx.GetHeader("X-CSRF-Token"); strings.TrimSpace(csrfToken) != "" {
+			ctx.Set(sharedcontexts.ContextFieldName_CSRFToken.String(), csrfToken)
+		}
 
-		accessToken, _ := extractAccessToken(ctx, accessTokenCookieHandler)
+		accessToken, _ := accessTokenCookieHandler.Get(ctx)
+		if strings.TrimSpace(accessToken) == "" {
+			authorizationHeader := ctx.GetHeader("Authorization")
+			if strings.HasPrefix(authorizationHeader, "Bearer ") {
+				accessToken = strings.TrimPrefix(authorizationHeader, "Bearer ")
+			}
+		}
 		if accessToken != "" {
 			if claims, err := sharedtokens.ParseAccessToken(accessToken); err == nil {
 				if _, err := uuid.Parse(claims.Subject); err == nil {
@@ -38,52 +46,18 @@ func JWTMiddleware(accessTokenCookieHandler, refreshTokenCookieHandler *cookies.
 			}
 		}
 
-		refreshToken, _ := extractRefreshToken(ctx, refreshTokenCookieHandler)
+		refreshToken, _ := refreshTokenCookieHandler.Get(ctx)
 		if refreshToken != "" {
 			if claims, err := sharedtokens.ParseRefreshToken(refreshToken); err == nil {
 				if _, err := uuid.Parse(claims.Subject); err == nil {
 					ctx.Set(sharedcontexts.ContextFieldName_User_PublicId.String(), claims.Subject)
 					ctx.Set(sharedcontexts.ContextFieldName_User_Name.String(), claims.Name)
 					ctx.Set(sharedcontexts.ContextFieldName_User_Email.String(), claims.Email)
+					ctx.Set(sharedcontexts.ContextFieldName_RefreshToken.String(), refreshToken)
 				}
 			}
 		}
 
 		ctx.Next()
 	}
-}
-
-func extractAccessToken(ctx *gin.Context, accessTokenCookieHandler *cookies.CookieHandler) (string, *exceptions.Exception) {
-	accessToken, err := accessTokenCookieHandler.Get(ctx)
-	if err == nil && strings.TrimSpace(accessToken) != "" {
-		return accessToken, nil
-	}
-
-	authorizationHeader := ctx.GetHeader("Authorization")
-	if !strings.HasPrefix(authorizationHeader, "Bearer ") {
-		return "", exceptions.New(
-			"InvalidAccessToken",
-			"Token",
-			"ExtractAccessToken",
-			"access token is missing or invalid",
-			http.StatusUnauthorized,
-		)
-	}
-
-	return strings.TrimPrefix(authorizationHeader, "Bearer "), nil
-}
-
-func extractRefreshToken(ctx *gin.Context, refreshTokenCookieHandler *cookies.CookieHandler) (string, *exceptions.Exception) {
-	refreshToken, err := refreshTokenCookieHandler.Get(ctx)
-	if err != nil || strings.TrimSpace(refreshToken) == "" {
-		return "", exceptions.New(
-			"InvalidRefreshToken",
-			"Token",
-			"ExtractRefreshToken",
-			"refresh token is missing or invalid",
-			http.StatusUnauthorized,
-		)
-	}
-
-	return refreshToken, nil
 }

@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	badgesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/badges"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/badges"
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 
 	otherservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/other"
@@ -29,8 +29,8 @@ func NewBadgeEndpoint(
 }
 
 func (t *BadgeEndpoint) LoadUserBadges(ctx *gin.Context) {
-	request := &gatewaycontract.Request[badgesdto.LoadUserBadgesRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.LoadUserBadgesRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -50,7 +50,7 @@ func (t *BadgeEndpoint) LoadUserBadges(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[badgesdto.LoadUserBadgesResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.LoadUserBadgesResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,

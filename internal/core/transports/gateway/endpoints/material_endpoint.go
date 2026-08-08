@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	materialsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/materials"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/materials"
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 
 	materialservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/material"
@@ -44,8 +44,8 @@ func NewMaterialEndpoint(
 }
 
 func (t *MaterialEndpoint) GetMyMaterialById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[materialsdto.GetMyMaterialByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetMyMaterialByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -65,7 +65,7 @@ func (t *MaterialEndpoint) GetMyMaterialById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[materialsdto.GetMyMaterialByIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetMyMaterialByIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -76,8 +76,8 @@ func (t *MaterialEndpoint) GetMyMaterialById(ctx *gin.Context) {
 }
 
 func (t *MaterialEndpoint) GetMyMaterialAndItsParentById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[materialsdto.GetMyMaterialAndItsParentByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetMyMaterialAndItsParentByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -97,7 +97,7 @@ func (t *MaterialEndpoint) GetMyMaterialAndItsParentById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[materialsdto.GetMyMaterialAndItsParentByIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetMyMaterialAndItsParentByIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -108,8 +108,8 @@ func (t *MaterialEndpoint) GetMyMaterialAndItsParentById(ctx *gin.Context) {
 }
 
 func (t *MaterialEndpoint) GetMyMaterialsByParentSubShelfId(ctx *gin.Context) {
-	request := &gatewaycontract.Request[materialsdto.GetMyMaterialsByParentSubShelfIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetMyMaterialsByParentSubShelfIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -129,7 +129,7 @@ func (t *MaterialEndpoint) GetMyMaterialsByParentSubShelfId(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[materialsdto.GetMyMaterialsByParentSubShelfIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetMyMaterialsByParentSubShelfIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -140,8 +140,8 @@ func (t *MaterialEndpoint) GetMyMaterialsByParentSubShelfId(ctx *gin.Context) {
 }
 
 func (t *MaterialEndpoint) GetAllMyMaterialsByRootShelfId(ctx *gin.Context) {
-	request := &gatewaycontract.Request[materialsdto.GetAllMyMaterialsByRootShelfIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetAllMyMaterialsByRootShelfIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -161,7 +161,7 @@ func (t *MaterialEndpoint) GetAllMyMaterialsByRootShelfId(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[materialsdto.GetAllMyMaterialsByRootShelfIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetAllMyMaterialsByRootShelfIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -172,8 +172,8 @@ func (t *MaterialEndpoint) GetAllMyMaterialsByRootShelfId(ctx *gin.Context) {
 }
 
 func (t *MaterialEndpoint) CreateMyMaterial(ctx *gin.Context) {
-	request := &gatewaycontract.Request[materialsdto.CreateMyMaterialRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.CreateMyMaterialRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -193,7 +193,7 @@ func (t *MaterialEndpoint) CreateMyMaterial(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[materialsdto.CreateMyMaterialResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.CreateMyMaterialResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -204,8 +204,8 @@ func (t *MaterialEndpoint) CreateMyMaterial(ctx *gin.Context) {
 }
 
 func (t *MaterialEndpoint) UpdateMyMaterialById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[materialsdto.UpdateMyMaterialByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.UpdateMyMaterialByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -225,7 +225,7 @@ func (t *MaterialEndpoint) UpdateMyMaterialById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[materialsdto.UpdateMyMaterialByIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.UpdateMyMaterialByIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -236,8 +236,8 @@ func (t *MaterialEndpoint) UpdateMyMaterialById(ctx *gin.Context) {
 }
 
 func (t *MaterialEndpoint) SaveMyMaterialById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[materialsdto.SaveMyMaterialByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.SaveMyMaterialByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -257,7 +257,7 @@ func (t *MaterialEndpoint) SaveMyMaterialById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[materialsdto.SaveMyMaterialByIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.SaveMyMaterialByIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -268,8 +268,8 @@ func (t *MaterialEndpoint) SaveMyMaterialById(ctx *gin.Context) {
 }
 
 func (t *MaterialEndpoint) MoveMyMaterialById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[materialsdto.MoveMyMaterialByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.MoveMyMaterialByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -289,7 +289,7 @@ func (t *MaterialEndpoint) MoveMyMaterialById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[materialsdto.MoveMyMaterialByIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.MoveMyMaterialByIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -300,8 +300,8 @@ func (t *MaterialEndpoint) MoveMyMaterialById(ctx *gin.Context) {
 }
 
 func (t *MaterialEndpoint) MoveMyMaterialsByIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[materialsdto.MoveMyMaterialsByIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.MoveMyMaterialsByIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -321,7 +321,7 @@ func (t *MaterialEndpoint) MoveMyMaterialsByIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[materialsdto.MoveMyMaterialsByIdsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.MoveMyMaterialsByIdsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -332,8 +332,8 @@ func (t *MaterialEndpoint) MoveMyMaterialsByIds(ctx *gin.Context) {
 }
 
 func (t *MaterialEndpoint) RestoreMyMaterialById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[materialsdto.RestoreMyMaterialByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.RestoreMyMaterialByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -353,7 +353,7 @@ func (t *MaterialEndpoint) RestoreMyMaterialById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[materialsdto.RestoreMyMaterialByIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.RestoreMyMaterialByIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -364,8 +364,8 @@ func (t *MaterialEndpoint) RestoreMyMaterialById(ctx *gin.Context) {
 }
 
 func (t *MaterialEndpoint) RestoreMyMaterialsByIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[materialsdto.RestoreMyMaterialsByIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.RestoreMyMaterialsByIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -385,7 +385,7 @@ func (t *MaterialEndpoint) RestoreMyMaterialsByIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[materialsdto.RestoreMyMaterialsByIdsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.RestoreMyMaterialsByIdsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -396,8 +396,8 @@ func (t *MaterialEndpoint) RestoreMyMaterialsByIds(ctx *gin.Context) {
 }
 
 func (t *MaterialEndpoint) DeleteMyMaterialById(ctx *gin.Context) {
-	request := &gatewaycontract.Request[materialsdto.DeleteMyMaterialByIdRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.DeleteMyMaterialByIdRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -417,7 +417,7 @@ func (t *MaterialEndpoint) DeleteMyMaterialById(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[materialsdto.DeleteMyMaterialByIdResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.DeleteMyMaterialByIdResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -428,8 +428,8 @@ func (t *MaterialEndpoint) DeleteMyMaterialById(ctx *gin.Context) {
 }
 
 func (t *MaterialEndpoint) DeleteMyMaterialsByIds(ctx *gin.Context) {
-	request := &gatewaycontract.Request[materialsdto.DeleteMyMaterialsByIdsRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.DeleteMyMaterialsByIdsRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -449,7 +449,7 @@ func (t *MaterialEndpoint) DeleteMyMaterialsByIds(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[materialsdto.DeleteMyMaterialsByIdsResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.DeleteMyMaterialsByIdsResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,

@@ -1,0 +1,12 @@
+go 1.26.0
+
+use (
+	./contracts
+	./internal/core
+	./internal/durablejob
+	./internal/email
+	./internal/gateway
+	./internal/realtimegateway
+	./shared
+	./test
+)

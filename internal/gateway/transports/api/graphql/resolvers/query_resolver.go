@@ -9,19 +9,19 @@ import (
 
 	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
 
-	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
-	itemsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/items"
-	materialsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/materials"
-	rootshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/root-shelves"
-	routinetagsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tags"
-	routinetaskrecordsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-task-records"
-	routinetasksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tasks"
-	routinesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routines"
-	stationsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/stations"
-	subshelvesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/sub-shelves"
-	themesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/themes"
-	usersdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
+	blockpackscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
+	blockscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
+	itemscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/items"
+	materialscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/materials"
+	rootshelvescontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/root-shelves"
+	routinetagscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tags"
+	routinetaskrecordscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-task-records"
+	routinetaskscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tasks"
+	routinescontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routines"
+	stationscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/stations"
+	subshelvescontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/sub-shelves"
+	themescontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/themes"
+	userscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
 	generated "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/generated"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 
@@ -37,13 +37,13 @@ func (r *queryResolver) SearchUsers(ctx context.Context, input gqlmodels.SearchU
 	}
 
 	response, exception := coreadapters.CallSecurly[
-		usersdto.SearchUsersRequestDto,
-		usersdto.SearchUsersResponseDto,
+		userscontract.SearchUsersRequestDto,
+		userscontract.SearchUsersResponseDto,
 	](
 		ginContext,
 		r.coreClient,
 		&input,
-		usersdto.SearchUsersOperation,
+		userscontract.SearchUsersOperation,
 		"/core/v1/users/graphql/search",
 	)
 	if exception != nil {
@@ -61,13 +61,13 @@ func (r *queryResolver) SearchThemes(ctx context.Context, input gqlmodels.Search
 	}
 
 	response, exception := coreadapters.Call[
-		themesdto.SearchThemesRequestDto,
-		themesdto.SearchThemesResponseDto,
+		themescontract.SearchThemesRequestDto,
+		themescontract.SearchThemesResponseDto,
 	](
 		ginContext,
 		r.coreClient,
 		&input,
-		themesdto.SearchThemesOperation,
+		themescontract.SearchThemesOperation,
 		"/core/v1/themes/graphql/search",
 	)
 	if exception != nil {
@@ -85,13 +85,13 @@ func (r *queryResolver) SearchRootShelves(ctx context.Context, input gqlmodels.S
 	}
 
 	response, exception := coreadapters.CallSecurly[
-		rootshelvesdto.SearchRootShelvesRequestDto,
-		rootshelvesdto.SearchRootShelvesResponseDto,
+		rootshelvescontract.SearchRootShelvesRequestDto,
+		rootshelvescontract.SearchRootShelvesResponseDto,
 	](
 		ginContext,
 		r.coreClient,
 		&input,
-		rootshelvesdto.SearchRootShelvesOperation,
+		rootshelvescontract.SearchRootShelvesOperation,
 		"/core/v1/root-shelves/graphql/search",
 	)
 	if exception != nil {
@@ -109,13 +109,13 @@ func (r *queryResolver) SearchSubShelves(ctx context.Context, input gqlmodels.Se
 	}
 
 	response, exception := coreadapters.CallSecurly[
-		subshelvesdto.SearchSubShelvesRequestDto,
-		subshelvesdto.SearchSubShelvesResponseDto,
+		subshelvescontract.SearchSubShelvesRequestDto,
+		subshelvescontract.SearchSubShelvesResponseDto,
 	](
 		ginContext,
 		r.coreClient,
 		&input,
-		subshelvesdto.SearchSubShelvesOperation,
+		subshelvescontract.SearchSubShelvesOperation,
 		"/core/v1/sub-shelves/graphql/search",
 	)
 	if exception != nil {
@@ -133,13 +133,13 @@ func (r *queryResolver) SearchItems(ctx context.Context, input gqlmodels.SearchI
 	}
 
 	response, exception := coreadapters.CallSecurly[
-		itemsdto.SearchItemsRequestDto,
-		itemsdto.SearchItemsResponseDto,
+		itemscontract.SearchItemsRequestDto,
+		itemscontract.SearchItemsResponseDto,
 	](
 		ginContext,
 		r.coreClient,
 		&input,
-		itemsdto.SearchItemsOperation,
+		itemscontract.SearchItemsOperation,
 		"/core/v1/items/graphql/search",
 	)
 	if exception != nil {
@@ -157,13 +157,13 @@ func (r *queryResolver) SearchMaterials(ctx context.Context, input gqlmodels.Sea
 	}
 
 	response, exception := coreadapters.CallSecurly[
-		materialsdto.SearchMaterialsRequestDto,
-		materialsdto.SearchMaterialsResponseDto,
+		materialscontract.SearchMaterialsRequestDto,
+		materialscontract.SearchMaterialsResponseDto,
 	](
 		ginContext,
 		r.coreClient,
 		&input,
-		materialsdto.SearchMaterialsOperation,
+		materialscontract.SearchMaterialsOperation,
 		"/core/v1/materials/graphql/search",
 	)
 	if exception != nil {
@@ -181,13 +181,13 @@ func (r *queryResolver) SearchBlockPacks(ctx context.Context, input gqlmodels.Se
 	}
 
 	response, exception := coreadapters.CallSecurly[
-		blockpacksdto.SearchBlockPacksRequestDto,
-		blockpacksdto.SearchBlockPacksResponseDto,
+		blockpackscontract.SearchBlockPacksRequestDto,
+		blockpackscontract.SearchBlockPacksResponseDto,
 	](
 		ginContext,
 		r.coreClient,
 		&input,
-		blockpacksdto.SearchBlockPacksOperation,
+		blockpackscontract.SearchBlockPacksOperation,
 		"/core/v1/block-packs/graphql/search",
 	)
 	if exception != nil {
@@ -205,13 +205,13 @@ func (r *queryResolver) SearchBlocks(ctx context.Context, input gqlmodels.Search
 	}
 
 	response, exception := coreadapters.CallSecurly[
-		blocksdto.SearchBlocksRequestDto,
-		blocksdto.SearchBlocksResponseDto,
+		blockscontract.SearchBlocksRequestDto,
+		blockscontract.SearchBlocksResponseDto,
 	](
 		ginContext,
 		r.coreClient,
 		&input,
-		blocksdto.SearchBlocksOperation,
+		blockscontract.SearchBlocksOperation,
 		"/core/v1/blocks/graphql/search",
 	)
 	if exception != nil {
@@ -229,13 +229,13 @@ func (r *queryResolver) SearchStations(ctx context.Context, input gqlmodels.Sear
 	}
 
 	response, exception := coreadapters.CallSecurly[
-		stationsdto.SearchStationsRequestDto,
-		stationsdto.SearchStationsResponseDto,
+		stationscontract.SearchStationsRequestDto,
+		stationscontract.SearchStationsResponseDto,
 	](
 		ginContext,
 		r.coreClient,
 		&input,
-		stationsdto.SearchStationsOperation,
+		stationscontract.SearchStationsOperation,
 		"/core/v1/stations/graphql/search",
 	)
 	if exception != nil {
@@ -253,13 +253,13 @@ func (r *queryResolver) SearchRoutines(ctx context.Context, input gqlmodels.Sear
 	}
 
 	response, exception := coreadapters.CallSecurly[
-		routinesdto.SearchRoutinesRequestDto,
-		routinesdto.SearchRoutinesResponseDto,
+		routinescontract.SearchRoutinesRequestDto,
+		routinescontract.SearchRoutinesResponseDto,
 	](
 		ginContext,
 		r.coreClient,
 		&input,
-		routinesdto.SearchRoutinesOperation,
+		routinescontract.SearchRoutinesOperation,
 		"/core/v1/routines/graphql/search",
 	)
 	if exception != nil {
@@ -277,13 +277,13 @@ func (r *queryResolver) SearchRoutineTags(ctx context.Context, input gqlmodels.S
 	}
 
 	response, exception := coreadapters.CallSecurly[
-		routinetagsdto.SearchRoutineTagsRequestDto,
-		routinetagsdto.SearchRoutineTagsResponseDto,
+		routinetagscontract.SearchRoutineTagsRequestDto,
+		routinetagscontract.SearchRoutineTagsResponseDto,
 	](
 		ginContext,
 		r.coreClient,
 		&input,
-		routinetagsdto.SearchRoutineTagsOperation,
+		routinetagscontract.SearchRoutineTagsOperation,
 		"/core/v1/routine-tags/graphql/search",
 	)
 	if exception != nil {
@@ -301,13 +301,13 @@ func (r *queryResolver) SearchRoutineTasks(ctx context.Context, input gqlmodels.
 	}
 
 	response, exception := coreadapters.CallSecurly[
-		routinetasksdto.SearchRoutineTasksRequestDto,
-		routinetasksdto.SearchRoutineTasksResponseDto,
+		routinetaskscontract.SearchRoutineTasksRequestDto,
+		routinetaskscontract.SearchRoutineTasksResponseDto,
 	](
 		ginContext,
 		r.coreClient,
 		&input,
-		routinetasksdto.SearchRoutineTasksOperation,
+		routinetaskscontract.SearchRoutineTasksOperation,
 		"/core/v1/routine-tasks/graphql/search",
 	)
 	if exception != nil {
@@ -325,13 +325,13 @@ func (r *queryResolver) SearchRoutineTaskRecords(ctx context.Context, input gqlm
 	}
 
 	response, exception := coreadapters.CallSecurly[
-		routinetaskrecordsdto.SearchRoutineTaskRecordsRequestDto,
-		routinetaskrecordsdto.SearchRoutineTaskRecordsResponseDto,
+		routinetaskrecordscontract.SearchRoutineTaskRecordsRequestDto,
+		routinetaskrecordscontract.SearchRoutineTaskRecordsResponseDto,
 	](
 		ginContext,
 		r.coreClient,
 		&input,
-		routinetaskrecordsdto.SearchRoutineTaskRecordsOperation,
+		routinetaskrecordscontract.SearchRoutineTaskRecordsOperation,
 		"/core/v1/routine-task-records/graphql/search",
 	)
 	if exception != nil {

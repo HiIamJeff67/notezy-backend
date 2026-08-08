@@ -12,13 +12,13 @@ import (
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
-	blockpacksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
 	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
-	typescontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	blocknote "github.com/HiIamJeff67/notezy-backend/contracts/types/blocknote"
 
 	inputs "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/inputs"
 	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
@@ -34,8 +34,8 @@ import (
 type YjsDocumentInitializer interface {
 	InitializeDocuments(
 		context.Context,
-		[]blockpacksdto.InitializeBlockPackYjsDocumentReqDto,
-	) ([]blockpacksdto.InitializeBlockPackYjsDocumentResDto, error)
+		[]apicontract.InitializeBlockPackYjsDocumentReqDto,
+	) ([]apicontract.InitializeBlockPackYjsDocumentResDto, error)
 }
 
 type BlockPackHandlerInterface interface {
@@ -128,7 +128,7 @@ func (s *BlockPackHandler) HandleCreateBlockPack(
 
 	blockPackInputs := make([]inputs.BulkCreateBlockPackInput, 0, len(candidateTasks))
 	blockContentInputs := make([]inputs.BulkCreateBlockPackContentInput, 0, len(candidateTasks))
-	initializationReqDtos := make([]blockpacksdto.InitializeBlockPackYjsDocumentReqDto, 0, len(candidateTasks))
+	initializationReqDtos := make([]apicontract.InitializeBlockPackYjsDocumentReqDto, 0, len(candidateTasks))
 	preparedTaskIndexes := make([]int, 0, len(candidateTasks))
 
 	for candidateIndex, payload := range candidatePayloads {
@@ -141,7 +141,7 @@ func (s *BlockPackHandler) HandleCreateBlockPack(
 		var prevRootId *uuid.UUID
 		taskFailed := false
 		taskBlocks := make([]inputs.CreateBlockInput, 0)
-		matchedRootBlocks := make([]typescontract.ArborizedEditableBlock, 0, len(payload.Template.Blocks))
+		matchedRootBlocks := make([]blocknote.ArborizedEditableBlock, 0, len(payload.Template.Blocks))
 		prevRootInputIndex := -1
 		for _, block := range payload.Template.Blocks {
 			matchedBlock, exception := s.templateBlockMatcher.MatchArborizedEditableBlock(block.ArborizedEditableBlock, patternValues)
@@ -191,7 +191,7 @@ func (s *BlockPackHandler) HandleCreateBlockPack(
 			BlockPackId: blockPackId,
 			Blocks:      taskBlocks,
 		})
-		initializationReqDtos = append(initializationReqDtos, blockpacksdto.InitializeBlockPackYjsDocumentReqDto{
+		initializationReqDtos = append(initializationReqDtos, apicontract.InitializeBlockPackYjsDocumentReqDto{
 			Blocks: matchedRootBlocks,
 		})
 		preparedTaskIndexes = append(preparedTaskIndexes, candidateTaskIndexes[candidateIndex])
@@ -234,7 +234,7 @@ func (s *BlockPackHandler) HandleCreateBlockPack(
 	}
 
 	successfulBlockContentInputs := make([]inputs.BulkCreateBlockPackContentInput, 0, len(blockContentInputs))
-	successfulInitializationResDtos := make([]blockpacksdto.InitializeBlockPackYjsDocumentResDto, 0, len(initializationResDtos))
+	successfulInitializationResDtos := make([]apicontract.InitializeBlockPackYjsDocumentResDto, 0, len(initializationResDtos))
 	successfulTaskIndexes := make([]int, 0, len(preparedTaskIndexes))
 	for index, success := range blockPackSuccesses {
 		if success {

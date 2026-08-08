@@ -8,11 +8,11 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	emailcontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1"
 	emaileventscontract "github.com/HiIamJeff67/notezy-backend/contracts/email/v1/events"
-	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
 )

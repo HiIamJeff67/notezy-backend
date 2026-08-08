@@ -39,29 +39,25 @@ The BlockPack response contains `channelTicket`, `expiresAt`, `channelType`, `ch
 Read, Write, Admin, and Owner users can inspect the currently active connections in one BlockPack room:
 
 ```text
-GET /api/development/v1/realtime/block-pack/:blockPackId/participants
+GET /realtime/development/v1/block-pack/:blockPackId/participants
 ```
 
-The response body uses the normal `{ success, data, exception }` envelope. `data` is an array of:
+The response body uses the RealtimeGateway response envelope. `data.participants` is an array of ephemeral lease records:
 
 ```json
 {
   "userPublicId": "UUID",
-  "name": "string",
-  "displayName": "string",
   "channelPermission": "read" | "write",
   "connectionCount": 1
 }
 ```
 
-RealtimeGateway derives participants from its active Redis subscriber leases. API
-Gateway requests the bounded public-ID, permission, and connection-count snapshot
-through its versioned private RealtimeGateway transport, then sends that collection
-to Core only for authenticated request validation, RootShelf membership filtering,
-and name/display-name enrichment. Neither API Gateway nor Core reads
-RealtimeGateway Redis participant state directly. Participants are ephemeral
-presence data, not an access-control source; an empty array means no active room
-connection was observed.
+RealtimeGateway derives participants directly from its active Redis subscriber
+leases and serves the snapshot from its own public realtime endpoint. API Gateway
+does not proxy this request and Core does not read RealtimeGateway Redis participant
+state. Participants are ephemeral presence data, not an access-control source; an
+empty array means no active room connection was observed. User profile details, if
+needed by a client, remain a separate Core API query.
 
 Tickets are EdDSA JWTs signed by Core and verified by RealtimeGateway. Go receives `REALTIME_TICKET_PRIVATE_KEY_BASE64`, which is Base64-encoded PKCS#8 Ed25519 DER. Node worker 不接收 ticket key，也不驗證 public ticket；它只接受已由 RealtimeGateway 驗證後送出的 internal frame。Tickets contain `iss`, `aud`, `sub`, `jti`, `iat`, `exp`, a hash of the `User-Agent`, and the channel claims where applicable. Audiences are `notezy-realtime-connection` and `notezy-realtime-block-pack`.
 

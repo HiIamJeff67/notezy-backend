@@ -1,4 +1,4 @@
-package routinesdto
+package apicontract
 
 const (
 	GetMyRoutineByIdOperation                        = "routine.get-by-id"

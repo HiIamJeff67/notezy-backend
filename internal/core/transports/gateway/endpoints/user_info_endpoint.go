@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	userinfosdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-infos"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-infos"
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 
 	userservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/user"
@@ -29,8 +29,8 @@ func NewUserInfoEndpoint(userInfoService userservices.UserInfoServiceInterface) 
 }
 
 func (t *UserInfoEndpoint) GetMyInfo(ctx *gin.Context) {
-	request := &gatewaycontract.Request[userinfosdto.GetMyInfoRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.GetMyInfoRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -50,7 +50,7 @@ func (t *UserInfoEndpoint) GetMyInfo(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[userinfosdto.GetMyInfoResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.GetMyInfoResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,
@@ -61,8 +61,8 @@ func (t *UserInfoEndpoint) GetMyInfo(ctx *gin.Context) {
 }
 
 func (t *UserInfoEndpoint) UpdateMyInfo(ctx *gin.Context) {
-	request := &gatewaycontract.Request[userinfosdto.UpdateMyInfoRequestDto]{}
-	if err := ctx.ShouldBindJSON(request); err != nil {
+	request := &gatewaycontract.Request[apicontract.UpdateMyInfoRequestDto]{}
+	if err := ctx.ShouldBindBodyWithJSON(request); err != nil {
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -82,7 +82,7 @@ func (t *UserInfoEndpoint) UpdateMyInfo(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gatewaycontract.Response[userinfosdto.UpdateMyInfoResponseDto]{
+	ctx.JSON(http.StatusOK, gatewaycontract.Response[apicontract.UpdateMyInfoResponseDto]{
 		Version: gatewaycontract.Version,
 		Metadata: gatewaycontract.ResponseMetadata{
 			RequestId:   request.Metadata.RequestId,

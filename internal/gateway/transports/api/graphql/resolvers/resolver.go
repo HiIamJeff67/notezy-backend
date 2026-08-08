@@ -9,10 +9,10 @@ import (
 
 type Resolver struct {
 	dataloader dataloaders.Dataloaders
-	coreClient *coreadapters.CoreClient
+	coreClient *coreadapters.CoreAdapter
 }
 
-func NewResolver(coreClient *coreadapters.CoreClient) *Resolver {
+func NewResolver(coreClient *coreadapters.CoreAdapter) *Resolver {
 	return &Resolver{
 		dataloader: dataloaders.NewDataloaders(coreClient),
 		coreClient: coreClient,

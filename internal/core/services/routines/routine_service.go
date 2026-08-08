@@ -11,14 +11,14 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
 	searchcursor "github.com/HiIamJeff67/notezy-backend/shared/lib/searchcursor"
 	times "github.com/HiIamJeff67/notezy-backend/shared/lib/times"
 
-	routinesdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routines"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routines"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
@@ -33,28 +33,28 @@ import (
 )
 
 type RoutineServiceInterface interface {
-	GetMyRoutineById(ctx context.Context, reqDto *routinesdto.GetMyRoutineByIdRequestDto) (*routinesdto.GetMyRoutineByIdResponseDto, *exceptions.Exception)
-	GetMyRoutinesByStationId(ctx context.Context, reqDto *routinesdto.GetMyRoutinesByStationIdRequestDto) (*routinesdto.GetMyRoutinesByStationIdResponseDto, *exceptions.Exception)
-	GetAllMyRoutinesByTimeRange(ctx context.Context, reqDto *routinesdto.GetAllMyRoutinesByTimeRangeRequestDto) (*routinesdto.GetAllMyRoutinesByTimeRangeResponseDto, *exceptions.Exception)
-	CreateRoutineByStationId(ctx context.Context, reqDto *routinesdto.CreateRoutineByStationIdRequestDto) (*routinesdto.CreateRoutineByStationIdResponseDto, *exceptions.Exception)
-	CreateRoutinesByStationIds(ctx context.Context, reqDto *routinesdto.CreateRoutinesByStationIdsRequestDto) (*routinesdto.CreateRoutinesByStationIdsResponseDto, *exceptions.Exception)
-	UpdateMyRoutineById(ctx context.Context, reqDto *routinesdto.UpdateMyRoutineByIdRequestDto) (*routinesdto.UpdateMyRoutineByIdResponseDto, *exceptions.Exception)
-	UpdateMyRoutinesByIds(ctx context.Context, reqDto *routinesdto.UpdateMyRoutinesByIdsRequestDto) (*routinesdto.UpdateMyRoutinesByIdsResponseDto, *exceptions.Exception)
-	LinkRoutineTagById(ctx context.Context, reqDto *routinesdto.LinkRoutineTagByIdRequestDto) (*routinesdto.LinkRoutineTagByIdResponseDto, *exceptions.Exception)
-	LinkRoutineTagsByIds(ctx context.Context, reqDto *routinesdto.LinkRoutineTagsByIdsRequestDto) (*routinesdto.LinkRoutineTagsByIdsResponseDto, *exceptions.Exception)
-	LinkRoutineItemById(ctx context.Context, reqDto *routinesdto.LinkRoutineItemByIdRequestDto) (*routinesdto.LinkRoutineItemByIdResponseDto, *exceptions.Exception)
-	LinkRoutineItemsByIds(ctx context.Context, reqDto *routinesdto.LinkRoutineItemsByIdsRequestDto) (*routinesdto.LinkRoutineItemsByIdsResponseDto, *exceptions.Exception)
-	RestoreMyRoutineById(ctx context.Context, reqDto *routinesdto.RestoreMyRoutineByIdRequestDto) (*routinesdto.RestoreMyRoutineByIdResponseDto, *exceptions.Exception)
-	RestoreMyRoutinesByIds(ctx context.Context, reqDto *routinesdto.RestoreMyRoutinesByIdsRequestDto) (*routinesdto.RestoreMyRoutinesByIdsResponseDto, *exceptions.Exception)
-	DeleteMyRoutineById(ctx context.Context, reqDto *routinesdto.DeleteMyRoutineByIdRequestDto) (*routinesdto.DeleteMyRoutineByIdResponseDto, *exceptions.Exception)
-	DeleteMyRoutinesByIds(ctx context.Context, reqDto *routinesdto.DeleteMyRoutinesByIdsRequestDto) (*routinesdto.DeleteMyRoutinesByIdsResponseDto, *exceptions.Exception)
-	HardDeleteMyRoutineById(ctx context.Context, reqDto *routinesdto.HardDeleteMyRoutineByIdRequestDto) (*routinesdto.HardDeleteMyRoutineByIdResponseDto, *exceptions.Exception)
-	HardDeleteMyRoutinesByIds(ctx context.Context, reqDto *routinesdto.HardDeleteMyRoutinesByIdsRequestDto) (*routinesdto.HardDeleteMyRoutinesByIdsResponseDto, *exceptions.Exception)
+	GetMyRoutineById(ctx context.Context, reqDto *apicontract.GetMyRoutineByIdRequestDto) (*apicontract.GetMyRoutineByIdResponseDto, *exceptions.Exception)
+	GetMyRoutinesByStationId(ctx context.Context, reqDto *apicontract.GetMyRoutinesByStationIdRequestDto) (*apicontract.GetMyRoutinesByStationIdResponseDto, *exceptions.Exception)
+	GetAllMyRoutinesByTimeRange(ctx context.Context, reqDto *apicontract.GetAllMyRoutinesByTimeRangeRequestDto) (*apicontract.GetAllMyRoutinesByTimeRangeResponseDto, *exceptions.Exception)
+	CreateRoutineByStationId(ctx context.Context, reqDto *apicontract.CreateRoutineByStationIdRequestDto) (*apicontract.CreateRoutineByStationIdResponseDto, *exceptions.Exception)
+	CreateRoutinesByStationIds(ctx context.Context, reqDto *apicontract.CreateRoutinesByStationIdsRequestDto) (*apicontract.CreateRoutinesByStationIdsResponseDto, *exceptions.Exception)
+	UpdateMyRoutineById(ctx context.Context, reqDto *apicontract.UpdateMyRoutineByIdRequestDto) (*apicontract.UpdateMyRoutineByIdResponseDto, *exceptions.Exception)
+	UpdateMyRoutinesByIds(ctx context.Context, reqDto *apicontract.UpdateMyRoutinesByIdsRequestDto) (*apicontract.UpdateMyRoutinesByIdsResponseDto, *exceptions.Exception)
+	LinkRoutineTagById(ctx context.Context, reqDto *apicontract.LinkRoutineTagByIdRequestDto) (*apicontract.LinkRoutineTagByIdResponseDto, *exceptions.Exception)
+	LinkRoutineTagsByIds(ctx context.Context, reqDto *apicontract.LinkRoutineTagsByIdsRequestDto) (*apicontract.LinkRoutineTagsByIdsResponseDto, *exceptions.Exception)
+	LinkRoutineItemById(ctx context.Context, reqDto *apicontract.LinkRoutineItemByIdRequestDto) (*apicontract.LinkRoutineItemByIdResponseDto, *exceptions.Exception)
+	LinkRoutineItemsByIds(ctx context.Context, reqDto *apicontract.LinkRoutineItemsByIdsRequestDto) (*apicontract.LinkRoutineItemsByIdsResponseDto, *exceptions.Exception)
+	RestoreMyRoutineById(ctx context.Context, reqDto *apicontract.RestoreMyRoutineByIdRequestDto) (*apicontract.RestoreMyRoutineByIdResponseDto, *exceptions.Exception)
+	RestoreMyRoutinesByIds(ctx context.Context, reqDto *apicontract.RestoreMyRoutinesByIdsRequestDto) (*apicontract.RestoreMyRoutinesByIdsResponseDto, *exceptions.Exception)
+	DeleteMyRoutineById(ctx context.Context, reqDto *apicontract.DeleteMyRoutineByIdRequestDto) (*apicontract.DeleteMyRoutineByIdResponseDto, *exceptions.Exception)
+	DeleteMyRoutinesByIds(ctx context.Context, reqDto *apicontract.DeleteMyRoutinesByIdsRequestDto) (*apicontract.DeleteMyRoutinesByIdsResponseDto, *exceptions.Exception)
+	HardDeleteMyRoutineById(ctx context.Context, reqDto *apicontract.HardDeleteMyRoutineByIdRequestDto) (*apicontract.HardDeleteMyRoutineByIdResponseDto, *exceptions.Exception)
+	HardDeleteMyRoutinesByIds(ctx context.Context, reqDto *apicontract.HardDeleteMyRoutinesByIdsRequestDto) (*apicontract.HardDeleteMyRoutinesByIdsResponseDto, *exceptions.Exception)
 
-	VisualizeMyRoutineStatusCount(ctx context.Context, reqDto *routinesdto.VisualizeMyRoutineStatusCountRequestDto) (*routinesdto.VisualizeMyRoutineStatusCountResponseDto, *exceptions.Exception)
-	VisualizeMyRoutinePeriodCount(ctx context.Context, reqDto *routinesdto.VisualizeMyRoutinePeriodCountRequestDto) (*routinesdto.VisualizeMyRoutinePeriodCountResponseDto, *exceptions.Exception)
-	VisualizeMyRoutineScheduledStartAtCount(ctx context.Context, reqDto *routinesdto.VisualizeMyRoutineScheduledStartAtCountRequestDto) (*routinesdto.VisualizeMyRoutineScheduledStartAtCountResponseDto, *exceptions.Exception)
-	VisualizeMyRoutineScheduledEndAtCount(ctx context.Context, reqDto *routinesdto.VisualizeMyRoutineScheduledEndAtCountRequestDto) (*routinesdto.VisualizeMyRoutineScheduledEndAtCountResponseDto, *exceptions.Exception)
+	VisualizeMyRoutineStatusCount(ctx context.Context, reqDto *apicontract.VisualizeMyRoutineStatusCountRequestDto) (*apicontract.VisualizeMyRoutineStatusCountResponseDto, *exceptions.Exception)
+	VisualizeMyRoutinePeriodCount(ctx context.Context, reqDto *apicontract.VisualizeMyRoutinePeriodCountRequestDto) (*apicontract.VisualizeMyRoutinePeriodCountResponseDto, *exceptions.Exception)
+	VisualizeMyRoutineScheduledStartAtCount(ctx context.Context, reqDto *apicontract.VisualizeMyRoutineScheduledStartAtCountRequestDto) (*apicontract.VisualizeMyRoutineScheduledStartAtCountResponseDto, *exceptions.Exception)
+	VisualizeMyRoutineScheduledEndAtCount(ctx context.Context, reqDto *apicontract.VisualizeMyRoutineScheduledEndAtCountRequestDto) (*apicontract.VisualizeMyRoutineScheduledEndAtCountResponseDto, *exceptions.Exception)
 
 	SearchPrivateRoutines(ctx context.Context, userId uuid.UUID, gqlInput gqlmodels.SearchRoutineInput) (*gqlmodels.SearchRoutineConnection, *exceptions.Exception)
 }
@@ -145,7 +145,7 @@ func (s *RoutineService) visualizeMyRoutineTimeCount(
 	queryRangeEndedAt time.Time,
 	columnName string,
 	fieldName string,
-) ([]routinesdto.RoutineCountDatum, *exceptions.Exception) {
+) ([]apicontract.RoutineCountDatum, *exceptions.Exception) {
 	db := s.db.WithContext(ctx)
 	var buckets []struct {
 		BucketStart  time.Time `gorm:"column:bucket_start;"`
@@ -188,7 +188,7 @@ func (s *RoutineService) visualizeMyRoutineTimeCount(
 		return nil, apiexceptions.Routine.NotFound().WithOrigin(err)
 	}
 
-	data := make([]routinesdto.RoutineCountDatum, len(buckets))
+	data := make([]apicontract.RoutineCountDatum, len(buckets))
 	for index, bucket := range buckets {
 		bucketEnd := bucket.BucketStart.Add(time.Duration(timeHourUnit) * time.Hour)
 		x := bucket.BucketStart.Format(time.DateOnly)
@@ -207,7 +207,7 @@ func (s *RoutineService) visualizeMyRoutineTimeCount(
 			return nil, apiexceptions.Routine.FailedToMarshalData(metadata)
 		}
 
-		data[index] = routinesdto.RoutineCountDatum{
+		data[index] = apicontract.RoutineCountDatum{
 			Id:    bucket.BucketStart.Format(time.RFC3339),
 			X:     x,
 			Value: bucket.RoutineCount,
@@ -223,8 +223,8 @@ func (s *RoutineService) visualizeMyRoutineTimeCount(
 /* ============================== Main Methods ============================== */
 
 func (s *RoutineService) GetMyRoutineById(
-	ctx context.Context, reqDto *routinesdto.GetMyRoutineByIdRequestDto,
-) (*routinesdto.GetMyRoutineByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.GetMyRoutineByIdRequestDto,
+) (*apicontract.GetMyRoutineByIdResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -290,7 +290,7 @@ func (s *RoutineService) GetMyRoutineById(
 		}
 	}
 
-	return &routinesdto.GetMyRoutineByIdResponseDto{
+	return &apicontract.GetMyRoutineByIdResponseDto{
 		Id:               routine.Id,
 		StationId:        routine.StationId,
 		Title:            routine.Title,
@@ -311,8 +311,8 @@ func (s *RoutineService) GetMyRoutineById(
 }
 
 func (s *RoutineService) GetMyRoutinesByStationId(
-	ctx context.Context, reqDto *routinesdto.GetMyRoutinesByStationIdRequestDto,
-) (*routinesdto.GetMyRoutinesByStationIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.GetMyRoutinesByStationIdRequestDto,
+) (*apicontract.GetMyRoutinesByStationIdResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -371,7 +371,7 @@ func (s *RoutineService) GetMyRoutinesByStationId(
 		return nil, exception
 	}
 
-	resDto := make(routinesdto.GetMyRoutinesByStationIdResponseDto, len(routines))
+	resDto := make(apicontract.GetMyRoutinesByStationIdResponseDto, len(routines))
 	for index, routine := range routines {
 		tagIds := make([]uuid.UUID, len(routine.RoutinesToTags))
 		for index, routineToTag := range routine.RoutinesToTags {
@@ -390,7 +390,7 @@ func (s *RoutineService) GetMyRoutinesByStationId(
 				itemIds = append(itemIds, routineToItem.ItemId)
 			}
 		}
-		resDto[index] = routinesdto.RoutineResponseDto{
+		resDto[index] = apicontract.RoutineResponseDto{
 			Id:               routine.Id,
 			StationId:        routine.StationId,
 			Title:            routine.Title,
@@ -413,8 +413,8 @@ func (s *RoutineService) GetMyRoutinesByStationId(
 }
 
 func (s *RoutineService) GetAllMyRoutinesByTimeRange(
-	ctx context.Context, reqDto *routinesdto.GetAllMyRoutinesByTimeRangeRequestDto,
-) (*routinesdto.GetAllMyRoutinesByTimeRangeResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.GetAllMyRoutinesByTimeRangeRequestDto,
+) (*apicontract.GetAllMyRoutinesByTimeRangeResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -470,7 +470,7 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 		return nil, exception
 	}
 
-	resDto := make(routinesdto.GetAllMyRoutinesByTimeRangeResponseDto, len(routines))
+	resDto := make(apicontract.GetAllMyRoutinesByTimeRangeResponseDto, len(routines))
 	for index, routine := range routines {
 		tagIds := make([]uuid.UUID, len(routine.RoutinesToTags))
 		for index, routineToTag := range routine.RoutinesToTags {
@@ -489,7 +489,7 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 				itemIds = append(itemIds, routineToItem.ItemId)
 			}
 		}
-		resDto[index] = routinesdto.RoutineResponseDto{
+		resDto[index] = apicontract.RoutineResponseDto{
 			Id:               routine.Id,
 			StationId:        routine.StationId,
 			Title:            routine.Title,
@@ -512,8 +512,8 @@ func (s *RoutineService) GetAllMyRoutinesByTimeRange(
 }
 
 func (s *RoutineService) CreateRoutineByStationId(
-	ctx context.Context, reqDto *routinesdto.CreateRoutineByStationIdRequestDto,
-) (*routinesdto.CreateRoutineByStationIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.CreateRoutineByStationIdRequestDto,
+) (*apicontract.CreateRoutineByStationIdResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -549,15 +549,15 @@ func (s *RoutineService) CreateRoutineByStationId(
 		return nil, exception
 	}
 
-	return &routinesdto.CreateRoutineByStationIdResponseDto{
+	return &apicontract.CreateRoutineByStationIdResponseDto{
 		Id:        *newRoutineId,
 		CreatedAt: time.Now(),
 	}, nil
 }
 
 func (s *RoutineService) CreateRoutinesByStationIds(
-	ctx context.Context, reqDto *routinesdto.CreateRoutinesByStationIdsRequestDto,
-) (*routinesdto.CreateRoutinesByStationIdsResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.CreateRoutinesByStationIdsRequestDto,
+) (*apicontract.CreateRoutinesByStationIdsResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -597,15 +597,15 @@ func (s *RoutineService) CreateRoutinesByStationIds(
 		return nil, exception
 	}
 
-	return &routinesdto.CreateRoutinesByStationIdsResponseDto{
+	return &apicontract.CreateRoutinesByStationIdsResponseDto{
 		Ids:       newRoutineIds,
 		CreatedAt: time.Now(),
 	}, nil
 }
 
 func (s *RoutineService) UpdateMyRoutineById(
-	ctx context.Context, reqDto *routinesdto.UpdateMyRoutineByIdRequestDto,
-) (*routinesdto.UpdateMyRoutineByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.UpdateMyRoutineByIdRequestDto,
+) (*apicontract.UpdateMyRoutineByIdResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -644,14 +644,14 @@ func (s *RoutineService) UpdateMyRoutineById(
 		return nil, exception
 	}
 
-	return &routinesdto.UpdateMyRoutineByIdResponseDto{
+	return &apicontract.UpdateMyRoutineByIdResponseDto{
 		UpdatedAt: updatedRoutine.UpdatedAt,
 	}, nil
 }
 
 func (s *RoutineService) UpdateMyRoutinesByIds(
-	ctx context.Context, reqDto *routinesdto.UpdateMyRoutinesByIdsRequestDto,
-) (*routinesdto.UpdateMyRoutinesByIdsResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.UpdateMyRoutinesByIdsRequestDto,
+) (*apicontract.UpdateMyRoutinesByIdsResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -696,14 +696,14 @@ func (s *RoutineService) UpdateMyRoutinesByIds(
 		return nil, exception
 	}
 
-	return &routinesdto.UpdateMyRoutinesByIdsResponseDto{
+	return &apicontract.UpdateMyRoutinesByIdsResponseDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
 
 func (s *RoutineService) LinkRoutineTagById(
-	ctx context.Context, reqDto *routinesdto.LinkRoutineTagByIdRequestDto,
-) (*routinesdto.LinkRoutineTagByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.LinkRoutineTagByIdRequestDto,
+) (*apicontract.LinkRoutineTagByIdResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -766,7 +766,7 @@ func (s *RoutineService) LinkRoutineTagById(
 		result = tx.Model(&schemas.RoutinesToTags{}).
 			Create(&newRoutinesToTags)
 	}
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Routine.FailedToLinkRoutineTags().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Routine.NoChanges()},
 	}); exception != nil {
@@ -779,14 +779,14 @@ func (s *RoutineService) LinkRoutineTagById(
 		return nil, apiexceptions.Routine.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	return &routinesdto.LinkRoutineTagByIdResponseDto{
+	return &apicontract.LinkRoutineTagByIdResponseDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
 
 func (s *RoutineService) LinkRoutineTagsByIds(
-	ctx context.Context, reqDto *routinesdto.LinkRoutineTagsByIdsRequestDto,
-) (*routinesdto.LinkRoutineTagsByIdsResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.LinkRoutineTagsByIdsRequestDto,
+) (*apicontract.LinkRoutineTagsByIdsResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -886,7 +886,7 @@ func (s *RoutineService) LinkRoutineTagsByIds(
 		result = tx.Model(&schemas.RoutinesToTags{}).
 			Create(&newRoutinesToTags)
 	}
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Routine.FailedToLinkRoutineTags().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Routine.NoChanges()},
 	}); exception != nil {
@@ -899,14 +899,14 @@ func (s *RoutineService) LinkRoutineTagsByIds(
 		return nil, apiexceptions.Routine.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	return &routinesdto.LinkRoutineTagsByIdsResponseDto{
+	return &apicontract.LinkRoutineTagsByIdsResponseDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
 
 func (s *RoutineService) LinkRoutineItemById(
-	ctx context.Context, reqDto *routinesdto.LinkRoutineItemByIdRequestDto,
-) (*routinesdto.LinkRoutineItemByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.LinkRoutineItemByIdRequestDto,
+) (*apicontract.LinkRoutineItemByIdResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -968,7 +968,7 @@ func (s *RoutineService) LinkRoutineItemById(
 		result = tx.Model(&schemas.RoutinesToItems{}).
 			Create(&newRoutinesToItems)
 	}
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Routine.FailedToLinkItems().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Routine.NoChanges()},
 	}); exception != nil {
@@ -981,14 +981,14 @@ func (s *RoutineService) LinkRoutineItemById(
 		return nil, apiexceptions.Routine.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	return &routinesdto.LinkRoutineItemByIdResponseDto{
+	return &apicontract.LinkRoutineItemByIdResponseDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
 
 func (s *RoutineService) LinkRoutineItemsByIds(
-	ctx context.Context, reqDto *routinesdto.LinkRoutineItemsByIdsRequestDto,
-) (*routinesdto.LinkRoutineItemsByIdsResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.LinkRoutineItemsByIdsRequestDto,
+) (*apicontract.LinkRoutineItemsByIdsResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -1099,7 +1099,7 @@ func (s *RoutineService) LinkRoutineItemsByIds(
 		result = tx.Model(&schemas.RoutinesToItems{}).
 			Create(&newRoutinesToItems)
 	}
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Routine.FailedToLinkItems().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Routine.NoChanges()},
 	}); exception != nil {
@@ -1112,14 +1112,14 @@ func (s *RoutineService) LinkRoutineItemsByIds(
 		return nil, apiexceptions.Routine.FailedToCommitTransaction().WithOrigin(err)
 	}
 
-	return &routinesdto.LinkRoutineItemsByIdsResponseDto{
+	return &apicontract.LinkRoutineItemsByIdsResponseDto{
 		UpdatedAt: time.Now(),
 	}, nil
 }
 
 func (s *RoutineService) RestoreMyRoutineById(
-	ctx context.Context, reqDto *routinesdto.RestoreMyRoutineByIdRequestDto,
-) (*routinesdto.RestoreMyRoutineByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.RestoreMyRoutineByIdRequestDto,
+) (*apicontract.RestoreMyRoutineByIdResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -1144,7 +1144,7 @@ func (s *RoutineService) RestoreMyRoutineById(
 		return nil, exception
 	}
 
-	return &routinesdto.RestoreMyRoutineByIdResponseDto{
+	return &apicontract.RestoreMyRoutineByIdResponseDto{
 		Id:               restoredRoutine.Id,
 		StationId:        restoredRoutine.StationId,
 		Title:            restoredRoutine.Title,
@@ -1162,8 +1162,8 @@ func (s *RoutineService) RestoreMyRoutineById(
 }
 
 func (s *RoutineService) RestoreMyRoutinesByIds(
-	ctx context.Context, reqDto *routinesdto.RestoreMyRoutinesByIdsRequestDto,
-) (*routinesdto.RestoreMyRoutinesByIdsResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.RestoreMyRoutinesByIdsRequestDto,
+) (*apicontract.RestoreMyRoutinesByIdsResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -1188,9 +1188,9 @@ func (s *RoutineService) RestoreMyRoutinesByIds(
 		return nil, exception
 	}
 
-	resDto := routinesdto.RestoreMyRoutinesByIdsResponseDto{}
+	resDto := apicontract.RestoreMyRoutinesByIdsResponseDto{}
 	for _, restoredRoutine := range restoredRoutines {
-		resDto = append(resDto, routinesdto.RestoreMyRoutineByIdResponseDto{
+		resDto = append(resDto, apicontract.RestoreMyRoutineByIdResponseDto{
 			Id:               restoredRoutine.Id,
 			StationId:        restoredRoutine.StationId,
 			Title:            restoredRoutine.Title,
@@ -1211,8 +1211,8 @@ func (s *RoutineService) RestoreMyRoutinesByIds(
 }
 
 func (s *RoutineService) DeleteMyRoutineById(
-	ctx context.Context, reqDto *routinesdto.DeleteMyRoutineByIdRequestDto,
-) (*routinesdto.DeleteMyRoutineByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.DeleteMyRoutineByIdRequestDto,
+) (*apicontract.DeleteMyRoutineByIdResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -1237,14 +1237,14 @@ func (s *RoutineService) DeleteMyRoutineById(
 		return nil, exception
 	}
 
-	return &routinesdto.DeleteMyRoutineByIdResponseDto{
+	return &apicontract.DeleteMyRoutineByIdResponseDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
 
 func (s *RoutineService) DeleteMyRoutinesByIds(
-	ctx context.Context, reqDto *routinesdto.DeleteMyRoutinesByIdsRequestDto,
-) (*routinesdto.DeleteMyRoutinesByIdsResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.DeleteMyRoutinesByIdsRequestDto,
+) (*apicontract.DeleteMyRoutinesByIdsResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -1269,14 +1269,14 @@ func (s *RoutineService) DeleteMyRoutinesByIds(
 		return nil, exception
 	}
 
-	return &routinesdto.DeleteMyRoutinesByIdsResponseDto{
+	return &apicontract.DeleteMyRoutinesByIdsResponseDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
 
 func (s *RoutineService) HardDeleteMyRoutineById(
-	ctx context.Context, reqDto *routinesdto.HardDeleteMyRoutineByIdRequestDto,
-) (*routinesdto.HardDeleteMyRoutineByIdResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.HardDeleteMyRoutineByIdRequestDto,
+) (*apicontract.HardDeleteMyRoutineByIdResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -1301,14 +1301,14 @@ func (s *RoutineService) HardDeleteMyRoutineById(
 		return nil, exception
 	}
 
-	return &routinesdto.HardDeleteMyRoutineByIdResponseDto{
+	return &apicontract.HardDeleteMyRoutineByIdResponseDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
 
 func (s *RoutineService) HardDeleteMyRoutinesByIds(
-	ctx context.Context, reqDto *routinesdto.HardDeleteMyRoutinesByIdsRequestDto,
-) (*routinesdto.HardDeleteMyRoutinesByIdsResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.HardDeleteMyRoutinesByIdsRequestDto,
+) (*apicontract.HardDeleteMyRoutinesByIdsResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -1333,7 +1333,7 @@ func (s *RoutineService) HardDeleteMyRoutinesByIds(
 		return nil, exception
 	}
 
-	return &routinesdto.HardDeleteMyRoutinesByIdsResponseDto{
+	return &apicontract.HardDeleteMyRoutinesByIdsResponseDto{
 		DeletedAt: time.Now(),
 	}, nil
 }
@@ -1341,8 +1341,8 @@ func (s *RoutineService) HardDeleteMyRoutinesByIds(
 /* ============================== Service Methods for Charts ============================== */
 
 func (s *RoutineService) VisualizeMyRoutineStatusCount(
-	ctx context.Context, reqDto *routinesdto.VisualizeMyRoutineStatusCountRequestDto,
-) (*routinesdto.VisualizeMyRoutineStatusCountResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.VisualizeMyRoutineStatusCountRequestDto,
+) (*apicontract.VisualizeMyRoutineStatusCountResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -1403,27 +1403,27 @@ func (s *RoutineService) VisualizeMyRoutineStatusCount(
 		return nil, apiexceptions.Routine.FailedToMarshalData(overDueRoutineMetadata)
 	}
 
-	return &routinesdto.VisualizeMyRoutineStatusCountResponseDto{
-		Data: []routinesdto.RoutineCountDatum{
-			routinesdto.RoutineCountDatum{
+	return &apicontract.VisualizeMyRoutineStatusCountResponseDto{
+		Data: []apicontract.RoutineCountDatum{
+			apicontract.RoutineCountDatum{
 				Id:    "scheduled-routine-count",
 				X:     "Scheduled Routine Count",
 				Value: counts.ScheduledCount,
 				Meta:  scheduledRoutineMeta,
 			},
-			routinesdto.RoutineCountDatum{
+			apicontract.RoutineCountDatum{
 				Id:    "in-progress-routine-count",
 				X:     "In Progress Routine Count",
 				Value: counts.InProgressCount,
 				Meta:  inProgressRoutineMeta,
 			},
-			routinesdto.RoutineCountDatum{
+			apicontract.RoutineCountDatum{
 				Id:    "completed-routine-count",
 				X:     "Completed Routine Count",
 				Value: counts.CompletedCount,
 				Meta:  completedRoutineMeta,
 			},
-			routinesdto.RoutineCountDatum{
+			apicontract.RoutineCountDatum{
 				Id:    "over-due-routine-count",
 				X:     "Over Due Routine Count",
 				Value: counts.OverDueCount,
@@ -1434,8 +1434,8 @@ func (s *RoutineService) VisualizeMyRoutineStatusCount(
 }
 
 func (s *RoutineService) VisualizeMyRoutinePeriodCount(
-	ctx context.Context, reqDto *routinesdto.VisualizeMyRoutinePeriodCountRequestDto,
-) (*routinesdto.VisualizeMyRoutinePeriodCountResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.VisualizeMyRoutinePeriodCountRequestDto,
+) (*apicontract.VisualizeMyRoutinePeriodCountResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -1487,21 +1487,21 @@ func (s *RoutineService) VisualizeMyRoutinePeriodCount(
 		return nil, apiexceptions.Routine.FailedToMarshalData(monthlyRoutineMetadata)
 	}
 
-	return &routinesdto.VisualizeMyRoutinePeriodCountResponseDto{
-		Data: []routinesdto.RoutineCountDatum{
-			routinesdto.RoutineCountDatum{
+	return &apicontract.VisualizeMyRoutinePeriodCountResponseDto{
+		Data: []apicontract.RoutineCountDatum{
+			apicontract.RoutineCountDatum{
 				Id:    "daily-routine-count",
 				X:     "Daily Routine Count",
 				Value: counts.DailyCount,
 				Meta:  dailyRoutineMeta,
 			},
-			routinesdto.RoutineCountDatum{
+			apicontract.RoutineCountDatum{
 				Id:    "weekly-routine-count",
 				X:     "Weekly Routine Count",
 				Value: counts.WeeklyCount,
 				Meta:  weeklyRoutineMeta,
 			},
-			routinesdto.RoutineCountDatum{
+			apicontract.RoutineCountDatum{
 				Id:    "monthly-routine-count",
 				X:     "Monthly Routine Count",
 				Value: counts.MonthlyCount,
@@ -1512,8 +1512,8 @@ func (s *RoutineService) VisualizeMyRoutinePeriodCount(
 }
 
 func (s *RoutineService) VisualizeMyRoutineScheduledStartAtCount(
-	ctx context.Context, reqDto *routinesdto.VisualizeMyRoutineScheduledStartAtCountRequestDto,
-) (*routinesdto.VisualizeMyRoutineScheduledStartAtCountResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.VisualizeMyRoutineScheduledStartAtCountRequestDto,
+) (*apicontract.VisualizeMyRoutineScheduledStartAtCountResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -1542,14 +1542,14 @@ func (s *RoutineService) VisualizeMyRoutineScheduledStartAtCount(
 		return nil, exception
 	}
 
-	return &routinesdto.VisualizeMyRoutineScheduledStartAtCountResponseDto{
+	return &apicontract.VisualizeMyRoutineScheduledStartAtCountResponseDto{
 		Data: data,
 	}, nil
 }
 
 func (s *RoutineService) VisualizeMyRoutineScheduledEndAtCount(
-	ctx context.Context, reqDto *routinesdto.VisualizeMyRoutineScheduledEndAtCountRequestDto,
-) (*routinesdto.VisualizeMyRoutineScheduledEndAtCountResponseDto, *exceptions.Exception) {
+	ctx context.Context, reqDto *apicontract.VisualizeMyRoutineScheduledEndAtCountRequestDto,
+) (*apicontract.VisualizeMyRoutineScheduledEndAtCountResponseDto, *exceptions.Exception) {
 	actorUserId, exception := contexts.GetActorUserId(ctx)
 	if exception != nil {
 		return nil, exception
@@ -1578,7 +1578,7 @@ func (s *RoutineService) VisualizeMyRoutineScheduledEndAtCount(
 		return nil, exception
 	}
 
-	return &routinesdto.VisualizeMyRoutineScheduledEndAtCountResponseDto{
+	return &apicontract.VisualizeMyRoutineScheduledEndAtCountResponseDto{
 		Data: data,
 	}, nil
 }

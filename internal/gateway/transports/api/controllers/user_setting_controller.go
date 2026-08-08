@@ -1,41 +1,39 @@
 package controllers
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
 	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
 
-	usersettingsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-settings"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-settings"
 
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
 )
 
 type UserSettingControllerInterface interface {
-	GetMySetting(ctx *gin.Context, requestDto *usersettingsdto.GetMySettingRequestDto)
-	UpdateMySetting(ctx *gin.Context, requestDto *usersettingsdto.UpdateMySettingRequestDto)
+	GetMySetting(ctx *gin.Context, requestDto *apicontract.GetMySettingRequestDto)
+	UpdateMySetting(ctx *gin.Context, requestDto *apicontract.UpdateMySettingRequestDto)
 }
 
 type UserSettingController struct {
-	coreClient *coreadapters.CoreClient
+	coreClient *coreadapters.CoreAdapter
 }
 
-func NewUserSettingController(coreClient *coreadapters.CoreClient) UserSettingControllerInterface {
+func NewUserSettingController(coreClient *coreadapters.CoreAdapter) UserSettingControllerInterface {
 	return &UserSettingController{
 		coreClient: coreClient,
 	}
 }
 
-func (c *UserSettingController) GetMySetting(ctx *gin.Context, requestDto *usersettingsdto.GetMySettingRequestDto) {
+func (c *UserSettingController) GetMySetting(ctx *gin.Context, requestDto *apicontract.GetMySettingRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		usersettingsdto.GetMySettingRequestDto,
-		usersettingsdto.GetMySettingResponseDto,
+		apicontract.GetMySettingRequestDto,
+		apicontract.GetMySettingResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		usersettingsdto.GetMySettingOperation,
+		apicontract.GetMySettingOperation,
 		"/core/v1/user-settings/get",
 	)
 	if exception != nil {
@@ -43,22 +41,18 @@ func (c *UserSettingController) GetMySetting(ctx *gin.Context, requestDto *users
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *UserSettingController) UpdateMySetting(ctx *gin.Context, requestDto *usersettingsdto.UpdateMySettingRequestDto) {
+func (c *UserSettingController) UpdateMySetting(ctx *gin.Context, requestDto *apicontract.UpdateMySettingRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		usersettingsdto.UpdateMySettingRequestDto,
-		usersettingsdto.UpdateMySettingResponseDto,
+		apicontract.UpdateMySettingRequestDto,
+		apicontract.UpdateMySettingResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		usersettingsdto.UpdateMySettingOperation,
+		apicontract.UpdateMySettingOperation,
 		"/core/v1/user-settings/update",
 	)
 	if exception != nil {
@@ -66,9 +60,5 @@ func (c *UserSettingController) UpdateMySetting(ctx *gin.Context, requestDto *us
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }

@@ -1,4 +1,4 @@
-package usersettingsdto
+package apicontract
 
 import coreapicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api"
 

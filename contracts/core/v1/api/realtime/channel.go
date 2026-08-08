@@ -1,4 +1,4 @@
-package realtimedto
+package apicontract
 
 import (
 	"time"

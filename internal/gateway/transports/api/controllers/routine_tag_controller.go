@@ -1,47 +1,45 @@
 package controllers
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
 	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
 
-	routinetagsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tags"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tags"
 
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
 )
 
 type RoutineTagControllerInterface interface {
-	GetMyRoutineTagById(ctx *gin.Context, requestDto *routinetagsdto.GetMyRoutineTagByIdRequestDto)
-	GetAllMyRoutineTags(ctx *gin.Context, requestDto *routinetagsdto.GetAllMyRoutineTagsRequestDto)
-	CreateRoutineTag(ctx *gin.Context, requestDto *routinetagsdto.CreateRoutineTagRequestDto)
-	CreateRoutineTags(ctx *gin.Context, requestDto *routinetagsdto.CreateRoutineTagsRequestDto)
-	UpdateMyRoutineTagById(ctx *gin.Context, requestDto *routinetagsdto.UpdateMyRoutineTagByIdRequestDto)
-	UpdateMyRoutineTagsByIds(ctx *gin.Context, requestDto *routinetagsdto.UpdateMyRoutineTagsByIdsRequestDto)
-	HardDeleteMyRoutineTagById(ctx *gin.Context, requestDto *routinetagsdto.HardDeleteMyRoutineTagByIdRequestDto)
-	HardDeleteMyRoutineTagsByIds(ctx *gin.Context, requestDto *routinetagsdto.HardDeleteMyRoutineTagsByIdsRequestDto)
+	GetMyRoutineTagById(ctx *gin.Context, requestDto *apicontract.GetMyRoutineTagByIdRequestDto)
+	GetAllMyRoutineTags(ctx *gin.Context, requestDto *apicontract.GetAllMyRoutineTagsRequestDto)
+	CreateRoutineTag(ctx *gin.Context, requestDto *apicontract.CreateRoutineTagRequestDto)
+	CreateRoutineTags(ctx *gin.Context, requestDto *apicontract.CreateRoutineTagsRequestDto)
+	UpdateMyRoutineTagById(ctx *gin.Context, requestDto *apicontract.UpdateMyRoutineTagByIdRequestDto)
+	UpdateMyRoutineTagsByIds(ctx *gin.Context, requestDto *apicontract.UpdateMyRoutineTagsByIdsRequestDto)
+	HardDeleteMyRoutineTagById(ctx *gin.Context, requestDto *apicontract.HardDeleteMyRoutineTagByIdRequestDto)
+	HardDeleteMyRoutineTagsByIds(ctx *gin.Context, requestDto *apicontract.HardDeleteMyRoutineTagsByIdsRequestDto)
 }
 
 type RoutineTagController struct {
-	coreClient *coreadapters.CoreClient
+	coreClient *coreadapters.CoreAdapter
 }
 
-func NewRoutineTagController(coreClient *coreadapters.CoreClient) RoutineTagControllerInterface {
+func NewRoutineTagController(coreClient *coreadapters.CoreAdapter) RoutineTagControllerInterface {
 	return &RoutineTagController{
 		coreClient: coreClient,
 	}
 }
 
-func (c *RoutineTagController) GetMyRoutineTagById(ctx *gin.Context, requestDto *routinetagsdto.GetMyRoutineTagByIdRequestDto) {
+func (c *RoutineTagController) GetMyRoutineTagById(ctx *gin.Context, requestDto *apicontract.GetMyRoutineTagByIdRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		routinetagsdto.GetMyRoutineTagByIdRequestDto,
-		routinetagsdto.GetMyRoutineTagByIdResponseDto,
+		apicontract.GetMyRoutineTagByIdRequestDto,
+		apicontract.GetMyRoutineTagByIdResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinetagsdto.GetMyRoutineTagByIdOperation,
+		apicontract.GetMyRoutineTagByIdOperation,
 		"/core/v1/routine-tags/get-by-id",
 	)
 	if exception != nil {
@@ -49,22 +47,18 @@ func (c *RoutineTagController) GetMyRoutineTagById(ctx *gin.Context, requestDto 
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineTagController) GetAllMyRoutineTags(ctx *gin.Context, requestDto *routinetagsdto.GetAllMyRoutineTagsRequestDto) {
+func (c *RoutineTagController) GetAllMyRoutineTags(ctx *gin.Context, requestDto *apicontract.GetAllMyRoutineTagsRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		routinetagsdto.GetAllMyRoutineTagsRequestDto,
-		routinetagsdto.GetAllMyRoutineTagsResponseDto,
+		apicontract.GetAllMyRoutineTagsRequestDto,
+		apicontract.GetAllMyRoutineTagsResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinetagsdto.GetAllMyRoutineTagsOperation,
+		apicontract.GetAllMyRoutineTagsOperation,
 		"/core/v1/routine-tags/get-all",
 	)
 	if exception != nil {
@@ -72,22 +66,18 @@ func (c *RoutineTagController) GetAllMyRoutineTags(ctx *gin.Context, requestDto 
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineTagController) CreateRoutineTag(ctx *gin.Context, requestDto *routinetagsdto.CreateRoutineTagRequestDto) {
+func (c *RoutineTagController) CreateRoutineTag(ctx *gin.Context, requestDto *apicontract.CreateRoutineTagRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		routinetagsdto.CreateRoutineTagRequestDto,
-		routinetagsdto.CreateRoutineTagResponseDto,
+		apicontract.CreateRoutineTagRequestDto,
+		apicontract.CreateRoutineTagResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinetagsdto.CreateRoutineTagOperation,
+		apicontract.CreateRoutineTagOperation,
 		"/core/v1/routine-tags/create",
 	)
 	if exception != nil {
@@ -95,22 +85,18 @@ func (c *RoutineTagController) CreateRoutineTag(ctx *gin.Context, requestDto *ro
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineTagController) CreateRoutineTags(ctx *gin.Context, requestDto *routinetagsdto.CreateRoutineTagsRequestDto) {
+func (c *RoutineTagController) CreateRoutineTags(ctx *gin.Context, requestDto *apicontract.CreateRoutineTagsRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		routinetagsdto.CreateRoutineTagsRequestDto,
-		routinetagsdto.CreateRoutineTagsResponseDto,
+		apicontract.CreateRoutineTagsRequestDto,
+		apicontract.CreateRoutineTagsResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinetagsdto.CreateRoutineTagsOperation,
+		apicontract.CreateRoutineTagsOperation,
 		"/core/v1/routine-tags/create-many",
 	)
 	if exception != nil {
@@ -118,22 +104,18 @@ func (c *RoutineTagController) CreateRoutineTags(ctx *gin.Context, requestDto *r
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineTagController) UpdateMyRoutineTagById(ctx *gin.Context, requestDto *routinetagsdto.UpdateMyRoutineTagByIdRequestDto) {
+func (c *RoutineTagController) UpdateMyRoutineTagById(ctx *gin.Context, requestDto *apicontract.UpdateMyRoutineTagByIdRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		routinetagsdto.UpdateMyRoutineTagByIdRequestDto,
-		routinetagsdto.UpdateMyRoutineTagByIdResponseDto,
+		apicontract.UpdateMyRoutineTagByIdRequestDto,
+		apicontract.UpdateMyRoutineTagByIdResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinetagsdto.UpdateMyRoutineTagByIdOperation,
+		apicontract.UpdateMyRoutineTagByIdOperation,
 		"/core/v1/routine-tags/update",
 	)
 	if exception != nil {
@@ -141,22 +123,18 @@ func (c *RoutineTagController) UpdateMyRoutineTagById(ctx *gin.Context, requestD
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineTagController) UpdateMyRoutineTagsByIds(ctx *gin.Context, requestDto *routinetagsdto.UpdateMyRoutineTagsByIdsRequestDto) {
+func (c *RoutineTagController) UpdateMyRoutineTagsByIds(ctx *gin.Context, requestDto *apicontract.UpdateMyRoutineTagsByIdsRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		routinetagsdto.UpdateMyRoutineTagsByIdsRequestDto,
-		routinetagsdto.UpdateMyRoutineTagsByIdsResponseDto,
+		apicontract.UpdateMyRoutineTagsByIdsRequestDto,
+		apicontract.UpdateMyRoutineTagsByIdsResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinetagsdto.UpdateMyRoutineTagsByIdsOperation,
+		apicontract.UpdateMyRoutineTagsByIdsOperation,
 		"/core/v1/routine-tags/update-many",
 	)
 	if exception != nil {
@@ -164,22 +142,18 @@ func (c *RoutineTagController) UpdateMyRoutineTagsByIds(ctx *gin.Context, reques
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineTagController) HardDeleteMyRoutineTagById(ctx *gin.Context, requestDto *routinetagsdto.HardDeleteMyRoutineTagByIdRequestDto) {
+func (c *RoutineTagController) HardDeleteMyRoutineTagById(ctx *gin.Context, requestDto *apicontract.HardDeleteMyRoutineTagByIdRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		routinetagsdto.HardDeleteMyRoutineTagByIdRequestDto,
-		routinetagsdto.HardDeleteMyRoutineTagByIdResponseDto,
+		apicontract.HardDeleteMyRoutineTagByIdRequestDto,
+		apicontract.HardDeleteMyRoutineTagByIdResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinetagsdto.HardDeleteMyRoutineTagByIdOperation,
+		apicontract.HardDeleteMyRoutineTagByIdOperation,
 		"/core/v1/routine-tags/hard-delete",
 	)
 	if exception != nil {
@@ -187,22 +161,18 @@ func (c *RoutineTagController) HardDeleteMyRoutineTagById(ctx *gin.Context, requ
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *RoutineTagController) HardDeleteMyRoutineTagsByIds(ctx *gin.Context, requestDto *routinetagsdto.HardDeleteMyRoutineTagsByIdsRequestDto) {
+func (c *RoutineTagController) HardDeleteMyRoutineTagsByIds(ctx *gin.Context, requestDto *apicontract.HardDeleteMyRoutineTagsByIdsRequestDto) {
 	response, exception := coreadapters.CallSecurly[
-		routinetagsdto.HardDeleteMyRoutineTagsByIdsRequestDto,
-		routinetagsdto.HardDeleteMyRoutineTagsByIdsResponseDto,
+		apicontract.HardDeleteMyRoutineTagsByIdsRequestDto,
+		apicontract.HardDeleteMyRoutineTagsByIdsResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		routinetagsdto.HardDeleteMyRoutineTagsByIdsOperation,
+		apicontract.HardDeleteMyRoutineTagsByIdsOperation,
 		"/core/v1/routine-tags/hard-delete-many",
 	)
 	if exception != nil {
@@ -210,9 +180,5 @@ func (c *RoutineTagController) HardDeleteMyRoutineTagsByIds(ctx *gin.Context, re
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }

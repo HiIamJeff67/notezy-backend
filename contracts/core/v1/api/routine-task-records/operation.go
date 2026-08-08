@@ -1,4 +1,4 @@
-package routinetaskrecordsdto
+package apicontract
 
 const (
 	GetAllMyRoutineTaskRecordsByRoutineTaskIdOperation        = "routine-task-record.get-all-by-routine-task-id"

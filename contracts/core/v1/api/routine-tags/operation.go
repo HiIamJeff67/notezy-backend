@@ -1,4 +1,4 @@
-package routinetagsdto
+package apicontract
 
 const (
 	GetMyRoutineTagByIdOperation          = "routine-tag.get-by-id"

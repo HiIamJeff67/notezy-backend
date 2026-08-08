@@ -6,11 +6,11 @@ import (
 
 	"github.com/google/uuid"
 
-	typescontract "github.com/HiIamJeff67/notezy-backend/contracts/types"
+	blocknote "github.com/HiIamJeff67/notezy-backend/contracts/types/blocknote"
 )
 
 type editableBlockFlattenItem struct {
-	block         *typescontract.ArborizedEditableBlock
+	block         *blocknote.ArborizedEditableBlock
 	parentBlockId *uuid.UUID
 	prevBlockId   *uuid.UUID
 	nextBlockId   *uuid.UUID
@@ -18,7 +18,7 @@ type editableBlockFlattenItem struct {
 
 /* ============================== Auxiliary Functions ============================== */
 
-func previousEditableBlockId(blocks []typescontract.ArborizedEditableBlock, index int) *uuid.UUID {
+func previousEditableBlockId(blocks []blocknote.ArborizedEditableBlock, index int) *uuid.UUID {
 	if index == 0 {
 		return nil
 	}
@@ -27,7 +27,7 @@ func previousEditableBlockId(blocks []typescontract.ArborizedEditableBlock, inde
 	return &previousBlockId
 }
 
-func nextEditableBlockId(blocks []typescontract.ArborizedEditableBlock, index int) *uuid.UUID {
+func nextEditableBlockId(blocks []blocknote.ArborizedEditableBlock, index int) *uuid.UUID {
 	if index+1 == len(blocks) {
 		return nil
 	}
@@ -38,17 +38,17 @@ func nextEditableBlockId(blocks []typescontract.ArborizedEditableBlock, index in
 
 /* ============================== Main Methods ============================== */
 
-func FlattenEditableBlock(root *typescontract.ArborizedEditableBlock) ([]typescontract.RawFlattenedEditableBlock, int64, error) {
+func FlattenEditableBlock(root *blocknote.ArborizedEditableBlock) ([]blocknote.RawFlattenedEditableBlock, int64, error) {
 	if root == nil {
-		return []typescontract.RawFlattenedEditableBlock{}, 0, nil
+		return []blocknote.RawFlattenedEditableBlock{}, 0, nil
 	}
 
-	return FlattenEditableBlocks([]typescontract.ArborizedEditableBlock{*root})
+	return FlattenEditableBlocks([]blocknote.ArborizedEditableBlock{*root})
 }
 
-func FlattenEditableBlocks(roots []typescontract.ArborizedEditableBlock) ([]typescontract.RawFlattenedEditableBlock, int64, error) {
+func FlattenEditableBlocks(roots []blocknote.ArborizedEditableBlock) ([]blocknote.RawFlattenedEditableBlock, int64, error) {
 	if len(roots) == 0 {
-		return []typescontract.RawFlattenedEditableBlock{}, 0, nil
+		return []blocknote.RawFlattenedEditableBlock{}, 0, nil
 	}
 
 	queue := make([]editableBlockFlattenItem, 0, len(roots))
@@ -60,7 +60,7 @@ func FlattenEditableBlocks(roots []typescontract.ArborizedEditableBlock) ([]type
 		})
 	}
 
-	flattenedBlocks := make([]typescontract.RawFlattenedEditableBlock, 0, len(roots))
+	flattenedBlocks := make([]blocknote.RawFlattenedEditableBlock, 0, len(roots))
 	visitedBlockIds := make(map[uuid.UUID]bool)
 	var totalSize int64
 	for len(queue) > 0 {
@@ -84,7 +84,7 @@ func FlattenEditableBlocks(roots []typescontract.ArborizedEditableBlock) ([]type
 		}
 		totalSize += int64(len(props) + len(content))
 
-		flattenedBlocks = append(flattenedBlocks, typescontract.RawFlattenedEditableBlock{
+		flattenedBlocks = append(flattenedBlocks, blocknote.RawFlattenedEditableBlock{
 			Id:            item.block.Id,
 			ParentBlockId: item.parentBlockId,
 			PrevBlockId:   item.prevBlockId,

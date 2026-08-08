@@ -1,4 +1,4 @@
-package routinesdto
+package apicontract
 
 import (
 	"encoding/json"

@@ -8,7 +8,7 @@ import (
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm/clause"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
 	array "github.com/HiIamJeff67/notezy-backend/shared/lib/array"
@@ -124,7 +124,7 @@ func (r *MaterialRepository) CheckPermissionAndGetOneById(
 		Scopes(r.materialScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&material)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Material.NotFound().WithOrigin(result.Error)},
 		{First: material.Id == uuid.Nil, Second: apiexceptions.Material.NotFound()},
 	}); exception != nil {
@@ -151,7 +151,7 @@ func (r *MaterialRepository) CheckPermissionsAndGetManyByIds(
 		Scopes(r.materialScope.IncludePreloads(preloads)).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		Find(&materials)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Material.NotFound().WithOrigin(result.Error)},
 		{First: len(materials) == 0, Second: apiexceptions.Material.NotFound()},
 	}); exception != nil {
@@ -214,7 +214,7 @@ func (r *MaterialRepository) CreateOneBySubShelfId(
 
 	result := parsedOptions.DB.Model(&schemas.Material{}).
 		Create(&newMaterial)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Material.FailedToCreate().WithOrigin(result.Error)},
 		{First: newMaterial.Id == uuid.Nil, Second: apiexceptions.Material.FailedToCreate()},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Material.NoChanges()},
@@ -291,7 +291,7 @@ func (r *MaterialRepository) UpdateOneById(
 		Where("id = ? AND deleted_at IS NULL", id). // no need to check the permission here, since we have done that part on the above
 		Select("*").
 		Updates(&updates)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Material.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Material.NoChanges()},
 	}); exception != nil {
@@ -328,7 +328,7 @@ func (r *MaterialRepository) RestoreSoftDeletedOneById(
 		Clauses(clause.Returning{}).
 		Where(`"MaterialTable".id = ?`, id).
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Material.FailedToUpdate().WithOrigin(result.Error)},
 		{First: restoredMaterial.Id == uuid.Nil, Second: apiexceptions.Material.FailedToUpdate()},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Material.NoChanges()},
@@ -361,7 +361,7 @@ func (r *MaterialRepository) RestoreSoftDeletedManyByIds(
 		Clauses(clause.Returning{}).
 		Where(`"MaterialTable".id IN ?`, ids).
 		Updates(map[string]interface{}{"deleted_at": nil}) // force to assign null value
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Material.FailedToUpdate().WithOrigin(result.Error)},
 		{First: len(restoredMaterials) != len(ids), Second: apiexceptions.Material.FailedToUpdate()},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Material.NoChanges()},
@@ -385,7 +385,7 @@ func (r *MaterialRepository) SoftDeleteOneById(
 		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Where(`"MaterialTable".id = ?`, id).
 		Update("deleted_at", time.Now())
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Material.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Material.NoChanges()},
 	}); exception != nil {
@@ -412,7 +412,7 @@ func (r *MaterialRepository) SoftDeleteManyByIds(
 		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Where(`"MaterialTable".id IN ?`, ids).
 		Update("deleted_at", time.Now())
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Material.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Material.NoChanges()},
 	}); exception != nil {
@@ -435,7 +435,7 @@ func (r *MaterialRepository) HardDeleteOneById(
 		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Where(`"MaterialTable".id = ?`, id).
 		Delete(&schemas.Material{})
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Material.FailedToDelete().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Material.NoChanges()},
 	}); exception != nil {
@@ -462,7 +462,7 @@ func (r *MaterialRepository) HardDeleteManyByIds(
 		Scopes(r.materialScope.FilterOnlyDeleted(parsedOptions.OnlyDeleted)).
 		Where(`"MaterialTable".id IN ?`, ids).
 		Delete(&schemas.Material{})
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Material.FailedToDelete().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.Material.NoChanges()},
 	}); exception != nil {

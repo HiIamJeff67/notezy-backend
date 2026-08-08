@@ -1,41 +1,42 @@
 package controllers
 
 import (
-	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
 
 	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
 
-	authdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/auth"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/auth"
 
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
 )
 
 type AuthControllerInterface interface {
-	Register(ctx *gin.Context, requestDto *authdto.RegisterRequestDto)
-	RegisterViaGoogle(ctx *gin.Context, requestDto *authdto.RegisterViaGoogleRequestDto)
-	Login(ctx *gin.Context, requestDto *authdto.LoginRequestDto)
-	LoginViaGoogle(ctx *gin.Context, requestDto *authdto.LoginViaGoogleRequestDto)
-	Logout(ctx *gin.Context, requestDto *authdto.LogoutRequestDto)
-	SendAuthCode(ctx *gin.Context, requestDto *authdto.SendAuthCodeRequestDto)
-	ValidateEmail(ctx *gin.Context, requestDto *authdto.ValidateEmailRequestDto)
-	ResetEmail(ctx *gin.Context, requestDto *authdto.ResetEmailRequestDto)
-	ForgetPassword(ctx *gin.Context, requestDto *authdto.ForgetPasswordRequestDto)
-	ResetMe(ctx *gin.Context, requestDto *authdto.ResetMeRequestDto)
-	DeleteMe(ctx *gin.Context, requestDto *authdto.DeleteMeRequestDto)
+	Register(ctx *gin.Context, requestDto *apicontract.RegisterRequestDto)
+	RegisterViaGoogle(ctx *gin.Context, requestDto *apicontract.RegisterViaGoogleRequestDto)
+	Login(ctx *gin.Context, requestDto *apicontract.LoginRequestDto)
+	LoginViaGoogle(ctx *gin.Context, requestDto *apicontract.LoginViaGoogleRequestDto)
+	Logout(ctx *gin.Context, requestDto *apicontract.LogoutRequestDto)
+	SendAuthCode(ctx *gin.Context, requestDto *apicontract.SendAuthCodeRequestDto)
+	ValidateEmail(ctx *gin.Context, requestDto *apicontract.ValidateEmailRequestDto)
+	ResetEmail(ctx *gin.Context, requestDto *apicontract.ResetEmailRequestDto)
+	ForgetPassword(ctx *gin.Context, requestDto *apicontract.ForgetPasswordRequestDto)
+	ResetMe(ctx *gin.Context, requestDto *apicontract.ResetMeRequestDto)
+	DeleteMe(ctx *gin.Context, requestDto *apicontract.DeleteMeRequestDto)
 }
 
 type AuthController struct {
-	coreClient                *coreadapters.CoreClient
+	coreClient                *coreadapters.CoreAdapter
 	accessTokenCookieHandler  *cookies.CookieHandler
 	refreshTokenCookieHandler *cookies.CookieHandler
 }
 
 func NewAuthController(
-	coreClient *coreadapters.CoreClient,
+	coreClient *coreadapters.CoreAdapter,
 	accessTokenCookieHandler *cookies.CookieHandler,
 	refreshTokenCookieHandler *cookies.CookieHandler,
 ) AuthControllerInterface {
@@ -46,15 +47,15 @@ func NewAuthController(
 	}
 }
 
-func (c *AuthController) Register(ctx *gin.Context, requestDto *authdto.RegisterRequestDto) {
+func (c *AuthController) Register(ctx *gin.Context, requestDto *apicontract.RegisterRequestDto) {
 	c.accessTokenCookieHandler.Delete(ctx)
 	c.refreshTokenCookieHandler.Delete(ctx)
 
-	response, exception := coreadapters.Call[authdto.RegisterRequestDto, authdto.RegisterResponseDto](
+	response, exception := coreadapters.Call[apicontract.RegisterRequestDto, apicontract.RegisterResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		authdto.RegisterOperation,
+		apicontract.RegisterOperation,
 		"/core/v1/auth/register",
 	)
 	if exception != nil {
@@ -64,30 +65,32 @@ func (c *AuthController) Register(ctx *gin.Context, requestDto *authdto.Register
 
 	c.accessTokenCookieHandler.Set(ctx, response.Data.AccessToken)
 	c.refreshTokenCookieHandler.Set(ctx, response.Data.RefreshToken)
-	ctx.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data": gin.H{
-			"publicId":    response.Data.PublicId,
-			"name":        response.Data.Name,
-			"displayName": response.Data.DisplayName,
-			"email":       response.Data.Email,
-			"accessToken": response.Data.AccessToken,
-			"csrfToken":   response.Data.CSRFToken,
-			"createdAt":   response.Data.CreatedAt,
-		},
-		"exception": nil,
+	writeClientResponse(ctx, struct {
+		PublicId    uuid.UUID `json:"publicId"`
+		Name        string    `json:"name"`
+		DisplayName string    `json:"displayName"`
+		Email       string    `json:"email"`
+		CSRFToken   string    `json:"csrfToken"`
+		CreatedAt   time.Time `json:"createdAt"`
+	}{
+		PublicId:    response.Data.PublicId,
+		Name:        response.Data.Name,
+		DisplayName: response.Data.DisplayName,
+		Email:       response.Data.Email,
+		CSRFToken:   response.Data.CSRFToken,
+		CreatedAt:   response.Data.CreatedAt,
 	})
 }
 
-func (c *AuthController) RegisterViaGoogle(ctx *gin.Context, requestDto *authdto.RegisterViaGoogleRequestDto) {
+func (c *AuthController) RegisterViaGoogle(ctx *gin.Context, requestDto *apicontract.RegisterViaGoogleRequestDto) {
 	c.accessTokenCookieHandler.Delete(ctx)
 	c.refreshTokenCookieHandler.Delete(ctx)
 
-	response, exception := coreadapters.Call[authdto.RegisterViaGoogleRequestDto, authdto.RegisterViaGoogleResponseDto](
+	response, exception := coreadapters.Call[apicontract.RegisterViaGoogleRequestDto, apicontract.RegisterViaGoogleResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		authdto.RegisterViaGoogleOperation,
+		apicontract.RegisterViaGoogleOperation,
 		"/core/v1/auth/register/google",
 	)
 	if exception != nil {
@@ -97,30 +100,32 @@ func (c *AuthController) RegisterViaGoogle(ctx *gin.Context, requestDto *authdto
 
 	c.accessTokenCookieHandler.Set(ctx, response.Data.AccessToken)
 	c.refreshTokenCookieHandler.Set(ctx, response.Data.RefreshToken)
-	ctx.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data": gin.H{
-			"publicId":    response.Data.PublicId,
-			"name":        response.Data.Name,
-			"displayName": response.Data.DisplayName,
-			"email":       response.Data.Email,
-			"accessToken": response.Data.AccessToken,
-			"csrfToken":   response.Data.CSRFToken,
-			"createdAt":   response.Data.CreatedAt,
-		},
-		"exception": nil,
+	writeClientResponse(ctx, struct {
+		PublicId    uuid.UUID `json:"publicId"`
+		Name        string    `json:"name"`
+		DisplayName string    `json:"displayName"`
+		Email       string    `json:"email"`
+		CSRFToken   string    `json:"csrfToken"`
+		CreatedAt   time.Time `json:"createdAt"`
+	}{
+		PublicId:    response.Data.PublicId,
+		Name:        response.Data.Name,
+		DisplayName: response.Data.DisplayName,
+		Email:       response.Data.Email,
+		CSRFToken:   response.Data.CSRFToken,
+		CreatedAt:   response.Data.CreatedAt,
 	})
 }
 
-func (c *AuthController) Login(ctx *gin.Context, requestDto *authdto.LoginRequestDto) {
+func (c *AuthController) Login(ctx *gin.Context, requestDto *apicontract.LoginRequestDto) {
 	c.accessTokenCookieHandler.Delete(ctx)
 	c.refreshTokenCookieHandler.Delete(ctx)
 
-	response, exception := coreadapters.Call[authdto.LoginRequestDto, authdto.LoginResponseDto](
+	response, exception := coreadapters.Call[apicontract.LoginRequestDto, apicontract.LoginResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		authdto.LoginOperation,
+		apicontract.LoginOperation,
 		"/core/v1/auth/login",
 	)
 	if exception != nil {
@@ -130,31 +135,35 @@ func (c *AuthController) Login(ctx *gin.Context, requestDto *authdto.LoginReques
 
 	c.accessTokenCookieHandler.Set(ctx, response.Data.AccessToken)
 	c.refreshTokenCookieHandler.Set(ctx, response.Data.RefreshToken)
-	ctx.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data": gin.H{
-			"publicId":    response.Data.PublicId,
-			"name":        response.Data.Name,
-			"displayName": response.Data.DisplayName,
-			"email":       response.Data.Email,
-			"accessToken": response.Data.AccessToken,
-			"csrfToken":   response.Data.CSRFToken,
-			"updatedAt":   response.Data.UpdatedAt,
-			"createdAt":   response.Data.CreatedAt,
-		},
-		"exception": nil,
+	updatedAt := response.Data.UpdatedAt
+	writeClientResponse(ctx, struct {
+		PublicId    uuid.UUID  `json:"publicId"`
+		Name        string     `json:"name"`
+		DisplayName string     `json:"displayName"`
+		Email       string     `json:"email"`
+		CSRFToken   string     `json:"csrfToken"`
+		UpdatedAt   *time.Time `json:"updatedAt,omitempty"`
+		CreatedAt   time.Time  `json:"createdAt"`
+	}{
+		PublicId:    response.Data.PublicId,
+		Name:        response.Data.Name,
+		DisplayName: response.Data.DisplayName,
+		Email:       response.Data.Email,
+		CSRFToken:   response.Data.CSRFToken,
+		UpdatedAt:   &updatedAt,
+		CreatedAt:   response.Data.CreatedAt,
 	})
 }
 
-func (c *AuthController) LoginViaGoogle(ctx *gin.Context, requestDto *authdto.LoginViaGoogleRequestDto) {
+func (c *AuthController) LoginViaGoogle(ctx *gin.Context, requestDto *apicontract.LoginViaGoogleRequestDto) {
 	c.accessTokenCookieHandler.Delete(ctx)
 	c.refreshTokenCookieHandler.Delete(ctx)
 
-	response, exception := coreadapters.Call[authdto.LoginViaGoogleRequestDto, authdto.LoginViaGoogleResponseDto](
+	response, exception := coreadapters.Call[apicontract.LoginViaGoogleRequestDto, apicontract.LoginViaGoogleResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		authdto.LoginViaGoogleOperation,
+		apicontract.LoginViaGoogleOperation,
 		"/core/v1/auth/login/google",
 	)
 	if exception != nil {
@@ -164,28 +173,32 @@ func (c *AuthController) LoginViaGoogle(ctx *gin.Context, requestDto *authdto.Lo
 
 	c.accessTokenCookieHandler.Set(ctx, response.Data.AccessToken)
 	c.refreshTokenCookieHandler.Set(ctx, response.Data.RefreshToken)
-	ctx.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data": gin.H{
-			"publicId":    response.Data.PublicId,
-			"name":        response.Data.Name,
-			"displayName": response.Data.DisplayName,
-			"email":       response.Data.Email,
-			"accessToken": response.Data.AccessToken,
-			"csrfToken":   response.Data.CSRFToken,
-			"updatedAt":   response.Data.UpdatedAt,
-			"createdAt":   response.Data.CreatedAt,
-		},
-		"exception": nil,
+	updatedAt := response.Data.UpdatedAt
+	writeClientResponse(ctx, struct {
+		PublicId    uuid.UUID  `json:"publicId"`
+		Name        string     `json:"name"`
+		DisplayName string     `json:"displayName"`
+		Email       string     `json:"email"`
+		CSRFToken   string     `json:"csrfToken"`
+		UpdatedAt   *time.Time `json:"updatedAt,omitempty"`
+		CreatedAt   time.Time  `json:"createdAt"`
+	}{
+		PublicId:    response.Data.PublicId,
+		Name:        response.Data.Name,
+		DisplayName: response.Data.DisplayName,
+		Email:       response.Data.Email,
+		CSRFToken:   response.Data.CSRFToken,
+		UpdatedAt:   &updatedAt,
+		CreatedAt:   response.Data.CreatedAt,
 	})
 }
 
-func (c *AuthController) Logout(ctx *gin.Context, requestDto *authdto.LogoutRequestDto) {
-	response, exception := coreadapters.CallSecurly[authdto.LogoutRequestDto, authdto.LogoutResponseDto](
+func (c *AuthController) Logout(ctx *gin.Context, requestDto *apicontract.LogoutRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.LogoutRequestDto, apicontract.LogoutResponseDto](
 		ctx,
 		c.coreClient,
 		requestDto,
-		authdto.LogoutOperation,
+		apicontract.LogoutOperation,
 		"/core/v1/auth/logout",
 	)
 	if exception != nil {
@@ -195,65 +208,65 @@ func (c *AuthController) Logout(ctx *gin.Context, requestDto *authdto.LogoutRequ
 
 	c.accessTokenCookieHandler.Delete(ctx)
 	c.refreshTokenCookieHandler.Delete(ctx)
-	ctx.JSON(http.StatusOK, gin.H{"success": true, "data": response.Data, "exception": nil})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *AuthController) SendAuthCode(ctx *gin.Context, requestDto *authdto.SendAuthCodeRequestDto) {
-	response, exception := coreadapters.Call[authdto.SendAuthCodeRequestDto, authdto.SendAuthCodeResponseDto](ctx, c.coreClient, requestDto, authdto.SendAuthCodeOperation, "/core/v1/auth/email/code")
+func (c *AuthController) SendAuthCode(ctx *gin.Context, requestDto *apicontract.SendAuthCodeRequestDto) {
+	response, exception := coreadapters.Call[apicontract.SendAuthCodeRequestDto, apicontract.SendAuthCodeResponseDto](ctx, c.coreClient, requestDto, apicontract.SendAuthCodeOperation, "/core/v1/auth/email/code")
 	if exception != nil {
 		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"success": true, "data": response.Data, "exception": nil})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *AuthController) ValidateEmail(ctx *gin.Context, requestDto *authdto.ValidateEmailRequestDto) {
-	response, exception := coreadapters.CallSecurly[authdto.ValidateEmailRequestDto, authdto.ValidateEmailResponseDto](ctx, c.coreClient, requestDto, authdto.ValidateEmailOperation, "/core/v1/auth/email/validate")
+func (c *AuthController) ValidateEmail(ctx *gin.Context, requestDto *apicontract.ValidateEmailRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.ValidateEmailRequestDto, apicontract.ValidateEmailResponseDto](ctx, c.coreClient, requestDto, apicontract.ValidateEmailOperation, "/core/v1/auth/email/validate")
 	if exception != nil {
 		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"success": true, "data": response.Data, "exception": nil})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *AuthController) ResetEmail(ctx *gin.Context, requestDto *authdto.ResetEmailRequestDto) {
-	response, exception := coreadapters.CallSecurly[authdto.ResetEmailRequestDto, authdto.ResetEmailResponseDto](ctx, c.coreClient, requestDto, authdto.ResetEmailOperation, "/core/v1/auth/email/reset")
+func (c *AuthController) ResetEmail(ctx *gin.Context, requestDto *apicontract.ResetEmailRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.ResetEmailRequestDto, apicontract.ResetEmailResponseDto](ctx, c.coreClient, requestDto, apicontract.ResetEmailOperation, "/core/v1/auth/email/reset")
 	if exception != nil {
 		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"success": true, "data": response.Data, "exception": nil})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *AuthController) ForgetPassword(ctx *gin.Context, requestDto *authdto.ForgetPasswordRequestDto) {
-	response, exception := coreadapters.Call[authdto.ForgetPasswordRequestDto, authdto.ForgetPasswordResponseDto](ctx, c.coreClient, requestDto, authdto.ForgetPasswordOperation, "/core/v1/auth/password/forget")
+func (c *AuthController) ForgetPassword(ctx *gin.Context, requestDto *apicontract.ForgetPasswordRequestDto) {
+	response, exception := coreadapters.Call[apicontract.ForgetPasswordRequestDto, apicontract.ForgetPasswordResponseDto](ctx, c.coreClient, requestDto, apicontract.ForgetPasswordOperation, "/core/v1/auth/password/forget")
 	if exception != nil {
 		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"success": true, "data": response.Data, "exception": nil})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *AuthController) ResetMe(ctx *gin.Context, requestDto *authdto.ResetMeRequestDto) {
-	response, exception := coreadapters.CallSecurly[authdto.ResetMeRequestDto, authdto.ResetMeResponseDto](ctx, c.coreClient, requestDto, authdto.ResetMeOperation, "/core/v1/auth/me/reset")
+func (c *AuthController) ResetMe(ctx *gin.Context, requestDto *apicontract.ResetMeRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.ResetMeRequestDto, apicontract.ResetMeResponseDto](ctx, c.coreClient, requestDto, apicontract.ResetMeOperation, "/core/v1/auth/me/reset")
 	if exception != nil {
 		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"success": true, "data": response.Data, "exception": nil})
+	writeClientResponse(ctx, response.Data)
 }
 
-func (c *AuthController) DeleteMe(ctx *gin.Context, requestDto *authdto.DeleteMeRequestDto) {
-	response, exception := coreadapters.CallSecurly[authdto.DeleteMeRequestDto, authdto.DeleteMeResponseDto](ctx, c.coreClient, requestDto, authdto.DeleteMeOperation, "/core/v1/auth/me/delete")
+func (c *AuthController) DeleteMe(ctx *gin.Context, requestDto *apicontract.DeleteMeRequestDto) {
+	response, exception := coreadapters.CallSecurly[apicontract.DeleteMeRequestDto, apicontract.DeleteMeResponseDto](ctx, c.coreClient, requestDto, apicontract.DeleteMeOperation, "/core/v1/auth/me/delete")
 	if exception != nil {
 		exceptionwriter.SafelyAbortAndResponseWithJSON(exception, ctx)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"success": true, "data": response.Data, "exception": nil})
+	writeClientResponse(ctx, response.Data)
 }

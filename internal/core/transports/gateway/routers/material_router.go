@@ -3,7 +3,7 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	materialsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/materials"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/materials"
 
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
@@ -19,7 +19,7 @@ func configureMaterialRoutes(
 		materialRoutes.POST(
 			"/get-by-id",
 			middlewares.DelegationAuthenticatedMiddleware(
-				materialsdto.GetMyMaterialByIdOperation,
+				apicontract.GetMyMaterialByIdOperation,
 			),
 			authMiddleware,
 			endpoint.GetMyMaterialById,
@@ -27,7 +27,7 @@ func configureMaterialRoutes(
 		materialRoutes.POST(
 			"/get-and-parent-by-id",
 			middlewares.DelegationAuthenticatedMiddleware(
-				materialsdto.GetMyMaterialAndItsParentByIdOperation,
+				apicontract.GetMyMaterialAndItsParentByIdOperation,
 			),
 			authMiddleware,
 			endpoint.GetMyMaterialAndItsParentById,
@@ -35,7 +35,7 @@ func configureMaterialRoutes(
 		materialRoutes.POST(
 			"/get-by-parent-sub-shelf-id",
 			middlewares.DelegationAuthenticatedMiddleware(
-				materialsdto.GetMyMaterialsByParentSubShelfIdOperation,
+				apicontract.GetMyMaterialsByParentSubShelfIdOperation,
 			),
 			authMiddleware,
 			endpoint.GetMyMaterialsByParentSubShelfId,
@@ -43,7 +43,7 @@ func configureMaterialRoutes(
 		materialRoutes.POST(
 			"/get-all-by-root-shelf-id",
 			middlewares.DelegationAuthenticatedMiddleware(
-				materialsdto.GetAllMyMaterialsByRootShelfIdOperation,
+				apicontract.GetAllMyMaterialsByRootShelfIdOperation,
 			),
 			authMiddleware,
 			endpoint.GetAllMyMaterialsByRootShelfId,
@@ -51,7 +51,7 @@ func configureMaterialRoutes(
 		materialRoutes.POST(
 			"/create",
 			middlewares.DelegationAuthenticatedMiddleware(
-				materialsdto.CreateMyMaterialOperation,
+				apicontract.CreateMyMaterialOperation,
 			),
 			authMiddleware,
 			endpoint.CreateMyMaterial,
@@ -59,7 +59,7 @@ func configureMaterialRoutes(
 		materialRoutes.POST(
 			"/update",
 			middlewares.DelegationAuthenticatedMiddleware(
-				materialsdto.UpdateMyMaterialByIdOperation,
+				apicontract.UpdateMyMaterialByIdOperation,
 			),
 			authMiddleware,
 			endpoint.UpdateMyMaterialById,
@@ -67,7 +67,7 @@ func configureMaterialRoutes(
 		materialRoutes.POST(
 			"/save",
 			middlewares.DelegationAuthenticatedMiddleware(
-				materialsdto.SaveMyMaterialByIdOperation,
+				apicontract.SaveMyMaterialByIdOperation,
 			),
 			authMiddleware,
 			endpoint.SaveMyMaterialById,
@@ -75,7 +75,7 @@ func configureMaterialRoutes(
 		materialRoutes.POST(
 			"/move",
 			middlewares.DelegationAuthenticatedMiddleware(
-				materialsdto.MoveMyMaterialByIdOperation,
+				apicontract.MoveMyMaterialByIdOperation,
 			),
 			authMiddleware,
 			endpoint.MoveMyMaterialById,
@@ -83,7 +83,7 @@ func configureMaterialRoutes(
 		materialRoutes.POST(
 			"/move-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				materialsdto.MoveMyMaterialsByIdsOperation,
+				apicontract.MoveMyMaterialsByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.MoveMyMaterialsByIds,
@@ -91,7 +91,7 @@ func configureMaterialRoutes(
 		materialRoutes.POST(
 			"/restore",
 			middlewares.DelegationAuthenticatedMiddleware(
-				materialsdto.RestoreMyMaterialByIdOperation,
+				apicontract.RestoreMyMaterialByIdOperation,
 			),
 			authMiddleware,
 			endpoint.RestoreMyMaterialById,
@@ -99,7 +99,7 @@ func configureMaterialRoutes(
 		materialRoutes.POST(
 			"/restore-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				materialsdto.RestoreMyMaterialsByIdsOperation,
+				apicontract.RestoreMyMaterialsByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.RestoreMyMaterialsByIds,
@@ -107,7 +107,7 @@ func configureMaterialRoutes(
 		materialRoutes.POST(
 			"/delete",
 			middlewares.DelegationAuthenticatedMiddleware(
-				materialsdto.DeleteMyMaterialByIdOperation,
+				apicontract.DeleteMyMaterialByIdOperation,
 			),
 			authMiddleware,
 			endpoint.DeleteMyMaterialById,
@@ -115,7 +115,7 @@ func configureMaterialRoutes(
 		materialRoutes.POST(
 			"/delete-many",
 			middlewares.DelegationAuthenticatedMiddleware(
-				materialsdto.DeleteMyMaterialsByIdsOperation,
+				apicontract.DeleteMyMaterialsByIdsOperation,
 			),
 			authMiddleware,
 			endpoint.DeleteMyMaterialsByIds,
@@ -123,7 +123,7 @@ func configureMaterialRoutes(
 		materialRoutes.POST(
 			"/graphql/search",
 			middlewares.DelegationAuthenticatedMiddleware(
-				materialsdto.SearchMaterialsOperation,
+				apicontract.SearchMaterialsOperation,
 			),
 			authMiddleware,
 			endpoint.SearchMaterials,

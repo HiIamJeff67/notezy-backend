@@ -3,8 +3,7 @@ package repositories
 import (
 	"github.com/google/uuid"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	options "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/options"
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
@@ -41,7 +40,7 @@ func (r *BadgeRepository) GetOneById(
 	result := query.Where("id = ?", id).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&badge)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.Badge.NotFound().WithOrigin(result.Error)},
 		{First: badge.Id == uuid.Nil, Second: apiexceptions.Badge.NotFound()},
 	}); exception != nil {

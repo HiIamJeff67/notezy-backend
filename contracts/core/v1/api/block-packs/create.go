@@ -1,4 +1,4 @@
-package blockpacksdto
+package apicontract
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	coreapicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api"
-	blockpackstypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/block-packs"
+	coretypes "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/types/block-packs"
 )
 
 type CreateBlockPackRequestDto struct {
@@ -14,7 +14,7 @@ type CreateBlockPackRequestDto struct {
 		struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
-		blockpackstypes.CreatableBlockPack,
+		coretypes.CreatableBlockPack,
 		struct{},
 		struct{},
 	]
@@ -31,7 +31,7 @@ type CreateBlockPacksRequestDto struct {
 			UserAgent string `json:"userAgent" validate:"required,isuseragent"`
 		},
 		struct {
-			CreatedBlockPacks []blockpackstypes.CreatableBlockPack `json:"createdBlockPacks" validate:"required,min=1,max=1024,dive"`
+			CreatedBlockPacks []coretypes.CreatableBlockPack `json:"createdBlockPacks" validate:"required,min=1,max=1024,dive"`
 		},
 		struct{},
 		struct{},

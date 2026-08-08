@@ -9,8 +9,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
 
 	emailsenders "github.com/HiIamJeff67/notezy-backend/internal/email/senders"

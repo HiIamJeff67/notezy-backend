@@ -1,29 +1,27 @@
 package controllers
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
 	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
 
-	useraccountsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-accounts"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/user-accounts"
 
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
 )
 
 type UserAccountControllerInterface interface {
-	GetMyAccount(ctx *gin.Context, requestDto *useraccountsdto.GetMyAccountRequestDto)
-	UpdateMyAccount(ctx *gin.Context, requestDto *useraccountsdto.UpdateMyAccountRequestDto)
-	BindGoogleAccount(ctx *gin.Context, requestDto *useraccountsdto.BindGoogleAccountRequestDto)
-	UnbindGoogleAccount(ctx *gin.Context, requestDto *useraccountsdto.UnbindGoogleAccountRequestDto)
+	GetMyAccount(ctx *gin.Context, requestDto *apicontract.GetMyAccountRequestDto)
+	UpdateMyAccount(ctx *gin.Context, requestDto *apicontract.UpdateMyAccountRequestDto)
+	BindGoogleAccount(ctx *gin.Context, requestDto *apicontract.BindGoogleAccountRequestDto)
+	UnbindGoogleAccount(ctx *gin.Context, requestDto *apicontract.UnbindGoogleAccountRequestDto)
 }
 
 type UserAccountController struct {
-	coreClient *coreadapters.CoreClient
+	coreClient *coreadapters.CoreAdapter
 }
 
-func NewUserAccountController(coreClient *coreadapters.CoreClient) UserAccountControllerInterface {
+func NewUserAccountController(coreClient *coreadapters.CoreAdapter) UserAccountControllerInterface {
 	return &UserAccountController{
 		coreClient: coreClient,
 	}
@@ -31,16 +29,16 @@ func NewUserAccountController(coreClient *coreadapters.CoreClient) UserAccountCo
 
 func (c *UserAccountController) GetMyAccount(
 	ctx *gin.Context,
-	requestDto *useraccountsdto.GetMyAccountRequestDto,
+	requestDto *apicontract.GetMyAccountRequestDto,
 ) {
 	response, exception := coreadapters.CallSecurly[
-		useraccountsdto.GetMyAccountRequestDto,
-		useraccountsdto.GetMyAccountResponseDto,
+		apicontract.GetMyAccountRequestDto,
+		apicontract.GetMyAccountResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		useraccountsdto.GetMyAccountOperation,
+		apicontract.GetMyAccountOperation,
 		"/core/v1/user-accounts/get",
 	)
 	if exception != nil {
@@ -48,25 +46,21 @@ func (c *UserAccountController) GetMyAccount(
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
 func (c *UserAccountController) UpdateMyAccount(
 	ctx *gin.Context,
-	requestDto *useraccountsdto.UpdateMyAccountRequestDto,
+	requestDto *apicontract.UpdateMyAccountRequestDto,
 ) {
 	response, exception := coreadapters.CallSecurly[
-		useraccountsdto.UpdateMyAccountRequestDto,
-		useraccountsdto.UpdateMyAccountResponseDto,
+		apicontract.UpdateMyAccountRequestDto,
+		apicontract.UpdateMyAccountResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		useraccountsdto.UpdateMyAccountOperation,
+		apicontract.UpdateMyAccountOperation,
 		"/core/v1/user-accounts/update",
 	)
 	if exception != nil {
@@ -74,25 +68,21 @@ func (c *UserAccountController) UpdateMyAccount(
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
 func (c *UserAccountController) BindGoogleAccount(
 	ctx *gin.Context,
-	requestDto *useraccountsdto.BindGoogleAccountRequestDto,
+	requestDto *apicontract.BindGoogleAccountRequestDto,
 ) {
 	response, exception := coreadapters.CallSecurly[
-		useraccountsdto.BindGoogleAccountRequestDto,
-		useraccountsdto.BindGoogleAccountResponseDto,
+		apicontract.BindGoogleAccountRequestDto,
+		apicontract.BindGoogleAccountResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		useraccountsdto.BindGoogleAccountOperation,
+		apicontract.BindGoogleAccountOperation,
 		"/core/v1/user-accounts/google/bind",
 	)
 	if exception != nil {
@@ -100,25 +90,21 @@ func (c *UserAccountController) BindGoogleAccount(
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }
 
 func (c *UserAccountController) UnbindGoogleAccount(
 	ctx *gin.Context,
-	requestDto *useraccountsdto.UnbindGoogleAccountRequestDto,
+	requestDto *apicontract.UnbindGoogleAccountRequestDto,
 ) {
 	response, exception := coreadapters.CallSecurly[
-		useraccountsdto.UnbindGoogleAccountRequestDto,
-		useraccountsdto.UnbindGoogleAccountResponseDto,
+		apicontract.UnbindGoogleAccountRequestDto,
+		apicontract.UnbindGoogleAccountResponseDto,
 	](
 		ctx,
 		c.coreClient,
 		requestDto,
-		useraccountsdto.UnbindGoogleAccountOperation,
+		apicontract.UnbindGoogleAccountOperation,
 		"/core/v1/user-accounts/google/unbind",
 	)
 	if exception != nil {
@@ -126,9 +112,5 @@ func (c *UserAccountController) UnbindGoogleAccount(
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"success":   true,
-		"data":      response.Data,
-		"exception": nil,
-	})
+	writeClientResponse(ctx, response.Data)
 }

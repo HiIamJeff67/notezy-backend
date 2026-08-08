@@ -6,18 +6,17 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"sort"
 
 	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
 	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 	types "github.com/HiIamJeff67/notezy-backend/shared/types"
 
-	realtimedto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/realtime"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/realtime"
 	realtimegatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/realtime-gateway/v1"
 	enumscontract "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 	yjsworkercontract "github.com/HiIamJeff67/notezy-backend/contracts/yjs-worker/v1"
@@ -30,9 +29,8 @@ import (
 )
 
 type RealtimeServiceInterface interface {
-	GetMyBlockPackRealtimeParticipants(ctx context.Context, requestDto *realtimedto.GetMyBlockPackRealtimeParticipantsRequestDto) (*realtimedto.GetMyBlockPackRealtimeParticipantsResponseDto, *exceptions.Exception)
-	CreateMyRealtimeConnectionTicket(ctx context.Context, requestDto *realtimedto.CreateMyRealtimeConnectionTicketRequestDto) (*realtimedto.CreateMyRealtimeConnectionTicketResponseDto, *exceptions.Exception)
-	CreateMyBlockPackChannelTicket(ctx context.Context, requestDto *realtimedto.CreateMyBlockPackChannelTicketRequestDto) (*realtimedto.CreateMyBlockPackChannelTicketResponseDto, *exceptions.Exception)
+	CreateMyRealtimeConnectionTicket(ctx context.Context, requestDto *apicontract.CreateMyRealtimeConnectionTicketRequestDto) (*apicontract.CreateMyRealtimeConnectionTicketResponseDto, *exceptions.Exception)
+	CreateMyBlockPackChannelTicket(ctx context.Context, requestDto *apicontract.CreateMyBlockPackChannelTicketRequestDto) (*apicontract.CreateMyBlockPackChannelTicketResponseDto, *exceptions.Exception)
 }
 
 type RealtimeService struct {
@@ -120,131 +118,10 @@ func (s *RealtimeService) getBlockPackMaximumSubscribers(
 
 /* ============================== Service Methods for Realtime ============================== */
 
-func (s *RealtimeService) GetMyBlockPackRealtimeParticipants(
-	ctx context.Context, requestDto *realtimedto.GetMyBlockPackRealtimeParticipantsRequestDto,
-) (*realtimedto.GetMyBlockPackRealtimeParticipantsResponseDto, *exceptions.Exception) {
-	if err := s.validator.Struct(requestDto); err != nil {
-		return nil, exceptions.New(
-			"InvalidRequest",
-			"BlockPack",
-			"GetMyBlockPackRealtimeParticipants",
-			"Realtime participant request is invalid",
-			http.StatusBadRequest,
-		).WithOrigin(err)
-	}
-
-	db := s.db.WithContext(ctx)
-	allowedPermissions, exception := contexts.GetAllowedPermissions(ctx)
-	if exception != nil {
-		return nil, exception
-	}
-	actorUserId, exception := contexts.GetActorUserId(ctx)
-	if exception != nil {
-		return nil, exception
-	}
-
-	_, exception = s.blockPackRepository.CheckPermissionAndGetOneById(
-		requestDto.Param.BlockPackId,
-		actorUserId,
-		nil,
-		allowedPermissions,
-		options.WithDB(db),
-		options.WithAllowedPermissions(allowedPermissions),
-		options.WithOnlyDeleted(types.Ternary_Negative),
-	)
-	if exception != nil {
-		return nil, exception
-	}
-
-	if len(requestDto.Body.Participants) == 0 {
-		responseDto := realtimedto.GetMyBlockPackRealtimeParticipantsResponseDto{}
-		return &responseDto, nil
-	}
-
-	participantByPublicId := make(map[uuid.UUID]realtimedto.RealtimeBlockPackParticipantRequestDto, len(requestDto.Body.Participants))
-	for _, participant := range requestDto.Body.Participants {
-		existingParticipant, exists := participantByPublicId[participant.UserPublicId]
-		if !exists {
-			participantByPublicId[participant.UserPublicId] = participant
-			continue
-		}
-
-		existingParticipant.ConnectionCount += participant.ConnectionCount
-		if existingParticipant.ConnectionCount > constants.RealtimeMaxConnectionsPerUser {
-			return nil, exceptions.New(
-				"InvalidRequest",
-				"BlockPack",
-				"GetMyBlockPackRealtimeParticipants",
-				"Realtime participant connection count is invalid",
-				http.StatusBadRequest,
-			)
-		}
-		if existingParticipant.ChannelPermission != "write" || participant.ChannelPermission == "write" {
-			existingParticipant.ChannelPermission = participant.ChannelPermission
-		}
-		participantByPublicId[participant.UserPublicId] = existingParticipant
-	}
-	if len(participantByPublicId) > constants.MaxSearchLimit {
-		return nil, exceptions.New(
-			"InvalidRequest",
-			"BlockPack",
-			"GetMyBlockPackRealtimeParticipants",
-			"Realtime participant request contains too many identities",
-			http.StatusBadRequest,
-		)
-	}
-
-	userPublicIds := make([]uuid.UUID, 0, len(participantByPublicId))
-	for userPublicId := range participantByPublicId {
-		userPublicIds = append(userPublicIds, userPublicId)
-	}
-
-	var users []schemas.User
-	result := db.
-		Model(&schemas.User{}).
-		Select("public_id, name, display_name").
-		Joins(`INNER JOIN "UsersToShelvesTable" AS users_to_shelves ON users_to_shelves.user_id = "UserTable".id`).
-		Joins(`INNER JOIN "SubShelfTable" ON "SubShelfTable".root_shelf_id = users_to_shelves.root_shelf_id`).
-		Joins(`INNER JOIN "BlockPackTable" ON "BlockPackTable".parent_sub_shelf_id = "SubShelfTable".id`).
-		Where(`"BlockPackTable".id = ?`, requestDto.Param.BlockPackId).
-		Where(`"BlockPackTable".deleted_at IS NULL`).
-		Where(`"SubShelfTable".deleted_at IS NULL`).
-		Where("public_id IN ?", userPublicIds).
-		Find(&users)
-	if result.Error != nil {
-		return nil, exceptions.New(
-			"QueryFailed",
-			"User",
-			"GetMyBlockPackRealtimeParticipants",
-			"Failed to retrieve realtime participants",
-			http.StatusInternalServerError,
-			true,
-		).WithOrigin(result.Error)
-	}
-
-	responseDto := make(realtimedto.GetMyBlockPackRealtimeParticipantsResponseDto, 0, len(users))
-	for _, user := range users {
-		participant := participantByPublicId[user.PublicId]
-		responseDto = append(responseDto, realtimedto.RealtimeBlockPackParticipantResponseDto{
-			UserPublicId:      user.PublicId,
-			Name:              user.Name,
-			DisplayName:       user.DisplayName,
-			ChannelPermission: participant.ChannelPermission,
-			ConnectionCount:   participant.ConnectionCount,
-		})
-	}
-
-	sort.Slice(responseDto, func(first int, second int) bool {
-		return responseDto[first].DisplayName < responseDto[second].DisplayName
-	})
-
-	return &responseDto, nil
-}
-
 func (s *RealtimeService) CreateMyRealtimeConnectionTicket(
 	ctx context.Context,
-	requestDto *realtimedto.CreateMyRealtimeConnectionTicketRequestDto,
-) (*realtimedto.CreateMyRealtimeConnectionTicketResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.CreateMyRealtimeConnectionTicketRequestDto,
+) (*apicontract.CreateMyRealtimeConnectionTicketResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -277,7 +154,7 @@ func (s *RealtimeService) CreateMyRealtimeConnectionTicket(
 		).WithOrigin(err)
 	}
 
-	return &realtimedto.CreateMyRealtimeConnectionTicketResponseDto{
+	return &apicontract.CreateMyRealtimeConnectionTicketResponseDto{
 		RealtimeEndpoint:        "/" + realtimegatewaycontract.RealtimeDevelopmentBaseURL,
 		RealtimeProtocolVersion: constants.RealtimeProtocolVersion,
 		ConnectionTicket:        *connectionTicket,
@@ -287,8 +164,8 @@ func (s *RealtimeService) CreateMyRealtimeConnectionTicket(
 
 func (s *RealtimeService) CreateMyBlockPackChannelTicket(
 	ctx context.Context,
-	requestDto *realtimedto.CreateMyBlockPackChannelTicketRequestDto,
-) (*realtimedto.CreateMyBlockPackChannelTicketResponseDto, *exceptions.Exception) {
+	requestDto *apicontract.CreateMyBlockPackChannelTicketRequestDto,
+) (*apicontract.CreateMyBlockPackChannelTicketResponseDto, *exceptions.Exception) {
 	if err := s.validator.Struct(requestDto); err != nil {
 		return nil, exceptions.New(
 			"InvalidRequest",
@@ -389,7 +266,7 @@ func (s *RealtimeService) CreateMyBlockPackChannelTicket(
 		).WithOrigin(err)
 	}
 
-	return &realtimedto.CreateMyBlockPackChannelTicketResponseDto{
+	return &apicontract.CreateMyBlockPackChannelTicketResponseDto{
 		ChannelTicket:           *channelTicket,
 		ExpiresAt:               expiresAt,
 		ChannelType:             "BlockPack",

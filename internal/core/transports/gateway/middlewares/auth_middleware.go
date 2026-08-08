@@ -1,20 +1,19 @@
 package middlewares
 
 import (
+	"encoding/json"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	cookies "github.com/HiIamJeff67/notezy-backend/shared/cookies"
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
 	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
 
 	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
 
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"
 	data "github.com/HiIamJeff67/notezy-backend/internal/core/data/database"
@@ -44,19 +43,14 @@ func AuthMiddleware(userRepository repositories.UserRepositoryInterface) gin.Han
 			return
 		}
 
-		accessToken := ""
-		accessTokenExists := false
-		if cookie, err := ctx.Request.Cookie(cookies.ValidCookieName_AccessToken.String()); err == nil && strings.TrimSpace(cookie.Value) != "" {
-			accessToken = cookie.Value
-			accessTokenExists = true
+		request := &gatewaycontract.Request[json.RawMessage]{}
+		if ctx.Request.ContentLength != 0 {
+			_ = ctx.ShouldBindBodyWithJSON(request)
 		}
-
-		refreshToken := ""
-		refreshTokenExists := false
-		if cookie, err := ctx.Request.Cookie(cookies.ValidCookieName_RefreshToken.String()); err == nil && strings.TrimSpace(cookie.Value) != "" {
-			refreshToken = cookie.Value
-			refreshTokenExists = true
-		}
+		accessToken := request.Tokens.AccessToken
+		refreshToken := request.Tokens.RefreshToken
+		accessTokenExists := accessToken != ""
+		refreshTokenExists := refreshToken != ""
 		userAgent := ctx.GetHeader("User-Agent")
 		if accessTokenExists {
 			claims, err := sharedtokens.ParseAccessToken(accessToken)
@@ -184,9 +178,9 @@ func AuthMiddleware(userRepository repositories.UserRepositoryInterface) gin.Han
 			return
 		}
 
-		ctx.Header(gatewaycontract.CoreAuthRefreshed.String(), "true")
-		ctx.Header(gatewaycontract.CoreSetAccessToken.String(), *newAccessToken)
-		ctx.Header(gatewaycontract.CoreSetCSRFToken.String(), *newCSRFToken)
+		ctx.Set(sharedcontexts.ContextFieldName_IsNewTokens.String(), true)
+		ctx.Set(sharedcontexts.ContextFieldName_AccessToken.String(), *newAccessToken)
+		ctx.Set(sharedcontexts.ContextFieldName_CSRFToken.String(), *newCSRFToken)
 		if !setActorUserId(ctx, userRepository, userPublicId) {
 			return
 		}

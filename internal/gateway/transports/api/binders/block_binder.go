@@ -4,19 +4,19 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
 
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
 
 	controllers "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/controllers"
 )
 
 type BlockBinderInterface interface {
-	BindGetMyBlockById(controllerFunc controllers.Func[*blocksdto.GetMyBlockByIdRequestDto]) gin.HandlerFunc
-	BindGetMyBlocksByIds(controllerFunc controllers.Func[*blocksdto.GetMyBlocksByIdsRequestDto]) gin.HandlerFunc
-	BindGetMyBlocksByBlockPackId(controllerFunc controllers.Func[*blocksdto.GetMyBlocksByBlockPackIdRequestDto]) gin.HandlerFunc
+	BindGetMyBlockById(controllerFunc controllers.Func[*apicontract.GetMyBlockByIdRequestDto]) gin.HandlerFunc
+	BindGetMyBlocksByIds(controllerFunc controllers.Func[*apicontract.GetMyBlocksByIdsRequestDto]) gin.HandlerFunc
+	BindGetMyBlocksByBlockPackId(controllerFunc controllers.Func[*apicontract.GetMyBlocksByBlockPackIdRequestDto]) gin.HandlerFunc
 }
 
 type BlockBinder struct{}
@@ -25,9 +25,9 @@ func NewBlockBinder() BlockBinderInterface {
 	return &BlockBinder{}
 }
 
-func (b *BlockBinder) BindGetMyBlockById(controllerFunc controllers.Func[*blocksdto.GetMyBlockByIdRequestDto]) gin.HandlerFunc {
+func (b *BlockBinder) BindGetMyBlockById(controllerFunc controllers.Func[*apicontract.GetMyBlockByIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &blocksdto.GetMyBlockByIdRequestDto{}
+		requestDto := &apicontract.GetMyBlockByIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
 		blockId, err := uuid.Parse(ctx.Param("blockId"))
@@ -41,9 +41,9 @@ func (b *BlockBinder) BindGetMyBlockById(controllerFunc controllers.Func[*blocks
 	}
 }
 
-func (b *BlockBinder) BindGetMyBlocksByIds(controllerFunc controllers.Func[*blocksdto.GetMyBlocksByIdsRequestDto]) gin.HandlerFunc {
+func (b *BlockBinder) BindGetMyBlocksByIds(controllerFunc controllers.Func[*apicontract.GetMyBlocksByIdsRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &blocksdto.GetMyBlocksByIdsRequestDto{}
+		requestDto := &apicontract.GetMyBlocksByIdsRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
 		if err := ctx.ShouldBindQuery(&requestDto.Param); err != nil {
@@ -55,9 +55,9 @@ func (b *BlockBinder) BindGetMyBlocksByIds(controllerFunc controllers.Func[*bloc
 	}
 }
 
-func (b *BlockBinder) BindGetMyBlocksByBlockPackId(controllerFunc controllers.Func[*blocksdto.GetMyBlocksByBlockPackIdRequestDto]) gin.HandlerFunc {
+func (b *BlockBinder) BindGetMyBlocksByBlockPackId(controllerFunc controllers.Func[*apicontract.GetMyBlocksByBlockPackIdRequestDto]) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		requestDto := &blocksdto.GetMyBlocksByBlockPackIdRequestDto{}
+		requestDto := &apicontract.GetMyBlocksByBlockPackIdRequestDto{}
 		requestDto.Header.UserAgent = ctx.GetHeader("User-Agent")
 
 		blockPackId, err := uuid.Parse(ctx.Param("blockPackId"))

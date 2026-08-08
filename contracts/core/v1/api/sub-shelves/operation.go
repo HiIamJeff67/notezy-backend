@@ -1,4 +1,4 @@
-package subshelvesdto
+package apicontract
 
 const (
 	GetMySubShelfByIdOperation                       = "sub-shelf.get-by-id"

@@ -7,8 +7,7 @@ import (
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm/clause"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	partialupdate "github.com/HiIamJeff67/notezy-backend/shared/lib/partialupdate"
 
@@ -84,7 +83,7 @@ func (r *UserAccountRepository) UpdateOneByUserId(
 		userId,
 		opts...,
 	)
-	if exception = exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
+	if exception = exceptions.Cover(exception, []exceptions.Pair{
 		{First: existingUserAccount == nil, Second: apiexceptions.UserAccount.NotFound()},
 	}); exception != nil {
 		return nil, exception

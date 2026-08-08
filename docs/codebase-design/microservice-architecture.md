@@ -7,12 +7,12 @@ Notezy adopts a staged migration rather than a one-time domain/database split. `
 ## Target ownership
 
 ```text
-cmd/
-  api/
-  core/
-  realtimegateway/
-  durablejob/
-  email/
+internal/
+ gateway/commands/
+ core/commands/
+ realtimegateway/commands/
+ durablejob/commands/
+ email/commands/
 contracts/
   gateway/v1/              # Gateway-owned private request/response envelope
   core/
@@ -93,28 +93,37 @@ infra/
 tests/
 ```
 
-Directories are created only when they receive an owned implementation. The first migration baseline moves the existing Go application under `internal/`, creates `cmd/api/` for the API executable and its Cobra commands, and moves GraphQL SDL/documents to `contracts/core/v1/graphql/`. Later issues establish the remaining owners; no empty directory tree is committed merely to mirror this diagram.
+Directories are created only when they receive an owned implementation. Runtime
+composition roots and Cobra commands live under their owning runtime's `commands/`
+directory (`internal/gateway/commands/`, `internal/core/commands/`, and so on). GraphQL
+SDL, generated artifacts, and generator configuration live under
+`contracts/core/v1/graphql/`. Later issues establish the remaining owners; no
+empty directory tree is committed merely to mirror this diagram.
 
 ## Runtime module boundaries
 
-The repository currently keeps Core, contracts, shared packages, and the command
-composition roots in the root Go module. Gateway, DurableJob, Email, and
-RealtimeGateway each also have an owned Go module at their runtime root:
+Each Go runtime and each cross-runtime support layer owns an independent module:
 
 ```text
+contracts/go.mod
+shared/go.mod
+internal/core/go.mod
 internal/gateway/go.mod
 internal/durablejob/go.mod
 internal/email/go.mod
 internal/realtimegateway/go.mod
+test/go.mod
 ```
 
-Each runtime module has its own `go.sum` and can be tested or built from its
-directory without inheriting another runtime's module metadata. During this
-migration, these modules use a local `replace` to the root module for shared
-contracts and infrastructure. That replace is a migration bridge, not permission
-to import another runtime's source. DurableJob's execution protocol is carried
-by versioned contracts; Core remains the sole owner of database-backed task
-execution and state transitions.
+Each module has its own `go.sum` and can be tested or built from its directory
+without inheriting another runtime's module metadata. `go.work` at the
+repository root composes the modules for local development. The `test` module
+uses local `replace` directives to import the modules it tests; this keeps
+integration and architecture tests from introducing a dependency from a runtime
+back into the repository root. A root-level `go test ./...` is therefore not a
+supported command; use `make test-all` (or run it from `test/`). DurableJob's
+execution protocol is carried by versioned contracts; Core remains the sole
+owner of database-backed task execution and state transitions.
 YjsWorker remains a separate Node/TypeScript environment. It follows the same
 runtime layering as the Go services: `transports/` contains Core-facing HTTP and
 Kafka boundaries plus the Realtime WebSocket boundary, `services/` contains Yjs
@@ -128,7 +137,7 @@ than the cross-runtime contract.
 ## Dependency direction
 
 ```text
-cmd/* -> internal/*
+runtime commands -> owning internal runtime
 gateway -> contracts + shared
 gateway -X-> service data/repository
 internal/<runtime>/* -> contracts + shared + own data
@@ -146,7 +155,7 @@ Core and DurableJob database enum wrappers import those values and add only the
 PostgreSQL responsibilities (`Name`, `Scan`, `Value`, validation, and string
 conversion); neither runtime redefines a value set.
 
-`contracts/types/editable_block.go` has exactly two EditableBlock shapes:
+`contracts/types/blocknote/editable_block.go` has exactly two EditableBlock shapes:
 `ArborizedEditableBlock` is the recursive, validated transport tree, while
 `RawFlattenedEditableBlock` is the persistence/projection row with parent and
 sibling identifiers plus raw JSON props/content.
@@ -160,7 +169,12 @@ DurableJob-owned RoutineTask execution payloads live under
 protocol boundary while DurableJob handlers consume it without importing Core
 source. Only genuinely portable structures, such as EditableBlock shapes,
 remain under `contracts/types/`. BlockNote schemas remain portable in
-`shared/lib/blocknote`.
+`contracts/types/blocknote`.
+
+Core-owned reusable DTO shapes under `contracts/core/v1/types/<domain>/` use
+the package name `coretypes`. Each domain folder remains an independent Go
+package; callers use explicit domain aliases only when multiple folders are
+imported by one file.
 
 ## Public and internal transport
 
@@ -187,7 +201,8 @@ methods. Delegation and Core-owned authorization middleware belongs in
 `internal/core/transports/gateway/middlewares/`. Tests live beside
 their endpoint, router, or middleware target.
 
-`cmd/api`, `cmd/core`, and `cmd/realtimegateway` are independent composition
+`internal/gateway/commands`, `internal/core/commands`, and
+`internal/realtimegateway/commands` are independent composition
 roots. API Gateway accepts HTTP and GraphQL browser traffic only; Core owns
 PostgreSQL-backed operations and its private listener; RealtimeGateway is the
 separate WebSocket edge runtime, directly addressed by the Nginx WebSocket
@@ -198,7 +213,8 @@ creates a new WebSocket client with its own connection state; no
 global singleton application instance is retained. It never constructs Core
 repositories or services.
 
-NOT-57 adds `cmd/durablejob` and `cmd/email` as independent composition roots.
+NOT-57 adds `internal/durablejob/commands` and `internal/email/commands` as independent
+composition roots.
 DurableJob is an independent process. Its RoutineTask handlers only validate,
 decode, and prepare versioned assignments; Core owns all database-backed task
 execution and state transitions. DurableJob therefore has no import path to
@@ -370,13 +386,10 @@ its Lua scripts are private to that cache domain.
 RealtimeGateway owns the lease cache and produces participant snapshots and
 deltas. Its lifecycle Kafka consumer publishes received revocations to its local
 Redis Pub/Sub channel so every RealtimeGateway instance detaches only its own
-matching connections and releases their leases. The API Gateway REST participant
-controller requests that snapshot through the versioned private
-`contracts/realtime-gateway/v1` transport, then calls Core only to validate the
-requester's BlockPack permission and enrich a bounded, de-duplicated public-ID
-collection after a RootShelf membership filter. Core's lifecycle path is outbox
-→ Kafka → RealtimeGateway; it never reads or writes RealtimeGateway-owned
-lease/cache state.
+matching connections and releases their leases. Clients request the ephemeral
+participant snapshot directly from RealtimeGateway; API Gateway does not proxy
+the request and Core never reads RealtimeGateway-owned lease/cache state. Core's
+lifecycle path is outbox → Kafka → RealtimeGateway.
 
 `internal/core/data/storage/` owns Core's storage implementation;
 Gateway does not access it directly.
@@ -384,7 +397,7 @@ Gateway does not access it directly.
 ## Lifecycle event contracts
 
 The runtime-neutral envelope is defined in
-[`contracts/types/event.go`](../../contracts/types/event.go). It contains no topic, consumer
+[`contracts/types/events/`](../../contracts/types/events/). It contains no topic, consumer
 group, or business payload, so `shared/platform/kafka` can consume any
 runtime's event without importing that runtime's contracts. Runtime-owned event
 families are kept at their boundaries:
@@ -407,7 +420,7 @@ and NOT-33 can evolve those owners without changing the semantic boundary.
 
 ## Exceptions and lifecycle
 
-`shared/exceptions` contains only the base exception envelope and origin
+`contracts/types/exceptions` contains only the base exception envelope and origin
 classification. Core domain factories stay in
 `internal/core/exceptions/`; Gateway-only failures use the base envelope
 at their use site. They return the base envelope but are never imported across a

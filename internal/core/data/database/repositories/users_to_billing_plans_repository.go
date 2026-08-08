@@ -7,8 +7,7 @@ import (
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm/clause"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
-	types "github.com/HiIamJeff67/notezy-backend/shared/types"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	partialupdate "github.com/HiIamJeff67/notezy-backend/shared/lib/partialupdate"
 
@@ -44,7 +43,7 @@ func (r *UsersToBillingPlansRepository) GetOnyById(
 		Where("id = ? and user_id = ?", id, userId).
 		Scopes(scopes.Locking(parsedOptions.LockingStrength)).
 		First(&usersToBillingPlans)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.UsersToBillingPlans.NotFound().WithOrigin(result.Error)},
 		{First: usersToBillingPlans.Id == uuid.Nil, Second: apiexceptions.UsersToBillingPlans.NotFound()},
 	}); exception != nil {
@@ -63,7 +62,7 @@ func (r *UsersToBillingPlansRepository) GetAllByUserId(
 	result := parsedOptions.DB.Table(schemas.UsersToBillingPlans{}.TableName()).
 		Where("user_id = ?", userId).
 		Find(&usersToBillingPlans)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.UsersToBillingPlans.NotFound().WithOrigin(result.Error)},
 		{First: len(usersToBillingPlans) == 0, Second: apiexceptions.UsersToBillingPlans.NotFound()},
 	}); exception != nil {
@@ -90,7 +89,7 @@ func (r *UsersToBillingPlansRepository) CreateOne(
 	result := parsedOptions.DB.Model(&schemas.UsersToBillingPlans{}).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Create(&newUsersToBillingPlans)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.UsersToBillingPlans.FailedToCreate().WithOrigin(result.Error)},
 		{First: newUsersToBillingPlans.Id == uuid.Nil, Second: apiexceptions.UsersToBillingPlans.FailedToCreate()},
 	}); exception != nil {
@@ -113,7 +112,7 @@ func (r *UsersToBillingPlansRepository) UpdateOneById(
 		userId,
 		opts...,
 	)
-	if exception := exceptions.Cover(exception, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(exception, []exceptions.Pair{
 		{First: existingUsersToBillingPlans == nil, Second: apiexceptions.UsersToBillingPlans.NotFound()},
 	}); exception != nil {
 		return nil, exception
@@ -128,7 +127,7 @@ func (r *UsersToBillingPlansRepository) UpdateOneById(
 		Where("id = ? and user_id = ?", id, userId).
 		Select("*").
 		Updates(&updates)
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.UsersToBillingPlans.FailedToUpdate().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.UsersToBillingPlans.NoChanges()},
 	}); exception != nil {
@@ -148,7 +147,7 @@ func (r *UsersToBillingPlansRepository) DeleteOneById(
 	result := parsedOptions.DB.Model(&schemas.UsersToBillingPlans{}).
 		Where("id = ? and user_id = ?", id, userId).
 		Delete(&schemas.UsersToBillingPlans{})
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.UsersToBillingPlans.FailedToDelete().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.UsersToBillingPlans.NoChanges()},
 	}); exception != nil {
@@ -172,7 +171,7 @@ func (r *UsersToBillingPlansRepository) DeleteManyByIds(
 	result := parsedOptions.DB.Model(&schemas.UsersToBillingPlans{}).
 		Where("ids IN ? and user_id = ?", ids, userId).
 		Delete(&schemas.UsersToBillingPlans{})
-	if exception := exceptions.Cover(nil, []types.Pair[bool, *exceptions.Exception]{
+	if exception := exceptions.Cover(nil, []exceptions.Pair{
 		{First: result.Error != nil, Second: apiexceptions.UsersToBillingPlans.FailedToDelete().WithOrigin(result.Error)},
 		{First: result.RowsAffected == 0, Second: apiexceptions.UsersToBillingPlans.NoChanges()},
 	}); exception != nil {

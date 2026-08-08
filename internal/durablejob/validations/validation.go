@@ -5,7 +5,7 @@ import (
 
 	sharedvalidation "github.com/HiIamJeff67/notezy-backend/shared/validations"
 
-	blocknotevalidations "github.com/HiIamJeff67/notezy-backend/shared/lib/blocknote/validations"
+	blocknotevalidations "github.com/HiIamJeff67/notezy-backend/contracts/types/blocknote/validations"
 )
 
 func New() *validator.Validate {

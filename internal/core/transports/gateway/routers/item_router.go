@@ -3,7 +3,7 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 
-	itemsdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/items"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/items"
 
 	endpoints "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/endpoints"
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/core/transports/gateway/middlewares"
@@ -19,7 +19,7 @@ func configureItemRoutes(
 		itemRoutes.POST(
 			"/graphql/search",
 			middlewares.DelegationAuthenticatedMiddleware(
-				itemsdto.SearchItemsOperation,
+				apicontract.SearchItemsOperation,
 			),
 			authMiddleware,
 			endpoint.SearchItems,

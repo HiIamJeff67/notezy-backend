@@ -7,9 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
-	blocksdto "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
+	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
 	durablejobdto "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 
@@ -45,11 +45,11 @@ func (e BlockProjectionEndpoint) Apply(ctx *gin.Context) {
 		return
 	}
 
-	documents := make([]blocksdto.ApplyBlockProjectionDocumentRequestDto, len(request.Dto.Documents))
+	documents := make([]apicontract.ApplyBlockProjectionDocumentRequestDto, len(request.Dto.Documents))
 	for index, document := range request.Dto.Documents {
-		documents[index] = blocksdto.ApplyBlockProjectionDocumentRequestDto{
+		documents[index] = apicontract.ApplyBlockProjectionDocumentRequestDto{
 			BlockPackId: document.BlockPackId,
-			Projection: blocksdto.ApplyBlockProjectionRequestDto{
+			Projection: apicontract.ApplyBlockProjectionRequestDto{
 				SchemaId:          document.Projection.SchemaId,
 				SchemaVersion:     document.Projection.SchemaVersion,
 				ProjectedSequence: document.Projection.ProjectedSequence,

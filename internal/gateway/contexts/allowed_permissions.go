@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"slices"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/shared/exceptions"
+	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	sharedcontexts "github.com/HiIamJeff67/notezy-backend/shared/lib/contexts"
 
@@ -42,4 +42,14 @@ func GetAllowedPermissions(
 	}
 
 	return slices.Clone(allowedPermissions), nil
+}
+
+func GetOptionalAllowedPermissions(
+	ctx context.Context,
+) ([]enumcontract.AccessControlPermission, *exceptions.Exception) {
+	if ctx.Value(sharedcontexts.ContextFieldName_Allowed_Permissions) == nil {
+		return nil, nil
+	}
+
+	return GetAllowedPermissions(ctx)
 }
