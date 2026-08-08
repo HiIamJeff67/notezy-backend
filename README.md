@@ -1,270 +1,187 @@
-<a><img src="global/images/logo/NotezyDocumentationHeaderImage.png" alt="notezy" /></a>
+<a><img src="global/images/logo/NotezyDocumentationHeaderImage.png" alt="Notezy" /></a>
 
-## Contents
+# Notezy Backend
 
-- [Project Overview](#project-overview)
-- [Core Features](#core-features)
-- [Runtime Mechanisms](#runtime-mechanisms)
-- [Layered Architecture](#layered-architecture)
-- [Build and Run](#build-and-run)
-- [Infrastructure and Operations](#infrastructure-and-operations)
-- [VS Code Workspace Configuration](#vs-code-workspace-configuration)
-- [Key Highlights and Engineering Notes](#key-highlights-and-engineering-notes)
-- [Repository Structure](#repository-structure)
-- [Licensing and Third-Party Notices](#licensing-and-third-party-notices)
+Notezy Backend is the server-side application for Notezy. It is a modular,
+multi-runtime Go backend with a dedicated TypeScript Yjs worker. The repository
+is currently maintained as a proprietary project; it is not the old open-source
+starter architecture.
 
-### Project Overview
+## Architecture
 
-- Backend stack: Go `1.26`, Gin, GORM, Cobra CLI.
-- API style: REST + GraphQL.
-- Domain focus: auth/user/account/profile/settings + shelf/material/block + routine/station workflows.
-- Storage and state: PostgreSQL + Redis.
-- Observability: OpenTelemetry + LGTM stack (Loki/Tempo/Mimir/Grafana).
+The system separates public traffic, core business operations, realtime
+connections, and asynchronous workers into independently runnable runtimes:
 
-### Core Features
+| Runtime | Responsibility |
+| --- | --- |
+| `internal/gateway` | Public HTTP/GraphQL entry point, client cookies, request safety, and internal Core adapter calls. |
+| `internal/core` | PostgreSQL-backed business operations, authorization, repositories, cache ownership, and transactional outbox publishing. |
+| `internal/realtimegateway` | Realtime/WebSocket gateway, ticket verification, connection admission, realtime leases, presence, and YjsWorker connections. |
+| `internal/durablejob` | Durable-job consumers and scheduling strategies. Core remains the owner of database-backed task state. |
+| `internal/email` | Email delivery runtime and message templates. |
+| `internal/yjsworker` | TypeScript Yjs document, projection, persistence, and compaction worker. |
 
-- Token-based authentication pipeline with cookies and CSRF verification.
-- Modular service boundaries with clear binder/controller/service/repository separation.
-- Permission-aware data access in repositories via scopes and access-control checks.
-- Database lifecycle support: enum migration, table migration, triggers, constraints, seed data.
-- Rate limiting for both anonymous and authenticated requests.
-- Async email workflow with retry and priority scheduling.
-- GraphQL resolver layer with generated schema bindings and dataloaders.
+The main request paths are:
 
-### Runtime Mechanisms
+```text
+Client HTTP/GraphQL
+    -> Gateway
+    -> Core
+    -> PostgreSQL / Redis
 
-- **Email Worker Manager**
-  - `internal/emails/manager.go`
-  - Priority queue + worker pool + retry/backoff + queue monitor ticker.
-  - Task types include welcome/validation/security notifications.
-- **Timeout Guard**
-  - `internal/middlewares/timeout_middleware.go`
-  - Buffered response writer + timeout context + panic capture for safe timeout responses.
-- **Authentication and Token Refresh**
-  - `internal/middlewares/auth_middleware.go`
-  - Access token validation first; fallback to refresh token path.
-  - On refresh success, issues new access/csrf token and updates cache/context.
-- **CSRF Validation**
-  - `internal/middlewares/csrf_middleware.go`
-  - Validates `X-CSRF-Token` and rotates token when near expiry.
-- **Rate Limiting**
-  - `internal/middlewares/unauthorized_rate_limit_middleware.go`
-  - `internal/middlewares/authorized_rate_limit_middleware.go`
-  - Uses hybrid rate limiting strategy with Redis-backed coordination.
-- **Response Interceptors**
-  - `ShareableResponseWriterInterceptor` for post-controller response rewriting.
-  - `RefreshTokenInterceptor` embeds refreshed tokens in response body/cookie.
-  - `EmbeddedInterceptor` appends additional authorized fields (e.g., `publicId`).
-- **Request Safety and Network Controls**
-  - CORS handling, origin/referer whitelist, `X-Forwarded-For` sanitization, max body size control.
-- **Validation and Input Safety**
-  - Custom validators for account/password strength, URL scheme allow/deny list, timezone, block content schema.
+Client WebSocket
+    -> RealtimeGateway
+    -> YjsWorker
 
-### Layered Architecture
+Core
+    -> transactional outbox
+    -> Kafka
+    -> DurableJob / Email / Realtime consumers
+```
 
-#### Request Flow
+Gateway and RealtimeGateway are separate public edges. Realtime traffic does
+not pass through the HTTP Gateway. Core owns business authorization and durable
+state; RealtimeGateway owns connection state and realtime Redis data.
 
-1. `routes` assemble middleware chains and binders.
-2. `binders` map HTTP request/context into request DTOs.
-3. `controllers` orchestrate service invocation and response format.
-4. `services` execute business workflows, transaction boundaries, cache/email/token interactions.
-5. `repositories` encapsulate persistence, scopes, permission checks, soft-delete policies, SQL ops.
-6. `models/schemas` define DB tables/enums/triggers/constraints/seeds.
+## Repository layout
 
-#### Layer Breakdown
+```text
+contracts/                         Versioned cross-runtime contracts
+  core/v1/                          Core API, events, and GraphQL contracts
+  durablejob/v1/                    DurableJob contracts
+  email/v1/                         Email contracts
+  gateway/v1/                       Gateway request/response envelope
+  realtime-gateway/v1/              RealtimeGateway contracts
+  yjs-worker/v1/                    YjsWorker contracts
+  types/                            Portable shared contract shapes
 
-- **Models Layer**
-  - `internal/core/data/database/schemas`: table schemas.
-  - `internal/core/data/database/schemas/enums`: enum definitions and migration mappings.
-  - `internal/core/data/database/schemas/triggers`: SQL triggers (cascading, projection, accounting, maintenance).
-  - `internal/core/data/database/schemas/constraints`: SQL constraints/indexes.
-  - `internal/core/data/database/seeds`: seed SQL sets for billing and plan limitations.
-  - `internal/core/data/database/inputs`: create/update input contracts.
-- **Repository Layer**
-  - `internal/core/data/database/repositories`: persistence APIs.
-  - `internal/core/data/database/scopes`: permission, preload, soft-delete filtering logic.
-  - `internal/core/data/database/sqls`: raw SQL units for targeted operations.
-  - `internal/core/data/database/options/repository_option.go`: DB/session/transaction behavior control.
-- **Service Layer**
-  - `internal/core/services`: business orchestration and workflow composition.
-  - Integrates DTOs, cache operations, token ops, and async email dispatch.
-- **Controller Layer**
-  - `internal/controllers`: HTTP response boundaries (`success/data/exception`).
-- **Binder Layer**
-  - `internal/binders`: JSON/query/context parsing and DTO assembly.
-- **Routes Layer**
-  - `internal/routes/developmentroutes`: main API routes (`/api/development/v1`).
-  - `internal/routes/testroutes`: test-only route registration.
-- **Commands and CLI**
-  - `internal/core/commands`: migration, seed, enum/db inspect, truncation commands.
-- **Exception System**
-  - `contracts/types/exceptions`: centralized error envelope and safe public fallback.
+internal/
+  cli/                              Shared Cobra command runner
+  gateway/                          Public HTTP/GraphQL gateway
+  core/                             Core runtime and data ownership
+  realtimegateway/                  Realtime/WebSocket gateway runtime
+  durablejob/                       Durable-job runtime
+  email/                            Email runtime
+  yjsworker/                         TypeScript Yjs runtime
 
-### Build and Run
+shared/                             Cross-runtime platform and utilities
+test/                               Architecture, integration, load, and soak tests
+infra/                              Nginx, staging, observability, and deployment files
+docs/                               Architecture, conventions, contracts, and runbooks
+```
 
-#### Prerequisites
+Each Go runtime has its own `go.mod`, Dockerfile, application composition root,
+and Cobra commands. Runtime code must not import another runtime's source. The
+`contracts` and `shared` modules are the supported cross-runtime boundaries.
+
+## Local development
+
+### Prerequisites
 
 - Go `1.26.x`
 - Docker and Docker Compose
-- `.env` configured for DB/Redis/JWT/CSRF/SMTP/OAuth values
+- Node.js `22.x` and pnpm `11.x` for `internal/yjsworker`
+- A local `.env` containing the required database, Redis, Kafka, token, OAuth,
+  SMTP, and observability settings
 
-#### Local Run (Host)
+### Start the development stack
 
-1. Configure `.env`.
-2. Run `(cd internal/gateway && go run ./commands)`.
-
-#### Development Run (Compose)
-
-1. `docker compose up -d --build`
-2. DB migration: `make -C internal/core migrate`
-3. Seed defaults: `make -C internal/core seed`
-
-#### Production-Like Run
-
-1. `docker compose -f docker-compose.prod.yaml up -d --build`
-
-#### GraphQL Generation
-
-- Generate: `make -C contracts gql-generate`
-- Clean + regenerate: `make -C contracts gql-regenerate`
-
-### Infrastructure and Operations
-
-- **Containerization**
-  - `docker-compose.yaml`: dev topology with API + DB + Redis + Nginx + LGTM.
-  - `docker-compose.prod.yaml`: leaner production-like topology.
-  - `internal/<runtime>/Dockerfile`: runtime-owned multi-stage image build.
-- **Nginx Reverse Proxy**
-  - `infra/nginx/default.dev.conf`: HTTP reverse proxy to `notezy-gateway:7777`.
-  - `infra/nginx/default.prod.conf`: HTTPS termination + redirect + proxy headers.
-- **GraphQL Artifacts**
-  - Schemas: `contracts/core/v1/graphql/schemas/**/*.graphql`.
-  - Generator config: `contracts/core/v1/graphql/gqlgen.yaml`.
-  - Generated outputs: `contracts/core/v1/graphql/generated/*_generated.go`, `contracts/core/v1/graphql/models/models_gen.go`.
-- **Observability (LGTM + OTEL)**
-  - Collector: `infra/monitor/otel-collector-config.dev.yaml`.
-  - Loki/Tempo/Mimir configs: `infra/monitor/*.yaml`.
-  - Grafana datasource provisioning: `infra/monitor/grafana/datasources.dev.yaml`.
-  - App-side tracing/metrics initialized in `internal/core/application.go` and route middleware.
-- **Scope Exclusion (PayPal)**
-  - `infra/paypal/*` is retained as a temporary reference location and is intentionally excluded from this main infra analysis section.
-
-### VS Code Workspace Configuration
-
-- `/.vscode/settings.json`
-  - Format on save enabled.
-  - Go formatter pinned to `golang.go`.
-  - OTEL collector YAML schema mapping enabled.
-  - Relative line numbers enabled.
-- `/.vscode/*.code-snippets`
-  - Team snippets for controller/service/schema/exception/comment templates.
-- `/.vscode/cspell.json`
-  - Domain-specific dictionary tuning for project vocabulary.
-
-### Key Highlights and Engineering Notes
-
-- High structural consistency across business modules:
-  - Module, controller, and binder boundaries are aligned for predictable maintenance.
-- Persistence and policy boundaries are explicit:
-  - Permission checks are scope-driven, not ad hoc in controllers.
-- Response lifecycle is extensible:
-  - Interceptor strategy supports token refresh embedding and response augmentation.
-- Redis cache ownership follows runtime boundaries:
-  - Core owns user-data and quota cache stores; Gateway owns rate-limit records.
-  - `shared/platform/redis` only owns Redis client lifecycle and cache-store registration.
-- Current testing profile:
-  - e2e tests are focused on auth flows.
-  - unit tests target utility-level behavior and helpers.
-
-### Repository Structure
-
-```text
-go-start-monolithic-kit/
-├── internal/
-│   ├── adapters/
-│   ├── binders/
-│   ├── caches/
-│   ├── configs/
-│   ├── contexts/
-│   ├── controllers/
-│   ├── cookies/
-│   ├── dtos/
-│   ├── emails/
-│   ├── exceptions/
-│   ├── graphql/
-│   │   ├── dataloaders/
-│   │   ├── generated/
-│   │   ├── models/
-│   │   ├── resolvers/
-│   │   └── scalars/
-│   ├── interceptors/
-│   ├── middlewares/
-│   ├── models/
-│   │   ├── inputs/
-│   │   ├── repositories/
-│   │   ├── scopes/
-│   │   ├── schemas/
-│   │   │   ├── constraints/
-│   │   │   ├── enums/
-│   │   │   └── triggers/
-│   │   ├── seeds/
-│   │   └── sqls/
-│   ├── modules/
-│   ├── monitor/
-│   │   ├── logs/
-│   │   ├── metrics/
-│   │   └── traces/
-│   ├── options/
-│   ├── routes/
-│   │   ├── developmentroutes/
-│   │   └── testroutes/
-│   ├── services/
-│   ├── storages/
-│   ├── tokens/
-│   ├── util/
-│   └── validation/
-├── infra/
-│   ├── docker/
-│   ├── graphql/
-│   ├── monitor/
-│   ├── nginx/
-│   └── paypal/ (excluded scope)
-├── shared/
-│   ├── constants/
-│   ├── graphql/
-│   ├── lib/
-│   └── types/
-├── test/
-│   ├── e2e/
-│   └── unit/
-├── docs/
-├── LICENSES/
-├── docker-compose.prod.yaml
-├── docker-compose.yaml
-├── go.mod
-├── go.sum
-├── LICENSE(tw).md
-├── LICENSE.md
-├── internal/
-│   ├── internal/gateway/commands/
-│   ├── internal/core/commands/
-│   ├── internal/durablejob/commands/
-│   ├── internal/email/commands/
-│   └── internal/realtimegateway/commands/
-├── Makefile
-└── README.md
+```sh
+docker compose up -d --build
+make -C internal/core migrate
+make -C internal/core seed
 ```
 
-### Licensing and Third-Party Notices
+For a production-like local stack:
 
-- **Project License (Proprietary/EULA)**
-  - `LICENSE.md` (English)
-  - `LICENSE(tw).md` (Traditional Chinese)
-- **Third-Party License Bundle**
-  - Summary index: `LICENSES/THIRD_PARTY_NOTICES.txt`
-  - Package-level texts: `LICENSES/<domain>/<package>/...`
-- **Compliance Position (Current State)**
-  - The repository follows a dual model:
-    - proprietary EULA for project code
-    - bundled third-party notices/licenses for dependencies
-  - Even if the repository becomes private, retaining third-party notices is still recommended for internal compliance traceability.
+```sh
+docker compose -f docker-compose.prod.yaml up -d --build
+```
+
+### Tests and quality checks
+
+The root Makefile is the single command surface used by local development,
+GitHub Actions, and Jenkins:
+
+```sh
+make ci-format
+make ci-vet
+make ci-unit
+make ci-race
+make ci-generated
+make ci-containers
+```
+
+Docker-backed tests are intentionally separate from ordinary pull-request
+checks:
+
+```sh
+make test-integration
+make test-integration-kafka
+make test-load-websocket
+make test-soak-websocket
+make test-load-kafka-lag
+```
+
+Set `NOTEZY_RUN_INTEGRATION=1` when running Testcontainers integration tests.
+
+### GraphQL contracts
+
+GraphQL schema and generated artifacts are Core-owned:
+
+```sh
+make -C contracts gql-generate
+make -C contracts gql-regenerate
+```
+
+Generated files are checked in and CI verifies that regeneration leaves a clean
+working tree.
+
+## CI/CD and Jenkins
+
+GitHub Actions is the primary repository automation:
+
+- `ci.yml` runs format, vet, unit, race, generated-contract, and container gates
+  for pull requests, protected branches, and version tags.
+- `integration.yml` runs scheduled or manually triggered PostgreSQL/Redis/Kafka
+  integration verification.
+- `staging.yml` promotes an immutable GHCR image tag on an approved staging
+  self-hosted runner and checks `/startedz` and `/healthz` for every runtime.
+
+Jenkins is an optional self-hosted pipeline executor, not another Notezy
+runtime. The root `Jenkinsfile` deliberately calls the same Makefile targets as
+GitHub Actions. It is useful when an organization needs an on-premise runner,
+private network access, a separate approval system, or an existing Jenkins
+credential store. Its staging stage promotes an already-built immutable GHCR
+tag; it does not rebuild source on the staging host. Jenkins credentials provide
+GHCR access and deployment secrets, while the repository contains no secret
+values.
+
+Staging commands are shared by both systems:
+
+```sh
+IMAGE_REGISTRY=ghcr.io/ORG/REPO IMAGE_TAG=TAG \
+COMPOSE_ENV_FILE=/etc/notezy/staging.env make staging-deploy
+make staging-smoke
+```
+
+Formal production rollout, migration rollback, and disaster recovery are
+separate operational work and are not implied by a successful staging run.
+
+## Documentation
+
+- [Microservice architecture](docs/codebase-design/microservice-architecture.md)
+- [CI/CD pipeline](docs/codebase-design/ci-cd-pipeline.md)
+- [Project conventions](docs/conventions/README.md)
+- [Kafka local development](docs/runbooks/kafka-local-development.md)
+- [Transactional outbox](docs/system-design/transactional-outbox.md)
+- [Realtime protocol](docs/system-design/realtime-protocol.md)
+
+## Licensing
+
+Project code is distributed under the Notezy proprietary license:
+
+- `LICENSE.md` — English
+- `LICENSE(tw).md` — Traditional Chinese
+
+Third-party notices and license texts are preserved under `LICENSES/`.
