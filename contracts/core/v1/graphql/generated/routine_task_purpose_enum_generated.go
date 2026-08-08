@@ -6,9 +6,8 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 	"github.com/vektah/gqlparser/v2/ast"
-
-	enums "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
 // region    ************************** generated!.gotpl **************************

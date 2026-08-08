@@ -12,11 +12,10 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
+	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
+	"github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 	"github.com/google/uuid"
 	"github.com/vektah/gqlparser/v2/ast"
-
-	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
-	enums "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 
 // region    ************************** generated!.gotpl **************************

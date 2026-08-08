@@ -1,0 +1,48 @@
+name: Notezy Staging Delivery
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: GHCR tag to deploy (for example v0.4.0 or a commit SHA)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: notezy-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy and smoke-test staging
+    runs-on: [self-hosted, staging]
+    environment: staging
+    env:
+      IMAGE_TAG: ${{ inputs.image_tag }}
+      IMAGE_REGISTRY: ghcr.io/${{ github.repository }}
+      COMPOSE_FILE: docker-compose.prod.yaml
+      COMPOSE_ENV_FILE: /etc/notezy/staging.env
+    steps:
+      - uses: actions/checkout@v4
+      - name: Login to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io \
+            --username "${{ github.actor }}" --password-stdin
+      - name: Pull promoted images
+        run: make staging-deploy
+      - name: Verify staging runtime status
+        run: make staging-smoke
+      - name: Capture staging logs
+        if: always()
+        run: docker compose --env-file "$COMPOSE_ENV_FILE" -f "$COMPOSE_FILE" logs --no-color > staging-compose.log
+      - name: Upload staging logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-compose-logs-${{ github.run_id }}
+          path: staging-compose.log
+          retention-days: 14

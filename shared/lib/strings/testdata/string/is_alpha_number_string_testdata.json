@@ -1,0 +1,6 @@
+[
+  { "args": { "s": "abc123" }, "returns": true },
+  { "args": { "s": "ABC" }, "returns": true },
+  { "args": { "s": "123" }, "returns": true },
+  { "args": { "s": "abc-123" }, "returns": false }
+]

@@ -1,0 +1,6 @@
+[
+  { "args": { "input": "CamelCaseString" }, "returns": "camel case string" },
+  { "args": { "input": "simpleTest" }, "returns": "simple test" },
+  { "args": { "input": "A" }, "returns": "a" },
+  { "args": { "input": "" }, "returns": "" }
+]

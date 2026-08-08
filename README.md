@@ -116,8 +116,8 @@
 #### Development Run (Compose)
 
 1. `docker compose up -d --build`
-2. DB migration: `make migrate-hotreload-db`
-3. Seed defaults: `make seed-hotreload-db`
+2. DB migration: `make -C internal/core migrate`
+3. Seed defaults: `make -C internal/core seed`
 
 #### Production-Like Run
 
@@ -125,8 +125,8 @@
 
 #### GraphQL Generation
 
-- Generate: `make gql-generate`
-- Clean + regenerate: `make gql-regenerate`
+- Generate: `make -C contracts gql-generate`
+- Clean + regenerate: `make -C contracts gql-regenerate`
 
 ### Infrastructure and Operations
 

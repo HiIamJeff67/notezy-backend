@@ -17,8 +17,8 @@ import (
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
+	stringutil "github.com/HiIamJeff67/notezy-backend/shared/lib/strings"
 	sharedtokens "github.com/HiIamJeff67/notezy-backend/shared/tokens"
-	validators "github.com/HiIamJeff67/notezy-backend/shared/validations/validators"
 
 	authcode "github.com/HiIamJeff67/notezy-backend/shared/lib/authcode"
 	snowflake "github.com/HiIamJeff67/notezy-backend/shared/lib/snowflake"
@@ -615,7 +615,7 @@ func (s *AuthService) Login(
 	// otherwise, the user should provide their account and password
 	var user *schemas.User = nil
 	var exception *exceptions.Exception = nil
-	if validators.IsAlphaAndNumberString(reqDto.Body.Account) { // if the account field contains user name
+	if stringutil.IsAlphaAndNumberString(reqDto.Body.Account) { // if the account field contains user name
 		if user, exception = s.userRepository.GetOneByName(
 			reqDto.Body.Account,
 			nil,
@@ -625,7 +625,7 @@ func (s *AuthService) Login(
 			tx.Rollback()
 			return nil, exception
 		}
-	} else if validators.IsEmailString(reqDto.Body.Account) { // if the account field contains email
+	} else if stringutil.IsEmailString(reqDto.Body.Account) { // if the account field contains email
 		if user, exception = s.userRepository.GetOneByEmail(
 			reqDto.Body.Account,
 			nil,
@@ -1275,7 +1275,7 @@ func (s *AuthService) ForgetPassword(
 	var user *schemas.User = nil
 	var exception *exceptions.Exception = nil
 	var preloads = []schemas.UserRelation{schemas.UserRelation_UserAccount, schemas.UserRelation_UserInfo, schemas.UserRelation_UserSetting}
-	if validators.IsEmailString(reqDto.Body.Account) { // if the account field contains email
+	if stringutil.IsEmailString(reqDto.Body.Account) { // if the account field contains email
 		if user, exception = s.userRepository.GetOneByEmail(
 			reqDto.Body.Account,
 			preloads,
@@ -1285,7 +1285,7 @@ func (s *AuthService) ForgetPassword(
 			tx.Rollback()
 			return nil, exception
 		}
-	} else if validators.IsAlphaAndNumberString(reqDto.Body.Account) { // if the account field contains user name
+	} else if stringutil.IsAlphaAndNumberString(reqDto.Body.Account) { // if the account field contains user name
 		if user, exception = s.userRepository.GetOneByName(
 			reqDto.Body.Account,
 			preloads,

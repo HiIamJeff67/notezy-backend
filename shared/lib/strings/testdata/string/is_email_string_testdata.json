@@ -1,0 +1,6 @@
+[
+  { "args": { "s": "user@example.com" }, "returns": true },
+  { "args": { "s": "user+tag@example.co.uk" }, "returns": true },
+  { "args": { "s": "invalid-email" }, "returns": false },
+  { "args": { "s": "user@example" }, "returns": false }
+]

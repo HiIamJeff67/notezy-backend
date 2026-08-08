@@ -7,7 +7,7 @@ package resolvers
 import (
 	"context"
 
-	generated "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/generated"
+	"github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/generated"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
 )
 

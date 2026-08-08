@@ -1,8 +1,6 @@
 package strings
 
-import (
-	"unicode"
-)
+import "unicode"
 
 func ConvertCamelCaseToSentenceCase(camelCaseString string) string {
 	var result []rune

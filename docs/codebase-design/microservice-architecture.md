@@ -108,6 +108,7 @@ Each Go runtime and each cross-runtime support layer owns an independent module:
 contracts/go.mod
 shared/go.mod
 internal/core/go.mod
+internal/cli/go.mod
 internal/gateway/go.mod
 internal/durablejob/go.mod
 internal/email/go.mod
@@ -115,15 +116,20 @@ internal/realtimegateway/go.mod
 test/go.mod
 ```
 
-Each module has its own `go.sum` and can be tested or built from its directory
-without inheriting another runtime's module metadata. `go.work` at the
-repository root composes the modules for local development. The `test` module
-uses local `replace` directives to import the modules it tests; this keeps
-integration and architecture tests from introducing a dependency from a runtime
-back into the repository root. A root-level `go test ./...` is therefore not a
-supported command; use `make test-all` (or run it from `test/`). DurableJob's
+Each module has its own module metadata and can be tested or built from its
+directory without inheriting another runtime's module metadata. `go.work` at
+the repository root composes the modules for local development. The `test`
+module is reserved for black-box integration and architecture tests and does
+not import runtime production packages. Runtime E2E tests live under the
+owning runtime's `test/` directory. A root-level `go test ./...` is therefore
+not a supported command; use `make test-all` or `internal/cli`. DurableJob's
 execution protocol is carried by versioned contracts; Core remains the sole
 owner of database-backed task execution and state transitions.
+Root integration tests under `test/integration/` use `testcontainers-go` for
+ephemeral PostgreSQL, Redis, and Kafka dependencies. They skip Docker startup
+unless `NOTEZY_RUN_INTEGRATION=1` is set. WebSocket connection load/soak and
+Kafka consumer-lag checks live as k6 scripts under `test/load/`; they are
+invoked by the root Makefile and remain outside Go modules.
 YjsWorker remains a separate Node/TypeScript environment. It follows the same
 runtime layering as the Go services: `transports/` contains Core-facing HTTP and
 Kafka boundaries plus the Realtime WebSocket boundary, `services/` contains Yjs

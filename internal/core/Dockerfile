@@ -4,22 +4,24 @@ WORKDIR /notezy-backend
 
 RUN apk add --no-cache git
 
-COPY go.mod go.sum ./
-COPY internal/gateway/go.mod internal/gateway/go.sum internal/gateway/
-COPY internal/durablejob/go.mod internal/durablejob/go.sum internal/durablejob/
-COPY internal/email/go.mod internal/email/go.sum internal/email/
-COPY internal/realtimegateway/go.mod internal/realtimegateway/go.sum internal/realtimegateway/
+COPY contracts/go.mod contracts/go.sum contracts/
+COPY shared/go.mod shared/go.sum shared/
+COPY internal/core/go.mod internal/core/go.sum internal/core/
+WORKDIR /notezy-backend/internal/core
 RUN go mod download
+WORKDIR /notezy-backend
 
 COPY . .
 
 FROM base AS dev
 
+WORKDIR /notezy-backend/internal/core
 RUN go install github.com/air-verse/air@latest
 
 FROM base AS builder
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /out/core ./internal/core/commands
+WORKDIR /notezy-backend/internal/core
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/core ./commands
 
 FROM alpine:latest AS production
 

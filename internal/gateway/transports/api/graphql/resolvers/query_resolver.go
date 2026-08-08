@@ -7,8 +7,6 @@ package resolvers
 import (
 	"context"
 
-	exceptionwriter "github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
-
 	blockpackscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/block-packs"
 	blockscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
 	itemscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/items"
@@ -22,11 +20,11 @@ import (
 	subshelvescontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/sub-shelves"
 	themescontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/themes"
 	userscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/users"
-	generated "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/generated"
+	"github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/generated"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
-
 	gatewaycontexts "github.com/HiIamJeff67/notezy-backend/internal/gateway/contexts"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
+	"github.com/HiIamJeff67/notezy-backend/shared/util/exceptionwriter"
 )
 
 // SearchUsers is the resolver for the searchUsers field.

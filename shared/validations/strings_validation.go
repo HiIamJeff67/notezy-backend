@@ -9,7 +9,7 @@ import (
 	"github.com/go-playground/validator/v10" // make sure we use the version 10
 
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
-	validators "github.com/HiIamJeff67/notezy-backend/shared/validations/validators"
+	stringutil "github.com/HiIamJeff67/notezy-backend/shared/lib/strings"
 )
 
 var urlWhiteList = []string{"http", "https", "mailto", "tel", "ws"}
@@ -21,7 +21,7 @@ func RegisterStringsValidation(validate *validator.Validate) {
 		val := fl.Field().String()
 
 		// try email validation
-		if validators.IsEmailString(val) {
+		if stringutil.IsEmailString(val) {
 			return true
 		}
 
@@ -33,7 +33,7 @@ func RegisterStringsValidation(validate *validator.Validate) {
 	})
 	validate.RegisterValidation("alphaandnum", func(fl validator.FieldLevel) bool {
 		val := fl.Field().String()
-		return validators.IsAlphaAndNumberString(val)
+		return stringutil.IsAlphaAndNumberString(val)
 	})
 	validate.RegisterValidation("isstrongpassword", func(fl validator.FieldLevel) bool {
 		password := strings.TrimSpace(fl.Field().String())
@@ -63,7 +63,7 @@ func RegisterStringsValidation(validate *validator.Validate) {
 	})
 	validate.RegisterValidation("isnumberstring", func(fl validator.FieldLevel) bool {
 		val := fl.Field().String()
-		return validators.IsNumberString(val)
+		return stringutil.IsNumberString(val)
 	})
 	validate.RegisterValidation("isurl", func(fl validator.FieldLevel) bool {
 		urlStr := strings.TrimSpace(fl.Field().String())

@@ -26,7 +26,7 @@ services:
 
   notezy-gateway:
     container_name: ${DOCKER_GATEWAY_SERVICE_NAME:-notezy-gateway}
-    image: ${DOCKER_GATEWAY_SERVICE_NAME:-notezy-gateway}:latest
+    image: ${GATEWAY_IMAGE:-notezy-gateway:latest}
     # restart: always
     build:
       context: .
@@ -68,7 +68,7 @@ services:
 
   notezy-core:
     container_name: ${DOCKER_CORE_SERVICE_NAME:-notezy-core}
-    image: ${DOCKER_CORE_SERVICE_NAME:-notezy-core}:latest
+    image: ${CORE_IMAGE:-notezy-core:latest}
     build:
       context: .
       dockerfile: internal/core/Dockerfile
@@ -134,7 +134,7 @@ services:
 
   notezy-realtime-gateway:
     container_name: ${DOCKER_REALTIME_GATEWAY_SERVICE_NAME:-notezy-realtime-gateway}
-    image: ${DOCKER_REALTIME_GATEWAY_SERVICE_NAME:-notezy-realtime-gateway}:latest
+    image: ${REALTIME_GATEWAY_IMAGE:-notezy-realtime-gateway:latest}
     build:
       context: .
       dockerfile: internal/realtimegateway/Dockerfile
@@ -189,7 +189,7 @@ services:
 
   notezy-durable-job:
     container_name: ${DOCKER_DURABLE_JOB_SERVICE_NAME:-notezy-durable-job}
-    image: ${DOCKER_DURABLE_JOB_SERVICE_NAME:-notezy-durable-job}:latest
+    image: ${DURABLE_JOB_IMAGE:-notezy-durable-job:latest}
     build:
       context: .
       dockerfile: internal/durablejob/Dockerfile
@@ -237,7 +237,7 @@ services:
 
   notezy-email:
     container_name: ${DOCKER_EMAIL_SERVICE_NAME:-notezy-email}
-    image: ${DOCKER_EMAIL_SERVICE_NAME:-notezy-email}:latest
+    image: ${EMAIL_IMAGE:-notezy-email:latest}
     build:
       context: .
       dockerfile: internal/email/Dockerfile
@@ -273,7 +273,7 @@ services:
       retries: 6
       start_period: 10s
   notezy-yjs-worker:
-    image: ${DOCKER_YJS_WORKER_SERVICE_NAME:-notezy-yjs-worker}:latest
+    image: ${YJS_WORKER_IMAGE:-notezy-yjs-worker:latest}
     build:
       context: .
       dockerfile: internal/yjsworker/Dockerfile

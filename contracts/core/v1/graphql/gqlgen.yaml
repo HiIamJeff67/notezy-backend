@@ -1,13 +1,13 @@
 # Where are all the schema files located? globs are supported eg  src/**/*.graphqls
 schema:
-  - contracts/core/v1/graphql/schemas/enums/*.graphql
-  - contracts/core/v1/graphql/schemas/*.graphql
+  - core/v1/graphql/schemas/enums/*.graphql
+  - core/v1/graphql/schemas/*.graphql
 
 # Where should the generated server code go?
 exec:
   package: generated
   layout: follow-schema # Only other option is "follow-schema," ie multi-file.
-  dir: contracts/core/v1/graphql/generated
+  dir: core/v1/graphql/generated
   filename_template: "{name}_generated.go" # optional
 
 # Uncomment to enable federation
@@ -20,7 +20,7 @@ exec:
 
 # Where should any generated models go?
 model:
-  filename: contracts/core/v1/graphql/models/models_gen.go
+  filename: core/v1/graphql/models/models_gen.go
   package: gqlmodels
 
   # Optional: Pass in a path to a new gotpl template to use for generating the models
@@ -35,7 +35,7 @@ resolver:
   # filename: graph/resolver.go
 
   # Only for follow-schema layout:
-  dir: internal/gateway/transports/api/graphql/resolvers
+  dir: ../internal/gateway/transports/api/graphql/resolvers
   filename_template: "{name}_resolver.go"
 
   # Optional: turn on to not generate template comments above resolvers

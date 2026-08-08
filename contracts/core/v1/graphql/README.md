@@ -16,5 +16,5 @@ only through `internal/gateway/transports/core/adapters/CoreAdapter`. Each Core
 domain endpoint/router owns its own GraphQL operation; a shared GraphQLEndpoint
 or central Core GraphQL router is not permitted.
 
-Run `make gql-generate` after changing SDL. Generated output must not be edited
+Run `make -C contracts gql-generate` after changing SDL. Generated output must not be edited
 by hand.

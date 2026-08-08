@@ -1,71 +1,96 @@
-# ============================== Database Shortcut Commands ============================== #
-view-hotreload-dbs:
-	docker compose exec -T notezy-core go run ./internal/core/commands viewDatabases
+# ============================== Workspace Commands ============================== #
 
-view-hotreload-enums:
-	docker compose exec -T notezy-core go run ./internal/core/commands viewAllEnums
+WORKSPACE_MODULES := contracts shared internal/cli internal/core internal/gateway internal/durablejob internal/email internal/realtimegateway test
 
-psql:
-	docker exec -it notezy-db psql -U jeff -d notezy-db
+.PHONY: ci-format ci-vet ci-unit ci-race ci-generated ci-containers staging-deploy staging-smoke
 
-# ============================== Migration Commands ============================== #
-migrate-build-db:
-	docker compose exec -T notezy-core ./core migrateDB
-migrate-hotreload-db:
-	docker compose exec -T notezy-core go run ./internal/core/commands migrateDB
+ci-format:
+	@files="$$(find contracts shared internal test -type f -name '*.go' -not -path '*/vendor/*' -print0 | xargs -0 gofmt -l)"; \
+	if [ -n "$$files" ]; then echo "Unformatted Go files:"; echo "$$files"; exit 1; fi
 
-clear-build-db:
-	docker exec -i notezy-db psql -U jeff -d notezy-db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
-clear-hotreload-db: # the same as the build version of db
-	docker exec -i notezy-db psql -U jeff -d notezy-db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+ci-vet:
+	@set -e; \
+	for module in $(WORKSPACE_MODULES); do \
+		echo "go vet $$module"; \
+		(cd "$$module" && GOWORK=off go vet ./...); \
+	done
 
-remigrate-build-db:
-	make clear-build-db
-	make migrate-build-db
+ci-unit:
+	$(MAKE) test-all
 
-remigrate-hotreload-db:
-	make clear-hotreload-db
-	make migrate-hotreload-db
+ci-race:
+	@set -e; \
+	for module in $(WORKSPACE_MODULES); do \
+		$(MAKE) test-race MODULE="$$module"; \
+	done
 
-# ============================== Seeding Commands ============================== #
-seed-build-db:
-	docker compose exec -T notezy-core ./core seedDB
-seed-hotreload-db:
-	docker compose exec -T notezy-core go run ./internal/core/commands seedDB
+ci-generated:
+	$(MAKE) -C contracts gql-generate
+	@git diff --exit-code -- contracts/core/v1/graphql/generated contracts/core/v1/graphql/models
 
-clear-go-cache:
-	go clean -modcache
-	cd contracts && go mod download
-	cd shared && go mod download
-	cd internal/core && go mod download
-	cd internal/gateway && go mod download
-	cd internal/durablejob && go mod download
-	cd internal/email && go mod download
-	cd internal/realtimegateway && go mod download
-	cd test && go mod download
+ci-containers:
+	@set -e; \
+	for runtime in gateway core durablejob email realtimegateway yjsworker; do \
+		echo "docker build $$runtime"; \
+		target=production; \
+		if [ "$$runtime" = yjsworker ]; then target=runtime; fi; \
+		docker build --target "$$target" --file "internal/$$runtime/Dockerfile" --tag "notezy-ci-$$runtime" .; \
+	done
 
-test-auth-e2e:
-	docker compose exec -T notezy-gateway sh -c 'cd test && go test ./e2e/auth'
+staging-deploy:
+	infra/staging/deploy.sh
 
-test-architecture:
-	cd test && go test ./architecture
+staging-smoke:
+	infra/staging/smoke.sh
+
+CLI_RUN := go -C internal/cli run .
 
 test-all:
-	cd test && go test ./...
+	$(CLI_RUN) test-all
 
-# ============================== GraphQL Shortcut Commands ============================== #
-gql-generate: # update before generate
-	go run github.com/99designs/gqlgen@v0.17.76 generate --config contracts/core/v1/graphql/gqlgen.yaml
+test-module:
+	@if [ -z "$(MODULE)" ]; then echo "usage: make test-module MODULE=<module>"; exit 1; fi
+	$(CLI_RUN) test-module $(MODULE)
 
-gql-clean:
-ifeq ($(OS),Windows_NT)
-	@if exist contracts\core\v1\graphql\generated\*.* del /q /s contracts\core\v1\graphql\generated\*.*
-	@if exist contracts\core\v1\graphql\models\*.* del /q /s contracts\core\v1\graphql\models\*.*
-else
-	rm -rf contracts/core/v1/graphql/generated/*
-	rm -rf contracts/core/v1/graphql/models/*
-endif
+test-race:
+	@if [ -z "$(MODULE)" ]; then echo "usage: make test-race MODULE=<module>"; exit 1; fi
+	$(CLI_RUN) test-race $(MODULE)
 
-gql-regenerate:
-	make gql-clean
-	make gql-generate
+test-contracts:
+	$(MAKE) -C contracts test
+
+test-shared:
+	$(MAKE) -C shared test
+
+test-core:
+	$(MAKE) -C internal/core test
+
+test-gateway:
+	$(MAKE) -C internal/gateway test
+
+test-durable-job:
+	$(MAKE) -C internal/durablejob test
+
+test-email:
+	$(MAKE) -C internal/email test
+
+test-realtime-gateway:
+	$(MAKE) -C internal/realtimegateway test
+
+test-architecture:
+	$(MAKE) -C test test-architecture
+
+test-integration:
+	$(MAKE) -C test test-integration
+
+test-integration-kafka:
+	$(MAKE) -C test test-integration-kafka
+
+test-load-websocket:
+	$(MAKE) -C test test-load-websocket
+
+test-soak-websocket:
+	$(MAKE) -C test test-soak-websocket
+
+test-load-kafka-lag:
+	$(MAKE) -C test test-load-kafka-lag
