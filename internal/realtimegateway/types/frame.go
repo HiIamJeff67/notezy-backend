@@ -1,6 +1,11 @@
 package realtimetypes
 
-import "github.com/google/uuid"
+import (
+	"encoding/json"
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type ControlFrame struct {
 	Version   int       `json:"version"`
@@ -108,4 +113,18 @@ type ResourceEventFrame struct {
 	TargetUserPublicId *uuid.UUID `json:"targetUserPublicId,omitempty"`
 	Change             string     `json:"change"`
 	Permission         string     `json:"permission,omitempty"`
+}
+
+type NotificationFrame struct {
+	Version          int             `json:"version"`
+	Type             FrameType       `json:"type"`
+	EventId          uuid.UUID       `json:"eventId"`
+	NotificationId   uuid.UUID       `json:"notificationId"`
+	NotificationType string          `json:"notificationType"`
+	Priority         string          `json:"priority"`
+	TemplateKey      string          `json:"templateKey"`
+	TemplateVersion  int             `json:"templateVersion"`
+	Payload          json.RawMessage `json:"payload"`
+	CreatedAt        time.Time       `json:"createdAt"`
+	ExpiresAt        *time.Time      `json:"expiresAt,omitempty"`
 }

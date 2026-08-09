@@ -37,6 +37,8 @@ type OutboxEventRepositoryInterface interface {
 	EnqueueBlockPackChanged(tx *gorm.DB, correlationId string, blockPackIds []uuid.UUID) error
 	EnqueueBlockPackDeleted(tx *gorm.DB, correlationId string, blockPackIds []uuid.UUID) error
 	EnqueueUserSessionsRevoked(tx *gorm.DB, correlationId string, userPublicId uuid.UUID) error
+	EnqueueUserDeleted(tx *gorm.DB, correlationId string, userPublicId uuid.UUID, deletedAt time.Time) error
+	EnqueueNotificationRequested(tx *gorm.DB, correlationId string, data coreeventscontract.NotificationRequestedData) error
 	EnqueueYjsMaintenanceHint(tx *gorm.DB, correlationId string, blockPackId uuid.UUID, reason string) error
 	EnqueueManyYjsMaintenanceHints(tx *gorm.DB, correlationId string, blockPackIds []uuid.UUID, reason string) error
 	ClaimAvailable(ctx context.Context, workerId string, batchSize int, claimTimeout time.Duration, opts ...options.RepositoryOptions) ([]schemas.OutboxEvent, *exceptions.Exception)
@@ -495,6 +497,66 @@ func (r *OutboxEventRepository) EnqueueUserSessionsRevoked(
 				Data:          coreeventscontract.UserSessionsRevokedData{},
 			},
 		},
+	)
+}
+
+func (r *OutboxEventRepository) EnqueueUserDeleted(
+	tx *gorm.DB,
+	correlationId string,
+	userPublicId uuid.UUID,
+	deletedAt time.Time,
+) error {
+	if tx == nil || userPublicId == uuid.Nil || deletedAt.IsZero() {
+		return errors.New("user deletion event requires a transaction, user public ID, and deletion time")
+	}
+
+	return EnqueueOutboxEvents(
+		tx,
+		coreeventscontract.CoreLifecycleTopic,
+		[]eventcontract.EventEnvelope[coreeventscontract.UserDeletedData]{
+			{
+				SchemaVersion: eventcontract.Version,
+				EventId:       uuid.New(),
+				EventType:     coreeventscontract.EventType_UserDeleted,
+				AggregateType: coreeventscontract.AggregateType_User,
+				AggregateId:   userPublicId,
+				KafkaKey:      userPublicId.String(),
+				OccurredAt:    deletedAt.UTC(),
+				CorrelationId: correlationId,
+				Data: coreeventscontract.UserDeletedData{
+					DeletedAt: deletedAt.UTC(),
+				},
+			},
+		},
+	)
+}
+
+func (r *OutboxEventRepository) EnqueueNotificationRequested(
+	tx *gorm.DB,
+	correlationId string,
+	data coreeventscontract.NotificationRequestedData,
+) error {
+	if tx == nil || data.RecipientUserPublicId == uuid.Nil || data.Type == "" ||
+		data.TemplateKey == "" || data.TemplateVersion <= 0 || data.DedupeKey == "" {
+		return errors.New("notification request is incomplete")
+	}
+
+	envelope := eventcontract.EventEnvelope[coreeventscontract.NotificationRequestedData]{
+		SchemaVersion: eventcontract.Version,
+		EventId:       uuid.New(),
+		EventType:     coreeventscontract.EventType_NotificationRequested,
+		AggregateType: coreeventscontract.AggregateType_Notification,
+		AggregateId:   data.RecipientUserPublicId,
+		KafkaKey:      data.RecipientUserPublicId.String(),
+		OccurredAt:    time.Now().UTC(),
+		CorrelationId: correlationId,
+		Data:          data,
+	}
+
+	return EnqueueOutboxEvents(
+		tx,
+		coreeventscontract.CoreNotificationTopic,
+		[]eventcontract.EventEnvelope[coreeventscontract.NotificationRequestedData]{envelope},
 	)
 }
 

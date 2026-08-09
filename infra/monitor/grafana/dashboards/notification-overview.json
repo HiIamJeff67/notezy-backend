@@ -1,0 +1,141 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "targets": [
+        {
+          "expr": "sum by (messaging_destination_name, messaging_consumer_group_name) (rate(notezy_kafka_consume_count_total{messaging_destination_name=~\"notezy.core.notification.v1|notezy.core.lifecycle.v1\"}[5m]))",
+          "legendFormat": "{{messaging_destination_name}} / {{messaging_consumer_group_name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Notification and Lifecycle Consume Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "targets": [
+        {
+          "expr": "sum by (messaging_destination_name, messaging_consumer_group_name) (rate(notezy_kafka_dlq_count_total{messaging_destination_name=~\"notezy.core.notification.v1|notezy.core.lifecycle.v1|notezy.notification.v1\"}[5m]))",
+          "legendFormat": "{{messaging_destination_name}} / {{messaging_consumer_group_name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Kafka Dead-Letter Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "targets": [
+        {
+          "expr": "max by (messaging_destination_name, messaging_consumer_group_name) (notezy_kafka_consumer_lag{messaging_destination_name=~\"notezy.core.notification.v1|notezy.core.lifecycle.v1|notezy.notification.v1\"})",
+          "legendFormat": "{{messaging_destination_name}} / {{messaging_consumer_group_name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Kafka Consumer Lag",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 4,
+      "targets": [
+        {
+          "expr": "sum by (messaging_destination_name, kafka_published) (rate(notezy_kafka_publish_count_total{messaging_destination_name=~\"notezy.core.notification.v1|notezy.notification.v1\"}[5m]))",
+          "legendFormat": "{{messaging_destination_name}} / published={{kafka_published}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (messaging_destination_name) (rate(notezy_kafka_publish_failure_count_total{messaging_destination_name=~\"notezy.core.notification.v1|notezy.notification.v1\"}[5m]))",
+          "legendFormat": "{{messaging_destination_name}} / publish failures",
+          "refId": "B"
+        }
+      ],
+      "title": "Notification Kafka Publish Rate",
+      "type": "timeseries"
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": [
+    "notezy",
+    "notification",
+    "kafka"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "title": "Notezy Notification and Kafka",
+  "uid": "notezy-notification-kafka",
+  "version": 1
+}

@@ -10,10 +10,8 @@ import (
 
 	"github.com/google/uuid"
 
-	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
-
-	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
-	durablejobroutinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
+	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1"
+	durablejobroutinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
 	enums "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 
 	handlers "github.com/HiIamJeff67/notezy-backend/internal/durablejob/routinetask/handlers"
@@ -144,11 +142,36 @@ func (hm *HandlerManager) Manage(
 
 			preparedTask, exception := registry.HandlerFunc(ctx, assignment)
 			if exception != nil || preparedTask == nil {
+				errorCode := enums.RoutineTaskRecordErrorCode_HandlerFailed
+				errorReason := "routine task preparation failed"
+				if exception != nil {
+					switch {
+					case errors.Is(exception.Origin(), context.Canceled):
+						errorCode = enums.RoutineTaskRecordErrorCode_Canceled
+					case errors.Is(exception.Origin(), context.DeadlineExceeded):
+						errorCode = enums.RoutineTaskRecordErrorCode_Timeout
+					default:
+						switch exception.HTTPStatusCode() {
+						case http.StatusBadRequest:
+							errorCode = enums.RoutineTaskRecordErrorCode_PayloadInvalid
+						case http.StatusNotFound:
+							errorCode = enums.RoutineTaskRecordErrorCode_TargetNotFound
+						case http.StatusUnauthorized, http.StatusForbidden:
+							errorCode = enums.RoutineTaskRecordErrorCode_PermissionDenied
+						}
+					}
+					if exception.Reason != "" {
+						errorReason = exception.Reason
+						if len(errorReason) > 256 {
+							errorReason = errorReason[:256]
+						}
+					}
+				}
 				hm.appendFailure(failedRoutineTask{
 					assignment:  assignment,
 					failedAt:    time.Now().UTC(),
-					errorCode:   routineTaskErrorCode(exception),
-					errorReason: routineTaskErrorReason(exception),
+					errorCode:   errorCode,
+					errorReason: errorReason,
 				})
 				return
 			}
@@ -251,37 +274,4 @@ func (hm *HandlerManager) publishResults(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-func routineTaskErrorCode(exception *exceptions.Exception) enums.RoutineTaskRecordErrorCode {
-	if exception == nil {
-		return enums.RoutineTaskRecordErrorCode_HandlerFailed
-	}
-	if errors.Is(exception.Origin(), context.Canceled) {
-		return enums.RoutineTaskRecordErrorCode_Canceled
-	}
-	if errors.Is(exception.Origin(), context.DeadlineExceeded) {
-		return enums.RoutineTaskRecordErrorCode_Timeout
-	}
-	switch exception.HTTPStatusCode() {
-	case http.StatusBadRequest:
-		return enums.RoutineTaskRecordErrorCode_PayloadInvalid
-	case http.StatusNotFound:
-		return enums.RoutineTaskRecordErrorCode_TargetNotFound
-	case http.StatusUnauthorized, http.StatusForbidden:
-		return enums.RoutineTaskRecordErrorCode_PermissionDenied
-	default:
-		return enums.RoutineTaskRecordErrorCode_HandlerFailed
-	}
-}
-
-func routineTaskErrorReason(exception *exceptions.Exception) string {
-	if exception == nil || exception.Reason == "" {
-		return "routine task preparation failed"
-	}
-	reason := exception.Reason
-	if len(reason) > 256 {
-		return reason[:256]
-	}
-	return reason
 }

@@ -11,9 +11,9 @@ import (
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
-	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
-	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/events"
-	durablejobroutinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
+	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1"
+	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/events"
+	durablejobroutinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
 	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 
 	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"

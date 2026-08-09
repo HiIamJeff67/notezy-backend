@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
+	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
 	enums "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 
 	validation "github.com/HiIamJeff67/notezy-backend/internal/durablejob/validations"

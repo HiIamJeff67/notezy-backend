@@ -2,8 +2,8 @@
 
 ## Scope
 
-Kafka is the Phase 3 transport for versioned lifecycle events. Local Compose
-runs one KRaft broker and provisions the v1 lifecycle topic. This is a local
+Kafka is the Phase 3 transport for versioned cross-runtime events. Local Compose
+runs one KRaft broker and provisions the complete versioned topic catalog. This is a local
 and integration environment only; production Kafka topology, credentials, and
 delivery automation remain outside this runbook.
 
@@ -15,11 +15,17 @@ production strategy is twelve partitions, replication factor three, and
 
 ## Start and inspect
 
-Start the broker and one-time topic provisioner:
+Start the broker and idempotent topic provisioner:
 
 ```bash
 docker compose up -d notezy-kafka notezy-kafka-init
 docker compose logs --follow notezy-kafka-init
+```
+
+The same provisioner can be run from the host with:
+
+```bash
+make kafka-topics
 ```
 
 Inspect a provisioned topic:
@@ -33,20 +39,11 @@ docker compose exec notezy-kafka \
 ```
 
 Containers connect to `notezy-kafka:9092`. A process started on the host uses
-`127.0.0.1:9094` by default. The initial lifecycle topic has delete cleanup,
-seven-day retention, three local partitions, and replication factor one. Its
-paired dead-letter topic, `notezy.core.lifecycle.v1.dlq`, has the same local
-partition count and 30-day retention. The same provisioner also creates the
-YjsWorker command/reply and DurableJob maintenance topics:
-`notezy.yjsworker.core.command.v1`,
-`notezy.yjsworker.core.command.v1.dlq`,
-`notezy.core.yjsworker.reply.v1`,
-`notezy.core.yjsworker.reply.v1.dlq`,
-`notezy.core.durablejob.yjs-maintenance-hint.v1`,
-`notezy.durablejob.core.yjs-maintenance-request.v1`,
-`notezy.core.yjsworker.maintenance-command.v1`,
-`notezy.yjsworker.core.maintenance-result.v1`, and
-`notezy.core.durablejob.yjs-maintenance-result.v1` (and their local DLQs).
+`127.0.0.1:9094` by default. The catalog in
+`shared/platform/kafka/topics` is the source of truth for Core, DurableJob,
+Email, Notification, and YjsWorker topics. Each catalog entry uses delete
+cleanup, seven-day retention, three local partitions, replication factor one,
+and a paired 30-day dead-letter topic.
 Automatic topic creation is disabled, so
 an absent topic is always a provisioning failure.
 

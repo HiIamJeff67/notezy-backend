@@ -126,6 +126,8 @@ func (c *LifecycleConsumer) process(
 			EventId:      envelope.EventId,
 			UserPublicId: envelope.AggregateId,
 		})
+	case coreeventscontract.EventType_UserDeleted:
+		return nil
 	case coreeventscontract.EventType_BlockPackRoomPolicyChanged,
 		coreeventscontract.EventType_RootShelfPermissionRevoked:
 		if envelope.EventType == coreeventscontract.EventType_RootShelfPermissionRevoked {

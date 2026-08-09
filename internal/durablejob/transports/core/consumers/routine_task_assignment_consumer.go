@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 
-	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
-	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/events"
+	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1"
+	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/events"
 	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 
 	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"

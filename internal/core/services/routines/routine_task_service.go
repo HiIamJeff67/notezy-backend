@@ -20,9 +20,9 @@ import (
 
 	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/routine-tasks"
 	gqlmodels "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/graphql/models"
-	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
-	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/events"
-	durablejobroutinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
+	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1"
+	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/events"
+	durablejobroutinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
 	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 
 	contexts "github.com/HiIamJeff67/notezy-backend/internal/core/contexts"

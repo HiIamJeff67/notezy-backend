@@ -3,7 +3,6 @@ package realtime
 import (
 	"context"
 	"crypto/sha256"
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -75,45 +74,6 @@ func (s *RealtimeService) getActorUserPublicId(ctx context.Context) (uuid.UUID, 
 	}
 
 	return user.PublicId, nil
-}
-
-func (s *RealtimeService) getBlockPackMaximumSubscribers(
-	ctx context.Context,
-	blockPackId uuid.UUID,
-) (int32, error) {
-	var rootShelf schemas.RootShelf
-	result := s.db.WithContext(ctx).
-		Model(&schemas.BlockPack{}).
-		Select(`"RootShelfTable".owner_id`).
-		Joins(`INNER JOIN "SubShelfTable" ON "SubShelfTable".id = "BlockPackTable".parent_sub_shelf_id`).
-		Joins(`INNER JOIN "RootShelfTable" ON "RootShelfTable".id = "SubShelfTable".root_shelf_id`).
-		Where(`"BlockPackTable".id = ?`, blockPackId).
-		Where(`"BlockPackTable".deleted_at IS NULL`).
-		Where(`"SubShelfTable".deleted_at IS NULL`).
-		Where(`"RootShelfTable".deleted_at IS NULL`).
-		Scan(&rootShelf)
-	if result.Error != nil {
-		return 0, result.Error
-	}
-	if result.RowsAffected == 0 || rootShelf.OwnerId == uuid.Nil {
-		return 0, gorm.ErrRecordNotFound
-	}
-
-	var maximumSubscribers int32
-	result = s.db.WithContext(ctx).
-		Model(&schemas.User{}).
-		Select(`"PlanLimitationTable".max_realtime_room_subscriber_count`).
-		Joins(`INNER JOIN "PlanLimitationTable" ON "PlanLimitationTable".key = "UserTable".plan`).
-		Where(`"UserTable".id = ?`, rootShelf.OwnerId).
-		Scan(&maximumSubscribers)
-	if result.Error != nil {
-		return 0, result.Error
-	}
-	if result.RowsAffected == 0 || maximumSubscribers <= 0 {
-		return 0, errors.New("block pack owner has no realtime room subscriber capacity")
-	}
-
-	return maximumSubscribers, nil
 }
 
 /* ============================== Service Methods for Realtime ============================== */
@@ -230,15 +190,60 @@ func (s *RealtimeService) CreateMyBlockPackChannelTicket(
 		).WithOrigin(result.Error)
 	}
 
-	maximumSubscribers, err := s.getBlockPackMaximumSubscribers(ctx, blockPack.Id)
-	if err != nil {
+	var rootShelf schemas.RootShelf
+	result = db.
+		Model(&schemas.BlockPack{}).
+		Select(`"RootShelfTable".owner_id`).
+		Joins(`INNER JOIN "SubShelfTable" ON "SubShelfTable".id = "BlockPackTable".parent_sub_shelf_id`).
+		Joins(`INNER JOIN "RootShelfTable" ON "RootShelfTable".id = "SubShelfTable".root_shelf_id`).
+		Where(`"BlockPackTable".id = ?`, blockPack.Id).
+		Where(`"BlockPackTable".deleted_at IS NULL`).
+		Where(`"SubShelfTable".deleted_at IS NULL`).
+		Where(`"RootShelfTable".deleted_at IS NULL`).
+		Scan(&rootShelf)
+	if result.Error != nil {
 		return nil, exceptions.New(
 			"Unavailable",
 			"BlockPack",
 			"CreateMyBlockPackChannelTicket",
 			"Block pack realtime room admission is unavailable",
 			http.StatusServiceUnavailable,
-		).WithOrigin(err)
+		).WithOrigin(result.Error)
+	}
+	if result.RowsAffected == 0 || rootShelf.OwnerId == uuid.Nil {
+		return nil, exceptions.New(
+			"Unavailable",
+			"BlockPack",
+			"CreateMyBlockPackChannelTicket",
+			"Block pack realtime room admission is unavailable",
+			http.StatusServiceUnavailable,
+		).WithOrigin(gorm.ErrRecordNotFound)
+	}
+
+	var maximumSubscribers int32
+	result = db.
+		Model(&schemas.User{}).
+		Select(`"PlanLimitationTable".max_realtime_room_subscriber_count`).
+		Joins(`INNER JOIN "PlanLimitationTable" ON "PlanLimitationTable".key = "UserTable".plan`).
+		Where(`"UserTable".id = ?`, rootShelf.OwnerId).
+		Scan(&maximumSubscribers)
+	if result.Error != nil {
+		return nil, exceptions.New(
+			"Unavailable",
+			"BlockPack",
+			"CreateMyBlockPackChannelTicket",
+			"Block pack realtime room admission is unavailable",
+			http.StatusServiceUnavailable,
+		).WithOrigin(result.Error)
+	}
+	if result.RowsAffected == 0 || maximumSubscribers <= 0 {
+		return nil, exceptions.New(
+			"Unavailable",
+			"BlockPack",
+			"CreateMyBlockPackChannelTicket",
+			"Block pack realtime room admission is unavailable",
+			http.StatusServiceUnavailable,
+		).WithOrigin(fmt.Errorf("block pack owner has no realtime room subscriber capacity"))
 	}
 
 	userAgentHash := sha256.Sum256([]byte(requestDto.Header.UserAgent))

@@ -23,6 +23,7 @@ import (
 	ratelimitmiddlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	developmentroutes "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/routes/developmentroutes"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
+	notificationadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/notification/adapters"
 	status "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/status"
 )
 
@@ -99,6 +100,7 @@ func Start() func() {
 	})
 	developmentroutes.ConfigureAPIRoutes(
 		coreadapters.NewCoreAdapter(config.CoreBaseUrl, config.CoreAdapterTimeout),
+		notificationadapters.NewNotificationAdapter(config.NotificationBaseUrl, config.NotificationAdapterTimeout),
 		config.AllowedDomains,
 		accessTokenCookieHandler,
 		refreshTokenCookieHandler,

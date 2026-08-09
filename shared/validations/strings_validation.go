@@ -3,6 +3,7 @@ package validations
 import (
 	"net/url"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -76,15 +77,11 @@ func RegisterStringsValidation(validate *validator.Validate) {
 		}
 
 		scheme := strings.ToLower(parsedURL.Scheme)
-		for _, validScheme := range urlWhiteList {
-			if scheme == validScheme {
-				return true
-			}
+		if slices.Contains(urlWhiteList, scheme) {
+			return true
 		}
-		for _, invalidScheme := range urlBlackList {
-			if scheme == invalidScheme {
-				return false
-			}
+		if slices.Contains(urlBlackList, scheme) {
+			return false
 		}
 
 		return parsedURL.Scheme != "" && parsedURL.Host != ""

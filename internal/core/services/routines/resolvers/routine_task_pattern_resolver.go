@@ -11,7 +11,7 @@ import (
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
-	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
+	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
 
 	schemas "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas"
 	coreenums "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/schemas/enums"

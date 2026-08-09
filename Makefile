@@ -1,8 +1,8 @@
 # ============================== Workspace Commands ============================== #
 
-WORKSPACE_MODULES := contracts shared internal/cli internal/core internal/gateway internal/durablejob internal/email internal/realtimegateway test
+WORKSPACE_MODULES := contracts shared internal/cli internal/core internal/gateway internal/durablejob internal/email internal/notification internal/realtimegateway test
 
-.PHONY: ci-format ci-vet ci-unit ci-race ci-generated ci-containers staging-deploy staging-smoke
+.PHONY: ci-format ci-vet ci-unit ci-race ci-generated ci-containers staging-deploy staging-smoke kafka-topics
 
 ci-format:
 	@files="$$(find contracts shared internal test -type f -name '*.go' -not -path '*/vendor/*' -print0 | xargs -0 gofmt -l)"; \
@@ -30,7 +30,7 @@ ci-generated:
 
 ci-containers:
 	@set -e; \
-	for runtime in gateway core durablejob email realtimegateway yjsworker; do \
+	for runtime in gateway core durablejob email notification realtimegateway yjsworker; do \
 		echo "docker build $$runtime"; \
 		target=production; \
 		if [ "$$runtime" = yjsworker ]; then target=runtime; fi; \
@@ -77,6 +77,9 @@ test-email:
 test-realtime-gateway:
 	$(MAKE) -C internal/realtimegateway test
 
+test-notification:
+	$(MAKE) -C internal/notification test
+
 test-architecture:
 	$(MAKE) -C test test-architecture
 
@@ -94,3 +97,6 @@ test-soak-websocket:
 
 test-load-kafka-lag:
 	$(MAKE) -C test test-load-kafka-lag
+
+kafka-topics:
+	$(CLI_RUN) kafka topics ensure

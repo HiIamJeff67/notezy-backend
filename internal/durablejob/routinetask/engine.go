@@ -11,8 +11,8 @@ import (
 
 	constants "github.com/HiIamJeff67/notezy-backend/shared/constants"
 
-	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
-	durablejobroutinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
+	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1"
+	durablejobroutinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
 
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
 

@@ -13,7 +13,7 @@ import (
 
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
-	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
+	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
 	enums "github.com/HiIamJeff67/notezy-backend/contracts/types/enums"
 )
 

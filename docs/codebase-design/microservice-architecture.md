@@ -171,7 +171,7 @@ no generic `ArborizedBlock`, `RawArborizedEditableBlock`, or duplicate
 `FlattenedEditableBlock` types.
 
 DurableJob-owned RoutineTask execution payloads live under
-`contracts/durablejob/v1/types/routine-tasks/`. Core validates and persists the
+`contracts/durable-job/v1/types/routine-tasks/`. Core validates and persists the
 protocol boundary while DurableJob handlers consume it without importing Core
 source. Only genuinely portable structures, such as EditableBlock shapes,
 remain under `contracts/types/`. BlockNote schemas remain portable in
@@ -396,7 +396,7 @@ families are kept at their boundaries:
 
 - [`contracts/core/v1/events`](../../contracts/core/v1/events/) contains Core
   lifecycle facts and policy decisions consumed by RealtimeGateway.
-- [`contracts/durablejob/v1/events`](../../contracts/durablejob/v1/events/)
+- [`contracts/durable-job/v1/events`](../../contracts/durable-job/v1/events/)
   contains RoutineTask and DurableJob-to-Core Yjs maintenance coordination.
 - [`contracts/core/v1/events`](../../contracts/core/v1/events/)
   contains Core-owned lifecycle facts and Yjs maintenance hints.

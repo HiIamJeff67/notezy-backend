@@ -21,9 +21,10 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 	franzkgo "github.com/twmb/franz-go/pkg/kgo"
 
-	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/events"
+	durablejobeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/events"
 	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 	platformkafka "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka"
+	kafkatopics "github.com/HiIamJeff67/notezy-backend/shared/platform/kafka/topics"
 )
 
 func TestCoreDurableJobKafkaBrokerFlow(t *testing.T) {
@@ -269,6 +270,7 @@ func configuredKafkaBrokers(t *testing.T) []string {
 		}
 	}
 	if len(brokers) > 0 {
+		ensureKafkaTopics(t, brokers)
 		return brokers
 	}
 
@@ -333,7 +335,31 @@ func configuredKafkaBrokers(t *testing.T) []string {
 		}
 	})
 
-	return []string{"127.0.0.1:" + strconv.Itoa(hostPort)}
+	containerBrokers := []string{"127.0.0.1:" + strconv.Itoa(hostPort)}
+	ensureKafkaTopics(t, containerBrokers)
+	return containerBrokers
+}
+
+func ensureKafkaTopics(t *testing.T, brokers []string) {
+	t.Helper()
+
+	provisioner, err := platformkafka.NewTopicProvisioner(platformkafka.ClientConfig{
+		ConnectionConfig: platformkafka.ConnectionConfig{
+			Brokers:     brokers,
+			DialTimeout: 10 * time.Second,
+		},
+		ClientId: "notezy-test-kafka-topic-bootstrap",
+	})
+	if err != nil {
+		t.Fatalf("create Kafka topic provisioner: %v", err)
+	}
+	t.Cleanup(provisioner.Close)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	t.Cleanup(cancel)
+	if err := provisioner.EnsureTopics(ctx, kafkatopics.All()); err != nil {
+		t.Fatalf("ensure Kafka topics: %v", err)
+	}
 }
 
 func freeTCPPort(t *testing.T) int {

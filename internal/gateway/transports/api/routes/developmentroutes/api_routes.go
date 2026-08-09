@@ -11,6 +11,7 @@ import (
 
 	middlewares "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/api/middlewares"
 	coreadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/core/adapters"
+	notificationadapters "github.com/HiIamJeff67/notezy-backend/internal/gateway/transports/notification/adapters"
 )
 
 var (
@@ -20,6 +21,7 @@ var (
 
 func ConfigureAPIRoutes(
 	coreClient *coreadapters.CoreAdapter,
+	notificationClient *notificationadapters.NotificationAdapter,
 	allowedDomains []string,
 	accessTokenCookieHandler *cookies.CookieHandler,
 	refreshTokenCookieHandler *cookies.CookieHandler,
@@ -51,6 +53,7 @@ func ConfigureAPIRoutes(
 	configureDevelopmentBlockRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
 	configureDevelopmentRealtimeRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
 	configureDevelopmentGraphQLRoutes(DevelopmentAPIRouterGroup, coreClient, accessTokenCookieHandler, refreshTokenCookieHandler)
+	configureDevelopmentNotificationRoutes(DevelopmentAPIRouterGroup, notificationClient, accessTokenCookieHandler, refreshTokenCookieHandler)
 
 	// test
 	configureStaticRoutes(DevelopmentAPIRouterGroup)

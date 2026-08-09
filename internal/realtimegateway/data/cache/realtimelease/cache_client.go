@@ -65,6 +65,19 @@ type ResourceEvent struct {
 	Permission         string     `json:"permission,omitempty"`
 }
 
+type NotificationEvent struct {
+	EventId               uuid.UUID       `json:"eventId"`
+	NotificationId        uuid.UUID       `json:"notificationId"`
+	RecipientUserPublicId uuid.UUID       `json:"recipientUserPublicId"`
+	Type                  string          `json:"type"`
+	Priority              string          `json:"priority"`
+	TemplateKey           string          `json:"templateKey"`
+	TemplateVersion       int             `json:"templateVersion"`
+	Payload               json.RawMessage `json:"payload"`
+	CreatedAt             time.Time       `json:"createdAt"`
+	ExpiresAt             *time.Time      `json:"expiresAt,omitempty"`
+}
+
 type RealtimeLeaseCacheClient struct {
 	cacheStore *RealtimeLeaseCacheStore
 }
@@ -176,6 +189,10 @@ func (s *RealtimeLeaseCacheClient) userSessionRevocationKey() string {
 	return "Realtime:user:session-revocations"
 }
 
+func (s *RealtimeLeaseCacheClient) userNotificationKey() string {
+	return "Realtime:user:notifications"
+}
+
 /* ============================== Lifecycle Methods ============================== */
 
 func (s *RealtimeLeaseCacheClient) MarkLifecycleEventProcessed(eventId uuid.UUID) (bool, error) {
@@ -280,6 +297,45 @@ func (s *RealtimeLeaseCacheClient) SubscribeUserSessionRevocations(
 			}
 
 			handler(revocation)
+		}
+	}()
+
+	return func() {
+		_ = pubsub.Close()
+	}, nil
+}
+
+func (s *RealtimeLeaseCacheClient) PublishNotification(event NotificationEvent) error {
+	if event.EventId == uuid.Nil || event.RecipientUserPublicId == uuid.Nil {
+		return errors.New("realtime notification event is incomplete")
+	}
+	redisClient, err := s.getRedisClient(event.RecipientUserPublicId.String())
+	if err != nil {
+		return err
+	}
+	payload, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+
+	return redisClient.Publish(s.userNotificationKey(), payload).Err()
+}
+
+func (s *RealtimeLeaseCacheClient) SubscribeNotifications(
+	handler func(NotificationEvent),
+) (func(), error) {
+	redisClient, err := s.getRedisClient(s.userNotificationKey())
+	if err != nil {
+		return nil, err
+	}
+	pubsub := redisClient.Subscribe(s.userNotificationKey())
+	go func() {
+		for message := range pubsub.Channel() {
+			var event NotificationEvent
+			if err := json.Unmarshal([]byte(message.Payload), &event); err != nil {
+				continue
+			}
+			handler(event)
 		}
 	}()
 

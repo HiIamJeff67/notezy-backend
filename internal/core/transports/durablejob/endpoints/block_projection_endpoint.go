@@ -10,7 +10,7 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/blocks"
-	durablejobdto "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
+	durablejobdto "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1"
 	gatewaycontract "github.com/HiIamJeff67/notezy-backend/contracts/gateway/v1"
 
 	blockservices "github.com/HiIamJeff67/notezy-backend/internal/core/services/blocks"

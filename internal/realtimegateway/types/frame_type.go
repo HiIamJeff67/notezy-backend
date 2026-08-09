@@ -22,4 +22,5 @@ const (
 	FrameType_Heartbeat       FrameType = "heartbeat"
 	FrameType_Reconnect       FrameType = "reconnect"
 	FrameType_ResourceEvent   FrameType = "resource-event"
+	FrameType_Notification    FrameType = "notification"
 )

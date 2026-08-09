@@ -139,6 +139,21 @@ func Start() func() {
 		},
 	)
 	shutdownLifecycleConsumer := lifecycleConsumer.Start(context.Background())
+	notificationConsumer := workers.NewNotificationConsumer(
+		realtimeLeaseCacheClient,
+		platformkafka.ConsumerConfig{
+			ClientConfig: platformkafka.ClientConfig{
+				ConnectionConfig: kafkaConnectionConfig,
+				ClientId:         "notezy-realtime-gateway-notification",
+			},
+			ConsumerGroup:       "notezy-realtime-gateway-notification-v1",
+			MaximumAttempts:     config.KafkaConsumer.MaximumAttempts,
+			InitialRetryBackoff: config.KafkaConsumer.InitialRetryBackoff,
+			MaximumRetryBackoff: config.KafkaConsumer.MaximumRetryBackoff,
+			MaximumPollRecords:  config.KafkaConsumer.MaximumPollRecords,
+		},
+	)
+	shutdownNotificationConsumer := notificationConsumer.Start(context.Background())
 	routes.GET("", websocketAdapter.Handle)
 
 	listener, err := net.Listen("tcp", config.ListenAddress)
@@ -165,6 +180,7 @@ func Start() func() {
 		application.ready.Store(false)
 		application.healthy.Store(false)
 		shutdownLifecycleConsumer()
+		shutdownNotificationConsumer()
 		websocketAdapter.Shutdown()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()

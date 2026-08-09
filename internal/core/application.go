@@ -101,6 +101,7 @@ func NewCoreTransportRouter(
 	routineTaskRepository := repositories.NewRoutineTaskRepository(routineTaskScope)
 	routineTaskRecordRepository := repositories.NewRoutineTaskRecordRepository(routineTaskRecordScope)
 	itemRepository := repositories.NewItemRepository(itemScope)
+	outboxEventRepository := repositories.NewOutboxEventRepository()
 	inMemoryStorage := storage.NewInMemoryStorage()
 
 	oauthService := authservices.NewOAuthService(config.OAuthGoogle.OAuthConfig())
@@ -116,6 +117,7 @@ func NewCoreTransportRouter(
 		userAccountRepository,
 		userSettingRepository,
 		rootShelfRepository,
+		outboxEventRepository,
 		oauthService,
 		emailClient,
 		userDataCacheClient,

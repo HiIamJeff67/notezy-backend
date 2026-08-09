@@ -31,20 +31,21 @@ import (
 )
 
 type WebSocketAdapter struct {
-	upgrader                    websocket.Upgrader
-	workerManager               workers.WorkerManagerInterface
-	leaseStore                  *realtimeleasecache.RealtimeLeaseCacheClient
-	realtimeDisabled            bool
-	realtimeBetaUserPublicIdSet map[uuid.UUID]bool
-	connectorMutex              sync.RWMutex
-	connectors                  map[uuid.UUID]*Connector
-	pendingConnectorCount       int
-	maximumConnectors           int
-	maximumConnectionsPerUser   int
-	shutdownRevocationListener  func()
-	shutdownSessionListener     func()
-	shutdownPresenceListener    func()
-	shutdownResourceListener    func()
+	upgrader                     websocket.Upgrader
+	workerManager                workers.WorkerManagerInterface
+	leaseStore                   *realtimeleasecache.RealtimeLeaseCacheClient
+	realtimeDisabled             bool
+	realtimeBetaUserPublicIdSet  map[uuid.UUID]bool
+	connectorMutex               sync.RWMutex
+	connectors                   map[uuid.UUID]*Connector
+	pendingConnectorCount        int
+	maximumConnectors            int
+	maximumConnectionsPerUser    int
+	shutdownRevocationListener   func()
+	shutdownSessionListener      func()
+	shutdownPresenceListener     func()
+	shutdownResourceListener     func()
+	shutdownNotificationListener func()
 }
 
 func NewWebSocketAdapter(
@@ -82,6 +83,7 @@ func NewWebSocketAdapter(
 	application.subscribeUserSessionRevocations()
 	application.subscribeBlockPackPresenceEvents()
 	application.subscribeResourceEvents()
+	application.subscribeNotifications()
 
 	return application
 }
@@ -124,6 +126,45 @@ func (g *WebSocketAdapter) subscribeResourceEvents() {
 	}
 
 	g.shutdownResourceListener = shutdown
+}
+
+func (g *WebSocketAdapter) subscribeNotifications() {
+	shutdown, err := g.leaseStore.SubscribeNotifications(g.broadcastNotification)
+	if err != nil {
+		logs.NotezyLogger.Error(context.Background(), err, "Failed to subscribe to realtime notifications")
+		return
+	}
+
+	g.shutdownNotificationListener = shutdown
+}
+
+func (g *WebSocketAdapter) broadcastNotification(event realtimeleasecache.NotificationEvent) {
+	g.connectorMutex.RLock()
+	connectors := make([]*Connector, 0)
+	for _, connector := range g.connectors {
+		if connector.UserPublicId == event.RecipientUserPublicId {
+			connectors = append(connectors, connector)
+		}
+	}
+	g.connectorMutex.RUnlock()
+
+	for _, connector := range connectors {
+		if err := connector.writeJSON(realtimetypes.NotificationFrame{
+			Version:          constants.RealtimeProtocolVersion,
+			Type:             realtimetypes.FrameType_Notification,
+			EventId:          event.EventId,
+			NotificationId:   event.NotificationId,
+			NotificationType: event.Type,
+			Priority:         event.Priority,
+			TemplateKey:      event.TemplateKey,
+			TemplateVersion:  event.TemplateVersion,
+			Payload:          event.Payload,
+			CreatedAt:        event.CreatedAt,
+			ExpiresAt:        event.ExpiresAt,
+		}); err != nil {
+			logs.NotezyLogger.Error(context.Background(), err, "Failed to enqueue realtime notification")
+		}
+	}
 }
 
 func (g *WebSocketAdapter) broadcastResourceEvent(event realtimeleasecache.ResourceEvent) {
@@ -180,6 +221,9 @@ func (g *WebSocketAdapter) Shutdown() {
 	}
 	if g.shutdownResourceListener != nil {
 		g.shutdownResourceListener()
+	}
+	if g.shutdownNotificationListener != nil {
+		g.shutdownNotificationListener()
 	}
 
 	g.connectorMutex.RLock()

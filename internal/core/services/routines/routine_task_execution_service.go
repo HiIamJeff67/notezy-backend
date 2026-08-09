@@ -14,8 +14,8 @@ import (
 	exceptions "github.com/HiIamJeff67/notezy-backend/contracts/types/exceptions"
 
 	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
-	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1"
-	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durablejob/v1/types/routine-tasks"
+	durablejobcontract "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1"
+	routinetasktypes "github.com/HiIamJeff67/notezy-backend/contracts/durable-job/v1/types/routine-tasks"
 	eventcontract "github.com/HiIamJeff67/notezy-backend/contracts/types/events"
 
 	repositories "github.com/HiIamJeff67/notezy-backend/internal/core/data/database/repositories"
@@ -105,7 +105,7 @@ func NewRoutineTaskExecutionService(
 	return service
 }
 
-/* ============================== Auxiliary Methods ============================== */
+/* ============================== Service Methods for RoutineTaskExecution ============================== */
 
 func (s *RoutineTaskExecutionService) ValidateRoutineTaskPayload(
 	purpose coreenums.RoutineTaskPurpose,
@@ -113,8 +113,6 @@ func (s *RoutineTaskExecutionService) ValidateRoutineTaskPayload(
 ) *exceptions.Exception {
 	return s.routineTaskHandler.HandleValidateRoutineTaskPayload(purpose, payload)
 }
-
-/* ============================== Service Methods for RoutineTaskExecution ============================== */
 
 func (s *RoutineTaskExecutionService) ResolveRoutineTaskPatterns(
 	ctx context.Context,

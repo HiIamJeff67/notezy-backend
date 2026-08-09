@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -24,7 +25,9 @@ import (
 	snowflake "github.com/HiIamJeff67/notezy-backend/shared/lib/snowflake"
 
 	apicontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/api/auth"
+	coreeventscontract "github.com/HiIamJeff67/notezy-backend/contracts/core/v1/events"
 	emaildto "github.com/HiIamJeff67/notezy-backend/contracts/email/v1/events"
+	notificationtypescontract "github.com/HiIamJeff67/notezy-backend/contracts/notification/v1/types"
 
 	logs "github.com/HiIamJeff67/notezy-backend/shared/platform/observability/logs"
 
@@ -66,6 +69,7 @@ type AuthService struct {
 	userAccountRepository repositories.UserAccountRepositoryInterface
 	userSettingRepository repositories.UserSettingRepositoryInterface
 	rootShelfRepository   repositories.RootShelfRepositoryInterface
+	outboxRepository      repositories.OutboxEventRepositoryInterface
 	oauthService          OAuthServiceInterface
 	emailClient           emailtransport.ClientInterface
 	userDataCacheClient   *userdata.UserDataCacheClient
@@ -80,6 +84,7 @@ func NewAuthService(
 	userAccountRepository repositories.UserAccountRepositoryInterface,
 	userSettingRepository repositories.UserSettingRepositoryInterface,
 	rootShelfRepository repositories.RootShelfRepositoryInterface,
+	outboxRepository repositories.OutboxEventRepositoryInterface,
 	oauthService OAuthServiceInterface,
 	emailClient emailtransport.ClientInterface,
 	userDataCacheClient *userdata.UserDataCacheClient,
@@ -91,6 +96,9 @@ func NewAuthService(
 	if authCodeGenerator == nil {
 		authCodeGenerator = authcode.New()
 	}
+	if outboxRepository == nil {
+		outboxRepository = repositories.NewOutboxEventRepository()
+	}
 	return &AuthService{
 		validator:             validator,
 		db:                    db,
@@ -99,6 +107,7 @@ func NewAuthService(
 		userAccountRepository: userAccountRepository,
 		userSettingRepository: userSettingRepository,
 		rootShelfRepository:   rootShelfRepository,
+		outboxRepository:      outboxRepository,
 		oauthService:          oauthService,
 		emailClient:           emailClient,
 		userDataCacheClient:   userDataCacheClient,
@@ -152,27 +161,6 @@ func (s *AuthService) hashPassword(password string) (string, *exceptions.Excepti
 			http.StatusInternalServerError,
 			true,
 		).WithOrigin(err)
-	}
-	return string(bytes), nil
-}
-
-func (s *AuthService) getOAuthFakeName() (string, *exceptions.Exception) {
-	reg, err := regexp.Compile("[^a-z0-9]+")
-	if err != nil {
-		return "", apiexceptions.Auth.FailedToCompileRegularExpression().WithOrigin(err)
-	}
-	fakeName := strings.ToLower(uuid.New().String())
-	fakeName = reg.ReplaceAllString(fakeName, "")
-	if len(fakeName) < 6 {
-		fakeName = fakeName + snowflake.GenerateRepeatableID()
-	}
-	return fakeName, nil
-}
-
-func (s *AuthService) getOAuthFakePassword() (string, *exceptions.Exception) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(uuid.New().String()), bcrypt.DefaultCost)
-	if err != nil {
-		return "", exceptions.New("FailedToGenerateHashValue", "Auth", "Hash", "Failed to generate a hash value", http.StatusInternalServerError, true).WithOrigin(err)
 	}
 	return string(bytes), nil
 }
@@ -237,6 +225,52 @@ func (s *AuthService) generateCSRFToken() (*string, *exceptions.Exception) {
 	}
 
 	return token, nil
+}
+
+func (s *AuthService) enqueueWelcomeNotification(
+	tx *gorm.DB,
+	userPublicId uuid.UUID,
+) *exceptions.Exception {
+	payload, err := json.Marshal(notificationtypescontract.NewsPayload{
+		Title:   "Welcome to Notezy",
+		Summary: "Your Notezy account is ready.",
+		Body:    "Start organizing your notes, shelves, and routines in one place.",
+	})
+	if err != nil {
+		return exceptions.New(
+			"FailedToMarshal",
+			"Notification",
+			"Request",
+			"Failed to encode the welcome notification payload",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
+
+	if err := s.outboxRepository.EnqueueNotificationRequested(
+		tx,
+		uuid.NewString(),
+		coreeventscontract.NotificationRequestedData{
+			RecipientUserPublicId: userPublicId,
+			Type:                  coreeventscontract.NotificationType_News,
+			Priority:              coreeventscontract.NotificationPriority_Normal,
+			TemplateKey:           notificationtypescontract.TemplateKey_News,
+			TemplateVersion:       1,
+			Payload:               payload,
+			DedupeKey:             "welcome:" + userPublicId.String(),
+		},
+	); err != nil {
+		return exceptions.New(
+			"FailedToCreate",
+			"Notification",
+			"Request",
+			"Failed to enqueue the welcome notification",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
+
+	return nil
 }
 
 /* ============================== Service Methods for Authentication ============================== */
@@ -362,6 +396,10 @@ func (s *AuthService) Register(
 		tx.Rollback()
 		return nil, exception
 	}
+	if exception = s.enqueueWelcomeNotification(tx, newUser.PublicId); exception != nil {
+		tx.Rollback()
+		return nil, exception
+	}
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return nil, apiexceptions.User.FailedToCommitTransaction().WithOrigin(err)
@@ -424,10 +462,19 @@ func (s *AuthService) RegisterViaGoogle(
 		return nil, exception
 	}
 
-	fakePassword, exception := s.getOAuthFakePassword()
-	if exception != nil {
-		return nil, exception
+	fakePasswordBytes, err := bcrypt.GenerateFromPassword([]byte(uuid.New().String()), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, exceptions.New(
+			"FailedToGenerateHashValue",
+			"Auth",
+			"Hash",
+			"Failed to generate a hash value",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
 	}
+	fakePassword := string(fakePasswordBytes)
+
 	hashedPassword, exception := s.hashPassword(fakePassword)
 	if exception != nil {
 		return nil, exception
@@ -435,10 +482,15 @@ func (s *AuthService) RegisterViaGoogle(
 
 	tx := s.db.WithContext(ctx).Begin()
 
-	fakeName, exception := s.getOAuthFakeName()
-	if exception != nil {
+	reg, err := regexp.Compile("[^a-z0-9]+")
+	if err != nil {
 		tx.Rollback()
-		return nil, exception
+		return nil, apiexceptions.Auth.FailedToCompileRegularExpression().WithOrigin(err)
+	}
+	fakeName := strings.ToLower(uuid.New().String())
+	fakeName = reg.ReplaceAllString(fakeName, "")
+	if len(fakeName) < 6 {
+		fakeName += snowflake.GenerateRepeatableID()
 	}
 	if len(fakeName) > constants.MaxNameLength {
 		fakeName = fakeName[:constants.MaxNameLength]
@@ -575,6 +627,11 @@ func (s *AuthService) RegisterViaGoogle(
 	)
 	if exception != nil {
 		_ = logs.NotezyLogger.JSON(ctx, slog.LevelError, exception.String(), exception)
+	}
+
+	if exception = s.enqueueWelcomeNotification(tx, newUser.PublicId); exception != nil {
+		tx.Rollback()
+		return nil, exception
 	}
 
 	if err := tx.Commit().Error; err != nil {
@@ -1114,7 +1171,7 @@ func (s *AuthService) Logout(
 		tx.Rollback()
 		return nil, exception
 	}
-	if err := repositories.NewOutboxEventRepository().EnqueueUserSessionsRevoked(
+	if err := s.outboxRepository.EnqueueUserSessionsRevoked(
 		tx,
 		actorUserPublicId.String(),
 		actorUserPublicId,
@@ -1525,11 +1582,16 @@ func (s *AuthService) DeleteMe(
 		).WithOrigin(tx.Error)
 	}
 
-	if err := tx.Exec(authsql.DeleteMeSQL, actorUserId, reqDto.Body.AuthCode).Error; err != nil {
+	deleteResult := tx.Exec(authsql.DeleteMeSQL, actorUserId, reqDto.Body.AuthCode)
+	if deleteResult.Error != nil {
 		tx.Rollback()
-		return nil, apiexceptions.User.FailedToDelete().WithOrigin(err)
+		return nil, apiexceptions.User.FailedToDelete().WithOrigin(deleteResult.Error)
 	}
-	if err := repositories.NewOutboxEventRepository().EnqueueUserSessionsRevoked(
+	if deleteResult.RowsAffected == 0 {
+		tx.Rollback()
+		return nil, apiexceptions.User.FailedToDelete()
+	}
+	if err := s.outboxRepository.EnqueueUserSessionsRevoked(
 		tx,
 		actorUserPublicId.String(),
 		actorUserPublicId,
@@ -1540,6 +1602,22 @@ func (s *AuthService) DeleteMe(
 			"Outbox",
 			"DeleteMe",
 			"Failed to create user session revocation event",
+			http.StatusInternalServerError,
+			true,
+		).WithOrigin(err)
+	}
+	if err := s.outboxRepository.EnqueueUserDeleted(
+		tx,
+		actorUserPublicId.String(),
+		actorUserPublicId,
+		time.Now().UTC(),
+	); err != nil {
+		tx.Rollback()
+		return nil, exceptions.New(
+			"FailedToCreate",
+			"Outbox",
+			"DeleteMe",
+			"Failed to create user deletion event",
 			http.StatusInternalServerError,
 			true,
 		).WithOrigin(err)

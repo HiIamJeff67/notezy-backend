@@ -89,28 +89,7 @@ func NewRootShelfService(
 	}
 }
 
-func getRootShelfMemberPublicIds(tx *gorm.DB, rootShelfIds []uuid.UUID) ([]uuid.UUID, error) {
-	if tx == nil || len(rootShelfIds) == 0 {
-		return nil, nil
-	}
-
-	var relations []schemas.UsersToShelves
-	if result := tx.
-		Preload(string(schemas.UsersToShelvesRelation_User)).
-		Where("root_shelf_id IN ?", rootShelfIds).
-		Find(&relations); result.Error != nil {
-		return nil, result.Error
-	}
-
-	publicIds := make([]uuid.UUID, 0, len(relations))
-	for _, relation := range relations {
-		if relation.User.PublicId != uuid.Nil {
-			publicIds = append(publicIds, relation.User.PublicId)
-		}
-	}
-
-	return publicIds, nil
-}
+/* ============================== Auxiliary Functions ============================== */
 
 func (s *RootShelfService) saveMyRootShelfPermission(
 	ctx context.Context,
@@ -644,9 +623,12 @@ func (s *RootShelfService) DeleteMyRootShelfById(
 	}
 	var rootShelfMemberPublicIds []uuid.UUID
 	if permission == enums.AccessControlPermission_Owner {
-		var memberErr error
-		rootShelfMemberPublicIds, memberErr = getRootShelfMemberPublicIds(tx, []uuid.UUID{rootShelf.Id})
-		if memberErr != nil {
+		var relations []schemas.UsersToShelves
+		result := tx.
+			Preload(string(schemas.UsersToShelvesRelation_User)).
+			Where("root_shelf_id = ?", rootShelf.Id).
+			Find(&relations)
+		if result.Error != nil {
 			tx.Rollback()
 			return nil, exceptions.New(
 				"FailedToRead",
@@ -655,7 +637,13 @@ func (s *RootShelfService) DeleteMyRootShelfById(
 				"Failed to resolve root shelf members",
 				http.StatusInternalServerError,
 				true,
-			).WithOrigin(memberErr)
+			).WithOrigin(result.Error)
+		}
+		rootShelfMemberPublicIds = make([]uuid.UUID, 0, len(relations))
+		for _, relation := range relations {
+			if relation.User.PublicId != uuid.Nil {
+				rootShelfMemberPublicIds = append(rootShelfMemberPublicIds, relation.User.PublicId)
+			}
 		}
 	}
 

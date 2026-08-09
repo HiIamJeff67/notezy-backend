@@ -119,6 +119,14 @@ handling, and calls the local service or engine through constructor-injected
 dependencies. Scheduling and execution policy remain in the owning runtime's
 service or engine; those packages must not import their transport back.
 
+Kafka topic creation policy follows the same ownership boundary. Define one
+explicit `TopicSpec` factory per queue under `shared/platform/kafka/topics/` and
+wire those factories through `All()`. `TopicSpec` has no implicit defaults:
+partitions, replication, retention, cleanup policy, in-sync replicas, and
+dead-letter retention must be specified by the topic owner. The platform
+provisioner validates and applies the spec but never owns queue policy or
+global topic variables.
+
 ## Runtime-owned workers
 
 Long-lived background loops belong to the owning runtime's `workers/` package,

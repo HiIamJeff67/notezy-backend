@@ -10,27 +10,35 @@ import (
 )
 
 type Config struct {
-	ListenAddress      string
-	TrustedProxies     []string
-	AllowedDomains     []string
-	CoreBaseUrl        string
-	CoreAdapterTimeout time.Duration
+	ListenAddress              string
+	TrustedProxies             []string
+	AllowedDomains             []string
+	CoreBaseUrl                string
+	CoreAdapterTimeout         time.Duration
+	NotificationBaseUrl        string
+	NotificationAdapterTimeout time.Duration
 }
 
 func LoadConfig() (Config, error) {
 	config := Config{
-		ListenAddress:  strings.TrimSpace(os.Getenv("GATEWAY_LISTEN_ADDRESS")),
-		TrustedProxies: sharedstrings.SplitValues(os.Getenv("GIN_TRUSTED_PROXIES")),
-		AllowedDomains: sharedstrings.SplitValues(os.Getenv("ALLOWED_DOMAINS")),
-		CoreBaseUrl:    strings.TrimRight(strings.TrimSpace(os.Getenv("CORE_BASE_URL")), "/"),
+		ListenAddress:       strings.TrimSpace(os.Getenv("GATEWAY_LISTEN_ADDRESS")),
+		TrustedProxies:      sharedstrings.SplitValues(os.Getenv("GIN_TRUSTED_PROXIES")),
+		AllowedDomains:      sharedstrings.SplitValues(os.Getenv("ALLOWED_DOMAINS")),
+		CoreBaseUrl:         strings.TrimRight(strings.TrimSpace(os.Getenv("CORE_BASE_URL")), "/"),
+		NotificationBaseUrl: strings.TrimRight(strings.TrimSpace(os.Getenv("NOTIFICATION_BASE_URL")), "/"),
 	}
-	if config.ListenAddress == "" || config.CoreBaseUrl == "" {
-		return Config{}, fmt.Errorf("GATEWAY_LISTEN_ADDRESS and CORE_BASE_URL are required")
+	if config.ListenAddress == "" || config.CoreBaseUrl == "" || config.NotificationBaseUrl == "" {
+		return Config{}, fmt.Errorf("GATEWAY_LISTEN_ADDRESS, CORE_BASE_URL, and NOTIFICATION_BASE_URL are required")
 	}
 	coreTimeout, err := time.ParseDuration(strings.TrimSpace(os.Getenv("CORE_CLIENT_TIMEOUT")))
 	if err != nil || coreTimeout <= 0 {
 		return Config{}, fmt.Errorf("CORE_CLIENT_TIMEOUT must be a positive Go duration")
 	}
 	config.CoreAdapterTimeout = coreTimeout
+	notificationTimeout, err := time.ParseDuration(strings.TrimSpace(os.Getenv("NOTIFICATION_CLIENT_TIMEOUT")))
+	if err != nil || notificationTimeout <= 0 {
+		return Config{}, fmt.Errorf("NOTIFICATION_CLIENT_TIMEOUT must be a positive Go duration")
+	}
+	config.NotificationAdapterTimeout = notificationTimeout
 	return config, nil
 }
