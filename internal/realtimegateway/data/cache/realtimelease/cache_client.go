@@ -246,6 +246,10 @@ func (s *RealtimeLeaseCacheClient) SubscribeBlockPackChannelRevocations(
 	}
 
 	pubsub := redisClient.Subscribe(s.blockPackChannelRevocationKey())
+	if _, err := pubsub.Receive(); err != nil {
+		_ = pubsub.Close()
+		return nil, err
+	}
 
 	go func() {
 		for message := range pubsub.Channel() {
@@ -288,6 +292,10 @@ func (s *RealtimeLeaseCacheClient) SubscribeUserSessionRevocations(
 	}
 
 	pubsub := redisClient.Subscribe(s.userSessionRevocationKey())
+	if _, err := pubsub.Receive(); err != nil {
+		_ = pubsub.Close()
+		return nil, err
+	}
 
 	go func() {
 		for message := range pubsub.Channel() {
@@ -329,6 +337,11 @@ func (s *RealtimeLeaseCacheClient) SubscribeNotifications(
 		return nil, err
 	}
 	pubsub := redisClient.Subscribe(s.userNotificationKey())
+	if _, err := pubsub.Receive(); err != nil {
+		_ = pubsub.Close()
+		return nil, err
+	}
+
 	go func() {
 		for message := range pubsub.Channel() {
 			var event NotificationEvent
@@ -367,6 +380,10 @@ func (s *RealtimeLeaseCacheClient) SubscribeResourceEvents(
 	}
 
 	pubsub := redisClient.Subscribe(s.resourceEventKey())
+	if _, err := pubsub.Receive(); err != nil {
+		_ = pubsub.Close()
+		return nil, err
+	}
 
 	go func() {
 		for message := range pubsub.Channel() {
@@ -728,6 +745,10 @@ func (s *RealtimeLeaseCacheClient) SubscribeBlockPackPresenceEvents(
 	}
 
 	pubsub := redisClient.Subscribe(s.blockPackPresenceKey())
+	if _, err := pubsub.Receive(); err != nil {
+		_ = pubsub.Close()
+		return nil, err
+	}
 
 	go func() {
 		for message := range pubsub.Channel() {
